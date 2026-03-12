@@ -9,20 +9,111 @@ import fitz  # pymupdf
 from PIL import Image, ImageTk
 import io
 import os
+import json
 
 
 # ===================== カラーテーマ =====================
-BG_DARK    = "#1a1a2e"
-BG_PANEL   = "#16213e"
-BG_CARD    = "#0f3460"
-ACCENT     = "#e94560"
-ACCENT2    = "#533483"
-TEXT_MAIN  = "#eaeaea"
-TEXT_SUB   = "#a0a0b0"
-BTN_HOVER  = "#ff6b6b"
-SUCCESS    = "#4ecca3"
-WARNING    = "#ffd460"
-CROP_ON_BG = "#8b0000"
+THEMES = {
+    "dark": {
+        "BG_DARK":    "#1a1a2e",
+        "BG_PANEL":   "#16213e",
+        "BG_CARD":    "#0f3460",
+        "ACCENT":     "#e94560",
+        "ACCENT2":    "#533483",
+        "TEXT_MAIN":  "#eaeaea",
+        "TEXT_SUB":   "#a0a0b0",
+        "BTN_HOVER":  "#ff6b6b",
+        "SUCCESS":    "#4ecca3",
+        "WARNING":    "#ffd460",
+        "CROP_ON_BG": "#8b0000",
+        "PREVIEW_BG": "#111122",
+        "DANGER_BG":  "#7c1c2e",
+        "DANGER_FG":  "#ffaaaa",
+    },
+    "light": {
+        "BG_DARK":    "#f0f0f5",
+        "BG_PANEL":   "#e0e0ea",
+        "BG_CARD":    "#d0d0dd",
+        "ACCENT":     "#d63050",
+        "ACCENT2":    "#7b52ab",
+        "TEXT_MAIN":  "#1a1a2e",
+        "TEXT_SUB":   "#555566",
+        "BTN_HOVER":  "#ff6b6b",
+        "SUCCESS":    "#2a9d6a",
+        "WARNING":    "#b8860b",
+        "CROP_ON_BG": "#cc3333",
+        "PREVIEW_BG": "#c8c8d0",
+        "DANGER_BG":  "#e8c0c0",
+        "DANGER_FG":  "#7c1c2e",
+    },
+}
+
+# 現在テーマの色をモジュールレベルで参照するための辞書（実行時に設定）
+C = dict(THEMES["dark"])
+
+SETTINGS_FILE = "pdf_editor_settings.json"
+
+def _get_settings_path():
+    """設定ファイルのパスを返す（スクリプトと同じディレクトリ）"""
+    return os.path.join(os.path.dirname(os.path.abspath(__file__)), SETTINGS_FILE)
+
+def _load_settings():
+    """設定を読み込む。ファイルがなければデフォルト値を返す"""
+    defaults = {"theme": "dark", "font_size": 12}
+    try:
+        path = _get_settings_path()
+        if os.path.exists(path):
+            with open(path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            for k, v in defaults.items():
+                data.setdefault(k, v)
+            return data
+    except Exception:
+        pass
+    return dict(defaults)
+
+def _save_settings(settings):
+    """設定を保存する"""
+    try:
+        path = _get_settings_path()
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump(settings, f, ensure_ascii=False, indent=2)
+    except Exception:
+        pass
+
+def _detect_system_theme():
+    """Windowsのシステムテーマを検出。ダーク→'dark'、ライト→'light'"""
+    try:
+        import winreg
+        key = winreg.OpenKey(
+            winreg.HKEY_CURRENT_USER,
+            r"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize")
+        val, _ = winreg.QueryValueEx(key, "AppsUseLightTheme")
+        winreg.CloseKey(key)
+        return "light" if val == 1 else "dark"
+    except Exception:
+        return "dark"
+
+def _resolve_theme(theme_setting):
+    """テーマ設定値を実際のテーマ名に解決する"""
+    if theme_setting == "system":
+        return _detect_system_theme()
+    return theme_setting if theme_setting in THEMES else "dark"
+
+def _apply_theme(theme_name):
+    """テーマをグローバル辞書Cに適用"""
+    resolved = _resolve_theme(theme_name)
+    C.update(THEMES[resolved])
+
+def _make_font(delta=0, weight=None, base_size=10):
+    """フォントタプルを生成するグローバルヘルパー"""
+    size = max(7, base_size + delta)
+    if weight:
+        return ("Segoe UI", size, weight)
+    return ("Segoe UI", size)
+
+# 現在のフォントサイズ（設定から読み込み後に更新）
+_current_font_size = 12
 
 
 class PDFEditorApp:
@@ -32,8 +123,15 @@ class PDFEditorApp:
         self.root = root
         self.root.title("PDF Editor")
         self.root.geometry("1200x780")
-        self.root.configure(bg=BG_DARK)
         self.root.minsize(900, 600)
+
+        # 設定読み込み・テーマ適用
+        self.settings = _load_settings()
+        self.font_size = self.settings.get("font_size", 10)
+        global _current_font_size
+        _current_font_size = self.font_size
+        _apply_theme(self.settings.get("theme", "dark"))
+        self.root.configure(bg=C["BG_DARK"])
 
         self.doc = None
         self.filepath = None
@@ -51,6 +149,7 @@ class PDFEditorApp:
         # Undo / Redo (#18)
         self._undo_stack = []
         self._redo_stack = []
+        self._pending_click = None
 
         self._build_styles()
         self._build_ui()
@@ -73,104 +172,114 @@ class PDFEditorApp:
 
     # ─────────────────────────────────────────
     def _build_styles(self):
+        fs = self.font_size  # ベースフォントサイズ
         style = ttk.Style()
         style.theme_use("clam")
-        style.configure("TFrame", background=BG_DARK)
-        style.configure("Panel.TFrame", background=BG_PANEL)
-        style.configure("Card.TFrame", background=BG_CARD)
+        style.configure("TFrame", background=C["BG_DARK"])
+        style.configure("Panel.TFrame", background=C["BG_PANEL"])
+        style.configure("Card.TFrame", background=C["BG_CARD"])
         style.configure("TLabel",
-                        background=BG_DARK, foreground=TEXT_MAIN,
-                        font=("Segoe UI", 10))
+                        background=C["BG_DARK"], foreground=C["TEXT_MAIN"],
+                        font=("Segoe UI", fs))
         style.configure("Title.TLabel",
-                        background=BG_DARK, foreground=ACCENT,
-                        font=("Segoe UI", 18, "bold"))
+                        background=C["BG_DARK"], foreground=C["ACCENT"],
+                        font=("Segoe UI", fs + 8, "bold"))
         style.configure("Sub.TLabel",
-                        background=BG_DARK, foreground=TEXT_SUB,
-                        font=("Segoe UI", 9))
+                        background=C["BG_DARK"], foreground=C["TEXT_SUB"],
+                        font=("Segoe UI", fs - 1))
         style.configure("Status.TLabel",
-                        background=BG_PANEL, foreground=SUCCESS,
-                        font=("Segoe UI", 9))
+                        background=C["BG_PANEL"], foreground=C["SUCCESS"],
+                        font=("Segoe UI", fs - 1))
         style.configure("TButton",
-                        background=BG_CARD, foreground=TEXT_MAIN,
-                        font=("Segoe UI", 9, "bold"),
+                        background=C["BG_CARD"], foreground=C["TEXT_MAIN"],
+                        font=("Segoe UI", fs - 1, "bold"),
                         borderwidth=0, padding=(10, 6))
         style.map("TButton",
-                  background=[("active", ACCENT), ("pressed", ACCENT2)],
+                  background=[("active", C["ACCENT"]), ("pressed", C["ACCENT2"])],
                   foreground=[("active", "#ffffff")])
         style.configure("Accent.TButton",
-                        background=ACCENT, foreground="#ffffff",
-                        font=("Segoe UI", 10, "bold"),
+                        background=C["ACCENT"], foreground="#ffffff",
+                        font=("Segoe UI", fs, "bold"),
                         borderwidth=0, padding=(12, 7))
         style.map("Accent.TButton",
-                  background=[("active", BTN_HOVER)])
+                  background=[("active", C["BTN_HOVER"])])
         style.configure("Danger.TButton",
-                        background="#7c1c2e", foreground="#ffaaaa",
-                        font=("Segoe UI", 9, "bold"),
+                        background=C["DANGER_BG"], foreground=C["DANGER_FG"],
+                        font=("Segoe UI", fs - 1, "bold"),
                         borderwidth=0, padding=(10, 6))
         style.map("Danger.TButton",
-                  background=[("active", ACCENT)])
+                  background=[("active", C["ACCENT"])])
         # トリミングモードON強調 (#16)
         style.configure("CropOn.TButton",
-                        background=CROP_ON_BG, foreground="#ffffff",
-                        font=("Segoe UI", 9, "bold"),
+                        background=C["CROP_ON_BG"], foreground="#ffffff",
+                        font=("Segoe UI", fs - 1, "bold"),
                         borderwidth=2, padding=(10, 6))
         style.map("CropOn.TButton",
                   background=[("active", "#aa0000")])
         style.configure("TScrollbar",
-                        background=BG_CARD, troughcolor=BG_PANEL,
+                        background=C["BG_CARD"], troughcolor=C["BG_PANEL"],
                         borderwidth=0, arrowsize=12)
         style.configure("Horizontal.TScale",
-                        background=BG_DARK, troughcolor=BG_CARD)
+                        background=C["BG_DARK"], troughcolor=C["BG_CARD"])
 
     # ─────────────────────────────────────────
     def _build_ui(self):
-        header = tk.Frame(self.root, bg=BG_PANEL, height=56)
+        header_h = max(56, int(self.font_size * 5))
+        header = tk.Frame(self.root, bg=C["BG_PANEL"], height=header_h)
         header.pack(fill="x", side="top")
         header.pack_propagate(False)
-        tk.Label(header, text="✦ PDF Editor", bg=BG_PANEL,
-                 fg=ACCENT, font=("Segoe UI", 16, "bold")).pack(side="left", padx=20, pady=12)
+        tk.Label(header, text="✦ PDF Editor", bg=C["BG_PANEL"],
+                 fg=C["ACCENT"], font=self._font(6, "bold")).pack(side="left", padx=20, pady=12)
         self.status_var = tk.StringVar(value="ファイルを開いてください")
         tk.Label(header, textvariable=self.status_var,
-                 bg=BG_PANEL, fg=SUCCESS,
-                 font=("Segoe UI", 9)).pack(side="right", padx=20)
+                 bg=C["BG_PANEL"], fg=C["SUCCESS"],
+                 font=self._font(-1)).pack(side="right", padx=20)
 
-        main = tk.Frame(self.root, bg=BG_DARK)
+        main = tk.Frame(self.root, bg=C["BG_DARK"])
         main.pack(fill="both", expand=True)
 
-        left = tk.Frame(main, bg=BG_PANEL, width=220)
-        left.pack(side="left", fill="y")
-        left.pack_propagate(False)
-        self._build_thumb_panel(left)
-
-        center = tk.Frame(main, bg=BG_DARK)
-        center.pack(side="left", fill="both", expand=True)
-        self._build_preview(center)
-
-        right = tk.Frame(main, bg=BG_PANEL, width=230)
+        # 右ペインは固定幅（ウィンドウ拡大時は中央だけ広がる）
+        right_width = max(260, int(self.font_size * 22))
+        right = tk.Frame(main, bg=C["BG_PANEL"], width=right_width)
         right.pack(side="right", fill="y")
         right.pack_propagate(False)
-        self._build_tools(right)
+        self._build_tools_scrollable(right)
+
+        # 左パネルと中央はPanedWindowでリサイズ可能
+        paned = tk.PanedWindow(main, orient="horizontal", bg=C["BG_DARK"],
+                               sashwidth=5, sashrelief="flat",
+                               opaqueresize=True, bd=0)
+        paned.pack(side="left", fill="both", expand=True)
+
+        left_width = max(200, int(self.font_size * 18))
+        left = tk.Frame(paned, bg=C["BG_PANEL"])
+        self._build_thumb_panel(left)
+        paned.add(left, minsize=150, width=left_width)
+
+        center = tk.Frame(paned, bg=C["BG_DARK"])
+        self._build_preview(center)
+        paned.add(center, minsize=300)
 
     # ─────────────────────────────────────────
     def _build_thumb_panel(self, parent):
-        hdr = tk.Frame(parent, bg=BG_PANEL)
+        hdr = tk.Frame(parent, bg=C["BG_PANEL"])
         hdr.pack(fill="x", padx=10, pady=(10, 4))
-        tk.Label(hdr, text="ページ一覧", bg=BG_PANEL,
-                 fg=ACCENT, font=("Segoe UI", 10, "bold")).pack(side="left")
-        tk.Label(hdr, text="D&D で並替", bg=BG_PANEL,
-                 fg=TEXT_SUB, font=("Segoe UI", 7)).pack(side="right")
+        tk.Label(hdr, text="ページ一覧", bg=C["BG_PANEL"],
+                 fg=C["ACCENT"], font=self._font(0, "bold")).pack(side="left")
+        tk.Label(hdr, text="D&D で並替", bg=C["BG_PANEL"],
+                 fg=C["TEXT_SUB"], font=self._font(-3)).pack(side="right")
 
-        sel_frame = tk.Frame(parent, bg=BG_PANEL)
+        sel_frame = tk.Frame(parent, bg=C["BG_PANEL"])
         sel_frame.pack(fill="x", padx=6, pady=2)
         ttk.Button(sel_frame, text="全選択",
                    command=self._select_all).pack(side="left", padx=2)
         ttk.Button(sel_frame, text="解除",
                    command=self._deselect_all).pack(side="left", padx=2)
 
-        canvas_frame = tk.Frame(parent, bg=BG_PANEL)
+        canvas_frame = tk.Frame(parent, bg=C["BG_PANEL"])
         canvas_frame.pack(fill="both", expand=True, padx=4, pady=4)
 
-        self.thumb_canvas = tk.Canvas(canvas_frame, bg=BG_PANEL,
+        self.thumb_canvas = tk.Canvas(canvas_frame, bg=C["BG_PANEL"],
                                       highlightthickness=0)
         sb = ttk.Scrollbar(canvas_frame, orient="vertical",
                            command=self.thumb_canvas.yview)
@@ -178,7 +287,7 @@ class PDFEditorApp:
         sb.pack(side="right", fill="y")
         self.thumb_canvas.pack(fill="both", expand=True)
 
-        self.thumb_inner = tk.Frame(self.thumb_canvas, bg=BG_PANEL)
+        self.thumb_inner = tk.Frame(self.thumb_canvas, bg=C["BG_PANEL"])
         self.thumb_canvas.create_window((0, 0), window=self.thumb_inner,
                                         anchor="nw")
         self.thumb_inner.bind("<Configure>",
@@ -190,32 +299,34 @@ class PDFEditorApp:
 
     # ─────────────────────────────────────────
     def _build_preview(self, parent):
-        toolbar = tk.Frame(parent, bg=BG_PANEL, height=44)
+        toolbar = tk.Frame(parent, bg=C["BG_PANEL"], height=44)
         toolbar.pack(fill="x")
         toolbar.pack_propagate(False)
 
-        ttk.Button(toolbar, text="◀ 前",
-                   command=self._prev_page).pack(side="left", padx=6, pady=8)
+        self.prev_btn = ttk.Button(toolbar, text="◀ 前",
+                   command=self._prev_page)
+        self.prev_btn.pack(side="left", padx=6, pady=8)
         self.page_label = tk.Label(toolbar, text="- / -",
-                                   bg=BG_PANEL, fg=TEXT_MAIN,
-                                   font=("Segoe UI", 10, "bold"))
+                                   bg=C["BG_PANEL"], fg=C["TEXT_MAIN"],
+                                   font=self._font(0, "bold"))
         self.page_label.pack(side="left", padx=4)
-        ttk.Button(toolbar, text="次 ▶",
-                   command=self._next_page).pack(side="left", padx=6)
+        self.next_btn = ttk.Button(toolbar, text="次 ▶",
+                   command=self._next_page)
+        self.next_btn.pack(side="left", padx=6)
 
         ttk.Button(toolbar, text="🔍 縮小",
                    command=lambda: self._zoom(-0.2)).pack(side="right", padx=4, pady=8)
         ttk.Button(toolbar, text="🔍 拡大",
                    command=lambda: self._zoom(0.2)).pack(side="right", padx=4)
         self.zoom_label = tk.Label(toolbar, text="100%",
-                                   bg=BG_PANEL, fg=TEXT_SUB,
-                                   font=("Segoe UI", 9))
+                                   bg=C["BG_PANEL"], fg=C["TEXT_SUB"],
+                                   font=self._font(-1))
         self.zoom_label.pack(side="right", padx=4)
 
-        frame = tk.Frame(parent, bg=BG_DARK)
+        frame = tk.Frame(parent, bg=C["BG_DARK"])
         frame.pack(fill="both", expand=True)
 
-        self.preview_canvas = tk.Canvas(frame, bg="#111122",
+        self.preview_canvas = tk.Canvas(frame, bg=C["PREVIEW_BG"],
                                         highlightthickness=0)
         vbar = ttk.Scrollbar(frame, orient="vertical",
                              command=self.preview_canvas.yview)
@@ -238,42 +349,103 @@ class PDFEditorApp:
         self.crop_overlay_ids = []
 
     # ─────────────────────────────────────────
+    def _build_tools_scrollable(self, parent):
+        """右ペインをスクロール可能にするラッパー"""
+        canvas = tk.Canvas(parent, bg=C["BG_PANEL"], highlightthickness=0, bd=0)
+        sb = ttk.Scrollbar(parent, orient="vertical", command=canvas.yview)
+        canvas.configure(yscrollcommand=sb.set)
+        sb.pack(side="right", fill="y")
+        canvas.pack(fill="both", expand=True)
+
+        inner = tk.Frame(canvas, bg=C["BG_PANEL"])
+        canvas.create_window((0, 0), window=inner, anchor="nw",
+                             tags="inner_window")
+
+        def _on_configure(e):
+            canvas.configure(scrollregion=canvas.bbox("all"))
+            # 内部フレームの幅をキャンバスに合わせる
+            canvas.itemconfigure("inner_window", width=canvas.winfo_width())
+        inner.bind("<Configure>", _on_configure)
+        canvas.bind("<Configure>",
+                    lambda e: canvas.itemconfigure("inner_window",
+                                                   width=e.width))
+        canvas.bind("<MouseWheel>",
+                    lambda e: canvas.yview_scroll(int(-1*(e.delta/120)), "units"))
+        # 内部ウィジェット上でもスクロールが効くようにバインドを伝播
+        def _bind_mousewheel_recursive(widget):
+            widget.bind("<MouseWheel>",
+                        lambda e: canvas.yview_scroll(int(-1*(e.delta/120)), "units"),
+                        add="+")
+            for child in widget.winfo_children():
+                _bind_mousewheel_recursive(child)
+
+        self._build_tools(inner)
+        # ツール構築後にバインド＆スクロール位置を先頭にリセット
+        def _after_build():
+            _bind_mousewheel_recursive(inner)
+            canvas.yview_moveto(0)
+        # 複数タイミングで呼び出して確実にリセット
+        inner.after_idle(lambda: canvas.yview_moveto(0))
+        inner.after(100, _after_build)
+        inner.after(300, lambda: canvas.yview_moveto(0))
+
+    # ─────────────────────────────────────────
     def _build_tools(self, parent):
-        tk.Label(parent, text="ツール", bg=BG_PANEL,
-                 fg=ACCENT, font=("Segoe UI", 11, "bold")).pack(pady=(14, 6))
+        # ファイル依存ボタンのリスト（doc未開時に disabled にする）
+        self._doc_buttons = []
 
         def section(title):
-            f = tk.Frame(parent, bg=BG_CARD, bd=0)
+            f = tk.Frame(parent, bg=C["BG_CARD"], bd=0)
             f.pack(fill="x", padx=10, pady=5)
-            tk.Label(f, text=title, bg=BG_CARD, fg=WARNING,
-                     font=("Segoe UI", 9, "bold")).pack(anchor="w", padx=8, pady=(6,2))
+            tk.Label(f, text=title, bg=C["BG_CARD"], fg=C["WARNING"],
+                     font=self._font(-1, "bold")).pack(anchor="w", padx=8, pady=(6,2))
             return f
 
-        def btn(parent, text, cmd, style="TButton"):
-            ttk.Button(parent, text=text, command=cmd,
-                       style=style).pack(fill="x", padx=8, pady=2)
+        def btn(parent, text, cmd, style="TButton", needs_doc=False):
+            b = ttk.Button(parent, text=text, command=cmd, style=style)
+            b.pack(fill="x", padx=8, pady=2)
+            if needs_doc:
+                self._doc_buttons.append(b)
+            return b
+
+        f5 = section("⚙ 設定")
+        btn(f5, "⚙ テーマ・フォント設定…", self._open_settings)
 
         f = section("📂 ファイル")
         btn(f, "ファイルを開く (Ctrl+O)", self._open_file, "Accent.TButton")
-        btn(f, "上書き保存 (Ctrl+S)", self._save_file)
-        btn(f, "名前を付けて保存 (Ctrl+Shift+S)", self._save_as)
+        btn(f, "上書き保存 (Ctrl+S)", self._save_file, needs_doc=True)
+        btn(f, "名前を付けて保存 (Ctrl+Shift+S)", self._save_as, needs_doc=True)
         btn(f, "✕ 終了", self._quit, "Danger.TButton")
 
         f_ur = section("↩ 元に戻す / やり直す")
-        btn(f_ur, "↩ 元に戻す (Ctrl+Z)", self._undo)
-        btn(f_ur, "↪ やり直す (Ctrl+Y)", self._redo)
+        ur_row = tk.Frame(f_ur, bg=C["BG_CARD"])
+        ur_row.pack(fill="x", padx=6, pady=2)
+        b_undo = ttk.Button(ur_row, text="↩ Ctrl+Z", command=self._undo)
+        b_undo.pack(side="left", expand=True, fill="x", padx=2, pady=2)
+        self._doc_buttons.append(b_undo)
+        b_redo = ttk.Button(ur_row, text="↪ Ctrl+Y", command=self._redo)
+        b_redo.pack(side="left", expand=True, fill="x", padx=2, pady=2)
+        self._doc_buttons.append(b_redo)
 
         f2 = section("📄 ページ操作（選択ページ）")
-        tk.Label(f2, text="回転角度:", bg=BG_CARD, fg=TEXT_SUB,
-                 font=("Segoe UI", 8)).pack(anchor="w", padx=8)
-        rot_f = tk.Frame(f2, bg=BG_CARD)
-        rot_f.pack(fill="x", padx=6, pady=2)
-        for deg, label in [(90,"↻ 90°"), (180,"↺↻ 180°"), (270,"↺ 270°")]:
-            ttk.Button(rot_f, text=label,
-                       command=lambda d=deg: self._rotate_selected(d)
-                       ).pack(side="left", expand=True, fill="x", padx=2, pady=2)
+        tk.Label(f2, text="回転:", bg=C["BG_CARD"], fg=C["TEXT_SUB"],
+                 font=self._font(-2)).pack(anchor="w", padx=8)
+        rot_row1 = tk.Frame(f2, bg=C["BG_CARD"])
+        rot_row1.pack(fill="x", padx=6, pady=(2, 0))
+        for deg, label in [(270,"↺ 左90°"), (90,"↻ 右90°")]:
+            b = ttk.Button(rot_row1, text=label,
+                           command=lambda d=deg: self._rotate_selected(d))
+            b.pack(side="left", expand=True, fill="x", padx=2, pady=2)
+            self._doc_buttons.append(b)
+        rot_row2 = tk.Frame(f2, bg=C["BG_CARD"])
+        rot_row2.pack(fill="x", padx=6, pady=(0, 2))
+        b180 = ttk.Button(rot_row2, text="↕ 180°",
+                          command=lambda: self._rotate_selected(180))
+        b180.pack(fill="x", padx=2, pady=2)
+        self._doc_buttons.append(b180)
 
-        btn(f2, "🗑 選択ページを削除 (Del)", self._delete_selected, "Danger.TButton")
+        btn(f2, "🗑 選択ページを削除 (Del)", self._delete_selected,
+            "Danger.TButton", needs_doc=True)
 
         f3 = section("✂ トリミング（現在ページ）")
         self.crop_mode_var = tk.BooleanVar(value=False)
@@ -281,31 +453,27 @@ class PDFEditorApp:
             f3, text="✂ 範囲選択モード OFF",
             command=self._toggle_crop_mode)
         self.crop_toggle_btn.pack(fill="x", padx=8, pady=(4,2))
+        self._doc_buttons.append(self.crop_toggle_btn)
         tk.Label(f3, text="プレビュー上でドラッグして範囲を指定",
-                 bg=BG_CARD, fg=TEXT_SUB, font=("Segoe UI", 8)).pack(anchor="w", padx=8)
+                 bg=C["BG_CARD"], fg=C["TEXT_SUB"], font=self._font(-2)).pack(anchor="w", padx=8)
 
         self.crop_info_var = tk.StringVar(value="範囲未選択")
         tk.Label(f3, textvariable=self.crop_info_var,
-                 bg=BG_CARD, fg=SUCCESS, font=("Segoe UI", 8)).pack(anchor="w", padx=8, pady=2)
+                 bg=C["BG_CARD"], fg=C["TEXT_SUB"], font=self._font(-2)).pack(anchor="w", padx=8, pady=2)
 
-        btn(f3, "✔ 選択範囲でトリミング", self._crop_page)
-        btn(f3, "✕ 選択範囲をリセット",   self._crop_reset, "Danger.TButton")
+        btn(f3, "✔ 選択範囲でトリミング", self._crop_page, needs_doc=True)
+        btn(f3, "✕ 選択範囲をリセット",   self._crop_reset, "Danger.TButton",
+            needs_doc=True)
 
         f4 = section("📎 挿入・結合")
-        btn(f4, "別PDFから挿入", self._insert_from_file)
-        btn(f4, "PDFを末尾に結合", self._merge_pdf)
+        btn(f4, "先頭に挿入", lambda: self._insert_from_file("head"), needs_doc=True)
+        btn(f4, "末尾に挿入", lambda: self._insert_from_file("tail"), needs_doc=True)
+        btn(f4, "指定位置に挿入…", lambda: self._insert_from_file("pos"),
+            needs_doc=True)
+        btn(f4, "PDFを末尾に結合", self._merge_pdf, needs_doc=True)
 
-        f5 = section("🔀 ページ移動")
-        move_f = tk.Frame(f5, bg=BG_CARD)
-        move_f.pack(fill="x", padx=6, pady=4)
-        tk.Label(move_f, text="移動先(1始まり):", bg=BG_CARD, fg=TEXT_MAIN,
-                 font=("Segoe UI", 9)).pack(side="left")
-        self.move_var = tk.IntVar(value=1)
-        tk.Spinbox(move_f, from_=1, to=9999, textvariable=self.move_var,
-                   width=5, bg=BG_DARK, fg=TEXT_MAIN,
-                   insertbackground=TEXT_MAIN, font=("Segoe UI", 9), bd=0
-                   ).pack(side="left", padx=4)
-        btn(f5, "現在ページを移動", self._move_page)
+        # 初期状態: すべてのdoc依存ボタンを disabled にする
+        self._update_doc_buttons_state()
 
     # ══════════════════════════════════════════
     #  Undo / Redo (#18)
@@ -364,11 +532,44 @@ class PDFEditorApp:
     #  ファイル操作
     # ══════════════════════════════════════════
     def _open_file(self):
-        path = filedialog.askopenfilename(
+        paths = filedialog.askopenfilenames(
             filetypes=[("PDFファイル", "*.pdf"), ("すべて", "*.*")])
-        if not path:
+        if not paths:
             return
-        self._open_pdf_path(path)
+        if len(paths) == 1:
+            self._open_pdf_path(paths[0])
+        else:
+            # 複数ファイル選択時は結合して開く
+            self._open_multiple_pdfs(list(paths))
+
+    def _open_multiple_pdfs(self, paths):
+        """複数PDFを結合して1つのドキュメントとして開く"""
+        MergeOrderDialog(self.root, paths, self._do_open_merged)
+
+    def _do_open_merged(self, ordered_paths):
+        """結合順ダイアログ確定後、結合して開く"""
+        try:
+            if self.doc:
+                self.doc.close()
+            merged = fitz.open()
+            total = 0
+            for path in ordered_paths:
+                src = fitz.open(path)
+                merged.insert_pdf(src)
+                total += len(src)
+                src.close()
+            self.doc = merged
+            self.filepath = None  # 結合結果なので保存先なし
+            self.current_page = 0
+            self.selected_pages.clear()
+            self._undo_stack.clear()
+            self._redo_stack.clear()
+            self._invalidate_thumb_cache()
+            self._refresh_all()
+            names = ", ".join(os.path.basename(p) for p in ordered_paths)
+            self._set_status(f"{len(ordered_paths)}ファイルを結合して開きました ({total}ページ): {names}")
+        except Exception as e:
+            messagebox.showerror("エラー", str(e))
 
     def _open_pdf_path(self, path):
         """パス指定でPDFを開く（ダイアログ / D&D 共用）"""
@@ -389,8 +590,12 @@ class PDFEditorApp:
 
     def _save_file(self):
         """上書き保存 — 確認ダイアログ付き (#14)"""
-        if not self.doc or not self.filepath:
+        if not self.doc:
             messagebox.showinfo("情報", "先にファイルを開いてください")
+            return
+        if not self.filepath:
+            # 結合して開いた場合など保存先がない場合は名前を付けて保存
+            self._save_as()
             return
         if not messagebox.askyesno("上書き保存の確認",
                                     f"以下のファイルを上書き保存します。\n\n"
@@ -513,7 +718,7 @@ class PDFEditorApp:
                 self.preview_canvas.create_rectangle(ex, sy, pw, ey, fill="#000000", stipple="gray50", outline=""),
             ]
             self.crop_rect_id = self.preview_canvas.create_rectangle(
-                sx, sy, ex, ey, outline=ACCENT, width=2, dash=(4,3))
+                sx, sy, ex, ey, outline=C["ACCENT"], width=2, dash=(4,3))
         else:
             self.preview_canvas.coords(self.crop_overlay_ids[0], 0, 0, pw, sy)
             self.preview_canvas.coords(self.crop_overlay_ids[1], 0, ey, pw, ph)
@@ -567,10 +772,24 @@ class PDFEditorApp:
         mb = page.mediabox
         new_rect = fitz.Rect(mb.x0 + x0_pdf, mb.y0 + y0_pdf,
                              mb.x0 + x1_pdf, mb.y0 + y1_pdf)
-        if new_rect.is_empty or new_rect.is_infinite:
+        # CropBox を MediaBox の範囲内に厳密にクランプ
+        # pymupdf は浮動小数点で厳密に比較するため余裕を持たせる
+        EPS = 0.01
+        new_rect = fitz.Rect(
+            max(round(new_rect.x0, 2), mb.x0 + EPS),
+            max(round(new_rect.y0, 2), mb.y0 + EPS),
+            min(round(new_rect.x1, 2), mb.x1 - EPS),
+            min(round(new_rect.y1, 2), mb.y1 - EPS)
+        )
+        if new_rect.is_empty or new_rect.is_infinite or new_rect.width < 1 or new_rect.height < 1:
             messagebox.showerror("エラー", "範囲が小さすぎます。もう一度ドラッグしてください")
             return
-        page.set_cropbox(new_rect)
+        try:
+            page.set_cropbox(new_rect)
+        except ValueError as e:
+            messagebox.showerror("トリミングエラー",
+                f"CropBoxの設定に失敗しました。\n範囲を調整して再度お試しください。\n\n{e}")
+            return
         self.crop_rect = None
         self.crop_mode = False
         self.crop_toggle_btn.configure(text="✂ 範囲選択モード OFF", style="TButton")
@@ -580,7 +799,8 @@ class PDFEditorApp:
         self._refresh_all()
         self._set_status(f"ページ{self.current_page+1}をトリミングしました")
 
-    def _insert_from_file(self):
+    def _insert_from_file(self, mode="pos"):
+        """別PDFから挿入。mode: 'head'=先頭, 'tail'=末尾, 'pos'=指定位置"""
         if not self._check_doc():
             return
         paths = filedialog.askopenfilenames(
@@ -588,25 +808,52 @@ class PDFEditorApp:
             filetypes=[("PDFファイル", "*.pdf")])
         if not paths:
             return
-        pos = simpledialog.askinteger(
-            "挿入位置",
-            f"挿入する位置を入力してください\n(1〜{len(self.doc)+1})\n\n"
-            f"例: 3 と入力 → 2ページ目と3ページ目の間に挿入",
-            minvalue=1, maxvalue=len(self.doc)+1,
-            initialvalue=self.current_page+2)
-        if pos is None:
-            return
+
+        if mode == "head":
+            insert_at = 0
+        elif mode == "tail":
+            insert_at = len(self.doc)
+        else:
+            pos = simpledialog.askinteger(
+                "挿入位置",
+                f"何ページ目の後ろに挿入しますか？\n"
+                f"(0 = 先頭、1〜{len(self.doc)} = そのページの後ろ)\n\n"
+                f"例: 3 → 3ページ目の後ろに挿入",
+                minvalue=0, maxvalue=len(self.doc),
+                initialvalue=self.current_page + 1)
+            if pos is None:
+                return
+            insert_at = pos
+
+        # 複数ファイル時は結合順ダイアログを表示
+        if len(paths) > 1:
+            MergeOrderDialog(self.root, list(paths),
+                             lambda ordered: self._do_insert(ordered, insert_at))
+        else:
+            self._do_insert(list(paths), insert_at)
+
+    def _do_insert(self, ordered_paths, insert_at):
+        """結合順確定後に実際の挿入を行う"""
         self._save_undo()
         try:
-            insert_at = pos - 1
-            for path in paths:
+            total = 0
+            pos = insert_at
+            for path in ordered_paths:
                 src = fitz.open(path)
-                self.doc.insert_pdf(src, start_at=insert_at)
-                insert_at += len(src)
+                self.doc.insert_pdf(src, start_at=pos)
+                pos += len(src)
+                total += len(src)
                 src.close()
             self._invalidate_thumb_cache()
             self._refresh_all()
-            self._set_status(f"{len(paths)}ファイルを{pos}ページ目に挿入しました")
+            if insert_at == 0:
+                where = "先頭"
+            elif insert_at >= len(self.doc) - total:
+                where = "末尾"
+            else:
+                where = f"{insert_at}ページ目の後ろ"
+            self._set_status(
+                f"{len(ordered_paths)}ファイル（計{total}ページ）を{where}に挿入しました")
         except Exception as e:
             messagebox.showerror("エラー", str(e))
 
@@ -636,22 +883,6 @@ class PDFEditorApp:
         except Exception as e:
             messagebox.showerror("エラー", str(e))
 
-    def _move_page(self):
-        if not self._check_doc():
-            return
-        src = self.current_page
-        dest = self.move_var.get() - 1
-        dest = max(0, min(dest, len(self.doc)-1))
-        if dest == src:
-            return
-        self._save_undo()
-        self.doc.move_page(src, dest)
-        self.current_page = dest
-        self.selected_pages.clear()
-        self._invalidate_thumb_cache()
-        self._refresh_all()
-        self._set_status(f'p.{src+1} → p.{dest+1} に移動しました')
-
     def _toggle_select(self, i):
         if i in self.selected_pages:
             self.selected_pages.discard(i)
@@ -674,6 +905,18 @@ class PDFEditorApp:
         self.crop_overlay_ids = []
         self.crop_rect_id = None
         if not self.doc or len(self.doc) == 0:
+            # 空状態: 案内文を中央に表示
+            self.preview_canvas.update_idletasks()
+            cw = self.preview_canvas.winfo_width()
+            ch = self.preview_canvas.winfo_height()
+            self.preview_canvas.create_text(
+                cw // 2, ch // 2 - 16,
+                text="📂 ファイルを開いてください",
+                fill=C["TEXT_SUB"], font=self._font(4))
+            self.preview_canvas.create_text(
+                cw // 2, ch // 2 + 16,
+                text="Ctrl+O  または右パネル「ファイルを開く」",
+                fill=C["TEXT_SUB"], font=self._font())
             return
         page = self.doc[self.current_page]
         mat = fitz.Matrix(self.zoom * 1.5, self.zoom * 1.5)
@@ -681,9 +924,17 @@ class PDFEditorApp:
         img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
         photo = ImageTk.PhotoImage(img)
         self.preview_img_ref = photo
-        self.preview_canvas.create_image(10, 10, anchor="nw", image=photo)
+        pad = 10
+        # ページの影（ドロップシャドウ風）で境界を明確化
+        self.preview_canvas.create_rectangle(
+            pad + 3, pad + 3, pad + pix.width + 3, pad + pix.height + 3,
+            fill=C["TEXT_SUB"], outline="")
+        self.preview_canvas.create_rectangle(
+            pad, pad, pad + pix.width, pad + pix.height,
+            fill="", outline=C["TEXT_SUB"], width=1)
+        self.preview_canvas.create_image(pad, pad, anchor="nw", image=photo)
         self.preview_canvas.configure(
-            scrollregion=(0, 0, pix.width+20, pix.height+20))
+            scrollregion=(0, 0, pix.width + pad * 2, pix.height + pad * 2))
 
     # ══════════════════════════════════════════
     #  ナビゲーション & ズーム
@@ -727,9 +978,17 @@ class PDFEditorApp:
     def _refresh_all(self):
         self._build_thumbnails()
         self._show_preview()
+        self._update_doc_buttons_state()
         n = len(self.doc) if self.doc else 0
         self.page_label.configure(
             text=f"{self.current_page+1} / {n}" if n else "- / -")
+        # ナビゲーションボタンの活性/非活性制御
+        if n <= 1:
+            self.prev_btn.state(["disabled"])
+            self.next_btn.state(["disabled"])
+        else:
+            self.prev_btn.state(["!disabled"] if self.current_page > 0 else ["disabled"])
+            self.next_btn.state(["!disabled"] if self.current_page < n - 1 else ["disabled"])
 
     def _refresh_thumbs_selection_only(self):
         """選択・カレント変更のみ — 画像再生成なし (#8)"""
@@ -737,13 +996,20 @@ class PDFEditorApp:
         for i, frame in enumerate(frames):
             is_sel = i in self.selected_pages
             is_cur = i == self.current_page
-            bg = ACCENT if is_sel else (BG_CARD if is_cur else BG_PANEL)
+            bg = C["ACCENT"] if is_sel else (C["BG_CARD"] if is_cur else C["BG_PANEL"])
             frame.configure(bg=bg)
             for child in frame.winfo_children():
                 child.configure(bg=bg)
         n = len(self.doc) if self.doc else 0
         self.page_label.configure(
             text=f"{self.current_page+1} / {n}" if n else "- / -")
+        # ナビゲーションボタンの活性/非活性制御
+        if n <= 1:
+            self.prev_btn.state(["disabled"])
+            self.next_btn.state(["disabled"])
+        else:
+            self.prev_btn.state(["!disabled"] if self.current_page > 0 else ["disabled"])
+            self.next_btn.state(["!disabled"] if self.current_page < n - 1 else ["disabled"])
 
     def _build_thumbnails(self):
         for w in self.thumb_inner.winfo_children():
@@ -760,15 +1026,15 @@ class PDFEditorApp:
 
         is_sel = i in self.selected_pages
         is_cur = i == self.current_page
-        bg = ACCENT if is_sel else (BG_CARD if is_cur else BG_PANEL)
+        bg = C["ACCENT"] if is_sel else (C["BG_CARD"] if is_cur else C["BG_PANEL"])
 
         frame = tk.Frame(self.thumb_inner, bg=bg, cursor="hand2")
         frame.pack(fill="x", padx=6, pady=3)
 
         lbl = tk.Label(frame, image=photo, bg=bg)
         lbl.pack(pady=(4,0))
-        tk.Label(frame, text=f"p.{i+1}", bg=bg, fg=TEXT_MAIN,
-                 font=("Segoe UI", 8)).pack(pady=(0,4))
+        tk.Label(frame, text=f"p.{i+1}", bg=bg, fg=C["TEXT_MAIN"],
+                 font=self._font(-2)).pack(pady=(0,4))
 
         def on_press(event, idx=i):
             self._dnd_src_idx = idx
@@ -795,18 +1061,136 @@ class PDFEditorApp:
                 if event.state & 0x0004:  # Ctrl
                     self._toggle_select(idx)
                 else:
-                    self.selected_pages.clear()
-                    self.current_page = idx
-                    self._refresh_all()
+                    # 遅延実行でダブルクリックと競合しないようにする
+                    self._pending_click = self.root.after(
+                        250, lambda: self._single_click(idx))
             self._dnd_src_idx  = None
             self._dnd_dragging = False
             self._dnd_destroy_ghost()
             self._dnd_clear_indicator()
 
+        def on_double(event, idx=i):
+            # シングルクリックの遅延実行をキャンセル
+            if hasattr(self, '_pending_click') and self._pending_click:
+                self.root.after_cancel(self._pending_click)
+                self._pending_click = None
+            self._show_page_popup(idx)
+
         for w in (frame, lbl):
             w.bind('<ButtonPress-1>',   on_press)
             w.bind('<B1-Motion>',       on_motion)
             w.bind('<ButtonRelease-1>', on_release)
+            w.bind('<Double-Button-1>', on_double)
+
+    # ══ ページ拡大表示ポップアップ ═════════════════════
+    def _single_click(self, idx):
+        """遅延実行されるシングルクリック処理"""
+        self._pending_click = None
+        self.selected_pages.clear()
+        self.current_page = idx
+        self._refresh_all()
+
+    def _show_page_popup(self, idx):
+        """サムネイルダブルクリックでページを拡大表示"""
+        if not self.doc or idx >= len(self.doc):
+            return
+        popup = tk.Toplevel(self.root)
+        popup.configure(bg=C["PREVIEW_BG"])
+        popup.geometry("900x700")
+        popup.transient(self.root)
+
+        # ツールバー
+        toolbar = tk.Frame(popup, bg=C["BG_PANEL"], height=40)
+        toolbar.pack(fill="x")
+        toolbar.pack_propagate(False)
+
+        popup_state = {"idx": idx, "zoom": 1.5}  # ミュータブルで共有
+        n = len(self.doc)
+
+        def update_nav():
+            """ナビゲーションボタンの活性/非活性とラベル更新"""
+            i = popup_state["idx"]
+            page_lbl.configure(text=f"{i+1} / {n}")
+            popup.title(f"ページ {i+1} / {n}")
+            if n <= 1:
+                prev_btn.state(["disabled"])
+                next_btn.state(["disabled"])
+            else:
+                prev_btn.state(["!disabled"] if i > 0 else ["disabled"])
+                next_btn.state(["!disabled"] if i < n - 1 else ["disabled"])
+
+        def render_page():
+            canvas.delete("all")
+            page = self.doc[popup_state["idx"]]
+            mat = fitz.Matrix(popup_state["zoom"], popup_state["zoom"])
+            pix = page.get_pixmap(matrix=mat, alpha=False)
+            img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
+            photo = ImageTk.PhotoImage(img)
+            canvas._photo = photo  # 参照を保持
+            pad = 10
+            canvas.create_rectangle(
+                pad + 3, pad + 3, pad + pix.width + 3, pad + pix.height + 3,
+                fill=C["TEXT_SUB"], outline="")
+            canvas.create_rectangle(
+                pad, pad, pad + pix.width, pad + pix.height,
+                fill="", outline=C["TEXT_SUB"], width=1)
+            canvas.create_image(pad, pad, anchor="nw", image=photo)
+            canvas.configure(scrollregion=(0, 0, pix.width + pad * 2, pix.height + pad * 2))
+            zoom_lbl.configure(text=f"{int(popup_state['zoom'] / 1.5 * 100)}%")
+            update_nav()
+
+        def go_prev():
+            if popup_state["idx"] > 0:
+                popup_state["idx"] -= 1
+                render_page()
+
+        def go_next():
+            if popup_state["idx"] < n - 1:
+                popup_state["idx"] += 1
+                render_page()
+
+        def zoom_in():
+            popup_state["zoom"] = min(5.0, popup_state["zoom"] + 0.3)
+            render_page()
+
+        def zoom_out():
+            popup_state["zoom"] = max(0.3, popup_state["zoom"] - 0.3)
+            render_page()
+
+        # ナビゲーション（左側）
+        prev_btn = ttk.Button(toolbar, text="◀", command=go_prev)
+        prev_btn.pack(side="left", padx=(10, 2), pady=6)
+        page_lbl = tk.Label(toolbar, text=f"{idx+1} / {n}",
+                            bg=C["BG_PANEL"], fg=C["TEXT_MAIN"],
+                            font=self._font(0, "bold"))
+        page_lbl.pack(side="left", padx=4)
+        next_btn = ttk.Button(toolbar, text="▶", command=go_next)
+        next_btn.pack(side="left", padx=2)
+
+        # ズーム・閉じる（右側）
+        zoom_lbl = tk.Label(toolbar, text="100%", bg=C["BG_PANEL"], fg=C["TEXT_SUB"],
+                            font=self._font(-1))
+        zoom_lbl.pack(side="right", padx=6)
+        ttk.Button(toolbar, text="🔍 縮小", command=zoom_out).pack(side="right", padx=2, pady=6)
+        ttk.Button(toolbar, text="🔍 拡大", command=zoom_in).pack(side="right", padx=2, pady=6)
+        ttk.Button(toolbar, text="✕ 閉じる", command=popup.destroy,
+                   style="Danger.TButton").pack(side="right", padx=6, pady=6)
+
+        # キャンバス
+        frame = tk.Frame(popup, bg=C["PREVIEW_BG"])
+        frame.pack(fill="both", expand=True)
+        canvas = tk.Canvas(frame, bg=C["PREVIEW_BG"], highlightthickness=0)
+        vbar = ttk.Scrollbar(frame, orient="vertical", command=canvas.yview)
+        hbar = ttk.Scrollbar(frame, orient="horizontal", command=canvas.xview)
+        canvas.configure(yscrollcommand=vbar.set, xscrollcommand=hbar.set)
+        hbar.pack(side="bottom", fill="x")
+        vbar.pack(side="right", fill="y")
+        canvas.pack(fill="both", expand=True)
+        canvas.bind("<MouseWheel>",
+                    lambda e: canvas.yview_scroll(int(-1 * (e.delta / 120)), "units"))
+
+        render_page()
+        popup.focus_set()
 
     # ══ D&D ヘルパー ══════════════════════════════
     def _dnd_start_ghost(self, idx):
@@ -817,11 +1201,11 @@ class PDFEditorApp:
         ghost.overrideredirect(True)
         ghost.attributes('-alpha', 0.6)
         ghost.attributes('-topmost', True)
-        lbl = tk.Label(ghost, image=photo, bg=BG_CARD,
+        lbl = tk.Label(ghost, image=photo, bg=C["BG_CARD"],
                        relief='flat', bd=2)
         lbl.pack()
-        num = tk.Label(ghost, text=f'p.{idx+1}', bg=BG_CARD,
-                       fg=ACCENT, font=('Segoe UI', 8, 'bold'))
+        num = tk.Label(ghost, text=f'p.{idx+1}', bg=C["BG_CARD"],
+                       fg=C["ACCENT"], font=self._font(-2, "bold"))
         num.pack()
         self._dnd_ghost = ghost
 
@@ -853,7 +1237,7 @@ class PDFEditorApp:
         cw = self.thumb_canvas.winfo_width()
         self._dnd_indicator = self.thumb_canvas.create_line(
             4, y, cw - 4, y,
-            fill=ACCENT, width=3, dash=(6, 3))
+            fill=C["ACCENT"], width=3, dash=(6, 3))
 
     def _dnd_clear_indicator(self):
         if self._dnd_indicator:
@@ -887,20 +1271,38 @@ class PDFEditorApp:
         if dest is None or src is None:
             return
         n = len(self.doc)
-        dest = min(dest, n - 1)
-        if dest == src:
-            return
+        dest = max(0, min(dest, n))
+        # move_page の仕様: dest が src より後ろの場合は dest-1 が実際の位置
+        # dest == n の場合は末尾への移動
+        if dest == src or dest == src + 1:
+            return  # 同じ位置または直後（実質移動なし）
         self._save_undo()
-        self.doc.move_page(src, dest)
-        self.current_page = dest
+        # fitz.move_page(src, dest) は dest の前に挿入
+        # 末尾に移動したい場合は dest = -1 または dest = n
+        if dest >= n:
+            self.doc.move_page(src, -1)  # -1 = 末尾
+            actual_dest = n - 1
+        else:
+            actual_dest = dest if dest < src else dest - 1
+            self.doc.move_page(src, dest)
+        self.current_page = actual_dest
         self.selected_pages.clear()
         self._invalidate_thumb_cache()
         self._refresh_all()
-        self._set_status(f'p.{src+1} → p.{dest+1} に移動しました')
+        self._set_status(f'p.{src+1} → p.{actual_dest+1} に移動しました')
 
     # ══════════════════════════════════════════
     #  ユーティリティ
     # ══════════════════════════════════════════
+    def _update_doc_buttons_state(self):
+        """ファイル開閉状態に応じてボタンの活性/非活性を切り替え"""
+        state = ["!disabled"] if self.doc else ["disabled"]
+        for b in self._doc_buttons:
+            try:
+                b.state(state)
+            except Exception:
+                pass
+
     def _check_doc(self):
         if not self.doc:
             messagebox.showinfo("情報", "先にPDFファイルを開いてください")
@@ -922,6 +1324,140 @@ class PDFEditorApp:
     def _set_status(self, msg):
         self.status_var.set(msg)
 
+    def _font(self, delta=0, weight=None):
+        """テーマ対応フォントタプルを返す"""
+        size = max(7, self.font_size + delta)
+        if weight:
+            return ("Segoe UI", size, weight)
+        return ("Segoe UI", size)
+
+    # ══════════════════════════════════════════
+    #  設定ダイアログ
+    # ══════════════════════════════════════════
+    def _open_settings(self):
+        """設定ダイアログを開く"""
+        SettingsDialog(self.root, self.settings, self._apply_settings)
+
+    def _apply_settings(self, new_settings):
+        """設定変更を適用してUIを再構築"""
+        self.settings = new_settings
+        self.font_size = new_settings.get("font_size", 10)
+        global _current_font_size
+        _current_font_size = self.font_size
+        _apply_theme(new_settings.get("theme", "dark"))
+        _save_settings(new_settings)
+        self._rebuild_ui()
+        self._set_status("設定を変更しました")
+
+    def _rebuild_ui(self):
+        """テーマ・フォント変更時にUI全体を再構築"""
+        # メインフレーム以下を破棄して再構築
+        self.root.configure(bg=C["BG_DARK"])
+        for w in self.root.winfo_children():
+            w.destroy()
+        self.thumb_images.clear()
+        self.thumb_cache.clear()
+        self.crop_rect = None
+        self.crop_drag_start = None
+        self.crop_mode = False
+        self.crop_overlay_ids = []
+        self.crop_rect_id = None
+        self._build_styles()
+        self._build_ui()
+        if self.doc:
+            self._refresh_all()
+        else:
+            self._show_preview()
+            self._update_doc_buttons_state()
+
+
+# ══════════════════════════════════════════
+#  設定ダイアログ
+# ══════════════════════════════════════════
+class SettingsDialog(tk.Toplevel):
+    def __init__(self, parent, current_settings, callback):
+        super().__init__(parent)
+        self.title("設定")
+        self.configure(bg=C["BG_DARK"])
+        self.resizable(False, False)
+        self.grab_set()
+
+        self.callback = callback
+        self.current_settings = dict(current_settings)
+
+        self._build()
+        self.update_idletasks()
+        px = parent.winfo_rootx() + parent.winfo_width()  // 2
+        py = parent.winfo_rooty() + parent.winfo_height() // 2
+        fs = current_settings.get("font_size", 12)
+        w = max(380, int(fs * 32))
+        h = max(280, int(fs * 24))
+        self.geometry(f"{w}x{h}+{px - w//2}+{py - h//2}")
+
+    def _build(self):
+        tk.Label(self, text="⚙ 設定",
+                 bg=C["BG_DARK"], fg=C["ACCENT"],
+                 font=("Segoe UI", 13, "bold")).pack(pady=(14, 10))
+
+        # テーマ選択
+        tf = tk.Frame(self, bg=C["BG_DARK"])
+        tf.pack(fill="x", padx=24, pady=6)
+        tk.Label(tf, text="テーマ:", bg=C["BG_DARK"], fg=C["TEXT_MAIN"],
+                 font=("Segoe UI", 10)).pack(side="left")
+        self.theme_var = tk.StringVar(value=self.current_settings.get("theme", "dark"))
+        theme_options = [("ダーク", "dark"), ("ライト", "light"), ("システム設定", "system")]
+        for text, value in theme_options:
+            tk.Radiobutton(tf, text=text, variable=self.theme_var, value=value,
+                           bg=C["BG_DARK"], fg=C["TEXT_MAIN"],
+                           selectcolor=C["BG_CARD"], activebackground=C["BG_DARK"],
+                           activeforeground=C["TEXT_MAIN"],
+                           font=("Segoe UI", 9)).pack(side="left", padx=6)
+
+        # フォントサイズ
+        ff = tk.Frame(self, bg=C["BG_DARK"])
+        ff.pack(fill="x", padx=24, pady=6)
+        tk.Label(ff, text="フォントサイズ:", bg=C["BG_DARK"], fg=C["TEXT_MAIN"],
+                 font=("Segoe UI", 10)).pack(side="left")
+        self.font_var = tk.IntVar(value=self.current_settings.get("font_size", 10))
+        tk.Spinbox(ff, from_=8, to=16, textvariable=self.font_var, width=4,
+                   font=("Segoe UI", 10),
+                   bg=C["BG_CARD"], fg=C["TEXT_MAIN"],
+                   buttonbackground=C["BG_PANEL"],
+                   insertbackground=C["TEXT_MAIN"]).pack(side="left", padx=8)
+        tk.Label(ff, text="pt  (8〜16)", bg=C["BG_DARK"], fg=C["TEXT_SUB"],
+                 font=("Segoe UI", 9)).pack(side="left")
+
+        # プレビュー
+        self.preview_label = tk.Label(self, text="サンプルテキスト  Sample Text  123",
+                                       bg=C["BG_CARD"], fg=C["TEXT_MAIN"],
+                                       font=("Segoe UI", self.font_var.get()),
+                                       padx=12, pady=8)
+        self.preview_label.pack(padx=24, pady=8, fill="x")
+        self.font_var.trace_add("write", self._update_preview)
+
+        # ボタン
+        btn_row = tk.Frame(self, bg=C["BG_DARK"])
+        btn_row.pack(pady=(8, 14))
+        ttk.Button(btn_row, text="✔ 適用", style="Accent.TButton",
+                   command=self._apply).pack(side="left", padx=8)
+        ttk.Button(btn_row, text="キャンセル",
+                   command=self.destroy).pack(side="left", padx=8)
+
+    def _update_preview(self, *_):
+        try:
+            size = self.font_var.get()
+            size = max(8, min(16, size))
+            self.preview_label.configure(font=("Segoe UI", size))
+        except Exception:
+            pass
+
+    def _apply(self):
+        new_settings = dict(self.current_settings)
+        new_settings["theme"] = self.theme_var.get()
+        new_settings["font_size"] = max(8, min(16, self.font_var.get()))
+        self.destroy()
+        self.callback(new_settings)
+
 
 # ══════════════════════════════════════════
 #  結合順ダイアログ (#3 ページ数キャッシュ)
@@ -930,12 +1466,13 @@ class MergeOrderDialog(tk.Toplevel):
     def __init__(self, parent, paths, callback):
         super().__init__(parent)
         self.title("結合順の確認・変更")
-        self.configure(bg=BG_DARK)
-        self.resizable(False, False)
+        self.configure(bg=C["BG_DARK"])
+        self.resizable(True, True)
         self.grab_set()
 
         self.paths = paths
         self.callback = callback
+        self._font_size = _current_font_size
 
         # ページ数を初回のみ取得してキャッシュ (#3)
         self._page_counts = {}
@@ -951,32 +1488,45 @@ class MergeOrderDialog(tk.Toplevel):
         self.update_idletasks()
         px = parent.winfo_rootx() + parent.winfo_width()  // 2
         py = parent.winfo_rooty() + parent.winfo_height() // 2
-        w, h = 480, 420
+        fs = self._font_size
+        w = max(480, int(fs * 40))
+        # ファイル数に応じて高さを調整（1ファイルあたり約fs*2.5px分加算）
+        base_h = max(420, int(fs * 32))
+        extra_h = max(0, len(self.paths) - 4) * int(fs * 2.5)
+        h = min(base_h + extra_h, parent.winfo_height() - 40)  # 親を超えない
         self.geometry(f"{w}x{h}+{px - w//2}+{py - h//2}")
+        self.minsize(400, 350)
+
+    def _font(self, delta=0, weight=None):
+        size = max(7, self._font_size + delta)
+        if weight:
+            return ("Segoe UI", size, weight)
+        return ("Segoe UI", size)
 
     def _build(self):
         tk.Label(self, text="結合順の確認・並び替え",
-                 bg=BG_DARK, fg=ACCENT,
-                 font=("Segoe UI", 12, "bold")).pack(pady=(14, 4))
+                 bg=C["BG_DARK"], fg=C["ACCENT"],
+                 font=self._font(2, "bold")).pack(pady=(14, 4))
         tk.Label(self,
                  text="ファイルを選択して ▲▼ で順番を変更できます\n"
                       "確定すると現在のPDFの末尾に順番通り結合されます",
-                 bg=BG_DARK, fg=TEXT_SUB,
-                 font=("Segoe UI", 9), justify="center").pack(pady=(0, 8))
+                 bg=C["BG_DARK"], fg=C["TEXT_SUB"],
+                 font=self._font(-1), justify="center").pack(pady=(0, 8))
 
-        list_frame = tk.Frame(self, bg=BG_PANEL, bd=0)
+        list_frame = tk.Frame(self, bg=C["BG_PANEL"], bd=0)
         list_frame.pack(fill="both", expand=True, padx=16, pady=4)
 
         sb = ttk.Scrollbar(list_frame, orient="vertical")
+        list_height = max(6, min(20, len(self.paths) + 2))
         self.listbox = tk.Listbox(
             list_frame,
             yscrollcommand=sb.set,
-            bg=BG_CARD, fg=TEXT_MAIN,
-            selectbackground=ACCENT, selectforeground="#fff",
-            font=("Segoe UI", 9),
+            bg=C["BG_CARD"], fg=C["TEXT_MAIN"],
+            selectbackground=C["ACCENT"], selectforeground="#fff",
+            font=self._font(-1),
             activestyle="none",
             bd=0, highlightthickness=0,
-            height=12)
+            height=list_height)
         sb.configure(command=self.listbox.yview)
         sb.pack(side="right", fill="y")
         self.listbox.pack(fill="both", expand=True)
@@ -985,7 +1535,7 @@ class MergeOrderDialog(tk.Toplevel):
             pc = self._page_counts.get(p, 0)
             self.listbox.insert(tk.END, f"  {os.path.basename(p)}  ({pc}p)")
 
-        btn_row = tk.Frame(self, bg=BG_DARK)
+        btn_row = tk.Frame(self, bg=C["BG_DARK"])
         btn_row.pack(fill="x", padx=16, pady=6)
         ttk.Button(btn_row, text="▲ 上へ",
                    command=self._move_up).pack(side="left", padx=4)
@@ -997,11 +1547,11 @@ class MergeOrderDialog(tk.Toplevel):
 
         self.info_var = tk.StringVar()
         tk.Label(self, textvariable=self.info_var,
-                 bg=BG_DARK, fg=SUCCESS,
-                 font=("Segoe UI", 9)).pack(pady=2)
+                 bg=C["BG_DARK"], fg=C["SUCCESS"],
+                 font=self._font(-1)).pack(pady=2)
         self._update_info()
 
-        ok_row = tk.Frame(self, bg=BG_DARK)
+        ok_row = tk.Frame(self, bg=C["BG_DARK"])
         ok_row.pack(pady=(4, 14))
         ttk.Button(ok_row, text="✔ この順番で結合",
                    style="Accent.TButton",
