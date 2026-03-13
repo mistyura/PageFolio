@@ -10,6 +10,9 @@ from PIL import Image, ImageTk
 import io
 import os
 import json
+import importlib
+import importlib.util
+import traceback
 
 
 # ===================== カラーテーマ =====================
@@ -116,6 +119,185 @@ def _make_font(delta=0, weight=None, base_size=10):
 _current_font_size = 12
 
 
+# ===================== プラグインシステム =====================
+
+PLUGINS_DIR = "plugins"
+
+def _get_plugins_dir():
+    """プラグインディレクトリのパスを返す（スクリプトと同じディレクトリ内）"""
+    return os.path.join(os.path.dirname(os.path.abspath(__file__)), PLUGINS_DIR)
+
+
+class PDFEditorPlugin:
+    """プラグイン基底クラス。プラグインはこのクラスを継承して作成する。"""
+    name = "Unnamed Plugin"
+    version = "0.0.0"
+    description = ""
+    author = ""
+
+    def on_load(self, app):
+        """プラグインがロードされた時に呼ばれる"""
+        pass
+
+    def on_unload(self, app):
+        """プラグインがアンロードされた時に呼ばれる"""
+        pass
+
+    def on_file_open(self, app, path):
+        """ファイルが開かれた後に呼ばれる"""
+        pass
+
+    def on_file_save(self, app, path):
+        """ファイルが保存された後に呼ばれる"""
+        pass
+
+    def on_page_rotate(self, app, pages, degrees):
+        """ページが回転された後に呼ばれる"""
+        pass
+
+    def on_page_delete(self, app, pages):
+        """ページが削除された後に呼ばれる"""
+        pass
+
+    def on_page_crop(self, app, page_index):
+        """ページがトリミングされた後に呼ばれる"""
+        pass
+
+    def on_page_change(self, app, page_index):
+        """表示ページが変更された時に呼ばれる"""
+        pass
+
+    def on_insert(self, app, paths, insert_at):
+        """ページが挿入された後に呼ばれる"""
+        pass
+
+    def on_merge(self, app, paths):
+        """PDFが結合された後に呼ばれる"""
+        pass
+
+    def build_ui(self, app, parent):
+        """プラグイン独自のUIを構築する。parentはtk.Frameを受け取る。"""
+        pass
+
+
+class PluginManager:
+    """プラグインの検出・読み込み・管理を行うマネージャー"""
+
+    def __init__(self):
+        self._plugins = {}        # {plugin_id: plugin_instance}
+        self._plugin_modules = {} # {plugin_id: module}
+        self._disabled = set()    # 無効化されたプラグインIDのセット
+
+    @property
+    def plugins(self):
+        """有効なプラグイン一覧を返す"""
+        return {k: v for k, v in self._plugins.items() if k not in self._disabled}
+
+    @property
+    def all_plugins(self):
+        """全プラグイン一覧を返す（無効含む）"""
+        return dict(self._plugins)
+
+    def is_enabled(self, plugin_id):
+        return plugin_id in self._plugins and plugin_id not in self._disabled
+
+    def discover_plugins(self):
+        """プラグインディレクトリからプラグインファイルを検出する"""
+        plugins_dir = _get_plugins_dir()
+        if not os.path.isdir(plugins_dir):
+            return []
+        found = []
+        for name in sorted(os.listdir(plugins_dir)):
+            if name.startswith("_") or not name.endswith(".py"):
+                continue
+            plugin_id = name[:-3]  # .py を除去
+            found.append((plugin_id, os.path.join(plugins_dir, name)))
+        return found
+
+    def load_plugin(self, plugin_id, filepath, app=None):
+        """プラグインファイルを読み込み、登録する"""
+        if plugin_id in self._plugins:
+            return self._plugins[plugin_id]
+        try:
+            spec = importlib.util.spec_from_file_location(
+                f"pdf_editor_plugin_{plugin_id}", filepath)
+            module = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(module)
+            self._plugin_modules[plugin_id] = module
+
+            # モジュール内で PDFEditorPlugin を継承したクラスを探す
+            plugin_class = None
+            for attr_name in dir(module):
+                attr = getattr(module, attr_name)
+                if (isinstance(attr, type)
+                        and issubclass(attr, PDFEditorPlugin)
+                        and attr is not PDFEditorPlugin):
+                    plugin_class = attr
+                    break
+
+            if plugin_class is None:
+                return None
+
+            instance = plugin_class()
+            self._plugins[plugin_id] = instance
+            if app and plugin_id not in self._disabled:
+                instance.on_load(app)
+            return instance
+        except Exception:
+            traceback.print_exc()
+            return None
+
+    def unload_plugin(self, plugin_id, app=None):
+        """プラグインをアンロードする"""
+        if plugin_id in self._plugins:
+            if app:
+                try:
+                    self._plugins[plugin_id].on_unload(app)
+                except Exception:
+                    traceback.print_exc()
+            del self._plugins[plugin_id]
+            self._plugin_modules.pop(plugin_id, None)
+
+    def enable_plugin(self, plugin_id, app=None):
+        """プラグインを有効化する"""
+        self._disabled.discard(plugin_id)
+        if plugin_id in self._plugins and app:
+            try:
+                self._plugins[plugin_id].on_load(app)
+            except Exception:
+                traceback.print_exc()
+
+    def disable_plugin(self, plugin_id, app=None):
+        """プラグインを無効化する"""
+        if plugin_id in self._plugins and app:
+            try:
+                self._plugins[plugin_id].on_unload(app)
+            except Exception:
+                traceback.print_exc()
+        self._disabled.add(plugin_id)
+
+    def load_all(self, app=None, disabled_ids=None):
+        """全プラグインを検出・読み込みする"""
+        if disabled_ids:
+            self._disabled = set(disabled_ids)
+        for plugin_id, filepath in self.discover_plugins():
+            self.load_plugin(plugin_id, filepath, app)
+
+    def fire_event(self, event_name, *args, **kwargs):
+        """有効な全プラグインにイベントを通知する"""
+        for plugin_id, plugin in self.plugins.items():
+            method = getattr(plugin, event_name, None)
+            if method:
+                try:
+                    method(*args, **kwargs)
+                except Exception:
+                    traceback.print_exc()
+
+    def get_disabled_ids(self):
+        """無効化されたプラグインIDリストを返す"""
+        return list(self._disabled)
+
+
 class PDFEditorApp:
     MAX_UNDO = 20
 
@@ -150,6 +332,11 @@ class PDFEditorApp:
         self._undo_stack = []
         self._redo_stack = []
         self._pending_click = None
+
+        # プラグインマネージャー
+        self.plugin_manager = PluginManager()
+        disabled_plugins = self.settings.get("disabled_plugins", [])
+        self.plugin_manager.load_all(app=self, disabled_ids=disabled_plugins)
 
         self._build_styles()
         self._build_ui()
@@ -472,6 +659,14 @@ class PDFEditorApp:
             needs_doc=True)
         btn(f4, "PDFを末尾に結合", self._merge_pdf, needs_doc=True)
 
+        # プラグインセクション
+        f_plug = section("🔌 プラグイン")
+        btn(f_plug, "🔌 プラグイン管理…", self._open_plugin_dialog)
+        # 有効プラグインのUI構築
+        self._plugin_ui_frame = tk.Frame(parent, bg=C["BG_PANEL"])
+        self._plugin_ui_frame.pack(fill="x", padx=0, pady=0)
+        self._build_plugin_ui()
+
         # 初期状態: すべてのdoc依存ボタンを disabled にする
         self._update_doc_buttons_state()
 
@@ -585,6 +780,7 @@ class PDFEditorApp:
             self._invalidate_thumb_cache()
             self._refresh_all()
             self._set_status(f"開きました: {os.path.basename(path)}  ({len(self.doc)}ページ)")
+            self.plugin_manager.fire_event("on_file_open", self, path)
         except Exception as e:
             messagebox.showerror("エラー", str(e))
 
@@ -611,6 +807,7 @@ class PDFEditorApp:
                 self.doc.save(tmp)
                 os.replace(tmp, self.filepath)
             self._set_status(f"保存しました: {os.path.basename(self.filepath)}")
+            self.plugin_manager.fire_event("on_file_save", self, self.filepath)
         except Exception as e:
             messagebox.showerror("保存エラー", f"保存に失敗しました:\n{e}")
 
@@ -626,6 +823,7 @@ class PDFEditorApp:
             self.doc.save(path)
             self.filepath = path
             self._set_status(f"保存しました: {os.path.basename(path)}")
+            self.plugin_manager.fire_event("on_file_save", self, path)
         except Exception as e:
             messagebox.showerror("エラー", str(e))
 
@@ -643,6 +841,7 @@ class PDFEditorApp:
         self._invalidate_thumb_cache(targets)
         self._refresh_all()
         self._set_status(f"{len(targets)}ページを{deg}°回転しました")
+        self.plugin_manager.fire_event("on_page_rotate", self, targets, deg)
 
     def _delete_selected(self):
         if not self._check_doc():
@@ -667,6 +866,7 @@ class PDFEditorApp:
         self._invalidate_thumb_cache()
         self._refresh_all()
         self._set_status(f"{len(targets)}ページを削除しました")
+        self.plugin_manager.fire_event("on_page_delete", self, targets)
 
     # ── トリミング (#16 視覚強調)
     def _toggle_crop_mode(self):
@@ -798,6 +998,7 @@ class PDFEditorApp:
         self._invalidate_thumb_cache([self.current_page])
         self._refresh_all()
         self._set_status(f"ページ{self.current_page+1}をトリミングしました")
+        self.plugin_manager.fire_event("on_page_crop", self, self.current_page)
 
     def _insert_from_file(self, mode="pos"):
         """別PDFから挿入。mode: 'head'=先頭, 'tail'=末尾, 'pos'=指定位置"""
@@ -854,6 +1055,7 @@ class PDFEditorApp:
                 where = f"{insert_at}ページ目の後ろ"
             self._set_status(
                 f"{len(ordered_paths)}ファイル（計{total}ページ）を{where}に挿入しました")
+            self.plugin_manager.fire_event("on_insert", self, ordered_paths, insert_at)
         except Exception as e:
             messagebox.showerror("エラー", str(e))
 
@@ -880,6 +1082,7 @@ class PDFEditorApp:
             self._refresh_all()
             self._set_status(
                 f"{len(ordered_paths)}ファイル（計{total}ページ）を末尾に結合しました")
+            self.plugin_manager.fire_event("on_merge", self, ordered_paths)
         except Exception as e:
             messagebox.showerror("エラー", str(e))
 
@@ -943,11 +1146,13 @@ class PDFEditorApp:
         if self.doc and self.current_page > 0:
             self.current_page -= 1
             self._refresh_all()
+            self.plugin_manager.fire_event("on_page_change", self, self.current_page)
 
     def _next_page(self):
         if self.doc and self.current_page < len(self.doc)-1:
             self.current_page += 1
             self._refresh_all()
+            self.plugin_manager.fire_event("on_page_change", self, self.current_page)
 
     def _zoom(self, delta):
         self.zoom = max(0.3, min(3.0, self.zoom + delta))
@@ -1332,6 +1537,36 @@ class PDFEditorApp:
         return ("Segoe UI", size)
 
     # ══════════════════════════════════════════
+    #  プラグイン管理
+    # ══════════════════════════════════════════
+    def _build_plugin_ui(self):
+        """有効プラグインのカスタムUIを構築する"""
+        if not hasattr(self, '_plugin_ui_frame'):
+            return
+        for w in self._plugin_ui_frame.winfo_children():
+            w.destroy()
+        for plugin_id, plugin in self.plugin_manager.plugins.items():
+            try:
+                pf = tk.Frame(self._plugin_ui_frame, bg=C["BG_CARD"], bd=0)
+                pf.pack(fill="x", padx=10, pady=3)
+                tk.Label(pf, text=f"🔌 {plugin.name}",
+                         bg=C["BG_CARD"], fg=C["WARNING"],
+                         font=self._font(-1, "bold")).pack(anchor="w", padx=8, pady=(4, 2))
+                plugin.build_ui(self, pf)
+            except Exception:
+                traceback.print_exc()
+
+    def _open_plugin_dialog(self):
+        """プラグイン管理ダイアログを開く"""
+        PluginDialog(self.root, self)
+
+    def _reload_plugins(self):
+        """プラグインを再読み込みして設定を保存する"""
+        self.settings["disabled_plugins"] = self.plugin_manager.get_disabled_ids()
+        _save_settings(self.settings)
+        self._build_plugin_ui()
+
+    # ══════════════════════════════════════════
     #  設定ダイアログ
     # ══════════════════════════════════════════
     def _open_settings(self):
@@ -1457,6 +1692,163 @@ class SettingsDialog(tk.Toplevel):
         new_settings["font_size"] = max(8, min(16, self.font_var.get()))
         self.destroy()
         self.callback(new_settings)
+
+
+# ══════════════════════════════════════════
+#  プラグイン管理ダイアログ
+# ══════════════════════════════════════════
+class PluginDialog(tk.Toplevel):
+    def __init__(self, parent, app):
+        super().__init__(parent)
+        self.title("プラグイン管理")
+        self.configure(bg=C["BG_DARK"])
+        self.resizable(True, True)
+        self.grab_set()
+
+        self.app = app
+        self.pm = app.plugin_manager
+        self._font_size = app.font_size
+
+        self._build()
+        self.update_idletasks()
+        px = parent.winfo_rootx() + parent.winfo_width() // 2
+        py = parent.winfo_rooty() + parent.winfo_height() // 2
+        fs = self._font_size
+        w = max(500, int(fs * 42))
+        h = max(400, int(fs * 30))
+        self.geometry(f"{w}x{h}+{px - w // 2}+{py - h // 2}")
+        self.minsize(420, 340)
+
+    def _font(self, delta=0, weight=None):
+        size = max(7, self._font_size + delta)
+        if weight:
+            return ("Segoe UI", size, weight)
+        return ("Segoe UI", size)
+
+    def _build(self):
+        tk.Label(self, text="🔌 プラグイン管理",
+                 bg=C["BG_DARK"], fg=C["ACCENT"],
+                 font=self._font(2, "bold")).pack(pady=(14, 4))
+
+        plugins_dir = _get_plugins_dir()
+        tk.Label(self,
+                 text=f"プラグインフォルダ: {plugins_dir}",
+                 bg=C["BG_DARK"], fg=C["TEXT_SUB"],
+                 font=self._font(-2), wraplength=450).pack(pady=(0, 8))
+
+        # プラグインリスト
+        list_frame = tk.Frame(self, bg=C["BG_PANEL"], bd=0)
+        list_frame.pack(fill="both", expand=True, padx=16, pady=4)
+
+        canvas = tk.Canvas(list_frame, bg=C["BG_PANEL"], highlightthickness=0)
+        sb = ttk.Scrollbar(list_frame, orient="vertical", command=canvas.yview)
+        canvas.configure(yscrollcommand=sb.set)
+        sb.pack(side="right", fill="y")
+        canvas.pack(fill="both", expand=True)
+
+        self._list_inner = tk.Frame(canvas, bg=C["BG_PANEL"])
+        canvas.create_window((0, 0), window=self._list_inner, anchor="nw",
+                             tags="inner")
+        self._list_inner.bind("<Configure>",
+                              lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
+        canvas.bind("<Configure>",
+                    lambda e: canvas.itemconfigure("inner", width=e.width))
+        self._list_canvas = canvas
+
+        self._refresh_list()
+
+        # ボタン行
+        btn_row = tk.Frame(self, bg=C["BG_DARK"])
+        btn_row.pack(fill="x", padx=16, pady=(8, 4))
+        ttk.Button(btn_row, text="🔄 再検出",
+                   command=self._rescan).pack(side="left", padx=4)
+        ttk.Button(btn_row, text="📁 フォルダを開く",
+                   command=self._open_folder).pack(side="left", padx=4)
+
+        ok_row = tk.Frame(self, bg=C["BG_DARK"])
+        ok_row.pack(pady=(4, 14))
+        ttk.Button(ok_row, text="✔ 閉じる", style="Accent.TButton",
+                   command=self._close).pack(side="left", padx=8)
+
+    def _refresh_list(self):
+        for w in self._list_inner.winfo_children():
+            w.destroy()
+
+        all_plugins = self.pm.all_plugins
+        if not all_plugins:
+            tk.Label(self._list_inner,
+                     text="プラグインが見つかりません\n\n"
+                          f"「{PLUGINS_DIR}」フォルダに .py ファイルを\n"
+                          "配置してください",
+                     bg=C["BG_PANEL"], fg=C["TEXT_SUB"],
+                     font=self._font(), justify="center").pack(pady=30)
+            return
+
+        self._check_vars = {}
+        for plugin_id, plugin in all_plugins.items():
+            row = tk.Frame(self._list_inner, bg=C["BG_CARD"], bd=0)
+            row.pack(fill="x", padx=6, pady=3)
+
+            var = tk.BooleanVar(value=self.pm.is_enabled(plugin_id))
+            self._check_vars[plugin_id] = var
+
+            cb = tk.Checkbutton(row, variable=var,
+                                command=lambda pid=plugin_id: self._toggle(pid),
+                                bg=C["BG_CARD"], activebackground=C["BG_CARD"],
+                                selectcolor=C["BG_PANEL"])
+            cb.pack(side="left", padx=(8, 4), pady=6)
+
+            info = tk.Frame(row, bg=C["BG_CARD"])
+            info.pack(side="left", fill="x", expand=True, pady=4)
+
+            name_text = f"{plugin.name}  v{plugin.version}"
+            tk.Label(info, text=name_text,
+                     bg=C["BG_CARD"], fg=C["TEXT_MAIN"],
+                     font=self._font(0, "bold"), anchor="w").pack(anchor="w")
+
+            if plugin.description:
+                tk.Label(info, text=plugin.description,
+                         bg=C["BG_CARD"], fg=C["TEXT_SUB"],
+                         font=self._font(-2), anchor="w",
+                         wraplength=350).pack(anchor="w")
+
+            if plugin.author:
+                tk.Label(info, text=f"作者: {plugin.author}",
+                         bg=C["BG_CARD"], fg=C["TEXT_SUB"],
+                         font=self._font(-2), anchor="w").pack(anchor="w")
+
+    def _toggle(self, plugin_id):
+        if self._check_vars[plugin_id].get():
+            self.pm.enable_plugin(plugin_id, self.app)
+        else:
+            self.pm.disable_plugin(plugin_id, self.app)
+        self.app._reload_plugins()
+
+    def _rescan(self):
+        """プラグインを再検出・再読み込みする"""
+        # 既存プラグインを一度アンロード
+        for pid in list(self.pm.all_plugins.keys()):
+            self.pm.unload_plugin(pid, self.app)
+        disabled = self.app.settings.get("disabled_plugins", [])
+        self.pm.load_all(app=self.app, disabled_ids=disabled)
+        self._refresh_list()
+        self.app._reload_plugins()
+
+    def _open_folder(self):
+        """プラグインフォルダを作成して開く"""
+        plugins_dir = _get_plugins_dir()
+        os.makedirs(plugins_dir, exist_ok=True)
+        # Windowsのエクスプローラーで開く
+        try:
+            os.startfile(plugins_dir)
+        except AttributeError:
+            # Windows以外の場合
+            import subprocess
+            subprocess.Popen(["xdg-open", plugins_dir])
+
+    def _close(self):
+        self.app._reload_plugins()
+        self.destroy()
 
 
 # ══════════════════════════════════════════
