@@ -14,7 +14,7 @@
 | PDF ライブラリ | pymupdf (fitz) |
 | 画像ライブラリ | Pillow (PIL) |
 | 対象 OS | Windows 11 |
-| 現在バージョン | v1.8.3 |
+| 現在バージョン | v1.9.0 |
 
 ---
 
@@ -26,9 +26,12 @@ PDF_Editor.zip
 ├── PDF_Editor起動.bat         # 起動用バッチ
 ├── README.md                  # エンドユーザー向け使用概要
 ├── CLAUDE.md                  # 本ファイル（AI 向け開発指示書）
-└── 開発履歴.md                # 機能追加・変更の履歴
+├── 開発履歴.md                # 機能追加・変更の履歴
+└── plugins/                   # プラグインディレクトリ
+    └── page_info.py           # サンプルプラグイン（ページ情報表示）
 （実行時に自動生成）
-└── pdf_editor_settings.json   # ユーザー設定（テーマ・フォントサイズ）
+├── pdf_editor_settings.json   # ユーザー設定（テーマ・フォントサイズ）
+└── plugins/                   # ユーザー作成プラグインの配置先
 ```
 
 ---
@@ -53,6 +56,18 @@ PDF_Editor.zip
 | ページ拡大表示 | `_show_page_popup` `_single_click` | サムネイルダブルクリック拡大 |
 | サムネイルキャッシュ | `_invalidate_thumb_cache` `_get_thumb_photo` | キャッシュ管理 |
 | 設定 | `_open_settings` `_apply_settings` `_rebuild_ui` `_font` | テーマ・フォント設定・UI再構築 |
+| プラグイン管理 | `_build_plugin_ui` `_open_plugin_dialog` `_reload_plugins` | プラグインのUI構築・管理 |
+
+### `PDFEditorPlugin`
+プラグイン基底クラス。外部プラグインはこのクラスを継承して作成する。
+フックメソッド: `on_load` `on_unload` `on_file_open` `on_file_save` `on_page_rotate` `on_page_delete` `on_page_crop` `on_page_change` `on_insert` `on_merge` `build_ui`
+
+### `PluginManager`
+プラグインの検出・読み込み・有効/無効管理・イベント配信を行うマネージャークラス。
+`plugins/` ディレクトリ内の `.py` ファイルを自動検出し、`PDFEditorPlugin` サブクラスをロードする。
+
+### `PluginDialog`
+`tk.Toplevel` サブクラス。プラグインの一覧表示・有効/無効切り替え・再検出を行うモーダルダイアログ。
 
 ### `SettingsDialog`
 `tk.Toplevel` サブクラス。テーマ（ダーク/ライト/システム）とフォントサイズ（8〜16pt）を設定するモーダルダイアログ。
@@ -106,8 +121,9 @@ C = dict(THEMES["dark"])  # 実行時に _apply_theme() で更新
   - `self.thumb_cache` — サムネイルキャッシュ辞書
   - `self._doc_buttons` — ファイル依存ボタンのリスト（doc未開時に disabled）
   - `self._pending_click` — ダブルクリック競合防止用の遅延クリックID
-  - `self.settings` — 設定辞書（テーマ、フォントサイズ）
+  - `self.settings` — 設定辞書（テーマ、フォントサイズ、無効プラグイン）
   - `self.font_size` — 現在のベースフォントサイズ（8〜16）
+  - `self.plugin_manager` — `PluginManager` インスタンス
 - **再描画**: ページ変更後は必ず `self._refresh_all()` を呼ぶ
 - **ステータス表示**: 操作完了後は `self._set_status(msg)` でヘッダーに表示
 - **ファイル操作前の確認**: `self._check_doc()` で `self.doc` の存在を確認する
