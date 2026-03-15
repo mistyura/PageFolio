@@ -1,32 +1,67 @@
-# PDF Editor 使用概要
+# PageFolio
 
-Python + Tkinter 製の PDF 編集 GUI アプリです。  
-Windows 11 で動作します。
+**PDF ページ整理ツール — Python + Tkinter 製 GUI アプリ**
+
+A PDF page organizer built with Python + Tkinter.  
+Windows 11 で動作します / Runs on Windows 11.
+
+> 📝 このプロジェクトは [Claude Code](https://claude.ai/code)（Anthropic）を活用して開発されています。
+> AI との協調開発のユースケースとして公開しています。
+>
+> This project is developed with [Claude Code](https://claude.ai/code) by Anthropic,
+> and published as a use case of AI-assisted development.
 
 ---
 
-## 必要環境
+## 概要 / Overview
 
-- Python 3.8 以上
-- 必要ライブラリ（初回起動時に自動インストール）
+PageFolio は PDF のページを整理・編集するための GUI ツールです。
+テキスト編集や注釈追加は行いません。**ページ単位の操作に特化しています。**
+
+PageFolio is a GUI tool for organizing and editing PDF pages.
+It does **not** edit text or add annotations — it focuses on **page-level operations**.
+
+---
+
+## 機能 / Features
+
+| 機能 | 説明 |
+|------|------|
+| 📂 ファイルを開く | 単一・複数 PDF を読み込み（複数選択時は結合） |
+| 💾 保存 | 上書き保存 / 名前を付けて保存 |
+| 🔄 ページ回転 | 90° / 180° / 270°、複数ページ一括対応 |
+| 🗑 ページ削除 | 選択ページをまとめて削除 |
+| ✂ トリミング | プレビュー上のドラッグで余白をカット |
+| 📎 挿入・結合 | 別 PDF からページを挿入 / 末尾に結合 |
+| 🔀 D&D 並び替え | サムネイルをドラッグ＆ドロップでページ順を変更 |
+| ↩ Undo / Redo | 最大20回の取り消し・やり直し（Ctrl+Z / Ctrl+Y） |
+| 🔍 プレビュー | ズーム・スクロール対応、ページ拡大表示 |
+| ⚙ テーマ・フォント | ダーク / ライト / システム連動、フォントサイズ変更 |
+
+---
+
+## 必要環境 / Requirements
+
+- Python 3.8 以上 / Python 3.8+
+- 必要ライブラリ（初回起動時に自動インストール）/ Auto-installed on first launch:
   - `pymupdf`
   - `pillow`
 
 ---
 
-## 起動方法
+## 起動方法 / Getting Started
 
-`PDF_Editor起動.bat` をダブルクリックするだけで起動します。  
+```
+PageFolio起動.bat をダブルクリック
+Double-click PageFolio起動.bat
+```
+
 初回のみライブラリの自動インストールが行われます。
-
-```
-PDF_Editor起動.bat   ← ダブルクリックで起動
-pdf_editor.py        ← 本体スクリプト
-```
+Required libraries are installed automatically on the first launch.
 
 ---
 
-## 画面構成
+## 画面構成 / Layout
 
 ```
 ┌─────────────────────────────────────────────┐
@@ -42,91 +77,31 @@ pdf_editor.py        ← 本体スクリプト
 
 ---
 
-## 機能一覧
-
-### 📂 ファイル操作
-
-| 操作 | 説明 |
-|------|------|
-| ファイルを開く | PDF ファイルを読み込む |
-| 上書き保存 | 現在のファイルに上書き保存 |
-| 名前を付けて保存 | 別名で保存 |
-
----
-
-### 📄 ページ操作
-
-サムネイル一覧でページを選択してから操作します。
-
-| 操作 | 説明 |
-|------|------|
-| 複数選択 | **Ctrl + クリック** でページを複数選択 |
-| 全選択 / 解除 | 一覧上部のボタンで一括操作 |
-| 回転（90° / 180° / 270°） | 選択ページをまとめて回転 |
-| 削除 | 選択ページをまとめて削除（確認ダイアログあり） |
-
----
-
-### ✂ トリミング（現在ページ）
-
-プレビュー上でマウスドラッグして残したい範囲を指定し、範囲外を削除します。
-
-1. 右パネルの **「✂ 範囲選択モード OFF」** ボタンを押す  
-   → ボタンが **ON** に切り替わり、カーソルが十字（＋）になる
-2. プレビュー上でドラッグして **残したい範囲** を選択  
-   （選択範囲外が暗くなり、座標とサイズが表示される）
-3. **「✔ 選択範囲でトリミング」** を押すと反映
-4. やり直す場合は **「✕ 選択範囲をリセット」** を押す
-
-> ズームを拡大してから選択すると精度が上がります。
-
----
-
-### 📎 挿入・結合
-
-#### 別 PDF から挿入（複数ファイル対応）
-
-1. **「別 PDF から挿入」** を押す
-2. 挿入したい PDF を複数選択（Ctrl + クリック）
-3. 挿入位置（ページ番号）を指定
-4. 選択順に指定位置へ挿入される
-
-#### PDF を末尾に結合（複数ファイル・順番指定対応）
-
-1. **「PDF を末尾に結合」** を押す
-2. 結合したい PDF を複数選択
-3. **結合順ダイアログ** が開く
-
-| ダイアログの操作 | 説明 |
-|------------------|------|
-| ▲ 上へ / ▼ 下へ | ファイルの結合順を並び替え |
-| ✕ 削除 | リストから不要なファイルを除外 |
-| 合計ページ数表示 | 結合後の総ページ数をリアルタイム確認 |
-| ✔ この順番で結合 | 確定して末尾に結合 |
-
----
-
-### 🔀 ページ移動
-
-1. 移動したいページをプレビューまたはサムネイルで表示
-2. 右パネルの **移動先（1始まり）** に番号を入力
-3. **「現在ページを移動」** を押す
-
----
-
-### 🔍 プレビュー操作
-
-| 操作 | 説明 |
-|------|------|
-| ◀ 前 / 次 ▶ | ページ移動 |
-| 🔍 拡大 / 縮小 | ズーム（30% 〜 300%） |
-| マウスホイール | スクロール |
-
----
-
-## 注意事項
+## 注意事項 / Notes
 
 - トリミングは **現在表示中のページ** にのみ適用されます
 - 回転・削除は **選択中のページ** が対象です（未選択の場合は現在ページ）
 - 保存前にアプリを閉じると編集内容は失われます
 - 暗号化・パスワード保護された PDF は開けない場合があります
+
+---
+
+## Claude Code による開発について / About AI-assisted Development
+
+本プロジェクトは Claude Code を使った開発のユースケースとして公開しています。
+
+- `CLAUDE.md` — Claude に渡す構造化された開発指示書
+- `開発履歴.md` — 各バージョンの変更内容を記録した開発ログ
+
+v0.1（旧 PDF Editor v1.0）から現在まで、機能追加・バグ修正・UI改善のほぼすべてを Claude Code との対話で実装してきました。
+
+This project is published as a use case of development with Claude Code.
+
+- `CLAUDE.md` — Structured development instructions passed to Claude
+- `開発履歴.md` (Development History) — Change log for each version
+
+---
+
+## ライセンス / License
+
+MIT License — see [LICENSE](LICENSE)

@@ -1,4 +1,4 @@
-# CLAUDE.md — PDF Editor AI 開発指示書
+# CLAUDE.md — PageFolio AI 開発指示書
 
 このファイルは Claude (AI) がこのプロジェクトを編集・拡張する際に参照する指示書です。
 
@@ -8,27 +8,36 @@
 
 | 項目 | 内容 |
 |------|------|
-| アプリ名 | PDF Editor |
+| アプリ名 | PageFolio |
 | 言語 | Python 3.8+ |
 | UI フレームワーク | Tkinter（標準ライブラリ） |
 | PDF ライブラリ | pymupdf (fitz) |
 | 画像ライブラリ | Pillow (PIL) |
 | 対象 OS | Windows 11 |
-| 現在バージョン | v1.8.3 |
+| 現在バージョン | v0.9.0 |
+
+---
+
+## 開発について
+
+本プロジェクトは **Claude Code**（Anthropic）を活用して開発されています。
+`CLAUDE.md` による構造化された AI 開発指示書の運用、`開発履歴.md` による変更管理など、
+AI との協調開発のユースケースとして公開しています。
 
 ---
 
 ## ファイル構成
 
 ```
-PDF_Editor.zip
-├── pdf_editor.py              # アプリ本体（単一ファイル構成）
-├── PDF_Editor起動.bat         # 起動用バッチ
+PageFolio/
+├── pagefolio.py               # アプリ本体（単一ファイル構成）
+├── PageFolio起動.bat          # 起動用バッチ
 ├── README.md                  # エンドユーザー向け使用概要
 ├── CLAUDE.md                  # 本ファイル（AI 向け開発指示書）
-└── 開発履歴.md                # 機能追加・変更の履歴
+├── 開発履歴.md                # 機能追加・変更の履歴
+└── LICENSE                    # MITライセンス
 （実行時に自動生成）
-└── pdf_editor_settings.json   # ユーザー設定（テーマ・フォントサイズ）
+└── pagefolio_settings.json    # ユーザー設定（テーマ・フォントサイズ）
 ```
 
 ---
@@ -80,7 +89,7 @@ THEMES = {
     "light": {
         "BG_DARK": "#f0f0f5",  "BG_PANEL": "#e0e0ea",  "BG_CARD": "#d0d0dd",
         "ACCENT": "#d63050",   "TEXT_MAIN": "#1a1a2e",  "TEXT_SUB": "#555566",
-        "SUCCESS": "#2a9d6a",  "WARNING": "#b8860b",    "PREVIEW_BG": "#ffffff",
+        "SUCCESS": "#2a9d6a",  "WARNING": "#b8860b",    "PREVIEW_BG": "#c8c8d0",
         ...
     },
 }
@@ -91,7 +100,7 @@ C = dict(THEMES["dark"])  # 実行時に _apply_theme() で更新
 
 ## コーディング規約
 
-- **単一ファイル構成を維持する**: `pdf_editor.py` 1 ファイルにすべて収める
+- **単一ファイル構成を維持する**: `pagefolio.py` 1 ファイルにすべて収める
 - **メソッド名**: `_` プレフィックスで内部メソッドを示す
 - **ボタンスタイル**:
   - 通常操作 → `"TButton"`
@@ -114,8 +123,7 @@ C = dict(THEMES["dark"])  # 実行時に _apply_theme() で更新
 - **トリミング安全処理**: CropBox は必ず MediaBox 内にクランプしてから `set_cropbox` を呼ぶ
 - **テーマ色の参照**: グローバル定数ではなく `C["BG_DARK"]` 等のテーマ辞書を使う
 - **フォントサイズ**: ハードコードせず `self._font(delta)` ヘルパーを使う（ベース + delta）
-- **設定保存**: `pdf_editor_settings.json` に JSON で永続化（`_save_settings()`）
-- **ZIP 配布**: ファイル名は CP932 エンコードで格納（Windows 文字化け防止）
+- **設定保存**: `pagefolio_settings.json` に JSON で永続化（`_save_settings()`）
 
 ---
 
@@ -154,30 +162,21 @@ C = dict(THEMES["dark"])  # 実行時に _apply_theme() で更新
 
 ## 今後の追加予定機能（候補）
 
-UIレビュー（2026-03-12）より追加：
-- [x] ファイル未開時のボタングレーアウト（v1.6.0 で対応済）
-- [x] 空状態プレビュー領域に案内文表示（v1.6.0 で対応済）
-- [x] 「範囲未選択」の文字色を通常色に変更（v1.6.0 で対応済）
-- [x] 180°回転ボタンの初期表示位置改善（v1.7.0 で対応済 — Undo/Redo横並び化）
-- [x] 右ペイン初期スクロール位置のズレ修正（v1.7.0 で対応済 — 複数タイミングリセット）
-- [x] 左パネル幅リサイズ対応（v1.7.0 で対応済 — PanedWindow導入）
-
-その他候補：
 - [ ] 複数ページの一括トリミング
 - [ ] 複数ページの D&D 一括移動
 - [ ] ページの回転状態をプレビューに即時反映
 - [ ] PDF のパスワード解除対応
 - [ ] 印刷機能
 - [ ] ページ範囲指定での分割保存
+- [ ] PyInstaller による exe 化・配布対応
 
 ---
 
 ## 変更時のチェックリスト
 
-- [ ] `python3 -c "import ast; ast.parse(open('pdf_editor.py').read())"` で構文確認
+- [ ] `python3 -c "import ast; ast.parse(open('pagefolio.py').read())"` で構文確認
 - [ ] `開発履歴.md` に変更内容を追記
 - [ ] バージョン番号を更新（本ファイル・開発履歴.md）
-- [ ] ZIP を再作成して配布（`README.md` `pdf_editor.py` `PDF_Editor起動.bat` `CLAUDE.md` `開発履歴.md`）
 
 ---
 
