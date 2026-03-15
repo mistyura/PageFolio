@@ -1,0 +1,16 @@
+# ユーザー設定（個人環境に依存するため除外）
+pagefolio_settings.json
+
+# Pythonキャッシュ
+__pycache__/
+*.py[cod]
+*.pyo
+
+# PyInstaller出力
+dist/
+build/
+*.spec
+
+# その他
+.DS_Store
+Thumbs.db
