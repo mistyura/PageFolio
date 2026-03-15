@@ -1,3 +1,7 @@
+# PageFolio - PDF Page Organizer
+# Copyright (c) 2026 mistyura
+# Released under the MIT License
+# https://github.com/mistyura/PageFolio
 """
 PageFolio GUI - Windows 11
 必要ライブラリ: pip install pymupdf pillow
@@ -597,6 +601,7 @@ class PDFEditorApp:
 
         f5 = section("⚙ 設定")
         btn(f5, "⚙ テーマ・フォント設定…", self._open_settings)
+        btn(f5, "ℹ About", lambda: AboutDialog(self.root, self._font))
 
         f = section("📂 ファイル")
         btn(f, "ファイルを開く (Ctrl+O)", self._open_file, "Accent.TButton")
@@ -1604,6 +1609,53 @@ class PDFEditorApp:
         else:
             self._show_preview()
             self._update_doc_buttons_state()
+
+
+# ══════════════════════════════════════════
+#  About ダイアログ
+# ══════════════════════════════════════════
+class AboutDialog(tk.Toplevel):
+    def __init__(self, parent, font_func):
+        super().__init__(parent)
+        self.title("PageFolio について")
+        self.configure(bg=C["BG_DARK"])
+        self.resizable(False, False)
+        self.grab_set()
+
+        self._font = font_func
+        self._build()
+        self.update_idletasks()
+        w, h = 360, 260
+        px = parent.winfo_rootx() + parent.winfo_width()  // 2
+        py = parent.winfo_rooty() + parent.winfo_height() // 2
+        self.geometry(f"{w}x{h}+{px - w//2}+{py - h//2}")
+
+    def _build(self):
+        tk.Label(self, text="PageFolio",
+                 bg=C["BG_DARK"], fg=C["ACCENT"],
+                 font=("Segoe UI", 16, "bold")).pack(pady=(20, 2))
+        tk.Label(self, text="v0.9.0",
+                 bg=C["BG_DARK"], fg=C["TEXT_SUB"],
+                 font=self._font(0)).pack()
+        tk.Label(self, text="PDF Page Organizer",
+                 bg=C["BG_DARK"], fg=C["TEXT_MAIN"],
+                 font=self._font(-1)).pack(pady=(2, 12))
+
+        sep = tk.Frame(self, bg=C["BG_CARD"], height=1)
+        sep.pack(fill="x", padx=30, pady=4)
+
+        tk.Label(self, text="Copyright (c) 2026 mistyura",
+                 bg=C["BG_DARK"], fg=C["TEXT_SUB"],
+                 font=self._font(-2)).pack(pady=(6, 2))
+        tk.Label(self, text="MIT License",
+                 bg=C["BG_DARK"], fg=C["TEXT_SUB"],
+                 font=self._font(-2)).pack()
+        tk.Label(self, text="https://github.com/mistyura/PageFolio",
+                 bg=C["BG_DARK"], fg=C["SUCCESS"],
+                 font=self._font(-2)).pack(pady=(2, 16))
+
+        ttk.Button(self, text="OK", command=self.destroy,
+                   style="Accent.TButton").pack(pady=(0, 16))
 
 
 # ══════════════════════════════════════════
