@@ -1,5 +1,5 @@
 """
-PDF Editor GUI - Windows 11
+PageFolio GUI - Windows 11
 必要ライブラリ: pip install pymupdf pillow
 """
 
@@ -54,7 +54,7 @@ THEMES = {
 # 現在テーマの色をモジュールレベルで参照するための辞書（実行時に設定）
 C = dict(THEMES["dark"])
 
-SETTINGS_FILE = "pdf_editor_settings.json"
+SETTINGS_FILE = "pagefolio_settings.json"
 
 def _get_settings_path():
     """設定ファイルのパスを返す（スクリプトと同じディレクトリ）"""
@@ -303,7 +303,7 @@ class PDFEditorApp:
 
     def __init__(self, root):
         self.root = root
-        self.root.title("PDF Editor")
+        self.root.title("PageFolio")
         self.root.geometry("1200x780")
         self.root.minsize(900, 600)
 
@@ -415,7 +415,7 @@ class PDFEditorApp:
         header = tk.Frame(self.root, bg=C["BG_PANEL"], height=header_h)
         header.pack(fill="x", side="top")
         header.pack_propagate(False)
-        tk.Label(header, text="✦ PDF Editor", bg=C["BG_PANEL"],
+        tk.Label(header, text="✦ PageFolio", bg=C["BG_PANEL"],
                  fg=C["ACCENT"], font=self._font(6, "bold")).pack(side="left", padx=20, pady=12)
         self.status_var = tk.StringVar(value="ファイルを開いてください")
         tk.Label(header, textvariable=self.status_var,
