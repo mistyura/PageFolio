@@ -1,5 +1,9 @@
+# PageFolio - PDF Page Organizer
+# Copyright (c) 2026 mistyura
+# Released under the MIT License
+# https://github.com/mistyura/PageFolio
 """
-PDF Editor GUI - Windows 11
+PageFolio GUI - Windows 11
 必要ライブラリ: pip install pymupdf pillow
 """
 
@@ -54,7 +58,7 @@ THEMES = {
 # 現在テーマの色をモジュールレベルで参照するための辞書（実行時に設定）
 C = dict(THEMES["dark"])
 
-SETTINGS_FILE = "pdf_editor_settings.json"
+SETTINGS_FILE = "pagefolio_settings.json"
 
 def _get_settings_path():
     """設定ファイルのパスを返す（スクリプトと同じディレクトリ）"""
@@ -303,7 +307,7 @@ class PDFEditorApp:
 
     def __init__(self, root):
         self.root = root
-        self.root.title("PDF Editor")
+        self.root.title("PageFolio")
         self.root.geometry("1200x780")
         self.root.minsize(900, 600)
 
@@ -415,7 +419,7 @@ class PDFEditorApp:
         header = tk.Frame(self.root, bg=C["BG_PANEL"], height=header_h)
         header.pack(fill="x", side="top")
         header.pack_propagate(False)
-        tk.Label(header, text="✦ PDF Editor", bg=C["BG_PANEL"],
+        tk.Label(header, text="✦ PageFolio", bg=C["BG_PANEL"],
                  fg=C["ACCENT"], font=self._font(6, "bold")).pack(side="left", padx=20, pady=12)
         self.status_var = tk.StringVar(value="ファイルを開いてください")
         tk.Label(header, textvariable=self.status_var,
@@ -597,6 +601,7 @@ class PDFEditorApp:
 
         f5 = section("⚙ 設定")
         btn(f5, "⚙ テーマ・フォント設定…", self._open_settings)
+        btn(f5, "ℹ About", lambda: AboutDialog(self.root, self._font))
 
         f = section("📂 ファイル")
         btn(f, "ファイルを開く (Ctrl+O)", self._open_file, "Accent.TButton")
@@ -1604,6 +1609,53 @@ class PDFEditorApp:
         else:
             self._show_preview()
             self._update_doc_buttons_state()
+
+
+# ══════════════════════════════════════════
+#  About ダイアログ
+# ══════════════════════════════════════════
+class AboutDialog(tk.Toplevel):
+    def __init__(self, parent, font_func):
+        super().__init__(parent)
+        self.title("PageFolio について")
+        self.configure(bg=C["BG_DARK"])
+        self.resizable(False, False)
+        self.grab_set()
+
+        self._font = font_func
+        self._build()
+        self.update_idletasks()
+        w, h = 360, 260
+        px = parent.winfo_rootx() + parent.winfo_width()  // 2
+        py = parent.winfo_rooty() + parent.winfo_height() // 2
+        self.geometry(f"{w}x{h}+{px - w//2}+{py - h//2}")
+
+    def _build(self):
+        tk.Label(self, text="PageFolio",
+                 bg=C["BG_DARK"], fg=C["ACCENT"],
+                 font=("Segoe UI", 16, "bold")).pack(pady=(20, 2))
+        tk.Label(self, text="v0.9.0",
+                 bg=C["BG_DARK"], fg=C["TEXT_SUB"],
+                 font=self._font(0)).pack()
+        tk.Label(self, text="PDF Page Organizer",
+                 bg=C["BG_DARK"], fg=C["TEXT_MAIN"],
+                 font=self._font(-1)).pack(pady=(2, 12))
+
+        sep = tk.Frame(self, bg=C["BG_CARD"], height=1)
+        sep.pack(fill="x", padx=30, pady=4)
+
+        tk.Label(self, text="Copyright (c) 2026 mistyura",
+                 bg=C["BG_DARK"], fg=C["TEXT_SUB"],
+                 font=self._font(-2)).pack(pady=(6, 2))
+        tk.Label(self, text="MIT License",
+                 bg=C["BG_DARK"], fg=C["TEXT_SUB"],
+                 font=self._font(-2)).pack()
+        tk.Label(self, text="https://github.com/mistyura/PageFolio",
+                 bg=C["BG_DARK"], fg=C["SUCCESS"],
+                 font=self._font(-2)).pack(pady=(2, 16))
+
+        ttk.Button(self, text="OK", command=self.destroy,
+                   style="Accent.TButton").pack(pady=(0, 16))
 
 
 # ══════════════════════════════════════════
