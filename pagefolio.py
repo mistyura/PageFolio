@@ -58,6 +58,302 @@ THEMES = {
 # 現在テーマの色をモジュールレベルで参照するための辞書（実行時に設定）
 C = dict(THEMES["dark"])
 
+# ===================== 言語辞書 =====================
+LANG = {
+    "ja": {
+        # ヘッダー / ステータス
+        "status_initial": "ファイルを開いてください",
+        # サムネイルパネル
+        "panel_pages": "ページ一覧",
+        "dnd_hint": "D&D で並替",
+        "select_all": "全選択",
+        "deselect": "解除",
+        # プレビューツールバー
+        "btn_prev": "◀ 前",
+        "btn_next": "次 ▶",
+        "btn_zoom_in": "🔍 拡大",
+        "btn_zoom_out": "🔍 縮小",
+        # ツールセクション見出し
+        "sec_settings": "⚙ 設定",
+        "sec_file": "📂 ファイル",
+        "sec_undo": "↩ 元に戻す / やり直す",
+        "sec_page": "📄 ページ操作（選択ページ）",
+        "sec_crop": "✂ トリミング（現在ページ）",
+        "sec_insert": "📎 挿入・結合",
+        "sec_plugin": "🔌 プラグイン",
+        # 設定セクションボタン
+        "btn_settings": "⚙ テーマ・フォント設定…",
+        "btn_about": "ℹ About",
+        "btn_lang": "🌐 English",
+        # ファイルセクションボタン
+        "btn_open": "ファイルを開く (Ctrl+O)",
+        "btn_save": "上書き保存 (Ctrl+S)",
+        "btn_save_as": "名前を付けて保存 (Ctrl+Shift+S)",
+        "btn_quit": "✕ 終了",
+        # Undo/Redo
+        "btn_undo": "↩ Ctrl+Z",
+        "btn_redo": "↪ Ctrl+Y",
+        # ページ操作
+        "lbl_rotate": "回転:",
+        "btn_rot_left": "↺ 左90°",
+        "btn_rot_right": "↻ 右90°",
+        "btn_rot_180": "↕ 180°",
+        "btn_delete": "🗑 選択ページを削除 (Del)",
+        # トリミング
+        "crop_mode_off": "✂ 範囲選択モード OFF",
+        "crop_mode_on": "🔴 範囲選択モード ON  (クリックで OFF)",
+        "crop_hint": "プレビュー上でドラッグして範囲を指定",
+        "crop_no_sel": "範囲未選択",
+        "btn_crop": "✔ 選択範囲でトリミング",
+        "btn_crop_reset": "✕ 選択範囲をリセット",
+        # 挿入・結合
+        "btn_insert_head": "先頭に挿入",
+        "btn_insert_tail": "末尾に挿入",
+        "btn_insert_pos": "指定位置に挿入…",
+        "btn_merge": "PDFを末尾に結合",
+        # プラグイン
+        "btn_plugin_mgr": "🔌 プラグイン管理…",
+        # プレビュー空状態
+        "preview_empty1": "📂 ファイルを開いてください",
+        "preview_empty2": "Ctrl+O  または右パネル「ファイルを開く」",
+        # 共通ボタン
+        "btn_close": "✕ 閉じる",
+        # ステータスメッセージ
+        "undo_empty": "元に戻す履歴がありません",
+        "redo_empty": "やり直す履歴がありません",
+        "undo_done": "元に戻しました",
+        "redo_done": "やり直しました",
+        "status_settings": "設定を変更しました",
+        # ファイル操作
+        "filetypes_pdf": "PDFファイル",
+        "filetypes_all": "すべて",
+        "info_open_first": "先にファイルを開いてください",
+        "save_confirm_title": "上書き保存の確認",
+        "save_confirm_msg": "以下のファイルを上書き保存します。\n\n{name}\n\n元のファイルは上書きされます。よろしいですか？",
+        "status_saved": "保存しました: {name}",
+        "err_save_title": "保存エラー",
+        "err_save_msg": "保存に失敗しました:\n{e}",
+        "status_opened": "開きました: {name}  ({n}ページ)",
+        "status_merged_open": "{count}ファイルを結合して開きました ({total}ページ): {names}",
+        # ページ操作ステータス
+        "status_rotated": "{count}ページを{deg}°回転しました",
+        "info_no_page_sel": "削除するページを選択してください",
+        "warn_del_all_title": "警告",
+        "warn_del_all": "すべてのページを削除することはできません。\n最低1ページは残す必要があります。",
+        "confirm_del": "{count}ページを削除しますか？",
+        "status_deleted": "{count}ページを削除しました",
+        # トリミング
+        "info_crop_drag": "プレビュー上でドラッグしてトリミング範囲を選択してください",
+        "status_cropped": "ページ{page}をトリミングしました",
+        "err_crop_small": "範囲が小さすぎます。もう一度ドラッグしてください",
+        "err_crop_title": "トリミングエラー",
+        "err_crop_msg": "CropBoxの設定に失敗しました。\n範囲を調整して再度お試しください。\n\n{e}",
+        # 挿入・結合ステータス
+        "dlg_insert_title": "挿入するPDFを選択（複数可）",
+        "dlg_insert_pos_title": "挿入位置",
+        "dlg_insert_pos_msg": "何ページ目の後ろに挿入しますか？\n(0 = 先頭、1〜{n} = そのページの後ろ)\n\n例: 3 → 3ページ目の後ろに挿入",
+        "status_insert_head": "先頭",
+        "status_insert_tail": "末尾",
+        "status_insert_pos": "{pos}ページ目の後ろ",
+        "status_inserted": "{count}ファイル（計{total}ページ）を{where}に挿入しました",
+        "dlg_merge_title": "結合するPDFを選択（複数可・選択順に結合）",
+        "status_merged": "{count}ファイル（計{total}ページ）を末尾に結合しました",
+        # 終了
+        "quit_confirm": "アプリを終了しますか？\n（未保存の変更は失われます）",
+        # doc 確認
+        "info_no_doc": "先にPDFファイルを開いてください",
+        # D&D ステータス
+        "status_dnd_moved": "p.{src} → p.{dest} に移動しました",
+        # About ダイアログ
+        "about_title": "PageFolio について",
+        "about_subtitle": "PDF Page Organizer",
+        "about_ok": "OK",
+        # 設定ダイアログ
+        "settings_title": "設定",
+        "settings_heading": "⚙ 設定",
+        "settings_theme": "テーマ:",
+        "settings_theme_dark": "ダーク",
+        "settings_theme_light": "ライト",
+        "settings_theme_system": "システム設定",
+        "settings_font": "フォントサイズ:",
+        "settings_font_hint": "pt  (8〜16)",
+        "settings_preview_text": "サンプルテキスト  Sample Text  123",
+        "settings_apply": "✔ 適用",
+        "settings_cancel": "キャンセル",
+        # 結合順ダイアログ
+        "merge_title": "結合順の確認・変更",
+        "merge_heading": "結合順の確認・並び替え",
+        "merge_hint": "ファイルを選択して ▲▼ で順番を変更できます\n確定すると現在のPDFの末尾に順番通り結合されます",
+        "merge_up": "▲ 上へ",
+        "merge_down": "▼ 下へ",
+        "merge_remove": "✕ 削除",
+        "merge_info": "合計 {count} ファイル  /  {total} ページ",
+        "merge_confirm": "✔ この順番で結合",
+        "merge_cancel": "キャンセル",
+        "merge_no_files": "ファイルがありません",
+        # プラグインダイアログ
+        "plugin_title": "プラグイン管理",
+        "plugin_heading": "🔌 プラグイン管理",
+        "plugin_dir_label": "プラグインフォルダ: {path}",
+        "plugin_empty": "プラグインが見つかりません\n\n「{dir}」フォルダに .py ファイルを\n配置してください",
+        "plugin_author": "作者: {author}",
+        "plugin_rescan": "🔄 再検出",
+        "plugin_open_folder": "📁 フォルダを開く",
+        "plugin_close": "✔ 閉じる",
+        # 共通エラー
+        "err_title": "エラー",
+        "info_title": "情報",
+        "warn_title": "警告",
+        "confirm_title": "確認",
+    },
+    "en": {
+        # Header / status
+        "status_initial": "Open a file to get started",
+        # Thumbnail panel
+        "panel_pages": "Pages",
+        "dnd_hint": "Drag to reorder",
+        "select_all": "Select All",
+        "deselect": "Deselect",
+        # Preview toolbar
+        "btn_prev": "◀ Prev",
+        "btn_next": "Next ▶",
+        "btn_zoom_in": "🔍 Zoom In",
+        "btn_zoom_out": "🔍 Zoom Out",
+        # Tool section titles
+        "sec_settings": "⚙ Settings",
+        "sec_file": "📂 File",
+        "sec_undo": "↩ Undo / Redo",
+        "sec_page": "📄 Page Operations",
+        "sec_crop": "✂ Crop (Current Page)",
+        "sec_insert": "📎 Insert / Merge",
+        "sec_plugin": "🔌 Plugins",
+        # Settings section buttons
+        "btn_settings": "⚙ Theme & Font…",
+        "btn_about": "ℹ About",
+        "btn_lang": "🌐 日本語",
+        # File section buttons
+        "btn_open": "Open File (Ctrl+O)",
+        "btn_save": "Save (Ctrl+S)",
+        "btn_save_as": "Save As (Ctrl+Shift+S)",
+        "btn_quit": "✕ Quit",
+        # Undo/Redo
+        "btn_undo": "↩ Ctrl+Z",
+        "btn_redo": "↪ Ctrl+Y",
+        # Page operations
+        "lbl_rotate": "Rotate:",
+        "btn_rot_left": "↺ Left 90°",
+        "btn_rot_right": "↻ Right 90°",
+        "btn_rot_180": "↕ 180°",
+        "btn_delete": "🗑 Delete Selected (Del)",
+        # Crop
+        "crop_mode_off": "✂ Crop Mode OFF",
+        "crop_mode_on": "🔴 Crop Mode ON  (click to OFF)",
+        "crop_hint": "Drag on preview to select crop area",
+        "crop_no_sel": "No selection",
+        "btn_crop": "✔ Crop to Selection",
+        "btn_crop_reset": "✕ Reset Selection",
+        # Insert/Merge
+        "btn_insert_head": "Insert at Beginning",
+        "btn_insert_tail": "Insert at End",
+        "btn_insert_pos": "Insert at Position…",
+        "btn_merge": "Merge PDF to End",
+        # Plugin
+        "btn_plugin_mgr": "🔌 Manage Plugins…",
+        # Preview empty state
+        "preview_empty1": "📂 Open a file to get started",
+        "preview_empty2": "Ctrl+O  or use \"Open File\" in the right panel",
+        # Common button
+        "btn_close": "✕ Close",
+        # Status messages
+        "undo_empty": "Nothing to undo",
+        "redo_empty": "Nothing to redo",
+        "undo_done": "Undone",
+        "redo_done": "Redone",
+        "status_settings": "Settings updated",
+        # File operations
+        "filetypes_pdf": "PDF files",
+        "filetypes_all": "All files",
+        "info_open_first": "Please open a file first",
+        "save_confirm_title": "Confirm Overwrite",
+        "save_confirm_msg": "Overwrite the following file?\n\n{name}\n\nThis cannot be undone. Continue?",
+        "status_saved": "Saved: {name}",
+        "err_save_title": "Save Error",
+        "err_save_msg": "Failed to save:\n{e}",
+        "status_opened": "Opened: {name}  ({n} pages)",
+        "status_merged_open": "Opened {count} files merged ({total} pages): {names}",
+        # Page operations status
+        "status_rotated": "Rotated {count} page(s) by {deg}°",
+        "info_no_page_sel": "Please select pages to delete",
+        "warn_del_all_title": "Warning",
+        "warn_del_all": "Cannot delete all pages.\nAt least one page must remain.",
+        "confirm_del": "Delete {count} page(s)?",
+        "status_deleted": "Deleted {count} page(s)",
+        # Crop
+        "info_crop_drag": "Drag on the preview to select a crop area",
+        "status_cropped": "Cropped page {page}",
+        "err_crop_small": "Selection too small. Please drag again.",
+        "err_crop_title": "Crop Error",
+        "err_crop_msg": "Failed to set CropBox.\nAdjust the selection and try again.\n\n{e}",
+        # Insert/Merge status
+        "dlg_insert_title": "Select PDF(s) to Insert",
+        "dlg_insert_pos_title": "Insert Position",
+        "dlg_insert_pos_msg": "Insert after which page?\n(0 = beginning, 1–{n} = after that page)\n\nEx: 3 → insert after page 3",
+        "status_insert_head": "beginning",
+        "status_insert_tail": "end",
+        "status_insert_pos": "after page {pos}",
+        "status_inserted": "Inserted {count} file(s) ({total} pages) at {where}",
+        "dlg_merge_title": "Select PDF(s) to Merge",
+        "status_merged": "Merged {count} file(s) ({total} pages) to end",
+        # Quit
+        "quit_confirm": "Quit PageFolio?\n(Unsaved changes will be lost)",
+        # Check doc
+        "info_no_doc": "Please open a PDF file first",
+        # D&D status
+        "status_dnd_moved": "p.{src} → p.{dest} moved",
+        # About dialog
+        "about_title": "About PageFolio",
+        "about_subtitle": "PDF Page Organizer",
+        "about_ok": "OK",
+        # Settings dialog
+        "settings_title": "Settings",
+        "settings_heading": "⚙ Settings",
+        "settings_theme": "Theme:",
+        "settings_theme_dark": "Dark",
+        "settings_theme_light": "Light",
+        "settings_theme_system": "System",
+        "settings_font": "Font Size:",
+        "settings_font_hint": "pt  (8–16)",
+        "settings_preview_text": "Sample Text  サンプルテキスト  123",
+        "settings_apply": "✔ Apply",
+        "settings_cancel": "Cancel",
+        # Merge order dialog
+        "merge_title": "Confirm Merge Order",
+        "merge_heading": "Confirm & Reorder",
+        "merge_hint": "Select a file and use ▲▼ to reorder\nThe PDFs will be merged in this order",
+        "merge_up": "▲ Up",
+        "merge_down": "▼ Down",
+        "merge_remove": "✕ Remove",
+        "merge_info": "Total {count} file(s)  /  {total} pages",
+        "merge_confirm": "✔ Merge in This Order",
+        "merge_cancel": "Cancel",
+        "merge_no_files": "No files",
+        # Plugin dialog
+        "plugin_title": "Plugin Manager",
+        "plugin_heading": "🔌 Plugin Manager",
+        "plugin_dir_label": "Plugin folder: {path}",
+        "plugin_empty": "No plugins found\n\nPlace .py files in the\n\"{dir}\" folder",
+        "plugin_author": "Author: {author}",
+        "plugin_rescan": "🔄 Rescan",
+        "plugin_open_folder": "📁 Open Folder",
+        "plugin_close": "✔ Close",
+        # Common error
+        "err_title": "Error",
+        "info_title": "Info",
+        "warn_title": "Warning",
+        "confirm_title": "Confirm",
+    },
+}
+
 SETTINGS_FILE = "pagefolio_settings.json"
 
 def _get_settings_path():
@@ -66,7 +362,7 @@ def _get_settings_path():
 
 def _load_settings():
     """設定を読み込む。ファイルがなければデフォルト値を返す"""
-    defaults = {"theme": "dark", "font_size": 12}
+    defaults = {"theme": "dark", "font_size": 12, "lang": "ja"}
     try:
         path = _get_settings_path()
         if os.path.exists(path):
@@ -314,6 +610,7 @@ class PDFEditorApp:
         # 設定読み込み・テーマ適用
         self.settings = _load_settings()
         self.font_size = self.settings.get("font_size", 10)
+        self.lang = self.settings.get("lang", "ja")
         global _current_font_size
         _current_font_size = self.font_size
         _apply_theme(self.settings.get("theme", "dark"))
@@ -421,7 +718,7 @@ class PDFEditorApp:
         header.pack_propagate(False)
         tk.Label(header, text="✦ PageFolio", bg=C["BG_PANEL"],
                  fg=C["ACCENT"], font=self._font(6, "bold")).pack(side="left", padx=20, pady=12)
-        self.status_var = tk.StringVar(value="ファイルを開いてください")
+        self.status_var = tk.StringVar(value=self._t("status_initial"))
         tk.Label(header, textvariable=self.status_var,
                  bg=C["BG_PANEL"], fg=C["SUCCESS"],
                  font=self._font(-1)).pack(side="right", padx=20)
@@ -455,16 +752,16 @@ class PDFEditorApp:
     def _build_thumb_panel(self, parent):
         hdr = tk.Frame(parent, bg=C["BG_PANEL"])
         hdr.pack(fill="x", padx=10, pady=(10, 4))
-        tk.Label(hdr, text="ページ一覧", bg=C["BG_PANEL"],
+        tk.Label(hdr, text=self._t("panel_pages"), bg=C["BG_PANEL"],
                  fg=C["ACCENT"], font=self._font(0, "bold")).pack(side="left")
-        tk.Label(hdr, text="D&D で並替", bg=C["BG_PANEL"],
+        tk.Label(hdr, text=self._t("dnd_hint"), bg=C["BG_PANEL"],
                  fg=C["TEXT_SUB"], font=self._font(-3)).pack(side="right")
 
         sel_frame = tk.Frame(parent, bg=C["BG_PANEL"])
         sel_frame.pack(fill="x", padx=6, pady=2)
-        ttk.Button(sel_frame, text="全選択",
+        ttk.Button(sel_frame, text=self._t("select_all"),
                    command=self._select_all).pack(side="left", padx=2)
-        ttk.Button(sel_frame, text="解除",
+        ttk.Button(sel_frame, text=self._t("deselect"),
                    command=self._deselect_all).pack(side="left", padx=2)
 
         canvas_frame = tk.Frame(parent, bg=C["BG_PANEL"])
@@ -494,20 +791,20 @@ class PDFEditorApp:
         toolbar.pack(fill="x")
         toolbar.pack_propagate(False)
 
-        self.prev_btn = ttk.Button(toolbar, text="◀ 前",
+        self.prev_btn = ttk.Button(toolbar, text=self._t("btn_prev"),
                    command=self._prev_page)
         self.prev_btn.pack(side="left", padx=6, pady=8)
         self.page_label = tk.Label(toolbar, text="- / -",
                                    bg=C["BG_PANEL"], fg=C["TEXT_MAIN"],
                                    font=self._font(0, "bold"))
         self.page_label.pack(side="left", padx=4)
-        self.next_btn = ttk.Button(toolbar, text="次 ▶",
+        self.next_btn = ttk.Button(toolbar, text=self._t("btn_next"),
                    command=self._next_page)
         self.next_btn.pack(side="left", padx=6)
 
-        ttk.Button(toolbar, text="🔍 縮小",
+        ttk.Button(toolbar, text=self._t("btn_zoom_out"),
                    command=lambda: self._zoom(-0.2)).pack(side="right", padx=4, pady=8)
-        ttk.Button(toolbar, text="🔍 拡大",
+        ttk.Button(toolbar, text=self._t("btn_zoom_in"),
                    command=lambda: self._zoom(0.2)).pack(side="right", padx=4)
         self.zoom_label = tk.Label(toolbar, text="100%",
                                    bg=C["BG_PANEL"], fg=C["TEXT_SUB"],
@@ -599,74 +896,75 @@ class PDFEditorApp:
                 self._doc_buttons.append(b)
             return b
 
-        f5 = section("⚙ 設定")
-        btn(f5, "⚙ テーマ・フォント設定…", self._open_settings)
-        btn(f5, "ℹ About", lambda: AboutDialog(self.root, self._font))
+        f5 = section(self._t("sec_settings"))
+        btn(f5, self._t("btn_settings"), self._open_settings)
+        btn(f5, self._t("btn_about"), lambda: AboutDialog(self.root, self._font, self.lang))
+        btn(f5, self._t("btn_lang"), self._toggle_lang)
 
-        f = section("📂 ファイル")
-        btn(f, "ファイルを開く (Ctrl+O)", self._open_file, "Accent.TButton")
-        btn(f, "上書き保存 (Ctrl+S)", self._save_file, needs_doc=True)
-        btn(f, "名前を付けて保存 (Ctrl+Shift+S)", self._save_as, needs_doc=True)
-        btn(f, "✕ 終了", self._quit, "Danger.TButton")
+        f = section(self._t("sec_file"))
+        btn(f, self._t("btn_open"), self._open_file, "Accent.TButton")
+        btn(f, self._t("btn_save"), self._save_file, needs_doc=True)
+        btn(f, self._t("btn_save_as"), self._save_as, needs_doc=True)
+        btn(f, self._t("btn_quit"), self._quit, "Danger.TButton")
 
-        f_ur = section("↩ 元に戻す / やり直す")
+        f_ur = section(self._t("sec_undo"))
         ur_row = tk.Frame(f_ur, bg=C["BG_CARD"])
         ur_row.pack(fill="x", padx=6, pady=2)
-        b_undo = ttk.Button(ur_row, text="↩ Ctrl+Z", command=self._undo)
+        b_undo = ttk.Button(ur_row, text=self._t("btn_undo"), command=self._undo)
         b_undo.pack(side="left", expand=True, fill="x", padx=2, pady=2)
         self._doc_buttons.append(b_undo)
-        b_redo = ttk.Button(ur_row, text="↪ Ctrl+Y", command=self._redo)
+        b_redo = ttk.Button(ur_row, text=self._t("btn_redo"), command=self._redo)
         b_redo.pack(side="left", expand=True, fill="x", padx=2, pady=2)
         self._doc_buttons.append(b_redo)
 
-        f2 = section("📄 ページ操作（選択ページ）")
-        tk.Label(f2, text="回転:", bg=C["BG_CARD"], fg=C["TEXT_SUB"],
+        f2 = section(self._t("sec_page"))
+        tk.Label(f2, text=self._t("lbl_rotate"), bg=C["BG_CARD"], fg=C["TEXT_SUB"],
                  font=self._font(-2)).pack(anchor="w", padx=8)
         rot_row1 = tk.Frame(f2, bg=C["BG_CARD"])
         rot_row1.pack(fill="x", padx=6, pady=(2, 0))
-        for deg, label in [(270,"↺ 左90°"), (90,"↻ 右90°")]:
-            b = ttk.Button(rot_row1, text=label,
+        for deg, lkey in [(270, "btn_rot_left"), (90, "btn_rot_right")]:
+            b = ttk.Button(rot_row1, text=self._t(lkey),
                            command=lambda d=deg: self._rotate_selected(d))
             b.pack(side="left", expand=True, fill="x", padx=2, pady=2)
             self._doc_buttons.append(b)
         rot_row2 = tk.Frame(f2, bg=C["BG_CARD"])
         rot_row2.pack(fill="x", padx=6, pady=(0, 2))
-        b180 = ttk.Button(rot_row2, text="↕ 180°",
+        b180 = ttk.Button(rot_row2, text=self._t("btn_rot_180"),
                           command=lambda: self._rotate_selected(180))
         b180.pack(fill="x", padx=2, pady=2)
         self._doc_buttons.append(b180)
 
-        btn(f2, "🗑 選択ページを削除 (Del)", self._delete_selected,
+        btn(f2, self._t("btn_delete"), self._delete_selected,
             "Danger.TButton", needs_doc=True)
 
-        f3 = section("✂ トリミング（現在ページ）")
+        f3 = section(self._t("sec_crop"))
         self.crop_mode_var = tk.BooleanVar(value=False)
         self.crop_toggle_btn = ttk.Button(
-            f3, text="✂ 範囲選択モード OFF",
+            f3, text=self._t("crop_mode_off"),
             command=self._toggle_crop_mode)
         self.crop_toggle_btn.pack(fill="x", padx=8, pady=(4,2))
         self._doc_buttons.append(self.crop_toggle_btn)
-        tk.Label(f3, text="プレビュー上でドラッグして範囲を指定",
+        tk.Label(f3, text=self._t("crop_hint"),
                  bg=C["BG_CARD"], fg=C["TEXT_SUB"], font=self._font(-2)).pack(anchor="w", padx=8)
 
-        self.crop_info_var = tk.StringVar(value="範囲未選択")
+        self.crop_info_var = tk.StringVar(value=self._t("crop_no_sel"))
         tk.Label(f3, textvariable=self.crop_info_var,
                  bg=C["BG_CARD"], fg=C["TEXT_SUB"], font=self._font(-2)).pack(anchor="w", padx=8, pady=2)
 
-        btn(f3, "✔ 選択範囲でトリミング", self._crop_page, needs_doc=True)
-        btn(f3, "✕ 選択範囲をリセット",   self._crop_reset, "Danger.TButton",
+        btn(f3, self._t("btn_crop"), self._crop_page, needs_doc=True)
+        btn(f3, self._t("btn_crop_reset"), self._crop_reset, "Danger.TButton",
             needs_doc=True)
 
-        f4 = section("📎 挿入・結合")
-        btn(f4, "先頭に挿入", lambda: self._insert_from_file("head"), needs_doc=True)
-        btn(f4, "末尾に挿入", lambda: self._insert_from_file("tail"), needs_doc=True)
-        btn(f4, "指定位置に挿入…", lambda: self._insert_from_file("pos"),
+        f4 = section(self._t("sec_insert"))
+        btn(f4, self._t("btn_insert_head"), lambda: self._insert_from_file("head"), needs_doc=True)
+        btn(f4, self._t("btn_insert_tail"), lambda: self._insert_from_file("tail"), needs_doc=True)
+        btn(f4, self._t("btn_insert_pos"), lambda: self._insert_from_file("pos"),
             needs_doc=True)
-        btn(f4, "PDFを末尾に結合", self._merge_pdf, needs_doc=True)
+        btn(f4, self._t("btn_merge"), self._merge_pdf, needs_doc=True)
 
         # プラグインセクション
-        f_plug = section("🔌 プラグイン")
-        btn(f_plug, "🔌 プラグイン管理…", self._open_plugin_dialog)
+        f_plug = section(self._t("sec_plugin"))
+        btn(f_plug, self._t("btn_plugin_mgr"), self._open_plugin_dialog)
         # 有効プラグインのUI構築
         self._plugin_ui_frame = tk.Frame(parent, bg=C["BG_PANEL"])
         self._plugin_ui_frame.pack(fill="x", padx=0, pady=0)
@@ -693,7 +991,7 @@ class PDFEditorApp:
 
     def _undo(self):
         if not self._undo_stack:
-            self._set_status("元に戻す履歴がありません")
+            self._set_status(self._t("undo_empty"))
             return
         if self.doc:
             self._redo_stack.append({
@@ -703,11 +1001,11 @@ class PDFEditorApp:
             })
         state = self._undo_stack.pop()
         self._restore_state(state)
-        self._set_status("元に戻しました")
+        self._set_status(self._t("undo_done"))
 
     def _redo(self):
         if not self._redo_stack:
-            self._set_status("やり直す履歴がありません")
+            self._set_status(self._t("redo_empty"))
             return
         if self.doc:
             self._undo_stack.append({
@@ -717,7 +1015,7 @@ class PDFEditorApp:
             })
         state = self._redo_stack.pop()
         self._restore_state(state)
-        self._set_status("やり直しました")
+        self._set_status(self._t("redo_done"))
 
     def _restore_state(self, state):
         if self.doc:
@@ -733,7 +1031,7 @@ class PDFEditorApp:
     # ══════════════════════════════════════════
     def _open_file(self):
         paths = filedialog.askopenfilenames(
-            filetypes=[("PDFファイル", "*.pdf"), ("すべて", "*.*")])
+            filetypes=[(self._t("filetypes_pdf"), "*.pdf"), (self._t("filetypes_all"), "*.*")])
         if not paths:
             return
         if len(paths) == 1:
@@ -744,7 +1042,7 @@ class PDFEditorApp:
 
     def _open_multiple_pdfs(self, paths):
         """複数PDFを結合して1つのドキュメントとして開く"""
-        MergeOrderDialog(self.root, paths, self._do_open_merged)
+        MergeOrderDialog(self.root, paths, self._do_open_merged, lang=self.lang)
 
     def _do_open_merged(self, ordered_paths):
         """結合順ダイアログ確定後、結合して開く"""
@@ -767,9 +1065,10 @@ class PDFEditorApp:
             self._invalidate_thumb_cache()
             self._refresh_all()
             names = ", ".join(os.path.basename(p) for p in ordered_paths)
-            self._set_status(f"{len(ordered_paths)}ファイルを結合して開きました ({total}ページ): {names}")
+            self._set_status(self._t("status_merged_open").format(
+                count=len(ordered_paths), total=total, names=names))
         except Exception as e:
-            messagebox.showerror("エラー", str(e))
+            messagebox.showerror(self._t("err_title"), str(e))
 
     def _open_pdf_path(self, path):
         """パス指定でPDFを開く（ダイアログ / D&D 共用）"""
@@ -784,24 +1083,24 @@ class PDFEditorApp:
             self._redo_stack.clear()
             self._invalidate_thumb_cache()
             self._refresh_all()
-            self._set_status(f"開きました: {os.path.basename(path)}  ({len(self.doc)}ページ)")
+            self._set_status(self._t("status_opened").format(
+                name=os.path.basename(path), n=len(self.doc)))
             self.plugin_manager.fire_event("on_file_open", self, path)
         except Exception as e:
-            messagebox.showerror("エラー", str(e))
+            messagebox.showerror(self._t("err_title"), str(e))
 
     def _save_file(self):
         """上書き保存 — 確認ダイアログ付き (#14)"""
         if not self.doc:
-            messagebox.showinfo("情報", "先にファイルを開いてください")
+            messagebox.showinfo(self._t("info_title"), self._t("info_open_first"))
             return
         if not self.filepath:
             # 結合して開いた場合など保存先がない場合は名前を付けて保存
             self._save_as()
             return
-        if not messagebox.askyesno("上書き保存の確認",
-                                    f"以下のファイルを上書き保存します。\n\n"
-                                    f"{os.path.basename(self.filepath)}\n\n"
-                                    f"元のファイルは上書きされます。よろしいですか？"):
+        if not messagebox.askyesno(self._t("save_confirm_title"),
+                                    self._t("save_confirm_msg").format(
+                                        name=os.path.basename(self.filepath))):
             return
         try:
             try:
@@ -811,26 +1110,27 @@ class PDFEditorApp:
                 tmp = self.filepath + ".tmp"
                 self.doc.save(tmp)
                 os.replace(tmp, self.filepath)
-            self._set_status(f"保存しました: {os.path.basename(self.filepath)}")
+            self._set_status(self._t("status_saved").format(name=os.path.basename(self.filepath)))
             self.plugin_manager.fire_event("on_file_save", self, self.filepath)
         except Exception as e:
-            messagebox.showerror("保存エラー", f"保存に失敗しました:\n{e}")
+            messagebox.showerror(self._t("err_save_title"),
+                                 self._t("err_save_msg").format(e=e))
 
     def _save_as(self):
         if not self.doc:
             return
         path = filedialog.asksaveasfilename(
             defaultextension=".pdf",
-            filetypes=[("PDFファイル", "*.pdf")])
+            filetypes=[(self._t("filetypes_pdf"), "*.pdf")])
         if not path:
             return
         try:
             self.doc.save(path)
             self.filepath = path
-            self._set_status(f"保存しました: {os.path.basename(path)}")
+            self._set_status(self._t("status_saved").format(name=os.path.basename(path)))
             self.plugin_manager.fire_event("on_file_save", self, path)
         except Exception as e:
-            messagebox.showerror("エラー", str(e))
+            messagebox.showerror(self._t("err_title"), str(e))
 
     # ══════════════════════════════════════════
     #  ページ操作
@@ -845,7 +1145,7 @@ class PDFEditorApp:
             page.set_rotation((page.rotation + deg) % 360)
         self._invalidate_thumb_cache(targets)
         self._refresh_all()
-        self._set_status(f"{len(targets)}ページを{deg}°回転しました")
+        self._set_status(self._t("status_rotated").format(count=len(targets), deg=deg))
         self.plugin_manager.fire_event("on_page_rotate", self, targets, deg)
 
     def _delete_selected(self):
@@ -853,15 +1153,14 @@ class PDFEditorApp:
             return
         targets = sorted(self._get_targets(), reverse=True)
         if not targets:
-            messagebox.showinfo("情報", "削除するページを選択してください")
+            messagebox.showinfo(self._t("info_title"), self._t("info_no_page_sel"))
             return
         # 全ページ削除防止 (#17)
         if len(targets) >= len(self.doc):
-            messagebox.showwarning("警告",
-                "すべてのページを削除することはできません。\n"
-                "最低1ページは残す必要があります。")
+            messagebox.showwarning(self._t("warn_del_all_title"), self._t("warn_del_all"))
             return
-        if not messagebox.askyesno("確認", f"{len(targets)}ページを削除しますか？"):
+        if not messagebox.askyesno(self._t("confirm_title"),
+                                    self._t("confirm_del").format(count=len(targets))):
             return
         self._save_undo()
         for i in targets:
@@ -870,7 +1169,7 @@ class PDFEditorApp:
         self.current_page = min(self.current_page, max(0, len(self.doc)-1))
         self._invalidate_thumb_cache()
         self._refresh_all()
-        self._set_status(f"{len(targets)}ページを削除しました")
+        self._set_status(self._t("status_deleted").format(count=len(targets)))
         self.plugin_manager.fire_event("on_page_delete", self, targets)
 
     # ── トリミング (#16 視覚強調)
@@ -878,12 +1177,12 @@ class PDFEditorApp:
         self.crop_mode = not self.crop_mode
         if self.crop_mode:
             self.crop_toggle_btn.configure(
-                text="🔴 範囲選択モード ON  (クリックで OFF)",
+                text=self._t("crop_mode_on"),
                 style="CropOn.TButton")
             self.preview_canvas.configure(cursor="crosshair")
         else:
             self.crop_toggle_btn.configure(
-                text="✂ 範囲選択モード OFF",
+                text=self._t("crop_mode_off"),
                 style="TButton")
             self.preview_canvas.configure(cursor="")
             self._clear_crop_overlay()
@@ -956,14 +1255,14 @@ class PDFEditorApp:
 
     def _crop_reset(self):
         self.crop_rect = None
-        self.crop_info_var.set("範囲未選択")
+        self.crop_info_var.set(self._t("crop_no_sel"))
         self._clear_crop_overlay()
 
     def _crop_page(self):
         if not self._check_doc():
             return
         if not self.crop_rect:
-            messagebox.showinfo("情報", "プレビュー上でドラッグしてトリミング範囲を選択してください")
+            messagebox.showinfo(self._t("info_title"), self._t("info_crop_drag"))
             return
         self._save_undo()
         sx, sy, ex, ey = self.crop_rect
@@ -987,22 +1286,22 @@ class PDFEditorApp:
             min(round(new_rect.y1, 2), mb.y1 - EPS)
         )
         if new_rect.is_empty or new_rect.is_infinite or new_rect.width < 1 or new_rect.height < 1:
-            messagebox.showerror("エラー", "範囲が小さすぎます。もう一度ドラッグしてください")
+            messagebox.showerror(self._t("err_title"), self._t("err_crop_small"))
             return
         try:
             page.set_cropbox(new_rect)
         except ValueError as e:
-            messagebox.showerror("トリミングエラー",
-                f"CropBoxの設定に失敗しました。\n範囲を調整して再度お試しください。\n\n{e}")
+            messagebox.showerror(self._t("err_crop_title"),
+                                 self._t("err_crop_msg").format(e=e))
             return
         self.crop_rect = None
         self.crop_mode = False
-        self.crop_toggle_btn.configure(text="✂ 範囲選択モード OFF", style="TButton")
+        self.crop_toggle_btn.configure(text=self._t("crop_mode_off"), style="TButton")
         self.preview_canvas.configure(cursor="")
-        self.crop_info_var.set("範囲未選択")
+        self.crop_info_var.set(self._t("crop_no_sel"))
         self._invalidate_thumb_cache([self.current_page])
         self._refresh_all()
-        self._set_status(f"ページ{self.current_page+1}をトリミングしました")
+        self._set_status(self._t("status_cropped").format(page=self.current_page+1))
         self.plugin_manager.fire_event("on_page_crop", self, self.current_page)
 
     def _insert_from_file(self, mode="pos"):
@@ -1010,8 +1309,8 @@ class PDFEditorApp:
         if not self._check_doc():
             return
         paths = filedialog.askopenfilenames(
-            title="挿入するPDFを選択（複数可）",
-            filetypes=[("PDFファイル", "*.pdf")])
+            title=self._t("dlg_insert_title"),
+            filetypes=[(self._t("filetypes_pdf"), "*.pdf")])
         if not paths:
             return
 
@@ -1021,10 +1320,8 @@ class PDFEditorApp:
             insert_at = len(self.doc)
         else:
             pos = simpledialog.askinteger(
-                "挿入位置",
-                f"何ページ目の後ろに挿入しますか？\n"
-                f"(0 = 先頭、1〜{len(self.doc)} = そのページの後ろ)\n\n"
-                f"例: 3 → 3ページ目の後ろに挿入",
+                self._t("dlg_insert_pos_title"),
+                self._t("dlg_insert_pos_msg").format(n=len(self.doc)),
                 minvalue=0, maxvalue=len(self.doc),
                 initialvalue=self.current_page + 1)
             if pos is None:
@@ -1034,7 +1331,8 @@ class PDFEditorApp:
         # 複数ファイル時は結合順ダイアログを表示
         if len(paths) > 1:
             MergeOrderDialog(self.root, list(paths),
-                             lambda ordered: self._do_insert(ordered, insert_at))
+                             lambda ordered: self._do_insert(ordered, insert_at),
+                             lang=self.lang)
         else:
             self._do_insert(list(paths), insert_at)
 
@@ -1053,26 +1351,26 @@ class PDFEditorApp:
             self._invalidate_thumb_cache()
             self._refresh_all()
             if insert_at == 0:
-                where = "先頭"
+                where = self._t("status_insert_head")
             elif insert_at >= len(self.doc) - total:
-                where = "末尾"
+                where = self._t("status_insert_tail")
             else:
-                where = f"{insert_at}ページ目の後ろ"
-            self._set_status(
-                f"{len(ordered_paths)}ファイル（計{total}ページ）を{where}に挿入しました")
+                where = self._t("status_insert_pos").format(pos=insert_at)
+            self._set_status(self._t("status_inserted").format(
+                count=len(ordered_paths), total=total, where=where))
             self.plugin_manager.fire_event("on_insert", self, ordered_paths, insert_at)
         except Exception as e:
-            messagebox.showerror("エラー", str(e))
+            messagebox.showerror(self._t("err_title"), str(e))
 
     def _merge_pdf(self):
         if not self._check_doc():
             return
         paths = filedialog.askopenfilenames(
-            title="結合するPDFを選択（複数可・選択順に結合）",
-            filetypes=[("PDFファイル", "*.pdf")])
+            title=self._t("dlg_merge_title"),
+            filetypes=[(self._t("filetypes_pdf"), "*.pdf")])
         if not paths:
             return
-        MergeOrderDialog(self.root, list(paths), self._do_merge)
+        MergeOrderDialog(self.root, list(paths), self._do_merge, lang=self.lang)
 
     def _do_merge(self, ordered_paths):
         self._save_undo()
@@ -1085,11 +1383,11 @@ class PDFEditorApp:
                 src.close()
             self._invalidate_thumb_cache()
             self._refresh_all()
-            self._set_status(
-                f"{len(ordered_paths)}ファイル（計{total}ページ）を末尾に結合しました")
+            self._set_status(self._t("status_merged").format(
+                count=len(ordered_paths), total=total))
             self.plugin_manager.fire_event("on_merge", self, ordered_paths)
         except Exception as e:
-            messagebox.showerror("エラー", str(e))
+            messagebox.showerror(self._t("err_title"), str(e))
 
     def _toggle_select(self, i):
         if i in self.selected_pages:
@@ -1119,11 +1417,11 @@ class PDFEditorApp:
             ch = self.preview_canvas.winfo_height()
             self.preview_canvas.create_text(
                 cw // 2, ch // 2 - 16,
-                text="📂 ファイルを開いてください",
+                text=self._t("preview_empty1"),
                 fill=C["TEXT_SUB"], font=self._font(4))
             self.preview_canvas.create_text(
                 cw // 2, ch // 2 + 16,
-                text="Ctrl+O  または右パネル「ファイルを開く」",
+                text=self._t("preview_empty2"),
                 fill=C["TEXT_SUB"], font=self._font())
             return
         page = self.doc[self.current_page]
@@ -1499,7 +1797,7 @@ class PDFEditorApp:
         self.selected_pages.clear()
         self._invalidate_thumb_cache()
         self._refresh_all()
-        self._set_status(f'p.{src+1} → p.{actual_dest+1} に移動しました')
+        self._set_status(self._t("status_dnd_moved").format(src=src+1, dest=actual_dest+1))
 
     # ══════════════════════════════════════════
     #  ユーティリティ
@@ -1515,7 +1813,7 @@ class PDFEditorApp:
 
     def _check_doc(self):
         if not self.doc:
-            messagebox.showinfo("情報", "先にPDFファイルを開いてください")
+            messagebox.showinfo(self._t("info_title"), self._t("info_no_doc"))
             return False
         return True
 
@@ -1524,8 +1822,7 @@ class PDFEditorApp:
 
     def _quit(self):
         if self.doc:
-            if messagebox.askyesno('確認',
-                    'アプリを終了しますか？\n（未保存の変更は失われます）'):
+            if messagebox.askyesno(self._t("confirm_title"), self._t("quit_confirm")):
                 self.doc.close()
                 self.root.destroy()
         else:
@@ -1540,6 +1837,17 @@ class PDFEditorApp:
         if weight:
             return ("Segoe UI", size, weight)
         return ("Segoe UI", size)
+
+    def _t(self, key):
+        """現在の言語でテキストを返すヘルパー"""
+        return LANG[self.lang].get(key, LANG["ja"].get(key, key))
+
+    def _toggle_lang(self):
+        """言語を切り替えて UI を再構築する"""
+        self.lang = "en" if self.lang == "ja" else "ja"
+        self.settings["lang"] = self.lang
+        _save_settings(self.settings)
+        self._rebuild_ui()
 
     # ══════════════════════════════════════════
     #  プラグイン管理
@@ -1582,12 +1890,13 @@ class PDFEditorApp:
         """設定変更を適用してUIを再構築"""
         self.settings = new_settings
         self.font_size = new_settings.get("font_size", 10)
+        self.lang = new_settings.get("lang", self.lang)
         global _current_font_size
         _current_font_size = self.font_size
         _apply_theme(new_settings.get("theme", "dark"))
         _save_settings(new_settings)
         self._rebuild_ui()
-        self._set_status("設定を変更しました")
+        self._set_status(self._t("status_settings"))
 
     def _rebuild_ui(self):
         """テーマ・フォント変更時にUI全体を再構築"""
@@ -1615,9 +1924,10 @@ class PDFEditorApp:
 #  About ダイアログ
 # ══════════════════════════════════════════
 class AboutDialog(tk.Toplevel):
-    def __init__(self, parent, font_func):
+    def __init__(self, parent, font_func, lang="ja"):
         super().__init__(parent)
-        self.title("PageFolio について")
+        self._L = LANG[lang]
+        self.title(self._L["about_title"])
         self.configure(bg=C["BG_DARK"])
         self.resizable(False, False)
         self.grab_set()
@@ -1634,10 +1944,10 @@ class AboutDialog(tk.Toplevel):
         tk.Label(self, text="PageFolio",
                  bg=C["BG_DARK"], fg=C["ACCENT"],
                  font=("Segoe UI", 16, "bold")).pack(pady=(20, 2))
-        tk.Label(self, text="v0.9.0",
+        tk.Label(self, text="v0.9.2",
                  bg=C["BG_DARK"], fg=C["TEXT_SUB"],
                  font=self._font(0)).pack()
-        tk.Label(self, text="PDF Page Organizer",
+        tk.Label(self, text=self._L["about_subtitle"],
                  bg=C["BG_DARK"], fg=C["TEXT_MAIN"],
                  font=self._font(-1)).pack(pady=(2, 12))
 
@@ -1654,7 +1964,7 @@ class AboutDialog(tk.Toplevel):
                  bg=C["BG_DARK"], fg=C["SUCCESS"],
                  font=self._font(-2)).pack(pady=(2, 16))
 
-        ttk.Button(self, text="OK", command=self.destroy,
+        ttk.Button(self, text=self._L["about_ok"], command=self.destroy,
                    style="Accent.TButton").pack(pady=(0, 16))
 
 
@@ -1664,7 +1974,9 @@ class AboutDialog(tk.Toplevel):
 class SettingsDialog(tk.Toplevel):
     def __init__(self, parent, current_settings, callback):
         super().__init__(parent)
-        self.title("設定")
+        lang = current_settings.get("lang", "ja")
+        self._L = LANG[lang]
+        self.title(self._L["settings_title"])
         self.configure(bg=C["BG_DARK"])
         self.resizable(False, False)
         self.grab_set()
@@ -1682,17 +1994,21 @@ class SettingsDialog(tk.Toplevel):
         self.geometry(f"{w}x{h}+{px - w//2}+{py - h//2}")
 
     def _build(self):
-        tk.Label(self, text="⚙ 設定",
+        tk.Label(self, text=self._L["settings_heading"],
                  bg=C["BG_DARK"], fg=C["ACCENT"],
                  font=("Segoe UI", 13, "bold")).pack(pady=(14, 10))
 
         # テーマ選択
         tf = tk.Frame(self, bg=C["BG_DARK"])
         tf.pack(fill="x", padx=24, pady=6)
-        tk.Label(tf, text="テーマ:", bg=C["BG_DARK"], fg=C["TEXT_MAIN"],
+        tk.Label(tf, text=self._L["settings_theme"], bg=C["BG_DARK"], fg=C["TEXT_MAIN"],
                  font=("Segoe UI", 10)).pack(side="left")
         self.theme_var = tk.StringVar(value=self.current_settings.get("theme", "dark"))
-        theme_options = [("ダーク", "dark"), ("ライト", "light"), ("システム設定", "system")]
+        theme_options = [
+            (self._L["settings_theme_dark"], "dark"),
+            (self._L["settings_theme_light"], "light"),
+            (self._L["settings_theme_system"], "system"),
+        ]
         for text, value in theme_options:
             tk.Radiobutton(tf, text=text, variable=self.theme_var, value=value,
                            bg=C["BG_DARK"], fg=C["TEXT_MAIN"],
@@ -1703,7 +2019,7 @@ class SettingsDialog(tk.Toplevel):
         # フォントサイズ
         ff = tk.Frame(self, bg=C["BG_DARK"])
         ff.pack(fill="x", padx=24, pady=6)
-        tk.Label(ff, text="フォントサイズ:", bg=C["BG_DARK"], fg=C["TEXT_MAIN"],
+        tk.Label(ff, text=self._L["settings_font"], bg=C["BG_DARK"], fg=C["TEXT_MAIN"],
                  font=("Segoe UI", 10)).pack(side="left")
         self.font_var = tk.IntVar(value=self.current_settings.get("font_size", 10))
         tk.Spinbox(ff, from_=8, to=16, textvariable=self.font_var, width=4,
@@ -1711,11 +2027,11 @@ class SettingsDialog(tk.Toplevel):
                    bg=C["BG_CARD"], fg=C["TEXT_MAIN"],
                    buttonbackground=C["BG_PANEL"],
                    insertbackground=C["TEXT_MAIN"]).pack(side="left", padx=8)
-        tk.Label(ff, text="pt  (8〜16)", bg=C["BG_DARK"], fg=C["TEXT_SUB"],
+        tk.Label(ff, text=self._L["settings_font_hint"], bg=C["BG_DARK"], fg=C["TEXT_SUB"],
                  font=("Segoe UI", 9)).pack(side="left")
 
         # プレビュー
-        self.preview_label = tk.Label(self, text="サンプルテキスト  Sample Text  123",
+        self.preview_label = tk.Label(self, text=self._L["settings_preview_text"],
                                        bg=C["BG_CARD"], fg=C["TEXT_MAIN"],
                                        font=("Segoe UI", self.font_var.get()),
                                        padx=12, pady=8)
@@ -1725,9 +2041,9 @@ class SettingsDialog(tk.Toplevel):
         # ボタン
         btn_row = tk.Frame(self, bg=C["BG_DARK"])
         btn_row.pack(pady=(8, 14))
-        ttk.Button(btn_row, text="✔ 適用", style="Accent.TButton",
+        ttk.Button(btn_row, text=self._L["settings_apply"], style="Accent.TButton",
                    command=self._apply).pack(side="left", padx=8)
-        ttk.Button(btn_row, text="キャンセル",
+        ttk.Button(btn_row, text=self._L["settings_cancel"],
                    command=self.destroy).pack(side="left", padx=8)
 
     def _update_preview(self, *_):
@@ -1752,7 +2068,8 @@ class SettingsDialog(tk.Toplevel):
 class PluginDialog(tk.Toplevel):
     def __init__(self, parent, app):
         super().__init__(parent)
-        self.title("プラグイン管理")
+        self._L = LANG[app.lang]
+        self.title(self._L["plugin_title"])
         self.configure(bg=C["BG_DARK"])
         self.resizable(True, True)
         self.grab_set()
@@ -1778,13 +2095,13 @@ class PluginDialog(tk.Toplevel):
         return ("Segoe UI", size)
 
     def _build(self):
-        tk.Label(self, text="🔌 プラグイン管理",
+        tk.Label(self, text=self._L["plugin_heading"],
                  bg=C["BG_DARK"], fg=C["ACCENT"],
                  font=self._font(2, "bold")).pack(pady=(14, 4))
 
         plugins_dir = _get_plugins_dir()
         tk.Label(self,
-                 text=f"プラグインフォルダ: {plugins_dir}",
+                 text=self._L["plugin_dir_label"].format(path=plugins_dir),
                  bg=C["BG_DARK"], fg=C["TEXT_SUB"],
                  font=self._font(-2), wraplength=450).pack(pady=(0, 8))
 
@@ -1812,14 +2129,14 @@ class PluginDialog(tk.Toplevel):
         # ボタン行
         btn_row = tk.Frame(self, bg=C["BG_DARK"])
         btn_row.pack(fill="x", padx=16, pady=(8, 4))
-        ttk.Button(btn_row, text="🔄 再検出",
+        ttk.Button(btn_row, text=self._L["plugin_rescan"],
                    command=self._rescan).pack(side="left", padx=4)
-        ttk.Button(btn_row, text="📁 フォルダを開く",
+        ttk.Button(btn_row, text=self._L["plugin_open_folder"],
                    command=self._open_folder).pack(side="left", padx=4)
 
         ok_row = tk.Frame(self, bg=C["BG_DARK"])
         ok_row.pack(pady=(4, 14))
-        ttk.Button(ok_row, text="✔ 閉じる", style="Accent.TButton",
+        ttk.Button(ok_row, text=self._L["plugin_close"], style="Accent.TButton",
                    command=self._close).pack(side="left", padx=8)
 
     def _refresh_list(self):
@@ -1829,9 +2146,7 @@ class PluginDialog(tk.Toplevel):
         all_plugins = self.pm.all_plugins
         if not all_plugins:
             tk.Label(self._list_inner,
-                     text="プラグインが見つかりません\n\n"
-                          f"「{PLUGINS_DIR}」フォルダに .py ファイルを\n"
-                          "配置してください",
+                     text=self._L["plugin_empty"].format(dir=PLUGINS_DIR),
                      bg=C["BG_PANEL"], fg=C["TEXT_SUB"],
                      font=self._font(), justify="center").pack(pady=30)
             return
@@ -1865,7 +2180,7 @@ class PluginDialog(tk.Toplevel):
                          wraplength=350).pack(anchor="w")
 
             if plugin.author:
-                tk.Label(info, text=f"作者: {plugin.author}",
+                tk.Label(info, text=self._L["plugin_author"].format(author=plugin.author),
                          bg=C["BG_CARD"], fg=C["TEXT_SUB"],
                          font=self._font(-2), anchor="w").pack(anchor="w")
 
@@ -1907,9 +2222,10 @@ class PluginDialog(tk.Toplevel):
 #  結合順ダイアログ (#3 ページ数キャッシュ)
 # ══════════════════════════════════════════
 class MergeOrderDialog(tk.Toplevel):
-    def __init__(self, parent, paths, callback):
+    def __init__(self, parent, paths, callback, lang="ja"):
         super().__init__(parent)
-        self.title("結合順の確認・変更")
+        self._L = LANG[lang]
+        self.title(self._L["merge_title"])
         self.configure(bg=C["BG_DARK"])
         self.resizable(True, True)
         self.grab_set()
@@ -1948,12 +2264,11 @@ class MergeOrderDialog(tk.Toplevel):
         return ("Segoe UI", size)
 
     def _build(self):
-        tk.Label(self, text="結合順の確認・並び替え",
+        tk.Label(self, text=self._L["merge_heading"],
                  bg=C["BG_DARK"], fg=C["ACCENT"],
                  font=self._font(2, "bold")).pack(pady=(14, 4))
         tk.Label(self,
-                 text="ファイルを選択して ▲▼ で順番を変更できます\n"
-                      "確定すると現在のPDFの末尾に順番通り結合されます",
+                 text=self._L["merge_hint"],
                  bg=C["BG_DARK"], fg=C["TEXT_SUB"],
                  font=self._font(-1), justify="center").pack(pady=(0, 8))
 
@@ -1981,11 +2296,11 @@ class MergeOrderDialog(tk.Toplevel):
 
         btn_row = tk.Frame(self, bg=C["BG_DARK"])
         btn_row.pack(fill="x", padx=16, pady=6)
-        ttk.Button(btn_row, text="▲ 上へ",
+        ttk.Button(btn_row, text=self._L["merge_up"],
                    command=self._move_up).pack(side="left", padx=4)
-        ttk.Button(btn_row, text="▼ 下へ",
+        ttk.Button(btn_row, text=self._L["merge_down"],
                    command=self._move_down).pack(side="left", padx=4)
-        ttk.Button(btn_row, text="✕ 削除",
+        ttk.Button(btn_row, text=self._L["merge_remove"],
                    style="Danger.TButton",
                    command=self._remove_item).pack(side="left", padx=4)
 
@@ -1997,10 +2312,10 @@ class MergeOrderDialog(tk.Toplevel):
 
         ok_row = tk.Frame(self, bg=C["BG_DARK"])
         ok_row.pack(pady=(4, 14))
-        ttk.Button(ok_row, text="✔ この順番で結合",
+        ttk.Button(ok_row, text=self._L["merge_confirm"],
                    style="Accent.TButton",
                    command=self._confirm).pack(side="left", padx=8)
-        ttk.Button(ok_row, text="キャンセル",
+        ttk.Button(ok_row, text=self._L["merge_cancel"],
                    command=self.destroy).pack(side="left", padx=8)
 
     def _move_up(self):
@@ -2039,11 +2354,12 @@ class MergeOrderDialog(tk.Toplevel):
 
     def _update_info(self):
         total = sum(self._page_counts.get(p, 0) for p in self.paths)
-        self.info_var.set(f"合計 {len(self.paths)} ファイル  /  {total} ページ")
+        self.info_var.set(self._L["merge_info"].format(count=len(self.paths), total=total))
 
     def _confirm(self):
         if not self.paths:
-            messagebox.showinfo("情報", "ファイルがありません", parent=self)
+            messagebox.showinfo(self._L.get("info_title", "Info"),
+                                self._L["merge_no_files"], parent=self)
             return
         self.destroy()
         self.callback(self.paths)
