@@ -522,6 +522,12 @@ class PluginManager:
             spec = importlib.util.spec_from_file_location(
                 f"pdf_editor_plugin_{plugin_id}", filepath)
             module = importlib.util.module_from_spec(spec)
+            # プラグインが "pdf_editor" モジュール名でインポートできるよう
+            # pagefolio 自身を sys.modules に登録する
+            import sys as _sys
+            _this_module = _sys.modules.get(__name__) or _sys.modules.get("__main__")
+            if "pdf_editor" not in _sys.modules and _this_module is not None:
+                _sys.modules["pdf_editor"] = _this_module
             spec.loader.exec_module(module)
             self._plugin_modules[plugin_id] = module
 
