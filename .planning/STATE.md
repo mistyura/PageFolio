@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Phase 02 Plan 01 完了（D&D ファイルオープン機能実装）
-last_updated: "2026-03-18T20:30:00.000Z"
+stopped_at: Completed 02-01-PLAN.md (D&D ファイルオープン機能実装)
+last_updated: "2026-03-18T11:40:47.303Z"
 last_activity: 2026-03-18 — Plan 02-01 完了（tkinterdnd2 による D&D ファイルオープン実装）
 progress:
   total_phases: 4
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 3
   completed_plans: 3
   percent: 15
