@@ -12,7 +12,7 @@ PageFolio v0.9.4 から v1.0 へのリリースロードマップ。既存の PD
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: コード品質改善とレスポンシブ UI** - バグ修正・コードレビューとレイアウト再構築で土台を固める
+- [x] **Phase 1: コード品質改善とレスポンシブ UI** - バグ修正・コードレビューとレイアウト再構築で土台を固める (completed 2026-03-18)
 - [ ] **Phase 2: D&D ファイルオープン** - プレビュー領域へのドラッグ&ドロップで PDF を開く機能を追加
 - [ ] **Phase 3: パフォーマンスと品質仕上げ** - 大容量 PDF の非ブロッキング読み込みとエラーメッセージ多言語対応
 - [ ] **Phase 4: PyInstaller exe 配布** - onedir 形式で Windows exe パッケージを生成
@@ -80,7 +80,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. コード品質改善とレスポンシブ UI | 1/2 | In Progress | - |
+| 1. コード品質改善とレスポンシブ UI | 2/2 | Complete   | 2026-03-18 |
 | 2. D&D ファイルオープン | 0/? | Not started | - |
 | 3. パフォーマンスと品質仕上げ | 0/? | Not started | - |
 | 4. PyInstaller exe 配布 | 0/? | Not started | - |

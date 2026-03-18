@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: in-progress
-stopped_at: Phase 1 Plan 1 complete
-last_updated: "2026-03-18T10:07:25Z"
-last_activity: 2026-03-18 — Plan 01-01 完了
+status: executing
+stopped_at: Completed 01-02-PLAN.md
+last_updated: "2026-03-18T10:33:11.967Z"
+last_activity: 2026-03-18 — Plan 01-01 完了（3ペイン PanedWindow レイアウト実装）
 progress:
   total_phases: 4
-  completed_phases: 0
-  total_plans: 1
-  completed_plans: 1
+  completed_phases: 1
+  total_plans: 2
+  completed_plans: 2
   percent: 5
 ---
 
@@ -50,6 +50,7 @@ Progress: [█░░░░░░░░░] 5%
 - Trend: -
 
 *Updated after each plan completion*
+| Phase 01-code-quality-responsive-ui P02 | 15 | 1 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -64,6 +65,9 @@ Recent decisions affecting current work:
 - main Frame を廃止し PanedWindow を直接 root に配置（構造をフラット化）
 - 右ペインの固定幅 pack を廃止し PanedWindow の3番目のペインとして追加（minsize=220）
 - _build_tools_scrollable の after(100) 1本に統一（after_idle + after(300) は冗長として削除）
+- [Phase 01-code-quality-responsive-ui]: sash 初期比率設定を after_idle → after(200) に変更: ウィンドウ描画タイミングのずれを確実に解消
+- [Phase 01-code-quality-responsive-ui]: APP_VERSION 定数を導入: 'v0.9.4' をソースの 1 箇所で管理し About ダイアログと設定ダイアログの不一致を解消
+- [Phase 01-code-quality-responsive-ui]: 設定ダイアログのフォントを self._font() 統一: フォントサイズ変更設定が自身のダイアログに反映されない問題を修正
 
 ### Pending Todos
 
@@ -75,6 +79,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-18T10:07:25Z
-Stopped at: Completed 01-01-PLAN.md
-Resume file: .planning/phases/01-code-quality-responsive-ui/01-01-SUMMARY.md
+Last session: 2026-03-18T10:33:11.964Z
+Stopped at: Completed 01-02-PLAN.md
+Resume file: None
