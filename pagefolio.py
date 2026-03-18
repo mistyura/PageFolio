@@ -18,6 +18,12 @@ import importlib
 import importlib.util
 import traceback
 
+try:
+    from tkinterdnd2 import TkinterDnD, DND_FILES
+    _HAS_TKDND = True
+except ImportError:
+    _HAS_TKDND = False
+
 
 # ===================== カラーテーマ =====================
 THEMES = {
@@ -72,10 +78,10 @@ LANG = {
         "select_all": "全選択",
         "deselect": "解除",
         # プレビューツールバー
-        "btn_prev": "◀ 前",
-        "btn_next": "次 ▶",
-        "btn_zoom_in": "🔍 拡大",
-        "btn_zoom_out": "🔍 縮小",
+        "btn_prev": "◀",
+        "btn_next": "▶",
+        "btn_zoom_in": "＋",
+        "btn_zoom_out": "－",
         # ツールセクション見出し
         "sec_settings": "⚙ 設定",
         "sec_file": "📂 ファイル",
@@ -167,6 +173,10 @@ LANG = {
         "info_no_doc": "先にPDFファイルを開いてください",
         # D&D ステータス
         "status_dnd_moved": "p.{src} → p.{dest} に移動しました",
+        # D&D ファイルオープン
+        "dnd_drop_hint": "ここに PDF をドロップ",
+        "dnd_pdf_only": "PDF ファイルのみ対応しています",
+        "dnd_replace_confirm": "現在のファイルを閉じて新しいファイルを開きますか？\n（未保存の変更は失われます）",
         # About ダイアログ
         "about_title": "PageFolio について",
         "about_subtitle": "PDF Page Organizer",
@@ -218,10 +228,10 @@ LANG = {
         "select_all": "Select All",
         "deselect": "Deselect",
         # Preview toolbar
-        "btn_prev": "◀ Prev",
-        "btn_next": "Next ▶",
-        "btn_zoom_in": "🔍 Zoom In",
-        "btn_zoom_out": "🔍 Zoom Out",
+        "btn_prev": "◀",
+        "btn_next": "▶",
+        "btn_zoom_in": "＋",
+        "btn_zoom_out": "－",
         # Tool section titles
         "sec_settings": "⚙ Settings",
         "sec_file": "📂 File",
@@ -313,6 +323,10 @@ LANG = {
         "info_no_doc": "Please open a PDF file first",
         # D&D status
         "status_dnd_moved": "p.{src} → p.{dest} moved",
+        # D&D file open
+        "dnd_drop_hint": "Drop PDF here",
+        "dnd_pdf_only": "Only PDF files are supported",
+        "dnd_replace_confirm": "Close current file and open the new one?\n(Unsaved changes will be lost)",
         # About dialog
         "about_title": "About PageFolio",
         "about_subtitle": "PDF Page Organizer",
@@ -803,29 +817,30 @@ class PDFEditorApp:
 
     # ─────────────────────────────────────────
     def _build_preview(self, parent):
-        toolbar = tk.Frame(parent, bg=C["BG_PANEL"], height=44)
+        toolbar_h = max(44, int(self.font_size * 3.5))
+        toolbar = tk.Frame(parent, bg=C["BG_PANEL"], height=toolbar_h)
         toolbar.pack(fill="x")
         toolbar.pack_propagate(False)
 
         self.prev_btn = ttk.Button(toolbar, text=self._t("btn_prev"),
-                   command=self._prev_page)
-        self.prev_btn.pack(side="left", padx=6, pady=8)
+                   command=self._prev_page, width=3)
+        self.prev_btn.pack(side="left", padx=2, pady=4)
         self.page_label = tk.Label(toolbar, text="- / -",
                                    bg=C["BG_PANEL"], fg=C["TEXT_MAIN"],
                                    font=self._font(0, "bold"))
-        self.page_label.pack(side="left", padx=4)
+        self.page_label.pack(side="left", padx=2)
         self.next_btn = ttk.Button(toolbar, text=self._t("btn_next"),
-                   command=self._next_page)
-        self.next_btn.pack(side="left", padx=6)
+                   command=self._next_page, width=3)
+        self.next_btn.pack(side="left", padx=2)
 
         ttk.Button(toolbar, text=self._t("btn_zoom_out"),
-                   command=lambda: self._zoom(-0.2)).pack(side="right", padx=4, pady=8)
+                   command=lambda: self._zoom(-0.2), width=3).pack(side="right", padx=2, pady=4)
         ttk.Button(toolbar, text=self._t("btn_zoom_in"),
-                   command=lambda: self._zoom(0.2)).pack(side="right", padx=4)
+                   command=lambda: self._zoom(0.2), width=3).pack(side="right", padx=2)
         self.zoom_label = tk.Label(toolbar, text="100%",
                                    bg=C["BG_PANEL"], fg=C["TEXT_SUB"],
                                    font=self._font(-1))
-        self.zoom_label.pack(side="right", padx=4)
+        self.zoom_label.pack(side="right", padx=2)
 
         frame = tk.Frame(parent, bg=C["BG_DARK"])
         frame.pack(fill="both", expand=True)
@@ -1833,6 +1848,56 @@ class PDFEditorApp:
     def _get_targets(self):
         return list(self.selected_pages) if self.selected_pages else [self.current_page]
 
+    # ─────────────────────────────────────────
+    #  D&D ファイルオープン ハンドラ
+    # ─────────────────────────────────────────
+    def _on_dnd_enter(self, event):
+        """ドラッグがプレビュー領域に入ったときのビジュアルフィードバック"""
+        self.preview_canvas.configure(bg=C["ACCENT"])
+        self.preview_canvas.delete("dnd_hint")
+        cx = self.preview_canvas.winfo_width() // 2
+        cy = self.preview_canvas.winfo_height() // 2
+        self.preview_canvas.create_text(
+            cx, cy,
+            text=self._t("dnd_drop_hint"),
+            fill=C["TEXT_MAIN"],
+            font=self._font(4, "bold"),
+            tags="dnd_hint"
+        )
+        return event.action
+
+    def _on_dnd_leave(self, event):
+        """ドラッグがプレビュー領域を離れたときにフィードバックをリセット"""
+        self.preview_canvas.configure(bg=C["PREVIEW_BG"])
+        self.preview_canvas.delete("dnd_hint")
+        return event.action
+
+    def _on_dnd_drop(self, event):
+        """ドロップされたファイルを処理する"""
+        # フィードバックリセット（DropLeave は Drop 前に発火しない場合がある）
+        self.preview_canvas.configure(bg=C["PREVIEW_BG"])
+        self.preview_canvas.delete("dnd_hint")
+
+        raw_paths = self.preview_canvas.tk.splitlist(event.data)
+        pdf_paths = [p for p in raw_paths if p.lower().endswith('.pdf')]
+
+        if not pdf_paths:
+            if raw_paths:
+                self._set_status(self._t("dnd_pdf_only"))
+            return event.action
+
+        if len(pdf_paths) == 1:
+            if self.doc:
+                if not messagebox.askyesno(self._t("confirm_title"),
+                                           self._t("dnd_replace_confirm")):
+                    return event.action
+            self._open_pdf_path(pdf_paths[0])
+        else:
+            MergeOrderDialog(self.root, list(pdf_paths), self._do_open_merged,
+                             lang=self.lang)
+
+        return event.action
+
     def _quit(self):
         if self.doc:
             if messagebox.askyesno(self._t("confirm_title"), self._t("quit_confirm")):
@@ -1932,6 +1997,7 @@ class PDFEditorApp:
         else:
             self._show_preview()
             self._update_doc_buttons_state()
+        _setup_file_drop(self)
 
 
 # ══════════════════════════════════════════
@@ -2383,24 +2449,23 @@ class MergeOrderDialog(tk.Toplevel):
 # ─────────────────────────────────────────
 #  ファイルD&D (#22)
 # ─────────────────────────────────────────
-def _setup_file_drop(root, app):
-    """windnd による D&D。未インストール時はスキップ。"""
-    try:
-        import windnd
-        def on_drop(files):
-            for f in files:
-                path = f.decode('utf-8') if isinstance(f, bytes) else f
-                if path.lower().endswith('.pdf'):
-                    app._open_pdf_path(path)
-                    break
-        windnd.hook_dropfiles(root, func=on_drop)
-    except ImportError:
-        pass
+def _setup_file_drop(app):
+    """tkinterdnd2 による preview_canvas への D&D 登録。未インストール時はスキップ。"""
+    if not _HAS_TKDND:
+        return
+    canvas = app.preview_canvas
+    canvas.drop_target_register(DND_FILES)
+    canvas.dnd_bind('<<DropEnter>>', app._on_dnd_enter)
+    canvas.dnd_bind('<<DropLeave>>', app._on_dnd_leave)
+    canvas.dnd_bind('<<Drop>>', app._on_dnd_drop)
 
 
 # ─────────────────────────────────────────
 if __name__ == "__main__":
-    root = tk.Tk()
+    if _HAS_TKDND:
+        root = TkinterDnD.Tk()
+    else:
+        root = tk.Tk()
     app = PDFEditorApp(root)
-    _setup_file_drop(root, app)
+    _setup_file_drop(app)
     root.mainloop()
