@@ -718,6 +718,7 @@ class PDFEditorApp:
 
     # ─────────────────────────────────────────
     def _build_ui(self):
+        # ---- ヘッダー（既存コードをそのまま維持）----
         header_h = max(56, int(self.font_size * 5))
         header = tk.Frame(self.root, bg=C["BG_PANEL"], height=header_h)
         header.pack(fill="x", side="top")
@@ -729,30 +730,37 @@ class PDFEditorApp:
                  bg=C["BG_PANEL"], fg=C["SUCCESS"],
                  font=self._font(-1)).pack(side="right", padx=20)
 
-        main = tk.Frame(self.root, bg=C["BG_DARK"])
-        main.pack(fill="both", expand=True)
-
-        # 右ペインは固定幅（ウィンドウ拡大時は中央だけ広がる）
-        right_width = max(260, int(self.font_size * 22))
-        right = tk.Frame(main, bg=C["BG_PANEL"], width=right_width)
-        right.pack(side="right", fill="y")
-        right.pack_propagate(False)
-        self._build_tools_scrollable(right)
-
-        # 左パネルと中央はPanedWindowでリサイズ可能
-        paned = tk.PanedWindow(main, orient="horizontal", bg=C["BG_DARK"],
+        # ---- 3ペイン PanedWindow（main Frame を廃止し直接 root に配置）----
+        paned = tk.PanedWindow(self.root, orient="horizontal", bg=C["BG_DARK"],
                                sashwidth=5, sashrelief="flat",
                                opaqueresize=True, bd=0)
-        paned.pack(side="left", fill="both", expand=True)
+        paned.pack(fill="both", expand=True)
 
+        # 左ペイン: サムネイル
         left_width = max(200, int(self.font_size * 18))
         left = tk.Frame(paned, bg=C["BG_PANEL"])
         self._build_thumb_panel(left)
         paned.add(left, minsize=150, width=left_width)
 
+        # 中央ペイン: プレビュー
         center = tk.Frame(paned, bg=C["BG_DARK"])
         self._build_preview(center)
         paned.add(center, minsize=300)
+
+        # 右ペイン: ツール（固定幅 → PanedWindow の3番目のペインに変更）
+        right_width = max(260, int(self.font_size * 22))
+        right = tk.Frame(paned, bg=C["BG_PANEL"])
+        self._build_tools_scrollable(right)
+        paned.add(right, minsize=220, width=right_width)
+
+        # デフォルト比率 20:50:30 を描画後に設定
+        def _set_sash():
+            paned.update_idletasks()
+            total = paned.winfo_width()
+            if total > 100:
+                paned.sash_place(0, int(total * 0.20), 0)
+                paned.sash_place(1, int(total * 0.70), 0)
+        self.root.after_idle(_set_sash)
 
     # ─────────────────────────────────────────
     def _build_thumb_panel(self, parent):
