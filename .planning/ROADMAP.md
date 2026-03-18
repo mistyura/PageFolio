@@ -28,11 +28,11 @@ Decimal phases appear between their surrounding integers in numeric order.
   2. サムネイル・プレビュー・ツールパネル間の境界をドラッグして比率を変更できる
   3. ウィンドウを極端に狭くしてもサムネイルパネルが消えず最小幅が保たれる
   4. 既存機能（回転・削除・トリミング・結合・D&D 並び替え・Undo/Redo）が正常動作する
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 01-01: TBD
-- [ ] 01-02: TBD
+- [ ] 01-01-PLAN.md — コードレビュー・バグ修正と3ペイン PanedWindow レイアウト再構築
+- [ ] 01-02-PLAN.md — レスポンシブレイアウトと既存機能の手動検証
 
 ### Phase 2: D&D ファイルオープン
 **Goal**: ユーザーがエクスプローラーから PDF ファイルをプレビュー領域にドラッグ&ドロップするだけでファイルを開ける
@@ -80,7 +80,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. コード品質改善とレスポンシブ UI | 0/? | Not started | - |
+| 1. コード品質改善とレスポンシブ UI | 0/2 | Not started | - |
 | 2. D&D ファイルオープン | 0/? | Not started | - |
 | 3. パフォーマンスと品質仕上げ | 0/? | Not started | - |
 | 4. PyInstaller exe 配布 | 0/? | Not started | - |
