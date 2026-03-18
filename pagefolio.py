@@ -58,6 +58,9 @@ THEMES = {
 # 現在テーマの色をモジュールレベルで参照するための辞書（実行時に設定）
 C = dict(THEMES["dark"])
 
+# ===================== バージョン =====================
+APP_VERSION = "v0.9.4"
+
 # ===================== 言語辞書 =====================
 LANG = {
     "ja": {
@@ -748,10 +751,9 @@ class PDFEditorApp:
         paned.add(center, minsize=300)
 
         # 右ペイン: ツール（固定幅 → PanedWindow の3番目のペインに変更）
-        right_width = max(260, int(self.font_size * 22))
         right = tk.Frame(paned, bg=C["BG_PANEL"])
         self._build_tools_scrollable(right)
-        paned.add(right, minsize=220, width=right_width)
+        paned.add(right, minsize=220)
 
         # デフォルト比率 20:50:30 を描画後に設定
         def _set_sash():
@@ -760,7 +762,7 @@ class PDFEditorApp:
             if total > 100:
                 paned.sash_place(0, int(total * 0.20), 0)
                 paned.sash_place(1, int(total * 0.70), 0)
-        self.root.after_idle(_set_sash)
+        self.root.after(200, _set_sash)
 
     # ─────────────────────────────────────────
     def _build_thumb_panel(self, parent):
@@ -1895,7 +1897,7 @@ class PDFEditorApp:
     # ══════════════════════════════════════════
     def _open_settings(self):
         """設定ダイアログを開く"""
-        SettingsDialog(self.root, self.settings, self._apply_settings)
+        SettingsDialog(self.root, self.settings, self._apply_settings, self._font)
 
     def _apply_settings(self, new_settings):
         """設定変更を適用してUIを再構築"""
@@ -1956,7 +1958,7 @@ class AboutDialog(tk.Toplevel):
         tk.Label(self, text="PageFolio",
                  bg=C["BG_DARK"], fg=C["ACCENT"],
                  font=("Segoe UI", 16, "bold")).pack(pady=(20, 2))
-        tk.Label(self, text="v0.9.2",
+        tk.Label(self, text=APP_VERSION,
                  bg=C["BG_DARK"], fg=C["TEXT_SUB"],
                  font=self._font(0)).pack()
         tk.Label(self, text=self._L["about_subtitle"],
@@ -1984,7 +1986,7 @@ class AboutDialog(tk.Toplevel):
 #  設定ダイアログ
 # ══════════════════════════════════════════
 class SettingsDialog(tk.Toplevel):
-    def __init__(self, parent, current_settings, callback):
+    def __init__(self, parent, current_settings, callback, font_func=None):
         super().__init__(parent)
         lang = current_settings.get("lang", "ja")
         self._L = LANG[lang]
@@ -1995,6 +1997,7 @@ class SettingsDialog(tk.Toplevel):
 
         self.callback = callback
         self.current_settings = dict(current_settings)
+        self._font = font_func
 
         self._build()
         self.update_idletasks()
@@ -2008,13 +2011,13 @@ class SettingsDialog(tk.Toplevel):
     def _build(self):
         tk.Label(self, text=self._L["settings_heading"],
                  bg=C["BG_DARK"], fg=C["ACCENT"],
-                 font=("Segoe UI", 13, "bold")).pack(pady=(14, 10))
+                 font=self._font(2, "bold")).pack(pady=(14, 10))
 
         # テーマ選択
         tf = tk.Frame(self, bg=C["BG_DARK"])
         tf.pack(fill="x", padx=24, pady=6)
         tk.Label(tf, text=self._L["settings_theme"], bg=C["BG_DARK"], fg=C["TEXT_MAIN"],
-                 font=("Segoe UI", 10)).pack(side="left")
+                 font=self._font(0)).pack(side="left")
         self.theme_var = tk.StringVar(value=self.current_settings.get("theme", "dark"))
         theme_options = [
             (self._L["settings_theme_dark"], "dark"),
@@ -2026,21 +2029,21 @@ class SettingsDialog(tk.Toplevel):
                            bg=C["BG_DARK"], fg=C["TEXT_MAIN"],
                            selectcolor=C["BG_CARD"], activebackground=C["BG_DARK"],
                            activeforeground=C["TEXT_MAIN"],
-                           font=("Segoe UI", 9)).pack(side="left", padx=6)
+                           font=self._font(-1)).pack(side="left", padx=6)
 
         # フォントサイズ
         ff = tk.Frame(self, bg=C["BG_DARK"])
         ff.pack(fill="x", padx=24, pady=6)
         tk.Label(ff, text=self._L["settings_font"], bg=C["BG_DARK"], fg=C["TEXT_MAIN"],
-                 font=("Segoe UI", 10)).pack(side="left")
+                 font=self._font(0)).pack(side="left")
         self.font_var = tk.IntVar(value=self.current_settings.get("font_size", 10))
         tk.Spinbox(ff, from_=8, to=16, textvariable=self.font_var, width=4,
-                   font=("Segoe UI", 10),
+                   font=self._font(0),
                    bg=C["BG_CARD"], fg=C["TEXT_MAIN"],
                    buttonbackground=C["BG_PANEL"],
                    insertbackground=C["TEXT_MAIN"]).pack(side="left", padx=8)
         tk.Label(ff, text=self._L["settings_font_hint"], bg=C["BG_DARK"], fg=C["TEXT_SUB"],
-                 font=("Segoe UI", 9)).pack(side="left")
+                 font=self._font(-1)).pack(side="left")
 
         # プレビュー
         self.preview_label = tk.Label(self, text=self._L["settings_preview_text"],
