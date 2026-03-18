@@ -611,7 +611,7 @@ class PDFEditorApp:
         self.root = root
         self.root.title("PageFolio")
         self.root.geometry("1200x780")
-        self.root.minsize(900, 600)
+        self.root.minsize(800, 600)
 
         # 設定読み込み・テーマ適用
         self.settings = _load_settings()
@@ -878,10 +878,7 @@ class PDFEditorApp:
         def _after_build():
             _bind_mousewheel_recursive(inner)
             canvas.yview_moveto(0)
-        # 複数タイミングで呼び出して確実にリセット
-        inner.after_idle(lambda: canvas.yview_moveto(0))
         inner.after(100, _after_build)
-        inner.after(300, lambda: canvas.yview_moveto(0))
 
     # ─────────────────────────────────────────
     def _build_tools(self, parent):
@@ -1860,7 +1857,7 @@ class PDFEditorApp:
     # ══════════════════════════════════════════
     def _build_plugin_ui(self):
         """有効プラグインのカスタムUIを構築する"""
-        if not hasattr(self, '_plugin_ui_frame'):
+        if not hasattr(self, '_plugin_ui_frame') or self._plugin_ui_frame is None:
             return
         for w in self._plugin_ui_frame.winfo_children():
             w.destroy()
@@ -1917,6 +1914,7 @@ class PDFEditorApp:
         self.crop_mode = False
         self.crop_overlay_ids = []
         self.crop_rect_id = None
+        self._plugin_ui_frame = None
         self._build_styles()
         self._build_ui()
         if self.doc:
