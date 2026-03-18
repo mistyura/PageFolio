@@ -13,7 +13,7 @@ PageFolio v0.9.4 から v1.0 へのリリースロードマップ。既存の PD
 Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: コード品質改善とレスポンシブ UI** - バグ修正・コードレビューとレイアウト再構築で土台を固める (completed 2026-03-18)
-- [ ] **Phase 2: D&D ファイルオープン** - プレビュー領域へのドラッグ&ドロップで PDF を開く機能を追加
+- [x] **Phase 2: D&D ファイルオープン** - プレビュー領域へのドラッグ&ドロップで PDF を開く機能を追加 (completed 2026-03-18)
 - [ ] **Phase 3: パフォーマンスと品質仕上げ** - 大容量 PDF の非ブロッキング読み込みとエラーメッセージ多言語対応
 - [ ] **Phase 4: PyInstaller exe 配布** - onedir 形式で Windows exe パッケージを生成
 
@@ -45,7 +45,7 @@ Plans:
 **Plans**: 1 plan
 
 Plans:
-- [ ] 02-01-PLAN.md — windnd から tkinterdnd2 への移行と D&D ファイルオープン実装
+- [x] 02-01-PLAN.md — windnd から tkinterdnd2 への移行と D&D ファイルオープン実装 (2026-03-18)
 
 ### Phase 3: パフォーマンスと品質仕上げ
 **Goal**: 大容量 PDF を開いても UI がフリーズせず、読み込み進捗が可視化され、全エラーメッセージが多言語対応されている
@@ -81,6 +81,6 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. コード品質改善とレスポンシブ UI | 2/2 | Complete   | 2026-03-18 |
-| 2. D&D ファイルオープン | 0/1 | Not started | - |
+| 2. D&D ファイルオープン | 1/1 | Complete    | 2026-03-18 |
 | 3. パフォーマンスと品質仕上げ | 0/? | Not started | - |
 | 4. PyInstaller exe 配布 | 0/? | Not started | - |

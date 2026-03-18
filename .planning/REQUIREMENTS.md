@@ -15,9 +15,9 @@ Requirements for v1.0 release. Each maps to roadmap phases.
 
 ### D&D ファイルオープン
 
-- [ ] **DND-01**: プレビュー領域に PDF をドロップしてファイルを開ける
-- [ ] **DND-02**: 複数 PDF を同時ドロップすると結合ダイアログが表示される
-- [ ] **DND-03**: ドロップ対象エリアにファイルをドラッグするとビジュアルフィードバックが表示される
+- [x] **DND-01**: プレビュー領域に PDF をドロップしてファイルを開ける
+- [x] **DND-02**: 複数 PDF を同時ドロップすると結合ダイアログが表示される
+- [x] **DND-03**: ドロップ対象エリアにファイルをドラッグするとビジュアルフィードバックが表示される
 
 ### パフォーマンス
 
@@ -74,9 +74,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | UI-01 | Phase 1 | Complete (01-01) |
 | UI-02 | Phase 1 | Complete (01-01) |
 | UI-03 | Phase 1 | Complete (01-01) |
-| DND-01 | Phase 2 | Pending |
-| DND-02 | Phase 2 | Pending |
-| DND-03 | Phase 2 | Pending |
+| DND-01 | Phase 2 | Complete (02-01) |
+| DND-02 | Phase 2 | Complete (02-01) |
+| DND-03 | Phase 2 | Complete (02-01) |
 | PERF-01 | Phase 3 | Pending |
 | PERF-02 | Phase 3 | Pending |
 | QUAL-02 | Phase 3 | Pending |
@@ -90,4 +90,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2026-03-18*
-*Last updated: 2026-03-18 after roadmap creation*
+*Last updated: 2026-03-18 after Plan 02-01 completion (DND-01, DND-02, DND-03 complete)*
