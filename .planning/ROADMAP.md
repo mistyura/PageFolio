@@ -42,10 +42,10 @@ Plans:
   1. プレビュー領域に PDF をドロップするとそのファイルが開かれる
   2. 複数の PDF を同時にドロップすると結合ダイアログが表示される
   3. ファイルをプレビュー領域にドラッグ中、ドロップ可能であることを示すビジュアルフィードバックが表示される
-**Plans**: TBD
+**Plans**: 1 plan
 
 Plans:
-- [ ] 02-01: TBD
+- [ ] 02-01-PLAN.md — windnd から tkinterdnd2 への移行と D&D ファイルオープン実装
 
 ### Phase 3: パフォーマンスと品質仕上げ
 **Goal**: 大容量 PDF を開いても UI がフリーズせず、読み込み進捗が可視化され、全エラーメッセージが多言語対応されている
@@ -81,6 +81,6 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. コード品質改善とレスポンシブ UI | 2/2 | Complete   | 2026-03-18 |
-| 2. D&D ファイルオープン | 0/? | Not started | - |
+| 2. D&D ファイルオープン | 0/1 | Not started | - |
 | 3. パフォーマンスと品質仕上げ | 0/? | Not started | - |
 | 4. PyInstaller exe 配布 | 0/? | Not started | - |
