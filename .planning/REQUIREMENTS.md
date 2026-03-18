@@ -9,9 +9,9 @@ Requirements for v1.0 release. Each maps to roadmap phases.
 
 ### UI / レスポンシブ
 
-- [ ] **UI-01**: ウィンドウリサイズに応じてレイアウトが自動調整される（右側見切れ解消）
-- [ ] **UI-02**: PanedWindow による分割ペインでユーザーがパネル比率を調整できる
-- [ ] **UI-03**: サムネイルパネルが最小幅を保証し、狭いウィンドウでも消えない
+- [x] **UI-01**: ウィンドウリサイズに応じてレイアウトが自動調整される（右側見切れ解消）
+- [x] **UI-02**: PanedWindow による分割ペインでユーザーがパネル比率を調整できる
+- [x] **UI-03**: サムネイルパネルが最小幅を保証し、狭いウィンドウでも消えない
 
 ### D&D ファイルオープン
 
@@ -26,7 +26,7 @@ Requirements for v1.0 release. Each maps to roadmap phases.
 
 ### コード品質
 
-- [ ] **QUAL-01**: 全体コードレビューでバグを修正する
+- [x] **QUAL-01**: 全体コードレビューでバグを修正する
 - [ ] **QUAL-02**: 全エラーメッセージが日本語/英語に対応している
 
 ### 配布
@@ -70,10 +70,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| QUAL-01 | Phase 1 | Pending |
-| UI-01 | Phase 1 | Pending |
-| UI-02 | Phase 1 | Pending |
-| UI-03 | Phase 1 | Pending |
+| QUAL-01 | Phase 1 | Complete (01-01) |
+| UI-01 | Phase 1 | Complete (01-01) |
+| UI-02 | Phase 1 | Complete (01-01) |
+| UI-03 | Phase 1 | Complete (01-01) |
 | DND-01 | Phase 2 | Pending |
 | DND-02 | Phase 2 | Pending |
 | DND-03 | Phase 2 | Pending |

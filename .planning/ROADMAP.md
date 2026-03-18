@@ -31,7 +31,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Plans**: 2 plans
 
 Plans:
-- [ ] 01-01-PLAN.md — コードレビュー・バグ修正と3ペイン PanedWindow レイアウト再構築
+- [x] 01-01-PLAN.md — コードレビュー・バグ修正と3ペイン PanedWindow レイアウト再構築 (2026-03-18)
 - [ ] 01-02-PLAN.md — レスポンシブレイアウトと既存機能の手動検証
 
 ### Phase 2: D&D ファイルオープン
@@ -80,7 +80,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. コード品質改善とレスポンシブ UI | 0/2 | Not started | - |
+| 1. コード品質改善とレスポンシブ UI | 1/2 | In Progress | - |
 | 2. D&D ファイルオープン | 0/? | Not started | - |
 | 3. パフォーマンスと品質仕上げ | 0/? | Not started | - |
 | 4. PyInstaller exe 配布 | 0/? | Not started | - |
