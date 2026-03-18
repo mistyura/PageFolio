@@ -1883,7 +1883,8 @@ class PDFEditorApp:
 
         if not pdf_paths:
             if raw_paths:
-                self._set_status(self._t("dnd_pdf_only"))
+                messagebox.showwarning(self._t("confirm_title"),
+                                       self._t("dnd_pdf_only"))
             return event.action
 
         if len(pdf_paths) == 1:
