@@ -11,6 +11,37 @@ dist/
 build/
 *.spec
 
+# 開発ツール内部データ
+.planning/
+.claude/
+.bg-shell/
+
+# スクリーンショット（デバッグ用）
+*.png
+
 # その他
 .DS_Store
 Thumbs.db
+
+# ── GSD baseline (auto-generated) ──
+.gsd
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
+*.code-workspace
+.env
+.env.*
+!.env.example
+node_modules/
+.next/
+*.pyc
+.venv/
+venv/
+target/
+vendor/
+*.log
+coverage/
+.cache/
+tmp/

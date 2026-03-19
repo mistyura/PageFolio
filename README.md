@@ -33,6 +33,7 @@ It does **not** edit text or add annotations — it focuses on **page-level oper
 | 🗑 ページ削除 | 選択ページをまとめて削除 |
 | ✂ トリミング | プレビュー上のドラッグで余白をカット |
 | 📎 挿入・結合 | 別 PDF からページを挿入 / 末尾に結合 |
+| ✂ 分割 | ページ範囲指定で分割 / 1ページずつ個別PDFに分割 |
 | 🔀 D&D 並び替え | サムネイルをドラッグ＆ドロップでページ順を変更 |
 | ↩ Undo / Redo | 最大20回の取り消し・やり直し（Ctrl+Z / Ctrl+Y） |
 | 🔍 プレビュー | ズーム・スクロール対応、ページ拡大表示 |
@@ -51,6 +52,15 @@ It does **not** edit text or add annotations — it focuses on **page-level oper
 
 ## 起動方法 / Getting Started
 
+### EXE版（推奨）
+```
+dist/PageFolio.exe をダブルクリック
+Double-click dist/PageFolio.exe
+```
+Python のインストールは不要です。  
+No Python installation required.
+
+### Python版
 ```
 PageFolio起動.bat をダブルクリック
 Double-click PageFolio起動.bat
@@ -83,6 +93,18 @@ Required libraries are installed automatically on the first launch.
 - 回転・削除は **選択中のページ** が対象です（未選択の場合は現在ページ）
 - 保存前にアプリを閉じると編集内容は失われます
 - 暗号化・パスワード保護された PDF は開けない場合があります
+
+---
+
+## EXE ビルド / Build EXE
+
+```bash
+pip install pyinstaller
+pyinstaller pagefolio.spec --clean
+```
+
+`dist/PageFolio.exe` が生成されます。  
+The output `dist/PageFolio.exe` is a standalone single-file executable.
 
 ---
 

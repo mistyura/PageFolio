@@ -65,7 +65,7 @@ THEMES = {
 C = dict(THEMES["dark"])
 
 # ===================== バージョン =====================
-APP_VERSION = "v0.9.4"
+APP_VERSION = "v0.9.5"
 
 # ===================== 言語辞書 =====================
 LANG = {
@@ -120,6 +120,19 @@ LANG = {
         "btn_insert_tail": "末尾に挿入",
         "btn_insert_pos": "指定位置に挿入…",
         "btn_merge": "PDFを末尾に結合",
+        # 分割
+        "sec_split": "✂ 分割",
+        "btn_split_range": "📄 範囲を指定して分割…",
+        "btn_split_each": "📑 1ページずつ分割…",
+        "dlg_split_range_title": "ページ範囲を指定して分割",
+        "dlg_split_range_msg": "分割するページ範囲を入力してください。\n\n例:\n  1-3      → 1〜3ページ目を1ファイルに\n  1-3, 5-8 → 2ファイルに分割\n  4        → 4ページ目だけ抽出\n\nページ範囲 (1〜{n}):",
+        "dlg_split_save_dir": "分割ファイルの保存先フォルダを選択",
+        "status_split_range": "{count}個のPDFに分割しました → {folder}",
+        "status_split_each": "{count}ページを個別PDFに分割しました → {folder}",
+        "err_split_range": "ページ範囲の入力が正しくありません。\n\n正しい形式: 1-3, 5-8  または  4\nページ番号は 1〜{n} の範囲で指定してください。",
+        "err_split_no_range": "ページ範囲を入力してください。",
+        "split_overwrite_title": "上書き確認",
+        "split_overwrite_msg": "保存先に同名ファイルが存在します:\n\n{files}\n\n上書きしますか？",
         # プラグイン
         "btn_plugin_mgr": "🔌 プラグイン管理…",
         # プレビュー空状態
@@ -270,6 +283,19 @@ LANG = {
         "btn_insert_tail": "Insert at End",
         "btn_insert_pos": "Insert at Position…",
         "btn_merge": "Merge PDF to End",
+        # Split
+        "sec_split": "✂ Split",
+        "btn_split_range": "📄 Split by Range…",
+        "btn_split_each": "📑 Split Each Page…",
+        "dlg_split_range_title": "Split by Page Range",
+        "dlg_split_range_msg": "Enter page ranges to split.\n\nExamples:\n  1-3      → pages 1–3 as one file\n  1-3, 5-8 → two files\n  4        → extract page 4 only\n\nPage range (1–{n}):",
+        "dlg_split_save_dir": "Select folder for split files",
+        "status_split_range": "Split into {count} PDF(s) → {folder}",
+        "status_split_each": "Split {count} pages into individual PDFs → {folder}",
+        "err_split_range": "Invalid page range.\n\nCorrect format: 1-3, 5-8  or  4\nPage numbers must be between 1 and {n}.",
+        "err_split_no_range": "Please enter a page range.",
+        "split_overwrite_title": "Confirm Overwrite",
+        "split_overwrite_msg": "The following file(s) already exist:\n\n{files}\n\nOverwrite?",
         # Plugin
         "btn_plugin_mgr": "🔌 Manage Plugins…",
         # Preview empty state
@@ -990,6 +1016,10 @@ class PDFEditorApp:
             needs_doc=True)
         btn(f4, self._t("btn_merge"), self._merge_pdf, needs_doc=True)
 
+        f5_split = section(self._t("sec_split"))
+        btn(f5_split, self._t("btn_split_range"), self._split_by_range, needs_doc=True)
+        btn(f5_split, self._t("btn_split_each"), self._split_each_page, needs_doc=True)
+
         # プラグインセクション
         f_plug = section(self._t("sec_plugin"))
         btn(f_plug, self._t("btn_plugin_mgr"), self._open_plugin_dialog)
@@ -1414,6 +1444,128 @@ class PDFEditorApp:
             self._set_status(self._t("status_merged").format(
                 count=len(ordered_paths), total=total))
             self.plugin_manager.fire_event("on_merge", self, ordered_paths)
+        except Exception as e:
+            messagebox.showerror(self._t("err_title"), str(e))
+
+    # ══════════════════════════════════════════
+    #  PDF 分割
+    # ══════════════════════════════════════════
+    def _parse_page_ranges(self, text, max_page):
+        """ページ範囲文字列をパースして [(start, end), ...] のリストを返す。
+        ページ番号は1始まり、返り値も1始まり。無効時は None を返す。"""
+        ranges = []
+        text = text.strip()
+        if not text:
+            return None
+        for part in text.split(","):
+            part = part.strip()
+            if not part:
+                continue
+            if "-" in part:
+                tokens = part.split("-", 1)
+                try:
+                    s, e = int(tokens[0].strip()), int(tokens[1].strip())
+                except ValueError:
+                    return None
+                if s < 1 or e < 1 or s > max_page or e > max_page or s > e:
+                    return None
+                ranges.append((s, e))
+            else:
+                try:
+                    p = int(part)
+                except ValueError:
+                    return None
+                if p < 1 or p > max_page:
+                    return None
+                ranges.append((p, p))
+        return ranges if ranges else None
+
+    def _check_split_overwrite(self, folder, filenames):
+        """分割先に同名ファイルがあれば確認ダイアログを表示。続行ならTrue。"""
+        existing = [f for f in filenames if os.path.exists(os.path.join(folder, f))]
+        if not existing:
+            return True
+        names = "\n".join(existing[:10])
+        if len(existing) > 10:
+            names += f"\n… 他 {len(existing) - 10} ファイル"
+        return messagebox.askyesno(
+            self._t("split_overwrite_title"),
+            self._t("split_overwrite_msg").format(files=names))
+
+    def _split_by_range(self):
+        """ページ範囲を指定して分割保存"""
+        if not self._check_doc():
+            return
+        n = len(self.doc)
+        range_str = simpledialog.askstring(
+            self._t("dlg_split_range_title"),
+            self._t("dlg_split_range_msg").format(n=n))
+        if range_str is None:
+            return
+        if not range_str.strip():
+            messagebox.showinfo(self._t("info_title"), self._t("err_split_no_range"))
+            return
+        ranges = self._parse_page_ranges(range_str, n)
+        if ranges is None:
+            messagebox.showerror(self._t("err_title"),
+                                 self._t("err_split_range").format(n=n))
+            return
+        # 保存先フォルダ選択
+        folder = filedialog.askdirectory(title=self._t("dlg_split_save_dir"))
+        if not folder:
+            return
+        # 元ファイル名からベース名を取得
+        base = "split"
+        if self.doc.name:
+            base = os.path.splitext(os.path.basename(self.doc.name))[0]
+        try:
+            # ファイル名リストを先に生成して上書き確認
+            filenames = []
+            for idx, (s, e) in enumerate(ranges, 1):
+                if s == e:
+                    filenames.append(f"{base}_p{s}.pdf")
+                else:
+                    filenames.append(f"{base}_p{s}-{e}.pdf")
+            if not self._check_split_overwrite(folder, filenames):
+                return
+            for idx, (s, e) in enumerate(ranges):
+                out = fitz.open()
+                out.insert_pdf(self.doc, from_page=s - 1, to_page=e - 1)
+                out_path = os.path.join(folder, filenames[idx])
+                out.save(out_path)
+                out.close()
+            self._set_status(self._t("status_split_range").format(
+                count=len(ranges), folder=folder))
+        except Exception as e:
+            messagebox.showerror(self._t("err_title"), str(e))
+
+    def _split_each_page(self):
+        """全ページを1ページずつ個別PDFに分割保存"""
+        if not self._check_doc():
+            return
+        # 保存先フォルダ選択
+        folder = filedialog.askdirectory(title=self._t("dlg_split_save_dir"))
+        if not folder:
+            return
+        base = "split"
+        if self.doc.name:
+            base = os.path.splitext(os.path.basename(self.doc.name))[0]
+        n = len(self.doc)
+        # ゼロ埋め桁数を算出
+        digits = len(str(n))
+        try:
+            # ファイル名リストを先に生成して上書き確認
+            filenames = [f"{base}_p{str(i + 1).zfill(digits)}.pdf" for i in range(n)]
+            if not self._check_split_overwrite(folder, filenames):
+                return
+            for i in range(n):
+                out = fitz.open()
+                out.insert_pdf(self.doc, from_page=i, to_page=i)
+                out_path = os.path.join(folder, filenames[i])
+                out.save(out_path)
+                out.close()
+            self._set_status(self._t("status_split_each").format(
+                count=n, folder=folder))
         except Exception as e:
             messagebox.showerror(self._t("err_title"), str(e))
 
@@ -2016,7 +2168,8 @@ class AboutDialog(tk.Toplevel):
         self._font = font_func
         self._build()
         self.update_idletasks()
-        w, h = 360, 260
+        w = 360
+        h = max(300, self.winfo_reqheight() + 20)
         px = parent.winfo_rootx() + parent.winfo_width()  // 2
         py = parent.winfo_rooty() + parent.winfo_height() // 2
         self.geometry(f"{w}x{h}+{px - w//2}+{py - h//2}")
