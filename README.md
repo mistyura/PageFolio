@@ -41,33 +41,36 @@ It does **not** edit text or add annotations — it focuses on **page-level oper
 
 ---
 
-## 必要環境 / Requirements
+## ダウンロード / Download
 
-- Python 3.8 以上 / Python 3.8+
-- 必要ライブラリ（初回起動時に自動インストール）/ Auto-installed on first launch:
-  - `pymupdf`
-  - `pillow`
+[Releases](https://github.com/mistyura/PageFolio/releases) から最新の `PageFolio.exe` をダウンロードしてください。  
+Python のインストールは不要です。ダブルクリックで起動できます。
+
+Download the latest `PageFolio.exe` from [Releases](https://github.com/mistyura/PageFolio/releases).  
+No Python installation required — just double-click to run.
 
 ---
 
-## 起動方法 / Getting Started
+## Python から実行する場合 / Run from Python
 
-### EXE版（推奨）
-```
-dist/PageFolio.exe をダブルクリック
-Double-click dist/PageFolio.exe
-```
-Python のインストールは不要です。  
-No Python installation required.
-
-### Python版
-```
-PageFolio起動.bat をダブルクリック
-Double-click PageFolio起動.bat
+```bash
+pip install pymupdf pillow
+python pagefolio.py
 ```
 
-初回のみライブラリの自動インストールが行われます。
-Required libraries are installed automatically on the first launch.
+Python 3.8 以上が必要です / Requires Python 3.8+
+
+---
+
+## EXE ビルド / Build EXE
+
+```bash
+pip install pyinstaller
+pyinstaller --onefile --noconsole --icon=pagefolio.ico --name=PageFolio pagefolio.py
+```
+
+`dist/PageFolio.exe` が生成されます。  
+The output `dist/PageFolio.exe` is a standalone single-file executable.
 
 ---
 
@@ -93,18 +96,6 @@ Required libraries are installed automatically on the first launch.
 - 回転・削除は **選択中のページ** が対象です（未選択の場合は現在ページ）
 - 保存前にアプリを閉じると編集内容は失われます
 - 暗号化・パスワード保護された PDF は開けない場合があります
-
----
-
-## EXE ビルド / Build EXE
-
-```bash
-pip install pyinstaller
-pyinstaller pagefolio.spec --clean
-```
-
-`dist/PageFolio.exe` が生成されます。  
-The output `dist/PageFolio.exe` is a standalone single-file executable.
 
 ---
 

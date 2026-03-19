@@ -31,7 +31,7 @@ AI との協調開発のユースケースとして公開しています。
 ```
 PageFolio/
 ├── pagefolio.py               # アプリ本体（単一ファイル構成）
-├── PageFolio起動.bat          # 起動用バッチ
+├── pagefolio.ico              # アプリアイコン
 ├── README.md                  # エンドユーザー向け使用概要
 ├── CLAUDE.md                  # 本ファイル（AI 向け開発指示書）
 ├── 開発履歴.md                # 機能追加・変更の履歴
@@ -54,6 +54,7 @@ PageFolio/
 | ページ操作 | `_rotate_selected` `_delete_selected` | ページ編集 |
 | トリミング | `_toggle_crop_mode` `_crop_drag_start/move/end` `_crop_page` `_crop_reset` `_clear_crop_overlay` | ドラッグ選択トリミング |
 | 挿入・結合 | `_insert_from_file` `_do_insert` `_merge_pdf` `_do_merge` | 複数ファイル対応 |
+| 分割 | `_split_by_range` `_split_each_page` `_parse_page_ranges` `_check_split_overwrite` | ページ範囲分割・1ページ分割 |
 | D&D 並び替え | `_dnd_start_ghost` `_dnd_move_ghost` `_dnd_drop` `_dnd_show_indicator` `_dnd_dest_index` `_dnd_destroy_ghost` `_dnd_clear_indicator` | サムネイル D&D（末尾対応済） |
 | 表示更新 | `_refresh_all` `_build_thumbnails` `_add_thumb` `_show_preview` `_refresh_thumbs_selection_only` | 再描画 |
 | ボタン状態制御 | `_update_doc_buttons_state` | ファイル開閉に応じたボタン活性/非活性 |
@@ -173,8 +174,8 @@ C = dict(THEMES["dark"])  # 実行時に _apply_theme() で更新
 - [ ] ページの回転状態をプレビューに即時反映
 - [ ] PDF のパスワード解除対応
 - [ ] 印刷機能
-- [ ] ページ範囲指定での分割保存
-- [ ] PyInstaller による exe 化・配布対応
+- [x] ページ範囲指定での分割保存
+- [x] PyInstaller による exe 化・配布対応
 
 ---
 
