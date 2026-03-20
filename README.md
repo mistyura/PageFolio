@@ -53,6 +53,36 @@ No Python installation required — just double-click to run.
 
 ---
 
+## 画面構成 / Layout
+## スクリーンショット / Screenshot
+
+![PageFolio メイン画面](docs/メイン（ダーク）-日本語.png)
+![PageFolio メイン画面](docs/メイン（ダーク）-日本語-2.png)
+![PageFolio メイン画面](docs/メイン（ライト）-日本語.png)
+![PageFolio メイン画面](docs/メイン（ライト）-英語.png)
+![PageFolio メイン画面](docs/メイン（ダーク）-読込.png)
+![PageFolio メイン画面](docs/メイン（ダーク）-結合.png)
+
+---
+
+## 注意事項 / Notes
+
+- トリミングは **現在表示中のページ** にのみ適用されます
+- 回転・削除は **選択中のページ** が対象です（未選択の場合は現在ページ）
+- 保存前にアプリを閉じると編集内容は失われます
+- 暗号化・パスワード保護された PDF は開けない場合があります
+
+---
+
+## 🐛 バグ報告・フィードバック / Bug Reports
+
+不具合・要望は [Issues](https://github.com/mistyura/PageFolio/issues) からお知らせください。  
+Please report bugs or feature requests via [Issues](https://github.com/mistyura/PageFolio/issues).
+
+---
+
+## 開発者向け情報
+
 ## Python から実行する場合 / Run from Python
 
 ```bash
@@ -73,31 +103,6 @@ pyinstaller --onefile --noconsole --icon=pagefolio.ico --name=PageFolio pagefoli
 
 `dist/PageFolio.exe` が生成されます。  
 The output `dist/PageFolio.exe` is a standalone single-file executable.
-
----
-
-## 画面構成 / Layout
-
-```
-┌─────────────────────────────────────────────┐
-│  ヘッダー（タイトル / ステータス表示）           │
-├──────────┬──────────────────────┬────────────┤
-│          │                      │            │
-│ ページ   │   プレビュー          │  ツール    │
-│ 一覧     │   （現在ページ表示）  │  パネル    │
-│ サムネイル│                      │            │
-│          │                      │            │
-└──────────┴──────────────────────┴────────────┘
-```
-
----
-
-## 注意事項 / Notes
-
-- トリミングは **現在表示中のページ** にのみ適用されます
-- 回転・削除は **選択中のページ** が対象です（未選択の場合は現在ページ）
-- 保存前にアプリを閉じると編集内容は失われます
-- 暗号化・パスワード保護された PDF は開けない場合があります
 
 ---
 
