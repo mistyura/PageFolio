@@ -19,6 +19,9 @@ build/
 # スクリーンショット（デバッグ用）
 *.png
 
+# 起動バッチ（EXE配布に移行済み）
+*.bat
+
 # その他
 .DS_Store
 Thumbs.db

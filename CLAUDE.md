@@ -197,7 +197,9 @@ C = dict(THEMES["dark"])  # 実行時に _apply_theme() で更新
 
 ## 変更時のチェックリスト
 
-- [ ] `python3 -c "import ast; ast.parse(open('pagefolio.py').read())"` で構文確認
+- [ ] `ruff check . && ruff format .` でリント・フォーマット確認
+- [ ] `python -c "import ast; ast.parse(open('pagefolio.py', encoding='utf-8').read())"` で構文確認
+- [ ] `pytest` でテスト確認
 - [ ] `開発履歴.md` に変更内容を追記
 - [ ] バージョン番号を更新（本ファイル・開発履歴.md）
 

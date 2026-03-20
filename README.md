@@ -99,6 +99,21 @@ The output `dist/PageFolio.exe` is a standalone single-file executable.
 
 ---
 
+## 開発ツール / Development Tools
+
+| ツール | 用途 |
+|--------|------|
+| [Ruff](https://docs.astral.sh/ruff/) | リント・フォーマット |
+| [pytest](https://docs.pytest.org/) | テスト |
+| [PyInstaller](https://pyinstaller.org/) | EXE ビルド |
+
+```bash
+ruff check . && ruff format .   # リント・フォーマット
+pytest                           # テスト実行
+```
+
+---
+
 ## Claude Code による開発について / About AI-assisted Development
 
 本プロジェクトは Claude Code を使った開発のユースケースとして公開しています。
