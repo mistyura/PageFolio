@@ -2,11 +2,13 @@
 ページ情報表示プラグイン（サンプル）
 現在のページのサイズ・回転角度・CropBox情報をツールパネルに表示する。
 """
-import tkinter as tk
+
+import os
 
 # pdf_editor.py から PDFEditorPlugin をインポート
 import sys
-import os
+import tkinter as tk
+
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from pdf_editor import PDFEditorPlugin
 
@@ -31,24 +33,34 @@ class PageInfoPlugin(PDFEditorPlugin):
         rotation = page.rotation
         cropbox = page.cropbox
         mediabox = page.mediabox
-        has_crop = (cropbox != mediabox)
+        has_crop = cropbox != mediabox
         lines = [
             f"ページ {app.current_page + 1} / {len(app.doc)}",
             f"サイズ: {rect.width:.1f} × {rect.height:.1f} pt",
             f"回転: {rotation}°",
         ]
         if has_crop:
-            lines.append(f"CropBox: ({cropbox.x0:.0f},{cropbox.y0:.0f})-"
-                         f"({cropbox.x1:.0f},{cropbox.y1:.0f})")
+            lines.append(
+                f"CropBox: ({cropbox.x0:.0f},{cropbox.y0:.0f})-"
+                f"({cropbox.x1:.0f},{cropbox.y1:.0f})"
+            )
         self._label.configure(text="\n".join(lines))
 
     def build_ui(self, app, parent):
         # テーマ色を動的に取得
         from pdf_editor import C
-        self._label = tk.Label(parent, text="ファイル未読み込み",
-                               bg=C["BG_CARD"], fg=C["TEXT_SUB"],
-                               font=app._font(-2), justify="left",
-                               anchor="w", padx=8, pady=4)
+
+        self._label = tk.Label(
+            parent,
+            text="ファイル未読み込み",
+            bg=C["BG_CARD"],
+            fg=C["TEXT_SUB"],
+            font=app._font(-2),
+            justify="left",
+            anchor="w",
+            padx=8,
+            pady=4,
+        )
         self._label.pack(fill="x", padx=8, pady=(0, 4))
         self._update_info(app)
 

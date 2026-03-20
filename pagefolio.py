@@ -7,19 +7,20 @@ PageFolio GUI - Windows 11
 必要ライブラリ: pip install pymupdf pillow
 """
 
-import tkinter as tk
-from tkinter import ttk, filedialog, messagebox, simpledialog
-import fitz  # pymupdf
-from PIL import Image, ImageTk
-import io
-import os
-import json
 import importlib
 import importlib.util
+import json
+import os
+import tkinter as tk
 import traceback
+from tkinter import filedialog, messagebox, simpledialog, ttk
+
+import fitz  # pymupdf
+from PIL import Image, ImageTk
 
 try:
-    from tkinterdnd2 import TkinterDnD, DND_FILES
+    from tkinterdnd2 import DND_FILES, TkinterDnD
+
     _HAS_TKDND = True
 except ImportError:
     _HAS_TKDND = False
@@ -28,36 +29,36 @@ except ImportError:
 # ===================== カラーテーマ =====================
 THEMES = {
     "dark": {
-        "BG_DARK":    "#1a1a2e",
-        "BG_PANEL":   "#16213e",
-        "BG_CARD":    "#0f3460",
-        "ACCENT":     "#e94560",
-        "ACCENT2":    "#533483",
-        "TEXT_MAIN":  "#eaeaea",
-        "TEXT_SUB":   "#a0a0b0",
-        "BTN_HOVER":  "#ff6b6b",
-        "SUCCESS":    "#4ecca3",
-        "WARNING":    "#ffd460",
+        "BG_DARK": "#1a1a2e",
+        "BG_PANEL": "#16213e",
+        "BG_CARD": "#0f3460",
+        "ACCENT": "#e94560",
+        "ACCENT2": "#533483",
+        "TEXT_MAIN": "#eaeaea",
+        "TEXT_SUB": "#a0a0b0",
+        "BTN_HOVER": "#ff6b6b",
+        "SUCCESS": "#4ecca3",
+        "WARNING": "#ffd460",
         "CROP_ON_BG": "#8b0000",
         "PREVIEW_BG": "#111122",
-        "DANGER_BG":  "#7c1c2e",
-        "DANGER_FG":  "#ffaaaa",
+        "DANGER_BG": "#7c1c2e",
+        "DANGER_FG": "#ffaaaa",
     },
     "light": {
-        "BG_DARK":    "#f0f0f5",
-        "BG_PANEL":   "#e0e0ea",
-        "BG_CARD":    "#d0d0dd",
-        "ACCENT":     "#d63050",
-        "ACCENT2":    "#7b52ab",
-        "TEXT_MAIN":  "#1a1a2e",
-        "TEXT_SUB":   "#555566",
-        "BTN_HOVER":  "#ff6b6b",
-        "SUCCESS":    "#2a9d6a",
-        "WARNING":    "#b8860b",
+        "BG_DARK": "#f0f0f5",
+        "BG_PANEL": "#e0e0ea",
+        "BG_CARD": "#d0d0dd",
+        "ACCENT": "#d63050",
+        "ACCENT2": "#7b52ab",
+        "TEXT_MAIN": "#1a1a2e",
+        "TEXT_SUB": "#555566",
+        "BTN_HOVER": "#ff6b6b",
+        "SUCCESS": "#2a9d6a",
+        "WARNING": "#b8860b",
         "CROP_ON_BG": "#cc3333",
         "PREVIEW_BG": "#c8c8d0",
-        "DANGER_BG":  "#e8c0c0",
-        "DANGER_FG":  "#7c1c2e",
+        "DANGER_BG": "#e8c0c0",
+        "DANGER_FG": "#7c1c2e",
     },
 }
 
@@ -125,14 +126,26 @@ LANG = {
         "btn_split_range": "📄 範囲を指定して分割…",
         "btn_split_each": "📑 1ページずつ分割…",
         "dlg_split_range_title": "ページ範囲を指定して分割",
-        "dlg_split_range_msg": "分割するページ範囲を入力してください。\n\n例:\n  1-3      → 1〜3ページ目を1ファイルに\n  1-3, 5-8 → 2ファイルに分割\n  4        → 4ページ目だけ抽出\n\nページ範囲 (1〜{n}):",
+        "dlg_split_range_msg": (
+            "分割するページ範囲を入力してください。\n\n例:\n"
+            "  1-3      → 1〜3ページ目を1ファイルに\n"
+            "  1-3, 5-8 → 2ファイルに分割\n"
+            "  4        → 4ページ目だけ抽出\n\n"
+            "ページ範囲 (1〜{n}):"
+        ),
         "dlg_split_save_dir": "分割ファイルの保存先フォルダを選択",
         "status_split_range": "{count}個のPDFに分割しました → {folder}",
         "status_split_each": "{count}ページを個別PDFに分割しました → {folder}",
-        "err_split_range": "ページ範囲の入力が正しくありません。\n\n正しい形式: 1-3, 5-8  または  4\nページ番号は 1〜{n} の範囲で指定してください。",
+        "err_split_range": (
+            "ページ範囲の入力が正しくありません。\n\n"
+            "正しい形式: 1-3, 5-8  または  4\n"
+            "ページ番号は 1〜{n} の範囲で指定してください。"
+        ),
         "err_split_no_range": "ページ範囲を入力してください。",
         "split_overwrite_title": "上書き確認",
-        "split_overwrite_msg": "保存先に同名ファイルが存在します:\n\n{files}\n\n上書きしますか？",
+        "split_overwrite_msg": (
+            "保存先に同名ファイルが存在します:\n\n{files}\n\n上書きしますか？"
+        ),
         # プラグイン
         "btn_plugin_mgr": "🔌 プラグイン管理…",
         # プレビュー空状態
@@ -151,17 +164,25 @@ LANG = {
         "filetypes_all": "すべて",
         "info_open_first": "先にファイルを開いてください",
         "save_confirm_title": "上書き保存の確認",
-        "save_confirm_msg": "以下のファイルを上書き保存します。\n\n{name}\n\n元のファイルは上書きされます。よろしいですか？",
+        "save_confirm_msg": (
+            "以下のファイルを上書き保存します。\n\n{name}\n\n"
+            "元のファイルは上書きされます。よろしいですか？"
+        ),
         "status_saved": "保存しました: {name}",
         "err_save_title": "保存エラー",
         "err_save_msg": "保存に失敗しました:\n{e}",
         "status_opened": "開きました: {name}  ({n}ページ)",
-        "status_merged_open": "{count}ファイルを結合して開きました ({total}ページ): {names}",
+        "status_merged_open": (
+            "{count}ファイルを結合して開きました ({total}ページ): {names}"
+        ),
         # ページ操作ステータス
         "status_rotated": "{count}ページを{deg}°回転しました",
         "info_no_page_sel": "削除するページを選択してください",
         "warn_del_all_title": "警告",
-        "warn_del_all": "すべてのページを削除することはできません。\n最低1ページは残す必要があります。",
+        "warn_del_all": (
+            "すべてのページを削除することはできません。\n"
+            "最低1ページは残す必要があります。"
+        ),
         "confirm_del": "{count}ページを削除しますか？",
         "status_deleted": "{count}ページを削除しました",
         # トリミング
@@ -169,11 +190,17 @@ LANG = {
         "status_cropped": "ページ{page}をトリミングしました",
         "err_crop_small": "範囲が小さすぎます。もう一度ドラッグしてください",
         "err_crop_title": "トリミングエラー",
-        "err_crop_msg": "CropBoxの設定に失敗しました。\n範囲を調整して再度お試しください。\n\n{e}",
+        "err_crop_msg": (
+            "CropBoxの設定に失敗しました。\n範囲を調整して再度お試しください。\n\n{e}"
+        ),
         # 挿入・結合ステータス
         "dlg_insert_title": "挿入するPDFを選択（複数可）",
         "dlg_insert_pos_title": "挿入位置",
-        "dlg_insert_pos_msg": "何ページ目の後ろに挿入しますか？\n(0 = 先頭、1〜{n} = そのページの後ろ)\n\n例: 3 → 3ページ目の後ろに挿入",
+        "dlg_insert_pos_msg": (
+            "何ページ目の後ろに挿入しますか？\n"
+            "(0 = 先頭、1〜{n} = そのページの後ろ)\n\n"
+            "例: 3 → 3ページ目の後ろに挿入"
+        ),
         "status_insert_head": "先頭",
         "status_insert_tail": "末尾",
         "status_insert_pos": "{pos}ページ目の後ろ",
@@ -189,7 +216,10 @@ LANG = {
         # D&D ファイルオープン
         "dnd_drop_hint": "ここに PDF をドロップ",
         "dnd_pdf_only": "PDF ファイルのみ対応しています",
-        "dnd_replace_confirm": "現在のファイルを閉じて新しいファイルを開きますか？\n（未保存の変更は失われます）",
+        "dnd_replace_confirm": (
+            "現在のファイルを閉じて新しいファイルを開きますか？\n"
+            "（未保存の変更は失われます）"
+        ),
         # About ダイアログ
         "about_title": "PageFolio について",
         "about_subtitle": "PDF Page Organizer",
@@ -209,7 +239,10 @@ LANG = {
         # 結合順ダイアログ
         "merge_title": "結合順の確認・変更",
         "merge_heading": "結合順の確認・並び替え",
-        "merge_hint": "ファイルを選択して ▲▼ で順番を変更できます\n確定すると現在のPDFの末尾に順番通り結合されます",
+        "merge_hint": (
+            "ファイルを選択して ▲▼ で順番を変更できます\n"
+            "確定すると現在のPDFの末尾に順番通り結合されます"
+        ),
         "merge_up": "▲ 上へ",
         "merge_down": "▼ 下へ",
         "merge_remove": "✕ 削除",
@@ -221,7 +254,10 @@ LANG = {
         "plugin_title": "プラグイン管理",
         "plugin_heading": "🔌 プラグイン管理",
         "plugin_dir_label": "プラグインフォルダ: {path}",
-        "plugin_empty": "プラグインが見つかりません\n\n「{dir}」フォルダに .py ファイルを\n配置してください",
+        "plugin_empty": (
+            "プラグインが見つかりません\n\n"
+            "「{dir}」フォルダに .py ファイルを\n配置してください"
+        ),
         "plugin_author": "作者: {author}",
         "plugin_rescan": "🔄 再検出",
         "plugin_open_folder": "📁 フォルダを開く",
@@ -288,19 +324,31 @@ LANG = {
         "btn_split_range": "📄 Split by Range…",
         "btn_split_each": "📑 Split Each Page…",
         "dlg_split_range_title": "Split by Page Range",
-        "dlg_split_range_msg": "Enter page ranges to split.\n\nExamples:\n  1-3      → pages 1–3 as one file\n  1-3, 5-8 → two files\n  4        → extract page 4 only\n\nPage range (1–{n}):",
+        "dlg_split_range_msg": (
+            "Enter page ranges to split.\n\nExamples:\n"
+            "  1-3      → pages 1–3 as one file\n"
+            "  1-3, 5-8 → two files\n"
+            "  4        → extract page 4 only\n\n"
+            "Page range (1–{n}):"
+        ),
         "dlg_split_save_dir": "Select folder for split files",
         "status_split_range": "Split into {count} PDF(s) → {folder}",
         "status_split_each": "Split {count} pages into individual PDFs → {folder}",
-        "err_split_range": "Invalid page range.\n\nCorrect format: 1-3, 5-8  or  4\nPage numbers must be between 1 and {n}.",
+        "err_split_range": (
+            "Invalid page range.\n\n"
+            "Correct format: 1-3, 5-8  or  4\n"
+            "Page numbers must be between 1 and {n}."
+        ),
         "err_split_no_range": "Please enter a page range.",
         "split_overwrite_title": "Confirm Overwrite",
-        "split_overwrite_msg": "The following file(s) already exist:\n\n{files}\n\nOverwrite?",
+        "split_overwrite_msg": (
+            "The following file(s) already exist:\n\n{files}\n\nOverwrite?"
+        ),
         # Plugin
         "btn_plugin_mgr": "🔌 Manage Plugins…",
         # Preview empty state
         "preview_empty1": "📂 Open a file to get started",
-        "preview_empty2": "Ctrl+O  or use \"Open File\" in the right panel",
+        "preview_empty2": 'Ctrl+O  or use "Open File" in the right panel',
         # Common button
         "btn_close": "✕ Close",
         # Status messages
@@ -314,7 +362,10 @@ LANG = {
         "filetypes_all": "All files",
         "info_open_first": "Please open a file first",
         "save_confirm_title": "Confirm Overwrite",
-        "save_confirm_msg": "Overwrite the following file?\n\n{name}\n\nThis cannot be undone. Continue?",
+        "save_confirm_msg": (
+            "Overwrite the following file?\n\n{name}\n\n"
+            "This cannot be undone. Continue?"
+        ),
         "status_saved": "Saved: {name}",
         "err_save_title": "Save Error",
         "err_save_msg": "Failed to save:\n{e}",
@@ -332,11 +383,17 @@ LANG = {
         "status_cropped": "Cropped page {page}",
         "err_crop_small": "Selection too small. Please drag again.",
         "err_crop_title": "Crop Error",
-        "err_crop_msg": "Failed to set CropBox.\nAdjust the selection and try again.\n\n{e}",
+        "err_crop_msg": (
+            "Failed to set CropBox.\nAdjust the selection and try again.\n\n{e}"
+        ),
         # Insert/Merge status
         "dlg_insert_title": "Select PDF(s) to Insert",
         "dlg_insert_pos_title": "Insert Position",
-        "dlg_insert_pos_msg": "Insert after which page?\n(0 = beginning, 1–{n} = after that page)\n\nEx: 3 → insert after page 3",
+        "dlg_insert_pos_msg": (
+            "Insert after which page?\n"
+            "(0 = beginning, 1–{n} = after that page)\n\n"
+            "Ex: 3 → insert after page 3"
+        ),
         "status_insert_head": "beginning",
         "status_insert_tail": "end",
         "status_insert_pos": "after page {pos}",
@@ -352,7 +409,9 @@ LANG = {
         # D&D file open
         "dnd_drop_hint": "Drop PDF here",
         "dnd_pdf_only": "Only PDF files are supported",
-        "dnd_replace_confirm": "Close current file and open the new one?\n(Unsaved changes will be lost)",
+        "dnd_replace_confirm": (
+            "Close current file and open the new one?\n(Unsaved changes will be lost)"
+        ),
         # About dialog
         "about_title": "About PageFolio",
         "about_subtitle": "PDF Page Organizer",
@@ -372,7 +431,9 @@ LANG = {
         # Merge order dialog
         "merge_title": "Confirm Merge Order",
         "merge_heading": "Confirm & Reorder",
-        "merge_hint": "Select a file and use ▲▼ to reorder\nThe PDFs will be merged in this order",
+        "merge_hint": (
+            "Select a file and use ▲▼ to reorder\nThe PDFs will be merged in this order"
+        ),
         "merge_up": "▲ Up",
         "merge_down": "▼ Down",
         "merge_remove": "✕ Remove",
@@ -384,7 +445,7 @@ LANG = {
         "plugin_title": "Plugin Manager",
         "plugin_heading": "🔌 Plugin Manager",
         "plugin_dir_label": "Plugin folder: {path}",
-        "plugin_empty": "No plugins found\n\nPlace .py files in the\n\"{dir}\" folder",
+        "plugin_empty": 'No plugins found\n\nPlace .py files in the\n"{dir}" folder',
         "plugin_author": "Author: {author}",
         "plugin_rescan": "🔄 Rescan",
         "plugin_open_folder": "📁 Open Folder",
@@ -399,9 +460,11 @@ LANG = {
 
 SETTINGS_FILE = "pagefolio_settings.json"
 
+
 def _get_settings_path():
     """設定ファイルのパスを返す（スクリプトと同じディレクトリ）"""
     return os.path.join(os.path.dirname(os.path.abspath(__file__)), SETTINGS_FILE)
+
 
 def _load_settings():
     """設定を読み込む。ファイルがなければデフォルト値を返す"""
@@ -414,9 +477,10 @@ def _load_settings():
             for k, v in defaults.items():
                 data.setdefault(k, v)
             return data
-    except Exception:
+    except Exception:  # noqa: S110
         pass
     return dict(defaults)
+
 
 def _save_settings(settings):
     """設定を保存する"""
@@ -424,21 +488,25 @@ def _save_settings(settings):
         path = _get_settings_path()
         with open(path, "w", encoding="utf-8") as f:
             json.dump(settings, f, ensure_ascii=False, indent=2)
-    except Exception:
+    except Exception:  # noqa: S110
         pass
+
 
 def _detect_system_theme():
     """Windowsのシステムテーマを検出。ダーク→'dark'、ライト→'light'"""
     try:
         import winreg
+
         key = winreg.OpenKey(
             winreg.HKEY_CURRENT_USER,
-            r"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize")
+            r"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize",
+        )
         val, _ = winreg.QueryValueEx(key, "AppsUseLightTheme")
         winreg.CloseKey(key)
         return "light" if val == 1 else "dark"
     except Exception:
         return "dark"
+
 
 def _resolve_theme(theme_setting):
     """テーマ設定値を実際のテーマ名に解決する"""
@@ -446,10 +514,12 @@ def _resolve_theme(theme_setting):
         return _detect_system_theme()
     return theme_setting if theme_setting in THEMES else "dark"
 
+
 def _apply_theme(theme_name):
     """テーマをグローバル辞書Cに適用"""
     resolved = _resolve_theme(theme_name)
     C.update(THEMES[resolved])
+
 
 def _make_font(delta=0, weight=None, base_size=10):
     """フォントタプルを生成するグローバルヘルパー"""
@@ -457,6 +527,7 @@ def _make_font(delta=0, weight=None, base_size=10):
     if weight:
         return ("Segoe UI", size, weight)
     return ("Segoe UI", size)
+
 
 # 現在のフォントサイズ（設定から読み込み後に更新）
 _current_font_size = 12
@@ -466,6 +537,7 @@ _current_font_size = 12
 
 PLUGINS_DIR = "plugins"
 
+
 def _get_plugins_dir():
     """プラグインディレクトリのパスを返す（スクリプトと同じディレクトリ内）"""
     return os.path.join(os.path.dirname(os.path.abspath(__file__)), PLUGINS_DIR)
@@ -473,6 +545,7 @@ def _get_plugins_dir():
 
 class PDFEditorPlugin:
     """プラグイン基底クラス。プラグインはこのクラスを継承して作成する。"""
+
     name = "Unnamed Plugin"
     version = "0.0.0"
     description = ""
@@ -527,9 +600,9 @@ class PluginManager:
     """プラグインの検出・読み込み・管理を行うマネージャー"""
 
     def __init__(self):
-        self._plugins = {}        # {plugin_id: plugin_instance}
-        self._plugin_modules = {} # {plugin_id: module}
-        self._disabled = set()    # 無効化されたプラグインIDのセット
+        self._plugins = {}  # {plugin_id: plugin_instance}
+        self._plugin_modules = {}  # {plugin_id: module}
+        self._disabled = set()  # 無効化されたプラグインIDのセット
 
     @property
     def plugins(self):
@@ -563,11 +636,13 @@ class PluginManager:
             return self._plugins[plugin_id]
         try:
             spec = importlib.util.spec_from_file_location(
-                f"pdf_editor_plugin_{plugin_id}", filepath)
+                f"pdf_editor_plugin_{plugin_id}", filepath
+            )
             module = importlib.util.module_from_spec(spec)
             # プラグインが "pdf_editor" モジュール名でインポートできるよう
             # pagefolio 自身を sys.modules に登録する
             import sys as _sys
+
             _this_module = _sys.modules.get(__name__) or _sys.modules.get("__main__")
             if "pdf_editor" not in _sys.modules and _this_module is not None:
                 _sys.modules["pdf_editor"] = _this_module
@@ -578,9 +653,11 @@ class PluginManager:
             plugin_class = None
             for attr_name in dir(module):
                 attr = getattr(module, attr_name)
-                if (isinstance(attr, type)
-                        and issubclass(attr, PDFEditorPlugin)
-                        and attr is not PDFEditorPlugin):
+                if (
+                    isinstance(attr, type)
+                    and issubclass(attr, PDFEditorPlugin)
+                    and attr is not PDFEditorPlugin
+                ):
                     plugin_class = attr
                     break
 
@@ -634,7 +711,7 @@ class PluginManager:
 
     def fire_event(self, event_name, *args, **kwargs):
         """有効な全プラグインにイベントを通知する"""
-        for plugin_id, plugin in self.plugins.items():
+        for _plugin_id, plugin in self.plugins.items():
             method = getattr(plugin, event_name, None)
             if method:
                 try:
@@ -670,10 +747,10 @@ class PDFEditorApp:
         self.current_page = 0
         self.selected_pages = set()
         self.thumb_images = []
-        self.thumb_cache = {}       # サムネイルキャッシュ (#7)
-        self._dnd_src_idx  = None
-        self._dnd_ghost    = None
-        self._dnd_indicator= None
+        self.thumb_cache = {}  # サムネイルキャッシュ (#7)
+        self._dnd_src_idx = None
+        self._dnd_ghost = None
+        self._dnd_indicator = None
         self.crop_rect = None
         self.crop_drag_start = None
         self.crop_mode = False
@@ -705,7 +782,7 @@ class PDFEditorApp:
         self.root.bind("<Control-Y>", lambda e: self._redo())
         self.root.bind("<Control-Shift-s>", lambda e: self._save_as())
         self.root.bind("<Control-Shift-S>", lambda e: self._save_as())
-        self.root.bind("<Delete>",    lambda e: self._delete_selected())
+        self.root.bind("<Delete>", lambda e: self._delete_selected())
 
     # ─────────────────────────────────────────
     def _build_styles(self):
@@ -715,49 +792,81 @@ class PDFEditorApp:
         style.configure("TFrame", background=C["BG_DARK"])
         style.configure("Panel.TFrame", background=C["BG_PANEL"])
         style.configure("Card.TFrame", background=C["BG_CARD"])
-        style.configure("TLabel",
-                        background=C["BG_DARK"], foreground=C["TEXT_MAIN"],
-                        font=("Segoe UI", fs))
-        style.configure("Title.TLabel",
-                        background=C["BG_DARK"], foreground=C["ACCENT"],
-                        font=("Segoe UI", fs + 8, "bold"))
-        style.configure("Sub.TLabel",
-                        background=C["BG_DARK"], foreground=C["TEXT_SUB"],
-                        font=("Segoe UI", fs - 1))
-        style.configure("Status.TLabel",
-                        background=C["BG_PANEL"], foreground=C["SUCCESS"],
-                        font=("Segoe UI", fs - 1))
-        style.configure("TButton",
-                        background=C["BG_CARD"], foreground=C["TEXT_MAIN"],
-                        font=("Segoe UI", fs - 1, "bold"),
-                        borderwidth=0, padding=(10, 6))
-        style.map("TButton",
-                  background=[("active", C["ACCENT"]), ("pressed", C["ACCENT2"])],
-                  foreground=[("active", "#ffffff")])
-        style.configure("Accent.TButton",
-                        background=C["ACCENT"], foreground="#ffffff",
-                        font=("Segoe UI", fs, "bold"),
-                        borderwidth=0, padding=(12, 7))
-        style.map("Accent.TButton",
-                  background=[("active", C["BTN_HOVER"])])
-        style.configure("Danger.TButton",
-                        background=C["DANGER_BG"], foreground=C["DANGER_FG"],
-                        font=("Segoe UI", fs - 1, "bold"),
-                        borderwidth=0, padding=(10, 6))
-        style.map("Danger.TButton",
-                  background=[("active", C["ACCENT"])])
+        style.configure(
+            "TLabel",
+            background=C["BG_DARK"],
+            foreground=C["TEXT_MAIN"],
+            font=("Segoe UI", fs),
+        )
+        style.configure(
+            "Title.TLabel",
+            background=C["BG_DARK"],
+            foreground=C["ACCENT"],
+            font=("Segoe UI", fs + 8, "bold"),
+        )
+        style.configure(
+            "Sub.TLabel",
+            background=C["BG_DARK"],
+            foreground=C["TEXT_SUB"],
+            font=("Segoe UI", fs - 1),
+        )
+        style.configure(
+            "Status.TLabel",
+            background=C["BG_PANEL"],
+            foreground=C["SUCCESS"],
+            font=("Segoe UI", fs - 1),
+        )
+        style.configure(
+            "TButton",
+            background=C["BG_CARD"],
+            foreground=C["TEXT_MAIN"],
+            font=("Segoe UI", fs - 1, "bold"),
+            borderwidth=0,
+            padding=(10, 6),
+        )
+        style.map(
+            "TButton",
+            background=[("active", C["ACCENT"]), ("pressed", C["ACCENT2"])],
+            foreground=[("active", "#ffffff")],
+        )
+        style.configure(
+            "Accent.TButton",
+            background=C["ACCENT"],
+            foreground="#ffffff",
+            font=("Segoe UI", fs, "bold"),
+            borderwidth=0,
+            padding=(12, 7),
+        )
+        style.map("Accent.TButton", background=[("active", C["BTN_HOVER"])])
+        style.configure(
+            "Danger.TButton",
+            background=C["DANGER_BG"],
+            foreground=C["DANGER_FG"],
+            font=("Segoe UI", fs - 1, "bold"),
+            borderwidth=0,
+            padding=(10, 6),
+        )
+        style.map("Danger.TButton", background=[("active", C["ACCENT"])])
         # トリミングモードON強調 (#16)
-        style.configure("CropOn.TButton",
-                        background=C["CROP_ON_BG"], foreground="#ffffff",
-                        font=("Segoe UI", fs - 1, "bold"),
-                        borderwidth=2, padding=(10, 6))
-        style.map("CropOn.TButton",
-                  background=[("active", "#aa0000")])
-        style.configure("TScrollbar",
-                        background=C["BG_CARD"], troughcolor=C["BG_PANEL"],
-                        borderwidth=0, arrowsize=12)
-        style.configure("Horizontal.TScale",
-                        background=C["BG_DARK"], troughcolor=C["BG_CARD"])
+        style.configure(
+            "CropOn.TButton",
+            background=C["CROP_ON_BG"],
+            foreground="#ffffff",
+            font=("Segoe UI", fs - 1, "bold"),
+            borderwidth=2,
+            padding=(10, 6),
+        )
+        style.map("CropOn.TButton", background=[("active", "#aa0000")])
+        style.configure(
+            "TScrollbar",
+            background=C["BG_CARD"],
+            troughcolor=C["BG_PANEL"],
+            borderwidth=0,
+            arrowsize=12,
+        )
+        style.configure(
+            "Horizontal.TScale", background=C["BG_DARK"], troughcolor=C["BG_CARD"]
+        )
 
     # ─────────────────────────────────────────
     def _build_ui(self):
@@ -766,17 +875,32 @@ class PDFEditorApp:
         header = tk.Frame(self.root, bg=C["BG_PANEL"], height=header_h)
         header.pack(fill="x", side="top")
         header.pack_propagate(False)
-        tk.Label(header, text="✦ PageFolio", bg=C["BG_PANEL"],
-                 fg=C["ACCENT"], font=self._font(6, "bold")).pack(side="left", padx=20, pady=12)
+        tk.Label(
+            header,
+            text="✦ PageFolio",
+            bg=C["BG_PANEL"],
+            fg=C["ACCENT"],
+            font=self._font(6, "bold"),
+        ).pack(side="left", padx=20, pady=12)
         self.status_var = tk.StringVar(value=self._t("status_initial"))
-        tk.Label(header, textvariable=self.status_var,
-                 bg=C["BG_PANEL"], fg=C["SUCCESS"],
-                 font=self._font(-1)).pack(side="right", padx=20)
+        tk.Label(
+            header,
+            textvariable=self.status_var,
+            bg=C["BG_PANEL"],
+            fg=C["SUCCESS"],
+            font=self._font(-1),
+        ).pack(side="right", padx=20)
 
         # ---- 3ペイン PanedWindow（main Frame を廃止し直接 root に配置）----
-        paned = tk.PanedWindow(self.root, orient="horizontal", bg=C["BG_DARK"],
-                               sashwidth=5, sashrelief="flat",
-                               opaqueresize=True, bd=0)
+        paned = tk.PanedWindow(
+            self.root,
+            orient="horizontal",
+            bg=C["BG_DARK"],
+            sashwidth=5,
+            sashrelief="flat",
+            opaqueresize=True,
+            bd=0,
+        )
         paned.pack(fill="both", expand=True)
 
         # 左ペイン: サムネイル
@@ -802,44 +926,64 @@ class PDFEditorApp:
             if total > 100:
                 paned.sash_place(0, int(total * 0.20), 0)
                 paned.sash_place(1, int(total * 0.70), 0)
+
         self.root.after(200, _set_sash)
 
     # ─────────────────────────────────────────
     def _build_thumb_panel(self, parent):
         hdr = tk.Frame(parent, bg=C["BG_PANEL"])
         hdr.pack(fill="x", padx=10, pady=(10, 4))
-        tk.Label(hdr, text=self._t("panel_pages"), bg=C["BG_PANEL"],
-                 fg=C["ACCENT"], font=self._font(0, "bold")).pack(side="left")
-        tk.Label(hdr, text=self._t("dnd_hint"), bg=C["BG_PANEL"],
-                 fg=C["TEXT_SUB"], font=self._font(-3)).pack(side="right")
+        tk.Label(
+            hdr,
+            text=self._t("panel_pages"),
+            bg=C["BG_PANEL"],
+            fg=C["ACCENT"],
+            font=self._font(0, "bold"),
+        ).pack(side="left")
+        tk.Label(
+            hdr,
+            text=self._t("dnd_hint"),
+            bg=C["BG_PANEL"],
+            fg=C["TEXT_SUB"],
+            font=self._font(-3),
+        ).pack(side="right")
 
         sel_frame = tk.Frame(parent, bg=C["BG_PANEL"])
         sel_frame.pack(fill="x", padx=6, pady=2)
-        ttk.Button(sel_frame, text=self._t("select_all"),
-                   command=self._select_all).pack(side="left", padx=2)
-        ttk.Button(sel_frame, text=self._t("deselect"),
-                   command=self._deselect_all).pack(side="left", padx=2)
+        ttk.Button(
+            sel_frame, text=self._t("select_all"), command=self._select_all
+        ).pack(side="left", padx=2)
+        ttk.Button(
+            sel_frame, text=self._t("deselect"), command=self._deselect_all
+        ).pack(side="left", padx=2)
 
         canvas_frame = tk.Frame(parent, bg=C["BG_PANEL"])
         canvas_frame.pack(fill="both", expand=True, padx=4, pady=4)
 
-        self.thumb_canvas = tk.Canvas(canvas_frame, bg=C["BG_PANEL"],
-                                      highlightthickness=0)
-        sb = ttk.Scrollbar(canvas_frame, orient="vertical",
-                           command=self.thumb_canvas.yview)
+        self.thumb_canvas = tk.Canvas(
+            canvas_frame, bg=C["BG_PANEL"], highlightthickness=0
+        )
+        sb = ttk.Scrollbar(
+            canvas_frame, orient="vertical", command=self.thumb_canvas.yview
+        )
         self.thumb_canvas.configure(yscrollcommand=sb.set)
         sb.pack(side="right", fill="y")
         self.thumb_canvas.pack(fill="both", expand=True)
 
         self.thumb_inner = tk.Frame(self.thumb_canvas, bg=C["BG_PANEL"])
-        self.thumb_canvas.create_window((0, 0), window=self.thumb_inner,
-                                        anchor="nw")
-        self.thumb_inner.bind("<Configure>",
-                              lambda e: self.thumb_canvas.configure(
-                                  scrollregion=self.thumb_canvas.bbox("all")))
-        self.thumb_canvas.bind("<MouseWheel>",
-                               lambda e: self.thumb_canvas.yview_scroll(
-                                   int(-1*(e.delta/120)), "units"))
+        self.thumb_canvas.create_window((0, 0), window=self.thumb_inner, anchor="nw")
+        self.thumb_inner.bind(
+            "<Configure>",
+            lambda e: self.thumb_canvas.configure(
+                scrollregion=self.thumb_canvas.bbox("all")
+            ),
+        )
+        self.thumb_canvas.bind(
+            "<MouseWheel>",
+            lambda e: self.thumb_canvas.yview_scroll(
+                int(-1 * (e.delta / 120)), "units"
+            ),
+        )
 
     # ─────────────────────────────────────────
     def _build_preview(self, parent):
@@ -848,45 +992,66 @@ class PDFEditorApp:
         toolbar.pack(fill="x")
         toolbar.pack_propagate(False)
 
-        self.prev_btn = ttk.Button(toolbar, text=self._t("btn_prev"),
-                   command=self._prev_page, width=3)
+        self.prev_btn = ttk.Button(
+            toolbar, text=self._t("btn_prev"), command=self._prev_page, width=3
+        )
         self.prev_btn.pack(side="left", padx=2, pady=4)
-        self.page_label = tk.Label(toolbar, text="- / -",
-                                   bg=C["BG_PANEL"], fg=C["TEXT_MAIN"],
-                                   font=self._font(0, "bold"))
+        self.page_label = tk.Label(
+            toolbar,
+            text="- / -",
+            bg=C["BG_PANEL"],
+            fg=C["TEXT_MAIN"],
+            font=self._font(0, "bold"),
+        )
         self.page_label.pack(side="left", padx=2)
-        self.next_btn = ttk.Button(toolbar, text=self._t("btn_next"),
-                   command=self._next_page, width=3)
+        self.next_btn = ttk.Button(
+            toolbar, text=self._t("btn_next"), command=self._next_page, width=3
+        )
         self.next_btn.pack(side="left", padx=2)
 
-        ttk.Button(toolbar, text=self._t("btn_zoom_out"),
-                   command=lambda: self._zoom(-0.2), width=3).pack(side="right", padx=2, pady=4)
-        ttk.Button(toolbar, text=self._t("btn_zoom_in"),
-                   command=lambda: self._zoom(0.2), width=3).pack(side="right", padx=2)
-        self.zoom_label = tk.Label(toolbar, text="100%",
-                                   bg=C["BG_PANEL"], fg=C["TEXT_SUB"],
-                                   font=self._font(-1))
+        ttk.Button(
+            toolbar,
+            text=self._t("btn_zoom_out"),
+            command=lambda: self._zoom(-0.2),
+            width=3,
+        ).pack(side="right", padx=2, pady=4)
+        ttk.Button(
+            toolbar,
+            text=self._t("btn_zoom_in"),
+            command=lambda: self._zoom(0.2),
+            width=3,
+        ).pack(side="right", padx=2)
+        self.zoom_label = tk.Label(
+            toolbar,
+            text="100%",
+            bg=C["BG_PANEL"],
+            fg=C["TEXT_SUB"],
+            font=self._font(-1),
+        )
         self.zoom_label.pack(side="right", padx=2)
 
         frame = tk.Frame(parent, bg=C["BG_DARK"])
         frame.pack(fill="both", expand=True)
 
-        self.preview_canvas = tk.Canvas(frame, bg=C["PREVIEW_BG"],
-                                        highlightthickness=0)
-        vbar = ttk.Scrollbar(frame, orient="vertical",
-                             command=self.preview_canvas.yview)
-        hbar = ttk.Scrollbar(frame, orient="horizontal",
-                             command=self.preview_canvas.xview)
-        self.preview_canvas.configure(yscrollcommand=vbar.set,
-                                      xscrollcommand=hbar.set)
+        self.preview_canvas = tk.Canvas(frame, bg=C["PREVIEW_BG"], highlightthickness=0)
+        vbar = ttk.Scrollbar(
+            frame, orient="vertical", command=self.preview_canvas.yview
+        )
+        hbar = ttk.Scrollbar(
+            frame, orient="horizontal", command=self.preview_canvas.xview
+        )
+        self.preview_canvas.configure(yscrollcommand=vbar.set, xscrollcommand=hbar.set)
         hbar.pack(side="bottom", fill="x")
         vbar.pack(side="right", fill="y")
         self.preview_canvas.pack(fill="both", expand=True)
-        self.preview_canvas.bind("<MouseWheel>",
-                                 lambda e: self.preview_canvas.yview_scroll(
-                                     int(-1*(e.delta/120)), "units"))
-        self.preview_canvas.bind("<ButtonPress-1>",   self._crop_drag_start)
-        self.preview_canvas.bind("<B1-Motion>",       self._crop_drag_move)
+        self.preview_canvas.bind(
+            "<MouseWheel>",
+            lambda e: self.preview_canvas.yview_scroll(
+                int(-1 * (e.delta / 120)), "units"
+            ),
+        )
+        self.preview_canvas.bind("<ButtonPress-1>", self._crop_drag_start)
+        self.preview_canvas.bind("<B1-Motion>", self._crop_drag_move)
         self.preview_canvas.bind("<ButtonRelease-1>", self._crop_drag_end)
         self.zoom = 1.0
         self.preview_img_ref = None
@@ -903,32 +1068,39 @@ class PDFEditorApp:
         canvas.pack(fill="both", expand=True)
 
         inner = tk.Frame(canvas, bg=C["BG_PANEL"])
-        canvas.create_window((0, 0), window=inner, anchor="nw",
-                             tags="inner_window")
+        canvas.create_window((0, 0), window=inner, anchor="nw", tags="inner_window")
 
         def _on_configure(e):
             canvas.configure(scrollregion=canvas.bbox("all"))
             # 内部フレームの幅をキャンバスに合わせる
             canvas.itemconfigure("inner_window", width=canvas.winfo_width())
+
         inner.bind("<Configure>", _on_configure)
-        canvas.bind("<Configure>",
-                    lambda e: canvas.itemconfigure("inner_window",
-                                                   width=e.width))
-        canvas.bind("<MouseWheel>",
-                    lambda e: canvas.yview_scroll(int(-1*(e.delta/120)), "units"))
+        canvas.bind(
+            "<Configure>", lambda e: canvas.itemconfigure("inner_window", width=e.width)
+        )
+        canvas.bind(
+            "<MouseWheel>",
+            lambda e: canvas.yview_scroll(int(-1 * (e.delta / 120)), "units"),
+        )
+
         # 内部ウィジェット上でもスクロールが効くようにバインドを伝播
         def _bind_mousewheel_recursive(widget):
-            widget.bind("<MouseWheel>",
-                        lambda e: canvas.yview_scroll(int(-1*(e.delta/120)), "units"),
-                        add="+")
+            widget.bind(
+                "<MouseWheel>",
+                lambda e: canvas.yview_scroll(int(-1 * (e.delta / 120)), "units"),
+                add="+",
+            )
             for child in widget.winfo_children():
                 _bind_mousewheel_recursive(child)
 
         self._build_tools(inner)
+
         # ツール構築後にバインド＆スクロール位置を先頭にリセット
         def _after_build():
             _bind_mousewheel_recursive(inner)
             canvas.yview_moveto(0)
+
         inner.after(100, _after_build)
 
     # ─────────────────────────────────────────
@@ -939,8 +1111,13 @@ class PDFEditorApp:
         def section(title):
             f = tk.Frame(parent, bg=C["BG_CARD"], bd=0)
             f.pack(fill="x", padx=10, pady=5)
-            tk.Label(f, text=title, bg=C["BG_CARD"], fg=C["WARNING"],
-                     font=self._font(-1, "bold")).pack(anchor="w", padx=8, pady=(6,2))
+            tk.Label(
+                f,
+                text=title,
+                bg=C["BG_CARD"],
+                fg=C["WARNING"],
+                font=self._font(-1, "bold"),
+            ).pack(anchor="w", padx=8, pady=(6, 2))
             return f
 
         def btn(parent, text, cmd, style="TButton", needs_doc=False):
@@ -952,7 +1129,11 @@ class PDFEditorApp:
 
         f5 = section(self._t("sec_settings"))
         btn(f5, self._t("btn_settings"), self._open_settings)
-        btn(f5, self._t("btn_about"), lambda: AboutDialog(self.root, self._font, self.lang))
+        btn(
+            f5,
+            self._t("btn_about"),
+            lambda: AboutDialog(self.root, self._font, self.lang),
+        )
         btn(f5, self._t("btn_lang"), self._toggle_lang)
 
         f = section(self._t("sec_file"))
@@ -972,48 +1153,93 @@ class PDFEditorApp:
         self._doc_buttons.append(b_redo)
 
         f2 = section(self._t("sec_page"))
-        tk.Label(f2, text=self._t("lbl_rotate"), bg=C["BG_CARD"], fg=C["TEXT_SUB"],
-                 font=self._font(-2)).pack(anchor="w", padx=8)
+        tk.Label(
+            f2,
+            text=self._t("lbl_rotate"),
+            bg=C["BG_CARD"],
+            fg=C["TEXT_SUB"],
+            font=self._font(-2),
+        ).pack(anchor="w", padx=8)
         rot_row1 = tk.Frame(f2, bg=C["BG_CARD"])
         rot_row1.pack(fill="x", padx=6, pady=(2, 0))
         for deg, lkey in [(270, "btn_rot_left"), (90, "btn_rot_right")]:
-            b = ttk.Button(rot_row1, text=self._t(lkey),
-                           command=lambda d=deg: self._rotate_selected(d))
+            b = ttk.Button(
+                rot_row1,
+                text=self._t(lkey),
+                command=lambda d=deg: self._rotate_selected(d),
+            )
             b.pack(side="left", expand=True, fill="x", padx=2, pady=2)
             self._doc_buttons.append(b)
         rot_row2 = tk.Frame(f2, bg=C["BG_CARD"])
         rot_row2.pack(fill="x", padx=6, pady=(0, 2))
-        b180 = ttk.Button(rot_row2, text=self._t("btn_rot_180"),
-                          command=lambda: self._rotate_selected(180))
+        b180 = ttk.Button(
+            rot_row2,
+            text=self._t("btn_rot_180"),
+            command=lambda: self._rotate_selected(180),
+        )
         b180.pack(fill="x", padx=2, pady=2)
         self._doc_buttons.append(b180)
 
-        btn(f2, self._t("btn_delete"), self._delete_selected,
-            "Danger.TButton", needs_doc=True)
+        btn(
+            f2,
+            self._t("btn_delete"),
+            self._delete_selected,
+            "Danger.TButton",
+            needs_doc=True,
+        )
 
         f3 = section(self._t("sec_crop"))
         self.crop_mode_var = tk.BooleanVar(value=False)
         self.crop_toggle_btn = ttk.Button(
-            f3, text=self._t("crop_mode_off"),
-            command=self._toggle_crop_mode)
-        self.crop_toggle_btn.pack(fill="x", padx=8, pady=(4,2))
+            f3, text=self._t("crop_mode_off"), command=self._toggle_crop_mode
+        )
+        self.crop_toggle_btn.pack(fill="x", padx=8, pady=(4, 2))
         self._doc_buttons.append(self.crop_toggle_btn)
-        tk.Label(f3, text=self._t("crop_hint"),
-                 bg=C["BG_CARD"], fg=C["TEXT_SUB"], font=self._font(-2)).pack(anchor="w", padx=8)
+        tk.Label(
+            f3,
+            text=self._t("crop_hint"),
+            bg=C["BG_CARD"],
+            fg=C["TEXT_SUB"],
+            font=self._font(-2),
+        ).pack(anchor="w", padx=8)
 
         self.crop_info_var = tk.StringVar(value=self._t("crop_no_sel"))
-        tk.Label(f3, textvariable=self.crop_info_var,
-                 bg=C["BG_CARD"], fg=C["TEXT_SUB"], font=self._font(-2)).pack(anchor="w", padx=8, pady=2)
+        tk.Label(
+            f3,
+            textvariable=self.crop_info_var,
+            bg=C["BG_CARD"],
+            fg=C["TEXT_SUB"],
+            font=self._font(-2),
+        ).pack(anchor="w", padx=8, pady=2)
 
         btn(f3, self._t("btn_crop"), self._crop_page, needs_doc=True)
-        btn(f3, self._t("btn_crop_reset"), self._crop_reset, "Danger.TButton",
-            needs_doc=True)
+        btn(
+            f3,
+            self._t("btn_crop_reset"),
+            self._crop_reset,
+            "Danger.TButton",
+            needs_doc=True,
+        )
 
         f4 = section(self._t("sec_insert"))
-        btn(f4, self._t("btn_insert_head"), lambda: self._insert_from_file("head"), needs_doc=True)
-        btn(f4, self._t("btn_insert_tail"), lambda: self._insert_from_file("tail"), needs_doc=True)
-        btn(f4, self._t("btn_insert_pos"), lambda: self._insert_from_file("pos"),
-            needs_doc=True)
+        btn(
+            f4,
+            self._t("btn_insert_head"),
+            lambda: self._insert_from_file("head"),
+            needs_doc=True,
+        )
+        btn(
+            f4,
+            self._t("btn_insert_tail"),
+            lambda: self._insert_from_file("tail"),
+            needs_doc=True,
+        )
+        btn(
+            f4,
+            self._t("btn_insert_pos"),
+            lambda: self._insert_from_file("pos"),
+            needs_doc=True,
+        )
         btn(f4, self._t("btn_merge"), self._merge_pdf, needs_doc=True)
 
         f5_split = section(self._t("sec_split"))
@@ -1038,9 +1264,9 @@ class PDFEditorApp:
         if not self.doc:
             return
         state = {
-            'pdf_bytes': self.doc.tobytes(),
-            'current_page': self.current_page,
-            'selected_pages': set(self.selected_pages),
+            "pdf_bytes": self.doc.tobytes(),
+            "current_page": self.current_page,
+            "selected_pages": set(self.selected_pages),
         }
         self._undo_stack.append(state)
         if len(self._undo_stack) > self.MAX_UNDO:
@@ -1052,11 +1278,13 @@ class PDFEditorApp:
             self._set_status(self._t("undo_empty"))
             return
         if self.doc:
-            self._redo_stack.append({
-                'pdf_bytes': self.doc.tobytes(),
-                'current_page': self.current_page,
-                'selected_pages': set(self.selected_pages),
-            })
+            self._redo_stack.append(
+                {
+                    "pdf_bytes": self.doc.tobytes(),
+                    "current_page": self.current_page,
+                    "selected_pages": set(self.selected_pages),
+                }
+            )
         state = self._undo_stack.pop()
         self._restore_state(state)
         self._set_status(self._t("undo_done"))
@@ -1066,11 +1294,13 @@ class PDFEditorApp:
             self._set_status(self._t("redo_empty"))
             return
         if self.doc:
-            self._undo_stack.append({
-                'pdf_bytes': self.doc.tobytes(),
-                'current_page': self.current_page,
-                'selected_pages': set(self.selected_pages),
-            })
+            self._undo_stack.append(
+                {
+                    "pdf_bytes": self.doc.tobytes(),
+                    "current_page": self.current_page,
+                    "selected_pages": set(self.selected_pages),
+                }
+            )
         state = self._redo_stack.pop()
         self._restore_state(state)
         self._set_status(self._t("redo_done"))
@@ -1078,9 +1308,9 @@ class PDFEditorApp:
     def _restore_state(self, state):
         if self.doc:
             self.doc.close()
-        self.doc = fitz.open(stream=state['pdf_bytes'], filetype="pdf")
-        self.current_page = min(state['current_page'], max(0, len(self.doc) - 1))
-        self.selected_pages = state['selected_pages']
+        self.doc = fitz.open(stream=state["pdf_bytes"], filetype="pdf")
+        self.current_page = min(state["current_page"], max(0, len(self.doc) - 1))
+        self.selected_pages = state["selected_pages"]
         self._invalidate_thumb_cache()
         self._refresh_all()
 
@@ -1089,7 +1319,11 @@ class PDFEditorApp:
     # ══════════════════════════════════════════
     def _open_file(self):
         paths = filedialog.askopenfilenames(
-            filetypes=[(self._t("filetypes_pdf"), "*.pdf"), (self._t("filetypes_all"), "*.*")])
+            filetypes=[
+                (self._t("filetypes_pdf"), "*.pdf"),
+                (self._t("filetypes_all"), "*.*"),
+            ]
+        )
         if not paths:
             return
         if len(paths) == 1:
@@ -1123,8 +1357,11 @@ class PDFEditorApp:
             self._invalidate_thumb_cache()
             self._refresh_all()
             names = ", ".join(os.path.basename(p) for p in ordered_paths)
-            self._set_status(self._t("status_merged_open").format(
-                count=len(ordered_paths), total=total, names=names))
+            self._set_status(
+                self._t("status_merged_open").format(
+                    count=len(ordered_paths), total=total, names=names
+                )
+            )
         except Exception as e:
             messagebox.showerror(self._t("err_title"), str(e))
 
@@ -1141,8 +1378,11 @@ class PDFEditorApp:
             self._redo_stack.clear()
             self._invalidate_thumb_cache()
             self._refresh_all()
-            self._set_status(self._t("status_opened").format(
-                name=os.path.basename(path), n=len(self.doc)))
+            self._set_status(
+                self._t("status_opened").format(
+                    name=os.path.basename(path), n=len(self.doc)
+                )
+            )
             self.plugin_manager.fire_event("on_file_open", self, path)
         except Exception as e:
             messagebox.showerror(self._t("err_title"), str(e))
@@ -1156,36 +1396,43 @@ class PDFEditorApp:
             # 結合して開いた場合など保存先がない場合は名前を付けて保存
             self._save_as()
             return
-        if not messagebox.askyesno(self._t("save_confirm_title"),
-                                    self._t("save_confirm_msg").format(
-                                        name=os.path.basename(self.filepath))):
+        if not messagebox.askyesno(
+            self._t("save_confirm_title"),
+            self._t("save_confirm_msg").format(name=os.path.basename(self.filepath)),
+        ):
             return
         try:
             try:
-                self.doc.save(self.filepath, incremental=True,
-                              encryption=fitz.PDF_ENCRYPT_KEEP)
+                self.doc.save(
+                    self.filepath, incremental=True, encryption=fitz.PDF_ENCRYPT_KEEP
+                )
             except Exception:
                 tmp = self.filepath + ".tmp"
                 self.doc.save(tmp)
                 os.replace(tmp, self.filepath)
-            self._set_status(self._t("status_saved").format(name=os.path.basename(self.filepath)))
+            self._set_status(
+                self._t("status_saved").format(name=os.path.basename(self.filepath))
+            )
             self.plugin_manager.fire_event("on_file_save", self, self.filepath)
         except Exception as e:
-            messagebox.showerror(self._t("err_save_title"),
-                                 self._t("err_save_msg").format(e=e))
+            messagebox.showerror(
+                self._t("err_save_title"), self._t("err_save_msg").format(e=e)
+            )
 
     def _save_as(self):
         if not self.doc:
             return
         path = filedialog.asksaveasfilename(
-            defaultextension=".pdf",
-            filetypes=[(self._t("filetypes_pdf"), "*.pdf")])
+            defaultextension=".pdf", filetypes=[(self._t("filetypes_pdf"), "*.pdf")]
+        )
         if not path:
             return
         try:
             self.doc.save(path)
             self.filepath = path
-            self._set_status(self._t("status_saved").format(name=os.path.basename(path)))
+            self._set_status(
+                self._t("status_saved").format(name=os.path.basename(path))
+            )
             self.plugin_manager.fire_event("on_file_save", self, path)
         except Exception as e:
             messagebox.showerror(self._t("err_title"), str(e))
@@ -1215,16 +1462,20 @@ class PDFEditorApp:
             return
         # 全ページ削除防止 (#17)
         if len(targets) >= len(self.doc):
-            messagebox.showwarning(self._t("warn_del_all_title"), self._t("warn_del_all"))
+            messagebox.showwarning(
+                self._t("warn_del_all_title"),
+                self._t("warn_del_all"),
+            )
             return
-        if not messagebox.askyesno(self._t("confirm_title"),
-                                    self._t("confirm_del").format(count=len(targets))):
+        if not messagebox.askyesno(
+            self._t("confirm_title"), self._t("confirm_del").format(count=len(targets))
+        ):
             return
         self._save_undo()
         for i in targets:
             self.doc.delete_page(i)
         self.selected_pages.clear()
-        self.current_page = min(self.current_page, max(0, len(self.doc)-1))
+        self.current_page = min(self.current_page, max(0, len(self.doc) - 1))
         self._invalidate_thumb_cache()
         self._refresh_all()
         self._set_status(self._t("status_deleted").format(count=len(targets)))
@@ -1235,13 +1486,13 @@ class PDFEditorApp:
         self.crop_mode = not self.crop_mode
         if self.crop_mode:
             self.crop_toggle_btn.configure(
-                text=self._t("crop_mode_on"),
-                style="CropOn.TButton")
+                text=self._t("crop_mode_on"), style="CropOn.TButton"
+            )
             self.preview_canvas.configure(cursor="crosshair")
         else:
             self.crop_toggle_btn.configure(
-                text=self._t("crop_mode_off"),
-                style="TButton")
+                text=self._t("crop_mode_off"), style="TButton"
+            )
             self.preview_canvas.configure(cursor="")
             self._clear_crop_overlay()
 
@@ -1261,26 +1512,37 @@ class PDFEditorApp:
         cx = self.preview_canvas.canvasx(event.x)
         cy = self.preview_canvas.canvasy(event.y)
         x0, y0 = self.crop_drag_start
-        sx, sy, ex, ey = min(x0,cx), min(y0,cy), max(x0,cx), max(y0,cy)
+        sx, sy, ex, ey = min(x0, cx), min(y0, cy), max(x0, cx), max(y0, cy)
 
         sr = self.preview_canvas.cget("scrollregion")
         if sr:
             parts = sr.split()
-            pw = float(parts[2]) if len(parts) >= 3 else self.preview_canvas.winfo_width()
-            ph = float(parts[3]) if len(parts) >= 4 else self.preview_canvas.winfo_height()
+            pw = (
+                float(parts[2])
+                if len(parts) >= 3
+                else self.preview_canvas.winfo_width()
+            )
+            ph = (
+                float(parts[3])
+                if len(parts) >= 4
+                else self.preview_canvas.winfo_height()
+            )
         else:
             pw = self.preview_canvas.winfo_width()
             ph = self.preview_canvas.winfo_height()
 
+        _ov = dict(fill="#000000", stipple="gray50", outline="")
         if not self.crop_overlay_ids:
+            cr = self.preview_canvas.create_rectangle
             self.crop_overlay_ids = [
-                self.preview_canvas.create_rectangle(0, 0, pw, sy, fill="#000000", stipple="gray50", outline=""),
-                self.preview_canvas.create_rectangle(0, ey, pw, ph, fill="#000000", stipple="gray50", outline=""),
-                self.preview_canvas.create_rectangle(0, sy, sx, ey, fill="#000000", stipple="gray50", outline=""),
-                self.preview_canvas.create_rectangle(ex, sy, pw, ey, fill="#000000", stipple="gray50", outline=""),
+                cr(0, 0, pw, sy, **_ov),
+                cr(0, ey, pw, ph, **_ov),
+                cr(0, sy, sx, ey, **_ov),
+                cr(ex, sy, pw, ey, **_ov),
             ]
             self.crop_rect_id = self.preview_canvas.create_rectangle(
-                sx, sy, ex, ey, outline=C["ACCENT"], width=2, dash=(4,3))
+                sx, sy, ex, ey, outline=C["ACCENT"], width=2, dash=(4, 3)
+            )
         else:
             self.preview_canvas.coords(self.crop_overlay_ids[0], 0, 0, pw, sy)
             self.preview_canvas.coords(self.crop_overlay_ids[1], 0, ey, pw, ph)
@@ -1296,7 +1558,9 @@ class PDFEditorApp:
         py0 = int((sy - img_offset) / scale)
         px1 = int((ex - img_offset) / scale)
         py1 = int((ey - img_offset) / scale)
-        self.crop_info_var.set(f"({px0},{py0}) - ({px1},{py1})  {px1-px0}×{py1-py0} pt")
+        self.crop_info_var.set(
+            f"({px0},{py0}) - ({px1},{py1})  {px1 - px0}×{py1 - py0} pt"
+        )
 
     def _crop_drag_end(self, event):
         if not self.crop_mode:
@@ -1332,8 +1596,9 @@ class PDFEditorApp:
         y1_pdf = (ey - img_offset) / scale
         page = self.doc[self.current_page]
         mb = page.mediabox
-        new_rect = fitz.Rect(mb.x0 + x0_pdf, mb.y0 + y0_pdf,
-                             mb.x0 + x1_pdf, mb.y0 + y1_pdf)
+        new_rect = fitz.Rect(
+            mb.x0 + x0_pdf, mb.y0 + y0_pdf, mb.x0 + x1_pdf, mb.y0 + y1_pdf
+        )
         # CropBox を MediaBox の範囲内に厳密にクランプ
         # pymupdf は浮動小数点で厳密に比較するため余裕を持たせる
         EPS = 0.01
@@ -1341,16 +1606,22 @@ class PDFEditorApp:
             max(round(new_rect.x0, 2), mb.x0 + EPS),
             max(round(new_rect.y0, 2), mb.y0 + EPS),
             min(round(new_rect.x1, 2), mb.x1 - EPS),
-            min(round(new_rect.y1, 2), mb.y1 - EPS)
+            min(round(new_rect.y1, 2), mb.y1 - EPS),
         )
-        if new_rect.is_empty or new_rect.is_infinite or new_rect.width < 1 or new_rect.height < 1:
+        if (
+            new_rect.is_empty
+            or new_rect.is_infinite
+            or new_rect.width < 1
+            or new_rect.height < 1
+        ):
             messagebox.showerror(self._t("err_title"), self._t("err_crop_small"))
             return
         try:
             page.set_cropbox(new_rect)
         except ValueError as e:
-            messagebox.showerror(self._t("err_crop_title"),
-                                 self._t("err_crop_msg").format(e=e))
+            messagebox.showerror(
+                self._t("err_crop_title"), self._t("err_crop_msg").format(e=e)
+            )
             return
         self.crop_rect = None
         self.crop_mode = False
@@ -1359,7 +1630,7 @@ class PDFEditorApp:
         self.crop_info_var.set(self._t("crop_no_sel"))
         self._invalidate_thumb_cache([self.current_page])
         self._refresh_all()
-        self._set_status(self._t("status_cropped").format(page=self.current_page+1))
+        self._set_status(self._t("status_cropped").format(page=self.current_page + 1))
         self.plugin_manager.fire_event("on_page_crop", self, self.current_page)
 
     def _insert_from_file(self, mode="pos"):
@@ -1368,7 +1639,8 @@ class PDFEditorApp:
             return
         paths = filedialog.askopenfilenames(
             title=self._t("dlg_insert_title"),
-            filetypes=[(self._t("filetypes_pdf"), "*.pdf")])
+            filetypes=[(self._t("filetypes_pdf"), "*.pdf")],
+        )
         if not paths:
             return
 
@@ -1380,17 +1652,22 @@ class PDFEditorApp:
             pos = simpledialog.askinteger(
                 self._t("dlg_insert_pos_title"),
                 self._t("dlg_insert_pos_msg").format(n=len(self.doc)),
-                minvalue=0, maxvalue=len(self.doc),
-                initialvalue=self.current_page + 1)
+                minvalue=0,
+                maxvalue=len(self.doc),
+                initialvalue=self.current_page + 1,
+            )
             if pos is None:
                 return
             insert_at = pos
 
         # 複数ファイル時は結合順ダイアログを表示
         if len(paths) > 1:
-            MergeOrderDialog(self.root, list(paths),
-                             lambda ordered: self._do_insert(ordered, insert_at),
-                             lang=self.lang)
+            MergeOrderDialog(
+                self.root,
+                list(paths),
+                lambda ordered: self._do_insert(ordered, insert_at),
+                lang=self.lang,
+            )
         else:
             self._do_insert(list(paths), insert_at)
 
@@ -1414,8 +1691,11 @@ class PDFEditorApp:
                 where = self._t("status_insert_tail")
             else:
                 where = self._t("status_insert_pos").format(pos=insert_at)
-            self._set_status(self._t("status_inserted").format(
-                count=len(ordered_paths), total=total, where=where))
+            self._set_status(
+                self._t("status_inserted").format(
+                    count=len(ordered_paths), total=total, where=where
+                )
+            )
             self.plugin_manager.fire_event("on_insert", self, ordered_paths, insert_at)
         except Exception as e:
             messagebox.showerror(self._t("err_title"), str(e))
@@ -1425,7 +1705,8 @@ class PDFEditorApp:
             return
         paths = filedialog.askopenfilenames(
             title=self._t("dlg_merge_title"),
-            filetypes=[(self._t("filetypes_pdf"), "*.pdf")])
+            filetypes=[(self._t("filetypes_pdf"), "*.pdf")],
+        )
         if not paths:
             return
         MergeOrderDialog(self.root, list(paths), self._do_merge, lang=self.lang)
@@ -1441,8 +1722,9 @@ class PDFEditorApp:
                 src.close()
             self._invalidate_thumb_cache()
             self._refresh_all()
-            self._set_status(self._t("status_merged").format(
-                count=len(ordered_paths), total=total))
+            self._set_status(
+                self._t("status_merged").format(count=len(ordered_paths), total=total)
+            )
             self.plugin_manager.fire_event("on_merge", self, ordered_paths)
         except Exception as e:
             messagebox.showerror(self._t("err_title"), str(e))
@@ -1490,7 +1772,8 @@ class PDFEditorApp:
             names += f"\n… 他 {len(existing) - 10} ファイル"
         return messagebox.askyesno(
             self._t("split_overwrite_title"),
-            self._t("split_overwrite_msg").format(files=names))
+            self._t("split_overwrite_msg").format(files=names),
+        )
 
     def _split_by_range(self):
         """ページ範囲を指定して分割保存"""
@@ -1498,8 +1781,8 @@ class PDFEditorApp:
             return
         n = len(self.doc)
         range_str = simpledialog.askstring(
-            self._t("dlg_split_range_title"),
-            self._t("dlg_split_range_msg").format(n=n))
+            self._t("dlg_split_range_title"), self._t("dlg_split_range_msg").format(n=n)
+        )
         if range_str is None:
             return
         if not range_str.strip():
@@ -1507,8 +1790,9 @@ class PDFEditorApp:
             return
         ranges = self._parse_page_ranges(range_str, n)
         if ranges is None:
-            messagebox.showerror(self._t("err_title"),
-                                 self._t("err_split_range").format(n=n))
+            messagebox.showerror(
+                self._t("err_title"), self._t("err_split_range").format(n=n)
+            )
             return
         # 保存先フォルダ選択
         folder = filedialog.askdirectory(title=self._t("dlg_split_save_dir"))
@@ -1521,7 +1805,7 @@ class PDFEditorApp:
         try:
             # ファイル名リストを先に生成して上書き確認
             filenames = []
-            for idx, (s, e) in enumerate(ranges, 1):
+            for _idx, (s, e) in enumerate(ranges, 1):
                 if s == e:
                     filenames.append(f"{base}_p{s}.pdf")
                 else:
@@ -1534,8 +1818,9 @@ class PDFEditorApp:
                 out_path = os.path.join(folder, filenames[idx])
                 out.save(out_path)
                 out.close()
-            self._set_status(self._t("status_split_range").format(
-                count=len(ranges), folder=folder))
+            self._set_status(
+                self._t("status_split_range").format(count=len(ranges), folder=folder)
+            )
         except Exception as e:
             messagebox.showerror(self._t("err_title"), str(e))
 
@@ -1564,8 +1849,9 @@ class PDFEditorApp:
                 out_path = os.path.join(folder, filenames[i])
                 out.save(out_path)
                 out.close()
-            self._set_status(self._t("status_split_each").format(
-                count=n, folder=folder))
+            self._set_status(
+                self._t("status_split_each").format(count=n, folder=folder)
+            )
         except Exception as e:
             messagebox.showerror(self._t("err_title"), str(e))
 
@@ -1596,13 +1882,19 @@ class PDFEditorApp:
             cw = self.preview_canvas.winfo_width()
             ch = self.preview_canvas.winfo_height()
             self.preview_canvas.create_text(
-                cw // 2, ch // 2 - 16,
+                cw // 2,
+                ch // 2 - 16,
                 text=self._t("preview_empty1"),
-                fill=C["TEXT_SUB"], font=self._font(4))
+                fill=C["TEXT_SUB"],
+                font=self._font(4),
+            )
             self.preview_canvas.create_text(
-                cw // 2, ch // 2 + 16,
+                cw // 2,
+                ch // 2 + 16,
                 text=self._t("preview_empty2"),
-                fill=C["TEXT_SUB"], font=self._font())
+                fill=C["TEXT_SUB"],
+                font=self._font(),
+            )
             return
         page = self.doc[self.current_page]
         mat = fitz.Matrix(self.zoom * 1.5, self.zoom * 1.5)
@@ -1613,14 +1905,26 @@ class PDFEditorApp:
         pad = 10
         # ページの影（ドロップシャドウ風）で境界を明確化
         self.preview_canvas.create_rectangle(
-            pad + 3, pad + 3, pad + pix.width + 3, pad + pix.height + 3,
-            fill=C["TEXT_SUB"], outline="")
+            pad + 3,
+            pad + 3,
+            pad + pix.width + 3,
+            pad + pix.height + 3,
+            fill=C["TEXT_SUB"],
+            outline="",
+        )
         self.preview_canvas.create_rectangle(
-            pad, pad, pad + pix.width, pad + pix.height,
-            fill="", outline=C["TEXT_SUB"], width=1)
+            pad,
+            pad,
+            pad + pix.width,
+            pad + pix.height,
+            fill="",
+            outline=C["TEXT_SUB"],
+            width=1,
+        )
         self.preview_canvas.create_image(pad, pad, anchor="nw", image=photo)
         self.preview_canvas.configure(
-            scrollregion=(0, 0, pix.width + pad * 2, pix.height + pad * 2))
+            scrollregion=(0, 0, pix.width + pad * 2, pix.height + pad * 2)
+        )
 
     # ══════════════════════════════════════════
     #  ナビゲーション & ズーム
@@ -1632,14 +1936,14 @@ class PDFEditorApp:
             self.plugin_manager.fire_event("on_page_change", self, self.current_page)
 
     def _next_page(self):
-        if self.doc and self.current_page < len(self.doc)-1:
+        if self.doc and self.current_page < len(self.doc) - 1:
             self.current_page += 1
             self._refresh_all()
             self.plugin_manager.fire_event("on_page_change", self, self.current_page)
 
     def _zoom(self, delta):
         self.zoom = max(0.3, min(3.0, self.zoom + delta))
-        self.zoom_label.configure(text=f"{int(self.zoom*100)}%")
+        self.zoom_label.configure(text=f"{int(self.zoom * 100)}%")
         self._show_preview()
 
     # ══════════════════════════════════════════
@@ -1669,14 +1973,17 @@ class PDFEditorApp:
         self._update_doc_buttons_state()
         n = len(self.doc) if self.doc else 0
         self.page_label.configure(
-            text=f"{self.current_page+1} / {n}" if n else "- / -")
+            text=f"{self.current_page + 1} / {n}" if n else "- / -"
+        )
         # ナビゲーションボタンの活性/非活性制御
         if n <= 1:
             self.prev_btn.state(["disabled"])
             self.next_btn.state(["disabled"])
         else:
-            self.prev_btn.state(["!disabled"] if self.current_page > 0 else ["disabled"])
-            self.next_btn.state(["!disabled"] if self.current_page < n - 1 else ["disabled"])
+            prev_st = ["!disabled"] if self.current_page > 0 else ["disabled"]
+            next_st = ["!disabled"] if self.current_page < n - 1 else ["disabled"]
+            self.prev_btn.state(prev_st)
+            self.next_btn.state(next_st)
 
     def _refresh_thumbs_selection_only(self):
         """選択・カレント変更のみ — 画像再生成なし (#8)"""
@@ -1690,14 +1997,17 @@ class PDFEditorApp:
                 child.configure(bg=bg)
         n = len(self.doc) if self.doc else 0
         self.page_label.configure(
-            text=f"{self.current_page+1} / {n}" if n else "- / -")
+            text=f"{self.current_page + 1} / {n}" if n else "- / -"
+        )
         # ナビゲーションボタンの活性/非活性制御
         if n <= 1:
             self.prev_btn.state(["disabled"])
             self.next_btn.state(["disabled"])
         else:
-            self.prev_btn.state(["!disabled"] if self.current_page > 0 else ["disabled"])
-            self.next_btn.state(["!disabled"] if self.current_page < n - 1 else ["disabled"])
+            prev_st = ["!disabled"] if self.current_page > 0 else ["disabled"]
+            next_st = ["!disabled"] if self.current_page < n - 1 else ["disabled"]
+            self.prev_btn.state(prev_st)
+            self.next_btn.state(next_st)
 
     def _build_thumbnails(self):
         for w in self.thumb_inner.winfo_children():
@@ -1720,9 +2030,10 @@ class PDFEditorApp:
         frame.pack(fill="x", padx=6, pady=3)
 
         lbl = tk.Label(frame, image=photo, bg=bg)
-        lbl.pack(pady=(4,0))
-        tk.Label(frame, text=f"p.{i+1}", bg=bg, fg=C["TEXT_MAIN"],
-                 font=self._font(-2)).pack(pady=(0,4))
+        lbl.pack(pady=(4, 0))
+        tk.Label(
+            frame, text=f"p.{i + 1}", bg=bg, fg=C["TEXT_MAIN"], font=self._font(-2)
+        ).pack(pady=(0, 4))
 
         def on_press(event, idx=i):
             self._dnd_src_idx = idx
@@ -1751,24 +2062,25 @@ class PDFEditorApp:
                 else:
                     # 遅延実行でダブルクリックと競合しないようにする
                     self._pending_click = self.root.after(
-                        250, lambda: self._single_click(idx))
-            self._dnd_src_idx  = None
+                        250, lambda: self._single_click(idx)
+                    )
+            self._dnd_src_idx = None
             self._dnd_dragging = False
             self._dnd_destroy_ghost()
             self._dnd_clear_indicator()
 
         def on_double(event, idx=i):
             # シングルクリックの遅延実行をキャンセル
-            if hasattr(self, '_pending_click') and self._pending_click:
+            if hasattr(self, "_pending_click") and self._pending_click:
                 self.root.after_cancel(self._pending_click)
                 self._pending_click = None
             self._show_page_popup(idx)
 
         for w in (frame, lbl):
-            w.bind('<ButtonPress-1>',   on_press)
-            w.bind('<B1-Motion>',       on_motion)
-            w.bind('<ButtonRelease-1>', on_release)
-            w.bind('<Double-Button-1>', on_double)
+            w.bind("<ButtonPress-1>", on_press)
+            w.bind("<B1-Motion>", on_motion)
+            w.bind("<ButtonRelease-1>", on_release)
+            w.bind("<Double-Button-1>", on_double)
 
     # ══ ページ拡大表示ポップアップ ═════════════════════
     def _single_click(self, idx):
@@ -1798,8 +2110,8 @@ class PDFEditorApp:
         def update_nav():
             """ナビゲーションボタンの活性/非活性とラベル更新"""
             i = popup_state["idx"]
-            page_lbl.configure(text=f"{i+1} / {n}")
-            popup.title(f"ページ {i+1} / {n}")
+            page_lbl.configure(text=f"{i + 1} / {n}")
+            popup.title(f"ページ {i + 1} / {n}")
             if n <= 1:
                 prev_btn.state(["disabled"])
                 next_btn.state(["disabled"])
@@ -1817,13 +2129,31 @@ class PDFEditorApp:
             canvas._photo = photo  # 参照を保持
             pad = 10
             canvas.create_rectangle(
-                pad + 3, pad + 3, pad + pix.width + 3, pad + pix.height + 3,
-                fill=C["TEXT_SUB"], outline="")
+                pad + 3,
+                pad + 3,
+                pad + pix.width + 3,
+                pad + pix.height + 3,
+                fill=C["TEXT_SUB"],
+                outline="",
+            )
             canvas.create_rectangle(
-                pad, pad, pad + pix.width, pad + pix.height,
-                fill="", outline=C["TEXT_SUB"], width=1)
+                pad,
+                pad,
+                pad + pix.width,
+                pad + pix.height,
+                fill="",
+                outline=C["TEXT_SUB"],
+                width=1,
+            )
             canvas.create_image(pad, pad, anchor="nw", image=photo)
-            canvas.configure(scrollregion=(0, 0, pix.width + pad * 2, pix.height + pad * 2))
+            canvas.configure(
+                scrollregion=(
+                    0,
+                    0,
+                    pix.width + pad * 2,
+                    pix.height + pad * 2,
+                )
+            )
             zoom_lbl.configure(text=f"{int(popup_state['zoom'] / 1.5 * 100)}%")
             update_nav()
 
@@ -1848,21 +2178,39 @@ class PDFEditorApp:
         # ナビゲーション（左側）
         prev_btn = ttk.Button(toolbar, text="◀", command=go_prev)
         prev_btn.pack(side="left", padx=(10, 2), pady=6)
-        page_lbl = tk.Label(toolbar, text=f"{idx+1} / {n}",
-                            bg=C["BG_PANEL"], fg=C["TEXT_MAIN"],
-                            font=self._font(0, "bold"))
+        page_lbl = tk.Label(
+            toolbar,
+            text=f"{idx + 1} / {n}",
+            bg=C["BG_PANEL"],
+            fg=C["TEXT_MAIN"],
+            font=self._font(0, "bold"),
+        )
         page_lbl.pack(side="left", padx=4)
         next_btn = ttk.Button(toolbar, text="▶", command=go_next)
         next_btn.pack(side="left", padx=2)
 
         # ズーム・閉じる（右側）
-        zoom_lbl = tk.Label(toolbar, text="100%", bg=C["BG_PANEL"], fg=C["TEXT_SUB"],
-                            font=self._font(-1))
+        zoom_lbl = tk.Label(
+            toolbar,
+            text="100%",
+            bg=C["BG_PANEL"],
+            fg=C["TEXT_SUB"],
+            font=self._font(-1),
+        )
         zoom_lbl.pack(side="right", padx=6)
-        ttk.Button(toolbar, text="🔍 縮小", command=zoom_out).pack(side="right", padx=2, pady=6)
-        ttk.Button(toolbar, text="🔍 拡大", command=zoom_in).pack(side="right", padx=2, pady=6)
-        ttk.Button(toolbar, text="✕ 閉じる", command=popup.destroy,
-                   style="Danger.TButton").pack(side="right", padx=6, pady=6)
+        ttk.Button(
+            toolbar,
+            text="🔍 縮小",
+            command=zoom_out,
+        ).pack(side="right", padx=2, pady=6)
+        ttk.Button(
+            toolbar,
+            text="🔍 拡大",
+            command=zoom_in,
+        ).pack(side="right", padx=2, pady=6)
+        ttk.Button(
+            toolbar, text="✕ 閉じる", command=popup.destroy, style="Danger.TButton"
+        ).pack(side="right", padx=6, pady=6)
 
         # キャンバス
         frame = tk.Frame(popup, bg=C["PREVIEW_BG"])
@@ -1874,8 +2222,10 @@ class PDFEditorApp:
         hbar.pack(side="bottom", fill="x")
         vbar.pack(side="right", fill="y")
         canvas.pack(fill="both", expand=True)
-        canvas.bind("<MouseWheel>",
-                    lambda e: canvas.yview_scroll(int(-1 * (e.delta / 120)), "units"))
+        canvas.bind(
+            "<MouseWheel>",
+            lambda e: canvas.yview_scroll(int(-1 * (e.delta / 120)), "units"),
+        )
 
         render_page()
         popup.focus_set()
@@ -1887,19 +2237,23 @@ class PDFEditorApp:
         photo = self.thumb_images[idx]
         ghost = tk.Toplevel(self.root)
         ghost.overrideredirect(True)
-        ghost.attributes('-alpha', 0.6)
-        ghost.attributes('-topmost', True)
-        lbl = tk.Label(ghost, image=photo, bg=C["BG_CARD"],
-                       relief='flat', bd=2)
+        ghost.attributes("-alpha", 0.6)
+        ghost.attributes("-topmost", True)
+        lbl = tk.Label(ghost, image=photo, bg=C["BG_CARD"], relief="flat", bd=2)
         lbl.pack()
-        num = tk.Label(ghost, text=f'p.{idx+1}', bg=C["BG_CARD"],
-                       fg=C["ACCENT"], font=self._font(-2, "bold"))
+        num = tk.Label(
+            ghost,
+            text=f"p.{idx + 1}",
+            bg=C["BG_CARD"],
+            fg=C["ACCENT"],
+            font=self._font(-2, "bold"),
+        )
         num.pack()
         self._dnd_ghost = ghost
 
     def _dnd_move_ghost(self, event):
         if self._dnd_ghost:
-            self._dnd_ghost.geometry(f'+{event.x_root+12}+{event.y_root+8}')
+            self._dnd_ghost.geometry(f"+{event.x_root + 12}+{event.y_root + 8}")
 
     def _dnd_destroy_ghost(self):
         if self._dnd_ghost:
@@ -1924,8 +2278,8 @@ class PDFEditorApp:
         y = fy if dest < len(frames) else fy + fh
         cw = self.thumb_canvas.winfo_width()
         self._dnd_indicator = self.thumb_canvas.create_line(
-            4, y, cw - 4, y,
-            fill=C["ACCENT"], width=3, dash=(6, 3))
+            4, y, cw - 4, y, fill=C["ACCENT"], width=3, dash=(6, 3)
+        )
 
     def _dnd_clear_indicator(self):
         if self._dnd_indicator:
@@ -1977,7 +2331,11 @@ class PDFEditorApp:
         self.selected_pages.clear()
         self._invalidate_thumb_cache()
         self._refresh_all()
-        self._set_status(self._t("status_dnd_moved").format(src=src+1, dest=actual_dest+1))
+        msg = self._t("status_dnd_moved").format(
+            src=src + 1,
+            dest=actual_dest + 1,
+        )
+        self._set_status(msg)
 
     # ══════════════════════════════════════════
     #  ユーティリティ
@@ -1988,7 +2346,7 @@ class PDFEditorApp:
         for b in self._doc_buttons:
             try:
                 b.state(state)
-            except Exception:
+            except Exception:  # noqa: S110
                 pass
 
     def _check_doc(self):
@@ -2010,11 +2368,12 @@ class PDFEditorApp:
         cx = self.preview_canvas.winfo_width() // 2
         cy = self.preview_canvas.winfo_height() // 2
         self.preview_canvas.create_text(
-            cx, cy,
+            cx,
+            cy,
             text=self._t("dnd_drop_hint"),
             fill=C["TEXT_MAIN"],
             font=self._font(4, "bold"),
-            tags="dnd_hint"
+            tags="dnd_hint",
         )
         return event.action
 
@@ -2031,23 +2390,26 @@ class PDFEditorApp:
         self.preview_canvas.delete("dnd_hint")
 
         raw_paths = self.preview_canvas.tk.splitlist(event.data)
-        pdf_paths = [p for p in raw_paths if p.lower().endswith('.pdf')]
+        pdf_paths = [p for p in raw_paths if p.lower().endswith(".pdf")]
 
         if not pdf_paths:
             if raw_paths:
-                messagebox.showwarning(self._t("confirm_title"),
-                                       self._t("dnd_pdf_only"))
+                messagebox.showwarning(
+                    self._t("confirm_title"), self._t("dnd_pdf_only")
+                )
             return event.action
 
         if len(pdf_paths) == 1:
             if self.doc:
-                if not messagebox.askyesno(self._t("confirm_title"),
-                                           self._t("dnd_replace_confirm")):
+                if not messagebox.askyesno(
+                    self._t("confirm_title"), self._t("dnd_replace_confirm")
+                ):
                     return event.action
             self._open_pdf_path(pdf_paths[0])
         else:
-            MergeOrderDialog(self.root, list(pdf_paths), self._do_open_merged,
-                             lang=self.lang)
+            MergeOrderDialog(
+                self.root, list(pdf_paths), self._do_open_merged, lang=self.lang
+            )
 
         return event.action
 
@@ -2085,17 +2447,21 @@ class PDFEditorApp:
     # ══════════════════════════════════════════
     def _build_plugin_ui(self):
         """有効プラグインのカスタムUIを構築する"""
-        if not hasattr(self, '_plugin_ui_frame') or self._plugin_ui_frame is None:
+        if not hasattr(self, "_plugin_ui_frame") or self._plugin_ui_frame is None:
             return
         for w in self._plugin_ui_frame.winfo_children():
             w.destroy()
-        for plugin_id, plugin in self.plugin_manager.plugins.items():
+        for _plugin_id, plugin in self.plugin_manager.plugins.items():
             try:
                 pf = tk.Frame(self._plugin_ui_frame, bg=C["BG_CARD"], bd=0)
                 pf.pack(fill="x", padx=10, pady=3)
-                tk.Label(pf, text=f"🔌 {plugin.name}",
-                         bg=C["BG_CARD"], fg=C["WARNING"],
-                         font=self._font(-1, "bold")).pack(anchor="w", padx=8, pady=(4, 2))
+                tk.Label(
+                    pf,
+                    text=f"🔌 {plugin.name}",
+                    bg=C["BG_CARD"],
+                    fg=C["WARNING"],
+                    font=self._font(-1, "bold"),
+                ).pack(anchor="w", padx=8, pady=(4, 2))
                 plugin.build_ui(self, pf)
             except Exception:
                 traceback.print_exc()
@@ -2170,36 +2536,61 @@ class AboutDialog(tk.Toplevel):
         self.update_idletasks()
         w = 360
         h = max(300, self.winfo_reqheight() + 20)
-        px = parent.winfo_rootx() + parent.winfo_width()  // 2
+        px = parent.winfo_rootx() + parent.winfo_width() // 2
         py = parent.winfo_rooty() + parent.winfo_height() // 2
-        self.geometry(f"{w}x{h}+{px - w//2}+{py - h//2}")
+        self.geometry(f"{w}x{h}+{px - w // 2}+{py - h // 2}")
 
     def _build(self):
-        tk.Label(self, text="PageFolio",
-                 bg=C["BG_DARK"], fg=C["ACCENT"],
-                 font=("Segoe UI", 16, "bold")).pack(pady=(20, 2))
-        tk.Label(self, text=APP_VERSION,
-                 bg=C["BG_DARK"], fg=C["TEXT_SUB"],
-                 font=self._font(0)).pack()
-        tk.Label(self, text=self._L["about_subtitle"],
-                 bg=C["BG_DARK"], fg=C["TEXT_MAIN"],
-                 font=self._font(-1)).pack(pady=(2, 12))
+        tk.Label(
+            self,
+            text="PageFolio",
+            bg=C["BG_DARK"],
+            fg=C["ACCENT"],
+            font=("Segoe UI", 16, "bold"),
+        ).pack(pady=(20, 2))
+        tk.Label(
+            self,
+            text=APP_VERSION,
+            bg=C["BG_DARK"],
+            fg=C["TEXT_SUB"],
+            font=self._font(0),
+        ).pack()
+        tk.Label(
+            self,
+            text=self._L["about_subtitle"],
+            bg=C["BG_DARK"],
+            fg=C["TEXT_MAIN"],
+            font=self._font(-1),
+        ).pack(pady=(2, 12))
 
         sep = tk.Frame(self, bg=C["BG_CARD"], height=1)
         sep.pack(fill="x", padx=30, pady=4)
 
-        tk.Label(self, text="Copyright (c) 2026 mistyura",
-                 bg=C["BG_DARK"], fg=C["TEXT_SUB"],
-                 font=self._font(-2)).pack(pady=(6, 2))
-        tk.Label(self, text="MIT License",
-                 bg=C["BG_DARK"], fg=C["TEXT_SUB"],
-                 font=self._font(-2)).pack()
-        tk.Label(self, text="https://github.com/mistyura/PageFolio",
-                 bg=C["BG_DARK"], fg=C["SUCCESS"],
-                 font=self._font(-2)).pack(pady=(2, 16))
+        tk.Label(
+            self,
+            text="Copyright (c) 2026 mistyura",
+            bg=C["BG_DARK"],
+            fg=C["TEXT_SUB"],
+            font=self._font(-2),
+        ).pack(pady=(6, 2))
+        tk.Label(
+            self,
+            text="MIT License",
+            bg=C["BG_DARK"],
+            fg=C["TEXT_SUB"],
+            font=self._font(-2),
+        ).pack()
+        tk.Label(
+            self,
+            text="https://github.com/mistyura/PageFolio",
+            bg=C["BG_DARK"],
+            fg=C["SUCCESS"],
+            font=self._font(-2),
+        ).pack(pady=(2, 16))
 
-        ttk.Button(self, text=self._L["about_ok"], command=self.destroy,
-                   style="Accent.TButton").pack(pady=(0, 16))
+        ttk.Button(
+            self, text=self._L["about_ok"], command=self.destroy, style="Accent.TButton"
+        ).pack(pady=(0, 16))
 
 
 # ══════════════════════════════════════════
@@ -2221,23 +2612,32 @@ class SettingsDialog(tk.Toplevel):
 
         self._build()
         self.update_idletasks()
-        px = parent.winfo_rootx() + parent.winfo_width()  // 2
+        px = parent.winfo_rootx() + parent.winfo_width() // 2
         py = parent.winfo_rooty() + parent.winfo_height() // 2
         fs = current_settings.get("font_size", 12)
         w = max(380, int(fs * 32))
         h = max(280, int(fs * 24))
-        self.geometry(f"{w}x{h}+{px - w//2}+{py - h//2}")
+        self.geometry(f"{w}x{h}+{px - w // 2}+{py - h // 2}")
 
     def _build(self):
-        tk.Label(self, text=self._L["settings_heading"],
-                 bg=C["BG_DARK"], fg=C["ACCENT"],
-                 font=self._font(2, "bold")).pack(pady=(14, 10))
+        tk.Label(
+            self,
+            text=self._L["settings_heading"],
+            bg=C["BG_DARK"],
+            fg=C["ACCENT"],
+            font=self._font(2, "bold"),
+        ).pack(pady=(14, 10))
 
         # テーマ選択
         tf = tk.Frame(self, bg=C["BG_DARK"])
         tf.pack(fill="x", padx=24, pady=6)
-        tk.Label(tf, text=self._L["settings_theme"], bg=C["BG_DARK"], fg=C["TEXT_MAIN"],
-                 font=self._font(0)).pack(side="left")
+        tk.Label(
+            tf,
+            text=self._L["settings_theme"],
+            bg=C["BG_DARK"],
+            fg=C["TEXT_MAIN"],
+            font=self._font(0),
+        ).pack(side="left")
         self.theme_var = tk.StringVar(value=self.current_settings.get("theme", "dark"))
         theme_options = [
             (self._L["settings_theme_dark"], "dark"),
@@ -2245,48 +2645,82 @@ class SettingsDialog(tk.Toplevel):
             (self._L["settings_theme_system"], "system"),
         ]
         for text, value in theme_options:
-            tk.Radiobutton(tf, text=text, variable=self.theme_var, value=value,
-                           bg=C["BG_DARK"], fg=C["TEXT_MAIN"],
-                           selectcolor=C["BG_CARD"], activebackground=C["BG_DARK"],
-                           activeforeground=C["TEXT_MAIN"],
-                           font=self._font(-1)).pack(side="left", padx=6)
+            tk.Radiobutton(
+                tf,
+                text=text,
+                variable=self.theme_var,
+                value=value,
+                bg=C["BG_DARK"],
+                fg=C["TEXT_MAIN"],
+                selectcolor=C["BG_CARD"],
+                activebackground=C["BG_DARK"],
+                activeforeground=C["TEXT_MAIN"],
+                font=self._font(-1),
+            ).pack(side="left", padx=6)
 
         # フォントサイズ
         ff = tk.Frame(self, bg=C["BG_DARK"])
         ff.pack(fill="x", padx=24, pady=6)
-        tk.Label(ff, text=self._L["settings_font"], bg=C["BG_DARK"], fg=C["TEXT_MAIN"],
-                 font=self._font(0)).pack(side="left")
+        tk.Label(
+            ff,
+            text=self._L["settings_font"],
+            bg=C["BG_DARK"],
+            fg=C["TEXT_MAIN"],
+            font=self._font(0),
+        ).pack(side="left")
         self.font_var = tk.IntVar(value=self.current_settings.get("font_size", 10))
-        tk.Spinbox(ff, from_=8, to=16, textvariable=self.font_var, width=4,
-                   font=self._font(0),
-                   bg=C["BG_CARD"], fg=C["TEXT_MAIN"],
-                   buttonbackground=C["BG_PANEL"],
-                   insertbackground=C["TEXT_MAIN"]).pack(side="left", padx=8)
-        tk.Label(ff, text=self._L["settings_font_hint"], bg=C["BG_DARK"], fg=C["TEXT_SUB"],
-                 font=self._font(-1)).pack(side="left")
+        tk.Spinbox(
+            ff,
+            from_=8,
+            to=16,
+            textvariable=self.font_var,
+            width=4,
+            font=self._font(0),
+            bg=C["BG_CARD"],
+            fg=C["TEXT_MAIN"],
+            buttonbackground=C["BG_PANEL"],
+            insertbackground=C["TEXT_MAIN"],
+        ).pack(side="left", padx=8)
+        tk.Label(
+            ff,
+            text=self._L["settings_font_hint"],
+            bg=C["BG_DARK"],
+            fg=C["TEXT_SUB"],
+            font=self._font(-1),
+        ).pack(side="left")
 
         # プレビュー
-        self.preview_label = tk.Label(self, text=self._L["settings_preview_text"],
-                                       bg=C["BG_CARD"], fg=C["TEXT_MAIN"],
-                                       font=("Segoe UI", self.font_var.get()),
-                                       padx=12, pady=8)
+        self.preview_label = tk.Label(
+            self,
+            text=self._L["settings_preview_text"],
+            bg=C["BG_CARD"],
+            fg=C["TEXT_MAIN"],
+            font=("Segoe UI", self.font_var.get()),
+            padx=12,
+            pady=8,
+        )
         self.preview_label.pack(padx=24, pady=8, fill="x")
         self.font_var.trace_add("write", self._update_preview)
 
         # ボタン
         btn_row = tk.Frame(self, bg=C["BG_DARK"])
         btn_row.pack(pady=(8, 14))
-        ttk.Button(btn_row, text=self._L["settings_apply"], style="Accent.TButton",
-                   command=self._apply).pack(side="left", padx=8)
-        ttk.Button(btn_row, text=self._L["settings_cancel"],
-                   command=self.destroy).pack(side="left", padx=8)
+        ttk.Button(
+            btn_row,
+            text=self._L["settings_apply"],
+            style="Accent.TButton",
+            command=self._apply,
+        ).pack(side="left", padx=8)
+        ttk.Button(btn_row, text=self._L["settings_cancel"], command=self.destroy).pack(
+            side="left", padx=8
+        )
 
     def _update_preview(self, *_):
         try:
             size = self.font_var.get()
             size = max(8, min(16, size))
             self.preview_label.configure(font=("Segoe UI", size))
-        except Exception:
+        except Exception:  # noqa: S110
             pass
 
     def _apply(self):
@@ -2330,15 +2764,23 @@ class PluginDialog(tk.Toplevel):
         return ("Segoe UI", size)
 
     def _build(self):
-        tk.Label(self, text=self._L["plugin_heading"],
-                 bg=C["BG_DARK"], fg=C["ACCENT"],
-                 font=self._font(2, "bold")).pack(pady=(14, 4))
+        tk.Label(
+            self,
+            text=self._L["plugin_heading"],
+            bg=C["BG_DARK"],
+            fg=C["ACCENT"],
+            font=self._font(2, "bold"),
+        ).pack(pady=(14, 4))
 
         plugins_dir = _get_plugins_dir()
-        tk.Label(self,
-                 text=self._L["plugin_dir_label"].format(path=plugins_dir),
-                 bg=C["BG_DARK"], fg=C["TEXT_SUB"],
-                 font=self._font(-2), wraplength=450).pack(pady=(0, 8))
+        tk.Label(
+            self,
+            text=self._L["plugin_dir_label"].format(path=plugins_dir),
+            bg=C["BG_DARK"],
+            fg=C["TEXT_SUB"],
+            font=self._font(-2),
+            wraplength=450,
+        ).pack(pady=(0, 8))
 
         # プラグインリスト
         list_frame = tk.Frame(self, bg=C["BG_PANEL"], bd=0)
@@ -2351,12 +2793,16 @@ class PluginDialog(tk.Toplevel):
         canvas.pack(fill="both", expand=True)
 
         self._list_inner = tk.Frame(canvas, bg=C["BG_PANEL"])
-        canvas.create_window((0, 0), window=self._list_inner, anchor="nw",
-                             tags="inner")
-        self._list_inner.bind("<Configure>",
-                              lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
-        canvas.bind("<Configure>",
-                    lambda e: canvas.itemconfigure("inner", width=e.width))
+        canvas.create_window((0, 0), window=self._list_inner, anchor="nw", tags="inner")
+        self._list_inner.bind(
+            "<Configure>",
+            lambda e: canvas.configure(
+                scrollregion=canvas.bbox("all"),
+            ),
+        )
+        canvas.bind(
+            "<Configure>", lambda e: canvas.itemconfigure("inner", width=e.width)
+        )
         self._list_canvas = canvas
 
         self._refresh_list()
@@ -2364,15 +2810,21 @@ class PluginDialog(tk.Toplevel):
         # ボタン行
         btn_row = tk.Frame(self, bg=C["BG_DARK"])
         btn_row.pack(fill="x", padx=16, pady=(8, 4))
-        ttk.Button(btn_row, text=self._L["plugin_rescan"],
-                   command=self._rescan).pack(side="left", padx=4)
-        ttk.Button(btn_row, text=self._L["plugin_open_folder"],
-                   command=self._open_folder).pack(side="left", padx=4)
+        ttk.Button(btn_row, text=self._L["plugin_rescan"], command=self._rescan).pack(
+            side="left", padx=4
+        )
+        ttk.Button(
+            btn_row, text=self._L["plugin_open_folder"], command=self._open_folder
+        ).pack(side="left", padx=4)
 
         ok_row = tk.Frame(self, bg=C["BG_DARK"])
         ok_row.pack(pady=(4, 14))
-        ttk.Button(ok_row, text=self._L["plugin_close"], style="Accent.TButton",
-                   command=self._close).pack(side="left", padx=8)
+        ttk.Button(
+            ok_row,
+            text=self._L["plugin_close"],
+            style="Accent.TButton",
+            command=self._close,
+        ).pack(side="left", padx=8)
 
     def _refresh_list(self):
         for w in self._list_inner.winfo_children():
@@ -2380,10 +2832,14 @@ class PluginDialog(tk.Toplevel):
 
         all_plugins = self.pm.all_plugins
         if not all_plugins:
-            tk.Label(self._list_inner,
-                     text=self._L["plugin_empty"].format(dir=PLUGINS_DIR),
-                     bg=C["BG_PANEL"], fg=C["TEXT_SUB"],
-                     font=self._font(), justify="center").pack(pady=30)
+            tk.Label(
+                self._list_inner,
+                text=self._L["plugin_empty"].format(dir=PLUGINS_DIR),
+                bg=C["BG_PANEL"],
+                fg=C["TEXT_SUB"],
+                font=self._font(),
+                justify="center",
+            ).pack(pady=30)
             return
 
         self._check_vars = {}
@@ -2394,30 +2850,52 @@ class PluginDialog(tk.Toplevel):
             var = tk.BooleanVar(value=self.pm.is_enabled(plugin_id))
             self._check_vars[plugin_id] = var
 
-            cb = tk.Checkbutton(row, variable=var,
-                                command=lambda pid=plugin_id: self._toggle(pid),
-                                bg=C["BG_CARD"], activebackground=C["BG_CARD"],
-                                selectcolor=C["BG_PANEL"])
+            cb = tk.Checkbutton(
+                row,
+                variable=var,
+                command=lambda pid=plugin_id: self._toggle(pid),
+                bg=C["BG_CARD"],
+                activebackground=C["BG_CARD"],
+                selectcolor=C["BG_PANEL"],
+            )
             cb.pack(side="left", padx=(8, 4), pady=6)
 
             info = tk.Frame(row, bg=C["BG_CARD"])
             info.pack(side="left", fill="x", expand=True, pady=4)
 
             name_text = f"{plugin.name}  v{plugin.version}"
-            tk.Label(info, text=name_text,
-                     bg=C["BG_CARD"], fg=C["TEXT_MAIN"],
-                     font=self._font(0, "bold"), anchor="w").pack(anchor="w")
+            tk.Label(
+                info,
+                text=name_text,
+                bg=C["BG_CARD"],
+                fg=C["TEXT_MAIN"],
+                font=self._font(0, "bold"),
+                anchor="w",
+            ).pack(anchor="w")
 
             if plugin.description:
-                tk.Label(info, text=plugin.description,
-                         bg=C["BG_CARD"], fg=C["TEXT_SUB"],
-                         font=self._font(-2), anchor="w",
-                         wraplength=350).pack(anchor="w")
+                tk.Label(
+                    info,
+                    text=plugin.description,
+                    bg=C["BG_CARD"],
+                    fg=C["TEXT_SUB"],
+                    font=self._font(-2),
+                    anchor="w",
+                    wraplength=350,
+                ).pack(anchor="w")
 
             if plugin.author:
-                tk.Label(info, text=self._L["plugin_author"].format(author=plugin.author),
-                         bg=C["BG_CARD"], fg=C["TEXT_SUB"],
-                         font=self._font(-2), anchor="w").pack(anchor="w")
+                author_txt = self._L["plugin_author"].format(
+                    author=plugin.author,
+                )
+                tk.Label(
+                    info,
+                    text=author_txt,
+                    bg=C["BG_CARD"],
+                    fg=C["TEXT_SUB"],
+                    font=self._font(-2),
+                    anchor="w",
+                ).pack(anchor="w")
 
     def _toggle(self, plugin_id):
         if self._check_vars[plugin_id].get():
@@ -2442,11 +2920,12 @@ class PluginDialog(tk.Toplevel):
         os.makedirs(plugins_dir, exist_ok=True)
         # Windowsのエクスプローラーで開く
         try:
-            os.startfile(plugins_dir)
+            os.startfile(plugins_dir)  # noqa: S606
         except AttributeError:
             # Windows以外の場合
             import subprocess
-            subprocess.Popen(["xdg-open", plugins_dir])
+
+            subprocess.Popen(["xdg-open", plugins_dir])  # noqa: S603, S607
 
     def _close(self):
         self.app._reload_plugins()
@@ -2481,7 +2960,7 @@ class MergeOrderDialog(tk.Toplevel):
 
         self._build()
         self.update_idletasks()
-        px = parent.winfo_rootx() + parent.winfo_width()  // 2
+        px = parent.winfo_rootx() + parent.winfo_width() // 2
         py = parent.winfo_rooty() + parent.winfo_height() // 2
         fs = self._font_size
         w = max(480, int(fs * 40))
@@ -2489,7 +2968,7 @@ class MergeOrderDialog(tk.Toplevel):
         base_h = max(420, int(fs * 32))
         extra_h = max(0, len(self.paths) - 4) * int(fs * 2.5)
         h = min(base_h + extra_h, parent.winfo_height() - 40)  # 親を超えない
-        self.geometry(f"{w}x{h}+{px - w//2}+{py - h//2}")
+        self.geometry(f"{w}x{h}+{px - w // 2}+{py - h // 2}")
         self.minsize(400, 350)
 
     def _font(self, delta=0, weight=None):
@@ -2499,13 +2978,21 @@ class MergeOrderDialog(tk.Toplevel):
         return ("Segoe UI", size)
 
     def _build(self):
-        tk.Label(self, text=self._L["merge_heading"],
-                 bg=C["BG_DARK"], fg=C["ACCENT"],
-                 font=self._font(2, "bold")).pack(pady=(14, 4))
-        tk.Label(self,
-                 text=self._L["merge_hint"],
-                 bg=C["BG_DARK"], fg=C["TEXT_SUB"],
-                 font=self._font(-1), justify="center").pack(pady=(0, 8))
+        tk.Label(
+            self,
+            text=self._L["merge_heading"],
+            bg=C["BG_DARK"],
+            fg=C["ACCENT"],
+            font=self._font(2, "bold"),
+        ).pack(pady=(14, 4))
+        tk.Label(
+            self,
+            text=self._L["merge_hint"],
+            bg=C["BG_DARK"],
+            fg=C["TEXT_SUB"],
+            font=self._font(-1),
+            justify="center",
+        ).pack(pady=(0, 8))
 
         list_frame = tk.Frame(self, bg=C["BG_PANEL"], bd=0)
         list_frame.pack(fill="both", expand=True, padx=16, pady=4)
@@ -2515,12 +3002,16 @@ class MergeOrderDialog(tk.Toplevel):
         self.listbox = tk.Listbox(
             list_frame,
             yscrollcommand=sb.set,
-            bg=C["BG_CARD"], fg=C["TEXT_MAIN"],
-            selectbackground=C["ACCENT"], selectforeground="#fff",
+            bg=C["BG_CARD"],
+            fg=C["TEXT_MAIN"],
+            selectbackground=C["ACCENT"],
+            selectforeground="#fff",
             font=self._font(-1),
             activestyle="none",
-            bd=0, highlightthickness=0,
-            height=list_height)
+            bd=0,
+            highlightthickness=0,
+            height=list_height,
+        )
         sb.configure(command=self.listbox.yview)
         sb.pack(side="right", fill="y")
         self.listbox.pack(fill="both", expand=True)
@@ -2531,43 +3022,56 @@ class MergeOrderDialog(tk.Toplevel):
 
         btn_row = tk.Frame(self, bg=C["BG_DARK"])
         btn_row.pack(fill="x", padx=16, pady=6)
-        ttk.Button(btn_row, text=self._L["merge_up"],
-                   command=self._move_up).pack(side="left", padx=4)
-        ttk.Button(btn_row, text=self._L["merge_down"],
-                   command=self._move_down).pack(side="left", padx=4)
-        ttk.Button(btn_row, text=self._L["merge_remove"],
-                   style="Danger.TButton",
-                   command=self._remove_item).pack(side="left", padx=4)
+        ttk.Button(btn_row, text=self._L["merge_up"], command=self._move_up).pack(
+            side="left", padx=4
+        )
+        ttk.Button(btn_row, text=self._L["merge_down"], command=self._move_down).pack(
+            side="left", padx=4
+        )
+        ttk.Button(
+            btn_row,
+            text=self._L["merge_remove"],
+            style="Danger.TButton",
+            command=self._remove_item,
+        ).pack(side="left", padx=4)
 
         self.info_var = tk.StringVar()
-        tk.Label(self, textvariable=self.info_var,
-                 bg=C["BG_DARK"], fg=C["SUCCESS"],
-                 font=self._font(-1)).pack(pady=2)
+        tk.Label(
+            self,
+            textvariable=self.info_var,
+            bg=C["BG_DARK"],
+            fg=C["SUCCESS"],
+            font=self._font(-1),
+        ).pack(pady=2)
         self._update_info()
 
         ok_row = tk.Frame(self, bg=C["BG_DARK"])
         ok_row.pack(pady=(4, 14))
-        ttk.Button(ok_row, text=self._L["merge_confirm"],
-                   style="Accent.TButton",
-                   command=self._confirm).pack(side="left", padx=8)
-        ttk.Button(ok_row, text=self._L["merge_cancel"],
-                   command=self.destroy).pack(side="left", padx=8)
+        ttk.Button(
+            ok_row,
+            text=self._L["merge_confirm"],
+            style="Accent.TButton",
+            command=self._confirm,
+        ).pack(side="left", padx=8)
+        ttk.Button(ok_row, text=self._L["merge_cancel"], command=self.destroy).pack(
+            side="left", padx=8
+        )
 
     def _move_up(self):
         sel = self.listbox.curselection()
         if not sel or sel[0] == 0:
             return
         i = sel[0]
-        self.paths[i-1], self.paths[i] = self.paths[i], self.paths[i-1]
-        self._reload_list(i-1)
+        self.paths[i - 1], self.paths[i] = self.paths[i], self.paths[i - 1]
+        self._reload_list(i - 1)
 
     def _move_down(self):
         sel = self.listbox.curselection()
-        if not sel or sel[0] >= len(self.paths)-1:
+        if not sel or sel[0] >= len(self.paths) - 1:
             return
         i = sel[0]
-        self.paths[i], self.paths[i+1] = self.paths[i+1], self.paths[i]
-        self._reload_list(i+1)
+        self.paths[i], self.paths[i + 1] = self.paths[i + 1], self.paths[i]
+        self._reload_list(i + 1)
 
     def _remove_item(self):
         sel = self.listbox.curselection()
@@ -2575,7 +3079,7 @@ class MergeOrderDialog(tk.Toplevel):
             return
         i = sel[0]
         self.paths.pop(i)
-        self._reload_list(max(0, i-1))
+        self._reload_list(max(0, i - 1))
 
     def _reload_list(self, select_idx=None):
         self.listbox.delete(0, tk.END)
@@ -2589,12 +3093,19 @@ class MergeOrderDialog(tk.Toplevel):
 
     def _update_info(self):
         total = sum(self._page_counts.get(p, 0) for p in self.paths)
-        self.info_var.set(self._L["merge_info"].format(count=len(self.paths), total=total))
+        info_txt = self._L["merge_info"].format(
+            count=len(self.paths),
+            total=total,
+        )
+        self.info_var.set(info_txt)
 
     def _confirm(self):
         if not self.paths:
-            messagebox.showinfo(self._L.get("info_title", "Info"),
-                                self._L["merge_no_files"], parent=self)
+            messagebox.showinfo(
+                self._L.get("info_title", "Info"),
+                self._L["merge_no_files"],
+                parent=self,
+            )
             return
         self.destroy()
         self.callback(self.paths)
@@ -2609,9 +3120,9 @@ def _setup_file_drop(app):
         return
     canvas = app.preview_canvas
     canvas.drop_target_register(DND_FILES)
-    canvas.dnd_bind('<<DropEnter>>', app._on_dnd_enter)
-    canvas.dnd_bind('<<DropLeave>>', app._on_dnd_leave)
-    canvas.dnd_bind('<<Drop>>', app._on_dnd_drop)
+    canvas.dnd_bind("<<DropEnter>>", app._on_dnd_enter)
+    canvas.dnd_bind("<<DropLeave>>", app._on_dnd_leave)
+    canvas.dnd_bind("<<Drop>>", app._on_dnd_drop)
 
 
 # ─────────────────────────────────────────

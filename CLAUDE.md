@@ -99,6 +99,13 @@ C = dict(THEMES["dark"])  # 実行時に _apply_theme() で更新
 
 ---
 
+## コマンド
+
+- テスト実行: `pytest`
+- リント: `ruff check . && ruff format .`
+
+---
+
 ## コーディング規約
 
 - **単一ファイル構成を維持する**: `pagefolio.py` 1 ファイルにすべて収める
@@ -125,6 +132,15 @@ C = dict(THEMES["dark"])  # 実行時に _apply_theme() で更新
 - **テーマ色の参照**: グローバル定数ではなく `C["BG_DARK"]` 等のテーマ辞書を使う
 - **フォントサイズ**: ハードコードせず `self._font(delta)` ヘルパーを使う（ベース + delta）
 - **設定保存**: `pagefolio_settings.json` に JSON で永続化（`_save_settings()`）
+- **作業フロー**: 1タスクずつ完了させてから次のタスクへ進むこと
+- **リント必須**: py ファイルを編集したら必ず `ruff check . && ruff format .` が通ることを確認すること
+- **テスト必須**: コミット前に `pytest` を通すこと
+
+### 禁止事項
+
+- `pyproject.toml` / `ruff.toml` の編集
+- 裸の `except:` 句（必ず `except Exception as e:` の形で）
+- `# type: ignore` の無断使用
 
 ---
 
