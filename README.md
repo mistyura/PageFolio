@@ -1,6 +1,8 @@
 # PageFolio
 
 **PDF ページ整理ツール — Python + Tkinter 製 GUI アプリ**
+![Version](https://img.shields.io/badge/version-v0.9.5-blue)
+![Pre-release](https://img.shields.io/badge/status-pre--release-orange)
 
 A PDF page organizer built with Python + Tkinter.  
 Windows 11 で動作します / Runs on Windows 11.
@@ -121,7 +123,7 @@ pytest                           # テスト実行
 - `CLAUDE.md` — Claude に渡す構造化された開発指示書
 - `開発履歴.md` — 各バージョンの変更内容を記録した開発ログ
 
-v0.1（旧 PDF Editor v1.0）から現在まで、機能追加・バグ修正・UI改善のほぼすべてを Claude Code との対話で実装してきました。
+　機能追加・バグ修正・UI改善のほぼすべてを Claude Code との対話で実装してきました。
 
 This project is published as a use case of development with Claude Code.
 
