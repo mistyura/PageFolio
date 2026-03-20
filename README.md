@@ -53,15 +53,14 @@ No Python installation required — just double-click to run.
 
 ---
 
-## 画面構成 / Layout
-## スクリーンショット / Screenshot
+## 画面構成 / Layout (スクリーンショット / Screenshot)
 
-![PageFolio メイン画面](docs/メイン（ダーク）-日本語.png)
-![PageFolio メイン画面](docs/メイン（ダーク）-日本語-2.png)
-![PageFolio メイン画面](docs/メイン（ライト）-日本語.png)
-![PageFolio メイン画面](docs/メイン（ライト）-英語.png)
-![PageFolio メイン画面](docs/メイン（ダーク）-読込.png)
-![PageFolio メイン画面](docs/メイン（ダーク）-結合.png)
+![ダークテーマ（日本語）](docs/メイン（ダーク）-日本語.png)
+![ダークテーマ（複数選択）](docs/メイン（ダーク）-日本語-2.png)
+![ライトテーマ（日本語）](docs/メイン（ライト）-日本語.png)
+![ライトテーマ（英語）](docs/メイン（ライト）-英語.png)
+![読み込み画面](docs/メイン（ダーク）-読込.png)
+![PDF結合画面](docs/メイン（ダーク）-結合.png)
 
 ---
 
