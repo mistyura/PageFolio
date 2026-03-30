@@ -35,7 +35,16 @@ PageFolio/
 ├── README.md                  # エンドユーザー向け使用概要
 ├── CLAUDE.md                  # 本ファイル（AI 向け開発指示書）
 ├── 開発履歴.md                # 機能追加・変更の履歴
-└── LICENSE                    # MITライセンス
+├── LICENSE                    # MITライセンス
+├── pyproject.toml             # Ruff・pytest 設定
+├── plugins/                   # プラグインディレクトリ
+│   └── page_info.py           # サンプルプラグイン（ページ情報表示）
+├── tests/                     # テストスイート（pytest）
+│   ├── conftest.py            # テスト用共通フィクスチャ
+│   ├── test_utils.py          # ユーティリティ関数テスト（35件）
+│   ├── test_pdf_ops.py        # PDF 操作テスト（26件）
+│   └── test_plugins.py        # PluginManager テスト（17件）
+└── docs/                      # スクリーンショット画像
 （実行時に自動生成）
 └── pagefolio_settings.json    # ユーザー設定（テーマ・フォントサイズ）
 ```

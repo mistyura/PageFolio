@@ -116,7 +116,19 @@ The output `dist/PageFolio.exe` is a standalone single-file executable.
 ```bash
 ruff check . && ruff format .   # リント・フォーマット
 pytest                           # テスト実行
+pytest tests/ -v                 # テスト詳細表示
 ```
+
+### テスト構成 / Test Structure
+
+| ファイル | テスト数 | カバー範囲 |
+|----------|---------|------------|
+| `tests/test_utils.py` | 35 | 設定読み書き・テーマ解決・フォント生成・ページ範囲パース |
+| `tests/test_pdf_ops.py` | 26 | PDF 読込・保存・回転・削除・挿入・結合・分割・トリミング |
+| `tests/test_plugins.py` | 17 | プラグイン検出・読込・有効/無効切替・イベント発火 |
+
+テストは GUI (Tkinter) を起動せずにヘッドレスで実行可能です。  
+All tests run headless without launching the Tkinter GUI.
 
 ---
 
