@@ -14,7 +14,7 @@
 | PDF ライブラリ | pymupdf (fitz) |
 | 画像ライブラリ | Pillow (PIL) |
 | 対象 OS | Windows 11 |
-| 現在バージョン | v0.9.5 |
+| 現在バージョン | v0.9.6 |
 
 ---
 
@@ -30,7 +30,21 @@ AI との協調開発のユースケースとして公開しています。
 
 ```
 PageFolio/
-├── pagefolio.py               # アプリ本体（単一ファイル構成）
+├── pagefolio.py               # エントリーポイント（python pagefolio.py で起動）
+├── pagefolio/                 # メインパッケージ
+│   ├── __init__.py            # 公開API（後方互換 import 用）
+│   ├── __main__.py            # python -m pagefolio エントリーポイント
+│   ├── constants.py           # テーマ・バージョン・言語辞書（THEMES, C, LANG）
+│   ├── settings.py            # 設定ユーティリティ関数
+│   ├── plugins.py             # プラグインシステム（PDFEditorPlugin, PluginManager）
+│   ├── app.py                 # PDFEditorApp 本体（Mixin 統合 + 状態管理）
+│   ├── ui_builder.py          # UI構築 Mixin（スタイル・レイアウト）
+│   ├── file_ops.py            # ファイル操作 Mixin（open/save/undo/redo）
+│   ├── page_ops.py            # ページ操作 Mixin（回転/削除/トリミング/挿入/結合/分割）
+│   ├── viewer.py              # 表示 Mixin（プレビュー/ズーム/サムネイル/ポップアップ）
+│   ├── dnd.py                 # D&D Mixin（サムネイルのドラッグ並び替え）
+│   ├── dialogs.py             # ダイアログ群（About/Settings/Plugin/MergeOrder）
+│   └── file_drop.py           # ファイル D&D（tkinterdnd2 連携）
 ├── pagefolio.ico              # アプリアイコン
 ├── README.md                  # エンドユーザー向け使用概要
 ├── CLAUDE.md                  # 本ファイル（AI 向け開発指示書）
@@ -51,36 +65,31 @@ PageFolio/
 
 ---
 
-## クラス構成
+## モジュール構成
 
-### `PDFEditorApp`
-メインアプリケーションクラス。`tk.Tk` の root を受け取りすべての UI・ロジックを管理。
+### `pagefolio/constants.py`
+テーマカラー（`THEMES`）、実行時テーマ辞書（`C`）、バージョン（`APP_VERSION`）、言語辞書（`LANG`）を定義。
 
-| メソッドグループ | 主なメソッド | 役割 |
-|-----------------|-------------|------|
-| UI 構築 | `_build_styles` `_build_ui` `_build_thumb_panel` `_build_preview` `_build_tools_scrollable` `_build_tools` | 画面レイアウト |
-| ファイル操作 | `_open_file` `_open_multiple_pdfs` `_do_open_merged` `_open_pdf_path` `_save_file` `_save_as` `_quit` | PDF 読み書き・終了 |
-| ページ操作 | `_rotate_selected` `_delete_selected` | ページ編集 |
-| トリミング | `_toggle_crop_mode` `_crop_drag_start/move/end` `_crop_page` `_crop_reset` `_clear_crop_overlay` | ドラッグ選択トリミング |
-| 挿入・結合 | `_insert_from_file` `_do_insert` `_merge_pdf` `_do_merge` | 複数ファイル対応 |
-| 分割 | `_split_by_range` `_split_each_page` `_parse_page_ranges` `_check_split_overwrite` | ページ範囲分割・1ページ分割 |
-| D&D 並び替え | `_dnd_start_ghost` `_dnd_move_ghost` `_dnd_drop` `_dnd_show_indicator` `_dnd_dest_index` `_dnd_destroy_ghost` `_dnd_clear_indicator` | サムネイル D&D（末尾対応済） |
-| 表示更新 | `_refresh_all` `_build_thumbnails` `_add_thumb` `_show_preview` `_refresh_thumbs_selection_only` | 再描画 |
-| ボタン状態制御 | `_update_doc_buttons_state` | ファイル開閉に応じたボタン活性/非活性 |
-| ナビゲーション | `_prev_page` `_next_page` `_zoom` | プレビュー操作 |
-| Undo / Redo | `_save_undo` `_undo` `_redo` `_restore_state` | 操作取り消し・やり直し（最大20回） |
-| ページ拡大表示 | `_show_page_popup` `_single_click` | サムネイルダブルクリック拡大 |
-| サムネイルキャッシュ | `_invalidate_thumb_cache` `_get_thumb_photo` | キャッシュ管理 |
-| 設定 | `_open_settings` `_apply_settings` `_rebuild_ui` `_font` | テーマ・フォント設定・UI再構築 |
+### `pagefolio/settings.py`
+設定ファイルの読み書き・テーマ解決・フォント生成のユーティリティ関数群。
 
-### `SettingsDialog`
-`tk.Toplevel` サブクラス。テーマ（ダーク/ライト/システム）とフォントサイズ（8〜16pt）を設定するモーダルダイアログ。
-`_apply(new_settings)` コールバックで `PDFEditorApp._apply_settings` に返す。
+### `pagefolio/plugins.py`
+`PDFEditorPlugin` 基底クラスと `PluginManager` クラス。プラグインの検出・読込・有効/無効管理。
 
-### `MergeOrderDialog`
-`tk.Toplevel` サブクラス。複数 PDF の結合順を確認・並び替えするモーダルダイアログ。
-ファイルを開く（複数選択）・挿入・結合の3か所から共通で利用。
-`_do_merge(ordered_paths)` コールバックで結果を `PDFEditorApp` に返す。
+### `pagefolio/app.py`
+`PDFEditorApp` メインクラス。5つの Mixin を統合し、`__init__`・キーバインド・ユーティリティメソッドを持つ。
+
+### Mixin モジュール群
+| モジュール | Mixin クラス | 責務 |
+|-----------|-------------|------|
+| `ui_builder.py` | `UIBuilderMixin` | スタイル定義・レイアウト構築 |
+| `file_ops.py` | `FileOpsMixin` | ファイル操作・Undo/Redo |
+| `page_ops.py` | `PageOpsMixin` | ページ回転・削除・トリミング・挿入・結合・分割 |
+| `viewer.py` | `ViewerMixin` | プレビュー・ズーム・サムネイル・ポップアップ |
+| `dnd.py` | `DnDMixin` | サムネイル D&D 並び替え |
+
+### `pagefolio/dialogs.py`
+`AboutDialog`・`SettingsDialog`・`PluginDialog`・`MergeOrderDialog` の4ダイアログクラス。
 
 ---
 
@@ -117,7 +126,7 @@ C = dict(THEMES["dark"])  # 実行時に _apply_theme() で更新
 
 ## コーディング規約
 
-- **単一ファイル構成を維持する**: `pagefolio.py` 1 ファイルにすべて収める
+- **パッケージ構成を維持する**: `pagefolio/` パッケージにモジュール分割済み。Mixin パターンで PDFEditorApp を構成。
 - **メソッド名**: `_` プレフィックスで内部メソッドを示す
 - **ボタンスタイル**:
   - 通常操作 → `"TButton"`

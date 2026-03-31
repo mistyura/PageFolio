@@ -6,6 +6,7 @@ import textwrap
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import pagefolio
+import pagefolio.plugins as _plugins_mod
 
 # ===== PluginManager 基本操作 =====
 
@@ -39,7 +40,7 @@ class TestPluginDiscovery:
         # .py 以外は除外
         (plugins_dir / "readme.txt").write_text("# dummy", encoding="utf-8")
 
-        monkeypatch.setattr(pagefolio, "_get_plugins_dir", lambda: str(plugins_dir))
+        monkeypatch.setattr(_plugins_mod, "_get_plugins_dir", lambda: str(plugins_dir))
 
         pm = pagefolio.PluginManager()
         found = pm.discover_plugins()
@@ -53,7 +54,7 @@ class TestPluginDiscovery:
         """空ディレクトリでは空リストを返す"""
         plugins_dir = tmp_path / "plugins"
         plugins_dir.mkdir()
-        monkeypatch.setattr(pagefolio, "_get_plugins_dir", lambda: str(plugins_dir))
+        monkeypatch.setattr(_plugins_mod, "_get_plugins_dir", lambda: str(plugins_dir))
 
         pm = pagefolio.PluginManager()
         found = pm.discover_plugins()
@@ -62,7 +63,7 @@ class TestPluginDiscovery:
     def test_discover_nonexistent_directory(self, tmp_path, monkeypatch):
         """存在しないディレクトリでは空リストを返す"""
         monkeypatch.setattr(
-            pagefolio, "_get_plugins_dir", lambda: str(tmp_path / "nonexistent")
+            _plugins_mod, "_get_plugins_dir", lambda: str(tmp_path / "nonexistent")
         )
         pm = pagefolio.PluginManager()
         found = pm.discover_plugins()
@@ -288,7 +289,7 @@ class TestLoadAll:
             """)
             (plugins_dir / f"{name}.py").write_text(code, encoding="utf-8")
 
-        monkeypatch.setattr(pagefolio, "_get_plugins_dir", lambda: str(plugins_dir))
+        monkeypatch.setattr(_plugins_mod, "_get_plugins_dir", lambda: str(plugins_dir))
 
         pm = pagefolio.PluginManager()
         pm.load_all(disabled_ids=["beta"])

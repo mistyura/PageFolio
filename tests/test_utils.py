@@ -1,4 +1,4 @@
-"""pagefolio.py のユーティリティ関数テスト"""
+"""pagefolio のユーティリティ関数テスト"""
 
 import json
 import os
@@ -10,6 +10,7 @@ import pytest
 # pagefolio モジュールをインポート
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import pagefolio
+import pagefolio.settings as _settings_mod
 
 # ===== _load_settings / _save_settings =====
 
@@ -20,7 +21,7 @@ class TestLoadSettings:
     def test_defaults_when_no_file(self, tmp_path):
         """設定ファイルがない場合はデフォルト値を返す"""
         fake_path = str(tmp_path / "nonexistent.json")
-        with patch.object(pagefolio, "_get_settings_path", return_value=fake_path):
+        with patch.object(_settings_mod, "_get_settings_path", return_value=fake_path):
             settings = pagefolio._load_settings()
         assert settings["theme"] == "dark"
         assert settings["font_size"] == 12
@@ -30,7 +31,7 @@ class TestLoadSettings:
         """既存設定ファイルを正しく読み込む"""
         path, write_fn = tmp_settings
         write_fn({"theme": "light", "font_size": 14, "lang": "en"})
-        with patch.object(pagefolio, "_get_settings_path", return_value=str(path)):
+        with patch.object(_settings_mod, "_get_settings_path", return_value=str(path)):
             settings = pagefolio._load_settings()
         assert settings["theme"] == "light"
         assert settings["font_size"] == 14
@@ -40,7 +41,7 @@ class TestLoadSettings:
         """一部のキーがない場合はデフォルトで補完される"""
         path, write_fn = tmp_settings
         write_fn({"theme": "light"})
-        with patch.object(pagefolio, "_get_settings_path", return_value=str(path)):
+        with patch.object(_settings_mod, "_get_settings_path", return_value=str(path)):
             settings = pagefolio._load_settings()
         assert settings["theme"] == "light"
         assert settings["font_size"] == 12  # デフォルト
@@ -50,7 +51,7 @@ class TestLoadSettings:
         """不正なJSONの場合はデフォルト値を返す"""
         path, _ = tmp_settings
         path.write_text("{invalid json!!!", encoding="utf-8")
-        with patch.object(pagefolio, "_get_settings_path", return_value=str(path)):
+        with patch.object(_settings_mod, "_get_settings_path", return_value=str(path)):
             settings = pagefolio._load_settings()
         assert settings["theme"] == "dark"
         assert settings["font_size"] == 12
@@ -63,7 +64,7 @@ class TestSaveSettings:
         """保存した設定が再読み込みで一致する"""
         path, _ = tmp_settings
         data = {"theme": "light", "font_size": 16, "lang": "en"}
-        with patch.object(pagefolio, "_get_settings_path", return_value=str(path)):
+        with patch.object(_settings_mod, "_get_settings_path", return_value=str(path)):
             pagefolio._save_settings(data)
             loaded = json.loads(path.read_text(encoding="utf-8"))
         assert loaded == data
@@ -71,7 +72,7 @@ class TestSaveSettings:
     def test_save_creates_file(self, tmp_path):
         """ファイルがなくても新規作成される"""
         path = tmp_path / "new_settings.json"
-        with patch.object(pagefolio, "_get_settings_path", return_value=str(path)):
+        with patch.object(_settings_mod, "_get_settings_path", return_value=str(path)):
             pagefolio._save_settings({"theme": "dark"})
         assert path.exists()
 
