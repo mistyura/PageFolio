@@ -4,6 +4,8 @@ import os
 import sys
 import textwrap
 
+import pytest
+
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import pagefolio
 import pagefolio.plugins as _plugins_mod
@@ -299,3 +301,243 @@ class TestLoadAll:
         assert "alpha" in pm.plugins
         assert "beta" not in pm.plugins
         assert "beta" in pm.all_plugins
+
+
+# ===== _get_plugins_dir テスト =====
+
+
+class TestGetPluginsDir:
+    """_get_plugins_dir の分岐テスト"""
+
+    def test_frozen_mode(self, monkeypatch):
+        """frozen モード（exe 実行時）では sys.executable のディレクトリを基準にする"""
+        monkeypatch.setattr(sys, "frozen", True, raising=False)
+        monkeypatch.setattr(sys, "executable", os.path.join("/path", "to", "app.exe"))
+        result = _plugins_mod._get_plugins_dir()
+        expected = os.path.join("/path", "to", "plugins")
+        assert result == expected
+
+    def test_normal_mode(self, monkeypatch):
+        """通常モード（スクリプト実行時）ではプロジェクトルートを基準にする"""
+        monkeypatch.delattr(sys, "frozen", raising=False)
+        result = _plugins_mod._get_plugins_dir()
+        # pagefolio/ の親ディレクトリ + "plugins"
+        expected_base = os.path.dirname(
+            os.path.dirname(os.path.abspath(_plugins_mod.__file__))
+        )
+        expected = os.path.join(expected_base, "plugins")
+        assert result == expected
+
+
+# ===== PDFEditorPlugin 基底クラス全メソッドテスト =====
+
+
+class TestPDFEditorPluginBase:
+    """PDFEditorPlugin 基底クラスの全メソッドが呼び出し可能で例外を投げないことを確認"""
+
+    @pytest.mark.parametrize(
+        "method_name, args",
+        [
+            ("on_load", ("app",)),
+            ("on_unload", ("app",)),
+            ("on_file_open", ("app", "/path.pdf")),
+            ("on_file_save", ("app", "/path.pdf")),
+            ("on_page_rotate", ("app", [0], 90)),
+            ("on_page_delete", ("app", [0])),
+            ("on_page_crop", ("app", 0)),
+            ("on_page_change", ("app", 0)),
+            ("on_insert", ("app", ["/a.pdf"], 0)),
+            ("on_merge", ("app", ["/a.pdf"])),
+            ("build_ui", ("app", "parent")),
+        ],
+    )
+    def test_base_method_callable(self, method_name, args):
+        """基底メソッド {method_name} が呼び出し可能で None を返す"""
+        plugin = pagefolio.PDFEditorPlugin()
+        method = getattr(plugin, method_name)
+        result = method(*args)
+        assert result is None
+
+
+# ===== app 引数付きライフサイクルテスト =====
+
+
+class TestPluginLifecycleWithApp:
+    """load/unload/enable/disable を app 引数付きで呼んだ場合のテスト"""
+
+    def _create_lifecycle_plugin(self, path):
+        """on_load/on_unload でフラグを切り替えるプラグインファイルを生成"""
+        code = textwrap.dedent("""\
+            import pagefolio
+
+            class LifecyclePlugin(pagefolio.PDFEditorPlugin):
+                name = "LifecyclePlugin"
+                version = "1.0.0"
+
+                def __init__(self):
+                    self.loaded = False
+                    self.unloaded = False
+
+                def on_load(self, app):
+                    self.loaded = True
+
+                def on_unload(self, app):
+                    self.unloaded = True
+        """)
+        path.write_text(code, encoding="utf-8")
+        return path
+
+    def test_load_plugin_with_app(self, tmp_path):
+        """app 引数付きで load_plugin すると on_load(app) が呼ばれる"""
+        plugin_file = self._create_lifecycle_plugin(tmp_path / "lc_plug.py")
+        pm = pagefolio.PluginManager()
+        instance = pm.load_plugin("lc_plug", str(plugin_file), app="mock_app")
+        assert instance.loaded is True
+
+    def test_load_plugin_with_app_disabled(self, tmp_path):
+        """disabled なプラグインは app 付き load でも on_load が呼ばれない"""
+        plugin_file = self._create_lifecycle_plugin(tmp_path / "lc_plug.py")
+        pm = pagefolio.PluginManager()
+        pm._disabled.add("lc_plug")
+        instance = pm.load_plugin("lc_plug", str(plugin_file), app="mock_app")
+        assert instance.loaded is False
+
+    def test_unload_plugin_with_app(self, tmp_path):
+        """app 引数付きで unload_plugin すると on_unload(app) が呼ばれる"""
+        plugin_file = self._create_lifecycle_plugin(tmp_path / "lc_plug.py")
+        pm = pagefolio.PluginManager()
+        instance = pm.load_plugin("lc_plug", str(plugin_file))
+        pm.unload_plugin("lc_plug", app="mock_app")
+        assert instance.unloaded is True
+
+    def test_enable_plugin_with_app(self, tmp_path):
+        """disable → enable(app) で on_load(app) が呼ばれる"""
+        plugin_file = self._create_lifecycle_plugin(tmp_path / "lc_plug.py")
+        pm = pagefolio.PluginManager()
+        instance = pm.load_plugin("lc_plug", str(plugin_file))
+        pm.disable_plugin("lc_plug")
+        assert instance.loaded is False  # disable では loaded 不変
+        instance.loaded = False  # 明示的にリセット
+        pm.enable_plugin("lc_plug", app="mock_app")
+        assert instance.loaded is True
+
+    def test_disable_plugin_with_app(self, tmp_path):
+        """disable(app) で on_unload(app) が呼ばれる"""
+        plugin_file = self._create_lifecycle_plugin(tmp_path / "lc_plug.py")
+        pm = pagefolio.PluginManager()
+        instance = pm.load_plugin("lc_plug", str(plugin_file))
+        pm.disable_plugin("lc_plug", app="mock_app")
+        assert instance.unloaded is True
+
+
+# ===== fire_event 例外ハンドリングテスト =====
+
+
+class TestFireEventException:
+    """fire_event 内で例外が発生した場合のテスト"""
+
+    def _create_error_plugin(self, path, class_name="ErrorPlugin"):
+        """イベントハンドラが例外を投げるプラグインファイルを生成"""
+        code = textwrap.dedent(f"""\
+            import pagefolio
+
+            class {class_name}(pagefolio.PDFEditorPlugin):
+                name = "{class_name}"
+                version = "1.0.0"
+
+                def on_file_open(self, app, path):
+                    raise RuntimeError("Test error from {class_name}")
+        """)
+        path.write_text(code, encoding="utf-8")
+        return path
+
+    def _create_tracking_plugin(self, path, class_name="TrackingPlugin"):
+        """呼び出しを記録するプラグインファイルを生成"""
+        code = textwrap.dedent(f"""\
+            import pagefolio
+
+            class {class_name}(pagefolio.PDFEditorPlugin):
+                name = "{class_name}"
+                version = "1.0.0"
+
+                def __init__(self):
+                    self.called = False
+
+                def on_file_open(self, app, path):
+                    self.called = True
+        """)
+        path.write_text(code, encoding="utf-8")
+        return path
+
+    def test_fire_event_exception_caught(self, tmp_path):
+        """プラグインが例外を投げても fire_event は正常に完了する"""
+        error_file = self._create_error_plugin(tmp_path / "error_plug.py")
+        pm = pagefolio.PluginManager()
+        pm.load_plugin("error_plug", str(error_file))
+        # 例外が飲み込まれて正常に return する
+        pm.fire_event("on_file_open", None, "/test.pdf")
+
+    def test_fire_event_exception_other_plugins_still_called(self, tmp_path):
+        """例外プラグインの後の別プラグインも正常に呼ばれる"""
+        error_file = self._create_error_plugin(tmp_path / "error_plug.py")
+        tracking_file = self._create_tracking_plugin(tmp_path / "tracking_plug.py")
+
+        pm = pagefolio.PluginManager()
+        pm.load_plugin("error_plug", str(error_file))
+        tracking = pm.load_plugin("tracking_plug", str(tracking_file))
+
+        pm.fire_event("on_file_open", None, "/test.pdf")
+        assert tracking.called is True
+
+
+# ===== ライフサイクル例外ハンドリングテスト =====
+
+
+class TestLifecycleExceptionHandling:
+    """unload/enable/disable 内の例外ハンドリングテスト"""
+
+    def _create_error_lifecycle_plugin(self, path):
+        """on_load/on_unload が例外を投げるプラグインを生成"""
+        code = textwrap.dedent("""\
+            import pagefolio
+
+            class ErrorLifecyclePlugin(pagefolio.PDFEditorPlugin):
+                name = "ErrorLifecyclePlugin"
+                version = "1.0.0"
+
+                def on_load(self, app):
+                    raise RuntimeError("on_load error")
+
+                def on_unload(self, app):
+                    raise RuntimeError("on_unload error")
+        """)
+        path.write_text(code, encoding="utf-8")
+        return path
+
+    def test_unload_exception_caught(self, tmp_path):
+        """unload 時に on_unload が例外を投げてもクラッシュしない"""
+        plugin_file = self._create_error_lifecycle_plugin(tmp_path / "err_lc.py")
+        pm = pagefolio.PluginManager()
+        pm.load_plugin("err_lc", str(plugin_file))
+        # app 付き unload → on_unload が例外 → 飲み込まれる
+        pm.unload_plugin("err_lc", app="mock_app")
+        assert "err_lc" not in pm.all_plugins
+
+    def test_enable_exception_caught(self, tmp_path):
+        """enable 時に on_load が例外を投げてもクラッシュしない"""
+        plugin_file = self._create_error_lifecycle_plugin(tmp_path / "err_lc.py")
+        pm = pagefolio.PluginManager()
+        pm.load_plugin("err_lc", str(plugin_file))
+        pm.disable_plugin("err_lc")
+        # app 付き enable → on_load が例外 → 飲み込まれる
+        pm.enable_plugin("err_lc", app="mock_app")
+        assert pm.is_enabled("err_lc")
+
+    def test_disable_exception_caught(self, tmp_path):
+        """disable 時に on_unload が例外を投げてもクラッシュしない"""
+        plugin_file = self._create_error_lifecycle_plugin(tmp_path / "err_lc.py")
+        pm = pagefolio.PluginManager()
+        pm.load_plugin("err_lc", str(plugin_file))
+        # app 付き disable → on_unload が例外 → 飲み込まれる
+        pm.disable_plugin("err_lc", app="mock_app")
+        assert not pm.is_enabled("err_lc")
