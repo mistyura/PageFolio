@@ -3,14 +3,9 @@
 現在のページのサイズ・回転角度・CropBox情報をツールパネルに表示する。
 """
 
-import os
-
-# pdf_editor.py から PDFEditorPlugin をインポート
-import sys
 import tkinter as tk
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from pdf_editor import PDFEditorPlugin
+from pagefolio.plugins import PDFEditorPlugin
 
 
 class PageInfoPlugin(PDFEditorPlugin):
@@ -48,7 +43,7 @@ class PageInfoPlugin(PDFEditorPlugin):
 
     def build_ui(self, app, parent):
         # テーマ色を動的に取得
-        from pdf_editor import C
+        from pagefolio.constants import C
 
         self._label = tk.Label(
             parent,
