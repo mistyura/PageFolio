@@ -3,10 +3,13 @@
 # Released under the MIT License
 """ファイル操作 Mixin — open/save/undo/redo"""
 
+import logging
 import os
 from tkinter import filedialog, messagebox
 
 import fitz
+
+logger = logging.getLogger(__name__)
 
 
 class FileOpsMixin:
@@ -161,7 +164,8 @@ class FileOpsMixin:
                 self.doc.save(
                     self.filepath, incremental=True, encryption=fitz.PDF_ENCRYPT_KEEP
                 )
-            except Exception:
+            except Exception as e:
+                logger.debug("incremental save 失敗、tmp ファイル経由で保存: %s", e)
                 tmp = self.filepath + ".tmp"
                 self.doc.save(tmp)
                 os.replace(tmp, self.filepath)

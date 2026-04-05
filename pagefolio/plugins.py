@@ -5,10 +5,12 @@
 
 import importlib
 import importlib.util
+import logging
 import os
-import traceback
 
 from pagefolio.constants import PLUGINS_DIR
+
+logger = logging.getLogger(__name__)
 
 
 def _get_plugins_dir():
@@ -141,8 +143,8 @@ class PluginManager:
             if app and plugin_id not in self._disabled:
                 instance.on_load(app)
             return instance
-        except Exception:
-            traceback.print_exc()
+        except Exception as e:
+            logger.exception("プラグインロード失敗 (%s): %s", plugin_id, e)
             return None
 
     def unload_plugin(self, plugin_id, app=None):
@@ -151,8 +153,8 @@ class PluginManager:
             if app:
                 try:
                     self._plugins[plugin_id].on_unload(app)
-                except Exception:
-                    traceback.print_exc()
+                except Exception as e:
+                    logger.exception("プラグインアンロード失敗 (%s): %s", plugin_id, e)
             del self._plugins[plugin_id]
             self._plugin_modules.pop(plugin_id, None)
 
@@ -162,16 +164,16 @@ class PluginManager:
         if plugin_id in self._plugins and app:
             try:
                 self._plugins[plugin_id].on_load(app)
-            except Exception:
-                traceback.print_exc()
+            except Exception as e:
+                logger.exception("プラグイン有効化失敗 (%s): %s", plugin_id, e)
 
     def disable_plugin(self, plugin_id, app=None):
         """プラグインを無効化する"""
         if plugin_id in self._plugins and app:
             try:
                 self._plugins[plugin_id].on_unload(app)
-            except Exception:
-                traceback.print_exc()
+            except Exception as e:
+                logger.exception("プラグイン無効化失敗 (%s): %s", plugin_id, e)
         self._disabled.add(plugin_id)
 
     def load_all(self, app=None, disabled_ids=None):
@@ -188,8 +190,10 @@ class PluginManager:
             if method:
                 try:
                     method(*args, **kwargs)
-                except Exception:
-                    traceback.print_exc()
+                except Exception as e:
+                    logger.exception(
+                        "プラグインイベント %s 発火失敗: %s", event_name, e
+                    )
 
     def get_disabled_ids(self):
         """無効化されたプラグインIDリストを返す"""

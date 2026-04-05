@@ -4,9 +4,12 @@
 """設定ユーティリティ関数"""
 
 import json
+import logging
 import os
 
 from pagefolio.constants import SETTINGS_FILE, THEMES, C
+
+logger = logging.getLogger(__name__)
 
 
 def _get_settings_path():
@@ -34,8 +37,8 @@ def _load_settings():
             for k, v in defaults.items():
                 data.setdefault(k, v)
             return data
-    except Exception:  # noqa: S110
-        pass
+    except Exception as e:
+        logger.debug("設定ファイル読み込み失敗: %s", e)
     return dict(defaults)
 
 
@@ -45,8 +48,8 @@ def _save_settings(settings):
         path = _get_settings_path()
         with open(path, "w", encoding="utf-8") as f:
             json.dump(settings, f, ensure_ascii=False, indent=2)
-    except Exception:  # noqa: S110
-        pass
+    except Exception as e:
+        logger.debug("設定ファイル保存失敗: %s", e)
 
 
 def _detect_system_theme():
@@ -61,7 +64,8 @@ def _detect_system_theme():
         val, _ = winreg.QueryValueEx(key, "AppsUseLightTheme")
         winreg.CloseKey(key)
         return "light" if val == 1 else "dark"
-    except Exception:
+    except Exception as e:
+        logger.debug("システムテーマ検出失敗: %s", e)
         return "dark"
 
 
