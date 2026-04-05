@@ -3,6 +3,7 @@
 # Released under the MIT License
 """ダイアログ — About, Settings, Plugin, MergeOrder"""
 
+import logging
 import os
 import tkinter as tk
 from tkinter import messagebox, ttk
@@ -12,6 +13,8 @@ import fitz
 from pagefolio.constants import APP_VERSION, LANG, PLUGINS_DIR, C
 from pagefolio.plugins import _get_plugins_dir
 from pagefolio.settings import _current_font_size
+
+logger = logging.getLogger(__name__)
 
 
 # ══════════════════════════════════════════
@@ -211,8 +214,8 @@ class SettingsDialog(tk.Toplevel):
             size = self.font_var.get()
             size = max(8, min(16, size))
             self.preview_label.configure(font=("Segoe UI", size))
-        except Exception:  # noqa: S110
-            pass
+        except Exception as e:
+            logger.debug("フォントプレビュー更新失敗: %s", e)
 
     def _apply(self):
         new_settings = dict(self.current_settings)
@@ -440,7 +443,8 @@ class MergeOrderDialog(tk.Toplevel):
                 d = fitz.open(p)
                 self._page_counts[p] = len(d)
                 d.close()
-            except Exception:
+            except Exception as e:
+                logger.debug("ページ数取得失敗: %s", e)
                 self._page_counts[p] = 0
 
         self._build()

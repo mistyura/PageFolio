@@ -3,8 +3,8 @@
 # Released under the MIT License
 """メインアプリケーションクラス — Mixin を統合した PDFEditorApp"""
 
+import logging
 import tkinter as tk
-import traceback
 from tkinter import messagebox
 
 from pagefolio.constants import LANG, C
@@ -22,11 +22,17 @@ from pagefolio.settings import (
 from pagefolio.ui_builder import UIBuilderMixin
 from pagefolio.viewer import ViewerMixin
 
+logger = logging.getLogger(__name__)
+
 
 class PDFEditorApp(UIBuilderMixin, FileOpsMixin, PageOpsMixin, ViewerMixin, DnDMixin):
     MAX_UNDO = 20
 
     def __init__(self, root):
+        logging.basicConfig(
+            level=logging.WARNING,
+            format="%(levelname)s:%(name)s:%(message)s",
+        )
         self.root = root
         self.root.title("PageFolio")
         self.root.geometry("1200x780")
@@ -93,8 +99,8 @@ class PDFEditorApp(UIBuilderMixin, FileOpsMixin, PageOpsMixin, ViewerMixin, DnDM
         for b in self._doc_buttons:
             try:
                 b.state(state)
-            except Exception:  # noqa: S110
-                pass
+            except Exception as e:
+                logger.debug("ボタン状態変更失敗: %s", e)
 
     def _check_doc(self):
         if not self.doc:
@@ -209,8 +215,8 @@ class PDFEditorApp(UIBuilderMixin, FileOpsMixin, PageOpsMixin, ViewerMixin, DnDM
                     font=self._font(-1, "bold"),
                 ).pack(anchor="w", padx=8, pady=(4, 2))
                 plugin.build_ui(self, pf)
-            except Exception:
-                traceback.print_exc()
+            except Exception as e:
+                logger.exception("プラグイン UI 構築失敗: %s", e)
 
     def _open_plugin_dialog(self):
         """プラグイン管理ダイアログを開く"""
