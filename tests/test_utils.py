@@ -3,7 +3,7 @@
 import json
 import os
 import sys
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -253,3 +253,63 @@ class TestParsePageRanges:
         """範囲の末尾が最大を超える"""
         result = self.app._parse_page_ranges("1-100", 10)
         assert result is None
+
+
+# ===== _get_settings_path =====
+
+
+class TestGetSettingsPath:
+    """_get_settings_path の分岐テスト"""
+
+    def test_frozen_mode(self, monkeypatch):
+        """PyInstaller (frozen) モードでは sys.executable のディレクトリを基準にする"""
+        monkeypatch.setattr(sys, "frozen", True, raising=False)
+        monkeypatch.setattr(sys, "executable", os.path.join("/fake", "dir", "app.exe"))
+        result = _settings_mod._get_settings_path()
+        expected_dir = os.path.join("/fake", "dir")
+        assert os.path.dirname(result) == expected_dir
+        assert os.path.basename(result) == _settings_mod.SETTINGS_FILE
+
+    def test_normal_mode(self, monkeypatch):
+        """通常実行ではパッケージ親ディレクトリを基準にする"""
+        monkeypatch.delattr(sys, "frozen", raising=False)
+        result = _settings_mod._get_settings_path()
+        # pagefolio/ パッケージの親 + SETTINGS_FILE
+        expected_base = os.path.dirname(
+            os.path.dirname(os.path.abspath(_settings_mod.__file__))
+        )
+        assert result == os.path.join(expected_base, _settings_mod.SETTINGS_FILE)
+
+
+# ===== _save_settings 例外パス =====
+
+
+class TestSaveSettingsError:
+    """_save_settings の例外パステスト"""
+
+    def test_save_to_invalid_path(self):
+        """存在しないディレクトリへの保存は例外を投げずに return する"""
+        invalid_path = os.path.join(
+            "/nonexistent_dir_xyz", "sub", "pagefolio_settings.json"
+        )
+        with patch.object(
+            _settings_mod, "_get_settings_path", return_value=invalid_path
+        ):
+            # 例外が raise されないことを確認（except 句でキャッチされる）
+            _settings_mod._save_settings({"theme": "dark"})
+
+
+# ===== _detect_system_theme 例外パス =====
+
+
+class TestDetectSystemThemeError:
+    """_detect_system_theme の例外パステスト"""
+
+    def test_winreg_import_error(self):
+        """winreg のインポートが失敗した場合 'dark' を返す"""
+        # winreg がローカル import なので sys.modules に壊れたモジュールを注入
+        broken = MagicMock()
+        broken.OpenKey = MagicMock(side_effect=OSError("mocked"))
+        with patch.dict("sys.modules", {"winreg": broken}):
+            result = _settings_mod._detect_system_theme()
+        assert result == "dark"
