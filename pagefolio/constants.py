@@ -44,7 +44,7 @@ THEMES = {
 C = dict(THEMES["dark"])
 
 # ===================== バージョン =====================
-APP_VERSION = "v0.9.6"
+APP_VERSION = "v0.9.7"
 
 # ===================== ファイル名定数 =====================
 SETTINGS_FILE = "pagefolio_settings.json"
