@@ -54,6 +54,24 @@ class PageOpsMixin:
         self._set_status(self._t("status_deleted").format(count=len(targets)))
         self.plugin_manager.fire_event("on_page_delete", self, targets)
 
+    def _duplicate_page(self):
+        """アクティブページを直後に複製して挿入する"""
+        if not self._check_doc():
+            return
+        pno = self.current_page
+        self._save_undo()
+        try:
+            tmp = fitz.open()
+            tmp.insert_pdf(self.doc, from_page=pno, to_page=pno)
+            self.doc.insert_pdf(tmp, start_at=pno + 1)
+            tmp.close()
+            self._invalidate_thumb_cache()
+            self.current_page = pno + 1
+            self._refresh_all()
+            self._set_status(self._t("status_duplicated").format(page=pno + 1))
+        except Exception as e:
+            messagebox.showerror(self._t("err_title"), str(e))
+
     # ── トリミング ──
     def _toggle_crop_mode(self):
         self.crop_mode = not self.crop_mode
@@ -382,11 +400,16 @@ class PageOpsMixin:
                     filenames.append(f"{base}_p{s}-{e}.pdf")
             if not self._check_split_overwrite(folder, filenames):
                 return
+            compress = messagebox.askyesno(
+                self._t("compress_split_confirm_title"),
+                self._t("compress_split_confirm_msg"),
+            )
+            save_kwargs = {"garbage": 4, "deflate": 1, "clean": 1} if compress else {}
             for idx, (s, e) in enumerate(ranges):
                 out = fitz.open()
                 out.insert_pdf(self.doc, from_page=s - 1, to_page=e - 1)
                 out_path = os.path.join(folder, filenames[idx])
-                out.save(out_path)
+                out.save(out_path, **save_kwargs)
                 out.close()
             self._set_status(
                 self._t("status_split_range").format(count=len(ranges), folder=folder)
@@ -410,11 +433,16 @@ class PageOpsMixin:
             filenames = [f"{base}_p{str(i + 1).zfill(digits)}.pdf" for i in range(n)]
             if not self._check_split_overwrite(folder, filenames):
                 return
+            compress = messagebox.askyesno(
+                self._t("compress_split_confirm_title"),
+                self._t("compress_split_confirm_msg"),
+            )
+            save_kwargs = {"garbage": 4, "deflate": 1, "clean": 1} if compress else {}
             for i in range(n):
                 out = fitz.open()
                 out.insert_pdf(self.doc, from_page=i, to_page=i)
                 out_path = os.path.join(folder, filenames[i])
-                out.save(out_path)
+                out.save(out_path, **save_kwargs)
                 out.close()
             self._set_status(
                 self._t("status_split_each").format(count=n, folder=folder)

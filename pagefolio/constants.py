@@ -44,7 +44,7 @@ THEMES = {
 C = dict(THEMES["dark"])
 
 # ===================== バージョン =====================
-APP_VERSION = "v0.9.7"
+APP_VERSION = "v0.9.8"
 
 # ===================== ファイル名定数 =====================
 SETTINGS_FILE = "pagefolio_settings.json"
@@ -89,6 +89,8 @@ LANG = {
         "btn_rot_right": "↻ 右90°",
         "btn_rot_180": "↕ 180°",
         "btn_delete": "🗑 選択ページを削除 (Del)",
+        "btn_duplicate": "📋 現在ページを複製",
+        "status_duplicated": "p.{page} を複製して直後に挿入しました",
         # トリミング
         "crop_mode_off": "✂ 範囲選択モード OFF",
         "crop_mode_on": "🔴 範囲選択モード ON  (クリックで OFF)",
@@ -125,6 +127,17 @@ LANG = {
         "split_overwrite_title": "上書き確認",
         "split_overwrite_msg": (
             "保存先に同名ファイルが存在します:\n\n{files}\n\n上書きしますか？"
+        ),
+        # 縮小保存
+        "sec_compress": "🗜 縮小保存",
+        "btn_save_compressed": "🗜 縮小して保存…",
+        "status_compressed": "縮小保存しました: {name}",
+        "compress_split_confirm_title": "分割時の縮小保存",
+        "compress_split_confirm_msg": (
+            "分割したPDFを縮小最適化して保存しますか？\n"
+            "（garbage収集 + 圧縮を実行します）\n\n"
+            "「はい」を選ぶとファイルサイズが小さくなりますが\n"
+            "処理時間が増加する場合があります。"
         ),
         # プラグイン
         "btn_plugin_mgr": "🔌 プラグイン管理…",
@@ -287,6 +300,8 @@ LANG = {
         "btn_rot_right": "↻ Right 90°",
         "btn_rot_180": "↕ 180°",
         "btn_delete": "🗑 Delete Selected (Del)",
+        "btn_duplicate": "📋 Duplicate Current Page",
+        "status_duplicated": "Duplicated p.{page} and inserted after it",
         # Crop
         "crop_mode_off": "✂ Crop Mode OFF",
         "crop_mode_on": "🔴 Crop Mode ON  (click to OFF)",
@@ -323,6 +338,17 @@ LANG = {
         "split_overwrite_title": "Confirm Overwrite",
         "split_overwrite_msg": (
             "The following file(s) already exist:\n\n{files}\n\nOverwrite?"
+        ),
+        # Compress save
+        "sec_compress": "🗜 Compress & Save",
+        "btn_save_compressed": "🗜 Save Compressed…",
+        "status_compressed": "Saved compressed: {name}",
+        "compress_split_confirm_title": "Compress Split Files?",
+        "compress_split_confirm_msg": (
+            "Save split PDFs with size optimization?\n"
+            "(Runs garbage collection + compression)\n\n"
+            "Choosing 'Yes' reduces file size but may\n"
+            "increase processing time."
         ),
         # Plugin
         "btn_plugin_mgr": "🔌 Manage Plugins…",

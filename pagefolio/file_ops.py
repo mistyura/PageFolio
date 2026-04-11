@@ -196,3 +196,22 @@ class FileOpsMixin:
             self.plugin_manager.fire_event("on_file_save", self, path)
         except Exception as e:
             messagebox.showerror(self._t("err_title"), str(e))
+
+    def _save_compressed(self):
+        """縮小最適化して名前を付けて保存（garbage=4, deflate=1, clean=1）"""
+        if not self.doc:
+            messagebox.showinfo(self._t("info_title"), self._t("info_open_first"))
+            return
+        path = filedialog.asksaveasfilename(
+            defaultextension=".pdf",
+            filetypes=[(self._t("filetypes_pdf"), "*.pdf")],
+        )
+        if not path:
+            return
+        try:
+            self.doc.save(path, garbage=4, deflate=1, clean=1)
+            self._set_status(
+                self._t("status_compressed").format(name=os.path.basename(path))
+            )
+        except Exception as e:
+            messagebox.showerror(self._t("err_title"), str(e))

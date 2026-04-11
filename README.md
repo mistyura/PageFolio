@@ -1,7 +1,7 @@
 # PageFolio
 
 **PDF ページ整理ツール — Python + Tkinter 製 GUI アプリ**
-![Version](https://img.shields.io/badge/version-v0.9.7-blue)
+![Version](https://img.shields.io/badge/version-v0.9.8-blue)
 ![Pre-release](https://img.shields.io/badge/status-pre--release-orange)
 
 A PDF page organizer built with Python + Tkinter.  
@@ -34,8 +34,10 @@ It does **not** edit text or add annotations — it focuses on **page-level oper
 | 🔄 ページ回転 | 90° / 180° / 270°、複数ページ一括対応 |
 | 🗑 ページ削除 | 選択ページをまとめて削除 |
 | ✂ トリミング | プレビュー上のドラッグで余白をカット |
+| 📋 ページ複製 | 現在のページを直後に複製して挿入 |
 | 📎 挿入・結合 | 別 PDF からページを挿入 / 末尾に結合 |
-| ✂ 分割 | ページ範囲指定で分割 / 1ページずつ個別PDFに分割 |
+| ✂ 分割 | ページ範囲指定で分割 / 1ページずつ個別PDFに分割（縮小オプション付き） |
+| 🗜 縮小保存 | garbage収集 + 圧縮でファイルサイズを最適化して保存 |
 | 🔀 D&D 並び替え | サムネイルをドラッグ＆ドロップでページ順を変更 |
 | ↩ Undo / Redo | 最大20回の取り消し・やり直し（Ctrl+Z / Ctrl+Y） |
 | 🔍 プレビュー | ズーム・スクロール対応、ページ拡大表示 |

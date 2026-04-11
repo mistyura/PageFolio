@@ -402,6 +402,7 @@ class UIBuilderMixin:
             "Danger.TButton",
             needs_doc=True,
         )
+        btn(f2, self._t("btn_duplicate"), self._duplicate_page, needs_doc=True)
 
         f3 = section(self._t("sec_crop"))
         self.crop_mode_var = tk.BooleanVar(value=False)
@@ -468,6 +469,14 @@ class UIBuilderMixin:
             f5_split,
             self._t("btn_split_each"),
             self._split_each_page,
+            needs_doc=True,
+        )
+
+        f6_compress = section(self._t("sec_compress"))
+        btn(
+            f6_compress,
+            self._t("btn_save_compressed"),
+            self._save_compressed,
             needs_doc=True,
         )
 
