@@ -8,6 +8,7 @@ __pycache__/
 
 # PyInstaller出力
 dist/
+!dist/PageFolio.exe
 build/
 *.spec
 
