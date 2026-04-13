@@ -35,7 +35,6 @@ class PDFEditorApp(UIBuilderMixin, FileOpsMixin, PageOpsMixin, ViewerMixin, DnDM
         )
         self.root = root
         self.root.title("PageFolio")
-        self.root.geometry("1200x780")
         self.root.minsize(800, 600)
 
         # 設定読み込み・テーマ適用
@@ -47,6 +46,21 @@ class PDFEditorApp(UIBuilderMixin, FileOpsMixin, PageOpsMixin, ViewerMixin, DnDM
         _settings_mod._current_font_size = self.font_size
         _apply_theme(self.settings.get("theme", "dark"))
         self.root.configure(bg=C["BG_DARK"])
+
+        # 前回終了時のウィンドウジオメトリを復元
+        saved_geom = self.settings.get("window_geometry", "")
+        if saved_geom:
+            try:
+                self.root.geometry(saved_geom)
+            except Exception as e:
+                logger.debug("ジオメトリ復元失敗: %s", e)
+                self.root.geometry("1200x780")
+        else:
+            self.root.geometry("1200x780")
+
+        # 閲覧/編集モード（デフォルト: 閲覧モード）
+        self.edit_mode = self.settings.get("edit_mode", False)
+        self._mode_btn = None
 
         self.doc = None
         self.filepath = None
@@ -89,6 +103,7 @@ class PDFEditorApp(UIBuilderMixin, FileOpsMixin, PageOpsMixin, ViewerMixin, DnDM
         self.root.bind("<Control-Shift-s>", lambda e: self._save_as())
         self.root.bind("<Control-Shift-S>", lambda e: self._save_as())
         self.root.bind("<Delete>", lambda e: self._delete_selected())
+        self.root.bind("<F5>", lambda e: self._toggle_edit_mode())
 
     # ══════════════════════════════════════════
     #  ユーティリティ
@@ -166,6 +181,7 @@ class PDFEditorApp(UIBuilderMixin, FileOpsMixin, PageOpsMixin, ViewerMixin, DnDM
         return event.action
 
     def _quit(self):
+        self._save_window_state()
         if self.doc:
             if messagebox.askyesno(self._t("confirm_title"), self._t("quit_confirm")):
                 self.doc.close()
@@ -175,6 +191,88 @@ class PDFEditorApp(UIBuilderMixin, FileOpsMixin, PageOpsMixin, ViewerMixin, DnDM
 
     def _set_status(self, msg):
         self.status_var.set(msg)
+
+    # ══════════════════════════════════════════
+    #  閲覧/編集モード切替
+    # ══════════════════════════════════════════
+    def _toggle_edit_mode(self):
+        """閲覧モード ↔ 編集モードを切り替える"""
+        self.edit_mode = not self.edit_mode
+        if self.edit_mode:
+            # 編集モードへ: 右パネルを追加
+            if str(self._right_panel) not in self._paned.panes():
+                self._paned.add(self._right_panel, minsize=220)
+            self.root.after(60, self._restore_edit_sashes)
+        else:
+            # 閲覧モードへ: サッシ位置を保存して右パネルを非表示
+            self._save_sash_positions()
+            if str(self._right_panel) in self._paned.panes():
+                self._paned.forget(self._right_panel)
+            self.root.after(60, self._set_viewer_sash)
+        self._update_mode_btn()
+
+    def _save_sash_positions(self):
+        """現在のサッシ位置を設定に保存"""
+        try:
+            self.settings["sash_left"] = self._paned.sash_coord(0)[0]
+            if len(self._paned.panes()) > 2:
+                self.settings["sash_right"] = self._paned.sash_coord(1)[0]
+        except Exception as e:
+            logger.debug("サッシ位置保存失敗: %s", e)
+
+    def _restore_edit_sashes(self):
+        """編集モード用サッシ位置を復元"""
+        try:
+            self._paned.update_idletasks()
+            total = self._paned.winfo_width()
+            if total <= 100:
+                return
+            left = self.settings.get("sash_left", int(total * 0.15))
+            right = self.settings.get("sash_right", int(total * 0.77))
+            left = max(100, min(left, total - 450))
+            right = max(left + 200, min(right, total - 220))
+            self._paned.sash_place(0, left, 0)
+            self._paned.sash_place(1, right, 0)
+        except Exception as e:
+            logger.debug("サッシ位置復元失敗: %s", e)
+
+    def _set_viewer_sash(self):
+        """閲覧モード用サッシ位置を設定（左パネル15%）"""
+        try:
+            self._paned.update_idletasks()
+            total = self._paned.winfo_width()
+            if total > 100:
+                self._paned.sash_place(0, int(total * 0.15), 0)
+        except Exception as e:
+            logger.debug("閲覧モードサッシ設定失敗: %s", e)
+
+    def _update_mode_btn(self):
+        """モード切替ボタンのテキスト・スタイルを更新"""
+        if self._mode_btn is None:
+            return
+        try:
+            if self.edit_mode:
+                self._mode_btn.configure(
+                    text=self._t("mode_edit_label"), style="Accent.TButton"
+                )
+            else:
+                self._mode_btn.configure(
+                    text=self._t("mode_view_label"), style="TButton"
+                )
+        except Exception as e:
+            logger.debug("モードボタン更新失敗: %s", e)
+
+    def _save_window_state(self):
+        """ウィンドウのジオメトリ・サッシ位置・モードを設定に保存"""
+        try:
+            geom = self.root.geometry()
+            if geom and "x" in geom:
+                self.settings["window_geometry"] = geom
+        except Exception as e:
+            logger.debug("ジオメトリ保存失敗: %s", e)
+        self._save_sash_positions()
+        self.settings["edit_mode"] = self.edit_mode
+        _save_settings(self.settings)
 
     def _font(self, delta=0, weight=None):
         """テーマ対応フォントタプルを返す"""
@@ -261,6 +359,7 @@ class PDFEditorApp(UIBuilderMixin, FileOpsMixin, PageOpsMixin, ViewerMixin, DnDM
         self.crop_overlay_ids = []
         self.crop_rect_id = None
         self._plugin_ui_frame = None
+        self._mode_btn = None
         self._build_styles()
         self._build_ui()
         if self.doc:

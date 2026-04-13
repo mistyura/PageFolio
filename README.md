@@ -1,7 +1,7 @@
 # PageFolio
 
 **PDF ページ整理ツール — Python + Tkinter 製 GUI アプリ**
-![Version](https://img.shields.io/badge/version-v0.9.8-blue)
+![Version](https://img.shields.io/badge/version-v0.9.8.1-blue)
 ![Pre-release](https://img.shields.io/badge/status-pre--release-orange)
 
 A PDF page organizer built with Python + Tkinter.  
@@ -41,7 +41,9 @@ It does **not** edit text or add annotations — it focuses on **page-level oper
 | 🔀 D&D 並び替え | サムネイルをドラッグ＆ドロップでページ順を変更 |
 | ↩ Undo / Redo | 最大20回の取り消し・やり直し（Ctrl+Z / Ctrl+Y） |
 | 🔍 プレビュー | ズーム・スクロール対応、ページ拡大表示 |
+| 👁 閲覧/編集モード | ヘッダーボタン（F5）でモード切替。閲覧モードは右パネル非表示でプレビュー最大化 |
 | ⚙ テーマ・フォント | ダーク / ライト / システム連動、フォントサイズ変更 |
+| 🪟 ウィンドウ状態引き継ぎ | 前回終了時のウィンドウ位置・サイズを次回起動時に復元 |
 
 ---
 

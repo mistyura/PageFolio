@@ -96,10 +96,11 @@ class UIBuilderMixin:
 
     def _build_ui(self):
 
-        header_h = max(56, int(self.font_size * 5))
+        header_h = max(60, int(self.font_size * 5.5))
         header = tk.Frame(self.root, bg=C["BG_PANEL"], height=header_h)
         header.pack(fill="x", side="top")
         header.pack_propagate(False)
+
         tk.Label(
             header,
             text="✦ PageFolio",
@@ -107,6 +108,20 @@ class UIBuilderMixin:
             fg=C["ACCENT"],
             font=self._font(6, "bold"),
         ).pack(side="left", padx=20, pady=12)
+
+        # 閲覧/編集モード切替ボタン
+        mode_style = "Accent.TButton" if self.edit_mode else "TButton"
+        mode_text = (
+            self._t("mode_edit_label") if self.edit_mode else self._t("mode_view_label")
+        )
+        self._mode_btn = ttk.Button(
+            header,
+            text=mode_text,
+            style=mode_style,
+            command=self._toggle_edit_mode,
+        )
+        self._mode_btn.pack(side="left", padx=16, pady=12)
+
         self.status_var = tk.StringVar(value=self._t("status_initial"))
         tk.Label(
             header,
@@ -116,7 +131,7 @@ class UIBuilderMixin:
             font=self._font(-1),
         ).pack(side="right", padx=20)
 
-        paned = tk.PanedWindow(
+        self._paned = tk.PanedWindow(
             self.root,
             orient="horizontal",
             bg=C["BG_DARK"],
@@ -125,27 +140,38 @@ class UIBuilderMixin:
             opaqueresize=True,
             bd=0,
         )
-        paned.pack(fill="both", expand=True)
+        self._paned.pack(fill="both", expand=True)
 
-        left_width = max(200, int(self.font_size * 18))
-        left = tk.Frame(paned, bg=C["BG_PANEL"])
+        left_width = max(170, int(self.font_size * 15))
+        left = tk.Frame(self._paned, bg=C["BG_PANEL"])
         self._build_thumb_panel(left)
-        paned.add(left, minsize=150, width=left_width)
+        self._paned.add(left, minsize=130, width=left_width)
 
-        center = tk.Frame(paned, bg=C["BG_DARK"])
+        center = tk.Frame(self._paned, bg=C["BG_DARK"])
         self._build_preview(center)
-        paned.add(center, minsize=300)
+        self._paned.add(center, minsize=300)
 
-        right = tk.Frame(paned, bg=C["BG_PANEL"])
-        self._build_tools_scrollable(right)
-        paned.add(right, minsize=220)
+        # 右パネル（ツール）— 編集モード時のみペインに追加
+        self._right_panel = tk.Frame(self._paned, bg=C["BG_PANEL"])
+        self._build_tools_scrollable(self._right_panel)
+        if self.edit_mode:
+            self._paned.add(self._right_panel, minsize=220)
 
         def _set_sash():
-            paned.update_idletasks()
-            total = paned.winfo_width()
-            if total > 100:
-                paned.sash_place(0, int(total * 0.20), 0)
-                paned.sash_place(1, int(total * 0.70), 0)
+            self._paned.update_idletasks()
+            total = self._paned.winfo_width()
+            if total <= 100:
+                return
+            if self.edit_mode:
+                left_pos = self.settings.get("sash_left", int(total * 0.15))
+                right_pos = self.settings.get("sash_right", int(total * 0.77))
+                left_pos = max(100, min(left_pos, total - 450))
+                right_pos = max(left_pos + 200, min(right_pos, total - 220))
+                self._paned.sash_place(0, left_pos, 0)
+                self._paned.sash_place(1, right_pos, 0)
+            else:
+                left_pos = int(total * 0.15)
+                self._paned.sash_place(0, left_pos, 0)
 
         self.root.after(200, _set_sash)
 
@@ -205,39 +231,40 @@ class UIBuilderMixin:
         )
 
     def _build_preview(self, parent):
-        toolbar_h = max(44, int(self.font_size * 3.5))
+        toolbar_h = max(52, int(self.font_size * 4.5))
         toolbar = tk.Frame(parent, bg=C["BG_PANEL"], height=toolbar_h)
         toolbar.pack(fill="x")
         toolbar.pack_propagate(False)
 
         self.prev_btn = ttk.Button(
-            toolbar, text=self._t("btn_prev"), command=self._prev_page, width=3
+            toolbar, text=self._t("btn_prev"), command=self._prev_page, width=4
         )
-        self.prev_btn.pack(side="left", padx=2, pady=4)
+        self.prev_btn.pack(side="left", padx=(10, 2), pady=6)
         self.page_label = tk.Label(
             toolbar,
             text="- / -",
             bg=C["BG_PANEL"],
             fg=C["TEXT_MAIN"],
             font=self._font(0, "bold"),
+            width=8,
         )
-        self.page_label.pack(side="left", padx=2)
+        self.page_label.pack(side="left", padx=4)
         self.next_btn = ttk.Button(
-            toolbar, text=self._t("btn_next"), command=self._next_page, width=3
+            toolbar, text=self._t("btn_next"), command=self._next_page, width=4
         )
-        self.next_btn.pack(side="left", padx=2)
+        self.next_btn.pack(side="left", padx=(2, 10))
 
         ttk.Button(
             toolbar,
             text=self._t("btn_zoom_out"),
             command=lambda: self._zoom(-0.2),
-            width=3,
-        ).pack(side="right", padx=2, pady=4)
+            width=4,
+        ).pack(side="right", padx=(2, 10), pady=6)
         ttk.Button(
             toolbar,
             text=self._t("btn_zoom_in"),
             command=lambda: self._zoom(0.2),
-            width=3,
+            width=4,
         ).pack(side="right", padx=2)
         self.zoom_label = tk.Label(
             toolbar,
@@ -245,8 +272,9 @@ class UIBuilderMixin:
             bg=C["BG_PANEL"],
             fg=C["TEXT_SUB"],
             font=self._font(-1),
+            width=6,
         )
-        self.zoom_label.pack(side="right", padx=2)
+        self.zoom_label.pack(side="right", padx=6)
 
         frame = tk.Frame(parent, bg=C["BG_DARK"])
         frame.pack(fill="both", expand=True)
