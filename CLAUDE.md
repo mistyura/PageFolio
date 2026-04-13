@@ -14,7 +14,7 @@
 | PDF ライブラリ | pymupdf (fitz) |
 | 画像ライブラリ | Pillow (PIL) |
 | 対象 OS | Windows 11 |
-| 現在バージョン | v0.9.8 |
+| 現在バージョン | v0.9.8.1 |
 
 ---
 
@@ -141,8 +141,12 @@ C = dict(THEMES["dark"])  # 実行時に _apply_theme() で更新
   - `self.thumb_cache` — サムネイルキャッシュ辞書
   - `self._doc_buttons` — ファイル依存ボタンのリスト（doc未開時に disabled）
   - `self._pending_click` — ダブルクリック競合防止用の遅延クリックID
-  - `self.settings` — 設定辞書（テーマ、フォントサイズ）
+  - `self.settings` — 設定辞書（テーマ、フォントサイズ、ウィンドウジオメトリ、モード）
   - `self.font_size` — 現在のベースフォントサイズ（8〜16）
+  - `self.edit_mode` — 編集モード True / 閲覧モード False（設定に永続化）
+  - `self._paned` — メインの `tk.PanedWindow`（横分割）参照
+  - `self._right_panel` — 右ツールパネルの `tk.Frame`（閲覧モード時は paned から外す）
+  - `self._mode_btn` — モード切替 `ttk.Button` 参照
 - **再描画**: ページ変更後は必ず `self._refresh_all()` を呼ぶ
 - **ステータス表示**: 操作完了後は `self._set_status(msg)` でヘッダーに表示
 - **ファイル操作前の確認**: `self._check_doc()` で `self.doc` の存在を確認する
@@ -212,6 +216,8 @@ C = dict(THEMES["dark"])  # 実行時に _apply_theme() で更新
 - [x] PyInstaller による exe 化・配布対応
 - [x] ページ複製機能（アクティブページを直後に挿入）
 - [x] PDF サイズ縮小保存（単体 + 分割時オプション）
+- [x] 閲覧モード / 編集モード 切替（F5 ショートカット、デフォルト閲覧モード）
+- [x] ウィンドウ位置・サイズの前回終了時引き継ぎ
 
 ---
 
