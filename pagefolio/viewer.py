@@ -252,7 +252,7 @@ class ViewerMixin:
         popup.geometry("900x700")
         popup.transient(self.root)
 
-        toolbar = tk.Frame(popup, bg=C["BG_PANEL"], height=40)
+        toolbar = tk.Frame(popup, bg=C["BG_PANEL"], height=56)
         toolbar.pack(fill="x")
         toolbar.pack_propagate(False)
 
@@ -327,39 +327,39 @@ class ViewerMixin:
             render_page()
 
         prev_btn = ttk.Button(toolbar, text="◀", command=go_prev)
-        prev_btn.pack(side="left", padx=(10, 2), pady=6)
+        prev_btn.pack(side="left", padx=(12, 4), pady=10)
         page_lbl = tk.Label(
             toolbar,
             text=f"{idx + 1} / {n}",
             bg=C["BG_PANEL"],
             fg=C["TEXT_MAIN"],
-            font=self._font(0, "bold"),
+            font=self._font(2, "bold"),
         )
-        page_lbl.pack(side="left", padx=4)
+        page_lbl.pack(side="left", padx=6)
         next_btn = ttk.Button(toolbar, text="▶", command=go_next)
-        next_btn.pack(side="left", padx=2)
+        next_btn.pack(side="left", padx=4)
 
         zoom_lbl = tk.Label(
             toolbar,
             text="100%",
             bg=C["BG_PANEL"],
             fg=C["TEXT_SUB"],
-            font=self._font(-1),
+            font=self._font(0),
         )
-        zoom_lbl.pack(side="right", padx=6)
+        zoom_lbl.pack(side="right", padx=8)
         ttk.Button(
             toolbar,
             text="🔍 縮小",
             command=zoom_out,
-        ).pack(side="right", padx=2, pady=6)
+        ).pack(side="right", padx=4, pady=10)
         ttk.Button(
             toolbar,
             text="🔍 拡大",
             command=zoom_in,
-        ).pack(side="right", padx=2, pady=6)
+        ).pack(side="right", padx=4, pady=10)
         ttk.Button(
             toolbar, text="✕ 閉じる", command=popup.destroy, style="Danger.TButton"
-        ).pack(side="right", padx=6, pady=6)
+        ).pack(side="right", padx=8, pady=10)
 
         frame = tk.Frame(popup, bg=C["PREVIEW_BG"])
         frame.pack(fill="both", expand=True)

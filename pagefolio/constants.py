@@ -44,7 +44,7 @@ THEMES = {
 C = dict(THEMES["dark"])
 
 # ===================== バージョン =====================
-APP_VERSION = "v0.9.8.1"
+APP_VERSION = "v0.9.8.2"
 
 # ===================== ファイル名定数 =====================
 SETTINGS_FILE = "pagefolio_settings.json"
@@ -145,8 +145,8 @@ LANG = {
         "mode_view_label": "👁 閲覧モード",
         "mode_edit_label": "📝 編集モード",
         # プレビュー空状態
-        "preview_empty1": "📂 ファイルを開いてください",
-        "preview_empty2": "Ctrl+O  または右パネル「ファイルを開く」",
+        "preview_empty1": "📂 ファイルをドラッグ＆ドロップ",
+        "preview_empty2": "または Ctrl+O / メニューから「ファイルを開く」",
         # 共通ボタン
         "btn_close": "✕ 閉じる",
         # ステータスメッセージ
@@ -359,8 +359,8 @@ LANG = {
         "mode_view_label": "👁 View Mode",
         "mode_edit_label": "📝 Edit Mode",
         # Preview empty state
-        "preview_empty1": "📂 Open a file to get started",
-        "preview_empty2": 'Ctrl+O  or use "Open File" in the right panel',
+        "preview_empty1": "📂 Drag & Drop a file here",
+        "preview_empty2": 'or Ctrl+O / use "Open File" from the menu',
         # Common button
         "btn_close": "✕ Close",
         # Status messages

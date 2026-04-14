@@ -151,27 +151,22 @@ class UIBuilderMixin:
         self._build_preview(center)
         self._paned.add(center, minsize=300)
 
-        # 右パネル（ツール）— 編集モード時のみペインに追加
+        # 右パネル（ツール）— 常時表示
         self._right_panel = tk.Frame(self._paned, bg=C["BG_PANEL"])
         self._build_tools_scrollable(self._right_panel)
-        if self.edit_mode:
-            self._paned.add(self._right_panel, minsize=220)
+        self._paned.add(self._right_panel, minsize=220)
 
         def _set_sash():
             self._paned.update_idletasks()
             total = self._paned.winfo_width()
             if total <= 100:
                 return
-            if self.edit_mode:
-                left_pos = self.settings.get("sash_left", int(total * 0.15))
-                right_pos = self.settings.get("sash_right", int(total * 0.77))
-                left_pos = max(100, min(left_pos, total - 450))
-                right_pos = max(left_pos + 200, min(right_pos, total - 220))
-                self._paned.sash_place(0, left_pos, 0)
-                self._paned.sash_place(1, right_pos, 0)
-            else:
-                left_pos = int(total * 0.15)
-                self._paned.sash_place(0, left_pos, 0)
+            left_pos = self.settings.get("sash_left", int(total * 0.15))
+            right_pos = self.settings.get("sash_right", int(total * 0.77))
+            left_pos = max(100, min(left_pos, total - 450))
+            right_pos = max(left_pos + 200, min(right_pos, total - 220))
+            self._paned.sash_place(0, left_pos, 0)
+            self._paned.sash_place(1, right_pos, 0)
 
         self.root.after(200, _set_sash)
 
@@ -350,6 +345,7 @@ class UIBuilderMixin:
         from pagefolio.dialogs import AboutDialog
 
         self._doc_buttons = []
+        self._edit_only_buttons = []
 
         def section(title):
             f = tk.Frame(parent, bg=C["BG_CARD"], bd=0)
@@ -363,11 +359,13 @@ class UIBuilderMixin:
             ).pack(anchor="w", padx=8, pady=(6, 2))
             return f
 
-        def btn(parent, text, cmd, style="TButton", needs_doc=False):
+        def btn(parent, text, cmd, style="TButton", needs_doc=False, edit_only=False):
             b = ttk.Button(parent, text=text, command=cmd, style=style)
             b.pack(fill="x", padx=8, pady=2)
             if needs_doc:
                 self._doc_buttons.append(b)
+            if edit_only:
+                self._edit_only_buttons.append(b)
             return b
 
         f5 = section(self._t("sec_settings"))
@@ -381,8 +379,15 @@ class UIBuilderMixin:
 
         f = section(self._t("sec_file"))
         btn(f, self._t("btn_open"), self._open_file, "Accent.TButton")
-        btn(f, self._t("btn_save"), self._save_file, needs_doc=True)
-        btn(f, self._t("btn_save_as"), self._save_as, needs_doc=True)
+        btn(f, self._t("btn_save"), self._save_file, needs_doc=True, edit_only=True)
+        btn(f, self._t("btn_save_as"), self._save_as, needs_doc=True, edit_only=True)
+        btn(
+            f,
+            self._t("btn_save_compressed"),
+            self._save_compressed,
+            needs_doc=True,
+            edit_only=True,
+        )
         btn(f, self._t("btn_quit"), self._quit, "Danger.TButton")
 
         f_ur = section(self._t("sec_undo"))
@@ -391,9 +396,11 @@ class UIBuilderMixin:
         b_undo = ttk.Button(ur_row, text=self._t("btn_undo"), command=self._undo)
         b_undo.pack(side="left", expand=True, fill="x", padx=2, pady=2)
         self._doc_buttons.append(b_undo)
+        self._edit_only_buttons.append(b_undo)
         b_redo = ttk.Button(ur_row, text=self._t("btn_redo"), command=self._redo)
         b_redo.pack(side="left", expand=True, fill="x", padx=2, pady=2)
         self._doc_buttons.append(b_redo)
+        self._edit_only_buttons.append(b_redo)
 
         f2 = section(self._t("sec_page"))
         tk.Label(
@@ -413,6 +420,7 @@ class UIBuilderMixin:
             )
             b.pack(side="left", expand=True, fill="x", padx=2, pady=2)
             self._doc_buttons.append(b)
+            self._edit_only_buttons.append(b)
         rot_row2 = tk.Frame(f2, bg=C["BG_CARD"])
         rot_row2.pack(fill="x", padx=6, pady=(0, 2))
         b180 = ttk.Button(
@@ -422,6 +430,7 @@ class UIBuilderMixin:
         )
         b180.pack(fill="x", padx=2, pady=2)
         self._doc_buttons.append(b180)
+        self._edit_only_buttons.append(b180)
 
         btn(
             f2,
@@ -429,8 +438,15 @@ class UIBuilderMixin:
             self._delete_selected,
             "Danger.TButton",
             needs_doc=True,
+            edit_only=True,
         )
-        btn(f2, self._t("btn_duplicate"), self._duplicate_page, needs_doc=True)
+        btn(
+            f2,
+            self._t("btn_duplicate"),
+            self._duplicate_page,
+            needs_doc=True,
+            edit_only=True,
+        )
 
         f3 = section(self._t("sec_crop"))
         self.crop_mode_var = tk.BooleanVar(value=False)
@@ -439,6 +455,7 @@ class UIBuilderMixin:
         )
         self.crop_toggle_btn.pack(fill="x", padx=8, pady=(4, 2))
         self._doc_buttons.append(self.crop_toggle_btn)
+        self._edit_only_buttons.append(self.crop_toggle_btn)
         tk.Label(
             f3,
             text=self._t("crop_hint"),
@@ -456,13 +473,14 @@ class UIBuilderMixin:
             font=self._font(-2),
         ).pack(anchor="w", padx=8, pady=2)
 
-        btn(f3, self._t("btn_crop"), self._crop_page, needs_doc=True)
+        btn(f3, self._t("btn_crop"), self._crop_page, needs_doc=True, edit_only=True)
         btn(
             f3,
             self._t("btn_crop_reset"),
             self._crop_reset,
             "Danger.TButton",
             needs_doc=True,
+            edit_only=True,
         )
 
         f4 = section(self._t("sec_insert"))
@@ -471,20 +489,23 @@ class UIBuilderMixin:
             self._t("btn_insert_head"),
             lambda: self._insert_from_file("head"),
             needs_doc=True,
+            edit_only=True,
         )
         btn(
             f4,
             self._t("btn_insert_tail"),
             lambda: self._insert_from_file("tail"),
             needs_doc=True,
+            edit_only=True,
         )
         btn(
             f4,
             self._t("btn_insert_pos"),
             lambda: self._insert_from_file("pos"),
             needs_doc=True,
+            edit_only=True,
         )
-        btn(f4, self._t("btn_merge"), self._merge_pdf, needs_doc=True)
+        btn(f4, self._t("btn_merge"), self._merge_pdf, needs_doc=True, edit_only=True)
 
         f5_split = section(self._t("sec_split"))
         btn(
@@ -492,20 +513,14 @@ class UIBuilderMixin:
             self._t("btn_split_range"),
             self._split_by_range,
             needs_doc=True,
+            edit_only=True,
         )
         btn(
             f5_split,
             self._t("btn_split_each"),
             self._split_each_page,
             needs_doc=True,
-        )
-
-        f6_compress = section(self._t("sec_compress"))
-        btn(
-            f6_compress,
-            self._t("btn_save_compressed"),
-            self._save_compressed,
-            needs_doc=True,
+            edit_only=True,
         )
 
         f_plug = section(self._t("sec_plugin"))
@@ -515,3 +530,4 @@ class UIBuilderMixin:
         self._build_plugin_ui()
 
         self._update_doc_buttons_state()
+        self._update_edit_buttons_state()

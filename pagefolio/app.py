@@ -198,18 +198,20 @@ class PDFEditorApp(UIBuilderMixin, FileOpsMixin, PageOpsMixin, ViewerMixin, DnDM
     def _toggle_edit_mode(self):
         """閲覧モード ↔ 編集モードを切り替える"""
         self.edit_mode = not self.edit_mode
-        if self.edit_mode:
-            # 編集モードへ: 右パネルを追加
-            if str(self._right_panel) not in self._paned.panes():
-                self._paned.add(self._right_panel, minsize=220)
-            self.root.after(60, self._restore_edit_sashes)
-        else:
-            # 閲覧モードへ: サッシ位置を保存して右パネルを非表示
-            self._save_sash_positions()
-            if str(self._right_panel) in self._paned.panes():
-                self._paned.forget(self._right_panel)
-            self.root.after(60, self._set_viewer_sash)
+        self._update_edit_buttons_state()
         self._update_mode_btn()
+
+    def _update_edit_buttons_state(self):
+        """編集モード/閲覧モードに応じて編集専用ボタンの活性/非活性を切り替え"""
+        state = ["!disabled"] if self.edit_mode else ["disabled"]
+        for b in self._edit_only_buttons:
+            try:
+                b.state(state)
+            except Exception as e:
+                logger.debug("編集ボタン状態変更失敗: %s", e)
+        # 編集モード時はドキュメント状態も再チェック
+        if self.edit_mode:
+            self._update_doc_buttons_state()
 
     def _save_sash_positions(self):
         """現在のサッシ位置を設定に保存"""
@@ -235,16 +237,6 @@ class PDFEditorApp(UIBuilderMixin, FileOpsMixin, PageOpsMixin, ViewerMixin, DnDM
             self._paned.sash_place(1, right, 0)
         except Exception as e:
             logger.debug("サッシ位置復元失敗: %s", e)
-
-    def _set_viewer_sash(self):
-        """閲覧モード用サッシ位置を設定（左パネル15%）"""
-        try:
-            self._paned.update_idletasks()
-            total = self._paned.winfo_width()
-            if total > 100:
-                self._paned.sash_place(0, int(total * 0.15), 0)
-        except Exception as e:
-            logger.debug("閲覧モードサッシ設定失敗: %s", e)
 
     def _update_mode_btn(self):
         """モード切替ボタンのテキスト・スタイルを更新"""
