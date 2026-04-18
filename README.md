@@ -1,7 +1,7 @@
 # PageFolio
 
 **PDF ページ整理ツール — Python + Tkinter 製 GUI アプリ**
-![Version](https://img.shields.io/badge/version-v0.9.8.1-blue)
+![Version](https://img.shields.io/badge/version-v0.9.8.2-blue)
 ![Pre-release](https://img.shields.io/badge/status-pre--release-orange)
 
 A PDF page organizer built with Python + Tkinter.  
