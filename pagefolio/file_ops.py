@@ -89,9 +89,39 @@ class FileOpsMixin:
         self._set_status(self._t("redo_done"))
 
     def _restore_state(self, state):
-        if self.doc:
-            self.doc.close()
-        self.doc = fitz.open(stream=state["pdf_bytes"], filetype="pdf")
+        if "pdf_bytes" in state:
+            # 旧来形式（Redo スタック由来）またはフォールバック
+            if self.doc:
+                self.doc.close()
+            self.doc = fitz.open(stream=state["pdf_bytes"], filetype="pdf")
+        else:
+            op = state["op"]
+            if op == "rotate":
+                for page_i, old_rot in state["data"]:
+                    self.doc[page_i].set_rotation(old_rot)
+            elif op == "crop":
+                page_i, (x0, y0, x1, y1) = state["data"]
+                self.doc[page_i].set_cropbox(fitz.Rect(x0, y0, x1, y1))
+            elif op == "delete":
+                # 昇順で再挿入（インデックスずれ防止）
+                for page_i, page_bytes in state["data"]:
+                    tmp = fitz.open(stream=page_bytes, filetype="pdf")
+                    self.doc.insert_pdf(tmp, start_at=page_i)
+                    tmp.close()
+            elif op == "move":
+                src, actual_dest = state["data"]
+                self.doc.move_page(actual_dest, src)
+            elif op == "duplicate":
+                self.doc.delete_page(state["data"] + 1)
+            elif op == "insert":
+                insert_at, num = state["data"]
+                for _ in range(num):
+                    self.doc.delete_page(insert_at)
+            elif op == "merge":
+                old_count = state["data"]
+                while len(self.doc) > old_count:
+                    self.doc.delete_page(old_count)
+
         self.current_page = min(state["current_page"], max(0, len(self.doc) - 1))
         self.selected_pages = state["selected_pages"]
         self._invalidate_thumb_cache()
