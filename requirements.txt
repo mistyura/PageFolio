@@ -1,0 +1,10 @@
+# 実行依存
+PyMuPDF==1.27.2.2
+Pillow==12.2.0
+tkinterdnd2==0.4.3
+pyinstaller==6.19.0
+
+# 開発依存
+pytest==9.0.2
+pytest-cov==7.1.0
+ruff==0.15.7

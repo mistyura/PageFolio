@@ -1,0 +1,332 @@
+{
+  "version": 1,
+  "exported_at": "2026-05-04T03:55:01.361Z",
+  "milestones": [
+    {
+      "id": "M001",
+      "title": "v1.0 画像対応・パフォーマンス・操作性改善",
+      "status": "active",
+      "depends_on": [],
+      "created_at": "2026-05-04T03:53:58.479Z",
+      "completed_at": null,
+      "vision": "Windows 向けデスクトップ PDF（および画像）編集ツール。Python + Tkinter で構築され、PyInstaller で exe 配布可能。ページの閲覧・回転・削除・トリミング・複製・結合・分割などの操作を単一 GUI で提供する。v0.9.8.2 をベースに v1.0 として完成させる。",
+      "success_criteria": [
+        "PNG/JPG/BMP/TIFF ファイルをファイルメニュー・D&D どちらでも開き、既存の全編集操作が使える",
+        "ページ切替・ズーム変更・大規模 PDF 開封時に UI がフリーズしない（バックグラウンドレンダリング）",
+        "Undo スタックが差分方式になり、大規模 PDF でのメモリ使用量が削減される",
+        "複数選択ページを D&D で一括移動・一括トリミングできる",
+        "requirements.txt にバージョン固定済みの依存ライブラリがコミットされている"
+      ],
+      "key_risks": [],
+      "proof_strategy": [],
+      "verification_contract": "",
+      "verification_integration": "",
+      "verification_operational": "",
+      "verification_uat": "",
+      "definition_of_done": [],
+      "requirement_coverage": "Not provided.",
+      "boundary_map_markdown": "Not provided.",
+      "sequence": 0
+    }
+  ],
+  "slices": [
+    {
+      "milestone_id": "M001",
+      "id": "S01",
+      "title": "基盤と画像対応",
+      "status": "pending",
+      "risk": "medium",
+      "depends": [],
+      "demo": "requirements.txt 固定済み、PNG/JPG/BMP/TIFF ファイルを開いて既存の全編集操作が使える",
+      "created_at": "2026-05-04T03:53:58.480Z",
+      "completed_at": null,
+      "full_summary_md": "",
+      "full_uat_md": "",
+      "goal": "requirements.txt を直接依存のみに整理し、PNG/JPG/BMP/TIFF ファイルを PDF と同様に開いて既存の全編集操作が使える状態にする",
+      "success_criteria": "1. requirements.txt が直接依存のみ（PyMuPDF, Pillow, tkinterdnd2, pyinstaller, pytest, pytest-cov, ruff）を含む\\n2. PNG/JPG/JPEG/BMP/TIFF/TIF ファイルをファイルダイアログ・D&D どちらでも開ける\\n3. 画像ファイルで Ctrl+S すると _save_as() にフォールスルーし PDF 保存ダイアログが開く\\n4. ruff check && ruff format が通る\\n5. pytest が全件パスする",
+      "proof_level": "",
+      "integration_closure": "constants.py の SUPPORTED_EXTENSIONS / IMAGE_EXTENSIONS を file_ops.py と app.py の 3 箇所（ダイアログフィルター・D&D フィルター・保存フォールスルー）で共有参照し、LANG 辞書経由で UI テキストを管理する",
+      "observability_impact": "",
+      "sequence": 1,
+      "replan_triggered_at": null,
+      "is_sketch": 0,
+      "sketch_scope": ""
+    },
+    {
+      "milestone_id": "M001",
+      "id": "S02",
+      "title": "バックグラウンドレンダリング",
+      "status": "pending",
+      "risk": "medium",
+      "depends": [
+        "S01"
+      ],
+      "demo": "大規模 PDF を開いてページ切替・ズームを操作しても UI が応答し続ける",
+      "created_at": "2026-05-04T03:53:58.480Z",
+      "completed_at": null,
+      "full_summary_md": "",
+      "full_uat_md": "",
+      "goal": "ページ切替・ズーム変更・大規模 PDF 開封時に UI がフリーズしない",
+      "success_criteria": "threading.Thread + root.after() でバックグラウンドレンダリングが実装され、UI スレッドがブロックされない",
+      "proof_level": "手動検証 + pytest",
+      "integration_closure": "viewer.py のレンダリングロジックを threading.Thread で非同期化し、root.after() で UI を更新する",
+      "observability_impact": "レンダリング中はステータスバーにインジケーターを表示する",
+      "sequence": 2,
+      "replan_triggered_at": null,
+      "is_sketch": 0,
+      "sketch_scope": ""
+    },
+    {
+      "milestone_id": "M001",
+      "id": "S03",
+      "title": "Undo 差分化",
+      "status": "pending",
+      "risk": "medium",
+      "depends": [
+        "S02"
+      ],
+      "demo": "大規模 PDF で複数操作後の Undo が動作し、メモリ使用量が全体コピー方式より削減される",
+      "created_at": "2026-05-04T03:53:58.480Z",
+      "completed_at": null,
+      "full_summary_md": "",
+      "full_uat_md": "",
+      "goal": "Undo スタックが差分方式になり大規模 PDF でのメモリ使用量が削減される",
+      "success_criteria": "変更ページのバイト列のみをキャッシュする差分 Undo が実装され、既存の Undo/Redo 操作がすべて正常に動作する",
+      "proof_level": "pytest + メモリ使用量の目視確認",
+      "integration_closure": "file_ops.py の _undo_stack / _redo_stack を差分方式に変更し、既存の Undo/Redo API を維持する",
+      "observability_impact": "なし",
+      "sequence": 3,
+      "replan_triggered_at": null,
+      "is_sketch": 0,
+      "sketch_scope": ""
+    },
+    {
+      "milestone_id": "M001",
+      "id": "S04",
+      "title": "複数ページ操作と保守",
+      "status": "pending",
+      "risk": "medium",
+      "depends": [
+        "S03"
+      ],
+      "demo": "複数ページを選択して D&D で一括移動、および一括トリミングが動作する",
+      "created_at": "2026-05-04T03:53:58.480Z",
+      "completed_at": null,
+      "full_summary_md": "",
+      "full_uat_md": "",
+      "goal": "複数ページの D&D 一括移動・一括トリミングが動作し、ダイアログのフォント生成ロジックが統一される",
+      "success_criteria": "複数選択ページの D&D 一括移動と一括トリミングが動作する。dialogs.py のフォント生成が _font() ヘルパーに統一される。",
+      "proof_level": "pytest + 手動検証",
+      "integration_closure": "dnd.py の D&D ロジックと page_ops.py のトリミングロジックを複数ページ対応に拡張する",
+      "observability_impact": "なし",
+      "sequence": 4,
+      "replan_triggered_at": null,
+      "is_sketch": 0,
+      "sketch_scope": ""
+    }
+  ],
+  "tasks": [
+    {
+      "milestone_id": "M001",
+      "slice_id": "S01",
+      "id": "T01",
+      "title": "requirements.txt 整備",
+      "status": "pending",
+      "one_liner": "",
+      "narrative": "",
+      "verification_result": "",
+      "duration": "",
+      "completed_at": null,
+      "blocker_discovered": false,
+      "deviations": "",
+      "known_issues": "",
+      "key_files": [],
+      "key_decisions": [],
+      "full_summary_md": "",
+      "description": "現在の pip freeze 全出力を直接依存のみに書き直す。PyMuPDF, Pillow, tkinterdnd2, pyinstaller（実行依存）と pytest, pytest-cov, ruff（dev 依存）をバージョン固定で記載する。無関係パッケージ（altgraph, numpy 等）はすべて除外する（D-01〜D-04）。",
+      "estimate": "10m",
+      "files": [
+        "requirements.txt"
+      ],
+      "verify": "cat requirements.txt でエントリー数が 7 以下であることを確認",
+      "inputs": [
+        "現在の requirements.txt の内容",
+        ".planning/phases/01-基盤と画像対応/01-CONTEXT.md §D-01〜D-04"
+      ],
+      "expected_output": [
+        "requirements.txt が直接依存 7 パッケージのみを含む",
+        "インストール済みバージョンと一致したバージョン固定"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M001",
+      "slice_id": "S01",
+      "id": "T02",
+      "title": "constants.py 拡張子定数・LANG キー追加",
+      "status": "pending",
+      "one_liner": "",
+      "narrative": "",
+      "verification_result": "",
+      "duration": "",
+      "completed_at": null,
+      "blocker_discovered": false,
+      "deviations": "",
+      "known_issues": "",
+      "key_files": [],
+      "key_decisions": [],
+      "full_summary_md": "",
+      "description": "pagefolio/constants.py に SUPPORTED_EXTENSIONS と IMAGE_EXTENSIONS の 2 定数を追加する（D-05）。LANG['ja'] と LANG['en'] 両方に新規キー filetypes_supported / filetypes_image / status_opened_image / status_image_save_as を追加し、既存キー dnd_drop_hint / dnd_pdf_only / dlg_insert_title の値を UI-SPEC の Copywriting Contract に従い更新する。",
+      "estimate": "20m",
+      "files": [
+        "pagefolio/constants.py"
+      ],
+      "verify": "python -c \"from pagefolio.constants import SUPPORTED_EXTENSIONS, IMAGE_EXTENSIONS, LANG; assert '.png' in SUPPORTED_EXTENSIONS; assert 'filetypes_supported' in LANG['ja']\" が通る。ruff check pagefolio/constants.py がクリーン",
+      "inputs": [
+        ".planning/phases/01-基盤と画像対応/01-UI-SPEC.md §Constants Contract",
+        ".planning/phases/01-基盤と画像対応/01-UI-SPEC.md §Copywriting Contract"
+      ],
+      "expected_output": [
+        "SUPPORTED_EXTENSIONS と IMAGE_EXTENSIONS が constants.py に存在する",
+        "LANG['ja'] と LANG['en'] に 4 新規キー追加・3 キーの値更新"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M001",
+      "slice_id": "S01",
+      "id": "T03",
+      "title": "file_ops.py ファイルダイアログ・保存フロー変更",
+      "status": "pending",
+      "one_liner": "",
+      "narrative": "",
+      "verification_result": "",
+      "duration": "",
+      "completed_at": null,
+      "blocker_discovered": false,
+      "deviations": "",
+      "known_issues": "",
+      "key_files": [],
+      "key_decisions": [],
+      "full_summary_md": "",
+      "description": "_open_file() の filetypes を UI-SPEC の 4 エントリーに変更（D-06）。挿入ダイアログの filetypes も同様に変更。_save_file() に IMAGE_EXTENSIONS チェックを追加し _save_as() フォールスルーを実装（D-11）。単体画像オープン後に status_opened_image を表示する。",
+      "estimate": "30m",
+      "files": [
+        "pagefolio/file_ops.py"
+      ],
+      "verify": "ruff check pagefolio/file_ops.py がクリーン。python -c \"import ast; ast.parse(open('pagefolio/file_ops.py', encoding='utf-8').read())\" が通る",
+      "inputs": [
+        "pagefolio/file_ops.py 現在の内容",
+        "pagefolio/constants.py（T02 完了後）",
+        ".planning/phases/01-基盤と画像対応/01-UI-SPEC.md §Interaction Contract",
+        ".planning/phases/01-基盤と画像対応/01-UI-SPEC.md §Phase 1 UI Surface Area"
+      ],
+      "expected_output": [
+        "_open_file() が 4 エントリーの filetypes を持つ",
+        "_save_file() が IMAGE_EXTENSIONS チェックで _save_as() にフォールスルーする"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M001",
+      "slice_id": "S01",
+      "id": "T04",
+      "title": "app.py D&D フィルター拡張",
+      "status": "pending",
+      "one_liner": "",
+      "narrative": "",
+      "verification_result": "",
+      "duration": "",
+      "completed_at": null,
+      "blocker_discovered": false,
+      "deviations": "",
+      "known_issues": "",
+      "key_files": [],
+      "key_decisions": [],
+      "full_summary_md": "",
+      "description": "_on_dnd_drop() の '.pdf' ハードコードフィルターを SUPPORTED_EXTENSIONS 定数参照に差し替える（D-07, D-08）。",
+      "estimate": "20m",
+      "files": [
+        "pagefolio/app.py"
+      ],
+      "verify": "ruff check pagefolio/app.py がクリーン。python -c \"import ast; ast.parse(open('pagefolio/app.py', encoding='utf-8').read())\" が通る",
+      "inputs": [
+        "pagefolio/app.py の _on_dnd_drop() 付近の現在コード",
+        "pagefolio/constants.py（T02 完了後）",
+        ".planning/phases/01-基盤と画像対応/01-CONTEXT.md §Integration Points"
+      ],
+      "expected_output": [
+        "_on_dnd_drop() が SUPPORTED_EXTENSIONS でフィルタリングしている",
+        "'.pdf' のハードコード文字列比較が消えている"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M001",
+      "slice_id": "S01",
+      "id": "T05",
+      "title": "リント・テスト・受け入れ確認",
+      "status": "pending",
+      "one_liner": "",
+      "narrative": "",
+      "verification_result": "",
+      "duration": "",
+      "completed_at": null,
+      "blocker_discovered": false,
+      "deviations": "",
+      "known_issues": "",
+      "key_files": [],
+      "key_decisions": [],
+      "full_summary_md": "",
+      "description": "全 py ファイルに対して ruff check && ruff format を実行し警告ゼロを確認する。pytest を実行し全テストがパスすることを確認する。",
+      "estimate": "15m",
+      "files": [],
+      "verify": "ruff check . && ruff format . の出力にエラーなし。pytest の出力に FAILED がゼロ",
+      "inputs": [
+        "T01〜T04 の全変更完了後の状態"
+      ],
+      "expected_output": [
+        "ruff check . がエラーゼロ",
+        "pytest が全件 PASSED"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    }
+  ],
+  "decisions": [],
+  "verification_evidence": []
+}

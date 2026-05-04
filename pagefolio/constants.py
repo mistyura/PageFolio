@@ -49,6 +49,13 @@ APP_VERSION = "v0.9.8.2"
 # ===================== ファイル名定数 =====================
 SETTINGS_FILE = "pagefolio_settings.json"
 PLUGINS_DIR = "plugins"
+
+# ===================== 対応拡張子（D-05）=====================
+SUPPORTED_EXTENSIONS = frozenset(
+    {".pdf", ".png", ".jpg", ".jpeg", ".bmp", ".tiff", ".tif"}
+)
+
+IMAGE_EXTENSIONS = frozenset({".png", ".jpg", ".jpeg", ".bmp", ".tiff", ".tif"})
 LANG = {
     "ja": {
         # ヘッダー / ステータス
@@ -158,6 +165,12 @@ LANG = {
         # ファイル操作
         "filetypes_pdf": "PDFファイル",
         "filetypes_all": "すべて",
+        "filetypes_supported": "サポートファイル",
+        "filetypes_image": "画像ファイル",
+        "status_opened_image": "開きました（画像→PDF変換）: {name}  (1ページ)",
+        "status_image_save_as": (
+            "画像ファイルは PDF で保存します — 保存先を選択してください"
+        ),
         "info_open_first": "先にファイルを開いてください",
         "save_confirm_title": "上書き保存の確認",
         "save_confirm_msg": (
@@ -190,7 +203,7 @@ LANG = {
             "CropBoxの設定に失敗しました。\n範囲を調整して再度お試しください。\n\n{e}"
         ),
         # 挿入・結合ステータス
-        "dlg_insert_title": "挿入するPDFを選択（複数可）",
+        "dlg_insert_title": "挿入するファイルを選択（PDF/画像、複数可）",
         "dlg_insert_pos_title": "挿入位置",
         "dlg_insert_pos_msg": (
             "何ページ目の後ろに挿入しますか？\n"
@@ -210,8 +223,8 @@ LANG = {
         # D&D ステータス
         "status_dnd_moved": "p.{src} → p.{dest} に移動しました",
         # D&D ファイルオープン
-        "dnd_drop_hint": "ここに PDF をドロップ",
-        "dnd_pdf_only": "PDF ファイルのみ対応しています",
+        "dnd_drop_hint": "ここに PDF / 画像をドロップ",
+        "dnd_pdf_only": "PDF または画像ファイル (PNG/JPG/BMP/TIFF) のみ対応しています",
         "dnd_replace_confirm": (
             "現在のファイルを閉じて新しいファイルを開きますか？\n"
             "（未保存の変更は失われます）"
@@ -372,6 +385,12 @@ LANG = {
         # File operations
         "filetypes_pdf": "PDF files",
         "filetypes_all": "All files",
+        "filetypes_supported": "Supported Files",
+        "filetypes_image": "Image Files",
+        "status_opened_image": "Opened (image→PDF): {name}  (1 page)",
+        "status_image_save_as": (
+            "Image file will be saved as PDF — choose save location"
+        ),
         "info_open_first": "Please open a file first",
         "save_confirm_title": "Confirm Overwrite",
         "save_confirm_msg": (
@@ -399,7 +418,7 @@ LANG = {
             "Failed to set CropBox.\nAdjust the selection and try again.\n\n{e}"
         ),
         # Insert/Merge status
-        "dlg_insert_title": "Select PDF(s) to Insert",
+        "dlg_insert_title": "Select file(s) to insert (PDF/image)",
         "dlg_insert_pos_title": "Insert Position",
         "dlg_insert_pos_msg": (
             "Insert after which page?\n"
@@ -419,8 +438,8 @@ LANG = {
         # D&D status
         "status_dnd_moved": "p.{src} → p.{dest} moved",
         # D&D file open
-        "dnd_drop_hint": "Drop PDF here",
-        "dnd_pdf_only": "Only PDF files are supported",
+        "dnd_drop_hint": "Drop PDF or image here",
+        "dnd_pdf_only": "Only PDF or image files (PNG/JPG/BMP/TIFF) are supported",
         "dnd_replace_confirm": (
             "Close current file and open the new one?\n(Unsaved changes will be lost)"
         ),
