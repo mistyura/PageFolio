@@ -21,9 +21,13 @@ class DnDMixin:
         ghost.attributes("-topmost", True)
         lbl = tk.Label(ghost, image=photo, bg=C["BG_CARD"], relief="flat", bd=2)
         lbl.pack()
+        if idx in self.selected_pages and len(self.selected_pages) > 1:
+            label_text = f"{len(self.selected_pages)} pages"
+        else:
+            label_text = f"p.{idx + 1}"
         num = tk.Label(
             ghost,
-            text=f"p.{idx + 1}",
+            text=label_text,
             bg=C["BG_CARD"],
             fg=C["ACCENT"],
             font=self._font(-2, "bold"),
@@ -94,6 +98,23 @@ class DnDMixin:
             return
         n = len(self.doc)
         dest = max(0, min(dest, n))
+        if src in self.selected_pages and len(self.selected_pages) > 1:
+            sorted_sel = sorted(self.selected_pages)
+            non_selected = [p for p in range(n) if p not in self.selected_pages]
+            sel_before_dest = sum(1 for p in self.selected_pages if p < dest)
+            adj_dest = dest - sel_before_dest
+            adj_dest = max(0, min(adj_dest, len(non_selected)))
+            new_order = non_selected[:adj_dest] + sorted_sel + non_selected[adj_dest:]
+            if len(new_order) != n:
+                return
+            self.doc.select(new_order)
+            self._save_undo("bulk_move", new_order=new_order)
+            self.current_page = new_order.index(src)
+            self.selected_pages.clear()
+            self._invalidate_thumb_cache()
+            self._refresh_all()
+            self._set_status(self._t("status_bulk_moved").format(count=len(sorted_sel)))
+            return
         if dest == src or dest == src + 1:
             return
         if dest >= n:
