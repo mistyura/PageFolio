@@ -17,8 +17,8 @@ class PageOpsMixin:
     def _rotate_selected(self, deg):
         if not self._check_doc():
             return
-        self._save_undo()
         targets = self._get_targets()
+        self._save_undo("rotate", targets=targets)
         for i in targets:
             page = self.doc[i]
             page.set_rotation((page.rotation + deg) % 360)
@@ -44,7 +44,7 @@ class PageOpsMixin:
             self._t("confirm_title"), self._t("confirm_del").format(count=len(targets))
         ):
             return
-        self._save_undo()
+        self._save_undo("delete", targets=targets)
         for i in targets:
             self.doc.delete_page(i)
         self.selected_pages.clear()
@@ -59,7 +59,7 @@ class PageOpsMixin:
         if not self._check_doc():
             return
         pno = self.current_page
-        self._save_undo()
+        self._save_undo("duplicate", pno=pno)
         try:
             tmp = fitz.open()
             tmp.insert_pdf(self.doc, from_page=pno, to_page=pno)
@@ -176,7 +176,7 @@ class PageOpsMixin:
         if not self.crop_rect:
             messagebox.showinfo(self._t("info_title"), self._t("info_crop_drag"))
             return
-        self._save_undo()
+        self._save_undo("crop", page_i=self.current_page)
         sx, sy, ex, ey = self.crop_rect
         scale = self.zoom * 1.5
         img_offset = 10
@@ -270,7 +270,7 @@ class PageOpsMixin:
 
     def _do_insert(self, ordered_paths, insert_at):
         """結合順確定後に実際の挿入を行う"""
-        self._save_undo()
+        self._save_undo("insert", insert_at=insert_at)
         try:
             total = 0
             pos = insert_at
@@ -280,6 +280,7 @@ class PageOpsMixin:
                 pos += len(src)
                 total += len(src)
                 src.close()
+            self._undo_stack[-1]["data"][1] = total
             self._invalidate_thumb_cache()
             self._refresh_all()
             if insert_at == 0:
@@ -311,7 +312,7 @@ class PageOpsMixin:
         MergeOrderDialog(self.root, list(paths), self._do_merge, lang=self.lang)
 
     def _do_merge(self, ordered_paths):
-        self._save_undo()
+        self._save_undo("merge")
         try:
             total = 0
             for path in ordered_paths:
