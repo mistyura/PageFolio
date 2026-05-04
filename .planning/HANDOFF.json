@@ -1,0 +1,39 @@
+{
+  "version": "1.0",
+  "timestamp": "2026-05-04",
+  "phase": "1",
+  "phase_name": "基盤と画像対応",
+  "phase_dir": ".planning/phases/01-基盤と画像対応",
+  "plan": null,
+  "task": null,
+  "total_tasks": null,
+  "status": "paused",
+  "completed_tasks": [
+    {"id": 1, "name": "/gsd-discuss-phase 1 → CONTEXT.md (D-01〜D-12)", "status": "done", "commit": "d9024f0"},
+    {"id": 2, "name": "/gsd-ui-phase 1 → 01-UI-SPEC.md 承認（6/6 PASS）", "status": "done", "commit": "19d911a"}
+  ],
+  "remaining_tasks": [
+    {"id": 3, "name": "/gsd-plan-phase 1 — 実行プランの作成", "status": "not_started"},
+    {"id": 4, "name": "/gsd-execute-phase 1 — プランの実行", "status": "not_started"}
+  ],
+  "blockers": [],
+  "human_actions_pending": [],
+  "decisions": [
+    {
+      "decision": "Widget Geometry スペーシング値を設計トークンではなく既存コード実測値（参照専用）として分類",
+      "rationale": "ui_builder.py の既存 padx/pady は 4 の倍数でない値を含む。新規ウィジェットには 4/8/16px 制約を課し、既存値は変更禁止の記録として扱う",
+      "phase": "1"
+    },
+    {
+      "decision": "requirements.txt はプロジェクトルートに untracked で存在するが pip freeze 全出力のため MAINT-02 非対応",
+      "rationale": "D-04 の指示通り直接依存のみに書き直してから git add する必要がある — Phase 1 実行で対応",
+      "phase": "1"
+    }
+  ],
+  "uncommitted_files": [
+    ".planning/codebase/ (codebase analysis — 5 files, prior session)",
+    "requirements.txt (pip freeze 全出力 — Phase 1 で D-04 に従い書き直し要)"
+  ],
+  "next_action": "/gsd-plan-phase 1 を実行してフェーズ1のプランを作成する",
+  "context_notes": "UI-SPEC 承認完了。次は /gsd-plan-phase 1 でプランを生成してから /gsd-execute-phase 1 で実装へ。requirements.txt は untracked で存在するが pip freeze 全出力なので Phase 1 実行中に D-04 の通り書き直すこと。"
+}
