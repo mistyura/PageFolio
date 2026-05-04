@@ -20,14 +20,37 @@ class FileOpsMixin:
     # ══════════════════════════════════════════
     #  Undo / Redo
     # ══════════════════════════════════════════
-    def _save_undo(self):
+    def _save_undo(self, op, **kwargs):
         if not self.doc:
             return
         state = {
-            "pdf_bytes": self.doc.tobytes(),
+            "op": op,
             "current_page": self.current_page,
             "selected_pages": set(self.selected_pages),
         }
+        if op == "rotate":
+            state["data"] = [(i, self.doc[i].rotation) for i in kwargs["targets"]]
+        elif op == "crop":
+            page_i = kwargs["page_i"]
+            cb = self.doc[page_i].cropbox
+            state["data"] = (page_i, (cb.x0, cb.y0, cb.x1, cb.y1))
+        elif op == "delete":
+            targets = sorted(kwargs["targets"])
+            data = []
+            for i in targets:
+                tmp = fitz.open()
+                tmp.insert_pdf(self.doc, from_page=i, to_page=i)
+                data.append((i, tmp.tobytes()))
+                tmp.close()
+            state["data"] = data
+        elif op == "move":
+            state["data"] = (kwargs["src"], kwargs["actual_dest"])
+        elif op == "duplicate":
+            state["data"] = kwargs["pno"]
+        elif op == "insert":
+            state["data"] = [kwargs["insert_at"], 0]
+        elif op == "merge":
+            state["data"] = len(self.doc)
         self._undo_stack.append(state)
         if len(self._undo_stack) > self.MAX_UNDO:
             self._undo_stack.pop(0)
