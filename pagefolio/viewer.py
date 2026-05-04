@@ -3,6 +3,8 @@
 # Released under the MIT License
 """表示 Mixin — プレビュー・ズーム・サムネイル・選択・ポップアップ"""
 
+import logging
+import threading
 import tkinter as tk
 from tkinter import ttk
 
@@ -10,6 +12,8 @@ import fitz
 from PIL import Image, ImageTk
 
 from pagefolio.constants import C
+
+logger = logging.getLogger(__name__)
 
 
 class ViewerMixin:
@@ -57,34 +61,74 @@ class ViewerMixin:
                 font=self._font(),
             )
             return
-        page = self.doc[self.current_page]
-        mat = fitz.Matrix(self.zoom * 1.5, self.zoom * 1.5)
-        pix = page.get_pixmap(matrix=mat, alpha=False)
-        img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
-        photo = ImageTk.PhotoImage(img)
-        self.preview_img_ref = photo
-        pad = 10
-        self.preview_canvas.create_rectangle(
-            pad + 3,
-            pad + 3,
-            pad + pix.width + 3,
-            pad + pix.height + 3,
+
+        self._preview_gen += 1
+        gen = self._preview_gen
+        page_idx = self.current_page
+        zoom = self.zoom
+        filepath = self.filepath
+        doc_bytes = self.doc.tobytes() if not filepath else None
+
+        # ローディングプレースホルダーを即時描画
+        self.preview_canvas.update_idletasks()
+        cw = self.preview_canvas.winfo_width()
+        ch = self.preview_canvas.winfo_height()
+        self.preview_canvas.create_text(
+            max(cw // 2, 10),
+            max(ch // 2, 10),
+            text="...",
             fill=C["TEXT_SUB"],
-            outline="",
+            font=self._font(4),
         )
-        self.preview_canvas.create_rectangle(
-            pad,
-            pad,
-            pad + pix.width,
-            pad + pix.height,
-            fill="",
-            outline=C["TEXT_SUB"],
-            width=1,
-        )
-        self.preview_canvas.create_image(pad, pad, anchor="nw", image=photo)
-        self.preview_canvas.configure(
-            scrollregion=(0, 0, pix.width + pad * 2, pix.height + pad * 2)
-        )
+
+        def worker():
+            try:
+                if filepath:
+                    tmp_doc = fitz.open(filepath)
+                else:
+                    tmp_doc = fitz.open(stream=doc_bytes, filetype="pdf")
+                try:
+                    page = tmp_doc[page_idx]
+                    mat = fitz.Matrix(zoom * 1.5, zoom * 1.5)
+                    pix = page.get_pixmap(matrix=mat, alpha=False)
+                    samples = bytes(pix.samples)
+                    w, h = pix.width, pix.height
+                finally:
+                    tmp_doc.close()
+            except Exception as e:
+                logger.debug("プレビューワーカー例外: %s", e)
+                return
+            self.root.after(0, lambda: _apply(samples, w, h))
+
+        def _apply(samples, w, h):
+            if self._preview_gen != gen or not self.doc:
+                return
+            img = Image.frombytes("RGB", [w, h], samples)
+            photo = ImageTk.PhotoImage(img)
+            self.preview_img_ref = photo
+            pad = 10
+            self.preview_canvas.delete("all")
+            self.preview_canvas.create_rectangle(
+                pad + 3,
+                pad + 3,
+                pad + w + 3,
+                pad + h + 3,
+                fill=C["TEXT_SUB"],
+                outline="",
+            )
+            self.preview_canvas.create_rectangle(
+                pad,
+                pad,
+                pad + w,
+                pad + h,
+                fill="",
+                outline=C["TEXT_SUB"],
+                width=1,
+            )
+            self.preview_canvas.create_image(pad, pad, anchor="nw", image=photo)
+            self.preview_canvas.configure(scrollregion=(0, 0, w + pad * 2, h + pad * 2))
+
+        threading.Thread(target=worker, daemon=True).start()
 
     # ── ナビゲーション & ズーム ──
     def _prev_page(self):
