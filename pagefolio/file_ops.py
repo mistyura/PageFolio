@@ -72,6 +72,8 @@ class FileOpsMixin:
         self.current_page = min(state["current_page"], max(0, len(self.doc) - 1))
         self.selected_pages = state["selected_pages"]
         self._invalidate_thumb_cache()
+        self._preview_gen += 1
+        self._thumb_gen += 1
         self._refresh_all()
 
     # ══════════════════════════════════════════
@@ -120,6 +122,8 @@ class FileOpsMixin:
             self._undo_stack.clear()
             self._redo_stack.clear()
             self._invalidate_thumb_cache()
+            self._preview_gen += 1
+            self._thumb_gen += 1
             self._refresh_all()
             names = ", ".join(os.path.basename(p) for p in ordered_paths)
             self._set_status(
@@ -142,6 +146,8 @@ class FileOpsMixin:
             self._undo_stack.clear()
             self._redo_stack.clear()
             self._invalidate_thumb_cache()
+            self._preview_gen += 1
+            self._thumb_gen += 1
             self._refresh_all()
             ext = os.path.splitext(path)[1].lower()
             if ext in IMAGE_EXTENSIONS:
