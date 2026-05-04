@@ -13,7 +13,6 @@ build/
 *.spec
 
 # 開発ツール内部データ
-.planning/
 .claude/
 .bg-shell/
 
@@ -52,3 +51,6 @@ tmp/
 
 # ── GSD baseline (auto-generated) ──
 .gsd-id
+
+# ── GSD baseline (auto-generated) ──
+.mcp.json
