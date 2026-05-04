@@ -209,18 +209,37 @@ class ViewerMixin:
             self.next_btn.state(next_st)
 
     def _build_thumbnails(self):
+        self._thumb_gen += 1
+        gen = self._thumb_gen
         for w in self.thumb_inner.winfo_children():
             w.destroy()
         self.thumb_images.clear()
         if not self.doc:
             return
-        for i in range(len(self.doc)):
-            self._add_thumb(i)
+        placeholder_labels = [
+            self._add_thumb_placeholder(i) for i in range(len(self.doc))
+        ]
 
-    def _add_thumb(self, i):
-        photo = self._get_thumb_photo(i)
-        self.thumb_images.append(photo)
+        def render_next(i):
+            if self._thumb_gen != gen or not self.doc:
+                logger.debug(
+                    "サムネイルレンダリングスキップ: gen=%s, current_gen=%s",
+                    gen,
+                    self._thumb_gen,
+                )
+                return
+            if i >= len(self.doc):
+                return
+            photo = self._get_thumb_photo(i)
+            frame, lbl = placeholder_labels[i]
+            lbl.configure(image=photo)
+            self.thumb_images.append(photo)
+            self.root.after(0, lambda: render_next(i + 1))
 
+        self.root.after_idle(lambda: render_next(0))
+
+    def _add_thumb_placeholder(self, i):
+        """プレースホルダー frame・lbl を作成しイベントをバインドして返す"""
         is_sel = i in self.selected_pages
         is_cur = i == self.current_page
         bg = C["ACCENT"] if is_sel else (C["BG_CARD"] if is_cur else C["BG_PANEL"])
@@ -228,7 +247,7 @@ class ViewerMixin:
         frame = tk.Frame(self.thumb_inner, bg=bg, cursor="hand2")
         frame.pack(fill="x", padx=6, pady=3)
 
-        lbl = tk.Label(frame, image=photo, bg=bg)
+        lbl = tk.Label(frame, bg=bg)
         lbl.pack(pady=(4, 0))
         tk.Label(
             frame, text=f"p.{i + 1}", bg=bg, fg=C["TEXT_MAIN"], font=self._font(-2)
@@ -278,6 +297,14 @@ class ViewerMixin:
             w.bind("<B1-Motion>", on_motion)
             w.bind("<ButtonRelease-1>", on_release)
             w.bind("<Double-Button-1>", on_double)
+
+        return frame, lbl
+
+    def _add_thumb(self, i):
+        frame, lbl = self._add_thumb_placeholder(i)
+        photo = self._get_thumb_photo(i)
+        lbl.configure(image=photo)
+        self.thumb_images.append(photo)
 
     # ── ページ拡大表示ポップアップ ──
     def _single_click(self, idx):
