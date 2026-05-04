@@ -1,7 +1,8 @@
 ---
 phase: 1
 slug: 基盤と画像対応
-status: draft
+status: approved
+reviewed_at: "2026-05-04"
 framework: tkinter
 design_system: THEMES dict (pagefolio/constants.py)
 created: "2026-05-04"
