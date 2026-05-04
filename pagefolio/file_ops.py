@@ -51,6 +51,10 @@ class FileOpsMixin:
             state["data"] = [kwargs["insert_at"], 0]
         elif op == "merge":
             state["data"] = len(self.doc)
+        elif op == "bulk_move":
+            state["data"] = kwargs["new_order"]  # 整数リスト
+        elif op == "bulk_crop":
+            state["data"] = kwargs["crop_data"]  # [(page_i, (x0,y0,x1,y1)), ...]
         self._undo_stack.append(state)
         if len(self._undo_stack) > self.MAX_UNDO:
             self._undo_stack.pop(0)
@@ -121,6 +125,15 @@ class FileOpsMixin:
                 old_count = state["data"]
                 while len(self.doc) > old_count:
                     self.doc.delete_page(old_count)
+            elif op == "bulk_move":
+                new_order = state["data"]
+                inverse = [0] * len(new_order)
+                for i, v in enumerate(new_order):
+                    inverse[v] = i
+                self.doc.select(inverse)
+            elif op == "bulk_crop":
+                for page_i, (x0, y0, x1, y1) in state["data"]:
+                    self.doc[page_i].set_cropbox(fitz.Rect(x0, y0, x1, y1))
 
         self.current_page = min(state["current_page"], max(0, len(self.doc) - 1))
         self.selected_pages = state["selected_pages"]
