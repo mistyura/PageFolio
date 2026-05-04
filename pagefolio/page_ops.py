@@ -8,7 +8,7 @@ from tkinter import filedialog, messagebox, simpledialog
 
 import fitz
 
-from pagefolio.constants import C
+from pagefolio.constants import IMAGE_EXTENSIONS, SUPPORTED_EXTENSIONS, C
 
 
 class PageOpsMixin:
@@ -226,9 +226,16 @@ class PageOpsMixin:
         """別PDFから挿入。mode: 'head'=先頭, 'tail'=末尾, 'pos'=指定位置"""
         if not self._check_doc():
             return
+        _supported_filter = " ".join(f"*{ext}" for ext in sorted(SUPPORTED_EXTENSIONS))
+        _image_filter = " ".join(f"*{ext}" for ext in sorted(IMAGE_EXTENSIONS))
         paths = filedialog.askopenfilenames(
             title=self._t("dlg_insert_title"),
-            filetypes=[(self._t("filetypes_pdf"), "*.pdf")],
+            filetypes=[
+                (self._t("filetypes_supported"), _supported_filter),
+                (self._t("filetypes_pdf"), "*.pdf"),
+                (self._t("filetypes_image"), _image_filter),
+                (self._t("filetypes_all"), "*.*"),
+            ],
         )
         if not paths:
             return

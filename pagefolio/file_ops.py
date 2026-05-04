@@ -9,6 +9,8 @@ from tkinter import filedialog, messagebox
 
 import fitz
 
+from pagefolio.constants import IMAGE_EXTENSIONS, SUPPORTED_EXTENSIONS
+
 logger = logging.getLogger(__name__)
 
 
@@ -76,9 +78,13 @@ class FileOpsMixin:
     #  ファイル操作
     # ══════════════════════════════════════════
     def _open_file(self):
+        _supported_filter = " ".join(f"*{ext}" for ext in sorted(SUPPORTED_EXTENSIONS))
+        _image_filter = " ".join(f"*{ext}" for ext in sorted(IMAGE_EXTENSIONS))
         paths = filedialog.askopenfilenames(
             filetypes=[
+                (self._t("filetypes_supported"), _supported_filter),
                 (self._t("filetypes_pdf"), "*.pdf"),
+                (self._t("filetypes_image"), _image_filter),
                 (self._t("filetypes_all"), "*.*"),
             ]
         )
@@ -137,11 +143,17 @@ class FileOpsMixin:
             self._redo_stack.clear()
             self._invalidate_thumb_cache()
             self._refresh_all()
-            self._set_status(
-                self._t("status_opened").format(
-                    name=os.path.basename(path), n=len(self.doc)
+            ext = os.path.splitext(path)[1].lower()
+            if ext in IMAGE_EXTENSIONS:
+                self._set_status(
+                    self._t("status_opened_image").format(name=os.path.basename(path))
                 )
-            )
+            else:
+                self._set_status(
+                    self._t("status_opened").format(
+                        name=os.path.basename(path), n=len(self.doc)
+                    )
+                )
             self.plugin_manager.fire_event("on_file_open", self, path)
         except Exception as e:
             messagebox.showerror(self._t("err_title"), str(e))
@@ -152,6 +164,11 @@ class FileOpsMixin:
             messagebox.showinfo(self._t("info_title"), self._t("info_open_first"))
             return
         if not self.filepath:
+            self._save_as()
+            return
+        ext = os.path.splitext(self.filepath)[1].lower()
+        if ext in IMAGE_EXTENSIONS:
+            self._set_status(self._t("status_image_save_as"))
             self._save_as()
             return
         if not messagebox.askyesno(

@@ -4,10 +4,11 @@
 """メインアプリケーションクラス — Mixin を統合した PDFEditorApp"""
 
 import logging
+import os
 import tkinter as tk
 from tkinter import messagebox
 
-from pagefolio.constants import LANG, C
+from pagefolio.constants import LANG, SUPPORTED_EXTENSIONS, C
 from pagefolio.dialogs import PluginDialog, SettingsDialog
 from pagefolio.dnd import DnDMixin
 from pagefolio.file_drop import _setup_file_drop
@@ -157,7 +158,11 @@ class PDFEditorApp(UIBuilderMixin, FileOpsMixin, PageOpsMixin, ViewerMixin, DnDM
         self.preview_canvas.delete("dnd_hint")
 
         raw_paths = self.preview_canvas.tk.splitlist(event.data)
-        pdf_paths = [p for p in raw_paths if p.lower().endswith(".pdf")]
+        pdf_paths = [
+            p
+            for p in raw_paths
+            if os.path.splitext(p)[1].lower() in SUPPORTED_EXTENSIONS
+        ]
 
         if not pdf_paths:
             if raw_paths:
