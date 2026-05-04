@@ -81,6 +81,10 @@ class PDFEditorApp(UIBuilderMixin, FileOpsMixin, PageOpsMixin, ViewerMixin, DnDM
         self._redo_stack = []
         self._pending_click = None
 
+        # バックグラウンドレンダリング世代カウンター
+        self._preview_gen = 0  # プレビュー世代カウンター
+        self._thumb_gen = 0  # サムネイル世代カウンター
+
         # プラグインマネージャー
         self.plugin_manager = PluginManager()
         disabled_plugins = self.settings.get("disabled_plugins", [])
@@ -349,6 +353,8 @@ class PDFEditorApp(UIBuilderMixin, FileOpsMixin, PageOpsMixin, ViewerMixin, DnDM
         for w in self.root.winfo_children():
             w.destroy()
         self.thumb_images.clear()
+        self._preview_gen += 1
+        self._thumb_gen += 1
         self.thumb_cache.clear()
         self.crop_rect = None
         self.crop_drag_start = None
