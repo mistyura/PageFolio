@@ -96,13 +96,13 @@ class DnDMixin:
         dest = max(0, min(dest, n))
         if dest == src or dest == src + 1:
             return
-        self._save_undo()
         if dest >= n:
             self.doc.move_page(src, -1)
             actual_dest = n - 1
         else:
             actual_dest = dest if dest < src else dest - 1
             self.doc.move_page(src, dest)
+        self._save_undo("move", src=src, actual_dest=actual_dest)
         self.current_page = actual_dest
         self.selected_pages.clear()
         self._invalidate_thumb_cache()
