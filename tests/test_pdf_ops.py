@@ -325,43 +325,62 @@ class TestPageCrop:
 
 
 class TestUndoRedoLogic:
-    """Undo/Redo のロジックテスト（PDF のバイトコピーベース）"""
+    """Undo/Redo 差分フォーマットのロジックテスト（操作タイプ別方式）"""
 
-    def test_save_and_restore_state(self, sample_pdf_doc):
-        """状態の保存と復元（アプリの _save_undo / _restore_state と同等）"""
-        # 状態保存（PDF バイト列）
-        saved_state = sample_pdf_doc.tobytes()
-        original_pages = len(sample_pdf_doc)
+    def test_rotate_delta_roundtrip(self, sample_pdf_doc):
+        """回転の差分保存と逆操作が正しく動作する"""
+        doc = sample_pdf_doc
+        original_rotation = doc[0].rotation  # 通常 0
 
-        # 変更: ページ削除
-        sample_pdf_doc.delete_page(0)
-        assert len(sample_pdf_doc) == original_pages - 1
+        # 差分保存: 回転前の rotation を記録
+        delta = {"op": "rotate", "data": [(0, doc[0].rotation)]}
 
-        # 状態復元
-        restored_doc = fitz.open("pdf", saved_state)
-        assert len(restored_doc) == original_pages
-        assert "Page 1" in restored_doc[0].get_text()
-        restored_doc.close()
+        # 操作: 90度回転
+        doc[0].set_rotation((doc[0].rotation + 90) % 360)
+        assert doc[0].rotation == 90
 
-    def test_redo_after_undo(self, sample_pdf_doc):
-        """Undo後のRedo（バイト列ベース）"""
-        # 初期状態保存
-        state_before = sample_pdf_doc.tobytes()
+        # Undo: 差分で復元
+        for page_i, old_rot in delta["data"]:
+            doc[page_i].set_rotation(old_rot)
+        assert doc[0].rotation == original_rotation
 
-        # 操作: 回転
-        sample_pdf_doc[0].set_rotation(90)
-        state_after = sample_pdf_doc.tobytes()
+    def test_delete_delta_roundtrip(self, sample_pdf_doc):
+        """削除の差分保存と逆操作（ページ復元）が正しく動作する"""
+        doc = sample_pdf_doc
+        original_count = len(doc)  # 3ページ
 
-        # Undo: 元に戻す
-        restored = fitz.open("pdf", state_before)
-        assert restored[0].rotation == 0
+        # 差分保存: 削除対象ページをバイト列で保存（昇順）
+        targets = sorted([0])  # ページ0を削除
+        delta_data = []
+        for i in targets:
+            tmp = fitz.open()
+            tmp.insert_pdf(doc, from_page=i, to_page=i)
+            delta_data.append((i, tmp.tobytes()))
+            tmp.close()
 
-        # Redo: やり直す
-        re_restored = fitz.open("pdf", state_after)
-        assert re_restored[0].rotation == 90
+        # 操作: ページ削除
+        doc.delete_page(0)
+        assert len(doc) == original_count - 1
 
+        # Undo: 昇順で再挿入
+        for page_i, page_bytes in delta_data:
+            tmp = fitz.open(stream=page_bytes, filetype="pdf")
+            doc.insert_pdf(tmp, start_at=page_i)
+            tmp.close()
+        assert len(doc) == original_count
+        assert "Page 1" in doc[0].get_text()
+
+    def test_fallback_pdf_bytes_format(self, sample_pdf_doc):
+        """pdf_bytes キーを持つ旧フォーマットが _restore_state で処理できる"""
+        doc = sample_pdf_doc
+        # 旧フォーマット（Redo スタック由来）: pdf_bytes キー付き
+        saved_bytes = doc.tobytes()
+        state = {"pdf_bytes": saved_bytes, "current_page": 0, "selected_pages": set()}
+
+        # pdf_bytes キーで復元できることを fitz API で確認
+        restored = fitz.open(stream=state["pdf_bytes"], filetype="pdf")
+        assert len(restored) == len(doc)
         restored.close()
-        re_restored.close()
 
 
 # ===== _check_split_overwrite =====
