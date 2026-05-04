@@ -197,6 +197,8 @@ LANG = {
         # トリミング
         "info_crop_drag": "プレビュー上でドラッグしてトリミング範囲を選択してください",
         "status_cropped": "ページ{page}をトリミングしました",
+        "status_bulk_cropped": "選択{count}ページをトリミングしました",
+        "confirm_bulk_crop": "選択中の{count}ページすべてにトリミングを適用しますか？",
         "err_crop_small": "範囲が小さすぎます。もう一度ドラッグしてください",
         "err_crop_title": "トリミングエラー",
         "err_crop_msg": (
@@ -222,6 +224,7 @@ LANG = {
         "info_no_doc": "先にPDFファイルを開いてください",
         # D&D ステータス
         "status_dnd_moved": "p.{src} → p.{dest} に移動しました",
+        "status_bulk_moved": "{count}ページを一括移動しました",
         # D&D ファイルオープン
         "dnd_drop_hint": "ここに PDF / 画像をドロップ",
         "dnd_pdf_only": "PDF または画像ファイル (PNG/JPG/BMP/TIFF) のみ対応しています",
@@ -412,6 +415,8 @@ LANG = {
         # Crop
         "info_crop_drag": "Drag on the preview to select a crop area",
         "status_cropped": "Cropped page {page}",
+        "status_bulk_cropped": "Trimmed {count} selected page(s)",
+        "confirm_bulk_crop": "Apply crop to all {count} selected page(s)?",
         "err_crop_small": "Selection too small. Please drag again.",
         "err_crop_title": "Crop Error",
         "err_crop_msg": (
@@ -437,6 +442,7 @@ LANG = {
         "info_no_doc": "Please open a PDF file first",
         # D&D status
         "status_dnd_moved": "p.{src} → p.{dest} moved",
+        "status_bulk_moved": "Moved {count} page(s)",
         # D&D file open
         "dnd_drop_hint": "Drop PDF or image here",
         "dnd_pdf_only": "Only PDF or image files (PNG/JPG/BMP/TIFF) are supported",
