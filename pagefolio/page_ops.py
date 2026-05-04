@@ -176,50 +176,111 @@ class PageOpsMixin:
         if not self.crop_rect:
             messagebox.showinfo(self._t("info_title"), self._t("info_crop_drag"))
             return
-        self._save_undo("crop", page_i=self.current_page)
-        sx, sy, ex, ey = self.crop_rect
-        scale = self.zoom * 1.5
-        img_offset = 10
-        x0_pdf = (sx - img_offset) / scale
-        y0_pdf = (sy - img_offset) / scale
-        x1_pdf = (ex - img_offset) / scale
-        y1_pdf = (ey - img_offset) / scale
-        page = self.doc[self.current_page]
-        mb = page.mediabox
-        new_rect = fitz.Rect(
-            mb.x0 + x0_pdf, mb.y0 + y0_pdf, mb.x0 + x1_pdf, mb.y0 + y1_pdf
-        )
-        EPS = 0.01
-        new_rect = fitz.Rect(
-            max(round(new_rect.x0, 2), mb.x0 + EPS),
-            max(round(new_rect.y0, 2), mb.y0 + EPS),
-            min(round(new_rect.x1, 2), mb.x1 - EPS),
-            min(round(new_rect.y1, 2), mb.y1 - EPS),
-        )
-        if (
-            new_rect.is_empty
-            or new_rect.is_infinite
-            or new_rect.width < 1
-            or new_rect.height < 1
-        ):
-            messagebox.showerror(self._t("err_title"), self._t("err_crop_small"))
-            return
-        try:
-            page.set_cropbox(new_rect)
-        except ValueError as e:
-            messagebox.showerror(
-                self._t("err_crop_title"), self._t("err_crop_msg").format(e=e)
+        targets = self._get_targets()
+        if len(targets) > 1:
+            if not messagebox.askyesno(
+                self._t("confirm_title"),
+                self._t("confirm_bulk_crop").format(count=len(targets)),
+            ):
+                return
+        if len(targets) == 1:
+            self._save_undo("crop", page_i=self.current_page)
+            sx, sy, ex, ey = self.crop_rect
+            scale = self.zoom * 1.5
+            img_offset = 10
+            x0_pdf = (sx - img_offset) / scale
+            y0_pdf = (sy - img_offset) / scale
+            x1_pdf = (ex - img_offset) / scale
+            y1_pdf = (ey - img_offset) / scale
+            page = self.doc[self.current_page]
+            mb = page.mediabox
+            new_rect = fitz.Rect(
+                mb.x0 + x0_pdf, mb.y0 + y0_pdf, mb.x0 + x1_pdf, mb.y0 + y1_pdf
             )
-            return
+            EPS = 0.01
+            new_rect = fitz.Rect(
+                max(round(new_rect.x0, 2), mb.x0 + EPS),
+                max(round(new_rect.y0, 2), mb.y0 + EPS),
+                min(round(new_rect.x1, 2), mb.x1 - EPS),
+                min(round(new_rect.y1, 2), mb.y1 - EPS),
+            )
+            if (
+                new_rect.is_empty
+                or new_rect.is_infinite
+                or new_rect.width < 1
+                or new_rect.height < 1
+            ):
+                messagebox.showerror(self._t("err_title"), self._t("err_crop_small"))
+                return
+            try:
+                page.set_cropbox(new_rect)
+            except ValueError as e:
+                messagebox.showerror(
+                    self._t("err_crop_title"), self._t("err_crop_msg").format(e=e)
+                )
+                return
+        else:
+            sx, sy, ex, ey = self.crop_rect
+            scale = self.zoom * 1.5
+            img_offset = 10
+            x0_pdf = (sx - img_offset) / scale
+            y0_pdf = (sy - img_offset) / scale
+            x1_pdf = (ex - img_offset) / scale
+            y1_pdf = (ey - img_offset) / scale
+            cur_mb = self.doc[self.current_page].mediabox
+            rel = (
+                x0_pdf / cur_mb.width,
+                y0_pdf / cur_mb.height,
+                x1_pdf / cur_mb.width,
+                y1_pdf / cur_mb.height,
+            )
+            EPS = 0.01
+            crop_data = []
+            for i in targets:
+                cb = self.doc[i].cropbox
+                crop_data.append((i, (cb.x0, cb.y0, cb.x1, cb.y1)))
+            self._save_undo("bulk_crop", crop_data=crop_data)
+            for i in targets:
+                page = self.doc[i]
+                mb = page.mediabox
+                new_rect = fitz.Rect(
+                    mb.x0 + rel[0] * mb.width,
+                    mb.y0 + rel[1] * mb.height,
+                    mb.x0 + rel[2] * mb.width,
+                    mb.y0 + rel[3] * mb.height,
+                )
+                new_rect = fitz.Rect(
+                    max(round(new_rect.x0, 2), mb.x0 + EPS),
+                    max(round(new_rect.y0, 2), mb.y0 + EPS),
+                    min(round(new_rect.x1, 2), mb.x1 - EPS),
+                    min(round(new_rect.y1, 2), mb.y1 - EPS),
+                )
+                if (
+                    new_rect.is_empty
+                    or new_rect.is_infinite
+                    or new_rect.width < 1
+                    or new_rect.height < 1
+                ):
+                    continue
+                try:
+                    page.set_cropbox(new_rect)
+                except ValueError:
+                    continue
         self.crop_rect = None
         self.crop_mode = False
         self.crop_toggle_btn.configure(text=self._t("crop_mode_off"), style="TButton")
         self.preview_canvas.configure(cursor="")
         self.crop_info_var.set(self._t("crop_no_sel"))
-        self._invalidate_thumb_cache([self.current_page])
+        self._invalidate_thumb_cache(targets)
         self._refresh_all()
-        self._set_status(self._t("status_cropped").format(page=self.current_page + 1))
-        self.plugin_manager.fire_event("on_page_crop", self, self.current_page)
+        if len(targets) == 1:
+            self._set_status(
+                self._t("status_cropped").format(page=self.current_page + 1)
+            )
+            self.plugin_manager.fire_event("on_page_crop", self, self.current_page)
+        else:
+            self._set_status(self._t("status_bulk_cropped").format(count=len(targets)))
+            self.plugin_manager.fire_event("on_page_crop", self, targets)
 
     # ── 挿入・結合 ──
     def _insert_from_file(self, mode="pos"):
