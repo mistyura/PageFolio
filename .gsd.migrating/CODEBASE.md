@@ -1,7 +1,7 @@
 # Codebase Map
 
-Generated: 2026-05-04T03:51:35Z | Files: 27 | Described: 0/27
-<!-- gsd:codebase-meta {"generatedAt":"2026-05-04T03:51:35Z","fingerprint":"fb1933dc8273f35b63a525018ff16890a345b5ab","fileCount":27,"truncated":false} -->
+Generated: 2026-05-04T05:00:26Z | Files: 51 | Described: 0/51
+<!-- gsd:codebase-meta {"generatedAt":"2026-05-04T05:00:26Z","fingerprint":"15979ba1a006eef2603ba8a6fd2fe11c7ea80803","fileCount":51,"truncated":false} -->
 
 ### (root)/
 - `.coverage`
@@ -11,7 +11,47 @@ Generated: 2026-05-04T03:51:35Z | Files: 27 | Described: 0/27
 - `pagefolio.py`
 - `pyproject.toml`
 - `README.md`
+- `requirements.txt`
 - `開発履歴.md`
+
+### .gsd.migrating/
+- `.gsd.migrating/CODEBASE.md`
+- `.gsd.migrating/DECISIONS.md`
+- `.gsd.migrating/event-log.jsonl`
+- `.gsd.migrating/gsd.db`
+- `.gsd.migrating/gsd.db-shm`
+- `.gsd.migrating/gsd.db-wal`
+- `.gsd.migrating/notifications.jsonl`
+- `.gsd.migrating/PROJECT.md`
+- `.gsd.migrating/REQUIREMENTS.md`
+- `.gsd.migrating/state-manifest.json`
+- `.gsd.migrating/STATE.md`
+
+### .gsd.migrating/milestones/M001/
+- `.gsd.migrating/milestones/M001/M001-CONTEXT.md`
+- `.gsd.migrating/milestones/M001/M001-ROADMAP.md`
+
+### .gsd.migrating/milestones/M001/slices/S01/
+- `.gsd.migrating/milestones/M001/slices/S01/S01-PLAN.md`
+
+### .gsd.migrating/milestones/M001/slices/S01/tasks/
+- `.gsd.migrating/milestones/M001/slices/S01/tasks/T01-PLAN.md`
+- `.gsd.migrating/milestones/M001/slices/S01/tasks/T02-PLAN.md`
+- `.gsd.migrating/milestones/M001/slices/S01/tasks/T03-PLAN.md`
+- `.gsd.migrating/milestones/M001/slices/S01/tasks/T04-PLAN.md`
+- `.gsd.migrating/milestones/M001/slices/S01/tasks/T05-PLAN.md`
+
+### .gsd.migrating/milestones/M001/slices/S02/
+- `.gsd.migrating/milestones/M001/slices/S02/S02-PLAN.md`
+
+### .gsd.migrating/milestones/M001/slices/S03/
+- `.gsd.migrating/milestones/M001/slices/S03/S03-PLAN.md`
+
+### .gsd.migrating/milestones/M001/slices/S04/
+- `.gsd.migrating/milestones/M001/slices/S04/S04-PLAN.md`
+
+### .gsd.migrating/runtime/
+- `.gsd.migrating/runtime/write-gate-state.json`
 
 ### pagefolio/
 - `pagefolio/__init__.py`

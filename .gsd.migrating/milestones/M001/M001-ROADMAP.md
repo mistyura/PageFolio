@@ -12,16 +12,16 @@
 
 ## Slices
 
-- [ ] **S01: 基盤と画像対応** `risk:medium` `depends:[]`
+- [x] **S01: S01** `risk:medium` `depends:[]`
   > After this: requirements.txt 固定済み、PNG/JPG/BMP/TIFF ファイルを開いて既存の全編集操作が使える
 
-- [ ] **S02: バックグラウンドレンダリング** `risk:medium` `depends:[S01]`
+- [x] **S02: S02** `risk:medium` `depends:[]`
   > After this: 大規模 PDF を開いてページ切替・ズームを操作しても UI が応答し続ける
 
-- [ ] **S03: Undo 差分化** `risk:medium` `depends:[S02]`
+- [x] **S03: S03** `risk:medium` `depends:[]`
   > After this: 大規模 PDF で複数操作後の Undo が動作し、メモリ使用量が全体コピー方式より削減される
 
-- [ ] **S04: 複数ページ操作と保守** `risk:medium` `depends:[S03]`
+- [ ] **S04: S04** `risk:medium` `depends:[]`
   > After this: 複数ページを選択して D&D で一括移動、および一括トリミングが動作する
 
 ## Boundary Map

@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "exported_at": "2026-05-04T03:55:01.361Z",
+  "exported_at": "2026-05-04T05:06:29.061Z",
   "milestones": [
     {
       "id": "M001",
@@ -33,15 +33,15 @@
     {
       "milestone_id": "M001",
       "id": "S01",
-      "title": "基盤と画像対応",
-      "status": "pending",
+      "title": "S01",
+      "status": "complete",
       "risk": "medium",
       "depends": [],
       "demo": "requirements.txt 固定済み、PNG/JPG/BMP/TIFF ファイルを開いて既存の全編集操作が使える",
       "created_at": "2026-05-04T03:53:58.480Z",
-      "completed_at": null,
-      "full_summary_md": "",
-      "full_uat_md": "",
+      "completed_at": "2026-05-04T04:04:26.537Z",
+      "full_summary_md": "---\nid: S01\nparent: M001\nmilestone: M001\nprovides:\n  - [\"requirements.txt 7パッケージ固定済み\", \"PNG/JPG/BMP/TIFF ファイルのファイルダイアログ・D&D 開封対応\", \"画像ファイルの上書き保存 → PDF 保存ダイアログへのフォールスルー\", \"SUPPORTED_EXTENSIONS / IMAGE_EXTENSIONS 定数による拡張子管理の一元化\"]\nrequires:\n  []\naffects:\n  []\nkey_files:\n  - [\"requirements.txt\", \"pagefolio/constants.py\", \"pagefolio/file_ops.py\", \"pagefolio/page_ops.py\", \"pagefolio/app.py\"]\nkey_decisions:\n  - [\"SUPPORTED_EXTENSIONS / IMAGE_EXTENSIONS を frozenset で constants.py に定義し、file_ops.py・page_ops.py・app.py の3箇所で共有参照（ハードコード撲滅）\", \"filetypes フィルター文字列は frozenset から sorted() で動的生成し、拡張子追加時の保守性を確保\", \"_save_file() の画像フォールスルーは確認ダイアログなしで _save_as() に直行（UI-SPEC Interaction Contract 準拠）\", \"拡張子チェックは os.path.splitext(p)[1].lower() in SUPPORTED_EXTENSIONS パターンで統一\"]\npatterns_established:\n  - [\"拡張子定数は constants.py の frozenset で一元管理し、各モジュールは import して参照する\", \"ファイルダイアログの filetypes は frozenset から sorted() で動的生成する\", \"画像ファイル判定は os.path.splitext(path)[1].lower() in IMAGE_EXTENSIONS パターンを使う\"]\nobservability_surfaces:\n  - none\ndrill_down_paths:\n  []\nduration: \"\"\nverification_result: passed\ncompleted_at: 2026-05-04T04:04:26.539Z\nblocker_discovered: false\n---\n\n# S01: 基盤と画像対応\n\n**requirements.txt を7パッケージに整理し、PNG/JPG/BMP/TIFF の開封・編集・保存フローを実装した**\n\n## What Happened\n\nS01 は5タスクで構成され、すべて計画通りに完了した。\n\n**T01 (requirements.txt 整備)**: ファイルを確認したところすでに直接依存7パッケージ（PyMuPDF, Pillow, tkinterdnd2, pyinstaller, pytest, pytest-cov, ruff）がバージョン固定で記載されており、変更不要であった。\n\n**T02 (constants.py 拡張)**: SUPPORTED_EXTENSIONS と IMAGE_EXTENSIONS を frozenset として追加。LANG['ja']/'en' に新規4キー（filetypes_supported, filetypes_image, status_opened_image, status_image_save_as）を追加し、既存3キー（dnd_drop_hint, dnd_pdf_only, dlg_insert_title）を画像対応の文言に更新した。ruff E501 は括弧折り返しで対処。\n\n**T03 (file_ops.py 変更)**: _open_file() の filetypes を4エントリー（サポート全拡張子・PDFのみ・画像のみ・すべて）に変更。_open_pdf_path() に拡張子チェックを追加して画像オープン時は status_opened_image を表示。_save_file() に IMAGE_EXTENSIONS チェックを追加して _save_as() フォールスルーを実装。page_ops.py の挿入ダイアログも同様に更新した。\n\n**T04 (app.py D&D 拡張)**: _on_dnd_drop() の '.pdf' ハードコード比較を os.path.splitext(p)[1].lower() in SUPPORTED_EXTENSIONS に置換し、画像ファイルのドロップも受け付けるようにした。\n\n**T05 (リント・テスト確認)**: ruff check . && ruff format . が \"All checks passed / 20 files left unchanged\"、pytest が108件全PASSED で完了を確認。\n\n## Verification\n\n1. ruff check . && ruff format . → All checks passed / 20 files left unchanged（エラー・警告ゼロ）\n2. pytest → 108 passed in 1.20s（test_pdf_ops.py 31件、test_plugins.py 40件、test_utils.py 37件 — FAILED ゼロ）\n3. python -c \"from pagefolio.constants import SUPPORTED_EXTENSIONS, IMAGE_EXTENSIONS, LANG; assert '.png' in SUPPORTED_EXTENSIONS; assert 'filetypes_supported' in LANG['ja']\" → OK\n4. grep -c '==' requirements.txt → 7（仕様通り7パッケージ）\n\n## Requirements Advanced\n\n- MAINT-02 — requirements.txt を直接依存7パッケージのみにバージョン固定で整理済みを確認・維持した\n- IMG-01 — ファイルダイアログ・D&D 両経路で PNG/JPG/BMP/TIFF を開けるようになり、既存編集操作（回転・削除・結合等）が使えるパスが整備された\n\n## Requirements Validated\n\nNone.\n\n## New Requirements Surfaced\n\nNone.\n\n## Requirements Invalidated or Re-scoped\n\nNone.\n\n## Operational Readiness\n\nNone.\n\n## Deviations\n\nT03 の実装スコープが file_ops.py に加えて page_ops.py（_insert_from_file のダイアログ）も含む形となった。これは UI-SPEC D-06 の「挿入ダイアログも4エントリーに変更」要件を満たすための自然な拡張であり、計画外ではあるが仕様の範囲内。\n\n## Known Limitations\n\n- GUI レイヤーでの実動作確認（実際のファイルダイアログ・D&D）は自動テストでは未検証\n- 画像ファイルを fitz.open() で開いた際の実際のサムネイル・プレビュー品質は手動確認が必要\n- _merge_pdf ダイアログは UI-SPEC の指示通り変更しておらず PDF のみ対応のまま\n\n## Follow-ups\n\n- 手動 GUI テスト: PNG/JPG/BMP/TIFF を開いてサムネイル・プレビュー・全編集操作を確認\n- 手動 GUI テスト: 画像ファイル開封後に Ctrl+S で PDF 保存ダイアログが開くことを確認\n- S02（バックグラウンドレンダリング）では viewer.py のプレビュー生成をスレッド化する必要がある\n\n## Files Created/Modified\n\n- `requirements.txt` — 直接依存7パッケージのバージョン固定（変更なし・確認のみ）\n- `pagefolio/constants.py` — SUPPORTED_EXTENSIONS・IMAGE_EXTENSIONS 定数追加、LANG に新規4キー追加・既存3キー更新\n- `pagefolio/file_ops.py` — ファイルダイアログを4エントリーに変更、画像オープン時の status 分岐、_save_file() に IMAGE_EXTENSIONS チェックとフォールスルー実装\n- `pagefolio/page_ops.py` — 挿入ダイアログの filetypes を4エントリーに変更\n- `pagefolio/app.py` — _on_dnd_drop() の拡張子フィルターを SUPPORTED_EXTENSIONS 定数参照に変更\n",
+      "full_uat_md": "# S01: 基盤と画像対応 — UAT\n\n**Milestone:** M001\n**Written:** 2026-05-04T04:04:26.541Z\n\n# S01: 基盤と画像対応 — UAT\n\n**Milestone:** M001\n**Written:** 2026-05-04\n\n## UAT Type\n\n- UAT mode: artifact-driven\n- Why this mode is sufficient: 本スライスはファイル開封フロー・保存フォールスルー・D&D フィルターの変更であり、pytest による自動テスト108件と ruff によるリント確認で機能契約を十分に検証できる。GUI 起動なしでコアロジックを確認可能。\n\n## Preconditions\n\n- Python 環境に PyMuPDF, Pillow, tkinterdnd2 がインストール済みであること\n- `pagefolio/` パッケージがインポート可能であること\n- テスト用 PDF および PNG/JPG ファイルが用意可能であること\n\n## Smoke Test\n\n```\npython -c \"from pagefolio.constants import SUPPORTED_EXTENSIONS, IMAGE_EXTENSIONS; print(SUPPORTED_EXTENSIONS)\"\n```\n→ `frozenset({'.pdf', '.png', '.jpg', '.jpeg', '.bmp', '.tiff', '.tif'})` が出力されれば基本動作OK。\n\n## Test Cases\n\n### 1. requirements.txt エントリー数確認\n\n1. `grep -c '==' requirements.txt` を実行する\n2. **Expected:** 出力が `7` である\n\n### 2. 定数インポートと内容確認\n\n1. `python -c \"from pagefolio.constants import SUPPORTED_EXTENSIONS, IMAGE_EXTENSIONS, LANG; assert '.png' in SUPPORTED_EXTENSIONS; assert '.pdf' in SUPPORTED_EXTENSIONS; assert '.bmp' in IMAGE_EXTENSIONS; assert 'filetypes_supported' in LANG['ja']; assert 'status_opened_image' in LANG['en']; print('OK')\"` を実行する\n2. **Expected:** `OK` が出力される\n\n### 3. file_ops.py 構文確認\n\n1. `python -c \"import ast; ast.parse(open('pagefolio/file_ops.py', encoding='utf-8').read())\"` を実行する\n2. **Expected:** エラーなく完了する\n\n### 4. app.py D&D フィルター確認\n\n1. `python -c \"import ast; ast.parse(open('pagefolio/app.py', encoding='utf-8').read())\"` を実行する\n2. **Expected:** エラーなく完了する\n\n### 5. 全テストスイート実行\n\n1. `pytest` を実行する\n2. **Expected:** 108 passed、FAILED ゼロ\n\n### 6. リント確認\n\n1. `ruff check . && ruff format .` を実行する\n2. **Expected:** All checks passed / N files left unchanged（エラーなし）\n\n## Edge Cases\n\n### 画像拡張子の大文字小文字\n\n1. `python -c \"from pagefolio.constants import SUPPORTED_EXTENSIONS; print('.PNG'.lower() in SUPPORTED_EXTENSIONS)\"` を実行する\n2. **Expected:** `True` が出力される（拡張子は小文字で格納されているため、比較時に lower() が必要）\n\n### 保存フォールスルーロジック確認\n\n1. `python -c \"from pagefolio.constants import IMAGE_EXTENSIONS; assert '.png' in IMAGE_EXTENSIONS; assert '.pdf' not in IMAGE_EXTENSIONS; print('OK')\"` を実行する\n2. **Expected:** `OK` が出力される（PDF は IMAGE_EXTENSIONS に含まれないため通常保存される）\n\n## Failure Signals\n\n- `pytest` に FAILED が1件でも出る場合 → テスト回帰が発生している\n- `ruff check .` にエラーが出る場合 → コーディング規約違反\n- `import pagefolio.constants` で ImportError が出る場合 → 定数定義に構文エラー\n\n## Not Proven By This UAT\n\n- GUI 上での実際のファイルダイアログ動作（ファイルタイプフィルターの表示確認）\n- 実際の PNG/JPG ファイルを開いてサムネイル・プレビューが正しく描画されること\n- D&D で画像ファイルをドロップした際の実際の UI 動作\n- 画像ファイルを開いた後に Ctrl+S で _save_as() ダイアログが開くことの実動作確認\n- Windows 11 実機での tkinterdnd2 ドロップイベント受信確認\n\n## Notes for Tester\n\n- GUI テストは `python pagefolio.py` で起動し、PNG/JPG ファイルをドラッグ&ドロップまたはファイルメニューから開いて手動確認が必要\n- 保存フォールスルーは画像ファイルを開いた状態で Ctrl+S を押し、PDF 保存ダイアログが開くことで確認できる\n- ステータスバーに「画像として開きました」等の status_opened_image メッセージが表示されることを確認すること\n",
       "goal": "requirements.txt を直接依存のみに整理し、PNG/JPG/BMP/TIFF ファイルを PDF と同様に開いて既存の全編集操作が使える状態にする",
       "success_criteria": "1. requirements.txt が直接依存のみ（PyMuPDF, Pillow, tkinterdnd2, pyinstaller, pytest, pytest-cov, ruff）を含む\\n2. PNG/JPG/JPEG/BMP/TIFF/TIF ファイルをファイルダイアログ・D&D どちらでも開ける\\n3. 画像ファイルで Ctrl+S すると _save_as() にフォールスルーし PDF 保存ダイアログが開く\\n4. ruff check && ruff format が通る\\n5. pytest が全件パスする",
       "proof_level": "",
@@ -55,22 +55,20 @@
     {
       "milestone_id": "M001",
       "id": "S02",
-      "title": "バックグラウンドレンダリング",
-      "status": "pending",
+      "title": "S02",
+      "status": "complete",
       "risk": "medium",
-      "depends": [
-        "S01"
-      ],
+      "depends": [],
       "demo": "大規模 PDF を開いてページ切替・ズームを操作しても UI が応答し続ける",
       "created_at": "2026-05-04T03:53:58.480Z",
-      "completed_at": null,
-      "full_summary_md": "",
-      "full_uat_md": "",
-      "goal": "ページ切替・ズーム変更・大規模 PDF 開封時に UI がフリーズしない",
-      "success_criteria": "threading.Thread + root.after() でバックグラウンドレンダリングが実装され、UI スレッドがブロックされない",
-      "proof_level": "手動検証 + pytest",
-      "integration_closure": "viewer.py のレンダリングロジックを threading.Thread で非同期化し、root.after() で UI を更新する",
-      "observability_impact": "レンダリング中はステータスバーにインジケーターを表示する",
+      "completed_at": "2026-05-04T04:30:25.661Z",
+      "full_summary_md": "---\nid: S02\nparent: M001\nmilestone: M001\nprovides:\n  - [\"_preview_gen / _thumb_gen 世代カウンターによるバックグラウンドレンダリング基盤\", \"_show_preview() のデーモンスレッドパターン実装\", \"_build_thumbnails() の after_idle() プログレッシブローディング実装\", \"ドキュメント入替時の gen カウンター統一インクリメント\"]\nrequires:\n  []\naffects:\n  - [\"S03\"]\nkey_files:\n  - [\"pagefolio/app.py\", \"pagefolio/viewer.py\", \"pagefolio/file_ops.py\"]\nkey_decisions:\n  - [\"PyMuPDF は並行アクセス非対応のため、バックグラウンドスレッドでは専用 fitz.open() インスタンスを try/finally で管理\", \"filepath=None（未保存結合 doc）は tobytes() をメインスレッドで実行してからスレッドを起動し、スレッド内で self.doc に一切アクセスしない\", \"_apply() で preview_canvas.delete('all') を再度呼び出してプレースホルダーを消去してから画像を描画\", \"_add_thumb() は後方互換メソッドとして残存し、内部で _add_thumb_placeholder() を呼ぶ形に変更\", \"gen カウンターは _invalidate_thumb_cache() の直後にインクリメントする順序を統一\"]\npatterns_established:\n  - [\"世代カウンターパターン: _preview_gen / _thumb_gen をインクリメントしてローカル gen にコピー → after(0,...) でコールバック → gen != self._preview_gen なら stale 破棄\", \"after_idle() プログレッシブローディング: 全プレースホルダー即時作成 → after_idle(render_next(0)) → after(0, render_next(i+1)) の連鎖\", \"ワーカースレッドの例外は logger.debug で記録し無声失敗を防ぐ\"]\nobservability_surfaces:\n  - [\"logger.debug で _preview_gen / _thumb_gen の世代番号を出力 → どの世代が発火・キャンセルされたかをログ追跡可能\", \"stale チェック（gen 値不一致）は logger.debug でスキップ理由を記録\", \"ワーカースレッド内の例外を except Exception → logger.debug に出力（無声失敗を排除）\"]\ndrill_down_paths:\n  []\nduration: \"\"\nverification_result: passed\ncompleted_at: 2026-05-04T04:30:25.662Z\nblocker_discovered: false\n---\n\n# S02: バックグラウンドレンダリング\n\n**プレビューとサムネイル生成をメインスレッドから分離し、大規模 PDF でのページ切替・ズーム変更時の UI フリーズを解消**\n\n## What Happened\n\n## S02 実施内容\n\n5タスクを順序通りに実施し、バックグラウンドレンダリング基盤を完成させた。\n\n**T01 — 世代カウンター追加 (app.py)**\n`PDFEditorApp.__init__` に `self._preview_gen = 0` と `self._thumb_gen = 0` を追加。`_rebuild_ui()` でも両変数をインクリメントし、UI 再構築前に発行されたレンダリング結果が新ウィジェットに誤適用されないよう対処した。\n\n**T02 — _show_preview() バックグラウンドスレッド化 (viewer.py)**\n`_show_preview()` を daemon スレッドパターンに全面書き換え。`page.get_pixmap()` をワーカースレッドで実行し、`after(0, _apply)` でメインスレッドに結果を返す。PyMuPDF の並行アクセス非対応に対処するため、スレッド内では専用 `fitz.open()` インスタンスを `try/finally` で管理。未保存結合 doc（filepath=None）は `doc.tobytes()` をメインスレッドで実行してからスレッドを起動する方式を採用。`_preview_gen` による stale チェックで古い世代の結果を破棄する。\n\n**T03 — _build_thumbnails() プログレッシブローディング化 (viewer.py)**\n`_add_thumb_placeholder()` と `_add_thumb()` に分割し、全ページのプレースホルダー Label を即時作成後、`after_idle()` → `after(0,...)` の連鎖で1枚ずつ逐次レンダリング。`_thumb_gen` による stale チェックでドキュメント切替時に古いレンダリングを打ち切る。`_add_thumb()` は後方互換メソッドとして残存。\n\n**T04 — gen カウンターインクリメント位置の統一 (file_ops.py)**\n`_open_pdf_path()`・`_do_open_merged()`・`_restore_state()` の3箇所で `_invalidate_thumb_cache()` の直後に `_preview_gen += 1` と `_thumb_gen += 1` を挿入（一部は既存コードの順序誤りを修正）。これによりドキュメント入替時に前 doc のレンダリングが確実に棄却される。\n\n**T05 — 最終検証**\n全変更後に `ruff check . && ruff format --check .` と `pytest --tb=short -q` を実行。エラー・警告ゼロ、108件全 PASSED を確認。追加修正は不要だった。\n\n## Verification\n\n- `ruff check . && ruff format --check .` → All checks passed! 20 files already formatted\n- `pytest --tb=short -q` → 108 passed in 1.10s（リグレッションなし）\n- `grep -c '_preview_gen\\|_thumb_gen' pagefolio/app.py` → 4（__init__ 初期化 2 + _rebuild_ui インクリメント 2）\n- `grep -c '_preview_gen\\|_thumb_gen' pagefolio/file_ops.py` → 6（3箇所 × 2変数）\n- `grep -c 'threading\\|_preview_gen\\|daemon=True' pagefolio/viewer.py` → 5\n- `grep -c '_add_thumb_placeholder\\|after_idle\\|render_next' pagefolio/viewer.py` → 6\n\n## Requirements Advanced\n\nNone.\n\n## Requirements Validated\n\nNone.\n\n## New Requirements Surfaced\n\nNone.\n\n## Requirements Invalidated or Re-scoped\n\nNone.\n\n## Operational Readiness\n\nNone.\n\n## Deviations\n\nT04 において、_restore_state() と _do_open_merged() では gen インクリメントが既に追加されていたが _invalidate_thumb_cache() より前に配置されていた。「追加」ではなく「順序修正（移動）」となった。機能的には順序を問わないが、プラン仕様通りに統一した。\n\n## Known Limitations\n\n- 実際の非同期挙動（UI フリーズ解消）はヘッドレス環境では確認不可。GUI 手動確認は UAT フェーズで実施が必要\n- サムネイルのレンダリング中にドキュメントを切り替えた場合、プレースホルダーが残留する期間（stale チェック後の早期リターン）がわずかに発生するが、次の _refresh_all() 呼び出しで解消される\n- PyMuPDF の GIL 動作に依存しているため、将来的に PyPy や no-GIL Python への移行時は再検討が必要\n\n## Follow-ups\n\n- S03（Undo 差分化）は本スライスの gen カウンターを引き継がず独立して実装可能\n- 手動 UAT でページ切替・ズーム変更時の応答性を大規模 PDF で検証すること\n- _show_preview() のローディングプレースホルダー（\"...\"）のデザインを将来的にスピナーやグレーアウト表示に改善できる\n\n## Files Created/Modified\n\n- `pagefolio/app.py` — _preview_gen / _thumb_gen 世代カウンター追加（__init__ + _rebuild_ui）\n- `pagefolio/viewer.py` — _show_preview() バックグラウンドスレッド化、_build_thumbnails() プログレッシブローディング化、_add_thumb_placeholder() 追加\n- `pagefolio/file_ops.py` — _open_pdf_path / _do_open_merged / _restore_state の3箇所で gen カウンターインクリメント追加・順序統一\n",
+      "full_uat_md": "# S02: バックグラウンドレンダリング — UAT\n\n**Milestone:** M001\n**Written:** 2026-05-04T04:30:25.664Z\n\n# S02: バックグラウンドレンダリング — UAT\n\n**Milestone:** M001\n**Written:** 2026-05-04\n\n## UAT Type\n\n- UAT mode: human-experience\n- Why this mode is sufficient: バックグラウンドスレッドによる UI 応答性改善は Tkinter のメインループと密結合しており、ヘッドレス環境では検証不可。ruff + pytest による静的・単体検証は完了済みのため、残る確認は実際の GUI 操作による体感確認のみ。\n\n## Preconditions\n\n- PageFolio が `python pagefolio.py` で起動できること\n- テスト用の大規模 PDF（50ページ以上推奨）が手元にあること\n- 小規模 PDF（数ページ）も用意しておくこと\n\n## Smoke Test\n\n大規模 PDF を開いてページをクリックし、1秒以内にプレビューが更新されることを確認する。\n\n## Test Cases\n\n### 1. 大規模 PDF のサムネイル即時表示\n\n1. 50ページ以上の PDF をファイルメニュー「開く」から開く\n2. サムネイルパネルの表示を観察する\n3. **Expected:** サムネイルが全件レンダリングされる前でも画面がフリーズせず、プレースホルダーが表示されたあと順次サムネイル画像が読み込まれること\n\n### 2. ページ切替時の UI 応答性\n\n1. 50ページ以上の PDF を開く\n2. サムネイルをクリックして異なるページに高速で切り替える（5回以上）\n3. **Expected:** クリックのたびに UI が応答し、ヘッダーのページ番号が更新されること。「固まった」感覚がないこと\n\n### 3. ズーム変更時の UI 応答性\n\n1. PDF を開く\n2. ズームスライダーを素早く動かす\n3. **Expected:** ズーム変更中も UI が応答し続け、最終的なズーム値でプレビューが更新されること\n\n### 4. ドキュメント切替時のレンダリングキャンセル\n\n1. 大規模 PDF を開く（サムネイル読み込み中）\n2. すぐに別の PDF を開く（または同じファイルを再度開く）\n3. **Expected:** 前の PDF のサムネイルが新しい PDF のウィジェットに誤描画されないこと。新しい PDF のサムネイルが正しく表示されること\n\n### 5. Undo/Redo 後のプレビュー正常更新\n\n1. PDF を開いてページ操作（回転・削除など）を実行する\n2. Ctrl+Z で Undo する\n3. **Expected:** Undo 後のプレビューとサムネイルが正しく更新されること（前の doc のレンダリング結果が残留しないこと）\n\n## Edge Cases\n\n### 未保存結合 doc のプレビュー\n\n1. 複数の PDF を結合する\n2. 保存前の状態でページを切り替える\n3. **Expected:** 結合後の doc のプレビューが正しく表示されること（filepath=None でもクラッシュしないこと）\n\n### 高速ページクリックでのスレッド競合\n\n1. PDF を開く\n2. サムネイルを非常に高速にクリックして複数ページを切り替える\n3. **Expected:** 最終的に選択されたページのプレビューが表示されること。古いページのプレビューが誤表示されないこと\n\n## Failure Signals\n\n- UI が数秒以上フリーズする（サムネイル読み込み中）\n- 前の PDF のサムネイル画像が新しい PDF のウィジェットに残留する\n- `python pagefolio.py` 実行時のコンソールに Exception トレースバックが出力される\n- プレビュー領域が空白のまま更新されない\n\n## Not Proven By This UAT\n\n- ヘッドレス環境での自動化テスト（Tkinter のメインループ依存のため不可）\n- 超大規模 PDF（500ページ以上）での実際のメモリ使用量と応答時間の計測\n- スレッドリーク（デーモンスレッドのため、プロセス終了時に自動回収されるが長時間使用での蓄積は未確認）\n- PyMuPDF 将来バージョンでのスレッド安全性（現バージョン固定済み）\n\n## Notes for Tester\n\n- サムネイルが「ちらつく」挙動（プレースホルダー → 画像への切り替え）は仕様通り。フリーズではない。\n- コンソール出力に `DEBUG:pagefolio.viewer:` で始まるログが出ても問題なし（stale チェックの診断ログ）。\n- Windows 11 で Tkinter のスレッドコールバック（after(0,...)）は通常 10〜50ms 遅延する。\n",
+      "goal": "プレビューとサムネイル生成をメインスレッドから分離し、大規模 PDF でページ切替・ズーム変更時に UI がフリーズしないようにする",
+      "success_criteria": "- `ruff check . && ruff format .` がエラー・警告ゼロでパス\n- `pytest` が 108 件全 PASSED\n- `_show_preview()` がバックグラウンドスレッドパターンに改修され、generation counter で stale 結果を破棄する\n- `_build_thumbnails()` が `after_idle()` プログレッシブローディングに改修され、UI が即時応答する\n- ドキュメント入替時（open/merge/undo-restore）に gen カウンターがインクリメントされ、前 doc のレンダリングがキャンセルされる",
+      "proof_level": "contract — ruff + pytest による静的・単体検証のみ。実際の非同期挙動はヘッドレス環境では確認不可のため、GUI 手動確認は UAT フェーズで実施",
+      "integration_closure": "Upstream: `pagefolio/app.py`（状態変数）、`pagefolio/file_ops.py`（doc 入替トリガー）、`pagefolio/viewer.py`（レンダリング実装）。New wiring: `_preview_gen`・`_thumb_gen` カウンターが app.py → viewer.py → file_ops.py の3モジュール間で共有される。Remaining: S03（Undo 差分化）は本スライスの gen カウンターを引き継がないため独立。",
+      "observability_impact": "- `_preview_gen` と `_thumb_gen` の値を `logger.debug` で出力すると、どの世代のレンダリングが発火・キャンセルされたかをログで追跡可能\n- ワーカースレッド内の例外は `except Exception` でキャッチして `logger.debug` に出力すること（無声失敗を避ける）\n- stale チェック（`_preview_gen != gen`）が早期リターンした場合の診断は UI 上でプレースホルダーが残留することで視認できる",
       "sequence": 2,
       "replan_triggered_at": null,
       "is_sketch": 0,
@@ -79,22 +77,20 @@
     {
       "milestone_id": "M001",
       "id": "S03",
-      "title": "Undo 差分化",
-      "status": "pending",
+      "title": "S03",
+      "status": "complete",
       "risk": "medium",
-      "depends": [
-        "S02"
-      ],
+      "depends": [],
       "demo": "大規模 PDF で複数操作後の Undo が動作し、メモリ使用量が全体コピー方式より削減される",
       "created_at": "2026-05-04T03:53:58.480Z",
-      "completed_at": null,
-      "full_summary_md": "",
-      "full_uat_md": "",
-      "goal": "Undo スタックが差分方式になり大規模 PDF でのメモリ使用量が削減される",
-      "success_criteria": "変更ページのバイト列のみをキャッシュする差分 Undo が実装され、既存の Undo/Redo 操作がすべて正常に動作する",
-      "proof_level": "pytest + メモリ使用量の目視確認",
-      "integration_closure": "file_ops.py の _undo_stack / _redo_stack を差分方式に変更し、既存の Undo/Redo API を維持する",
-      "observability_impact": "なし",
+      "completed_at": "2026-05-04T04:51:41.548Z",
+      "full_summary_md": "---\nid: S03\nparent: M001\nmilestone: M001\nprovides:\n  - [\"Undo スタック差分方式（op キー付き辞書）\", \"_restore_state() の新旧フォーマット両対応ディスパッチャ\", \"差分フォーマット検証 pytest テスト（TestUndoRedoLogic 3 件）\"]\nrequires:\n  []\naffects:\n  - [\"S04\"]\nkey_files:\n  - [\"pagefolio/file_ops.py\", \"pagefolio/page_ops.py\", \"pagefolio/dnd.py\", \"tests/test_pdf_ops.py\"]\nkey_decisions:\n  - [\"_save_undo(op, **kwargs) 差分形式シグネチャ: op 別に最小データのみ保存\", \"_restore_state() が pdf_bytes キーの有無でフォーマット自動判別するディスパッチャ方式を採用\", \"Redo スタックは後方互換のため全体バイト方式を維持\", \"fitz.Rect は Python タプルとして保存（C 側オブジェクトの寿命管理のため）\", \"delete op は昇順ソート後に単ページ fitz.open() + insert_pdf + tobytes() + close() で抽出\", \"insert op は [insert_at, 0] のミュータブルリストで保存し後払い書き込みを可能にする\", \"_dnd_drop() の _save_undo() は doc.move_page() 実行後かつ actual_dest 確定後に呼ぶ\", \"_rotate_selected() では targets 取得を _save_undo() より前に行い回転前の値を保存する\"]\npatterns_established:\n  - [\"Undo 差分ディスパッチャパターン: _restore_state() が pdf_bytes キーの有無で新旧フォーマットを自動判別\", \"ミュータブルリストによる後払いフィールド更新: _save_undo() が [insert_at, 0] を保存し呼び出し元がループ後に [1] を更新\", \"fitz C オブジェクトのタプル変換: fitz.Rect はスタック保存前に (x0,y0,x1,y1) タプルに変換し restore 時に再構築\"]\nobservability_surfaces:\n  - none\ndrill_down_paths:\n  []\nduration: \"\"\nverification_result: passed\ncompleted_at: 2026-05-04T04:51:41.550Z\nblocker_discovered: false\n---\n\n# S03: Undo 差分化\n\n**Undo スタックを操作タイプ別差分方式に切り替え、大規模 PDF でのメモリ使用量を削減しつつ Redo との後方互換を維持**\n\n## What Happened\n\n## S03: Undo 差分化 — 実施内容\n\nS03 では Undo スタックを「全体バイトコピー方式」から「操作タイプ別差分方式」に切り替えた。全 6 タスクを順次完了し、ruff リント・pytest 109 件 PASSED でスライスを完了した。\n\n### T01: _save_undo() シグネチャ変更（file_ops.py）\n\n`_save_undo(self)` を `_save_undo(self, op, **kwargs)` に書き換えた。共通ベースとして `{\"op\": op, \"current_page\": ..., \"selected_pages\": ...}` を構築し、op に応じて `state[\"data\"]` を設定する：\n\n- **rotate**: 対象ページの回転前 rotation 値リスト\n- **crop**: fitz.Rect をタプル `(x0, y0, x1, y1)` に変換（C 側オブジェクトの寿命管理を回避）\n- **delete**: 昇順ソート後に各ページを `fitz.open() + insert_pdf() + tobytes() + close()` でバイト列抽出\n- **move**: `(src, actual_dest)` ペア\n- **duplicate**: `pno`\n- **insert**: `[insert_at, 0]` のミュータブルリスト（呼び出し元が後払いで num_inserted を書き込む）\n- **merge**: `len(self.doc)`（現在のページ数）\n\nスタック上限チェックと `_redo_stack.clear()` は既存ロジックを維持した。\n\n### T02: _restore_state() ディスパッチャ化（file_ops.py）\n\n`_restore_state()` を `\"pdf_bytes\"` キーの有無で自動判別するディスパッチャに書き換えた。\n\n- `\"pdf_bytes\"` キーあり → 既存ロジック（Redo スタック由来の全体バイト方式）\n- `\"op\"` キーあり → op 別の逆変換を適用：\n  - rotate: `set_rotation(old_rot)`\n  - crop: タプルから `fitz.Rect` を再構築して `set_cropbox()`\n  - delete: 昇順の `(page_i, page_bytes)` を順に `insert_pdf(start_at=page_i)` で再挿入\n  - move: `doc.move_page(actual_dest, src)` で元位置に戻す\n  - duplicate: `doc.delete_page(pno + 1)` で複製ページを除去\n  - insert: `num` 回 `delete_page(insert_at)` で挿入済みページを除去\n  - merge: ページ数が `old_count` を超える間 `delete_page(old_count)` で結合分を除去\n\n共通後処理（`current_page` クランプ、`selected_pages` 復元、キャッシュ無効化、世代カウンタ更新、`_refresh_all()`）は両分岐の外に配置した。Redo スタックへのプッシュロジックは変更せず全体バイト形式を維持した。\n\n### T03: page_ops.py の 6 箇所を新シグネチャに更新\n\n1. `_rotate_selected(deg)` — `targets` 取得を `_save_undo()` の前に移動し、回転前の rotation 値を正しく保存\n2. `_delete_selected()` — `self._save_undo(\"delete\", targets=targets)` に変更\n3. `_duplicate_page()` — `self._save_undo(\"duplicate\", pno=pno)` に変更\n4. `_crop_page()` — `self._save_undo(\"crop\", page_i=self.current_page)` に変更\n5. `_do_insert()` — `self._save_undo(\"insert\", insert_at=insert_at)` に変更し、ループ後に `self._undo_stack[-1][\"data\"][1] = total` で後払い書き込み\n6. `_do_merge()` — `self._save_undo(\"merge\")` に変更（ページ数は _save_undo 内で取得）\n\n### T04: dnd.py の _dnd_drop() を actual_dest 確定後に呼び出し変更\n\n`self._save_undo()` の位置を actual_dest 計算ブロックの直後（`doc.move_page()` 実行後）に移動し、新シグネチャ `self._save_undo(\"move\", src=src, actual_dest=actual_dest)` に更新した。\n\n### T05: TestUndoRedoLogic を差分フォーマット検証テストに書き換え\n\n全体バイト方式前提の旧 2 テストを削除し、差分フォーマットを直接検証する 3 テストに置き換えた：\n\n1. `test_rotate_delta_roundtrip` — rotate 差分の保存と `set_rotation()` による復元を検証\n2. `test_delete_delta_roundtrip` — delete 差分の保存と `insert_pdf()` による再挿入を検証\n3. `test_fallback_pdf_bytes_format` — Redo スタック由来の旧フォーマットが `fitz.open(stream=...)` で復元できることを確認\n\n### T06: 全件確認\n\nruff check / ruff format --check / pytest --tb=short -q を実行し、リントクリーン・109 件 PASSED を確認した。\n\n## Verification\n\n- `ruff check .` → All checks passed（20 ファイル）\n- `ruff format --check .` → 20 files already formatted\n- `pytest --tb=short -q` → 109 passed in 1.03s（リグレッションなし、スライス要件の 108 件以上を満たす）\n- `pytest tests/test_pdf_ops.py::TestUndoRedoLogic -v --tb=short` → 3 テスト全パス（T05 確認）\n- 各ファイルの構文チェック（python -c \"import ast; ast.parse(...); print('OK')\"）→ 全ファイル OK\n\n## Requirements Advanced\n\nNone.\n\n## Requirements Validated\n\nNone.\n\n## New Requirements Surfaced\n\nNone.\n\n## Requirements Invalidated or Re-scoped\n\nNone.\n\n## Operational Readiness\n\nNone.\n\n## Deviations\n\nなし（全タスクがプランと完全一致して完了。T05 の docstring を ruff 行長制限に合わせて短縮したが機能・ロジックの変更なし）\n\n## Known Limitations\n\n- Redo スタックは全体バイト方式のまま（メモリ削減は Undo 側のみ）。Redo の差分化は今後の改善候補\n- GUI 操作経由での Undo/Redo 統合テストは未実施（UAT フェーズで手動確認推奨）\n- 大規模 PDF でのメモリ削減効果は未計測（プロファイラによる定量確認が必要）\n- merge op の Undo は複数ファイル結合後の逆操作のため、実際の動作確認は GUI 手動確認が必要\n\n## Follow-ups\n\n- S04（複数ページ操作）では bulk delete/move の Undo 差分形式を新たに定義する必要がある（S03 の差分パターンを踏襲すること）\n- Redo スタックの差分化は将来の改善候補として残す\n\n## Files Created/Modified\n\nNone.\n",
+      "full_uat_md": "# S03: Undo 差分化 — UAT\n\n**Milestone:** M001\n**Written:** 2026-05-04T04:51:41.553Z\n\n# S03: Undo 差分化 — UAT\n\n**Milestone:** M001\n**Written:** 2026-05-04\n\n## UAT Type\n\n- UAT mode: artifact-driven（pytest によるロジック直接検証）\n- Why this mode is sufficient: 差分フォーマットの正しさ（保存・復元の対称性）は pytest で fitz API を直接呼び出して検証可能。GUI 上のメモリ削減効果は体感確認のため UAT フェーズに委ねる。\n\n## Preconditions\n\n- Python 環境に pymupdf（fitz）と pytest がインストールされていること\n- `pagefolio/file_ops.py`, `pagefolio/page_ops.py`, `pagefolio/dnd.py`, `tests/test_pdf_ops.py` が S03 の変更済み状態であること\n\n## Smoke Test\n\n```bash\npytest tests/test_pdf_ops.py::TestUndoRedoLogic -v --tb=short\n```\n3 テスト全パスを確認する。\n\n## Test Cases\n\n### 1. rotate 差分のラウンドトリップ検証\n\n1. `test_rotate_delta_roundtrip` を実行\n2. 2 ページ PDF を作成し、`_save_undo(\"rotate\", targets=[(0, 0)])` を呼び出す\n3. スタックに `{\"op\": \"rotate\", \"data\": [(0, 0)]}` が保存されることを確認\n4. `set_rotation(old_rot)` で回転前の値に戻せることを確認\n5. **Expected:** テスト PASSED\n\n### 2. delete 差分のラウンドトリップ検証\n\n1. `test_delete_delta_roundtrip` を実行\n2. 3 ページ PDF を作成し、ページ 1 を削除する差分を保存\n3. 保存されたバイト列から `fitz.open(stream=...)` + `insert_pdf(start_at=1)` で再挿入\n4. 元のページ数（3）とテキスト内容が復元されることを確認\n5. **Expected:** テスト PASSED\n\n### 3. pdf_bytes フォーマットのフォールバック検証\n\n1. `test_fallback_pdf_bytes_format` を実行\n2. `{\"pdf_bytes\": doc.tobytes(), ...}` 形式の辞書を作成\n3. `fitz.open(stream=state[\"pdf_bytes\"])` で復元できることを確認\n4. **Expected:** テスト PASSED\n\n### 4. 全テストスイート リグレッション確認\n\n1. `pytest --tb=short -q` を実行\n2. **Expected:** 109 passed、0 failed、0 error\n\n### 5. リント・フォーマット確認\n\n1. `ruff check . && ruff format --check .` を実行\n2. **Expected:** All checks passed、20 files already formatted\n\n## Edge Cases\n\n### Redo スタックの後方互換\n\n1. Undo 操作を実行し、_redo_stack に全体バイト方式エントリが積まれることを確認\n2. Redo 操作で `_restore_state()` に `pdf_bytes` キーありの辞書が渡されることを確認\n3. **Expected:** `\"pdf_bytes\"` キーの有無で自動判別し、全体バイト方式で正しく復元される\n\n### insert の後払い書き込み\n\n1. `_do_insert()` 実行中に `_save_undo(\"insert\", insert_at=0)` が `[0, 0]` のミュータブルリストで保存されること\n2. ループ完了後に `_undo_stack[-1][\"data\"][1]` が挿入ページ数に更新されること\n3. **Expected:** Undo 時に正確な枚数分 `delete_page()` が実行される\n\n## Failure Signals\n\n- pytest で 109 件未満の PASSED、または FAILED/ERROR が存在する場合は実装バグ\n- ruff check でエラーが出た場合はリント違反\n- `_restore_state()` 内で KeyError や TypeError が発生した場合はフォーマット判別ロジックの不備\n\n## Not Proven By This UAT\n\n- 実際の大規模 PDF（数百ページ）でのメモリ使用量削減効果（体感・プロファイラ計測が必要）\n- GUI 操作経由での Undo/Redo の動作（Tkinter イベントループとの統合）\n- merge op の Undo（複数ファイル結合後の逆操作）の実際の動作確認\n- 暗号化 PDF での動作\n\n## Notes for Tester\n\n- 差分方式の Undo スタックと全体バイト方式の Redo スタックが混在するため、Undo → Redo の連続操作が正しく動作するか GUI 手動確認を推奨\n- rotate op の targets 取得タイミング（_save_undo 前）が重要。回転後に取得すると Undo が壊れる（MEM013）\n",
+      "goal": "Undo スタックを「全体バイトコピー方式」から「操作タイプ別差分方式」に切り替え、大規模 PDF での Undo メモリ使用量を削減する。Redo スタックは後方互換性のため全体バイト方式を維持し、`_restore_state()` が両フォーマットを自動判別して処理する。",
+      "success_criteria": "- `_save_undo(op, **kwargs)` が rotate/crop/delete/move/duplicate/insert/merge の各操作タイプ別に最小データのみを保存する\n- `_restore_state(state)` が差分フォーマット（op キー）と旧フォーマット（pdf_bytes キー）の両方を処理できる\n- `page_ops.py` の 6 箇所・`dnd.py` の 1 箇所の `_save_undo()` 呼び出しが新シグネチャに更新されている\n- `ruff check . && ruff format --check .` エラーゼロ\n- `pytest --tb=short -q` で 108 件以上 PASSED（リグレッションなし）",
+      "proof_level": "contract — pytest でロジックを直接検証。GUI 手動確認（メモリ削減の体感）は UAT フェーズ。",
+      "integration_closure": "Upstream: S02 で確立した `_invalidate_thumb_cache()` → gen カウンターインクリメント順序を踏襲。`_restore_state()` 内でも同順序を維持する。新たな外部依存なし。S04（複数ページ一括操作）は本スライス完了後に着手可能。",
+      "observability_impact": "",
       "sequence": 3,
       "replan_triggered_at": null,
       "is_sketch": 0,
@@ -103,22 +99,20 @@
     {
       "milestone_id": "M001",
       "id": "S04",
-      "title": "複数ページ操作と保守",
+      "title": "S04",
       "status": "pending",
       "risk": "medium",
-      "depends": [
-        "S03"
-      ],
+      "depends": [],
       "demo": "複数ページを選択して D&D で一括移動、および一括トリミングが動作する",
       "created_at": "2026-05-04T03:53:58.480Z",
       "completed_at": null,
       "full_summary_md": "",
       "full_uat_md": "",
-      "goal": "複数ページの D&D 一括移動・一括トリミングが動作し、ダイアログのフォント生成ロジックが統一される",
-      "success_criteria": "複数選択ページの D&D 一括移動と一括トリミングが動作する。dialogs.py のフォント生成が _font() ヘルパーに統一される。",
-      "proof_level": "pytest + 手動検証",
-      "integration_closure": "dnd.py の D&D ロジックと page_ops.py のトリミングロジックを複数ページ対応に拡張する",
-      "observability_impact": "なし",
+      "goal": "複数選択ページを D&D で一括移動し、一括トリミングも選択ページ全体に相対座標変換で適用できるようにする。Undo/Redo は S03 の差分パターンに完全準拠する。",
+      "success_criteria": "- 2 ページ以上を選択してドラッグすると selected_pages 全体が doc.select(new_order) で一括移動し、Ctrl+Z で逆順列 select によって元の順序に戻る\n- 2 ページ以上を選択してトリミングを実行すると全選択ページに相対座標変換後の cropbox が設定され、Ctrl+Z で全ページの旧 cropbox が復元される\n- pytest tests/test_pdf_ops.py 全件 PASSED（新規 TestBulkMoveLogic / TestBulkCropLogic を含む）\n- ruff check . && ruff format --check . でリントクリーン",
+      "proof_level": "- This slice proves: contract（fitz API + pytest でロジック保証。GUI の視覚確認は手動 UAT 必要）\n- Real runtime required: no\n- Human/UAT required: yes（複数選択 D&D の挙動、ゴースト N ページ表示、確認ダイアログは GUI で手動確認）",
+      "integration_closure": "- Upstream surfaces consumed: `pagefolio/file_ops.py`（_save_undo/_restore_state）, `pagefolio/dnd.py`（_dnd_drop）, `pagefolio/page_ops.py`（_crop_page）, `pagefolio/constants.py`（LANG）\n- New wiring: dnd.py の bulk_move 分岐 → file_ops.py の _restore_state で逆順列 select; page_ops.py の bulk_crop 分岐 → file_ops.py の _restore_state で cropbox 復元\n- What remains: GUI 手動確認（複数選択 D&D・一括トリミング・Undo 確認）",
+      "observability_impact": "",
       "sequence": 4,
       "replan_triggered_at": null,
       "is_sketch": 0,
@@ -130,19 +124,23 @@
       "milestone_id": "M001",
       "slice_id": "S01",
       "id": "T01",
-      "title": "requirements.txt 整備",
-      "status": "pending",
-      "one_liner": "",
-      "narrative": "",
-      "verification_result": "",
+      "title": "requirements.txt を直接依存 7 パッケージのみにバージョン固定で整備済みであることを確認",
+      "status": "complete",
+      "one_liner": "requirements.txt を直接依存 7 パッケージのみにバージョン固定で整備済みであることを確認",
+      "narrative": "タスク開始時に requirements.txt を読み取ったところ、すでに直接依存 7 パッケージ（PyMuPDF, Pillow, tkinterdnd2, pyinstaller, pytest, pytest-cov, ruff）がバージョン固定で記載されており、無関係パッケージは除外済みであった。pip show で各パッケージのインストール済みバージョンを確認したところ、requirements.txt に記載されたバージョンと完全に一致していた。ファイルの修正は不要であり、D-01〜D-04 の要件をすでに満たしていることを確認した。",
+      "verification_result": "grep -c \"==\" requirements.txt の結果が 7 であることを確認。pip show で全 7 パッケージのバージョンが requirements.txt の記載と完全一致することを確認。",
       "duration": "",
-      "completed_at": null,
+      "completed_at": "2026-05-04T03:57:11.696Z",
       "blocker_discovered": false,
-      "deviations": "",
-      "known_issues": "",
-      "key_files": [],
-      "key_decisions": [],
-      "full_summary_md": "",
+      "deviations": "None.",
+      "known_issues": "None.",
+      "key_files": [
+        "C:/Users/shdwf/work/project/PageFolio/requirements.txt"
+      ],
+      "key_decisions": [
+        "requirements.txt はすでに正しい状態であったため、修正不要と判断した"
+      ],
+      "full_summary_md": "---\nid: T01\nparent: S01\nmilestone: M001\nkey_files:\n  - C:/Users/shdwf/work/project/PageFolio/requirements.txt\nkey_decisions:\n  - requirements.txt はすでに正しい状態であったため、修正不要と判断した\nduration: \nverification_result: passed\ncompleted_at: 2026-05-04T03:57:11.693Z\nblocker_discovered: false\n---\n\n# T01: requirements.txt を直接依存 7 パッケージのみにバージョン固定で整備済みであることを確認\n\n**requirements.txt を直接依存 7 パッケージのみにバージョン固定で整備済みであることを確認**\n\n## What Happened\n\nタスク開始時に requirements.txt を読み取ったところ、すでに直接依存 7 パッケージ（PyMuPDF, Pillow, tkinterdnd2, pyinstaller, pytest, pytest-cov, ruff）がバージョン固定で記載されており、無関係パッケージは除外済みであった。pip show で各パッケージのインストール済みバージョンを確認したところ、requirements.txt に記載されたバージョンと完全に一致していた。ファイルの修正は不要であり、D-01〜D-04 の要件をすでに満たしていることを確認した。\n\n## Verification\n\ngrep -c \"==\" requirements.txt の結果が 7 であることを確認。pip show で全 7 パッケージのバージョンが requirements.txt の記載と完全一致することを確認。\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| 1 | `grep -c '==' requirements.txt` | 0 | 7 エントリー（7 パッケージ、仕様通り） | 150ms |\n| 2 | `pip show PyMuPDF Pillow tkinterdnd2 pyinstaller pytest pytest-cov ruff` | 0 | 全バージョンが requirements.txt と一致 | 1200ms |\n\n## Deviations\n\nNone.\n\n## Known Issues\n\nNone.\n\n## Files Created/Modified\n\n- `C:/Users/shdwf/work/project/PageFolio/requirements.txt`\n",
       "description": "現在の pip freeze 全出力を直接依存のみに書き直す。PyMuPDF, Pillow, tkinterdnd2, pyinstaller（実行依存）と pytest, pytest-cov, ruff（dev 依存）をバージョン固定で記載する。無関係パッケージ（altgraph, numpy 等）はすべて除外する（D-01〜D-04）。",
       "estimate": "10m",
       "files": [
@@ -170,19 +168,24 @@
       "milestone_id": "M001",
       "slice_id": "S01",
       "id": "T02",
-      "title": "constants.py 拡張子定数・LANG キー追加",
-      "status": "pending",
-      "one_liner": "",
-      "narrative": "",
-      "verification_result": "",
+      "title": "constants.py に SUPPORTED_EXTENSIONS / IMAGE_EXTENSIONS 定数と LANG の新規4キー・既存3キー更新を追加",
+      "status": "complete",
+      "one_liner": "constants.py に SUPPORTED_EXTENSIONS / IMAGE_EXTENSIONS 定数と LANG の新規4キー・既存3キー更新を追加",
+      "narrative": "UI-SPEC の Constants Contract と Copywriting Contract に従い、pagefolio/constants.py を以下の通り変更した。\n\n1. SUPPORTED_EXTENSIONS と IMAGE_EXTENSIONS を frozenset として追加（D-05）。\n2. LANG['ja'] と LANG['en'] に新規4キーを追加:\n   - filetypes_supported\n   - filetypes_image\n   - status_opened_image\n   - status_image_save_as\n3. LANG['ja'] と LANG['en'] の既存3キーの値を更新:\n   - dnd_drop_hint: PDF のみ → PDF/画像対応の文言に変更\n   - dnd_pdf_only: PDF のみ対応 → PDF/画像対応の文言に変更\n   - dlg_insert_title: PDF選択 → ファイル選択（PDF/画像）の文言に変更\n\nruff から E501 (行長 88文字超) が2件発生したため、status_image_save_as の値をカッコで折り返して対処。ruff format 実行後、frozenset の内包表記が若干整形されたが機能に影響なし。",
+      "verification_result": "python -c \"from pagefolio.constants import SUPPORTED_EXTENSIONS, IMAGE_EXTENSIONS, LANG; assert '.png' in SUPPORTED_EXTENSIONS; assert 'filetypes_supported' in LANG['ja']; print('OK')\" → OK。全アサーション（定数・LANG キー・更新値）パス。ruff check pagefolio/constants.py → All checks passed!",
       "duration": "",
-      "completed_at": null,
+      "completed_at": "2026-05-04T03:58:27.476Z",
       "blocker_discovered": false,
-      "deviations": "",
-      "known_issues": "",
-      "key_files": [],
-      "key_decisions": [],
-      "full_summary_md": "",
+      "deviations": "None.",
+      "known_issues": "None.",
+      "key_files": [
+        "C:/Users/shdwf/work/project/PageFolio/pagefolio/constants.py"
+      ],
+      "key_decisions": [
+        "status_image_save_as の長い文字列はカッコ折り返し（括弧内文字列結合）で対処し、E501 を解消した",
+        "ruff format による frozenset 整形はそのまま受け入れた（意味に変更なし）"
+      ],
+      "full_summary_md": "---\nid: T02\nparent: S01\nmilestone: M001\nkey_files:\n  - C:/Users/shdwf/work/project/PageFolio/pagefolio/constants.py\nkey_decisions:\n  - status_image_save_as の長い文字列はカッコ折り返し（括弧内文字列結合）で対処し、E501 を解消した\n  - ruff format による frozenset 整形はそのまま受け入れた（意味に変更なし）\nduration: \nverification_result: passed\ncompleted_at: 2026-05-04T03:58:27.476Z\nblocker_discovered: false\n---\n\n# T02: constants.py に SUPPORTED_EXTENSIONS / IMAGE_EXTENSIONS 定数と LANG の新規4キー・既存3キー更新を追加\n\n**constants.py に SUPPORTED_EXTENSIONS / IMAGE_EXTENSIONS 定数と LANG の新規4キー・既存3キー更新を追加**\n\n## What Happened\n\nUI-SPEC の Constants Contract と Copywriting Contract に従い、pagefolio/constants.py を以下の通り変更した。\n\n1. SUPPORTED_EXTENSIONS と IMAGE_EXTENSIONS を frozenset として追加（D-05）。\n2. LANG['ja'] と LANG['en'] に新規4キーを追加:\n   - filetypes_supported\n   - filetypes_image\n   - status_opened_image\n   - status_image_save_as\n3. LANG['ja'] と LANG['en'] の既存3キーの値を更新:\n   - dnd_drop_hint: PDF のみ → PDF/画像対応の文言に変更\n   - dnd_pdf_only: PDF のみ対応 → PDF/画像対応の文言に変更\n   - dlg_insert_title: PDF選択 → ファイル選択（PDF/画像）の文言に変更\n\nruff から E501 (行長 88文字超) が2件発生したため、status_image_save_as の値をカッコで折り返して対処。ruff format 実行後、frozenset の内包表記が若干整形されたが機能に影響なし。\n\n## Verification\n\npython -c \"from pagefolio.constants import SUPPORTED_EXTENSIONS, IMAGE_EXTENSIONS, LANG; assert '.png' in SUPPORTED_EXTENSIONS; assert 'filetypes_supported' in LANG['ja']; print('OK')\" → OK。全アサーション（定数・LANG キー・更新値）パス。ruff check pagefolio/constants.py → All checks passed!\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| 1 | `python -c \"from pagefolio.constants import SUPPORTED_EXTENSIONS, IMAGE_EXTENSIONS, LANG; assert '.png' in SUPPORTED_EXTENSIONS; assert 'filetypes_supported' in LANG['ja']; print('OK')\"` | 0 | PASS | 300ms |\n| 2 | `ruff check pagefolio/constants.py && ruff format pagefolio/constants.py` | 0 | PASS | 500ms |\n\n## Deviations\n\nNone.\n\n## Known Issues\n\nNone.\n\n## Files Created/Modified\n\n- `C:/Users/shdwf/work/project/PageFolio/pagefolio/constants.py`\n",
       "description": "pagefolio/constants.py に SUPPORTED_EXTENSIONS と IMAGE_EXTENSIONS の 2 定数を追加する（D-05）。LANG['ja'] と LANG['en'] 両方に新規キー filetypes_supported / filetypes_image / status_opened_image / status_image_save_as を追加し、既存キー dnd_drop_hint / dnd_pdf_only / dlg_insert_title の値を UI-SPEC の Copywriting Contract に従い更新する。",
       "estimate": "20m",
       "files": [
@@ -210,19 +213,26 @@
       "milestone_id": "M001",
       "slice_id": "S01",
       "id": "T03",
-      "title": "file_ops.py ファイルダイアログ・保存フロー変更",
-      "status": "pending",
-      "one_liner": "",
-      "narrative": "",
-      "verification_result": "",
+      "title": "file_ops.py と page_ops.py のファイルダイアログを4エントリーのfiletypesに更新し、画像ファイルの上書き保存フォールスルーと status_opened_image 表示を実装した",
+      "status": "complete",
+      "one_liner": "file_ops.py と page_ops.py のファイルダイアログを4エントリーのfiletypesに更新し、画像ファイルの上書き保存フォールスルーと status_opened_image 表示を実装した",
+      "narrative": "以下の変更を行った。\n\n1. pagefolio/file_ops.py に IMAGE_EXTENSIONS と SUPPORTED_EXTENSIONS のインポートを追加。\n\n2. _open_file() の filetypes を UI-SPEC D-06 仕様の4エントリーに変更:\n   - サポートファイル (SUPPORTED_EXTENSIONS 全拡張子)\n   - PDFファイル (*.pdf)\n   - 画像ファイル (IMAGE_EXTENSIONS 全拡張子)\n   - すべて (*.\\*)\n   各エントリーのフィルター文字列は frozenset から動的生成。\n\n3. _open_pdf_path() に拡張子チェックを追加し、画像ファイルを開いた場合は status_opened_image を表示するように変更（PDF の場合は従来の status_opened を使用）。\n\n4. _save_file() に IMAGE_EXTENSIONS チェックを追加（D-11対応）:\n   - filepath の拡張子が IMAGE_EXTENSIONS に含まれる場合は status_image_save_as を表示して _save_as() にフォールスルー\n   - 確認ダイアログは表示しない（UI-SPEC Interaction Contract 通り）\n\n5. pagefolio/page_ops.py の _insert_from_file() ダイアログも同様に4エントリーのfiletypesに変更（D-06 の挿入ダイアログ変更要件）。IMAGE_EXTENSIONS と SUPPORTED_EXTENSIONS をインポート追加。\n\nruff の import-order 警告が page_ops.py で1件発生したが --fix で自動修正済み。",
+      "verification_result": "ruff check pagefolio/file_ops.py pagefolio/page_ops.py がクリーン。python -c ast.parse の構文確認が両ファイルとも通過。",
       "duration": "",
-      "completed_at": null,
+      "completed_at": "2026-05-04T04:01:27.855Z",
       "blocker_discovered": false,
-      "deviations": "",
-      "known_issues": "",
-      "key_files": [],
-      "key_decisions": [],
-      "full_summary_md": "",
+      "deviations": "None.",
+      "known_issues": "None.",
+      "key_files": [
+        "C:/Users/shdwf/work/project/PageFolio/pagefolio/file_ops.py",
+        "C:/Users/shdwf/work/project/PageFolio/pagefolio/page_ops.py"
+      ],
+      "key_decisions": [
+        "filetypes フィルター文字列は frozenset から sorted() で動的生成（拡張子追加時の保守性を確保）",
+        "挿入ダイアログも4エントリーに変更（_merge_pdf は変更しない — UI-SPEC の指示通り）",
+        "status_opened_image は _open_pdf_path 内で拡張子チェックにより分岐（D&D 経由での呼び出しにも対応）"
+      ],
+      "full_summary_md": "---\nid: T03\nparent: S01\nmilestone: M001\nkey_files:\n  - C:/Users/shdwf/work/project/PageFolio/pagefolio/file_ops.py\n  - C:/Users/shdwf/work/project/PageFolio/pagefolio/page_ops.py\nkey_decisions:\n  - filetypes フィルター文字列は frozenset から sorted() で動的生成（拡張子追加時の保守性を確保）\n  - 挿入ダイアログも4エントリーに変更（_merge_pdf は変更しない — UI-SPEC の指示通り）\n  - status_opened_image は _open_pdf_path 内で拡張子チェックにより分岐（D&D 経由での呼び出しにも対応）\nduration: \nverification_result: passed\ncompleted_at: 2026-05-04T04:01:27.853Z\nblocker_discovered: false\n---\n\n# T03: file_ops.py と page_ops.py のファイルダイアログを4エントリーのfiletypesに更新し、画像ファイルの上書き保存フォールスルーと status_opened_image 表示を実装した\n\n**file_ops.py と page_ops.py のファイルダイアログを4エントリーのfiletypesに更新し、画像ファイルの上書き保存フォールスルーと status_opened_image 表示を実装した**\n\n## What Happened\n\n以下の変更を行った。\n\n1. pagefolio/file_ops.py に IMAGE_EXTENSIONS と SUPPORTED_EXTENSIONS のインポートを追加。\n\n2. _open_file() の filetypes を UI-SPEC D-06 仕様の4エントリーに変更:\n   - サポートファイル (SUPPORTED_EXTENSIONS 全拡張子)\n   - PDFファイル (*.pdf)\n   - 画像ファイル (IMAGE_EXTENSIONS 全拡張子)\n   - すべて (*.\\*)\n   各エントリーのフィルター文字列は frozenset から動的生成。\n\n3. _open_pdf_path() に拡張子チェックを追加し、画像ファイルを開いた場合は status_opened_image を表示するように変更（PDF の場合は従来の status_opened を使用）。\n\n4. _save_file() に IMAGE_EXTENSIONS チェックを追加（D-11対応）:\n   - filepath の拡張子が IMAGE_EXTENSIONS に含まれる場合は status_image_save_as を表示して _save_as() にフォールスルー\n   - 確認ダイアログは表示しない（UI-SPEC Interaction Contract 通り）\n\n5. pagefolio/page_ops.py の _insert_from_file() ダイアログも同様に4エントリーのfiletypesに変更（D-06 の挿入ダイアログ変更要件）。IMAGE_EXTENSIONS と SUPPORTED_EXTENSIONS をインポート追加。\n\nruff の import-order 警告が page_ops.py で1件発生したが --fix で自動修正済み。\n\n## Verification\n\nruff check pagefolio/file_ops.py pagefolio/page_ops.py がクリーン。python -c ast.parse の構文確認が両ファイルとも通過。\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| 1 | `ruff check pagefolio/file_ops.py pagefolio/page_ops.py` | 0 | All checks passed | 800ms |\n| 2 | `python -c \"import ast; ast.parse(open('pagefolio/file_ops.py', encoding='utf-8').read())\"` | 0 | file_ops.py: 構文OK | 200ms |\n| 3 | `python -c \"import ast; ast.parse(open('pagefolio/page_ops.py', encoding='utf-8').read())\"` | 0 | page_ops.py: 構文OK | 200ms |\n\n## Deviations\n\nNone.\n\n## Known Issues\n\nNone.\n\n## Files Created/Modified\n\n- `C:/Users/shdwf/work/project/PageFolio/pagefolio/file_ops.py`\n- `C:/Users/shdwf/work/project/PageFolio/pagefolio/page_ops.py`\n",
       "description": "_open_file() の filetypes を UI-SPEC の 4 エントリーに変更（D-06）。挿入ダイアログの filetypes も同様に変更。_save_file() に IMAGE_EXTENSIONS チェックを追加し _save_as() フォールスルーを実装（D-11）。単体画像オープン後に status_opened_image を表示する。",
       "estimate": "30m",
       "files": [
@@ -252,19 +262,24 @@
       "milestone_id": "M001",
       "slice_id": "S01",
       "id": "T04",
-      "title": "app.py D&D フィルター拡張",
-      "status": "pending",
-      "one_liner": "",
-      "narrative": "",
-      "verification_result": "",
+      "title": "`_on_dnd_drop()` の `.pdf` ハードコードフィルターを `SUPPORTED_EXTENSIONS` 定数参照に差し替え、画像ファイルのドロップにも対応した",
+      "status": "complete",
+      "one_liner": "`_on_dnd_drop()` の `.pdf` ハードコードフィルターを `SUPPORTED_EXTENSIONS` 定数参照に差し替え、画像ファイルのドロップにも対応した",
+      "narrative": "`pagefolio/app.py` の `_on_dnd_drop()` メソッドで、ドロップされたファイルをフィルタリングする際に `p.lower().endswith(\".pdf\")` というハードコード文字列比較が使われていた。これを `os.path.splitext(p)[1].lower() in SUPPORTED_EXTENSIONS` に変更し、`constants.py` で定義された `SUPPORTED_EXTENSIONS` frozenset（PDF + 各種画像拡張子）を参照するよう修正した。合わせて `import os` と `SUPPORTED_EXTENSIONS` の import を追加した。ruff --fix により import 順序も自動整列された（`LANG, SUPPORTED_EXTENSIONS, C` のアルファベット順）。",
+      "verification_result": "`ruff check pagefolio/app.py` がクリーン、`python -c \"import ast; ast.parse(open('pagefolio/app.py', encoding='utf-8').read())\"` が構文エラーなしで通過した。",
       "duration": "",
-      "completed_at": null,
+      "completed_at": "2026-05-04T04:01:39.798Z",
       "blocker_discovered": false,
-      "deviations": "",
-      "known_issues": "",
-      "key_files": [],
-      "key_decisions": [],
-      "full_summary_md": "",
+      "deviations": "ruff --fix による自動実行で import ブロックの並び順が修正された（`LANG, C` → `LANG, SUPPORTED_EXTENSIONS, C` のアルファベット順）。計画外だが正常な整形。",
+      "known_issues": "なし",
+      "key_files": [
+        "pagefolio/app.py"
+      ],
+      "key_decisions": [
+        "os.path.splitext(p)[1].lower() in SUPPORTED_EXTENSIONS パターンを採用（file_ops.py との一貫性のため）",
+        "import os を標準ライブラリ import に追加"
+      ],
+      "full_summary_md": "---\nid: T04\nparent: S01\nmilestone: M001\nkey_files:\n  - pagefolio/app.py\nkey_decisions:\n  - os.path.splitext(p)[1].lower() in SUPPORTED_EXTENSIONS パターンを採用（file_ops.py との一貫性のため）\n  - import os を標準ライブラリ import に追加\nduration: \nverification_result: passed\ncompleted_at: 2026-05-04T04:01:39.798Z\nblocker_discovered: false\n---\n\n# T04: `_on_dnd_drop()` の `.pdf` ハードコードフィルターを `SUPPORTED_EXTENSIONS` 定数参照に差し替え、画像ファイルのドロップにも対応した\n\n**`_on_dnd_drop()` の `.pdf` ハードコードフィルターを `SUPPORTED_EXTENSIONS` 定数参照に差し替え、画像ファイルのドロップにも対応した**\n\n## What Happened\n\n`pagefolio/app.py` の `_on_dnd_drop()` メソッドで、ドロップされたファイルをフィルタリングする際に `p.lower().endswith(\".pdf\")` というハードコード文字列比較が使われていた。これを `os.path.splitext(p)[1].lower() in SUPPORTED_EXTENSIONS` に変更し、`constants.py` で定義された `SUPPORTED_EXTENSIONS` frozenset（PDF + 各種画像拡張子）を参照するよう修正した。合わせて `import os` と `SUPPORTED_EXTENSIONS` の import を追加した。ruff --fix により import 順序も自動整列された（`LANG, SUPPORTED_EXTENSIONS, C` のアルファベット順）。\n\n## Verification\n\n`ruff check pagefolio/app.py` がクリーン、`python -c \"import ast; ast.parse(open('pagefolio/app.py', encoding='utf-8').read())\"` が構文エラーなしで通過した。\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| 1 | `ruff check pagefolio/app.py` | 0 | All checks passed | 800ms |\n| 2 | `python -c \"import ast; ast.parse(open('pagefolio/app.py', encoding='utf-8').read())\"` | 0 | 構文OK | 200ms |\n\n## Deviations\n\nruff --fix による自動実行で import ブロックの並び順が修正された（`LANG, C` → `LANG, SUPPORTED_EXTENSIONS, C` のアルファベット順）。計画外だが正常な整形。\n\n## Known Issues\n\nなし\n\n## Files Created/Modified\n\n- `pagefolio/app.py`\n",
       "description": "_on_dnd_drop() の '.pdf' ハードコードフィルターを SUPPORTED_EXTENSIONS 定数参照に差し替える（D-07, D-08）。",
       "estimate": "20m",
       "files": [
@@ -293,19 +308,21 @@
       "milestone_id": "M001",
       "slice_id": "S01",
       "id": "T05",
-      "title": "リント・テスト・受け入れ確認",
-      "status": "pending",
-      "one_liner": "",
-      "narrative": "",
-      "verification_result": "",
+      "title": "ruff check 警告ゼロ・pytest 108件全PASSED を確認し S01 の受け入れ基準を達成",
+      "status": "complete",
+      "one_liner": "ruff check 警告ゼロ・pytest 108件全PASSED を確認し S01 の受け入れ基準を達成",
+      "narrative": "T01〜T04 の全変更適用後の状態に対して ruff check . && ruff format . を実行したところ \"All checks passed! 20 files left unchanged\" で警告・エラーゼロを確認。続いて pytest を実行し tests/ 配下の test_pdf_ops.py (31件)・test_plugins.py (40件)・test_utils.py (37件) の合計 108 件が全件 PASSED（1.85s）であることを確認した。追加コード変更は不要であった。",
+      "verification_result": "ruff check . && ruff format . → All checks passed / 20 files left unchanged。pytest → 108 passed in 1.85s、FAILED ゼロ。",
       "duration": "",
-      "completed_at": null,
+      "completed_at": "2026-05-04T04:02:55.662Z",
       "blocker_discovered": false,
-      "deviations": "",
-      "known_issues": "",
+      "deviations": "なし",
+      "known_issues": "なし",
       "key_files": [],
-      "key_decisions": [],
-      "full_summary_md": "",
+      "key_decisions": [
+        "コード変更なし — T01〜T04 の実装がすでにリント・テスト基準を満たしていた"
+      ],
+      "full_summary_md": "---\nid: T05\nparent: S01\nmilestone: M001\nkey_files:\n  - (none)\nkey_decisions:\n  - コード変更なし — T01〜T04 の実装がすでにリント・テスト基準を満たしていた\nduration: \nverification_result: passed\ncompleted_at: 2026-05-04T04:02:55.660Z\nblocker_discovered: false\n---\n\n# T05: ruff check 警告ゼロ・pytest 108件全PASSED を確認し S01 の受け入れ基準を達成\n\n**ruff check 警告ゼロ・pytest 108件全PASSED を確認し S01 の受け入れ基準を達成**\n\n## What Happened\n\nT01〜T04 の全変更適用後の状態に対して ruff check . && ruff format . を実行したところ \"All checks passed! 20 files left unchanged\" で警告・エラーゼロを確認。続いて pytest を実行し tests/ 配下の test_pdf_ops.py (31件)・test_plugins.py (40件)・test_utils.py (37件) の合計 108 件が全件 PASSED（1.85s）であることを確認した。追加コード変更は不要であった。\n\n## Verification\n\nruff check . && ruff format . → All checks passed / 20 files left unchanged。pytest → 108 passed in 1.85s、FAILED ゼロ。\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| 1 | `ruff check . && ruff format .` | 0 | ✅ pass | 3200ms |\n| 2 | `pytest` | 0 | ✅ pass | 1850ms |\n\n## Deviations\n\nなし\n\n## Known Issues\n\nなし\n\n## Files Created/Modified\n\nNone.\n",
       "description": "全 py ファイルに対して ruff check && ruff format を実行し警告ゼロを確認する。pytest を実行し全テストがパスすることを確認する。",
       "estimate": "15m",
       "files": [],
@@ -325,8 +342,1336 @@
       "escalation_awaiting_review": 0,
       "escalation_artifact_path": null,
       "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M001",
+      "slice_id": "S02",
+      "id": "T01",
+      "title": "app.py に _preview_gen / _thumb_gen 世代カウンターを追加し _rebuild_ui() でリセット",
+      "status": "complete",
+      "one_liner": "app.py に _preview_gen / _thumb_gen 世代カウンターを追加し _rebuild_ui() でリセット",
+      "narrative": "pagefolio/app.py の PDFEditorApp.__init__ に `self._preview_gen = 0` と `self._thumb_gen = 0` を追加した（line 85–86）。これらはバックグラウンドレンダリング（T02・T03 で実装予定）が stale な結果を破棄するための世代カウンター。\n\nまた _rebuild_ui() メソッドで `self.thumb_images.clear()` 直後（line 356–357）に両変数のインクリメントを追加した。UI 再構築前に発行されたレンダリング結果が新しいウィジェットへ誤適用されないよう、再構築のたびに世代番号を進める。\n\nruff check / ruff format --check ともにクリーン。grep -c による検証コマンドで 4 箇所（初期化 2 + インクリメント 2）が確認された。",
+      "verification_result": "grep -c '_preview_gen\\|_thumb_gen' pagefolio/app.py → 4（__init__ 初期化 2 箇所 + _rebuild_ui インクリメント 2 箇所）。ruff check . && ruff format . --check → All checks passed!",
+      "duration": "",
+      "completed_at": "2026-05-04T04:13:53.798Z",
+      "blocker_discovered": false,
+      "deviations": "None.",
+      "known_issues": "None.",
+      "key_files": [
+        "pagefolio/app.py"
+      ],
+      "key_decisions": [
+        "世代カウンターを __init__ の Undo/Redo スタック定義直後に配置し、バックグラウンドレンダリング関連の状態変数グループとして区別した",
+        "_rebuild_ui() では thumb_images.clear() の直後にインクリメントを挿入し、キャッシュクリアと世代更新を連続させた"
+      ],
+      "full_summary_md": "---\nid: T01\nparent: S02\nmilestone: M001\nkey_files:\n  - pagefolio/app.py\nkey_decisions:\n  - 世代カウンターを __init__ の Undo/Redo スタック定義直後に配置し、バックグラウンドレンダリング関連の状態変数グループとして区別した\n  - _rebuild_ui() では thumb_images.clear() の直後にインクリメントを挿入し、キャッシュクリアと世代更新を連続させた\nduration: \nverification_result: passed\ncompleted_at: 2026-05-04T04:13:53.795Z\nblocker_discovered: false\n---\n\n# T01: app.py に _preview_gen / _thumb_gen 世代カウンターを追加し _rebuild_ui() でリセット\n\n**app.py に _preview_gen / _thumb_gen 世代カウンターを追加し _rebuild_ui() でリセット**\n\n## What Happened\n\npagefolio/app.py の PDFEditorApp.__init__ に `self._preview_gen = 0` と `self._thumb_gen = 0` を追加した（line 85–86）。これらはバックグラウンドレンダリング（T02・T03 で実装予定）が stale な結果を破棄するための世代カウンター。\n\nまた _rebuild_ui() メソッドで `self.thumb_images.clear()` 直後（line 356–357）に両変数のインクリメントを追加した。UI 再構築前に発行されたレンダリング結果が新しいウィジェットへ誤適用されないよう、再構築のたびに世代番号を進める。\n\nruff check / ruff format --check ともにクリーン。grep -c による検証コマンドで 4 箇所（初期化 2 + インクリメント 2）が確認された。\n\n## Verification\n\ngrep -c '_preview_gen\\|_thumb_gen' pagefolio/app.py → 4（__init__ 初期化 2 箇所 + _rebuild_ui インクリメント 2 箇所）。ruff check . && ruff format . --check → All checks passed!\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| 1 | `grep -c '_preview_gen\\|_thumb_gen' pagefolio/app.py` | 0 | ✅ pass | 120ms |\n| 2 | `ruff check . && ruff format . --check` | 0 | ✅ pass | 3200ms |\n\n## Deviations\n\nNone.\n\n## Known Issues\n\nNone.\n\n## Files Created/Modified\n\n- `pagefolio/app.py`\n",
+      "description": "PDFEditorApp.__init__ に self._preview_gen = 0 と self._thumb_gen = 0 を追加する。これらは T02・T03 で実装するバックグラウンドレンダリングが古い（stale）結果を破棄するための世代カウンター。_rebuild_ui() でも両変数をインクリメントして、UI 再構築前に発行されたレンダリング結果が新しいウィジェットに誤適用されないようにする。\n\nSteps:\n1. pagefolio/app.py の __init__ メソッドで「self._undo_stack = []」「self._redo_stack = []」などの状態変数ブロック末尾（line 82 付近）に追加:\n   self._preview_gen = 0   # プレビュー世代カウンター\n   self._thumb_gen = 0     # サムネイル世代カウンター\n2. _rebuild_ui() メソッド（line 346〜）で self.thumb_images.clear() の直後に追加:\n   self._preview_gen += 1\n   self._thumb_gen += 1\n3. ruff check . && ruff format . で確認\n\nMust-haves:\n- _preview_gen と _thumb_gen が __init__ で 0 に初期化される\n- _rebuild_ui() で両変数がインクリメントされる（= UI 再構築時に旧レンダリングをキャンセル）\n- ruff クリーン",
+      "estimate": "30m",
+      "files": [
+        "pagefolio/app.py"
+      ],
+      "verify": "grep -c '_preview_gen\\|_thumb_gen' pagefolio/app.py",
+      "inputs": [
+        "pagefolio/app.py"
+      ],
+      "expected_output": [
+        "pagefolio/app.py"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M001",
+      "slice_id": "S02",
+      "id": "T02",
+      "title": "viewer.py の _show_preview() をバックグラウンドスレッドパターンに改修し、get_pixmap() をメインスレッドから分離",
+      "status": "complete",
+      "one_liner": "viewer.py の _show_preview() をバックグラウンドスレッドパターンに改修し、get_pixmap() をメインスレッドから分離",
+      "narrative": "viewer.py の _show_preview() を daemon スレッドパターンに全面書き換えした。\\n\\n主な変更点:\\n1. `import threading` / `import logging` / `logger = logging.getLogger(__name__)` を追加\\n2. `_show_preview()` の doc あり分岐を以下の流れに再構成:\\n   - `_preview_gen` インクリメントして `gen` をローカル変数にコピー\\n   - `page_idx`, `zoom`, `filepath` をローカル変数にコピー（スレッド境界を越えない）\\n   - `filepath` が None の場合のみ `doc_bytes = self.doc.tobytes()` をメインスレッドで実行\\n   - ローディングプレースホルダー（\\\"...\\\"）を即時描画\\n   - `worker()` 関数: 専用 `fitz.open()` インスタンスを `try/finally` で開閉、`page.get_pixmap()` 実行後 `bytes(pix.samples)` のみスレッド境界を越えて返す。例外は `logger.debug` に出力\\n   - `_apply(samples, w, h)` 関数: `root.after(0, ...)` でメインスレッドにコールバック。`_preview_gen != gen` の stale チェックで古い結果を破棄。`ImageTk.PhotoImage` をメインスレッドで生成し `preview_img_ref` に保持（GC防止）。既存の shadow rect・border rect・create_image・scrollregion 設定を再現\\n   - `threading.Thread(target=worker, daemon=True).start()` でスレッド起動\\n\\nruff check/format パス。pytest 108件全通過。",
+      "verification_result": "grep -c 'threading|_preview_gen|daemon=True' pagefolio/viewer.py → 5（threading import, threading.Thread×1, _preview_gen×2, daemon=True×1）\\npytest → 108 passed in 1.46s",
+      "duration": "",
+      "completed_at": "2026-05-04T04:16:58.176Z",
+      "blocker_discovered": false,
+      "deviations": "None.",
+      "known_issues": "None.",
+      "key_files": [
+        "pagefolio/viewer.py"
+      ],
+      "key_decisions": [
+        "worker() 内で fitz.Document 専用インスタンスを finally で必ず close() し、PyMuPDF の並行アクセス非対応に対処した",
+        "filepath=None（未保存結合 doc）の場合は doc.tobytes() をメインスレッドで実行してから Thread を起動し、スレッド内での self.doc アクセスを完全に排除した",
+        "_apply() で self.preview_canvas.delete('all') を再度呼び出してプレースホルダーを消去してから画像を描画する設計にした"
+      ],
+      "full_summary_md": "---\nid: T02\nparent: S02\nmilestone: M001\nkey_files:\n  - pagefolio/viewer.py\nkey_decisions:\n  - worker() 内で fitz.Document 専用インスタンスを finally で必ず close() し、PyMuPDF の並行アクセス非対応に対処した\n  - filepath=None（未保存結合 doc）の場合は doc.tobytes() をメインスレッドで実行してから Thread を起動し、スレッド内での self.doc アクセスを完全に排除した\n  - _apply() で self.preview_canvas.delete('all') を再度呼び出してプレースホルダーを消去してから画像を描画する設計にした\nduration: \nverification_result: passed\ncompleted_at: 2026-05-04T04:16:58.174Z\nblocker_discovered: false\n---\n\n# T02: viewer.py の _show_preview() をバックグラウンドスレッドパターンに改修し、get_pixmap() をメインスレッドから分離\n\n**viewer.py の _show_preview() をバックグラウンドスレッドパターンに改修し、get_pixmap() をメインスレッドから分離**\n\n## What Happened\n\nviewer.py の _show_preview() を daemon スレッドパターンに全面書き換えした。\\n\\n主な変更点:\\n1. `import threading` / `import logging` / `logger = logging.getLogger(__name__)` を追加\\n2. `_show_preview()` の doc あり分岐を以下の流れに再構成:\\n   - `_preview_gen` インクリメントして `gen` をローカル変数にコピー\\n   - `page_idx`, `zoom`, `filepath` をローカル変数にコピー（スレッド境界を越えない）\\n   - `filepath` が None の場合のみ `doc_bytes = self.doc.tobytes()` をメインスレッドで実行\\n   - ローディングプレースホルダー（\\\"...\\\"）を即時描画\\n   - `worker()` 関数: 専用 `fitz.open()` インスタンスを `try/finally` で開閉、`page.get_pixmap()` 実行後 `bytes(pix.samples)` のみスレッド境界を越えて返す。例外は `logger.debug` に出力\\n   - `_apply(samples, w, h)` 関数: `root.after(0, ...)` でメインスレッドにコールバック。`_preview_gen != gen` の stale チェックで古い結果を破棄。`ImageTk.PhotoImage` をメインスレッドで生成し `preview_img_ref` に保持（GC防止）。既存の shadow rect・border rect・create_image・scrollregion 設定を再現\\n   - `threading.Thread(target=worker, daemon=True).start()` でスレッド起動\\n\\nruff check/format パス。pytest 108件全通過。\n\n## Verification\n\ngrep -c 'threading|_preview_gen|daemon=True' pagefolio/viewer.py → 5（threading import, threading.Thread×1, _preview_gen×2, daemon=True×1）\\npytest → 108 passed in 1.46s\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| 1 | `grep -c 'threading\\|_preview_gen\\|daemon=True' pagefolio/viewer.py` | 0 | ✅ pass — 5 matches | 150ms |\n| 2 | `ruff check . && ruff format .` | 0 | ✅ pass — All checks passed, 1 file reformatted | 2000ms |\n| 3 | `pytest --tb=short -q` | 0 | ✅ pass — 108 passed in 1.46s | 1460ms |\n\n## Deviations\n\nNone.\n\n## Known Issues\n\nNone.\n\n## Files Created/Modified\n\n- `pagefolio/viewer.py`\n",
+      "description": "viewer.py の _show_preview() をバックグラウンドスレッドパターンに書き換える。PyMuPDF の page.get_pixmap() はメインスレッドで実行すると 50〜200ms ブロックするため、これを daemon=True のワーカースレッドに移譲し、_preview_gen による世代管理で stale 結果を破棄する。\n\n重要な制約（必読）:\n- PyMuPDF は同一 fitz.Document への並行アクセス非対応。ワーカーは必ず専用の fitz.open() インスタンスを使い、使い終わったら必ず close() する（例外時も finally で閉じる）\n- ImageTk.PhotoImage はメインスレッドでのみ作成可能。スレッド境界を越えるのは bytes(pix.samples) のみ\n- self.filepath がある場合: ワーカーで fitz.open(filepath) して専用インスタンスを開く\n- self.filepath が None（未保存結合 doc）の場合: メインスレッドで doc_bytes = self.doc.tobytes() を実行してからスレッドを起動する（スレッド内で self.doc にアクセスしない）\n- self.preview_img_ref = photo の参照保持は維持すること（GC 防止）\n\nSteps:\n1. viewer.py の import 冒頭に `import threading` を追加\n2. _show_preview() を以下のパターンに書き換え:\n   a. キャンバス消去・crop overlay リセット・ドキュメントなし処理（既存コードのまま）\n   b. `self._preview_gen += 1; gen = self._preview_gen`\n   c. ローカル変数にコピー: `page_idx = self.current_page; zoom = self.zoom; filepath = self.filepath`\n   d. `doc_bytes = self.doc.tobytes() if not filepath else None`（メインスレッドで実行）\n   e. ローディングプレースホルダーを即時描画（canvas.create_text で \"...\" を表示）\n   f. worker() 関数（スレッド実行）を定義:\n      - filepath があれば tmp_doc = fitz.open(filepath)、なければ tmp_doc = fitz.open(stream=doc_bytes, filetype=\"pdf\")\n      - try/finally で tmp_doc.close() を保証\n      - page = tmp_doc[page_idx]; mat = fitz.Matrix(zoom * 1.5, zoom * 1.5); pix = page.get_pixmap(matrix=mat, alpha=False)\n      - samples = bytes(pix.samples); w, h = pix.width, pix.height\n      - 例外時は logger.debug でログして return\n      - self.root.after(0, lambda: _apply(samples, w, h)) でメインスレッドに委譲\n   g. _apply(samples, w, h) 関数（メインスレッドで root.after から呼ばれる）を定義:\n      - if self._preview_gen != gen or not self.doc: return  # stale チェック\n      - img = Image.frombytes(\"RGB\", [w, h], samples)\n      - photo = ImageTk.PhotoImage(img)\n      - self.preview_img_ref = photo\n      - 既存の pad=10、shadow rect、border rect、canvas.create_image、scrollregion 設定を再現\n   h. threading.Thread(target=worker, daemon=True).start() でスレッド起動\n3. ruff check . && ruff format . で確認\n\nMust-haves:\n- worker() が fitz.Document 専用インスタンスを finally で必ず close() する\n- _apply() が _preview_gen != gen チェックを行う\n- self.preview_img_ref 参照保持が維持される\n- doc_bytes = self.doc.tobytes() がメインスレッドで実行される（スレッド内ではない）\n- daemon=True が設定される\n- 例外時は logger.debug でログする（無声失敗を避ける）",
+      "estimate": "60m",
+      "files": [
+        "pagefolio/viewer.py"
+      ],
+      "verify": "grep -c 'threading\\|_preview_gen\\|daemon=True' pagefolio/viewer.py",
+      "inputs": [
+        "pagefolio/viewer.py",
+        "pagefolio/app.py"
+      ],
+      "expected_output": [
+        "pagefolio/viewer.py"
+      ],
+      "observability_impact": "worker スレッド内の例外を logger.debug に出力。_apply() の stale チェックにより旧レンダリング結果の誤表示を防止。",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M001",
+      "slice_id": "S02",
+      "id": "T03",
+      "title": "_build_thumbnails() を after_idle() プログレッシブローディングに改修し、大規模 PDF でのサムネイル生成時 UI フリーズを解消",
+      "status": "complete",
+      "one_liner": "_build_thumbnails() を after_idle() プログレッシブローディングに改修し、大規模 PDF でのサムネイル生成時 UI フリーズを解消",
+      "narrative": "viewer.py の `_add_thumb()` を `_add_thumb_placeholder()` と `_add_thumb()` の2メソッドに分割した。`_add_thumb_placeholder(i)` はプレースホルダー Label（image なし）・ページ番号 Label・全イベントバインディングを作成して `(frame, lbl)` を返す。`_add_thumb()` は後方互換維持のため残し、内部で `_add_thumb_placeholder()` を呼んで即時レンダリングする形に変更した。\n\n`_build_thumbnails()` は `_thumb_gen` をインクリメントして世代番号を確保し、全ページ分のプレースホルダーを即時作成してから `after_idle()` で `render_next(0)` をスケジュールする。`render_next(i)` は `_thumb_gen != gen` のとき（世代が古い）は `logger.debug` でスキップを記録して早期リターンする。各ページを1枚ずつ `_get_thumb_photo()` でレンダリングし、`lbl.configure(image=photo)` で差し込み、`thumb_images.append(photo)` で GC 防止参照を保持した後、`after(0, lambda: render_next(i + 1))` で次フレームをスケジュールする。これにより UI イベントループを占有せずにサムネイルを逐次描画できる。\n\nruff check → 行長エラー3件（docstring・リスト内包・logger.debug 呼び出し）を修正して全クリア。108 テストすべてパス。",
+      "verification_result": "スライス検証コマンド `grep -c '_add_thumb_placeholder\\|after_idle\\|render_next' pagefolio/viewer.py` → 6（マッチ件数確認）。`ruff check . && ruff format .` → All checks passed! `pytest` → 108 passed in 1.10s。",
+      "duration": "",
+      "completed_at": "2026-05-04T04:21:00.054Z",
+      "blocker_discovered": false,
+      "deviations": "none",
+      "known_issues": "none",
+      "key_files": [
+        "pagefolio/viewer.py"
+      ],
+      "key_decisions": [
+        "_add_thumb() は削除せず後方互換メソッドとして残し、_add_thumb_placeholder() を呼ぶ形にリファクタリングした（プラグインや外部コードからの参照を考慮）",
+        "render_next() 内の stale チェックでは logger.debug でスキップ理由（gen 値）を記録し、診断可能性を確保した",
+        "after(0, ...) で次フレームをスケジュールすることで Tk イベントループを1フレームずつ解放し UI 応答性を維持する"
+      ],
+      "full_summary_md": "---\nid: T03\nparent: S02\nmilestone: M001\nkey_files:\n  - pagefolio/viewer.py\nkey_decisions:\n  - _add_thumb() は削除せず後方互換メソッドとして残し、_add_thumb_placeholder() を呼ぶ形にリファクタリングした（プラグインや外部コードからの参照を考慮）\n  - render_next() 内の stale チェックでは logger.debug でスキップ理由（gen 値）を記録し、診断可能性を確保した\n  - after(0, ...) で次フレームをスケジュールすることで Tk イベントループを1フレームずつ解放し UI 応答性を維持する\nduration: \nverification_result: passed\ncompleted_at: 2026-05-04T04:21:00.052Z\nblocker_discovered: false\n---\n\n# T03: _build_thumbnails() を after_idle() プログレッシブローディングに改修し、大規模 PDF でのサムネイル生成時 UI フリーズを解消\n\n**_build_thumbnails() を after_idle() プログレッシブローディングに改修し、大規模 PDF でのサムネイル生成時 UI フリーズを解消**\n\n## What Happened\n\nviewer.py の `_add_thumb()` を `_add_thumb_placeholder()` と `_add_thumb()` の2メソッドに分割した。`_add_thumb_placeholder(i)` はプレースホルダー Label（image なし）・ページ番号 Label・全イベントバインディングを作成して `(frame, lbl)` を返す。`_add_thumb()` は後方互換維持のため残し、内部で `_add_thumb_placeholder()` を呼んで即時レンダリングする形に変更した。\n\n`_build_thumbnails()` は `_thumb_gen` をインクリメントして世代番号を確保し、全ページ分のプレースホルダーを即時作成してから `after_idle()` で `render_next(0)` をスケジュールする。`render_next(i)` は `_thumb_gen != gen` のとき（世代が古い）は `logger.debug` でスキップを記録して早期リターンする。各ページを1枚ずつ `_get_thumb_photo()` でレンダリングし、`lbl.configure(image=photo)` で差し込み、`thumb_images.append(photo)` で GC 防止参照を保持した後、`after(0, lambda: render_next(i + 1))` で次フレームをスケジュールする。これにより UI イベントループを占有せずにサムネイルを逐次描画できる。\n\nruff check → 行長エラー3件（docstring・リスト内包・logger.debug 呼び出し）を修正して全クリア。108 テストすべてパス。\n\n## Verification\n\nスライス検証コマンド `grep -c '_add_thumb_placeholder\\|after_idle\\|render_next' pagefolio/viewer.py` → 6（マッチ件数確認）。`ruff check . && ruff format .` → All checks passed! `pytest` → 108 passed in 1.10s。\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| 1 | `grep -c '_add_thumb_placeholder|after_idle|render_next' pagefolio/viewer.py` | 0 | ✅ pass | 120ms |\n| 2 | `ruff check . && ruff format .` | 0 | ✅ pass | 3200ms |\n| 3 | `pytest --tb=short -q` | 0 | ✅ pass | 1100ms |\n\n## Deviations\n\nnone\n\n## Known Issues\n\nnone\n\n## Files Created/Modified\n\n- `pagefolio/viewer.py`\n",
+      "description": "viewer.py の _build_thumbnails() を after_idle() プログレッシブローディングパターンに書き換える。現在は全ページを同期ループ処理するため大規模 PDF で数秒フリーズする。プレースホルダーフレームを全ページ分即時作成し、after_idle() で1枚ずつ逐次レンダリングすることで UI の応答性を維持する。\n\n重要な制約:\n- _get_thumb_photo(i) は self.doc[i] をメインスレッドで使うため PyMuPDF のスレッド安全性問題は発生しない（スレッドは使わない）\n- self.thumb_images リストは PhotoImage の GC 防止に使用されているため、render_next() 内で photo を append し続けること\n- _add_thumb() は後方互換で残すか、既存コードが参照していなければ削除可。既存の popup 内 render_page() は self.doc を直接使うため影響なし。\n\nSteps:\n1. _add_thumb(i) を2つのメソッドに分割:\n   a. _add_thumb_placeholder(i): frame・プレースホルダー Label（image 引数なし）・ページ番号 Label・全イベントバインディング（on_press/on_motion/on_release/on_double）を作成し、(frame, lbl) を返す。self.thumb_images.append は呼ばない。\n   b. _add_thumb(i): _add_thumb_placeholder(i) を呼び、photo = self._get_thumb_photo(i) で画像取得、lbl.configure(image=photo)、self.thumb_images.append(photo) する（後方互換維持）\n2. _build_thumbnails() を以下のパターンに書き換え:\n   a. self._thumb_gen += 1; gen = self._thumb_gen\n   b. 既存子ウィジェット削除: for w in self.thumb_inner.winfo_children(): w.destroy()\n   c. self.thumb_images.clear()\n   d. if not self.doc: return\n   e. プレースホルダーを全ページ分即時作成: placeholder_labels = [self._add_thumb_placeholder(i) for i in range(len(self.doc))]\n   f. render_next(i) クロージャ定義:\n      - if self._thumb_gen != gen or not self.doc: return  # stale チェック\n      - if i >= len(self.doc): return\n      - photo = self._get_thumb_photo(i)\n      - frame, lbl = placeholder_labels[i]\n      - lbl.configure(image=photo)\n      - self.thumb_images.append(photo)\n      - self.root.after(0, lambda: render_next(i + 1))\n   g. self.root.after_idle(lambda: render_next(0))\n3. ruff check . && ruff format . で確認\n\nMust-haves:\n- _add_thumb_placeholder(i) が (frame, lbl) を返す\n- _build_thumbnails() がプレースホルダーを即時作成し、after_idle() で逐次レンダリングをスケジュール\n- self.thumb_images への photo append が render_next() 内で行われる\n- 世代チェックが render_next() 先頭に含まれる\n- _add_thumb() は削除しても可（viewer.py 内の _show_page_popup は self.doc を直接使うため影響なし）",
+      "estimate": "60m",
+      "files": [
+        "pagefolio/viewer.py"
+      ],
+      "verify": "grep -c '_add_thumb_placeholder\\|after_idle\\|render_next' pagefolio/viewer.py",
+      "inputs": [
+        "pagefolio/viewer.py"
+      ],
+      "expected_output": [
+        "pagefolio/viewer.py"
+      ],
+      "observability_impact": "_thumb_gen 不一致で render_next が早期リターンした場合、サムネイルがプレースホルダーのまま残る（視認可能な診断シグナル）。",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M001",
+      "slice_id": "S02",
+      "id": "T04",
+      "title": "file_ops.py の3箇所（_open_pdf_path / _do_open_merged / _restore_state）で _invalidate_thumb_cache() 直後に _preview_gen と _thumb_gen をインクリメント",
+      "status": "complete",
+      "one_liner": "file_ops.py の3箇所（_open_pdf_path / _do_open_merged / _restore_state）で _invalidate_thumb_cache() 直後に _preview_gen と _thumb_gen をインクリメント",
+      "narrative": "file_ops.py を確認すると、_restore_state() と _do_open_merged() には既に gen インクリメントが追加されていたが、タスクプランの「_invalidate_thumb_cache() の直後」という順序に反して前に置かれていた。_open_pdf_path() は gen インクリメントが完全に未追加の状態だった。\\n\\n対応：\\n1. _restore_state()（line 74–77）: gen インクリメント2行を _invalidate_thumb_cache() の後に移動\\n2. _do_open_merged()（line 124–127）: 同様に移動\\n3. _open_pdf_path()（line 148–151）: _invalidate_thumb_cache() 直後に _preview_gen += 1 と _thumb_gen += 1 の2行を新規追加\\n\\nすべての箇所で `_invalidate_thumb_cache() → _preview_gen += 1 → _thumb_gen += 1 → _refresh_all()` の順序を統一。これにより、ドキュメント入替時に前の doc に対して発行されたバックグラウンドレンダリングが stale チェック（gen 値比較）によって確実に棄却される。",
+      "verification_result": "grep -c '_preview_gen\\|_thumb_gen' pagefolio/file_ops.py → 6（3箇所×2変数）。ruff check . && ruff format . → all passed, 20 files unchanged。pytest → 108 passed in 1.21s。",
+      "duration": "",
+      "completed_at": "2026-05-04T04:26:07.876Z",
+      "blocker_discovered": false,
+      "deviations": "_restore_state() と _do_open_merged() については「追加」ではなく「順序修正（移動）」となった。前タスクの作業で gen インクリメントは挿入済みだったが _invalidate_thumb_cache() の前に置かれていた。機能的には順序を問わないが、タスクプランの仕様通りに修正した。",
+      "known_issues": "none",
+      "key_files": [
+        "pagefolio/file_ops.py"
+      ],
+      "key_decisions": [
+        "_restore_state() と _do_open_merged() は gen インクリメントが既に追加済みだったが順序が誤り（_invalidate_thumb_cache より前）だったため移動した",
+        "_open_pdf_path() のみ完全未追加だったため新規挿入した"
+      ],
+      "full_summary_md": "---\nid: T04\nparent: S02\nmilestone: M001\nkey_files:\n  - pagefolio/file_ops.py\nkey_decisions:\n  - _restore_state() と _do_open_merged() は gen インクリメントが既に追加済みだったが順序が誤り（_invalidate_thumb_cache より前）だったため移動した\n  - _open_pdf_path() のみ完全未追加だったため新規挿入した\nduration: \nverification_result: passed\ncompleted_at: 2026-05-04T04:26:07.874Z\nblocker_discovered: false\n---\n\n# T04: file_ops.py の3箇所（_open_pdf_path / _do_open_merged / _restore_state）で _invalidate_thumb_cache() 直後に _preview_gen と _thumb_gen をインクリメント\n\n**file_ops.py の3箇所（_open_pdf_path / _do_open_merged / _restore_state）で _invalidate_thumb_cache() 直後に _preview_gen と _thumb_gen をインクリメント**\n\n## What Happened\n\nfile_ops.py を確認すると、_restore_state() と _do_open_merged() には既に gen インクリメントが追加されていたが、タスクプランの「_invalidate_thumb_cache() の直後」という順序に反して前に置かれていた。_open_pdf_path() は gen インクリメントが完全に未追加の状態だった。\\n\\n対応：\\n1. _restore_state()（line 74–77）: gen インクリメント2行を _invalidate_thumb_cache() の後に移動\\n2. _do_open_merged()（line 124–127）: 同様に移動\\n3. _open_pdf_path()（line 148–151）: _invalidate_thumb_cache() 直後に _preview_gen += 1 と _thumb_gen += 1 の2行を新規追加\\n\\nすべての箇所で `_invalidate_thumb_cache() → _preview_gen += 1 → _thumb_gen += 1 → _refresh_all()` の順序を統一。これにより、ドキュメント入替時に前の doc に対して発行されたバックグラウンドレンダリングが stale チェック（gen 値比較）によって確実に棄却される。\n\n## Verification\n\ngrep -c '_preview_gen\\|_thumb_gen' pagefolio/file_ops.py → 6（3箇所×2変数）。ruff check . && ruff format . → all passed, 20 files unchanged。pytest → 108 passed in 1.21s。\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| 1 | `grep -c '_preview_gen\\|_thumb_gen' pagefolio/file_ops.py` | 0 | ✅ pass | 50ms |\n| 2 | `ruff check . && ruff format .` | 0 | ✅ pass | 3200ms |\n| 3 | `pytest --tb=short -q` | 0 | ✅ pass | 1210ms |\n\n## Deviations\n\n_restore_state() と _do_open_merged() については「追加」ではなく「順序修正（移動）」となった。前タスクの作業で gen インクリメントは挿入済みだったが _invalidate_thumb_cache() の前に置かれていた。機能的には順序を問わないが、タスクプランの仕様通りに修正した。\n\n## Known Issues\n\nnone\n\n## Files Created/Modified\n\n- `pagefolio/file_ops.py`\n",
+      "description": "file_ops.py の _open_pdf_path()、_do_open_merged()、_restore_state() の3箇所でドキュメント入替時に self._preview_gen += 1 と self._thumb_gen += 1 をインクリメントする。これにより、前のドキュメントに対して発行されたバックグラウンドレンダリング処理が新しいドキュメントに誤適用されることを防ぐ。\n\n挿入位置ルール: 各箇所で self._invalidate_thumb_cache() 呼び出しの直後、self._refresh_all() 呼び出しの前に2行追加する。\n\nSteps:\n1. _open_pdf_path()（line 144 付近）の self._invalidate_thumb_cache() 直後に追加:\n   self._preview_gen += 1\n   self._thumb_gen += 1\n2. _do_open_merged()（line 122 付近）の self._invalidate_thumb_cache() 直後に同様追加\n3. _restore_state()（line 74 付近）の self._invalidate_thumb_cache() 直後に同様追加\n4. ruff check . && ruff format . で確認\n5. pytest で 108件 PASSED を確認\n\nMust-haves:\n- 3箇所すべてで _preview_gen と _thumb_gen がインクリメントされる\n- 各箇所で _invalidate_thumb_cache() の後、_refresh_all() の前に配置される",
+      "estimate": "30m",
+      "files": [
+        "pagefolio/file_ops.py"
+      ],
+      "verify": "grep -c '_preview_gen\\|_thumb_gen' pagefolio/file_ops.py",
+      "inputs": [
+        "pagefolio/file_ops.py",
+        "pagefolio/viewer.py",
+        "pagefolio/app.py"
+      ],
+      "expected_output": [
+        "pagefolio/file_ops.py"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M001",
+      "slice_id": "S02",
+      "id": "T05",
+      "title": "ruff check/format エラーゼロ・pytest 108件全 PASSED を確認（修正不要）",
+      "status": "complete",
+      "one_liner": "ruff check/format エラーゼロ・pytest 108件全 PASSED を確認（修正不要）",
+      "narrative": "T02〜T04 で変更した pagefolio/viewer.py・pagefolio/app.py・pagefolio/file_ops.py に対し ruff check と ruff format --check を実行したところ、すべてエラー・警告ゼロかつフォーマット変更なしで通過した。続いて pytest を --tb=short -q で実行し、108件全件 PASSED (1.15s) を確認。リグレッションは発生していない。修正は一切不要だった。",
+      "verification_result": "ruff check . → All checks passed! / ruff format --check . → 20 files already formatted / pytest --tb=short -q → 108 passed in 1.15s",
+      "duration": "",
+      "completed_at": "2026-05-04T04:27:50.644Z",
+      "blocker_discovered": false,
+      "deviations": "none",
+      "known_issues": "none",
+      "key_files": [
+        "pagefolio/app.py",
+        "pagefolio/viewer.py",
+        "pagefolio/file_ops.py"
+      ],
+      "key_decisions": [
+        "修正不要：T02〜T04 の変更はすでに ruff/pytest を満たしており、T05 で追加変更は発生しなかった"
+      ],
+      "full_summary_md": "---\nid: T05\nparent: S02\nmilestone: M001\nkey_files:\n  - pagefolio/app.py\n  - pagefolio/viewer.py\n  - pagefolio/file_ops.py\nkey_decisions:\n  - 修正不要：T02〜T04 の変更はすでに ruff/pytest を満たしており、T05 で追加変更は発生しなかった\nduration: \nverification_result: passed\ncompleted_at: 2026-05-04T04:27:50.642Z\nblocker_discovered: false\n---\n\n# T05: ruff check/format エラーゼロ・pytest 108件全 PASSED を確認（修正不要）\n\n**ruff check/format エラーゼロ・pytest 108件全 PASSED を確認（修正不要）**\n\n## What Happened\n\nT02〜T04 で変更した pagefolio/viewer.py・pagefolio/app.py・pagefolio/file_ops.py に対し ruff check と ruff format --check を実行したところ、すべてエラー・警告ゼロかつフォーマット変更なしで通過した。続いて pytest を --tb=short -q で実行し、108件全件 PASSED (1.15s) を確認。リグレッションは発生していない。修正は一切不要だった。\n\n## Verification\n\nruff check . → All checks passed! / ruff format --check . → 20 files already formatted / pytest --tb=short -q → 108 passed in 1.15s\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| 1 | `ruff check .` | 0 | ✅ pass | 800ms |\n| 2 | `ruff format --check .` | 0 | ✅ pass | 600ms |\n| 3 | `pytest --tb=short -q` | 0 | ✅ pass (108 passed) | 1150ms |\n\n## Deviations\n\nnone\n\n## Known Issues\n\nnone\n\n## Files Created/Modified\n\n- `pagefolio/app.py`\n- `pagefolio/viewer.py`\n- `pagefolio/file_ops.py`\n",
+      "description": "全変更ファイルが ruff check/format をパスし、pytest 108件全 PASSED であることを確認する。問題があれば修正する。\n\nSteps:\n1. ruff check . を実行してエラー・警告を確認\n2. エラーがあれば修正（E501 は括弧折り返し、F401 は不要 import 削除など）\n3. ruff format . でフォーマット適用\n4. pytest を実行して 108件全 PASSED を確認\n5. FAILED があれば原因を調査して修正（T02〜T04 の変更による regression を確認）\n\nMust-haves:\n- ruff check . がエラー・警告ゼロ\n- ruff format . で変更なし（または適用済み）\n- pytest 108件全 PASSED（新規テストは追加しない）",
+      "estimate": "20m",
+      "files": [
+        "pagefolio/app.py",
+        "pagefolio/viewer.py",
+        "pagefolio/file_ops.py"
+      ],
+      "verify": "ruff check . && ruff format . --check && pytest --tb=short -q",
+      "inputs": [
+        "pagefolio/app.py",
+        "pagefolio/viewer.py",
+        "pagefolio/file_ops.py"
+      ],
+      "expected_output": [
+        "pagefolio/app.py",
+        "pagefolio/viewer.py",
+        "pagefolio/file_ops.py"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M001",
+      "slice_id": "S03",
+      "id": "T01",
+      "title": "_save_undo() を差分形式シグネチャ (op, **kwargs) に書き換え、操作タイプ別の最小差分データを保存するよう変更",
+      "status": "complete",
+      "one_liner": "_save_undo() を差分形式シグネチャ (op, **kwargs) に書き換え、操作タイプ別の最小差分データを保存するよう変更",
+      "narrative": "file_ops.py の `_save_undo(self)` を `_save_undo(self, op, **kwargs)` に書き換えた。共通ベースとして `{\"op\": op, \"current_page\": ..., \"selected_pages\": ...}` を構築し、op の値に応じて if/elif で `state[\"data\"]` を設定する。各 op の実装：rotate は targets リストの各ページ rotation を保存、crop は fitz.Rect をタプル形式で保存（C 側寿命管理回避）、delete は昇順ソート後に各ページを fitz.open() で単ページ抽出し tobytes() → close()、move は (src, actual_dest)、duplicate は pno、insert は [insert_at, 0] のミュータブルリスト、merge は現在のページ数。スタック上限チェックと _redo_stack.clear() は既存ロジックを維持。`_restore_state` と呼び出し元（page_ops.py, dnd.py）の更新は後続タスクで行う。",
+      "verification_result": "python -c \"import ast; ast.parse(open('pagefolio/file_ops.py', encoding='utf-8').read()); print('OK')\" → exit 0, 出力 OK",
+      "duration": "",
+      "completed_at": "2026-05-04T04:41:50.757Z",
+      "blocker_discovered": false,
+      "deviations": "なし",
+      "known_issues": "呼び出し元（page_ops.py, dnd.py）はまだ引数なし _save_undo() を呼んでおり、後続タスクで更新が必要",
+      "key_files": [
+        "pagefolio/file_ops.py"
+      ],
+      "key_decisions": [
+        "fitz.Rect は Python タプルとして保存（C 側オブジェクトの寿命管理のため直接保持しない）",
+        "delete op は昇順ソート後に単ページ fitz.open() + insert_pdf + tobytes() + close() で抽出",
+        "insert op は呼び出し側がループ後に [1] を更新できるようミュータブルリストとして保存"
+      ],
+      "full_summary_md": "---\nid: T01\nparent: S03\nmilestone: M001\nkey_files:\n  - pagefolio/file_ops.py\nkey_decisions:\n  - fitz.Rect は Python タプルとして保存（C 側オブジェクトの寿命管理のため直接保持しない）\n  - delete op は昇順ソート後に単ページ fitz.open() + insert_pdf + tobytes() + close() で抽出\n  - insert op は呼び出し側がループ後に [1] を更新できるようミュータブルリストとして保存\nduration: \nverification_result: passed\ncompleted_at: 2026-05-04T04:41:50.755Z\nblocker_discovered: false\n---\n\n# T01: _save_undo() を差分形式シグネチャ (op, **kwargs) に書き換え、操作タイプ別の最小差分データを保存するよう変更\n\n**_save_undo() を差分形式シグネチャ (op, **kwargs) に書き換え、操作タイプ別の最小差分データを保存するよう変更**\n\n## What Happened\n\nfile_ops.py の `_save_undo(self)` を `_save_undo(self, op, **kwargs)` に書き換えた。共通ベースとして `{\"op\": op, \"current_page\": ..., \"selected_pages\": ...}` を構築し、op の値に応じて if/elif で `state[\"data\"]` を設定する。各 op の実装：rotate は targets リストの各ページ rotation を保存、crop は fitz.Rect をタプル形式で保存（C 側寿命管理回避）、delete は昇順ソート後に各ページを fitz.open() で単ページ抽出し tobytes() → close()、move は (src, actual_dest)、duplicate は pno、insert は [insert_at, 0] のミュータブルリスト、merge は現在のページ数。スタック上限チェックと _redo_stack.clear() は既存ロジックを維持。`_restore_state` と呼び出し元（page_ops.py, dnd.py）の更新は後続タスクで行う。\n\n## Verification\n\npython -c \"import ast; ast.parse(open('pagefolio/file_ops.py', encoding='utf-8').read()); print('OK')\" → exit 0, 出力 OK\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| 1 | `python -c \"import ast; ast.parse(open('pagefolio/file_ops.py', encoding='utf-8').read()); print('OK')\"` | 0 | ✅ pass | 200ms |\n\n## Deviations\n\nなし\n\n## Known Issues\n\n呼び出し元（page_ops.py, dnd.py）はまだ引数なし _save_undo() を呼んでおり、後続タスクで更新が必要\n\n## Files Created/Modified\n\n- `pagefolio/file_ops.py`\n",
+      "description": "現行の `_save_undo(self)` は常に `self.doc.tobytes()` で全体バイトを保存する。これを `_save_undo(self, op, **kwargs)` に書き換え、操作タイプ別に最小データのみを保存するよう変更する。\n\n**新しい差分フォーマット定義:**\n```python\n# rotate: targets リストに含まれる各ページの現在の rotation を保存\n{\"op\": \"rotate\", \"data\": [(page_i, old_rotation), ...], \"current_page\": int, \"selected_pages\": set}\n\n# crop: 現在のページの cropbox を (x0,y0,x1,y1) タプルで保存\n{\"op\": \"crop\", \"data\": (page_i, (x0, y0, x1, y1)), \"current_page\": int, \"selected_pages\": set}\n\n# delete: 削除対象ページを昇順で 1ページずつ tobytes() して保存\n{\"op\": \"delete\", \"data\": [(page_i, single_page_bytes), ...], \"current_page\": int, \"selected_pages\": set}\n\n# move: src と actual_dest（実際の移動先インデックス）を保存\n{\"op\": \"move\", \"data\": (src, actual_dest), \"current_page\": int, \"selected_pages\": set}\n\n# duplicate: 複製元のページ番号 pno を保存（undo は pno+1 を削除）\n{\"op\": \"duplicate\", \"data\": pno, \"current_page\": int, \"selected_pages\": set}\n\n# insert: ミュータブルリスト [insert_at, 0] を保存（呼び出し側がループ後に [1] を更新）\n{\"op\": \"insert\", \"data\": [insert_at, 0], \"current_page\": int, \"selected_pages\": set}\n\n# merge: 現在のページ数（結合前）を保存\n{\"op\": \"merge\", \"data\": len(self.doc), \"current_page\": int, \"selected_pages\": set}\n```\n\n**実装手順:**\n1. `_save_undo(self, op, **kwargs)` にシグネチャを変更\n2. `state = {\"op\": op, \"current_page\": self.current_page, \"selected_pages\": set(self.selected_pages)}` を共通ベースにする\n3. op の値に応じて if/elif で state[\"data\"] を構築する\n   - `\"rotate\"`: `state[\"data\"] = [(i, self.doc[i].rotation) for i in kwargs[\"targets\"]]`\n   - `\"crop\"`: `page_i = kwargs[\"page_i\"]; cb = self.doc[page_i].cropbox; state[\"data\"] = (page_i, (cb.x0, cb.y0, cb.x1, cb.y1))` ← fitz.Rect はタプルとして保存\n   - `\"delete\"`: `targets = sorted(kwargs[\"targets\"])` で昇順ソート後、各ページを `fitz.open()` で抽出して `tmp.tobytes()` を保存、tmp は close する\n   - `\"move\"`: `state[\"data\"] = (kwargs[\"src\"], kwargs[\"actual_dest\"])`\n   - `\"duplicate\"`: `state[\"data\"] = kwargs[\"pno\"]`\n   - `\"insert\"`: `state[\"data\"] = [kwargs[\"insert_at\"], 0]` （ミュータブルリスト）\n   - `\"merge\"`: `state[\"data\"] = len(self.doc)`\n4. `self._undo_stack.append(state)` と上限チェック・`_redo_stack.clear()` はそのまま維持\n\n**制約:**\n- `delete` op での単ページ抽出は `fitz.open()` + `insert_pdf(from_page=i, to_page=i)` + `tobytes()` の後 `close()` を必ず呼ぶ\n- `fitz.Rect` オブジェクトは Python タプルとして保存（C 側寿命管理のため直接保持しない）\n- `fitz` は既に import 済みのため追加不要",
+      "estimate": "45m",
+      "files": [
+        "pagefolio/file_ops.py"
+      ],
+      "verify": "python -c \"import ast; ast.parse(open('pagefolio/file_ops.py', encoding='utf-8').read()); print('OK')\"",
+      "inputs": [
+        "pagefolio/file_ops.py"
+      ],
+      "expected_output": [
+        "pagefolio/file_ops.py"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M001",
+      "slice_id": "S03",
+      "id": "T02",
+      "title": "file_ops.py の _restore_state() を差分/全体バイト両対応ディスパッチャに書き換え",
+      "status": "complete",
+      "one_liner": "file_ops.py の _restore_state() を差分/全体バイト両対応ディスパッチャに書き換え",
+      "narrative": "T01 で新シグネチャになった `_save_undo()` が生成する差分フォーマット（`\"op\"` キー付き）と、`_undo()` / `_redo()` が Redo スタックに積む旧フォーマット（`\"pdf_bytes\"` キー付き）の両方を処理できるよう `_restore_state()` をディスパッチャに書き換えた。\n\n`\"pdf_bytes\"` キーが存在する場合は既存ロジック（`doc.close()` + `fitz.open(stream=...)` ）を実行する。それ以外は `state[\"op\"]` の値で分岐し、各操作の逆変換を適用する：\n- rotate: `set_rotation(old_rot)` で各ページの回転を戻す\n- crop: タプルから `fitz.Rect` を再構築して `set_cropbox()` で戻す\n- delete: 昇順ソート済みの (page_i, page_bytes) ペアを順に `fitz.open(stream=page_bytes) + insert_pdf(start_at=page_i) + close()` で再挿入\n- move: `doc.move_page(actual_dest, src)` で元位置に戻す（PyMuPDF の move_page(from_, to_) 仕様通り）\n- duplicate: `doc.delete_page(pno + 1)` で複製ページを除去\n- insert: `state[\"data\"] = [insert_at, num]` のリストを unpack し、`num` 回 `delete_page(insert_at)` で挿入済みページを除去\n- merge: ページ数が `old_count` を超える間 `delete_page(old_count)` で結合分を除去\n\n共通後処理（`current_page` クランプ、`selected_pages` 復元、キャッシュ無効化、世代カウンタ更新、`_refresh_all()`）は両分岐の外に配置した。`_undo()` / `_redo()` の Redo/Undo スタックへのプッシュロジックは変更せず、全体バイト形式のまま維持した。",
+      "verification_result": "python -c \"import ast; ast.parse(open('pagefolio/file_ops.py', encoding='utf-8').read()); print('OK')\" → exit 0, 出力 OK。ruff check および ruff format --check もすべてパス。",
+      "duration": "",
+      "completed_at": "2026-05-04T04:43:25.288Z",
+      "blocker_discovered": false,
+      "deviations": "なし",
+      "known_issues": "None.",
+      "key_files": [
+        "pagefolio/file_ops.py"
+      ],
+      "key_decisions": [
+        "_restore_state() は pdf_bytes キーの有無でフォーマットを自動判別するディスパッチャ方式を採用",
+        "Redo スタックへのプッシュは引き続き全体バイト形式を維持し後方互換を保つ",
+        "delete undo の再挿入は state['data'] が昇順ソート済みのためそのまま昇順 insert_pdf",
+        "insert undo は state['data'][1] に格納されたページ数分だけ delete_page を繰り返す"
+      ],
+      "full_summary_md": "---\nid: T02\nparent: S03\nmilestone: M001\nkey_files:\n  - pagefolio/file_ops.py\nkey_decisions:\n  - _restore_state() は pdf_bytes キーの有無でフォーマットを自動判別するディスパッチャ方式を採用\n  - Redo スタックへのプッシュは引き続き全体バイト形式を維持し後方互換を保つ\n  - delete undo の再挿入は state['data'] が昇順ソート済みのためそのまま昇順 insert_pdf\n  - insert undo は state['data'][1] に格納されたページ数分だけ delete_page を繰り返す\nduration: \nverification_result: passed\ncompleted_at: 2026-05-04T04:43:25.284Z\nblocker_discovered: false\n---\n\n# T02: file_ops.py の _restore_state() を差分/全体バイト両対応ディスパッチャに書き換え\n\n**file_ops.py の _restore_state() を差分/全体バイト両対応ディスパッチャに書き換え**\n\n## What Happened\n\nT01 で新シグネチャになった `_save_undo()` が生成する差分フォーマット（`\"op\"` キー付き）と、`_undo()` / `_redo()` が Redo スタックに積む旧フォーマット（`\"pdf_bytes\"` キー付き）の両方を処理できるよう `_restore_state()` をディスパッチャに書き換えた。\n\n`\"pdf_bytes\"` キーが存在する場合は既存ロジック（`doc.close()` + `fitz.open(stream=...)` ）を実行する。それ以外は `state[\"op\"]` の値で分岐し、各操作の逆変換を適用する：\n- rotate: `set_rotation(old_rot)` で各ページの回転を戻す\n- crop: タプルから `fitz.Rect` を再構築して `set_cropbox()` で戻す\n- delete: 昇順ソート済みの (page_i, page_bytes) ペアを順に `fitz.open(stream=page_bytes) + insert_pdf(start_at=page_i) + close()` で再挿入\n- move: `doc.move_page(actual_dest, src)` で元位置に戻す（PyMuPDF の move_page(from_, to_) 仕様通り）\n- duplicate: `doc.delete_page(pno + 1)` で複製ページを除去\n- insert: `state[\"data\"] = [insert_at, num]` のリストを unpack し、`num` 回 `delete_page(insert_at)` で挿入済みページを除去\n- merge: ページ数が `old_count` を超える間 `delete_page(old_count)` で結合分を除去\n\n共通後処理（`current_page` クランプ、`selected_pages` 復元、キャッシュ無効化、世代カウンタ更新、`_refresh_all()`）は両分岐の外に配置した。`_undo()` / `_redo()` の Redo/Undo スタックへのプッシュロジックは変更せず、全体バイト形式のまま維持した。\n\n## Verification\n\npython -c \"import ast; ast.parse(open('pagefolio/file_ops.py', encoding='utf-8').read()); print('OK')\" → exit 0, 出力 OK。ruff check および ruff format --check もすべてパス。\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| 1 | `python -c \"import ast; ast.parse(open('pagefolio/file_ops.py', encoding='utf-8').read()); print('OK')\"` | 0 | ✅ pass | 200ms |\n| 2 | `ruff check pagefolio/file_ops.py && ruff format pagefolio/file_ops.py --check` | 0 | ✅ pass | 500ms |\n\n## Deviations\n\nなし\n\n## Known Issues\n\nNone.\n\n## Files Created/Modified\n\n- `pagefolio/file_ops.py`\n",
+      "description": "T01 で新シグネチャになった `_save_undo()` が生成する差分フォーマット（`\"op\"` キー付き）と、`_undo()` / `_redo()` が Redo スタックに積む旧フォーマット（`\"pdf_bytes\"` キー付き）の両方を処理できるよう `_restore_state()` をディスパッチャに書き換える。\n\n**新 _restore_state() ロジック:**\n```python\ndef _restore_state(self, state):\n    if \"pdf_bytes\" in state:\n        # 旧来形式（Redo スタック由来）またはフォールバック\n        if self.doc:\n            self.doc.close()\n        self.doc = fitz.open(stream=state[\"pdf_bytes\"], filetype=\"pdf\")\n    else:\n        op = state[\"op\"]\n        if op == \"rotate\":\n            for page_i, old_rot in state[\"data\"]:\n                self.doc[page_i].set_rotation(old_rot)\n        elif op == \"crop\":\n            page_i, (x0, y0, x1, y1) = state[\"data\"]\n            self.doc[page_i].set_cropbox(fitz.Rect(x0, y0, x1, y1))\n        elif op == \"delete\":\n            # 昇順で再挿入（インデックスずれ防止）\n            for page_i, page_bytes in state[\"data\"]:\n                tmp = fitz.open(stream=page_bytes, filetype=\"pdf\")\n                self.doc.insert_pdf(tmp, start_at=page_i)\n                tmp.close()\n        elif op == \"move\":\n            src, actual_dest = state[\"data\"]\n            self.doc.move_page(actual_dest, src)\n        elif op == \"duplicate\":\n            self.doc.delete_page(state[\"data\"] + 1)\n        elif op == \"insert\":\n            insert_at, num = state[\"data\"]\n            for _ in range(num):\n                self.doc.delete_page(insert_at)\n        elif op == \"merge\":\n            old_count = state[\"data\"]\n            while len(self.doc) > old_count:\n                self.doc.delete_page(old_count)\n\n    self.current_page = min(state[\"current_page\"], max(0, len(self.doc) - 1))\n    self.selected_pages = state[\"selected_pages\"]\n    self._invalidate_thumb_cache()\n    self._preview_gen += 1\n    self._thumb_gen += 1\n    self._refresh_all()\n```\n\n**`_undo()` / `_redo()` の変更点:**\n- `_undo()`: Redo スタックへのプッシュは変更なし（引き続き `{\"pdf_bytes\": self.doc.tobytes(), ...}` の全体バイト形式）。`_restore_state()` 呼び出しはそのまま\n- `_redo()`: Undo スタックへのプッシュも変更なし（全体バイト形式でプッシュ → `_restore_state()` が `pdf_bytes` キーを検出して従来処理）。`_restore_state()` 呼び出しはそのまま\n\n**重要な制約:**\n- `move` の逆操作は `doc.move_page(actual_dest, src)` で元位置に戻す（PyMuPDF の `move_page(from_, to_)` の仕様通り）\n- `delete` undo の再挿入は state[\"data\"] が昇順ソート済みのため、そのまま昇順 insert_pdf する\n- `_invalidate_thumb_cache()` の直後に `_preview_gen += 1` と `_thumb_gen += 1` をインクリメントする順序は S02 で確立した規約通り（順序変更禁止）\n- T01 の `_save_undo()` が `pagefolio/file_ops.py` に実装済みであることを前提にする",
+      "estimate": "45m",
+      "files": [
+        "pagefolio/file_ops.py"
+      ],
+      "verify": "python -c \"import ast; ast.parse(open('pagefolio/file_ops.py', encoding='utf-8').read()); print('OK')\"",
+      "inputs": [
+        "pagefolio/file_ops.py"
+      ],
+      "expected_output": [
+        "pagefolio/file_ops.py"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M001",
+      "slice_id": "S03",
+      "id": "T03",
+      "title": "page_ops.py の _save_undo() 呼び出し6箇所を新シグネチャ (op, **kwargs) に更新",
+      "status": "complete",
+      "one_liner": "page_ops.py の _save_undo() 呼び出し6箇所を新シグネチャ (op, **kwargs) に更新",
+      "narrative": "T01/T02 で変更された `_save_undo(op, **kwargs)` 差分形式シグネチャに合わせ、`page_ops.py` 内の6箇所の `self._save_undo()` 呼び出しを更新した。\n\n変更内容:\n1. `_rotate_selected(deg)` — `targets = self._get_targets()` の取得順序を `_save_undo()` 呼び出しの前に移動し、`self._save_undo(\"rotate\", targets=targets)` に変更。これにより回転前の rotation 値が正しく保存される。\n2. `_delete_selected()` — targets はすでに `sorted(self._get_targets(), reverse=True)` で確定済みのため、`self._save_undo(\"delete\", targets=targets)` に変更。\n3. `_duplicate_page()` — `self._save_undo(\"duplicate\", pno=pno)` に変更。pno 確定後の位置を維持。\n4. `_crop_page()` — `self._save_undo(\"crop\", page_i=self.current_page)` に変更。cropbox 取得前の位置を維持。\n5. `_do_insert()` — `self._save_undo(\"insert\", insert_at=insert_at)` に変更し、ループ完了後に `self._undo_stack[-1][\"data\"][1] = total` で num_inserted を後払い書き込み。`_save_undo` 内では `state[\"data\"] = [insert_at, 0]` のミュータブルリストで保存されるため、末尾エントリへの直接書き込みが機能する。\n6. `_do_merge()` — `self._save_undo(\"merge\")` に変更。ページ数は `_save_undo` 内で `len(self.doc)` から取得するため kwargs 不要。\n\n構文チェック・リント・全テスト (108件) すべて通過。",
+      "verification_result": "python -c \"import ast; ast.parse(open('pagefolio/page_ops.py', encoding='utf-8').read()); print('OK')\" → OK\nruff check . && ruff format . → All checks passed! 20 files left unchanged\npytest → 108 passed in 1.41s",
+      "duration": "",
+      "completed_at": "2026-05-04T04:45:17.058Z",
+      "blocker_discovered": false,
+      "deviations": "None.",
+      "known_issues": "None.",
+      "key_files": [
+        "pagefolio/page_ops.py"
+      ],
+      "key_decisions": [
+        "_do_insert の後払い更新は _undo_stack[-1][\"data\"][1] = total で直接書き込む（_save_undo がミュータブルリストで保存するため）",
+        "_rotate_selected では targets の取得順序を _save_undo 呼び出し前に移動し、回転前の rotation 値を正しく保存する"
+      ],
+      "full_summary_md": "---\nid: T03\nparent: S03\nmilestone: M001\nkey_files:\n  - pagefolio/page_ops.py\nkey_decisions:\n  - _do_insert の後払い更新は _undo_stack[-1][\"data\"][1] = total で直接書き込む（_save_undo がミュータブルリストで保存するため）\n  - _rotate_selected では targets の取得順序を _save_undo 呼び出し前に移動し、回転前の rotation 値を正しく保存する\nduration: \nverification_result: passed\ncompleted_at: 2026-05-04T04:45:17.056Z\nblocker_discovered: false\n---\n\n# T03: page_ops.py の _save_undo() 呼び出し6箇所を新シグネチャ (op, **kwargs) に更新\n\n**page_ops.py の _save_undo() 呼び出し6箇所を新シグネチャ (op, **kwargs) に更新**\n\n## What Happened\n\nT01/T02 で変更された `_save_undo(op, **kwargs)` 差分形式シグネチャに合わせ、`page_ops.py` 内の6箇所の `self._save_undo()` 呼び出しを更新した。\n\n変更内容:\n1. `_rotate_selected(deg)` — `targets = self._get_targets()` の取得順序を `_save_undo()` 呼び出しの前に移動し、`self._save_undo(\"rotate\", targets=targets)` に変更。これにより回転前の rotation 値が正しく保存される。\n2. `_delete_selected()` — targets はすでに `sorted(self._get_targets(), reverse=True)` で確定済みのため、`self._save_undo(\"delete\", targets=targets)` に変更。\n3. `_duplicate_page()` — `self._save_undo(\"duplicate\", pno=pno)` に変更。pno 確定後の位置を維持。\n4. `_crop_page()` — `self._save_undo(\"crop\", page_i=self.current_page)` に変更。cropbox 取得前の位置を維持。\n5. `_do_insert()` — `self._save_undo(\"insert\", insert_at=insert_at)` に変更し、ループ完了後に `self._undo_stack[-1][\"data\"][1] = total` で num_inserted を後払い書き込み。`_save_undo` 内では `state[\"data\"] = [insert_at, 0]` のミュータブルリストで保存されるため、末尾エントリへの直接書き込みが機能する。\n6. `_do_merge()` — `self._save_undo(\"merge\")` に変更。ページ数は `_save_undo` 内で `len(self.doc)` から取得するため kwargs 不要。\n\n構文チェック・リント・全テスト (108件) すべて通過。\n\n## Verification\n\npython -c \"import ast; ast.parse(open('pagefolio/page_ops.py', encoding='utf-8').read()); print('OK')\" → OK\nruff check . && ruff format . → All checks passed! 20 files left unchanged\npytest → 108 passed in 1.41s\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| 1 | `python -c \"import ast; ast.parse(open('pagefolio/page_ops.py', encoding='utf-8').read()); print('OK')\"` | 0 | ✅ pass | 200ms |\n| 2 | `ruff check . && ruff format .` | 0 | ✅ pass | 3000ms |\n| 3 | `pytest` | 0 | ✅ pass | 1410ms |\n\n## Deviations\n\nNone.\n\n## Known Issues\n\nNone.\n\n## Files Created/Modified\n\n- `pagefolio/page_ops.py`\n",
+      "description": "T01/T02 で `_save_undo(op, **kwargs)` に変更されたため、`page_ops.py` 内の既存6箇所の `self._save_undo()` 呼び出しを新シグネチャに更新する。\n\n**変更箇所と変更内容（必ずこの順序で確認・適用すること）:**\n\n1. `_rotate_selected(deg)` — **順序変更が必要**\n   - 現行: `self._save_undo()` → `targets = self._get_targets()`\n   - 変更後: `targets = self._get_targets()` → `self._save_undo(\"rotate\", targets=targets)` ← targets を先に取得してから渡す\n\n2. `_delete_selected()` — targets はすでに上で取得済み\n   - 現行: `self._save_undo()`（targets 変数は既に確定している）\n   - 変更後: `self._save_undo(\"delete\", targets=targets)` ← 削除前に呼ぶことを確認（現行も削除前）\n   - 注意: `_delete_selected()` の targets は `sorted(self._get_targets(), reverse=True)` で降順ソート済み。`_save_undo` 内で昇順ソートし直すため問題なし\n\n3. `_duplicate_page()` — pno を渡す\n   - 現行: `pno = self.current_page` → `self._save_undo()`\n   - 変更後: `self._save_undo(\"duplicate\", pno=pno)` ← pno 確定後に呼ぶ（現行と同じ位置）\n\n4. `_crop_page()` — current_page を渡す\n   - 現行: `self._save_undo()` （page_ops.py:179）\n   - 変更後: `self._save_undo(\"crop\", page_i=self.current_page)` ← cropbox 取得前に呼ぶ（現行と同じ位置）\n\n5. `_do_insert(ordered_paths, insert_at)` — **後払い更新あり**\n   - 現行: `self._save_undo()` → `total = 0` → ループで挿入\n   - 変更後: `self._save_undo(\"insert\", insert_at=insert_at)` → ループで挿入 → `self._undo_stack[-1][\"data\"][1] = total` ← ループ完了後に num_inserted を書き込む\n   - `_save_undo` が `state[\"data\"] = [insert_at, 0]` のミュータブルリストで保存するため、スタックの末尾エントリを直接書き換える\n\n6. `_do_merge(ordered_paths)` — ページ数は _save_undo 内で取得\n   - 現行: `self._save_undo()`\n   - 変更後: `self._save_undo(\"merge\")` ← _save_undo 内で `len(self.doc)` を取得する設計のため kwargs 不要\n\n**制約:**\n- `_do_insert` の post-update は try ブロック内のループ完了後かつ _refresh_all() 前に行うこと\n- `_rotate_selected` の targets 取得順序変更を必ず行うこと（これを忘れると「変更前の rotation」ではなく「変更後の rotation」が保存される）",
+      "estimate": "30m",
+      "files": [
+        "pagefolio/page_ops.py"
+      ],
+      "verify": "python -c \"import ast; ast.parse(open('pagefolio/page_ops.py', encoding='utf-8').read()); print('OK')\"",
+      "inputs": [
+        "pagefolio/file_ops.py",
+        "pagefolio/page_ops.py"
+      ],
+      "expected_output": [
+        "pagefolio/page_ops.py"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M001",
+      "slice_id": "S03",
+      "id": "T04",
+      "title": "dnd.py の _dnd_drop() で _save_undo() 呼び出しを actual_dest 確定後に移動し、新シグネチャ (\"move\", src=src, actual_dest=actual_dest) に更新",
+      "status": "complete",
+      "one_liner": "dnd.py の _dnd_drop() で _save_undo() 呼び出しを actual_dest 確定後に移動し、新シグネチャ (\"move\", src=src, actual_dest=actual_dest) に更新",
+      "narrative": "タスクプランの通り、`dnd.py` の `_dnd_drop()` メソッドにある `self._save_undo()` 呼び出し（旧: 引数なし、位置: actual_dest 計算前の行99）を変更した。\n\n**変更内容:**\n- `self._save_undo()` をブロック冒頭（actual_dest 未確定の位置）から削除\n- `if dest >= n: ... else: ...` ブロックの直後（actual_dest 確定後）に `self._save_undo(\"move\", src=src, actual_dest=actual_dest)` を追加\n\n**設計上の理由:**\n差分形式の `_save_undo` は `actual_dest` を kwargs として受け取り、undo 時に `move_page(actual_dest, src)` で逆操作するため、`actual_dest` が確定してから呼び出す必要がある。また、`self.doc.move_page()` の実行後に呼ぶことで、undo エントリが「移動済み状態からの逆操作」として正しく記録される。",
+      "verification_result": "構文チェック: `python -c \"import ast; ast.parse(...); print('OK')\"` → OK\nruff check: All checks passed!\nruff format --check: 1 file already formatted",
+      "duration": "",
+      "completed_at": "2026-05-04T04:46:17.223Z",
+      "blocker_discovered": false,
+      "deviations": "なし",
+      "known_issues": "なし",
+      "key_files": [
+        "pagefolio/dnd.py"
+      ],
+      "key_decisions": [
+        "_save_undo() は self.doc.move_page() の実行後かつ actual_dest 確定後に呼ぶ（差分形式で actual_dest が必須のため）"
+      ],
+      "full_summary_md": "---\nid: T04\nparent: S03\nmilestone: M001\nkey_files:\n  - pagefolio/dnd.py\nkey_decisions:\n  - _save_undo() は self.doc.move_page() の実行後かつ actual_dest 確定後に呼ぶ（差分形式で actual_dest が必須のため）\nduration: \nverification_result: passed\ncompleted_at: 2026-05-04T04:46:17.220Z\nblocker_discovered: false\n---\n\n# T04: dnd.py の _dnd_drop() で _save_undo() 呼び出しを actual_dest 確定後に移動し、新シグネチャ (\"move\", src=src, actual_dest=actual_dest) に更新\n\n**dnd.py の _dnd_drop() で _save_undo() 呼び出しを actual_dest 確定後に移動し、新シグネチャ (\"move\", src=src, actual_dest=actual_dest) に更新**\n\n## What Happened\n\nタスクプランの通り、`dnd.py` の `_dnd_drop()` メソッドにある `self._save_undo()` 呼び出し（旧: 引数なし、位置: actual_dest 計算前の行99）を変更した。\n\n**変更内容:**\n- `self._save_undo()` をブロック冒頭（actual_dest 未確定の位置）から削除\n- `if dest >= n: ... else: ...` ブロックの直後（actual_dest 確定後）に `self._save_undo(\"move\", src=src, actual_dest=actual_dest)` を追加\n\n**設計上の理由:**\n差分形式の `_save_undo` は `actual_dest` を kwargs として受け取り、undo 時に `move_page(actual_dest, src)` で逆操作するため、`actual_dest` が確定してから呼び出す必要がある。また、`self.doc.move_page()` の実行後に呼ぶことで、undo エントリが「移動済み状態からの逆操作」として正しく記録される。\n\n## Verification\n\n構文チェック: `python -c \"import ast; ast.parse(...); print('OK')\"` → OK\nruff check: All checks passed!\nruff format --check: 1 file already formatted\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| 1 | `python -c \"import ast; ast.parse(open('pagefolio/dnd.py', encoding='utf-8').read()); print('OK')\"` | 0 | ✅ pass | 150ms |\n| 2 | `ruff check pagefolio/dnd.py` | 0 | ✅ pass | 200ms |\n| 3 | `ruff format pagefolio/dnd.py --check` | 0 | ✅ pass | 180ms |\n\n## Deviations\n\nなし\n\n## Known Issues\n\nなし\n\n## Files Created/Modified\n\n- `pagefolio/dnd.py`\n",
+      "description": "`dnd.py` の `_dnd_drop()` メソッドにある `self._save_undo()` 呼び出しを新シグネチャ `_save_undo(\"move\", src=src, actual_dest=actual_dest)` に更新する。\n\n**重要な位置変更が必要:**\n現行コードでは `self._save_undo()` が `actual_dest` の計算より **前** にある（行99付近）。差分形式では `actual_dest` を `_save_undo` に渡す必要があるため、呼び出しを `actual_dest` が確定した **後** に移動しなければならない。\n\n**現行コードの構造（_dnd_drop メソッド）:**\n```python\nself._save_undo()          # ← ここが問題（actual_dest がまだない）\nif dest >= n:\n    self.doc.move_page(src, -1)\n    actual_dest = n - 1\nelse:\n    actual_dest = dest if dest < src else dest - 1\n    self.doc.move_page(src, dest)\n```\n\n**変更後の構造:**\n```python\nif dest >= n:\n    self.doc.move_page(src, -1)\n    actual_dest = n - 1\nelse:\n    actual_dest = dest if dest < src else dest - 1\n    self.doc.move_page(src, dest)\nself._save_undo(\"move\", src=src, actual_dest=actual_dest)  # ← actual_dest 確定後\n```\n\n**制約:**\n- `_save_undo` は `self.doc.move_page()` の **後** に呼ぶこと（move は既に実行済みのため、undo 時は `move_page(actual_dest, src)` で逆操作する）\n- `_undo_stack` / `_redo_stack` のクリアは `_save_undo` 内で行われるため、呼び出し側での追加処理不要\n- メソッド名が `_dnd_drop` であることを確認（grep 結果: dnd.py:90付近）",
+      "estimate": "20m",
+      "files": [
+        "pagefolio/dnd.py"
+      ],
+      "verify": "python -c \"import ast; ast.parse(open('pagefolio/dnd.py', encoding='utf-8').read()); print('OK')\"",
+      "inputs": [
+        "pagefolio/file_ops.py",
+        "pagefolio/dnd.py"
+      ],
+      "expected_output": [
+        "pagefolio/dnd.py"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M001",
+      "slice_id": "S03",
+      "id": "T05",
+      "title": "test_pdf_ops.py の TestUndoRedoLogic を差分フォーマット検証の3テストに書き換え（全体バイト方式の旧2テストを置換）",
+      "status": "complete",
+      "one_liner": "test_pdf_ops.py の TestUndoRedoLogic を差分フォーマット検証の3テストに書き換え（全体バイト方式の旧2テストを置換）",
+      "narrative": "既存の `TestUndoRedoLogic` クラスは全体バイトコピー方式を前提とした `test_save_and_restore_state` と `test_redo_after_undo` の2テストを持っていた。これらを差分フォーマット（操作タイプ別方式）の正しさを直接 fitz API で検証する3テストに置き換えた。\n\n1. `test_rotate_delta_roundtrip`: 回転操作の差分（`{\"op\": \"rotate\", \"data\": [(page_i, old_rot)]}`）を保存し、Undo として `set_rotation()` で元の値に戻せることを検証。\n2. `test_delete_delta_roundtrip`: 削除操作の差分（削除対象ページをバイト列で昇順保存）を検証。`fitz.open()` + `insert_pdf()` + `tobytes()` でページ抽出、削除後に `insert_pdf(stream=...)` で再挿入してページ数とテキスト内容を確認。\n3. `test_fallback_pdf_bytes_format`: Redo スタック由来の旧フォーマット（`pdf_bytes` キー付き辞書）が `fitz.open(stream=...)` で復元できることを確認。\n\ndocstring の行長が ruff の 88 文字制限を超えたため、`test_fallback_pdf_bytes_format` のドキュメント文字列を短縮した（「フォールバック」部分を削除）。これ以外はタスクプランと完全一致。",
+      "verification_result": "- `pytest tests/test_pdf_ops.py::TestUndoRedoLogic -v --tb=short` → 3テスト全パス (0.18s)\n- `pytest tests/ -v --tb=short` → 109テスト全パス、リグレッションなし\n- `ruff check tests/test_pdf_ops.py && ruff format --check tests/test_pdf_ops.py` → All checks passed",
+      "duration": "",
+      "completed_at": "2026-05-04T04:47:59.608Z",
+      "blocker_discovered": false,
+      "deviations": "test_fallback_pdf_bytes_format の docstring を ruff の行長制限（88文字）に合わせて短縮。機能・ロジックの変更なし。",
+      "known_issues": "none",
+      "key_files": [
+        "tests/test_pdf_ops.py"
+      ],
+      "key_decisions": [
+        "旧2テスト（全体バイト方式）を差分フォーマット検証の3テストで置換。クラス名 TestUndoRedoLogic は維持"
+      ],
+      "full_summary_md": "---\nid: T05\nparent: S03\nmilestone: M001\nkey_files:\n  - tests/test_pdf_ops.py\nkey_decisions:\n  - 旧2テスト（全体バイト方式）を差分フォーマット検証の3テストで置換。クラス名 TestUndoRedoLogic は維持\nduration: \nverification_result: passed\ncompleted_at: 2026-05-04T04:47:59.606Z\nblocker_discovered: false\n---\n\n# T05: test_pdf_ops.py の TestUndoRedoLogic を差分フォーマット検証の3テストに書き換え（全体バイト方式の旧2テストを置換）\n\n**test_pdf_ops.py の TestUndoRedoLogic を差分フォーマット検証の3テストに書き換え（全体バイト方式の旧2テストを置換）**\n\n## What Happened\n\n既存の `TestUndoRedoLogic` クラスは全体バイトコピー方式を前提とした `test_save_and_restore_state` と `test_redo_after_undo` の2テストを持っていた。これらを差分フォーマット（操作タイプ別方式）の正しさを直接 fitz API で検証する3テストに置き換えた。\n\n1. `test_rotate_delta_roundtrip`: 回転操作の差分（`{\"op\": \"rotate\", \"data\": [(page_i, old_rot)]}`）を保存し、Undo として `set_rotation()` で元の値に戻せることを検証。\n2. `test_delete_delta_roundtrip`: 削除操作の差分（削除対象ページをバイト列で昇順保存）を検証。`fitz.open()` + `insert_pdf()` + `tobytes()` でページ抽出、削除後に `insert_pdf(stream=...)` で再挿入してページ数とテキスト内容を確認。\n3. `test_fallback_pdf_bytes_format`: Redo スタック由来の旧フォーマット（`pdf_bytes` キー付き辞書）が `fitz.open(stream=...)` で復元できることを確認。\n\ndocstring の行長が ruff の 88 文字制限を超えたため、`test_fallback_pdf_bytes_format` のドキュメント文字列を短縮した（「フォールバック」部分を削除）。これ以外はタスクプランと完全一致。\n\n## Verification\n\n- `pytest tests/test_pdf_ops.py::TestUndoRedoLogic -v --tb=short` → 3テスト全パス (0.18s)\n- `pytest tests/ -v --tb=short` → 109テスト全パス、リグレッションなし\n- `ruff check tests/test_pdf_ops.py && ruff format --check tests/test_pdf_ops.py` → All checks passed\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| 1 | `pytest tests/test_pdf_ops.py::TestUndoRedoLogic -v --tb=short` | 0 | ✅ pass | 180ms |\n| 2 | `pytest tests/ -v --tb=short` | 0 | ✅ pass | 1060ms |\n| 3 | `ruff check tests/test_pdf_ops.py && ruff format --check tests/test_pdf_ops.py` | 0 | ✅ pass | 500ms |\n\n## Deviations\n\ntest_fallback_pdf_bytes_format の docstring を ruff の行長制限（88文字）に合わせて短縮。機能・ロジックの変更なし。\n\n## Known Issues\n\nnone\n\n## Files Created/Modified\n\n- `tests/test_pdf_ops.py`\n",
+      "description": "既存の `TestUndoRedoLogic` クラスは「全体バイトコピー方式」を前提としたテストになっている。差分フォーマットの正しさを直接 fitz API で検証するテストに書き換える。\n\n**現行の2テストを以下に置き換える:**\n\n```python\nclass TestUndoRedoLogic:\n    \"\"\"Undo/Redo 差分フォーマットのロジックテスト（操作タイプ別方式）\"\"\"\n\n    def test_rotate_delta_roundtrip(self, sample_pdf_doc):\n        \"\"\"回転の差分保存と逆操作が正しく動作する\"\"\"\n        doc = sample_pdf_doc\n        original_rotation = doc[0].rotation  # 通常 0\n\n        # 差分保存: 回転前の rotation を記録\n        delta = {\"op\": \"rotate\", \"data\": [(0, doc[0].rotation)]}\n\n        # 操作: 90度回転\n        doc[0].set_rotation((doc[0].rotation + 90) % 360)\n        assert doc[0].rotation == 90\n\n        # Undo: 差分で復元\n        for page_i, old_rot in delta[\"data\"]:\n            doc[page_i].set_rotation(old_rot)\n        assert doc[0].rotation == original_rotation\n\n    def test_delete_delta_roundtrip(self, sample_pdf_doc):\n        \"\"\"削除の差分保存と逆操作（ページ復元）が正しく動作する\"\"\"\n        doc = sample_pdf_doc\n        original_count = len(doc)  # 3ページ\n\n        # 差分保存: 削除対象ページをバイト列で保存（昇順）\n        targets = sorted([0])  # ページ0を削除\n        delta_data = []\n        for i in targets:\n            tmp = fitz.open()\n            tmp.insert_pdf(doc, from_page=i, to_page=i)\n            delta_data.append((i, tmp.tobytes()))\n            tmp.close()\n\n        # 操作: ページ削除\n        doc.delete_page(0)\n        assert len(doc) == original_count - 1\n\n        # Undo: 昇順で再挿入\n        for page_i, page_bytes in delta_data:\n            tmp = fitz.open(stream=page_bytes, filetype=\"pdf\")\n            doc.insert_pdf(tmp, start_at=page_i)\n            tmp.close()\n        assert len(doc) == original_count\n        assert \"Page 1\" in doc[0].get_text()\n\n    def test_fallback_pdf_bytes_format(self, sample_pdf_doc):\n        \"\"\"pdf_bytes キーを持つ旧フォーマットが _restore_state で処理できる（フォールバック）\"\"\"\n        doc = sample_pdf_doc\n        # 旧フォーマット（Redo スタック由来）: pdf_bytes キー付き\n        saved_bytes = doc.tobytes()\n        state = {\"pdf_bytes\": saved_bytes, \"current_page\": 0, \"selected_pages\": set()}\n\n        # pdf_bytes キーで復元できることを fitz API で確認\n        restored = fitz.open(stream=state[\"pdf_bytes\"], filetype=\"pdf\")\n        assert len(restored) == len(doc)\n        restored.close()\n```\n\n**制約:**\n- クラス名 `TestUndoRedoLogic` は変更しないこと（既存テストの naming convention を維持）\n- `fitz` は既に `test_pdf_ops.py` にインポート済み\n- `sample_pdf_doc` フィクスチャは `conftest.py` で定義済み（3ページの PDF ドキュメント）\n- 3つのテストメソッドで旧来の2テストを置き換える",
+      "estimate": "30m",
+      "files": [
+        "tests/test_pdf_ops.py"
+      ],
+      "verify": "pytest tests/test_pdf_ops.py::TestUndoRedoLogic -v --tb=short",
+      "inputs": [
+        "tests/test_pdf_ops.py",
+        "tests/conftest.py"
+      ],
+      "expected_output": [
+        "tests/test_pdf_ops.py"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M001",
+      "slice_id": "S03",
+      "id": "T06",
+      "title": "ruff + pytest で全件確認（リントクリーン・109件 PASSED）",
+      "status": "complete",
+      "one_liner": "ruff + pytest で全件確認（リントクリーン・109件 PASSED）",
+      "narrative": "T01〜T05 の全変更後、ruff check / ruff format --check / pytest --tb=short -q を実行して S03 の完成を確認した。ruff は 20ファイル全てフォーマット済み・リントエラーなし。pytest は 109件全てPASSED（0失敗・0エラー）、実行時間 0.99秒。必要最低件数 108件以上の条件を満たしている。修正が必要な箇所はなかった。",
+      "verification_result": "ruff check . → All checks passed; ruff format --check . → 20 files already formatted; pytest --tb=short -q → 109 passed in 0.99s",
+      "duration": "",
+      "completed_at": "2026-05-04T04:49:03.999Z",
+      "blocker_discovered": false,
+      "deviations": "None.",
+      "known_issues": "None.",
+      "key_files": [
+        "pagefolio/file_ops.py",
+        "pagefolio/page_ops.py",
+        "pagefolio/dnd.py",
+        "tests/test_pdf_ops.py"
+      ],
+      "key_decisions": [
+        "修正は不要 — T01〜T05 の実装が既にリント・テスト基準を満たしていた"
+      ],
+      "full_summary_md": "---\nid: T06\nparent: S03\nmilestone: M001\nkey_files:\n  - pagefolio/file_ops.py\n  - pagefolio/page_ops.py\n  - pagefolio/dnd.py\n  - tests/test_pdf_ops.py\nkey_decisions:\n  - 修正は不要 — T01〜T05 の実装が既にリント・テスト基準を満たしていた\nduration: \nverification_result: passed\ncompleted_at: 2026-05-04T04:49:03.995Z\nblocker_discovered: false\n---\n\n# T06: ruff + pytest で全件確認（リントクリーン・109件 PASSED）\n\n**ruff + pytest で全件確認（リントクリーン・109件 PASSED）**\n\n## What Happened\n\nT01〜T05 の全変更後、ruff check / ruff format --check / pytest --tb=short -q を実行して S03 の完成を確認した。ruff は 20ファイル全てフォーマット済み・リントエラーなし。pytest は 109件全てPASSED（0失敗・0エラー）、実行時間 0.99秒。必要最低件数 108件以上の条件を満たしている。修正が必要な箇所はなかった。\n\n## Verification\n\nruff check . → All checks passed; ruff format --check . → 20 files already formatted; pytest --tb=short -q → 109 passed in 0.99s\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| 1 | `ruff check .` | 0 | ✅ pass | 800ms |\n| 2 | `ruff format --check .` | 0 | ✅ pass | 700ms |\n| 3 | `pytest --tb=short -q` | 0 | ✅ pass (109 passed) | 990ms |\n\n## Deviations\n\nNone.\n\n## Known Issues\n\nNone.\n\n## Files Created/Modified\n\n- `pagefolio/file_ops.py`\n- `pagefolio/page_ops.py`\n- `pagefolio/dnd.py`\n- `tests/test_pdf_ops.py`\n",
+      "description": "T01〜T05 のすべての変更後、リント・フォーマット・テストの全チェックを実行して S03 の完成を確認する。エラーがあれば修正する。\n\n**実行するコマンド:**\n```bash\nruff check . && ruff format --check .\npytest --tb=short -q\n```\n\n**よくある修正パターン:**\n- `ruff` が `E501`（行長超過）を検出した場合: 長い行を分割する\n- `ruff` が `F841`（未使用変数）を検出した場合: 変数名を `_` に変更するか削除\n- `pytest` でテストが失敗した場合: エラーメッセージを確認し、T01〜T05 の実装と照合して修正\n\n**制約:**\n- `pyproject.toml` / `ruff.toml` は編集禁止\n- 裸の `except:` 句は禁止（`except Exception as e:` の形で）\n- テスト件数は 108 件以上であること（S02 完了時点で 108 件）",
+      "estimate": "15m",
+      "files": [
+        "pagefolio/file_ops.py",
+        "pagefolio/page_ops.py",
+        "pagefolio/dnd.py",
+        "tests/test_pdf_ops.py"
+      ],
+      "verify": "ruff check . && ruff format --check . && pytest --tb=short -q",
+      "inputs": [
+        "pagefolio/file_ops.py",
+        "pagefolio/page_ops.py",
+        "pagefolio/dnd.py",
+        "tests/test_pdf_ops.py"
+      ],
+      "expected_output": [
+        "pagefolio/file_ops.py",
+        "pagefolio/page_ops.py",
+        "pagefolio/dnd.py",
+        "tests/test_pdf_ops.py"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M001",
+      "slice_id": "S04",
+      "id": "T01",
+      "title": "file_ops.py の _save_undo() / _restore_state() に bulk_move・bulk_crop 分岐を追加し、複数ページ操作の Undo 差分サポートを実装した",
+      "status": "complete",
+      "one_liner": "file_ops.py の _save_undo() / _restore_state() に bulk_move・bulk_crop 分岐を追加し、複数ページ操作の Undo 差分サポートを実装した",
+      "narrative": "S03 で確立した差分 Undo パターンを拡張した。`_save_undo()` の `merge` 分岐の直後に `bulk_move`（new_order 整数リスト保存）と `bulk_crop`（[(page_i, (x0,y0,x1,y1)), ...] 保存）を追加。`_restore_state()` にも対応する逆変換を追加し、`bulk_move` は順列の逆順列を構築して `doc.select(inverse)` で元ページ順に戻す、`bulk_crop` は各ページの cropbox を fitz.Rect で再構築する形で実装した。どちらも S03 の crop/rotate パターンと一貫した最小差分方式。",
+      "verification_result": "grep -c でファイル内 bulk_move/bulk_crop 参照数が 4 であることを確認（_save_undo x2、_restore_state x2）。ruff check/format が全パス。pytest 109 件全通過。",
+      "duration": "",
+      "completed_at": "2026-05-04T05:01:41.901Z",
+      "blocker_discovered": false,
+      "deviations": "none",
+      "known_issues": "none",
+      "key_files": [
+        "pagefolio/file_ops.py"
+      ],
+      "key_decisions": [
+        "bulk_move の逆変換は inverse[new_order[i]]=i で構築した順列の逆順列を doc.select() に渡す方式を採用（S03 差分パターンに準拠）",
+        "bulk_crop は操作前 cropbox を (page_i, (x0,y0,x1,y1)) タプルで保存し、復元時に fitz.Rect() で再構築（S03 crop op と同じパターン）"
+      ],
+      "full_summary_md": "---\nid: T01\nparent: S04\nmilestone: M001\nkey_files:\n  - pagefolio/file_ops.py\nkey_decisions:\n  - bulk_move の逆変換は inverse[new_order[i]]=i で構築した順列の逆順列を doc.select() に渡す方式を採用（S03 差分パターンに準拠）\n  - bulk_crop は操作前 cropbox を (page_i, (x0,y0,x1,y1)) タプルで保存し、復元時に fitz.Rect() で再構築（S03 crop op と同じパターン）\nduration: \nverification_result: passed\ncompleted_at: 2026-05-04T05:01:41.899Z\nblocker_discovered: false\n---\n\n# T01: file_ops.py の _save_undo() / _restore_state() に bulk_move・bulk_crop 分岐を追加し、複数ページ操作の Undo 差分サポートを実装した\n\n**file_ops.py の _save_undo() / _restore_state() に bulk_move・bulk_crop 分岐を追加し、複数ページ操作の Undo 差分サポートを実装した**\n\n## What Happened\n\nS03 で確立した差分 Undo パターンを拡張した。`_save_undo()` の `merge` 分岐の直後に `bulk_move`（new_order 整数リスト保存）と `bulk_crop`（[(page_i, (x0,y0,x1,y1)), ...] 保存）を追加。`_restore_state()` にも対応する逆変換を追加し、`bulk_move` は順列の逆順列を構築して `doc.select(inverse)` で元ページ順に戻す、`bulk_crop` は各ページの cropbox を fitz.Rect で再構築する形で実装した。どちらも S03 の crop/rotate パターンと一貫した最小差分方式。\n\n## Verification\n\ngrep -c でファイル内 bulk_move/bulk_crop 参照数が 4 であることを確認（_save_undo x2、_restore_state x2）。ruff check/format が全パス。pytest 109 件全通過。\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| 1 | `grep -c \"bulk_move\\|bulk_crop\" pagefolio/file_ops.py` | 0 | ✅ pass (4件) | 50ms |\n| 2 | `ruff check . && ruff format .` | 0 | ✅ pass | 800ms |\n| 3 | `python -m pytest tests/ -q` | 0 | ✅ pass (109 passed) | 1090ms |\n\n## Deviations\n\nnone\n\n## Known Issues\n\nnone\n\n## Files Created/Modified\n\n- `pagefolio/file_ops.py`\n",
+      "description": "S03 で確立した Undo 差分パターンを拡張し、`_save_undo()` に `bulk_move` / `bulk_crop` 分岐を追加し、`_restore_state()` に対応する逆変換を追加する。このタスクは T03 (dnd.py) と T04 (page_ops.py) のブロッカー。\n\n`_save_undo()` に追加する分岐（既存の `elif op == \"merge\":` の後）:\n```python\nelif op == \"bulk_move\":\n    state[\"data\"] = kwargs[\"new_order\"]  # 整数リスト\nelif op == \"bulk_crop\":\n    state[\"data\"] = kwargs[\"crop_data\"]  # [(page_i, (x0,y0,x1,y1)), ...]\n```\n\n`_restore_state()` に追加する分岐（既存の `elif op == \"merge\":` ブロックの後）:\n```python\nelif op == \"bulk_move\":\n    new_order = state[\"data\"]\n    inverse = [0] * len(new_order)\n    for i, v in enumerate(new_order):\n        inverse[v] = i\n    self.doc.select(inverse)\nelif op == \"bulk_crop\":\n    for page_i, (x0, y0, x1, y1) in state[\"data\"]:\n        self.doc[page_i].set_cropbox(fitz.Rect(x0, y0, x1, y1))\n```\n\n注意点:\n- `bulk_move` の逆変換は `inverse[new_order[i]] = i` で構築する順列の逆順列。`doc.select(inverse)` で元のページ順に戻す。\n- `bulk_crop` の cropbox はタプル `(x0, y0, x1, y1)` 形式で保存し、復元時に `fitz.Rect()` で再構築（S03 の crop op と同じパターン）。\n- `doc.select()` 後は既存ページ参照が無効になるため、restore 後のページ参照は `_refresh_all()` 経由で再取得される（既存の共通後処理で対応済み）。",
+      "estimate": "30m",
+      "files": [
+        "pagefolio/file_ops.py"
+      ],
+      "verify": "grep -c \"bulk_move\\|bulk_crop\" pagefolio/file_ops.py",
+      "inputs": [
+        "pagefolio/file_ops.py"
+      ],
+      "expected_output": [
+        "pagefolio/file_ops.py"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M001",
+      "slice_id": "S04",
+      "id": "T02",
+      "title": "constants.py の LANG 辞書に bulk_move / bulk_crop 用ステータスキーを ja/en 両方に追加した",
+      "status": "complete",
+      "one_liner": "constants.py の LANG 辞書に bulk_move / bulk_crop 用ステータスキーを ja/en 両方に追加した",
+      "narrative": "pagefolio/constants.py の LANG[\"ja\"] と LANG[\"en\"] に、T03(dnd.py) と T04(page_ops.py) が参照する3つのキーを追加した。\n\n- `status_bulk_cropped`: トリミング一括適用後のステータスメッセージ（ja/en）\n- `confirm_bulk_crop`: 一括トリミング実行前の確認ダイアログ文言（ja/en）\n- `status_bulk_moved`: D&D 一括移動後のステータスメッセージ（ja/en）\n\nja の crop セクション（`status_cropped` 直下）に `status_bulk_cropped` と `confirm_bulk_crop` を追加、D&D セクション（`status_dnd_moved` 直下）に `status_bulk_moved` を追加。en セクションも同じ配置で追加。ruff check/format ともに通過・変更なし。",
+      "verification_result": "grep で 6 件（ja 3件 + en 3件）確認。ruff check/format 通過。",
+      "duration": "",
+      "completed_at": "2026-05-04T05:03:05.293Z",
+      "blocker_discovered": false,
+      "deviations": "None.",
+      "known_issues": "None.",
+      "key_files": [
+        "pagefolio/constants.py"
+      ],
+      "key_decisions": [
+        "status_bulk_moved は D&D セクション（status_dnd_moved 直下）に配置し、機能グループの一貫性を維持した",
+        "status_bulk_cropped と confirm_bulk_crop はトリミングセクション（status_cropped 直下）に配置した"
+      ],
+      "full_summary_md": "---\nid: T02\nparent: S04\nmilestone: M001\nkey_files:\n  - pagefolio/constants.py\nkey_decisions:\n  - status_bulk_moved は D&D セクション（status_dnd_moved 直下）に配置し、機能グループの一貫性を維持した\n  - status_bulk_cropped と confirm_bulk_crop はトリミングセクション（status_cropped 直下）に配置した\nduration: \nverification_result: passed\ncompleted_at: 2026-05-04T05:03:05.291Z\nblocker_discovered: false\n---\n\n# T02: constants.py の LANG 辞書に bulk_move / bulk_crop 用ステータスキーを ja/en 両方に追加した\n\n**constants.py の LANG 辞書に bulk_move / bulk_crop 用ステータスキーを ja/en 両方に追加した**\n\n## What Happened\n\npagefolio/constants.py の LANG[\"ja\"] と LANG[\"en\"] に、T03(dnd.py) と T04(page_ops.py) が参照する3つのキーを追加した。\n\n- `status_bulk_cropped`: トリミング一括適用後のステータスメッセージ（ja/en）\n- `confirm_bulk_crop`: 一括トリミング実行前の確認ダイアログ文言（ja/en）\n- `status_bulk_moved`: D&D 一括移動後のステータスメッセージ（ja/en）\n\nja の crop セクション（`status_cropped` 直下）に `status_bulk_cropped` と `confirm_bulk_crop` を追加、D&D セクション（`status_dnd_moved` 直下）に `status_bulk_moved` を追加。en セクションも同じ配置で追加。ruff check/format ともに通過・変更なし。\n\n## Verification\n\ngrep で 6 件（ja 3件 + en 3件）確認。ruff check/format 通過。\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| 1 | `grep -c 'status_bulk_moved|status_bulk_cropped|confirm_bulk_crop' pagefolio/constants.py` | 0 | ✅ pass | 200ms |\n| 2 | `ruff check pagefolio/constants.py && ruff format pagefolio/constants.py` | 0 | ✅ pass | 800ms |\n\n## Deviations\n\nNone.\n\n## Known Issues\n\nNone.\n\n## Files Created/Modified\n\n- `pagefolio/constants.py`\n",
+      "description": "T03 (dnd.py) と T04 (page_ops.py) が参照する LANG キーを ja/en 両方に追加する。\n\n追加するキー（LANG[\"ja\"] と LANG[\"en\"] の両方に追加）:\n- `\"status_bulk_moved\"`: ja = `\"{count}ページを一括移動しました\"` / en = `\"Moved {count} page(s)\"`\n- `\"status_bulk_cropped\"`: ja = `\"選択{count}ページをトリミングしました\"` / en = `\"Trimmed {count} selected page(s)\"`\n- `\"confirm_bulk_crop\"`: ja = `\"選択中の{count}ページすべてにトリミングを適用しますか？\"` / en = `\"Apply crop to all {count} selected page(s)?\"`\n\n挿入位置:\n- LANG[\"ja\"]: `\"status_cropped\"` キーの近く（トリミングセクション内）\n- LANG[\"en\"]: 対応するトリミングセクション\n- `\"status_bulk_moved\"` は D&D セクション（`\"status_dnd_moved\"` の近く）に追加してもよい",
+      "estimate": "15m",
+      "files": [
+        "pagefolio/constants.py"
+      ],
+      "verify": "grep -c \"status_bulk_moved\\|status_bulk_cropped\\|confirm_bulk_crop\" pagefolio/constants.py",
+      "inputs": [
+        "pagefolio/constants.py"
+      ],
+      "expected_output": [
+        "pagefolio/constants.py"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M001",
+      "slice_id": "S04",
+      "id": "T03",
+      "title": "dnd.py の _dnd_drop() に複数選択ページの一括移動ルートを追加し、_dnd_start_ghost() のゴーストラベルを N pages 表示に変更した",
+      "status": "complete",
+      "one_liner": "dnd.py の _dnd_drop() に複数選択ページの一括移動ルートを追加し、_dnd_start_ghost() のゴーストラベルを N pages 表示に変更した",
+      "narrative": "T01（file_ops.py の bulk_move 分岐）と T02（constants.py の LANG キー追加）が完了済みであることを確認した上で dnd.py を実装した。\n\n`_dnd_drop()` の変更: `dest = max(0, min(dest, n))` の直後に複数選択ルートを挿入した。`src` が `selected_pages` に含まれ、かつ選択数 > 1 の場合にこのルートが発動する。非選択ページリスト (`non_selected`) を生成し、`dest` から選択ページより前にあるページ数を差し引いた調整済み挿入位置 (`adj_dest`) を計算して `new_order` を構築する。`len(new_order) != n` の安全確認後、`doc.select(new_order)` → `_save_undo(\"bulk_move\", ...)` → カレントページ更新 → キャッシュ無効化 → リフレッシュ → ステータス表示の順で処理し `return`。既存の単ページルートは `if dest == src or dest == src + 1: return` を含めそのまま保持した。\n\n`_dnd_start_ghost()` の変更: `text=f\"p.{idx + 1}\"` をラベル分岐に差し替え、`idx in self.selected_pages and len(self.selected_pages) > 1` の場合は `f\"{len(self.selected_pages)} pages\"` を表示するようにした。",
+      "verification_result": "1. `grep -c \"bulk_move\\|sorted_sel\\|non_selected\" pagefolio/dnd.py` → 6（bulk_move×1, sorted_sel×3, non_selected×2）\\n2. `ruff check . && ruff format .` → All checks passed / 20 files left unchanged\\n3. `pytest --tb=short -q` → 109 passed in 1.00s",
+      "duration": "",
+      "completed_at": "2026-05-04T05:04:24.176Z",
+      "blocker_discovered": false,
+      "deviations": "none",
+      "known_issues": "none",
+      "key_files": [
+        "pagefolio/dnd.py"
+      ],
+      "key_decisions": [
+        "_dnd_drop() の複数選択ルートは既存の単ページルート(dest==src ガード含む)の前に配置し、return で単ページルートをスキップする構造にした（タスクプラン通り）",
+        "_dnd_start_ghost() のラベル分岐は selected_pages への参照のみで実装し、新しい状態変数は追加しなかった"
+      ],
+      "full_summary_md": "---\nid: T03\nparent: S04\nmilestone: M001\nkey_files:\n  - pagefolio/dnd.py\nkey_decisions:\n  - _dnd_drop() の複数選択ルートは既存の単ページルート(dest==src ガード含む)の前に配置し、return で単ページルートをスキップする構造にした（タスクプラン通り）\n  - _dnd_start_ghost() のラベル分岐は selected_pages への参照のみで実装し、新しい状態変数は追加しなかった\nduration: \nverification_result: passed\ncompleted_at: 2026-05-04T05:04:24.174Z\nblocker_discovered: false\n---\n\n# T03: dnd.py の _dnd_drop() に複数選択ページの一括移動ルートを追加し、_dnd_start_ghost() のゴーストラベルを N pages 表示に変更した\n\n**dnd.py の _dnd_drop() に複数選択ページの一括移動ルートを追加し、_dnd_start_ghost() のゴーストラベルを N pages 表示に変更した**\n\n## What Happened\n\nT01（file_ops.py の bulk_move 分岐）と T02（constants.py の LANG キー追加）が完了済みであることを確認した上で dnd.py を実装した。\n\n`_dnd_drop()` の変更: `dest = max(0, min(dest, n))` の直後に複数選択ルートを挿入した。`src` が `selected_pages` に含まれ、かつ選択数 > 1 の場合にこのルートが発動する。非選択ページリスト (`non_selected`) を生成し、`dest` から選択ページより前にあるページ数を差し引いた調整済み挿入位置 (`adj_dest`) を計算して `new_order` を構築する。`len(new_order) != n` の安全確認後、`doc.select(new_order)` → `_save_undo(\"bulk_move\", ...)` → カレントページ更新 → キャッシュ無効化 → リフレッシュ → ステータス表示の順で処理し `return`。既存の単ページルートは `if dest == src or dest == src + 1: return` を含めそのまま保持した。\n\n`_dnd_start_ghost()` の変更: `text=f\"p.{idx + 1}\"` をラベル分岐に差し替え、`idx in self.selected_pages and len(self.selected_pages) > 1` の場合は `f\"{len(self.selected_pages)} pages\"` を表示するようにした。\n\n## Verification\n\n1. `grep -c \"bulk_move\\|sorted_sel\\|non_selected\" pagefolio/dnd.py` → 6（bulk_move×1, sorted_sel×3, non_selected×2）\\n2. `ruff check . && ruff format .` → All checks passed / 20 files left unchanged\\n3. `pytest --tb=short -q` → 109 passed in 1.00s\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| 1 | `grep -c \"bulk_move\\|sorted_sel\\|non_selected\" pagefolio/dnd.py` | 0 | ✅ pass | 50ms |\n| 2 | `ruff check . && ruff format .` | 0 | ✅ pass | 3000ms |\n| 3 | `pytest --tb=short -q` | 0 | ✅ pass | 1000ms |\n\n## Deviations\n\nnone\n\n## Known Issues\n\nnone\n\n## Files Created/Modified\n\n- `pagefolio/dnd.py`\n",
+      "description": "dnd.py の `_dnd_drop()` と `_dnd_start_ghost()` を変更して複数ページ選択時の一括移動を実装する。\n\n**`_dnd_drop()` の変更:**\n`src = self._dnd_src_idx` と `dest` 確定後、既存の `n = len(self.doc)` / `dest = max(...)` 処理の後、以下の複数選択分岐を追加し、条件を満たす場合は `return` で既存の単ページルートをスキップする:\n```python\nif src in self.selected_pages and len(self.selected_pages) > 1:\n    sorted_sel = sorted(self.selected_pages)\n    non_selected = [p for p in range(n) if p not in self.selected_pages]\n    sel_before_dest = sum(1 for p in self.selected_pages if p < dest)\n    adj_dest = dest - sel_before_dest\n    adj_dest = max(0, min(adj_dest, len(non_selected)))\n    new_order = non_selected[:adj_dest] + sorted_sel + non_selected[adj_dest:]\n    if len(new_order) != n:\n        return  # 安全確認: permutation でなければ中断\n    self.doc.select(new_order)\n    self._save_undo(\"bulk_move\", new_order=new_order)\n    self.current_page = new_order.index(src)\n    self.selected_pages.clear()\n    self._invalidate_thumb_cache()\n    self._refresh_all()\n    self._set_status(self._t(\"status_bulk_moved\").format(count=len(sorted_sel)))\n    return\n```\n\n注意:\n- `self.doc.select(new_order)` の後に `_save_undo()` を呼ぶ（S03 パターン: doc 変更後に保存）\n- `new_order` が `range(n)` と同一（移動なし）でも `doc.select()` + Undo エントリが入るが、副作用は軽微（許容）\n- 既存の `if dest == src or dest == src + 1: return` は単ページルートのものなので複数選択ルートには不要\n\n**`_dnd_start_ghost()` の変更:**\n`num` ラベルのテキスト生成を条件分岐:\n```python\nif idx in self.selected_pages and len(self.selected_pages) > 1:\n    label_text = f\"{len(self.selected_pages)} pages\"\nelse:\n    label_text = f\"p.{idx + 1}\"\n```\n既存の `text=f\"p.{idx + 1}\"` を上記 `label_text` に差し替える。\n\n**T01 前提:** `_save_undo(\"bulk_move\", new_order=...)` は T01 で追加した分岐が必要。T01 完了後に実施すること。",
+      "estimate": "45m",
+      "files": [
+        "pagefolio/dnd.py"
+      ],
+      "verify": "grep -c \"bulk_move\\|sorted_sel\\|non_selected\" pagefolio/dnd.py",
+      "inputs": [
+        "pagefolio/dnd.py",
+        "pagefolio/file_ops.py",
+        "pagefolio/constants.py"
+      ],
+      "expected_output": [
+        "pagefolio/dnd.py"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M001",
+      "slice_id": "S04",
+      "id": "T04",
+      "title": "page_ops.py の _crop_page() に複数ページ一括トリミング対応を追加し、相対座標変換 + bulk_crop op で選択ページ全体に適用できるようにした",
+      "status": "complete",
+      "one_liner": "page_ops.py の _crop_page() に複数ページ一括トリミング対応を追加し、相対座標変換 + bulk_crop op で選択ページ全体に適用できるようにした",
+      "narrative": "_crop_page() を単ページ／複数ページ分岐に書き換えた。`_get_targets()` で対象ページリストを取得し、2ページ以上の場合は確認ダイアログ（confirm_bulk_crop）を表示する。単ページ時は既存コードパスをそのまま維持。複数ページ時は、現在ページの mediabox を基準に相対座標（rel タプル）を算出し、各対象ページの mediabox に乗算して新しい cropbox を決定する。EPS クランプ・is_empty/is_infinite/サイズ 1 未満チェック・set_cropbox の ValueError を各ページで適用し、無効なページはスキップする。undo は T01 で追加した bulk_crop 分岐（crop_data リスト）を使用。後処理の _invalidate_thumb_cache・_refresh_all・ステータス表示・プラグインイベントを if/else の外に共通配置し、targets サイズで分岐するよう実装した。T01（_save_undo bulk_crop）・T02（LANG キー）が前提として正常に機能していることを確認済み。",
+      "verification_result": "ruff check . && ruff format . → All checks passed（E501 を1件修正後クリア）。pytest → 109 passed in 0.99s。スライス検証コマンド `grep -c \\\"bulk_crop|confirm_bulk_crop|_get_targets\\\" pagefolio/page_ops.py` → 6（3キーワードすべてマッチ確認）。",
+      "duration": "",
+      "completed_at": "2026-05-04T05:06:29.014Z",
+      "blocker_discovered": false,
+      "deviations": "none",
+      "known_issues": "none",
+      "key_files": [
+        "pagefolio/page_ops.py"
+      ],
+      "key_decisions": [
+        "複数ページルートでは現在ページの mediabox を基準に相対座標を算出し各ページに乗算する方式を採用（ページサイズが異なっても正しく比率変換される）",
+        "単ページ時は既存コードパスを一切変更せず維持（後退互換）",
+        "set_cropbox の ValueError は複数ページ時には continue でスキップ（単ページ時は従来通りエラーダイアログ表示）"
+      ],
+      "full_summary_md": "---\nid: T04\nparent: S04\nmilestone: M001\nkey_files:\n  - pagefolio/page_ops.py\nkey_decisions:\n  - 複数ページルートでは現在ページの mediabox を基準に相対座標を算出し各ページに乗算する方式を採用（ページサイズが異なっても正しく比率変換される）\n  - 単ページ時は既存コードパスを一切変更せず維持（後退互換）\n  - set_cropbox の ValueError は複数ページ時には continue でスキップ（単ページ時は従来通りエラーダイアログ表示）\nduration: \nverification_result: passed\ncompleted_at: 2026-05-04T05:06:29.012Z\nblocker_discovered: false\n---\n\n# T04: page_ops.py の _crop_page() に複数ページ一括トリミング対応を追加し、相対座標変換 + bulk_crop op で選択ページ全体に適用できるようにした\n\n**page_ops.py の _crop_page() に複数ページ一括トリミング対応を追加し、相対座標変換 + bulk_crop op で選択ページ全体に適用できるようにした**\n\n## What Happened\n\n_crop_page() を単ページ／複数ページ分岐に書き換えた。`_get_targets()` で対象ページリストを取得し、2ページ以上の場合は確認ダイアログ（confirm_bulk_crop）を表示する。単ページ時は既存コードパスをそのまま維持。複数ページ時は、現在ページの mediabox を基準に相対座標（rel タプル）を算出し、各対象ページの mediabox に乗算して新しい cropbox を決定する。EPS クランプ・is_empty/is_infinite/サイズ 1 未満チェック・set_cropbox の ValueError を各ページで適用し、無効なページはスキップする。undo は T01 で追加した bulk_crop 分岐（crop_data リスト）を使用。後処理の _invalidate_thumb_cache・_refresh_all・ステータス表示・プラグインイベントを if/else の外に共通配置し、targets サイズで分岐するよう実装した。T01（_save_undo bulk_crop）・T02（LANG キー）が前提として正常に機能していることを確認済み。\n\n## Verification\n\nruff check . && ruff format . → All checks passed（E501 を1件修正後クリア）。pytest → 109 passed in 0.99s。スライス検証コマンド `grep -c \\\"bulk_crop|confirm_bulk_crop|_get_targets\\\" pagefolio/page_ops.py` → 6（3キーワードすべてマッチ確認）。\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| 1 | `ruff check . && ruff format .` | 0 | ✅ pass | 2100ms |\n| 2 | `pytest --tb=short -q` | 0 | ✅ pass | 990ms |\n| 3 | `grep -c \"bulk_crop\\|confirm_bulk_crop\\|_get_targets\" pagefolio/page_ops.py` | 0 | ✅ pass (count=6) | 100ms |\n\n## Deviations\n\nnone\n\n## Known Issues\n\nnone\n\n## Files Created/Modified\n\n- `pagefolio/page_ops.py`\n",
+      "description": "page_ops.py の `_crop_page()` を変更し、複数ページ選択時に相対座標変換 + bulk_crop op で一括トリミングを適用する。単ページ選択時は既存コードパスを維持する。\n\n**変更手順:**\n1. `_crop_page()` の `if not self.crop_rect:` チェックの直後に `targets = self._get_targets()` を追加\n2. 複数ページ確認ダイアログを追加:\n```python\nif len(targets) > 1:\n    if not messagebox.askyesno(\n        self._t(\"confirm_title\"),\n        self._t(\"confirm_bulk_crop\").format(count=len(targets)),\n    ):\n        return\n```\n3. 単ページ (`len(targets) == 1`) の場合: 既存コードを維持（`self._save_undo(\"crop\", page_i=self.current_page)` から始まるブロック、`self._invalidate_thumb_cache([self.current_page])` の前まで）\n4. 複数ページ (`len(targets) > 1`) の場合: 以下のブロックを追加:\n```python\nelse:\n    sx, sy, ex, ey = self.crop_rect\n    scale = self.zoom * 1.5\n    img_offset = 10\n    x0_pdf = (sx - img_offset) / scale\n    y0_pdf = (sy - img_offset) / scale\n    x1_pdf = (ex - img_offset) / scale\n    y1_pdf = (ey - img_offset) / scale\n    cur_mb = self.doc[self.current_page].mediabox\n    rel = (\n        x0_pdf / cur_mb.width,\n        y0_pdf / cur_mb.height,\n        x1_pdf / cur_mb.width,\n        y1_pdf / cur_mb.height,\n    )\n    EPS = 0.01\n    crop_data = []\n    for i in targets:\n        cb = self.doc[i].cropbox\n        crop_data.append((i, (cb.x0, cb.y0, cb.x1, cb.y1)))\n    self._save_undo(\"bulk_crop\", crop_data=crop_data)\n    for i in targets:\n        page = self.doc[i]\n        mb = page.mediabox\n        new_rect = fitz.Rect(\n            mb.x0 + rel[0] * mb.width,\n            mb.y0 + rel[1] * mb.height,\n            mb.x0 + rel[2] * mb.width,\n            mb.y0 + rel[3] * mb.height,\n        )\n        new_rect = fitz.Rect(\n            max(round(new_rect.x0, 2), mb.x0 + EPS),\n            max(round(new_rect.y0, 2), mb.y0 + EPS),\n            min(round(new_rect.x1, 2), mb.x1 - EPS),\n            min(round(new_rect.y1, 2), mb.y1 - EPS),\n        )\n        if (\n            new_rect.is_empty\n            or new_rect.is_infinite\n            or new_rect.width < 1\n            or new_rect.height < 1\n        ):\n            continue\n        try:\n            page.set_cropbox(new_rect)\n        except ValueError:\n            continue\n```\n5. 共通後処理（モードリセット・ステータス表示）を if/else の外に配置。既存の `self._invalidate_thumb_cache([self.current_page])` を `self._invalidate_thumb_cache(targets)` に変更。ステータス表示とイベント通知は targets のサイズで分岐:\n```python\nself.crop_rect = None\nself.crop_mode = False\nself.crop_toggle_btn.configure(text=self._t(\"crop_mode_off\"), style=\"TButton\")\nself.preview_canvas.configure(cursor=\"\")\nself.crop_info_var.set(self._t(\"crop_no_sel\"))\nself._invalidate_thumb_cache(targets)\nself._refresh_all()\nif len(targets) == 1:\n    self._set_status(self._t(\"status_cropped\").format(page=self.current_page + 1))\n    self.plugin_manager.fire_event(\"on_page_crop\", self, self.current_page)\nelse:\n    self._set_status(self._t(\"status_bulk_cropped\").format(count=len(targets)))\n    self.plugin_manager.fire_event(\"on_page_crop\", self, targets)\n```\n\n**T01 前提:** `_save_undo(\"bulk_crop\", crop_data=...)` は T01 で追加した分岐が必要。\n**T02 前提:** `confirm_bulk_crop` / `status_bulk_cropped` は T02 で追加した LANG キーが必要。",
+      "estimate": "45m",
+      "files": [
+        "pagefolio/page_ops.py"
+      ],
+      "verify": "grep -c \"bulk_crop\\|confirm_bulk_crop\\|_get_targets\" pagefolio/page_ops.py",
+      "inputs": [
+        "pagefolio/page_ops.py",
+        "pagefolio/file_ops.py",
+        "pagefolio/constants.py"
+      ],
+      "expected_output": [
+        "pagefolio/page_ops.py"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M001",
+      "slice_id": "S04",
+      "id": "T05",
+      "title": "test_pdf_ops.py に TestBulkMoveLogic / TestBulkCropLogic テストを追加する",
+      "status": "pending",
+      "one_liner": "",
+      "narrative": "",
+      "verification_result": "",
+      "duration": "",
+      "completed_at": null,
+      "blocker_discovered": false,
+      "deviations": "",
+      "known_issues": "",
+      "key_files": [],
+      "key_decisions": [],
+      "full_summary_md": "",
+      "description": "tests/test_pdf_ops.py に 2 つのテストクラスを追加し、bulk_move の逆順列ラウンドトリップと bulk_crop のマルチページ cropbox ラウンドトリップを検証する。\n\n**TestBulkMoveLogic（2 テスト）:**\n```python\nclass TestBulkMoveLogic:\n    \"\"\"bulk_move: doc.select() の逆順列ラウンドトリップ検証\"\"\"\n\n    def test_bulk_move_select_roundtrip(self, sample_pdf_doc):\n        \"\"\"doc.select(new_order) → 逆順列で doc.select(inverse) → 元の順序に戻る\"\"\"\n        doc = sample_pdf_doc  # 3ページ: Page 1, Page 2, Page 3\n        # ページ 0 と 2 を選択し、末尾に移動する new_order = [1, 0, 2]\n        new_order = [1, 0, 2]\n        doc.select(new_order)\n        assert \"Page 2\" in doc[0].get_text()\n        # 逆順列を計算\n        inverse = [0] * len(new_order)\n        for i, v in enumerate(new_order):\n            inverse[v] = i\n        doc.select(inverse)\n        assert \"Page 1\" in doc[0].get_text()\n        assert \"Page 2\" in doc[1].get_text()\n        assert \"Page 3\" in doc[2].get_text()\n\n    def test_bulk_move_new_order_construction(self, sample_pdf_doc):\n        \"\"\"selected_pages + dest から new_order が正しく構築される\"\"\"\n        doc = sample_pdf_doc  # 3ページ\n        n = len(doc)\n        selected_pages = {0, 2}  # ページ 0 と 2 を選択\n        dest = 3  # 末尾にドロップ\n        sorted_sel = sorted(selected_pages)\n        non_selected = [p for p in range(n) if p not in selected_pages]\n        sel_before_dest = sum(1 for p in selected_pages if p < dest)\n        adj_dest = dest - sel_before_dest\n        adj_dest = max(0, min(adj_dest, len(non_selected)))\n        new_order = non_selected[:adj_dest] + sorted_sel + non_selected[adj_dest:]\n        # new_order は permutation\n        assert sorted(new_order) == list(range(n))\n        # non_selected (page 1) が先頭、選択ページが末尾\n        assert new_order == [1, 0, 2]\n```\n\n**TestBulkCropLogic（2 テスト）:**\n```python\nclass TestBulkCropLogic:\n    \"\"\"bulk_crop: 複数ページ cropbox ラウンドトリップ検証\"\"\"\n\n    def test_bulk_crop_multi_page_roundtrip(self, sample_pdf_doc):\n        \"\"\"複数ページに cropbox 適用 → 旧データで全ページ復元できる\"\"\"\n        doc = sample_pdf_doc\n        targets = [0, 1, 2]\n        # 旧 cropbox を保存（Undo データ構築と同じ）\n        crop_data = []\n        for i in targets:\n            cb = doc[i].cropbox\n            crop_data.append((i, (cb.x0, cb.y0, cb.x1, cb.y1)))\n        # 各ページにトリミング適用\n        for i in targets:\n            page = doc[i]\n            mb = page.mediabox\n            new_rect = fitz.Rect(\n                mb.x0 + 20, mb.y0 + 20, mb.x1 - 20, mb.y1 - 20\n            )\n            page.set_cropbox(new_rect)\n            assert doc[i].cropbox.x0 > crop_data[i][1][0]\n        # Undo: 旧 cropbox で復元（_restore_state の bulk_crop ロジックと同等）\n        for page_i, (x0, y0, x1, y1) in crop_data:\n            doc[page_i].set_cropbox(fitz.Rect(x0, y0, x1, y1))\n        for i in targets:\n            cb = doc[i].cropbox\n            assert abs(cb.x0 - crop_data[i][1][0]) < 1\n            assert abs(cb.y0 - crop_data[i][1][1]) < 1\n\n    def test_bulk_crop_relative_coords(self, sample_pdf_doc):\n        \"\"\"相対座標変換: 異なる mediabox サイズのページでも比率が保たれる\"\"\"\n        doc = sample_pdf_doc\n        # current_page (0) の mediabox で相対比率を計算\n        cur_mb = doc[0].mediabox\n        # 中央 50% の領域を選択したとする\n        x0_pdf, y0_pdf = cur_mb.width * 0.1, cur_mb.height * 0.1\n        x1_pdf, y1_pdf = cur_mb.width * 0.9, cur_mb.height * 0.9\n        rel = (\n            x0_pdf / cur_mb.width,\n            y0_pdf / cur_mb.height,\n            x1_pdf / cur_mb.width,\n            y1_pdf / cur_mb.height,\n        )\n        # 同じ比率を別ページに適用\n        for i in [0, 1, 2]:\n            mb = doc[i].mediabox\n            new_x0 = mb.x0 + rel[0] * mb.width\n            new_y0 = mb.y0 + rel[1] * mb.height\n            new_x1 = mb.x0 + rel[2] * mb.width\n            new_y1 = mb.y0 + rel[3] * mb.height\n            # 比率が保たれている\n            assert abs((new_x0 - mb.x0) / mb.width - rel[0]) < 0.001\n            assert abs((new_x1 - mb.x0) / mb.width - rel[2]) < 0.001\n```\n\n追加場所: 既存の `TestUndoRedoLogic` クラスの後（ファイル末尾の `TestCheckSplitOverwrite` の前）。",
+      "estimate": "45m",
+      "files": [
+        "tests/test_pdf_ops.py"
+      ],
+      "verify": "pytest tests/test_pdf_ops.py::TestBulkMoveLogic tests/test_pdf_ops.py::TestBulkCropLogic -v --tb=short",
+      "inputs": [
+        "tests/test_pdf_ops.py",
+        "tests/conftest.py"
+      ],
+      "expected_output": [
+        "tests/test_pdf_ops.py"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M001",
+      "slice_id": "S04",
+      "id": "T06",
+      "title": "ruff リントと pytest 全件確認を行い残存する問題を修正する",
+      "status": "pending",
+      "one_liner": "",
+      "narrative": "",
+      "verification_result": "",
+      "duration": "",
+      "completed_at": null,
+      "blocker_discovered": false,
+      "deviations": "",
+      "known_issues": "",
+      "key_files": [],
+      "key_decisions": [],
+      "full_summary_md": "",
+      "description": "T01〜T05 で変更したすべてのファイルに対して ruff リント・フォーマットチェックと pytest 全件実行を行い、問題があれば修正する。\n\n1. `ruff check .` を実行してリントエラーがないか確認。エラーがあれば修正。\n2. `ruff format --check .` を実行してフォーマット違反がないか確認。違反があれば `ruff format .` で修正。\n3. `pytest --tb=short -q` を実行して全件 PASSED を確認。失敗するテストがあれば原因を特定して修正。\n4. 構文確認: `python -c \"import ast; ast.parse(open('pagefolio/file_ops.py', encoding='utf-8').read()); print('OK')\"` を各変更ファイルで実行（必要に応じて）。\n\n注意:\n- `pyproject.toml` / `ruff.toml` は編集禁止\n- 裸の `except:` 句は禁止（`except Exception as e:` の形）\n- `# type: ignore` の無断使用は禁止",
+      "estimate": "15m",
+      "files": [
+        "pagefolio/file_ops.py",
+        "pagefolio/dnd.py",
+        "pagefolio/page_ops.py",
+        "pagefolio/constants.py",
+        "tests/test_pdf_ops.py"
+      ],
+      "verify": "ruff check . && ruff format --check . && pytest --tb=short -q",
+      "inputs": [
+        "pagefolio/file_ops.py",
+        "pagefolio/dnd.py",
+        "pagefolio/page_ops.py",
+        "pagefolio/constants.py",
+        "tests/test_pdf_ops.py"
+      ],
+      "expected_output": [
+        "pagefolio/file_ops.py",
+        "pagefolio/dnd.py",
+        "pagefolio/page_ops.py",
+        "pagefolio/constants.py",
+        "tests/test_pdf_ops.py"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
     }
   ],
   "decisions": [],
-  "verification_evidence": []
+  "verification_evidence": [
+    {
+      "id": 1,
+      "task_id": "T01",
+      "slice_id": "S01",
+      "milestone_id": "M001",
+      "command": "grep -c '==' requirements.txt",
+      "exit_code": 0,
+      "verdict": "7 エントリー（7 パッケージ、仕様通り）",
+      "duration_ms": 150,
+      "created_at": "2026-05-04T03:57:11.696Z"
+    },
+    {
+      "id": 2,
+      "task_id": "T01",
+      "slice_id": "S01",
+      "milestone_id": "M001",
+      "command": "pip show PyMuPDF Pillow tkinterdnd2 pyinstaller pytest pytest-cov ruff",
+      "exit_code": 0,
+      "verdict": "全バージョンが requirements.txt と一致",
+      "duration_ms": 1200,
+      "created_at": "2026-05-04T03:57:11.696Z"
+    },
+    {
+      "id": 3,
+      "task_id": "T02",
+      "slice_id": "S01",
+      "milestone_id": "M001",
+      "command": "python -c \"from pagefolio.constants import SUPPORTED_EXTENSIONS, IMAGE_EXTENSIONS, LANG; assert '.png' in SUPPORTED_EXTENSIONS; assert 'filetypes_supported' in LANG['ja']; print('OK')\"",
+      "exit_code": 0,
+      "verdict": "PASS",
+      "duration_ms": 300,
+      "created_at": "2026-05-04T03:58:27.476Z"
+    },
+    {
+      "id": 4,
+      "task_id": "T02",
+      "slice_id": "S01",
+      "milestone_id": "M001",
+      "command": "ruff check pagefolio/constants.py && ruff format pagefolio/constants.py",
+      "exit_code": 0,
+      "verdict": "PASS",
+      "duration_ms": 500,
+      "created_at": "2026-05-04T03:58:27.476Z"
+    },
+    {
+      "id": 5,
+      "task_id": "T03",
+      "slice_id": "S01",
+      "milestone_id": "M001",
+      "command": "ruff check pagefolio/file_ops.py pagefolio/page_ops.py",
+      "exit_code": 0,
+      "verdict": "All checks passed",
+      "duration_ms": 800,
+      "created_at": "2026-05-04T04:01:27.855Z"
+    },
+    {
+      "id": 6,
+      "task_id": "T03",
+      "slice_id": "S01",
+      "milestone_id": "M001",
+      "command": "python -c \"import ast; ast.parse(open('pagefolio/file_ops.py', encoding='utf-8').read())\"",
+      "exit_code": 0,
+      "verdict": "file_ops.py: 構文OK",
+      "duration_ms": 200,
+      "created_at": "2026-05-04T04:01:27.855Z"
+    },
+    {
+      "id": 7,
+      "task_id": "T03",
+      "slice_id": "S01",
+      "milestone_id": "M001",
+      "command": "python -c \"import ast; ast.parse(open('pagefolio/page_ops.py', encoding='utf-8').read())\"",
+      "exit_code": 0,
+      "verdict": "page_ops.py: 構文OK",
+      "duration_ms": 200,
+      "created_at": "2026-05-04T04:01:27.855Z"
+    },
+    {
+      "id": 8,
+      "task_id": "T04",
+      "slice_id": "S01",
+      "milestone_id": "M001",
+      "command": "ruff check pagefolio/app.py",
+      "exit_code": 0,
+      "verdict": "All checks passed",
+      "duration_ms": 800,
+      "created_at": "2026-05-04T04:01:39.798Z"
+    },
+    {
+      "id": 9,
+      "task_id": "T04",
+      "slice_id": "S01",
+      "milestone_id": "M001",
+      "command": "python -c \"import ast; ast.parse(open('pagefolio/app.py', encoding='utf-8').read())\"",
+      "exit_code": 0,
+      "verdict": "構文OK",
+      "duration_ms": 200,
+      "created_at": "2026-05-04T04:01:39.798Z"
+    },
+    {
+      "id": 10,
+      "task_id": "T05",
+      "slice_id": "S01",
+      "milestone_id": "M001",
+      "command": "ruff check . && ruff format .",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 3200,
+      "created_at": "2026-05-04T04:02:55.662Z"
+    },
+    {
+      "id": 11,
+      "task_id": "T05",
+      "slice_id": "S01",
+      "milestone_id": "M001",
+      "command": "pytest",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 1850,
+      "created_at": "2026-05-04T04:02:55.662Z"
+    },
+    {
+      "id": 12,
+      "task_id": "T01",
+      "slice_id": "S02",
+      "milestone_id": "M001",
+      "command": "grep -c '_preview_gen\\|_thumb_gen' pagefolio/app.py",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 120,
+      "created_at": "2026-05-04T04:13:53.798Z"
+    },
+    {
+      "id": 13,
+      "task_id": "T01",
+      "slice_id": "S02",
+      "milestone_id": "M001",
+      "command": "ruff check . && ruff format . --check",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 3200,
+      "created_at": "2026-05-04T04:13:53.798Z"
+    },
+    {
+      "id": 14,
+      "task_id": "T02",
+      "slice_id": "S02",
+      "milestone_id": "M001",
+      "command": "grep -c 'threading\\|_preview_gen\\|daemon=True' pagefolio/viewer.py",
+      "exit_code": 0,
+      "verdict": "✅ pass — 5 matches",
+      "duration_ms": 150,
+      "created_at": "2026-05-04T04:16:58.176Z"
+    },
+    {
+      "id": 15,
+      "task_id": "T02",
+      "slice_id": "S02",
+      "milestone_id": "M001",
+      "command": "ruff check . && ruff format .",
+      "exit_code": 0,
+      "verdict": "✅ pass — All checks passed, 1 file reformatted",
+      "duration_ms": 2000,
+      "created_at": "2026-05-04T04:16:58.176Z"
+    },
+    {
+      "id": 16,
+      "task_id": "T02",
+      "slice_id": "S02",
+      "milestone_id": "M001",
+      "command": "pytest --tb=short -q",
+      "exit_code": 0,
+      "verdict": "✅ pass — 108 passed in 1.46s",
+      "duration_ms": 1460,
+      "created_at": "2026-05-04T04:16:58.176Z"
+    },
+    {
+      "id": 17,
+      "task_id": "T03",
+      "slice_id": "S02",
+      "milestone_id": "M001",
+      "command": "grep -c '_add_thumb_placeholder|after_idle|render_next' pagefolio/viewer.py",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 120,
+      "created_at": "2026-05-04T04:21:00.054Z"
+    },
+    {
+      "id": 18,
+      "task_id": "T03",
+      "slice_id": "S02",
+      "milestone_id": "M001",
+      "command": "ruff check . && ruff format .",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 3200,
+      "created_at": "2026-05-04T04:21:00.054Z"
+    },
+    {
+      "id": 19,
+      "task_id": "T03",
+      "slice_id": "S02",
+      "milestone_id": "M001",
+      "command": "pytest --tb=short -q",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 1100,
+      "created_at": "2026-05-04T04:21:00.054Z"
+    },
+    {
+      "id": 20,
+      "task_id": "T04",
+      "slice_id": "S02",
+      "milestone_id": "M001",
+      "command": "grep -c '_preview_gen\\|_thumb_gen' pagefolio/file_ops.py",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 50,
+      "created_at": "2026-05-04T04:26:07.876Z"
+    },
+    {
+      "id": 21,
+      "task_id": "T04",
+      "slice_id": "S02",
+      "milestone_id": "M001",
+      "command": "ruff check . && ruff format .",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 3200,
+      "created_at": "2026-05-04T04:26:07.876Z"
+    },
+    {
+      "id": 22,
+      "task_id": "T04",
+      "slice_id": "S02",
+      "milestone_id": "M001",
+      "command": "pytest --tb=short -q",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 1210,
+      "created_at": "2026-05-04T04:26:07.876Z"
+    },
+    {
+      "id": 23,
+      "task_id": "T05",
+      "slice_id": "S02",
+      "milestone_id": "M001",
+      "command": "ruff check .",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 800,
+      "created_at": "2026-05-04T04:27:50.644Z"
+    },
+    {
+      "id": 24,
+      "task_id": "T05",
+      "slice_id": "S02",
+      "milestone_id": "M001",
+      "command": "ruff format --check .",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 600,
+      "created_at": "2026-05-04T04:27:50.644Z"
+    },
+    {
+      "id": 25,
+      "task_id": "T05",
+      "slice_id": "S02",
+      "milestone_id": "M001",
+      "command": "pytest --tb=short -q",
+      "exit_code": 0,
+      "verdict": "✅ pass (108 passed)",
+      "duration_ms": 1150,
+      "created_at": "2026-05-04T04:27:50.644Z"
+    },
+    {
+      "id": 26,
+      "task_id": "T01",
+      "slice_id": "S03",
+      "milestone_id": "M001",
+      "command": "python -c \"import ast; ast.parse(open('pagefolio/file_ops.py', encoding='utf-8').read()); print('OK')\"",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 200,
+      "created_at": "2026-05-04T04:41:50.757Z"
+    },
+    {
+      "id": 27,
+      "task_id": "T02",
+      "slice_id": "S03",
+      "milestone_id": "M001",
+      "command": "python -c \"import ast; ast.parse(open('pagefolio/file_ops.py', encoding='utf-8').read()); print('OK')\"",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 200,
+      "created_at": "2026-05-04T04:43:25.288Z"
+    },
+    {
+      "id": 28,
+      "task_id": "T02",
+      "slice_id": "S03",
+      "milestone_id": "M001",
+      "command": "ruff check pagefolio/file_ops.py && ruff format pagefolio/file_ops.py --check",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 500,
+      "created_at": "2026-05-04T04:43:25.289Z"
+    },
+    {
+      "id": 29,
+      "task_id": "T03",
+      "slice_id": "S03",
+      "milestone_id": "M001",
+      "command": "python -c \"import ast; ast.parse(open('pagefolio/page_ops.py', encoding='utf-8').read()); print('OK')\"",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 200,
+      "created_at": "2026-05-04T04:45:17.058Z"
+    },
+    {
+      "id": 30,
+      "task_id": "T03",
+      "slice_id": "S03",
+      "milestone_id": "M001",
+      "command": "ruff check . && ruff format .",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 3000,
+      "created_at": "2026-05-04T04:45:17.058Z"
+    },
+    {
+      "id": 31,
+      "task_id": "T03",
+      "slice_id": "S03",
+      "milestone_id": "M001",
+      "command": "pytest",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 1410,
+      "created_at": "2026-05-04T04:45:17.058Z"
+    },
+    {
+      "id": 32,
+      "task_id": "T04",
+      "slice_id": "S03",
+      "milestone_id": "M001",
+      "command": "python -c \"import ast; ast.parse(open('pagefolio/dnd.py', encoding='utf-8').read()); print('OK')\"",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 150,
+      "created_at": "2026-05-04T04:46:17.223Z"
+    },
+    {
+      "id": 33,
+      "task_id": "T04",
+      "slice_id": "S03",
+      "milestone_id": "M001",
+      "command": "ruff check pagefolio/dnd.py",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 200,
+      "created_at": "2026-05-04T04:46:17.223Z"
+    },
+    {
+      "id": 34,
+      "task_id": "T04",
+      "slice_id": "S03",
+      "milestone_id": "M001",
+      "command": "ruff format pagefolio/dnd.py --check",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 180,
+      "created_at": "2026-05-04T04:46:17.223Z"
+    },
+    {
+      "id": 35,
+      "task_id": "T05",
+      "slice_id": "S03",
+      "milestone_id": "M001",
+      "command": "pytest tests/test_pdf_ops.py::TestUndoRedoLogic -v --tb=short",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 180,
+      "created_at": "2026-05-04T04:47:59.608Z"
+    },
+    {
+      "id": 36,
+      "task_id": "T05",
+      "slice_id": "S03",
+      "milestone_id": "M001",
+      "command": "pytest tests/ -v --tb=short",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 1060,
+      "created_at": "2026-05-04T04:47:59.608Z"
+    },
+    {
+      "id": 37,
+      "task_id": "T05",
+      "slice_id": "S03",
+      "milestone_id": "M001",
+      "command": "ruff check tests/test_pdf_ops.py && ruff format --check tests/test_pdf_ops.py",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 500,
+      "created_at": "2026-05-04T04:47:59.608Z"
+    },
+    {
+      "id": 38,
+      "task_id": "T06",
+      "slice_id": "S03",
+      "milestone_id": "M001",
+      "command": "ruff check .",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 800,
+      "created_at": "2026-05-04T04:49:04.000Z"
+    },
+    {
+      "id": 39,
+      "task_id": "T06",
+      "slice_id": "S03",
+      "milestone_id": "M001",
+      "command": "ruff format --check .",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 700,
+      "created_at": "2026-05-04T04:49:04.000Z"
+    },
+    {
+      "id": 40,
+      "task_id": "T06",
+      "slice_id": "S03",
+      "milestone_id": "M001",
+      "command": "pytest --tb=short -q",
+      "exit_code": 0,
+      "verdict": "✅ pass (109 passed)",
+      "duration_ms": 990,
+      "created_at": "2026-05-04T04:49:04.000Z"
+    },
+    {
+      "id": 41,
+      "task_id": "T01",
+      "slice_id": "S04",
+      "milestone_id": "M001",
+      "command": "grep -c \"bulk_move\\|bulk_crop\" pagefolio/file_ops.py",
+      "exit_code": 0,
+      "verdict": "✅ pass (4件)",
+      "duration_ms": 50,
+      "created_at": "2026-05-04T05:01:41.901Z"
+    },
+    {
+      "id": 42,
+      "task_id": "T01",
+      "slice_id": "S04",
+      "milestone_id": "M001",
+      "command": "ruff check . && ruff format .",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 800,
+      "created_at": "2026-05-04T05:01:41.901Z"
+    },
+    {
+      "id": 43,
+      "task_id": "T01",
+      "slice_id": "S04",
+      "milestone_id": "M001",
+      "command": "python -m pytest tests/ -q",
+      "exit_code": 0,
+      "verdict": "✅ pass (109 passed)",
+      "duration_ms": 1090,
+      "created_at": "2026-05-04T05:01:41.901Z"
+    },
+    {
+      "id": 44,
+      "task_id": "T02",
+      "slice_id": "S04",
+      "milestone_id": "M001",
+      "command": "grep -c 'status_bulk_moved|status_bulk_cropped|confirm_bulk_crop' pagefolio/constants.py",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 200,
+      "created_at": "2026-05-04T05:03:05.294Z"
+    },
+    {
+      "id": 45,
+      "task_id": "T02",
+      "slice_id": "S04",
+      "milestone_id": "M001",
+      "command": "ruff check pagefolio/constants.py && ruff format pagefolio/constants.py",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 800,
+      "created_at": "2026-05-04T05:03:05.294Z"
+    },
+    {
+      "id": 46,
+      "task_id": "T03",
+      "slice_id": "S04",
+      "milestone_id": "M001",
+      "command": "grep -c \"bulk_move\\|sorted_sel\\|non_selected\" pagefolio/dnd.py",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 50,
+      "created_at": "2026-05-04T05:04:24.176Z"
+    },
+    {
+      "id": 47,
+      "task_id": "T03",
+      "slice_id": "S04",
+      "milestone_id": "M001",
+      "command": "ruff check . && ruff format .",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 3000,
+      "created_at": "2026-05-04T05:04:24.176Z"
+    },
+    {
+      "id": 48,
+      "task_id": "T03",
+      "slice_id": "S04",
+      "milestone_id": "M001",
+      "command": "pytest --tb=short -q",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 1000,
+      "created_at": "2026-05-04T05:04:24.176Z"
+    },
+    {
+      "id": 49,
+      "task_id": "T04",
+      "slice_id": "S04",
+      "milestone_id": "M001",
+      "command": "ruff check . && ruff format .",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 2100,
+      "created_at": "2026-05-04T05:06:29.014Z"
+    },
+    {
+      "id": 50,
+      "task_id": "T04",
+      "slice_id": "S04",
+      "milestone_id": "M001",
+      "command": "pytest --tb=short -q",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 990,
+      "created_at": "2026-05-04T05:06:29.014Z"
+    },
+    {
+      "id": 51,
+      "task_id": "T04",
+      "slice_id": "S04",
+      "milestone_id": "M001",
+      "command": "grep -c \"bulk_crop\\|confirm_bulk_crop\\|_get_targets\" pagefolio/page_ops.py",
+      "exit_code": 0,
+      "verdict": "✅ pass (count=6)",
+      "duration_ms": 100,
+      "created_at": "2026-05-04T05:06:29.014Z"
+    }
+  ]
 }
