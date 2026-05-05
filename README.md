@@ -1,8 +1,8 @@
 # PageFolio
 
 **PDF ページ整理ツール — Python + Tkinter 製 GUI アプリ**
-![Version](https://img.shields.io/badge/version-v0.9.8.2-blue)
-![Pre-release](https://img.shields.io/badge/status-pre--release-orange)
+![Version](https://img.shields.io/badge/version-v1.0.0-blue)
+![Stable](https://img.shields.io/badge/status-stable-green)
 
 A PDF page organizer built with Python + Tkinter.  
 Windows 11 で動作します / Runs on Windows 11.
@@ -29,16 +29,16 @@ It does **not** edit text or add annotations — it focuses on **page-level oper
 
 | 機能 | 説明 |
 |------|------|
-| 📂 ファイルを開く | 単一・複数 PDF を読み込み（複数選択時は結合） |
+| 📂 ファイルを開く | PDF・PNG・JPG・BMP・TIFF を読み込み（複数選択時は結合） |
 | 💾 保存 | 上書き保存 / 名前を付けて保存 |
 | 🔄 ページ回転 | 90° / 180° / 270°、複数ページ一括対応 |
 | 🗑 ページ削除 | 選択ページをまとめて削除 |
-| ✂ トリミング | プレビュー上のドラッグで余白をカット |
+| ✂ トリミング | プレビュー上のドラッグで余白をカット（複数選択ページ一括適用） |
 | 📋 ページ複製 | 現在のページを直後に複製して挿入 |
 | 📎 挿入・結合 | 別 PDF からページを挿入 / 末尾に結合 |
 | ✂ 分割 | ページ範囲指定で分割 / 1ページずつ個別PDFに分割（縮小オプション付き） |
 | 🗜 縮小保存 | garbage収集 + 圧縮でファイルサイズを最適化して保存 |
-| 🔀 D&D 並び替え | サムネイルをドラッグ＆ドロップでページ順を変更 |
+| 🔀 D&D 並び替え | サムネイルをドラッグ＆ドロップでページ順を変更（複数ページ一括移動対応） |
 | ↩ Undo / Redo | 最大20回の取り消し・やり直し（Ctrl+Z / Ctrl+Y） |
 | 🔍 プレビュー | ズーム・スクロール対応、ページ拡大表示 |
 | 👁 閲覧/編集モード | ヘッダーボタン（F5）でモード切替。閲覧モードは右パネル非表示でプレビュー最大化 |
@@ -70,7 +70,7 @@ No Python installation required — just double-click to run.
 
 ## 注意事項 / Notes
 
-- トリミングは **現在表示中のページ** にのみ適用されます
+- トリミングは **選択中のページすべて** に一括適用されます（複数選択対応）
 - 回転・削除は **選択中のページ** が対象です（未選択の場合は現在ページ）
 - 保存前にアプリを閉じると編集内容は失われます
 - 暗号化・パスワード保護された PDF は開けない場合があります
@@ -128,7 +128,7 @@ pytest tests/ -v                 # テスト詳細表示
 | ファイル | テスト数 | カバー範囲 |
 |----------|---------|------------|
 | `tests/test_utils.py` | 35 | 設定読み書き・テーマ解決・フォント生成・ページ範囲パース |
-| `tests/test_pdf_ops.py` | 26 | PDF 読込・保存・回転・削除・挿入・結合・分割・トリミング |
+| `tests/test_pdf_ops.py` | 34 | PDF 読込・保存・回転・削除・挿入・結合・分割・トリミング・Undo差分・一括操作 |
 | `tests/test_plugins.py` | 17 | プラグイン検出・読込・有効/無効切替・イベント発火 |
 
 テストは GUI (Tkinter) を起動せずにヘッドレスで実行可能です。  
