@@ -66,8 +66,7 @@ class ViewerMixin:
         gen = self._preview_gen
         page_idx = self.current_page
         zoom = self.zoom
-        filepath = self.filepath
-        doc_bytes = self.doc.tobytes() if not filepath else None
+        doc_bytes = self.doc.tobytes()
 
         # ローディングプレースホルダーを即時描画
         self.preview_canvas.update_idletasks()
@@ -83,10 +82,7 @@ class ViewerMixin:
 
         def worker():
             try:
-                if filepath:
-                    tmp_doc = fitz.open(filepath)
-                else:
-                    tmp_doc = fitz.open(stream=doc_bytes, filetype="pdf")
+                tmp_doc = fitz.open(stream=doc_bytes, filetype="pdf")
                 try:
                     page = tmp_doc[page_idx]
                     mat = fitz.Matrix(zoom * 1.5, zoom * 1.5)
