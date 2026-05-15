@@ -44,7 +44,7 @@ THEMES = {
 C = dict(THEMES["dark"])
 
 # ===================== バージョン =====================
-APP_VERSION = "v1.0.0"
+APP_VERSION = "v1.1.0"
 
 # ===================== ファイル名定数 =====================
 SETTINGS_FILE = "pagefolio_settings.json"
@@ -86,6 +86,7 @@ LANG = {
         "btn_open": "ファイルを開く (Ctrl+O)",
         "btn_save": "上書き保存 (Ctrl+S)",
         "btn_save_as": "名前を付けて保存 (Ctrl+Shift+S)",
+        "btn_close_file": "📕 ファイルを閉じる",
         "btn_quit": "✕ 終了",
         # Undo/Redo
         "btn_undo": "↩ Ctrl+Z",
@@ -110,6 +111,24 @@ LANG = {
         "btn_insert_tail": "末尾に挿入",
         "btn_insert_pos": "指定位置に挿入…",
         "btn_merge": "PDFを末尾に結合",
+        # ページ結合・リサイズ
+        "sec_merge_resize": "📐 ページ結合・リサイズ",
+        "btn_merge_resize": "🧩 選択ページを結合してリサイズ…",
+        "info_merge_resize_min": "結合・リサイズには2ページ以上の選択が必要です",
+        "mr_dialog_title": "ページ結合・リサイズ",
+        "mr_dialog_heading": "ページ結合・リサイズ",
+        "mr_dialog_hint": (
+            "選択中の{count}ページを1枚に結合し、合計サイズの新しいページを作成します。\n"
+            "例: 2枚のA4を横並びで結合 → 1枚のA3"
+        ),
+        "mr_direction": "配置方向:",
+        "mr_horizontal": "横並び（左→右）",
+        "mr_vertical": "縦並び（上→下）",
+        "mr_order_label": "結合順（上から順）:",
+        "mr_size_preview": "出力サイズ: {w}×{h} pt",
+        "mr_apply": "✔ 結合・リサイズ実行",
+        "mr_cancel": "キャンセル",
+        "status_merge_resize": "{count}ページを結合・リサイズしました ({w}×{h} pt)",
         # 分割
         "sec_split": "✂ 分割",
         "btn_split_range": "📄 範囲を指定して分割…",
@@ -181,6 +200,8 @@ LANG = {
         "err_save_title": "保存エラー",
         "err_save_msg": "保存に失敗しました:\n{e}",
         "status_opened": "開きました: {name}  ({n}ページ)",
+        "close_confirm": ("現在のファイルを閉じますか？\n（未保存の変更は失われます）"),
+        "status_closed": "ファイルを閉じました",
         "status_merged_open": (
             "{count}ファイルを結合して開きました ({total}ページ): {names}"
         ),
@@ -309,6 +330,7 @@ LANG = {
         "btn_open": "Open File (Ctrl+O)",
         "btn_save": "Save (Ctrl+S)",
         "btn_save_as": "Save As (Ctrl+Shift+S)",
+        "btn_close_file": "📕 Close File",
         "btn_quit": "✕ Quit",
         # Undo/Redo
         "btn_undo": "↩ Ctrl+Z",
@@ -333,6 +355,24 @@ LANG = {
         "btn_insert_tail": "Insert at End",
         "btn_insert_pos": "Insert at Position…",
         "btn_merge": "Merge PDF to End",
+        # Page merge & resize
+        "sec_merge_resize": "📐 Merge & Resize",
+        "btn_merge_resize": "🧩 Merge Selected Pages & Resize…",
+        "info_merge_resize_min": "Select 2 or more pages to merge & resize",
+        "mr_dialog_title": "Merge & Resize Pages",
+        "mr_dialog_heading": "Merge & Resize Pages",
+        "mr_dialog_hint": (
+            "Combine {count} selected pages into one page sized to fit them all.\n"
+            "Ex: 2× A4 side by side → 1× A3"
+        ),
+        "mr_direction": "Direction:",
+        "mr_horizontal": "Horizontal (left→right)",
+        "mr_vertical": "Vertical (top→bottom)",
+        "mr_order_label": "Merge order (top to bottom):",
+        "mr_size_preview": "Output size: {w}×{h} pt",
+        "mr_apply": "✔ Apply Merge & Resize",
+        "mr_cancel": "Cancel",
+        "status_merge_resize": "Merged {count} pages → {w}×{h} pt",
         # Split
         "sec_split": "✂ Split",
         "btn_split_range": "📄 Split by Range…",
@@ -404,6 +444,8 @@ LANG = {
         "err_save_title": "Save Error",
         "err_save_msg": "Failed to save:\n{e}",
         "status_opened": "Opened: {name}  ({n} pages)",
+        "close_confirm": ("Close the current file?\n(Unsaved changes will be lost)"),
+        "status_closed": "File closed",
         "status_merged_open": "Opened {count} files merged ({total} pages): {names}",
         # Page operations status
         "status_rotated": "Rotated {count} page(s) by {deg}°",

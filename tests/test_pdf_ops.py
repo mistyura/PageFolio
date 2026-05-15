@@ -524,3 +524,125 @@ class TestCheckSplitOverwrite:
         result = self.app._check_split_overwrite(str(tmp_path), ["a.pdf", "b.pdf"])
         assert result is False
         mock_ask.assert_called_once()
+
+
+# ===== ページ結合・リサイズ =====
+
+
+class TestMergeResizeLogic:
+    """ページ結合・リサイズロジックのテスト (v1.1.0)"""
+
+    def test_horizontal_merge_two_a4_to_a3(self):
+        """A4 縦×2 を横並びで結合すると A3 横サイズになる"""
+        doc = fitz.open()
+        for _ in range(2):
+            doc.new_page(width=595, height=842)  # A4 portrait
+
+        targets = [0, 1]
+        rects = [doc[i].rect for i in targets]
+        out_w = sum(r.width for r in rects)
+        out_h = max(r.height for r in rects)
+
+        new_doc = fitz.open()
+        new_page = new_doc.new_page(width=out_w, height=out_h)
+        offset = 0.0
+        for src_pno in targets:
+            r = doc[src_pno].rect
+            new_page.show_pdf_page(
+                fitz.Rect(offset, 0, offset + r.width, r.height), doc, src_pno
+            )
+            offset += r.width
+
+        assert new_page.rect.width == 1190
+        assert new_page.rect.height == 842
+        assert len(new_doc) == 1
+        new_doc.close()
+        doc.close()
+
+    def test_vertical_merge_two_a4(self):
+        """A4 縦×2 を縦並びで結合すると幅 595 / 高さ 1684 になる"""
+        doc = fitz.open()
+        for _ in range(2):
+            doc.new_page(width=595, height=842)
+
+        targets = [0, 1]
+        rects = [doc[i].rect for i in targets]
+        out_w = max(r.width for r in rects)
+        out_h = sum(r.height for r in rects)
+
+        new_doc = fitz.open()
+        new_page = new_doc.new_page(width=out_w, height=out_h)
+        offset = 0.0
+        for src_pno in targets:
+            r = doc[src_pno].rect
+            new_page.show_pdf_page(
+                fitz.Rect(0, offset, r.width, offset + r.height), doc, src_pno
+            )
+            offset += r.height
+
+        assert new_page.rect.width == 595
+        assert new_page.rect.height == 1684
+        new_doc.close()
+        doc.close()
+
+    def test_merge_replaces_originals(self):
+        """結合実行で元ページは削除され、合計ページ数が想定通り減る"""
+        doc = fitz.open()
+        for i in range(4):
+            page = doc.new_page(width=595, height=842)
+            page.insert_text((72, 72), f"P{i + 1}", fontsize=20)
+        targets = [1, 2]
+
+        # 結合後の new_page を doc に挿入
+        rects = [doc[i].rect for i in targets]
+        new_doc = fitz.open()
+        new_page = new_doc.new_page(
+            width=sum(r.width for r in rects),
+            height=max(r.height for r in rects),
+        )
+        offset = 0.0
+        for src_pno in targets:
+            r = doc[src_pno].rect
+            new_page.show_pdf_page(
+                fitz.Rect(offset, 0, offset + r.width, r.height), doc, src_pno
+            )
+            offset += r.width
+
+        insert_at = targets[0]
+        doc.insert_pdf(new_doc, start_at=insert_at)
+        new_doc.close()
+        for i in sorted(targets, reverse=True):
+            doc.delete_page(i + 1)
+
+        # 元 4 ページ - 2 ページ + 1 ページ = 3 ページ
+        assert len(doc) == 3
+        # 挿入位置に結合ページが入っている
+        assert doc[insert_at].rect.width == 1190
+        doc.close()
+
+    def test_three_a4_horizontal_merge(self):
+        """A4 縦×3 を横並びで結合すると 1785×842 になる"""
+        doc = fitz.open()
+        for _ in range(3):
+            doc.new_page(width=595, height=842)
+
+        targets = [0, 1, 2]
+        rects = [doc[i].rect for i in targets]
+        out_w = sum(r.width for r in rects)
+        out_h = max(r.height for r in rects)
+        assert out_w == 595 * 3
+        assert out_h == 842
+        doc.close()
+
+    def test_mixed_sizes_horizontal(self):
+        """サイズが異なるページを横並びで結合（高さは最大値）"""
+        doc = fitz.open()
+        doc.new_page(width=595, height=842)  # A4
+        doc.new_page(width=420, height=595)  # A5
+        targets = [0, 1]
+        rects = [doc[i].rect for i in targets]
+        out_w = sum(r.width for r in rects)
+        out_h = max(r.height for r in rects)
+        assert out_w == 595 + 420
+        assert out_h == 842
+        doc.close()

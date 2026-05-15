@@ -12,6 +12,7 @@ from pagefolio.constants import APP_VERSION, LANG, THEMES, C  # noqa: F401
 from pagefolio.dialogs import (  # noqa: F401
     AboutDialog,
     MergeOrderDialog,
+    MergeResizeDialog,
     PluginDialog,
     SettingsDialog,
 )

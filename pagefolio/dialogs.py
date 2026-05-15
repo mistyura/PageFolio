@@ -597,3 +597,155 @@ class MergeOrderDialog(tk.Toplevel):
             return
         self.destroy()
         self.callback(self.paths)
+
+
+# ══════════════════════════════════════════
+#  ページ結合・リサイズダイアログ
+# ══════════════════════════════════════════
+class MergeResizeDialog(tk.Toplevel):
+    """選択ページを1枚に結合・リサイズするための方向選択ダイアログ"""
+
+    def __init__(self, parent, page_infos, callback, lang="ja", font_func=None):
+        super().__init__(parent)
+        self._L = LANG[lang]
+        self.title(self._L["mr_dialog_title"])
+        self.configure(bg=C["BG_DARK"])
+        self.resizable(False, False)
+        self.grab_set()
+
+        self.page_infos = page_infos  # [(page_no_1based, width, height), ...]
+        self.callback = callback
+        self._font_size = _current_font_size
+        self._font_func = font_func
+
+        self._build()
+        self._update_size_preview()
+        self.update_idletasks()
+        fs = self._font_size
+        w = max(420, int(fs * 38))
+        h = max(360, int(fs * 28) + len(page_infos) * (fs + 6))
+        h = min(h, parent.winfo_height() - 40)
+        px = parent.winfo_rootx() + parent.winfo_width() // 2
+        py = parent.winfo_rooty() + parent.winfo_height() // 2
+        self.geometry(f"{w}x{h}+{px - w // 2}+{py - h // 2}")
+        self.minsize(380, 300)
+
+    def _font(self, delta=0, weight=None):
+        if self._font_func:
+            return self._font_func(delta, weight)
+        size = max(7, self._font_size + delta)
+        if weight:
+            return ("Segoe UI", size, weight)
+        return ("Segoe UI", size)
+
+    def _build(self):
+        count = len(self.page_infos)
+
+        tk.Label(
+            self,
+            text=self._L["mr_dialog_heading"],
+            bg=C["BG_DARK"],
+            fg=C["ACCENT"],
+            font=self._font(2, "bold"),
+        ).pack(pady=(14, 4))
+
+        tk.Label(
+            self,
+            text=self._L["mr_dialog_hint"].format(count=count),
+            bg=C["BG_DARK"],
+            fg=C["TEXT_SUB"],
+            font=self._font(-1),
+            justify="center",
+        ).pack(pady=(0, 10))
+
+        # 方向選択
+        df = tk.Frame(self, bg=C["BG_DARK"])
+        df.pack(fill="x", padx=24, pady=4)
+        tk.Label(
+            df,
+            text=self._L["mr_direction"],
+            bg=C["BG_DARK"],
+            fg=C["TEXT_MAIN"],
+            font=self._font(0),
+        ).pack(side="left")
+        self.dir_var = tk.StringVar(value="horizontal")
+        for value, key in (
+            ("horizontal", "mr_horizontal"),
+            ("vertical", "mr_vertical"),
+        ):
+            tk.Radiobutton(
+                df,
+                text=self._L[key],
+                variable=self.dir_var,
+                value=value,
+                bg=C["BG_DARK"],
+                fg=C["TEXT_MAIN"],
+                selectcolor=C["BG_CARD"],
+                activebackground=C["BG_DARK"],
+                activeforeground=C["TEXT_MAIN"],
+                font=self._font(-1),
+                command=self._update_size_preview,
+            ).pack(side="left", padx=6)
+
+        # 結合順表示
+        tk.Label(
+            self,
+            text=self._L["mr_order_label"],
+            bg=C["BG_DARK"],
+            fg=C["TEXT_MAIN"],
+            font=self._font(-1),
+        ).pack(anchor="w", padx=24, pady=(8, 2))
+
+        list_frame = tk.Frame(self, bg=C["BG_PANEL"], bd=0)
+        list_frame.pack(fill="x", padx=24, pady=2)
+        for pno, w, h in self.page_infos:
+            tk.Label(
+                list_frame,
+                text=f"  p.{pno}   ({int(w)}×{int(h)} pt)",
+                bg=C["BG_PANEL"],
+                fg=C["TEXT_MAIN"],
+                font=self._font(-1),
+                anchor="w",
+            ).pack(fill="x", padx=4, pady=1)
+
+        # 出力サイズプレビュー
+        self.size_var = tk.StringVar(value="")
+        tk.Label(
+            self,
+            textvariable=self.size_var,
+            bg=C["BG_DARK"],
+            fg=C["SUCCESS"],
+            font=self._font(0, "bold"),
+        ).pack(pady=(10, 4))
+
+        # ボタン
+        btn_row = tk.Frame(self, bg=C["BG_DARK"])
+        btn_row.pack(pady=(8, 14))
+        ttk.Button(
+            btn_row,
+            text=self._L["mr_apply"],
+            style="Accent.TButton",
+            command=self._apply,
+        ).pack(side="left", padx=8)
+        ttk.Button(
+            btn_row,
+            text=self._L["mr_cancel"],
+            command=self.destroy,
+        ).pack(side="left", padx=8)
+
+    def _compute_size(self):
+        widths = [w for _, w, _ in self.page_infos]
+        heights = [h for _, _, h in self.page_infos]
+        if self.dir_var.get() == "horizontal":
+            return sum(widths), max(heights)
+        return max(widths), sum(heights)
+
+    def _update_size_preview(self):
+        w, h = self._compute_size()
+        self.size_var.set(self._L["mr_size_preview"].format(w=int(w), h=int(h)))
+
+    def _apply(self):
+        direction = self.dir_var.get()
+        out_w, out_h = self._compute_size()
+        self.destroy()
+        self.callback(direction, out_w, out_h)

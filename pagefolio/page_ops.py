@@ -372,6 +372,90 @@ class PageOpsMixin:
 
         MergeOrderDialog(self.root, list(paths), self._do_merge, lang=self.lang)
 
+    def _merge_resize_pages(self):
+        """選択ページを1枚に結合してリサイズする（例: 2× A4 → 1× A3）"""
+        if not self._check_doc():
+            return
+        targets = sorted(self._get_targets())
+        if len(targets) < 2:
+            messagebox.showinfo(self._t("info_title"), self._t("info_merge_resize_min"))
+            return
+
+        page_infos = []
+        for i in targets:
+            r = self.doc[i].rect
+            page_infos.append((i + 1, r.width, r.height))
+
+        from pagefolio.dialogs import MergeResizeDialog
+
+        MergeResizeDialog(
+            self.root,
+            page_infos,
+            lambda direction, out_w, out_h: self._do_merge_resize(
+                targets, direction, out_w, out_h
+            ),
+            lang=self.lang,
+            font_func=self._font,
+        )
+
+    def _do_merge_resize(self, targets, direction, out_w, out_h):
+        """結合・リサイズの実処理。targets は昇順のページインデックス。"""
+        # Undo はスナップショット形式で保存（_restore_state が pdf_bytes を扱う）
+        self._undo_stack.append(
+            {
+                "pdf_bytes": self.doc.tobytes(),
+                "current_page": self.current_page,
+                "selected_pages": set(self.selected_pages),
+            }
+        )
+        if len(self._undo_stack) > self.MAX_UNDO:
+            self._undo_stack.pop(0)
+        self._redo_stack.clear()
+
+        try:
+            new_doc = fitz.open()
+            new_page = new_doc.new_page(width=out_w, height=out_h)
+
+            offset = 0.0
+            for src_pno in targets:
+                src_rect = self.doc[src_pno].rect
+                if direction == "horizontal":
+                    target_rect = fitz.Rect(
+                        offset, 0, offset + src_rect.width, src_rect.height
+                    )
+                    offset += src_rect.width
+                else:
+                    target_rect = fitz.Rect(
+                        0, offset, src_rect.width, offset + src_rect.height
+                    )
+                    offset += src_rect.height
+                new_page.show_pdf_page(target_rect, self.doc, src_pno)
+
+            insert_at = targets[0]
+            self.doc.insert_pdf(new_doc, start_at=insert_at)
+            new_doc.close()
+
+            # 元ページは挿入により +1 シフトしているので +1 した位置を逆順削除
+            for i in sorted(targets, reverse=True):
+                self.doc.delete_page(i + 1)
+
+            self.selected_pages = {insert_at}
+            self.current_page = insert_at
+            self._invalidate_thumb_cache()
+            self._preview_gen += 1
+            self._thumb_gen += 1
+            self._refresh_all()
+            self._set_status(
+                self._t("status_merge_resize").format(
+                    count=len(targets), w=int(out_w), h=int(out_h)
+                )
+            )
+            self.plugin_manager.fire_event(
+                "on_merge_resize", self, targets, direction, out_w, out_h
+            )
+        except Exception as e:
+            messagebox.showerror(self._t("err_title"), str(e))
+
     def _do_merge(self, ordered_paths):
         self._save_undo("merge")
         try:
