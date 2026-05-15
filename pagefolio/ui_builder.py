@@ -388,6 +388,7 @@ class UIBuilderMixin:
             needs_doc=True,
             edit_only=True,
         )
+        btn(f, self._t("btn_close_file"), self._close_file, needs_doc=True)
         btn(f, self._t("btn_quit"), self._quit, "Danger.TButton")
 
         f_ur = section(self._t("sec_undo"))
@@ -506,6 +507,16 @@ class UIBuilderMixin:
             edit_only=True,
         )
         btn(f4, self._t("btn_merge"), self._merge_pdf, needs_doc=True, edit_only=True)
+
+        f_mr = section(self._t("sec_merge_resize"))
+        btn(
+            f_mr,
+            self._t("btn_merge_resize"),
+            self._merge_resize_pages,
+            "Accent.TButton",
+            needs_doc=True,
+            edit_only=True,
+        )
 
         f5_split = section(self._t("sec_split"))
         btn(

@@ -286,6 +286,30 @@ class FileOpsMixin:
         except Exception as e:
             messagebox.showerror(self._t("err_title"), str(e))
 
+    def _close_file(self):
+        """現在開いているファイルを閉じる（アプリは終了しない）"""
+        if not self.doc:
+            messagebox.showinfo(self._t("info_title"), self._t("info_open_first"))
+            return
+        if not messagebox.askyesno(self._t("confirm_title"), self._t("close_confirm")):
+            return
+        try:
+            self.doc.close()
+        except Exception as e:
+            logger.debug("doc.close 失敗: %s", e)
+        self.doc = None
+        self.filepath = None
+        self.current_page = 0
+        self.selected_pages.clear()
+        self._undo_stack.clear()
+        self._redo_stack.clear()
+        self._invalidate_thumb_cache()
+        self._preview_gen += 1
+        self._thumb_gen += 1
+        self._refresh_all()
+        self._set_status(self._t("status_closed"))
+        self.plugin_manager.fire_event("on_file_close", self)
+
     def _save_compressed(self):
         """縮小最適化して名前を付けて保存（garbage=4, deflate=1, clean=1）"""
         if not self.doc:
