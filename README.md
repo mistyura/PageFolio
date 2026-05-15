@@ -1,7 +1,7 @@
 # PageFolio
 
 **PDF ページ整理ツール — Python + Tkinter 製 GUI アプリ**
-![Version](https://img.shields.io/badge/version-v1.0.1-blue)
+![Version](https://img.shields.io/badge/version-v1.1.0-blue)
 ![Stable](https://img.shields.io/badge/status-stable-green)
 
 A PDF page organizer built with Python + Tkinter.  
@@ -36,9 +36,11 @@ It does **not** edit text or add annotations — it focuses on **page-level oper
 | ✂ トリミング | プレビュー上のドラッグで余白をカット（複数選択ページ一括適用） |
 | 📋 ページ複製 | 現在のページを直後に複製して挿入 |
 | 📎 挿入・結合 | 別 PDF からページを挿入 / 末尾に結合 |
+| 📐 ページ結合・リサイズ | **v1.1.0** 選択した複数ページを横並び/縦並びで1枚に結合（例: 2× A4 → 1× A3） |
 | ✂ 分割 | ページ範囲指定で分割 / 1ページずつ個別PDFに分割（縮小オプション付き） |
 | 🗜 縮小保存 | garbage収集 + 圧縮でファイルサイズを最適化して保存 |
 | 🔀 D&D 並び替え | サムネイルをドラッグ＆ドロップでページ順を変更（複数ページ一括移動対応） |
+| 📕 ファイルを閉じる | **v1.1.0** アプリを終了せず現在のファイルだけを閉じる |
 | ↩ Undo / Redo | 最大20回の取り消し・やり直し（Ctrl+Z / Ctrl+Y） |
 | 🔍 プレビュー | ズーム・スクロール対応、ページ拡大表示 |
 | 👁 閲覧/編集モード | ヘッダーボタン（F5）でモード切替。閲覧モードは右パネル非表示でプレビュー最大化 |
@@ -128,7 +130,7 @@ pytest tests/ -v                 # テスト詳細表示
 | ファイル | テスト数 | カバー範囲 |
 |----------|---------|------------|
 | `tests/test_utils.py` | 39 | 設定読み書き・テーマ解決・フォント生成・ページ範囲パース |
-| `tests/test_pdf_ops.py` | 34 | PDF 読込・保存・回転・削除・挿入・結合・分割・トリミング・Undo差分・一括操作 |
+| `tests/test_pdf_ops.py` | 39 | PDF 読込・保存・回転・削除・挿入・結合・分割・トリミング・Undo差分・一括操作・結合リサイズ |
 | `tests/test_plugins.py` | 40 | プラグイン検出・読込・有効/無効切替・イベント発火 |
 
 テストは GUI (Tkinter) を起動せずにヘッドレスで実行可能です。  
