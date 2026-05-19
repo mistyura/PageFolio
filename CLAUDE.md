@@ -14,7 +14,7 @@
 | PDF ライブラリ | pymupdf (fitz) |
 | 画像ライブラリ | Pillow (PIL) |
 | 対象 OS | Windows 11 |
-| 現在バージョン | v1.1.1 |
+| 現在バージョン | v1.1.2 |
 
 ---
 
