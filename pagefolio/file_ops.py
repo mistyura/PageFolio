@@ -215,7 +215,7 @@ class FileOpsMixin:
         try:
             if self.doc:
                 self.doc.close()
-            self.doc = fitz.open(path)
+            self.doc = self._open_path_as_pdf(path)
             self.filepath = path
             self.current_page = 0
             self.selected_pages.clear()
