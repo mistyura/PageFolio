@@ -336,7 +336,7 @@ class PageOpsMixin:
             total = 0
             pos = insert_at
             for path in ordered_paths:
-                src = fitz.open(path)
+                src = self._open_path_as_pdf(path)
                 self.doc.insert_pdf(src, start_at=pos)
                 pos += len(src)
                 total += len(src)

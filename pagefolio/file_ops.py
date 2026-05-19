@@ -169,6 +169,16 @@ class FileOpsMixin:
 
         MergeOrderDialog(self.root, paths, self._do_open_merged, lang=self.lang)
 
+    def _open_path_as_pdf(self, path):
+        """ファイルをPDF互換のDocumentとして開く。画像の場合はPDFに変換する。"""
+        ext = os.path.splitext(path)[1].lower()
+        if ext in IMAGE_EXTENSIONS:
+            img_doc = fitz.open(path)
+            pdf_bytes = img_doc.convert_to_pdf()
+            img_doc.close()
+            return fitz.open(stream=pdf_bytes, filetype="pdf")
+        return fitz.open(path)
+
     def _do_open_merged(self, ordered_paths):
         """結合順ダイアログ確定後、結合して開く"""
         try:
@@ -177,7 +187,7 @@ class FileOpsMixin:
             merged = fitz.open()
             total = 0
             for path in ordered_paths:
-                src = fitz.open(path)
+                src = self._open_path_as_pdf(path)
                 merged.insert_pdf(src)
                 total += len(src)
                 src.close()
