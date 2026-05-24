@@ -1,6 +1,7 @@
 # CLAUDE.md — PageFolio AI 開発指示書
 
 このファイルは Claude (AI) がこのプロジェクトを編集・拡張する際に参照する指示書です。
+エンドユーザー向けの情報は [README.md](README.md)、変更履歴は [開発履歴.md](開発履歴.md) を参照してください。
 
 ---
 
@@ -14,15 +15,10 @@
 | PDF ライブラリ | pymupdf (fitz) |
 | 画像ライブラリ | Pillow (PIL) |
 | 対象 OS | Windows 11 |
-| 現在バージョン | v1.1.2 |
+| 現在バージョン | `pagefolio/constants.py` の `APP_VERSION` を参照 |
 
----
-
-## 開発について
-
-本プロジェクトは **Claude Code**（Anthropic）を活用して開発されています。
-`CLAUDE.md` による構造化された AI 開発指示書の運用、`開発履歴.md` による変更管理など、
-AI との協調開発のユースケースとして公開しています。
+> バージョン番号は `pagefolio/constants.py` の `APP_VERSION` を真の情報源とする。
+> README.md のバッジ・開発履歴.md の最新エントリと同期させること。
 
 ---
 
@@ -34,7 +30,7 @@ PageFolio/
 ├── pagefolio/                 # メインパッケージ
 │   ├── __init__.py            # 公開API（後方互換 import 用）
 │   ├── __main__.py            # python -m pagefolio エントリーポイント
-│   ├── constants.py           # テーマ・バージョン・言語辞書（THEMES, C, LANG）
+│   ├── constants.py           # テーマ・バージョン・言語辞書（THEMES, C, LANG, APP_VERSION）
 │   ├── settings.py            # 設定ユーティリティ関数
 │   ├── plugins.py             # プラグインシステム（PDFEditorPlugin, PluginManager）
 │   ├── app.py                 # PDFEditorApp 本体（Mixin 統合 + 状態管理）
@@ -43,7 +39,7 @@ PageFolio/
 │   ├── page_ops.py            # ページ操作 Mixin（回転/削除/トリミング/挿入/結合/分割）
 │   ├── viewer.py              # 表示 Mixin（プレビュー/ズーム/サムネイル/ポップアップ）
 │   ├── dnd.py                 # D&D Mixin（サムネイルのドラッグ並び替え）
-│   ├── dialogs.py             # ダイアログ群（About/Settings/Plugin/MergeOrder）
+│   ├── dialogs.py             # ダイアログ群（About/Settings/Plugin/MergeOrder/MergeResize）
 │   └── file_drop.py           # ファイル D&D（tkinterdnd2 連携）
 ├── pagefolio.ico              # アプリアイコン
 ├── README.md                  # エンドユーザー向け使用概要
@@ -55,12 +51,13 @@ PageFolio/
 │   └── page_info.py           # サンプルプラグイン（ページ情報表示）
 ├── tests/                     # テストスイート（pytest）
 │   ├── conftest.py            # テスト用共通フィクスチャ
-│   ├── test_utils.py          # ユーティリティ関数テスト（35件）
-│   ├── test_pdf_ops.py        # PDF 操作テスト（34件）
-│   └── test_plugins.py        # PluginManager テスト（17件）
+│   ├── test_utils.py          # ユーティリティ関数テスト
+│   ├── test_pdf_ops.py        # PDF 操作テスト
+│   └── test_plugins.py        # PluginManager テスト
 └── docs/                      # スクリーンショット画像
+
 （実行時に自動生成）
-└── pagefolio_settings.json    # ユーザー設定（テーマ・フォントサイズ）
+└── pagefolio_settings.json    # ユーザー設定（テーマ・フォントサイズ等）
 ```
 
 ---
@@ -80,6 +77,7 @@ PageFolio/
 `PDFEditorApp` メインクラス。5つの Mixin を統合し、`__init__`・キーバインド・ユーティリティメソッドを持つ。
 
 ### Mixin モジュール群
+
 | モジュール | Mixin クラス | 責務 |
 |-----------|-------------|------|
 | `ui_builder.py` | `UIBuilderMixin` | スタイル定義・レイアウト構築 |
@@ -89,7 +87,7 @@ PageFolio/
 | `dnd.py` | `DnDMixin` | サムネイル D&D 並び替え |
 
 ### `pagefolio/dialogs.py`
-`AboutDialog`・`SettingsDialog`・`PluginDialog`・`MergeOrderDialog` の4ダイアログクラス。
+`AboutDialog`・`SettingsDialog`・`PluginDialog`・`MergeOrderDialog`・`MergeResizeDialog` のダイアログクラス群。
 
 ---
 
@@ -119,62 +117,69 @@ C = dict(THEMES["dark"])  # 実行時に _apply_theme() で更新
 
 ## コマンド
 
-- テスト実行: `pytest`
-- リント: `ruff check . && ruff format .`
+| コマンド | 用途 |
+|---------|------|
+| `pytest` | テスト実行 |
+| `ruff check . && ruff format .` | リント・フォーマット |
 
 ---
 
 ## コーディング規約
 
+### 構造・命名
 - **パッケージ構成を維持する**: `pagefolio/` パッケージにモジュール分割済み。Mixin パターンで PDFEditorApp を構成。
-- **メソッド名**: `_` プレフィックスで内部メソッドを示す
-- **ボタンスタイル**:
-  - 通常操作 → `"TButton"`
-  - 主要アクション → `"Accent.TButton"`
-  - 破壊的操作（削除・終了） → `"Danger.TButton"`
-  - トリミングモード ON → `"CropOn.TButton"`
-- **状態管理**:
-  - `self.doc` — 現在開いている `fitz.Document`（未開時は `None`）
-  - `self.current_page` — 0 始まりのページインデックス
-  - `self.selected_pages` — `set` で複数選択を管理
-  - `self._undo_stack` / `self._redo_stack` — Undo/Redo スタック
-  - `self.thumb_cache` — サムネイルキャッシュ辞書
-  - `self._doc_buttons` — ファイル依存ボタンのリスト（doc未開時に disabled）
-  - `self._pending_click` — ダブルクリック競合防止用の遅延クリックID
-  - `self.settings` — 設定辞書（テーマ、フォントサイズ、ウィンドウジオメトリ、モード）
-  - `self.font_size` — 現在のベースフォントサイズ（8〜16）
-  - `self.edit_mode` — 編集モード True / 閲覧モード False（設定に永続化）
-  - `self._paned` — メインの `tk.PanedWindow`（横分割）参照
-  - `self._right_panel` — 右ツールパネルの `tk.Frame`（閲覧モード時は paned から外す）
-  - `self._mode_btn` — モード切替 `ttk.Button` 参照
-- **再描画**: ページ変更後は必ず `self._refresh_all()` を呼ぶ
-- **ステータス表示**: 操作完了後は `self._set_status(msg)` でヘッダーに表示
-- **ファイル操作前の確認**: `self._check_doc()` で `self.doc` の存在を確認する
-- **トリミング安全処理**: CropBox は必ず MediaBox 内にクランプしてから `set_cropbox` を呼ぶ
-- **テーマ色の参照**: グローバル定数ではなく `C["BG_DARK"]` 等のテーマ辞書を使う
-- **フォントサイズ**: ハードコードせず `self._font(delta)` ヘルパーを使う（ベース + delta）
-- **設定保存**: `pagefolio_settings.json` に JSON で永続化（`_save_settings()`）
-- **作業フロー**: 1タスクずつ完了させてから次のタスクへ進むこと
+- **メソッド名**: `_` プレフィックスで内部メソッドを示す。
+- **テーマ色の参照**: グローバル定数ではなく `C["BG_DARK"]` 等のテーマ辞書を使う。
+- **フォントサイズ**: ハードコードせず `self._font(delta)` ヘルパーを使う（ベース + delta）。
+
+### ボタンスタイル
+- 通常操作 → `"TButton"`
+- 主要アクション → `"Accent.TButton"`
+- 破壊的操作（削除・終了） → `"Danger.TButton"`
+- トリミングモード ON → `"CropOn.TButton"`
+
+### 状態管理（`self.*` 主要属性）
+
+| 属性 | 説明 |
+|------|------|
+| `self.doc` | 現在開いている `fitz.Document`（未開時は `None`） |
+| `self.current_page` | 0 始まりのページインデックス |
+| `self.selected_pages` | `set` で複数選択を管理 |
+| `self._undo_stack` / `self._redo_stack` | Undo/Redo スタック |
+| `self.thumb_cache` | サムネイルキャッシュ辞書 |
+| `self._doc_buttons` | ファイル依存ボタンのリスト（doc 未開時に disabled） |
+| `self._pending_click` | ダブルクリック競合防止用の遅延クリックID |
+| `self.settings` | 設定辞書（テーマ、フォントサイズ、ウィンドウジオメトリ、モード） |
+| `self.font_size` | 現在のベースフォントサイズ（8〜16） |
+| `self.edit_mode` | 編集モード True / 閲覧モード False（設定に永続化） |
+| `self._paned` | メインの `tk.PanedWindow`（横分割）参照 |
+| `self._right_panel` | 右ツールパネルの `tk.Frame` |
+| `self._mode_btn` | モード切替 `ttk.Button` 参照 |
+
+### 操作後の作法
+- **再描画**: ページ変更後は必ず `self._refresh_all()` を呼ぶ。
+- **ステータス表示**: 操作完了後は `self._set_status(msg)` でヘッダーに表示。
+- **ファイル操作前の確認**: `self._check_doc()` で `self.doc` の存在を確認する。
+- **トリミング安全処理**: CropBox は必ず MediaBox 内にクランプしてから `set_cropbox` を呼ぶ。
+- **設定保存**: `pagefolio_settings.json` に JSON で永続化（`_save_settings()`）。
+
+### 作業フロー
+- **1タスクずつ完了させてから次のタスクへ進むこと**
 - **リント必須**: py ファイルを編集したら必ず `ruff check . && ruff format .` が通ることを確認すること
 - **テスト必須**: コミット前に `pytest` を通すこと
 
 ### 禁止事項
-
 - `pyproject.toml` / `ruff.toml` の編集
 - 裸の `except:` 句（必ず `except Exception as e:` の形で）
 - `# type: ignore` の無断使用
 
 ---
 
-## Language
-
-タスクリスト（TodoWrite）の内容を含め、すべての返答を日本語で行うこと。
-
----
-
 ## 言語ルール
 
-本プロジェクトでは、以下の出力を**原則日本語**で記述すること。
+タスクリスト（TodoWrite）の内容を含め、**すべての返答を日本語で行うこと**。
+
+以下の出力も**原則日本語**で記述する。
 
 | 対象 | 例 |
 |------|-----|
@@ -183,7 +188,7 @@ C = dict(THEMES["dark"])  # 実行時に _apply_theme() で更新
 | GitHub Issue のタイトル / コメント | `トリミング後にプレビューが更新されない` |
 | コードレビューのフィードバック | `この条件分岐は不要では？` |
 | `開発履歴.md` の記載 | 既存ルール通り |
-| セッション終了時の申し送り | 既存ルール通り |
+| セッション終了時の申し送り | 後述のフォーマット |
 | ユーザーへの応答・説明 | 会話はすべて日本語 |
 
 **例外（英語のまま）**:
@@ -205,21 +210,13 @@ C = dict(THEMES["dark"])  # 実行時に _apply_theme() で更新
 
 ---
 
-## 今後の追加予定機能（候補）
+## 今後の追加予定機能
 
-- [x] 複数ページの一括トリミング
-- [x] 複数ページの D&D 一括移動
 - [ ] ページの回転状態をプレビューに即時反映
 - [ ] PDF のパスワード解除対応
 - [ ] 印刷機能
-- [x] ページ範囲指定での分割保存
-- [x] PyInstaller による exe 化・配布対応
-- [x] ページ複製機能（アクティブページを直後に挿入）
-- [x] PDF サイズ縮小保存（単体 + 分割時オプション）
-- [x] 閲覧モード / 編集モード 切替（F5 ショートカット、デフォルト閲覧モード）
-- [x] ウィンドウ位置・サイズの前回終了時引き継ぎ
-- [x] ページ結合・リサイズ機能（複数A4を1枚のA3にまとめる等）
-- [x] ファイルを閉じる（アプリは終了しない）
+
+> 実装済みの機能リストは [開発履歴.md](開発履歴.md) を参照。
 
 ---
 
@@ -229,14 +226,14 @@ C = dict(THEMES["dark"])  # 実行時に _apply_theme() で更新
 - [ ] `python -c "import ast; ast.parse(open('pagefolio.py', encoding='utf-8').read())"` で構文確認
 - [ ] `pytest` でテスト確認
 - [ ] `開発履歴.md` に変更内容を追記
-- [ ] バージョン番号を更新（本ファイル・開発履歴.md）
+- [ ] バージョン番号を更新（`pagefolio/constants.py` の `APP_VERSION`、開発履歴.md、README.md のバッジ）
 
 ---
 
 ## セッション終了時のルール
 
 作業が完了したら、依頼されなくても必ず日本語で以下の形式で申し送りを出力すること。
-この出力はclaude.aiに貼り付けてNotionを更新するために使用する。
+この出力は claude.ai に貼り付けて Notion を更新するために使用する。
 
 ### 変更内容サマリー
 

@@ -1,14 +1,15 @@
 # PageFolio
 
 **PDF ページ整理ツール — Python + Tkinter 製 GUI アプリ**
+
 ![Version](https://img.shields.io/badge/version-v1.1.2-blue)
 ![Stable](https://img.shields.io/badge/status-stable-green)
 
-A PDF page organizer built with Python + Tkinter.  
+A PDF page organizer built with Python + Tkinter.
 Windows 11 で動作します / Runs on Windows 11.
 
 > 📝 このプロジェクトは [Claude Code](https://claude.ai/code)（Anthropic）を活用して開発されています。
-> AI との協調開発のユースケースとして公開しています。
+> AI との協調開発のユースケースとして公開しており、開発指示書（`CLAUDE.md`）と開発履歴（`開発履歴.md`）も併せて公開しています。
 >
 > This project is developed with [Claude Code](https://claude.ai/code) by Anthropic,
 > and published as a use case of AI-assisted development.
@@ -36,14 +37,14 @@ It does **not** edit text or add annotations — it focuses on **page-level oper
 | ✂ トリミング | プレビュー上のドラッグで余白をカット（複数選択ページ一括適用） |
 | 📋 ページ複製 | 現在のページを直後に複製して挿入 |
 | 📎 挿入・結合 | 別 PDF からページを挿入 / 末尾に結合 |
-| 📐 ページ結合・リサイズ | **v1.1.0** 選択した複数ページを横並び/縦並びで1枚に結合（例: 2× A4 → 1× A3） |
+| 📐 ページ結合・リサイズ | 選択した複数ページを横並び/縦並びで1枚に結合（例: 2× A4 → 1× A3） |
 | ✂ 分割 | ページ範囲指定で分割 / 1ページずつ個別PDFに分割（縮小オプション付き） |
 | 🗜 縮小保存 | garbage収集 + 圧縮でファイルサイズを最適化して保存 |
 | 🔀 D&D 並び替え | サムネイルをドラッグ＆ドロップでページ順を変更（複数ページ一括移動対応） |
-| 📕 ファイルを閉じる | **v1.1.0** アプリを終了せず現在のファイルだけを閉じる |
+| 📕 ファイルを閉じる | アプリを終了せず現在のファイルだけを閉じる |
 | ↩ Undo / Redo | 最大20回の取り消し・やり直し（Ctrl+Z / Ctrl+Y） |
 | 🔍 プレビュー | ズーム・スクロール対応、ページ拡大表示 |
-| 👁 閲覧/編集モード | ヘッダーボタン（F5）でモード切替。閲覧モードは右パネル非表示でプレビュー最大化 |
+| 👁 閲覧/編集モード | ヘッダーボタン（F5）でモード切替。閲覧モードは編集ボタンが非活性 |
 | ⚙ テーマ・フォント | ダーク / ライト / システム連動、フォントサイズ変更 |
 | 🪟 ウィンドウ状態引き継ぎ | 前回終了時のウィンドウ位置・サイズを次回起動時に復元 |
 
@@ -51,15 +52,15 @@ It does **not** edit text or add annotations — it focuses on **page-level oper
 
 ## ダウンロード / Download
 
-[Releases](https://github.com/mistyura/PageFolio/releases) から最新の `PageFolio.exe` をダウンロードしてください。  
+[Releases](https://github.com/mistyura/PageFolio/releases) から最新の `PageFolio.exe` をダウンロードしてください。
 Python のインストールは不要です。ダブルクリックで起動できます。
 
-Download the latest `PageFolio.exe` from [Releases](https://github.com/mistyura/PageFolio/releases).  
+Download the latest `PageFolio.exe` from [Releases](https://github.com/mistyura/PageFolio/releases).
 No Python installation required — just double-click to run.
 
 ---
 
-## 画面構成 / Layout (スクリーンショット / Screenshot)
+## 画面構成 / Screenshots
 
 ![ダークテーマ（日本語）](docs/メイン（ダーク）-日本語.png)
 ![ダークテーマ（複数選択）](docs/メイン（ダーク）-日本語-2.png)
@@ -72,8 +73,7 @@ No Python installation required — just double-click to run.
 
 ## 注意事項 / Notes
 
-- トリミングは **選択中のページすべて** に一括適用されます（複数選択対応）
-- 回転・削除は **選択中のページ** が対象です（未選択の場合は現在ページ）
+- トリミング・回転・削除は **選択中のページ** が対象です（未選択の場合は現在ページ）
 - 保存前にアプリを閉じると編集内容は失われます
 - 暗号化・パスワード保護された PDF は開けない場合があります
 
@@ -81,14 +81,14 @@ No Python installation required — just double-click to run.
 
 ## 🐛 バグ報告・フィードバック / Bug Reports
 
-不具合・要望は [Issues](https://github.com/mistyura/PageFolio/issues) からお知らせください。  
+不具合・要望は [Issues](https://github.com/mistyura/PageFolio/issues) からお知らせください。
 Please report bugs or feature requests via [Issues](https://github.com/mistyura/PageFolio/issues).
 
 ---
 
-## 開発者向け情報
+## 開発者向け / For Developers
 
-## Python から実行する場合 / Run from Python
+### Python から実行 / Run from Python
 
 ```bash
 pip install pymupdf pillow
@@ -97,21 +97,16 @@ python pagefolio.py
 
 Python 3.8 以上が必要です / Requires Python 3.8+
 
----
-
-## EXE ビルド / Build EXE
+### EXE ビルド / Build EXE
 
 ```bash
 pip install pyinstaller
 pyinstaller --onefile --noconsole --icon=pagefolio.ico --name=PageFolio pagefolio.py
 ```
 
-`dist/PageFolio.exe` が生成されます。  
-The output `dist/PageFolio.exe` is a standalone single-file executable.
+`dist/PageFolio.exe` が単体実行可能ファイルとして生成されます。
 
----
-
-## 開発ツール / Development Tools
+### 開発ツール / Development Tools
 
 | ツール | 用途 |
 |--------|------|
@@ -122,35 +117,18 @@ The output `dist/PageFolio.exe` is a standalone single-file executable.
 ```bash
 ruff check . && ruff format .   # リント・フォーマット
 pytest                           # テスト実行
-pytest tests/ -v                 # テスト詳細表示
 ```
 
-### テスト構成 / Test Structure
-
-| ファイル | テスト数 | カバー範囲 |
-|----------|---------|------------|
-| `tests/test_utils.py` | 39 | 設定読み書き・テーマ解決・フォント生成・ページ範囲パース |
-| `tests/test_pdf_ops.py` | 39 | PDF 読込・保存・回転・削除・挿入・結合・分割・トリミング・Undo差分・一括操作・結合リサイズ |
-| `tests/test_plugins.py` | 40 | プラグイン検出・読込・有効/無効切替・イベント発火 |
-
-テストは GUI (Tkinter) を起動せずにヘッドレスで実行可能です。  
+テストは GUI (Tkinter) を起動せずにヘッドレスで実行可能です。
 All tests run headless without launching the Tkinter GUI.
 
----
+### AI 協調開発 / AI-assisted Development
 
-## Claude Code による開発について / About AI-assisted Development
+機能追加・バグ修正・UI改善のほぼすべてを Claude Code との対話で実装しています。
+詳細は以下を参照してください。
 
-本プロジェクトは Claude Code を使った開発のユースケースとして公開しています。
-
-- `CLAUDE.md` — Claude に渡す構造化された開発指示書
-- `開発履歴.md` — 各バージョンの変更内容を記録した開発ログ
-
-　機能追加・バグ修正・UI改善のほぼすべてを Claude Code との対話で実装してきました。
-
-This project is published as a use case of development with Claude Code.
-
-- `CLAUDE.md` — Structured development instructions passed to Claude
-- `開発履歴.md` (Development History) — Change log for each version
+- **[CLAUDE.md](CLAUDE.md)** — Claude に渡す構造化された開発指示書（モジュール構成・コーディング規約）
+- **[開発履歴.md](開発履歴.md)** — 各バージョンの変更ログ
 
 ---
 
