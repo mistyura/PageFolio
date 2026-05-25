@@ -2,7 +2,7 @@
 
 **PDF ページ整理ツール — Python + Tkinter 製 GUI アプリ**
 
-![Version](https://img.shields.io/badge/version-v1.1.2-blue)
+![Version](https://img.shields.io/badge/version-v1.1.2--4-blue)
 ![Stable](https://img.shields.io/badge/status-stable-green)
 
 A PDF page organizer built with Python + Tkinter.
@@ -52,11 +52,15 @@ It does **not** edit text or add annotations — it focuses on **page-level oper
 
 ## ダウンロード / Download
 
-[Releases](https://github.com/mistyura/PageFolio/releases) から最新の `PageFolio.exe` をダウンロードしてください。
-Python のインストールは不要です。ダブルクリックで起動できます。
+[Releases](https://github.com/mistyura/PageFolio/releases) から最新の `PageFolio-vX.X.X-onedir.zip` をダウンロードし、任意のフォルダに展開して `PageFolio.exe` を実行してください。
+Python のインストールは不要です。
 
-Download the latest `PageFolio.exe` from [Releases](https://github.com/mistyura/PageFolio/releases).
-No Python installation required — just double-click to run.
+Download the latest `PageFolio-vX.X.X-onedir.zip` from [Releases](https://github.com/mistyura/PageFolio/releases), extract it to any folder, and run `PageFolio.exe`.
+No Python installation required.
+
+> v1.1.2-4 以降は `--onedir` 形式で配布しています。zip 内の `PageFolio.exe` と `_internal/` フォルダは同じディレクトリに置いたままご利用ください。
+>
+> Starting with v1.1.2-4, releases are distributed in `--onedir` format. Keep `PageFolio.exe` and the `_internal/` folder together in the same directory.
 
 ---
 
@@ -101,10 +105,10 @@ Python 3.8 以上が必要です / Requires Python 3.8+
 
 ```bash
 pip install pyinstaller
-pyinstaller --onefile --noconsole --icon=pagefolio.ico --name=PageFolio pagefolio.py
+pyinstaller --onedir --noconsole --icon=pagefolio.ico --name=PageFolio pagefolio.py
 ```
 
-`dist/PageFolio.exe` が単体実行可能ファイルとして生成されます。
+`dist/PageFolio/` フォルダに `PageFolio.exe` と `_internal/` 一式が生成されます。配布時は `dist/PageFolio/` をフォルダごと zip 化してください。
 
 ### 開発ツール / Development Tools
 
