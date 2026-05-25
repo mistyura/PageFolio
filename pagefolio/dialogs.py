@@ -11,6 +11,7 @@ from tkinter import messagebox, ttk
 import fitz
 
 from pagefolio.constants import APP_VERSION, LANG, PLUGINS_DIR, C
+from pagefolio.ocr import fetch_lm_studio_models
 from pagefolio.plugins import _get_plugins_dir
 from pagefolio.settings import _current_font_size
 
@@ -113,8 +114,8 @@ class SettingsDialog(tk.Toplevel):
         px = parent.winfo_rootx() + parent.winfo_width() // 2
         py = parent.winfo_rooty() + parent.winfo_height() // 2
         fs = current_settings.get("font_size", 12)
-        w = max(380, int(fs * 32))
-        h = max(280, int(fs * 24))
+        w = max(460, int(fs * 38))
+        h = max(520, int(fs * 42))
         self.geometry(f"{w}x{h}+{px - w // 2}+{py - h // 2}")
 
     def _build(self):
@@ -197,6 +198,156 @@ class SettingsDialog(tk.Toplevel):
         self.preview_label.pack(padx=24, pady=8, fill="x")
         self.font_var.trace_add("write", self._update_preview)
 
+        # ── LM Studio (OCR) セクション ──
+        sep = tk.Frame(self, bg=C["BG_CARD"], height=1)
+        sep.pack(fill="x", padx=24, pady=(8, 4))
+        tk.Label(
+            self,
+            text=self._L["settings_lm_studio_section"],
+            bg=C["BG_DARK"],
+            fg=C["WARNING"],
+            font=self._font(0, "bold"),
+        ).pack(anchor="w", padx=24, pady=(4, 2))
+
+        # URL
+        url_row = tk.Frame(self, bg=C["BG_DARK"])
+        url_row.pack(fill="x", padx=24, pady=2)
+        tk.Label(
+            url_row,
+            text=self._L["settings_lm_url"],
+            bg=C["BG_DARK"],
+            fg=C["TEXT_MAIN"],
+            font=self._font(-1),
+            width=14,
+            anchor="w",
+        ).pack(side="left")
+        self.lm_url_var = tk.StringVar(
+            value=self.current_settings.get("lm_studio_url", "http://localhost:1234"),
+        )
+        tk.Entry(
+            url_row,
+            textvariable=self.lm_url_var,
+            font=self._font(-1),
+            bg=C["BG_CARD"],
+            fg=C["TEXT_MAIN"],
+            insertbackground=C["TEXT_MAIN"],
+            relief="flat",
+        ).pack(side="left", fill="x", expand=True, padx=4)
+
+        # モデル
+        model_row = tk.Frame(self, bg=C["BG_DARK"])
+        model_row.pack(fill="x", padx=24, pady=2)
+        tk.Label(
+            model_row,
+            text=self._L["settings_lm_model"],
+            bg=C["BG_DARK"],
+            fg=C["TEXT_MAIN"],
+            font=self._font(-1),
+            width=14,
+            anchor="w",
+        ).pack(side="left")
+        self.lm_model_var = tk.StringVar(
+            value=self.current_settings.get("lm_studio_model", ""),
+        )
+        self.lm_model_combo = ttk.Combobox(
+            model_row,
+            textvariable=self.lm_model_var,
+            font=self._font(-1),
+            values=[],
+        )
+        self.lm_model_combo.pack(side="left", fill="x", expand=True, padx=4)
+
+        tk.Label(
+            self,
+            text=self._L["settings_lm_model_hint"],
+            bg=C["BG_DARK"],
+            fg=C["TEXT_SUB"],
+            font=self._font(-2),
+        ).pack(anchor="w", padx=24)
+
+        # 解像度倍率
+        scale_row = tk.Frame(self, bg=C["BG_DARK"])
+        scale_row.pack(fill="x", padx=24, pady=(6, 2))
+        tk.Label(
+            scale_row,
+            text=self._L["settings_ocr_scale"],
+            bg=C["BG_DARK"],
+            fg=C["TEXT_MAIN"],
+            font=self._font(-1),
+            width=20,
+            anchor="w",
+        ).pack(side="left")
+        self.ocr_scale_var = tk.DoubleVar(
+            value=float(self.current_settings.get("ocr_scale", 2.0)),
+        )
+        tk.Spinbox(
+            scale_row,
+            from_=1.0,
+            to=4.0,
+            increment=0.5,
+            textvariable=self.ocr_scale_var,
+            width=6,
+            font=self._font(-1),
+            bg=C["BG_CARD"],
+            fg=C["TEXT_MAIN"],
+            buttonbackground=C["BG_PANEL"],
+            insertbackground=C["TEXT_MAIN"],
+        ).pack(side="left", padx=4)
+
+        # タイムアウト
+        to_row = tk.Frame(self, bg=C["BG_DARK"])
+        to_row.pack(fill="x", padx=24, pady=2)
+        tk.Label(
+            to_row,
+            text=self._L["settings_ocr_timeout"],
+            bg=C["BG_DARK"],
+            fg=C["TEXT_MAIN"],
+            font=self._font(-1),
+            width=20,
+            anchor="w",
+        ).pack(side="left")
+        self.ocr_timeout_var = tk.IntVar(
+            value=int(self.current_settings.get("ocr_timeout", 120)),
+        )
+        tk.Spinbox(
+            to_row,
+            from_=10,
+            to=600,
+            increment=10,
+            textvariable=self.ocr_timeout_var,
+            width=6,
+            font=self._font(-1),
+            bg=C["BG_CARD"],
+            fg=C["TEXT_MAIN"],
+            buttonbackground=C["BG_PANEL"],
+            insertbackground=C["TEXT_MAIN"],
+        ).pack(side="left", padx=4)
+
+        # 接続テスト・モデル取得
+        lm_btn_row = tk.Frame(self, bg=C["BG_DARK"])
+        lm_btn_row.pack(fill="x", padx=24, pady=(6, 2))
+        ttk.Button(
+            lm_btn_row,
+            text=self._L["settings_lm_fetch_models"],
+            command=self._fetch_models,
+        ).pack(side="left", padx=2)
+        ttk.Button(
+            lm_btn_row,
+            text=self._L["settings_lm_test"],
+            command=self._test_connection,
+        ).pack(side="left", padx=2)
+
+        self.lm_status_var = tk.StringVar(value="")
+        tk.Label(
+            self,
+            textvariable=self.lm_status_var,
+            bg=C["BG_DARK"],
+            fg=C["SUCCESS"],
+            font=self._font(-2),
+            wraplength=420,
+            justify="left",
+        ).pack(anchor="w", padx=24, pady=(2, 4))
+
         btn_row = tk.Frame(self, bg=C["BG_DARK"])
         btn_row.pack(pady=(8, 14))
         ttk.Button(
@@ -217,10 +368,61 @@ class SettingsDialog(tk.Toplevel):
         except Exception as e:
             logger.debug("フォントプレビュー更新失敗: %s", e)
 
+    def _fetch_models(self):
+        """LM Studio から利用可能モデル一覧を取得して Combobox に反映"""
+        url = self.lm_url_var.get().strip()
+        if not url:
+            self.lm_status_var.set(
+                self._L["settings_lm_test_fail"].format(error="URL is empty")
+            )
+            return
+        try:
+            models = fetch_lm_studio_models(url, timeout=10)
+        except (ConnectionError, TimeoutError, RuntimeError) as e:
+            self.lm_status_var.set(
+                self._L["settings_lm_test_fail"].format(error=str(e))
+            )
+            return
+        self.lm_model_combo["values"] = models
+        self.lm_status_var.set(self._L["settings_lm_test_ok"].format(count=len(models)))
+
+    def _test_connection(self):
+        """LM Studio /v1/models を叩いて接続を確認する"""
+        url = self.lm_url_var.get().strip()
+        if not url:
+            self.lm_status_var.set(
+                self._L["settings_lm_test_fail"].format(error="URL is empty")
+            )
+            return
+        try:
+            models = fetch_lm_studio_models(url, timeout=10)
+        except (ConnectionError, TimeoutError, RuntimeError) as e:
+            self.lm_status_var.set(
+                self._L["settings_lm_test_fail"].format(error=str(e))
+            )
+            return
+        self.lm_status_var.set(self._L["settings_lm_test_ok"].format(count=len(models)))
+
     def _apply(self):
         new_settings = dict(self.current_settings)
         new_settings["theme"] = self.theme_var.get()
         new_settings["font_size"] = max(8, min(16, self.font_var.get()))
+        new_settings["lm_studio_url"] = self.lm_url_var.get().strip() or (
+            "http://localhost:1234"
+        )
+        new_settings["lm_studio_model"] = self.lm_model_var.get().strip()
+        try:
+            new_settings["ocr_scale"] = max(
+                1.0, min(4.0, float(self.ocr_scale_var.get()))
+            )
+        except (tk.TclError, ValueError):
+            new_settings["ocr_scale"] = 2.0
+        try:
+            new_settings["ocr_timeout"] = max(
+                10, min(600, int(self.ocr_timeout_var.get()))
+            )
+        except (tk.TclError, ValueError):
+            new_settings["ocr_timeout"] = 120
         self.destroy()
         self.callback(new_settings)
 

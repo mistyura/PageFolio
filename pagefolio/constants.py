@@ -44,7 +44,7 @@ THEMES = {
 C = dict(THEMES["dark"])
 
 # ===================== バージョン =====================
-APP_VERSION = "v1.1.2"
+APP_VERSION = "v1.2.0"
 
 # ===================== ファイル名定数 =====================
 SETTINGS_FILE = "pagefolio_settings.json"
@@ -295,6 +295,57 @@ LANG = {
         "plugin_rescan": "🔄 再検出",
         "plugin_open_folder": "📁 フォルダを開く",
         "plugin_close": "✔ 閉じる",
+        # OCR（LM Studio）
+        "sec_ocr": "🔍 OCR（LM Studio）",
+        "btn_ocr_current": "🔠 現在ページをテキスト抽出",
+        "btn_ocr_selected": "📚 選択ページを一括抽出",
+        "ocr_prompt_label": "プロンプト:",
+        "ocr_preset_text": "通常テキスト",
+        "ocr_preset_table": "表形式",
+        "ocr_preset_markdown": "Markdown",
+        "ocr_dialog_title": "OCR — LM Studio",
+        "ocr_dialog_heading": "🔍 OCR テキスト抽出",
+        "ocr_progress_init": "準備中…",
+        "ocr_progress": "{cur}/{total} ページ処理中… (p.{page})",
+        "ocr_cancelling": "キャンセル中…",
+        "ocr_cancelled": "キャンセルしました",
+        "ocr_complete": "完了: {count}/{total} ページ成功",
+        "ocr_failed": "失敗しました",
+        "ocr_page_separator": "--- Page {page} ---",
+        "ocr_page_error": "[エラー] {error}",
+        "ocr_copy": "📋 クリップボードにコピー",
+        "ocr_copied": "クリップボードにコピーしました",
+        "ocr_save": "💾 テキストファイルに保存…",
+        "ocr_save_dialog_title": "OCR結果の保存先",
+        "ocr_saved": "保存しました: {path}",
+        "ocr_cancel": "✕ キャンセル",
+        "ocr_close_during_run": (
+            "OCR 実行中です。\nウィンドウを閉じると処理は中断されます。\n閉じますか？"
+        ),
+        "ocr_err_connection": (
+            "LM Studio に接続できませんでした。\n"
+            "URL: {url}\n\n"
+            "LM Studio が起動していること、URL が正しいことを\n"
+            "確認してください。\n\n詳細: {error}"
+        ),
+        "ocr_err_timeout": (
+            "OCR がタイムアウトしました ({timeout} 秒)。\n"
+            "モデルが大きい場合は設定でタイムアウトを延ばしてください。\n"
+            "\n詳細: {error}"
+        ),
+        # LM Studio 設定
+        "settings_lm_studio_section": "🔍 LM Studio (OCR)",
+        "settings_lm_url": "URL:",
+        "settings_lm_model": "モデル:",
+        "settings_lm_model_hint": (
+            "（空欄: LM Studio で読み込み済みのモデルを自動使用）"
+        ),
+        "settings_lm_fetch_models": "📥 モデル一覧を取得",
+        "settings_lm_test": "🔌 接続テスト",
+        "settings_lm_test_ok": "接続OK ({count} モデル利用可能)",
+        "settings_lm_test_fail": "接続失敗: {error}",
+        "settings_ocr_scale": "OCR 解像度倍率:",
+        "settings_ocr_timeout": "OCR タイムアウト (秒):",
         # 共通エラー
         "err_title": "エラー",
         "info_title": "情報",
@@ -529,6 +580,57 @@ LANG = {
         "plugin_rescan": "🔄 Rescan",
         "plugin_open_folder": "📁 Open Folder",
         "plugin_close": "✔ Close",
+        # OCR (LM Studio)
+        "sec_ocr": "🔍 OCR (LM Studio)",
+        "btn_ocr_current": "🔠 Extract Text from Current Page",
+        "btn_ocr_selected": "📚 Extract Text from Selected Pages",
+        "ocr_prompt_label": "Prompt:",
+        "ocr_preset_text": "Plain text",
+        "ocr_preset_table": "Table",
+        "ocr_preset_markdown": "Markdown",
+        "ocr_dialog_title": "OCR — LM Studio",
+        "ocr_dialog_heading": "🔍 OCR Text Extraction",
+        "ocr_progress_init": "Preparing…",
+        "ocr_progress": "Processing {cur}/{total} pages… (p.{page})",
+        "ocr_cancelling": "Cancelling…",
+        "ocr_cancelled": "Cancelled",
+        "ocr_complete": "Done: {count}/{total} page(s) succeeded",
+        "ocr_failed": "Failed",
+        "ocr_page_separator": "--- Page {page} ---",
+        "ocr_page_error": "[Error] {error}",
+        "ocr_copy": "📋 Copy to Clipboard",
+        "ocr_copied": "Copied to clipboard",
+        "ocr_save": "💾 Save to Text File…",
+        "ocr_save_dialog_title": "Save OCR Result",
+        "ocr_saved": "Saved: {path}",
+        "ocr_cancel": "✕ Cancel",
+        "ocr_close_during_run": (
+            "OCR is running.\n"
+            "Closing the window will cancel the process.\n"
+            "Close anyway?"
+        ),
+        "ocr_err_connection": (
+            "Failed to connect to LM Studio.\n"
+            "URL: {url}\n\n"
+            "Please make sure LM Studio is running\n"
+            "and the URL is correct.\n\nDetails: {error}"
+        ),
+        "ocr_err_timeout": (
+            "OCR timed out ({timeout}s).\n"
+            "If the model is large, increase the timeout in settings.\n"
+            "\nDetails: {error}"
+        ),
+        # LM Studio settings
+        "settings_lm_studio_section": "🔍 LM Studio (OCR)",
+        "settings_lm_url": "URL:",
+        "settings_lm_model": "Model:",
+        "settings_lm_model_hint": "(empty = auto-use model loaded in LM Studio)",
+        "settings_lm_fetch_models": "📥 Fetch Models",
+        "settings_lm_test": "🔌 Test Connection",
+        "settings_lm_test_ok": "Connected ({count} model(s) available)",
+        "settings_lm_test_fail": "Connection failed: {error}",
+        "settings_ocr_scale": "OCR Resolution Scale:",
+        "settings_ocr_timeout": "OCR Timeout (s):",
         # Common error
         "err_title": "Error",
         "info_title": "Info",

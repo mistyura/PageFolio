@@ -534,6 +534,21 @@ class UIBuilderMixin:
             edit_only=True,
         )
 
+        f_ocr = section(self._t("sec_ocr"))
+        btn(
+            f_ocr,
+            self._t("btn_ocr_current"),
+            self._ocr_current_page,
+            needs_doc=True,
+        )
+        btn(
+            f_ocr,
+            self._t("btn_ocr_selected"),
+            self._ocr_selected_pages,
+            "Accent.TButton",
+            needs_doc=True,
+        )
+
         f_plug = section(self._t("sec_plugin"))
         btn(f_plug, self._t("btn_plugin_mgr"), self._open_plugin_dialog)
         self._plugin_ui_frame = tk.Frame(parent, bg=C["BG_PANEL"])

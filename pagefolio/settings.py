@@ -28,7 +28,17 @@ def _get_settings_path():
 
 def _load_settings():
     """設定を読み込む。ファイルがなければデフォルト値を返す"""
-    defaults = {"theme": "dark", "font_size": 12, "lang": "ja"}
+    defaults = {
+        "theme": "dark",
+        "font_size": 12,
+        "lang": "ja",
+        # OCR (LM Studio) 関連デフォルト値
+        "lm_studio_url": "http://localhost:1234",
+        "lm_studio_model": "",
+        "ocr_prompt_preset": "text",
+        "ocr_scale": 2.0,
+        "ocr_timeout": 120,
+    }
     try:
         path = _get_settings_path()
         if os.path.exists(path):

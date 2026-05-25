@@ -13,6 +13,7 @@ from pagefolio.dialogs import PluginDialog, SettingsDialog
 from pagefolio.dnd import DnDMixin
 from pagefolio.file_drop import _setup_file_drop
 from pagefolio.file_ops import FileOpsMixin
+from pagefolio.ocr import OCRMixin
 from pagefolio.page_ops import PageOpsMixin
 from pagefolio.plugins import PluginManager
 from pagefolio.settings import (
@@ -26,7 +27,9 @@ from pagefolio.viewer import ViewerMixin
 logger = logging.getLogger(__name__)
 
 
-class PDFEditorApp(UIBuilderMixin, FileOpsMixin, PageOpsMixin, ViewerMixin, DnDMixin):
+class PDFEditorApp(
+    UIBuilderMixin, FileOpsMixin, PageOpsMixin, ViewerMixin, DnDMixin, OCRMixin
+):
     MAX_UNDO = 20
 
     def __init__(self, root):
