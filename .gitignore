@@ -49,12 +49,5 @@ vendor/
 coverage/
 .cache/
 tmp/
-
-# ── GSD baseline (auto-generated) ──
 .gsd-id
-
-# ── GSD baseline (auto-generated) ──
 .mcp.json
-
-# ── GSD baseline (auto-generated) ──
-dist/
