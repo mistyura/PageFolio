@@ -7,8 +7,9 @@ __pycache__/
 *.pyo
 
 # PyInstaller出力
-dist/
-!dist/PageFolio.exe
+dist/*
+!dist/PageFolio
+!dist/PageFolio/**
 build/
 *.spec
 
