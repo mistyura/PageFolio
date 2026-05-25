@@ -28,7 +28,7 @@ build/
 Thumbs.db
 
 # ── GSD baseline (auto-generated) ──
-.gsd
+.gsd*
 *.swp
 *.swo
 *~
@@ -55,3 +55,6 @@ tmp/
 
 # ── GSD baseline (auto-generated) ──
 .mcp.json
+
+# ── GSD baseline (auto-generated) ──
+dist/
