@@ -82,13 +82,13 @@ class OCRDialog(tk.Toplevel):
         self.update_idletasks()
         fs = self._font_size()
         # クリア/コピー/保存/読み取り実行/キャンセル/閉じる の6ボタンが収まる横幅
-        w = max(880, int(fs * 72))
+        w = max(1060, int(fs * 84))
         # 設定行(プロンプト/サーバ/モデル/詳細) + 進行表示 + 結果領域 + ボタン行
         h = max(680, int(fs * 56))
         px = parent.winfo_rootx() + parent.winfo_width() // 2
         py = parent.winfo_rooty() + parent.winfo_height() // 2
         self.geometry(f"{w}x{h}+{px - w // 2}+{py - h // 2}")
-        self.minsize(820, 620)
+        self.minsize(960, 620)
 
     # ── UI 構築 ──
     def _build(self):
