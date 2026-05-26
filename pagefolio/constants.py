@@ -367,8 +367,11 @@ LANG = {
         "ocr_timeout_short": "タイムアウト:",
         "ocr_max_tokens_short": "最大トークン:",
         "ocr_max_tokens_hint": "(-1: 無制限)",
+        "ocr_temperature_short": "温度:",
+        "ocr_temperature_hint": "(0.0〜0.2推奨)",
         "ocr_params_hint": (
-            "精度向上には解像度を上げる、出力切れには最大トークンを増やす"
+            "ハルシネーション抑制: 温度↓・解像度↑。"
+            "推奨モデル: Qwen2-VL-7B / MiniCPM-V / InternVL2 8B 以上"
         ),
         # 共通エラー
         "err_title": "エラー",
@@ -676,8 +679,11 @@ LANG = {
         "ocr_timeout_short": "Timeout:",
         "ocr_max_tokens_short": "Max tokens:",
         "ocr_max_tokens_hint": "(-1: unlimited)",
+        "ocr_temperature_short": "Temp:",
+        "ocr_temperature_hint": "(0.0-0.2 recommended)",
         "ocr_params_hint": (
-            "Raise scale for accuracy; raise max tokens to avoid truncation"
+            "To reduce hallucinations: lower temp / raise scale. "
+            "Recommended models: Qwen2-VL-7B / MiniCPM-V / InternVL2 8B+"
         ),
         # Common error
         "err_title": "Error",

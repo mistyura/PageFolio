@@ -34,6 +34,7 @@ class OCRDialog(tk.Toplevel):
         scale,
         timeout,
         max_tokens=-1,
+        temperature=0.1,
         lang="ja",
         font_func=None,
     ):
@@ -54,6 +55,7 @@ class OCRDialog(tk.Toplevel):
         self.scale_var = tk.DoubleVar(value=float(scale))
         self.timeout_var = tk.IntVar(value=int(timeout))
         self.max_tokens_var = tk.IntVar(value=int(max_tokens))
+        self.temperature_var = tk.DoubleVar(value=float(temperature))
         self.results = {}  # page_idx -> text
         self.errors = {}  # page_idx -> message
         self._cancel_flag = threading.Event()
@@ -255,6 +257,33 @@ class OCRDialog(tk.Toplevel):
             bg=C["BG_DARK"],
             fg=C["TEXT_SUB"],
             font=self._font(-2),
+        ).pack(side="left", padx=(0, 10))
+        tk.Label(
+            params_row,
+            text=self._L["ocr_temperature_short"],
+            bg=C["BG_DARK"],
+            fg=C["TEXT_MAIN"],
+            font=self._font(-1),
+        ).pack(side="left", padx=(0, 2))
+        tk.Spinbox(
+            params_row,
+            from_=0.0,
+            to=2.0,
+            increment=0.1,
+            textvariable=self.temperature_var,
+            width=5,
+            font=self._font(-1),
+            bg=C["BG_CARD"],
+            fg=C["TEXT_MAIN"],
+            buttonbackground=C["BG_PANEL"],
+            insertbackground=C["TEXT_MAIN"],
+        ).pack(side="left", padx=(0, 4))
+        tk.Label(
+            params_row,
+            text=self._L["ocr_temperature_hint"],
+            bg=C["BG_DARK"],
+            fg=C["TEXT_SUB"],
+            font=self._font(-2),
         ).pack(side="left")
 
         tk.Label(
@@ -411,6 +440,10 @@ class OCRDialog(tk.Toplevel):
             max_tokens = int(self.max_tokens_var.get())
         except (tk.TclError, ValueError):
             max_tokens = -1
+        try:
+            temperature = max(0.0, min(2.0, float(self.temperature_var.get())))
+        except (tk.TclError, ValueError):
+            temperature = 0.1
         self._effective_timeout = timeout
         for idx, page_idx in enumerate(self.page_indices, start=1):
             if self._cancel_flag.is_set():
@@ -437,6 +470,7 @@ class OCRDialog(tk.Toplevel):
                     prompt,
                     timeout=timeout,
                     max_tokens=max_tokens,
+                    temperature=temperature,
                 )
             except ConnectionError as e:
                 # 接続失敗は致命的 — 全体停止

@@ -83,6 +83,38 @@ No Python installation required.
 
 ---
 
+## 🔍 OCR テキスト抽出 / OCR Text Extraction
+
+ローカル動作の [LM Studio](https://lmstudio.ai/)（OpenAI 互換 API）を経由して、PDF ページから文字を抽出できます（v1.2.0〜）。
+
+PageFolio extracts text from PDF pages via local [LM Studio](https://lmstudio.ai/) (OpenAI-compatible API) since v1.2.0.
+
+### 推奨 Vision モデル / Recommended Vision Models
+
+小型モデル（4B 未満）は表組み・数値・固有名詞でハルシネーション（架空の文字列の生成）が起きやすいため、**7B 以上のモデルを推奨**します。
+
+Small models (<4B) tend to hallucinate especially on tables, numbers, and proper nouns. **7B+ models are recommended.**
+
+| モデル / Model | サイズ | 備考 |
+|----------------|--------|------|
+| **Qwen2-VL-7B-Instruct** | 7B | 日本語 OCR・表組み認識ともに高精度。第一推奨 |
+| **MiniCPM-V 2.6** | 8B | OCR タスクに最適化。多言語対応 |
+| **InternVL2-8B** | 8B | 詳細な画像理解・OCR 両立 |
+| Gemma 3 / 4 (4B) | 4B | 軽量だが OCR 用途には精度不足 |
+
+### ハルシネーション対策 / Reducing Hallucinations
+
+OCR ダイアログ右上の「詳細設定」で次のパラメータを調整できます:
+
+- **解像度** (1.0〜4.0): 高いほど認識精度向上（推奨 3.0〜4.0）
+- **最大トークン** (-1: 無制限): 出力途中切れの解消
+- **温度** (0.0〜2.0): **0.0〜0.2 推奨**。ランダム性を抑え架空文字を抑制
+- **タイムアウト** (10〜600 秒): 高解像度時は 240+ 秒推奨
+
+LM Studio 側の **Context Length** も明細書・長い文書の場合は 8192 以上に増やしてください。
+
+---
+
 ## 🐛 バグ報告・フィードバック / Bug Reports
 
 不具合・要望は [Issues](https://github.com/mistyura/PageFolio/issues) からお知らせください。

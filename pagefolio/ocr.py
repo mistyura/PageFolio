@@ -34,6 +34,7 @@ DEFAULT_LM_STUDIO_URL = "http://localhost:1234"
 DEFAULT_OCR_TIMEOUT = 120  # 秒
 DEFAULT_OCR_SCALE = 2.0
 DEFAULT_OCR_MAX_TOKENS = -1  # -1: 無制限
+DEFAULT_OCR_TEMPERATURE = 0.1  # OCR 用途は低温推奨（ハルシネーション抑制）
 
 
 def page_to_png_b64(page, scale=DEFAULT_OCR_SCALE):
@@ -44,7 +45,13 @@ def page_to_png_b64(page, scale=DEFAULT_OCR_SCALE):
     return base64.b64encode(png_bytes).decode("ascii")
 
 
-def build_chat_payload(model, b64_png, prompt, max_tokens=DEFAULT_OCR_MAX_TOKENS):
+def build_chat_payload(
+    model,
+    b64_png,
+    prompt,
+    max_tokens=DEFAULT_OCR_MAX_TOKENS,
+    temperature=DEFAULT_OCR_TEMPERATURE,
+):
     """LM Studio (OpenAI 互換) Chat Completions リクエストボディを構築する"""
     return {
         "model": model or "local-model",
@@ -63,6 +70,7 @@ def build_chat_payload(model, b64_png, prompt, max_tokens=DEFAULT_OCR_MAX_TOKENS
             }
         ],
         "max_tokens": max_tokens,
+        "temperature": temperature,
         "stream": False,
     }
 
@@ -74,6 +82,7 @@ def call_lm_studio(
     prompt,
     timeout=DEFAULT_OCR_TIMEOUT,
     max_tokens=DEFAULT_OCR_MAX_TOKENS,
+    temperature=DEFAULT_OCR_TEMPERATURE,
 ):
     """LM Studio Chat Completions API を呼び出して結果テキストを返す。
 
@@ -83,7 +92,9 @@ def call_lm_studio(
       RuntimeError: APIエラー（Vision 非対応モデル等）
     """
     endpoint = url.rstrip("/") + "/v1/chat/completions"
-    payload = build_chat_payload(model, b64_png, prompt, max_tokens=max_tokens)
+    payload = build_chat_payload(
+        model, b64_png, prompt, max_tokens=max_tokens, temperature=temperature
+    )
     data = json.dumps(payload).encode("utf-8")
     req = urllib.request.Request(  # noqa: S310
         endpoint,
@@ -174,6 +185,9 @@ class OCRMixin:
         scale = float(self.settings.get("ocr_scale", DEFAULT_OCR_SCALE))
         timeout = int(self.settings.get("ocr_timeout", DEFAULT_OCR_TIMEOUT))
         max_tokens = int(self.settings.get("ocr_max_tokens", DEFAULT_OCR_MAX_TOKENS))
+        temperature = float(
+            self.settings.get("ocr_temperature", DEFAULT_OCR_TEMPERATURE)
+        )
 
         OCRDialog(
             self.root,
@@ -186,6 +200,7 @@ class OCRMixin:
             scale=scale,
             timeout=timeout,
             max_tokens=max_tokens,
+            temperature=temperature,
             lang=self.lang,
             font_func=self._font,
         )

@@ -458,6 +458,42 @@ class LLMConfigDialog(tk.Toplevel):
             font=self._font(-2),
         ).pack(side="left", padx=4)
 
+        # 温度（temperature）
+        tmp_row = tk.Frame(self, bg=C["BG_DARK"])
+        tmp_row.pack(fill="x", padx=24, pady=2)
+        tk.Label(
+            tmp_row,
+            text=self._L["ocr_temperature_short"],
+            bg=C["BG_DARK"],
+            fg=C["TEXT_MAIN"],
+            font=self._font(-1),
+            width=20,
+            anchor="w",
+        ).pack(side="left")
+        self.ocr_temperature_var = tk.DoubleVar(
+            value=float(self.current_settings.get("ocr_temperature", 0.1)),
+        )
+        tk.Spinbox(
+            tmp_row,
+            from_=0.0,
+            to=2.0,
+            increment=0.1,
+            textvariable=self.ocr_temperature_var,
+            width=6,
+            font=self._font(-1),
+            bg=C["BG_CARD"],
+            fg=C["TEXT_MAIN"],
+            buttonbackground=C["BG_PANEL"],
+            insertbackground=C["TEXT_MAIN"],
+        ).pack(side="left", padx=4)
+        tk.Label(
+            tmp_row,
+            text=self._L["ocr_temperature_hint"],
+            bg=C["BG_DARK"],
+            fg=C["TEXT_SUB"],
+            font=self._font(-2),
+        ).pack(side="left", padx=4)
+
         # 接続テスト・モデル取得
         lm_btn_row = tk.Frame(self, bg=C["BG_DARK"])
         lm_btn_row.pack(fill="x", padx=24, pady=(6, 2))
@@ -551,6 +587,11 @@ class LLMConfigDialog(tk.Toplevel):
             llm_settings["ocr_max_tokens"] = max(-1, min(32000, mt))
         except (tk.TclError, ValueError):
             llm_settings["ocr_max_tokens"] = -1
+        try:
+            tmp = float(self.ocr_temperature_var.get())
+            llm_settings["ocr_temperature"] = max(0.0, min(2.0, tmp))
+        except (tk.TclError, ValueError):
+            llm_settings["ocr_temperature"] = 0.1
         self.destroy()
         if self.on_apply:
             self.on_apply(llm_settings)
