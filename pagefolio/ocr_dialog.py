@@ -47,7 +47,6 @@ class OCRDialog(tk.Toplevel):
         self.page_indices = list(page_indices)
         self.scale = scale
         self.timeout = timeout
-        self._lang = lang
         self._font = font_func or self._default_font
 
         self.url_var = tk.StringVar(value=url)
@@ -80,13 +79,14 @@ class OCRDialog(tk.Toplevel):
     def _center(self, parent):
         self.update_idletasks()
         fs = self._font_size()
-        w = max(720, int(fs * 60))
+        # クリア/コピー/保存/読み取り実行/キャンセル/閉じる の6ボタンが収まる横幅
+        w = max(880, int(fs * 72))
         # 設定行(プロンプト/サーバ/モデル) + 進行表示 + 結果領域 + ボタン行 を確実に表示
         h = max(620, int(fs * 52))
         px = parent.winfo_rootx() + parent.winfo_width() // 2
         py = parent.winfo_rooty() + parent.winfo_height() // 2
         self.geometry(f"{w}x{h}+{px - w // 2}+{py - h // 2}")
-        self.minsize(620, 560)
+        self.minsize(820, 560)
 
     # ── UI 構築 ──
     def _build(self):
@@ -126,7 +126,7 @@ class OCRDialog(tk.Toplevel):
                 font=self._font(-1),
             ).pack(side="left", padx=4)
 
-        # サーバ（参照のみ）
+        # サーバ（参照のみ・設定メニューの値を表示）
         sf = tk.Frame(self, bg=C["BG_DARK"])
         sf.pack(fill="x", padx=16, pady=(6, 2))
         tk.Label(
@@ -149,11 +149,6 @@ class OCRDialog(tk.Toplevel):
             state="readonly",
             readonlybackground=C["BG_CARD"],
         ).pack(side="left", fill="x", expand=True, padx=4)
-        ttk.Button(
-            sf,
-            text=self._L["ocr_open_llm_config"],
-            command=self._open_llm_config,
-        ).pack(side="left", padx=2)
 
         # モデル選択
         mf = tk.Frame(self, bg=C["BG_DARK"])
@@ -230,6 +225,11 @@ class OCRDialog(tk.Toplevel):
         self.save_btn.pack(side="left", padx=4)
         self.save_btn.state(["disabled"])
 
+        self.clear_btn = ttk.Button(
+            btn_row, text=self._L["ocr_clear"], command=self._clear_text
+        )
+        self.clear_btn.pack(side="left", padx=4)
+
         self.close_btn = ttk.Button(
             btn_row,
             text=self._L["btn_close"],
@@ -271,29 +271,18 @@ class OCRDialog(tk.Toplevel):
         self.model_combo["values"] = models
         self.progress_var.set(self._L["ocr_models_fetched"].format(count=len(models)))
 
-    def _open_llm_config(self):
-        """LLM 設定ダイアログを開き、URL/モデルなどを更新する"""
-        from pagefolio.dialogs import LLMConfigDialog
-
-        def on_apply(llm_settings):
-            self.app.settings.update(llm_settings)
-            from pagefolio.settings import _save_settings
-
-            _save_settings(self.app.settings)
-            self.url_var.set(llm_settings.get("lm_studio_url", self.url_var.get()))
-            self.model_var.set(
-                llm_settings.get("lm_studio_model", self.model_var.get())
-            )
-            self.scale = float(llm_settings.get("ocr_scale", self.scale))
-            self.timeout = int(llm_settings.get("ocr_timeout", self.timeout))
-
-        LLMConfigDialog(
-            self,
-            self.app.settings,
-            on_apply=on_apply,
-            font_func=self._font,
-            lang=self._lang,
-        )
+    def _clear_text(self):
+        """結果テキストエリアを初期化する"""
+        self.text.delete("1.0", "end")
+        self.results.clear()
+        self.errors.clear()
+        self.progress_bar["value"] = 0
+        if not self._started:
+            self.progress_var.set(self._L["ocr_run_first"])
+        else:
+            self.progress_var.set("")
+        self.copy_btn.state(["disabled"])
+        self.save_btn.state(["disabled"])
 
     # ── ワーカー ──
     def _on_run(self):
