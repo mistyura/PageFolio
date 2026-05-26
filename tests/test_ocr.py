@@ -39,6 +39,24 @@ class TestBuildChatPayload:
         payload = ocr.build_chat_payload("m", "a", "p")
         assert payload["messages"][0]["role"] == "user"
 
+    def test_max_tokens_default(self):
+        """max_tokens 未指定なら -1（無制限）"""
+        payload = ocr.build_chat_payload("m", "a", "p")
+        assert payload["max_tokens"] == -1
+
+    def test_max_tokens_custom(self):
+        payload = ocr.build_chat_payload("m", "a", "p", max_tokens=4096)
+        assert payload["max_tokens"] == 4096
+
+    def test_temperature_default(self):
+        """temperature 未指定なら 0.1（OCR 推奨値）"""
+        payload = ocr.build_chat_payload("m", "a", "p")
+        assert payload["temperature"] == 0.1
+
+    def test_temperature_custom(self):
+        payload = ocr.build_chat_payload("m", "a", "p", temperature=0.5)
+        assert payload["temperature"] == 0.5
+
 
 # ===== ページ → PNG base64 =====
 

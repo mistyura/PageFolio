@@ -9,7 +9,12 @@ import tkinter as tk
 from tkinter import filedialog, messagebox, ttk
 
 from pagefolio.constants import LANG, C
-from pagefolio.ocr import OCR_PROMPTS, call_lm_studio, page_to_png_b64
+from pagefolio.ocr import (
+    OCR_PROMPTS,
+    call_lm_studio,
+    fetch_lm_studio_models,
+    page_to_png_b64,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -28,6 +33,8 @@ class OCRDialog(tk.Toplevel):
         preset,
         scale,
         timeout,
+        max_tokens=-1,
+        temperature=0.1,
         lang="ja",
         font_func=None,
     ):
@@ -40,24 +47,25 @@ class OCRDialog(tk.Toplevel):
         self.app = app
         self.doc = doc
         self.page_indices = list(page_indices)
-        self.url = url
-        self.model = model
-        self.scale = scale
-        self.timeout = timeout
         self._font = font_func or self._default_font
 
+        self.url_var = tk.StringVar(value=url)
+        self.model_var = tk.StringVar(value=model)
         self.preset_var = tk.StringVar(value=preset)
+        self.scale_var = tk.DoubleVar(value=float(scale))
+        self.timeout_var = tk.IntVar(value=int(timeout))
+        self.max_tokens_var = tk.IntVar(value=int(max_tokens))
+        self.temperature_var = tk.DoubleVar(value=float(temperature))
         self.results = {}  # page_idx -> text
         self.errors = {}  # page_idx -> message
         self._cancel_flag = threading.Event()
         self._worker_thread = None
         self._done = False
+        self._started = False
 
         self._build()
         self._center(parent)
         self.protocol("WM_DELETE_WINDOW", self._on_close)
-        # ダイアログ表示完了後にワーカーを開始
-        self.after(50, self._start_worker)
 
     # ── ユーティリティ ──
     @staticmethod
@@ -75,12 +83,14 @@ class OCRDialog(tk.Toplevel):
     def _center(self, parent):
         self.update_idletasks()
         fs = self._font_size()
-        w = max(640, int(fs * 56))
-        h = max(440, int(fs * 36))
+        # クリア/コピー/保存/読み取り実行/キャンセル/閉じる の6ボタンが収まる横幅
+        w = max(1060, int(fs * 84))
+        # 設定行(プロンプト/サーバ/モデル/詳細) + 進行表示 + 結果領域 + ボタン行
+        h = max(680, int(fs * 56))
         px = parent.winfo_rootx() + parent.winfo_width() // 2
         py = parent.winfo_rooty() + parent.winfo_height() // 2
         self.geometry(f"{w}x{h}+{px - w // 2}+{py - h // 2}")
-        self.minsize(520, 360)
+        self.minsize(960, 620)
 
     # ── UI 構築 ──
     def _build(self):
@@ -120,8 +130,172 @@ class OCRDialog(tk.Toplevel):
                 font=self._font(-1),
             ).pack(side="left", padx=4)
 
+        # サーバ（参照のみ・設定メニューの値を表示）
+        sf = tk.Frame(self, bg=C["BG_DARK"])
+        sf.pack(fill="x", padx=16, pady=(6, 2))
+        tk.Label(
+            sf,
+            text=self._L["ocr_server_label"],
+            bg=C["BG_DARK"],
+            fg=C["TEXT_MAIN"],
+            font=self._font(-1),
+            width=8,
+            anchor="w",
+        ).pack(side="left")
+        tk.Entry(
+            sf,
+            textvariable=self.url_var,
+            font=self._font(-1),
+            bg=C["BG_CARD"],
+            fg=C["TEXT_SUB"],
+            insertbackground=C["TEXT_MAIN"],
+            relief="flat",
+            state="readonly",
+            readonlybackground=C["BG_CARD"],
+        ).pack(side="left", fill="x", expand=True, padx=4)
+
+        # モデル選択
+        mf = tk.Frame(self, bg=C["BG_DARK"])
+        mf.pack(fill="x", padx=16, pady=2)
+        tk.Label(
+            mf,
+            text=self._L["ocr_model_label"],
+            bg=C["BG_DARK"],
+            fg=C["TEXT_MAIN"],
+            font=self._font(-1),
+            width=8,
+            anchor="w",
+        ).pack(side="left")
+        self.model_combo = ttk.Combobox(
+            mf,
+            textvariable=self.model_var,
+            font=self._font(-1),
+            values=[],
+        )
+        self.model_combo.pack(side="left", fill="x", expand=True, padx=4)
+        ttk.Button(
+            mf,
+            text=self._L["ocr_fetch_models"],
+            command=self._fetch_models,
+        ).pack(side="left", padx=2)
+
+        # 詳細設定行（解像度 / タイムアウト / 最大トークン）
+        params_row = tk.Frame(self, bg=C["BG_DARK"])
+        params_row.pack(fill="x", padx=16, pady=(6, 0))
+        tk.Label(
+            params_row,
+            text=self._L["ocr_params_label"],
+            bg=C["BG_DARK"],
+            fg=C["TEXT_MAIN"],
+            font=self._font(-1),
+            width=8,
+            anchor="w",
+        ).pack(side="left")
+        tk.Label(
+            params_row,
+            text=self._L["ocr_scale_short"],
+            bg=C["BG_DARK"],
+            fg=C["TEXT_MAIN"],
+            font=self._font(-1),
+        ).pack(side="left", padx=(0, 2))
+        tk.Spinbox(
+            params_row,
+            from_=1.0,
+            to=4.0,
+            increment=0.5,
+            textvariable=self.scale_var,
+            width=5,
+            font=self._font(-1),
+            bg=C["BG_CARD"],
+            fg=C["TEXT_MAIN"],
+            buttonbackground=C["BG_PANEL"],
+            insertbackground=C["TEXT_MAIN"],
+        ).pack(side="left", padx=(0, 10))
+        tk.Label(
+            params_row,
+            text=self._L["ocr_timeout_short"],
+            bg=C["BG_DARK"],
+            fg=C["TEXT_MAIN"],
+            font=self._font(-1),
+        ).pack(side="left", padx=(0, 2))
+        tk.Spinbox(
+            params_row,
+            from_=10,
+            to=600,
+            increment=10,
+            textvariable=self.timeout_var,
+            width=5,
+            font=self._font(-1),
+            bg=C["BG_CARD"],
+            fg=C["TEXT_MAIN"],
+            buttonbackground=C["BG_PANEL"],
+            insertbackground=C["TEXT_MAIN"],
+        ).pack(side="left", padx=(0, 10))
+        tk.Label(
+            params_row,
+            text=self._L["ocr_max_tokens_short"],
+            bg=C["BG_DARK"],
+            fg=C["TEXT_MAIN"],
+            font=self._font(-1),
+        ).pack(side="left", padx=(0, 2))
+        tk.Spinbox(
+            params_row,
+            from_=-1,
+            to=32000,
+            increment=512,
+            textvariable=self.max_tokens_var,
+            width=7,
+            font=self._font(-1),
+            bg=C["BG_CARD"],
+            fg=C["TEXT_MAIN"],
+            buttonbackground=C["BG_PANEL"],
+            insertbackground=C["TEXT_MAIN"],
+        ).pack(side="left", padx=(0, 4))
+        tk.Label(
+            params_row,
+            text=self._L["ocr_max_tokens_hint"],
+            bg=C["BG_DARK"],
+            fg=C["TEXT_SUB"],
+            font=self._font(-2),
+        ).pack(side="left", padx=(0, 10))
+        tk.Label(
+            params_row,
+            text=self._L["ocr_temperature_short"],
+            bg=C["BG_DARK"],
+            fg=C["TEXT_MAIN"],
+            font=self._font(-1),
+        ).pack(side="left", padx=(0, 2))
+        tk.Spinbox(
+            params_row,
+            from_=0.0,
+            to=2.0,
+            increment=0.1,
+            textvariable=self.temperature_var,
+            width=5,
+            font=self._font(-1),
+            bg=C["BG_CARD"],
+            fg=C["TEXT_MAIN"],
+            buttonbackground=C["BG_PANEL"],
+            insertbackground=C["TEXT_MAIN"],
+        ).pack(side="left", padx=(0, 4))
+        tk.Label(
+            params_row,
+            text=self._L["ocr_temperature_hint"],
+            bg=C["BG_DARK"],
+            fg=C["TEXT_SUB"],
+            font=self._font(-2),
+        ).pack(side="left")
+
+        tk.Label(
+            self,
+            text=self._L["ocr_params_hint"],
+            bg=C["BG_DARK"],
+            fg=C["TEXT_SUB"],
+            font=self._font(-2),
+        ).pack(anchor="w", padx=16)
+
         # 進行表示
-        self.progress_var = tk.StringVar(value=self._L["ocr_progress_init"])
+        self.progress_var = tk.StringVar(value=self._L["ocr_run_first"])
         tk.Label(
             self,
             textvariable=self.progress_var,
@@ -147,6 +321,7 @@ class OCRDialog(tk.Toplevel):
             wrap="word",
             bd=0,
             highlightthickness=0,
+            height=10,
         )
         sb = ttk.Scrollbar(result_frame, orient="vertical", command=self.text.yview)
         self.text.configure(yscrollcommand=sb.set)
@@ -169,14 +344,17 @@ class OCRDialog(tk.Toplevel):
         self.save_btn.pack(side="left", padx=4)
         self.save_btn.state(["disabled"])
 
+        self.clear_btn = ttk.Button(
+            btn_row, text=self._L["ocr_clear"], command=self._clear_text
+        )
+        self.clear_btn.pack(side="left", padx=4)
+
         self.close_btn = ttk.Button(
             btn_row,
             text=self._L["btn_close"],
-            style="Accent.TButton",
-            command=self.destroy,
+            command=self._on_close,
         )
         self.close_btn.pack(side="right", padx=4)
-        self.close_btn.state(["disabled"])
 
         self.cancel_btn = ttk.Button(
             btn_row,
@@ -185,9 +363,62 @@ class OCRDialog(tk.Toplevel):
             command=self._on_cancel,
         )
         self.cancel_btn.pack(side="right", padx=4)
+        self.cancel_btn.state(["disabled"])
+
+        self.run_btn = ttk.Button(
+            btn_row,
+            text=self._L["ocr_run"],
+            style="Accent.TButton",
+            command=self._on_run,
+        )
+        self.run_btn.pack(side="right", padx=4)
+
+    # ── サーバ・モデル設定 ──
+    def _fetch_models(self):
+        """LM Studio から利用可能モデル一覧を取得して Combobox に反映"""
+        url = self.url_var.get().strip()
+        if not url:
+            self.progress_var.set(
+                self._L["ocr_models_fetch_fail"].format(error="URL is empty")
+            )
+            return
+        try:
+            models = fetch_lm_studio_models(url, timeout=10)
+        except (ConnectionError, TimeoutError, RuntimeError) as e:
+            self.progress_var.set(self._L["ocr_models_fetch_fail"].format(error=str(e)))
+            return
+        self.model_combo["values"] = models
+        self.progress_var.set(self._L["ocr_models_fetched"].format(count=len(models)))
+
+    def _clear_text(self):
+        """結果テキストエリア・進行表示・実行状態を初期化する"""
+        # 実行中はクリア不可（キャンセルしてから再度押す想定）
+        if self._started and not self._done:
+            return
+        self.text.delete("1.0", "end")
+        self.results.clear()
+        self.errors.clear()
+        self.progress_bar["value"] = 0
+        self.progress_var.set(self._L["ocr_run_first"])
+        self.copy_btn.state(["disabled"])
+        self.save_btn.state(["disabled"])
+        self.cancel_btn.state(["disabled"])
+        self.run_btn.state(["!disabled"])
+        self._started = False
+        self._done = False
+        self._cancel_flag.clear()
 
     # ── ワーカー ──
-    def _start_worker(self):
+    def _on_run(self):
+        """読み取り実行ボタン: OCR を開始する"""
+        if self._started:
+            return
+        self._started = True
+        self.run_btn.state(["disabled"])
+        self.cancel_btn.state(["!disabled"])
+        self.progress_var.set(self._L["ocr_progress_init"])
+        # 結果テキストエリアをクリア
+        self.text.delete("1.0", "end")
         prompt = OCR_PROMPTS.get(self.preset_var.get(), OCR_PROMPTS["text"])
         self._worker_thread = threading.Thread(
             target=self._worker, args=(prompt,), daemon=True
@@ -195,6 +426,25 @@ class OCRDialog(tk.Toplevel):
         self._worker_thread.start()
 
     def _worker(self, prompt):
+        url = self.url_var.get()
+        model = self.model_var.get()
+        try:
+            scale = max(1.0, min(4.0, float(self.scale_var.get())))
+        except (tk.TclError, ValueError):
+            scale = 2.0
+        try:
+            timeout = max(10, min(600, int(self.timeout_var.get())))
+        except (tk.TclError, ValueError):
+            timeout = 120
+        try:
+            max_tokens = int(self.max_tokens_var.get())
+        except (tk.TclError, ValueError):
+            max_tokens = -1
+        try:
+            temperature = max(0.0, min(2.0, float(self.temperature_var.get())))
+        except (tk.TclError, ValueError):
+            temperature = 0.1
+        self._effective_timeout = timeout
         for idx, page_idx in enumerate(self.page_indices, start=1):
             if self._cancel_flag.is_set():
                 self.after(0, self._finish_cancelled)
@@ -202,7 +452,7 @@ class OCRDialog(tk.Toplevel):
             # ページ画像変換
             try:
                 page = self.doc[page_idx]
-                b64 = page_to_png_b64(page, scale=self.scale)
+                b64 = page_to_png_b64(page, scale=scale)
             except Exception as e:
                 logger.exception("ページ画像変換失敗: %s", e)
                 self.errors[page_idx] = f"image conversion error: {e}"
@@ -214,11 +464,13 @@ class OCRDialog(tk.Toplevel):
             # LM Studio 呼び出し
             try:
                 text = call_lm_studio(
-                    self.url,
-                    self.model,
+                    url,
+                    model,
                     b64,
                     prompt,
-                    timeout=self.timeout,
+                    timeout=timeout,
+                    max_tokens=max_tokens,
+                    temperature=temperature,
                 )
             except ConnectionError as e:
                 # 接続失敗は致命的 — 全体停止
@@ -284,7 +536,6 @@ class OCRDialog(tk.Toplevel):
                 )
             )
         self.cancel_btn.state(["disabled"])
-        self.close_btn.state(["!disabled"])
         if self.results:
             self.copy_btn.state(["!disabled"])
             self.save_btn.state(["!disabled"])
@@ -293,7 +544,6 @@ class OCRDialog(tk.Toplevel):
         self._done = True
         self.progress_var.set(self._L["ocr_cancelled"])
         self.cancel_btn.state(["disabled"])
-        self.close_btn.state(["!disabled"])
         if self.results:
             self.copy_btn.state(["!disabled"])
             self.save_btn.state(["!disabled"])
@@ -301,10 +551,13 @@ class OCRDialog(tk.Toplevel):
     def _finish_error(self, msg, kind):
         self._done = True
         if kind == "connection":
-            user_msg = self._L["ocr_err_connection"].format(url=self.url, error=msg)
+            user_msg = self._L["ocr_err_connection"].format(
+                url=self.url_var.get(), error=msg
+            )
         elif kind == "timeout":
             user_msg = self._L["ocr_err_timeout"].format(
-                timeout=self.timeout, error=msg
+                timeout=getattr(self, "_effective_timeout", self.timeout_var.get()),
+                error=msg,
             )
         else:
             user_msg = msg
@@ -312,27 +565,30 @@ class OCRDialog(tk.Toplevel):
         self.text.insert("end", "\n" + user_msg + "\n")
         self.text.see("end")
         self.cancel_btn.state(["disabled"])
-        self.close_btn.state(["!disabled"])
         if self.results:
             self.copy_btn.state(["!disabled"])
             self.save_btn.state(["!disabled"])
 
     # ── 操作 ──
     def _on_cancel(self):
+        # キャンセルボタンは実行中のみ有効
         self._cancel_flag.set()
         self.cancel_btn.state(["disabled"])
         self.progress_var.set(self._L["ocr_cancelling"])
 
     def _on_close(self):
-        if not self._done:
-            ok = messagebox.askyesno(
-                self._L["confirm_title"],
-                self._L["ocr_close_during_run"],
-                parent=self,
-            )
-            if not ok:
-                return
-            self._cancel_flag.set()
+        # 未開始または完了済みなら確認なしで閉じる
+        if not self._started or self._done:
+            self.destroy()
+            return
+        ok = messagebox.askyesno(
+            self._L["confirm_title"],
+            self._L["ocr_close_during_run"],
+            parent=self,
+        )
+        if not ok:
+            return
+        self._cancel_flag.set()
         self.destroy()
 
     def _format_full_text(self):

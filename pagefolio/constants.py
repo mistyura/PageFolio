@@ -44,7 +44,7 @@ THEMES = {
 C = dict(THEMES["dark"])
 
 # ===================== バージョン =====================
-APP_VERSION = "v1.2.0"
+APP_VERSION = "v1.2.1"
 
 # ===================== ファイル名定数 =====================
 SETTINGS_FILE = "pagefolio_settings.json"
@@ -346,6 +346,33 @@ LANG = {
         "settings_lm_test_fail": "接続失敗: {error}",
         "settings_ocr_scale": "OCR 解像度倍率:",
         "settings_ocr_timeout": "OCR タイムアウト (秒):",
+        "settings_open_llm_config": "🔍 LLM 設定…",
+        # LLM 設定ダイアログ（OCR と設定で共有）
+        "llm_config_title": "LLM 設定",
+        "llm_config_heading": "🔍 LLM 設定 (LM Studio)",
+        "llm_config_apply": "✓ 適用",
+        "llm_config_cancel": "✕ キャンセル",
+        # OCR ダイアログ
+        "ocr_server_label": "サーバ:",
+        "ocr_model_label": "モデル:",
+        "ocr_run": "▶ 読み取り実行",
+        "ocr_fetch_models": "📥 モデル一覧取得",
+        "ocr_open_llm_config": "⚙ LLM 設定…",
+        "ocr_clear": "🧹 クリア",
+        "ocr_models_fetched": "{count} モデルを取得しました",
+        "ocr_models_fetch_fail": "モデル取得失敗: {error}",
+        "ocr_run_first": "「読み取り実行」を押すと開始します",
+        "ocr_params_label": "詳細設定:",
+        "ocr_scale_short": "解像度:",
+        "ocr_timeout_short": "タイムアウト:",
+        "ocr_max_tokens_short": "最大トークン:",
+        "ocr_max_tokens_hint": "(-1: 無制限)",
+        "ocr_temperature_short": "温度:",
+        "ocr_temperature_hint": "(0.0〜0.2推奨)",
+        "ocr_params_hint": (
+            "ハルシネーション抑制: 温度↓・解像度↑。"
+            "推奨モデル: Qwen2-VL-7B / MiniCPM-V / InternVL2 8B 以上"
+        ),
         # 共通エラー
         "err_title": "エラー",
         "info_title": "情報",
@@ -631,6 +658,33 @@ LANG = {
         "settings_lm_test_fail": "Connection failed: {error}",
         "settings_ocr_scale": "OCR Resolution Scale:",
         "settings_ocr_timeout": "OCR Timeout (s):",
+        "settings_open_llm_config": "🔍 LLM Settings…",
+        # LLM config dialog (shared by OCR & Settings)
+        "llm_config_title": "LLM Settings",
+        "llm_config_heading": "🔍 LLM Settings (LM Studio)",
+        "llm_config_apply": "✓ Apply",
+        "llm_config_cancel": "✕ Cancel",
+        # OCR dialog
+        "ocr_server_label": "Server:",
+        "ocr_model_label": "Model:",
+        "ocr_run": "▶ Run OCR",
+        "ocr_fetch_models": "📥 Fetch Models",
+        "ocr_open_llm_config": "⚙ LLM Settings…",
+        "ocr_clear": "🧹 Clear",
+        "ocr_models_fetched": "Fetched {count} model(s)",
+        "ocr_models_fetch_fail": "Fetch failed: {error}",
+        "ocr_run_first": 'Press "Run OCR" to start',
+        "ocr_params_label": "Advanced:",
+        "ocr_scale_short": "Scale:",
+        "ocr_timeout_short": "Timeout:",
+        "ocr_max_tokens_short": "Max tokens:",
+        "ocr_max_tokens_hint": "(-1: unlimited)",
+        "ocr_temperature_short": "Temp:",
+        "ocr_temperature_hint": "(0.0-0.2 recommended)",
+        "ocr_params_hint": (
+            "To reduce hallucinations: lower temp / raise scale. "
+            "Recommended models: Qwen2-VL-7B / MiniCPM-V / InternVL2 8B+"
+        ),
         # Common error
         "err_title": "Error",
         "info_title": "Info",

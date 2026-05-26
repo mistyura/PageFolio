@@ -115,7 +115,7 @@ class SettingsDialog(tk.Toplevel):
         py = parent.winfo_rooty() + parent.winfo_height() // 2
         fs = current_settings.get("font_size", 12)
         w = max(460, int(fs * 38))
-        h = max(520, int(fs * 42))
+        h = max(420, self.winfo_reqheight() + 20)
         self.geometry(f"{w}x{h}+{px - w // 2}+{py - h // 2}")
 
     def _build(self):
@@ -208,6 +208,105 @@ class SettingsDialog(tk.Toplevel):
             fg=C["WARNING"],
             font=self._font(0, "bold"),
         ).pack(anchor="w", padx=24, pady=(4, 2))
+
+        ttk.Button(
+            self,
+            text=self._L["settings_open_llm_config"],
+            command=self._open_llm_config,
+        ).pack(anchor="w", padx=24, pady=(2, 8))
+
+        btn_row = tk.Frame(self, bg=C["BG_DARK"])
+        btn_row.pack(pady=(8, 14))
+        ttk.Button(
+            btn_row,
+            text=self._L["settings_apply"],
+            style="Accent.TButton",
+            command=self._apply,
+        ).pack(side="left", padx=8)
+        ttk.Button(btn_row, text=self._L["settings_cancel"], command=self.destroy).pack(
+            side="left", padx=8
+        )
+
+    def _update_preview(self, *_):
+        try:
+            size = self.font_var.get()
+            size = max(8, min(16, size))
+            self.preview_label.configure(font=("Segoe UI", size))
+        except Exception as e:
+            logger.debug("フォントプレビュー更新失敗: %s", e)
+
+    def _open_llm_config(self):
+        """LLM 設定ダイアログを開き、適用時に current_settings を更新する"""
+        lang = self.current_settings.get("lang", "ja")
+
+        def on_apply(llm_settings):
+            self.current_settings.update(llm_settings)
+
+        LLMConfigDialog(
+            self,
+            self.current_settings,
+            on_apply=on_apply,
+            font_func=self._font,
+            lang=lang,
+        )
+
+    def _apply(self):
+        new_settings = dict(self.current_settings)
+        new_settings["theme"] = self.theme_var.get()
+        new_settings["font_size"] = max(8, min(16, self.font_var.get()))
+        self.destroy()
+        self.callback(new_settings)
+
+
+# ══════════════════════════════════════════
+#  LLM 設定ダイアログ（OCR と設定で共有）
+# ══════════════════════════════════════════
+class LLMConfigDialog(tk.Toplevel):
+    """LM Studio の URL・モデル・OCR 解像度倍率・タイムアウトを編集する共通ダイアログ"""
+
+    def __init__(
+        self,
+        parent,
+        current_settings,
+        on_apply,
+        font_func=None,
+        lang="ja",
+    ):
+        super().__init__(parent)
+        self._L = LANG[lang]
+        self.title(self._L["llm_config_title"])
+        self.configure(bg=C["BG_DARK"])
+        self.resizable(False, False)
+        self.grab_set()
+
+        self.current_settings = dict(current_settings)
+        self.on_apply = on_apply
+        self._font = font_func or (
+            lambda d=0, w=None: (
+                ("Segoe UI", max(7, 10 + d), w) if w else ("Segoe UI", max(7, 10 + d))
+            )
+        )
+
+        self._build()
+        self.update_idletasks()
+        try:
+            fs = int(self._font(0)[1])
+        except Exception:
+            fs = _current_font_size
+        w = max(520, int(fs * 42))
+        h = max(420, self.winfo_reqheight() + 20)
+        px = parent.winfo_rootx() + parent.winfo_width() // 2
+        py = parent.winfo_rooty() + parent.winfo_height() // 2
+        self.geometry(f"{w}x{h}+{px - w // 2}+{py - h // 2}")
+
+    def _build(self):
+        tk.Label(
+            self,
+            text=self._L["llm_config_heading"],
+            bg=C["BG_DARK"],
+            fg=C["ACCENT"],
+            font=self._font(2, "bold"),
+        ).pack(pady=(14, 10))
 
         # URL
         url_row = tk.Frame(self, bg=C["BG_DARK"])
@@ -323,6 +422,78 @@ class SettingsDialog(tk.Toplevel):
             insertbackground=C["TEXT_MAIN"],
         ).pack(side="left", padx=4)
 
+        # 最大トークン
+        mt_row = tk.Frame(self, bg=C["BG_DARK"])
+        mt_row.pack(fill="x", padx=24, pady=2)
+        tk.Label(
+            mt_row,
+            text=self._L["ocr_max_tokens_short"],
+            bg=C["BG_DARK"],
+            fg=C["TEXT_MAIN"],
+            font=self._font(-1),
+            width=20,
+            anchor="w",
+        ).pack(side="left")
+        self.ocr_max_tokens_var = tk.IntVar(
+            value=int(self.current_settings.get("ocr_max_tokens", -1)),
+        )
+        tk.Spinbox(
+            mt_row,
+            from_=-1,
+            to=32000,
+            increment=512,
+            textvariable=self.ocr_max_tokens_var,
+            width=8,
+            font=self._font(-1),
+            bg=C["BG_CARD"],
+            fg=C["TEXT_MAIN"],
+            buttonbackground=C["BG_PANEL"],
+            insertbackground=C["TEXT_MAIN"],
+        ).pack(side="left", padx=4)
+        tk.Label(
+            mt_row,
+            text=self._L["ocr_max_tokens_hint"],
+            bg=C["BG_DARK"],
+            fg=C["TEXT_SUB"],
+            font=self._font(-2),
+        ).pack(side="left", padx=4)
+
+        # 温度（temperature）
+        tmp_row = tk.Frame(self, bg=C["BG_DARK"])
+        tmp_row.pack(fill="x", padx=24, pady=2)
+        tk.Label(
+            tmp_row,
+            text=self._L["ocr_temperature_short"],
+            bg=C["BG_DARK"],
+            fg=C["TEXT_MAIN"],
+            font=self._font(-1),
+            width=20,
+            anchor="w",
+        ).pack(side="left")
+        self.ocr_temperature_var = tk.DoubleVar(
+            value=float(self.current_settings.get("ocr_temperature", 0.1)),
+        )
+        tk.Spinbox(
+            tmp_row,
+            from_=0.0,
+            to=2.0,
+            increment=0.1,
+            textvariable=self.ocr_temperature_var,
+            width=6,
+            font=self._font(-1),
+            bg=C["BG_CARD"],
+            fg=C["TEXT_MAIN"],
+            buttonbackground=C["BG_PANEL"],
+            insertbackground=C["TEXT_MAIN"],
+        ).pack(side="left", padx=4)
+        tk.Label(
+            tmp_row,
+            text=self._L["ocr_temperature_hint"],
+            bg=C["BG_DARK"],
+            fg=C["TEXT_SUB"],
+            font=self._font(-2),
+        ).pack(side="left", padx=4)
+
         # 接続テスト・モデル取得
         lm_btn_row = tk.Frame(self, bg=C["BG_DARK"])
         lm_btn_row.pack(fill="x", padx=24, pady=(6, 2))
@@ -352,24 +523,15 @@ class SettingsDialog(tk.Toplevel):
         btn_row.pack(pady=(8, 14))
         ttk.Button(
             btn_row,
-            text=self._L["settings_apply"],
+            text=self._L["llm_config_apply"],
             style="Accent.TButton",
             command=self._apply,
         ).pack(side="left", padx=8)
-        ttk.Button(btn_row, text=self._L["settings_cancel"], command=self.destroy).pack(
-            side="left", padx=8
-        )
-
-    def _update_preview(self, *_):
-        try:
-            size = self.font_var.get()
-            size = max(8, min(16, size))
-            self.preview_label.configure(font=("Segoe UI", size))
-        except Exception as e:
-            logger.debug("フォントプレビュー更新失敗: %s", e)
+        ttk.Button(
+            btn_row, text=self._L["llm_config_cancel"], command=self.destroy
+        ).pack(side="left", padx=8)
 
     def _fetch_models(self):
-        """LM Studio から利用可能モデル一覧を取得して Combobox に反映"""
         url = self.lm_url_var.get().strip()
         if not url:
             self.lm_status_var.set(
@@ -387,7 +549,6 @@ class SettingsDialog(tk.Toplevel):
         self.lm_status_var.set(self._L["settings_lm_test_ok"].format(count=len(models)))
 
     def _test_connection(self):
-        """LM Studio /v1/models を叩いて接続を確認する"""
         url = self.lm_url_var.get().strip()
         if not url:
             self.lm_status_var.set(
@@ -404,27 +565,36 @@ class SettingsDialog(tk.Toplevel):
         self.lm_status_var.set(self._L["settings_lm_test_ok"].format(count=len(models)))
 
     def _apply(self):
-        new_settings = dict(self.current_settings)
-        new_settings["theme"] = self.theme_var.get()
-        new_settings["font_size"] = max(8, min(16, self.font_var.get()))
-        new_settings["lm_studio_url"] = self.lm_url_var.get().strip() or (
+        llm_settings = {}
+        llm_settings["lm_studio_url"] = self.lm_url_var.get().strip() or (
             "http://localhost:1234"
         )
-        new_settings["lm_studio_model"] = self.lm_model_var.get().strip()
+        llm_settings["lm_studio_model"] = self.lm_model_var.get().strip()
         try:
-            new_settings["ocr_scale"] = max(
+            llm_settings["ocr_scale"] = max(
                 1.0, min(4.0, float(self.ocr_scale_var.get()))
             )
         except (tk.TclError, ValueError):
-            new_settings["ocr_scale"] = 2.0
+            llm_settings["ocr_scale"] = 2.0
         try:
-            new_settings["ocr_timeout"] = max(
+            llm_settings["ocr_timeout"] = max(
                 10, min(600, int(self.ocr_timeout_var.get()))
             )
         except (tk.TclError, ValueError):
-            new_settings["ocr_timeout"] = 120
+            llm_settings["ocr_timeout"] = 120
+        try:
+            mt = int(self.ocr_max_tokens_var.get())
+            llm_settings["ocr_max_tokens"] = max(-1, min(32000, mt))
+        except (tk.TclError, ValueError):
+            llm_settings["ocr_max_tokens"] = -1
+        try:
+            tmp = float(self.ocr_temperature_var.get())
+            llm_settings["ocr_temperature"] = max(0.0, min(2.0, tmp))
+        except (tk.TclError, ValueError):
+            llm_settings["ocr_temperature"] = 0.1
         self.destroy()
-        self.callback(new_settings)
+        if self.on_apply:
+            self.on_apply(llm_settings)
 
 
 # ══════════════════════════════════════════
