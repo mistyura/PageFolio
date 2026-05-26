@@ -80,12 +80,13 @@ class OCRDialog(tk.Toplevel):
     def _center(self, parent):
         self.update_idletasks()
         fs = self._font_size()
-        w = max(640, int(fs * 56))
-        h = max(440, int(fs * 36))
+        w = max(720, int(fs * 60))
+        # 設定行(プロンプト/サーバ/モデル) + 進行表示 + 結果領域 + ボタン行 を確実に表示
+        h = max(620, int(fs * 52))
         px = parent.winfo_rootx() + parent.winfo_width() // 2
         py = parent.winfo_rooty() + parent.winfo_height() // 2
         self.geometry(f"{w}x{h}+{px - w // 2}+{py - h // 2}")
-        self.minsize(520, 360)
+        self.minsize(620, 560)
 
     # ── UI 構築 ──
     def _build(self):
@@ -206,6 +207,7 @@ class OCRDialog(tk.Toplevel):
             wrap="word",
             bd=0,
             highlightthickness=0,
+            height=10,
         )
         sb = ttk.Scrollbar(result_frame, orient="vertical", command=self.text.yview)
         self.text.configure(yscrollcommand=sb.set)

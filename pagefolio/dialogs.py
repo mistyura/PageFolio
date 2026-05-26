@@ -115,7 +115,7 @@ class SettingsDialog(tk.Toplevel):
         py = parent.winfo_rooty() + parent.winfo_height() // 2
         fs = current_settings.get("font_size", 12)
         w = max(460, int(fs * 38))
-        h = max(320, int(fs * 24))
+        h = max(420, self.winfo_reqheight() + 20)
         self.geometry(f"{w}x{h}+{px - w // 2}+{py - h // 2}")
 
     def _build(self):
@@ -289,9 +289,12 @@ class LLMConfigDialog(tk.Toplevel):
 
         self._build()
         self.update_idletasks()
-        fs = _current_font_size()
-        w = max(460, int(fs * 38))
-        h = max(360, self.winfo_reqheight() + 20)
+        try:
+            fs = int(self._font(0)[1])
+        except Exception:
+            fs = _current_font_size
+        w = max(520, int(fs * 42))
+        h = max(420, self.winfo_reqheight() + 20)
         px = parent.winfo_rootx() + parent.winfo_width() // 2
         py = parent.winfo_rooty() + parent.winfo_height() // 2
         self.geometry(f"{w}x{h}+{px - w // 2}+{py - h // 2}")
