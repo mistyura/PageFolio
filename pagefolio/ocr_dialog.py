@@ -233,10 +233,9 @@ class OCRDialog(tk.Toplevel):
         self.close_btn = ttk.Button(
             btn_row,
             text=self._L["btn_close"],
-            command=self.destroy,
+            command=self._on_close,
         )
         self.close_btn.pack(side="right", padx=4)
-        self.close_btn.state(["disabled"])
 
         self.cancel_btn = ttk.Button(
             btn_row,
@@ -245,6 +244,7 @@ class OCRDialog(tk.Toplevel):
             command=self._on_cancel,
         )
         self.cancel_btn.pack(side="right", padx=4)
+        self.cancel_btn.state(["disabled"])
 
         self.run_btn = ttk.Button(
             btn_row,
@@ -283,8 +283,7 @@ class OCRDialog(tk.Toplevel):
         self.progress_var.set(self._L["ocr_run_first"])
         self.copy_btn.state(["disabled"])
         self.save_btn.state(["disabled"])
-        self.close_btn.state(["disabled"])
-        self.cancel_btn.state(["!disabled"])
+        self.cancel_btn.state(["disabled"])
         self.run_btn.state(["!disabled"])
         self._started = False
         self._done = False
@@ -297,6 +296,7 @@ class OCRDialog(tk.Toplevel):
             return
         self._started = True
         self.run_btn.state(["disabled"])
+        self.cancel_btn.state(["!disabled"])
         self.progress_var.set(self._L["ocr_progress_init"])
         # 結果テキストエリアをクリア
         self.text.delete("1.0", "end")
@@ -398,7 +398,6 @@ class OCRDialog(tk.Toplevel):
                 )
             )
         self.cancel_btn.state(["disabled"])
-        self.close_btn.state(["!disabled"])
         if self.results:
             self.copy_btn.state(["!disabled"])
             self.save_btn.state(["!disabled"])
@@ -407,7 +406,6 @@ class OCRDialog(tk.Toplevel):
         self._done = True
         self.progress_var.set(self._L["ocr_cancelled"])
         self.cancel_btn.state(["disabled"])
-        self.close_btn.state(["!disabled"])
         if self.results:
             self.copy_btn.state(["!disabled"])
             self.save_btn.state(["!disabled"])
@@ -428,22 +426,13 @@ class OCRDialog(tk.Toplevel):
         self.text.insert("end", "\n" + user_msg + "\n")
         self.text.see("end")
         self.cancel_btn.state(["disabled"])
-        self.close_btn.state(["!disabled"])
         if self.results:
             self.copy_btn.state(["!disabled"])
             self.save_btn.state(["!disabled"])
 
     # ── 操作 ──
     def _on_cancel(self):
-        # 実行前ならそのまま閉じる
-        if not self._started:
-            self.destroy()
-            return
-        # 既に完了している場合も閉じる
-        if self._done:
-            self.destroy()
-            return
-        # 実行中はキャンセル要求
+        # キャンセルボタンは実行中のみ有効
         self._cancel_flag.set()
         self.cancel_btn.state(["disabled"])
         self.progress_var.set(self._L["ocr_cancelling"])
