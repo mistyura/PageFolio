@@ -33,6 +33,7 @@ OCR_PROMPTS = {
 DEFAULT_LM_STUDIO_URL = "http://localhost:1234"
 DEFAULT_OCR_TIMEOUT = 120  # 秒
 DEFAULT_OCR_SCALE = 2.0
+DEFAULT_OCR_MAX_TOKENS = -1  # -1: 無制限
 
 
 def page_to_png_b64(page, scale=DEFAULT_OCR_SCALE):
@@ -43,7 +44,7 @@ def page_to_png_b64(page, scale=DEFAULT_OCR_SCALE):
     return base64.b64encode(png_bytes).decode("ascii")
 
 
-def build_chat_payload(model, b64_png, prompt):
+def build_chat_payload(model, b64_png, prompt, max_tokens=DEFAULT_OCR_MAX_TOKENS):
     """LM Studio (OpenAI 互換) Chat Completions リクエストボディを構築する"""
     return {
         "model": model or "local-model",
@@ -61,12 +62,19 @@ def build_chat_payload(model, b64_png, prompt):
                 ],
             }
         ],
-        "max_tokens": -1,
+        "max_tokens": max_tokens,
         "stream": False,
     }
 
 
-def call_lm_studio(url, model, b64_png, prompt, timeout=DEFAULT_OCR_TIMEOUT):
+def call_lm_studio(
+    url,
+    model,
+    b64_png,
+    prompt,
+    timeout=DEFAULT_OCR_TIMEOUT,
+    max_tokens=DEFAULT_OCR_MAX_TOKENS,
+):
     """LM Studio Chat Completions API を呼び出して結果テキストを返す。
 
     例外:
@@ -75,7 +83,7 @@ def call_lm_studio(url, model, b64_png, prompt, timeout=DEFAULT_OCR_TIMEOUT):
       RuntimeError: APIエラー（Vision 非対応モデル等）
     """
     endpoint = url.rstrip("/") + "/v1/chat/completions"
-    payload = build_chat_payload(model, b64_png, prompt)
+    payload = build_chat_payload(model, b64_png, prompt, max_tokens=max_tokens)
     data = json.dumps(payload).encode("utf-8")
     req = urllib.request.Request(  # noqa: S310
         endpoint,
@@ -165,6 +173,7 @@ class OCRMixin:
         preset = self.settings.get("ocr_prompt_preset", "text")
         scale = float(self.settings.get("ocr_scale", DEFAULT_OCR_SCALE))
         timeout = int(self.settings.get("ocr_timeout", DEFAULT_OCR_TIMEOUT))
+        max_tokens = int(self.settings.get("ocr_max_tokens", DEFAULT_OCR_MAX_TOKENS))
 
         OCRDialog(
             self.root,
@@ -176,6 +185,7 @@ class OCRMixin:
             preset=preset,
             scale=scale,
             timeout=timeout,
+            max_tokens=max_tokens,
             lang=self.lang,
             font_func=self._font,
         )

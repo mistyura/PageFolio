@@ -38,6 +38,7 @@ def _load_settings():
         "ocr_prompt_preset": "text",
         "ocr_scale": 2.0,
         "ocr_timeout": 120,
+        "ocr_max_tokens": -1,
     }
     try:
         path = _get_settings_path()

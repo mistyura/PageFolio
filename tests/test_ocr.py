@@ -39,6 +39,15 @@ class TestBuildChatPayload:
         payload = ocr.build_chat_payload("m", "a", "p")
         assert payload["messages"][0]["role"] == "user"
 
+    def test_max_tokens_default(self):
+        """max_tokens 未指定なら -1（無制限）"""
+        payload = ocr.build_chat_payload("m", "a", "p")
+        assert payload["max_tokens"] == -1
+
+    def test_max_tokens_custom(self):
+        payload = ocr.build_chat_payload("m", "a", "p", max_tokens=4096)
+        assert payload["max_tokens"] == 4096
+
 
 # ===== ページ → PNG base64 =====
 

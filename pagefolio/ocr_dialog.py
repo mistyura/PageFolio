@@ -33,6 +33,7 @@ class OCRDialog(tk.Toplevel):
         preset,
         scale,
         timeout,
+        max_tokens=-1,
         lang="ja",
         font_func=None,
     ):
@@ -45,13 +46,14 @@ class OCRDialog(tk.Toplevel):
         self.app = app
         self.doc = doc
         self.page_indices = list(page_indices)
-        self.scale = scale
-        self.timeout = timeout
         self._font = font_func or self._default_font
 
         self.url_var = tk.StringVar(value=url)
         self.model_var = tk.StringVar(value=model)
         self.preset_var = tk.StringVar(value=preset)
+        self.scale_var = tk.DoubleVar(value=float(scale))
+        self.timeout_var = tk.IntVar(value=int(timeout))
+        self.max_tokens_var = tk.IntVar(value=int(max_tokens))
         self.results = {}  # page_idx -> text
         self.errors = {}  # page_idx -> message
         self._cancel_flag = threading.Event()
@@ -81,12 +83,12 @@ class OCRDialog(tk.Toplevel):
         fs = self._font_size()
         # クリア/コピー/保存/読み取り実行/キャンセル/閉じる の6ボタンが収まる横幅
         w = max(880, int(fs * 72))
-        # 設定行(プロンプト/サーバ/モデル) + 進行表示 + 結果領域 + ボタン行 を確実に表示
-        h = max(620, int(fs * 52))
+        # 設定行(プロンプト/サーバ/モデル/詳細) + 進行表示 + 結果領域 + ボタン行
+        h = max(680, int(fs * 56))
         px = parent.winfo_rootx() + parent.winfo_width() // 2
         py = parent.winfo_rooty() + parent.winfo_height() // 2
         self.geometry(f"{w}x{h}+{px - w // 2}+{py - h // 2}")
-        self.minsize(820, 560)
+        self.minsize(820, 620)
 
     # ── UI 構築 ──
     def _build(self):
@@ -174,6 +176,94 @@ class OCRDialog(tk.Toplevel):
             text=self._L["ocr_fetch_models"],
             command=self._fetch_models,
         ).pack(side="left", padx=2)
+
+        # 詳細設定行（解像度 / タイムアウト / 最大トークン）
+        params_row = tk.Frame(self, bg=C["BG_DARK"])
+        params_row.pack(fill="x", padx=16, pady=(6, 0))
+        tk.Label(
+            params_row,
+            text=self._L["ocr_params_label"],
+            bg=C["BG_DARK"],
+            fg=C["TEXT_MAIN"],
+            font=self._font(-1),
+            width=8,
+            anchor="w",
+        ).pack(side="left")
+        tk.Label(
+            params_row,
+            text=self._L["ocr_scale_short"],
+            bg=C["BG_DARK"],
+            fg=C["TEXT_MAIN"],
+            font=self._font(-1),
+        ).pack(side="left", padx=(0, 2))
+        tk.Spinbox(
+            params_row,
+            from_=1.0,
+            to=4.0,
+            increment=0.5,
+            textvariable=self.scale_var,
+            width=5,
+            font=self._font(-1),
+            bg=C["BG_CARD"],
+            fg=C["TEXT_MAIN"],
+            buttonbackground=C["BG_PANEL"],
+            insertbackground=C["TEXT_MAIN"],
+        ).pack(side="left", padx=(0, 10))
+        tk.Label(
+            params_row,
+            text=self._L["ocr_timeout_short"],
+            bg=C["BG_DARK"],
+            fg=C["TEXT_MAIN"],
+            font=self._font(-1),
+        ).pack(side="left", padx=(0, 2))
+        tk.Spinbox(
+            params_row,
+            from_=10,
+            to=600,
+            increment=10,
+            textvariable=self.timeout_var,
+            width=5,
+            font=self._font(-1),
+            bg=C["BG_CARD"],
+            fg=C["TEXT_MAIN"],
+            buttonbackground=C["BG_PANEL"],
+            insertbackground=C["TEXT_MAIN"],
+        ).pack(side="left", padx=(0, 10))
+        tk.Label(
+            params_row,
+            text=self._L["ocr_max_tokens_short"],
+            bg=C["BG_DARK"],
+            fg=C["TEXT_MAIN"],
+            font=self._font(-1),
+        ).pack(side="left", padx=(0, 2))
+        tk.Spinbox(
+            params_row,
+            from_=-1,
+            to=32000,
+            increment=512,
+            textvariable=self.max_tokens_var,
+            width=7,
+            font=self._font(-1),
+            bg=C["BG_CARD"],
+            fg=C["TEXT_MAIN"],
+            buttonbackground=C["BG_PANEL"],
+            insertbackground=C["TEXT_MAIN"],
+        ).pack(side="left", padx=(0, 4))
+        tk.Label(
+            params_row,
+            text=self._L["ocr_max_tokens_hint"],
+            bg=C["BG_DARK"],
+            fg=C["TEXT_SUB"],
+            font=self._font(-2),
+        ).pack(side="left")
+
+        tk.Label(
+            self,
+            text=self._L["ocr_params_hint"],
+            bg=C["BG_DARK"],
+            fg=C["TEXT_SUB"],
+            font=self._font(-2),
+        ).pack(anchor="w", padx=16)
 
         # 進行表示
         self.progress_var = tk.StringVar(value=self._L["ocr_run_first"])
@@ -309,6 +399,19 @@ class OCRDialog(tk.Toplevel):
     def _worker(self, prompt):
         url = self.url_var.get()
         model = self.model_var.get()
+        try:
+            scale = max(1.0, min(4.0, float(self.scale_var.get())))
+        except (tk.TclError, ValueError):
+            scale = 2.0
+        try:
+            timeout = max(10, min(600, int(self.timeout_var.get())))
+        except (tk.TclError, ValueError):
+            timeout = 120
+        try:
+            max_tokens = int(self.max_tokens_var.get())
+        except (tk.TclError, ValueError):
+            max_tokens = -1
+        self._effective_timeout = timeout
         for idx, page_idx in enumerate(self.page_indices, start=1):
             if self._cancel_flag.is_set():
                 self.after(0, self._finish_cancelled)
@@ -316,7 +419,7 @@ class OCRDialog(tk.Toplevel):
             # ページ画像変換
             try:
                 page = self.doc[page_idx]
-                b64 = page_to_png_b64(page, scale=self.scale)
+                b64 = page_to_png_b64(page, scale=scale)
             except Exception as e:
                 logger.exception("ページ画像変換失敗: %s", e)
                 self.errors[page_idx] = f"image conversion error: {e}"
@@ -332,7 +435,8 @@ class OCRDialog(tk.Toplevel):
                     model,
                     b64,
                     prompt,
-                    timeout=self.timeout,
+                    timeout=timeout,
+                    max_tokens=max_tokens,
                 )
             except ConnectionError as e:
                 # 接続失敗は致命的 — 全体停止
@@ -418,7 +522,8 @@ class OCRDialog(tk.Toplevel):
             )
         elif kind == "timeout":
             user_msg = self._L["ocr_err_timeout"].format(
-                timeout=self.timeout, error=msg
+                timeout=getattr(self, "_effective_timeout", self.timeout_var.get()),
+                error=msg,
             )
         else:
             user_msg = msg

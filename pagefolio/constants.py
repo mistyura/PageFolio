@@ -362,6 +362,14 @@ LANG = {
         "ocr_models_fetched": "{count} モデルを取得しました",
         "ocr_models_fetch_fail": "モデル取得失敗: {error}",
         "ocr_run_first": "「読み取り実行」を押すと開始します",
+        "ocr_params_label": "詳細設定:",
+        "ocr_scale_short": "解像度:",
+        "ocr_timeout_short": "タイムアウト:",
+        "ocr_max_tokens_short": "最大トークン:",
+        "ocr_max_tokens_hint": "(-1: 無制限)",
+        "ocr_params_hint": (
+            "精度向上には解像度を上げる、出力切れには最大トークンを増やす"
+        ),
         # 共通エラー
         "err_title": "エラー",
         "info_title": "情報",
@@ -663,6 +671,14 @@ LANG = {
         "ocr_models_fetched": "Fetched {count} model(s)",
         "ocr_models_fetch_fail": "Fetch failed: {error}",
         "ocr_run_first": 'Press "Run OCR" to start',
+        "ocr_params_label": "Advanced:",
+        "ocr_scale_short": "Scale:",
+        "ocr_timeout_short": "Timeout:",
+        "ocr_max_tokens_short": "Max tokens:",
+        "ocr_max_tokens_hint": "(-1: unlimited)",
+        "ocr_params_hint": (
+            "Raise scale for accuracy; raise max tokens to avoid truncation"
+        ),
         # Common error
         "err_title": "Error",
         "info_title": "Info",

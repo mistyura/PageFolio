@@ -422,6 +422,42 @@ class LLMConfigDialog(tk.Toplevel):
             insertbackground=C["TEXT_MAIN"],
         ).pack(side="left", padx=4)
 
+        # 最大トークン
+        mt_row = tk.Frame(self, bg=C["BG_DARK"])
+        mt_row.pack(fill="x", padx=24, pady=2)
+        tk.Label(
+            mt_row,
+            text=self._L["ocr_max_tokens_short"],
+            bg=C["BG_DARK"],
+            fg=C["TEXT_MAIN"],
+            font=self._font(-1),
+            width=20,
+            anchor="w",
+        ).pack(side="left")
+        self.ocr_max_tokens_var = tk.IntVar(
+            value=int(self.current_settings.get("ocr_max_tokens", -1)),
+        )
+        tk.Spinbox(
+            mt_row,
+            from_=-1,
+            to=32000,
+            increment=512,
+            textvariable=self.ocr_max_tokens_var,
+            width=8,
+            font=self._font(-1),
+            bg=C["BG_CARD"],
+            fg=C["TEXT_MAIN"],
+            buttonbackground=C["BG_PANEL"],
+            insertbackground=C["TEXT_MAIN"],
+        ).pack(side="left", padx=4)
+        tk.Label(
+            mt_row,
+            text=self._L["ocr_max_tokens_hint"],
+            bg=C["BG_DARK"],
+            fg=C["TEXT_SUB"],
+            font=self._font(-2),
+        ).pack(side="left", padx=4)
+
         # 接続テスト・モデル取得
         lm_btn_row = tk.Frame(self, bg=C["BG_DARK"])
         lm_btn_row.pack(fill="x", padx=24, pady=(6, 2))
@@ -510,6 +546,11 @@ class LLMConfigDialog(tk.Toplevel):
             )
         except (tk.TclError, ValueError):
             llm_settings["ocr_timeout"] = 120
+        try:
+            mt = int(self.ocr_max_tokens_var.get())
+            llm_settings["ocr_max_tokens"] = max(-1, min(32000, mt))
+        except (tk.TclError, ValueError):
+            llm_settings["ocr_max_tokens"] = -1
         self.destroy()
         if self.on_apply:
             self.on_apply(llm_settings)
