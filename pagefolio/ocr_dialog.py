@@ -272,17 +272,23 @@ class OCRDialog(tk.Toplevel):
         self.progress_var.set(self._L["ocr_models_fetched"].format(count=len(models)))
 
     def _clear_text(self):
-        """結果テキストエリアを初期化する"""
+        """結果テキストエリア・進行表示・実行状態を初期化する"""
+        # 実行中はクリア不可（キャンセルしてから再度押す想定）
+        if self._started and not self._done:
+            return
         self.text.delete("1.0", "end")
         self.results.clear()
         self.errors.clear()
         self.progress_bar["value"] = 0
-        if not self._started:
-            self.progress_var.set(self._L["ocr_run_first"])
-        else:
-            self.progress_var.set("")
+        self.progress_var.set(self._L["ocr_run_first"])
         self.copy_btn.state(["disabled"])
         self.save_btn.state(["disabled"])
+        self.close_btn.state(["disabled"])
+        self.cancel_btn.state(["!disabled"])
+        self.run_btn.state(["!disabled"])
+        self._started = False
+        self._done = False
+        self._cancel_flag.clear()
 
     # ── ワーカー ──
     def _on_run(self):
