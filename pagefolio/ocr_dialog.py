@@ -9,7 +9,12 @@ import tkinter as tk
 from tkinter import filedialog, messagebox, ttk
 
 from pagefolio.constants import LANG, C
-from pagefolio.ocr import OCR_PROMPTS, call_lm_studio, page_to_png_b64
+from pagefolio.ocr import (
+    OCR_PROMPTS,
+    call_lm_studio,
+    fetch_lm_studio_models,
+    page_to_png_b64,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -40,24 +45,24 @@ class OCRDialog(tk.Toplevel):
         self.app = app
         self.doc = doc
         self.page_indices = list(page_indices)
-        self.url = url
-        self.model = model
         self.scale = scale
         self.timeout = timeout
+        self._lang = lang
         self._font = font_func or self._default_font
 
+        self.url_var = tk.StringVar(value=url)
+        self.model_var = tk.StringVar(value=model)
         self.preset_var = tk.StringVar(value=preset)
         self.results = {}  # page_idx -> text
         self.errors = {}  # page_idx -> message
         self._cancel_flag = threading.Event()
         self._worker_thread = None
         self._done = False
+        self._started = False
 
         self._build()
         self._center(parent)
         self.protocol("WM_DELETE_WINDOW", self._on_close)
-        # ダイアログ表示完了後にワーカーを開始
-        self.after(50, self._start_worker)
 
     # ── ユーティリティ ──
     @staticmethod
@@ -120,8 +125,62 @@ class OCRDialog(tk.Toplevel):
                 font=self._font(-1),
             ).pack(side="left", padx=4)
 
+        # サーバ（参照のみ）
+        sf = tk.Frame(self, bg=C["BG_DARK"])
+        sf.pack(fill="x", padx=16, pady=(6, 2))
+        tk.Label(
+            sf,
+            text=self._L["ocr_server_label"],
+            bg=C["BG_DARK"],
+            fg=C["TEXT_MAIN"],
+            font=self._font(-1),
+            width=8,
+            anchor="w",
+        ).pack(side="left")
+        tk.Entry(
+            sf,
+            textvariable=self.url_var,
+            font=self._font(-1),
+            bg=C["BG_CARD"],
+            fg=C["TEXT_SUB"],
+            insertbackground=C["TEXT_MAIN"],
+            relief="flat",
+            state="readonly",
+            readonlybackground=C["BG_CARD"],
+        ).pack(side="left", fill="x", expand=True, padx=4)
+        ttk.Button(
+            sf,
+            text=self._L["ocr_open_llm_config"],
+            command=self._open_llm_config,
+        ).pack(side="left", padx=2)
+
+        # モデル選択
+        mf = tk.Frame(self, bg=C["BG_DARK"])
+        mf.pack(fill="x", padx=16, pady=2)
+        tk.Label(
+            mf,
+            text=self._L["ocr_model_label"],
+            bg=C["BG_DARK"],
+            fg=C["TEXT_MAIN"],
+            font=self._font(-1),
+            width=8,
+            anchor="w",
+        ).pack(side="left")
+        self.model_combo = ttk.Combobox(
+            mf,
+            textvariable=self.model_var,
+            font=self._font(-1),
+            values=[],
+        )
+        self.model_combo.pack(side="left", fill="x", expand=True, padx=4)
+        ttk.Button(
+            mf,
+            text=self._L["ocr_fetch_models"],
+            command=self._fetch_models,
+        ).pack(side="left", padx=2)
+
         # 進行表示
-        self.progress_var = tk.StringVar(value=self._L["ocr_progress_init"])
+        self.progress_var = tk.StringVar(value=self._L["ocr_run_first"])
         tk.Label(
             self,
             textvariable=self.progress_var,
@@ -172,7 +231,6 @@ class OCRDialog(tk.Toplevel):
         self.close_btn = ttk.Button(
             btn_row,
             text=self._L["btn_close"],
-            style="Accent.TButton",
             command=self.destroy,
         )
         self.close_btn.pack(side="right", padx=4)
@@ -186,8 +244,65 @@ class OCRDialog(tk.Toplevel):
         )
         self.cancel_btn.pack(side="right", padx=4)
 
+        self.run_btn = ttk.Button(
+            btn_row,
+            text=self._L["ocr_run"],
+            style="Accent.TButton",
+            command=self._on_run,
+        )
+        self.run_btn.pack(side="right", padx=4)
+
+    # ── サーバ・モデル設定 ──
+    def _fetch_models(self):
+        """LM Studio から利用可能モデル一覧を取得して Combobox に反映"""
+        url = self.url_var.get().strip()
+        if not url:
+            self.progress_var.set(
+                self._L["ocr_models_fetch_fail"].format(error="URL is empty")
+            )
+            return
+        try:
+            models = fetch_lm_studio_models(url, timeout=10)
+        except (ConnectionError, TimeoutError, RuntimeError) as e:
+            self.progress_var.set(self._L["ocr_models_fetch_fail"].format(error=str(e)))
+            return
+        self.model_combo["values"] = models
+        self.progress_var.set(self._L["ocr_models_fetched"].format(count=len(models)))
+
+    def _open_llm_config(self):
+        """LLM 設定ダイアログを開き、URL/モデルなどを更新する"""
+        from pagefolio.dialogs import LLMConfigDialog
+
+        def on_apply(llm_settings):
+            self.app.settings.update(llm_settings)
+            from pagefolio.settings import _save_settings
+
+            _save_settings(self.app.settings)
+            self.url_var.set(llm_settings.get("lm_studio_url", self.url_var.get()))
+            self.model_var.set(
+                llm_settings.get("lm_studio_model", self.model_var.get())
+            )
+            self.scale = float(llm_settings.get("ocr_scale", self.scale))
+            self.timeout = int(llm_settings.get("ocr_timeout", self.timeout))
+
+        LLMConfigDialog(
+            self,
+            self.app.settings,
+            on_apply=on_apply,
+            font_func=self._font,
+            lang=self._lang,
+        )
+
     # ── ワーカー ──
-    def _start_worker(self):
+    def _on_run(self):
+        """読み取り実行ボタン: OCR を開始する"""
+        if self._started:
+            return
+        self._started = True
+        self.run_btn.state(["disabled"])
+        self.progress_var.set(self._L["ocr_progress_init"])
+        # 結果テキストエリアをクリア
+        self.text.delete("1.0", "end")
         prompt = OCR_PROMPTS.get(self.preset_var.get(), OCR_PROMPTS["text"])
         self._worker_thread = threading.Thread(
             target=self._worker, args=(prompt,), daemon=True
@@ -195,6 +310,8 @@ class OCRDialog(tk.Toplevel):
         self._worker_thread.start()
 
     def _worker(self, prompt):
+        url = self.url_var.get()
+        model = self.model_var.get()
         for idx, page_idx in enumerate(self.page_indices, start=1):
             if self._cancel_flag.is_set():
                 self.after(0, self._finish_cancelled)
@@ -214,8 +331,8 @@ class OCRDialog(tk.Toplevel):
             # LM Studio 呼び出し
             try:
                 text = call_lm_studio(
-                    self.url,
-                    self.model,
+                    url,
+                    model,
                     b64,
                     prompt,
                     timeout=self.timeout,
@@ -301,7 +418,9 @@ class OCRDialog(tk.Toplevel):
     def _finish_error(self, msg, kind):
         self._done = True
         if kind == "connection":
-            user_msg = self._L["ocr_err_connection"].format(url=self.url, error=msg)
+            user_msg = self._L["ocr_err_connection"].format(
+                url=self.url_var.get(), error=msg
+            )
         elif kind == "timeout":
             user_msg = self._L["ocr_err_timeout"].format(
                 timeout=self.timeout, error=msg
@@ -319,20 +438,32 @@ class OCRDialog(tk.Toplevel):
 
     # ── 操作 ──
     def _on_cancel(self):
+        # 実行前ならそのまま閉じる
+        if not self._started:
+            self.destroy()
+            return
+        # 既に完了している場合も閉じる
+        if self._done:
+            self.destroy()
+            return
+        # 実行中はキャンセル要求
         self._cancel_flag.set()
         self.cancel_btn.state(["disabled"])
         self.progress_var.set(self._L["ocr_cancelling"])
 
     def _on_close(self):
-        if not self._done:
-            ok = messagebox.askyesno(
-                self._L["confirm_title"],
-                self._L["ocr_close_during_run"],
-                parent=self,
-            )
-            if not ok:
-                return
-            self._cancel_flag.set()
+        # 未開始または完了済みなら確認なしで閉じる
+        if not self._started or self._done:
+            self.destroy()
+            return
+        ok = messagebox.askyesno(
+            self._L["confirm_title"],
+            self._L["ocr_close_during_run"],
+            parent=self,
+        )
+        if not ok:
+            return
+        self._cancel_flag.set()
         self.destroy()
 
     def _format_full_text(self):
