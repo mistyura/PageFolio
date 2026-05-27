@@ -386,6 +386,12 @@ class OCRDialog(tk.Toplevel):
                 self._L["ocr_models_fetch_fail"].format(error="URL is empty")
             )
             return
+        # 押下直後に「取得中…」を即時表示（HTTP 同期呼び出しによる UI 凍結対策）
+        self.progress_var.set(self._L["ocr_models_fetching"].format(url=url))
+        try:
+            self.update_idletasks()
+        except tk.TclError:
+            pass
         try:
             models = fetch_lm_studio_models(url, timeout=10)
         except (ConnectionError, TimeoutError, RuntimeError) as e:
