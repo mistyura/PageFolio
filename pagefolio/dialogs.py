@@ -494,6 +494,42 @@ class LLMConfigDialog(tk.Toplevel):
             font=self._font(-2),
         ).pack(side="left", padx=4)
 
+        # 並列度（concurrency）
+        conc_row = tk.Frame(self, bg=C["BG_DARK"])
+        conc_row.pack(fill="x", padx=24, pady=2)
+        tk.Label(
+            conc_row,
+            text=self._L["settings_ocr_concurrency"],
+            bg=C["BG_DARK"],
+            fg=C["TEXT_MAIN"],
+            font=self._font(-1),
+            width=20,
+            anchor="w",
+        ).pack(side="left")
+        self.ocr_concurrency_var = tk.IntVar(
+            value=int(self.current_settings.get("ocr_concurrency", 2)),
+        )
+        tk.Spinbox(
+            conc_row,
+            from_=1,
+            to=8,
+            increment=1,
+            textvariable=self.ocr_concurrency_var,
+            width=6,
+            font=self._font(-1),
+            bg=C["BG_CARD"],
+            fg=C["TEXT_MAIN"],
+            buttonbackground=C["BG_PANEL"],
+            insertbackground=C["TEXT_MAIN"],
+        ).pack(side="left", padx=4)
+        tk.Label(
+            conc_row,
+            text=self._L["settings_ocr_concurrency_hint"],
+            bg=C["BG_DARK"],
+            fg=C["TEXT_SUB"],
+            font=self._font(-2),
+        ).pack(side="left", padx=4)
+
         # 接続テスト・モデル取得
         lm_btn_row = tk.Frame(self, bg=C["BG_DARK"])
         lm_btn_row.pack(fill="x", padx=24, pady=(6, 2))
@@ -592,6 +628,11 @@ class LLMConfigDialog(tk.Toplevel):
             llm_settings["ocr_temperature"] = max(0.0, min(2.0, tmp))
         except (tk.TclError, ValueError):
             llm_settings["ocr_temperature"] = 0.1
+        try:
+            conc = int(self.ocr_concurrency_var.get())
+            llm_settings["ocr_concurrency"] = max(1, min(8, conc))
+        except (tk.TclError, ValueError):
+            llm_settings["ocr_concurrency"] = 2
         self.destroy()
         if self.on_apply:
             self.on_apply(llm_settings)

@@ -44,7 +44,7 @@ THEMES = {
 C = dict(THEMES["dark"])
 
 # ===================== バージョン =====================
-APP_VERSION = "v1.2.1"
+APP_VERSION = "v1.2.2"
 
 # ===================== ファイル名定数 =====================
 SETTINGS_FILE = "pagefolio_settings.json"
@@ -307,6 +307,8 @@ LANG = {
         "ocr_dialog_heading": "🔍 OCR テキスト抽出",
         "ocr_progress_init": "準備中…",
         "ocr_progress": "{cur}/{total} ページ処理中… (p.{page})",
+        "ocr_progress_render": "画像変換中… ({cur}/{total})",
+        "ocr_progress_ocr": "読み取り完了 ({done}/{total}) — p.{page}",
         "ocr_cancelling": "キャンセル中…",
         "ocr_cancelled": "キャンセルしました",
         "ocr_complete": "完了: {count}/{total} ページ成功",
@@ -346,6 +348,10 @@ LANG = {
         "settings_lm_test_fail": "接続失敗: {error}",
         "settings_ocr_scale": "OCR 解像度倍率:",
         "settings_ocr_timeout": "OCR タイムアウト (秒):",
+        "settings_ocr_concurrency": "OCR 並列度:",
+        "settings_ocr_concurrency_hint": (
+            "(1〜8 / 推奨2。LM Studio が並列受付に対応しない場合は1相当)"
+        ),
         "settings_open_llm_config": "🔍 LLM 設定…",
         # LLM 設定ダイアログ（OCR と設定で共有）
         "llm_config_title": "LLM 設定",
@@ -619,6 +625,8 @@ LANG = {
         "ocr_dialog_heading": "🔍 OCR Text Extraction",
         "ocr_progress_init": "Preparing…",
         "ocr_progress": "Processing {cur}/{total} pages… (p.{page})",
+        "ocr_progress_render": "Rendering images… ({cur}/{total})",
+        "ocr_progress_ocr": "OCR done ({done}/{total}) — p.{page}",
         "ocr_cancelling": "Cancelling…",
         "ocr_cancelled": "Cancelled",
         "ocr_complete": "Done: {count}/{total} page(s) succeeded",
@@ -658,6 +666,11 @@ LANG = {
         "settings_lm_test_fail": "Connection failed: {error}",
         "settings_ocr_scale": "OCR Resolution Scale:",
         "settings_ocr_timeout": "OCR Timeout (s):",
+        "settings_ocr_concurrency": "OCR Concurrency:",
+        "settings_ocr_concurrency_hint": (
+            "(1-8 / 2 recommended. Effective only if LM Studio serves "
+            "requests in parallel)"
+        ),
         "settings_open_llm_config": "🔍 LLM Settings…",
         # LLM config dialog (shared by OCR & Settings)
         "llm_config_title": "LLM Settings",

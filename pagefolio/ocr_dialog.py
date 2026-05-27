@@ -10,8 +10,10 @@ from tkinter import filedialog, messagebox, ttk
 
 from pagefolio.constants import LANG, C
 from pagefolio.ocr import (
+    DEFAULT_OCR_CONCURRENCY,
+    MAX_OCR_CONCURRENCY,
     OCR_PROMPTS,
-    call_lm_studio,
+    call_lm_studio_parallel,
     fetch_lm_studio_models,
     page_to_png_b64,
 )
@@ -35,6 +37,7 @@ class OCRDialog(tk.Toplevel):
         timeout,
         max_tokens=-1,
         temperature=0.1,
+        concurrency=DEFAULT_OCR_CONCURRENCY,
         lang="ja",
         font_func=None,
     ):
@@ -56,6 +59,7 @@ class OCRDialog(tk.Toplevel):
         self.timeout_var = tk.IntVar(value=int(timeout))
         self.max_tokens_var = tk.IntVar(value=int(max_tokens))
         self.temperature_var = tk.DoubleVar(value=float(temperature))
+        self.concurrency = max(1, min(MAX_OCR_CONCURRENCY, int(concurrency)))
         self.results = {}  # page_idx -> text
         self.errors = {}  # page_idx -> message
         self._cancel_flag = threading.Event()
@@ -445,84 +449,89 @@ class OCRDialog(tk.Toplevel):
         except (tk.TclError, ValueError):
             temperature = 0.1
         self._effective_timeout = timeout
-        for idx, page_idx in enumerate(self.page_indices, start=1):
+        total = len(self.page_indices)
+
+        # フェーズ1: 全ページの画像を直列で変換
+        # （fitz の同一 Document 並行アクセスを回避するためここは並列化しない）
+        images = {}  # page_idx -> b64
+        for i, page_idx in enumerate(self.page_indices, start=1):
             if self._cancel_flag.is_set():
                 self.after(0, self._finish_cancelled)
                 return
-            # ページ画像変換
+            self.after(
+                0,
+                lambda cur=i, tot=total: self.progress_var.set(
+                    self._L["ocr_progress_render"].format(cur=cur, total=tot)
+                ),
+            )
             try:
-                page = self.doc[page_idx]
-                b64 = page_to_png_b64(page, scale=scale)
+                b64 = page_to_png_b64(self.doc[page_idx], scale=scale)
+                images[page_idx] = b64
             except Exception as e:
                 logger.exception("ページ画像変換失敗: %s", e)
                 self.errors[page_idx] = f"image conversion error: {e}"
-                self.after(
-                    0,
-                    lambda i=idx, p=page_idx: self._on_progress(i, p, error=True),
-                )
-                continue
-            # LM Studio 呼び出し
-            try:
-                text = call_lm_studio(
-                    url,
-                    model,
-                    b64,
-                    prompt,
-                    timeout=timeout,
-                    max_tokens=max_tokens,
-                    temperature=temperature,
-                )
-            except ConnectionError as e:
-                # 接続失敗は致命的 — 全体停止
-                self.after(
-                    0,
-                    lambda msg=str(e): self._finish_error(msg, kind="connection"),
-                )
-                return
-            except TimeoutError as e:
-                self.after(
-                    0,
-                    lambda msg=str(e): self._finish_error(msg, kind="timeout"),
-                )
-                return
-            except RuntimeError as e:
-                # API エラーは当該ページのみスキップして続行
-                self.errors[page_idx] = str(e)
-                self.after(
-                    0,
-                    lambda i=idx, p=page_idx: self._on_progress(i, p, error=True),
-                )
-                continue
-            except Exception as e:
-                logger.exception("OCR 呼び出し失敗: %s", e)
-                self.errors[page_idx] = str(e)
-                self.after(
-                    0,
-                    lambda i=idx, p=page_idx: self._on_progress(i, p, error=True),
-                )
-                continue
 
-            self.results[page_idx] = text
+        if self._cancel_flag.is_set():
+            self.after(0, self._finish_cancelled)
+            return
+
+        # フェーズ2: API 呼び出しを並列化（call_lm_studio_parallel に委譲）
+        def on_progress(done, page_idx, status):
             self.after(
                 0,
-                lambda i=idx, p=page_idx, t=text: self._on_progress(i, p, text=t),
+                lambda d=done, p=page_idx: self.progress_var.set(
+                    self._L["ocr_progress_ocr"].format(done=d, total=total, page=p + 1)
+                ),
             )
+            self.after(0, lambda d=done: self._on_progress_bar(d))
+
+        results, errors, fatal_msg, fatal_kind = call_lm_studio_parallel(
+            url,
+            model,
+            prompt,
+            images,
+            self.page_indices,
+            concurrency=self.concurrency,
+            timeout=timeout,
+            max_tokens=max_tokens,
+            temperature=temperature,
+            on_progress=on_progress,
+            is_cancelled=self._cancel_flag.is_set,
+        )
+        self.results.update(results)
+        self.errors.update(errors)
+
+        # フェーズ3: 結果をページ順にまとめて UI へ流し込む
+        if fatal_msg is not None:
+            self.after(
+                0,
+                lambda m=fatal_msg, k=fatal_kind: self._finish_error(m, kind=k),
+            )
+            return
+        if self._cancel_flag.is_set():
+            self.after(0, self._finish_cancelled)
+            return
+        self.after(0, self._render_results_ordered)
         self.after(0, self._finish_complete)
 
     # ── UI 更新（メインスレッド） ──
-    def _on_progress(self, idx, page_idx, text=None, error=False):
-        total = len(self.page_indices)
-        self.progress_var.set(
-            self._L["ocr_progress"].format(cur=idx, total=total, page=page_idx + 1)
-        )
-        self.progress_bar["value"] = idx
-        sep = self._L["ocr_page_separator"].format(page=page_idx + 1)
-        self.text.insert("end", f"\n{sep}\n")
-        if error:
-            err = self.errors.get(page_idx, "")
-            self.text.insert("end", self._L["ocr_page_error"].format(error=err) + "\n")
-        elif text is not None:
-            self.text.insert("end", text + "\n")
+    def _on_progress_bar(self, done):
+        """進捗バーの値だけを更新する（テキスト挿入なし）"""
+        self.progress_bar["value"] = done
+
+    def _render_results_ordered(self):
+        """results / errors をページ順に text へ流し込む（並列実行後の一括描画）"""
+        for page_idx in self.page_indices:
+            sep = self._L["ocr_page_separator"].format(page=page_idx + 1)
+            self.text.insert("end", f"\n{sep}\n")
+            if page_idx in self.results:
+                self.text.insert("end", self.results[page_idx] + "\n")
+            elif page_idx in self.errors:
+                self.text.insert(
+                    "end",
+                    self._L["ocr_page_error"].format(error=self.errors[page_idx])
+                    + "\n",
+                )
         self.text.see("end")
 
     def _finish_complete(self):
@@ -544,6 +553,8 @@ class OCRDialog(tk.Toplevel):
         self._done = True
         self.progress_var.set(self._L["ocr_cancelled"])
         self.cancel_btn.state(["disabled"])
+        if self.results or self.errors:
+            self._render_results_ordered()
         if self.results:
             self.copy_btn.state(["!disabled"])
             self.save_btn.state(["!disabled"])
@@ -562,6 +573,8 @@ class OCRDialog(tk.Toplevel):
         else:
             user_msg = msg
         self.progress_var.set(self._L["ocr_failed"])
+        if self.results or self.errors:
+            self._render_results_ordered()
         self.text.insert("end", "\n" + user_msg + "\n")
         self.text.see("end")
         self.cancel_btn.state(["disabled"])

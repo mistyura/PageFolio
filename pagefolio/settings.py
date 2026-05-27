@@ -40,6 +40,7 @@ def _load_settings():
         "ocr_timeout": 120,
         "ocr_max_tokens": -1,
         "ocr_temperature": 0.1,
+        "ocr_concurrency": 2,
     }
     try:
         path = _get_settings_path()

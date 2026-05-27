@@ -167,6 +167,185 @@ class TestCallLmStudio:
 # ===== fetch_lm_studio_models（モック） =====
 
 
+class TestCallLmStudioParallel:
+    """call_lm_studio_parallel の並列実行・順序保持・キャンセル・致命的エラー処理"""
+
+    def test_empty_inputs_return_empty(self, monkeypatch):
+        results, errors, fm, fk = ocr.call_lm_studio_parallel(
+            "http://x", "m", "p", images_b64={}, page_indices=[]
+        )
+        assert results == {}
+        assert errors == {}
+        assert fm is None and fk is None
+
+    def test_all_succeed_preserves_results_by_page_idx(self, monkeypatch):
+        """ページごとに正しい結果が返り、入力順に依らず辞書で取得できる"""
+
+        def fake_call(url, model, b64, prompt, **kw):
+            return f"text-{b64}"
+
+        monkeypatch.setattr(ocr, "call_lm_studio", fake_call)
+        images = {0: "A", 2: "B", 5: "C"}
+        results, errors, fm, fk = ocr.call_lm_studio_parallel(
+            "http://x",
+            "m",
+            "p",
+            images,
+            page_indices=[0, 2, 5],
+            concurrency=3,
+        )
+        assert results == {0: "text-A", 2: "text-B", 5: "text-C"}
+        assert errors == {}
+        assert fm is None
+
+    def test_concurrency_actually_parallel(self, monkeypatch):
+        """concurrency=4 で 4 件並列に走ること（同時実行数の最大値で検証）"""
+        import threading
+        import time
+
+        in_flight = 0
+        max_in_flight = 0
+        lock = threading.Lock()
+
+        def fake_call(url, model, b64, prompt, **kw):
+            nonlocal in_flight, max_in_flight
+            with lock:
+                in_flight += 1
+                max_in_flight = max(max_in_flight, in_flight)
+            time.sleep(0.05)
+            with lock:
+                in_flight -= 1
+            return b64
+
+        monkeypatch.setattr(ocr, "call_lm_studio", fake_call)
+        images = {i: f"img{i}" for i in range(4)}
+        results, _, _, _ = ocr.call_lm_studio_parallel(
+            "http://x", "m", "p", images, page_indices=list(range(4)), concurrency=4
+        )
+        assert len(results) == 4
+        assert max_in_flight >= 2  # 少なくとも 2 件は並列で走った
+
+    def test_runtime_error_is_per_page_not_fatal(self, monkeypatch):
+        """RuntimeError は当該ページのみ errors に記録、他ページは継続"""
+
+        def fake_call(url, model, b64, prompt, **kw):
+            if b64 == "BAD":
+                raise RuntimeError("HTTP 500: oops")
+            return f"ok-{b64}"
+
+        monkeypatch.setattr(ocr, "call_lm_studio", fake_call)
+        images = {0: "A", 1: "BAD", 2: "C"}
+        results, errors, fm, fk = ocr.call_lm_studio_parallel(
+            "http://x", "m", "p", images, page_indices=[0, 1, 2], concurrency=2
+        )
+        assert results == {0: "ok-A", 2: "ok-C"}
+        assert 1 in errors
+        assert "HTTP 500" in errors[1]
+        assert fm is None
+
+    def test_connection_error_is_fatal(self, monkeypatch):
+        """ConnectionError は fatal_msg に記録され、kind='connection'"""
+
+        def fake_call(url, model, b64, prompt, **kw):
+            raise ConnectionError("refused")
+
+        monkeypatch.setattr(ocr, "call_lm_studio", fake_call)
+        results, errors, fm, fk = ocr.call_lm_studio_parallel(
+            "http://x", "m", "p", {0: "A"}, page_indices=[0], concurrency=1
+        )
+        assert fm is not None
+        assert "refused" in fm
+        assert fk == "connection"
+
+    def test_timeout_error_is_fatal(self, monkeypatch):
+        def fake_call(url, model, b64, prompt, **kw):
+            raise TimeoutError("timed out")
+
+        monkeypatch.setattr(ocr, "call_lm_studio", fake_call)
+        _, _, fm, fk = ocr.call_lm_studio_parallel(
+            "http://x", "m", "p", {0: "A"}, page_indices=[0], concurrency=1
+        )
+        assert fm is not None
+        assert fk == "timeout"
+
+    def test_cancel_stops_submission(self, monkeypatch):
+        """is_cancelled() が True を返すと以降の呼び出しはスキップされる"""
+        import threading
+
+        call_count = {"n": 0}
+        lock = threading.Lock()
+        cancel = threading.Event()
+
+        def fake_call(url, model, b64, prompt, **kw):
+            with lock:
+                call_count["n"] += 1
+                if call_count["n"] >= 1:
+                    cancel.set()
+            return b64
+
+        monkeypatch.setattr(ocr, "call_lm_studio", fake_call)
+        images = {i: f"img{i}" for i in range(10)}
+        results, _, _, _ = ocr.call_lm_studio_parallel(
+            "http://x",
+            "m",
+            "p",
+            images,
+            page_indices=list(range(10)),
+            concurrency=1,
+            is_cancelled=cancel.is_set,
+        )
+        # キャンセル後の呼び出しは "cancel" として results に入らない
+        assert len(results) < 10
+
+    def test_progress_callback_called_for_each_done(self, monkeypatch):
+        def fake_call(url, model, b64, prompt, **kw):
+            return b64
+
+        monkeypatch.setattr(ocr, "call_lm_studio", fake_call)
+        calls = []
+
+        def on_progress(done, page_idx, status):
+            calls.append((done, page_idx, status))
+
+        images = {0: "A", 1: "B", 2: "C"}
+        ocr.call_lm_studio_parallel(
+            "http://x",
+            "m",
+            "p",
+            images,
+            page_indices=[0, 1, 2],
+            concurrency=1,
+            on_progress=on_progress,
+        )
+        assert len(calls) == 3
+        # done は 1, 2, 3 とインクリメントされる
+        assert [c[0] for c in calls] == [1, 2, 3]
+        assert all(c[2] == "ok" for c in calls)
+
+    def test_concurrency_clamped_to_max(self, monkeypatch):
+        """concurrency > MAX_OCR_CONCURRENCY は MAX にクランプされる（落ちずに動く）"""
+
+        def fake_call(url, model, b64, prompt, **kw):
+            return b64
+
+        monkeypatch.setattr(ocr, "call_lm_studio", fake_call)
+        images = {i: f"i{i}" for i in range(3)}
+        results, _, _, _ = ocr.call_lm_studio_parallel(
+            "http://x",
+            "m",
+            "p",
+            images,
+            page_indices=[0, 1, 2],
+            concurrency=999,
+        )
+        assert len(results) == 3
+
+    def test_default_concurrency_constant(self):
+        """DEFAULT_OCR_CONCURRENCY / MAX_OCR_CONCURRENCY が公開されている"""
+        assert ocr.DEFAULT_OCR_CONCURRENCY == 2
+        assert ocr.MAX_OCR_CONCURRENCY == 8
+
+
 class TestFetchModels:
     def test_returns_model_ids(self, monkeypatch):
         body = json.dumps(
