@@ -11,7 +11,7 @@ from tkinter import messagebox, ttk
 import fitz
 
 from pagefolio.constants import APP_VERSION, LANG, PLUGINS_DIR, C
-from pagefolio.ocr import fetch_lm_studio_models
+from pagefolio.ocr import MAX_OCR_MAX_TOKENS, fetch_lm_studio_models
 from pagefolio.plugins import _get_plugins_dir
 from pagefolio.settings import _current_font_size
 
@@ -440,8 +440,8 @@ class LLMConfigDialog(tk.Toplevel):
         tk.Spinbox(
             mt_row,
             from_=-1,
-            to=32000,
-            increment=512,
+            to=MAX_OCR_MAX_TOKENS,
+            increment=1024,
             textvariable=self.ocr_max_tokens_var,
             width=8,
             font=self._font(-1),
@@ -494,6 +494,42 @@ class LLMConfigDialog(tk.Toplevel):
             font=self._font(-2),
         ).pack(side="left", padx=4)
 
+        # 並列度（concurrency）
+        conc_row = tk.Frame(self, bg=C["BG_DARK"])
+        conc_row.pack(fill="x", padx=24, pady=2)
+        tk.Label(
+            conc_row,
+            text=self._L["settings_ocr_concurrency"],
+            bg=C["BG_DARK"],
+            fg=C["TEXT_MAIN"],
+            font=self._font(-1),
+            width=20,
+            anchor="w",
+        ).pack(side="left")
+        self.ocr_concurrency_var = tk.IntVar(
+            value=int(self.current_settings.get("ocr_concurrency", 2)),
+        )
+        tk.Spinbox(
+            conc_row,
+            from_=1,
+            to=8,
+            increment=1,
+            textvariable=self.ocr_concurrency_var,
+            width=6,
+            font=self._font(-1),
+            bg=C["BG_CARD"],
+            fg=C["TEXT_MAIN"],
+            buttonbackground=C["BG_PANEL"],
+            insertbackground=C["TEXT_MAIN"],
+        ).pack(side="left", padx=4)
+        tk.Label(
+            conc_row,
+            text=self._L["settings_ocr_concurrency_hint"],
+            bg=C["BG_DARK"],
+            fg=C["TEXT_SUB"],
+            font=self._font(-2),
+        ).pack(side="left", padx=4)
+
         # 接続テスト・モデル取得
         lm_btn_row = tk.Frame(self, bg=C["BG_DARK"])
         lm_btn_row.pack(fill="x", padx=24, pady=(6, 2))
@@ -509,7 +545,7 @@ class LLMConfigDialog(tk.Toplevel):
         ).pack(side="left", padx=2)
 
         self.lm_status_var = tk.StringVar(value="")
-        tk.Label(
+        self.lm_status_label = tk.Label(
             self,
             textvariable=self.lm_status_var,
             bg=C["BG_DARK"],
@@ -517,7 +553,8 @@ class LLMConfigDialog(tk.Toplevel):
             font=self._font(-2),
             wraplength=420,
             justify="left",
-        ).pack(anchor="w", padx=24, pady=(2, 4))
+        )
+        self.lm_status_label.pack(anchor="w", padx=24, pady=(2, 4))
 
         btn_row = tk.Frame(self, bg=C["BG_DARK"])
         btn_row.pack(pady=(8, 14))
@@ -531,38 +568,64 @@ class LLMConfigDialog(tk.Toplevel):
             btn_row, text=self._L["llm_config_cancel"], command=self.destroy
         ).pack(side="left", padx=8)
 
+    def _set_lm_status(self, text, kind="info"):
+        """LM Studio 操作の状態を表示する。kind: 'info' / 'ok' / 'fail'"""
+        color = {
+            "ok": C["SUCCESS"],
+            "fail": C["ACCENT"],
+            "info": C["WARNING"],
+        }.get(kind, C["TEXT_MAIN"])
+        self.lm_status_var.set(text)
+        try:
+            self.lm_status_label.configure(fg=color)
+        except tk.TclError:
+            pass
+        # ボタン押下直後の状態を即時描画
+        try:
+            self.update_idletasks()
+        except tk.TclError:
+            pass
+
     def _fetch_models(self):
         url = self.lm_url_var.get().strip()
         if not url:
-            self.lm_status_var.set(
-                self._L["settings_lm_test_fail"].format(error="URL is empty")
+            self._set_lm_status(
+                self._L["settings_lm_test_fail"].format(error="URL is empty"),
+                kind="fail",
             )
             return
+        self._set_lm_status(self._L["settings_lm_testing"].format(url=url), kind="info")
         try:
             models = fetch_lm_studio_models(url, timeout=10)
         except (ConnectionError, TimeoutError, RuntimeError) as e:
-            self.lm_status_var.set(
-                self._L["settings_lm_test_fail"].format(error=str(e))
+            self._set_lm_status(
+                self._L["settings_lm_test_fail"].format(error=str(e)), kind="fail"
             )
             return
         self.lm_model_combo["values"] = models
-        self.lm_status_var.set(self._L["settings_lm_test_ok"].format(count=len(models)))
+        self._set_lm_status(
+            self._L["settings_lm_test_ok"].format(count=len(models)), kind="ok"
+        )
 
     def _test_connection(self):
         url = self.lm_url_var.get().strip()
         if not url:
-            self.lm_status_var.set(
-                self._L["settings_lm_test_fail"].format(error="URL is empty")
+            self._set_lm_status(
+                self._L["settings_lm_test_fail"].format(error="URL is empty"),
+                kind="fail",
             )
             return
+        self._set_lm_status(self._L["settings_lm_testing"].format(url=url), kind="info")
         try:
             models = fetch_lm_studio_models(url, timeout=10)
         except (ConnectionError, TimeoutError, RuntimeError) as e:
-            self.lm_status_var.set(
-                self._L["settings_lm_test_fail"].format(error=str(e))
+            self._set_lm_status(
+                self._L["settings_lm_test_fail"].format(error=str(e)), kind="fail"
             )
             return
-        self.lm_status_var.set(self._L["settings_lm_test_ok"].format(count=len(models)))
+        self._set_lm_status(
+            self._L["settings_lm_test_ok"].format(count=len(models)), kind="ok"
+        )
 
     def _apply(self):
         llm_settings = {}
@@ -584,7 +647,7 @@ class LLMConfigDialog(tk.Toplevel):
             llm_settings["ocr_timeout"] = 120
         try:
             mt = int(self.ocr_max_tokens_var.get())
-            llm_settings["ocr_max_tokens"] = max(-1, min(32000, mt))
+            llm_settings["ocr_max_tokens"] = max(-1, min(MAX_OCR_MAX_TOKENS, mt))
         except (tk.TclError, ValueError):
             llm_settings["ocr_max_tokens"] = -1
         try:
@@ -592,6 +655,11 @@ class LLMConfigDialog(tk.Toplevel):
             llm_settings["ocr_temperature"] = max(0.0, min(2.0, tmp))
         except (tk.TclError, ValueError):
             llm_settings["ocr_temperature"] = 0.1
+        try:
+            conc = int(self.ocr_concurrency_var.get())
+            llm_settings["ocr_concurrency"] = max(1, min(8, conc))
+        except (tk.TclError, ValueError):
+            llm_settings["ocr_concurrency"] = 2
         self.destroy()
         if self.on_apply:
             self.on_apply(llm_settings)

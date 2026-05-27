@@ -44,7 +44,7 @@ THEMES = {
 C = dict(THEMES["dark"])
 
 # ===================== バージョン =====================
-APP_VERSION = "v1.2.1"
+APP_VERSION = "v1.2.2"
 
 # ===================== ファイル名定数 =====================
 SETTINGS_FILE = "pagefolio_settings.json"
@@ -307,6 +307,8 @@ LANG = {
         "ocr_dialog_heading": "🔍 OCR テキスト抽出",
         "ocr_progress_init": "準備中…",
         "ocr_progress": "{cur}/{total} ページ処理中… (p.{page})",
+        "ocr_progress_render": "画像変換中… ({cur}/{total})",
+        "ocr_progress_ocr": "読み取り完了 ({done}/{total}) — p.{page}",
         "ocr_cancelling": "キャンセル中…",
         "ocr_cancelled": "キャンセルしました",
         "ocr_complete": "完了: {count}/{total} ページ成功",
@@ -344,8 +346,13 @@ LANG = {
         "settings_lm_test": "🔌 接続テスト",
         "settings_lm_test_ok": "接続OK ({count} モデル利用可能)",
         "settings_lm_test_fail": "接続失敗: {error}",
+        "settings_lm_testing": "⏳ 接続中… ({url})",
         "settings_ocr_scale": "OCR 解像度倍率:",
         "settings_ocr_timeout": "OCR タイムアウト (秒):",
+        "settings_ocr_concurrency": "OCR 並列度:",
+        "settings_ocr_concurrency_hint": (
+            "(1〜8 / 推奨2。LM Studio が並列受付に対応しない場合は1相当)"
+        ),
         "settings_open_llm_config": "🔍 LLM 設定…",
         # LLM 設定ダイアログ（OCR と設定で共有）
         "llm_config_title": "LLM 設定",
@@ -361,12 +368,13 @@ LANG = {
         "ocr_clear": "🧹 クリア",
         "ocr_models_fetched": "{count} モデルを取得しました",
         "ocr_models_fetch_fail": "モデル取得失敗: {error}",
+        "ocr_models_fetching": "⏳ モデル一覧を取得中… ({url})",
         "ocr_run_first": "「読み取り実行」を押すと開始します",
         "ocr_params_label": "詳細設定:",
         "ocr_scale_short": "解像度:",
         "ocr_timeout_short": "タイムアウト:",
         "ocr_max_tokens_short": "最大トークン:",
-        "ocr_max_tokens_hint": "(-1: 無制限)",
+        "ocr_max_tokens_hint": "(-1: モデル最大値を使用 / 上限 262144)",
         "ocr_temperature_short": "温度:",
         "ocr_temperature_hint": "(0.0〜0.2推奨)",
         "ocr_params_hint": (
@@ -619,6 +627,8 @@ LANG = {
         "ocr_dialog_heading": "🔍 OCR Text Extraction",
         "ocr_progress_init": "Preparing…",
         "ocr_progress": "Processing {cur}/{total} pages… (p.{page})",
+        "ocr_progress_render": "Rendering images… ({cur}/{total})",
+        "ocr_progress_ocr": "OCR done ({done}/{total}) — p.{page}",
         "ocr_cancelling": "Cancelling…",
         "ocr_cancelled": "Cancelled",
         "ocr_complete": "Done: {count}/{total} page(s) succeeded",
@@ -656,8 +666,14 @@ LANG = {
         "settings_lm_test": "🔌 Test Connection",
         "settings_lm_test_ok": "Connected ({count} model(s) available)",
         "settings_lm_test_fail": "Connection failed: {error}",
+        "settings_lm_testing": "⏳ Connecting… ({url})",
         "settings_ocr_scale": "OCR Resolution Scale:",
         "settings_ocr_timeout": "OCR Timeout (s):",
+        "settings_ocr_concurrency": "OCR Concurrency:",
+        "settings_ocr_concurrency_hint": (
+            "(1-8 / 2 recommended. Effective only if LM Studio serves "
+            "requests in parallel)"
+        ),
         "settings_open_llm_config": "🔍 LLM Settings…",
         # LLM config dialog (shared by OCR & Settings)
         "llm_config_title": "LLM Settings",
@@ -673,12 +689,13 @@ LANG = {
         "ocr_clear": "🧹 Clear",
         "ocr_models_fetched": "Fetched {count} model(s)",
         "ocr_models_fetch_fail": "Fetch failed: {error}",
+        "ocr_models_fetching": "⏳ Fetching models… ({url})",
         "ocr_run_first": 'Press "Run OCR" to start',
         "ocr_params_label": "Advanced:",
         "ocr_scale_short": "Scale:",
         "ocr_timeout_short": "Timeout:",
         "ocr_max_tokens_short": "Max tokens:",
-        "ocr_max_tokens_hint": "(-1: unlimited)",
+        "ocr_max_tokens_hint": "(-1: use model max / cap 262144)",
         "ocr_temperature_short": "Temp:",
         "ocr_temperature_hint": "(0.0-0.2 recommended)",
         "ocr_params_hint": (
