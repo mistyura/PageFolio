@@ -374,7 +374,7 @@ LANG = {
         "ocr_scale_short": "解像度:",
         "ocr_timeout_short": "タイムアウト:",
         "ocr_max_tokens_short": "最大トークン:",
-        "ocr_max_tokens_hint": "(-1: 無制限)",
+        "ocr_max_tokens_hint": "(-1: モデル最大値を使用 / 上限 262144)",
         "ocr_temperature_short": "温度:",
         "ocr_temperature_hint": "(0.0〜0.2推奨)",
         "ocr_params_hint": (
@@ -695,7 +695,7 @@ LANG = {
         "ocr_scale_short": "Scale:",
         "ocr_timeout_short": "Timeout:",
         "ocr_max_tokens_short": "Max tokens:",
-        "ocr_max_tokens_hint": "(-1: unlimited)",
+        "ocr_max_tokens_hint": "(-1: use model max / cap 262144)",
         "ocr_temperature_short": "Temp:",
         "ocr_temperature_hint": "(0.0-0.2 recommended)",
         "ocr_params_hint": (

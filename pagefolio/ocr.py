@@ -34,7 +34,10 @@ OCR_PROMPTS = {
 DEFAULT_LM_STUDIO_URL = "http://localhost:1234"
 DEFAULT_OCR_TIMEOUT = 120  # 秒
 DEFAULT_OCR_SCALE = 2.0
-DEFAULT_OCR_MAX_TOKENS = -1  # -1: 無制限
+DEFAULT_OCR_MAX_TOKENS = -1  # -1: モデル側の最大値（context window）に委ねる
+# UI 上の最大値（Qwen2.5 系の 262144 トークンまで）
+# LM Studio は max_tokens=-1 でモデル最大値を使うため、通常は -1 で十分
+MAX_OCR_MAX_TOKENS = 262144
 DEFAULT_OCR_TEMPERATURE = 0.1  # OCR 用途は低温推奨（ハルシネーション抑制）
 DEFAULT_OCR_CONCURRENCY = 2  # API 呼び出しの並列度（1〜MAX_OCR_CONCURRENCY）
 MAX_OCR_CONCURRENCY = 8

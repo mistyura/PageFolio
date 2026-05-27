@@ -12,6 +12,7 @@ from pagefolio.constants import LANG, C
 from pagefolio.ocr import (
     DEFAULT_OCR_CONCURRENCY,
     MAX_OCR_CONCURRENCY,
+    MAX_OCR_MAX_TOKENS,
     OCR_PROMPTS,
     call_lm_studio_parallel,
     fetch_lm_studio_models,
@@ -245,10 +246,10 @@ class OCRDialog(tk.Toplevel):
         tk.Spinbox(
             params_row,
             from_=-1,
-            to=32000,
-            increment=512,
+            to=MAX_OCR_MAX_TOKENS,
+            increment=1024,
             textvariable=self.max_tokens_var,
-            width=7,
+            width=8,
             font=self._font(-1),
             bg=C["BG_CARD"],
             fg=C["TEXT_MAIN"],

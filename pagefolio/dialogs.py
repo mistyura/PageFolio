@@ -11,7 +11,7 @@ from tkinter import messagebox, ttk
 import fitz
 
 from pagefolio.constants import APP_VERSION, LANG, PLUGINS_DIR, C
-from pagefolio.ocr import fetch_lm_studio_models
+from pagefolio.ocr import MAX_OCR_MAX_TOKENS, fetch_lm_studio_models
 from pagefolio.plugins import _get_plugins_dir
 from pagefolio.settings import _current_font_size
 
@@ -440,8 +440,8 @@ class LLMConfigDialog(tk.Toplevel):
         tk.Spinbox(
             mt_row,
             from_=-1,
-            to=32000,
-            increment=512,
+            to=MAX_OCR_MAX_TOKENS,
+            increment=1024,
             textvariable=self.ocr_max_tokens_var,
             width=8,
             font=self._font(-1),
@@ -647,7 +647,7 @@ class LLMConfigDialog(tk.Toplevel):
             llm_settings["ocr_timeout"] = 120
         try:
             mt = int(self.ocr_max_tokens_var.get())
-            llm_settings["ocr_max_tokens"] = max(-1, min(32000, mt))
+            llm_settings["ocr_max_tokens"] = max(-1, min(MAX_OCR_MAX_TOKENS, mt))
         except (tk.TclError, ValueError):
             llm_settings["ocr_max_tokens"] = -1
         try:
