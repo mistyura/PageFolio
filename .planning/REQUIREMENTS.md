@@ -64,18 +64,18 @@
 
 ## Traceability
 
-| REQ-ID | Phase |
-|--------|-------|
-| BUG-01 | Phase 1 |
-| BUG-02 | Phase 1 |
-| BUG-03 | Phase 2 |
-| REFAC-01 | Phase 2 |
-| REFAC-02 | Phase 2 |
-| REFAC-03 | Phase 1 |
-| REFAC-04 | Phase 3 |
-| TEST-01 | Phase 1 |
-| TEST-02 | Phase 2 |
-| TEST-03 | Phase 3 |
+| REQ-ID | Phase | Status |
+|--------|-------|--------|
+| BUG-01 | Phase 1: Undo/Redo 修正 | Pending |
+| BUG-02 | Phase 1: Undo/Redo 修正 | Pending |
+| REFAC-03 | Phase 1: Undo/Redo 修正 | Pending |
+| TEST-01 | Phase 1: Undo/Redo 修正 | Pending |
+| BUG-03 | Phase 2: プレビュー最適化とリファクタリング | Pending |
+| REFAC-01 | Phase 2: プレビュー最適化とリファクタリング | Pending |
+| REFAC-02 | Phase 2: プレビュー最適化とリファクタリング | Pending |
+| TEST-02 | Phase 2: プレビュー最適化とリファクタリング | Pending |
+| REFAC-04 | Phase 3: API 整理と回帰テスト | Pending |
+| TEST-03 | Phase 3: API 整理と回帰テスト | Pending |
 
 ---
 *Requirements defined: 2026-06-01*

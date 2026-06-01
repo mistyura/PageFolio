@@ -65,15 +65,19 @@ PageFolio/
 ## モジュール構成
 
 ### `pagefolio/constants.py`
+
 テーマカラー（`THEMES`）、実行時テーマ辞書（`C`）、バージョン（`APP_VERSION`）、言語辞書（`LANG`）を定義。
 
 ### `pagefolio/settings.py`
+
 設定ファイルの読み書き・テーマ解決・フォント生成のユーティリティ関数群。
 
 ### `pagefolio/plugins.py`
+
 `PDFEditorPlugin` 基底クラスと `PluginManager` クラス。プラグインの検出・読込・有効/無効管理。
 
 ### `pagefolio/app.py`
+
 `PDFEditorApp` メインクラス。5つの Mixin を統合し、`__init__`・キーバインド・ユーティリティメソッドを持つ。
 
 ### Mixin モジュール群
@@ -87,6 +91,7 @@ PageFolio/
 | `dnd.py` | `DnDMixin` | サムネイル D&D 並び替え |
 
 ### `pagefolio/dialogs.py`
+
 `AboutDialog`・`SettingsDialog`・`PluginDialog`・`MergeOrderDialog`・`MergeResizeDialog` のダイアログクラス群。
 
 ---
@@ -127,12 +132,14 @@ C = dict(THEMES["dark"])  # 実行時に _apply_theme() で更新
 ## コーディング規約
 
 ### 構造・命名
+
 - **パッケージ構成を維持する**: `pagefolio/` パッケージにモジュール分割済み。Mixin パターンで PDFEditorApp を構成。
 - **メソッド名**: `_` プレフィックスで内部メソッドを示す。
 - **テーマ色の参照**: グローバル定数ではなく `C["BG_DARK"]` 等のテーマ辞書を使う。
 - **フォントサイズ**: ハードコードせず `self._font(delta)` ヘルパーを使う（ベース + delta）。
 
 ### ボタンスタイル
+
 - 通常操作 → `"TButton"`
 - 主要アクション → `"Accent.TButton"`
 - 破壊的操作（削除・終了） → `"Danger.TButton"`
@@ -157,6 +164,7 @@ C = dict(THEMES["dark"])  # 実行時に _apply_theme() で更新
 | `self._mode_btn` | モード切替 `ttk.Button` 参照 |
 
 ### 操作後の作法
+
 - **再描画**: ページ変更後は必ず `self._refresh_all()` を呼ぶ。
 - **ステータス表示**: 操作完了後は `self._set_status(msg)` でヘッダーに表示。
 - **ファイル操作前の確認**: `self._check_doc()` で `self.doc` の存在を確認する。
@@ -164,11 +172,13 @@ C = dict(THEMES["dark"])  # 実行時に _apply_theme() で更新
 - **設定保存**: `pagefolio_settings.json` に JSON で永続化（`_save_settings()`）。
 
 ### 作業フロー
+
 - **1タスクずつ完了させてから次のタスクへ進むこと**
 - **リント必須**: py ファイルを編集したら必ず `ruff check . && ruff format .` が通ることを確認すること
 - **テスト必須**: コミット前に `pytest` を通すこと
 
 ### 禁止事項
+
 - `pyproject.toml` / `ruff.toml` の編集
 - 裸の `except:` 句（必ず `except Exception as e:` の形で）
 - `# type: ignore` の無断使用
@@ -192,6 +202,7 @@ C = dict(THEMES["dark"])  # 実行時に _apply_theme() で更新
 | ユーザーへの応答・説明 | 会話はすべて日本語 |
 
 **例外（英語のまま）**:
+
 - ソースコード中の変数名・関数名・クラス名
 - ライブラリ名・コマンド名（`pymupdf`, `git push` など）
 - エラーメッセージの引用（原文ママ）
@@ -250,12 +261,274 @@ C = dict(THEMES["dark"])  # 実行時に _apply_theme() で更新
 ### 次セッションへの申し送り
 
 #### 未実施（動作確認・テスト）
+
 - 確認が必要な事項を箇条書き
 
 #### 注意点・潜在リスク
+
 - 動作上の注意点や将来の改善候補
 
 #### 実行推奨コマンド（必要な場合）
+
 ```
 pytest tests/ など
 ```
+
+<!-- GSD:project-start source:PROJECT.md -->
+
+## Project
+
+**PageFolio — コード最適化プロジェクト**
+
+PageFolio の既存コードベースに対する最適化プロジェクト。
+バグ修正・リファクタリング・テスト充実の 3 軸で品質を底上げする。
+
+**Core Value:** 大きな PDF でも Undo/Redo が正しく・速く動作し、コードが読みやすく保守しやすい状態にする。
+<!-- GSD:project-end -->
+
+<!-- GSD:stack-start source:codebase/STACK.md -->
+
+## Technology Stack
+
+## Runtime & Language
+
+- Python 3.8+ — アプリケーション全体（型ヒントは 3.8 互換）
+- 仮想環境: `venv/` (Windows 向け)
+- pip（`requirements.txt` で依存管理）
+- Lockfile: `requirements.txt`（バージョン固定）
+
+## Core Frameworks & Libraries
+
+| Name | Version | Purpose | Key usage patterns |
+|------|---------|---------|-------------------|
+| Tkinter | 標準ライブラリ | GUI フレームワーク | `tk.Tk`, `ttk.Button`, `tk.Canvas` でウィジェット構築 |
+| PyMuPDF (fitz) | 1.27.2.2 | PDF 読み書き・レンダリング | `fitz.open()`, `page.get_pixmap()`, `doc.save()` |
+| Pillow (PIL) | 12.2.0 | 画像変換・表示 | `Image`, `ImageTk.PhotoImage` でプレビュー描画 |
+| tkinterdnd2 | 0.4.3 | ファイル D&D サポート | `TkinterDnD.Tk`, `DND_FILES`, `drop_target_register()` |
+
+## Build & Tooling
+
+| Tool | Version | Purpose |
+|------|---------|---------|
+| Ruff | 0.15.7 | リント・フォーマット（E/F/W/I/S/B ルール） |
+| PyInstaller | 6.19.0 | Windows 実行ファイルのビルド（`.exe` 生成） |
+
+- `line-length = 88`
+- `select = ["E", "F", "W", "I", "S", "B"]`
+- `tests/**/*.py` で `S101` (assert) を除外
+
+## Development Dependencies
+
+| Tool | Version | Purpose |
+|------|---------|---------|
+| pytest | 9.0.2 | テストランナー |
+| pytest-cov | 7.1.0 | カバレッジ計測 |
+
+## Standard Library Usage
+
+- `tkinter` / `tkinter.ttk` — GUI 全般（`pagefolio/ui_builder.py`, `pagefolio/dialogs.py` など）
+- `tkinter.filedialog`, `messagebox`, `simpledialog` — ダイアログ操作
+- `json` — 設定ファイル読み書き（`pagefolio/settings.py`）
+- `os` — パス操作・ファイル検索
+- `logging` — ログ出力（全モジュール）
+- `threading` — バックグラウンド処理（`pagefolio/viewer.py`, `pagefolio/ocr_dialog.py`）
+- `concurrent.futures.ThreadPoolExecutor` — OCR 並列処理（`pagefolio/ocr.py`）
+- `urllib.request` — HTTP 通信（LM Studio API 呼び出し）（`pagefolio/ocr.py`）
+- `base64`, `json`, `socket` — OCR リクエスト組み立て（`pagefolio/ocr.py`）
+- `importlib`, `importlib.util` — プラグイン動的読み込み（`pagefolio/plugins.py`）
+
+## Infrastructure & Platform
+
+- `pagefolio.py` — `python pagefolio.py` 起動
+- `pagefolio/__main__.py` — `python -m pagefolio` 起動
+- PyInstaller で単一 `.exe` としてビルド
+- アイコン: `pagefolio.ico`
+- `pyproject.toml` で `pythonpath = ["src"]` を指定（pytest 用）
+
+<!-- GSD:stack-end -->
+
+<!-- GSD:conventions-start source:CONVENTIONS.md -->
+
+## Conventions
+
+## Naming Conventions
+
+- Modules use `snake_case.py` (e.g., `file_ops.py`, `ui_builder.py`, `page_ops.py`)
+- Test files use `test_<module>.py` prefix (e.g., `test_pdf_ops.py`, `test_plugins.py`)
+- PascalCase (e.g., `PDFEditorApp`, `UIBuilderMixin`, `FileOpsMixin`, `AboutDialog`)
+- Mixin classes end with `Mixin` suffix (e.g., `UIBuilderMixin`, `ViewerMixin`, `DnDMixin`)
+- Dialog classes end with `Dialog` suffix (e.g., `AboutDialog`, `SettingsDialog`)
+- Test classes use `Test<FeatureName>` prefix (e.g., `TestLoadSettings`, `TestPdfOpen`)
+- `_` prefix for internal/private methods (e.g., `_build_styles`, `_refresh_all`, `_set_status`)
+- Public API methods use plain names (e.g., `discover_plugins`, `load_plugin`, `fire_event`)
+- Tkinter event handlers conventionally begin with `_on_` or `_do_` (e.g., `_do_merge`, `_do_insert`)
+- `snake_case` throughout (e.g., `current_page`, `selected_pages`, `thumb_cache`)
+- Constants: `UPPER_SNAKE_CASE` (e.g., `APP_VERSION`, `THEMES`, `LANG`, `SETTINGS_FILE`)
+- Theme colors accessed via `C["KEY"]` dict, never hardcoded hex strings
+
+## Code Style
+
+- `tests/**/*.py` exempt from S101 (assert allowed in tests)
+- No bare `except:` — always `except Exception as e:`
+- No `# type: ignore` without prior approval
+
+## Module Organization
+
+- Takes `parent`, font function, and `lang` parameter
+- Sets `self.grab_set()` for modal behavior
+- Centers itself relative to parent window
+
+## Error Handling Patterns
+
+- Bare `except:` without exception type
+- Silencing exceptions without at minimum a `logger` call
+
+## UI Patterns
+
+- `"TButton"` — standard operation
+- `"Accent.TButton"` — primary/important action
+- `"Danger.TButton"` — destructive action (delete, quit)
+- `"CropOn.TButton"` — trim mode active state
+
+## Logging & Status
+
+<!-- GSD:conventions-end -->
+
+<!-- GSD:architecture-start source:ARCHITECTURE.md -->
+
+## Architecture
+
+## System Overview
+
+```text
+
+```
+
+## Design Patterns
+
+```python
+
+```
+
+## Core Components
+
+| Component | Responsibility | File |
+|-----------|----------------|------|
+| `PDFEditorApp` | Root app class; wires all Mixins, holds all state, sets up keybindings | `pagefolio/app.py` |
+| `UIBuilderMixin` | Builds ttk styles, PanedWindow layout, toolbar, thumbnail panel, preview canvas, right tool panel | `pagefolio/ui_builder.py` |
+| `FileOpsMixin` | Open/Save/SaveAs/Undo/Redo; snapshot-based undo stack | `pagefolio/file_ops.py` |
+| `PageOpsMixin` | Rotate, delete, crop (CropBox), insert, merge, split | `pagefolio/page_ops.py` |
+| `ViewerMixin` | Render preview (fitz→PIL→Tk), thumbnails with cache, zoom, popup preview | `pagefolio/viewer.py` |
+| `DnDMixin` | Thumbnail drag-and-drop reorder (single or multi-page) | `pagefolio/dnd.py` |
+| `OCRMixin` | LM Studio Vision API integration; concurrent page OCR | `pagefolio/ocr.py` |
+| `PluginManager` | Discover/load/unload/enable/disable plugins; fire lifecycle events | `pagefolio/plugins.py` |
+| `PDFEditorPlugin` | Abstract base for third-party plugins | `pagefolio/plugins.py` |
+| Constants & Theme | `THEMES`, `C` (runtime dict), `APP_VERSION`, `LANG`, `SUPPORTED_EXTENSIONS` | `pagefolio/constants.py` |
+| Settings utils | Read/write `pagefolio_settings.json`, theme application, font helpers | `pagefolio/settings.py` |
+| Dialogs | `AboutDialog`, `SettingsDialog`, `PluginDialog`, `MergeOrderDialog`, `MergeResizeDialog` | `pagefolio/dialogs.py` |
+| OCR Dialog | `OCRDialog` — multi-page OCR results viewer/exporter | `pagefolio/ocr_dialog.py` |
+| File Drop | tkinterdnd2 integration for drag-and-drop file open | `pagefolio/file_drop.py` |
+
+## Data Flow
+
+### File Open
+
+### Page Render (Preview)
+
+### Thumbnail Generation
+
+### Page Operation (example: rotate)
+
+### OCR Flow
+
+## State Management
+
+| Attribute | Type | Description |
+|-----------|------|-------------|
+| `self.doc` | `fitz.Document \| None` | Open PDF document |
+| `self.filepath` | `str \| None` | Path of the open file |
+| `self.current_page` | `int` | 0-based current page index |
+| `self.selected_pages` | `set[int]` | Multi-selection set |
+| `self._undo_stack` | `list[bytes]` | PDF snapshots (max 20) |
+| `self._redo_stack` | `list[bytes]` | PDF snapshots for redo |
+| `self.thumb_cache` | `dict[int, ImageTk.PhotoImage]` | Thumbnail image cache |
+| `self._doc_buttons` | `list[ttk.Button]` | Buttons disabled when no doc |
+| `self.crop_mode` | `bool` | Whether crop selection is active |
+| `self.crop_rect` | `tuple \| None` | Current crop selection rect |
+| `self.edit_mode` | `bool` | Edit vs View mode |
+| `self.settings` | `dict` | Persisted settings from JSON |
+| `self.font_size` | `int` | Base font size (8–16) |
+| `self.plugin_manager` | `PluginManager` | Plugin lifecycle manager |
+| `self._preview_gen` | `int` | Generation counter for preview thread |
+| `self._thumb_gen` | `int` | Generation counter for thumbnail thread |
+
+## Extension Points
+
+### Plugin System
+
+| Hook | Signature | Trigger |
+|------|-----------|---------|
+| `on_load` | `(app)` | Plugin enabled/loaded |
+| `on_unload` | `(app)` | Plugin disabled/unloaded |
+| `on_file_open` | `(app, path)` | File opened |
+| `on_file_save` | `(app, path)` | File saved |
+| `on_page_rotate` | `(app, pages, degrees)` | Page rotated |
+| `on_page_delete` | `(app, pages)` | Page deleted |
+| `on_page_crop` | `(app, page_index)` | Page cropped |
+| `on_page_change` | `(app, page_index)` | Current page changed |
+| `on_insert` | `(app, paths, insert_at)` | Pages inserted |
+| `on_merge` | `(app, paths)` | PDFs merged |
+| `build_ui` | `(app, parent)` | Build custom UI in given `tk.Frame` |
+
+### Theme Extension
+
+## Architectural Constraints
+
+- **Threading:** UI runs on the Tkinter main thread. Preview and thumbnail renders are dispatched to daemon threads; generation counters (`_preview_gen`, `_thumb_gen`) prevent stale results from overwriting newer ones. OCR uses `ThreadPoolExecutor`.
+- **Global state:** `C` (theme dict) and `_current_font_size` in `pagefolio/settings.py` are module-level mutable singletons updated at runtime.
+- **Undo limit:** Hard-coded to `MAX_UNDO = 20` snapshots in `pagefolio/app.py`. Each snapshot is a full PDF `bytes` serialization.
+- **CropBox safety:** All crop operations must clamp the `CropBox` inside the page's `MediaBox` before calling `set_cropbox()` (`pagefolio/page_ops.py`).
+
+## Anti-Patterns
+
+### Accessing theme colors via raw strings instead of `C` dict
+
+### Hardcoding font sizes
+
+## Error Handling
+
+- File operations use `messagebox.showerror()` for user-visible failures
+- Plugin callbacks are individually wrapped so one plugin failure cannot crash others
+- Background render threads silently discard results when generation counter has advanced
+
+<!-- GSD:architecture-end -->
+
+<!-- GSD:skills-start source:skills/ -->
+
+## Project Skills
+
+No project skills found. Add skills to any of: `.claude/skills/`, `.agents/skills/`, `.cursor/skills/`, `.github/skills/`, or `.codex/skills/` with a `SKILL.md` index file.
+<!-- GSD:skills-end -->
+
+<!-- GSD:workflow-start source:GSD defaults -->
+
+## GSD Workflow Enforcement
+
+Before using Edit, Write, or other file-changing tools, start work through a GSD command so planning artifacts and execution context stay in sync.
+
+Use these entry points:
+
+- `/gsd-quick` for small fixes, doc updates, and ad-hoc tasks
+- `/gsd-debug` for investigation and bug fixing
+- `/gsd-execute-phase` for planned phase work
+
+Do not make direct repo edits outside a GSD workflow unless the user explicitly asks to bypass it.
+<!-- GSD:workflow-end -->
+
+<!-- GSD:profile-start -->
+
+## Developer Profile
+
+> Profile not yet configured. Run `/gsd-profile-user` to generate your developer profile.
+> This section is managed by `generate-claude-profile` -- do not edit manually.
+<!-- GSD:profile-end -->
