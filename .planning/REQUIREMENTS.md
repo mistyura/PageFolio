@@ -29,9 +29,10 @@
   - 現状: 711 行・テーマ/言語/バージョン/拡張子定数が混在
   - 分割案: `lang.py`（LANG辞書）、`themes.py`（THEMES・C）、`constants.py`（バージョン・拡張子）
 
-- [ ] **REFAC-03**: Undo スタックを `collections.deque(maxlen=MAX_UNDO)` に変更する
+- [x] **REFAC-03**: Undo スタックを `collections.deque(maxlen=MAX_UNDO)` に変更する
   - 現状: `list.pop(0)` が O(n)
   - 対象: `pagefolio/file_ops.py`
+  - 完了: 01-02-PLAN にて deque 化・手動 pop(0) 削除済み (2026-06-03)
 
 - [ ] **REFAC-04**: `settings._current_font_size` 外部アクセスを公開関数に変更する
   - 現状: `app.py` が `_settings_mod._current_font_size` を直接書き換え
@@ -70,7 +71,7 @@
 |--------|-------|--------|
 | BUG-01 | Phase 1: Undo/Redo 修正 | Complete |
 | BUG-02 | Phase 1: Undo/Redo 修正 | Complete |
-| REFAC-03 | Phase 1: Undo/Redo 修正 | Pending |
+| REFAC-03 | Phase 1: Undo/Redo 修正 | Complete |
 | TEST-01 | Phase 1: Undo/Redo 修正 | Pending |
 | BUG-03 | Phase 2: プレビュー最適化とリファクタリング | Pending |
 | REFAC-01 | Phase 2: プレビュー最適化とリファクタリング | Pending |

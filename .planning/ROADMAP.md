@@ -40,7 +40,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 01-02-PLAN.md — Undo/Redo スタックの deque(maxlen=MAX_UNDO) 化（REFAC-03）
+- [x] 01-02-PLAN.md — Undo/Redo スタックの deque(maxlen=MAX_UNDO) 化（REFAC-03）
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
@@ -78,6 +78,6 @@ Phases execute in numeric order: 1 → 2 → 3
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Undo/Redo 修正 | 1/3 | In progress | - |
+| 1. Undo/Redo 修正 | 2/3 | In progress | - |
 | 2. プレビュー最適化とリファクタリング | 0/TBD | Not started | - |
 | 3. API 整理と回帰テスト | 0/TBD | Not started | - |
