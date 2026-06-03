@@ -370,10 +370,9 @@ class TestUndoRedoLogic:
         assert len(doc) == original_count
         assert "Page 1" in doc[0].get_text()
 
-    def test_restore_state_no_pdf_bytes_key(self, sample_pdf_doc):
-        """_restore_state は pdf_bytes キーを含まない op 別 state を受け付ける（対称デルタ方式）"""
-        doc = sample_pdf_doc
-        # op 別 state（新フォーマット）: pdf_bytes キーなし
+    def test_restore_state_no_pdf_bytes_key(self):
+        """_restore_state は pdf_bytes キーを含まない op 別 state を受け付ける"""
+        # op 別 state（対称デルタ方式）: pdf_bytes キーなし
         state = {
             "op": "rotate",
             "current_page": 0,
@@ -388,6 +387,7 @@ class TestUndoRedoLogic:
         import collections
 
         import fitz
+
         import pagefolio.file_ops as fo
 
         # FileOpsMixin のメソッドを Mixin として使う簡易スタブ
