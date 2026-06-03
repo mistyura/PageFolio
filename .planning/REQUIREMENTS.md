@@ -40,7 +40,7 @@
 
 ### テスト
 
-- [ ] **TEST-01**: BUG-01（挿入 Undo）の動作を検証するユニットテスト
+- [x] **TEST-01**: BUG-01（挿入 Undo）の動作を検証するユニットテスト
   - テスト場所: `tests/test_pdf_ops.py`
 
 - [ ] **TEST-02**: BUG-03（プレビュー生成）の回帰テスト
@@ -72,7 +72,7 @@
 | BUG-01 | Phase 1: Undo/Redo 修正 | Complete |
 | BUG-02 | Phase 1: Undo/Redo 修正 | Complete |
 | REFAC-03 | Phase 1: Undo/Redo 修正 | Complete |
-| TEST-01 | Phase 1: Undo/Redo 修正 | Pending |
+| TEST-01 | Phase 1: Undo/Redo 修正 | Complete |
 | BUG-03 | Phase 2: プレビュー最適化とリファクタリング | Pending |
 | REFAC-01 | Phase 2: プレビュー最適化とリファクタリング | Pending |
 | REFAC-02 | Phase 2: プレビュー最適化とリファクタリング | Pending |

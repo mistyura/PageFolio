@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: executing
-stopped_at: Completed 01-02-PLAN.md
-last_updated: "2026-06-03T01:16:56Z"
-last_activity: 2026-06-03 -- Phase 01 Plan 02 completed
+status: verifying
+stopped_at: Completed 01-03-PLAN.md
+last_updated: "2026-06-03T01:34:05.656Z"
+last_activity: 2026-06-03 -- Phase 01 Plan 02 完了（deque 化・O(1) Undo トリム実装）
 progress:
   total_phases: 3
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 3
-  completed_plans: 2
-  percent: 67
+  completed_plans: 3
+  percent: 33
 ---
 
 # Project State
@@ -27,7 +27,7 @@ See: .planning/PROJECT.md (updated 2026-06-01)
 
 Phase: 01 (undo-redo) — EXECUTING
 Plan: 3 of 3
-Status: Executing Phase 01 — Plan 02 完了
+Status: Phase complete — ready for verification
 Last activity: 2026-06-03 -- Phase 01 Plan 02 完了（deque 化・O(1) Undo トリム実装）
 
 Progress: [███████░░░] 67%
@@ -52,6 +52,7 @@ Progress: [███████░░░] 67%
 - Trend: -
 
 *Updated after each plan completion*
+| Phase 01 P03 | 30 | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -66,6 +67,9 @@ Recent decisions affecting current work:
 - D-06: _undo_stack/_redo_stack の両方を deque(maxlen=MAX_UNDO) 化し、手動 pop(0) を削除（REFAC-03）
 - BUG-03 対応: `doc.tobytes()` をやめ `page.get_pixmap()` 直接呼び出しに変更（Phase 2 予定）
 - REFAC-01: dialogs をサブパッケージ `pagefolio/dialogs/` に分割（Phase 2 予定）
+- [Phase ?]: delete_redo op 分離: delete undo/redo 対称化のために delete_redo op を新設
+- [Phase ?]: move 逆操作の bulk_move 化: move_page の順列計算 + doc.select() 方式で確実な逆操作を実現
+- [Phase ?]: merge_resize undo/redo swap: _restore_state(merge_resize) = undo、_restore_state(merge_resize_undo) = redo に修正
 
 ### Pending Todos
 
@@ -85,6 +89,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-06-03T01:16:56Z
-Stopped at: Completed 01-02-PLAN.md
-Resume file: .planning/phases/01-undo-redo/01-03-PLAN.md
+Last session: 2026-06-03T01:34:05.650Z
+Stopped at: Completed 01-03-PLAN.md
+Resume file: None
