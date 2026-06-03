@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Phase 2 context gathered
-last_updated: "2026-06-03T04:21:26.888Z"
-last_activity: 2026-06-03 -- Phase 02 planning complete
+stopped_at: Session resumed, proceeding to Phase 2 execution (3 plans, Wave 1)
+last_updated: "2026-06-03T05:09:31.076Z"
+last_activity: 2026-06-03 -- Phase 02 execution started
 progress:
   total_phases: 3
   completed_phases: 1
-  total_plans: 3
+  total_plans: 6
   completed_plans: 3
   percent: 33
 ---
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-01)
 
 **Core value:** 大きな PDF でも Undo/Redo が正しく・速く動作し、コードが読みやすく保守しやすい状態にする
-**Current focus:** Phase 01 — undo-redo
+**Current focus:** Phase 02 — preview-refactor
 
 ## Current Position
 
-Phase: 2
-Plan: Not started
-Status: Ready to execute
-Last activity: 2026-06-03 -- Phase 02 planning complete
+Phase: 02 (preview-refactor) — EXECUTING
+Plan: 1 of 3
+Status: Executing Phase 02
+Last activity: 2026-06-03 -- Phase 02 execution started
 
 Progress: [███████░░░] 67%
 
@@ -90,6 +90,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-06-03T03:45:17.734Z
-Stopped at: Phase 2 context gathered
-Resume file: .planning/phases/02-preview-refactor/02-CONTEXT.md
+Last session: 2026-06-03 -- セッション再開
+Stopped at: Session resumed, proceeding to Phase 2 execution (3 plans, Wave 1)
+Resume file: なし（HANDOFF 消化済み）
