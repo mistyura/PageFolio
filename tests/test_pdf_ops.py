@@ -385,14 +385,13 @@ class TestUndoRedoLogic:
 
     def test_restore_state_returns_inverse_delta(self):
         """_restore_state が逆デルタ dict を返す（pdf_bytes キーなし）"""
-        # この振る舞いは _restore_state がリファクタリングされた後にのみ成立する（Task 1 後）
         import collections
 
         import fitz
+        import pagefolio.file_ops as fo
 
-        # 簡易スタブで _restore_state の返り値を検証する
-        # モックアプリオブジェクト
-        class FakeApp:
+        # FileOpsMixin のメソッドを Mixin として使う簡易スタブ
+        class FakeApp(fo.FileOpsMixin):
             def __init__(self, doc):
                 self.doc = doc
                 self.current_page = 0
@@ -415,7 +414,7 @@ class TestUndoRedoLogic:
 
         app = FakeApp(doc)
         # rotate op の逆デルタ取得テスト
-        # 現在の rotation=0 で 90 度回転を適用済みと仮定し undo state を構築
+        # 90 度回転を適用済みと仮定し undo state を構築
         app.doc[0].set_rotation(90)
         state = {
             "op": "rotate",
@@ -424,15 +423,15 @@ class TestUndoRedoLogic:
             "data": [(0, 0)],  # 元の rotation=0 に戻す
         }
 
-        import pagefolio.file_ops as fo
-
-        inverse = fo.FileOpsMixin._restore_state(app, state)
+        inverse = app._restore_state(state)
         # 逆デルタが返されること（dict 型）
         assert isinstance(inverse, dict)
         # pdf_bytes キーを含まないこと
         assert "pdf_bytes" not in inverse
         # op キーを持つこと
         assert "op" in inverse
+        # 回転が元に戻っていること
+        assert app.doc[0].rotation == 0
         doc.close()
 
 

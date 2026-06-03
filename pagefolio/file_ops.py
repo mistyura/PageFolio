@@ -64,76 +64,196 @@ class FileOpsMixin:
         if not self._undo_stack:
             self._set_status(self._t("undo_empty"))
             return
-        if self.doc:
-            self._redo_stack.append(
-                {
-                    "pdf_bytes": self.doc.tobytes(),
-                    "current_page": self.current_page,
-                    "selected_pages": set(self.selected_pages),
-                }
-            )
         state = self._undo_stack.pop()
-        self._restore_state(state)
+        inverse = self._restore_state(state)
+        self._redo_stack.append(inverse)
         self._set_status(self._t("undo_done"))
 
     def _redo(self):
         if not self._redo_stack:
             self._set_status(self._t("redo_empty"))
             return
-        if self.doc:
-            self._undo_stack.append(
-                {
-                    "pdf_bytes": self.doc.tobytes(),
-                    "current_page": self.current_page,
-                    "selected_pages": set(self.selected_pages),
-                }
-            )
         state = self._redo_stack.pop()
-        self._restore_state(state)
+        inverse = self._restore_state(state)
+        self._undo_stack.append(inverse)
         self._set_status(self._t("redo_done"))
 
-    def _restore_state(self, state):
-        if "pdf_bytes" in state:
-            # 旧来形式（Redo スタック由来）またはフォールバック
-            if self.doc:
-                self.doc.close()
-            self.doc = fitz.open(stream=state["pdf_bytes"], filetype="pdf")
+    def _apply_inverse(self, state):
+        """現在の doc 状態から逆デルタを構築して返す。
+        _restore_state 内で逆操作を適用する直前に呼ぶ。
+        返り値は pdf_bytes キーを持たない op 別 state dict。
+        """
+        op = state["op"]
+        inv = {
+            "op": op,
+            "current_page": self.current_page,
+            "selected_pages": set(self.selected_pages),
+        }
+        if op == "rotate":
+            # 適用前の現在の rotation を逆デルタに格納
+            inv["data"] = [
+                (page_i, self.doc[page_i].rotation) for page_i, _ in state["data"]
+            ]
+        elif op == "crop":
+            page_i, _ = state["data"]
+            cb = self.doc[page_i].cropbox
+            inv["data"] = (page_i, (cb.x0, cb.y0, cb.x1, cb.y1))
+        elif op == "delete":
+            # delete の逆は insert: 削除されたページの (index, bytes) リストを格納
+            # _restore_state 側でページを再挿入するため、逆デルタは "delete" op として
+            # 同じページインデックスを再削除できるよう delete 形式で返す
+            inv["data"] = [(page_i, page_bytes) for page_i, page_bytes in state["data"]]
+        elif op == "move":
+            src, actual_dest = state["data"]
+            inv["data"] = (actual_dest, src)
+        elif op == "duplicate":
+            inv["data"] = state["data"] + 1  # 複製ページのインデックス（削除対象）
+            inv["op"] = "duplicate_undo"
+        elif op == "duplicate_undo":
+            # duplicate_undo の逆は duplicate（再複製）
+            inv["data"] = state["data"] - 1
+            inv["op"] = "duplicate"
+        elif op == "bulk_move":
+            new_order = state["data"]
+            inverse_order = [0] * len(new_order)
+            for i, v in enumerate(new_order):
+                inverse_order[v] = i
+            inv["data"] = inverse_order
+        elif op == "bulk_crop":
+            # 適用前の現在の cropbox を逆デルタに格納
+            inv["data"] = [
+                (
+                    page_i,
+                    (
+                        self.doc[page_i].cropbox.x0,
+                        self.doc[page_i].cropbox.y0,
+                        self.doc[page_i].cropbox.x1,
+                        self.doc[page_i].cropbox.y1,
+                    ),
+                )
+                for page_i, _ in state["data"]
+            ]
+        elif op == "insert":
+            # insert の逆: 挿入されたページを bytes でキャプチャして delete 形式に変換
+            # （Task 2 で完全実装。本タスクでは insert はページ増減系のため仮実装）
+            insert_at, num = state["data"]
+            captured = []
+            for i in range(insert_at, insert_at + num):
+                tmp = fitz.open()
+                tmp.insert_pdf(self.doc, from_page=i, to_page=i)
+                captured.append((i, tmp.tobytes()))
+                tmp.close()
+            inv["op"] = "insert_undo"
+            inv["data"] = captured
+        elif op == "insert_undo":
+            # insert_undo の逆は insert（bytes を再挿入）
+            inv["op"] = "insert_redo"
+            inv["data"] = state["data"]
+        elif op == "insert_redo":
+            insert_at = state["data"][0][0] if state["data"] else 0
+            num = len(state["data"])
+            captured = []
+            for i in range(insert_at, insert_at + num):
+                tmp = fitz.open()
+                tmp.insert_pdf(self.doc, from_page=i, to_page=i)
+                captured.append((i, tmp.tobytes()))
+                tmp.close()
+            inv["op"] = "insert_undo"
+            inv["data"] = captured
+        elif op == "merge":
+            # merge の逆: 追加されたページを bytes でキャプチャ（Task 2 で完全実装）
+            old_count = state["data"]
+            captured = []
+            for i in range(old_count, len(self.doc)):
+                tmp = fitz.open()
+                tmp.insert_pdf(self.doc, from_page=i, to_page=i)
+                captured.append((i, tmp.tobytes()))
+                tmp.close()
+            inv["op"] = "merge_undo"
+            inv["data"] = (old_count, captured)
+        elif op == "merge_undo":
+            old_count, captured = state["data"]
+            inv["op"] = "merge"
+            inv["data"] = old_count
+        elif op == "merge_resize":
+            # merge_resize の逆デルタ（Task 2 で実装）
+            inv["data"] = state["data"]
         else:
-            op = state["op"]
-            if op == "rotate":
-                for page_i, old_rot in state["data"]:
-                    self.doc[page_i].set_rotation(old_rot)
-            elif op == "crop":
-                page_i, (x0, y0, x1, y1) = state["data"]
+            # 未知の op はそのまま返す（安全フォールバック）
+            inv["data"] = state.get("data")
+        return inv
+
+    def _restore_state(self, state):
+        """op 別逆操作を適用し、逆方向へ戻すための op 別 state（逆デルタ）を返す。
+        pdf_bytes キーは一切使用しない（D-05）。
+        """
+        op = state["op"]
+        # 適用前の状態から逆デルタを構築
+        inverse = self._apply_inverse(state)
+
+        if op == "rotate":
+            for page_i, old_rot in state["data"]:
+                self.doc[page_i].set_rotation(old_rot)
+        elif op == "crop":
+            page_i, (x0, y0, x1, y1) = state["data"]
+            self.doc[page_i].set_cropbox(fitz.Rect(x0, y0, x1, y1))
+        elif op == "delete":
+            # 昇順で再挿入（インデックスずれ防止）
+            for page_i, page_bytes in state["data"]:
+                tmp = fitz.open(stream=page_bytes, filetype="pdf")
+                self.doc.insert_pdf(tmp, start_at=page_i)
+                tmp.close()
+        elif op == "move":
+            src, actual_dest = state["data"]
+            self.doc.move_page(actual_dest, src)
+        elif op == "duplicate":
+            self.doc.delete_page(state["data"] + 1)
+        elif op == "duplicate_undo":
+            # duplicate_undo: インデックスを再複製
+            pno = state["data"] - 1
+            tmp = fitz.open()
+            tmp.insert_pdf(self.doc, from_page=pno, to_page=pno)
+            self.doc.insert_pdf(tmp, start_at=pno + 1)
+            tmp.close()
+        elif op == "insert":
+            insert_at, num = state["data"]
+            for _ in range(num):
+                self.doc.delete_page(insert_at)
+        elif op == "insert_undo":
+            # insert_undo: キャプチャした bytes を昇順で再挿入
+            for page_i, page_bytes in state["data"]:
+                tmp = fitz.open(stream=page_bytes, filetype="pdf")
+                self.doc.insert_pdf(tmp, start_at=page_i)
+                tmp.close()
+        elif op == "insert_redo":
+            # insert_redo: 再挿入後にそのページを削除（insert の再実行相当）
+            for page_i, page_bytes in state["data"]:
+                tmp = fitz.open(stream=page_bytes, filetype="pdf")
+                self.doc.insert_pdf(tmp, start_at=page_i)
+                tmp.close()
+        elif op == "merge":
+            old_count = state["data"]
+            while len(self.doc) > old_count:
+                self.doc.delete_page(old_count)
+        elif op == "merge_undo":
+            # merge_undo: キャプチャした bytes を昇順で再追加
+            old_count, captured = state["data"]
+            for page_i, page_bytes in captured:
+                tmp = fitz.open(stream=page_bytes, filetype="pdf")
+                self.doc.insert_pdf(tmp, start_at=page_i)
+                tmp.close()
+        elif op == "merge_resize":
+            # merge_resize の復元（Task 2 で実装。ここではプレースホルダー）
+            pass
+        elif op == "bulk_move":
+            new_order = state["data"]
+            inverse_order = [0] * len(new_order)
+            for i, v in enumerate(new_order):
+                inverse_order[v] = i
+            self.doc.select(inverse_order)
+        elif op == "bulk_crop":
+            for page_i, (x0, y0, x1, y1) in state["data"]:
                 self.doc[page_i].set_cropbox(fitz.Rect(x0, y0, x1, y1))
-            elif op == "delete":
-                # 昇順で再挿入（インデックスずれ防止）
-                for page_i, page_bytes in state["data"]:
-                    tmp = fitz.open(stream=page_bytes, filetype="pdf")
-                    self.doc.insert_pdf(tmp, start_at=page_i)
-                    tmp.close()
-            elif op == "move":
-                src, actual_dest = state["data"]
-                self.doc.move_page(actual_dest, src)
-            elif op == "duplicate":
-                self.doc.delete_page(state["data"] + 1)
-            elif op == "insert":
-                insert_at, num = state["data"]
-                for _ in range(num):
-                    self.doc.delete_page(insert_at)
-            elif op == "merge":
-                old_count = state["data"]
-                while len(self.doc) > old_count:
-                    self.doc.delete_page(old_count)
-            elif op == "bulk_move":
-                new_order = state["data"]
-                inverse = [0] * len(new_order)
-                for i, v in enumerate(new_order):
-                    inverse[v] = i
-                self.doc.select(inverse)
-            elif op == "bulk_crop":
-                for page_i, (x0, y0, x1, y1) in state["data"]:
-                    self.doc[page_i].set_cropbox(fitz.Rect(x0, y0, x1, y1))
 
         self.current_page = min(state["current_page"], max(0, len(self.doc) - 1))
         self.selected_pages = state["selected_pages"]
@@ -141,6 +261,7 @@ class FileOpsMixin:
         self._preview_gen += 1
         self._thumb_gen += 1
         self._refresh_all()
+        return inverse
 
     # ══════════════════════════════════════════
     #  ファイル操作
