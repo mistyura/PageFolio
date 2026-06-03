@@ -78,6 +78,6 @@ Phases execute in numeric order: 1 → 2 → 3
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Undo/Redo 修正 | 3/3 | Complete   | 2026-06-03 |
+| 1. Undo/Redo 修正 | 3/3 | Complete    | 2026-06-03 |
 | 2. プレビュー最適化とリファクタリング | 0/TBD | Not started | - |
 | 3. API 整理と回帰テスト | 0/TBD | Not started | - |
