@@ -7,7 +7,7 @@ import logging
 import tkinter as tk
 from tkinter import ttk
 
-from pagefolio.constants import C, LANG
+from pagefolio.constants import LANG, C
 from pagefolio.ocr import MAX_OCR_MAX_TOKENS, fetch_lm_studio_models
 from pagefolio.settings import _current_font_size
 

@@ -8,7 +8,7 @@ import os
 import tkinter as tk
 from tkinter import ttk
 
-from pagefolio.constants import C, LANG, PLUGINS_DIR
+from pagefolio.constants import LANG, PLUGINS_DIR, C
 from pagefolio.plugins import _get_plugins_dir
 
 logger = logging.getLogger(__name__)

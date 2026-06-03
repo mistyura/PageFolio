@@ -7,7 +7,7 @@ import logging
 import tkinter as tk
 from tkinter import ttk
 
-from pagefolio.constants import APP_VERSION, C, LANG
+from pagefolio.constants import APP_VERSION, LANG, C
 
 logger = logging.getLogger(__name__)
 

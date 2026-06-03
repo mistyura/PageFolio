@@ -10,7 +10,7 @@ from tkinter import messagebox, ttk
 
 import fitz
 
-from pagefolio.constants import C, LANG
+from pagefolio.constants import LANG, C
 from pagefolio.settings import _current_font_size
 
 logger = logging.getLogger(__name__)
