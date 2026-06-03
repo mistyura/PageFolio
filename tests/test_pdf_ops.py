@@ -828,16 +828,21 @@ class TestAllOpsUndoRedoRoundtrip:
         for entry in list(app._undo_stack) + list(app._redo_stack):
             assert "pdf_bytes" not in entry
 
-    def test_move_roundtrip(self, sample_pdf_doc):
-        """move: ページ0→位置2移動 → undo で元順序 → redo で移動後順序"""
+    @pytest.mark.parametrize("src,dest", [(0, 2), (0, 3), (2, 0), (1, 3)])
+    def test_move_roundtrip(self, sample_pdf_doc, src, dest):
+        """move: 実 dnd 規約（actual_dest=最終位置, 末尾ドロップ dest>=n 含む）で
+        do→undo で元順序、redo で移動後順序に戻ることを検証（CR-01 回帰防止）。"""
         app = self._make_fake_app(sample_pdf_doc)
-        # 元の順序: [Page1, Page2, Page3]
         original_order = [_page_digest(app.doc[i]) for i in range(len(app.doc))]
 
-        # do: ページ0を位置2（末尾）へ移動
-        src, dest = 0, 2
-        app._save_undo("move", src=src, actual_dest=dest)
-        app.doc.move_page(src, dest)
+        # do: _save_undo は操作前に実 actual_dest を保存する必要があるため先に算出
+        n = len(app.doc)
+        actual_dest = (n - 1) if dest >= n else (dest if dest < src else dest - 1)
+        app._save_undo("move", src=src, actual_dest=actual_dest)
+        if dest >= n:
+            app.doc.move_page(src, -1)
+        else:
+            app.doc.move_page(src, dest)
         moved_order = [_page_digest(app.doc[i]) for i in range(len(app.doc))]
         assert moved_order != original_order
 

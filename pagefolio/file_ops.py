@@ -130,12 +130,11 @@ class FileOpsMixin:
             # move_page の順列を計算し、逆順列を doc.select() で適用する。
             src, actual_dest = state["data"]
             n = len(self.doc)
+            # actual_dest = 移動後ページの最終位置（末尾=n-1, 前方=dest-1, 後方=dest）。
+            # range から src を取り除き actual_dest へ挿入すれば現 doc 順序に一致する。
             order = list(range(n))
             item = order.pop(src)
-            if src < actual_dest:
-                order.insert(actual_dest - 1, item)
-            else:
-                order.insert(actual_dest, item)
+            order.insert(actual_dest, item)
             inverse_order = [0] * n
             for i, v in enumerate(order):
                 inverse_order[v] = i
@@ -253,13 +252,11 @@ class FileOpsMixin:
             # undo: move_page(src, dest) の逆順列を doc.select() で元の順序に戻す。
             src, actual_dest = state["data"]
             n = len(self.doc)
-            # move_page(src, dest) の結果の順列を計算
+            # actual_dest = 移動後ページの最終位置。range から src を取り除き
+            # actual_dest へ挿入すると現 doc（移動後）の順列に一致する（末尾含む）。
             order = list(range(n))
             item = order.pop(src)
-            if src < actual_dest:
-                order.insert(actual_dest - 1, item)
-            else:
-                order.insert(actual_dest, item)
+            order.insert(actual_dest, item)
             # 逆順列: order[i] = j → inverse[j] = i
             inverse_order = [0] * n
             for i, v in enumerate(order):
@@ -285,7 +282,8 @@ class FileOpsMixin:
                 self.doc.insert_pdf(tmp, start_at=page_i)
                 tmp.close()
         elif op == "insert_redo":
-            # insert_redo: 再挿入後にそのページを削除（insert の再実行相当）
+            # insert_redo: insert の再実行相当。キャプチャした bytes を昇順で再挿入する
+            # （insert→undo→redo の連鎖では「再挿入」が正しい挙動）。
             for page_i, page_bytes in state["data"]:
                 tmp = fitz.open(stream=page_bytes, filetype="pdf")
                 self.doc.insert_pdf(tmp, start_at=page_i)
@@ -334,7 +332,9 @@ class FileOpsMixin:
                 self.doc[page_i].set_cropbox(fitz.Rect(x0, y0, x1, y1))
 
         self.current_page = min(state["current_page"], max(0, len(self.doc) - 1))
-        self.selected_pages = state["selected_pages"]
+        # 防御コピー: state 内の set を共有束縛すると以降の破壊的変更が
+        # スタック上の他デルタを汚染しうる（保存側は set(...) でコピー済み）。
+        self.selected_pages = set(state["selected_pages"])
         self._invalidate_thumb_cache()
         self._preview_gen += 1
         self._thumb_gen += 1

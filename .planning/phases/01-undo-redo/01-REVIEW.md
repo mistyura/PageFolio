@@ -15,7 +15,15 @@ findings:
   info: 3
   total: 10
 status: issues_found
+resolved: [CR-01, CR-02, WR-03, WR-05]
+deferred: [WR-01, WR-02, WR-04, IN-01, IN-02, IN-03]
+resolution_version: v1.2.6
 ---
+
+> **対応状況（v1.2.6, 2026-06-03）**
+> 修正済み: CR-01（move 順列再構成）/ CR-02（insert 例外時の undo state 残留）/ WR-03（selected_pages 防御コピー）/ WR-05（insert_redo コメント）。
+> CR-01 はリグレッション防止のため `test_move_roundtrip` を実 dnd 規約（末尾ドロップ含む）でパラメータ化。163 テスト全通・ruff クリーンを確認。
+> 別途フォローアップ（非ブロッキング）: WR-01（保存タイミング統一）/ WR-02（merge_resize redo 選択正規化）/ WR-04（範囲外防御）/ IN-01・IN-02（ディスパッチ表化リファクタ）/ IN-03（テスト経路再現の全 op 拡大）。
 
 # フェーズ 01: コードレビュー報告書
 

@@ -2,7 +2,7 @@
 
 **PDF ページ整理ツール — Python + Tkinter 製 GUI アプリ**
 
-![Version](https://img.shields.io/badge/version-v1.2.5-blue)
+![Version](https://img.shields.io/badge/version-v1.2.6-blue)
 ![Stable](https://img.shields.io/badge/status-stable-green)
 
 A PDF page organizer built with Python + Tkinter.

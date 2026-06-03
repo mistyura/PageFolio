@@ -357,6 +357,12 @@ class PageOpsMixin:
             )
             self.plugin_manager.fire_event("on_insert", self, ordered_paths, insert_at)
         except Exception as e:
+            # 例外時は num=0 のままの不完全な insert state を破棄する。
+            # 残すと undo が range(0) で 1 ページも削除せず、部分挿入が取り残される。
+            if self._undo_stack and self._undo_stack[-1].get("op") == "insert":
+                self._undo_stack.pop()
+            self._invalidate_thumb_cache()
+            self._refresh_all()
             messagebox.showerror(self._t("err_title"), str(e))
 
     def _merge_pdf(self):
