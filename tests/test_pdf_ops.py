@@ -435,6 +435,141 @@ class TestUndoRedoLogic:
         doc.close()
 
 
+# ===== insert/merge Undo→Redo ラウンドトリップ =====
+
+
+class TestInsertMergeUndoRedo:
+    """insert/merge の do→undo→redo ラウンドトリップ検証（Task 2 対応）"""
+
+    def _make_fake_app(self, doc):
+        """FileOpsMixin を使う FakeApp を生成する"""
+        import collections
+
+        import pagefolio.file_ops as fo
+
+        class FakeApp(fo.FileOpsMixin):
+            MAX_UNDO = 20
+
+            def __init__(self, d):
+                self.doc = d
+                self.current_page = 0
+                self.selected_pages = set()
+                self._undo_stack = collections.deque()
+                self._redo_stack = collections.deque()
+                self._preview_gen = 0
+                self._thumb_gen = 0
+
+            def _invalidate_thumb_cache(self, *a, **kw):
+                pass
+
+            def _refresh_all(self):
+                pass
+
+            def _t(self, key):
+                return key
+
+            def _set_status(self, *a):
+                pass
+
+        return FakeApp(doc)
+
+    def test_insert_undo_removes_inserted_pages(self, sample_pdf_doc, multi_pdf_files):
+        """insert → undo で挿入ページが除去され元のページ数に戻る（BUG-01）"""
+        app = self._make_fake_app(sample_pdf_doc)
+        original_count = len(app.doc)  # 3
+
+        # insert op を _save_undo で記録（insert_at=1, num=0 → 書き戻し後に1）
+        app._save_undo("insert", insert_at=1)
+        # 実際の挿入（1ページを位置1に）
+        src = fitz.open(multi_pdf_files[0])  # 1ページ
+        app.doc.insert_pdf(src, start_at=1)
+        src.close()
+        # 書き戻し
+        app._undo_stack[-1]["data"][1] = 1
+        assert len(app.doc) == original_count + 1
+
+        # Undo: 挿入ページが除去される
+        app._undo()
+        assert len(app.doc) == original_count
+
+    def test_insert_undo_redo_roundtrip(self, sample_pdf_doc, multi_pdf_files):
+        """insert → undo → redo でページ内容ごと往復する"""
+        app = self._make_fake_app(sample_pdf_doc)
+        original_count = len(app.doc)  # 3
+        insert_at = 1
+
+        # insert op
+        app._save_undo("insert", insert_at=insert_at)
+        src = fitz.open(multi_pdf_files[0])  # "File1 Page1" が含まれる1ページ
+        app.doc.insert_pdf(src, start_at=insert_at)
+        src.close()
+        app._undo_stack[-1]["data"][1] = 1
+        assert len(app.doc) == original_count + 1
+
+        # Undo
+        app._undo()
+        assert len(app.doc) == original_count
+        # redo スタックに逆デルタが積まれていること
+        assert len(app._redo_stack) == 1
+
+        # Redo: 挿入ページが内容ごと復元される
+        app._redo()
+        assert len(app.doc) == original_count + 1
+        # 挿入位置のページに "File1 Page1" テキストが含まれること
+        assert "File1 Page1" in app.doc[insert_at].get_text()
+
+    def test_merge_resize_no_pdf_bytes_in_undo_stack(self):
+        """_do_merge_resize が pdf_bytes キーを持たない state を undo スタックに積む"""
+        import collections
+
+        import pagefolio.file_ops as fo
+        import pagefolio.page_ops as po
+
+        class FakeApp(fo.FileOpsMixin, po.PageOpsMixin):
+            MAX_UNDO = 20
+
+            def __init__(self):
+                doc = fitz.open()
+                for _ in range(4):
+                    doc.new_page(width=595, height=842)
+                self.doc = doc
+                self.current_page = 0
+                self.selected_pages = set()
+                self._undo_stack = collections.deque()
+                self._redo_stack = collections.deque()
+                self._preview_gen = 0
+                self._thumb_gen = 0
+                self.lang = "ja"
+
+            def _invalidate_thumb_cache(self, *a, **kw):
+                pass
+
+            def _refresh_all(self):
+                pass
+
+            def _t(self, key):
+                return key
+
+            def _set_status(self, *a):
+                pass
+
+            def plugin_manager(self):
+                pass
+
+        app = FakeApp()
+        # ダミー plugin_manager
+        import types
+
+        app.plugin_manager = types.SimpleNamespace(fire_event=lambda *a, **kw: None)
+        targets = [0, 1]
+        app._do_merge_resize(targets, "horizontal", 1190, 842)
+
+        # undo スタックに pdf_bytes キーが含まれないこと
+        assert len(app._undo_stack) > 0
+        for entry in app._undo_stack:
+            assert "pdf_bytes" not in entry, f"pdf_bytes が残存: {entry.keys()}"
+
+
 # ===== bulk_move ロジック =====
 
 
