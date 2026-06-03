@@ -48,7 +48,7 @@
   - `_show_preview()` が `tobytes()` を呼ばないことを確認
   - テスト場所: `tests/test_utils.py` または新規 `tests/test_viewer.py`
 
-- [ ] **TEST-03**: REFAC-01〜04 の import 回帰テスト
+- [x] **TEST-03**: REFAC-01〜04 の import 回帰テスト
   - 既存の import パスが壊れていないことを確認
   - テスト場所: `tests/` 各ファイル
 
@@ -79,7 +79,7 @@
 | REFAC-02 | Phase 2: プレビュー最適化とリファクタリング | Complete |
 | TEST-02 | Phase 2: プレビュー最適化とリファクタリング | Complete |
 | REFAC-04 | Phase 3: API 整理と回帰テスト | Complete |
-| TEST-03 | Phase 3: API 整理と回帰テスト | Pending |
+| TEST-03 | Phase 3: API 整理と回帰テスト | Complete |
 
 ---
 *Requirements defined: 2026-06-01*
