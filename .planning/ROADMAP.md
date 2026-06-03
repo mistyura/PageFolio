@@ -29,7 +29,11 @@ Decimal phases appear between their surrounding integers in numeric order.
   2. Undo スタックへの追加と上限超過時の削除が O(1) で完了する（deque 使用）
   3. 大きな PDF（10 MB 以上）で Undo を実行しても UI がフリーズしない（BUG-02 対応の設計判断を反映）
   4. `pytest` が全通し、BUG-01 の修正を検証するユニットテスト（TEST-01）が含まれる
-**Plans**: TBD
+**Plans**: 3 plans
+Plans:
+- [ ] 01-01-PLAN.md — Undo/Redo の対称デルタ化・挿入 Undo 修正・pdf_bytes 撤廃（BUG-01/BUG-02）
+- [ ] 01-02-PLAN.md — Undo/Redo スタックの deque(maxlen=MAX_UNDO) 化（REFAC-03）
+- [ ] 01-03-PLAN.md — 挿入 Undo/Redo 内容同一性テスト・全 op 往復の安全網テスト（TEST-01）
 
 ### Phase 2: プレビュー最適化とリファクタリング
 **Goal**: ページ切り替えのシリアライズが廃止され、主要モジュールの行数が管理可能な水準になる
@@ -58,6 +62,6 @@ Phases execute in numeric order: 1 → 2 → 3
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Undo/Redo 修正 | 0/TBD | Not started | - |
+| 1. Undo/Redo 修正 | 0/3 | Not started | - |
 | 2. プレビュー最適化とリファクタリング | 0/TBD | Not started | - |
 | 3. API 整理と回帰テスト | 0/TBD | Not started | - |
