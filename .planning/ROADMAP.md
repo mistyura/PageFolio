@@ -17,7 +17,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Undo/Redo 修正** - ページ挿入 Undo のバグ修正、Undo スタックの O(1) 化、Undo シリアライズコスト削減 (completed 2026-06-03)
 - [x] **Phase 2: プレビュー最適化とリファクタリング** - プレビューのフルシリアライズ廃止、dialogs / constants の分割 (completed 2026-06-03)
-- [ ] **Phase 3: API 整理と回帰テスト** - settings 公開 API 化、import 回帰テスト整備
+- [x] **Phase 3: API 整理と回帰テスト** - settings 公開 API 化、import 回帰テスト整備 (completed 2026-06-03)
 
 ## Phase Details
 
@@ -89,7 +89,7 @@ Plans:
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 03-02-PLAN.md — REFAC-01〜04 の import 回帰テストを tests/test_imports.py に整備（TEST-03）
+- [x] 03-02-PLAN.md — REFAC-01〜04 の import 回帰テストを tests/test_imports.py に整備（TEST-03）
 
 ## Progress
 
@@ -100,4 +100,4 @@ Phases execute in numeric order: 1 → 2 → 3
 |-------|----------------|--------|-----------|
 | 1. Undo/Redo 修正 | 3/3 | Complete    | 2026-06-03 |
 | 2. プレビュー最適化とリファクタリング | 3/3 | Complete    | 2026-06-03 |
-| 3. API 整理と回帰テスト | 1/2 | Executing    | - |
+| 3. API 整理と回帰テスト | 2/2 | Complete    | 2026-06-03 |
