@@ -4,7 +4,6 @@
 """表示 Mixin — プレビュー・ズーム・サムネイル・選択・ポップアップ"""
 
 import logging
-import threading
 import tkinter as tk
 from tkinter import ttk
 
@@ -38,6 +37,17 @@ class ViewerMixin:
         self._refresh_thumbs_selection_only()
 
     # ── プレビュー ──
+    def _render_preview_pixmap(self, page_idx, zoom):
+        """Tk 非依存の純関数プレビューレンダリングヘルパー。
+
+        self.doc[page_idx] を直接参照して get_pixmap を同期呼び出しし、
+        (samples: bytes, w: int, h: int) を返す。doc.tobytes() を一切呼ばない。
+        """
+        page = self.doc[page_idx]
+        mat = fitz.Matrix(zoom * 1.5, zoom * 1.5)
+        pix = page.get_pixmap(matrix=mat, alpha=False)
+        return bytes(pix.samples), pix.width, pix.height
+
     def _show_preview(self):
         self.preview_canvas.delete("all")
         self.crop_overlay_ids = []
@@ -62,69 +72,37 @@ class ViewerMixin:
             )
             return
 
-        self._preview_gen += 1
-        gen = self._preview_gen
         page_idx = self.current_page
         zoom = self.zoom
-        doc_bytes = self.doc.tobytes()
-
-        # ローディングプレースホルダーを即時描画
-        self.preview_canvas.update_idletasks()
-        cw = self.preview_canvas.winfo_width()
-        ch = self.preview_canvas.winfo_height()
-        self.preview_canvas.create_text(
-            max(cw // 2, 10),
-            max(ch // 2, 10),
-            text="...",
+        try:
+            samples, w, h = self._render_preview_pixmap(page_idx, zoom)
+        except Exception as e:
+            logger.debug("プレビュー描画例外: %s", e)
+            return
+        img = Image.frombytes("RGB", [w, h], samples)
+        photo = ImageTk.PhotoImage(img)
+        self.preview_img_ref = photo
+        pad = 10
+        self.preview_canvas.delete("all")
+        self.preview_canvas.create_rectangle(
+            pad + 3,
+            pad + 3,
+            pad + w + 3,
+            pad + h + 3,
             fill=C["TEXT_SUB"],
-            font=self._font(4),
+            outline="",
         )
-
-        def worker():
-            try:
-                tmp_doc = fitz.open(stream=doc_bytes, filetype="pdf")
-                try:
-                    page = tmp_doc[page_idx]
-                    mat = fitz.Matrix(zoom * 1.5, zoom * 1.5)
-                    pix = page.get_pixmap(matrix=mat, alpha=False)
-                    samples = bytes(pix.samples)
-                    w, h = pix.width, pix.height
-                finally:
-                    tmp_doc.close()
-            except Exception as e:
-                logger.debug("プレビューワーカー例外: %s", e)
-                return
-            self.root.after(0, lambda: _apply(samples, w, h))
-
-        def _apply(samples, w, h):
-            if self._preview_gen != gen or not self.doc:
-                return
-            img = Image.frombytes("RGB", [w, h], samples)
-            photo = ImageTk.PhotoImage(img)
-            self.preview_img_ref = photo
-            pad = 10
-            self.preview_canvas.delete("all")
-            self.preview_canvas.create_rectangle(
-                pad + 3,
-                pad + 3,
-                pad + w + 3,
-                pad + h + 3,
-                fill=C["TEXT_SUB"],
-                outline="",
-            )
-            self.preview_canvas.create_rectangle(
-                pad,
-                pad,
-                pad + w,
-                pad + h,
-                fill="",
-                outline=C["TEXT_SUB"],
-                width=1,
-            )
-            self.preview_canvas.create_image(pad, pad, anchor="nw", image=photo)
-            self.preview_canvas.configure(scrollregion=(0, 0, w + pad * 2, h + pad * 2))
-
-        threading.Thread(target=worker, daemon=True).start()
+        self.preview_canvas.create_rectangle(
+            pad,
+            pad,
+            pad + w,
+            pad + h,
+            fill="",
+            outline=C["TEXT_SUB"],
+            width=1,
+        )
+        self.preview_canvas.create_image(pad, pad, anchor="nw", image=photo)
+        self.preview_canvas.configure(scrollregion=(0, 0, w + pad * 2, h + pad * 2))
 
     # ── ナビゲーション & ズーム ──
     def _prev_page(self):
