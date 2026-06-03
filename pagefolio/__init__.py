@@ -39,4 +39,6 @@ from pagefolio.settings import (  # noqa: F401
     _make_font,
     _resolve_theme,
     _save_settings,
+    get_current_font_size,
+    set_current_font_size,
 )

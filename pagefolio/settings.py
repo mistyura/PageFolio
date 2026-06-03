@@ -105,3 +105,14 @@ def _make_font(delta=0, weight=None, base_size=10):
 
 # 現在のフォントサイズ（設定から読み込み後に更新）
 _current_font_size = 12
+
+
+def set_current_font_size(size: int) -> None:
+    """現在のフォントサイズを更新する公開 setter"""
+    global _current_font_size
+    _current_font_size = size
+
+
+def get_current_font_size() -> int:
+    """現在のフォントサイズを返す公開 getter"""
+    return _current_font_size
