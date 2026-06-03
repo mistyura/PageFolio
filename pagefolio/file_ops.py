@@ -55,6 +55,10 @@ class FileOpsMixin:
             state["data"] = kwargs["new_order"]  # 整数リスト
         elif op == "bulk_crop":
             state["data"] = kwargs["crop_data"]  # [(page_i, (x0,y0,x1,y1)), ...]
+        elif op == "merge_resize":
+            # data = {"insert_at": int, "merged_bytes": bytes,
+            #         "orig_pages": [(idx, bytes)]}
+            state["data"] = kwargs["data"]
         self._undo_stack.append(state)
         if len(self._undo_stack) > self.MAX_UNDO:
             self._undo_stack.pop(0)
@@ -176,7 +180,13 @@ class FileOpsMixin:
             inv["op"] = "merge"
             inv["data"] = old_count
         elif op == "merge_resize":
-            # merge_resize の逆デルタ（Task 2 で実装）
+            # merge_resize の逆: 結合ページを除去し元ページを復元するための逆デルタ
+            # 逆デルタ = merge_resize_undo（結合ページ削除 + 元ページ再挿入）
+            inv["op"] = "merge_resize_undo"
+            inv["data"] = state["data"]
+        elif op == "merge_resize_undo":
+            # merge_resize_undo の逆: 元ページを削除し結合ページを再挿入
+            inv["op"] = "merge_resize"
             inv["data"] = state["data"]
         else:
             # 未知の op はそのまま返す（安全フォールバック）
@@ -243,8 +253,27 @@ class FileOpsMixin:
                 self.doc.insert_pdf(tmp, start_at=page_i)
                 tmp.close()
         elif op == "merge_resize":
-            # merge_resize の復元（Task 2 で実装。ここではプレースホルダー）
-            pass
+            # merge_resize の redo: 元ページを削除し結合ページを再挿入
+            d = state["data"]
+            insert_at = d["insert_at"]
+            # 元ページ（昇順インデックス）を逆順で削除してから結合ページを挿入
+            orig_indices = sorted([idx for idx, _ in d["orig_pages"]], reverse=True)
+            for idx in orig_indices:
+                self.doc.delete_page(idx)
+            tmp = fitz.open(stream=d["merged_bytes"], filetype="pdf")
+            self.doc.insert_pdf(tmp, start_at=insert_at)
+            tmp.close()
+        elif op == "merge_resize_undo":
+            # merge_resize_undo の実行: 結合ページを削除し元ページを復元
+            d = state["data"]
+            insert_at = d["insert_at"]
+            # 結合ページを削除
+            self.doc.delete_page(insert_at)
+            # 元ページを昇順で再挿入
+            for idx, page_bytes in sorted(d["orig_pages"], key=lambda x: x[0]):
+                tmp = fitz.open(stream=page_bytes, filetype="pdf")
+                self.doc.insert_pdf(tmp, start_at=idx)
+                tmp.close()
         elif op == "bulk_move":
             new_order = state["data"]
             inverse_order = [0] * len(new_order)

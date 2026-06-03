@@ -400,19 +400,8 @@ class PageOpsMixin:
 
     def _do_merge_resize(self, targets, direction, out_w, out_h):
         """結合・リサイズの実処理。targets は昇順のページインデックス。"""
-        # Undo はスナップショット形式で保存（_restore_state が pdf_bytes を扱う）
-        self._undo_stack.append(
-            {
-                "pdf_bytes": self.doc.tobytes(),
-                "current_page": self.current_page,
-                "selected_pages": set(self.selected_pages),
-            }
-        )
-        if len(self._undo_stack) > self.MAX_UNDO:
-            self._undo_stack.pop(0)
-        self._redo_stack.clear()
-
         try:
+            # 結合ページを生成（まだ doc には挿入しない）
             new_doc = fitz.open()
             new_page = new_doc.new_page(width=out_w, height=out_h)
 
@@ -431,9 +420,30 @@ class PageOpsMixin:
                     offset += src_rect.height
                 new_page.show_pdf_page(target_rect, self.doc, src_pno)
 
+            # 元ページと結合ページの bytes をキャプチャして op 別デルタで保存（D-05）
             insert_at = targets[0]
-            self.doc.insert_pdf(new_doc, start_at=insert_at)
+            orig_pages = []
+            for idx in sorted(targets):
+                tmp = fitz.open()
+                tmp.insert_pdf(self.doc, from_page=idx, to_page=idx)
+                orig_pages.append((idx, tmp.tobytes()))
+                tmp.close()
+            merged_bytes = new_doc.tobytes()
             new_doc.close()
+
+            self._save_undo(
+                "merge_resize",
+                data={
+                    "insert_at": insert_at,
+                    "merged_bytes": merged_bytes,
+                    "orig_pages": orig_pages,
+                },
+            )
+
+            # 結合ページを挿入
+            merged_doc = fitz.open(stream=merged_bytes, filetype="pdf")
+            self.doc.insert_pdf(merged_doc, start_at=insert_at)
+            merged_doc.close()
 
             # 元ページは挿入により +1 シフトしているので +1 した位置を逆順削除
             for i in sorted(targets, reverse=True):
