@@ -2,7 +2,7 @@
 
 *A living document updated after each milestone. Lessons feed forward into future planning.*
 
-## Milestone: v1.0 — コード最適化 MVP
+## Milestone: v1.3.0 — コード最適化 MVP
 
 **Shipped:** 2026-06-03
 **Phases:** 3 | **Plans:** 8 | **Sessions:** 数セッション（2026-06-03 に 3 フェーズを集中実行）
@@ -48,13 +48,13 @@
 
 | Milestone | Sessions | Phases | Key Change |
 |-----------|----------|--------|------------|
-| v1.0 | 数 | 3 | GSD フルチェーン（discuss→plan→execute→verify）を最適化プロジェクトに初適用 |
+| v1.3.0 | 数 | 3 | GSD フルチェーン（discuss→plan→execute→verify）を最適化プロジェクトに初適用 |
 
 ### Cumulative Quality
 
 | Milestone | Tests | Coverage | Zero-Dep Additions |
 |-----------|-------|----------|-------------------|
-| v1.0 | 199 passed | （未計測） | 全要件を新規依存ゼロで達成 |
+| v1.3.0 | 199 passed | （未計測） | 全要件を新規依存ゼロで達成 |
 
 ### Top Lessons (Verified Across Milestones)
 

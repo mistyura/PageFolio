@@ -1,11 +1,11 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.0
+milestone: v1.3.0
 milestone_name: milestone
 status: Awaiting next milestone
 stopped_at: Completed 03-02-PLAN.md
 last_updated: "2026-06-03T06:42:26.366Z"
-last_activity: 2026-06-03 — Milestone v1.0 completed and archived
+last_activity: 2026-06-03 — Milestone v1.3.0 completed and archived
 progress:
   total_phases: 3
   completed_phases: 3
@@ -25,10 +25,10 @@ See: .planning/PROJECT.md (updated 2026-06-01)
 
 ## Current Position
 
-Phase: Milestone v1.0 complete
+Phase: Milestone v1.3.0 complete
 Plan: —
 Status: Awaiting next milestone
-Last activity: 2026-06-03 — Milestone v1.0 completed and archived
+Last activity: 2026-06-03 — Milestone v1.3.0 completed and archived
 
 ## Performance Metrics
 

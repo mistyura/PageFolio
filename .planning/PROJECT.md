@@ -60,7 +60,7 @@ PageFolio の既存コードベースに対する最適化プロジェクト。
 
 ### Active
 
-- （なし — 全要件が Validated へ移行。マイルストーン v1.0 完了）
+- （なし — 全要件が Validated へ移行。マイルストーン v1.3.0 完了）
 
 ### Out of Scope
 
@@ -83,14 +83,14 @@ PageFolio の既存コードベースに対する最適化プロジェクト。
 
 ## Current State
 
-**Shipped: v1.0 コード最適化 MVP (2026-06-03)** — 3 フェーズ / 8 プラン / 全 10 要件達成。
+**Shipped: v1.3.0 コード最適化 MVP (2026-06-03)** — 3 フェーズ / 8 プラン / 全 10 要件達成。
 
 - **Undo/Redo:** `doc.tobytes()` 全廃の対称デルタ設計。deque(maxlen) で O(1) スタック管理。大きな PDF でも非ブロッキング。
 - **プレビュー:** `page.get_pixmap()` 同期直接呼び出しでフルシリアライズを排除。
 - **構造:** `dialogs/` サブパッケージ化、`constants.py` を `lang.py`/`themes.py` に分割（後方互換 import 維持）。
 - **API:** `settings` のプライベート変数外部アクセスを公開 API 化（stale binding 解消）。
 - **テスト:** Undo 往復・プレビュー回帰・import 回帰を整備。**pytest 199 件全通・ruff クリーン**。
-- コードベースマップ: `.planning/codebase/` / マイルストーン詳細: `.planning/milestones/v1.0-ROADMAP.md`・`.planning/MILESTONES.md`
+- コードベースマップ: `.planning/codebase/` / マイルストーン詳細: `.planning/milestones/v1.3.0-ROADMAP.md`・`.planning/MILESTONES.md`
 
 ### Next Milestone Goals (候補・未確定)
 
@@ -110,4 +110,4 @@ PageFolio の既存コードベースに対する最適化プロジェクト。
 4. 決定事項 → Key Decisions を更新
 
 ---
-*Last updated: 2026-06-03 after v1.0 milestone (コード最適化 MVP) — 全 3 フェーズ・10 要件達成。*
+*Last updated: 2026-06-03 after v1.3.0 milestone (コード最適化 MVP) — 全 3 フェーズ・10 要件達成。*

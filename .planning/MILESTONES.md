@@ -1,6 +1,6 @@
 # Milestones
 
-## v1.0 コード最適化 MVP (Shipped: 2026-06-03)
+## v1.3.0 コード最適化 MVP (Shipped: 2026-06-03)
 
 **Phases completed:** 3 phases, 8 plans, 3 tasks
 
