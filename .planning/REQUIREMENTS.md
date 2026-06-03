@@ -14,18 +14,18 @@
   - 対象: `pagefolio/file_ops.py` (lines 63–93)
   - 完了: 01-01-PLAN にて全パスの doc.tobytes() を op 別デルタで置換済み (2026-06-03)
 
-- [ ] **BUG-03**: ページ切り替え時にプレビューのシリアライズを行わない
+- [x] **BUG-03**: ページ切り替え時にプレビューのシリアライズを行わない
   - 現状: `_show_preview()` ごとに `self.doc.tobytes()` を呼んでバックグラウンドスレッドに渡す
   - 対象: `pagefolio/viewer.py` (line 69)
   - 変更方針: ページ単位で `page.get_pixmap()` を直接呼ぶ方式に変更
 
 ### リファクタリング
 
-- [ ] **REFAC-01**: `dialogs.py` を `pagefolio/dialogs/` サブパッケージに分割する
+- [x] **REFAC-01**: `dialogs.py` を `pagefolio/dialogs/` サブパッケージに分割する
   - 現状: 1,191 行・6 クラスが 1 ファイルに混在
   - 分割案: `__init__.py`, `about.py`, `settings.py`, `plugin.py`, `merge.py`, `llm_config.py`
 
-- [ ] **REFAC-02**: `constants.py` を `lang.py` / `themes.py` に分割する
+- [x] **REFAC-02**: `constants.py` を `lang.py` / `themes.py` に分割する
   - 現状: 711 行・テーマ/言語/バージョン/拡張子定数が混在
   - 分割案: `lang.py`（LANG辞書）、`themes.py`（THEMES・C）、`constants.py`（バージョン・拡張子）
 
@@ -43,7 +43,7 @@
 - [x] **TEST-01**: BUG-01（挿入 Undo）の動作を検証するユニットテスト
   - テスト場所: `tests/test_pdf_ops.py`
 
-- [ ] **TEST-02**: BUG-03（プレビュー生成）の回帰テスト
+- [x] **TEST-02**: BUG-03（プレビュー生成）の回帰テスト
   - `_show_preview()` が `tobytes()` を呼ばないことを確認
   - テスト場所: `tests/test_utils.py` または新規 `tests/test_viewer.py`
 
@@ -73,10 +73,10 @@
 | BUG-02 | Phase 1: Undo/Redo 修正 | Complete |
 | REFAC-03 | Phase 1: Undo/Redo 修正 | Complete |
 | TEST-01 | Phase 1: Undo/Redo 修正 | Complete |
-| BUG-03 | Phase 2: プレビュー最適化とリファクタリング | Pending |
-| REFAC-01 | Phase 2: プレビュー最適化とリファクタリング | Pending |
-| REFAC-02 | Phase 2: プレビュー最適化とリファクタリング | Pending |
-| TEST-02 | Phase 2: プレビュー最適化とリファクタリング | Pending |
+| BUG-03 | Phase 2: プレビュー最適化とリファクタリング | Complete |
+| REFAC-01 | Phase 2: プレビュー最適化とリファクタリング | Complete |
+| REFAC-02 | Phase 2: プレビュー最適化とリファクタリング | Complete |
+| TEST-02 | Phase 2: プレビュー最適化とリファクタリング | Complete |
 | REFAC-04 | Phase 3: API 整理と回帰テスト | Pending |
 | TEST-03 | Phase 3: API 整理と回帰テスト | Pending |
 
