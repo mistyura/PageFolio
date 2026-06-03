@@ -58,7 +58,15 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. `constants.py` が `lang.py` / `themes.py` に分割され、既存の `C["BG_DARK"]` 等の参照が動作する
   4. `pytest` が全通し、BUG-03 の回帰テスト（TEST-02）が含まれる
 
-**Plans**: TBD
+**Plans**: 3 plans
+
+Plans:
+
+**Wave 1** *(3 plans 並行実行可能 — files_modified に重複なし)*
+
+- [ ] 02-01-PLAN.md — プレビュー同期化・純関数 _render_preview_pixmap 抽出・回帰テスト（BUG-03 / TEST-02）
+- [ ] 02-02-PLAN.md — constants.py を themes.py / lang.py に分割し再エクスポートで後方互換維持（REFAC-02）
+- [ ] 02-03-PLAN.md — dialogs.py を pagefolio/dialogs/ サブパッケージへ分割（REFAC-01）
 
 ### Phase 3: API 整理と回帰テスト
 
@@ -79,5 +87,5 @@ Phases execute in numeric order: 1 → 2 → 3
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Undo/Redo 修正 | 3/3 | Complete    | 2026-06-03 |
-| 2. プレビュー最適化とリファクタリング | 0/TBD | Not started | - |
+| 2. プレビュー最適化とリファクタリング | 0/3 | Not started | - |
 | 3. API 整理と回帰テスト | 0/TBD | Not started | - |
