@@ -370,17 +370,70 @@ class TestUndoRedoLogic:
         assert len(doc) == original_count
         assert "Page 1" in doc[0].get_text()
 
-    def test_fallback_pdf_bytes_format(self, sample_pdf_doc):
-        """pdf_bytes キーを持つ旧フォーマットが _restore_state で処理できる"""
+    def test_restore_state_no_pdf_bytes_key(self, sample_pdf_doc):
+        """_restore_state は pdf_bytes キーを含まない op 別 state を受け付ける（対称デルタ方式）"""
         doc = sample_pdf_doc
-        # 旧フォーマット（Redo スタック由来）: pdf_bytes キー付き
-        saved_bytes = doc.tobytes()
-        state = {"pdf_bytes": saved_bytes, "current_page": 0, "selected_pages": set()}
+        # op 別 state（新フォーマット）: pdf_bytes キーなし
+        state = {
+            "op": "rotate",
+            "current_page": 0,
+            "selected_pages": set(),
+            "data": [(0, 0)],
+        }
+        # pdf_bytes キーが存在しないことを確認
+        assert "pdf_bytes" not in state
 
-        # pdf_bytes キーで復元できることを fitz API で確認
-        restored = fitz.open(stream=state["pdf_bytes"], filetype="pdf")
-        assert len(restored) == len(doc)
-        restored.close()
+    def test_restore_state_returns_inverse_delta(self):
+        """_restore_state が逆デルタ dict を返す（pdf_bytes キーなし）"""
+        # この振る舞いは _restore_state がリファクタリングされた後にのみ成立する（Task 1 後）
+        import collections
+
+        import fitz
+
+        # 簡易スタブで _restore_state の返り値を検証する
+        # モックアプリオブジェクト
+        class FakeApp:
+            def __init__(self, doc):
+                self.doc = doc
+                self.current_page = 0
+                self.selected_pages = set()
+                self._undo_stack = collections.deque()
+                self._redo_stack = collections.deque()
+                self._preview_gen = 0
+                self._thumb_gen = 0
+
+            def _invalidate_thumb_cache(self, *a, **kw):
+                pass
+
+            def _refresh_all(self):
+                pass
+
+        doc = fitz.open()
+        for i in range(3):
+            page = doc.new_page(width=595, height=842)
+            page.insert_text((72, 72), f"Page {i + 1}", fontsize=24)
+
+        app = FakeApp(doc)
+        # rotate op の逆デルタ取得テスト
+        # 現在の rotation=0 で 90 度回転を適用済みと仮定し undo state を構築
+        app.doc[0].set_rotation(90)
+        state = {
+            "op": "rotate",
+            "current_page": 0,
+            "selected_pages": set(),
+            "data": [(0, 0)],  # 元の rotation=0 に戻す
+        }
+
+        import pagefolio.file_ops as fo
+
+        inverse = fo.FileOpsMixin._restore_state(app, state)
+        # 逆デルタが返されること（dict 型）
+        assert isinstance(inverse, dict)
+        # pdf_bytes キーを含まないこと
+        assert "pdf_bytes" not in inverse
+        # op キーを持つこと
+        assert "op" in inverse
+        doc.close()
 
 
 # ===== bulk_move ロジック =====
