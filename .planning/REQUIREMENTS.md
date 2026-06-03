@@ -34,9 +34,10 @@
   - 対象: `pagefolio/file_ops.py`
   - 完了: 01-02-PLAN にて deque 化・手動 pop(0) 削除済み (2026-06-03)
 
-- [ ] **REFAC-04**: `settings._current_font_size` 外部アクセスを公開関数に変更する
+- [x] **REFAC-04**: `settings._current_font_size` 外部アクセスを公開関数に変更する
   - 現状: `app.py` が `_settings_mod._current_font_size` を直接書き換え
   - 変更後: `set_current_font_size(size)` 関数を `settings.py` に追加し、`app.py` から呼ぶ
+  - 完了: 03-01-PLAN にて setter/getter 追加・全 write/read を API 経由に変更済み (2026-06-03)
 
 ### テスト
 
@@ -77,7 +78,7 @@
 | REFAC-01 | Phase 2: プレビュー最適化とリファクタリング | Complete |
 | REFAC-02 | Phase 2: プレビュー最適化とリファクタリング | Complete |
 | TEST-02 | Phase 2: プレビュー最適化とリファクタリング | Complete |
-| REFAC-04 | Phase 3: API 整理と回帰テスト | Pending |
+| REFAC-04 | Phase 3: API 整理と回帰テスト | Complete |
 | TEST-03 | Phase 3: API 整理と回帰テスト | Pending |
 
 ---

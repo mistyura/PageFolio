@@ -85,7 +85,7 @@ Plans:
 
 **Wave 1**
 
-- [ ] 03-01-PLAN.md — settings 公開 API 化（set_current_font_size / get_current_font_size 追加・write/read 全箇所を API 経由に）（REFAC-04）
+- [x] 03-01-PLAN.md — settings 公開 API 化（set_current_font_size / get_current_font_size 追加・write/read 全箇所を API 経由に）（REFAC-04）
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
@@ -100,4 +100,4 @@ Phases execute in numeric order: 1 → 2 → 3
 |-------|----------------|--------|-----------|
 | 1. Undo/Redo 修正 | 3/3 | Complete    | 2026-06-03 |
 | 2. プレビュー最適化とリファクタリング | 3/3 | Complete    | 2026-06-03 |
-| 3. API 整理と回帰テスト | 0/2 | Not started | - |
+| 3. API 整理と回帰テスト | 1/2 | Executing    | - |
