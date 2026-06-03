@@ -4,13 +4,15 @@
 
 ### バグ修正
 
-- [ ] **BUG-01**: ページ挿入操作を Undo すると、挿入前の状態に正しく戻る
+- [x] **BUG-01**: ページ挿入操作を Undo すると、挿入前の状態に正しく戻る
   - 現状: `_save_undo("insert", ...)` で挿入ページ数が常に 0 → Undo が何もしない
   - 対象: `pagefolio/file_ops.py` (line 51, 121–123)
+  - 完了: 01-01-PLAN にて対称デルタ化と insert bytes キャプチャで修正済み (2026-06-03)
 
-- [ ] **BUG-02**: 大きな PDF で Undo を実行しても UI がブロックしない
+- [x] **BUG-02**: 大きな PDF で Undo を実行しても UI がブロックしない
   - 現状: Undo 時に `doc.tobytes()` でフルシリアライズが走る
   - 対象: `pagefolio/file_ops.py` (lines 63–93)
+  - 完了: 01-01-PLAN にて全パスの doc.tobytes() を op 別デルタで置換済み (2026-06-03)
 
 - [ ] **BUG-03**: ページ切り替え時にプレビューのシリアライズを行わない
   - 現状: `_show_preview()` ごとに `self.doc.tobytes()` を呼んでバックグラウンドスレッドに渡す
@@ -66,8 +68,8 @@
 
 | REQ-ID | Phase | Status |
 |--------|-------|--------|
-| BUG-01 | Phase 1: Undo/Redo 修正 | Pending |
-| BUG-02 | Phase 1: Undo/Redo 修正 | Pending |
+| BUG-01 | Phase 1: Undo/Redo 修正 | Complete |
+| BUG-02 | Phase 1: Undo/Redo 修正 | Complete |
 | REFAC-03 | Phase 1: Undo/Redo 修正 | Pending |
 | TEST-01 | Phase 1: Undo/Redo 修正 | Pending |
 | BUG-03 | Phase 2: プレビュー最適化とリファクタリング | Pending |

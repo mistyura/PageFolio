@@ -36,7 +36,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Plans**: 3 plansPlans:
 **Wave 1**
 
-- [ ] 01-01-PLAN.md — Undo/Redo の対称デルタ化・挿入 Undo 修正・pdf_bytes 撤廃（BUG-01/BUG-02）
+- [x] 01-01-PLAN.md — Undo/Redo の対称デルタ化・挿入 Undo 修正・pdf_bytes 撤廃（BUG-01/BUG-02）
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
@@ -78,6 +78,6 @@ Phases execute in numeric order: 1 → 2 → 3
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Undo/Redo 修正 | 0/3 | Not started | - |
+| 1. Undo/Redo 修正 | 1/3 | In progress | - |
 | 2. プレビュー最適化とリファクタリング | 0/TBD | Not started | - |
 | 3. API 整理と回帰テスト | 0/TBD | Not started | - |
