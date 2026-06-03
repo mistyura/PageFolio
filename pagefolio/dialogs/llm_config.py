@@ -9,7 +9,7 @@ from tkinter import ttk
 
 from pagefolio.constants import LANG, C
 from pagefolio.ocr import MAX_OCR_MAX_TOKENS, fetch_lm_studio_models
-from pagefolio.settings import _current_font_size
+from pagefolio.settings import get_current_font_size
 
 logger = logging.getLogger(__name__)
 
@@ -48,7 +48,7 @@ class LLMConfigDialog(tk.Toplevel):
         try:
             fs = int(self._font(0)[1])
         except Exception:
-            fs = _current_font_size
+            fs = get_current_font_size()
         w = max(520, int(fs * 42))
         h = max(420, self.winfo_reqheight() + 20)
         px = parent.winfo_rootx() + parent.winfo_width() // 2

@@ -11,7 +11,7 @@ from tkinter import messagebox, ttk
 import fitz
 
 from pagefolio.constants import LANG, C
-from pagefolio.settings import _current_font_size
+from pagefolio.settings import get_current_font_size
 
 logger = logging.getLogger(__name__)
 
@@ -30,7 +30,7 @@ class MergeOrderDialog(tk.Toplevel):
 
         self.paths = paths
         self.callback = callback
-        self._font_size = _current_font_size
+        self._font_size = get_current_font_size()
 
         self._page_counts = {}
         for p in paths:
@@ -210,7 +210,7 @@ class MergeResizeDialog(tk.Toplevel):
 
         self.page_infos = page_infos  # [(page_no_1based, width, height), ...]
         self.callback = callback
-        self._font_size = _current_font_size
+        self._font_size = get_current_font_size()
         self._font_func = font_func
 
         self._build()

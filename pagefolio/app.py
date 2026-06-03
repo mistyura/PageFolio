@@ -21,6 +21,7 @@ from pagefolio.settings import (
     _apply_theme,
     _load_settings,
     _save_settings,
+    set_current_font_size,
 )
 from pagefolio.ui_builder import UIBuilderMixin
 from pagefolio.viewer import ViewerMixin
@@ -46,9 +47,7 @@ class PDFEditorApp(
         self.settings = _load_settings()
         self.font_size = self.settings.get("font_size", 10)
         self.lang = self.settings.get("lang", "ja")
-        import pagefolio.settings as _settings_mod
-
-        _settings_mod._current_font_size = self.font_size
+        set_current_font_size(self.font_size)
         _apply_theme(self.settings.get("theme", "dark"))
         self.root.configure(bg=C["BG_DARK"])
 
@@ -343,9 +342,7 @@ class PDFEditorApp(
         self.settings = new_settings
         self.font_size = new_settings.get("font_size", 10)
         self.lang = new_settings.get("lang", self.lang)
-        import pagefolio.settings as _settings_mod
-
-        _settings_mod._current_font_size = self.font_size
+        set_current_font_size(self.font_size)
         _apply_theme(new_settings.get("theme", "dark"))
         _save_settings(new_settings)
         self._rebuild_ui()
