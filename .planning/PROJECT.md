@@ -74,12 +74,30 @@ PageFolio の既存コードベースに対する最適化プロジェクト。
 
 | 決定事項 | 根拠 | 状態 |
 |---------|------|------|
-| BUG-02 対応：差分保存方式ではなくページ単位キャッシュ方式 | Undo スタックの設計を全面置き換えするより、プレビュー側のシリアライズをなくす方が影響範囲が小さい | 検討中 |
+| BUG-02 対応：op 別逆デルタによる対称 Undo/Redo 設計 | `doc.tobytes()` 全体シリアライズを撤廃し、op ごとに逆操作を保持することで大きな PDF でも UI をブロックしない | ✓ 検証済み（Phase 1・全 op 往復安全網テストで対称デルタバグ 3 件を発見・修正） |
 | BUG-03 対応：`doc.tobytes()` をバックグラウンドスレッドに渡すのをやめ、ページ単位で `page.get_pixmap()` を直接呼ぶ | fitz のスレッドセーフ制約を迂回しつつ、フルシリアライズを排除できる | 検証済み（Phase 2・同期化により `_preview_gen`/プレースホルダ廃止） |
 | DEBT-01：dialogs をサブパッケージ `pagefolio/dialogs/` に分割 | `dialogs.py` 単体でのモジュール分割より import パスの変更が最小化される | 検証済み（Phase 2・6クラスを5ファイルへ・`__init__.py` 再エクスポート） |
 | DEBT-02：constants を `themes.py`/`lang.py` に分割し再エクスポート | 711行のモジュールを責務別に分割しつつ既存 import 表面を温存 | 検証済み（Phase 2・`C` 識別子保持で in-place 更新を維持） |
 | DEBT-04：`_current_font_size` を write/read 両面で公開 API 化（最小案不採用） | write のみ setter 化では dialogs の private import と stale binding が残る。setter/getter 一本化で DEBT-04 の趣旨（外部アクセス全廃）を満たす | 検証済み（Phase 3・`set_current_font_size`/`get_current_font_size`・単純代入のみ D-04） |
 | TEST-03：import 回帰テストを単一ファイル `tests/test_imports.py` に集約（明示 import + assert） | 動的 importlib 方式より「何が壊れたか」が一目瞭然。責務を 1 箇所に集約し見通しを確保 | 検証済み（Phase 3・D-06/D-09・Tk 非依存 import のみ） |
+
+## Current State
+
+**Shipped: v1.0 コード最適化 MVP (2026-06-03)** — 3 フェーズ / 8 プラン / 全 10 要件達成。
+
+- **Undo/Redo:** `doc.tobytes()` 全廃の対称デルタ設計。deque(maxlen) で O(1) スタック管理。大きな PDF でも非ブロッキング。
+- **プレビュー:** `page.get_pixmap()` 同期直接呼び出しでフルシリアライズを排除。
+- **構造:** `dialogs/` サブパッケージ化、`constants.py` を `lang.py`/`themes.py` に分割（後方互換 import 維持）。
+- **API:** `settings` のプライベート変数外部アクセスを公開 API 化（stale binding 解消）。
+- **テスト:** Undo 往復・プレビュー回帰・import 回帰を整備。**pytest 199 件全通・ruff クリーン**。
+- コードベースマップ: `.planning/codebase/` / マイルストーン詳細: `.planning/milestones/v1.0-ROADMAP.md`・`.planning/MILESTONES.md`
+
+### Next Milestone Goals (候補・未確定)
+
+次マイルストーンの要件は `/gsd-new-milestone` で確定する。現時点の候補（Out of Scope から昇格しうるもの）:
+- サムネイル仮想化によるパフォーマンス改善（大量ページ対応）
+- 印刷機能 / 暗号化 PDF 対応（機能追加。最適化スコープからの拡張）
+- コードレビュー指摘の解消（`except` ロガー付与、`font_size` デフォルト統一など — 軽微な保守債）
 
 ## Evolution
 
@@ -92,4 +110,4 @@ PageFolio の既存コードベースに対する最適化プロジェクト。
 4. 決定事項 → Key Decisions を更新
 
 ---
-*Last updated: 2026-06-03 — Phase 3 (API 整理と回帰テスト) complete: REFAC-04/TEST-03. マイルストーン v1.0 全 3 フェーズ完了。*
+*Last updated: 2026-06-03 after v1.0 milestone (コード最適化 MVP) — 全 3 フェーズ・10 要件達成。*
