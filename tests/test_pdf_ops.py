@@ -570,6 +570,503 @@ class TestInsertMergeUndoRedo:
             assert "pdf_bytes" not in entry, f"pdf_bytes が残存: {entry.keys()}"
 
 
+# ===== 挿入 Undo/Redo 内容同一性検証 =====
+
+
+def _page_digest(page):
+    """ページのテキスト内容から digest を返す（D-07 内容同一性用）。
+    fitz.Page を受け取り、get_text() の文字列を返す。
+    sample_pdf_doc/multi_pdf_files は "Page N" / "File1 PageM" 形式のテキストを持つため
+    テキストベースの同一性検証が確実・高速。
+    """
+    return page.get_text().strip()
+
+
+class TestInsertUndoRedo:
+    """挿入 Undo/Redo の内容同一性・往復検証（TEST-01 / D-07）"""
+
+    def _make_fake_app(self, doc):
+        """FileOpsMixin を使う FakeApp を生成する"""
+        import collections
+
+        import pagefolio.file_ops as fo
+
+        class FakeApp(fo.FileOpsMixin):
+            MAX_UNDO = 20
+
+            def __init__(self, d):
+                self.doc = d
+                self.current_page = 0
+                self.selected_pages = set()
+                self._undo_stack = collections.deque(maxlen=self.MAX_UNDO)
+                self._redo_stack = collections.deque(maxlen=self.MAX_UNDO)
+                self._preview_gen = 0
+                self._thumb_gen = 0
+
+            def _invalidate_thumb_cache(self, *a, **kw):
+                pass
+
+            def _refresh_all(self):
+                pass
+
+            def _t(self, key):
+                return key
+
+            def _set_status(self, *a):
+                pass
+
+        return FakeApp(doc)
+
+    def test_insert_undo_restores_page_count(self, sample_pdf_doc, multi_pdf_files):
+        """insert → undo で len(doc) が元に戻る（BUG-01 ページ数検証）"""
+        app = self._make_fake_app(sample_pdf_doc)
+        original_count = len(app.doc)  # 3
+
+        # insert: 2ページ PDF を位置1に挿入
+        app._save_undo("insert", insert_at=1)
+        src = fitz.open(multi_pdf_files[1])  # 2ページ
+        app.doc.insert_pdf(src, start_at=1)
+        src.close()
+        app._undo_stack[-1]["data"][1] = 2
+        assert len(app.doc) == original_count + 2
+
+        # Undo: ページ数が元に戻る
+        app._undo()
+        assert len(app.doc) == original_count
+
+        # Undo/Redo state に pdf_bytes キーが生成されないこと（D-05）
+        for entry in app._redo_stack:
+            assert "pdf_bytes" not in entry
+
+    def test_insert_undo_restores_content(self, sample_pdf_doc, multi_pdf_files):
+        """insert → undo 後の残ページ digest が挿入前と一致する（D-07 内容同一性）"""
+        app = self._make_fake_app(sample_pdf_doc)
+
+        # 挿入前のページ digest を記録
+        before_digests = [_page_digest(app.doc[i]) for i in range(len(app.doc))]
+
+        # insert: 1ページを位置2に挿入
+        app._save_undo("insert", insert_at=2)
+        src = fitz.open(multi_pdf_files[0])  # 1ページ: "File1 Page1"
+        app.doc.insert_pdf(src, start_at=2)
+        src.close()
+        app._undo_stack[-1]["data"][1] = 1
+
+        # Undo
+        app._undo()
+
+        # 残ページの digest が挿入前と一致する
+        after_digests = [_page_digest(app.doc[i]) for i in range(len(app.doc))]
+        assert before_digests == after_digests
+
+        # Undo/Redo state に pdf_bytes キーが生成されないこと（D-05）
+        for entry in app._redo_stack:
+            assert "pdf_bytes" not in entry
+
+    def test_insert_undo_redo_roundtrip(self, sample_pdf_doc, multi_pdf_files):
+        """do→undo→redo で len と挿入ページ digest が一致する（D-07 redo 往復）"""
+        app = self._make_fake_app(sample_pdf_doc)
+        original_count = len(app.doc)  # 3
+        insert_at = 1
+
+        # 挿入前の全ページ digest を記録
+        before_digests = [_page_digest(app.doc[i]) for i in range(len(app.doc))]
+
+        # insert: 1ページを位置1に挿入（"File1 Page1" テキストを持つ）
+        app._save_undo("insert", insert_at=insert_at)
+        src = fitz.open(multi_pdf_files[0])  # 1ページ
+        inserted_digest = _page_digest(src[0])
+        app.doc.insert_pdf(src, start_at=insert_at)
+        src.close()
+        app._undo_stack[-1]["data"][1] = 1
+        assert len(app.doc) == original_count + 1
+
+        # 挿入後の挿入ページ digest を確認
+        assert _page_digest(app.doc[insert_at]) == inserted_digest
+
+        # Undo
+        app._undo()
+        assert len(app.doc) == original_count
+        after_undo_digests = [_page_digest(app.doc[i]) for i in range(len(app.doc))]
+        assert before_digests == after_undo_digests
+
+        # Undo/Redo state に pdf_bytes キーが生成されないこと（D-05）
+        for entry in app._redo_stack:
+            assert "pdf_bytes" not in entry
+
+        # Redo: 挿入ページが内容ごと復元される
+        app._redo()
+        assert len(app.doc) == original_count + 1
+        assert _page_digest(app.doc[insert_at]) == inserted_digest
+
+        # Undo/Redo state に pdf_bytes キーが生成されないこと（D-05）
+        for entry in app._undo_stack:
+            assert "pdf_bytes" not in entry
+
+
+# ===== 全 op 最小 do→undo→redo 往復テスト（安全網）=====
+
+
+class TestAllOpsUndoRedoRoundtrip:
+    """全 op（rotate/delete/move/duplicate/merge/bulk_move/bulk_crop/merge_resize）
+    の最小 do→undo→redo 往復検証（Deferred 安全網 / D-04/D-05 整合）"""
+
+    def _make_fake_app(self, doc):
+        """FileOpsMixin を使う FakeApp を生成する"""
+        import collections
+
+        import pagefolio.file_ops as fo
+
+        class FakeApp(fo.FileOpsMixin):
+            MAX_UNDO = 20
+
+            def __init__(self, d):
+                self.doc = d
+                self.current_page = 0
+                self.selected_pages = set()
+                self._undo_stack = collections.deque(maxlen=self.MAX_UNDO)
+                self._redo_stack = collections.deque(maxlen=self.MAX_UNDO)
+                self._preview_gen = 0
+                self._thumb_gen = 0
+
+            def _invalidate_thumb_cache(self, *a, **kw):
+                pass
+
+            def _refresh_all(self):
+                pass
+
+            def _t(self, key):
+                return key
+
+            def _set_status(self, *a):
+                pass
+
+        return FakeApp(doc)
+
+    def _make_full_fake_app(self, doc):
+        """FileOpsMixin + PageOpsMixin を使う FakeApp を生成する"""
+        import collections
+        import types
+
+        import pagefolio.file_ops as fo
+        import pagefolio.page_ops as po
+
+        class FakeApp(fo.FileOpsMixin, po.PageOpsMixin):
+            MAX_UNDO = 20
+
+            def __init__(self, d):
+                self.doc = d
+                self.current_page = 0
+                self.selected_pages = set()
+                self._undo_stack = collections.deque(maxlen=self.MAX_UNDO)
+                self._redo_stack = collections.deque(maxlen=self.MAX_UNDO)
+                self._preview_gen = 0
+                self._thumb_gen = 0
+                self.lang = "ja"
+
+            def _invalidate_thumb_cache(self, *a, **kw):
+                pass
+
+            def _refresh_all(self):
+                pass
+
+            def _t(self, key):
+                return key
+
+            def _set_status(self, *a):
+                pass
+
+        app = FakeApp(doc)
+        app.plugin_manager = types.SimpleNamespace(fire_event=lambda *a, **kw: None)
+        return app
+
+    def test_rotate_roundtrip(self, sample_pdf_doc):
+        """rotate: 90度回転 → undo で 0 → redo で 90（rotation 属性で検証）"""
+        app = self._make_fake_app(sample_pdf_doc)
+        targets = [0]
+        original_rot = app.doc[0].rotation  # 0
+
+        # do: 90度回転
+        app._save_undo("rotate", targets=targets)
+        app.doc[0].set_rotation((app.doc[0].rotation + 90) % 360)
+        assert app.doc[0].rotation == 90
+
+        # undo
+        app._undo()
+        assert app.doc[0].rotation == original_rot
+
+        # redo
+        app._redo()
+        assert app.doc[0].rotation == 90
+
+        # pdf_bytes キーなし
+        for entry in list(app._undo_stack) + list(app._redo_stack):
+            assert "pdf_bytes" not in entry
+
+    def test_delete_roundtrip(self, sample_pdf_doc):
+        """delete: 1ページ削除 → undo で復元（digest 一致）→ redo で再削除"""
+        app = self._make_fake_app(sample_pdf_doc)
+        original_count = len(app.doc)  # 3
+        target_digest = _page_digest(app.doc[1])
+
+        # do: ページ1を削除
+        targets = sorted([1], reverse=True)
+        app._save_undo("delete", targets=targets)
+        app.doc.delete_page(1)
+        assert len(app.doc) == original_count - 1
+
+        # undo: ページが復元される
+        app._undo()
+        assert len(app.doc) == original_count
+        assert _page_digest(app.doc[1]) == target_digest
+
+        # redo: 再削除
+        app._redo()
+        assert len(app.doc) == original_count - 1
+
+        # undo/redo エントリのトップレベルキーに pdf_bytes がないことを確認
+        for entry in list(app._undo_stack) + list(app._redo_stack):
+            assert "pdf_bytes" not in entry
+
+    def test_move_roundtrip(self, sample_pdf_doc):
+        """move: ページ0→位置2移動 → undo で元順序 → redo で移動後順序"""
+        app = self._make_fake_app(sample_pdf_doc)
+        # 元の順序: [Page1, Page2, Page3]
+        original_order = [_page_digest(app.doc[i]) for i in range(len(app.doc))]
+
+        # do: ページ0を位置2（末尾）へ移動
+        src, dest = 0, 2
+        app._save_undo("move", src=src, actual_dest=dest)
+        app.doc.move_page(src, dest)
+        moved_order = [_page_digest(app.doc[i]) for i in range(len(app.doc))]
+        assert moved_order != original_order
+
+        # undo: 元の順序に戻る
+        app._undo()
+        after_undo = [_page_digest(app.doc[i]) for i in range(len(app.doc))]
+        assert after_undo == original_order
+
+        # redo: 移動後の順序に戻る
+        app._redo()
+        after_redo = [_page_digest(app.doc[i]) for i in range(len(app.doc))]
+        assert after_redo == moved_order
+
+        for entry in list(app._undo_stack) + list(app._redo_stack):
+            assert "pdf_bytes" not in entry
+
+    def test_duplicate_roundtrip(self, sample_pdf_doc):
+        """duplicate: ページ1複製 → undo で元ページ数 → redo で複製ページ復元"""
+        app = self._make_fake_app(sample_pdf_doc)
+        original_count = len(app.doc)  # 3
+        pno = 1
+        src_digest = _page_digest(app.doc[pno])
+
+        # do: ページ1を複製
+        app._save_undo("duplicate", pno=pno)
+        tmp = fitz.open()
+        tmp.insert_pdf(app.doc, from_page=pno, to_page=pno)
+        app.doc.insert_pdf(tmp, start_at=pno + 1)
+        tmp.close()
+        assert len(app.doc) == original_count + 1
+        assert _page_digest(app.doc[pno + 1]) == src_digest
+
+        # undo: 複製ページが削除される
+        app._undo()
+        assert len(app.doc) == original_count
+
+        # redo: 複製ページが復元される
+        app._redo()
+        assert len(app.doc) == original_count + 1
+        assert _page_digest(app.doc[pno + 1]) == src_digest
+
+        for entry in list(app._undo_stack) + list(app._redo_stack):
+            assert "pdf_bytes" not in entry
+
+    def test_merge_roundtrip(self, sample_pdf_doc, multi_pdf_files):
+        """merge: 1ページ PDF を結合 → undo でページ数復元 → redo で再結合"""
+        app = self._make_fake_app(sample_pdf_doc)
+        original_count = len(app.doc)  # 3
+
+        # do: 1ページ PDF を結合（末尾に追加）
+        app._save_undo("merge")
+        src = fitz.open(multi_pdf_files[0])  # 1ページ: "File1 Page1"
+        merged_digest = _page_digest(src[0])
+        app.doc.insert_pdf(src)
+        src.close()
+        assert len(app.doc) == original_count + 1
+
+        # undo: 結合ページが除去される
+        app._undo()
+        assert len(app.doc) == original_count
+
+        # redo: 結合ページが内容ごと復元される
+        app._redo()
+        assert len(app.doc) == original_count + 1
+        assert _page_digest(app.doc[original_count]) == merged_digest
+
+        for entry in list(app._undo_stack) + list(app._redo_stack):
+            assert "pdf_bytes" not in entry
+
+    def test_bulk_move_roundtrip(self, sample_pdf_doc):
+        """bulk_move: ページ順序変更 → undo で元順序 → redo で変更後順序"""
+        app = self._make_fake_app(sample_pdf_doc)
+        original_order = [_page_digest(app.doc[i]) for i in range(len(app.doc))]
+
+        # do: new_order = [2, 0, 1] (ページ2を先頭に)
+        new_order = [2, 0, 1]
+        app._save_undo("bulk_move", new_order=new_order)
+        app.doc.select(new_order)
+        reordered = [_page_digest(app.doc[i]) for i in range(len(app.doc))]
+        assert reordered != original_order
+
+        # undo: 元の順序に戻る
+        app._undo()
+        after_undo = [_page_digest(app.doc[i]) for i in range(len(app.doc))]
+        assert after_undo == original_order
+
+        # redo: 変更後の順序に戻る
+        app._redo()
+        after_redo = [_page_digest(app.doc[i]) for i in range(len(app.doc))]
+        assert after_redo == reordered
+
+        for entry in list(app._undo_stack) + list(app._redo_stack):
+            assert "pdf_bytes" not in entry
+
+    def test_bulk_crop_roundtrip(self, sample_pdf_doc):
+        """bulk_crop: 複数ページ cropbox 設定 → undo で元 cropbox → redo で新 cropbox"""
+        app = self._make_fake_app(sample_pdf_doc)
+        targets = [0, 1]
+
+        # 元の cropbox を記録
+        original_cropboxes = [
+            (
+                app.doc[i].cropbox.x0,
+                app.doc[i].cropbox.y0,
+                app.doc[i].cropbox.x1,
+                app.doc[i].cropbox.y1,
+            )
+            for i in targets
+        ]
+
+        # do: cropbox を縮小
+        crop_data = [
+            (i, (cb[0], cb[1], cb[2], cb[3]))
+            for i, cb in zip(targets, original_cropboxes, strict=True)
+        ]
+        app._save_undo("bulk_crop", crop_data=crop_data)
+        for i in targets:
+            mb = app.doc[i].mediabox
+            new_rect = fitz.Rect(mb.x0 + 20, mb.y0 + 20, mb.x1 - 20, mb.y1 - 20)
+            app.doc[i].set_cropbox(new_rect)
+        new_cropboxes = [
+            (
+                app.doc[i].cropbox.x0,
+                app.doc[i].cropbox.y0,
+                app.doc[i].cropbox.x1,
+                app.doc[i].cropbox.y1,
+            )
+            for i in targets
+        ]
+
+        # undo: 元の cropbox に戻る
+        app._undo()
+        after_undo_cropboxes = [
+            (
+                app.doc[i].cropbox.x0,
+                app.doc[i].cropbox.y0,
+                app.doc[i].cropbox.x1,
+                app.doc[i].cropbox.y1,
+            )
+            for i in targets
+        ]
+        for orig, after in zip(original_cropboxes, after_undo_cropboxes, strict=True):
+            for o, a in zip(orig, after, strict=True):
+                assert abs(o - a) < 1.0
+
+        # redo: 縮小後の cropbox に戻る
+        app._redo()
+        after_redo_cropboxes = [
+            (
+                app.doc[i].cropbox.x0,
+                app.doc[i].cropbox.y0,
+                app.doc[i].cropbox.x1,
+                app.doc[i].cropbox.y1,
+            )
+            for i in targets
+        ]
+        for new_cb, after in zip(new_cropboxes, after_redo_cropboxes, strict=True):
+            for n, a in zip(new_cb, after, strict=True):
+                assert abs(n - a) < 1.0
+
+        for entry in list(app._undo_stack) + list(app._redo_stack):
+            assert "pdf_bytes" not in entry
+
+    def test_merge_resize_roundtrip(self):
+        """merge_resize: A4×2 を A3 に結合 → undo で元ページ復元 → redo で再結合"""
+        import collections
+        import types
+
+        import pagefolio.file_ops as fo
+        import pagefolio.page_ops as po
+
+        class FakeApp(fo.FileOpsMixin, po.PageOpsMixin):
+            MAX_UNDO = 20
+
+            def __init__(self):
+                doc = fitz.open()
+                for i in range(3):
+                    p = doc.new_page(width=595, height=842)
+                    p.insert_text((72, 72), f"Page {i + 1}", fontsize=24)
+                self.doc = doc
+                self.current_page = 0
+                self.selected_pages = set()
+                self._undo_stack = collections.deque(maxlen=self.MAX_UNDO)
+                self._redo_stack = collections.deque(maxlen=self.MAX_UNDO)
+                self._preview_gen = 0
+                self._thumb_gen = 0
+                self.lang = "ja"
+
+            def _invalidate_thumb_cache(self, *a, **kw):
+                pass
+
+            def _refresh_all(self):
+                pass
+
+            def _t(self, key):
+                return key
+
+            def _set_status(self, *a):
+                pass
+
+        app = FakeApp()
+        app.plugin_manager = types.SimpleNamespace(fire_event=lambda *a, **kw: None)
+        original_count = len(app.doc)  # 3
+        original_digests = [_page_digest(app.doc[i]) for i in range(original_count)]
+
+        # do: ページ0,1を横並びで結合（A3 サイズ）
+        targets = [0, 1]
+        app._do_merge_resize(targets, "horizontal", 1190, 842)
+        # 元3ページ - 2ページ + 1ページ = 2ページ
+        assert len(app.doc) == original_count - 1
+        # 結合ページのサイズが A3 になっていること
+        assert abs(app.doc[0].rect.width - 1190) < 1
+
+        # undo: 元のページ構成に戻る
+        app._undo()
+        assert len(app.doc) == original_count
+        after_undo_digests = [_page_digest(app.doc[i]) for i in range(len(app.doc))]
+        assert original_digests == after_undo_digests
+
+        # redo: 結合後の状態に戻る
+        app._redo()
+        assert len(app.doc) == original_count - 1
+        assert abs(app.doc[0].rect.width - 1190) < 1
+
+        # pdf_bytes キーなし
+        for entry in list(app._undo_stack) + list(app._redo_stack):
+            assert "pdf_bytes" not in entry
+
+
 # ===== bulk_move ロジック =====
 
 
