@@ -51,14 +51,15 @@ PageFolio の既存コードベースに対する最適化プロジェクト。
 - ✓ BUG-01: ページ挿入 Undo が正しく元に戻る — Phase 1 で検証（対称デルタ化）
 - ✓ BUG-02: Undo 実行時のシリアライズコストを削減する — Phase 1 で検証（doc.tobytes() 全廃）
 - ✓ DEBT-03 (REFAC-03): Undo スタックを `collections.deque(maxlen=MAX_UNDO)` に変更する — Phase 1 で検証
+- ✓ BUG-03: プレビュー生成のフルシリアライズを廃止する — Phase 2 で検証（`page.get_pixmap()` 同期直接呼び出し・`doc.tobytes()` 全廃）
+- ✓ DEBT-01 (REFAC-01): `dialogs.py` をサブパッケージ `pagefolio/dialogs/` に分割する — Phase 2 で検証（後方互換 import 維持）
+- ✓ DEBT-02 (REFAC-02): `constants.py` を `lang.py`・`themes.py` に分割する — Phase 2 で検証（再エクスポートで後方互換維持）
+- ✓ TEST-02: BUG-03 の回帰テスト（`tests/test_viewer.py`）— Phase 2 で検証
 
 ### Active
 
-- [ ] BUG-03: プレビュー生成のフルシリアライズを廃止する
-- [ ] DEBT-01: `dialogs.py` をダイアログ単位のモジュールに分割する
-- [ ] DEBT-02: `constants.py` を `lang.py`・`themes.py` に分割する
-- [ ] DEBT-04: `settings._current_font_size` 外部アクセスを公開関数 `set_current_font_size()` 経由に変更する
-- [ ] TEST: 修正・リファクタ各項目に対応するユニットテストを追加する（Phase 1: Undo/Redo 往復テスト追加済み、Phase 2/3 分は継続）
+- [ ] DEBT-04 (REFAC-04): `settings._current_font_size` 外部アクセスを公開関数 `set_current_font_size()` 経由に変更する
+- [ ] TEST-03: import 回帰テスト整備（Phase 3 予定。Phase 1: Undo/Redo 往復・Phase 2: BUG-03 回帰は追加済み）
 
 ### Out of Scope
 
@@ -73,8 +74,9 @@ PageFolio の既存コードベースに対する最適化プロジェクト。
 | 決定事項 | 根拠 | 状態 |
 |---------|------|------|
 | BUG-02 対応：差分保存方式ではなくページ単位キャッシュ方式 | Undo スタックの設計を全面置き換えするより、プレビュー側のシリアライズをなくす方が影響範囲が小さい | 検討中 |
-| BUG-03 対応：`doc.tobytes()` をバックグラウンドスレッドに渡すのをやめ、ページ単位で `page.get_pixmap()` を直接呼ぶ | fitz のスレッドセーフ制約を迂回しつつ、フルシリアライズを排除できる | 検討中 |
-| DEBT-01：dialogs をサブパッケージ `pagefolio/dialogs/` に分割 | `dialogs.py` 単体でのモジュール分割より import パスの変更が最小化される | 検討中 |
+| BUG-03 対応：`doc.tobytes()` をバックグラウンドスレッドに渡すのをやめ、ページ単位で `page.get_pixmap()` を直接呼ぶ | fitz のスレッドセーフ制約を迂回しつつ、フルシリアライズを排除できる | 検証済み（Phase 2・同期化により `_preview_gen`/プレースホルダ廃止） |
+| DEBT-01：dialogs をサブパッケージ `pagefolio/dialogs/` に分割 | `dialogs.py` 単体でのモジュール分割より import パスの変更が最小化される | 検証済み（Phase 2・6クラスを5ファイルへ・`__init__.py` 再エクスポート） |
+| DEBT-02：constants を `themes.py`/`lang.py` に分割し再エクスポート | 711行のモジュールを責務別に分割しつつ既存 import 表面を温存 | 検証済み（Phase 2・`C` 識別子保持で in-place 更新を維持） |
 
 ## Evolution
 
@@ -87,4 +89,4 @@ PageFolio の既存コードベースに対する最適化プロジェクト。
 4. 決定事項 → Key Decisions を更新
 
 ---
-*Last updated: 2026-06-03 — Phase 1 (Undo/Redo 修正) complete: BUG-01/BUG-02/REFAC-03/TEST-01*
+*Last updated: 2026-06-03 — Phase 2 (プレビュー最適化とリファクタリング) complete: BUG-03/REFAC-01/REFAC-02/TEST-02*
