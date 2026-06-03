@@ -60,8 +60,6 @@ class FileOpsMixin:
             #         "orig_pages": [(idx, bytes)]}
             state["data"] = kwargs["data"]
         self._undo_stack.append(state)
-        if len(self._undo_stack) > self.MAX_UNDO:
-            self._undo_stack.pop(0)
         self._redo_stack.clear()
 
     def _undo(self):

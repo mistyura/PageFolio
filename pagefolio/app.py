@@ -6,6 +6,7 @@
 import logging
 import os
 import tkinter as tk
+from collections import deque
 from tkinter import messagebox
 
 from pagefolio.constants import LANG, SUPPORTED_EXTENSIONS, C
@@ -80,8 +81,8 @@ class PDFEditorApp(
         self.crop_mode = False
 
         # Undo / Redo
-        self._undo_stack = []
-        self._redo_stack = []
+        self._undo_stack = deque(maxlen=self.MAX_UNDO)
+        self._redo_stack = deque(maxlen=self.MAX_UNDO)
         self._pending_click = None
 
         # バックグラウンドレンダリング世代カウンター
