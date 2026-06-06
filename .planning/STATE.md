@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.4.0
 milestone_name: OCR プロバイダ化 + クラウドAPI対応
 status: executing
-stopped_at: Phase 5 context gathered
-last_updated: "2026-06-06T09:24:58.244Z"
-last_activity: 2026-06-06 -- Phase 05 execution started
+stopped_at: 05-02-PLAN.md 完了
+last_updated: "2026-06-06T16:35:00Z"
+last_activity: 2026-06-06 -- 05-02 完了（_SENSITIVE_KEYS ガード・lang.py 文言追加）
 progress:
   total_phases: 4
   completed_phases: 1
   total_plans: 9
-  completed_plans: 5
-  percent: 25
+  completed_plans: 6
+  percent: 30
 ---
 
 # Project State
@@ -27,8 +27,8 @@ See: .planning/PROJECT.md (updated 2026-06-06)
 
 Phase: 05 (claude-provider-ui) — EXECUTING
 Plan: 2 of 5
-Status: Ready to execute
-Last activity: 2026-06-06 -- Phase 05 execution started
+Status: Executing Phase 05
+Last activity: 2026-06-06 -- 05-02 完了（_SENSITIVE_KEYS ガード・lang.py 文言追加）
 
 ```
 [==========] v1.3.0 COMPLETE
@@ -57,6 +57,7 @@ Last activity: 2026-06-06 -- Phase 05 execution started
 | Phase 04-provider-abstraction P03 | 6min | 2 tasks | 3 files |
 | Phase 04-provider-abstraction P04 (gap) | 10min | 3 tasks | 4 files |
 | Phase 05-claude-provider-ui P01 | 25 | 3 tasks | 2 files |
+| Phase 05-claude-provider-ui P02 | 10min | 3 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -89,7 +90,10 @@ Decisions are logged in PROJECT.md Key Decisions table.
 - [Phase 04-03]: OCR-PROV-02・OCR-PERF-01 要件完了。Phase 4 全成功基準達成
 - [Phase 04-04 CR-02]: _on_run でワーカー起動前に model_var/max_tokens_var/temperature_var/url_var の live 値で LMStudioProvider を再生成（SC-1 後方互換復元）
 - [Phase 04-04 CR-01]: _start_ocr の build_provider を try/except ValueError で保護し messagebox.showerror + return でグレースフル処理（防御的堅牢化）
-- [Phase ?]: ClaudeProvider 05-01
+- [Phase 05-01]: ClaudeProvider（messages API・effort/temperature 防御・429/5xx→OCRRetryableError 変換・並列度 Claude=2）
+- [Phase 05-02]: _SENSITIVE_KEYS を set 定数として定義し _save_settings でキー名のみ logger.error・値はログ非出力・除外コピーを json.dump（成功基準1・D-01・D-04）
+- [Phase 05-02]: claude_model="claude-sonnet-4-6" / ocr_effort="low" を DEFAULT_SETTINGS に追加（無害な設定値・OCR-UI-01 基盤）
+- [Phase 05-02]: Phase 5 文言 9 キーを ja/en 両辞書に追加（OCR-UI-01 基盤）
 
 ### Pending Todos
 
@@ -114,10 +118,10 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-06-06T09:24:58.236Z
-Stopped at: Phase 5 context gathered
-Resume file: .planning/phases/05-claude-provider-ui/05-CONTEXT.md
+Last session: 2026-06-06T16:35:00Z
+Stopped at: 05-02-PLAN.md 完了
+Resume file: .planning/phases/05-claude-provider-ui/05-03-PLAN.md
 
 ## Operator Next Steps
 
-- Phase 4 完全完了（04-01〜04-04 の全プラン + ギャップ修正完了）。`/gsd-plan-phase 5` で Claude Provider + セキュリティ基盤 + プロバイダ選択 UI フェーズの計画を開始する
+- 05-02 完了。次は 05-03（build_provider claude 分岐 + _resolve_api_key + run_parallel 指数バックオフ + _session_api_keys 属性）
