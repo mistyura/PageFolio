@@ -76,7 +76,7 @@
 
 **Wave 1**
 
-  - [ ] 05-01-PLAN.md — ClaudeProvider + OCRRetryableError 新設（messages API・effort/temperature 防御・429/5xx 変換・並列度 Claude=2）（ocr_providers.py）
+  - [x] 05-01-PLAN.md — ClaudeProvider + OCRRetryableError 新設（messages API・effort/temperature 防御・429/5xx 変換・並列度 Claude=2）（ocr_providers.py）
   - [ ] 05-02-PLAN.md — _save_settings 機密キーガード（成功基準1・最優先）+ DEFAULT 追加 + Phase 5 文言 ja/en（settings.py/lang.py）
 
 **Wave 2** *(blocked on Wave 1 completion)*
@@ -124,6 +124,6 @@
 | 2. プレビュー最適化とリファクタリング | v1.3.0 | 3/3 | Complete | 2026-06-03 |
 | 3. API 整理と回帰テスト | v1.3.0 | 2/2 | Complete | 2026-06-03 |
 | 4. プロバイダ抽象化 | v1.4.0 | 3/3 | Complete | 2026-06-06 |
-| 5. Claude Provider + セキュリティ基盤 + プロバイダ選択 UI | v1.4.0 | 0/5 | Planned | - |
+| 5. Claude Provider + セキュリティ基盤 + プロバイダ選択 UI | v1.4.0 | 1/5 | In Progress|  |
 | 6. Gemini Provider + 逐次レンダリング最適化 | v1.4.0 | 0/? | Not started | - |
 | 7. Tesseract + PluginManager 拡張 + QA | v1.4.0 | 0/? | Not started | - |

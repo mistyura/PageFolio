@@ -21,7 +21,7 @@ REQ-ID 形式: `OCR-[CATEGORY]-[NN]`。v1.3.0（`BUG`/`REFAC`/`TEST`）とは別
 
 ### OCR-API — クラウド API プロバイダ
 
-- [ ] **OCR-API-01**: ユーザーは Claude（messages API・モデル一覧・`ANTHROPIC_API_KEY`）でページを OCR できる
+- [x] **OCR-API-01**: ユーザーは Claude（messages API・モデル一覧・`ANTHROPIC_API_KEY`）でページを OCR できる
 - [ ] **OCR-API-02**: ユーザーは Gemini（generateContent・inline_data・モデル一覧・`GEMINI_API_KEY`/`GOOGLE_API_KEY`）でページを OCR できる
 - [ ] **OCR-API-03**: プロバイダを切り替えたとき、該当プロバイダのモデル一覧を取得して選択肢に提示する
 
@@ -36,14 +36,14 @@ REQ-ID 形式: `OCR-[CATEGORY]-[NN]`。v1.3.0（`BUG`/`REFAC`/`TEST`）とは別
 - [ ] **OCR-UI-01**: ユーザーは SettingsDialog でプロバイダ（off / gemini / claude / lmstudio / tesseract）を選択できる
 - [ ] **OCR-UI-02**: 既定は `ocr_provider: "off"` で、off のとき OCR ボタンを無効化し外部送信・課金を防ぐ
 - [ ] **OCR-UI-03**: クラウドプロバイダ選択時、実行前にページ数 × 概算コストとプライバシー注記の確認ダイアログを表示する（ローカル/Tesseract には表示しない）
-- [ ] **OCR-UI-04**: Opus 系モデル選択時の temperature/effort をモデル別に防御的に扱う（非対応パラメータは送らず、`effort` を提示）
+- [x] **OCR-UI-04**: Opus 系モデル選択時の temperature/effort をモデル別に防御的に扱う（非対応パラメータは送らず、`effort` を提示）
 
 ### OCR-PERF — 低スペック対策・安定性
 
 - [x] **OCR-PERF-01**: テキストが埋め込まれたページは `page.get_text()` の結果を採用し、Vision API 呼び出しをスキップする
 - [ ] **OCR-PERF-02**: ページ単位の逐次レンダリング → 送信 → 破棄でメモリ使用量を抑える（全ページ画像の一括保持を廃止）
-- [ ] **OCR-PERF-03**: クラウドプロバイダは並列度を抑制する（Gemini=1 / Claude=2、ローカル LM Studio は最大 8）
-- [ ] **OCR-PERF-04**: 429 / 5xx 応答に対し指数バックオフでリトライする（最大 3 回・`Retry-After` ヘッダ優先）
+- [x] **OCR-PERF-03**: クラウドプロバイダは並列度を抑制する（Gemini=1 / Claude=2、ローカル LM Studio は最大 8）
+- [x] **OCR-PERF-04**: 429 / 5xx 応答に対し指数バックオフでリトライする（最大 3 回・`Retry-After` ヘッダ優先）
 - [ ] **OCR-PERF-05**: `ocr_scale` のデフォルトを 1.5 に見直し、速度/コスト ↔ 精度のトレードオフヒントを UI に表示する
 
 ### OCR-EXT — 拡張（任意・最終フェーズ）
@@ -87,14 +87,14 @@ REQ-ID 形式: `OCR-[CATEGORY]-[NN]`。v1.3.0（`BUG`/`REFAC`/`TEST`）とは別
 | OCR-SEC-01 | Phase 5 | Pending |
 | OCR-SEC-02 | Phase 5 | Pending |
 | OCR-SEC-03 | Phase 5 | Pending |
-| OCR-API-01 | Phase 5 | Pending |
+| OCR-API-01 | Phase 5 | Complete |
 | OCR-API-03 | Phase 5 | Pending |
 | OCR-UI-01 | Phase 5 | Pending |
 | OCR-UI-02 | Phase 5 | Pending |
 | OCR-UI-03 | Phase 5 | Pending |
-| OCR-UI-04 | Phase 5 | Pending |
-| OCR-PERF-03 | Phase 5 | Pending |
-| OCR-PERF-04 | Phase 5 | Pending |
+| OCR-UI-04 | Phase 5 | Complete |
+| OCR-PERF-03 | Phase 5 | Complete |
+| OCR-PERF-04 | Phase 5 | Complete |
 | OCR-API-02 | Phase 6 | Pending |
 | OCR-PERF-02 | Phase 6 | Pending |
 | OCR-PERF-05 | Phase 6 | Pending |
