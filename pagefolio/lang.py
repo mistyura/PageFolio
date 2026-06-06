@@ -289,6 +289,25 @@ LANG = {
             "未対応の OCR プロバイダが設定されています: {name}\n"
             "設定を確認してください。"
         ),
+        # Phase 5: Claude Provider / セキュリティ UI 文言（D-06/D-07/D-12/D-15/D-17）
+        "ocr_api_key_missing": (
+            "APIキーが設定されていません（{env_var}）。"
+            "環境変数を設定するか、入力欄にキーを入力してください。"
+        ),
+        "ocr_session_key_label": "APIキー（このセッションのみ・保存されません）:",
+        "ocr_cost_confirm_title": "クラウド送信の確認",
+        "ocr_cost_confirm_msg": (
+            "送信先: {host}\n"
+            "対象: {count} ページ（概算コスト: {cost}）\n\n"
+            "ページ画像が外部 API に送信されます。\n"
+            "従量課金が発生します。\n"
+            "実行しますか？"
+        ),
+        "ocr_waiting_retry": "p.{page}: レート制限のため待機中（リトライ {n}/{max}）",
+        "ocr_provider_label": "OCR プロバイダ:",
+        "ocr_effort_label": "推論強度 (effort):",
+        "ocr_provider_off_hint": "OCR は無効です。設定でプロバイダを選択してください。",
+        "ocr_model_refresh": "モデル更新",
         # LM Studio 設定
         "settings_lm_studio_section": "🔍 LM Studio (OCR)",
         "settings_lm_url": "URL:",
@@ -616,6 +635,25 @@ LANG = {
         "ocr_provider_unsupported": (
             "Unsupported OCR provider configured: {name}\nPlease check your settings."
         ),
+        # Phase 5: Claude Provider / security UI messages (D-06/D-07/D-12/D-15/D-17)
+        "ocr_api_key_missing": (
+            "API key is not configured ({env_var}). "
+            "Set the environment variable or enter the key in the input field."
+        ),
+        "ocr_session_key_label": "API Key (this session only — not saved):",
+        "ocr_cost_confirm_title": "Confirm Cloud Submission",
+        "ocr_cost_confirm_msg": (
+            "Destination: {host}\n"
+            "Pages: {count} (estimated cost: {cost})\n\n"
+            "Page images will be sent to an external API.\n"
+            "Usage charges will apply.\n"
+            "Proceed?"
+        ),
+        "ocr_waiting_retry": "p.{page}: Rate-limited, waiting (retry {n}/{max})",
+        "ocr_provider_label": "OCR Provider:",
+        "ocr_effort_label": "Inference Effort:",
+        "ocr_provider_off_hint": "OCR is disabled. Select a provider in Settings.",
+        "ocr_model_refresh": "Refresh Models",
         # LM Studio settings
         "settings_lm_studio_section": "🔍 LM Studio (OCR)",
         "settings_lm_url": "URL:",
