@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.4.0
 milestone_name: OCR プロバイダ化 + クラウドAPI対応
 status: executing
-stopped_at: 05-04-PLAN.md 完了
-last_updated: "2026-06-07T10:00:00Z"
-last_activity: 2026-06-07 -- 05-04 完了（provider DD・欄切替・claude モデル更新・effort 切替・OCR ボタン無効化・human-verify approved）
+stopped_at: 05-05-PLAN.md Task 4 human-verify 待ち
+last_updated: "2026-06-07T11:00:00Z"
+last_activity: 2026-06-07 -- 05-05 Task 1-3 完了（provider 中立化・コスト確認ゲート・セッションキー入力欄・waiting 進捗）・Task 4 human-verify 待ち
 progress:
   total_phases: 4
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 9
-  completed_plans: 8
-  percent: 33
+  completed_plans: 9
+  percent: 50
 ---
 
 # Project State
@@ -105,6 +105,9 @@ Decisions are logged in PROJECT.md Key Decisions table.
 - [Phase 05-04]: _update_ocr_buttons_state は _update_doc_buttons_state から連動呼び出し（設定変更経路をカバー）
 - [Phase 05-04]: _refresh_claude_models は例外時も静的 RECOMMENDED_MODELS へフォールバック（D-08 一貫適用）
 - [Phase 05-04]: effort_frame / temperature_frame の pack 順は _on_model_change 呼び出し側が担保（フレーム同士の pack_forget が互いに独立）
+- [Phase 05-05]: on_progress の waiting status を 'waiting/{attempt}' 形式に変更しリトライ番号を伝搬（on_progress シグネチャ変更なし）
+- [Phase 05-05]: コスト確認ダイアログは messagebox.askyesno を使用（grab_set モーダルより軽量・D-11 毎回確認）
+- [Phase 05-05]: セッションキー入力欄の値は _session_api_keys に格納し settings には入れない（D-01/D-03）
 
 ### Pending Todos
 
@@ -129,7 +132,7 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-06-07T10:00:00Z
+Last session: 2026-06-06T22:52:44.941Z
 Stopped at: 05-04-PLAN.md 完了
 Resume file: .planning/phases/05-claude-provider-ui/05-05-PLAN.md
 
