@@ -119,6 +119,24 @@ class OCRDialog(tk.Toplevel):
             font=self._font(2, "bold"),
         ).pack(pady=(12, 6))
 
+        # 実行プロバイダ表示（どのプロバイダで OCR するかを明示）
+        prov_row = tk.Frame(self, bg=C["BG_DARK"])
+        prov_row.pack(fill="x", padx=16, pady=(0, 2))
+        tk.Label(
+            prov_row,
+            text=self._L["ocr_provider_label"],
+            bg=C["BG_DARK"],
+            fg=C["TEXT_MAIN"],
+            font=self._font(-1),
+        ).pack(side="left")
+        tk.Label(
+            prov_row,
+            text=self._provider_display_name(),
+            bg=C["BG_DARK"],
+            fg=C["ACCENT"],
+            font=self._font(-1, "bold"),
+        ).pack(side="left", padx=(6, 0))
+
         # プロンプトプリセット
         pf = tk.Frame(self, bg=C["BG_DARK"])
         pf.pack(fill="x", padx=16, pady=4)
@@ -148,8 +166,11 @@ class OCRDialog(tk.Toplevel):
             ).pack(side="left", padx=4)
 
         # サーバ（参照のみ・設定メニューの値を表示）
+        # LM Studio 固有欄: クラウドプロバイダ時は表示しない（provider 中立化）
+        show_lmstudio_fields = not self._is_cloud_provider()
         sf = tk.Frame(self, bg=C["BG_DARK"])
-        sf.pack(fill="x", padx=16, pady=(6, 2))
+        if show_lmstudio_fields:
+            sf.pack(fill="x", padx=16, pady=(6, 2))
         tk.Label(
             sf,
             text=self._L["ocr_server_label"],
@@ -171,9 +192,10 @@ class OCRDialog(tk.Toplevel):
             readonlybackground=C["BG_CARD"],
         ).pack(side="left", fill="x", expand=True, padx=4)
 
-        # モデル選択
+        # モデル選択（LM Studio 固有欄: クラウド時は非表示）
         mf = tk.Frame(self, bg=C["BG_DARK"])
-        mf.pack(fill="x", padx=16, pady=2)
+        if show_lmstudio_fields:
+            mf.pack(fill="x", padx=16, pady=2)
         tk.Label(
             mf,
             text=self._L["ocr_model_label"],
@@ -458,6 +480,21 @@ class OCRDialog(tk.Toplevel):
         self._cancel_flag.clear()
 
     # ── クラウドプロバイダ判定・コスト確認・セッションキー ──
+
+    def _provider_display_name(self):
+        """現在の ocr_provider 設定を人間可読なプロバイダ表示名に変換する。
+
+        claude → "Claude (Anthropic)"・lmstudio/"" → "LM Studio"。
+        未知の名前はそのまま返す（フォールバック）。
+        """
+        from pagefolio.ocr_providers import ClaudeProvider
+
+        name = self.app.settings.get("ocr_provider", "")
+        if name == "claude" or isinstance(self.provider, ClaudeProvider):
+            return self._L["ocr_provider_name_claude"]
+        if name in ("lmstudio", ""):
+            return self._L["ocr_provider_name_lmstudio"]
+        return name
 
     def _is_cloud_provider(self):
         """現在の ocr_provider 設定がクラウド系か判定する。
