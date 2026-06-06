@@ -2,9 +2,10 @@
 gsd_state_version: 1.0
 milestone: v1.4.0
 milestone_name: OCR プロバイダ化 + クラウドAPI対応
-status: roadmap_created
-last_updated: "2026-06-06"
-last_activity: 2026-06-06
+status: Roadmap created — ready for /gsd-plan-phase 4
+stopped_at: Phase 4 context gathered
+last_updated: "2026-06-06T05:34:38.025Z"
+last_activity: 2026-06-06 — v1.4.0 ロードマップ作成完了（Phase 04-07）
 progress:
   total_phases: 4
   completed_phases: 0
@@ -59,12 +60,14 @@ Last activity: 2026-06-06 — v1.4.0 ロードマップ作成完了（Phase 04-0
 Decisions are logged in PROJECT.md Key Decisions table.
 
 **v1.3.0 確定済み決定事項（引き継ぎ）:**
+
 - D-01: Undo/Redo を対称デルタ方式で実装
 - D-04: insert/merge は巻き戻し直前に削除ページ bytes をキャプチャして redo 用デルタに格納
 - D-05: _restore_state の pdf_bytes 分岐を完全撤廃
 - D-06: _undo_stack/_redo_stack の両方を deque(maxlen=MAX_UNDO) 化
 
 **v1.4.0 確定済み決定事項:**
+
 - V14-D-01: 実装方針は `urllib.request` 直叩き・新規 pip 依存ゼロ（公式 SDK 不採用）
 - V14-D-02: APIキーは環境変数のみ・`_save_settings()` への流入ガードが最優先タスク（Phase 05 着手直前）
 - V14-D-03: 既定 `ocr_provider: "off"` — 外部送信・課金を望まないユーザー向けの安全なデフォルト
@@ -97,9 +100,9 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-06-06
-Stopped at: Roadmap created for v1.4.0 (Phase 04-07)
-Resume file: None
+Last session: 2026-06-06T05:34:38.015Z
+Stopped at: Phase 4 context gathered
+Resume file: .planning/phases/04-provider-abstraction/04-CONTEXT.md
 
 ## Operator Next Steps
 
