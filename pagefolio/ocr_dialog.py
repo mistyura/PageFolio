@@ -14,9 +14,9 @@ from pagefolio.ocr import (
     MAX_OCR_CONCURRENCY,
     MAX_OCR_MAX_TOKENS,
     OCR_PROMPTS,
-    call_lm_studio_parallel,
-    fetch_lm_studio_models,
+    has_embedded_text,
     page_to_png_b64,
+    run_parallel,
 )
 
 logger = logging.getLogger(__name__)
@@ -39,6 +39,7 @@ class OCRDialog(tk.Toplevel):
         max_tokens=-1,
         temperature=0.1,
         concurrency=DEFAULT_OCR_CONCURRENCY,
+        provider=None,
         lang="ja",
         font_func=None,
     ):
@@ -61,12 +62,18 @@ class OCRDialog(tk.Toplevel):
         self.max_tokens_var = tk.IntVar(value=int(max_tokens))
         self.temperature_var = tk.DoubleVar(value=float(temperature))
         self.concurrency = max(1, min(MAX_OCR_CONCURRENCY, int(concurrency)))
+        # OCRProvider インスタンス（D-03: メインスレッド側でのみ使用）
+        self.provider = provider
         self.results = {}  # page_idx -> text
         self.errors = {}  # page_idx -> message
+        # 埋め込みテキスト検出によりスキップされたページ集合
+        self._skipped_pages = set()
         self._cancel_flag = threading.Event()
         self._worker_thread = None
         self._done = False
         self._started = False
+        self._images = {}  # page_idx -> b64（メインスレッドでレンダリング済み）
+        self._ocr_page_indices = []  # スキップ除外後の Vision OCR 対象ページリスト
 
         self._build()
         self._center(parent)
@@ -380,13 +387,13 @@ class OCRDialog(tk.Toplevel):
 
     # ── サーバ・モデル設定 ──
     def _fetch_models(self):
-        """LM Studio から利用可能モデル一覧を取得して Combobox に反映"""
-        url = self.url_var.get().strip()
-        if not url:
+        """provider から利用可能モデル一覧を取得して Combobox に反映"""
+        if self.provider is None:
             self.progress_var.set(
-                self._L["ocr_models_fetch_fail"].format(error="URL is empty")
+                self._L["ocr_models_fetch_fail"].format(error="provider not set")
             )
             return
+        url = self.url_var.get().strip()
         # 押下直後に「取得中…」を即時表示（HTTP 同期呼び出しによる UI 凍結対策）
         self.progress_var.set(self._L["ocr_models_fetching"].format(url=url))
         try:
@@ -394,7 +401,7 @@ class OCRDialog(tk.Toplevel):
         except tk.TclError:
             pass
         try:
-            models = fetch_lm_studio_models(url, timeout=10)
+            models = self.provider.list_models()
         except (ConnectionError, TimeoutError, RuntimeError) as e:
             self.progress_var.set(self._L["ocr_models_fetch_fail"].format(error=str(e)))
             return
@@ -409,6 +416,9 @@ class OCRDialog(tk.Toplevel):
         self.text.delete("1.0", "end")
         self.results.clear()
         self.errors.clear()
+        self._skipped_pages.clear()
+        self._images.clear()
+        self._ocr_page_indices.clear()
         self.progress_bar["value"] = 0
         self.progress_var.set(self._L["ocr_run_first"])
         self.copy_btn.state(["disabled"])
@@ -421,7 +431,10 @@ class OCRDialog(tk.Toplevel):
 
     # ── ワーカー ──
     def _on_run(self):
-        """読み取り実行ボタン: OCR を開始する"""
+        """読み取り実行ボタン: OCR を開始する。
+
+        メインスレッドでレンダリング/埋め込み判定後にワーカーを起動する。
+        """
         if self._started:
             return
         self._started = True
@@ -430,78 +443,103 @@ class OCRDialog(tk.Toplevel):
         self.progress_var.set(self._L["ocr_progress_init"])
         # 結果テキストエリアをクリア
         self.text.delete("1.0", "end")
-        prompt = OCR_PROMPTS.get(self.preset_var.get(), OCR_PROMPTS["text"])
-        self._worker_thread = threading.Thread(
-            target=self._worker, args=(prompt,), daemon=True
+
+        # UI パラメータをここで取得（メインスレッド）
+        try:
+            self._ocr_scale = max(1.0, min(4.0, float(self.scale_var.get())))
+        except (tk.TclError, ValueError):
+            self._ocr_scale = 2.0
+        try:
+            self._ocr_timeout = max(10, min(600, int(self.timeout_var.get())))
+        except (tk.TclError, ValueError):
+            self._ocr_timeout = 120
+        self._effective_timeout = self._ocr_timeout
+        self._ocr_prompt = OCR_PROMPTS.get(self.preset_var.get(), OCR_PROMPTS["text"])
+
+        # D-01/D-03/D-05: フェーズ1はメインスレッドで after() 小分け実行
+        # レンダリング完了後にワーカースレッドを起動する
+        self._render_idx = 0
+        self._render_next_page()
+
+    def _render_next_page(self):
+        """メインスレッドで1ページずつレンダリング/埋め込み判定する。
+
+        after() 小分けで UI フリーズを回避する（D-01/D-03/D-05）。
+        """
+        if self._cancel_flag.is_set():
+            self._finish_cancelled()
+            return
+
+        total = len(self.page_indices)
+        idx = self._render_idx
+
+        if idx >= total:
+            # 全ページのレンダリング/判定完了 → ワーカースレッドを起動
+            self._start_worker_thread()
+            return
+
+        page_idx = self.page_indices[idx]
+        self.progress_var.set(
+            self._L["ocr_progress_render"].format(cur=idx + 1, total=total)
         )
+
+        try:
+            page = self.doc[page_idx]
+            # D-05: has_embedded_text はメインスレッドで実行
+            if has_embedded_text(page):
+                # 埋め込みテキストあり: results に直接投入（成功基準2・D-07）
+                # T-04-09: 抽出テキストをログへ混入させない
+                extracted = page.get_text()
+                self.results[page_idx] = extracted
+                self._skipped_pages.add(page_idx)
+            else:
+                # 埋め込みテキストなし: Vision OCR のためレンダリング
+                b64 = page_to_png_b64(page, scale=self._ocr_scale)
+                self._images[page_idx] = b64
+                self._ocr_page_indices.append(page_idx)
+        except Exception as e:
+            logger.exception("ページ処理失敗 (p.%d): %s", page_idx, e)
+            self.errors[page_idx] = f"image conversion error: {e}"
+
+        self._render_idx += 1
+        # 次のページを after(0) で連鎖（UI フリーズ回避）
+        self.after(0, self._render_next_page)
+
+    def _start_worker_thread(self):
+        """レンダリング完了後にワーカースレッドを起動する"""
+        self._worker_thread = threading.Thread(target=self._worker, daemon=True)
         self._worker_thread.start()
 
-    def _worker(self, prompt):
-        url = self.url_var.get()
-        model = self.model_var.get()
-        try:
-            scale = max(1.0, min(4.0, float(self.scale_var.get())))
-        except (tk.TclError, ValueError):
-            scale = 2.0
-        try:
-            timeout = max(10, min(600, int(self.timeout_var.get())))
-        except (tk.TclError, ValueError):
-            timeout = 120
-        try:
-            max_tokens = int(self.max_tokens_var.get())
-        except (tk.TclError, ValueError):
-            max_tokens = -1
-        try:
-            temperature = max(0.0, min(2.0, float(self.temperature_var.get())))
-        except (tk.TclError, ValueError):
-            temperature = 0.1
-        self._effective_timeout = timeout
+    def _worker(self):
+        """フェーズ2: API 並列送信のみを担う（fitz アクセスゼロ・D-03）"""
         total = len(self.page_indices)
-
-        # フェーズ1: 全ページの画像を直列で変換
-        # （fitz の同一 Document 並行アクセスを回避するためここは並列化しない）
-        images = {}  # page_idx -> b64
-        for i, page_idx in enumerate(self.page_indices, start=1):
-            if self._cancel_flag.is_set():
-                self.after(0, self._finish_cancelled)
-                return
-            self.after(
-                0,
-                lambda cur=i, tot=total: self.progress_var.set(
-                    self._L["ocr_progress_render"].format(cur=cur, total=tot)
-                ),
-            )
-            try:
-                b64 = page_to_png_b64(self.doc[page_idx], scale=scale)
-                images[page_idx] = b64
-            except Exception as e:
-                logger.exception("ページ画像変換失敗: %s", e)
-                self.errors[page_idx] = f"image conversion error: {e}"
+        # スキップ済みページ数を進捗バー初期値に反映
+        skipped_count = len(self._skipped_pages)
 
         if self._cancel_flag.is_set():
             self.after(0, self._finish_cancelled)
             return
 
-        # フェーズ2: API 呼び出しを並列化（call_lm_studio_parallel に委譲）
+        # フェーズ2: run_parallel で Vision OCR（スキップ除外済みページのみ）
         def on_progress(done, page_idx, status):
             self.after(
                 0,
-                lambda d=done, p=page_idx: self.progress_var.set(
+                lambda d=done + skipped_count, p=page_idx: self.progress_var.set(
                     self._L["ocr_progress_ocr"].format(done=d, total=total, page=p + 1)
                 ),
             )
-            self.after(0, lambda d=done: self._on_progress_bar(d))
+            self.after(0, lambda d=done + skipped_count: self._on_progress_bar(d))
 
-        results, errors, fatal_msg, fatal_kind = call_lm_studio_parallel(
-            url,
-            model,
-            prompt,
-            images,
-            self.page_indices,
+        # スキップ済みページが存在する場合、進捗バーをスキップ数分先行させる
+        if skipped_count > 0:
+            self.after(0, lambda: self._on_progress_bar(skipped_count))
+
+        results, errors, fatal_msg, fatal_kind = run_parallel(
+            self.provider,
+            self._images,
+            self._ocr_page_indices,
             concurrency=self.concurrency,
-            timeout=timeout,
-            max_tokens=max_tokens,
-            temperature=temperature,
+            prompt=self._ocr_prompt,
             on_progress=on_progress,
             is_cancelled=self._cancel_flag.is_set,
         )
@@ -531,7 +569,13 @@ class OCRDialog(tk.Toplevel):
         for page_idx in self.page_indices:
             sep = self._L["ocr_page_separator"].format(page=page_idx + 1)
             self.text.insert("end", f"\n{sep}\n")
-            if page_idx in self.results:
+            if page_idx in self._skipped_pages:
+                # D-08: 埋め込みテキストスキップをスキップ通知と共に表示
+                skip_notice = self._L["ocr_text_skip_notice"].format(page=page_idx + 1)
+                self.text.insert("end", f"[{skip_notice}]\n")
+                if page_idx in self.results:
+                    self.text.insert("end", self.results[page_idx] + "\n")
+            elif page_idx in self.results:
                 self.text.insert("end", self.results[page_idx] + "\n")
             elif page_idx in self.errors:
                 self.text.insert(
