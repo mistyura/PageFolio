@@ -36,7 +36,10 @@
   2. テキストが埋め込まれたページに OCR を実行したとき、API 呼び出しが行われずに `page.get_text()` の結果が返される
   3. ワーカースレッド内で `fitz.Document` / `get_pixmap()` の直接呼び出しが一切存在しない（スレッド境界が明確）
   4. 新しいプロバイダクラスをファイルに追加するだけで `run_parallel()` から呼び出せる（プロバイダ別並列度が受け取れる）
-**Plans**: TBD
+**Plans**: 3 plans
+  - [ ] 04-01-PLAN.md — OCRProvider 抽象基底 + OCRAPIKeyError + LMStudioProvider 新設（ocr_providers.py）
+  - [ ] 04-02-PLAN.md — run_parallel 一般化 + has_embedded_text + build_provider + OCRMixin 中立化（ocr.py）
+  - [ ] 04-03-PLAN.md — _worker スレッド境界リファクタ + 埋め込みスキップ統合 + 文言/設定追加（ocr_dialog/lang/settings）
 
 ### Phase 5: Claude Provider + セキュリティ基盤 + プロバイダ選択 UI
 **Goal**: APIキー漏洩リスクなしに Claude で OCR が実行でき、ユーザーがプロバイダと実行コストを把握して操作できる
@@ -83,7 +86,7 @@
 | 1. Undo/Redo 修正 | v1.3.0 | 3/3 | Complete | 2026-06-03 |
 | 2. プレビュー最適化とリファクタリング | v1.3.0 | 3/3 | Complete | 2026-06-03 |
 | 3. API 整理と回帰テスト | v1.3.0 | 2/2 | Complete | 2026-06-03 |
-| 4. プロバイダ抽象化 | v1.4.0 | 0/? | Not started | - |
+| 4. プロバイダ抽象化 | v1.4.0 | 0/3 | Planned | - |
 | 5. Claude Provider + セキュリティ基盤 + プロバイダ選択 UI | v1.4.0 | 0/? | Not started | - |
 | 6. Gemini Provider + 逐次レンダリング最適化 | v1.4.0 | 0/? | Not started | - |
 | 7. Tesseract + PluginManager 拡張 + QA | v1.4.0 | 0/? | Not started | - |
