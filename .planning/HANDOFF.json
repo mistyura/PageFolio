@@ -1,0 +1,52 @@
+{
+  "version": "1.0",
+  "timestamp": "2026-06-06T02:13:25.300Z",
+  "phase": null,
+  "phase_name": "Milestone v1.4.0 creation (pre-phase)",
+  "phase_dir": null,
+  "plan": null,
+  "task": null,
+  "total_tasks": null,
+  "status": "paused",
+  "context": "research",
+  "workflow": "gsd-new-milestone",
+  "milestone": "v1.4.0",
+  "milestone_name": "OCR プロバイダ化 + クラウドAPI対応",
+  "completed_tasks": [
+    {"id": 1, "name": "マイルストーン目標ヒアリング（全部入り / Gemini+Claude 両必須 / 低スペック対策コア / v1.4.0）", "status": "done"},
+    {"id": 2, "name": "PROJECT.md 更新（Current Milestone v1.4.0 セクション追加・Active 更新・footer）", "status": "done", "commit": "c0d7bbd"},
+    {"id": 3, "name": "STATE.md を v1.4.0 へ切替（state.milestone-switch）", "status": "done", "commit": "c0d7bbd"},
+    {"id": 4, "name": "旧フェーズディレクトリ(01-03)クリア + milestone-start コミット", "status": "done", "commit": "c0d7bbd"},
+    {"id": 5, "name": "リサーチ4並列（STACK/FEATURES/ARCHITECTURE/PITFALLS）", "status": "done", "progress": ".planning/research/ に4ファイル生成済み（未コミット）"}
+  ],
+  "remaining_tasks": [
+    {"id": 6, "name": "シンセサイザー起動 → SUMMARY.md 生成（temperature 矛盾を STACK 優先で調停）+ research コミット", "status": "not_started"},
+    {"id": 7, "name": "Step 9: 要件定義（REQUIREMENTS.md・REQ-ID は既存連番継続・カテゴリ別スコープ）", "status": "not_started"},
+    {"id": 8, "name": "Step 10: ロードマップ作成（gsd-roadmapper・--reset-phase-numbers なし→Phase 04 から継続）", "status": "not_started"},
+    {"id": 9, "name": "Step 10.5: pending todos の phase 紐付け（todos なし→スキップ見込み）", "status": "not_started"},
+    {"id": 10, "name": "Step 11: 完了表示・次アクション案内", "status": "not_started"}
+  ],
+  "blockers": [
+    {"description": "リサーチ間で矛盾: STACK.md は『Opus 4.8 は temperature 利用可（公式確認）』、FEATURES.md/PITFALLS.md は旧仕様書の『temperature 不可』を踏襲。SUMMARY 生成時に STACK 優先で調停し、Claude payload はモデル別の防御的実装＋実 API での確認を明記すること。", "type": "technical", "workaround": "シンセサイザーへ conflict_to_resolve として指示済みの方針を踏襲する"}
+  ],
+  "human_actions_pending": [
+    {"action": "github PAT を発行し `setx GITHUB_PERSONAL_ACCESS_TOKEN \"...\"` を実行 → Claude Code 再起動", "context": "/doctor: github MCP が GITHUB_PERSONAL_ACCESS_TOKEN 未設定で Authorization ヘッダー不正。ユーザー自身が設定（秘密情報）", "blocking": false},
+    {"action": "Claude Code を完全再起動", "context": "asana/slack/notion プラグインを settings.json で false 化済み・github setx 反映のため再起動が必要", "blocking": false}
+  ],
+  "decisions": [
+    {"decision": "マイルストーン v1.4.0 のスコープは『全部入り』（プロバイダ抽象化 + Gemini + Claude + 低スペック対策 + Tesseract + プラグイン登録機構）", "rationale": "ユーザー選択。仕様書フェーズ1〜4すべて", "phase": "v1.4.0"},
+    {"decision": "Gemini と Claude の両方を必須", "rationale": "ユーザー選択（両方とも必須）", "phase": "v1.4.0"},
+    {"decision": "低スペック対策（テキスト埋め込み判定・逐次レンダリング・ocr_scale 見直し）をコア要件に含める", "rationale": "主想定が GPU 非搭載 PC", "phase": "v1.4.0"},
+    {"decision": "バージョンは v1.4.0（マイナーバンプ）", "rationale": "後方互換維持の機能追加。メモリ方針: マイルストーン版番は pagefolio 実版番に揃える", "phase": "v1.4.0"},
+    {"decision": "リサーチ実施（4並列）", "rationale": "API 最新仕様の裏取り。結果として仕様書の temperature 誤記を発見", "phase": "v1.4.0"},
+    {"decision": "phase 番号は継続（--reset-phase-numbers なし）→ 前マイルストーン最終 03 の次、Phase 04 から", "rationale": "ワークフロー既定", "phase": "v1.4.0"}
+  ],
+  "uncommitted_files": [
+    ".planning/research/STACK.md",
+    ".planning/research/FEATURES.md",
+    ".planning/research/ARCHITECTURE.md",
+    ".planning/research/PITFALLS.md"
+  ],
+  "next_action": "gsd-new-milestone ワークフローの Step 8 後半（シンセサイザー）から再開。gsd-research-synthesizer を起動して .planning/research/SUMMARY.md を生成（temperature 矛盾を STACK 優先で調停）し research/ をコミット。その後 Step 9（要件定義）→ Step 10（ロードマップ）へ。",
+  "context_notes": "GSD /gsd-new-milestone 実行中に /doctor 対応で中断。設計の正典は docs/OCRプロバイダ化_見積もり仕様.md。リサーチャー4体は完了済み（agentId は本セッション固有のため再開時は新規起動）。SUMMARY.md は未生成。研究ファイルは未コミットなので、再開時はシンセサイザー後にまとめてコミットして良い。リサーチが提起した重要点: (1) Opus temperature 矛盾, (2) Gemini Free Tier 10 RPM→並列度をプロバイダ別に分離(Gemini=1/Claude=2), (3) 全ページ base64 一括保持が低RAM最大リスク→逐次化が最重要, (4) fitz スレッド非安全は現行コードに既存, (5) Phase2 冒頭で _save_settings への APIキー流入ガードを最優先実装。"
+}
