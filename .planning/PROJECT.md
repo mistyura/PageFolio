@@ -7,6 +7,28 @@ PageFolio の既存コードベースに対する最適化プロジェクト。
 
 **Core Value:** 大きな PDF でも Undo/Redo が正しく・速く動作し、コードが読みやすく保守しやすい状態にする。
 
+## Current Milestone: v1.4.0 OCR プロバイダ化 + クラウドAPI対応
+
+**Goal:** 現行 OCR（LM Studio 専用）を `OCRProvider` 抽象化し、Gemini / Claude のクラウドAPIと Tesseract を差し替え可能にする。GPU 非搭載 PC を主想定とした低スペック対策とプラグイン登録機構まで含める。
+
+**Target features:**
+- プロバイダ抽象化（`OCRProvider` 基底・LM Studio を Provider 実装へリファクタ・`run_parallel()` 一般化）
+- Claude Provider（messages API・effort・モデル一覧 / `ANTHROPIC_API_KEY`）
+- Gemini Provider（generateContent・inline_data・モデル一覧 / `GEMINI_API_KEY`・`GOOGLE_API_KEY`）
+- 低スペック対策（テキスト埋め込み判定で OCR スキップ・逐次レンダリング・`ocr_scale` 見直し）
+- OCRDialog のプロバイダ選択UI・APIキー未設定エラー・`ocr_provider` enum（既定 `off`）
+- Tesseract Provider（オプション・精度劣後注記つき）
+- PluginManager へのプロバイダ登録フック新設
+- テスト・多言語文言・ドキュメント更新
+
+**Key context:**
+- APIキーは**環境変数のみ・平文保存禁止**（`pagefolio_settings.json` にキーを書かない）。未設定時は明示エラー、保存しない。
+- 既定 `ocr_provider: "off"`（外部送信・課金を望まないユーザー向けの安全側）。
+- 実装方針は **urllib 直叩き・依存追加なし**（公式SDK は PyInstaller 肥大化のため不採用）。
+- プライバシー（外部送信）・コスト（従量課金）・レート制限（429）に配慮。クラウド並列度はローカルより絞る。
+- 後方互換維持（v1.4.0 マイナーバンプ）。
+- 設計の出典: `docs/OCRプロバイダ化_見積もり仕様.md`
+
 ## Context
 
 | 項目 | 内容 |
@@ -60,7 +82,7 @@ PageFolio の既存コードベースに対する最適化プロジェクト。
 
 ### Active
 
-- （なし — 全要件が Validated へ移行。マイルストーン v1.3.0 完了）
+- マイルストーン v1.4.0（OCR プロバイダ化 + クラウドAPI対応）の要件を定義中 → `.planning/REQUIREMENTS.md` を参照
 
 ### Out of Scope
 
@@ -110,4 +132,4 @@ PageFolio の既存コードベースに対する最適化プロジェクト。
 4. 決定事項 → Key Decisions を更新
 
 ---
-*Last updated: 2026-06-03 after v1.3.0 milestone (コード最適化 MVP) — 全 3 フェーズ・10 要件達成。*
+*Last updated: 2026-06-06 — Started milestone v1.4.0 (OCR プロバイダ化 + クラウドAPI対応).*

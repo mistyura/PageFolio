@@ -1,17 +1,16 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.3.0
-milestone_name: milestone
-status: Awaiting next milestone
-stopped_at: Completed 03-02-PLAN.md
-last_updated: "2026-06-03T06:42:26.366Z"
-last_activity: 2026-06-03 — Milestone v1.3.0 completed and archived
+milestone: v1.4.0
+milestone_name: OCR プロバイダ化 + クラウドAPI対応
+status: planning
+last_updated: "2026-06-06T01:18:21.316Z"
+last_activity: 2026-06-06
 progress:
-  total_phases: 3
-  completed_phases: 3
-  total_plans: 8
-  completed_plans: 8
-  percent: 100
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
@@ -25,10 +24,10 @@ See: .planning/PROJECT.md (updated 2026-06-01)
 
 ## Current Position
 
-Phase: Milestone v1.3.0 complete
+Phase: Not started (defining requirements)
 Plan: —
-Status: Awaiting next milestone
-Last activity: 2026-06-03 — Milestone v1.3.0 completed and archived
+Status: Defining requirements
+Last activity: 2026-06-06 — Milestone v1.4.0 started
 
 ## Performance Metrics
 
