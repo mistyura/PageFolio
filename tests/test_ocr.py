@@ -494,3 +494,32 @@ class TestConstants:
         assert hasattr(ocr, "EMBEDDED_TEXT_MIN_CHARS")
         assert isinstance(ocr.EMBEDDED_TEXT_MIN_CHARS, int)
         assert ocr.EMBEDDED_TEXT_MIN_CHARS > 0
+
+
+# ===== build_provider ファクトリ =====
+
+
+class TestBuildProvider:
+    """build_provider の動作検証（Task 2 の振る舞い）"""
+
+    def test_lmstudio_returns_lmstudio_provider(self):
+        """ocr_provider='lmstudio' のとき LMStudioProvider を返す (Test 1)"""
+        settings = {
+            "ocr_provider": "lmstudio",
+            "lm_studio_url": "http://x",
+            "lm_studio_model": "m",
+        }
+        provider = ocr.build_provider(settings)
+        assert isinstance(provider, LMStudioProvider)
+        assert provider.url == "http://x"
+        assert provider.model == "m"
+
+    def test_no_ocr_provider_key_returns_lmstudio_provider(self):
+        """ocr_provider キーなし設定でも LMStudioProvider を返す（後方互換 Test 2）"""
+        provider = ocr.build_provider({})
+        assert isinstance(provider, LMStudioProvider)
+
+    def test_returns_ocr_provider_instance(self):
+        """build_provider が返す provider は OCRProvider インスタンス (Test 3)"""
+        provider = ocr.build_provider({"ocr_provider": "lmstudio"})
+        assert isinstance(provider, OCRProvider)
