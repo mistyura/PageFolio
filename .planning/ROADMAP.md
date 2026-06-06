@@ -37,7 +37,7 @@
   1. LM Studio で OCR を実行したとき、v1.3.0 と同じ結果・同じ UI 操作で完了する（後方互換）
   2. テキストが埋め込まれたページに OCR を実行したとき、API 呼び出しが行われずに `page.get_text()` の結果が返される
   3. ワーカースレッド内で `fitz.Document` / `get_pixmap()` の直接呼び出しが一切存在しない（スレッド境界が明確）
-  4. 新しいプロバイダクラスをファイルに追加するだけで `run_parallel()` から呼び出せる（プロバイダ別並列度が受け取れる）**Plans**: 3 plans
+  4. 新しいプロバイダクラスをファイルに追加するだけで `run_parallel()` から呼び出せる（プロバイダ別並列度が受け取れる）**Plans**: 4 plans
 
 **Wave 1**
 
@@ -50,6 +50,10 @@
 **Wave 3** *(blocked on Wave 2 completion)*
 
   - [x] 04-03-PLAN.md — _worker スレッド境界リファクタ + 埋め込みスキップ統合 + 文言/設定追加（ocr_dialog/lang/settings）
+
+**Wave 4** *(gap closure — 04-VERIFICATION.md gaps_found 対応)*
+
+  - [ ] 04-04-PLAN.md — CR-02 _on_run でダイアログ UI 値（model/max_tokens/temperature）を反映し provider 再生成（SC-1 後方互換復元）+ CR-01 _start_ocr の build_provider を try/except ValueError で防護（ocr_dialog/ocr/lang）
 
 ### Phase 5: Claude Provider + セキュリティ基盤 + プロバイダ選択 UI
 
