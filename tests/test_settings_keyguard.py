@@ -4,9 +4,6 @@
 """_save_settings の機密キー非永続化ガードテスト（成功基準1）"""
 
 import json
-import os
-
-import pytest
 
 from pagefolio.settings import _SENSITIVE_KEYS, _load_settings, _save_settings
 
@@ -54,8 +51,12 @@ class TestSaveSettingsKeyGuard:
         _save_settings(settings)
 
         raw = settings_path.read_text(encoding="utf-8")
-        assert "claude_api_key" not in raw, "claude_api_key が JSON ファイルに書き込まれた（成功基準1 違反）"
-        assert "sk-ant-secret-should-not-appear" not in raw, "APIキー値が JSON ファイルに書き込まれた"
+        assert "claude_api_key" not in raw, (
+            "claude_api_key が JSON ファイルに書き込まれた（成功基準1 違反）"
+        )
+        assert "sk-ant-secret-should-not-appear" not in raw, (
+            "APIキー値が JSON ファイルに書き込まれた"
+        )
 
     def test_anthropic_api_key_not_written_to_file(self, tmp_path, monkeypatch):
         """anthropic_api_key を含む settings を保存しても JSON ファイルに現れない"""
@@ -151,8 +152,12 @@ class TestSaveSettingsKeyGuard:
         _save_settings(settings)
 
         # 元の dict は変更されていない
-        assert set(settings.keys()) == original_keys, "入力 dict のキーが変更された（破壊的変更）"
-        assert settings["claude_api_key"] == original_value, "入力 dict の値が変更された"
+        assert set(settings.keys()) == original_keys, (
+            "入力 dict のキーが変更された（破壊的変更）"
+        )
+        assert settings["claude_api_key"] == original_value, (
+            "入力 dict の値が変更された"
+        )
 
 
 class TestLoadSettingsDefaults:
@@ -167,7 +172,9 @@ class TestLoadSettingsDefaults:
         )
 
         result = _load_settings()
-        assert "claude_model" in result, "claude_model が _load_settings の戻り値に含まれない"
+        assert "claude_model" in result, (
+            "claude_model が _load_settings の戻り値に含まれない"
+        )
         assert result["claude_model"] == "claude-sonnet-4-6"
 
     def test_ocr_effort_default(self, tmp_path, monkeypatch):
@@ -179,7 +186,9 @@ class TestLoadSettingsDefaults:
         )
 
         result = _load_settings()
-        assert "ocr_effort" in result, "ocr_effort が _load_settings の戻り値に含まれない"
+        assert "ocr_effort" in result, (
+            "ocr_effort が _load_settings の戻り値に含まれない"
+        )
         assert result["ocr_effort"] == "low"
 
     def test_load_with_existing_file_preserves_defaults(self, tmp_path, monkeypatch):
