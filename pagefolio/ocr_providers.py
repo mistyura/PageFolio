@@ -63,6 +63,14 @@ class OCRAPIKeyError(RuntimeError):
         super().__init__(f"環境変数 {env_var} が設定されていません")
 
 
+class OCRRetryableError(RuntimeError):
+    """429/5xx リトライ可能エラー。retry_after（秒）を保持する。"""
+
+    def __init__(self, message, retry_after=None):
+        self.retry_after = retry_after
+        super().__init__(message)
+
+
 class LMStudioProvider(OCRProvider):
     """LM Studio OpenAI 互換 Vision API プロバイダ（urllib 直叩き）。
 
@@ -190,3 +198,218 @@ class LMStudioProvider(OCRProvider):
         except json.JSONDecodeError as e:
             raise RuntimeError(f"Unexpected response: {body[:500]}") from e
         return [m.get("id") for m in data.get("data", []) if m.get("id")]
+
+
+class ClaudeProvider(OCRProvider):
+    """Anthropic Claude messages API プロバイダ（urllib 直叩き）。
+
+    Anthropic の /v1/messages エンドポイントを使って OCR を実行する。
+    APIキーは環境変数 ANTHROPIC_API_KEY から取得し、settings には保存しない。
+    """
+
+    default_concurrency = 2
+    max_concurrency = 2
+
+    ANTHROPIC_VERSION = "2023-06-01"
+    MESSAGES_ENDPOINT = "https://api.anthropic.com/v1/messages"
+    MODELS_ENDPOINT = "https://api.anthropic.com/v1/models"
+    RECOMMENDED_MODELS = ["claude-haiku-4-5", "claude-sonnet-4-6", "claude-opus-4-8"]
+
+    # effort 対応モデル集合（haiku は非対応・D-16）
+    EFFORT_MODELS = {
+        "claude-sonnet-4-6",
+        "claude-opus-4-8",
+        "claude-opus-4-7",
+        "claude-opus-4-6",
+        "claude-opus-4-5",
+    }
+
+    def __init__(
+        self, api_key, model, timeout=120, max_tokens=4096, temperature=0.1, effort="low"
+    ):
+        """初期化。
+
+        引数:
+          api_key:     Anthropic API キー（環境変数 ANTHROPIC_API_KEY 由来）
+          model:       使用するモデル ID（例: "claude-sonnet-4-6"）
+          timeout:     HTTP タイムアウト秒数（既定: 120）
+          max_tokens:  最大トークン数（既定: 4096）
+          temperature: 温度パラメータ（haiku のみ使用・既定: 0.1）
+          effort:      effort レベル（sonnet/opus 系で使用・既定: "low"）
+        """
+        self.api_key = api_key
+        self.model = model
+        self.timeout = timeout
+        self.max_tokens = max_tokens
+        self.temperature = temperature
+        self.effort = effort
+
+    def _supports_effort(self):
+        """このモデルが effort パラメータ（output_config.effort）に対応しているか判定する。
+
+        戻り値: haiku 系は False、sonnet/opus 系は True。
+        """
+        # haiku は必ず False（D-16）
+        if "haiku" in self.model:
+            return False
+        # 明示的な対応リストに含まれるか確認
+        if self.model in self.EFFORT_MODELS:
+            return True
+        # 前方互換のためプレフィックス判定も併用
+        return ("opus" in self.model or "sonnet" in self.model) and "haiku" not in self.model
+
+    def _build_payload(self, b64_png, prompt):
+        """Anthropic messages API リクエストボディを構築する（内部メソッド）。
+
+        effort 対応モデル（sonnet/opus 系）は output_config.effort を付与し temperature は送らない。
+        非対応モデル（haiku 系）は temperature を付与し output_config は送らない（D-16・成功基準7）。
+        """
+        payload = {
+            "model": self.model,
+            "max_tokens": self.max_tokens,
+            "messages": [
+                {
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "image",
+                            "source": {
+                                "type": "base64",
+                                "media_type": "image/png",
+                                "data": b64_png,
+                            },
+                        },
+                        {"type": "text", "text": prompt},
+                    ],
+                }
+            ],
+        }
+        if self._supports_effort():
+            payload["output_config"] = {"effort": self.effort}
+        else:
+            payload["temperature"] = self.temperature
+        return payload
+
+    def ocr_image(self, b64_png, prompt, **kwargs):
+        """Anthropic messages API を呼び出して OCR テキストを返す。
+
+        引数:
+          b64_png: PNG 画像の base64 文字列
+          prompt:  OCR 指示テキスト
+          **kwargs: 未使用（インターフェース互換のため受け取る）
+
+        戻り値: OCR 結果テキスト（str）
+
+        例外:
+          OCRRetryableError: HTTP 429 または 5xx（リトライ可能）
+          ConnectionError: 接続失敗
+          TimeoutError:    タイムアウト
+          RuntimeError:    HTTP 4xx（429 以外）またはレスポンス形式不正
+        """
+        payload = self._build_payload(b64_png, prompt)
+        data = json.dumps(payload).encode("utf-8")
+        req = urllib.request.Request(  # noqa: S310
+            self.MESSAGES_ENDPOINT,
+            data=data,
+            headers={
+                "Content-Type": "application/json",
+                "x-api-key": self.api_key,
+                "anthropic-version": self.ANTHROPIC_VERSION,
+            },
+            method="POST",
+        )
+        try:
+            with urllib.request.urlopen(req, timeout=self.timeout) as resp:  # noqa: S310
+                body = resp.read().decode("utf-8")
+        except urllib.error.HTTPError as e:
+            # 429 または 5xx はリトライ可能として OCRRetryableError を送出する
+            if e.code == 429 or e.code >= 500:
+                retry_after = None
+                raw_retry = e.headers.get("Retry-After") if e.headers else None
+                if raw_retry:
+                    try:
+                        retry_after = float(raw_retry)
+                    except (ValueError, TypeError):
+                        retry_after = None
+                raise OCRRetryableError(
+                    f"HTTP {e.code}: レート制限またはサーバエラー（リトライ可能）",
+                    retry_after=retry_after,
+                ) from e
+            # 4xx（429 以外）は retryable ではない
+            try:
+                err_body = e.read().decode("utf-8", errors="replace")
+            except Exception:
+                err_body = ""
+            raise RuntimeError(f"HTTP {e.code}: {err_body or e.reason}") from e
+        except socket.timeout as e:
+            raise TimeoutError(f"timed out after {self.timeout}s") from e
+        except urllib.error.URLError as e:
+            reason = getattr(e, "reason", e)
+            if isinstance(reason, socket.timeout):
+                raise TimeoutError(f"timed out after {self.timeout}s") from e
+            raise ConnectionError(str(reason)) from e
+
+        # レスポンス解析: type=="text" ブロックを走査して結合（Pitfall 6・content[0] 決め打ち禁止）
+        try:
+            result = json.loads(body)
+            texts = [
+                block["text"]
+                for block in result.get("content", [])
+                if block.get("type") == "text"
+            ]
+            if not texts:
+                raise RuntimeError(f"Unexpected response format: {body[:500]}")
+            return "\n".join(texts)
+        except (json.JSONDecodeError, TypeError) as e:
+            raise RuntimeError(f"Unexpected response format: {body[:500]}") from e
+
+    def list_models(self):
+        """Anthropic /v1/models から vision 対応モデル ID リストを取得する。
+
+        キー未設定（空文字/None）の場合は API を呼ばず RECOMMENDED_MODELS を返す（D-08）。
+
+        戻り値: モデル ID 文字列のリスト（list[str]）
+
+        例外:
+          ConnectionError: 接続失敗
+          TimeoutError:    タイムアウト
+          RuntimeError:    HTTP エラーまたはレスポンス形式不正
+        """
+        if not self.api_key:
+            # キー未設定・オフライン時でも選択肢が出るよう静的リストを返す（D-08）
+            return list(self.RECOMMENDED_MODELS)
+
+        timeout = 10
+        req = urllib.request.Request(  # noqa: S310
+            self.MODELS_ENDPOINT,
+            headers={
+                "x-api-key": self.api_key,
+                "anthropic-version": self.ANTHROPIC_VERSION,
+            },
+            method="GET",
+        )
+        try:
+            with urllib.request.urlopen(req, timeout=timeout) as resp:  # noqa: S310
+                body = resp.read().decode("utf-8")
+        except socket.timeout as e:
+            raise TimeoutError(f"timed out after {timeout}s") from e
+        except urllib.error.HTTPError as e:
+            raise RuntimeError(f"HTTP {e.code}: {e.reason}") from e
+        except urllib.error.URLError as e:
+            reason = getattr(e, "reason", e)
+            if isinstance(reason, socket.timeout):
+                raise TimeoutError(f"timed out after {timeout}s") from e
+            raise ConnectionError(str(reason)) from e
+
+        try:
+            data = json.loads(body)
+        except json.JSONDecodeError as e:
+            raise RuntimeError(f"Unexpected response: {body[:500]}") from e
+
+        # capabilities.image_input.supported が True のモデルのみ返す
+        return [
+            m.get("id")
+            for m in data.get("data", [])
+            if m.get("id")
+            and m.get("capabilities", {}).get("image_input", {}).get("supported", False)
+        ]
