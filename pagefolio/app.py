@@ -128,6 +128,22 @@ class PDFEditorApp(
                 b.state(state)
             except Exception as e:
                 logger.debug("ボタン状態変更失敗: %s", e)
+        # OCR ボタン状態も連動して更新する（off では doc があっても disabled）
+        self._update_ocr_buttons_state()
+
+    def _update_ocr_buttons_state(self):
+        """OCR プロバイダ設定と doc 状態に応じて OCR ボタンの活性/非活性を切り替え。
+
+        ocr_provider が "off" のとき、またはドキュメントが開かれていないとき
+        disabled 化する。外部送信・課金をゼロにする安全策（成功基準6・D-09）。
+        """
+        is_ocr_on = self.settings.get("ocr_provider", "off") != "off"
+        state = ["!disabled"] if (is_ocr_on and self.doc) else ["disabled"]
+        for b in getattr(self, "_ocr_buttons", []):
+            try:
+                b.state(state)
+            except Exception as e:
+                logger.debug("OCR ボタン状態変更失敗: %s", e)
 
     def _check_doc(self):
         if not self.doc:

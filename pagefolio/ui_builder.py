@@ -535,19 +535,22 @@ class UIBuilderMixin:
         )
 
         f_ocr = section(self._t("sec_ocr"))
-        btn(
+        self._ocr_buttons = []
+        btn_ocr_current = btn(
             f_ocr,
             self._t("btn_ocr_current"),
             self._ocr_current_page,
             needs_doc=True,
         )
-        btn(
+        self._ocr_buttons.append(btn_ocr_current)
+        btn_ocr_selected = btn(
             f_ocr,
             self._t("btn_ocr_selected"),
             self._ocr_selected_pages,
             "Accent.TButton",
             needs_doc=True,
         )
+        self._ocr_buttons.append(btn_ocr_selected)
 
         f_plug = section(self._t("sec_plugin"))
         btn(f_plug, self._t("btn_plugin_mgr"), self._open_plugin_dialog)
@@ -557,3 +560,4 @@ class UIBuilderMixin:
 
         self._update_doc_buttons_state()
         self._update_edit_buttons_state()
+        self._update_ocr_buttons_state()
