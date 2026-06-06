@@ -523,3 +523,98 @@ class TestBuildProvider:
         """build_provider が返す provider は OCRProvider インスタンス (Test 3)"""
         provider = ocr.build_provider({"ocr_provider": "lmstudio"})
         assert isinstance(provider, OCRProvider)
+
+
+# ===== _resolve_api_key（Task 1: 05-03）=====
+
+
+class TestResolveApiKey:
+    """_resolve_api_key の動作検証（キー解決・環境変数優先・未設定時エラー）"""
+
+    def test_env_var_present_returns_env_value(self, monkeypatch):
+        """環境変数 ANTHROPIC_API_KEY が設定されていればその値を返す（成功基準3・D-02）"""
+        from pagefolio.ocr import _resolve_api_key
+
+        monkeypatch.setenv("ANTHROPIC_API_KEY", "env-key-abc")
+        result = _resolve_api_key("claude", {})
+        assert result == "env-key-abc"
+
+    def test_env_var_absent_session_key_returned(self, monkeypatch):
+        """環境変数未設定・セッションキーあり → セッションキーを返す（D-02 環境変数優先・未設定時セッション）"""
+        from pagefolio.ocr import _resolve_api_key
+
+        monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+        result = _resolve_api_key("claude", {"claude": "sess-key"})
+        assert result == "sess-key"
+
+    def test_env_var_takes_priority_over_session_key(self, monkeypatch):
+        """環境変数があれば session_keys にキーがあっても環境変数を返す（D-02 優先順位）"""
+        from pagefolio.ocr import _resolve_api_key
+
+        monkeypatch.setenv("ANTHROPIC_API_KEY", "env-wins")
+        result = _resolve_api_key("claude", {"claude": "session-key"})
+        assert result == "env-wins"
+
+    def test_no_env_no_session_raises_ocr_api_key_error(self, monkeypatch):
+        """環境変数もセッションキーもない場合 OCRAPIKeyError を raise する（成功基準2）"""
+        from pagefolio.ocr import _resolve_api_key
+        from pagefolio.ocr_providers import OCRAPIKeyError
+
+        monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+        with pytest.raises(OCRAPIKeyError) as ei:
+            _resolve_api_key("claude", {})
+        assert ei.value.env_var == "ANTHROPIC_API_KEY"
+
+    def test_os_environ_not_written(self, monkeypatch):
+        """_resolve_api_key は os.environ への書き込みを行わない（D-05）"""
+        import os
+        from pagefolio.ocr import _resolve_api_key
+
+        monkeypatch.setenv("ANTHROPIC_API_KEY", "original-key")
+        _resolve_api_key("claude", {"claude": "sess"})
+        # 環境変数が書き換えられていないことを確認
+        assert os.environ.get("ANTHROPIC_API_KEY") == "original-key"
+
+
+# ===== build_provider claude 分岐（Task 1: 05-03）=====
+
+
+class TestBuildProviderClaude:
+    """build_provider の claude 分岐検証（キー引数注入・settings への非漏洩）"""
+
+    def test_claude_returns_claude_provider(self, monkeypatch):
+        """ocr_provider='claude' のとき ClaudeProvider インスタンスを返す（成功基準1）"""
+        from pagefolio.ocr_providers import ClaudeProvider
+
+        monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+        settings = {"ocr_provider": "claude"}
+        provider = ocr.build_provider(settings, api_key="k")
+        assert isinstance(provider, ClaudeProvider)
+
+    def test_claude_provider_api_key_is_injected(self, monkeypatch):
+        """ClaudeProvider に api_key が引数注入されている（settings から読まない・成功基準3）"""
+        monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+        provider = ocr.build_provider({"ocr_provider": "claude"}, api_key="my-key")
+        assert provider.api_key == "my-key"
+
+    def test_claude_model_default(self, monkeypatch):
+        """claude_model 未指定時は claude-sonnet-4-6 がデフォルト"""
+        monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+        provider = ocr.build_provider({"ocr_provider": "claude"}, api_key="k")
+        assert provider.model == "claude-sonnet-4-6"
+
+    def test_claude_model_from_settings(self, monkeypatch):
+        """claude_model が settings に指定されていればそれを使う"""
+        monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+        settings = {"ocr_provider": "claude", "claude_model": "claude-haiku-4-5"}
+        provider = ocr.build_provider(settings, api_key="k")
+        assert provider.model == "claude-haiku-4-5"
+
+    def test_settings_not_polluted_with_api_key(self, monkeypatch):
+        """build_provider 後も settings 辞書に api_key が混入していない（成功基準1/3）"""
+        monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+        settings = {"ocr_provider": "claude"}
+        ocr.build_provider(settings, api_key="secret")
+        # api_key・claude_api_key・anthropic_api_key いずれも settings に入っていないこと
+        for key in ("api_key", "claude_api_key", "anthropic_api_key", "ANTHROPIC_API_KEY"):
+            assert key not in settings, f"settings に {key} が混入している"
