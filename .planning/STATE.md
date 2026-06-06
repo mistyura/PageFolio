@@ -4,7 +4,7 @@ milestone: v1.4.0
 milestone_name: OCR プロバイダ化 + クラウドAPI対応
 status: Roadmap created — ready for /gsd-plan-phase 4
 stopped_at: Phase 4 context gathered
-last_updated: "2026-06-06T05:34:38.025Z"
+last_updated: "2026-06-06T06:05:04.901Z"
 last_activity: 2026-06-06 — v1.4.0 ロードマップ作成完了（Phase 04-07）
 progress:
   total_phases: 4
