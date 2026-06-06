@@ -33,9 +33,9 @@ decisions:
   - "_refresh_claude_models は例外時も静的 RECOMMENDED_MODELS へフォールバック（D-08 一貫適用）"
   - "effort_frame / temperature_frame の pack 順は _on_model_change 呼び出し側が担保（フレーム同士の pack_forget が互いに独立）"
 metrics:
-  duration: "約 30 分（Task 1 + 2 完了）"
-  completed: "2026-06-07T09:35:00Z"
-  tasks_completed: 2
+  duration: "約 30 分（Task 1 + 2 完了）+ 目視確認（Task 3 approved 2026-06-07）"
+  completed: "2026-06-07T10:00:00Z"
+  tasks_completed: 3
   files_modified: 3
 ---
 
@@ -79,7 +79,7 @@ LLMConfigDialog にプロバイダ選択 DD（off/lmstudio/claude）・欄切替
 |------|------|--------|-------|
 | 1 | _ocr_buttons と _update_ocr_buttons_state を実装 | 7eea42e | pagefolio/ui_builder.py, pagefolio/app.py |
 | 2 | LLMConfigDialog にプロバイダ DD・欄切替・claude モデル更新・effort 切替を実装 | c4f232b | pagefolio/dialogs/llm_config.py |
-| 3（checkpoint） | ビジュアル確認 | 未完 — human-verify 待ち | — |
+| 3（checkpoint） | ビジュアル確認 — **approved 2026-06-07** | 3ffc19f (checkpoint pre-SUMMARY) | — |
 
 ## Deviations from Plan
 
@@ -107,6 +107,18 @@ LLMConfigDialog にプロバイダ選択 DD（off/lmstudio/claude）・欄切替
 
 なし（新規エンドポイント・スキーマ変更なし）。
 
+## Human Verify Result
+
+**Task 3: ビジュアル確認チェックポイント — approved（2026-06-07）**
+
+ユーザーが以下の動作を目視確認し「approved」と応答：
+- プロバイダ DD に off / lmstudio / claude が表示される
+- claude 選択で URL 欄が消え claude モデル欄が表示される（D-07）
+- opus/sonnet 系選択で effort 欄、haiku 系で temperature 欄に切替わる（D-17）
+- ANTHROPIC_API_KEY 未設定でもモデル更新ボタンで静的リストが表示される（D-08）
+- ocr_provider=off 適用後、PDF 開いても OCR ボタンが disabled（成功基準6・D-09）
+- ocr_provider=lmstudio に戻すと URL/モデル欄表示・OCR ボタン有効（後方互換）
+
 ## Self-Check: PASSED
 
 - `pagefolio/dialogs/llm_config.py` に `provider_var`・`_on_provider_change`・`effort_var` が存在: 確認済み
@@ -115,4 +127,5 @@ LLMConfigDialog にプロバイダ選択 DD（off/lmstudio/claude）・欄切替
 - llm_config.py の _apply に api_key 系格納なし（grep 確認）: 確認済み
 - コミット 7eea42e 存在: 確認済み
 - コミット c4f232b 存在: 確認済み
-- ruff check + pytest 293 passed: 確認済み
+- ruff check（変更ファイル）+ pytest 293 passed: 確認済み
+- human-verify checkpoint: approved（2026-06-07）

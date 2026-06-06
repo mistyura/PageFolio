@@ -85,7 +85,7 @@
 
 **Wave 3** *(blocked on Wave 1/2 completion)*
 
-  - [ ] 05-04-PLAN.md — provider ドロップダウン・モデル更新・effort/temperature 切替 + off で OCR ボタン無効化（llm_config.py/ui_builder.py）
+  - [x] 05-04-PLAN.md — provider ドロップダウン・モデル更新・effort/temperature 切替 + off で OCR ボタン無効化（llm_config.py/ui_builder.py）
   - [ ] 05-05-PLAN.md — コスト確認ゲート + マスク付きセッションキー入力欄（非永続化）+ 待機中表示 + provider 中立化（ocr_dialog.py）
 
 ### Phase 6: Gemini Provider + 逐次レンダリング最適化
@@ -124,6 +124,6 @@
 | 2. プレビュー最適化とリファクタリング | v1.3.0 | 3/3 | Complete | 2026-06-03 |
 | 3. API 整理と回帰テスト | v1.3.0 | 2/2 | Complete | 2026-06-03 |
 | 4. プロバイダ抽象化 | v1.4.0 | 3/3 | Complete | 2026-06-06 |
-| 5. Claude Provider + セキュリティ基盤 + プロバイダ選択 UI | v1.4.0 | 2/5 | In Progress|  |
+| 5. Claude Provider + セキュリティ基盤 + プロバイダ選択 UI | v1.4.0 | 4/5 | In Progress|  |
 | 6. Gemini Provider + 逐次レンダリング最適化 | v1.4.0 | 0/? | Not started | - |
 | 7. Tesseract + PluginManager 拡張 + QA | v1.4.0 | 0/? | Not started | - |

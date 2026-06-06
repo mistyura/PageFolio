@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.4.0
 milestone_name: OCR プロバイダ化 + クラウドAPI対応
 status: executing
-stopped_at: 05-03-PLAN.md 完了
-last_updated: "2026-06-06T16:47:00Z"
-last_activity: 2026-06-06 -- 05-03 完了（_resolve_api_key・build_provider claude 分岐・run_parallel バックオフ・_start_ocr キー解決ゲート）
+stopped_at: 05-04-PLAN.md 完了
+last_updated: "2026-06-07T10:00:00Z"
+last_activity: 2026-06-07 -- 05-04 完了（provider DD・欄切替・claude モデル更新・effort 切替・OCR ボタン無効化・human-verify approved）
 progress:
   total_phases: 4
   completed_phases: 1
   total_plans: 9
-  completed_plans: 7
+  completed_plans: 8
   percent: 33
 ---
 
@@ -26,9 +26,9 @@ See: .planning/PROJECT.md (updated 2026-06-06)
 ## Current Position
 
 Phase: 05 (claude-provider-ui) — EXECUTING
-Plan: 3 of 5
+Plan: 4 of 5
 Status: Executing Phase 05
-Last activity: 2026-06-06 -- 05-03 完了（_resolve_api_key・build_provider claude 分岐・run_parallel バックオフ・_start_ocr キー解決ゲート）
+Last activity: 2026-06-07 -- 05-04 完了（provider DD・欄切替・claude モデル更新・effort 切替・OCR ボタン無効化・human-verify approved）
 
 ```
 [==========] v1.3.0 COMPLETE
@@ -59,6 +59,7 @@ Last activity: 2026-06-06 -- 05-03 完了（_resolve_api_key・build_provider cl
 | Phase 05-claude-provider-ui P01 | 25 | 3 tasks | 2 files |
 | Phase 05-claude-provider-ui P02 | 10min | 3 tasks | 3 files |
 | Phase 05-claude-provider-ui P03 | 30min | 3 tasks | 3 files |
+| Phase 05-claude-provider-ui P04 | 30min | 3 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -100,6 +101,10 @@ Decisions are logged in PROJECT.md Key Decisions table.
 - [Phase 05-03]: run_parallel バックオフは provider 非依存の共通層として実装（Phase 6 Gemini で再利用可能・D-14）
 - [Phase 05-03]: _start_ocr の waiting on_progress は done=None で呼ぶ（完了カウントは進めない）
 - [Phase 05-03]: getattr(self, '_session_api_keys', {}) でテスト経路の安全なフォールバックを確保
+- [Phase 05-04]: provider Combobox values は静的リスト ['off','lmstudio','claude']（Phase 6: gemini を追加予定コメント付記）
+- [Phase 05-04]: _update_ocr_buttons_state は _update_doc_buttons_state から連動呼び出し（設定変更経路をカバー）
+- [Phase 05-04]: _refresh_claude_models は例外時も静的 RECOMMENDED_MODELS へフォールバック（D-08 一貫適用）
+- [Phase 05-04]: effort_frame / temperature_frame の pack 順は _on_model_change 呼び出し側が担保（フレーム同士の pack_forget が互いに独立）
 
 ### Pending Todos
 
@@ -124,10 +129,10 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-06-06T16:47:00Z
-Stopped at: 05-03-PLAN.md 完了
-Resume file: .planning/phases/05-claude-provider-ui/05-04-PLAN.md
+Last session: 2026-06-07T10:00:00Z
+Stopped at: 05-04-PLAN.md 完了
+Resume file: .planning/phases/05-claude-provider-ui/05-05-PLAN.md
 
 ## Operator Next Steps
 
-- 05-03 完了。次は 05-04（OCR ダイアログ UI 拡張 — セッションキー入力欄・コスト確認・waiting 進捗表示）
+- 05-04 完了。次は 05-05（OCR ダイアログ UI 拡張 — セッションキー入力欄・コスト確認・waiting 進捗表示）
