@@ -469,3 +469,243 @@ class TestClaudeProviderBuildPayload:
         text_block = content[1]
         assert text_block["type"] == "text"
         assert text_block["text"] == "OCRプロンプト"
+
+
+# ===== Task 2: ClaudeProvider.ocr_image / list_models =====
+
+
+class _FakeClaudeResponse:
+    """ClaudeProvider テスト用 urlopen 文脈マネージャーモック"""
+
+    def __init__(self, body, headers=None):
+        self._body = body.encode("utf-8") if isinstance(body, str) else body
+        self._headers = headers or {}
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc, tb):
+        return False
+
+    def read(self):
+        return self._body
+
+
+class _FakeHTTPError(urllib.error.HTTPError):
+    """テスト用 HTTPError モック（Retry-After ヘッダーをシミュレート）"""
+
+    def __init__(self, code, reason="Error", body=b"", headers=None):
+        self._body_bytes = body if isinstance(body, bytes) else body.encode("utf-8")
+        self._fake_headers = headers or {}
+        super().__init__("http://x", code, reason, {}, io.BytesIO(self._body_bytes))
+        # headers 属性を差し替えてテスト用 dict で上書きする
+        self.headers = self._fake_headers
+
+    def read(self):
+        return self._body_bytes
+
+
+class TestClaudeProviderOcrImage:
+    """ClaudeProvider.ocr_image の振る舞いを確認する"""
+
+    def test_success_returns_text(self, monkeypatch):
+        """正常レスポンス（type=='text' ブロック）から OCR テキストを返す"""
+        from pagefolio import ocr_providers
+
+        body = json.dumps({"content": [{"type": "text", "text": "OCR 結果テキスト"}]})
+
+        def fake_urlopen(req, timeout=None):
+            return _FakeClaudeResponse(body)
+
+        monkeypatch.setattr(ocr_providers.urllib.request, "urlopen", fake_urlopen)
+        p = ocr_providers.ClaudeProvider("test-key", "claude-sonnet-4-6")
+        result = p.ocr_image("Zg==", "テキストを書き出して")
+        assert result == "OCR 結果テキスト"
+
+    def test_mixed_content_joins_text_blocks(self, monkeypatch):
+        """content に thinking と text が混在しても type=='text' のブロックのみ結合して返す（Pitfall 6）"""
+        from pagefolio import ocr_providers
+
+        body = json.dumps(
+            {
+                "content": [
+                    {"type": "thinking", "thinking": "考え中..."},
+                    {"type": "text", "text": "1行目"},
+                    {"type": "text", "text": "2行目"},
+                ]
+            }
+        )
+
+        def fake_urlopen(req, timeout=None):
+            return _FakeClaudeResponse(body)
+
+        monkeypatch.setattr(ocr_providers.urllib.request, "urlopen", fake_urlopen)
+        p = ocr_providers.ClaudeProvider("key", "claude-opus-4-8")
+        result = p.ocr_image("Zg==", "テスト")
+        assert result == "1行目\n2行目"
+        assert "thinking" not in result
+
+    def test_429_raises_ocr_retryable_error(self, monkeypatch):
+        """HTTP 429 応答で OCRRetryableError を送出する"""
+        from pagefolio import ocr_providers
+        from pagefolio.ocr_providers import OCRRetryableError
+
+        def fake_urlopen(req, timeout=None):
+            raise _FakeHTTPError(429, "Too Many Requests", b"rate limit")
+
+        monkeypatch.setattr(ocr_providers.urllib.request, "urlopen", fake_urlopen)
+        p = ocr_providers.ClaudeProvider("key", "claude-sonnet-4-6")
+        with pytest.raises(OCRRetryableError):
+            p.ocr_image("Zg==", "テスト")
+
+    def test_429_with_retry_after_header(self, monkeypatch):
+        """Retry-After ヘッダーがあれば retry_after に反映される"""
+        from pagefolio import ocr_providers
+        from pagefolio.ocr_providers import OCRRetryableError
+
+        def fake_urlopen(req, timeout=None):
+            raise _FakeHTTPError(429, "Too Many Requests", b"rate limit", headers={"Retry-After": "3"})
+
+        monkeypatch.setattr(ocr_providers.urllib.request, "urlopen", fake_urlopen)
+        p = ocr_providers.ClaudeProvider("key", "claude-sonnet-4-6")
+        with pytest.raises(OCRRetryableError) as ei:
+            p.ocr_image("Zg==", "テスト")
+        assert ei.value.retry_after == 3.0
+
+    def test_503_raises_ocr_retryable_error(self, monkeypatch):
+        """HTTP 503（5xx）応答で OCRRetryableError を送出する"""
+        from pagefolio import ocr_providers
+        from pagefolio.ocr_providers import OCRRetryableError
+
+        def fake_urlopen(req, timeout=None):
+            raise _FakeHTTPError(503, "Service Unavailable", b"server error")
+
+        monkeypatch.setattr(ocr_providers.urllib.request, "urlopen", fake_urlopen)
+        p = ocr_providers.ClaudeProvider("key", "claude-sonnet-4-6")
+        with pytest.raises(OCRRetryableError):
+            p.ocr_image("Zg==", "テスト")
+
+    def test_400_raises_runtime_error_not_retryable(self, monkeypatch):
+        """HTTP 400（4xx・429 以外）は RuntimeError（retryable ではない）"""
+        from pagefolio import ocr_providers
+
+        def fake_urlopen(req, timeout=None):
+            raise _FakeHTTPError(400, "Bad Request", b"invalid param")
+
+        monkeypatch.setattr(ocr_providers.urllib.request, "urlopen", fake_urlopen)
+        p = ocr_providers.ClaudeProvider("key", "claude-sonnet-4-6")
+        with pytest.raises(RuntimeError) as ei:
+            p.ocr_image("Zg==", "テスト")
+        # OCRRetryableError ではないことを確認
+        from pagefolio.ocr_providers import OCRRetryableError
+
+        assert not isinstance(ei.value, OCRRetryableError)
+
+    def test_socket_timeout_raises_timeout_error(self, monkeypatch):
+        """socket.timeout で TimeoutError を送出する"""
+        from pagefolio import ocr_providers
+
+        def fake_urlopen(req, timeout=None):
+            raise socket.timeout("timed out")
+
+        monkeypatch.setattr(ocr_providers.urllib.request, "urlopen", fake_urlopen)
+        p = ocr_providers.ClaudeProvider("key", "claude-sonnet-4-6")
+        with pytest.raises(TimeoutError):
+            p.ocr_image("Zg==", "テスト")
+
+    def test_urlerror_raises_connection_error(self, monkeypatch):
+        """URLError で ConnectionError を送出する"""
+        from pagefolio import ocr_providers
+
+        def fake_urlopen(req, timeout=None):
+            raise urllib.error.URLError("Connection refused")
+
+        monkeypatch.setattr(ocr_providers.urllib.request, "urlopen", fake_urlopen)
+        p = ocr_providers.ClaudeProvider("key", "claude-sonnet-4-6")
+        with pytest.raises(ConnectionError):
+            p.ocr_image("Zg==", "テスト")
+
+    def test_request_headers_contain_required_fields(self, monkeypatch):
+        """リクエストヘッダーに x-api-key と anthropic-version が含まれる"""
+        from pagefolio import ocr_providers
+
+        captured = {}
+
+        def fake_urlopen(req, timeout=None):
+            captured["headers"] = dict(req.headers)
+            body = json.dumps({"content": [{"type": "text", "text": "ok"}]})
+            return _FakeClaudeResponse(body)
+
+        monkeypatch.setattr(ocr_providers.urllib.request, "urlopen", fake_urlopen)
+        p = ocr_providers.ClaudeProvider("my-api-key", "claude-sonnet-4-6")
+        p.ocr_image("Zg==", "テスト")
+        # urllib は先頭大文字に正規化するため大文字小文字を無視して確認
+        header_keys_lower = {k.lower() for k in captured["headers"]}
+        assert "x-api-key" in header_keys_lower
+        assert "anthropic-version" in header_keys_lower
+
+
+class TestClaudeProviderListModels:
+    """ClaudeProvider.list_models の振る舞いを確認する"""
+
+    def test_no_api_key_returns_recommended_models(self):
+        """api_key が空文字のとき API を呼ばず RECOMMENDED_MODELS を返す（D-08）"""
+        from pagefolio.ocr_providers import ClaudeProvider
+
+        p = ClaudeProvider("", "claude-sonnet-4-6")
+        result = p.list_models()
+        assert result == list(ClaudeProvider.RECOMMENDED_MODELS)
+
+    def test_no_api_key_none_returns_recommended_models(self):
+        """api_key が None のとき API を呼ばず RECOMMENDED_MODELS を返す（D-08）"""
+        from pagefolio.ocr_providers import ClaudeProvider
+
+        p = ClaudeProvider(None, "claude-sonnet-4-6")
+        result = p.list_models()
+        assert result == list(ClaudeProvider.RECOMMENDED_MODELS)
+
+    def test_with_api_key_filters_vision_capable_models(self, monkeypatch):
+        """キー設定時は /v1/models を呼び image_input.supported==True のモデルのみ返す"""
+        from pagefolio import ocr_providers
+
+        body = json.dumps(
+            {
+                "data": [
+                    {
+                        "id": "claude-sonnet-4-6",
+                        "capabilities": {"image_input": {"supported": True}},
+                    },
+                    {
+                        "id": "claude-haiku-4-5",
+                        "capabilities": {"image_input": {"supported": True}},
+                    },
+                    {
+                        "id": "claude-text-only",
+                        "capabilities": {"image_input": {"supported": False}},
+                    },
+                ]
+            }
+        )
+
+        def fake_urlopen(req, timeout=None):
+            assert "/v1/models" in req.full_url
+            return _FakeClaudeResponse(body)
+
+        monkeypatch.setattr(ocr_providers.urllib.request, "urlopen", fake_urlopen)
+        p = ocr_providers.ClaudeProvider("my-key", "claude-sonnet-4-6")
+        result = p.list_models()
+        assert "claude-sonnet-4-6" in result
+        assert "claude-haiku-4-5" in result
+        assert "claude-text-only" not in result
+
+    def test_connection_error_raises(self, monkeypatch):
+        """接続失敗で ConnectionError を送出する"""
+        from pagefolio import ocr_providers
+
+        def fake_urlopen(req, timeout=None):
+            raise urllib.error.URLError("refused")
+
+        monkeypatch.setattr(ocr_providers.urllib.request, "urlopen", fake_urlopen)
+        p = ocr_providers.ClaudeProvider("valid-key", "claude-sonnet-4-6")
+        with pytest.raises(ConnectionError):
+            p.list_models()
