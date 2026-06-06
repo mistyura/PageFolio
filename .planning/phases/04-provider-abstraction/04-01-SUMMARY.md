@@ -117,5 +117,14 @@ TDD サイクルに従い 2 コミット構成:
 - `ocr.py` の既存関数（`build_chat_payload` / `call_lm_studio` / `fetch_lm_studio_models`）は本プランでは温存済み。Plan 02 でのリファクタ時に削除または deprecated 化する
 
 ---
+## Self-Check: PASSED
+
+- `pagefolio/ocr_providers.py` — FOUND
+- `tests/test_ocr_providers.py` — FOUND
+- `.planning/phases/04-provider-abstraction/04-01-SUMMARY.md` — FOUND
+- commit `e2b2ecb` — FOUND
+- commit `90b2a29` — FOUND
+
+---
 *Phase: 04-provider-abstraction*
 *Completed: 2026-06-06*
