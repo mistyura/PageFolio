@@ -6,6 +6,7 @@
 import base64
 import logging
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from tkinter import messagebox
 
 import fitz
 
@@ -236,8 +237,20 @@ class OCRMixin:
             self.settings.get("ocr_temperature", DEFAULT_OCR_TEMPERATURE)
         )
 
-        # build_provider で settings から Provider を生成
-        provider = build_provider(self.settings)
+        # build_provider で settings から Provider を生成（CR-01: ValueError を捕捉）
+        try:
+            provider = build_provider(self.settings)
+        except ValueError as e:
+            name = self.settings.get("ocr_provider", "")
+            logger.error(
+                "未対応の OCR プロバイダ '%s' が設定されています: %s", name, e
+            )
+            messagebox.showerror(
+                self._t("err_title"),
+                self._t("ocr_provider_unsupported").format(name=name),
+                parent=self.root,
+            )
+            return
 
         # 並列度クランプ上限を provider.max_concurrency に変更（D-10）
         concurrency = max(

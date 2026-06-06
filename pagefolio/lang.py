@@ -285,6 +285,10 @@ LANG = {
             "モデルが大きい場合は設定でタイムアウトを延ばしてください。\n"
             "\n詳細: {error}"
         ),
+        "ocr_provider_unsupported": (
+            "未対応の OCR プロバイダが設定されています: {name}\n"
+            "設定を確認してください。"
+        ),
         # LM Studio 設定
         "settings_lm_studio_section": "🔍 LM Studio (OCR)",
         "settings_lm_url": "URL:",
@@ -608,6 +612,10 @@ LANG = {
             "OCR timed out ({timeout}s).\n"
             "If the model is large, increase the timeout in settings.\n"
             "\nDetails: {error}"
+        ),
+        "ocr_provider_unsupported": (
+            "Unsupported OCR provider configured: {name}\n"
+            "Please check your settings."
         ),
         # LM Studio settings
         "settings_lm_studio_section": "🔍 LM Studio (OCR)",
