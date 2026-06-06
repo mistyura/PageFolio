@@ -788,3 +788,73 @@ class TestRunParallelBackoff:
             c for c in progress_calls if c[2] is not None and c[2].startswith("waiting")
         ]
         assert len(waiting_calls) >= 1
+
+
+# ===== _start_ocr クラウドゲート（成功基準3 リグレッション: 05-05 目視 NG 修正）=====
+
+
+class TestStartOcrCloudGate:
+    """claude かつキー未解決でも _start_ocr が OCRDialog を開く（成功基準3）。
+
+    旧実装は env 未設定・セッションキー空のとき即エラーで return し OCRDialog を
+    生成しなかったため、05-05 のマスク付きセッションキー入力欄に到達できなかった。
+    """
+
+    def _make_fake_app(self):
+        import types
+
+        return types.SimpleNamespace(
+            settings={"ocr_provider": "claude"},
+            _session_api_keys={},
+            root=None,
+            doc=object(),
+            lang="ja",
+            _t=lambda key: key,
+            _font=lambda *a, **k: None,
+        )
+
+    def test_cloud_no_key_opens_dialog_without_error(self, monkeypatch):
+        """env 未設定・セッションキー空でも showerror せず OCRDialog を開く"""
+        import pagefolio.ocr_dialog as ocr_dialog
+        from pagefolio.ocr import OCRMixin
+
+        monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+
+        opened = {"dialog": False}
+        err = {"count": 0}
+
+        def fake_dialog(*args, **kwargs):
+            opened["dialog"] = True
+            return object()
+
+        monkeypatch.setattr(ocr_dialog, "OCRDialog", fake_dialog)
+        monkeypatch.setattr(
+            ocr.messagebox,
+            "showerror",
+            lambda *a, **k: err.__setitem__("count", err["count"] + 1),
+        )
+
+        fake = self._make_fake_app()
+        OCRMixin._start_ocr(fake, [0])
+
+        assert opened["dialog"] is True
+        assert err["count"] == 0
+
+    def test_cloud_env_key_resolved_opens_dialog(self, monkeypatch):
+        """env 設定済みなら従来どおり OCRDialog を開く（後方互換）"""
+        import pagefolio.ocr_dialog as ocr_dialog
+        from pagefolio.ocr import OCRMixin
+
+        monkeypatch.setenv("ANTHROPIC_API_KEY", "env-key")
+
+        opened = {"dialog": False}
+        monkeypatch.setattr(
+            ocr_dialog,
+            "OCRDialog",
+            lambda *a, **k: opened.__setitem__("dialog", True),
+        )
+
+        fake = self._make_fake_app()
+        OCRMixin._start_ocr(fake, [0])
+
+        assert opened["dialog"] is True

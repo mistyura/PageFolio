@@ -318,8 +318,11 @@ class OCRMixin:
             self.settings.get("ocr_temperature", DEFAULT_OCR_TEMPERATURE)
         )
 
-        # クラウドプロバイダ（claude 等）のキー解決ゲート（成功基準2・D-02）
-        # キー未設定なら実行前に明示エラーを出して停止する（OCRDialog を生成しない）
+        # クラウドプロバイダ（claude 等）のキー事前解決（成功基準3・D-02/D-03）
+        # 環境変数 or 既存セッションキーがあればここで解決して provider に注入する。
+        # 未解決でもここではブロックせず OCRDialog を開く。OCRDialog がマスク付き
+        # セッションキー入力欄を表示し（成功基準3）、実行時にキー未入力なら明示エラーで
+        # 中止する（成功基準2 は OCRDialog._on_run が担保）。
         name = self.settings.get("ocr_provider", "")
         api_key = None
         _cloud_providers = {"claude"}  # Phase 6 で gemini を追加
@@ -330,13 +333,9 @@ class OCRMixin:
             session_keys = getattr(self, "_session_api_keys", {})
             try:
                 api_key = _resolve_api_key(name, session_keys)
-            except OCRAPIKeyError as e:
-                messagebox.showerror(
-                    self._t("err_title"),
-                    self._t("ocr_api_key_missing").format(env_var=e.env_var),
-                    parent=self.root,
-                )
-                return  # キー未設定: OCRDialog を生成せず処理を止める（成功基準2）
+            except OCRAPIKeyError:
+                # キー未解決: OCRDialog のセッションキー入力欄に委ねる（成功基準3）
+                api_key = None
 
         # build_provider で settings から Provider を生成（CR-01: ValueError を捕捉）
         try:
