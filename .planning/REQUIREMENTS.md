@@ -15,8 +15,8 @@ REQ-ID 形式: `OCR-[CATEGORY]-[NN]`。v1.3.0（`BUG`/`REFAC`/`TEST`）とは別
 
 ### OCR-PROV — プロバイダ抽象化（土台）
 
-- [ ] **OCR-PROV-01**: `OCRProvider` 抽象基底クラスを定義し、認識（`recognize`）・モデル一覧取得・並列度ポリシーの共通インターフェースを持つ
-- [ ] **OCR-PROV-02**: 既存 LM Studio OCR を `LMStudioProvider` 実装へリファクタし、既存の OCR 挙動を後方互換で維持する
+- [x] **OCR-PROV-01**: `OCRProvider` 抽象基底クラスを定義し、認識（`recognize`）・モデル一覧取得・並列度ポリシーの共通インターフェースを持つ
+- [x] **OCR-PROV-02**: 既存 LM Studio OCR を `LMStudioProvider` 実装へリファクタし、既存の OCR 挙動を後方互換で維持する
 - [ ] **OCR-PROV-03**: `run_parallel()` をプロバイダ非依存に一般化し、プロバイダ別の並列度を受け取れるようにする
 
 ### OCR-API — クラウド API プロバイダ
@@ -80,8 +80,8 @@ REQ-ID 形式: `OCR-[CATEGORY]-[NN]`。v1.3.0（`BUG`/`REFAC`/`TEST`）とは別
 
 | REQ-ID | Phase | Status |
 |--------|-------|--------|
-| OCR-PROV-01 | Phase 4 | Pending |
-| OCR-PROV-02 | Phase 4 | Pending |
+| OCR-PROV-01 | Phase 4 | Complete |
+| OCR-PROV-02 | Phase 4 | Complete |
 | OCR-PROV-03 | Phase 4 | Pending |
 | OCR-PERF-01 | Phase 4 | Pending |
 | OCR-SEC-01 | Phase 5 | Pending |
