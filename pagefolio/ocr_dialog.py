@@ -4,6 +4,7 @@
 """OCR ダイアログ — 進行表示・キャンセル・結果エクスポート"""
 
 import logging
+import os
 import threading
 import tkinter as tk
 from tkinter import filedialog, messagebox, ttk
@@ -13,7 +14,9 @@ from pagefolio.ocr import (
     DEFAULT_OCR_CONCURRENCY,
     MAX_OCR_CONCURRENCY,
     MAX_OCR_MAX_TOKENS,
+    MAX_RETRIES,
     OCR_PROMPTS,
+    build_provider,
     has_embedded_text,
     page_to_png_b64,
     run_parallel,
@@ -62,6 +65,8 @@ class OCRDialog(tk.Toplevel):
         self.max_tokens_var = tk.IntVar(value=int(max_tokens))
         self.temperature_var = tk.DoubleVar(value=float(temperature))
         self.concurrency = max(1, min(MAX_OCR_CONCURRENCY, int(concurrency)))
+        # セッションキー入力用（マスク表示・D-04）
+        self.api_key_var = tk.StringVar()
         # OCRProvider インスタンス（D-03: メインスレッド側でのみ使用）
         self.provider = provider
         self.results = {}  # page_idx -> text
@@ -306,6 +311,29 @@ class OCRDialog(tk.Toplevel):
             font=self._font(-2),
         ).pack(anchor="w", padx=16)
 
+        # セッションキー入力欄（クラウドかつ env 未設定時のみ表示・マスク・D-04）
+        self._key_frame = tk.Frame(self, bg=C["BG_DARK"])
+        if self._needs_session_key():
+            self._key_frame.pack(fill="x", padx=16, pady=(4, 0))
+        tk.Label(
+            self._key_frame,
+            text=self._L["ocr_session_key_label"],
+            bg=C["BG_DARK"],
+            fg=C["WARNING"],
+            font=self._font(-1),
+        ).pack(side="left")
+        self.api_key_entry = tk.Entry(
+            self._key_frame,
+            show="*",
+            textvariable=self.api_key_var,
+            font=self._font(-1),
+            bg=C["BG_CARD"],
+            fg=C["TEXT_MAIN"],
+            insertbackground=C["TEXT_MAIN"],
+            relief="flat",
+        )
+        self.api_key_entry.pack(side="left", fill="x", expand=True, padx=(4, 0))
+
         # 進行表示
         self.progress_var = tk.StringVar(value=self._L["ocr_run_first"])
         tk.Label(
@@ -429,14 +457,116 @@ class OCRDialog(tk.Toplevel):
         self._done = False
         self._cancel_flag.clear()
 
+    # ── クラウドプロバイダ判定・コスト確認・セッションキー ──
+
+    def _is_cloud_provider(self):
+        """現在の ocr_provider 設定がクラウド系か判定する。
+
+        claude（将来は gemini 等）であれば True を返す（D-13）。
+        """
+        from pagefolio.ocr_providers import ClaudeProvider
+
+        name = self.app.settings.get("ocr_provider", "")
+        if name == "claude":
+            return True
+        # isinstance ガード（将来 provider インスタンスが差し替わっていても対応）
+        if isinstance(self.provider, ClaudeProvider):
+            return True
+        return False
+
+    def _estimate_cost(self, model, page_count):
+        """ページ数とモデルから概算コスト文字列を返す（D-10）。
+
+        STACK.md 価格表: haiku $1/$5・sonnet $3/$15・opus $5/$25 MTok（input/output）。
+        Vision 入力: 1枚あたり最大 1568 トークン相当と仮定し、
+        OCR 出力: 1ページあたり平均 500 トークン程度を想定した粗い見積もり。
+        正確性より「課金が発生する」警告の存在が重要（D-10・Pitfall 8）。
+        """
+        # モデル別 input 単価（$/MTok）— STACK.md 価格表
+        if "haiku" in model:
+            input_price = 1.0  # haiku: $1/MTok
+            output_price = 5.0  # haiku: $5/MTok
+        elif "sonnet" in model:
+            input_price = 3.0  # sonnet: $3/MTok
+            output_price = 15.0  # sonnet: $15/MTok
+        else:
+            # opus（または不明モデル）
+            input_price = 5.0  # opus: $5/MTok
+            output_price = 25.0  # opus: $25/MTok
+
+        # Vision 入力トークン見積もり: 約 1600 tokens/page（Anthropic 参考値）
+        # 出力トークン見積もり: 約 500 tokens/page（OCR 結果テキスト）
+        input_tokens = page_count * 1600
+        output_tokens = page_count * 500
+        cost = (input_tokens * input_price + output_tokens * output_price) / 1_000_000
+        return f"約 ${cost:.3f} 程度"
+
+    def _needs_session_key(self):
+        """クラウドかつ環境変数 ANTHROPIC_API_KEY が未設定のときに True を返す。
+
+        環境変数が設定済みであれば入力欄を表示しない（D-02/D-03）。
+        """
+        if not self._is_cloud_provider():
+            return False
+        return not bool(os.environ.get("ANTHROPIC_API_KEY"))
+
+    def _confirm_cost(self):
+        """クラウド送信前のコスト確認ダイアログを表示し、ユーザーの選択を bool で返す。
+
+        毎回表示する（「今後表示しない」は設けない・D-11）。
+        ダイアログ内容（D-12 の3点）:
+          1. 送信先ホスト（api.anthropic.com）
+          2. 対象ページ数と概算コスト
+          3. 「ページ画像が外部 API に送信されます」「従量課金が発生します」
+        OK で True・キャンセルで False を返す（成功基準5）。
+        """
+        model = self.app.settings.get("claude_model", "claude-sonnet-4-6")
+        page_count = len(self.page_indices)
+        cost = self._estimate_cost(model, page_count)
+        msg = self._L["ocr_cost_confirm_msg"].format(
+            host="api.anthropic.com",
+            count=page_count,
+            cost=cost,
+        )
+        return messagebox.askyesno(
+            self._L["ocr_cost_confirm_title"],
+            msg,
+            parent=self,
+        )
+
     # ── ワーカー ──
     def _on_run(self):
         """読み取り実行ボタン: OCR を開始する。
 
         メインスレッドでレンダリング/埋め込み判定後にワーカーを起動する。
+        クラウドプロバイダ時は実行前にコスト確認ゲートを挟む（成功基準5・D-13）。
         """
         if self._started:
             return
+
+        # ── クラウド実行ゲート（_started を True にする前）──
+        if self._is_cloud_provider():
+            # セッションキー入力（環境変数未設定時のみ）
+            if self._needs_session_key():
+                key = self.api_key_var.get().strip()
+                if not key:
+                    # キー未入力 → エラー表示して中止（成功基準2・T-05-19）
+                    messagebox.showerror(
+                        self._L["err_title"],
+                        self._L["ocr_api_key_missing"].format(
+                            env_var="ANTHROPIC_API_KEY"
+                        ),
+                        parent=self,
+                    )
+                    return
+                # _session_api_keys に格納（settings には入れない・D-01/D-03）
+                self.app._session_api_keys["claude"] = key
+
+            # コスト確認ダイアログ（毎回・D-11・D-12）
+            if not self._confirm_cost():
+                # キャンセル → OCR を始めない（成功基準5）
+                return
+
         self._started = True
         self.run_btn.state(["disabled"])
         self.cancel_btn.state(["!disabled"])
@@ -456,8 +586,9 @@ class OCRDialog(tk.Toplevel):
         self._effective_timeout = self._ocr_timeout
         self._ocr_prompt = OCR_PROMPTS.get(self.preset_var.get(), OCR_PROMPTS["text"])
 
-        # CR-02: ダイアログ UI の live 値で self.provider を再生成する
-        # ワーカースレッド起動前に実行（run_parallel に反映される・メインスレッドのみ）
+        # CR-02（中立化版）: プロバイダ種別に応じて provider を再生成する
+        # lmstudio / off → LMStudioProvider（live 値で再生成・後方互換維持）
+        # claude → build_provider 経由で ClaudeProvider（api_key は引数注入のみ・D-01）
         try:
             url = self.url_var.get().strip()
         except (tk.TclError, ValueError):
@@ -478,15 +609,29 @@ class OCRDialog(tk.Toplevel):
             _prov = self.provider
             temperature = getattr(_prov, "temperature", 0.1) if _prov else 0.1
 
-        from pagefolio.ocr_providers import LMStudioProvider
+        name = self.app.settings.get("ocr_provider", "")
+        if name == "claude":
+            # claude: build_provider 経由でキー注入（D-01/D-05）
+            from pagefolio.ocr import _resolve_api_key
+            from pagefolio.ocr_providers import OCRAPIKeyError
 
-        self.provider = LMStudioProvider(
-            url=url,
-            model=model,
-            timeout=self._effective_timeout,
-            max_tokens=max_tokens,
-            temperature=temperature,
-        )
+            session_keys = getattr(self.app, "_session_api_keys", {})
+            try:
+                api_key = _resolve_api_key("claude", session_keys)
+            except OCRAPIKeyError:
+                api_key = ""
+            self.provider = build_provider(self.app.settings, api_key=api_key)
+        else:
+            # lmstudio / off: ライブ値で再生成（CR-02 後方互換）
+            from pagefolio.ocr_providers import LMStudioProvider
+
+            self.provider = LMStudioProvider(
+                url=url,
+                model=model,
+                timeout=self._effective_timeout,
+                max_tokens=max_tokens,
+                temperature=temperature,
+            )
 
         # D-01/D-03/D-05: フェーズ1はメインスレッドで after() 小分け実行
         # レンダリング完了後にワーカースレッドを起動する
@@ -554,6 +699,25 @@ class OCRDialog(tk.Toplevel):
 
         # フェーズ2: run_parallel で Vision OCR（スキップ除外済みページのみ）
         def on_progress(done, page_idx, status):
+            # "waiting/{attempt}" 時は待機中表示（D-15・T-05-20）
+            # バックグラウンドスレッドから直接操作せず after(0) 経由（Pitfall 3）
+            if status is not None and status.startswith("waiting"):
+                # "waiting/{attempt}" 形式からリトライ番号を取り出す
+                try:
+                    n = int(status.split("/")[1])
+                except (IndexError, ValueError):
+                    n = 1
+                self.after(
+                    0,
+                    lambda p=page_idx, _n=n: self.progress_var.set(
+                        self._L["ocr_waiting_retry"].format(
+                            page=p + 1, n=_n, max=MAX_RETRIES
+                        )
+                    ),
+                )
+                # 待機中は進捗バーを進めない（D-15）
+                return
+            # 通常完了（ok / err）: 進捗テキストと進捗バーを更新
             self.after(
                 0,
                 lambda d=done + skipped_count, p=page_idx: self.progress_var.set(

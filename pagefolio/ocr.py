@@ -185,10 +185,11 @@ def run_parallel(
                 if attempt >= MAX_RETRIES:
                     # 最大リトライ回数に達した → errors に記録
                     return ("err", page_idx, str(e))
-                # waiting 進捗を通知（D-15）
+                # waiting 進捗を通知（D-15）。status に "waiting/{attempt}" を埋めて
+                # リトライ番号を ocr_dialog 側で取得できるようにする
                 if on_progress is not None:
                     try:
-                        on_progress(None, page_idx, "waiting")
+                        on_progress(None, page_idx, f"waiting/{attempt}")
                     except Exception as pe:
                         logger.debug("on_progress waiting コールバック失敗: %s", pe)
                 # Retry-After 優先・なければ指数バックオフ（1s→2s→4s→…）

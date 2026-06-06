@@ -782,6 +782,9 @@ class TestRunParallelBackoff:
             concurrency=1,
             on_progress=on_progress,
         )
-        # "waiting" ステータスのコールが1回以上あること
-        waiting_calls = [c for c in progress_calls if c[2] == "waiting"]
+        # "waiting/{attempt}" ステータスのコールが1回以上あること
+        # status は "waiting/{attempt}" 形式（ocr_dialog 側でリトライ番号を参照できる）
+        waiting_calls = [
+            c for c in progress_calls if c[2] is not None and c[2].startswith("waiting")
+        ]
         assert len(waiting_calls) >= 1
