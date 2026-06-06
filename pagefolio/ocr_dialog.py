@@ -456,6 +456,38 @@ class OCRDialog(tk.Toplevel):
         self._effective_timeout = self._ocr_timeout
         self._ocr_prompt = OCR_PROMPTS.get(self.preset_var.get(), OCR_PROMPTS["text"])
 
+        # CR-02: ダイアログ UI の live 値で self.provider を再生成する
+        # ワーカースレッド起動前に実行（run_parallel に反映される・メインスレッドのみ）
+        try:
+            url = self.url_var.get().strip()
+        except (tk.TclError, ValueError):
+            url = getattr(self.provider, "url", "") if self.provider else ""
+        try:
+            model = self.model_var.get().strip()
+        except (tk.TclError, ValueError):
+            model = getattr(self.provider, "model", "") if self.provider else ""
+        try:
+            raw_mt = int(self.max_tokens_var.get())
+            max_tokens = max(-1, min(MAX_OCR_MAX_TOKENS, raw_mt))
+        except (tk.TclError, ValueError):
+            _prov = self.provider
+            max_tokens = getattr(_prov, "max_tokens", -1) if _prov else -1
+        try:
+            temperature = max(0.0, min(2.0, float(self.temperature_var.get())))
+        except (tk.TclError, ValueError):
+            _prov = self.provider
+            temperature = getattr(_prov, "temperature", 0.1) if _prov else 0.1
+
+        from pagefolio.ocr_providers import LMStudioProvider
+
+        self.provider = LMStudioProvider(
+            url=url,
+            model=model,
+            timeout=self._effective_timeout,
+            max_tokens=max_tokens,
+            temperature=temperature,
+        )
+
         # D-01/D-03/D-05: フェーズ1はメインスレッドで after() 小分け実行
         # レンダリング完了後にワーカースレッドを起動する
         self._render_idx = 0
