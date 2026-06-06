@@ -17,7 +17,7 @@ REQ-ID 形式: `OCR-[CATEGORY]-[NN]`。v1.3.0（`BUG`/`REFAC`/`TEST`）とは別
 
 - [x] **OCR-PROV-01**: `OCRProvider` 抽象基底クラスを定義し、認識（`recognize`）・モデル一覧取得・並列度ポリシーの共通インターフェースを持つ
 - [x] **OCR-PROV-02**: 既存 LM Studio OCR を `LMStudioProvider` 実装へリファクタし、既存の OCR 挙動を後方互換で維持する
-- [ ] **OCR-PROV-03**: `run_parallel()` をプロバイダ非依存に一般化し、プロバイダ別の並列度を受け取れるようにする
+- [x] **OCR-PROV-03**: `run_parallel()` をプロバイダ非依存に一般化し、プロバイダ別の並列度を受け取れるようにする
 
 ### OCR-API — クラウド API プロバイダ
 
@@ -40,7 +40,7 @@ REQ-ID 形式: `OCR-[CATEGORY]-[NN]`。v1.3.0（`BUG`/`REFAC`/`TEST`）とは別
 
 ### OCR-PERF — 低スペック対策・安定性
 
-- [ ] **OCR-PERF-01**: テキストが埋め込まれたページは `page.get_text()` の結果を採用し、Vision API 呼び出しをスキップする
+- [x] **OCR-PERF-01**: テキストが埋め込まれたページは `page.get_text()` の結果を採用し、Vision API 呼び出しをスキップする
 - [ ] **OCR-PERF-02**: ページ単位の逐次レンダリング → 送信 → 破棄でメモリ使用量を抑える（全ページ画像の一括保持を廃止）
 - [ ] **OCR-PERF-03**: クラウドプロバイダは並列度を抑制する（Gemini=1 / Claude=2、ローカル LM Studio は最大 8）
 - [ ] **OCR-PERF-04**: 429 / 5xx 応答に対し指数バックオフでリトライする（最大 3 回・`Retry-After` ヘッダ優先）
@@ -82,8 +82,8 @@ REQ-ID 形式: `OCR-[CATEGORY]-[NN]`。v1.3.0（`BUG`/`REFAC`/`TEST`）とは別
 |--------|-------|--------|
 | OCR-PROV-01 | Phase 4 | Complete |
 | OCR-PROV-02 | Phase 4 | Complete |
-| OCR-PROV-03 | Phase 4 | Pending |
-| OCR-PERF-01 | Phase 4 | Pending |
+| OCR-PROV-03 | Phase 4 | Complete |
+| OCR-PERF-01 | Phase 4 | Complete |
 | OCR-SEC-01 | Phase 5 | Pending |
 | OCR-SEC-02 | Phase 5 | Pending |
 | OCR-SEC-03 | Phase 5 | Pending |

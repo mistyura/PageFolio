@@ -4,13 +4,13 @@ milestone: v1.4.0
 milestone_name: OCR プロバイダ化 + クラウドAPI対応
 status: executing
 stopped_at: Phase 4 context gathered
-last_updated: "2026-06-06T06:16:32.703Z"
+last_updated: "2026-06-06T06:29:51.481Z"
 last_activity: 2026-06-06 -- Phase 04 execution started
 progress:
   total_phases: 4
   completed_phases: 0
   total_plans: 3
-  completed_plans: 1
+  completed_plans: 2
   percent: 0
 ---
 
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-06-06)
 ## Current Position
 
 Phase: 04 (provider-abstraction) — EXECUTING
-Plan: 2 of 3
+Plan: 3 of 3
 Status: Ready to execute
 Last activity: 2026-06-06 -- Phase 04 execution started
 
@@ -53,6 +53,7 @@ Last activity: 2026-06-06 -- Phase 04 execution started
 
 *v1.4.0 フェーズ完了後に追記*
 | Phase 04-provider-abstraction P01 | 3min | 2 tasks | 2 files |
+| Phase 04-provider-abstraction P02 | 8min | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -78,6 +79,8 @@ Decisions are logged in PROJECT.md Key Decisions table.
 - V14-D-07: テキスト埋め込み判定 (`page.get_text()`) を Phase 04 で先行実装（低コスト・高効果）
 - V14-D-08: Tesseract / PluginManager 登録フックは Phase 07（任意・最終）。スコープ調整時に切りやすい位置
 - [Phase ?]: OCRProvider 抽象基底（ocr_image/list_models 抽象メソッド + default_concurrency/max_concurrency クラス属性）を pagefolio/ocr_providers.py に新設し、後続プランのインターフェース契約を確定
+- [Phase 04-provider-abstraction]: EMBEDDED_TEXT_MIN_CHARS=3: 1〜2文字の誤検出を抑制しつつ典型的なページ番号テキスト以上を検出する（D-06）
+- [Phase 04-provider-abstraction]: build_provider で ocr_provider='off' のとき LMStudioProvider を返す（Phase 4 後方互換・D-CONTEXT）
 
 ### Pending Todos
 
@@ -102,7 +105,7 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-06-06T06:16:32.694Z
+Last session: 2026-06-06T06:29:51.471Z
 Stopped at: Phase 4 context gathered
 Resume file: .planning/phases/04-provider-abstraction/04-CONTEXT.md
 
