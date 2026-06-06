@@ -41,6 +41,8 @@ def _load_settings():
         "ocr_max_tokens": -1,
         "ocr_temperature": 0.1,
         "ocr_concurrency": 2,
+        # V14-D-03: 安全デフォルト（Phase 4 では LMStudioProvider として動作）
+        "ocr_provider": "off",
     }
     try:
         path = _get_settings_path()
