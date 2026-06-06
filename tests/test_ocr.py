@@ -624,3 +624,164 @@ class TestBuildProviderClaude:
             "ANTHROPIC_API_KEY",
         ):
             assert key not in settings, f"settings に {key} が混入している"
+
+
+# ===== run_parallel バックオフ（Task 2: 05-03）=====
+
+
+class TestRunParallelBackoff:
+    """run_parallel の OCRRetryableError 指数バックオフ検証（成功基準8・OCR-PERF-04）"""
+
+    def test_retryable_once_then_success(self, monkeypatch):
+        """1回 OCRRetryableError を投げた後に成功する → results に入る（リトライ成功）"""
+        from unittest.mock import MagicMock
+
+        import pagefolio.ocr as ocr_mod
+        from pagefolio.ocr_providers import OCRRetryableError
+
+        mock_time = MagicMock()
+        monkeypatch.setattr(ocr_mod, "time", mock_time)
+
+        call_count = {"n": 0}
+
+        def side_effect(b64, prompt):
+            call_count["n"] += 1
+            if call_count["n"] == 1:
+                raise OCRRetryableError("429 rate limit", retry_after=None)
+            return "ok-text"
+
+        provider = FakeProvider(side_effect=side_effect)
+        results, errors, fm, fk = ocr.run_parallel(
+            provider,
+            images_b64={0: "A"},
+            page_indices=[0],
+            concurrency=1,
+        )
+        assert 0 in results
+        assert results[0] == "ok-text"
+        assert errors == {}
+
+    def test_always_retryable_errors_after_max_retries(self, monkeypatch):
+        """毎回 OCRRetryableError → 最大3回リトライ後に errors に記録（無限ループしない）"""
+        from unittest.mock import MagicMock
+
+        import pagefolio.ocr as ocr_mod
+        from pagefolio.ocr_providers import OCRRetryableError
+
+        mock_time = MagicMock()
+        monkeypatch.setattr(ocr_mod, "time", mock_time)
+
+        call_count = {"n": 0}
+
+        def side_effect(b64, prompt):
+            call_count["n"] += 1
+            raise OCRRetryableError("429 always")
+
+        provider = FakeProvider(side_effect=side_effect)
+        results, errors, fm, fk = ocr.run_parallel(
+            provider,
+            images_b64={0: "A"},
+            page_indices=[0],
+            concurrency=1,
+        )
+        # errors に記録されること
+        assert 0 in errors
+        # MAX_RETRIES=3 で上限になること（コール数 ≤ MAX_RETRIES）
+        assert call_count["n"] <= ocr.MAX_RETRIES
+        assert results == {}
+
+    def test_retry_after_is_used_for_sleep(self, monkeypatch):
+        """retry_after を持つ OCRRetryableError では sleep にその値が使われる（Retry-After 優先）"""
+        from unittest.mock import MagicMock
+
+        import pagefolio.ocr as ocr_mod
+        from pagefolio.ocr_providers import OCRRetryableError
+
+        mock_time = MagicMock()
+        monkeypatch.setattr(ocr_mod, "time", mock_time)
+
+        call_count = {"n": 0}
+
+        def side_effect(b64, prompt):
+            call_count["n"] += 1
+            if call_count["n"] == 1:
+                raise OCRRetryableError("429", retry_after=5.0)
+            return "ok"
+
+        provider = FakeProvider(side_effect=side_effect)
+        ocr.run_parallel(
+            provider,
+            images_b64={0: "A"},
+            page_indices=[0],
+            concurrency=1,
+        )
+        # sleep が 5.0 で呼ばれていること（Retry-After 優先・D-15）
+        sleep_calls = [c.args[0] for c in mock_time.sleep.call_args_list]
+        assert any(s == 5.0 for s in sleep_calls), (
+            f"sleep(5.0) が呼ばれていない: {sleep_calls}"
+        )
+
+    def test_exponential_backoff_without_retry_after(self, monkeypatch):
+        """retry_after が None の場合は指数バックオフ（RETRY_BASE_DELAY * 2^(n-1)）が使われる"""
+        from unittest.mock import MagicMock
+
+        import pagefolio.ocr as ocr_mod
+        from pagefolio.ocr_providers import OCRRetryableError
+
+        mock_time = MagicMock()
+        monkeypatch.setattr(ocr_mod, "time", mock_time)
+
+        call_count = {"n": 0}
+
+        def side_effect(b64, prompt):
+            call_count["n"] += 1
+            if call_count["n"] < 3:
+                raise OCRRetryableError("429", retry_after=None)
+            return "ok"
+
+        provider = FakeProvider(side_effect=side_effect)
+        ocr.run_parallel(
+            provider,
+            images_b64={0: "A"},
+            page_indices=[0],
+            concurrency=1,
+        )
+        sleep_calls = [c.args[0] for c in mock_time.sleep.call_args_list]
+        # 少なくとも1回は RETRY_BASE_DELAY（1.0）以上で sleep されること
+        assert len(sleep_calls) >= 1
+        assert all(s >= ocr.RETRY_BASE_DELAY for s in sleep_calls)
+
+    def test_waiting_status_on_progress_called(self, monkeypatch):
+        """リトライ中に on_progress が status='waiting' で呼ばれる（D-15 waiting 進捗）"""
+        from unittest.mock import MagicMock
+
+        import pagefolio.ocr as ocr_mod
+        from pagefolio.ocr_providers import OCRRetryableError
+
+        mock_time = MagicMock()
+        monkeypatch.setattr(ocr_mod, "time", mock_time)
+
+        call_count = {"n": 0}
+
+        def side_effect(b64, prompt):
+            call_count["n"] += 1
+            if call_count["n"] == 1:
+                raise OCRRetryableError("429", retry_after=None)
+            return "ok"
+
+        progress_calls = []
+
+        def on_progress(done, page_idx, status):
+            progress_calls.append((done, page_idx, status))
+
+        provider = FakeProvider(side_effect=side_effect)
+        ocr.run_parallel(
+            provider,
+            images_b64={0: "A"},
+            page_indices=[0],
+            concurrency=1,
+            on_progress=on_progress,
+        )
+        # "waiting" ステータスのコールが1回以上あること
+        waiting_calls = [c for c in progress_calls if c[2] == "waiting"]
+        assert len(waiting_calls) >= 1
