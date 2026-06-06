@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.4.0
 milestone_name: OCR プロバイダ化 + クラウドAPI対応
 status: executing
-stopped_at: Phase 4 context gathered
-last_updated: "2026-06-06T06:29:51.481Z"
-last_activity: 2026-06-06 -- Phase 04 execution started
+stopped_at: Phase 04 Plan 04 完了（Phase 4 ギャップ修正プラン完了・CR-02/CR-01 クローズ）
+last_updated: "2026-06-06T07:16:34Z"
+last_activity: 2026-06-06 -- Phase 04 Plan 04 (gap closure) completed
 progress:
   total_phases: 4
-  completed_phases: 0
-  total_plans: 3
-  completed_plans: 3
+  completed_phases: 1
+  total_plans: 4
+  completed_plans: 4
   percent: 100
 ---
 
@@ -25,14 +25,14 @@ See: .planning/PROJECT.md (updated 2026-06-06)
 
 ## Current Position
 
-Phase: 04 (provider-abstraction) — EXECUTING
-Plan: 3 of 3
-Status: Complete
-Last activity: 2026-06-06 -- Phase 04 Plan 03 完了
+Phase: 04 (provider-abstraction) — COMPLETE
+Plan: 4 of 4 (ギャップ修正含む全プラン完了)
+Status: Phase 04 全完了 — Phase 05 待ち
+Last activity: 2026-06-06 -- Phase 04 Plan 04 (gap closure) completed
 
 ```
 [==========] v1.3.0 COMPLETE
-[===       ] v1.4.0 Phase 04 ████  Phase 05 ░░░░  Phase 06 ░░░░  Phase 07 ░░░░
+[====      ] v1.4.0 Phase 04 ████（完了）  Phase 05 ░░░░  Phase 06 ░░░░  Phase 07 ░░░░
 ```
 
 ## Performance Metrics
@@ -55,6 +55,7 @@ Last activity: 2026-06-06 -- Phase 04 Plan 03 完了
 | Phase 04-provider-abstraction P01 | 3min | 2 tasks | 2 files |
 | Phase 04-provider-abstraction P02 | 8min | 2 tasks | 4 files |
 | Phase 04-provider-abstraction P03 | 6min | 2 tasks | 3 files |
+| Phase 04-provider-abstraction P04 (gap) | 10min | 3 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -85,6 +86,8 @@ Decisions are logged in PROJECT.md Key Decisions table.
 - [Phase 04-03]: _render_next_page を after(0) 連鎖で実装しメインスレッドレンダリング中も UI フリーズを回避（D-01）
 - [Phase 04-03]: _worker docstring に禁止ワード（fitz/get_pixmap 等）を書かないルール（automated grep 誤検知防止）
 - [Phase 04-03]: OCR-PROV-02・OCR-PERF-01 要件完了。Phase 4 全成功基準達成
+- [Phase 04-04 CR-02]: _on_run でワーカー起動前に model_var/max_tokens_var/temperature_var/url_var の live 値で LMStudioProvider を再生成（SC-1 後方互換復元）
+- [Phase 04-04 CR-01]: _start_ocr の build_provider を try/except ValueError で保護し messagebox.showerror + return でグレースフル処理（防御的堅牢化）
 
 ### Pending Todos
 
@@ -109,10 +112,10 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-06-06T06:37:26Z
-Stopped at: Phase 04 Plan 03 完了（Phase 4 全プラン完了）
-Resume file: .planning/phases/04-provider-abstraction/04-03-SUMMARY.md
+Last session: 2026-06-06T07:16:34Z
+Stopped at: Phase 04 Plan 04 完了（Phase 4 ギャップ修正プラン完了・CR-02/CR-01 クローズ）
+Resume file: .planning/phases/04-provider-abstraction/04-04-SUMMARY.md
 
 ## Operator Next Steps
 
-- Phase 4 完了。`/gsd-plan-phase 5` で Claude Provider + セキュリティ基盤 + プロバイダ選択 UI フェーズの計画を開始する
+- Phase 4 完全完了（04-01〜04-04 の全プラン + ギャップ修正完了）。`/gsd-plan-phase 5` で Claude Provider + セキュリティ基盤 + プロバイダ選択 UI フェーズの計画を開始する
