@@ -66,6 +66,10 @@ class PDFEditorApp(
         self.edit_mode = self.settings.get("edit_mode", False)
         self._mode_btn = None
 
+        # セッション中のみ保持する API キー辞書（プロバイダ別 dict）
+        # settings へは入れない・os.environ にも書かない・プロセス終了で消滅（D-01）
+        self._session_api_keys = {}
+
         self.doc = None
         self.filepath = None
         self.current_page = 0

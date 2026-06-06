@@ -44,6 +44,48 @@ MAX_OCR_CONCURRENCY = 8
 # 3 文字以上を「テキスト埋め込みあり」と判定する
 EMBEDDED_TEXT_MIN_CHARS = 3
 
+# バックオフ定数（OCR-PERF-04 指数バックオフ）
+MAX_RETRIES = 3  # リトライ最大回数（OCRRetryableError 時・無限ループ防止）
+RETRY_BASE_DELAY = 1.0  # 初回待機秒数（以降 base * 2**(attempt-1)）
+
+
+def _resolve_api_key(provider_name, session_keys):
+    """プロバイダ名とセッションキー辞書からAPIキーを解決する。
+
+    優先順位: 環境変数 > セッションキー（D-02）。
+    解決できなければ OCRAPIKeyError を raise する（成功基準2）。
+
+    引数:
+      provider_name: プロバイダ名（現時点では "claude" のみ対応）
+      session_keys:  プロバイダ別セッションキー辞書（例: {"claude": "sk-ant-..."}）
+
+    戻り値: APIキー文字列
+
+    例外:
+      OCRAPIKeyError — 環境変数もセッションキーも未設定の場合（env_var 属性付き）
+
+    注意: os.environ への書き込みは一切行わない（D-05・読み取りのみ）。
+    """
+    import os
+
+    from pagefolio.ocr_providers import OCRAPIKeyError
+
+    if provider_name == "claude":
+        env_var = "ANTHROPIC_API_KEY"
+        # 環境変数を優先（D-02）
+        key = os.environ.get(env_var)
+        if key:
+            return key
+        # 環境変数未設定のときのみセッションキーを使用
+        key = session_keys.get("claude", "")
+        if key:
+            return key
+        # どちらも未設定 → 実行前に明示エラーを raise（成功基準2）
+        raise OCRAPIKeyError(env_var)
+
+    # 将来の Gemini など他プロバイダはここに追加する
+    raise OCRAPIKeyError(f"{provider_name.upper()}_API_KEY")
+
 
 def page_to_png_b64(page, scale=DEFAULT_OCR_SCALE):
     """fitz.Page を PNG → base64 文字列に変換する（汎用ユーティリティ）。
@@ -176,16 +218,17 @@ def run_parallel(
     return results, errors, fatal["msg"], fatal["kind"]
 
 
-def build_provider(settings):
+def build_provider(settings, api_key=None):
     """settings 辞書から OCRProvider インスタンスを生成するファクトリ。
 
     引数:
-      settings: アプリ設定辞書（lm_studio_url / lm_studio_model 等を参照）
+      settings: アプリ設定辞書（lm_studio_url / lm_studio_model / claude_model 等を参照）
+      api_key:  クラウドプロバイダ用 API キー（引数注入・settings には格納しない）
+                D-01/D-05: api_key は settings から読まず・settings へ書き込まない
 
     戻り値: OCRProvider インスタンス
 
-    Phase 4 では ocr_provider 未指定（後方互換）でも LMStudioProvider を返す。
-    claude/gemini/tesseract は Phase 5/6/7 で追加予定（D-CONTEXT）。
+    注意: api_key は settings へ書き込まない（D-01・D-05）。
     """
     # 関数内 import で循環 import を回避（_start_ocr の前例と同様）
     from pagefolio.ocr_providers import LMStudioProvider
@@ -201,7 +244,19 @@ def build_provider(settings):
             max_tokens=int(settings.get("ocr_max_tokens", DEFAULT_OCR_MAX_TOKENS)),
             temperature=float(settings.get("ocr_temperature", DEFAULT_OCR_TEMPERATURE)),
         )
-    # Phase 5/6/7 で追加するプロバイダはここに分岐を追加する
+    elif name == "claude":
+        # api_key は settings から読まず引数のみ・settings へ書き込まない（D-01/D-05）
+        from pagefolio.ocr_providers import ClaudeProvider
+
+        return ClaudeProvider(
+            api_key=api_key or "",
+            model=settings.get("claude_model", "claude-sonnet-4-6"),
+            timeout=int(settings.get("ocr_timeout", DEFAULT_OCR_TIMEOUT)),
+            max_tokens=int(settings.get("ocr_max_tokens", 4096)),
+            temperature=float(settings.get("ocr_temperature", DEFAULT_OCR_TEMPERATURE)),
+            effort=settings.get("ocr_effort", "low"),
+        )
+    # Phase 6/7 で追加するプロバイダはここに分岐を追加する
     raise ValueError(f"未対応のプロバイダ: {name}")
 
 

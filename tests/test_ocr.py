@@ -567,12 +567,13 @@ class TestResolveApiKey:
 
     def test_os_environ_not_written(self, monkeypatch):
         """_resolve_api_key は os.environ への書き込みを行わない（D-05）"""
-        import os
         from pagefolio.ocr import _resolve_api_key
 
         monkeypatch.setenv("ANTHROPIC_API_KEY", "original-key")
         _resolve_api_key("claude", {"claude": "sess"})
         # 環境変数が書き換えられていないことを確認
+        import os
+
         assert os.environ.get("ANTHROPIC_API_KEY") == "original-key"
 
 
@@ -616,5 +617,10 @@ class TestBuildProviderClaude:
         settings = {"ocr_provider": "claude"}
         ocr.build_provider(settings, api_key="secret")
         # api_key・claude_api_key・anthropic_api_key いずれも settings に入っていないこと
-        for key in ("api_key", "claude_api_key", "anthropic_api_key", "ANTHROPIC_API_KEY"):
+        for key in (
+            "api_key",
+            "claude_api_key",
+            "anthropic_api_key",
+            "ANTHROPIC_API_KEY",
+        ):
             assert key not in settings, f"settings に {key} が混入している"
