@@ -17,14 +17,14 @@ from pagefolio.dialogs import (  # noqa: F401
     SettingsDialog,
 )
 
-# OCR (LM Studio)
+# OCR
 from pagefolio.ocr import (  # noqa: F401
     OCR_PROMPTS,
     OCRMixin,
-    build_chat_payload,
-    call_lm_studio,
-    fetch_lm_studio_models,
+    build_provider,
+    has_embedded_text,
     page_to_png_b64,
+    run_parallel,
 )
 
 # プラグインシステム

@@ -8,7 +8,8 @@ import tkinter as tk
 from tkinter import ttk
 
 from pagefolio.constants import LANG, C
-from pagefolio.ocr import MAX_OCR_MAX_TOKENS, fetch_lm_studio_models
+from pagefolio.ocr import MAX_OCR_MAX_TOKENS
+from pagefolio.ocr_providers import LMStudioProvider
 from pagefolio.settings import get_current_font_size
 
 logger = logging.getLogger(__name__)
@@ -352,7 +353,7 @@ class LLMConfigDialog(tk.Toplevel):
             return
         self._set_lm_status(self._L["settings_lm_testing"].format(url=url), kind="info")
         try:
-            models = fetch_lm_studio_models(url, timeout=10)
+            models = LMStudioProvider(url=url, model="").list_models()
         except (ConnectionError, TimeoutError, RuntimeError) as e:
             self._set_lm_status(
                 self._L["settings_lm_test_fail"].format(error=str(e)), kind="fail"
@@ -373,7 +374,7 @@ class LLMConfigDialog(tk.Toplevel):
             return
         self._set_lm_status(self._L["settings_lm_testing"].format(url=url), kind="info")
         try:
-            models = fetch_lm_studio_models(url, timeout=10)
+            models = LMStudioProvider(url=url, model="").list_models()
         except (ConnectionError, TimeoutError, RuntimeError) as e:
             self._set_lm_status(
                 self._L["settings_lm_test_fail"].format(error=str(e)), kind="fail"

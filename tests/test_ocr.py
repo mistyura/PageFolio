@@ -334,7 +334,7 @@ class TestRunParallel:
         assert fk == "timeout"
 
     def test_concurrency_clamped_to_provider_max(self):
-        """concurrency=999 でも provider.max_concurrency（=4）にクランプされ落ちずに動く (Test 3)"""
+        """concurrency=999 でも provider.max_concurrency にクランプされる (Test 3)"""
         provider = FakeProvider()  # max_concurrency=4
         images = {i: f"i{i}" for i in range(3)}
         results, _, _, _ = ocr.run_parallel(
@@ -382,7 +382,7 @@ class TestRunParallel:
         assert len(results) < 10
 
     def test_progress_callback_called_for_each_done(self):
-        """on_progress(done, page_idx, status) が完了ごとに done=1,2,3.. でコールされる (Test 5)"""
+        """on_progress が完了ごとに done=1,2,3.. でコールされる (Test 5)"""
         provider = FakeProvider()
         calls = []
 
@@ -433,7 +433,7 @@ class TestRunParallel:
 
 
 class TestHasEmbeddedText:
-    """has_embedded_text がテキスト量の多いページで True、空ページで False を返すか (Test 6)"""
+    """has_embedded_text: テキスト有りページで True、空ページで False を返す (Test 6)"""
 
     def test_text_rich_page_returns_true(self, sample_pdf_doc):
         """テキストが埋め込まれたページは True を返す"""
@@ -470,7 +470,9 @@ class TestHasEmbeddedText:
         doc = fitz.open()
         page = doc.new_page(width=595, height=842)
         # 20文字以上を挿入
-        page.insert_text((72, 72), "This is sufficient text for detection.", fontsize=12)
+        page.insert_text(
+            (72, 72), "This is sufficient text for detection.", fontsize=12
+        )
         result = ocr.has_embedded_text(page)
         assert result is True
         doc.close()
