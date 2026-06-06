@@ -6,8 +6,7 @@ import json
 import socket
 import urllib.error
 
-import pytest
-
+import pytest  # noqa: F401 (used for pytest.raises)
 
 # ===== Task 1: OCRProvider 抽象基底クラス + OCRAPIKeyError =====
 
