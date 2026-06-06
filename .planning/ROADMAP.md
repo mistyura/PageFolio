@@ -71,8 +71,22 @@
   7. Opus 系モデルで `temperature` を送らず `effort` を使用し、非対応パラメータによる 400 エラーが発生しない
   8. 429 / 5xx 応答時に指数バックオフ（最大 3 回）でリトライし、UI に「待機中」が表示される
 
-**Plans**: TBD
+**Plans**: 5 plans
 **UI hint**: yes
+
+**Wave 1**
+
+  - [ ] 05-01-PLAN.md — ClaudeProvider + OCRRetryableError 新設（messages API・effort/temperature 防御・429/5xx 変換・並列度 Claude=2）（ocr_providers.py）
+  - [ ] 05-02-PLAN.md — _save_settings 機密キーガード（成功基準1・最優先）+ DEFAULT 追加 + Phase 5 文言 ja/en（settings.py/lang.py）
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
+  - [ ] 05-03-PLAN.md — build_provider claude 分岐 + _resolve_api_key（env 優先・未設定明示エラー）+ run_parallel 指数バックオフ + _session_api_keys 属性（ocr.py/app.py）
+
+**Wave 3** *(blocked on Wave 1/2 completion)*
+
+  - [ ] 05-04-PLAN.md — provider ドロップダウン・モデル更新・effort/temperature 切替 + off で OCR ボタン無効化（llm_config.py/ui_builder.py）
+  - [ ] 05-05-PLAN.md — コスト確認ゲート + マスク付きセッションキー入力欄（非永続化）+ 待機中表示 + provider 中立化（ocr_dialog.py）
 
 ### Phase 6: Gemini Provider + 逐次レンダリング最適化
 
@@ -110,6 +124,6 @@
 | 2. プレビュー最適化とリファクタリング | v1.3.0 | 3/3 | Complete | 2026-06-03 |
 | 3. API 整理と回帰テスト | v1.3.0 | 2/2 | Complete | 2026-06-03 |
 | 4. プロバイダ抽象化 | v1.4.0 | 3/3 | Complete | 2026-06-06 |
-| 5. Claude Provider + セキュリティ基盤 + プロバイダ選択 UI | v1.4.0 | 0/? | Not started | - |
+| 5. Claude Provider + セキュリティ基盤 + プロバイダ選択 UI | v1.4.0 | 0/5 | Planned | - |
 | 6. Gemini Provider + 逐次レンダリング最適化 | v1.4.0 | 0/? | Not started | - |
 | 7. Tesseract + PluginManager 拡張 + QA | v1.4.0 | 0/? | Not started | - |
