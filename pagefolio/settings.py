@@ -11,6 +11,10 @@ from pagefolio.constants import SETTINGS_FILE, THEMES, C
 
 logger = logging.getLogger(__name__)
 
+# D-01: 機密キー集合（_save_settings が JSON へ書き込まないキー名）
+# Pitfall 1: APIキー平文漏洩防止の構造的ガード（最後の砦）
+_SENSITIVE_KEYS = {"claude_api_key", "gemini_api_key", "anthropic_api_key", "api_key"}
+
 
 def _get_settings_path():
     """設定ファイルのパスを返す（実行ファイルと同じディレクトリ）"""
@@ -43,6 +47,9 @@ def _load_settings():
         "ocr_concurrency": 2,
         # V14-D-03: 安全デフォルト（Phase 4 では LMStudioProvider として動作）
         "ocr_provider": "off",
+        # Phase 5: Claude Provider 設定（APIキーではない無害な設定値・OCR-UI-01）
+        "claude_model": "claude-sonnet-4-6",  # STACK.md 推奨モデル
+        "ocr_effort": "low",  # effort 対応モデル時の既定値（D-17）
     }
     try:
         path = _get_settings_path()
@@ -58,11 +65,23 @@ def _load_settings():
 
 
 def _save_settings(settings):
-    """設定を保存する"""
+    """設定を保存する。機密キー（_SENSITIVE_KEYS）は保存対象から除外する（D-01・成功基準1）"""
+    # D-01: 機密キー混入チェック（Pitfall 1 構造的ガードの最後の砦）
+    # キー値はログに出さず、キー名のみ警告する（D-04・Security Mistakes）
+    leaked = [k for k in _SENSITIVE_KEYS if k in settings]
+    if leaked:
+        for k in leaked:
+            logger.error(
+                "機密キー '%s' が settings に混入しています（保存から除外します）", k
+            )
+        # 機密キーを除去した保存用コピーを作成（入力 dict は破壊的変更しない）
+        to_save = {k: v for k, v in settings.items() if k not in _SENSITIVE_KEYS}
+    else:
+        to_save = settings
     try:
         path = _get_settings_path()
         with open(path, "w", encoding="utf-8") as f:
-            json.dump(settings, f, ensure_ascii=False, indent=2)
+            json.dump(to_save, f, ensure_ascii=False, indent=2)
     except Exception as e:
         logger.debug("設定ファイル保存失敗: %s", e)
 
