@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.4.0
 milestone_name: OCR プロバイダ化 + クラウドAPI対応
-status: executing
-stopped_at: Phase 04 Plan 04 完了（Phase 4 ギャップ修正プラン完了・CR-02/CR-01 クローズ）
-last_updated: "2026-06-06T07:16:34Z"
+status: Phase 04 全完了 — Phase 05 待ち
+stopped_at: Phase 5 context gathered
+last_updated: "2026-06-06T08:23:46.838Z"
 last_activity: 2026-06-06 -- Phase 04 Plan 04 (gap closure) completed
 progress:
   total_phases: 4
   completed_phases: 1
   total_plans: 4
   completed_plans: 4
-  percent: 100
+  percent: 25
 ---
 
 # Project State
@@ -112,9 +112,9 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-06-06T07:16:34Z
-Stopped at: Phase 04 Plan 04 完了（Phase 4 ギャップ修正プラン完了・CR-02/CR-01 クローズ）
-Resume file: .planning/phases/04-provider-abstraction/04-04-SUMMARY.md
+Last session: 2026-06-06T08:23:46.829Z
+Stopped at: Phase 5 context gathered
+Resume file: .planning/phases/05-claude-provider-ui/05-CONTEXT.md
 
 ## Operator Next Steps
 
