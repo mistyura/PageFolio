@@ -247,7 +247,7 @@ def build_provider(settings, api_key=None):
     """settings 辞書から OCRProvider インスタンスを生成するファクトリ。
 
     引数:
-      settings: アプリ設定辞書（lm_studio_url / lm_studio_model / claude_model 等を参照）
+      settings: アプリ設定辞書（lm_studio_url / lm_studio_model 等を参照）
       api_key:  クラウドプロバイダ用 API キー（引数注入・settings には格納しない）
                 D-01/D-05: api_key は settings から読まず・settings へ書き込まない
 
@@ -318,7 +318,7 @@ class OCRMixin:
         )
 
         # クラウドプロバイダ（claude 等）のキー解決ゲート（成功基準2・D-02）
-        # キー未設定の場合は実行前に明示エラーを出して処理を止める（OCRDialog を生成しない）
+        # キー未設定なら実行前に明示エラーを出して停止する（OCRDialog を生成しない）
         name = self.settings.get("ocr_provider", "")
         api_key = None
         _cloud_providers = {"claude"}  # Phase 6 で gemini を追加

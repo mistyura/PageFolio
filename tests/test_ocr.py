@@ -532,7 +532,7 @@ class TestResolveApiKey:
     """_resolve_api_key の動作検証（キー解決・環境変数優先・未設定時エラー）"""
 
     def test_env_var_present_returns_env_value(self, monkeypatch):
-        """環境変数 ANTHROPIC_API_KEY が設定されていればその値を返す（成功基準3・D-02）"""
+        """環境変数 ANTHROPIC_API_KEY があればその値を返す（成功基準3・D-02）"""
         from pagefolio.ocr import _resolve_api_key
 
         monkeypatch.setenv("ANTHROPIC_API_KEY", "env-key-abc")
@@ -540,7 +540,7 @@ class TestResolveApiKey:
         assert result == "env-key-abc"
 
     def test_env_var_absent_session_key_returned(self, monkeypatch):
-        """環境変数未設定・セッションキーあり → セッションキーを返す（D-02 環境変数優先・未設定時セッション）"""
+        """環境変数未設定・セッションキーあり → セッションキーを返す（D-02）"""
         from pagefolio.ocr import _resolve_api_key
 
         monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
@@ -548,7 +548,7 @@ class TestResolveApiKey:
         assert result == "sess-key"
 
     def test_env_var_takes_priority_over_session_key(self, monkeypatch):
-        """環境変数があれば session_keys にキーがあっても環境変数を返す（D-02 優先順位）"""
+        """session_keys にキーがあっても環境変数を優先して返す（D-02 優先順位）"""
         from pagefolio.ocr import _resolve_api_key
 
         monkeypatch.setenv("ANTHROPIC_API_KEY", "env-wins")
@@ -556,7 +556,7 @@ class TestResolveApiKey:
         assert result == "env-wins"
 
     def test_no_env_no_session_raises_ocr_api_key_error(self, monkeypatch):
-        """環境変数もセッションキーもない場合 OCRAPIKeyError を raise する（成功基準2）"""
+        """環境変数もセッションキーもなければ OCRAPIKeyError を raise（成功基準2）"""
         from pagefolio.ocr import _resolve_api_key
         from pagefolio.ocr_providers import OCRAPIKeyError
 
@@ -584,7 +584,7 @@ class TestBuildProviderClaude:
     """build_provider の claude 分岐検証（キー引数注入・settings への非漏洩）"""
 
     def test_claude_returns_claude_provider(self, monkeypatch):
-        """ocr_provider='claude' のとき ClaudeProvider インスタンスを返す（成功基準1）"""
+        """ocr_provider='claude' で ClaudeProvider を返す（成功基準1）"""
         from pagefolio.ocr_providers import ClaudeProvider
 
         monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
@@ -593,7 +593,7 @@ class TestBuildProviderClaude:
         assert isinstance(provider, ClaudeProvider)
 
     def test_claude_provider_api_key_is_injected(self, monkeypatch):
-        """ClaudeProvider に api_key が引数注入されている（settings から読まない・成功基準3）"""
+        """ClaudeProvider に api_key が引数注入される（settings から読まない・SC3）"""
         monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
         provider = ocr.build_provider({"ocr_provider": "claude"}, api_key="my-key")
         assert provider.api_key == "my-key"
@@ -612,11 +612,11 @@ class TestBuildProviderClaude:
         assert provider.model == "claude-haiku-4-5"
 
     def test_settings_not_polluted_with_api_key(self, monkeypatch):
-        """build_provider 後も settings 辞書に api_key が混入していない（成功基準1/3）"""
+        """build_provider 後も settings に api_key が混入しない（成功基準1/3）"""
         monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
         settings = {"ocr_provider": "claude"}
         ocr.build_provider(settings, api_key="secret")
-        # api_key・claude_api_key・anthropic_api_key いずれも settings に入っていないこと
+        # api_key 系のキーが settings に入っていないこと
         for key in (
             "api_key",
             "claude_api_key",
@@ -633,7 +633,7 @@ class TestRunParallelBackoff:
     """run_parallel の OCRRetryableError 指数バックオフ検証（成功基準8・OCR-PERF-04）"""
 
     def test_retryable_once_then_success(self, monkeypatch):
-        """1回 OCRRetryableError を投げた後に成功する → results に入る（リトライ成功）"""
+        """1回 OCRRetryableError 後に成功 → results に入る（リトライ成功）"""
         from unittest.mock import MagicMock
 
         import pagefolio.ocr as ocr_mod
@@ -662,7 +662,7 @@ class TestRunParallelBackoff:
         assert errors == {}
 
     def test_always_retryable_errors_after_max_retries(self, monkeypatch):
-        """毎回 OCRRetryableError → 最大3回リトライ後に errors に記録（無限ループしない）"""
+        """毎回 OCRRetryableError → 最大3回後に errors 記録（無限ループしない）"""
         from unittest.mock import MagicMock
 
         import pagefolio.ocr as ocr_mod
@@ -691,7 +691,7 @@ class TestRunParallelBackoff:
         assert results == {}
 
     def test_retry_after_is_used_for_sleep(self, monkeypatch):
-        """retry_after を持つ OCRRetryableError では sleep にその値が使われる（Retry-After 優先）"""
+        """retry_after 付きエラーは sleep にその値を使う（Retry-After 優先）"""
         from unittest.mock import MagicMock
 
         import pagefolio.ocr as ocr_mod
@@ -722,7 +722,7 @@ class TestRunParallelBackoff:
         )
 
     def test_exponential_backoff_without_retry_after(self, monkeypatch):
-        """retry_after が None の場合は指数バックオフ（RETRY_BASE_DELAY * 2^(n-1)）が使われる"""
+        """retry_after が None なら指数バックオフ（RETRY_BASE_DELAY * 2^(n-1)）"""
         from unittest.mock import MagicMock
 
         import pagefolio.ocr as ocr_mod
@@ -752,7 +752,7 @@ class TestRunParallelBackoff:
         assert all(s >= ocr.RETRY_BASE_DELAY for s in sleep_calls)
 
     def test_waiting_status_on_progress_called(self, monkeypatch):
-        """リトライ中に on_progress が status='waiting' で呼ばれる（D-15 waiting 進捗）"""
+        """リトライ中に on_progress が status='waiting' で呼ばれる（D-15）"""
         from unittest.mock import MagicMock
 
         import pagefolio.ocr as ocr_mod
