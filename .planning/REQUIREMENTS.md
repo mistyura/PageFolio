@@ -76,32 +76,33 @@ REQ-ID 形式: `OCR-[CATEGORY]-[NN]`。v1.3.0（`BUG`/`REFAC`/`TEST`）とは別
 
 ## Traceability
 
-各要件 → フェーズの対応表。ロードマップ作成時に埋める。
+各要件 → フェーズの対応表。
 
 | REQ-ID | Phase | Status |
 |--------|-------|--------|
-| OCR-PROV-01 | — | Pending |
-| OCR-PROV-02 | — | Pending |
-| OCR-PROV-03 | — | Pending |
-| OCR-API-01 | — | Pending |
-| OCR-API-02 | — | Pending |
-| OCR-API-03 | — | Pending |
-| OCR-SEC-01 | — | Pending |
-| OCR-SEC-02 | — | Pending |
-| OCR-SEC-03 | — | Pending |
-| OCR-UI-01 | — | Pending |
-| OCR-UI-02 | — | Pending |
-| OCR-UI-03 | — | Pending |
-| OCR-UI-04 | — | Pending |
-| OCR-PERF-01 | — | Pending |
-| OCR-PERF-02 | — | Pending |
-| OCR-PERF-03 | — | Pending |
-| OCR-PERF-04 | — | Pending |
-| OCR-PERF-05 | — | Pending |
-| OCR-EXT-01 | — | Pending |
-| OCR-EXT-02 | — | Pending |
-| OCR-QA-01 | — | Pending |
-| OCR-QA-02 | — | Pending |
+| OCR-PROV-01 | Phase 4 | Pending |
+| OCR-PROV-02 | Phase 4 | Pending |
+| OCR-PROV-03 | Phase 4 | Pending |
+| OCR-PERF-01 | Phase 4 | Pending |
+| OCR-SEC-01 | Phase 5 | Pending |
+| OCR-SEC-02 | Phase 5 | Pending |
+| OCR-SEC-03 | Phase 5 | Pending |
+| OCR-API-01 | Phase 5 | Pending |
+| OCR-API-03 | Phase 5 | Pending |
+| OCR-UI-01 | Phase 5 | Pending |
+| OCR-UI-02 | Phase 5 | Pending |
+| OCR-UI-03 | Phase 5 | Pending |
+| OCR-UI-04 | Phase 5 | Pending |
+| OCR-PERF-03 | Phase 5 | Pending |
+| OCR-PERF-04 | Phase 5 | Pending |
+| OCR-API-02 | Phase 6 | Pending |
+| OCR-PERF-02 | Phase 6 | Pending |
+| OCR-PERF-05 | Phase 6 | Pending |
+| OCR-QA-01 | Phase 6 | Pending |
+| OCR-EXT-01 | Phase 7 | Pending |
+| OCR-EXT-02 | Phase 7 | Pending |
+| OCR-QA-02 | Phase 7 | Pending |
 
 ---
 *Requirements defined: 2026-06-06 — Milestone v1.4.0 (OCR プロバイダ化 + クラウドAPI対応).*
+*Traceability updated: 2026-06-06 — Phase 04-07 割り当て完了（22/22件）.*
