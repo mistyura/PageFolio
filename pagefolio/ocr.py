@@ -5,6 +5,7 @@
 
 import base64
 import logging
+import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from tkinter import messagebox
 
@@ -171,19 +172,43 @@ def run_parallel(
     def _call(page_idx, b64):
         if _is_cancelled() or fatal["msg"] is not None:
             return ("cancel", page_idx, None)
-        try:
-            # Provider 非依存: per-page で provider.ocr_image を呼ぶ（D-04）
-            text = provider.ocr_image(b64, prompt)
-            return ("ok", page_idx, text)
-        except ConnectionError as e:
-            return ("fatal_conn", page_idx, str(e))
-        except TimeoutError as e:
-            return ("fatal_timeout", page_idx, str(e))
-        except RuntimeError as e:
-            return ("err", page_idx, str(e))
-        except Exception as e:
-            logger.exception("OCR 呼び出し失敗: %s", e)
-            return ("err", page_idx, str(e))
+        # OCRRetryableError（429/5xx）は指数バックオフ（最大 MAX_RETRIES 回）でリトライ
+        # Retry-After ヘッダがある場合はその値を優先する（OCR-PERF-04）
+        from pagefolio.ocr_providers import OCRRetryableError
+
+        for attempt in range(1, MAX_RETRIES + 1):
+            try:
+                # Provider 非依存: per-page で provider.ocr_image を呼ぶ（D-04）
+                text = provider.ocr_image(b64, prompt)
+                return ("ok", page_idx, text)
+            except OCRRetryableError as e:
+                if attempt >= MAX_RETRIES:
+                    # 最大リトライ回数に達した → errors に記録
+                    return ("err", page_idx, str(e))
+                # waiting 進捗を通知（D-15）
+                if on_progress is not None:
+                    try:
+                        on_progress(None, page_idx, "waiting")
+                    except Exception as pe:
+                        logger.debug("on_progress waiting コールバック失敗: %s", pe)
+                # Retry-After 優先・なければ指数バックオフ（1s→2s→4s→…）
+                delay = (
+                    e.retry_after
+                    if e.retry_after is not None
+                    else RETRY_BASE_DELAY * (2 ** (attempt - 1))
+                )
+                time.sleep(delay)
+            except ConnectionError as e:
+                return ("fatal_conn", page_idx, str(e))
+            except TimeoutError as e:
+                return ("fatal_timeout", page_idx, str(e))
+            except RuntimeError as e:
+                return ("err", page_idx, str(e))
+            except Exception as e:
+                logger.exception("OCR 呼び出し失敗: %s", e)
+                return ("err", page_idx, str(e))
+        # ここには到達しない（for ループ内で必ず return）
+        return ("err", page_idx, "リトライ上限超過")
 
     done = 0
     executor = ThreadPoolExecutor(max_workers=workers)
