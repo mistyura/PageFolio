@@ -408,7 +408,7 @@ class TestClaudeProviderBuildPayload:
     """ClaudeProvider._build_payload() の構造を確認する"""
 
     def test_opus_payload_has_output_config_effort(self):
-        """opus モデルは payload に output_config.effort を含み temperature を含まない（成功基準7）"""
+        """opus モデルは output_config.effort を含み temperature を含まない"""
         from pagefolio.ocr_providers import ClaudeProvider
 
         p = ClaudeProvider("k", "claude-opus-4-8")
@@ -418,7 +418,7 @@ class TestClaudeProviderBuildPayload:
         assert "temperature" not in payload
 
     def test_sonnet_payload_has_output_config_effort(self):
-        """sonnet モデルは payload に output_config.effort を含み temperature を含まない"""
+        """sonnet モデルは output_config.effort を含み temperature を含まない"""
         from pagefolio.ocr_providers import ClaudeProvider
 
         p = ClaudeProvider("k", "claude-sonnet-4-6")
@@ -428,7 +428,7 @@ class TestClaudeProviderBuildPayload:
         assert "temperature" not in payload
 
     def test_haiku_payload_has_temperature_no_output_config(self):
-        """haiku モデルは payload に temperature を含み output_config を含まない（成功基準7・D-16）"""
+        """haiku モデルは temperature を含み output_config を含まない（D-16）"""
         from pagefolio.ocr_providers import ClaudeProvider
 
         p = ClaudeProvider("k", "claude-haiku-4-5")
@@ -523,7 +523,7 @@ class TestClaudeProviderOcrImage:
         assert result == "OCR 結果テキスト"
 
     def test_mixed_content_joins_text_blocks(self, monkeypatch):
-        """content に thinking と text が混在しても type=='text' のブロックのみ結合して返す（Pitfall 6）"""
+        """thinking+text 混在でも type=='text' ブロックのみ結合して返す（Pitfall 6）"""
         from pagefolio import ocr_providers
 
         body = json.dumps(
@@ -564,7 +564,9 @@ class TestClaudeProviderOcrImage:
         from pagefolio.ocr_providers import OCRRetryableError
 
         def fake_urlopen(req, timeout=None):
-            raise _FakeHTTPError(429, "Too Many Requests", b"rate limit", headers={"Retry-After": "3"})
+            raise _FakeHTTPError(
+                429, "Too Many Requests", b"rate limit", headers={"Retry-After": "3"}
+            )
 
         monkeypatch.setattr(ocr_providers.urllib.request, "urlopen", fake_urlopen)
         p = ocr_providers.ClaudeProvider("key", "claude-sonnet-4-6")
@@ -665,7 +667,7 @@ class TestClaudeProviderListModels:
         assert result == list(ClaudeProvider.RECOMMENDED_MODELS)
 
     def test_with_api_key_filters_vision_capable_models(self, monkeypatch):
-        """キー設定時は /v1/models を呼び image_input.supported==True のモデルのみ返す"""
+        """キー設定時は /v1/models を呼び vision 対応モデルのみ返す"""
         from pagefolio import ocr_providers
 
         body = json.dumps(

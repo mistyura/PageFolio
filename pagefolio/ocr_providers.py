@@ -225,7 +225,13 @@ class ClaudeProvider(OCRProvider):
     }
 
     def __init__(
-        self, api_key, model, timeout=120, max_tokens=4096, temperature=0.1, effort="low"
+        self,
+        api_key,
+        model,
+        timeout=120,
+        max_tokens=4096,
+        temperature=0.1,
+        effort="low",
     ):
         """初期化。
 
@@ -245,7 +251,7 @@ class ClaudeProvider(OCRProvider):
         self.effort = effort
 
     def _supports_effort(self):
-        """このモデルが effort パラメータ（output_config.effort）に対応しているか判定する。
+        """このモデルが effort パラメータ（output_config）に対応しているか判定する。
 
         戻り値: haiku 系は False、sonnet/opus 系は True。
         """
@@ -256,13 +262,15 @@ class ClaudeProvider(OCRProvider):
         if self.model in self.EFFORT_MODELS:
             return True
         # 前方互換のためプレフィックス判定も併用
-        return ("opus" in self.model or "sonnet" in self.model) and "haiku" not in self.model
+        has_opus_or_sonnet = "opus" in self.model or "sonnet" in self.model
+        return has_opus_or_sonnet and "haiku" not in self.model
 
     def _build_payload(self, b64_png, prompt):
         """Anthropic messages API リクエストボディを構築する（内部メソッド）。
 
-        effort 対応モデル（sonnet/opus 系）は output_config.effort を付与し temperature は送らない。
-        非対応モデル（haiku 系）は temperature を付与し output_config は送らない（D-16・成功基準7）。
+        effort 対応モデル（sonnet/opus 系）は output_config.effort を付与し
+        temperature は送らない。非対応モデル（haiku 系）は temperature を付与し
+        output_config は送らない（D-16・成功基準7）。
         """
         payload = {
             "model": self.model,
@@ -349,7 +357,8 @@ class ClaudeProvider(OCRProvider):
                 raise TimeoutError(f"timed out after {self.timeout}s") from e
             raise ConnectionError(str(reason)) from e
 
-        # レスポンス解析: type=="text" ブロックを走査して結合（Pitfall 6・content[0] 決め打ち禁止）
+        # レスポンス解析: type=="text" ブロックを走査して結合
+        # content[0] 決め打ち禁止（Pitfall 6）
         try:
             result = json.loads(body)
             texts = [
@@ -366,7 +375,8 @@ class ClaudeProvider(OCRProvider):
     def list_models(self):
         """Anthropic /v1/models から vision 対応モデル ID リストを取得する。
 
-        キー未設定（空文字/None）の場合は API を呼ばず RECOMMENDED_MODELS を返す（D-08）。
+        キー未設定（空文字/None）の場合は API を呼ばず
+        RECOMMENDED_MODELS を返す（D-08）。
 
         戻り値: モデル ID 文字列のリスト（list[str]）
 
