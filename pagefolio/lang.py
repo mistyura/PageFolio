@@ -614,8 +614,7 @@ LANG = {
             "\nDetails: {error}"
         ),
         "ocr_provider_unsupported": (
-            "Unsupported OCR provider configured: {name}\n"
-            "Please check your settings."
+            "Unsupported OCR provider configured: {name}\nPlease check your settings."
         ),
         # LM Studio settings
         "settings_lm_studio_section": "🔍 LM Studio (OCR)",

@@ -242,9 +242,7 @@ class OCRMixin:
             provider = build_provider(self.settings)
         except ValueError as e:
             name = self.settings.get("ocr_provider", "")
-            logger.error(
-                "未対応の OCR プロバイダ '%s' が設定されています: %s", name, e
-            )
+            logger.error("未対応の OCR プロバイダ '%s' が設定されています: %s", name, e)
             messagebox.showerror(
                 self._t("err_title"),
                 self._t("ocr_provider_unsupported").format(name=name),
