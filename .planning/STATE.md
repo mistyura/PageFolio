@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.4.0
 milestone_name: OCR プロバイダ化 + クラウドAPI対応
 status: executing
-stopped_at: 05-02-PLAN.md 完了
-last_updated: "2026-06-06T16:35:00Z"
-last_activity: 2026-06-06 -- 05-02 完了（_SENSITIVE_KEYS ガード・lang.py 文言追加）
+stopped_at: 05-03-PLAN.md 完了
+last_updated: "2026-06-06T16:47:00Z"
+last_activity: 2026-06-06 -- 05-03 完了（_resolve_api_key・build_provider claude 分岐・run_parallel バックオフ・_start_ocr キー解決ゲート）
 progress:
   total_phases: 4
   completed_phases: 1
   total_plans: 9
-  completed_plans: 6
-  percent: 30
+  completed_plans: 7
+  percent: 33
 ---
 
 # Project State
@@ -26,9 +26,9 @@ See: .planning/PROJECT.md (updated 2026-06-06)
 ## Current Position
 
 Phase: 05 (claude-provider-ui) — EXECUTING
-Plan: 2 of 5
+Plan: 3 of 5
 Status: Executing Phase 05
-Last activity: 2026-06-06 -- 05-02 完了（_SENSITIVE_KEYS ガード・lang.py 文言追加）
+Last activity: 2026-06-06 -- 05-03 完了（_resolve_api_key・build_provider claude 分岐・run_parallel バックオフ・_start_ocr キー解決ゲート）
 
 ```
 [==========] v1.3.0 COMPLETE
@@ -58,6 +58,7 @@ Last activity: 2026-06-06 -- 05-02 完了（_SENSITIVE_KEYS ガード・lang.py 
 | Phase 04-provider-abstraction P04 (gap) | 10min | 3 tasks | 4 files |
 | Phase 05-claude-provider-ui P01 | 25 | 3 tasks | 2 files |
 | Phase 05-claude-provider-ui P02 | 10min | 3 tasks | 3 files |
+| Phase 05-claude-provider-ui P03 | 30min | 3 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -94,6 +95,11 @@ Decisions are logged in PROJECT.md Key Decisions table.
 - [Phase 05-02]: _SENSITIVE_KEYS を set 定数として定義し _save_settings でキー名のみ logger.error・値はログ非出力・除外コピーを json.dump（成功基準1・D-01・D-04）
 - [Phase 05-02]: claude_model="claude-sonnet-4-6" / ocr_effort="low" を DEFAULT_SETTINGS に追加（無害な設定値・OCR-UI-01 基盤）
 - [Phase 05-02]: Phase 5 文言 9 キーを ja/en 両辞書に追加（OCR-UI-01 基盤）
+- [Phase 05-03]: _resolve_api_key は os.environ.get のみ（読み取り専用）・書き込み禁止（D-05）
+- [Phase 05-03]: build_provider の claude 分岐は api_key を引数のみで受け取り settings には入れない（D-01/D-05）
+- [Phase 05-03]: run_parallel バックオフは provider 非依存の共通層として実装（Phase 6 Gemini で再利用可能・D-14）
+- [Phase 05-03]: _start_ocr の waiting on_progress は done=None で呼ぶ（完了カウントは進めない）
+- [Phase 05-03]: getattr(self, '_session_api_keys', {}) でテスト経路の安全なフォールバックを確保
 
 ### Pending Todos
 
@@ -118,10 +124,10 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-06-06T16:35:00Z
-Stopped at: 05-02-PLAN.md 完了
-Resume file: .planning/phases/05-claude-provider-ui/05-03-PLAN.md
+Last session: 2026-06-06T16:47:00Z
+Stopped at: 05-03-PLAN.md 完了
+Resume file: .planning/phases/05-claude-provider-ui/05-04-PLAN.md
 
 ## Operator Next Steps
 
-- 05-02 完了。次は 05-03（build_provider claude 分岐 + _resolve_api_key + run_parallel 指数バックオフ + _session_api_keys 属性）
+- 05-03 完了。次は 05-04（OCR ダイアログ UI 拡張 — セッションキー入力欄・コスト確認・waiting 進捗表示）

@@ -81,7 +81,7 @@
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-  - [ ] 05-03-PLAN.md — build_provider claude 分岐 + _resolve_api_key（env 優先・未設定明示エラー）+ run_parallel 指数バックオフ + _session_api_keys 属性（ocr.py/app.py）
+  - [x] 05-03-PLAN.md — build_provider claude 分岐 + _resolve_api_key（env 優先・未設定明示エラー）+ run_parallel 指数バックオフ + _session_api_keys 属性（ocr.py/app.py）
 
 **Wave 3** *(blocked on Wave 1/2 completion)*
 
