@@ -290,3 +290,182 @@ class TestLMStudioProviderListModels:
         p = ocr_providers.LMStudioProvider("http://x", "m")
         with pytest.raises(ConnectionError):
             p.list_models()
+
+
+# ===== Task 1: OCRRetryableError =====
+
+
+class TestOCRRetryableError:
+    """OCRRetryableError の構造と属性を確認する"""
+
+    def test_is_runtime_error_subclass(self):
+        """OCRRetryableError は RuntimeError のサブクラスであること"""
+        from pagefolio.ocr_providers import OCRRetryableError
+
+        assert issubclass(OCRRetryableError, RuntimeError)
+
+    def test_retry_after_with_value(self):
+        """retry_after 引数を指定するとその値を保持する"""
+        from pagefolio.ocr_providers import OCRRetryableError
+
+        e = OCRRetryableError("429 Too Many Requests", retry_after=5.0)
+        assert e.retry_after == 5.0
+
+    def test_retry_after_default_none(self):
+        """retry_after 省略時は None になる"""
+        from pagefolio.ocr_providers import OCRRetryableError
+
+        e = OCRRetryableError("503 Service Unavailable")
+        assert e.retry_after is None
+
+    def test_message_preserved(self):
+        """例外メッセージが正しく保持される"""
+        from pagefolio.ocr_providers import OCRRetryableError
+
+        e = OCRRetryableError("レート制限超過")
+        assert "レート制限超過" in str(e)
+
+
+# ===== Task 1: ClaudeProvider 骨格（payload 構築・effort 判定）=====
+
+
+class TestClaudeProviderBasic:
+    """ClaudeProvider の基本属性とクラス定数を確認する"""
+
+    def test_is_ocr_provider_subclass(self):
+        """ClaudeProvider は OCRProvider のサブクラスであること"""
+        from pagefolio.ocr_providers import ClaudeProvider, OCRProvider
+
+        assert issubclass(ClaudeProvider, OCRProvider)
+
+    def test_default_concurrency(self):
+        """default_concurrency == 2（OCR-PERF-03 Claude=2）"""
+        from pagefolio.ocr_providers import ClaudeProvider
+
+        assert ClaudeProvider.default_concurrency == 2
+
+    def test_max_concurrency(self):
+        """max_concurrency == 2（OCR-PERF-03 Claude=2 上限）"""
+        from pagefolio.ocr_providers import ClaudeProvider
+
+        assert ClaudeProvider.max_concurrency == 2
+
+    def test_anthropic_version_constant(self):
+        """ANTHROPIC_VERSION が '2023-06-01' であること"""
+        from pagefolio.ocr_providers import ClaudeProvider
+
+        assert ClaudeProvider.ANTHROPIC_VERSION == "2023-06-01"
+
+    def test_messages_endpoint_constant(self):
+        """MESSAGES_ENDPOINT が Anthropic messages API URL であること"""
+        from pagefolio.ocr_providers import ClaudeProvider
+
+        assert "api.anthropic.com/v1/messages" in ClaudeProvider.MESSAGES_ENDPOINT
+
+    def test_recommended_models_contains_haiku_sonnet_opus(self):
+        """RECOMMENDED_MODELS に haiku / sonnet / opus が含まれること"""
+        from pagefolio.ocr_providers import ClaudeProvider
+
+        ids = ClaudeProvider.RECOMMENDED_MODELS
+        assert any("haiku" in m for m in ids)
+        assert any("sonnet" in m for m in ids)
+        assert any("opus" in m for m in ids)
+
+    def test_instantiation(self):
+        """ClaudeProvider がインスタンス化できる"""
+        from pagefolio.ocr_providers import ClaudeProvider
+
+        p = ClaudeProvider("test-key", "claude-sonnet-4-6")
+        assert p is not None
+
+
+class TestClaudeProviderSupportsEffort:
+    """ClaudeProvider._supports_effort() のモデル別判定を確認する"""
+
+    def test_haiku_not_supports_effort(self):
+        """claude-haiku-4-5 は effort 非対応（D-16）"""
+        from pagefolio.ocr_providers import ClaudeProvider
+
+        p = ClaudeProvider("k", "claude-haiku-4-5")
+        assert p._supports_effort() is False
+
+    def test_sonnet_supports_effort(self):
+        """claude-sonnet-4-6 は effort 対応"""
+        from pagefolio.ocr_providers import ClaudeProvider
+
+        p = ClaudeProvider("k", "claude-sonnet-4-6")
+        assert p._supports_effort() is True
+
+    def test_opus_supports_effort(self):
+        """claude-opus-4-8 は effort 対応"""
+        from pagefolio.ocr_providers import ClaudeProvider
+
+        p = ClaudeProvider("k", "claude-opus-4-8")
+        assert p._supports_effort() is True
+
+
+class TestClaudeProviderBuildPayload:
+    """ClaudeProvider._build_payload() の構造を確認する"""
+
+    def test_opus_payload_has_output_config_effort(self):
+        """opus モデルは payload に output_config.effort を含み temperature を含まない（成功基準7）"""
+        from pagefolio.ocr_providers import ClaudeProvider
+
+        p = ClaudeProvider("k", "claude-opus-4-8")
+        payload = p._build_payload("AAA", "テスト")
+        assert "output_config" in payload
+        assert payload["output_config"]["effort"] == "low"
+        assert "temperature" not in payload
+
+    def test_sonnet_payload_has_output_config_effort(self):
+        """sonnet モデルは payload に output_config.effort を含み temperature を含まない"""
+        from pagefolio.ocr_providers import ClaudeProvider
+
+        p = ClaudeProvider("k", "claude-sonnet-4-6")
+        payload = p._build_payload("AAA", "テスト")
+        assert "output_config" in payload
+        assert "effort" in payload["output_config"]
+        assert "temperature" not in payload
+
+    def test_haiku_payload_has_temperature_no_output_config(self):
+        """haiku モデルは payload に temperature を含み output_config を含まない（成功基準7・D-16）"""
+        from pagefolio.ocr_providers import ClaudeProvider
+
+        p = ClaudeProvider("k", "claude-haiku-4-5")
+        payload = p._build_payload("AAA", "テスト")
+        assert "temperature" in payload
+        assert "output_config" not in payload
+
+    def test_payload_has_model_and_max_tokens(self):
+        """payload のトップレベルに model と max_tokens を持つ"""
+        from pagefolio.ocr_providers import ClaudeProvider
+
+        p = ClaudeProvider("k", "claude-sonnet-4-6")
+        payload = p._build_payload("AAA", "テスト")
+        assert "model" in payload
+        assert "max_tokens" in payload
+        assert payload["model"] == "claude-sonnet-4-6"
+
+    def test_payload_image_block_format(self):
+        """content[0] が正しい base64 image ブロック形式であること"""
+        from pagefolio.ocr_providers import ClaudeProvider
+
+        p = ClaudeProvider("k", "claude-sonnet-4-6")
+        payload = p._build_payload("TestBase64==", "プロンプト")
+        content = payload["messages"][0]["content"]
+        image_block = content[0]
+        assert image_block["type"] == "image"
+        assert image_block["source"]["type"] == "base64"
+        assert image_block["source"]["media_type"] == "image/png"
+        assert image_block["source"]["data"] == "TestBase64=="
+
+    def test_payload_text_block_format(self):
+        """content[1] が正しいテキストブロック形式であること"""
+        from pagefolio.ocr_providers import ClaudeProvider
+
+        p = ClaudeProvider("k", "claude-sonnet-4-6")
+        payload = p._build_payload("AAA", "OCRプロンプト")
+        content = payload["messages"][0]["content"]
+        text_block = content[1]
+        assert text_block["type"] == "text"
+        assert text_block["text"] == "OCRプロンプト"
