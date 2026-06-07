@@ -206,9 +206,9 @@ class TestLLMConfigProviderValues:
 
         from pagefolio.dialogs.llm_config import LLMConfigDialog
 
-        src = pathlib.Path(
-            "pagefolio/dialogs/llm_config.py"
-        ).read_text(encoding="utf-8")
+        src = pathlib.Path("pagefolio/dialogs/llm_config.py").read_text(
+            encoding="utf-8"
+        )
         assert '"gemini"' in src, (
             "provider_combo の values に 'gemini' が含まれていない"
         )
@@ -219,9 +219,9 @@ class TestLLMConfigProviderValues:
         """llm_config.py に gemini_section_frame の定義が存在する。"""
         import pathlib
 
-        src = pathlib.Path(
-            "pagefolio/dialogs/llm_config.py"
-        ).read_text(encoding="utf-8")
+        src = pathlib.Path("pagefolio/dialogs/llm_config.py").read_text(
+            encoding="utf-8"
+        )
         assert "gemini_section_frame" in src
         assert "gemini_model_var" in src
         assert "_on_provider_change" in src

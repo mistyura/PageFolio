@@ -200,9 +200,7 @@ class TestLoadSettingsDefaults:
         )
 
         result = _load_settings()
-        assert "ocr_scale" in result, (
-            "ocr_scale が _load_settings の戻り値に含まれない"
-        )
+        assert "ocr_scale" in result, "ocr_scale が _load_settings の戻り値に含まれない"
         assert result["ocr_scale"] == 1.5, (
             f"ocr_scale の既定値が 1.5 でない: {result['ocr_scale']}"
         )

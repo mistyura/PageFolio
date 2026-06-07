@@ -113,7 +113,7 @@
 
 **Wave 3** *(gap closure — 06-VERIFICATION.md gaps_found / 06-REVIEW.md CR-01・CR-02 対応・blocked on Wave 2)*
 
-  - [ ] 06-04-PLAN.md — CR-01 _start_worker_thread を concurrency 本のワーカー起動へ（LM Studio 後方互換復元・OCR-PERF-02）+ 終了シグナル concurrency 本 + done カウンタ Lock 化 + 全ワーカー終了後の単一終了処理 + CR-02 _finish_* 冪等ガード（結果二重挿入防止）+ 並列度/冪等性回帰テスト + WR-01/02/03 技術的負債解消（ocr_dialog/ocr/settings/llm_config/test_ocr）
+  - [x] 06-04-PLAN.md — CR-01 _start_worker_thread を concurrency 本のワーカー起動へ（LM Studio 後方互換復元・OCR-PERF-02）+ 終了シグナル concurrency 本 + done カウンタ Lock 化 + 全ワーカー終了後の単一終了処理 + CR-02 _finish_* 冪等ガード（結果二重挿入防止）+ 並列度/冪等性回帰テスト + WR-01/02/03 技術的負債解消（ocr_dialog/ocr/settings/llm_config/test_ocr）
 
 ### Phase 7: Tesseract + PluginManager 拡張 + QA
 
@@ -138,5 +138,5 @@
 | 3. API 整理と回帰テスト | v1.3.0 | 2/2 | Complete | 2026-06-03 |
 | 4. プロバイダ抽象化 | v1.4.0 | 3/3 | Complete | 2026-06-06 |
 | 5. Claude Provider + セキュリティ基盤 + プロバイダ選択 UI | v1.4.0 | 4/5 | In Progress|  |
-| 6. Gemini Provider + 逐次レンダリング最適化 | v1.4.0 | 3/4 | In Progress (gap closure 06-04) |  |
+| 6. Gemini Provider + 逐次レンダリング最適化 | v1.4.0 | 4/4 | Complete | 2026-06-07 |
 | 7. Tesseract + PluginManager 拡張 + QA | v1.4.0 | 0/? | Not started | - |

@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.4.0
 milestone_name: OCR プロバイダ化 + クラウドAPI対応
 status: executing
-stopped_at: Completed 06-02-PLAN.md
-last_updated: "2026-06-07T04:20:00Z"
-last_activity: 2026-06-07 -- Phase 06 Plan 02 completed (producer-consumer 逐次レンダリング・メモリ最適化)
+stopped_at: Completed 06-04-PLAN.md
+last_updated: "2026-06-07T04:35:00.000Z"
+last_activity: 2026-06-07 -- Phase 06 plan 04 完了（CR-01/CR-02/WR-01/02/03 全解消）
 progress:
   total_phases: 4
   completed_phases: 2
-  total_plans: 12
-  completed_plans: 12
-  percent: 83
+  total_plans: 13
+  completed_plans: 13
+  percent: 100
 ---
 
 # Project State
@@ -25,10 +25,10 @@ See: .planning/PROJECT.md (updated 2026-06-06)
 
 ## Current Position
 
-Phase: 06 (gemini-provider) — EXECUTING
-Plan: 3 of 3 (Plan 03 完了)
-Status: Phase 06 完了（Plan 02 逐次レンダリング含む全3プラン完了）
-Last activity: 2026-06-07 -- Phase 06 Plan 03 completed
+Phase: 06 (gemini-provider) — COMPLETE
+Plan: 4 of 4（全プラン完了）
+Status: Phase 06 完了（06-04 ギャップクロージャ達成）
+Last activity: 2026-06-07 -- Phase 06 plan 04 完了（CR-01 並列度復元・CR-02 冪等ガード・WR-01/02/03）
 
 ```
 [==========] v1.3.0 COMPLETE
@@ -63,6 +63,7 @@ Last activity: 2026-06-07 -- Phase 06 Plan 03 completed
 | Phase 06-gemini-provider P01 | 6min | 3 tasks | 4 files |
 | Phase 06-gemini-provider P02 | 20min | 3 tasks | 3 files |
 | Phase 06-gemini-provider P03 | 12min | 3 tasks | 9 files |
+| Phase 06-gemini-provider P04 (gap) | 6min | 3 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -125,6 +126,10 @@ Decisions are logged in PROJECT.md Key Decisions table.
 - [Phase 06-02]: _worker は fitz/get_pixmap/page_to_png_b64/self.doc[ を一切使用しない（D-04 必達）
 - [Phase 06-02]: 全ページ base64 一括辞書蓄積（self._images = {}）を撤廃しパイプライン化
 - [Phase 06-02]: 統合プログレス（done+skipped/total）を主軸とし、レンダリング 2 段表示を廃止（D-03）
+- [Phase 06-04]: _workers_remaining カウンタ（Lock 配下）で最終ワーカーのみ終了処理を呼ぶ（単一終了処理の保証・CR-01）
+- [Phase 06-04]: _fatal_msg/_fatal_kind を共有属性に昇格し Lock 保護（複数ワーカーの致命的エラー報告・CR-01）
+- [Phase 06-04]: DEFAULT_OCR_SCALE = 1.5 に統一し D-11 既定と整合（WR-01）
+- [Phase 06-04]: _SENSITIVE_KEYS に google_api_key / GOOGLE_API_KEY / GEMINI_API_KEY / ANTHROPIC_API_KEY 大文字バリアントを追加（WR-03）
 
 ### Pending Todos
 
@@ -155,11 +160,12 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-06-07T04:20:00Z
-Stopped at: Completed 06-02-PLAN.md
+Last session: 2026-06-07T04:35:00Z
+Stopped at: Completed 06-04-PLAN.md（Phase 06 全4プラン完了）
 Resume file: None
 
 ## Operator Next Steps
 
-- Phase 06 全3プラン完了（06-01 GeminiProvider コア・06-02 逐次レンダリング・06-03 Gemini UI 統合）
+- Phase 06 全4プラン完了（06-01 GeminiProvider コア・06-02 逐次レンダリング・06-03 Gemini UI 統合・06-04 ギャップクロージャ）
+- SC-2（OCR-PERF-02）が BLOCKER から VERIFIED に復元（CR-01 LM Studio 並列度復元・CR-02 冪等ガード達成）
 - 次は Phase 07（Tesseract / PluginManager 登録フック — 任意・最終）または v1.4.0 リリース確認

@@ -314,9 +314,7 @@ LANG = {
             "環境変数 GEMINI_API_KEY（または GOOGLE_API_KEY）を設定するか、"
             "入力欄にキーを入力してください。"
         ),
-        "ocr_scale_tradeoff_hint": (
-            "低=速い/安い・高=精度。低スペック PC は 1.5 推奨"
-        ),
+        "ocr_scale_tradeoff_hint": ("低=速い/安い・高=精度。低スペック PC は 1.5 推奨"),
         "ocr_effort_label": "推論強度 (effort):",
         "ocr_provider_off_hint": "OCR は無効です。設定でプロバイダを選択してください。",
         "ocr_model_refresh": "モデル更新",
