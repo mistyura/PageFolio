@@ -41,10 +41,10 @@ REQ-ID 形式: `OCR-[CATEGORY]-[NN]`。v1.3.0（`BUG`/`REFAC`/`TEST`）とは別
 ### OCR-PERF — 低スペック対策・安定性
 
 - [x] **OCR-PERF-01**: テキストが埋め込まれたページは `page.get_text()` の結果を採用し、Vision API 呼び出しをスキップする
-- [ ] **OCR-PERF-02**: ページ単位の逐次レンダリング → 送信 → 破棄でメモリ使用量を抑える（全ページ画像の一括保持を廃止）
+- [x] **OCR-PERF-02**: ページ単位の逐次レンダリング → 送信 → 破棄でメモリ使用量を抑える（全ページ画像の一括保持を廃止）
 - [x] **OCR-PERF-03**: クラウドプロバイダは並列度を抑制する（Gemini=1 / Claude=2、ローカル LM Studio は最大 8）
 - [x] **OCR-PERF-04**: 429 / 5xx 応答に対し指数バックオフでリトライする（最大 3 回・`Retry-After` ヘッダ優先）
-- [ ] **OCR-PERF-05**: `ocr_scale` のデフォルトを 1.5 に見直し、速度/コスト ↔ 精度のトレードオフヒントを UI に表示する
+- [x] **OCR-PERF-05**: `ocr_scale` のデフォルトを 1.5 に見直し、速度/コスト ↔ 精度のトレードオフヒントを UI に表示する
 
 ### OCR-EXT — 拡張（任意・最終フェーズ）
 
@@ -96,8 +96,8 @@ REQ-ID 形式: `OCR-[CATEGORY]-[NN]`。v1.3.0（`BUG`/`REFAC`/`TEST`）とは別
 | OCR-PERF-03 | Phase 5 | Complete |
 | OCR-PERF-04 | Phase 5 | Complete |
 | OCR-API-02 | Phase 6 | Complete |
-| OCR-PERF-02 | Phase 6 | Pending |
-| OCR-PERF-05 | Phase 6 | Pending |
+| OCR-PERF-02 | Phase 6 | Complete |
+| OCR-PERF-05 | Phase 6 | Complete |
 | OCR-QA-01 | Phase 6 | Complete |
 | OCR-EXT-01 | Phase 7 | Pending |
 | OCR-EXT-02 | Phase 7 | Pending |
