@@ -84,7 +84,19 @@ def _resolve_api_key(provider_name, session_keys):
         # どちらも未設定 → 実行前に明示エラーを raise（成功基準2）
         raise OCRAPIKeyError(env_var)
 
-    # 将来の Gemini など他プロバイダはここに追加する
+    if provider_name == "gemini":
+        # GEMINI_API_KEY 優先・未設定なら GOOGLE_API_KEY フォールバック（D-06）
+        # os.environ への書き込みは行わない（D-05・読み取りのみ）
+        key = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
+        if key:
+            return key
+        key = session_keys.get("gemini", "")
+        if key:
+            return key
+        # どちらも未設定 → 主変数名 GEMINI_API_KEY でエラー（D-06）
+        raise OCRAPIKeyError("GEMINI_API_KEY")
+
+    # 未対応プロバイダ
     raise OCRAPIKeyError(f"{provider_name.upper()}_API_KEY")
 
 
@@ -282,7 +294,19 @@ def build_provider(settings, api_key=None):
             temperature=float(settings.get("ocr_temperature", DEFAULT_OCR_TEMPERATURE)),
             effort=settings.get("ocr_effort", "low"),
         )
-    # Phase 6/7 で追加するプロバイダはここに分岐を追加する
+    elif name == "gemini":
+        # api_key は settings から読まず引数のみ・settings へ書き込まない（D-01/D-05）
+        # effort パラメータなし（D-09: Gemini は temperature のみ）
+        from pagefolio.ocr_providers import GeminiProvider
+
+        return GeminiProvider(
+            api_key=api_key or "",
+            model=settings.get("gemini_model", "gemini-2.5-flash"),
+            timeout=int(settings.get("ocr_timeout", DEFAULT_OCR_TIMEOUT)),
+            max_tokens=int(settings.get("ocr_max_tokens", 4096)),
+            temperature=float(settings.get("ocr_temperature", DEFAULT_OCR_TEMPERATURE)),
+        )
+    # Phase 7 で追加するプロバイダはここに分岐を追加する
     raise ValueError(f"未対応のプロバイダ: {name}")
 
 
@@ -325,7 +349,7 @@ class OCRMixin:
         # 中止する（成功基準2 は OCRDialog._on_run が担保）。
         name = self.settings.get("ocr_provider", "")
         api_key = None
-        _cloud_providers = {"claude"}  # Phase 6 で gemini を追加
+        _cloud_providers = {"claude", "gemini"}  # Phase 6: gemini 追加
         if name in _cloud_providers:
             from pagefolio.ocr_providers import OCRAPIKeyError
 
