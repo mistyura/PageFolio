@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.4.0
 milestone_name: OCR プロバイダ化 + クラウドAPI対応
 status: executing
-stopped_at: Completed 06-01-PLAN.md
-last_updated: "2026-06-07T03:32:49.884Z"
-last_activity: 2026-06-07 -- Phase 06 execution started
+stopped_at: Completed 06-03-PLAN.md
+last_updated: "2026-06-07T03:56:00Z"
+last_activity: 2026-06-07 -- Phase 06 Plan 03 completed (Gemini UI 統合・ocr_scale 最適化)
 progress:
   total_phases: 4
   completed_phases: 2
   total_plans: 12
-  completed_plans: 10
-  percent: 50
+  completed_plans: 12
+  percent: 83
 ---
 
 # Project State
@@ -26,13 +26,13 @@ See: .planning/PROJECT.md (updated 2026-06-06)
 ## Current Position
 
 Phase: 06 (gemini-provider) — EXECUTING
-Plan: 2 of 3
-Status: Ready to execute
-Last activity: 2026-06-07 -- Phase 06 execution started
+Plan: 3 of 3 (Plan 03 完了)
+Status: Phase 06 完了（Plan 02 逐次レンダリング含む全3プラン完了）
+Last activity: 2026-06-07 -- Phase 06 Plan 03 completed
 
 ```
 [==========] v1.3.0 COMPLETE
-[====      ] v1.4.0 Phase 04 ████（完了）  Phase 05 ░░░░  Phase 06 ░░░░  Phase 07 ░░░░
+[========  ] v1.4.0 Phase 04 ████（完了）  Phase 05 ████（完了）  Phase 06 ████（完了）  Phase 07 ░░░░
 ```
 
 ## Performance Metrics
@@ -61,6 +61,7 @@ Last activity: 2026-06-07 -- Phase 06 execution started
 | Phase 05-claude-provider-ui P03 | 30min | 3 tasks | 3 files |
 | Phase 05-claude-provider-ui P04 | 30min | 3 tasks | 3 files |
 | Phase 06-gemini-provider P01 | 6min | 3 tasks | 4 files |
+| Phase 06-gemini-provider P03 | 12min | 3 tasks | 9 files |
 
 ## Accumulated Context
 
@@ -113,6 +114,11 @@ Decisions are logged in PROJECT.md Key Decisions table.
 - [Phase ?]: [Phase 06-01]: GEMINI_API_KEY 優先 GOOGLE_API_KEY フォールバック dual env var（D-06）
 - [Phase ?]: [Phase 06-01]: thinkingConfig は generationConfig 直下 thinkingBudget=0（D-09）
 - [Phase ?]: [Phase 06-01]: x-goog-api-key ヘッダー認証 URL ?key= 不使用（D-05/T-06-01）
+- [Phase 06-03]: ocr_scale 既定を 2.0 → 1.5 に変更（D-11・OCR-PERF-05）。既存保存値は setdefault で据え置き
+- [Phase 06-03]: gemini_model 既定 'gemini-2.5-flash' を settings.py に追加（D-08・無害な設定値）
+- [Phase 06-03]: _is_cloud_provider は name in ('claude','gemini') + isinstance((ClaudeProvider, GeminiProvider)) で判定（Pitfall-F）
+- [Phase 06-03]: _needs_session_key の gemini 分岐は GEMINI_API_KEY or GOOGLE_API_KEY dual env var（D-06/Pitfall-G）
+- [Phase 06-03]: gemini セッションキーは _session_api_keys['gemini'] のみに格納（T-06-11・settings 非永続化）
 
 ### Pending Todos
 
@@ -143,10 +149,11 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-06-07T03:32:49.874Z
-Stopped at: Completed 06-01-PLAN.md
+Last session: 2026-06-07T03:56:00Z
+Stopped at: Completed 06-03-PLAN.md
 Resume file: None
 
 ## Operator Next Steps
 
-- 05-04 完了。次は 05-05（OCR ダイアログ UI 拡張 — セッションキー入力欄・コスト確認・waiting 進捗表示）
+- Phase 06 全3プラン完了（06-01 GeminiProvider コア・06-02 逐次レンダリング・06-03 Gemini UI 統合）
+- 次は Phase 07（Tesseract / PluginManager 登録フック — 任意・最終）または v1.4.0 リリース確認
