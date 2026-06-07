@@ -104,7 +104,7 @@
 
 **Wave 1** *(並列・ファイル非重複)*
 
-  - [ ] 06-01-PLAN.md — GeminiProvider 新設（inline_data・x-goog-api-key・thinkingBudget=0・dual env var）+ build_provider/_resolve_api_key/_cloud_providers gemini 配線 + Gemini モックテスト（ocr_providers/ocr/test_ocr*）
+  - [x] 06-01-PLAN.md — GeminiProvider 新設（inline_data・x-goog-api-key・thinkingBudget=0・dual env var）+ build_provider/_resolve_api_key/_cloud_providers gemini 配線 + Gemini モックテスト（ocr_providers/ocr/test_ocr*）
   - [ ] 06-03-PLAN.md — ocr_scale 既定 1.5 + 設定欄トレードオフ常設ヒント + gemini UI 欄（llm_config）+ OCRDialog プロバイダ判定の gemini 対応 + 日英文言 + APP_VERSION/開発履歴/README 同期（settings/lang/llm_config/ocr_dialog/constants）
 
 **Wave 2** *(blocked on Wave 1 — ocr.py / ocr_dialog.py 共有)*
@@ -134,5 +134,5 @@
 | 3. API 整理と回帰テスト | v1.3.0 | 2/2 | Complete | 2026-06-03 |
 | 4. プロバイダ抽象化 | v1.4.0 | 3/3 | Complete | 2026-06-06 |
 | 5. Claude Provider + セキュリティ基盤 + プロバイダ選択 UI | v1.4.0 | 4/5 | In Progress|  |
-| 6. Gemini Provider + 逐次レンダリング最適化 | v1.4.0 | 0/3 | Planned | - |
+| 6. Gemini Provider + 逐次レンダリング最適化 | v1.4.0 | 1/3 | In Progress|  |
 | 7. Tesseract + PluginManager 拡張 + QA | v1.4.0 | 0/? | Not started | - |

@@ -22,7 +22,7 @@ REQ-ID 形式: `OCR-[CATEGORY]-[NN]`。v1.3.0（`BUG`/`REFAC`/`TEST`）とは別
 ### OCR-API — クラウド API プロバイダ
 
 - [x] **OCR-API-01**: ユーザーは Claude（messages API・モデル一覧・`ANTHROPIC_API_KEY`）でページを OCR できる
-- [ ] **OCR-API-02**: ユーザーは Gemini（generateContent・inline_data・モデル一覧・`GEMINI_API_KEY`/`GOOGLE_API_KEY`）でページを OCR できる
+- [x] **OCR-API-02**: ユーザーは Gemini（generateContent・inline_data・モデル一覧・`GEMINI_API_KEY`/`GOOGLE_API_KEY`）でページを OCR できる
 - [ ] **OCR-API-03**: プロバイダを切り替えたとき、該当プロバイダのモデル一覧を取得して選択肢に提示する
 
 ### OCR-SEC — セキュリティ（APIキー）
@@ -53,7 +53,7 @@ REQ-ID 形式: `OCR-[CATEGORY]-[NN]`。v1.3.0（`BUG`/`REFAC`/`TEST`）とは別
 
 ### OCR-QA — テスト・文言・ドキュメント
 
-- [ ] **OCR-QA-01**: 各 Provider の payload 構築・レスポンス解析・テキスト埋め込みスキップ判定をモックでテストする（`tests/test_ocr.py`）
+- [x] **OCR-QA-01**: 各 Provider の payload 構築・レスポンス解析・テキスト埋め込みスキップ判定をモックでテストする（`tests/test_ocr.py`）
 - [ ] **OCR-QA-02**: プロバイダ名・APIキー未設定・精度注記・コスト警告の多言語文言（`lang.py`）と README/開発履歴を更新する
 
 ---
@@ -95,10 +95,10 @@ REQ-ID 形式: `OCR-[CATEGORY]-[NN]`。v1.3.0（`BUG`/`REFAC`/`TEST`）とは別
 | OCR-UI-04 | Phase 5 | Complete |
 | OCR-PERF-03 | Phase 5 | Complete |
 | OCR-PERF-04 | Phase 5 | Complete |
-| OCR-API-02 | Phase 6 | Pending |
+| OCR-API-02 | Phase 6 | Complete |
 | OCR-PERF-02 | Phase 6 | Pending |
 | OCR-PERF-05 | Phase 6 | Pending |
-| OCR-QA-01 | Phase 6 | Pending |
+| OCR-QA-01 | Phase 6 | Complete |
 | OCR-EXT-01 | Phase 7 | Pending |
 | OCR-EXT-02 | Phase 7 | Pending |
 | OCR-QA-02 | Phase 7 | Pending |
