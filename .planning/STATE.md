@@ -4,7 +4,7 @@ milestone: v1.4.0
 milestone_name: OCR プロバイダ化 + クラウドAPI対応
 status: executing
 stopped_at: Phase 6 context gathered
-last_updated: "2026-06-07T02:27:24.178Z"
+last_updated: "2026-06-07T03:05:43.493Z"
 last_activity: 2026-06-07 -- 05-04 完了（provider DD・欄切替・claude モデル更新・effort 切替・OCR ボタン無効化・human-verify approved）
 progress:
   total_phases: 4
@@ -27,7 +27,7 @@ See: .planning/PROJECT.md (updated 2026-06-06)
 
 Phase: 05 (claude-provider-ui) — EXECUTING
 Plan: 4 of 5
-Status: Executing Phase 05
+Status: Ready to execute
 Last activity: 2026-06-07 -- 05-04 完了（provider DD・欄切替・claude モデル更新・effort 切替・OCR ボタン無効化・human-verify approved）
 
 ```
