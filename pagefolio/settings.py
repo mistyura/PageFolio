@@ -13,7 +13,17 @@ logger = logging.getLogger(__name__)
 
 # D-01: 機密キー集合（_save_settings が JSON へ書き込まないキー名）
 # Pitfall 1: APIキー平文漏洩防止の構造的ガード（最後の砦）
-_SENSITIVE_KEYS = {"claude_api_key", "gemini_api_key", "anthropic_api_key", "api_key"}
+# WR-03: D-06 の dual env var（GEMINI_API_KEY / GOOGLE_API_KEY）フォールバック対応
+_SENSITIVE_KEYS = {
+    "claude_api_key",
+    "gemini_api_key",
+    "google_api_key",  # WR-03: Gemini フォールバックキー名（小文字）
+    "anthropic_api_key",
+    "api_key",
+    "GEMINI_API_KEY",  # WR-03: 大文字バリアント
+    "GOOGLE_API_KEY",  # WR-03: Gemini フォールバックキー名（大文字・D-06）
+    "ANTHROPIC_API_KEY",  # WR-03: 大文字バリアント
+}
 
 
 def _get_settings_path():

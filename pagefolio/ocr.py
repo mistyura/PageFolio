@@ -6,6 +6,7 @@
 import base64
 import logging
 import queue
+import sys
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from tkinter import messagebox
@@ -32,7 +33,7 @@ OCR_PROMPTS = {
 
 DEFAULT_LM_STUDIO_URL = "http://localhost:1234"
 DEFAULT_OCR_TIMEOUT = 120  # 秒
-DEFAULT_OCR_SCALE = 2.0
+DEFAULT_OCR_SCALE = 1.5  # D-11: 新規既定 1.5 に統一（WR-01）
 DEFAULT_OCR_MAX_TOKENS = -1  # -1: モデル側の最大値（context window）に委ねる
 # UI 上の最大値（Qwen2.5 系の 262144 トークンまで）
 # LM Studio は max_tokens=-1 でモデル最大値を使うため、通常は -1 で十分
@@ -316,7 +317,11 @@ def run_with_bounded_buffer(
             except Exception as e:
                 logger.exception("consumer スレッド例外: %s", e)
     finally:
-        executor.shutdown(wait=False, cancel_futures=True)
+        # WR-02: cancel_futures は Python 3.9+ 追加（3.8 互換分岐）
+        if sys.version_info >= (3, 9):
+            executor.shutdown(wait=False, cancel_futures=True)
+        else:
+            executor.shutdown(wait=False)
 
     producer_thread.join(timeout=5.0)
 
@@ -439,7 +444,11 @@ def run_parallel(
                 except Exception as e:
                     logger.debug("on_progress コールバック失敗: %s", e)
     finally:
-        executor.shutdown(wait=False, cancel_futures=True)
+        # WR-02: cancel_futures は Python 3.9+ 追加（3.8 互換分岐）
+        if sys.version_info >= (3, 9):
+            executor.shutdown(wait=False, cancel_futures=True)
+        else:
+            executor.shutdown(wait=False)
 
     return results, errors, fatal["msg"], fatal["kind"]
 

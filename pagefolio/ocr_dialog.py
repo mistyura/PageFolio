@@ -805,7 +805,7 @@ class OCRDialog(tk.Toplevel):
         try:
             self._ocr_scale = max(1.0, min(4.0, float(self.scale_var.get())))
         except (tk.TclError, ValueError):
-            self._ocr_scale = 2.0
+            self._ocr_scale = 1.5  # WR-01: D-11 整合（例外フォールバック統一）
         try:
             self._ocr_timeout = max(10, min(600, int(self.timeout_var.get())))
         except (tk.TclError, ValueError):

@@ -324,8 +324,9 @@ class LLMConfigDialog(tk.Toplevel):
             width=20,
             anchor="w",
         ).pack(side="left")
+        # WR-01: D-11 整合（フォールバック 2.0→1.5）
         self.ocr_scale_var = tk.DoubleVar(
-            value=float(self.current_settings.get("ocr_scale", 2.0)),
+            value=float(self.current_settings.get("ocr_scale", 1.5)),
         )
         tk.Spinbox(
             scale_row,
@@ -714,7 +715,7 @@ class LLMConfigDialog(tk.Toplevel):
                 1.0, min(4.0, float(self.ocr_scale_var.get()))
             )
         except (tk.TclError, ValueError):
-            llm_settings["ocr_scale"] = 2.0
+            llm_settings["ocr_scale"] = 1.5  # WR-01: D-11 整合
         try:
             llm_settings["ocr_timeout"] = max(
                 10, min(600, int(self.ocr_timeout_var.get()))
