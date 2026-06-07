@@ -22,7 +22,7 @@
 
 - [ ] **Phase 4: プロバイダ抽象化** — `OCRProvider` 基底・LM Studio を Provider 実装へ移動・`run_parallel()` 一般化・テキスト埋め込みスキップ
 - [ ] **Phase 5: Claude Provider + セキュリティ基盤 + プロバイダ選択 UI** — APIキーガード最優先・ClaudeProvider・確認ダイアログ・バックオフ・SettingsDialog UI
-- [ ] **Phase 6: Gemini Provider + 逐次レンダリング最適化** — GeminiProvider・ページ単位逐次化・`ocr_scale` 見直し・OCR モックテスト (検証: gaps_found — SC-2/OCR-PERF-02 BLOCKER)
+- [ ] **Phase 6: Gemini Provider + 逐次レンダリング最適化** — GeminiProvider・ページ単位逐次化・`ocr_scale` 見直し・OCR モックテスト (検証: gaps_found — SC-2/OCR-PERF-02 BLOCKER → 06-04 ギャップクロージャで対応)
 - [ ] **Phase 7: Tesseract + PluginManager 拡張 + QA** — TesseractProvider（任意）・プロバイダ登録フック・多言語文言・ドキュメント更新
 
 ## Phase Details
@@ -100,7 +100,7 @@
   3. `ocr_scale` のデフォルトが 1.5 になり、UI にコスト/精度のトレードオフ説明が表示される
   4. 各 Provider の payload 構築・レスポンス解析・テキスト埋め込みスキップ判定がモックテストで検証されている（`tests/test_ocr.py` 通過）
 
-**Plans**: 3 plans
+**Plans**: 4 plans
 
 **Wave 1** *(並列・ファイル非重複)*
 
@@ -110,6 +110,10 @@
 **Wave 2** *(blocked on Wave 1 — ocr.py / ocr_dialog.py 共有)*
 
   - [x] 06-02-PLAN.md — producer-consumer 逐次レンダリング（run_with_bounded_buffer・全ページ一括保持廃止・ワーカー内 fitz アクセスゼロ・統合プログレス）+ メモリ非蓄積リグレッションテスト（ocr/ocr_dialog/test_ocr）
+
+**Wave 3** *(gap closure — 06-VERIFICATION.md gaps_found / 06-REVIEW.md CR-01・CR-02 対応・blocked on Wave 2)*
+
+  - [ ] 06-04-PLAN.md — CR-01 _start_worker_thread を concurrency 本のワーカー起動へ（LM Studio 後方互換復元・OCR-PERF-02）+ 終了シグナル concurrency 本 + done カウンタ Lock 化 + 全ワーカー終了後の単一終了処理 + CR-02 _finish_* 冪等ガード（結果二重挿入防止）+ 並列度/冪等性回帰テスト + WR-01/02/03 技術的負債解消（ocr_dialog/ocr/settings/llm_config/test_ocr）
 
 ### Phase 7: Tesseract + PluginManager 拡張 + QA
 
@@ -134,5 +138,5 @@
 | 3. API 整理と回帰テスト | v1.3.0 | 2/2 | Complete | 2026-06-03 |
 | 4. プロバイダ抽象化 | v1.4.0 | 3/3 | Complete | 2026-06-06 |
 | 5. Claude Provider + セキュリティ基盤 + プロバイダ選択 UI | v1.4.0 | 4/5 | In Progress|  |
-| 6. Gemini Provider + 逐次レンダリング最適化 | v1.4.0 | 3/3 | In Progress (gaps_found) |  |
+| 6. Gemini Provider + 逐次レンダリング最適化 | v1.4.0 | 3/4 | In Progress (gap closure 06-04) |  |
 | 7. Tesseract + PluginManager 拡張 + QA | v1.4.0 | 0/? | Not started | - |
