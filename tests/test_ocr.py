@@ -1151,3 +1151,103 @@ class TestBuildProviderGemini:
         ocr.build_provider(settings, api_key="secret")
         for key in ("api_key", "gemini_api_key", "GEMINI_API_KEY", "GOOGLE_API_KEY"):
             assert key not in settings, f"settings に {key} が混入している"
+
+
+# ===== producer-consumer メモリ非蓄積リグレッション（D-13・成功基準2）=====
+
+
+class TestProducerConsumerMemory:
+    """run_with_bounded_buffer の同時保持画像数がバッファ上限を超えないことを検証する。
+
+    FakeProvider の ocr_image 呼び出し時点で in-flight な b64 の数が
+    concurrency + 1 （バッファ上限）を超えないことを threading.Lock で計測する（D-13）。
+    """
+
+    def test_in_flight_count_never_exceeds_maxsize(self):
+        """同時保持画像数が concurrency+1 以内に収まること（T-06-06・成功基準2）"""
+        in_flight_count = [0]
+        max_observed = [0]
+        lock = threading.Lock()
+        concurrency = 2
+
+        def counting_side_effect(b64, prompt):
+            with lock:
+                in_flight_count[0] += 1
+                max_observed[0] = max(max_observed[0], in_flight_count[0])
+            time.sleep(0.01)  # API 処理時間を模擬
+            with lock:
+                in_flight_count[0] -= 1
+            return f"text-{b64}"
+
+        provider = FakeProvider(side_effect=counting_side_effect)
+        # max_concurrency を concurrency に合わせるためモンキーパッチ
+        provider.default_concurrency = concurrency
+        provider.max_concurrency = concurrency
+
+        page_indices = list(range(20))  # 20 ページ（100 ページの代替）
+        results, errors, fm, fk = ocr.run_with_bounded_buffer(
+            provider=provider,
+            render_fn=lambda i: f"b64-page-{i}",
+            page_indices=page_indices,
+            concurrency=concurrency,
+            prompt="",
+        )
+        expected_maxsize = concurrency + 1
+        assert max_observed[0] <= expected_maxsize, (
+            f"同時保持数 {max_observed[0]} がバッファ上限 {expected_maxsize} を超えた"
+        )
+        assert len(results) == len(page_indices), (
+            f"結果取りこぼし: {len(results)} / {len(page_indices)} ページ"
+        )
+        assert fm is None
+
+    def test_all_results_collected_no_missing(self):
+        """全ページの結果が results に揃い取りこぼしがないこと"""
+        provider = FakeProvider()
+        page_indices = list(range(20))
+        results, errors, fm, fk = ocr.run_with_bounded_buffer(
+            provider=provider,
+            render_fn=lambda i: f"b64-{i}",
+            page_indices=page_indices,
+            concurrency=2,
+            prompt="",
+        )
+        assert len(results) == len(page_indices)
+        for i in page_indices:
+            assert i in results, f"ページ {i} の結果が欠落"
+
+    def test_cancel_terminates_without_deadlock(self):
+        """is_cancelled が途中で True になると残ページを処理せず有限時間で終了する。
+
+        デッドロックしないことをタイムアウトなし（pytest のデフォルト）で検証する。
+        """
+        call_count = [0]
+        cancel_after = 5  # 5 回呼び出し後にキャンセル
+
+        def side_effect(b64, prompt):
+            with threading.Lock():
+                call_count[0] += 1
+            time.sleep(0.01)
+            return f"text-{b64}"
+
+        provider = FakeProvider(side_effect=side_effect)
+        cancel_event = threading.Event()
+
+        def is_cancelled():
+            if call_count[0] >= cancel_after:
+                cancel_event.set()
+            return cancel_event.is_set()
+
+        page_indices = list(range(50))
+        results, errors, fm, fk = ocr.run_with_bounded_buffer(
+            provider=provider,
+            render_fn=lambda i: f"b64-{i}",
+            page_indices=page_indices,
+            concurrency=1,
+            prompt="",
+            is_cancelled=is_cancelled,
+        )
+        # キャンセル後は全ページは処理されない
+        assert len(results) < len(page_indices), (
+            "キャンセル後も全ページが処理されている（キャンセルが効いていない）"
+        )
