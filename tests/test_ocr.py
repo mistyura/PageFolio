@@ -858,3 +858,199 @@ class TestStartOcrCloudGate:
         OCRMixin._start_ocr(fake, [0])
 
         assert opened["dialog"] is True
+
+
+# ===== OCRDialog LLM 設定ライブ更新（Task 1: 260607-ccz）=====
+
+
+class TestOcrDialogLlmConfig:
+    """_apply_llm_settings のロジック検証（Tkinter ウィンドウ不使用）。
+
+    _refresh_provider_dependent_ui を no-op に差し替えた fake インスタンスで
+    OCRDialog._apply_llm_settings を未束縛呼び出しして検証する。
+    """
+
+    def _make_fake(self, extra_settings=None):
+        """Tkinter 不使用の fake OCRDialog インスタンスを生成する。"""
+        import types
+
+        settings = {
+            "ocr_provider": "lmstudio",
+            "lm_studio_url": "http://localhost:1234",
+            "lm_studio_model": "",
+            "ocr_timeout": 120,
+            "ocr_max_tokens": -1,
+            "ocr_temperature": 0.1,
+        }
+        if extra_settings:
+            settings.update(extra_settings)
+
+        app = types.SimpleNamespace(
+            settings=settings,
+            _session_api_keys={},
+        )
+
+        fake = types.SimpleNamespace(
+            app=app,
+            provider=None,
+            progress_var=types.SimpleNamespace(set=lambda _v: None),
+            _started=False,
+            _done=False,
+        )
+        # url_var / model_var の set を記録できる SimpleNamespace
+        fake.url_var = types.SimpleNamespace(set=lambda v: None)
+        fake.model_var = types.SimpleNamespace(set=lambda v: None)
+
+        # _refresh_provider_dependent_ui を no-op に差し替え
+        fake._refresh_called = False
+
+        def _no_op_refresh():
+            fake._refresh_called = True
+
+        fake._refresh_provider_dependent_ui = _no_op_refresh
+        return fake
+
+    # ── test 1: settings が更新される ──────────────────────────────────────
+
+    def test_apply_updates_settings(self, monkeypatch):
+        """llm_settings を渡すと fake.app.settings に反映される。"""
+        import pagefolio.ocr as ocr_mod
+        import pagefolio.settings as settings_mod
+
+        monkeypatch.setattr(settings_mod, "_save_settings", lambda _: None)
+        monkeypatch.setattr(ocr_mod, "build_provider", lambda s, api_key="": object())
+        monkeypatch.setattr(
+            ocr_mod, "_resolve_api_key", lambda provider, keys: "test-key"
+        )
+
+        fake = self._make_fake()
+        llm_settings = {"ocr_provider": "claude", "claude_model": "claude-opus-4-8"}
+
+        from pagefolio.ocr_dialog import OCRDialog
+
+        OCRDialog._apply_llm_settings(fake, llm_settings)
+
+        assert fake.app.settings["ocr_provider"] == "claude"
+        assert fake.app.settings["claude_model"] == "claude-opus-4-8"
+
+    # ── test 2: _save_settings が1回呼ばれる ────────────────────────────────
+
+    def test_apply_persists_via_save_settings(self, monkeypatch):
+        """_apply_llm_settings が _save_settings(app.settings) を1回呼ぶ。"""
+        import pagefolio.ocr_providers as prov_mod
+        import pagefolio.settings as settings_mod
+
+        saved = {"count": 0, "arg": None}
+
+        def mock_save(s):
+            saved["count"] += 1
+            saved["arg"] = s
+
+        monkeypatch.setattr(settings_mod, "_save_settings", mock_save)
+        monkeypatch.setattr(prov_mod, "LMStudioProvider", lambda **kw: object())
+
+        fake = self._make_fake()
+        llm_settings = {"ocr_provider": "lmstudio", "lm_studio_url": "http://x"}
+
+        from pagefolio.ocr_dialog import OCRDialog
+
+        OCRDialog._apply_llm_settings(fake, llm_settings)
+
+        assert saved["count"] == 1
+        assert saved["arg"] is fake.app.settings
+
+    # ── test 3: provider 再生成（lmstudio / claude）────────────────────────
+
+    def test_apply_regenerates_provider_lmstudio_and_claude(self, monkeypatch):
+        """ocr_provider='lmstudio' → LMStudioProvider、='claude' → build_provider。"""
+        import pagefolio.ocr as ocr_mod
+        import pagefolio.ocr_providers as prov_mod
+        import pagefolio.settings as settings_mod
+
+        monkeypatch.setattr(settings_mod, "_save_settings", lambda _: None)
+
+        # lmstudio パス
+        lmstudio_marker = object()
+        monkeypatch.setattr(prov_mod, "LMStudioProvider", lambda **kw: lmstudio_marker)
+        fake_lm = self._make_fake({"ocr_provider": "lmstudio"})
+
+        from pagefolio.ocr_dialog import OCRDialog
+
+        OCRDialog._apply_llm_settings(fake_lm, {"ocr_provider": "lmstudio"})
+        assert fake_lm.provider is lmstudio_marker
+
+        # claude パス
+        claude_marker = object()
+        monkeypatch.setattr(
+            ocr_mod, "build_provider", lambda s, api_key="": claude_marker
+        )
+        monkeypatch.setattr(
+            ocr_mod, "_resolve_api_key", lambda provider, keys: "test-key"
+        )
+        fake_cl = self._make_fake({"ocr_provider": "claude"})
+        OCRDialog._apply_llm_settings(fake_cl, {"ocr_provider": "claude"})
+        assert fake_cl.provider is claude_marker
+
+    # ── test 4: api_key 系キーが settings に流入しない ──────────────────────
+
+    def test_apply_does_not_leak_api_key(self, monkeypatch):
+        """llm_settings 経由で api_key 系キーが settings に入らないことを確認。
+
+        LLMConfigDialog._apply は api_key 系を llm_settings に入れない（T-05-12）。
+        万一含まれた場合も _save_settings の _SENSITIVE_KEYS ガードで除外される。
+        ここでは正常な llm_settings には機密キーが含まれないことを確認する。
+        """
+        import pagefolio.ocr_providers as prov_mod
+        import pagefolio.settings as settings_mod
+
+        saved_settings = {}
+
+        def mock_save(s):
+            saved_settings.update(s)
+
+        monkeypatch.setattr(settings_mod, "_save_settings", mock_save)
+        monkeypatch.setattr(prov_mod, "LMStudioProvider", lambda **kw: object())
+
+        # api_key 系を含まない正常な llm_settings（LLMConfigDialog の実挙動）
+        llm_settings = {
+            "ocr_provider": "lmstudio",
+            "lm_studio_url": "http://localhost:1234",
+            "lm_studio_model": "",
+        }
+        fake = self._make_fake()
+
+        from pagefolio.ocr_dialog import OCRDialog
+
+        OCRDialog._apply_llm_settings(fake, llm_settings)
+
+        sensitive_keys = (
+            "anthropic_api_key",
+            "ANTHROPIC_API_KEY",
+            "api_key",
+            "claude_api_key",
+        )
+        for key in sensitive_keys:
+            assert key not in fake.app.settings, f"settings に {key} が混入"
+
+    # ── test 5: 実行中ガード（_open_llm_config）────────────────────────────
+
+    def test_open_llm_config_blocked_during_run(self, monkeypatch):
+        """_started=True, _done=False のとき LLMConfigDialog が生成されない。"""
+        import pagefolio.dialogs.llm_config as llm_cfg_mod
+
+        opened_count = {"n": 0}
+
+        def fake_llm_config_dialog(*args, **kwargs):
+            opened_count["n"] += 1
+
+        monkeypatch.setattr(llm_cfg_mod, "LLMConfigDialog", fake_llm_config_dialog)
+
+        fake = self._make_fake()
+        fake._started = True
+        fake._done = False
+
+        from pagefolio.ocr_dialog import OCRDialog
+
+        OCRDialog._open_llm_config(fake)
+
+        assert opened_count["n"] == 0, "実行中に LLMConfigDialog が生成されてはならない"
