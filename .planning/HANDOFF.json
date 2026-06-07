@@ -1,0 +1,31 @@
+{
+  "version": "1.0",
+  "timestamp": "2026-06-07T04:52:03.087Z",
+  "phase": "06",
+  "phase_name": "gemini-provider",
+  "phase_dir": ".planning/phases/06-gemini-provider",
+  "plan": 4,
+  "task": 3,
+  "total_tasks": 3,
+  "status": "phase_complete_awaiting_decision",
+  "completed_tasks": [
+    {"id": 1, "name": "06-01 GeminiProvider 新設 + build_provider/_resolve_api_key/_cloud_providers 配線", "status": "done", "commit": "(既完了)"},
+    {"id": 2, "name": "06-02 producer-consumer 逐次レンダリング（メモリ非蓄積）", "status": "done", "commit": "(既完了)"},
+    {"id": 3, "name": "06-03 ocr_scale 1.5 + Gemini UI 統合 + 文言/バージョン同期", "status": "done", "commit": "(既完了)"},
+    {"id": 4, "name": "06-04 ギャップクロージャ CR-01/CR-02/WR-01-03（今回実行）", "status": "done", "commit": "ea81ed9,a213482,a6f15bc,4a9fe28"}
+  ],
+  "remaining_tasks": [],
+  "blockers": [],
+  "human_actions_pending": [
+    {"action": "実 LM Studio 環境で concurrency=4 設定時に 4 スレッド並列動作することの手動確認", "context": "自動テストは stub でカバー済み・実機未確認", "blocking": false},
+    {"action": "キャンセル時の結果二重挿入が UI 上で解消されたことの手動確認", "context": "CR-02 冪等ガード追加・実機未確認", "blocking": false}
+  ],
+  "decisions": [
+    {"decision": "06-04 をシーケンシャル実行（worktree 分離なし）で実行", "rationale": "ローカル main が origin より 100 コミット先行。GSD worktree は origin/HEAD ベースで作られ base mismatch で HALT するため（学習済み）。単一プランで並列の利点もない", "phase": "06"},
+    {"decision": "コードレビューの Critical（put_nowait センチネルドロップ）を非ブロッキングと判定", "rationale": "worker ループの get(timeout=1.0)+_cancel_flag バックストップで最大 ~1 秒で終了。デッドロックではなく遅延キャンセルの軽微指摘", "phase": "06"},
+    {"decision": "REQUIREMENTS.md の OCR-PERF-02 / OCR-PERF-05 を Complete に更新", "rationale": "検証者がトレーサビリティの更新漏れ（Pending 残存）を指摘。実装は完了済み", "phase": "06"}
+  ],
+  "uncommitted_files": [],
+  "next_action": "次の3択から選択: (1) /gsd-secure-phase 6 でセキュリティ脅威検証（security_enforcement=true・SECURITY.md 未作成）, (2) /gsd-discuss-phase 7 で次フェーズ（Tesseract + PluginManager 拡張 + QA）着手, (3) v1.4.0 リリース判断（Phase 7 は任意・最終）",
+  "context_notes": "Phase 06 は --gaps-only でギャップクロージャ 06-04 を実行し完全クローズ。フェーズ目標検証 passed (4/4 must-haves)、前回 BLOCKER (SC-2/OCR-PERF-02) 解消、回帰なし、377 passed。フェーズ完了マーク済み（commit 4dfa40e）。APP_VERSION は既に v1.4.0。コードレビューは issues_found だが Critical は自己検証で軽微と判定済み・残指摘（WR-01 GIL前提・WR-02 進捗微少表示・IN系テスト網羅）は将来改善候補。"
+}
