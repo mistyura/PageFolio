@@ -10,7 +10,7 @@ from tkinter import ttk
 
 from pagefolio.constants import LANG, C
 from pagefolio.ocr import MAX_OCR_MAX_TOKENS
-from pagefolio.ocr_providers import ClaudeProvider, LMStudioProvider
+from pagefolio.ocr_providers import ClaudeProvider, GeminiProvider, LMStudioProvider
 from pagefolio.settings import get_current_font_size
 
 logger = logging.getLogger(__name__)
@@ -25,13 +25,14 @@ _EFFORT_VALUES = ("low", "medium", "high", "xhigh", "max")
 class LLMConfigDialog(tk.Toplevel):
     """プロバイダ選択・欄切替・モデル更新・effort 切替を行う共通ダイアログ。
 
-    対応プロバイダ（off/lmstudio/claude）:
+    対応プロバイダ（off/lmstudio/claude/gemini）:
     プロバイダ選択:
       - off: OCR を無効化（OCR ボタンは disabled になる）
       - lmstudio: LM Studio URL・モデル欄を表示
       - claude: claude モデル欄・effort/temperature 欄を表示
+      - gemini: gemini モデル欄・temperature 欄を表示（D-09・effort 非対応）
 
-    # Phase 6: gemini / Phase 7: tesseract を追加予定
+    # Phase 7: tesseract を追加予定
     """
 
     def __init__(
@@ -96,8 +97,8 @@ class LLMConfigDialog(tk.Toplevel):
         self.provider_combo = ttk.Combobox(
             provider_row,
             textvariable=self.provider_var,
-            # Phase 6: gemini / Phase 7: tesseract を追加予定
-            values=["off", "lmstudio", "claude"],
+            # Phase 7: tesseract を追加予定
+            values=["off", "lmstudio", "claude", "gemini"],
             state="readonly",
             font=self._font(-1),
             width=14,
@@ -214,6 +215,41 @@ class LLMConfigDialog(tk.Toplevel):
             command=self._refresh_claude_models,
         ).pack(side="left", padx=2)
 
+        # ── Gemini 固有欄（gemini 選択時のみ表示）──
+        self.gemini_section_frame = tk.Frame(self, bg=C["BG_DARK"])
+
+        # gemini モデル選択
+        gemini_model_row = tk.Frame(self.gemini_section_frame, bg=C["BG_DARK"])
+        gemini_model_row.pack(fill="x", padx=0, pady=2)
+        tk.Label(
+            gemini_model_row,
+            text=self._L["settings_lm_model"],
+            bg=C["BG_DARK"],
+            fg=C["TEXT_MAIN"],
+            font=self._font(-1),
+            width=20,
+            anchor="w",
+        ).pack(side="left")
+        self.gemini_model_var = tk.StringVar(
+            value=self.current_settings.get("gemini_model", "gemini-2.5-flash"),
+        )
+        self.gemini_model_combo = ttk.Combobox(
+            gemini_model_row,
+            textvariable=self.gemini_model_var,
+            font=self._font(-1),
+            values=GeminiProvider.RECOMMENDED_MODELS,
+        )
+        self.gemini_model_combo.pack(side="left", fill="x", expand=True, padx=4)
+
+        # gemini モデル更新ボタン
+        gemini_btn_row = tk.Frame(self.gemini_section_frame, bg=C["BG_DARK"])
+        gemini_btn_row.pack(fill="x", padx=0, pady=(4, 2))
+        ttk.Button(
+            gemini_btn_row,
+            text=self._L["ocr_model_refresh"],
+            command=self._refresh_gemini_models,
+        ).pack(side="left", padx=2)
+
         # ── effort 欄（claude かつ effort 対応モデル時のみ表示）──
         self.effort_frame = tk.Frame(self, bg=C["BG_DARK"])
         effort_row = tk.Frame(self.effort_frame, bg=C["BG_DARK"])
@@ -304,6 +340,15 @@ class LLMConfigDialog(tk.Toplevel):
             buttonbackground=C["BG_PANEL"],
             insertbackground=C["TEXT_MAIN"],
         ).pack(side="left", padx=4)
+
+        # ocr_scale トレードオフ常設ヒント（D-12・テーマ色 C["TEXT_SUB"] 使用）
+        tk.Label(
+            self,
+            text=self._L["ocr_scale_tradeoff_hint"],
+            bg=C["BG_DARK"],
+            fg=C["TEXT_SUB"],
+            font=self._font(-2),
+        ).pack(anchor="w", padx=24)
 
         # ── タイムアウト ──
         to_row = tk.Frame(self, bg=C["BG_DARK"])
@@ -449,10 +494,18 @@ class LLMConfigDialog(tk.Toplevel):
         # Claude 固有欄
         if provider == "claude":
             self.claude_section_frame.pack(fill="x", padx=24, pady=(4, 2))
+            self.gemini_section_frame.pack_forget()
             # モデルに応じて effort/temperature を切替
             self._on_model_change()
+        elif provider == "gemini":
+            # Gemini: モデル欄を表示、effort 非対応のため temperature のみ（D-09）
+            self.gemini_section_frame.pack(fill="x", padx=24, pady=(4, 2))
+            self.claude_section_frame.pack_forget()
+            self.effort_frame.pack_forget()
+            self.temperature_frame.pack(fill="x", padx=24, pady=2)
         else:
             self.claude_section_frame.pack_forget()
+            self.gemini_section_frame.pack_forget()
             # lmstudio / off では temperature 欄を表示し effort 欄を隠す（従来挙動）
             self.effort_frame.pack_forget()
             self.temperature_frame.pack(fill="x", padx=24, pady=2)
@@ -587,6 +640,42 @@ class LLMConfigDialog(tk.Toplevel):
                 self._L["settings_lm_test_ok"].format(count=len(models)), kind="ok"
             )
 
+    # ── Gemini モデル更新 ───────────────────────────────
+    def _refresh_gemini_models(self):
+        """Gemini モデル一覧を取得して Combobox に反映する。
+
+        GEMINI_API_KEY / GOOGLE_API_KEY が未設定でも GeminiProvider.list_models が
+        RECOMMENDED_MODELS を返すので静的リストが常に表示される（D-08）。
+        api_key は os.environ 読み取りのみ。settings には書かない（D-01/D-05）。
+        """
+        self._set_lm_status("⏳ Gemini モデル一覧を取得中…", kind="info")
+        # api_key は環境変数からのみ読み取る（settings への書き込み禁止・D-01/D-05）
+        api_key = os.environ.get("GEMINI_API_KEY") or os.environ.get(
+            "GOOGLE_API_KEY", ""
+        )
+        try:
+            models = GeminiProvider(api_key=api_key, model="").list_models()
+        except (ConnectionError, TimeoutError, RuntimeError, Exception) as e:
+            # 例外時は静的推奨リストへフォールバック（D-08）
+            logger.warning("Gemini モデル取得失敗（静的リストへフォールバック）: %s", e)
+            models = GeminiProvider.RECOMMENDED_MODELS
+            self.gemini_model_combo["values"] = models
+            self._set_lm_status(
+                "環境変数 GEMINI_API_KEY/GOOGLE_API_KEY が未設定: 静的リスト表示中",
+                kind="info",
+            )
+            return
+        self.gemini_model_combo["values"] = models
+        if not api_key:
+            self._set_lm_status(
+                "環境変数 GEMINI_API_KEY/GOOGLE_API_KEY が未設定: 静的リスト表示中",
+                kind="info",
+            )
+        else:
+            self._set_lm_status(
+                self._L["settings_lm_test_ok"].format(count=len(models)), kind="ok"
+            )
+
     # ── 設定保存 ────────────────────────────────────────
     def _apply(self):
         """現在の UI 値を llm_settings に収集して on_apply コールバックに渡す。
@@ -613,6 +702,10 @@ class LLMConfigDialog(tk.Toplevel):
         raw_effort = self.effort_var.get()
         llm_settings["ocr_effort"] = (
             raw_effort if raw_effort in _EFFORT_VALUES else "low"
+        )
+        # Gemini 設定（gemini_model は api_key と異なり無害な設定値・T-06-10）
+        llm_settings["gemini_model"] = (
+            self.gemini_model_var.get().strip() or "gemini-2.5-flash"
         )
 
         # 共通数値設定（クランプして格納）

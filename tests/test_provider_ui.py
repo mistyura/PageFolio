@@ -197,6 +197,36 @@ def _make_dialog_stub(settings, provider=None, page_indices=None):
     return stub
 
 
+class TestLLMConfigProviderValues:
+    """Task 2 回帰: provider_combo に gemini が含まれることを確認。"""
+
+    def test_provider_combo_includes_gemini(self):
+        """provider_combo の values に 'gemini' が含まれる（OCR-API-02）。"""
+        import pathlib
+
+        from pagefolio.dialogs.llm_config import LLMConfigDialog
+
+        src = pathlib.Path(
+            "pagefolio/dialogs/llm_config.py"
+        ).read_text(encoding="utf-8")
+        assert '"gemini"' in src, (
+            "provider_combo の values に 'gemini' が含まれていない"
+        )
+        fn = LLMConfigDialog._model_supports_effort
+        assert callable(fn)
+
+    def test_gemini_section_frame_exists_in_source(self):
+        """llm_config.py に gemini_section_frame の定義が存在する。"""
+        import pathlib
+
+        src = pathlib.Path(
+            "pagefolio/dialogs/llm_config.py"
+        ).read_text(encoding="utf-8")
+        assert "gemini_section_frame" in src
+        assert "gemini_model_var" in src
+        assert "_on_provider_change" in src
+
+
 class TestIsCloudProvider:
     """OCR-UI-03: _is_cloud_provider の動作検証。"""
 
