@@ -5,6 +5,7 @@
 
 import logging
 import os
+import queue
 import threading
 import tkinter as tk
 from tkinter import filedialog, messagebox, ttk
@@ -19,7 +20,6 @@ from pagefolio.ocr import (
     build_provider,
     has_embedded_text,
     page_to_png_b64,
-    run_parallel,
 )
 
 logger = logging.getLogger(__name__)
@@ -77,7 +77,7 @@ class OCRDialog(tk.Toplevel):
         self._worker_thread = None
         self._done = False
         self._started = False
-        self._images = {}  # page_idx -> b64（メインスレッドでレンダリング済み）
+        self._render_queue = None  # queue.Queue（_on_run で初期化・producer-consumer）
         self._ocr_page_indices = []  # スキップ除外後の Vision OCR 対象ページリスト
 
         self._build()
@@ -480,7 +480,7 @@ class OCRDialog(tk.Toplevel):
         self.results.clear()
         self.errors.clear()
         self._skipped_pages.clear()
-        self._images.clear()
+        self._render_queue = None  # キュー参照をリセット（再実行時に再生成）
         self._ocr_page_indices.clear()
         self.progress_bar["value"] = 0
         self.progress_var.set(self._L["ocr_run_first"])
@@ -864,17 +864,26 @@ class OCRDialog(tk.Toplevel):
                 temperature=temperature,
             )
 
-        # D-01/D-03/D-05: フェーズ1はメインスレッドで after() 小分け実行
-        # レンダリング完了後にワーカースレッドを起動する
+        # producer-consumer: バッファ初期化 → consumer 先行起動 → producer 開始
+        # バッファ上限 = concurrency + 1（余裕係数 1 でワーカー飢えを防止・D-02）
+        self._render_queue = queue.Queue(maxsize=self.concurrency + 1)
         self._render_idx = 0
+        # consumer（ワーカー）を先に起動してから producer（レンダリング）を開始する
+        self._start_worker_thread()
         self._render_next_page()
 
     def _render_next_page(self):
-        """メインスレッドで1ページずつレンダリング/埋め込み判定する。
+        """メインスレッド（生産者）: 1 ページ render → キューに積む（after(0) 連鎖）。
 
-        after() 小分けで UI フリーズを回避する（D-01/D-03/D-05）。
+        fitz アクセスはここのみ（D-04 必達）。キャンセル検出付き put で Pitfall-B 対策。
+        全ページ完了またはキャンセル時に None 終了シグナルで worker を終わらせる。
         """
         if self._cancel_flag.is_set():
+            # キャンセル: 終了シグナルを送って worker を終わらせる（Pitfall-E）
+            try:
+                self._render_queue.put_nowait(None)
+            except queue.Full:
+                pass
             self._finish_cancelled()
             return
 
@@ -882,29 +891,50 @@ class OCRDialog(tk.Toplevel):
         idx = self._render_idx
 
         if idx >= total:
-            # 全ページのレンダリング/判定完了 → ワーカースレッドを起動
-            self._start_worker_thread()
-            return
+            # 全ページ完了: worker に終了シグナルを送る（Pitfall-E）
+            self._render_queue.put(None)
+            return  # _finish_complete は _worker が呼ぶ
 
         page_idx = self.page_indices[idx]
-        self.progress_var.set(
-            self._L["ocr_progress_render"].format(cur=idx + 1, total=total)
-        )
 
         try:
             page = self.doc[page_idx]
-            # D-05: has_embedded_text はメインスレッドで実行
+            # D-05: has_embedded_text / get_text / page_to_png_b64 はメインスレッドのみ
             if has_embedded_text(page):
-                # 埋め込みテキストあり: results に直接投入（成功基準2・D-07）
+                # 埋め込みテキストあり: results に直接投入しスキップ（D-03 統合対象）
                 # T-04-09: 抽出テキストをログへ混入させない
                 extracted = page.get_text()
                 self.results[page_idx] = extracted
                 self._skipped_pages.add(page_idx)
+                # スキップはキューに積まず次ページへ（progress bar を after で更新）
+                skipped_count = len(self._skipped_pages)
+                total_pages = len(self.page_indices)
+                self.after(
+                    0,
+                    lambda d=skipped_count, t=total_pages: self.progress_var.set(
+                        self._L["ocr_progress_ocr"].format(
+                            done=d, total=t, page=page_idx + 1
+                        )
+                    ),
+                )
+                self.after(0, lambda d=skipped_count: self._on_progress_bar(d))
             else:
-                # 埋め込みテキストなし: Vision OCR のためレンダリング
+                # 埋め込みテキストなし: Vision OCR のためレンダリングしてキューへ積む
                 b64 = page_to_png_b64(page, scale=self._ocr_scale)
-                self._images[page_idx] = b64
-                self._ocr_page_indices.append(page_idx)
+                # キャンセル検出付きブロッキング put（Pitfall-B）
+                while True:
+                    if self._cancel_flag.is_set():
+                        # キャンセル: 終了シグナルを送って worker を終わらせる
+                        try:
+                            self._render_queue.put_nowait(None)
+                        except queue.Full:
+                            pass
+                        return
+                    try:
+                        self._render_queue.put((page_idx, b64), timeout=0.1)
+                        break
+                    except queue.Full:
+                        continue
         except Exception as e:
             logger.exception("ページ処理失敗 (p.%d): %s", page_idx, e)
             self.errors[page_idx] = f"image conversion error: {e}"
@@ -914,66 +944,110 @@ class OCRDialog(tk.Toplevel):
         self.after(0, self._render_next_page)
 
     def _start_worker_thread(self):
-        """レンダリング完了後にワーカースレッドを起動する"""
+        """consumer（ワーカー）スレッドを起動する（producer 開始前に先行起動）"""
         self._worker_thread = threading.Thread(target=self._worker, daemon=True)
         self._worker_thread.start()
 
     def _worker(self):
-        """フェーズ2: API 並列送信のみを担う（fitz アクセスゼロ・D-03）"""
+        """バックグラウンドスレッド（消費者）: キューから取り出して API 送信。
+
+        fitz/get_pixmap/page_to_png_b64/self.doc[ は一切使用しない（D-04 必達）。
+        キューから取り出した b64 は送信後に即座に del する（成功基準2・T-06-06）。
+        統合プログレス（処理済み done+skipped/total）で進捗を表示する（D-03）。
+        """
         total = len(self.page_indices)
-        # スキップ済みページ数を進捗バー初期値に反映
-        skipped_count = len(self._skipped_pages)
+        done = 0  # Vision OCR 完了ページ数（スキップ除外）
+        fatal_msg = None
+        fatal_kind = None
 
-        if self._cancel_flag.is_set():
-            self.after(0, self._finish_cancelled)
-            return
+        while True:
+            try:
+                item = self._render_queue.get(timeout=1.0)
+            except queue.Empty:
+                # タイムアウト: キャンセル確認（Pitfall-E）
+                if self._cancel_flag.is_set():
+                    break
+                continue
 
-        # フェーズ2: run_parallel で Vision OCR（スキップ除外済みページのみ）
-        def on_progress(done, page_idx, status):
-            # "waiting/{attempt}" 時は待機中表示（D-15・T-05-20）
-            # バックグラウンドスレッドから直接操作せず after(0) 経由（Pitfall 3）
-            if status is not None and status.startswith("waiting"):
-                # "waiting/{attempt}" 形式からリトライ番号を取り出す
-                try:
-                    n = int(status.split("/")[1])
-                except (IndexError, ValueError):
-                    n = 1
-                self.after(
-                    0,
-                    lambda p=page_idx, _n=n: self.progress_var.set(
-                        self._L["ocr_waiting_retry"].format(
-                            page=p + 1, n=_n, max=MAX_RETRIES
+            if item is None:
+                break  # 完了シグナル
+
+            page_idx, b64 = item
+            try:
+                if self._cancel_flag.is_set() or fatal_msg is not None:
+                    # キャンセル or 致命的エラー後は API 呼び出しをスキップ
+                    continue
+
+                # OCRRetryableError は run_parallel と同じ指数バックオフでリトライ
+                from pagefolio.ocr_providers import OCRRetryableError
+
+                for attempt in range(1, MAX_RETRIES + 1):
+                    try:
+                        text = self.provider.ocr_image(b64, self._ocr_prompt)
+                        self.results[page_idx] = text
+                        done += 1
+                        break
+                    except OCRRetryableError as e:
+                        if attempt >= MAX_RETRIES:
+                            self.errors[page_idx] = str(e)
+                            done += 1
+                            break
+                        # リトライ待機中の進捗表示（D-15）
+                        try:
+                            n = attempt
+                        except Exception:
+                            n = 1
+                        self.after(
+                            0,
+                            lambda p=page_idx, _n=n: self.progress_var.set(
+                                self._L["ocr_waiting_retry"].format(
+                                    page=p + 1, n=_n, max=MAX_RETRIES
+                                )
+                            ),
                         )
-                    ),
-                )
-                # 待機中は進捗バーを進めない（D-15）
-                return
-            # 通常完了（ok / err）: 進捗テキストと進捗バーを更新
+                        import time as _time
+
+                        delay = (
+                            e.retry_after
+                            if e.retry_after is not None
+                            else 1.0 * (2 ** (attempt - 1))
+                        )
+                        _time.sleep(delay)
+                    except ConnectionError as e:
+                        fatal_msg = str(e)
+                        fatal_kind = "connection"
+                        done += 1
+                        break
+                    except TimeoutError as e:
+                        fatal_msg = str(e)
+                        fatal_kind = "timeout"
+                        done += 1
+                        break
+                    except RuntimeError as e:
+                        self.errors[page_idx] = str(e)
+                        done += 1
+                        break
+                    except Exception as e:
+                        logger.exception("OCR 呼び出し失敗: %s", e)
+                        self.errors[page_idx] = str(e)
+                        done += 1
+                        break
+            finally:
+                del b64  # 送信後即座に破棄（成功基準2・T-06-06）
+
+            # 統合プログレス更新（処理済み = done + skipped・D-03）
+            # after(0) 経由でメインスレッドへ（スレッドセーフ・Pitfall 3）
+            skipped_count = len(self._skipped_pages)
+            total_done = done + skipped_count
             self.after(
                 0,
-                lambda d=done + skipped_count, p=page_idx: self.progress_var.set(
+                lambda d=total_done, p=page_idx: self.progress_var.set(
                     self._L["ocr_progress_ocr"].format(done=d, total=total, page=p + 1)
                 ),
             )
-            self.after(0, lambda d=done + skipped_count: self._on_progress_bar(d))
+            self.after(0, lambda d=total_done: self._on_progress_bar(d))
 
-        # スキップ済みページが存在する場合、進捗バーをスキップ数分先行させる
-        if skipped_count > 0:
-            self.after(0, lambda: self._on_progress_bar(skipped_count))
-
-        results, errors, fatal_msg, fatal_kind = run_parallel(
-            self.provider,
-            self._images,
-            self._ocr_page_indices,
-            concurrency=self.concurrency,
-            prompt=self._ocr_prompt,
-            on_progress=on_progress,
-            is_cancelled=self._cancel_flag.is_set,
-        )
-        self.results.update(results)
-        self.errors.update(errors)
-
-        # フェーズ3: 結果をページ順にまとめて UI へ流し込む
+        # 全アイテム処理完了: 結果を UI へ流し込む
         if fatal_msg is not None:
             self.after(
                 0,
