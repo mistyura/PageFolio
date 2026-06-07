@@ -656,6 +656,25 @@ class OCRDialog(tk.Toplevel):
             )
         else:
             self._key_frame.pack_forget()
+        # (f) 行の増減でボタン行が隠れないよう、必要に応じてウィンドウ高さを拡張
+        self._grow_to_fit()
+
+    def _grow_to_fit(self):
+        """ライブ更新で行が増えた際、ボタン行が画面外へ押し出されないよう高さを拡張する。
+
+        固定高で開いたダイアログに LM Studio 欄を再表示すると content が高さを超え、
+        最下部のボタン行がクリップされるため、必要時のみ高さを広げる（縮小はしない）。
+        """
+        try:
+            self.update_idletasks()
+            req_h = self.winfo_reqheight()
+            cur_h = self.winfo_height()
+            if req_h > cur_h:
+                self.geometry(
+                    f"{self.winfo_width()}x{req_h}+{self.winfo_x()}+{self.winfo_y()}"
+                )
+        except tk.TclError:
+            pass
 
     def _confirm_cost(self):
         """クラウド送信前のコスト確認ダイアログを表示し、ユーザーの選択を bool で返す。
