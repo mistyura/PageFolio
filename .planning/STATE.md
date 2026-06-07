@@ -5,7 +5,7 @@ milestone_name: OCR プロバイダ化 + クラウドAPI対応
 status: executing
 stopped_at: 05-05-PLAN.md Task 4 human-verify 待ち
 last_updated: "2026-06-07T11:00:00Z"
-last_activity: 2026-06-07 -- 05-05 Task 1-3 完了（provider 中立化・コスト確認ゲート・セッションキー入力欄・waiting 進捗）・Task 4 human-verify 待ち
+last_activity: 2026-06-07 -- クイックタスク 260607-ccz 完了（OCR 画面に LLM 設定ボタン追加・ライブ更新・05-05 UAT 不具合修正・human-verify approved）
 progress:
   total_phases: 4
   completed_phases: 2
@@ -118,6 +118,12 @@ None.
 - fitz のスレッドセーフ制約（スレッドに `fitz.Document` を渡せない）: Phase 04 でスレッド境界を明確化することで対処
 - Gemini Free Tier 10 RPM: Phase 06 で並列度 1 を起点に実測して調整
 - Claude temperature/effort の実 API 確認: Phase 05 の完了条件として組み込み済み
+
+### Quick Tasks Completed
+
+| # | Description | Date | Commit | Directory |
+|---|-------------|------|--------|-----------|
+| 260607-ccz | OCR 抽出画面に「⚙ LLM 設定…」ボタンを追加し既存 LLMConfigDialog でプロバイダ・モデルを変更可能化（ライブ更新・05-05 UAT 発見の不具合修正） | 2026-06-07 | f210f76 | [260607-ccz-ocr-llm-llmconfigdialog](./quick/260607-ccz-ocr-llm-llmconfigdialog/) |
 
 ## Deferred Items
 
