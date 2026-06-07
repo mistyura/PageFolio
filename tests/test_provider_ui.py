@@ -254,6 +254,22 @@ class TestIsCloudProvider:
         )
         assert stub._is_cloud_provider() is True
 
+    def test_gemini_settings_returns_true(self):
+        """settings.ocr_provider == 'gemini' のとき True を返す（Pitfall-F）。"""
+        stub = _make_dialog_stub(settings={"ocr_provider": "gemini"})
+        assert stub._is_cloud_provider() is True
+
+    def test_gemini_provider_instance_returns_true(self):
+        """provider が GeminiProvider インスタンスのとき設定に関わらず True。"""
+        from pagefolio.ocr_providers import GeminiProvider
+
+        provider = GeminiProvider(api_key="x", model="gemini-2.5-flash")
+        stub = _make_dialog_stub(
+            settings={"ocr_provider": "lmstudio"},
+            provider=provider,
+        )
+        assert stub._is_cloud_provider() is True
+
 
 class TestEstimateCost:
     """OCR-UI-03: _estimate_cost の動作検証。"""
@@ -328,6 +344,26 @@ class TestNeedsSessionKey:
         """lmstudio はクラウドではないため env 未設定でも False。"""
         monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
         stub = _make_dialog_stub(settings={"ocr_provider": "lmstudio"})
+        assert stub._needs_session_key() is False
+
+    def test_gemini_env_unset_returns_true(self, monkeypatch):
+        """gemini で GEMINI_API_KEY/GOOGLE_API_KEY 両方未設定なら True（D-06）。"""
+        monkeypatch.delenv("GEMINI_API_KEY", raising=False)
+        monkeypatch.delenv("GOOGLE_API_KEY", raising=False)
+        stub = _make_dialog_stub(settings={"ocr_provider": "gemini"})
+        assert stub._needs_session_key() is True
+
+    def test_gemini_gemini_api_key_set_returns_false(self, monkeypatch):
+        """GEMINI_API_KEY が設定済みなら gemini でも False。"""
+        monkeypatch.setenv("GEMINI_API_KEY", "test-gemini-key")
+        stub = _make_dialog_stub(settings={"ocr_provider": "gemini"})
+        assert stub._needs_session_key() is False
+
+    def test_gemini_google_api_key_fallback_returns_false(self, monkeypatch):
+        """GEMINI_API_KEY 未設定でも GOOGLE_API_KEY があれば False。"""
+        monkeypatch.delenv("GEMINI_API_KEY", raising=False)
+        monkeypatch.setenv("GOOGLE_API_KEY", "test-google-key")
+        stub = _make_dialog_stub(settings={"ocr_provider": "gemini"})
         assert stub._needs_session_key() is False
 
 

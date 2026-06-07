@@ -498,14 +498,16 @@ class OCRDialog(tk.Toplevel):
     def _provider_display_name(self):
         """現在の ocr_provider 設定を人間可読なプロバイダ表示名に変換する。
 
-        claude → "Claude (Anthropic)"・lmstudio/"" → "LM Studio"。
-        未知の名前はそのまま返す（フォールバック）。
+        claude → "Claude (Anthropic)"・gemini → "Gemini (Google AI)"
+        lmstudio/"" → "LM Studio"。未知の名前はそのまま返す（フォールバック）。
         """
-        from pagefolio.ocr_providers import ClaudeProvider
+        from pagefolio.ocr_providers import ClaudeProvider, GeminiProvider
 
         name = self.app.settings.get("ocr_provider", "")
         if name == "claude" or isinstance(self.provider, ClaudeProvider):
             return self._L["ocr_provider_name_claude"]
+        if name == "gemini" or isinstance(self.provider, GeminiProvider):
+            return self._L["ocr_provider_name_gemini"]
         if name in ("lmstudio", ""):
             return self._L["ocr_provider_name_lmstudio"]
         return name
@@ -513,28 +515,39 @@ class OCRDialog(tk.Toplevel):
     def _is_cloud_provider(self):
         """現在の ocr_provider 設定がクラウド系か判定する。
 
-        claude（将来は gemini 等）であれば True を返す（D-13）。
+        claude / gemini であれば True を返す（D-13・Pitfall-F）。
         """
-        from pagefolio.ocr_providers import ClaudeProvider
+        from pagefolio.ocr_providers import ClaudeProvider, GeminiProvider
 
         name = self.app.settings.get("ocr_provider", "")
-        if name == "claude":
+        if name in ("claude", "gemini"):
             return True
-        # isinstance ガード（将来 provider インスタンスが差し替わっていても対応）
-        if isinstance(self.provider, ClaudeProvider):
+        # isinstance ガード（provider インスタンスが差し替わっていても対応）
+        if isinstance(self.provider, (ClaudeProvider, GeminiProvider)):
             return True
         return False
 
     def _estimate_cost(self, model, page_count):
         """ページ数とモデルから概算コスト文字列を返す（D-10）。
 
-        STACK.md 価格表: haiku $1/$5・sonnet $3/$15・opus $5/$25 MTok（input/output）。
-        Vision 入力: 1枚あたり最大 1568 トークン相当と仮定し、
-        OCR 出力: 1ページあたり平均 500 トークン程度を想定した粗い見積もり。
+        Claude STACK.md 価格表: haiku $1/$5・sonnet $3/$15・opus $5/$25 MTok。
+        Gemini: gemini-2.5-flash $0.075/$0.30 MTok（参考値・従量課金警告が重要）。
+        Vision 入力: 1枚あたり最大 1600 トークン相当を仮定。
+        OCR 出力: 1ページあたり平均 500 トークンを想定した粗い見積もり。
         正確性より「課金が発生する」警告の存在が重要（D-10・Pitfall 8）。
         """
-        # モデル別 input 単価（$/MTok）— STACK.md 価格表
-        if "haiku" in model:
+        # Gemini モデル判定
+        if "gemini" in model:
+            if "pro" in model:
+                # gemini-2.5-pro 系: $1.25/$10 MTok（参考値）
+                input_price = 1.25
+                output_price = 10.0
+            else:
+                # gemini-2.5-flash 系: $0.075/$0.30 MTok（参考値）
+                input_price = 0.075
+                output_price = 0.30
+        # Claude モデル別 input 単価（$/MTok）— STACK.md 価格表
+        elif "haiku" in model:
             input_price = 1.0  # haiku: $1/MTok
             output_price = 5.0  # haiku: $5/MTok
         elif "sonnet" in model:
@@ -545,7 +558,7 @@ class OCRDialog(tk.Toplevel):
             input_price = 5.0  # opus: $5/MTok
             output_price = 25.0  # opus: $25/MTok
 
-        # Vision 入力トークン見積もり: 約 1600 tokens/page（Anthropic 参考値）
+        # Vision 入力トークン見積もり: 約 1600 tokens/page（Anthropic/Google 参考値）
         # 出力トークン見積もり: 約 500 tokens/page（OCR 結果テキスト）
         input_tokens = page_count * 1600
         output_tokens = page_count * 500
@@ -553,12 +566,21 @@ class OCRDialog(tk.Toplevel):
         return f"約 ${cost:.3f} 程度"
 
     def _needs_session_key(self):
-        """クラウドかつ環境変数 ANTHROPIC_API_KEY が未設定のときに True を返す。
+        """クラウドかつ API キー環境変数が未設定のときに True を返す。
 
+        claude: ANTHROPIC_API_KEY が未設定なら True。
+        gemini: GEMINI_API_KEY/GOOGLE_API_KEY 両方未設定なら True（D-06/Pitfall-G）。
         環境変数が設定済みであれば入力欄を表示しない（D-02/D-03）。
         """
         if not self._is_cloud_provider():
             return False
+        name = self.app.settings.get("ocr_provider", "")
+        if name == "gemini":
+            # dual env var: GEMINI_API_KEY 優先・GOOGLE_API_KEY フォールバック（D-06）
+            return not bool(
+                os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
+            )
+        # claude（デフォルト）: ANTHROPIC_API_KEY を確認
         return not bool(os.environ.get("ANTHROPIC_API_KEY"))
 
     # ── LLM 設定ボタン・ライブ更新 ──────────────────────────────────────────
@@ -606,6 +628,17 @@ class OCRDialog(tk.Toplevel):
                 session_keys = getattr(self.app, "_session_api_keys", {})
                 try:
                     api_key = _resolve_api_key("claude", session_keys)
+                except OCRAPIKeyError:
+                    api_key = ""
+                self.provider = build_provider(self.app.settings, api_key=api_key)
+            elif name == "gemini":
+                # Gemini: dual env var → セッションキー → api_key=""（Pitfall-G）
+                from pagefolio.ocr import _resolve_api_key, build_provider
+                from pagefolio.ocr_providers import OCRAPIKeyError
+
+                session_keys = getattr(self.app, "_session_api_keys", {})
+                try:
+                    api_key = _resolve_api_key("gemini", session_keys)
                 except OCRAPIKeyError:
                     api_key = ""
                 self.provider = build_provider(self.app.settings, api_key=api_key)
@@ -681,16 +714,23 @@ class OCRDialog(tk.Toplevel):
 
         毎回表示する（「今後表示しない」は設けない・D-11）。
         ダイアログ内容（D-12 の3点）:
-          1. 送信先ホスト（api.anthropic.com）
+          1. 送信先ホスト（プロバイダ別: claude→api.anthropic.com/gemini→googleapis）
           2. 対象ページ数と概算コスト
           3. 「ページ画像が外部 API に送信されます」「従量課金が発生します」
         OK で True・キャンセルで False を返す（成功基準5）。
         """
-        model = self.app.settings.get("claude_model", "claude-sonnet-4-6")
+        name = self.app.settings.get("ocr_provider", "")
+        if name == "gemini":
+            model = self.app.settings.get("gemini_model", "gemini-2.5-flash")
+            host = "generativelanguage.googleapis.com"
+        else:
+            # claude（デフォルト）
+            model = self.app.settings.get("claude_model", "claude-sonnet-4-6")
+            host = "api.anthropic.com"
         page_count = len(self.page_indices)
         cost = self._estimate_cost(model, page_count)
         msg = self._L["ocr_cost_confirm_msg"].format(
-            host="api.anthropic.com",
+            host=host,
             count=page_count,
             cost=cost,
         )
@@ -712,21 +752,34 @@ class OCRDialog(tk.Toplevel):
 
         # ── クラウド実行ゲート（_started を True にする前）──
         if self._is_cloud_provider():
+            name = self.app.settings.get("ocr_provider", "")
             # セッションキー入力（環境変数未設定時のみ）
             if self._needs_session_key():
                 key = self.api_key_var.get().strip()
                 if not key:
                     # キー未入力 → エラー表示して中止（成功基準2・T-05-19）
-                    messagebox.showerror(
-                        self._L["err_title"],
-                        self._L["ocr_api_key_missing"].format(
-                            env_var="ANTHROPIC_API_KEY"
-                        ),
-                        parent=self,
-                    )
+                    if name == "gemini":
+                        # gemini: ocr_api_key_missing_gemini（dual env var 説明・D-06）
+                        messagebox.showerror(
+                            self._L["err_title"],
+                            self._L["ocr_api_key_missing_gemini"],
+                            parent=self,
+                        )
+                    else:
+                        # claude（デフォルト）
+                        messagebox.showerror(
+                            self._L["err_title"],
+                            self._L["ocr_api_key_missing"].format(
+                                env_var="ANTHROPIC_API_KEY"
+                            ),
+                            parent=self,
+                        )
                     return
-                # _session_api_keys に格納（settings には入れない・D-01/D-03）
-                self.app._session_api_keys["claude"] = key
+                # _session_api_keys に格納（settings には入れない・D-01/D-03/T-06-11）
+                if name == "gemini":
+                    self.app._session_api_keys["gemini"] = key
+                else:
+                    self.app._session_api_keys["claude"] = key
 
             # コスト確認ダイアログ（毎回・D-11・D-12）
             if not self._confirm_cost():
@@ -785,6 +838,17 @@ class OCRDialog(tk.Toplevel):
             session_keys = getattr(self.app, "_session_api_keys", {})
             try:
                 api_key = _resolve_api_key("claude", session_keys)
+            except OCRAPIKeyError:
+                api_key = ""
+            self.provider = build_provider(self.app.settings, api_key=api_key)
+        elif name == "gemini":
+            # gemini: build_provider 経由でキー注入（D-01/D-05/T-06-11）
+            from pagefolio.ocr import _resolve_api_key
+            from pagefolio.ocr_providers import OCRAPIKeyError
+
+            session_keys = getattr(self.app, "_session_api_keys", {})
+            try:
+                api_key = _resolve_api_key("gemini", session_keys)
             except OCRAPIKeyError:
                 api_key = ""
             self.provider = build_provider(self.app.settings, api_key=api_key)
