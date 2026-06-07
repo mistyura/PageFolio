@@ -1054,3 +1054,100 @@ class TestOcrDialogLlmConfig:
         OCRDialog._open_llm_config(fake)
 
         assert opened_count["n"] == 0, "実行中に LLMConfigDialog が生成されてはならない"
+
+
+# ===== _resolve_api_key gemini dual env var（Task 1: 06-01・D-06）=====
+
+
+class TestResolveApiKeyGemini:
+    """_resolve_api_key gemini の dual env var 解決を検証する（D-06・OCR-QA-01）"""
+
+    def test_gemini_api_key_priority(self, monkeypatch):
+        """GEMINI_API_KEY が優先されること（両方設定時）"""
+        from pagefolio.ocr import _resolve_api_key
+
+        monkeypatch.setenv("GEMINI_API_KEY", "primary-key")
+        monkeypatch.setenv("GOOGLE_API_KEY", "fallback-key")
+        key = _resolve_api_key("gemini", {})
+        assert key == "primary-key"
+
+    def test_google_api_key_fallback(self, monkeypatch):
+        """GEMINI_API_KEY 未設定で GOOGLE_API_KEY フォールバック（D-06）"""
+        from pagefolio.ocr import _resolve_api_key
+
+        monkeypatch.delenv("GEMINI_API_KEY", raising=False)
+        monkeypatch.setenv("GOOGLE_API_KEY", "fallback-key")
+        key = _resolve_api_key("gemini", {})
+        assert key == "fallback-key"
+
+    def test_session_key_used_when_env_unset(self, monkeypatch):
+        """環境変数なし・セッションキーあり → セッションキーを返す"""
+        from pagefolio.ocr import _resolve_api_key
+
+        monkeypatch.delenv("GEMINI_API_KEY", raising=False)
+        monkeypatch.delenv("GOOGLE_API_KEY", raising=False)
+        key = _resolve_api_key("gemini", {"gemini": "session-key"})
+        assert key == "session-key"
+
+    def test_raises_when_all_missing(self, monkeypatch):
+        """環境変数もセッションキーもなければ OCRAPIKeyError を raise"""
+        # env_var == 'GEMINI_API_KEY' であることを検証（D-06）
+        from pagefolio.ocr import _resolve_api_key
+        from pagefolio.ocr_providers import OCRAPIKeyError
+
+        monkeypatch.delenv("GEMINI_API_KEY", raising=False)
+        monkeypatch.delenv("GOOGLE_API_KEY", raising=False)
+        with pytest.raises(OCRAPIKeyError) as ei:
+            _resolve_api_key("gemini", {})
+        assert ei.value.env_var == "GEMINI_API_KEY"
+
+    def test_env_takes_priority_over_session_key(self, monkeypatch):
+        """環境変数があれば session_keys より優先する（D-02）"""
+        from pagefolio.ocr import _resolve_api_key
+
+        monkeypatch.setenv("GEMINI_API_KEY", "env-wins")
+        key = _resolve_api_key("gemini", {"gemini": "session-key"})
+        assert key == "env-wins"
+
+
+# ===== build_provider gemini 分岐（Task 1: 06-01）=====
+
+
+class TestBuildProviderGemini:
+    """build_provider の gemini 分岐を検証する（OCR-API-02）"""
+
+    def test_gemini_returns_gemini_provider(self, monkeypatch):
+        """ocr_provider='gemini' で GeminiProvider を返す"""
+        from pagefolio.ocr_providers import GeminiProvider
+
+        monkeypatch.delenv("GEMINI_API_KEY", raising=False)
+        settings = {"ocr_provider": "gemini"}
+        provider = ocr.build_provider(settings, api_key="k")
+        assert isinstance(provider, GeminiProvider)
+
+    def test_gemini_provider_api_key_injected(self, monkeypatch):
+        """GeminiProvider に api_key が引数注入される（settings から読まない）"""
+        monkeypatch.delenv("GEMINI_API_KEY", raising=False)
+        provider = ocr.build_provider({"ocr_provider": "gemini"}, api_key="my-key")
+        assert provider.api_key == "my-key"
+
+    def test_gemini_model_default(self, monkeypatch):
+        """gemini_model 未指定時は gemini-2.5-flash がデフォルト（D-08）"""
+        monkeypatch.delenv("GEMINI_API_KEY", raising=False)
+        provider = ocr.build_provider({"ocr_provider": "gemini"}, api_key="k")
+        assert provider.model == "gemini-2.5-flash"
+
+    def test_gemini_model_from_settings(self, monkeypatch):
+        """gemini_model が settings に指定されていればそれを使う"""
+        monkeypatch.delenv("GEMINI_API_KEY", raising=False)
+        settings = {"ocr_provider": "gemini", "gemini_model": "gemini-2.5-pro"}
+        provider = ocr.build_provider(settings, api_key="k")
+        assert provider.model == "gemini-2.5-pro"
+
+    def test_settings_not_polluted_with_api_key(self, monkeypatch):
+        """build_provider 後も settings に api_key が混入しない（D-01/T-06-02）"""
+        monkeypatch.delenv("GEMINI_API_KEY", raising=False)
+        settings = {"ocr_provider": "gemini"}
+        ocr.build_provider(settings, api_key="secret")
+        for key in ("api_key", "gemini_api_key", "GEMINI_API_KEY", "GOOGLE_API_KEY"):
+            assert key not in settings, f"settings に {key} が混入している"

@@ -711,3 +711,301 @@ class TestClaudeProviderListModels:
         p = ocr_providers.ClaudeProvider("valid-key", "claude-sonnet-4-6")
         with pytest.raises(ConnectionError):
             p.list_models()
+
+
+# ===== Task 1 (06-01): GeminiProvider テスト（D-14・OCR-QA-01） =====
+
+
+class TestGeminiProviderBasic:
+    """GeminiProvider の基本属性とインターフェース準拠を確認する（D-14 ①基盤）"""
+
+    def test_is_ocr_provider_subclass(self):
+        """GeminiProvider は OCRProvider のサブクラスであること"""
+        from pagefolio.ocr_providers import GeminiProvider, OCRProvider
+
+        assert issubclass(GeminiProvider, OCRProvider)
+
+    def test_instantiation(self):
+        """GeminiProvider がインスタンス化できる"""
+        from pagefolio.ocr_providers import GeminiProvider
+
+        p = GeminiProvider(api_key="k", model="gemini-2.5-flash")
+        assert p is not None
+
+    def test_default_concurrency(self):
+        """default_concurrency == 1（D-07: Gemini Free Tier 10 RPM 対応）"""
+        from pagefolio.ocr_providers import GeminiProvider
+
+        assert GeminiProvider.default_concurrency == 1
+
+    def test_max_concurrency(self):
+        """max_concurrency == 1（D-07: 並列度上限）"""
+        from pagefolio.ocr_providers import GeminiProvider
+
+        assert GeminiProvider.max_concurrency == 1
+
+
+class TestGeminiProviderBuildPayload:
+    """GeminiProvider._build_payload の構造を確認する（D-14 ①）"""
+
+    def test_inline_data_mime_type(self):
+        """parts[0].inline_data.mime_type が 'image/png' であること"""
+        from pagefolio.ocr_providers import GeminiProvider
+
+        p = GeminiProvider(api_key="k", model="gemini-2.5-flash")
+        payload = p._build_payload("ZmFrZQ==", "describe")
+        parts = payload["contents"][0]["parts"]
+        assert parts[0]["inline_data"]["mime_type"] == "image/png"
+
+    def test_inline_data_data(self):
+        """parts[0].inline_data.data が b64_png と一致すること"""
+        from pagefolio.ocr_providers import GeminiProvider
+
+        p = GeminiProvider(api_key="k", model="gemini-2.5-flash")
+        payload = p._build_payload("ZmFrZQ==", "describe")
+        parts = payload["contents"][0]["parts"]
+        assert parts[0]["inline_data"]["data"] == "ZmFrZQ=="
+
+    def test_text_part(self):
+        """parts[1].text が prompt と一致すること"""
+        from pagefolio.ocr_providers import GeminiProvider
+
+        p = GeminiProvider(api_key="k", model="gemini-2.5-flash")
+        payload = p._build_payload("ZmFrZQ==", "describe")
+        parts = payload["contents"][0]["parts"]
+        assert parts[1]["text"] == "describe"
+
+    def test_thinking_budget_zero(self):
+        """generationConfig.thinkingConfig.thinkingBudget == 0（D-09/Pitfall-C）"""
+        from pagefolio.ocr_providers import GeminiProvider
+
+        p = GeminiProvider(api_key="k", model="gemini-2.5-flash")
+        payload = p._build_payload("b64", "p")
+        assert payload["generationConfig"]["thinkingConfig"]["thinkingBudget"] == 0
+
+    def test_x_goog_api_key_header(self, monkeypatch):
+        """x-goog-api-key ヘッダーに api_key が設定される（D-05/T-06-01）"""
+        from pagefolio import ocr_providers
+
+        captured = {}
+
+        def fake_urlopen(req, timeout=None):
+            captured["headers"] = dict(req.headers)
+            body = json.dumps(
+                {"candidates": [{"content": {"parts": [{"text": "ok"}]}}]}
+            )
+            return _FakeResponse(body)
+
+        monkeypatch.setattr(ocr_providers.urllib.request, "urlopen", fake_urlopen)
+        p = ocr_providers.GeminiProvider(api_key="test-key", model="gemini-2.5-flash")
+        p.ocr_image("Zg==", "describe")
+        # urllib は先頭大文字に正規化する場合があるため lower で比較
+        header_keys_lower = {k.lower(): v for k, v in captured["headers"].items()}
+        assert header_keys_lower.get("x-goog-api-key") == "test-key"
+
+    def test_no_query_key_in_url(self, monkeypatch):
+        """URL クエリパラメータ ?key= が使われないこと（D-05/T-06-01）"""
+        from pagefolio import ocr_providers
+
+        captured = {}
+
+        def fake_urlopen(req, timeout=None):
+            captured["url"] = req.full_url
+            body = json.dumps(
+                {"candidates": [{"content": {"parts": [{"text": "ok"}]}}]}
+            )
+            return _FakeResponse(body)
+
+        monkeypatch.setattr(ocr_providers.urllib.request, "urlopen", fake_urlopen)
+        p = ocr_providers.GeminiProvider(api_key="test-key", model="gemini-2.5-flash")
+        p.ocr_image("Zg==", "describe")
+        assert "?key=" not in captured["url"]
+
+
+class TestGeminiProviderOcrImage:
+    """GeminiProvider.ocr_image の振る舞いを確認する（D-14 ②）"""
+
+    def test_success_returns_joined_text(self, monkeypatch):
+        """正常 candidates → parts[].text を改行結合して返す"""
+        from pagefolio import ocr_providers
+
+        body = json.dumps(
+            {"candidates": [{"content": {"parts": [{"text": "行1"}, {"text": "行2"}]}}]}
+        )
+
+        def fake_urlopen(req, timeout=None):
+            return _FakeResponse(body)
+
+        monkeypatch.setattr(ocr_providers.urllib.request, "urlopen", fake_urlopen)
+        p = ocr_providers.GeminiProvider(api_key="k", model="gemini-2.5-flash")
+        result = p.ocr_image("Zg==", "describe")
+        assert result == "行1\n行2"
+
+    def test_empty_candidates_raises_runtime_error(self, monkeypatch):
+        """candidates が空のとき RuntimeError を送出する（Pitfall-D/T-06-03）"""
+        from pagefolio import ocr_providers
+
+        body = json.dumps(
+            {"candidates": [], "promptFeedback": {"blockReason": "SAFETY"}}
+        )
+
+        def fake_urlopen(req, timeout=None):
+            return _FakeResponse(body)
+
+        monkeypatch.setattr(ocr_providers.urllib.request, "urlopen", fake_urlopen)
+        p = ocr_providers.GeminiProvider(api_key="k", model="gemini-2.5-flash")
+        with pytest.raises(RuntimeError):
+            p.ocr_image("Zg==", "describe")
+
+    def test_429_raises_ocr_retryable_error(self, monkeypatch):
+        """HTTP 429 応答で OCRRetryableError を送出する"""
+        from pagefolio import ocr_providers
+        from pagefolio.ocr_providers import OCRRetryableError
+
+        def fake_urlopen(req, timeout=None):
+            raise _FakeHTTPError(429, "Too Many Requests", b"rate limit")
+
+        monkeypatch.setattr(ocr_providers.urllib.request, "urlopen", fake_urlopen)
+        p = ocr_providers.GeminiProvider(api_key="k", model="gemini-2.5-flash")
+        with pytest.raises(OCRRetryableError):
+            p.ocr_image("Zg==", "describe")
+
+    def test_503_raises_ocr_retryable_error(self, monkeypatch):
+        """HTTP 503（5xx）応答で OCRRetryableError を送出する"""
+        from pagefolio import ocr_providers
+        from pagefolio.ocr_providers import OCRRetryableError
+
+        def fake_urlopen(req, timeout=None):
+            raise _FakeHTTPError(503, "Service Unavailable", b"server error")
+
+        monkeypatch.setattr(ocr_providers.urllib.request, "urlopen", fake_urlopen)
+        p = ocr_providers.GeminiProvider(api_key="k", model="gemini-2.5-flash")
+        with pytest.raises(OCRRetryableError):
+            p.ocr_image("Zg==", "describe")
+
+    def test_400_raises_runtime_error_not_retryable(self, monkeypatch):
+        """HTTP 400（4xx・429 以外）は RuntimeError（retryable ではない）"""
+        from pagefolio import ocr_providers
+
+        def fake_urlopen(req, timeout=None):
+            raise _FakeHTTPError(400, "Bad Request", b"invalid param")
+
+        monkeypatch.setattr(ocr_providers.urllib.request, "urlopen", fake_urlopen)
+        p = ocr_providers.GeminiProvider(api_key="k", model="gemini-2.5-flash")
+        with pytest.raises(RuntimeError) as ei:
+            p.ocr_image("Zg==", "describe")
+        from pagefolio.ocr_providers import OCRRetryableError
+
+        assert not isinstance(ei.value, OCRRetryableError)
+
+    def test_socket_timeout_raises_timeout_error(self, monkeypatch):
+        """socket.timeout で TimeoutError を送出する"""
+        from pagefolio import ocr_providers
+
+        def fake_urlopen(req, timeout=None):
+            raise socket.timeout("timed out")
+
+        monkeypatch.setattr(ocr_providers.urllib.request, "urlopen", fake_urlopen)
+        p = ocr_providers.GeminiProvider(api_key="k", model="gemini-2.5-flash")
+        with pytest.raises(TimeoutError):
+            p.ocr_image("Zg==", "describe")
+
+    def test_urlerror_raises_connection_error(self, monkeypatch):
+        """URLError で ConnectionError を送出する"""
+        from pagefolio import ocr_providers
+
+        def fake_urlopen(req, timeout=None):
+            raise urllib.error.URLError("Connection refused")
+
+        monkeypatch.setattr(ocr_providers.urllib.request, "urlopen", fake_urlopen)
+        p = ocr_providers.GeminiProvider(api_key="k", model="gemini-2.5-flash")
+        with pytest.raises(ConnectionError):
+            p.ocr_image("Zg==", "describe")
+
+
+class TestGeminiProviderListModels:
+    """GeminiProvider.list_models の振る舞いを確認する（D-14 ③）"""
+
+    def test_no_api_key_returns_recommended_models(self):
+        """api_key が空文字のとき API を呼ばず RECOMMENDED_MODELS を返す（D-08）"""
+        from pagefolio.ocr_providers import GeminiProvider
+
+        p = GeminiProvider(api_key="", model="gemini-2.5-flash")
+        result = p.list_models()
+        assert result == list(GeminiProvider.RECOMMENDED_MODELS)
+
+    def test_no_api_key_none_returns_recommended_models(self):
+        """api_key が None のとき API を呼ばず RECOMMENDED_MODELS を返す（D-08）"""
+        from pagefolio.ocr_providers import GeminiProvider
+
+        p = GeminiProvider(api_key=None, model="gemini-2.5-flash")
+        result = p.list_models()
+        assert result == list(GeminiProvider.RECOMMENDED_MODELS)
+
+    def test_filters_by_generate_content_method(self, monkeypatch):
+        """supportedGenerationMethods に generateContent を含むモデルのみ返す"""
+        from pagefolio import ocr_providers
+
+        body = json.dumps(
+            {
+                "models": [
+                    {
+                        "name": "models/gemini-2.5-flash",
+                        "supportedGenerationMethods": ["generateContent"],
+                    },
+                    {
+                        "name": "models/gemini-2.5-pro",
+                        "supportedGenerationMethods": ["generateContent"],
+                    },
+                    {
+                        "name": "models/embedding-001",
+                        "supportedGenerationMethods": ["embedContent"],
+                    },
+                ]
+            }
+        )
+
+        def fake_urlopen(req, timeout=None):
+            return _FakeResponse(body)
+
+        monkeypatch.setattr(ocr_providers.urllib.request, "urlopen", fake_urlopen)
+        p = ocr_providers.GeminiProvider(api_key="my-key", model="gemini-2.5-flash")
+        result = p.list_models()
+        assert "gemini-2.5-flash" in result
+        assert "gemini-2.5-pro" in result
+        assert "embedding-001" not in result
+
+    def test_removes_models_prefix(self, monkeypatch):
+        """'models/' プレフィックスを除去して返す"""
+        from pagefolio import ocr_providers
+
+        body = json.dumps(
+            {
+                "models": [
+                    {
+                        "name": "models/gemini-2.5-flash",
+                        "supportedGenerationMethods": ["generateContent"],
+                    }
+                ]
+            }
+        )
+
+        def fake_urlopen(req, timeout=None):
+            return _FakeResponse(body)
+
+        monkeypatch.setattr(ocr_providers.urllib.request, "urlopen", fake_urlopen)
+        p = ocr_providers.GeminiProvider(api_key="my-key", model="gemini-2.5-flash")
+        result = p.list_models()
+        assert result == ["gemini-2.5-flash"]
+
+    def test_connection_error_raises(self, monkeypatch):
+        """接続失敗で ConnectionError を送出する"""
+        from pagefolio import ocr_providers
+
+        def fake_urlopen(req, timeout=None):
+            raise urllib.error.URLError("refused")
+
+        monkeypatch.setattr(ocr_providers.urllib.request, "urlopen", fake_urlopen)
+        p = ocr_providers.GeminiProvider(api_key="valid-key", model="gemini-2.5-flash")
+        with pytest.raises(ConnectionError):
+            p.list_models()
