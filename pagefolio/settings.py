@@ -40,7 +40,7 @@ def _load_settings():
         "lm_studio_url": "http://localhost:1234",
         "lm_studio_model": "",
         "ocr_prompt_preset": "text",
-        "ocr_scale": 2.0,
+        "ocr_scale": 1.5,  # D-11: 新規ユーザー既定を 1.5 へ変更（低スペック PC 推奨）
         "ocr_timeout": 120,
         "ocr_max_tokens": -1,
         "ocr_temperature": 0.1,
@@ -50,6 +50,8 @@ def _load_settings():
         # Phase 5: Claude Provider 設定（APIキーではない無害な設定値・OCR-UI-01）
         "claude_model": "claude-sonnet-4-6",  # STACK.md 推奨モデル
         "ocr_effort": "low",  # effort 対応モデル時の既定値（D-17）
+        # Phase 6: Gemini Provider 設定（APIキーではない無害な設定値・D-08）
+        "gemini_model": "gemini-2.5-flash",  # D-08: 推奨モデル既定値
     }
     try:
         path = _get_settings_path()

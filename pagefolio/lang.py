@@ -307,6 +307,16 @@ LANG = {
         "ocr_provider_label": "OCR プロバイダ:",
         "ocr_provider_name_claude": "Claude (Anthropic)",
         "ocr_provider_name_lmstudio": "LM Studio",
+        # Phase 6: Gemini Provider 文言（D-06/D-12）
+        "ocr_provider_name_gemini": "Gemini (Google AI)",
+        "ocr_api_key_missing_gemini": (
+            "Gemini APIキーが設定されていません。"
+            "環境変数 GEMINI_API_KEY（または GOOGLE_API_KEY）を設定するか、"
+            "入力欄にキーを入力してください。"
+        ),
+        "ocr_scale_tradeoff_hint": (
+            "低=速い/安い・高=精度。低スペック PC は 1.5 推奨"
+        ),
         "ocr_effort_label": "推論強度 (effort):",
         "ocr_provider_off_hint": "OCR は無効です。設定でプロバイダを選択してください。",
         "ocr_model_refresh": "モデル更新",
@@ -655,6 +665,16 @@ LANG = {
         "ocr_provider_label": "OCR Provider:",
         "ocr_provider_name_claude": "Claude (Anthropic)",
         "ocr_provider_name_lmstudio": "LM Studio",
+        # Phase 6: Gemini Provider messages (D-06/D-12)
+        "ocr_provider_name_gemini": "Gemini (Google AI)",
+        "ocr_api_key_missing_gemini": (
+            "Gemini API key is not configured. "
+            "Set the environment variable GEMINI_API_KEY (or GOOGLE_API_KEY), "
+            "or enter the key in the input field."
+        ),
+        "ocr_scale_tradeoff_hint": (
+            "Low=fast/cheap, High=accuracy. 1.5 recommended for low-spec PCs."
+        ),
         "ocr_effort_label": "Inference Effort:",
         "ocr_provider_off_hint": "OCR is disabled. Select a provider in Settings.",
         "ocr_model_refresh": "Refresh Models",

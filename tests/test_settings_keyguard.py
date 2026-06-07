@@ -191,6 +191,39 @@ class TestLoadSettingsDefaults:
         )
         assert result["ocr_effort"] == "low"
 
+    def test_ocr_scale_default_is_1_5(self, tmp_path, monkeypatch):
+        """_load_settings() の ocr_scale 既定値は 1.5（D-11・OCR-PERF-05）"""
+        settings_path = tmp_path / "no_settings.json"  # 存在しないパス
+        monkeypatch.setattr(
+            "pagefolio.settings._get_settings_path",
+            lambda: str(settings_path),
+        )
+
+        result = _load_settings()
+        assert "ocr_scale" in result, (
+            "ocr_scale が _load_settings の戻り値に含まれない"
+        )
+        assert result["ocr_scale"] == 1.5, (
+            f"ocr_scale の既定値が 1.5 でない: {result['ocr_scale']}"
+        )
+
+    def test_gemini_model_default(self, tmp_path, monkeypatch):
+        """_load_settings() の gemini_model 既定値は 'gemini-2.5-flash'（D-08）"""
+        settings_path = tmp_path / "no_settings.json"  # 存在しないパス
+        monkeypatch.setattr(
+            "pagefolio.settings._get_settings_path",
+            lambda: str(settings_path),
+        )
+
+        result = _load_settings()
+        assert "gemini_model" in result, (
+            "gemini_model が _load_settings の戻り値に含まれない"
+        )
+        assert result["gemini_model"] == "gemini-2.5-flash", (
+            "gemini_model の既定値が 'gemini-2.5-flash' でない: "
+            f"{result['gemini_model']}"
+        )
+
     def test_load_with_existing_file_preserves_defaults(self, tmp_path, monkeypatch):
         """既存設定ファイルにないキーはデフォルト値で補完される"""
         settings_path = tmp_path / "partial_settings.json"
@@ -206,3 +239,5 @@ class TestLoadSettingsDefaults:
         assert result["theme"] == "light"  # ファイルの値を優先
         assert result["claude_model"] == "claude-sonnet-4-6"  # デフォルト補完
         assert result["ocr_effort"] == "low"  # デフォルト補完
+        assert result["ocr_scale"] == 1.5  # D-11 デフォルト補完
+        assert result["gemini_model"] == "gemini-2.5-flash"  # D-08 デフォルト補完
