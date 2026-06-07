@@ -129,13 +129,20 @@ class OCRDialog(tk.Toplevel):
             fg=C["TEXT_MAIN"],
             font=self._font(-1),
         ).pack(side="left")
-        tk.Label(
+        self._provider_value_label = tk.Label(
             prov_row,
             text=self._provider_display_name(),
             bg=C["BG_DARK"],
             fg=C["ACCENT"],
             font=self._font(-1, "bold"),
-        ).pack(side="left", padx=(6, 0))
+        )
+        self._provider_value_label.pack(side="left", padx=(6, 0))
+        self._llm_config_btn = ttk.Button(
+            prov_row,
+            text=self._L["ocr_open_llm_config"],
+            command=self._open_llm_config,
+        )
+        self._llm_config_btn.pack(side="left", padx=(12, 0))
 
         # プロンプトプリセット
         pf = tk.Frame(self, bg=C["BG_DARK"])
@@ -168,7 +175,8 @@ class OCRDialog(tk.Toplevel):
         # サーバ（参照のみ・設定メニューの値を表示）
         # LM Studio 固有欄: クラウドプロバイダ時は表示しない（provider 中立化）
         show_lmstudio_fields = not self._is_cloud_provider()
-        sf = tk.Frame(self, bg=C["BG_DARK"])
+        self._lmstudio_server_frame = tk.Frame(self, bg=C["BG_DARK"])
+        sf = self._lmstudio_server_frame
         if show_lmstudio_fields:
             sf.pack(fill="x", padx=16, pady=(6, 2))
         tk.Label(
@@ -193,7 +201,8 @@ class OCRDialog(tk.Toplevel):
         ).pack(side="left", fill="x", expand=True, padx=4)
 
         # モデル選択（LM Studio 固有欄: クラウド時は非表示）
-        mf = tk.Frame(self, bg=C["BG_DARK"])
+        self._lmstudio_model_frame = tk.Frame(self, bg=C["BG_DARK"])
+        mf = self._lmstudio_model_frame
         if show_lmstudio_fields:
             mf.pack(fill="x", padx=16, pady=2)
         tk.Label(
@@ -475,6 +484,7 @@ class OCRDialog(tk.Toplevel):
         self.save_btn.state(["disabled"])
         self.cancel_btn.state(["disabled"])
         self.run_btn.state(["!disabled"])
+        self._llm_config_btn.state(["!disabled"])
         self._started = False
         self._done = False
         self._cancel_flag.clear()
@@ -547,6 +557,94 @@ class OCRDialog(tk.Toplevel):
             return False
         return not bool(os.environ.get("ANTHROPIC_API_KEY"))
 
+    # ── LLM 設定ボタン・ライブ更新 ──────────────────────────────────────────
+
+    def _open_llm_config(self):
+        """プロバイダ表示行の「⚙ LLM 設定…」ボタンから LLMConfigDialog を開く。
+
+        実行中（_started かつ未完了）は即 return してプロバイダ変更を阻止する
+        （T-CCZ-02）。
+        """
+        if self._started and not self._done:
+            return
+        from pagefolio.dialogs.llm_config import LLMConfigDialog
+
+        lang = self.app.settings.get("lang", "ja")
+        LLMConfigDialog(
+            self,
+            self.app.settings,
+            on_apply=self._apply_llm_settings,
+            font_func=self._font,
+            lang=lang,
+        )
+
+    def _apply_llm_settings(self, llm_settings):
+        """LLMConfigDialog の on_apply コールバック。設定更新・永続化・ライブ更新。
+
+        llm_settings に api_key 系キーは含まれず T-05-12 ガードは維持される。
+        UI 操作は _refresh_provider_dependent_ui に委譲しテスト容易性を確保する。
+        """
+        # (a) 設定を app.settings に反映
+        self.app.settings.update(llm_settings)
+        # (b) 永続化（機密キー除外は _save_settings 内部で実施済み）
+        from pagefolio.settings import _save_settings
+
+        _save_settings(self.app.settings)
+        # (c)〜(g) UI 更新
+        self._refresh_provider_dependent_ui()
+        # (f) provider インスタンスの再生成
+        name = self.app.settings.get("ocr_provider", "")
+        try:
+            if name == "claude":
+                from pagefolio.ocr import _resolve_api_key, build_provider
+                from pagefolio.ocr_providers import OCRAPIKeyError
+
+                session_keys = getattr(self.app, "_session_api_keys", {})
+                try:
+                    api_key = _resolve_api_key("claude", session_keys)
+                except OCRAPIKeyError:
+                    api_key = ""
+                self.provider = build_provider(self.app.settings, api_key=api_key)
+            else:
+                from pagefolio.ocr_providers import LMStudioProvider
+
+                self.provider = LMStudioProvider(
+                    url=self.app.settings.get("lm_studio_url", "http://localhost:1234"),
+                    model=self.app.settings.get("lm_studio_model", ""),
+                    timeout=int(self.app.settings.get("ocr_timeout", 120)),
+                    max_tokens=int(self.app.settings.get("ocr_max_tokens", -1)),
+                    temperature=float(self.app.settings.get("ocr_temperature", 0.1)),
+                )
+                # (g) LM Studio 欄の Tk 変数も settings に合わせて更新
+                self.url_var.set(
+                    self.app.settings.get("lm_studio_url", "http://localhost:1234")
+                )
+                self.model_var.set(self.app.settings.get("lm_studio_model", ""))
+        except (ValueError, Exception) as e:
+            logger.error("provider 再生成に失敗しました: %s", e)
+            self.progress_var.set(f"プロバイダ再生成エラー: {e}")
+
+    def _refresh_provider_dependent_ui(self):
+        """プロバイダ依存 UI（表示ラベル・LM Studio 欄・セッションキー欄）を再評価する。
+
+        _apply_llm_settings から呼ばれる。テストでは no-op に差し替え可能。
+        """
+        # (c) プロバイダ表示ラベル更新
+        self._provider_value_label.configure(text=self._provider_display_name())
+        # (d) LM Studio 欄の可視性再評価
+        show = not self._is_cloud_provider()
+        if show:
+            self._lmstudio_server_frame.pack(fill="x", padx=16, pady=(6, 2))
+            self._lmstudio_model_frame.pack(fill="x", padx=16, pady=2)
+        else:
+            self._lmstudio_server_frame.pack_forget()
+            self._lmstudio_model_frame.pack_forget()
+        # (e) セッションキー欄の可視性再評価
+        if self._needs_session_key():
+            self._key_frame.pack(fill="x", padx=16, pady=(4, 0))
+        else:
+            self._key_frame.pack_forget()
+
     def _confirm_cost(self):
         """クラウド送信前のコスト確認ダイアログを表示し、ユーザーの選択を bool で返す。
 
@@ -606,6 +704,7 @@ class OCRDialog(tk.Toplevel):
 
         self._started = True
         self.run_btn.state(["disabled"])
+        self._llm_config_btn.state(["disabled"])
         self.cancel_btn.state(["!disabled"])
         self.progress_var.set(self._L["ocr_progress_init"])
         # 結果テキストエリアをクリア
