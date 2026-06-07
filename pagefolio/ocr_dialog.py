@@ -228,7 +228,9 @@ class OCRDialog(tk.Toplevel):
         ).pack(side="left", padx=2)
 
         # 詳細設定行（解像度 / タイムアウト / 最大トークン）
-        params_row = tk.Frame(self, bg=C["BG_DARK"])
+        # self 属性化: ライブ更新時に LM Studio 欄を before= でこの行の前へ戻す
+        self._params_row = tk.Frame(self, bg=C["BG_DARK"])
+        params_row = self._params_row
         params_row.pack(fill="x", padx=16, pady=(6, 0))
         tk.Label(
             params_row,
@@ -366,14 +368,16 @@ class OCRDialog(tk.Toplevel):
         self.api_key_entry.pack(side="left", fill="x", expand=True, padx=(4, 0))
 
         # 進行表示
+        # self 属性化: ライブ更新時にセッションキー欄を before= でこのラベルの前へ戻す
         self.progress_var = tk.StringVar(value=self._L["ocr_run_first"])
-        tk.Label(
+        self._progress_label = tk.Label(
             self,
             textvariable=self.progress_var,
             bg=C["BG_DARK"],
             fg=C["SUCCESS"],
             font=self._font(0, "bold"),
-        ).pack(pady=(4, 2))
+        )
+        self._progress_label.pack(pady=(4, 2))
 
         self.progress_bar = ttk.Progressbar(
             self, mode="determinate", maximum=max(1, len(self.page_indices))
@@ -632,16 +636,24 @@ class OCRDialog(tk.Toplevel):
         # (c) プロバイダ表示ラベル更新
         self._provider_value_label.configure(text=self._provider_display_name())
         # (d) LM Studio 欄の可視性再評価
+        # before= で元の位置（詳細設定行の前）へ戻す。素の pack() は
+        # スレーブリスト末尾へ追加されダイアログ最下部に表示されてしまうため。
         show = not self._is_cloud_provider()
         if show:
-            self._lmstudio_server_frame.pack(fill="x", padx=16, pady=(6, 2))
-            self._lmstudio_model_frame.pack(fill="x", padx=16, pady=2)
+            self._lmstudio_server_frame.pack(
+                fill="x", padx=16, pady=(6, 2), before=self._params_row
+            )
+            self._lmstudio_model_frame.pack(
+                fill="x", padx=16, pady=2, before=self._params_row
+            )
         else:
             self._lmstudio_server_frame.pack_forget()
             self._lmstudio_model_frame.pack_forget()
-        # (e) セッションキー欄の可視性再評価
+        # (e) セッションキー欄の可視性再評価（before= で進行表示の前へ戻す）
         if self._needs_session_key():
-            self._key_frame.pack(fill="x", padx=16, pady=(4, 0))
+            self._key_frame.pack(
+                fill="x", padx=16, pady=(4, 0), before=self._progress_label
+            )
         else:
             self._key_frame.pack_forget()
 
