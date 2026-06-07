@@ -22,7 +22,7 @@
 
 - [ ] **Phase 4: プロバイダ抽象化** — `OCRProvider` 基底・LM Studio を Provider 実装へ移動・`run_parallel()` 一般化・テキスト埋め込みスキップ
 - [ ] **Phase 5: Claude Provider + セキュリティ基盤 + プロバイダ選択 UI** — APIキーガード最優先・ClaudeProvider・確認ダイアログ・バックオフ・SettingsDialog UI
-- [ ] **Phase 6: Gemini Provider + 逐次レンダリング最適化** — GeminiProvider・ページ単位逐次化・`ocr_scale` 見直し・OCR モックテスト
+- [x] **Phase 6: Gemini Provider + 逐次レンダリング最適化** — GeminiProvider・ページ単位逐次化・`ocr_scale` 見直し・OCR モックテスト (completed 2026-06-07)
 - [ ] **Phase 7: Tesseract + PluginManager 拡張 + QA** — TesseractProvider（任意）・プロバイダ登録フック・多言語文言・ドキュメント更新
 
 ## Phase Details
@@ -109,7 +109,7 @@
 
 **Wave 2** *(blocked on Wave 1 — ocr.py / ocr_dialog.py 共有)*
 
-  - [ ] 06-02-PLAN.md — producer-consumer 逐次レンダリング（run_with_bounded_buffer・全ページ一括保持廃止・ワーカー内 fitz アクセスゼロ・統合プログレス）+ メモリ非蓄積リグレッションテスト（ocr/ocr_dialog/test_ocr）
+  - [x] 06-02-PLAN.md — producer-consumer 逐次レンダリング（run_with_bounded_buffer・全ページ一括保持廃止・ワーカー内 fitz アクセスゼロ・統合プログレス）+ メモリ非蓄積リグレッションテスト（ocr/ocr_dialog/test_ocr）
 
 ### Phase 7: Tesseract + PluginManager 拡張 + QA
 
@@ -134,5 +134,5 @@
 | 3. API 整理と回帰テスト | v1.3.0 | 2/2 | Complete | 2026-06-03 |
 | 4. プロバイダ抽象化 | v1.4.0 | 3/3 | Complete | 2026-06-06 |
 | 5. Claude Provider + セキュリティ基盤 + プロバイダ選択 UI | v1.4.0 | 4/5 | In Progress|  |
-| 6. Gemini Provider + 逐次レンダリング最適化 | v1.4.0 | 2/3 | In Progress|  |
+| 6. Gemini Provider + 逐次レンダリング最適化 | v1.4.0 | 3/3 | Complete   | 2026-06-07 |
 | 7. Tesseract + PluginManager 拡張 + QA | v1.4.0 | 0/? | Not started | - |
