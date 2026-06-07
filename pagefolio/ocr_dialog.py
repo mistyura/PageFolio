@@ -74,11 +74,18 @@ class OCRDialog(tk.Toplevel):
         # 埋め込みテキスト検出によりスキップされたページ集合
         self._skipped_pages = set()
         self._cancel_flag = threading.Event()
-        self._worker_thread = None
+        self._worker_threads = []  # CR-01: 複数ワーカースレッドの保持
         self._done = False
         self._started = False
         self._render_queue = None  # queue.Queue（_on_run で初期化・producer-consumer）
         self._ocr_page_indices = []  # スキップ除外後の Vision OCR 対象ページリスト
+        # CR-01: 共有 done カウンタ保護 Lock および調整カウンタ
+        self._done_lock = threading.Lock()
+        self._done_count = 0  # Lock 配下の Vision OCR 完了ページ数
+        self._workers_remaining = 0  # 残ワーカー数（0 になった最終ワーカーが終了処理）
+        # CR-01: 致命的エラー情報（複数ワーカーで最初に発生したもの・Lock 保護）
+        self._fatal_msg = None
+        self._fatal_kind = None
 
         self._build()
         self._center(parent)
@@ -879,11 +886,12 @@ class OCRDialog(tk.Toplevel):
         全ページ完了またはキャンセル時に None 終了シグナルで worker を終わらせる。
         """
         if self._cancel_flag.is_set():
-            # キャンセル: 終了シグナルを送って worker を終わらせる（Pitfall-E）
-            try:
-                self._render_queue.put_nowait(None)
-            except queue.Full:
-                pass
+            # キャンセル: 全ワーカー分の終了シグナルを送る（CR-01 Pitfall-E）
+            for _ in range(self.concurrency):
+                try:
+                    self._render_queue.put_nowait(None)
+                except queue.Full:
+                    pass
             self._finish_cancelled()
             return
 
@@ -891,9 +899,10 @@ class OCRDialog(tk.Toplevel):
         idx = self._render_idx
 
         if idx >= total:
-            # 全ページ完了: worker に終了シグナルを送る（Pitfall-E）
-            self._render_queue.put(None)
-            return  # _finish_complete は _worker が呼ぶ
+            # 全ページ完了: 全ワーカー分の終了シグナルを送る（CR-01 Pitfall-E）
+            for _ in range(self.concurrency):
+                self._render_queue.put(None)
+            return  # _finish_complete は最終ワーカーが呼ぶ
 
         page_idx = self.page_indices[idx]
 
@@ -924,11 +933,12 @@ class OCRDialog(tk.Toplevel):
                 # キャンセル検出付きブロッキング put（Pitfall-B）
                 while True:
                     if self._cancel_flag.is_set():
-                        # キャンセル: 終了シグナルを送って worker を終わらせる
-                        try:
-                            self._render_queue.put_nowait(None)
-                        except queue.Full:
-                            pass
+                        # キャンセル: 全ワーカー分の終了シグナルを送る（CR-01）
+                        for _ in range(self.concurrency):
+                            try:
+                                self._render_queue.put_nowait(None)
+                            except queue.Full:
+                                pass
                         return
                     try:
                         self._render_queue.put((page_idx, b64), timeout=0.1)
@@ -944,9 +954,17 @@ class OCRDialog(tk.Toplevel):
         self.after(0, self._render_next_page)
 
     def _start_worker_thread(self):
-        """consumer（ワーカー）スレッドを起動する（producer 開始前に先行起動）"""
-        self._worker_thread = threading.Thread(target=self._worker, daemon=True)
-        self._worker_thread.start()
+        """consumer（ワーカー）スレッドを self.concurrency 本起動する（CR-01）。
+
+        producer 開始前に先行起動する。全ワーカー終了後に最終ワーカーが
+        終了処理（_render_results_ordered / _finish_complete 等）を一度だけ呼ぶ。
+        """
+        self._worker_threads = []
+        self._workers_remaining = self.concurrency
+        for _ in range(self.concurrency):
+            t = threading.Thread(target=self._worker, daemon=True)
+            t.start()
+            self._worker_threads.append(t)
 
     def _worker(self):
         """バックグラウンドスレッド（消費者）: キューから取り出して API 送信。
@@ -954,11 +972,12 @@ class OCRDialog(tk.Toplevel):
         fitz/get_pixmap/page_to_png_b64/self.doc[ は一切使用しない（D-04 必達）。
         キューから取り出した b64 は送信後に即座に del する（成功基準2・T-06-06）。
         統合プログレス（処理済み done+skipped/total）で進捗を表示する（D-03）。
+        CR-01: 複数ワーカーが共有 done カウンタを Lock 配下で更新する。
+               最終ワーカーのみ終了処理（_render_results_ordered / _finish_*）を呼ぶ。
         """
+        import time as _time  # ループ外でインポート（IN-02 修正）
+
         total = len(self.page_indices)
-        done = 0  # Vision OCR 完了ページ数（スキップ除外）
-        fatal_msg = None
-        fatal_kind = None
 
         while True:
             try:
@@ -974,7 +993,9 @@ class OCRDialog(tk.Toplevel):
 
             page_idx, b64 = item
             try:
-                if self._cancel_flag.is_set() or fatal_msg is not None:
+                with self._done_lock:
+                    has_fatal = self._fatal_msg is not None
+                if self._cancel_flag.is_set() or has_fatal:
                     # キャンセル or 致命的エラー後は API 呼び出しをスキップ
                     continue
 
@@ -985,18 +1006,17 @@ class OCRDialog(tk.Toplevel):
                     try:
                         text = self.provider.ocr_image(b64, self._ocr_prompt)
                         self.results[page_idx] = text
-                        done += 1
+                        with self._done_lock:
+                            self._done_count += 1
                         break
                     except OCRRetryableError as e:
                         if attempt >= MAX_RETRIES:
                             self.errors[page_idx] = str(e)
-                            done += 1
+                            with self._done_lock:
+                                self._done_count += 1
                             break
                         # リトライ待機中の進捗表示（D-15）
-                        try:
-                            n = attempt
-                        except Exception:
-                            n = 1
+                        n = attempt
                         self.after(
                             0,
                             lambda p=page_idx, _n=n: self.progress_var.set(
@@ -1005,8 +1025,6 @@ class OCRDialog(tk.Toplevel):
                                 )
                             ),
                         )
-                        import time as _time
-
                         delay = (
                             e.retry_after
                             if e.retry_after is not None
@@ -1014,23 +1032,29 @@ class OCRDialog(tk.Toplevel):
                         )
                         _time.sleep(delay)
                     except ConnectionError as e:
-                        fatal_msg = str(e)
-                        fatal_kind = "connection"
-                        done += 1
+                        with self._done_lock:
+                            if self._fatal_msg is None:
+                                self._fatal_msg = str(e)
+                                self._fatal_kind = "connection"
+                            self._done_count += 1
                         break
                     except TimeoutError as e:
-                        fatal_msg = str(e)
-                        fatal_kind = "timeout"
-                        done += 1
+                        with self._done_lock:
+                            if self._fatal_msg is None:
+                                self._fatal_msg = str(e)
+                                self._fatal_kind = "timeout"
+                            self._done_count += 1
                         break
                     except RuntimeError as e:
                         self.errors[page_idx] = str(e)
-                        done += 1
+                        with self._done_lock:
+                            self._done_count += 1
                         break
                     except Exception as e:
                         logger.exception("OCR 呼び出し失敗: %s", e)
                         self.errors[page_idx] = str(e)
-                        done += 1
+                        with self._done_lock:
+                            self._done_count += 1
                         break
             finally:
                 del b64  # 送信後即座に破棄（成功基準2・T-06-06）
@@ -1038,7 +1062,8 @@ class OCRDialog(tk.Toplevel):
             # 統合プログレス更新（処理済み = done + skipped・D-03）
             # after(0) 経由でメインスレッドへ（スレッドセーフ・Pitfall 3）
             skipped_count = len(self._skipped_pages)
-            total_done = done + skipped_count
+            with self._done_lock:
+                total_done = self._done_count + skipped_count
             self.after(
                 0,
                 lambda d=total_done, p=page_idx: self.progress_var.set(
@@ -1047,7 +1072,17 @@ class OCRDialog(tk.Toplevel):
             )
             self.after(0, lambda d=total_done: self._on_progress_bar(d))
 
-        # 全アイテム処理完了: 結果を UI へ流し込む
+        # CR-01: 残ワーカー数を減らし、最終ワーカーのみ終了処理を実行する
+        with self._done_lock:
+            self._workers_remaining -= 1
+            is_last = self._workers_remaining == 0
+            fatal_msg = self._fatal_msg
+            fatal_kind = self._fatal_kind
+
+        if not is_last:
+            return  # 最終ワーカー以外は何もしない
+
+        # 最終ワーカーが終了処理を一度だけ実行
         if fatal_msg is not None:
             self.after(
                 0,
@@ -1087,6 +1122,8 @@ class OCRDialog(tk.Toplevel):
         self.text.see("end")
 
     def _finish_complete(self):
+        if self._done:  # CR-02: 冪等ガード（二重呼び出し防止）
+            return
         self._done = True
         if self._cancel_flag.is_set():
             self.progress_var.set(self._L["ocr_cancelled"])
@@ -1102,6 +1139,8 @@ class OCRDialog(tk.Toplevel):
             self.save_btn.state(["!disabled"])
 
     def _finish_cancelled(self):
+        if self._done:  # CR-02: 冪等ガード（二重呼び出し防止）
+            return
         self._done = True
         self.progress_var.set(self._L["ocr_cancelled"])
         self.cancel_btn.state(["disabled"])
@@ -1112,6 +1151,8 @@ class OCRDialog(tk.Toplevel):
             self.save_btn.state(["!disabled"])
 
     def _finish_error(self, msg, kind):
+        if self._done:  # CR-02: 冪等ガード（二重呼び出し防止）
+            return
         self._done = True
         if kind == "connection":
             user_msg = self._L["ocr_err_connection"].format(
