@@ -1251,3 +1251,150 @@ class TestProducerConsumerMemory:
         assert len(results) < len(page_indices), (
             "キャンセル後も全ページが処理されている（キャンセルが効いていない）"
         )
+
+
+# ===== OCRDialog 並列度回帰テスト（CR-01 修正検証・Task 2: 06-04）=====
+
+
+class TestWorkerConcurrency:
+    """_start_worker_thread が self.concurrency 本のワーカーを起動し、
+    終了シグナル None が concurrency 本送られることを検証する（CR-01 後方互換）。
+
+    TestOcrDialogLlmConfig と同じ「SimpleNamespace fake + 未束縛メソッド呼び出し」
+    パターンを踏襲する（Tkinter ウィンドウ不使用）。
+    """
+
+    def _make_fake_for_start(self, concurrency, monkeypatch):
+        """_start_worker_thread 用 fake OCRDialog。threading.Thread をスタブ化して
+        起動スレッド数を記録する。"""
+        import types
+
+        started_threads = []
+
+        class StubThread:
+            def __init__(self, target=None, daemon=False):
+                self._target = target
+
+            def start(self):
+                started_threads.append(self)
+
+        monkeypatch.setattr(threading, "Thread", StubThread)
+
+        fake = types.SimpleNamespace(
+            concurrency=concurrency,
+            _worker_threads=[],
+            _workers_remaining=0,
+        )
+        # _worker は no-op（スタブ Thread は実際には実行しない）
+        fake._worker = lambda: None
+        return fake, started_threads
+
+    def test_starts_concurrency_threads(self, monkeypatch):
+        """concurrency=4 のとき 4 本のワーカースレッドが起動される（CR-01）。"""
+        from pagefolio.ocr_dialog import OCRDialog
+
+        fake, started = self._make_fake_for_start(4, monkeypatch)
+        OCRDialog._start_worker_thread(fake)
+
+        assert len(started) == 4, f"起動スレッド数が {len(started)} 本（期待: 4 本）"
+        assert fake._workers_remaining == 4
+
+    def test_single_thread_for_gemini(self, monkeypatch):
+        """concurrency=1（Gemini 等）のとき 1 本のみ起動される（後方互換）。"""
+        from pagefolio.ocr_dialog import OCRDialog
+
+        fake, started = self._make_fake_for_start(1, monkeypatch)
+        OCRDialog._start_worker_thread(fake)
+
+        assert len(started) == 1, f"起動スレッド数が {len(started)} 本（期待: 1 本）"
+        assert fake._workers_remaining == 1
+
+    def test_termination_signals_match_concurrency(self):
+        """全ページ完了時にキューへ送られた None の数が concurrency 本（CR-01）。
+
+        _render_next_page を最短経路（全ページをスキップ扱い）で駆動し、
+        完了到達後にキューから取り出した None を数える。
+        """
+        import queue as q
+        import types
+
+        concurrency = 3
+        # 0 ページ（page_indices 空）にすると即座に全ページ完了分岐へ到達する
+        fake = types.SimpleNamespace(
+            concurrency=concurrency,
+            _cancel_flag=threading.Event(),
+            _render_queue=q.Queue(maxsize=concurrency + 2),
+            page_indices=[],
+            _render_idx=0,
+            # after を即時実行スタブ（連鎖なし・完了分岐では after を呼ばない）
+            after=lambda _ms, fn=None, *a: fn(*a) if fn else None,
+        )
+
+        from pagefolio.ocr_dialog import OCRDialog
+
+        OCRDialog._render_next_page(fake)
+
+        # キューから None を取り出してカウントする
+        null_count = 0
+        while True:
+            try:
+                item = fake._render_queue.get_nowait()
+            except q.Empty:
+                break
+            if item is None:
+                null_count += 1
+
+        assert null_count == concurrency, (
+            f"終了シグナル None の数が {null_count} 本（期待: {concurrency} 本）"
+        )
+
+
+# ===== OCRDialog _finish_cancelled 冪等性テスト（CR-02 修正検証・Task 2: 06-04）=====
+
+
+class TestFinishIdempotent:
+    """_finish_cancelled を 2 回呼んでも _render_results_ordered が 1 回のみ
+    実行されることを検証する（CR-02 冪等ガード）。"""
+
+    def _make_fake_for_finish(self):
+        """_finish_cancelled 用 fake OCRDialog。"""
+        import types
+
+        render_call_count = {"n": 0}
+
+        def mock_render():
+            render_call_count["n"] += 1
+
+        fake = types.SimpleNamespace(
+            _done=False,
+            results={"p0": "text"},  # results あり → _render_results_ordered を呼ぶ経路
+            errors={},
+            progress_var=types.SimpleNamespace(set=lambda _v: None),
+            cancel_btn=types.SimpleNamespace(state=lambda _s: None),
+            copy_btn=types.SimpleNamespace(state=lambda _s: None),
+            save_btn=types.SimpleNamespace(state=lambda _s: None),
+            _L={"ocr_cancelled": "キャンセルされました"},
+            _render_results_ordered=mock_render,
+        )
+        return fake, render_call_count
+
+    def test_finish_cancelled_renders_once(self):
+        """_finish_cancelled を 2 回呼んでも _render_results_ordered は 1 回のみ。"""
+        from pagefolio.ocr_dialog import OCRDialog
+
+        fake, render_call_count = self._make_fake_for_finish()
+
+        # 1 回目: _done=False → 正常に実行される
+        OCRDialog._finish_cancelled(fake)
+        assert render_call_count["n"] == 1, (
+            "1 回目で _render_results_ordered が呼ばれなかった"
+        )
+        assert fake._done is True
+
+        # 2 回目: _done=True → 早期 return（_render_results_ordered は追加呼び出しなし）
+        OCRDialog._finish_cancelled(fake)
+        count = render_call_count["n"]
+        assert count == 1, (
+            "2 回目の呼び出しで _render_results_ordered が再実行された"
+            f"（計 {count} 回）"
+        )
