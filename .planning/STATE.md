@@ -3,9 +3,9 @@ gsd_state_version: 1.0
 milestone: v1.4.0
 milestone_name: OCR プロバイダ化 + クラウドAPI対応
 status: executing
-stopped_at: Completed 06-03-PLAN.md
-last_updated: "2026-06-07T03:56:00Z"
-last_activity: 2026-06-07 -- Phase 06 Plan 03 completed (Gemini UI 統合・ocr_scale 最適化)
+stopped_at: Completed 06-02-PLAN.md
+last_updated: "2026-06-07T04:20:00Z"
+last_activity: 2026-06-07 -- Phase 06 Plan 02 completed (producer-consumer 逐次レンダリング・メモリ最適化)
 progress:
   total_phases: 4
   completed_phases: 2
@@ -61,6 +61,7 @@ Last activity: 2026-06-07 -- Phase 06 Plan 03 completed
 | Phase 05-claude-provider-ui P03 | 30min | 3 tasks | 3 files |
 | Phase 05-claude-provider-ui P04 | 30min | 3 tasks | 3 files |
 | Phase 06-gemini-provider P01 | 6min | 3 tasks | 4 files |
+| Phase 06-gemini-provider P02 | 20min | 3 tasks | 3 files |
 | Phase 06-gemini-provider P03 | 12min | 3 tasks | 9 files |
 
 ## Accumulated Context
@@ -119,6 +120,11 @@ Decisions are logged in PROJECT.md Key Decisions table.
 - [Phase 06-03]: _is_cloud_provider は name in ('claude','gemini') + isinstance((ClaudeProvider, GeminiProvider)) で判定（Pitfall-F）
 - [Phase 06-03]: _needs_session_key の gemini 分岐は GEMINI_API_KEY or GOOGLE_API_KEY dual env var（D-06/Pitfall-G）
 - [Phase 06-03]: gemini セッションキーは _session_api_keys['gemini'] のみに格納（T-06-11・settings 非永続化）
+- [Phase 06-02]: バッファ上限は concurrency+1（余裕係数 1: ワーカー飢えを防ぐ最小マージン・D-02）
+- [Phase 06-02]: run_with_bounded_buffer は Tk 非依存の ocr.py モジュール関数として切り出し（D-13 テスト可能化）
+- [Phase 06-02]: _worker は fitz/get_pixmap/page_to_png_b64/self.doc[ を一切使用しない（D-04 必達）
+- [Phase 06-02]: 全ページ base64 一括辞書蓄積（self._images = {}）を撤廃しパイプライン化
+- [Phase 06-02]: 統合プログレス（done+skipped/total）を主軸とし、レンダリング 2 段表示を廃止（D-03）
 
 ### Pending Todos
 
@@ -149,8 +155,8 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-06-07T03:56:00Z
-Stopped at: Completed 06-03-PLAN.md
+Last session: 2026-06-07T04:20:00Z
+Stopped at: Completed 06-02-PLAN.md
 Resume file: None
 
 ## Operator Next Steps
