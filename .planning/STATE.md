@@ -2,16 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.4.0
 milestone_name: OCR プロバイダ化 + クラウドAPI対応
-status: Phase 06 完了（06-04 ギャップクロージャ達成）
-stopped_at: context exhaustion at 76% (2026-06-09)
-last_updated: "2026-06-09T09:19:20.719Z"
-last_activity: 2026-06-07
+status: v1.4.0 完成・リリース済み（Phase 07 完了）
+last_updated: "2026-06-09T19:35:00.000Z"
+last_activity: 2026-06-09
 progress:
   total_phases: 4
-  completed_phases: 3
-  total_plans: 13
-  completed_plans: 13
-  percent: 75
+  completed_phases: 4
+  total_plans: 14
+  completed_plans: 14
+  percent: 100
 ---
 
 # Project State
@@ -28,7 +27,7 @@ See: .planning/PROJECT.md (updated 2026-06-06)
 Phase: 7
 Plan: Not started
 Status: Phase 06 完了（06-04 ギャップクロージャ達成）
-Last activity: 2026-06-07
+Last activity: 2026-06-09 - v1.4.0 リリース完了（GitHub Release: https://github.com/mistyura/PageFolio/releases/tag/v1.4.0）
 
 ```
 [==========] v1.3.0 COMPLETE
@@ -147,6 +146,7 @@ None.
 | # | Description | Date | Commit | Directory |
 |---|-------------|------|--------|-----------|
 | 260607-ccz | OCR 抽出画面に「⚙ LLM 設定…」ボタンを追加し既存 LLMConfigDialog でプロバイダ・モデルを変更可能化（ライブ更新・05-05 UAT 発見の不具合修正） | 2026-06-07 | f210f76 | [260607-ccz-ocr-llm-llmconfigdialog](./quick/260607-ccz-ocr-llm-llmconfigdialog/) |
+| 260609-aaa | v1.4.0 ビルド（PyInstaller）・git push・GitHub Release 作成（PageFolio-v1.4.0-win64.zip） | 2026-06-09 | 9888c4f | [260609-aaa-v140-build-release](./quick/260609-aaa-v140-build-release/) |
 
 ## Deferred Items
 
