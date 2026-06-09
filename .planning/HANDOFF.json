@@ -1,31 +1,48 @@
 {
   "version": "1.0",
-  "timestamp": "2026-06-07T04:52:03.087Z",
-  "phase": "06",
-  "phase_name": "gemini-provider",
-  "phase_dir": ".planning/phases/06-gemini-provider",
-  "plan": 4,
-  "task": 3,
-  "total_tasks": 3,
-  "status": "phase_complete_awaiting_decision",
+  "timestamp": "2026-06-09T19:30:00.000Z",
+  "phase": "07",
+  "phase_name": "tesseract-pluginmanager-qa",
+  "phase_dir": ".planning/phases/07-tesseract-pluginmanager-qa",
+  "plan": 1,
+  "task": 6,
+  "total_tasks": 6,
+  "status": "phase_complete",
   "completed_tasks": [
-    {"id": 1, "name": "06-01 GeminiProvider 新設 + build_provider/_resolve_api_key/_cloud_providers 配線", "status": "done", "commit": "(既完了)"},
-    {"id": 2, "name": "06-02 producer-consumer 逐次レンダリング（メモリ非蓄積）", "status": "done", "commit": "(既完了)"},
-    {"id": 3, "name": "06-03 ocr_scale 1.5 + Gemini UI 統合 + 文言/バージョン同期", "status": "done", "commit": "(既完了)"},
-    {"id": 4, "name": "06-04 ギャップクロージャ CR-01/CR-02/WR-01-03（今回実行）", "status": "done", "commit": "ea81ed9,a213482,a6f15bc,4a9fe28"}
+    {"id": 1, "name": "Task 1.1: TesseractProvider 実装（ocr_providers.py）", "status": "done", "commit": "0c5dbfd"},
+    {"id": 2, "name": "Task 1.2: PluginManager register_ocr_provider 追加（plugins.py）", "status": "done", "commit": "0c5dbfd"},
+    {"id": 3, "name": "Task 1.3: build_provider tesseract 分岐 + plugin_manager フォールバック（ocr.py）", "status": "done", "commit": "0c5dbfd"},
+    {"id": 4, "name": "Task 2.1: LLMConfigDialog UI 統合（dialogs/llm_config.py）", "status": "done", "commit": "0c5dbfd"},
+    {"id": 5, "name": "Task 3.1〜3.3: lang.py / README.md / 開発履歴.md 整備", "status": "done", "commit": "0c5dbfd"},
+    {"id": 6, "name": "Task 4.1〜4.2: テスト追加（396 tests pass）+ ruff/pytest フルパス確認", "status": "done", "commit": "0c5dbfd"}
   ],
   "remaining_tasks": [],
   "blockers": [],
   "human_actions_pending": [
-    {"action": "実 LM Studio 環境で concurrency=4 設定時に 4 スレッド並列動作することの手動確認", "context": "自動テストは stub でカバー済み・実機未確認", "blocking": false},
-    {"action": "キャンセル時の結果二重挿入が UI 上で解消されたことの手動確認", "context": "CR-02 冪等ガード追加・実機未確認", "blocking": false}
+    {
+      "action": "Tesseract 実機動作確認（Tesseract インストール済み環境で実際に OCR を実行する）",
+      "context": "CI/テスト環境には Tesseract が存在しないため subprocess モックでのみ検証済み。実機での確認が未実施。",
+      "blocking": false
+    },
+    {
+      "action": "STATE.md / ROADMAP.md の Phase 07 完了・v1.4.0 完成への更新",
+      "context": "STATE.md は Phase 06 完了時点のまま。ROADMAP.md の Phase 07 が 'Not started' のまま。",
+      "blocking": false
+    },
+    {
+      "action": "v1.4.0 リリース作業（GitHub タグ付け・リリースノート公開）",
+      "context": "Phase 07 完了により v1.4.0 の全フェーズが揃った。APP_VERSION=1.4.0 設定済み。",
+      "blocking": false
+    }
   ],
   "decisions": [
-    {"decision": "06-04 をシーケンシャル実行（worktree 分離なし）で実行", "rationale": "ローカル main が origin より 100 コミット先行。GSD worktree は origin/HEAD ベースで作られ base mismatch で HALT するため（学習済み）。単一プランで並列の利点もない", "phase": "06"},
-    {"decision": "コードレビューの Critical（put_nowait センチネルドロップ）を非ブロッキングと判定", "rationale": "worker ループの get(timeout=1.0)+_cancel_flag バックストップで最大 ~1 秒で終了。デッドロックではなく遅延キャンセルの軽微指摘", "phase": "06"},
-    {"decision": "REQUIREMENTS.md の OCR-PERF-02 / OCR-PERF-05 を Complete に更新", "rationale": "検証者がトレーサビリティの更新漏れ（Pending 残存）を指摘。実装は完了済み", "phase": "06"}
+    {"decision": "Tesseract stdin パイプ方式（pytesseract 非依存）", "rationale": "D-04: Windows でも動作確認済み・外部依存追加なし", "phase": "07"},
+    {"decision": "_TESSERACT_AVAILABLE は起動時1回評価", "rationale": "D-01: 起動後変更を反映しない仕様として許容・ドキュメント明記", "phase": "07"},
+    {"decision": "shell=False + noqa S603/S607", "rationale": "D-04: コマンドインジェクション対策・ruff セキュリティ警告の明示抑制", "phase": "07"},
+    {"decision": "register_ocr_provider のローカル import", "rationale": "ocr_providers → plugins 循環 import 回避", "phase": "07"},
+    {"decision": "シーケンシャル実行（worktree 分離なし）", "rationale": "ローカル main が origin より 115 コミット先行。GSD worktree は origin/HEAD ベースで base mismatch HALT するため（学習済み）", "phase": "07"}
   ],
   "uncommitted_files": [],
-  "next_action": "次の3択から選択: (1) /gsd-secure-phase 6 でセキュリティ脅威検証（security_enforcement=true・SECURITY.md 未作成）, (2) /gsd-discuss-phase 7 で次フェーズ（Tesseract + PluginManager 拡張 + QA）着手, (3) v1.4.0 リリース判断（Phase 7 は任意・最終）",
-  "context_notes": "Phase 06 は --gaps-only でギャップクロージャ 06-04 を実行し完全クローズ。フェーズ目標検証 passed (4/4 must-haves)、前回 BLOCKER (SC-2/OCR-PERF-02) 解消、回帰なし、377 passed。フェーズ完了マーク済み（commit 4dfa40e）。APP_VERSION は既に v1.4.0。コードレビューは issues_found だが Critical は自己検証で軽微と判定済み・残指摘（WR-01 GIL前提・WR-02 進捗微少表示・IN系テスト網羅）は将来改善候補。"
+  "next_action": "STATE.md と ROADMAP.md を Phase 07 完了・v1.4.0 完成に更新する。その後 v1.4.0 リリース作業（git tag / GitHub Release）、または次マイルストーン計画へ進む。",
+  "context_notes": "Phase 07 の全タスク（Wave 1〜4）が完了。396 テスト全通過・ruff エラーなし。v1.4.0 マイルストーンの全4フェーズ（04〜07）完了。作業ツリーはクリーン。APP_VERSION=1.4.0 設定済み。"
 }
