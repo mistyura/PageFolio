@@ -1398,3 +1398,193 @@ class TestFinishIdempotent:
             "2 回目の呼び出しで _render_results_ordered が再実行された"
             f"（計 {count} 回）"
         )
+
+
+# ===== Gap 1: 04-04 CR-01 — 未対応プロバイダ名 ValueError 捕捉 =====
+
+
+class TestStartOcrUnknownProvider:
+    """_start_ocr が未対応プロバイダ名の ValueError を捕捉して showerror + return する。
+
+    build_provider が ValueError を raise するよう monkeypatch し、
+    showerror が 1 回呼ばれること・OCRDialog が開かれないことを検証する（CR-01）。
+    """
+
+    def _make_fake_app(self, provider_name="unknown_xyz"):
+        import types
+
+        return types.SimpleNamespace(
+            settings={"ocr_provider": provider_name},
+            _session_api_keys={},
+            root=None,
+            doc=object(),
+            lang="ja",
+            _t=lambda key: key,
+            _font=lambda *a, **k: None,
+        )
+
+    def test_unknown_provider_shows_error_and_no_dialog(self, monkeypatch):
+        """未対応プロバイダ名のとき showerror が 1 回呼ばれ OCRDialog は開かれない。"""
+        import pagefolio.ocr_dialog as ocr_dialog
+        from pagefolio.ocr import OCRMixin
+
+        showerror_count = {"n": 0}
+        dialog_opened = {"flag": False}
+
+        monkeypatch.setattr(
+            ocr.messagebox,
+            "showerror",
+            lambda *a, **k: showerror_count.__setitem__("n", showerror_count["n"] + 1),
+        )
+        monkeypatch.setattr(
+            ocr_dialog,
+            "OCRDialog",
+            lambda *a, **k: dialog_opened.__setitem__("flag", True),
+        )
+        # build_provider が ValueError を raise するよう差し替え
+        monkeypatch.setattr(
+            ocr,
+            "build_provider",
+            lambda settings, api_key=None: (_ for _ in ()).throw(
+                ValueError("unsupported provider: unknown_xyz")
+            ),
+        )
+
+        fake = self._make_fake_app("unknown_xyz")
+        OCRMixin._start_ocr(fake, [0])
+
+        assert showerror_count["n"] == 1, (
+            f"showerror が {showerror_count['n']} 回呼ばれた（期待: 1 回）"
+        )
+        assert dialog_opened["flag"] is False, "OCRDialog が開かれてはならない"
+
+
+# ===== Gap 2: 04-04 CR-02 — _on_run がライブ値で LMStudioProvider を再生成する =====
+
+
+class TestOcrDialogOnRun:
+    """_on_run が model_var / max_tokens_var / temperature_var のライブ値で
+    LMStudioProvider を再生成して self.provider に設定することを検証する（CR-02）。
+
+    TestOcrDialogLlmConfig の _make_fake パターンを踏襲。
+    Tkinter ウィンドウ不使用の SimpleNamespace fake + 未束縛メソッド呼び出し。
+    """
+
+    def _make_fake_for_on_run(
+        self, model="live-model", max_tokens=512, temperature=0.5
+    ):
+        import threading
+        import types
+
+        app = types.SimpleNamespace(
+            settings={
+                "ocr_provider": "lmstudio",
+                "lm_studio_url": "http://localhost:1234",
+                "lm_studio_model": "",
+                "ocr_timeout": 120,
+                "ocr_max_tokens": -1,
+                "ocr_temperature": 0.1,
+            },
+            _session_api_keys={},
+        )
+
+        fake = types.SimpleNamespace(
+            app=app,
+            provider=None,
+            _started=False,
+            _done=False,
+            progress_var=types.SimpleNamespace(set=lambda _v: None),
+            cancel_btn=types.SimpleNamespace(state=lambda _s: None),
+            run_btn=types.SimpleNamespace(state=lambda _s: None),
+            _llm_config_btn=types.SimpleNamespace(state=lambda _s: None),
+            _cancel_flag=threading.Event(),
+            _ocr_page_indices=[0],
+            concurrency=1,
+            _render_queue=None,
+            _render_idx=0,
+            _workers_remaining=0,
+            _worker_threads=[],
+            text=types.SimpleNamespace(delete=lambda *a: None),
+            scale_var=types.SimpleNamespace(get=lambda: "1.5"),
+            timeout_var=types.SimpleNamespace(get=lambda: "120"),
+            preset_var=types.SimpleNamespace(get=lambda: "text"),
+            url_var=types.SimpleNamespace(get=lambda: "http://localhost:1234"),
+            model_var=types.SimpleNamespace(get=lambda: model),
+            max_tokens_var=types.SimpleNamespace(get=lambda: str(max_tokens)),
+            temperature_var=types.SimpleNamespace(get=lambda: str(temperature)),
+            _L={"ocr_progress_init": "init"},
+        )
+        # _is_cloud_provider: lmstudio は非クラウド → False
+        fake._is_cloud_provider = lambda: False
+        # _render_next_page を no-op に差し替え（スレッド起動しない）
+        fake._render_next_page = lambda: None
+        # _start_worker_thread を no-op に差し替え
+        fake._start_worker_thread = lambda: None
+        return fake
+
+    def test_on_run_regenerates_lmstudio_provider_with_live_values(self, monkeypatch):
+        """_on_run が model_var / max_tokens_var / temperature_var のライブ値で
+        LMStudioProvider を再生成して self.provider に設定する（CR-02）。"""
+        from pagefolio.ocr_dialog import OCRDialog
+        from pagefolio.ocr_providers import LMStudioProvider
+
+        created = {"provider": None}
+        original_init = LMStudioProvider.__init__
+
+        class CapturingProvider(LMStudioProvider):
+            def __init__(self, **kwargs):
+                original_init(self, **kwargs)
+                created["provider"] = self
+
+        import pagefolio.ocr_providers as ocr_prov_mod
+
+        monkeypatch.setattr(ocr_prov_mod, "LMStudioProvider", CapturingProvider)
+
+        fake = self._make_fake_for_on_run(
+            model="live-model", max_tokens=512, temperature=0.5
+        )
+        OCRDialog._on_run(fake)
+
+        assert fake.provider is not None, "self.provider が設定されていない"
+        assert isinstance(fake.provider, LMStudioProvider), (
+            f"provider が LMStudioProvider でない: {type(fake.provider)}"
+        )
+        assert fake.provider.model == "live-model", (
+            f"model が live-model でない: {fake.provider.model}"
+        )
+        assert fake.provider.max_tokens == 512, (
+            f"max_tokens が 512 でない: {fake.provider.max_tokens}"
+        )
+        assert abs(fake.provider.temperature - 0.5) < 1e-6, (
+            f"temperature が 0.5 でない: {fake.provider.temperature}"
+        )
+
+
+# ===== Gap 3: 04-03 — settings.py の ocr_provider デフォルト値が "off" =====
+
+
+class TestOcrProviderDefault:
+    """_load_settings のデフォルト設定に ocr_provider: "off" が含まれることを検証する。
+
+    実装参照: pagefolio/settings.py の defaults dict（V14-D-03 コメント付き行）。
+    """
+
+    def test_ocr_provider_default_is_off(self):
+        """_load_settings() のデフォルトで ocr_provider が "off" になる。"""
+        import os
+        import tempfile
+        from unittest.mock import patch
+
+        from pagefolio.settings import _load_settings
+
+        # ファイルが存在しない一時パスを指定して純粋なデフォルト値を得る
+
+        with tempfile.TemporaryDirectory() as tmp:
+            fake_path = os.path.join(tmp, "nonexistent_settings.json")
+            with patch("pagefolio.settings._get_settings_path", return_value=fake_path):
+                settings = _load_settings()
+
+        assert "ocr_provider" in settings, "settings に ocr_provider キーが存在しない"
+        assert settings["ocr_provider"] == "off", (
+            f"ocr_provider のデフォルト値が 'off' でない: {settings['ocr_provider']!r}"
+        )
