@@ -4,9 +4,11 @@
 """OCR プロバイダ抽象基底クラスと各プロバイダ実装"""
 
 import abc
+import base64
 import json
 import logging
 import socket
+import subprocess
 import urllib.error
 import urllib.request
 
@@ -611,3 +613,110 @@ class GeminiProvider(OCRProvider):
             if "generateContent" in m.get("supportedGenerationMethods", [])
             and m.get("name", "")
         ]
+
+
+def _detect_tesseract():
+    """起動時に一度だけ呼ばれる Tesseract 存在チェック関数。
+
+    戻り値: (available: bool, langs: frozenset[str]) のタプル。
+    Tesseract が見つかれば (True, {インストール済み言語...}) を、
+    見つからなければ (False, frozenset()) を返す。
+    """
+    try:
+        r = subprocess.run(
+            ["tesseract", "--version"],  # noqa: S603 S607
+            capture_output=True,
+            timeout=5,
+        )
+        if r.returncode != 0:
+            return False, frozenset()
+        # --list-langs でインストール済み言語を取得
+        # Windows は stdout、Linux 系は stderr に出力する場合があるため両方を確認
+        r2 = subprocess.run(
+            ["tesseract", "--list-langs"],  # noqa: S603 S607
+            capture_output=True,
+            timeout=5,
+        )
+        raw = (r2.stdout or r2.stderr).decode(errors="replace")
+        langs = frozenset(
+            line.strip()
+            for line in raw.splitlines()
+            if line.strip() and not line.lower().startswith("list of")
+        )
+        return True, langs
+    except (FileNotFoundError, OSError, subprocess.TimeoutExpired):
+        return False, frozenset()
+
+
+# アプリ起動時に一度だけ評価（D-01）
+_TESSERACT_AVAILABLE, _TESSERACT_LANGS = _detect_tesseract()
+
+
+class TesseractProvider(OCRProvider):
+    """Tesseract OCR プロバイダ（subprocess 直呼び・ネットワーク不要）。
+
+    tesseract コマンドを stdin パイプ方式で呼び出して OCR を実行する。
+    API キー・ネットワーク接続は不要でオフライン環境でも動作する。
+
+    注意: LLM ベースのプロバイダより精度が劣る場合があります。
+    """
+
+    default_concurrency = 1  # CPU バウンド・シングルスレッド前提
+    max_concurrency = 2
+
+    RECOMMENDED_LANGS: list = ["jpn+eng", "eng", "jpn"]
+
+    def __init__(self, lang="jpn+eng", psm=3, timeout=60):
+        """初期化。
+
+        引数:
+          lang:    Tesseract に渡す言語コード（例: "jpn+eng"）。
+                   実際の ocr_image 実行時は _TESSERACT_LANGS による自動解決を優先する。
+          psm:     ページセグメンテーションモード（3=全自動、6=単一ブロック）
+          timeout: subprocess タイムアウト秒数（既定: 60）
+        """
+        self.lang = lang
+        self.psm = psm
+        self.timeout = timeout
+
+    def ocr_image(self, b64_png, prompt, **kwargs):
+        """Tesseract を stdin パイプ方式で呼び出して OCR テキストを返す。
+
+        引数:
+          b64_png: PNG 画像の base64 文字列
+          prompt:  OCR 指示テキスト（Tesseract では無視される。インターフェース互換用）
+          **kwargs: 未使用（インターフェース互換のため受け取る）
+
+        戻り値: OCR 結果テキスト（str）
+
+        例外:
+          RuntimeError:  tesseract コマンドが見つからない、または終了コード != 0
+          TimeoutError:  tesseract がタイムアウト（D-T2）
+        """
+        # jpn が利用可能なら jpn+eng、なければ eng にフォールバック（D-04）
+        lang = "jpn+eng" if "jpn" in _TESSERACT_LANGS else "eng"
+        png_bytes = base64.b64decode(b64_png)
+        try:
+            result = subprocess.run(  # noqa: S603
+                ["tesseract", "stdin", "stdout", "-l", lang, "--psm", str(self.psm)],  # noqa: S607
+                input=png_bytes,
+                capture_output=True,
+                timeout=self.timeout,
+            )
+        except FileNotFoundError as e:
+            raise RuntimeError("tesseract コマンドが見つかりません") from e
+        except subprocess.TimeoutExpired as e:
+            raise TimeoutError(
+                f"Tesseract がタイムアウトしました ({self.timeout}s)"
+            ) from e
+        if result.returncode != 0:
+            err = result.stderr.decode(errors="replace")
+            raise RuntimeError(f"Tesseract エラー (rc={result.returncode}): {err}")
+        return result.stdout.decode("utf-8", errors="replace").strip()
+
+    def list_models(self):
+        """利用可能な Tesseract 言語コードのリストを返す。
+
+        戻り値: ["tesseract"]（固定の単一エントリ）
+        """
+        return ["tesseract"]

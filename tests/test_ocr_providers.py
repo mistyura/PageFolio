@@ -1009,3 +1009,149 @@ class TestGeminiProviderListModels:
         p = ocr_providers.GeminiProvider(api_key="valid-key", model="gemini-2.5-flash")
         with pytest.raises(ConnectionError):
             p.list_models()
+
+
+# ===== Phase 7: TesseractProvider =====
+
+
+class TestTesseractProviderBasic:
+    """TesseractProvider の基本属性とインターフェース準拠を確認する（OCR-EXT-01）"""
+
+    def test_is_ocr_provider_subclass(self):
+        """TesseractProvider は OCRProvider のサブクラスであること"""
+        from pagefolio.ocr_providers import OCRProvider, TesseractProvider
+
+        assert issubclass(TesseractProvider, OCRProvider)
+
+    def test_instantiation(self):
+        """TesseractProvider がエラーなくインスタンス化できること"""
+        from pagefolio.ocr_providers import TesseractProvider
+
+        p = TesseractProvider()
+        assert p is not None
+
+    def test_default_concurrency(self):
+        """default_concurrency == 1（CPU バウンド・シングルスレッド前提）"""
+        from pagefolio.ocr_providers import TesseractProvider
+
+        assert TesseractProvider.default_concurrency == 1
+
+    def test_max_concurrency(self):
+        """max_concurrency == 2"""
+        from pagefolio.ocr_providers import TesseractProvider
+
+        assert TesseractProvider.max_concurrency == 2
+
+    def test_list_models(self):
+        """list_models() が ["tesseract"] を返すこと"""
+        from pagefolio.ocr_providers import TesseractProvider
+
+        p = TesseractProvider()
+        assert p.list_models() == ["tesseract"]
+
+    def test_recommended_langs_is_list(self):
+        """RECOMMENDED_LANGS がリストであること"""
+        from pagefolio.ocr_providers import TesseractProvider
+
+        assert isinstance(TesseractProvider.RECOMMENDED_LANGS, list)
+
+
+class TestTesseractProviderOcrImage:
+    """TesseractProvider.ocr_image の各動作ケースを検証する（OCR-EXT-01）"""
+
+    def test_ocr_image_success(self, monkeypatch):
+        """subprocess.run が rc=0 を返すとき OCR テキストが返ること"""
+        from pagefolio import ocr_providers
+
+        class FakeResult:
+            returncode = 0
+            stdout = b"OCR\n"
+            stderr = b""
+
+        def fake_run(cmd, input=None, capture_output=False, timeout=None):
+            return FakeResult()
+
+        monkeypatch.setattr(ocr_providers.subprocess, "run", fake_run)
+        p = ocr_providers.TesseractProvider()
+        # base64 of 1x1 transparent PNG (valid base64 string)
+        import base64
+
+        result = p.ocr_image(base64.b64encode(b"fake_png").decode(), "describe")
+        assert result == "OCR"
+
+    def test_ocr_image_nonzero_returncode_raises_runtime_error(self, monkeypatch):
+        """rc != 0 のとき RuntimeError が送出されること"""
+        from pagefolio import ocr_providers
+
+        class FakeResult:
+            returncode = 1
+            stdout = b""
+            stderr = b"Error occurred"
+
+        def fake_run(cmd, **kw):
+            return FakeResult()
+
+        monkeypatch.setattr(ocr_providers.subprocess, "run", fake_run)
+        p = ocr_providers.TesseractProvider()
+        import base64
+
+        with pytest.raises(RuntimeError):
+            p.ocr_image(base64.b64encode(b"fake_png").decode(), "describe")
+
+    def test_ocr_image_file_not_found_raises_runtime_error(self, monkeypatch):
+        """FileNotFoundError → RuntimeError が送出されること"""
+        from pagefolio import ocr_providers
+
+        def fake_run(cmd, **kw):
+            raise FileNotFoundError("tesseract")
+
+        monkeypatch.setattr(ocr_providers.subprocess, "run", fake_run)
+        p = ocr_providers.TesseractProvider()
+        import base64
+
+        with pytest.raises(RuntimeError, match="tesseract コマンドが見つかりません"):
+            p.ocr_image(base64.b64encode(b"fake_png").decode(), "describe")
+
+    def test_ocr_image_timeout_raises_timeout_error(self, monkeypatch):
+        """TimeoutExpired のとき TimeoutError が送出されること"""
+        import subprocess
+
+        from pagefolio import ocr_providers
+
+        def fake_run(cmd, **kw):
+            raise subprocess.TimeoutExpired(cmd, 60)
+
+        monkeypatch.setattr(ocr_providers.subprocess, "run", fake_run)
+        p = ocr_providers.TesseractProvider(timeout=60)
+        import base64
+
+        with pytest.raises(TimeoutError):
+            p.ocr_image(base64.b64encode(b"fake_png").decode(), "describe")
+
+    def test_lang_fallback_to_eng_when_jpn_not_available(self, monkeypatch):
+        """_TESSERACT_LANGS に jpn がない場合 -l eng が渡されること（D-04）"""
+        from pagefolio import ocr_providers
+
+        monkeypatch.setattr(ocr_providers, "_TESSERACT_LANGS", frozenset({"eng"}))
+
+        captured = {}
+
+        class FakeResult:
+            returncode = 0
+            stdout = b"text\n"
+            stderr = b""
+
+        def fake_run(cmd, **kw):
+            captured["cmd"] = cmd
+            return FakeResult()
+
+        monkeypatch.setattr(ocr_providers.subprocess, "run", fake_run)
+        p = ocr_providers.TesseractProvider()
+        import base64
+
+        p.ocr_image(base64.b64encode(b"fake_png").decode(), "describe")
+        assert "-l" in captured["cmd"]
+        lang_idx = captured["cmd"].index("-l") + 1
+        assert captured["cmd"][lang_idx] == "eng", (
+            f"Expected 'eng' but got '{captured['cmd'][lang_idx]}'"
+        )

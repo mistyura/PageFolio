@@ -453,13 +453,15 @@ def run_parallel(
     return results, errors, fatal["msg"], fatal["kind"]
 
 
-def build_provider(settings, api_key=None):
+def build_provider(settings, api_key=None, plugin_manager=None):
     """settings 辞書から OCRProvider インスタンスを生成するファクトリ。
 
     引数:
-      settings: アプリ設定辞書（lm_studio_url / lm_studio_model 等を参照）
-      api_key:  クラウドプロバイダ用 API キー（引数注入・settings には格納しない）
-                D-01/D-05: api_key は settings から読まず・settings へ書き込まない
+      settings:       アプリ設定辞書（lm_studio_url / lm_studio_model 等を参照）
+      api_key:        クラウドプロバイダ用 API キー（引数注入・settings には格納しない）
+                      D-01/D-05: api_key は settings から読まず・settings へ書き込まない
+      plugin_manager: PluginManager インスタンス（省略可・None）。
+                      _provider_registry 登録プロバイダへのフォールバックを有効化。
 
     戻り値: OCRProvider インスタンス
 
@@ -503,7 +505,18 @@ def build_provider(settings, api_key=None):
             max_tokens=int(settings.get("ocr_max_tokens", 4096)),
             temperature=float(settings.get("ocr_temperature", DEFAULT_OCR_TEMPERATURE)),
         )
-    # Phase 7 で追加するプロバイダはここに分岐を追加する
+    elif name == "tesseract":
+        from pagefolio.ocr_providers import TesseractProvider
+
+        return TesseractProvider(
+            lang=settings.get("tesseract_lang", "jpn+eng"),
+            psm=int(settings.get("tesseract_psm", 3)),
+            timeout=int(settings.get("ocr_timeout", DEFAULT_OCR_TIMEOUT)),
+        )
+    # プラグイン登録プロバイダへのフォールバック（D-07）
+    if plugin_manager is not None and name in plugin_manager._provider_registry:
+        cls = plugin_manager._provider_registry[name]
+        return cls()
     raise ValueError(f"未対応のプロバイダ: {name}")
 
 
@@ -560,7 +573,11 @@ class OCRMixin:
 
         # build_provider で settings から Provider を生成（CR-01: ValueError を捕捉）
         try:
-            provider = build_provider(self.settings, api_key=api_key)
+            provider = build_provider(
+                self.settings,
+                api_key=api_key,
+                plugin_manager=getattr(self, "plugin_manager", None),
+            )
         except ValueError as e:
             logger.error("未対応の OCR プロバイダ '%s' が設定されています: %s", name, e)
             messagebox.showerror(

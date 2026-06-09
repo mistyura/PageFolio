@@ -541,3 +541,61 @@ class TestLifecycleExceptionHandling:
         # app 付き disable → on_unload が例外 → 飲み込まれる
         pm.disable_plugin("err_lc", app="mock_app")
         assert not pm.is_enabled("err_lc")
+
+
+# ===== Phase 7: PluginManager._provider_registry =====
+
+
+class TestPluginManagerProviderRegistry:
+    """PluginManager.register_ocr_provider の動作を検証する（OCR-EXT-02）"""
+
+    def test_initial_registry_is_empty(self):
+        """初期状態では _provider_registry が空辞書であること"""
+        pm = pagefolio.PluginManager()
+        assert pm._provider_registry == {}
+
+    def test_register_valid_provider(self):
+        """OCRProvider サブクラスの登録が成功すること"""
+        from pagefolio.ocr_providers import OCRProvider
+
+        class DummyProvider(OCRProvider):
+            def ocr_image(self, b64_png, prompt, **kwargs):
+                return "dummy"
+
+            def list_models(self):
+                return ["dummy"]
+
+        pm = pagefolio.PluginManager()
+        pm.register_ocr_provider("test", DummyProvider)
+        assert pm._provider_registry["test"] is DummyProvider
+
+    def test_register_non_subclass_raises_type_error(self):
+        """OCRProvider 非サブクラスの登録で TypeError が送出されること"""
+        pm = pagefolio.PluginManager()
+        with pytest.raises(TypeError):
+            pm.register_ocr_provider("bad", object)
+
+    def test_build_provider_uses_registry(self):
+        """build_provider が plugin_manager._provider_registry を参照すること（D-07）"""
+        from pagefolio.ocr import build_provider
+        from pagefolio.ocr_providers import OCRProvider
+
+        class DummyProvider(OCRProvider):
+            def ocr_image(self, b64_png, prompt, **kwargs):
+                return "dummy"
+
+            def list_models(self):
+                return ["dummy"]
+
+        pm = pagefolio.PluginManager()
+        pm.register_ocr_provider("test_plugin", DummyProvider)
+        provider = build_provider({"ocr_provider": "test_plugin"}, plugin_manager=pm)
+        assert isinstance(provider, DummyProvider)
+
+    def test_build_provider_raises_value_error_for_unknown(self):
+        """未登録かつ未知のプロバイダ名で ValueError が送出されること"""
+        from pagefolio.ocr import build_provider
+
+        pm = pagefolio.PluginManager()
+        with pytest.raises(ValueError):
+            build_provider({"ocr_provider": "completely_unknown"}, plugin_manager=pm)

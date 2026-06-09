@@ -10,7 +10,13 @@ from tkinter import ttk
 
 from pagefolio.constants import LANG, C
 from pagefolio.ocr import MAX_OCR_MAX_TOKENS
-from pagefolio.ocr_providers import ClaudeProvider, GeminiProvider, LMStudioProvider
+from pagefolio.ocr_providers import (
+    _TESSERACT_AVAILABLE,
+    _TESSERACT_LANGS,
+    ClaudeProvider,
+    GeminiProvider,
+    LMStudioProvider,
+)
 from pagefolio.settings import get_current_font_size
 
 logger = logging.getLogger(__name__)
@@ -42,6 +48,7 @@ class LLMConfigDialog(tk.Toplevel):
         on_apply,
         font_func=None,
         lang="ja",
+        plugin_manager=None,
     ):
         super().__init__(parent)
         self._L = LANG[lang]
@@ -57,6 +64,9 @@ class LLMConfigDialog(tk.Toplevel):
                 ("Segoe UI", max(7, 10 + d), w) if w else ("Segoe UI", max(7, 10 + d))
             )
         )
+        self._plugin_manager = plugin_manager
+        # Tesseract 未インストール時の選択リセット用（D-02）
+        self._last_valid_provider = current_settings.get("ocr_provider", "off")
 
         self._build()
         self.update_idletasks()
@@ -94,17 +104,35 @@ class LLMConfigDialog(tk.Toplevel):
         self.provider_var = tk.StringVar(
             value=self.current_settings.get("ocr_provider", "off"),
         )
+        # プロバイダ一覧を動的構築（D-08）: 基本 + tesseract + プラグイン登録
+        _base_providers = ["off", "lmstudio", "claude", "gemini", "tesseract"]
+        _plugin_extras = (
+            list(self._plugin_manager._provider_registry.keys())
+            if self._plugin_manager
+            else []
+        )
         self.provider_combo = ttk.Combobox(
             provider_row,
             textvariable=self.provider_var,
-            # Phase 7: tesseract を追加予定
-            values=["off", "lmstudio", "claude", "gemini"],
+            values=_base_providers + _plugin_extras,
             state="readonly",
             font=self._font(-1),
             width=14,
         )
         self.provider_combo.pack(side="left", padx=4)
         self.provider_combo.bind("<<ComboboxSelected>>", self._on_provider_change)
+        # Tesseract 未インストール時の案内ラベル（D-02）
+        if not _TESSERACT_AVAILABLE:
+            tk.Label(
+                provider_row,
+                text=self._L.get(
+                    "tesseract_not_installed_hint",
+                    "Tesseract is not installed.",
+                ),
+                bg=C["BG_DARK"],
+                fg=C["TEXT_SUB"],
+                font=self._font(-2),
+            ).pack(side="left", padx=(8, 0))
 
         # ── LM Studio 固有欄（lmstudio 選択時のみ表示）──
         self.url_section_frame = tk.Frame(self, bg=C["BG_DARK"])
@@ -249,6 +277,36 @@ class LLMConfigDialog(tk.Toplevel):
             text=self._L["ocr_model_refresh"],
             command=self._refresh_gemini_models,
         ).pack(side="left", padx=2)
+
+        # ── Tesseract 固有欄（tesseract 選択時のみ表示）──
+        self.tesseract_section_frame = tk.Frame(self, bg=C["BG_DARK"])
+
+        # 精度劣後注記（D-03: 常設ラベル・WARNING 色）
+        tk.Label(
+            self.tesseract_section_frame,
+            text=self._L.get(
+                "tesseract_accuracy_warning",
+                "Note: Tesseract accuracy is lower than LLM-based providers.",
+            ),
+            bg=C["BG_DARK"],
+            fg=C["WARNING"],
+            font=self._font(-2),
+            wraplength=460,
+            justify="left",
+        ).pack(anchor="w", pady=(4, 2))
+
+        # 言語フォールバック案内（jpn 未インストール時のみ表示）
+        if "jpn" not in _TESSERACT_LANGS:
+            tk.Label(
+                self.tesseract_section_frame,
+                text=self._L.get(
+                    "tesseract_lang_fallback",
+                    "jpn language pack not found. Running with eng only.",
+                ),
+                bg=C["BG_DARK"],
+                fg=C["TEXT_SUB"],
+                font=self._font(-2),
+            ).pack(anchor="w", pady=(0, 2))
 
         # ── effort 欄（claude かつ effort 対応モデル時のみ表示）──
         self.effort_frame = tk.Frame(self, bg=C["BG_DARK"])
@@ -486,6 +544,20 @@ class LLMConfigDialog(tk.Toplevel):
         """プロバイダ選択に応じて下位欄を pack/pack_forget で切替。"""
         provider = self.provider_var.get()
 
+        # Tesseract 未インストール時: 選択を前の有効プロバイダに戻す（D-02 代替）
+        if provider == "tesseract" and not _TESSERACT_AVAILABLE:
+            self.provider_var.set(self._last_valid_provider)
+            self._set_lm_status(
+                self._L.get(
+                    "tesseract_not_installed_hint",
+                    "Tesseract is not installed. Please use another provider.",
+                ),
+                kind="fail",
+            )
+            return
+        # 有効な選択を記録
+        self._last_valid_provider = provider
+
         # LM Studio 固有欄
         if provider == "lmstudio":
             self.url_section_frame.pack(fill="x", padx=24, pady=(4, 2))
@@ -496,17 +568,27 @@ class LLMConfigDialog(tk.Toplevel):
         if provider == "claude":
             self.claude_section_frame.pack(fill="x", padx=24, pady=(4, 2))
             self.gemini_section_frame.pack_forget()
+            self.tesseract_section_frame.pack_forget()
             # モデルに応じて effort/temperature を切替
             self._on_model_change()
         elif provider == "gemini":
             # Gemini: モデル欄を表示、effort 非対応のため temperature のみ（D-09）
             self.gemini_section_frame.pack(fill="x", padx=24, pady=(4, 2))
             self.claude_section_frame.pack_forget()
+            self.tesseract_section_frame.pack_forget()
             self.effort_frame.pack_forget()
             self.temperature_frame.pack(fill="x", padx=24, pady=2)
+        elif provider == "tesseract":
+            # Tesseract: 精度注記フレームを表示。API 設定・temperature は不要（D-03）
+            self.tesseract_section_frame.pack(fill="x", padx=24, pady=(4, 2))
+            self.claude_section_frame.pack_forget()
+            self.gemini_section_frame.pack_forget()
+            self.effort_frame.pack_forget()
+            self.temperature_frame.pack_forget()
         else:
             self.claude_section_frame.pack_forget()
             self.gemini_section_frame.pack_forget()
+            self.tesseract_section_frame.pack_forget()
             # lmstudio / off では temperature 欄を表示し effort 欄を隠す（従来挙動）
             self.effort_frame.pack_forget()
             self.temperature_frame.pack(fill="x", padx=24, pady=2)
@@ -707,6 +789,11 @@ class LLMConfigDialog(tk.Toplevel):
         # Gemini 設定（gemini_model は api_key と異なり無害な設定値・T-06-10）
         llm_settings["gemini_model"] = (
             self.gemini_model_var.get().strip() or "gemini-2.5-flash"
+        )
+
+        # Tesseract 設定（D-04: lang は _TESSERACT_LANGS 由来の固定値）
+        llm_settings["tesseract_lang"] = (
+            "jpn+eng" if "jpn" in _TESSERACT_LANGS else "eng"
         )
 
         # 共通数値設定（クランプして格納）

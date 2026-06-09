@@ -243,15 +243,15 @@ LANG = {
         "plugin_rescan": "🔄 再検出",
         "plugin_open_folder": "📁 フォルダを開く",
         "plugin_close": "✔ 閉じる",
-        # OCR（LM Studio）
-        "sec_ocr": "🔍 OCR（LM Studio）",
+        # OCR
+        "sec_ocr": "🔍 OCR",
         "btn_ocr_current": "🔠 現在ページをテキスト抽出",
         "btn_ocr_selected": "📚 選択ページを一括抽出",
         "ocr_prompt_label": "プロンプト:",
         "ocr_preset_text": "通常テキスト",
         "ocr_preset_table": "表形式",
         "ocr_preset_markdown": "Markdown",
-        "ocr_dialog_title": "OCR — LM Studio",
+        "ocr_dialog_title": "OCR",
         "ocr_dialog_heading": "🔍 OCR テキスト抽出",
         "ocr_progress_init": "準備中…",
         "ocr_progress": "{cur}/{total} ページ処理中… (p.{page})",
@@ -264,7 +264,6 @@ LANG = {
         "ocr_page_separator": "--- Page {page} ---",
         "ocr_page_error": "[エラー] {error}",
         "ocr_text_skip_notice": "p.{page}: テキスト埋め込み済みのためスキップしました",
-        "ocr_progress_skip": "埋め込みテキスト抽出 ({done}/{total}) — p.{page}",
         "ocr_copy": "📋 クリップボードにコピー",
         "ocr_copied": "クリップボードにコピーしました",
         "ocr_save": "💾 テキストファイルに保存…",
@@ -318,6 +317,21 @@ LANG = {
         "ocr_effort_label": "推論強度 (effort):",
         "ocr_provider_off_hint": "OCR は無効です。設定でプロバイダを選択してください。",
         "ocr_model_refresh": "モデル更新",
+        # Phase 7: Tesseract Provider 文言（D-09）
+        "tesseract_accuracy_warning": (
+            "※ Tesseract の精度は LLM ベースのプロバイダより劣ります"
+        ),
+        "tesseract_not_installed": (
+            "Tesseract がインストールされていません"
+            "（tesseract コマンドが見つかりません）"
+        ),
+        "tesseract_not_installed_hint": (
+            "Tesseract がインストールされていません。他のプロバイダを使用してください"
+        ),
+        "tesseract_lang_fallback": (
+            "jpn 言語パックが見つかりません。eng のみで実行します"
+        ),
+        "ocr_provider_name_tesseract": "Tesseract (ローカル)",
         # LM Studio 設定
         "settings_lm_studio_section": "🔍 LM Studio (OCR)",
         "settings_lm_url": "URL:",
@@ -598,15 +612,15 @@ LANG = {
         "plugin_rescan": "🔄 Rescan",
         "plugin_open_folder": "📁 Open Folder",
         "plugin_close": "✔ Close",
-        # OCR (LM Studio)
-        "sec_ocr": "🔍 OCR (LM Studio)",
+        # OCR
+        "sec_ocr": "🔍 OCR",
         "btn_ocr_current": "🔠 Extract Text from Current Page",
         "btn_ocr_selected": "📚 Extract Text from Selected Pages",
         "ocr_prompt_label": "Prompt:",
         "ocr_preset_text": "Plain text",
         "ocr_preset_table": "Table",
         "ocr_preset_markdown": "Markdown",
-        "ocr_dialog_title": "OCR — LM Studio",
+        "ocr_dialog_title": "OCR",
         "ocr_dialog_heading": "🔍 OCR Text Extraction",
         "ocr_progress_init": "Preparing…",
         "ocr_progress": "Processing {cur}/{total} pages… (p.{page})",
@@ -619,7 +633,6 @@ LANG = {
         "ocr_page_separator": "--- Page {page} ---",
         "ocr_page_error": "[Error] {error}",
         "ocr_text_skip_notice": "p.{page}: Skipped (embedded text detected)",
-        "ocr_progress_skip": "Embedded text ({done}/{total}) — p.{page}",
         "ocr_copy": "📋 Copy to Clipboard",
         "ocr_copied": "Copied to clipboard",
         "ocr_save": "💾 Save to Text File…",
@@ -676,6 +689,18 @@ LANG = {
         "ocr_effort_label": "Inference Effort:",
         "ocr_provider_off_hint": "OCR is disabled. Select a provider in Settings.",
         "ocr_model_refresh": "Refresh Models",
+        # Phase 7: Tesseract Provider messages (D-09)
+        "tesseract_accuracy_warning": (
+            "Note: Tesseract accuracy is lower than LLM-based providers."
+        ),
+        "tesseract_not_installed": ("Tesseract is not installed (command not found)."),
+        "tesseract_not_installed_hint": (
+            "Tesseract is not installed. Please use another provider."
+        ),
+        "tesseract_lang_fallback": (
+            "jpn language pack not found. Running with eng only."
+        ),
+        "ocr_provider_name_tesseract": "Tesseract (Local)",
         # LM Studio settings
         "settings_lm_studio_section": "🔍 LM Studio (OCR)",
         "settings_lm_url": "URL:",

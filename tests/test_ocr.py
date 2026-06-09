@@ -918,7 +918,11 @@ class TestOcrDialogLlmConfig:
         import pagefolio.settings as settings_mod
 
         monkeypatch.setattr(settings_mod, "_save_settings", lambda _: None)
-        monkeypatch.setattr(ocr_mod, "build_provider", lambda s, api_key="": object())
+        monkeypatch.setattr(
+            ocr_mod,
+            "build_provider",
+            lambda s, api_key="", plugin_manager=None: object(),
+        )
         monkeypatch.setattr(
             ocr_mod, "_resolve_api_key", lambda provider, keys: "test-key"
         )
@@ -982,7 +986,9 @@ class TestOcrDialogLlmConfig:
         # claude パス
         claude_marker = object()
         monkeypatch.setattr(
-            ocr_mod, "build_provider", lambda s, api_key="": claude_marker
+            ocr_mod,
+            "build_provider",
+            lambda s, api_key="", plugin_manager=None: claude_marker,
         )
         monkeypatch.setattr(
             ocr_mod, "_resolve_api_key", lambda provider, keys: "test-key"
@@ -1445,7 +1451,7 @@ class TestStartOcrUnknownProvider:
         monkeypatch.setattr(
             ocr,
             "build_provider",
-            lambda settings, api_key=None: (_ for _ in ()).throw(
+            lambda settings, api_key=None, plugin_manager=None: (_ for _ in ()).throw(
                 ValueError("unsupported provider: unknown_xyz")
             ),
         )

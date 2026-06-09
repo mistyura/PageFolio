@@ -84,6 +84,8 @@ class PluginManager:
         self._plugins = {}  # {plugin_id: plugin_instance}
         self._plugin_modules = {}  # {plugin_id: module}
         self._disabled = set()  # 無効化されたプラグインIDのセット
+        # OCR プロバイダ登録辞書 {name: OCRProvider サブクラス}
+        self._provider_registry = {}
 
     @property
     def plugins(self):
@@ -194,6 +196,27 @@ class PluginManager:
                     logger.exception(
                         "プラグインイベント %s 発火失敗: %s", event_name, e
                     )
+
+    def register_ocr_provider(self, name: str, cls) -> None:
+        """OCR プロバイダをレジストリに登録する。
+
+        プラグインの on_load(app) 内で次のように呼び出す:
+            app.plugin_manager.register_ocr_provider("myprovider", MyProvider)
+
+        引数:
+          name: プロバイダ識別名（例: "my_ocr"）。build_provider から参照される。
+          cls:  OCRProvider のサブクラス（インスタンスではなくクラスを渡すこと）
+
+        例外:
+          TypeError — cls が OCRProvider のサブクラスでない場合
+        """
+        # 循環 import 回避のため関数内 import
+        from pagefolio.ocr_providers import OCRProvider
+
+        if not (isinstance(cls, type) and issubclass(cls, OCRProvider)):
+            raise TypeError(f"{cls} は OCRProvider のサブクラスでなければなりません")
+        self._provider_registry[name] = cls
+        logger.debug("OCR プロバイダ登録: %s -> %s", name, cls.__name__)
 
     def get_disabled_ids(self):
         """無効化されたプラグインIDリストを返す"""

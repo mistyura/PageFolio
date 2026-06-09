@@ -609,6 +609,7 @@ class OCRDialog(tk.Toplevel):
             on_apply=self._apply_llm_settings,
             font_func=self._font,
             lang=lang,
+            plugin_manager=getattr(self.app, "plugin_manager", None),
         )
 
     def _apply_llm_settings(self, llm_settings):
@@ -637,7 +638,11 @@ class OCRDialog(tk.Toplevel):
                     api_key = _resolve_api_key("claude", session_keys)
                 except OCRAPIKeyError:
                     api_key = ""
-                self.provider = build_provider(self.app.settings, api_key=api_key)
+                self.provider = build_provider(
+                    self.app.settings,
+                    api_key=api_key,
+                    plugin_manager=getattr(self.app, "plugin_manager", None),
+                )
             elif name == "gemini":
                 # Gemini: dual env var → セッションキー → api_key=""（Pitfall-G）
                 from pagefolio.ocr import _resolve_api_key, build_provider
@@ -648,7 +653,11 @@ class OCRDialog(tk.Toplevel):
                     api_key = _resolve_api_key("gemini", session_keys)
                 except OCRAPIKeyError:
                     api_key = ""
-                self.provider = build_provider(self.app.settings, api_key=api_key)
+                self.provider = build_provider(
+                    self.app.settings,
+                    api_key=api_key,
+                    plugin_manager=getattr(self.app, "plugin_manager", None),
+                )
             else:
                 from pagefolio.ocr_providers import LMStudioProvider
 
@@ -847,7 +856,11 @@ class OCRDialog(tk.Toplevel):
                 api_key = _resolve_api_key("claude", session_keys)
             except OCRAPIKeyError:
                 api_key = ""
-            self.provider = build_provider(self.app.settings, api_key=api_key)
+            self.provider = build_provider(
+                self.app.settings,
+                api_key=api_key,
+                plugin_manager=getattr(self.app, "plugin_manager", None),
+            )
         elif name == "gemini":
             # gemini: build_provider 経由でキー注入（D-01/D-05/T-06-11）
             from pagefolio.ocr import _resolve_api_key
@@ -858,7 +871,11 @@ class OCRDialog(tk.Toplevel):
                 api_key = _resolve_api_key("gemini", session_keys)
             except OCRAPIKeyError:
                 api_key = ""
-            self.provider = build_provider(self.app.settings, api_key=api_key)
+            self.provider = build_provider(
+                self.app.settings,
+                api_key=api_key,
+                plugin_manager=getattr(self.app, "plugin_manager", None),
+            )
         else:
             # lmstudio / off: ライブ値で再生成（CR-02 後方互換）
             from pagefolio.ocr_providers import LMStudioProvider

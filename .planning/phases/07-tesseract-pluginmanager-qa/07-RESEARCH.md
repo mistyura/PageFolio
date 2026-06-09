@@ -651,17 +651,17 @@ def _on_provider_change(self, _event=None):
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **`sec_ocr` と `ocr_dialog_title` の更新スコープ**
    - What we know: 現在 "OCR（LM Studio）" と "OCR — LM Studio" と書かれている
    - What's unclear: Phase 7 で変更するか、次マイルストーンに先送りするか
-   - Recommendation: OCR-QA-02 の「全プロバイダの未整備文言整備」スコープに含まれるため Phase 7 で更新する
+   - RESOLVED: OCR-QA-02 の「全プロバイダの未整備文言整備」スコープに含まれるため Phase 7 で更新する（PLAN.md Task 3.1 手順 3 で対応）
 
 2. **プラグインプロバイダへの settings 渡し方法**
    - What we know: 現行の `cls()` 引数なし初期化では設定（URL / API キー等）を渡せない
    - What's unclear: Phase 7 のスコープに含めるか
-   - Recommendation: 今フェーズは `cls()` 引数なし（プラグイン作者が settings を別途取得することを前提）としてスコープを限定する
+   - RESOLVED: 今フェーズは `cls()` 引数なし（プラグイン作者が settings を別途取得することを前提）としてスコープを限定する（PLAN.md Task 1.3 のコード例で採用）
 
 ---
 

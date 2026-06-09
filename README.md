@@ -85,11 +85,54 @@ No Python installation required.
 
 ## 🔍 OCR テキスト抽出 / OCR Text Extraction
 
-ローカル動作の [LM Studio](https://lmstudio.ai/)（OpenAI 互換 API）を経由して、PDF ページから文字を抽出できます（v1.2.0〜）。
+v1.4.0 より複数の OCR プロバイダに対応しました。設定ダイアログでプロバイダを選択してください。
 
-PageFolio extracts text from PDF pages via local [LM Studio](https://lmstudio.ai/) (OpenAI-compatible API) since v1.2.0.
+PageFolio supports multiple OCR providers since v1.4.0. Select a provider in the settings dialog.
 
-### 推奨 Vision モデル / Recommended Vision Models
+### OCR プロバイダ一覧 / OCR Providers
+
+| プロバイダ | 必要な設定 | 特徴 |
+|-----------|-----------|------|
+| **LM Studio** | ローカルサーバ起動 | ローカル・無料・GPU 推奨・高精度 |
+| **Claude** | `ANTHROPIC_API_KEY` 環境変数 | 高精度・有料（従量課金） |
+| **Gemini** | `GEMINI_API_KEY` または `GOOGLE_API_KEY` | 高精度・有料（無料枠あり） |
+| **Tesseract** | Tesseract OCR を別途インストール | ローカル・無料・オフライン対応・精度は LLM より劣る |
+
+| Provider | Required Setup | Notes |
+|----------|---------------|-------|
+| **LM Studio** | Local server running | Local / Free / GPU recommended |
+| **Claude** | `ANTHROPIC_API_KEY` env var | High accuracy / Paid |
+| **Gemini** | `GEMINI_API_KEY` or `GOOGLE_API_KEY` | High accuracy / Paid (free tier) |
+| **Tesseract** | Install Tesseract OCR separately | Local / Free / Offline / Lower accuracy than LLMs |
+
+### 環境変数の設定 / Setting Environment Variables
+
+クラウドプロバイダを使用する場合は以下の環境変数を設定してください（設定ダイアログの入力欄でも一時設定可能）。
+
+```
+set ANTHROPIC_API_KEY=your_key_here
+set GEMINI_API_KEY=your_key_here
+```
+
+### Tesseract のインストール / Installing Tesseract
+
+Tesseract プロバイダを使用するには Tesseract OCR を別途インストールし、PATH を通す必要があります。
+
+To use the Tesseract provider, install Tesseract OCR separately and add it to your PATH.
+
+**Windows:**
+
+1. [UB Mannheim ビルド](https://github.com/UB-Mannheim/tesseract/wiki) からインストーラをダウンロード
+2. インストール時に日本語認識用の `jpn` 言語パックを追加
+3. インストール後、PATH に Tesseract の実行ファイルパスを追加（例: `C:\Program Files\Tesseract-OCR`）
+
+```
+# インストール確認 / Verify installation
+tesseract --version
+tesseract --list-langs
+```
+
+### 推奨 Vision モデル（LM Studio）/ Recommended Vision Models
 
 小型モデル（4B 未満）は表組み・数値・固有名詞でハルシネーション（架空の文字列の生成）が起きやすいため、**7B 以上のモデルを推奨**します。
 

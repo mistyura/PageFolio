@@ -170,6 +170,7 @@ class SettingsDialog(tk.Toplevel):
             on_apply=on_apply,
             font_func=self._font,
             lang=lang,
+            plugin_manager=getattr(self, "_plugin_manager", None),
         )
 
     def _apply(self):
