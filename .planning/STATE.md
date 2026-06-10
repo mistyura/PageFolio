@@ -133,7 +133,8 @@ Decisions are logged in PROJECT.md Key Decisions table.
 
 ### Pending Todos
 
-- **v1.4.1 ホットフィックス（H-1〜H-4）**: v1.4.0 リリースレビューで検出した重大問題の修正。
+- **v1.4.1 ホットフィックス（H-1〜H-5）**: v1.4.0 リリースレビューで検出した重大問題 +
+  ユーザー報告（H-5: LLM 設定画面のプロバイダ切替時リサイズ不全）の修正。
   **着手時は必ず [260610-aaa-REVIEW.md](./quick/260610-aaa-v140-review-fixplan/260610-aaa-REVIEW.md) を参照すること**
   （指摘番号・該当箇所・対応方針・着手時の注意を記載済み）。
 
@@ -171,6 +172,6 @@ Resume file: None
 ## Operator Next Steps
 
 - v1.4.0 リリース完了・全差分コードレビュー実施済み（2026-06-10）
-- 次は **v1.4.1 ホットフィックス（H-1〜H-4）**。着手前に H-1（ocr_max_tokens=-1 → Claude/Gemini 400）と
+- 次は **v1.4.1 ホットフィックス（H-1〜H-5）**。着手前に H-1（ocr_max_tokens=-1 → Claude/Gemini 400）と
   H-2（Tesseract 選択時に LMStudioProvider へ置換）を実機再現確認すること
 - **変更着手時は [.planning/quick/260610-aaa-v140-review-fixplan/260610-aaa-REVIEW.md](./quick/260610-aaa-v140-review-fixplan/260610-aaa-REVIEW.md) を必ず参照**

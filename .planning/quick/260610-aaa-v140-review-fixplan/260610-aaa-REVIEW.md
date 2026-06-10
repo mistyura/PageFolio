@@ -75,6 +75,19 @@ usage: >
   ocr_dialog 側は 139777c で `before=` 修正済みだが llm_config 側が未対応。
 - 対応: scale_row を self 属性化し `pack(..., before=self.scale_row)` 等のアンカー指定。
 
+### H-5: プロバイダ切替時にダイアログがリサイズされずボタンが見切れる（ユーザー報告 2026-06-10）
+
+- 該当: `pagefolio/dialogs/llm_config.py:57`（`resizable(False, False)`）、`:72-81`（`__init__` でのみ
+  `winfo_reqheight()` ベースの geometry 計算）、`:543-595`（`_on_provider_change` は pack 切替のみ）
+- 内容: ダイアログの高さは初期化時に一度だけ計算され固定される。例 Gemini → LM Studio のように
+  項目が多いプロバイダへ切替えると内容が固定高さを超え、「適用/キャンセル」ボタンが見切れる
+  （再立ち上げで直るのは初期化時に再計算されるため）。`_on_model_change` の effort/temperature
+  切替でも同様に高さが変動する。
+- 対応: `_on_provider_change` / `_on_model_change` の末尾で `self.update_idletasks()` 後に
+  `h = max(480, self.winfo_reqheight() + 20)` を再計算し、現在位置（`winfo_x()/winfo_y()`）を
+  維持したまま `self.geometry(f"{w}x{h}+{x}+{y}")` を再適用する（幅 w は初期値を self 属性化して保持）。
+  H-4（`before=` アンカー）と同じメソッドを触るため、**H-4 と同時に修正すること**。
+
 ---
 
 ## 中優先度（M）— v1.4.2 安定化対象
@@ -215,7 +228,7 @@ usage: >
 
 | リリース | 対象 | 規模目安 |
 |---------|------|---------|
-| v1.4.1 ホットフィックス | H-1〜H-4（着手前に H-1/H-2 を実機再現確認） | 1 セッション |
+| v1.4.1 ホットフィックス | H-1〜H-5（着手前に H-1/H-2 を実機再現確認。H-4/H-5 は同一メソッドのため同時修正） | 1 セッション |
 | v1.4.2 安定化 | M-1〜M-11 | 1〜2 セッション |
 | v1.5.0 以降 | L-1〜L-6 | バックログ |
 
