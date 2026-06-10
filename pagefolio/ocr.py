@@ -485,11 +485,15 @@ def build_provider(settings, api_key=None, plugin_manager=None):
         # api_key は settings から読まず引数のみ・settings へ書き込まない（D-01/D-05）
         from pagefolio.ocr_providers import ClaudeProvider
 
+        # H-1: -1 は LM Studio 専用の「モデル最大値委譲」値。
+        # Anthropic API は正の整数必須のため mt <= 0 のとき 4096 にクランプする。
+        mt = int(settings.get("ocr_max_tokens", DEFAULT_OCR_MAX_TOKENS))
+        mt = 4096 if mt <= 0 else mt
         return ClaudeProvider(
             api_key=api_key or "",
             model=settings.get("claude_model", "claude-sonnet-4-6"),
             timeout=int(settings.get("ocr_timeout", DEFAULT_OCR_TIMEOUT)),
-            max_tokens=int(settings.get("ocr_max_tokens", 4096)),
+            max_tokens=mt,
             temperature=float(settings.get("ocr_temperature", DEFAULT_OCR_TEMPERATURE)),
             effort=settings.get("ocr_effort", "low"),
         )
@@ -498,11 +502,15 @@ def build_provider(settings, api_key=None, plugin_manager=None):
         # effort パラメータなし（D-09: Gemini は temperature のみ）
         from pagefolio.ocr_providers import GeminiProvider
 
+        # H-1: -1 は LM Studio 専用の「モデル最大値委譲」値。
+        # Gemini API も正の整数必須のため mt <= 0 のとき 4096 にクランプする。
+        mt = int(settings.get("ocr_max_tokens", DEFAULT_OCR_MAX_TOKENS))
+        mt = 4096 if mt <= 0 else mt
         return GeminiProvider(
             api_key=api_key or "",
             model=settings.get("gemini_model", "gemini-2.5-flash"),
             timeout=int(settings.get("ocr_timeout", DEFAULT_OCR_TIMEOUT)),
-            max_tokens=int(settings.get("ocr_max_tokens", 4096)),
+            max_tokens=mt,
             temperature=float(settings.get("ocr_temperature", DEFAULT_OCR_TEMPERATURE)),
         )
     elif name == "tesseract":

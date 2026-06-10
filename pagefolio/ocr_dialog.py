@@ -515,6 +515,8 @@ class OCRDialog(tk.Toplevel):
             return self._L["ocr_provider_name_claude"]
         if name == "gemini" or isinstance(self.provider, GeminiProvider):
             return self._L["ocr_provider_name_gemini"]
+        if name == "tesseract":
+            return self._L["ocr_provider_name_tesseract"]
         if name in ("lmstudio", ""):
             return self._L["ocr_provider_name_lmstudio"]
         return name
@@ -658,7 +660,7 @@ class OCRDialog(tk.Toplevel):
                     api_key=api_key,
                     plugin_manager=getattr(self.app, "plugin_manager", None),
                 )
-            else:
+            elif name in ("lmstudio", "", "off"):
                 from pagefolio.ocr_providers import LMStudioProvider
 
                 self.provider = LMStudioProvider(
@@ -673,6 +675,18 @@ class OCRDialog(tk.Toplevel):
                     self.app.settings.get("lm_studio_url", "http://localhost:1234")
                 )
                 self.model_var.set(self.app.settings.get("lm_studio_model", ""))
+            else:
+                # H-2: tesseract / プラグイン登録プロバイダは build_provider で再生成
+                from pagefolio.ocr import build_provider
+
+                self.provider = build_provider(
+                    self.app.settings,
+                    plugin_manager=getattr(self.app, "plugin_manager", None),
+                )
+            # H-3: provider 再生成後に concurrency を max_concurrency 以下に再クランプ
+            self.concurrency = max(
+                1, min(self.provider.max_concurrency, self.concurrency)
+            )
         except (ValueError, Exception) as e:
             logger.error("provider 再生成に失敗しました: %s", e)
             self.progress_var.set(f"プロバイダ再生成エラー: {e}")
@@ -876,7 +890,7 @@ class OCRDialog(tk.Toplevel):
                 api_key=api_key,
                 plugin_manager=getattr(self.app, "plugin_manager", None),
             )
-        else:
+        elif name in ("lmstudio", "", "off"):
             # lmstudio / off: ライブ値で再生成（CR-02 後方互換）
             from pagefolio.ocr_providers import LMStudioProvider
 
@@ -887,6 +901,18 @@ class OCRDialog(tk.Toplevel):
                 max_tokens=max_tokens,
                 temperature=temperature,
             )
+        else:
+            # H-2: tesseract / プラグイン登録プロバイダは build_provider で再生成
+            # （else で LMStudioProvider を生成すると tesseract 選択時に画像が
+            #  LM Studio URL へ送信される重大な誤動作が発生する）
+            self.provider = build_provider(
+                self.app.settings,
+                plugin_manager=getattr(self.app, "plugin_manager", None),
+            )
+
+        # H-3: provider 再生成後に concurrency を max_concurrency 以下に再クランプ
+        # （lmstudio→gemini 切替時など max_concurrency が変わる場合に対応）
+        self.concurrency = max(1, min(self.provider.max_concurrency, self.concurrency))
 
         # producer-consumer: バッファ初期化 → consumer 先行起動 → producer 開始
         # バッファ上限 = concurrency + 1（余裕係数 1 でワーカー飢えを防止・D-02）
