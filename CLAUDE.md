@@ -217,7 +217,7 @@ C = dict(THEMES["dark"])  # 実行時に _apply_theme() で更新
 
 ### 禁止事項
 
-- `pyproject.toml` / `ruff.toml` の編集
+- `pyproject.toml` の編集
 - 裸の `except:` 句（必ず `except Exception as e:` の形で）
 - `# type: ignore` の無断使用
 
@@ -368,22 +368,23 @@ PageFolio の既存コードベースに対する最適化プロジェクト。
 
 ## Standard Library Usage
 
-- `tkinter` / `tkinter.ttk` — GUI 全般（`pagefolio/ui_builder.py`, `pagefolio/dialogs.py` など）
+- `tkinter` / `tkinter.ttk` — GUI 全般（`pagefolio/ui_builder.py`, `pagefolio/dialogs/` など）
 - `tkinter.filedialog`, `messagebox`, `simpledialog` — ダイアログ操作
 - `json` — 設定ファイル読み書き（`pagefolio/settings.py`）
 - `os` — パス操作・ファイル検索
 - `logging` — ログ出力（全モジュール）
-- `threading` — バックグラウンド処理（`pagefolio/viewer.py`, `pagefolio/ocr_dialog.py`）
+- `threading` — バックグラウンド処理（`pagefolio/ocr_dialog.py`）
 - `concurrent.futures.ThreadPoolExecutor` — OCR 並列処理（`pagefolio/ocr.py`）
-- `urllib.request` — HTTP 通信（LM Studio API 呼び出し）（`pagefolio/ocr.py`）
-- `base64`, `json`, `socket` — OCR リクエスト組み立て（`pagefolio/ocr.py`）
+- `urllib.request` — HTTP 通信（LM Studio API 呼び出し）（`pagefolio/ocr_providers.py`）
+- `base64` — OCR 画像エンコード（`pagefolio/ocr.py`）
+- `json`, `socket` — OCR リクエスト組み立て（`pagefolio/ocr_providers.py`）
 - `importlib`, `importlib.util` — プラグイン動的読み込み（`pagefolio/plugins.py`）
 
 ## Infrastructure & Platform
 
 - `pagefolio.py` — `python pagefolio.py` 起動
 - `pagefolio/__main__.py` — `python -m pagefolio` 起動
-- PyInstaller で単一 `.exe` としてビルド
+- PyInstaller で onedir 形式（ディレクトリ配布）としてビルド
 - アイコン: `pagefolio.ico`
 - `pyproject.toml` で `pythonpath = ["src"]` を指定（pytest 用）
 
@@ -458,7 +459,7 @@ PageFolio の既存コードベースに対する最適化プロジェクト。
 |-----------|----------------|------|
 | `PDFEditorApp` | Root app class; wires all Mixins, holds all state, sets up keybindings | `pagefolio/app.py` |
 | `UIBuilderMixin` | Builds ttk styles, PanedWindow layout, toolbar, thumbnail panel, preview canvas, right tool panel | `pagefolio/ui_builder.py` |
-| `FileOpsMixin` | Open/Save/SaveAs/Undo/Redo; snapshot-based undo stack | `pagefolio/file_ops.py` |
+| `FileOpsMixin` | Open/Save/SaveAs/Undo/Redo; delta-based undo stack (operation state dicts) | `pagefolio/file_ops.py` |
 | `PageOpsMixin` | Rotate, delete, crop (CropBox), insert, merge, split | `pagefolio/page_ops.py` |
 | `ViewerMixin` | Render preview (fitz→PIL→Tk), thumbnails with cache, zoom, popup preview | `pagefolio/viewer.py` |
 | `DnDMixin` | Thumbnail drag-and-drop reorder (single or multi-page) | `pagefolio/dnd.py` |
@@ -467,7 +468,7 @@ PageFolio の既存コードベースに対する最適化プロジェクト。
 | `PDFEditorPlugin` | Abstract base for third-party plugins | `pagefolio/plugins.py` |
 | Constants & Theme | `THEMES`, `C` (runtime dict), `APP_VERSION`, `LANG`, `SUPPORTED_EXTENSIONS` | `pagefolio/constants.py` |
 | Settings utils | Read/write `pagefolio_settings.json`, theme application, font helpers | `pagefolio/settings.py` |
-| Dialogs | `AboutDialog`, `SettingsDialog`, `PluginDialog`, `MergeOrderDialog`, `MergeResizeDialog` | `pagefolio/dialogs.py` |
+| Dialogs | `AboutDialog`, `SettingsDialog`, `PluginDialog`, `MergeOrderDialog`, `MergeResizeDialog` | `pagefolio/dialogs/` |
 | OCR Dialog | `OCRDialog` — multi-page OCR results viewer/exporter | `pagefolio/ocr_dialog.py` |
 | File Drop | tkinterdnd2 integration for drag-and-drop file open | `pagefolio/file_drop.py` |
 
@@ -491,8 +492,8 @@ PageFolio の既存コードベースに対する最適化プロジェクト。
 | `self.filepath` | `str \| None` | Path of the open file |
 | `self.current_page` | `int` | 0-based current page index |
 | `self.selected_pages` | `set[int]` | Multi-selection set |
-| `self._undo_stack` | `list[bytes]` | PDF snapshots (max 20) |
-| `self._redo_stack` | `list[bytes]` | PDF snapshots for redo |
+| `self._undo_stack` | `deque[dict]` | 操作デルタ state dict（max 20） |
+| `self._redo_stack` | `deque[dict]` | 逆操作デルタ state dict（max 20） |
 | `self.thumb_cache` | `dict[int, ImageTk.PhotoImage]` | Thumbnail image cache |
 | `self._doc_buttons` | `list[ttk.Button]` | Buttons disabled when no doc |
 | `self.crop_mode` | `bool` | Whether crop selection is active |
@@ -526,9 +527,9 @@ PageFolio の既存コードベースに対する最適化プロジェクト。
 
 ## Architectural Constraints
 
-- **Threading:** UI runs on the Tkinter main thread. Preview and thumbnail renders are dispatched to daemon threads; generation counters (`_preview_gen`, `_thumb_gen`) prevent stale results from overwriting newer ones. OCR uses `ThreadPoolExecutor`.
+- **Threading:** UI runs on the Tkinter main thread. Preview and thumbnail renders are processed on the main thread via `root.after()` chained calls; generation counters (`_preview_gen`, `_thumb_gen`) prevent stale results from overwriting newer ones. OCR uses `ThreadPoolExecutor`.
 - **Global state:** `C` (theme dict) and `_current_font_size` in `pagefolio/settings.py` are module-level mutable singletons updated at runtime.
-- **Undo limit:** Hard-coded to `MAX_UNDO = 20` snapshots in `pagefolio/app.py`. Each snapshot is a full PDF `bytes` serialization.
+- **Undo limit:** Hard-coded to `MAX_UNDO = 20` in `pagefolio/app.py`. 各エントリは操作固有のデルタ dict（rotate: 回転値リスト、crop: cropbox タプル、delete: ページ単位 bytes 等）であり、full PDF シリアライズではない。
 - **CropBox safety:** All crop operations must clamp the `CropBox` inside the page's `MediaBox` before calling `set_cropbox()` (`pagefolio/page_ops.py`).
 
 ## Anti-Patterns
@@ -541,7 +542,7 @@ PageFolio の既存コードベースに対する最適化プロジェクト。
 
 - File operations use `messagebox.showerror()` for user-visible failures
 - Plugin callbacks are individually wrapped so one plugin failure cannot crash others
-- Background render threads silently discard results when generation counter has advanced
+- Preview/thumbnail `root.after()` callbacks silently discard results when generation counter has advanced
 
 <!-- GSD:architecture-end -->
 
