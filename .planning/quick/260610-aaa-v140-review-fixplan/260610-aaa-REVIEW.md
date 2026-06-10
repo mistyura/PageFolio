@@ -237,6 +237,7 @@ usage: >
 - OCR ダイアログ内で "off" 切替時に `app._update_ocr_buttons_state()` 未呼出
 - **CLAUDE.md「ファイル構成」の更新**: `dialogs.py` → `dialogs/` パッケージ、
   `lang.py` / `themes.py` / `ocr.py` / `ocr_dialog.py` / `ocr_providers.py` が未記載
+  ✅ 対応済み（2026-06-10 / CLAUDE.md 最新化タスクで反映）
 
 ---
 

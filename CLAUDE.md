@@ -30,7 +30,9 @@ PageFolio/
 ├── pagefolio/                 # メインパッケージ
 │   ├── __init__.py            # 公開API（後方互換 import 用）
 │   ├── __main__.py            # python -m pagefolio エントリーポイント
-│   ├── constants.py           # テーマ・バージョン・言語辞書（THEMES, C, LANG, APP_VERSION）
+│   ├── constants.py           # バージョン・ファイル名・拡張子定数（APP_VERSION）+ themes/lang 再エクスポート
+│   ├── themes.py              # カラーテーマ定義（THEMES, 実行時辞書 C）
+│   ├── lang.py                # 言語辞書（LANG: ja / en）
 │   ├── settings.py            # 設定ユーティリティ関数
 │   ├── plugins.py             # プラグインシステム（PDFEditorPlugin, PluginManager）
 │   ├── app.py                 # PDFEditorApp 本体（Mixin 統合 + 状態管理）
@@ -39,21 +41,38 @@ PageFolio/
 │   ├── page_ops.py            # ページ操作 Mixin（回転/削除/トリミング/挿入/結合/分割）
 │   ├── viewer.py              # 表示 Mixin（プレビュー/ズーム/サムネイル/ポップアップ）
 │   ├── dnd.py                 # D&D Mixin（サムネイルのドラッグ並び替え）
-│   ├── dialogs.py             # ダイアログ群（About/Settings/Plugin/MergeOrder/MergeResize）
+│   ├── ocr.py                 # OCR Mixin + ヘルパー（build_provider / 並列実行 / リトライ制御）
+│   ├── ocr_providers.py       # OCR プロバイダ（LMStudio / Claude / Gemini / Tesseract）
+│   ├── ocr_dialog.py          # OCRDialog（複数ページ OCR 結果ビューア / エクスポート）
+│   ├── dialogs/               # ダイアログパッケージ
+│   │   ├── __init__.py        # 後方互換 re-export（from pagefolio.dialogs import ...）
+│   │   ├── about.py           # AboutDialog
+│   │   ├── settings.py        # SettingsDialog
+│   │   ├── plugin.py          # PluginDialog
+│   │   ├── merge.py           # MergeOrderDialog / MergeResizeDialog
+│   │   └── llm_config.py      # LLMConfigDialog（OCR プロバイダ / モデル設定）
 │   └── file_drop.py           # ファイル D&D（tkinterdnd2 連携）
 ├── pagefolio.ico              # アプリアイコン
+├── PageFolio.spec             # PyInstaller ビルド定義（onedir 形式）
 ├── README.md                  # エンドユーザー向け使用概要
 ├── CLAUDE.md                  # 本ファイル（AI 向け開発指示書）
 ├── 開発履歴.md                # 機能追加・変更の履歴
 ├── LICENSE                    # MITライセンス
 ├── pyproject.toml             # Ruff・pytest 設定
+├── requirements.txt           # 依存パッケージ（バージョン固定）
 ├── plugins/                   # プラグインディレクトリ
 │   └── page_info.py           # サンプルプラグイン（ページ情報表示）
 ├── tests/                     # テストスイート（pytest）
 │   ├── conftest.py            # テスト用共通フィクスチャ
+│   ├── test_imports.py        # パッケージ import / 後方互換テスト
 │   ├── test_utils.py          # ユーティリティ関数テスト
 │   ├── test_pdf_ops.py        # PDF 操作テスト
-│   └── test_plugins.py        # PluginManager テスト
+│   ├── test_plugins.py        # PluginManager テスト
+│   ├── test_viewer.py         # プレビュー / サムネイル描画テスト
+│   ├── test_settings_keyguard.py  # API キー非保存ガードテスト
+│   ├── test_ocr.py            # OCR ヘルパー / 並列実行テスト
+│   ├── test_ocr_providers.py  # OCR プロバイダ単体テスト
+│   └── test_provider_ui.py    # プロバイダ UI（ダイアログ連携）テスト
 └── docs/                      # スクリーンショット画像
 
 （実行時に自動生成）
@@ -66,19 +85,27 @@ PageFolio/
 
 ### `pagefolio/constants.py`
 
-テーマカラー（`THEMES`）、実行時テーマ辞書（`C`）、バージョン（`APP_VERSION`）、言語辞書（`LANG`）を定義。
+バージョン（`APP_VERSION`）・ファイル名・対応拡張子の定数を定義。
+`themes.py` の `THEMES` / `C`、`lang.py` の `LANG` を再エクスポートし後方互換 import 表面を維持。
+
+### `pagefolio/themes.py` / `pagefolio/lang.py`
+
+`themes.py` はカラーテーマ（`THEMES`）と実行時テーマ辞書（`C`）、`lang.py` は言語辞書（`LANG`、ja / en）を定義。
+LANG の新規キーは **ja / en 両方に同一キーで追加**しキー数の左右一致を維持すること。
 
 ### `pagefolio/settings.py`
 
 設定ファイルの読み書き・テーマ解決・フォント生成のユーティリティ関数群。
+API キーは `_SENSITIVE_KEYS` ガードにより `pagefolio_settings.json` へ保存されない。
 
 ### `pagefolio/plugins.py`
 
 `PDFEditorPlugin` 基底クラスと `PluginManager` クラス。プラグインの検出・読込・有効/無効管理。
+`register_ocr_provider` フックによる OCR プロバイダ登録に対応。
 
 ### `pagefolio/app.py`
 
-`PDFEditorApp` メインクラス。5つの Mixin を統合し、`__init__`・キーバインド・ユーティリティメソッドを持つ。
+`PDFEditorApp` メインクラス。6つの Mixin を統合し、`__init__`・キーバインド・ユーティリティメソッドを持つ。
 
 ### Mixin モジュール群
 
@@ -89,16 +116,27 @@ PageFolio/
 | `page_ops.py` | `PageOpsMixin` | ページ回転・削除・トリミング・挿入・結合・分割 |
 | `viewer.py` | `ViewerMixin` | プレビュー・ズーム・サムネイル・ポップアップ |
 | `dnd.py` | `DnDMixin` | サムネイル D&D 並び替え |
+| `ocr.py` | `OCRMixin` | OCR 起動・プロバイダ生成（`build_provider`）・ボタン状態管理 |
 
-### `pagefolio/dialogs.py`
+### OCR モジュール群
 
-`AboutDialog`・`SettingsDialog`・`PluginDialog`・`MergeOrderDialog`・`MergeResizeDialog` のダイアログクラス群。
+| モジュール | 主要クラス / 関数 | 責務 |
+|-----------|------------------|------|
+| `ocr.py` | `OCRMixin`, `build_provider`, `run_parallel`, `clamp_retry_after`, `interruptible_sleep` | プロバイダ生成・並列 OCR 実行・リトライ/キャンセル制御 |
+| `ocr_providers.py` | `OCRProvider`(ABC), `LMStudioProvider`, `ClaudeProvider`, `GeminiProvider`, `TesseractProvider` | 各バックエンドへの OCR リクエスト実装 |
+| `ocr_dialog.py` | `OCRDialog` | 複数ページ OCR の実行 UI・進捗・結果表示/エクスポート（`_run_gen` 世代ガード） |
+
+### `pagefolio/dialogs/`（パッケージ）
+
+`about.py`（`AboutDialog`）・`settings.py`（`SettingsDialog`）・`plugin.py`（`PluginDialog`）・
+`merge.py`（`MergeOrderDialog` / `MergeResizeDialog`）・`llm_config.py`（`LLMConfigDialog`）に分割。
+`__init__.py` が re-export するため `from pagefolio.dialogs import SettingsDialog` 等の既存 import は維持される。
 
 ---
 
 ## カラーテーマ
 
-テーマは `THEMES` 辞書で定義。実行時は `C` 辞書経由で参照。
+テーマは `pagefolio/themes.py` の `THEMES` 辞書で定義。実行時は `C` 辞書経由で参照。
 
 ```python
 THEMES = {
@@ -218,6 +256,10 @@ C = dict(THEMES["dark"])  # 実行時に _apply_theme() で更新
 - サムネイルは `fitz.Matrix(0.22, 0.22)` のスケールで生成（変更時はパフォーマンスに注意）
 - プレビューは `self.zoom * 1.5` のスケールで生成
 - 右ペインはスクロール可能な Canvas 構成（`_build_tools_scrollable` で実装）
+- クラウド OCR（Claude / Gemini）はページ画像を base64 で外部 API へ https 送信する（Tesseract / LM Studio はローカル完結）
+- API キーは設定ファイルに保存されず、環境変数またはセッションメモリ（`app._session_api_keys`）のみ
+- OCR のリトライ待機は `Retry-After` を 60 秒上限にクランプし、0.5 秒刻みでキャンセルを確認する（`clamp_retry_after` / `interruptible_sleep`）
+- `fitz.Document` はスレッド間で共有しない（OCR はメインスレッドでレンダリングした base64 のみワーカーへ渡す）
 
 ---
 
