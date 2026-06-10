@@ -39,7 +39,7 @@ usage: >
 
 ## 高優先度（H）— v1.4.1 ホットフィックス対象
 
-### H-1: 既定設定で Claude / Gemini OCR が全リクエスト 400 になる見込み
+### H-1: 既定設定で Claude / Gemini OCR が全リクエスト 400 になる見込み ✅
 
 - 該当: `pagefolio/ocr.py:492,505`（build_provider）、`pagefolio/settings.py` `_load_settings()` の `"ocr_max_tokens": -1`
 - 内容: `-1` は LM Studio 専用の「モデル最大値に委ねる」値だが、`_load_settings()` が
@@ -47,8 +47,9 @@ usage: >
   フォールバック 4096 は効かない。Anthropic は正の整数必須・Gemini も `-1` を拒否。
   プロバイダ側にクランプなし（コードレベルで裏取り済み・実 API 検証は未実施）。
 - 対応: build_provider の claude/gemini 分岐で `mt <= 0` なら 4096 にクランプ。回帰テスト追加。
+- 対応済み（v1.4.1 / commit: 1077b06, abf13d7）
 
-### H-2: Tesseract / プラグインプロバイダが実行時に LMStudioProvider へ置換される
+### H-2: Tesseract / プラグインプロバイダが実行時に LMStudioProvider へ置換される ✅
 
 - 該当: `pagefolio/ocr_dialog.py:879-889`（`_on_run` else 分岐）、`ocr_dialog.py:661-670`（`_apply_llm_settings` else 分岐）
 - 内容: 分岐が claude / gemini / それ以外の 3 択のため `tesseract`・プラグイン登録名も
@@ -58,24 +59,27 @@ usage: >
   `ocr_provider_name_tesseract` キーが未使用。
 - 対応: else を lmstudio/off 限定にし、それ以外は `build_provider(self.app.settings, ...)` で再生成。
   表示名に tesseract 分岐を追加。
+- 対応済み（v1.4.1 / commit: abf13d7）
 
-### H-3: プロバイダ切替後に concurrency が再クランプされない
+### H-3: プロバイダ切替後に concurrency が再クランプされない ✅
 
 - 該当: `pagefolio/ocr_dialog.py:67`（init 時のみ clamp）、`ocr_dialog.py:615-678`（`_apply_llm_settings`）
 - 内容: ダイアログ内で lmstudio→gemini に切替えても `self.concurrency` は旧値のまま。
   `GeminiProvider.max_concurrency = 1`（D-07）が無視され最大 8 ワーカー起動 → 429 連発。
 - 対応: `_apply_llm_settings` / `_on_run` の provider 再生成後に
   `self.concurrency = max(1, min(provider.max_concurrency, self.concurrency))` を再評価。
+- 対応済み（v1.4.1 / commit: abf13d7）
 
-### H-4: LLM 設定ダイアログのセクションがボタン行の下に表示される（UI 崩れ）
+### H-4: LLM 設定ダイアログのセクションがボタン行の下に表示される（UI 崩れ） ✅
 
 - 該当: `pagefolio/dialogs/llm_config.py:543-594`（`_on_provider_change`）
 - 内容: プロバイダ別セクション（url/claude/gemini/tesseract/effort/temperature）が
   btn_row pack 後に `before=` なしで pack されるため「適用/キャンセル」より下に出る。
   ocr_dialog 側は 139777c で `before=` 修正済みだが llm_config 側が未対応。
 - 対応: scale_row を self 属性化し `pack(..., before=self.scale_row)` 等のアンカー指定。
+- 対応済み（v1.4.1 / commit: e74cb63）
 
-### H-5: プロバイダ切替時にダイアログがリサイズされずボタンが見切れる（ユーザー報告 2026-06-10）
+### H-5: プロバイダ切替時にダイアログがリサイズされずボタンが見切れる（ユーザー報告 2026-06-10） ✅
 
 - 該当: `pagefolio/dialogs/llm_config.py:57`（`resizable(False, False)`）、`:72-81`（`__init__` でのみ
   `winfo_reqheight()` ベースの geometry 計算）、`:543-595`（`_on_provider_change` は pack 切替のみ）
@@ -87,6 +91,7 @@ usage: >
   `h = max(480, self.winfo_reqheight() + 20)` を再計算し、現在位置（`winfo_x()/winfo_y()`）を
   維持したまま `self.geometry(f"{w}x{h}+{x}+{y}")` を再適用する（幅 w は初期値を self 属性化して保持）。
   H-4（`before=` アンカー）と同じメソッドを触るため、**H-4 と同時に修正すること**。
+- 対応済み（v1.4.1 / commit: e74cb63）
 
 ---
 

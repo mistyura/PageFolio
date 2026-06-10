@@ -1600,7 +1600,7 @@ class TestOcrProviderDefault:
 
 
 class TestBuildProviderMaxTokensClamp:
-    """H-1: build_provider が claude/gemini で ocr_max_tokens<=0 を 4096 にクランプする。
+    """H-1: build_provider の claude/gemini で ocr_max_tokens<=0 を 4096 にクランプ。
 
     - ocr_max_tokens=-1（既定値）→ provider.max_tokens == 4096
     - ocr_max_tokens=0 → provider.max_tokens == 4096（境界値）
@@ -1618,12 +1618,13 @@ class TestBuildProviderMaxTokensClamp:
         )
 
     def test_claude_zero_clamped_to_4096(self, monkeypatch):
-        """claude: ocr_max_tokens=0 のとき provider.max_tokens が 4096 になる（境界値）"""
+        """claude: ocr_max_tokens=0 のとき max_tokens が 4096 になる（境界値）"""
         monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
         settings = {"ocr_provider": "claude", "ocr_max_tokens": 0}
         provider = ocr.build_provider(settings, api_key="k")
         assert provider.max_tokens == 4096, (
-            f"claude: max_tokens={provider.max_tokens}、0 が 4096 にクランプされていない"
+            f"claude: max_tokens={provider.max_tokens}"
+            "、0 が 4096 にクランプされていない"
         )
 
     def test_claude_positive_value_not_clamped(self, monkeypatch):
@@ -1646,13 +1647,14 @@ class TestBuildProviderMaxTokensClamp:
         )
 
     def test_gemini_zero_clamped_to_4096(self, monkeypatch):
-        """gemini: ocr_max_tokens=0 のとき provider.max_tokens が 4096 になる（境界値）"""
+        """gemini: ocr_max_tokens=0 のとき max_tokens が 4096 になる（境界値）"""
         monkeypatch.delenv("GEMINI_API_KEY", raising=False)
         monkeypatch.delenv("GOOGLE_API_KEY", raising=False)
         settings = {"ocr_provider": "gemini", "ocr_max_tokens": 0}
         provider = ocr.build_provider(settings, api_key="k")
         assert provider.max_tokens == 4096, (
-            f"gemini: max_tokens={provider.max_tokens}、0 が 4096 にクランプされていない"
+            f"gemini: max_tokens={provider.max_tokens}"
+            "、0 が 4096 にクランプされていない"
         )
 
     def test_gemini_positive_value_not_clamped(self, monkeypatch):
