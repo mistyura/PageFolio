@@ -16,7 +16,9 @@ logger = logging.getLogger(__name__)
 #  設定ダイアログ
 # ══════════════════════════════════════════
 class SettingsDialog(tk.Toplevel):
-    def __init__(self, parent, current_settings, callback, font_func=None):
+    def __init__(
+        self, parent, current_settings, callback, font_func=None, plugin_manager=None
+    ):
         super().__init__(parent)
         lang = current_settings.get("lang", "ja")
         self._L = LANG[lang]
@@ -28,6 +30,8 @@ class SettingsDialog(tk.Toplevel):
         self.callback = callback
         self.current_settings = dict(current_settings)
         self._font = font_func
+        # M-8: plugin_manager を保持して LLMConfigDialog へ渡す
+        self._plugin_manager = plugin_manager
 
         self._build()
         self.update_idletasks()

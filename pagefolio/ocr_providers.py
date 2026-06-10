@@ -255,24 +255,25 @@ class ClaudeProvider(OCRProvider):
     def _supports_effort(self):
         """このモデルが effort パラメータ（output_config）に対応しているか判定する。
 
-        戻り値: haiku 系は False、sonnet/opus 系は True。
+        M-3: EFFORT_MODELS 完全一致時のみ True。前方互換の prefix 判定を撤廃。
+        戻り値: EFFORT_MODELS 完全一致モデルは True、それ以外は False。
         """
-        # haiku は必ず False（D-16）
-        if "haiku" in self.model:
-            return False
-        # 明示的な対応リストに含まれるか確認
-        if self.model in self.EFFORT_MODELS:
-            return True
-        # 前方互換のためプレフィックス判定も併用
-        has_opus_or_sonnet = "opus" in self.model or "sonnet" in self.model
-        return has_opus_or_sonnet and "haiku" not in self.model
+        return self.model in self.EFFORT_MODELS
+
+    def _supports_temperature(self):
+        """このモデルが temperature パラメータに対応しているか判定する。
+
+        M-3: haiku 系のみ True。それ以外（未知モデル含む）は False。
+        """
+        return "haiku" in self.model
 
     def _build_payload(self, b64_png, prompt):
         """Anthropic messages API リクエストボディを構築する（内部メソッド）。
 
-        effort 対応モデル（sonnet/opus 系）は output_config.effort を付与し
-        temperature は送らない。非対応モデル（haiku 系）は temperature を付与し
-        output_config は送らない（D-16・成功基準7）。
+        M-3: 3 分岐で安全なパラメータを付与する。
+          - effort 対応（EFFORT_MODELS 完全一致）→ output_config.effort のみ
+          - haiku 系 → temperature のみ
+          - 未知モデル → 両方省略（最も安全な前方互換・D-16）
         """
         payload = {
             "model": self.model,
@@ -295,9 +296,12 @@ class ClaudeProvider(OCRProvider):
             ],
         }
         if self._supports_effort():
+            # effort 対応モデル: output_config を付与（temperature は送らない）
             payload["output_config"] = {"effort": self.effort}
-        else:
+        elif self._supports_temperature():
+            # haiku 系: temperature を付与（output_config は送らない・D-16）
             payload["temperature"] = self.temperature
+        # それ以外（未知モデル）: 両方省略（最も安全な前方互換）
         return payload
 
     def ocr_image(self, b64_png, prompt, **kwargs):
@@ -360,13 +364,14 @@ class ClaudeProvider(OCRProvider):
             raise ConnectionError(str(reason)) from e
 
         # レスポンス解析: type=="text" ブロックを走査して結合
+        # M-9: block.get("text") で text キー欠落ブロックを安全にスキップ
         # content[0] 決め打ち禁止（Pitfall 6）
         try:
             result = json.loads(body)
             texts = [
-                block["text"]
+                block.get("text")
                 for block in result.get("content", [])
-                if block.get("type") == "text"
+                if block.get("type") == "text" and block.get("text")
             ]
             if not texts:
                 raise RuntimeError(f"Unexpected response format: {body[:500]}")
@@ -463,8 +468,17 @@ class GeminiProvider(OCRProvider):
     def _build_payload(self, b64_png, prompt):
         """Gemini generateContent リクエストボディを構築する（内部メソッド）。
 
-        thinkingConfig は generationConfig の直下に置く（Pitfall-C・D-09）。
+        M-4: pro 系モデルでは thinkingConfig を省略（2.5-pro は thinking 無効化不可）。
+        flash 等（non-pro）は thinkingBudget=0 で thinking を無効化する（D-09）。
         """
+        gen_config = {
+            "temperature": self.temperature,
+            "maxOutputTokens": self.max_tokens,
+        }
+        # M-4: pro 系は thinkingConfig を送ると 400 INVALID_ARGUMENT の恐れ
+        if "pro" not in self.model:
+            # flash 等: thinkingConfig は generationConfig 直下（Pitfall-C・D-09）
+            gen_config["thinkingConfig"] = {"thinkingBudget": 0}
         return {
             "contents": [
                 {
@@ -474,12 +488,7 @@ class GeminiProvider(OCRProvider):
                     ]
                 }
             ],
-            "generationConfig": {
-                "temperature": self.temperature,
-                "maxOutputTokens": self.max_tokens,
-                # thinkingConfig は generationConfig 直下（Pitfall-C・D-09）
-                "thinkingConfig": {"thinkingBudget": 0},
-            },
+            "generationConfig": gen_config,
         }
 
     def _parse_response(self, body):

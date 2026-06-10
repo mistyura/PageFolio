@@ -355,7 +355,14 @@ class PDFEditorApp(
     # ══════════════════════════════════════════
     def _open_settings(self):
         """設定ダイアログを開く"""
-        SettingsDialog(self.root, self.settings, self._apply_settings, self._font)
+        # M-8: plugin_manager を渡して LLMConfigDialog でプラグインプロバイダを表示
+        SettingsDialog(
+            self.root,
+            self.settings,
+            self._apply_settings,
+            self._font,
+            plugin_manager=getattr(self, "plugin_manager", None),
+        )
 
     def _apply_settings(self, new_settings):
         """設定変更を適用してUIを再構築"""

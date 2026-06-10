@@ -634,19 +634,15 @@ class LLMConfigDialog(tk.Toplevel):
     def _model_supports_effort(self, model):
         """モデルが effort パラメータ（output_config）に対応しているか判定する。
 
-        ClaudeProvider.EFFORT_MODELS 集合 + プレフィックス判定を流用（D-16/D-17）。
+        M-3: ocr_providers.ClaudeProvider._supports_effort と同じ判定に揃える。
+        EFFORT_MODELS 完全一致のみ True（前方互換 prefix 判定を撤廃）。
 
-        戻り値: haiku 系は False、sonnet/opus 系は True。
+        戻り値: EFFORT_MODELS 完全一致のみ True、それ以外は False。
         """
         if not model:
             return False
-        if "haiku" in model:
-            return False
-        if model in ClaudeProvider.EFFORT_MODELS:
-            return True
-        # 前方互換：明示リストにないモデルはプレフィックスで判定
-        has_opus_or_sonnet = "opus" in model or "sonnet" in model
-        return has_opus_or_sonnet and "haiku" not in model
+        # M-3: EFFORT_MODELS 完全一致のみ True（prefix 判定撤廃・D-16 整合）
+        return model in ClaudeProvider.EFFORT_MODELS
 
     # ── ダイアログ高さ再計算（H-5）──────────────────────
     def _resize_to_fit(self):

@@ -1155,3 +1155,156 @@ class TestTesseractProviderOcrImage:
         assert captured["cmd"][lang_idx] == "eng", (
             f"Expected 'eng' but got '{captured['cmd'][lang_idx]}'"
         )
+
+
+# ===== M-3 回帰テスト: _supports_effort 厳格化 =====
+
+
+class TestClaudeProviderSupportsEffortStrict:
+    """M-3: _supports_effort が EFFORT_MODELS 完全一致のみ True を返す。
+
+    - EFFORT_MODELS 外（claude-sonnet-4-5 等）は False
+    - EFFORT_MODELS 内（claude-sonnet-4-6）は True
+    - 未知モデル（claude-future-9）の payload に effort/temperature 不在
+    - haiku は temperature を含む
+    """
+
+    def test_effort_models_outside_returns_false(self):
+        """EFFORT_MODELS 外のモデルは False を返す（M-3）。"""
+        from pagefolio.ocr_providers import ClaudeProvider
+
+        p = ClaudeProvider(api_key="", model="claude-sonnet-4-5")
+        assert p._supports_effort() is False
+
+    def test_effort_models_inside_returns_true(self):
+        """EFFORT_MODELS 内のモデルは True を返す（M-3）。"""
+        from pagefolio.ocr_providers import ClaudeProvider
+
+        p = ClaudeProvider(api_key="", model="claude-sonnet-4-6")
+        assert p._supports_effort() is True
+
+    def test_unknown_model_no_effort_no_temperature(self):
+        """未知モデルの payload に output_config も temperature も含まれない。"""
+        from pagefolio.ocr_providers import ClaudeProvider
+
+        p = ClaudeProvider(api_key="", model="claude-future-9")
+        payload = p._build_payload("b64", "prompt")
+        assert "output_config" not in payload, "未知モデルに output_config が含まれた"
+        assert "temperature" not in payload, "未知モデルに temperature が含まれた"
+
+    def test_haiku_model_has_temperature(self):
+        """haiku モデルの payload には temperature が含まれる。"""
+        from pagefolio.ocr_providers import ClaudeProvider
+
+        p = ClaudeProvider(api_key="", model="claude-haiku-4-5")
+        payload = p._build_payload("b64", "prompt")
+        assert "temperature" in payload, "haiku モデルに temperature が含まれない"
+        assert "output_config" not in payload, "haiku モデルに output_config が含まれた"
+
+
+# ===== M-4 回帰テスト: gemini-2.5-pro thinkingConfig 省略 =====
+
+
+class TestGeminiProviderThinkingConfig:
+    """M-4: gemini-2.5-pro 系では thinkingConfig が省略される。"""
+
+    def test_pro_model_no_thinking_config(self):
+        """gemini-2.5-pro の payload に thinkingConfig が含まれない（M-4）。"""
+        from pagefolio.ocr_providers import GeminiProvider
+
+        p = GeminiProvider(api_key="", model="gemini-2.5-pro")
+        payload = p._build_payload("b64", "prompt")
+        cfg = payload["generationConfig"]
+        assert "thinkingConfig" not in cfg, (
+            "gemini-2.5-pro の generationConfig に thinkingConfig が含まれた"
+        )
+
+    def test_flash_model_has_thinking_config(self):
+        """gemini-2.5-flash の payload には thinkingConfig が含まれる。"""
+        from pagefolio.ocr_providers import GeminiProvider
+
+        p = GeminiProvider(api_key="", model="gemini-2.5-flash")
+        payload = p._build_payload("b64", "prompt")
+        cfg = payload["generationConfig"]
+        assert "thinkingConfig" in cfg, (
+            "gemini-2.5-flash の generationConfig に thinkingConfig が含まれない"
+        )
+
+
+# ===== M-9 回帰テスト: ClaudeProvider text キー欠落で KeyError 非伝播 =====
+
+
+class TestClaudeProviderTextKeyMissing:
+    """M-9: text キー欠落ブロックを含むレスポンスで KeyError が漏れない。"""
+
+    def test_block_without_text_key_skipped(self, monkeypatch):
+        """type='text' だが text キーが欠落したブロックを含んでも KeyError しない。"""
+        import json as json_mod
+
+        from pagefolio import ocr_providers
+
+        # text キーが欠落したブロックと正常ブロックを混在させる
+        body = json_mod.dumps(
+            {
+                "content": [
+                    {"type": "text"},  # text キー欠落
+                    {"type": "text", "text": "hello"},  # 正常
+                ]
+            }
+        )
+
+        def fake_urlopen(req, timeout=None):
+            return _FakeClaudeResponse(body)
+
+        monkeypatch.setattr(ocr_providers.urllib.request, "urlopen", fake_urlopen)
+        p = ocr_providers.ClaudeProvider("key", "claude-sonnet-4-6")
+        result = p.ocr_image("Zg==", "prompt")
+        # text キーありのブロックのみ結合される
+        assert result == "hello"
+
+    def test_all_blocks_without_text_raises_runtime(self, monkeypatch):
+        """全ブロックに text キーが無ければ RuntimeError が送出される。"""
+        import json as json_mod
+
+        from pagefolio import ocr_providers
+
+        body = json_mod.dumps({"content": [{"type": "text"}, {"type": "image"}]})
+
+        def fake_urlopen(req, timeout=None):
+            return _FakeClaudeResponse(body)
+
+        monkeypatch.setattr(ocr_providers.urllib.request, "urlopen", fake_urlopen)
+        p = ocr_providers.ClaudeProvider("key", "claude-sonnet-4-6")
+        with pytest.raises(RuntimeError):
+            p.ocr_image("Zg==", "prompt")
+
+
+# ===== M-7 回帰テスト: build_provider プラグイン RuntimeError 正規化 =====
+
+
+class TestBuildProviderPluginRuntimeError:
+    """M-7: プラグイン cls() が例外を投げると RuntimeError に正規化される。"""
+
+    def test_plugin_constructor_exception_normalized_to_runtime_error(self):
+        """cls() が例外を投げると RuntimeError（素の例外が漏れない）。"""
+        import types
+
+        from pagefolio.ocr import build_provider
+        from pagefolio.ocr_providers import OCRProvider
+
+        class BrokenPlugin(OCRProvider):
+            def __init__(self):
+                raise ValueError("init error")
+
+            def ocr_image(self, b64, prompt, **kw):
+                return ""
+
+            def list_models(self):
+                return []
+
+        registry = {"broken": BrokenPlugin}
+        fake_pm = types.SimpleNamespace(_provider_registry=registry)
+        settings = {"ocr_provider": "broken"}
+
+        with pytest.raises(RuntimeError, match="broken"):
+            build_provider(settings, plugin_manager=fake_pm)

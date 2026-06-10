@@ -49,13 +49,13 @@ class TestModelSupportsEffort:
         """claude-opus-4-8 は EFFORT_MODELS に含まれるため True を返す。"""
         assert self.fn(self.stub, "claude-opus-4-8") is True
 
-    def test_unknown_sonnet_prefix_returns_true(self):
-        """EFFORT_MODELS にない新しい sonnet 系モデルも True を返す（前方互換）。"""
-        assert self.fn(self.stub, "claude-sonnet-99-0") is True
+    def test_unknown_sonnet_prefix_returns_false(self):
+        """M-3: EFFORT_MODELS にない sonnet 系モデルは False（prefix 判定撤廃）。"""
+        assert self.fn(self.stub, "claude-sonnet-99-0") is False
 
-    def test_unknown_opus_prefix_returns_true(self):
-        """EFFORT_MODELS にない新しい opus 系モデルも True を返す（前方互換）。"""
-        assert self.fn(self.stub, "claude-opus-99-0") is True
+    def test_unknown_opus_prefix_returns_false(self):
+        """M-3: EFFORT_MODELS にない opus 系モデルは False（prefix 判定撤廃）。"""
+        assert self.fn(self.stub, "claude-opus-99-0") is False
 
     def test_haiku_variant_always_false_d16(self):
         """'haiku' を含む名称（将来バージョン含む）は必ず False（D-16）。"""
@@ -442,3 +442,30 @@ class TestConfirmCost:
         stub._confirm_cost()
         assert "1" in captured_msg["msg"]
         assert "$" in captured_msg["msg"]
+
+
+# ===== M-8 回帰テスト: SettingsDialog に plugin_manager 引数追加 =====
+
+
+class TestSettingsDialogPluginManager:
+    """M-8: SettingsDialog が plugin_manager を受け取り _plugin_manager に保持する。"""
+
+    def test_settings_dialog_accepts_plugin_manager(self):
+        """SettingsDialog.__init__ が plugin_manager 引数を持つ。"""
+        import inspect
+
+        from pagefolio.dialogs.settings import SettingsDialog
+
+        sig = inspect.signature(SettingsDialog.__init__)
+        assert "plugin_manager" in sig.parameters, (
+            "SettingsDialog.__init__ に plugin_manager 引数が存在しない"
+        )
+
+    def test_settings_dialog_stores_plugin_manager(self):
+        """plugin_manager パラメータが SettingsDialog.__init__ に存在する。"""
+        import inspect
+
+        from pagefolio.dialogs.settings import SettingsDialog
+
+        sig_params = list(inspect.signature(SettingsDialog.__init__).parameters.keys())
+        assert "plugin_manager" in sig_params
