@@ -74,11 +74,11 @@ class LLMConfigDialog(tk.Toplevel):
             fs = int(self._font(0)[1])
         except Exception:
             fs = get_current_font_size()
-        w = max(540, int(fs * 44))
+        self._dialog_w = max(540, int(fs * 44))
         h = max(480, self.winfo_reqheight() + 20)
         px = parent.winfo_rootx() + parent.winfo_width() // 2
         py = parent.winfo_rooty() + parent.winfo_height() // 2
-        self.geometry(f"{w}x{h}+{px - w // 2}+{py - h // 2}")
+        self.geometry(f"{self._dialog_w}x{h}+{px - self._dialog_w // 2}+{py - h // 2}")
 
     def _build(self):
         tk.Label(
@@ -371,10 +371,11 @@ class LLMConfigDialog(tk.Toplevel):
         ).pack(side="left", padx=4)
 
         # ── 解像度倍率 ──
-        scale_row = tk.Frame(self, bg=C["BG_DARK"])
-        scale_row.pack(fill="x", padx=24, pady=(6, 2))
+        # H-4: self 属性として保持しプロバイダ別セクションのアンカーに使用
+        self.scale_row = tk.Frame(self, bg=C["BG_DARK"])
+        self.scale_row.pack(fill="x", padx=24, pady=(6, 2))
         tk.Label(
-            scale_row,
+            self.scale_row,
             text=self._L["settings_ocr_scale"],
             bg=C["BG_DARK"],
             fg=C["TEXT_MAIN"],
@@ -387,7 +388,7 @@ class LLMConfigDialog(tk.Toplevel):
             value=float(self.current_settings.get("ocr_scale", 1.5)),
         )
         tk.Spinbox(
-            scale_row,
+            self.scale_row,
             from_=1.0,
             to=4.0,
             increment=0.5,
@@ -559,39 +560,55 @@ class LLMConfigDialog(tk.Toplevel):
         self._last_valid_provider = provider
 
         # LM Studio 固有欄
+        # H-4: before=self.scale_row でプロバイダ別セクションをボタン行より上に挿入
         if provider == "lmstudio":
-            self.url_section_frame.pack(fill="x", padx=24, pady=(4, 2))
+            self.url_section_frame.pack(
+                fill="x", padx=24, pady=(4, 2), before=self.scale_row
+            )
         else:
             self.url_section_frame.pack_forget()
 
         # Claude 固有欄
         if provider == "claude":
-            self.claude_section_frame.pack(fill="x", padx=24, pady=(4, 2))
+            self.claude_section_frame.pack(
+                fill="x", padx=24, pady=(4, 2), before=self.scale_row
+            )
             self.gemini_section_frame.pack_forget()
             self.tesseract_section_frame.pack_forget()
             # モデルに応じて effort/temperature を切替
             self._on_model_change()
         elif provider == "gemini":
             # Gemini: モデル欄を表示、effort 非対応のため temperature のみ（D-09）
-            self.gemini_section_frame.pack(fill="x", padx=24, pady=(4, 2))
+            self.gemini_section_frame.pack(
+                fill="x", padx=24, pady=(4, 2), before=self.scale_row
+            )
             self.claude_section_frame.pack_forget()
             self.tesseract_section_frame.pack_forget()
             self.effort_frame.pack_forget()
-            self.temperature_frame.pack(fill="x", padx=24, pady=2)
+            self.temperature_frame.pack(
+                fill="x", padx=24, pady=2, before=self.scale_row
+            )
+            self._resize_to_fit()
         elif provider == "tesseract":
             # Tesseract: 精度注記フレームを表示。API 設定・temperature は不要（D-03）
-            self.tesseract_section_frame.pack(fill="x", padx=24, pady=(4, 2))
+            self.tesseract_section_frame.pack(
+                fill="x", padx=24, pady=(4, 2), before=self.scale_row
+            )
             self.claude_section_frame.pack_forget()
             self.gemini_section_frame.pack_forget()
             self.effort_frame.pack_forget()
             self.temperature_frame.pack_forget()
+            self._resize_to_fit()
         else:
             self.claude_section_frame.pack_forget()
             self.gemini_section_frame.pack_forget()
             self.tesseract_section_frame.pack_forget()
             # lmstudio / off では temperature 欄を表示し effort 欄を隠す（従来挙動）
             self.effort_frame.pack_forget()
-            self.temperature_frame.pack(fill="x", padx=24, pady=2)
+            self.temperature_frame.pack(
+                fill="x", padx=24, pady=2, before=self.scale_row
+            )
+            self._resize_to_fit()
 
     # ── モデル変更ハンドラ（effort/temperature 切替）──────
     def _on_model_change(self, _event=None):
@@ -599,14 +616,19 @@ class LLMConfigDialog(tk.Toplevel):
 
         effort 対応モデル（sonnet/opus 系）のとき effort 欄を表示し
         temperature 欄を隠す（D-17）。haiku 系は temperature 欄を表示。
+        H-4: before=self.scale_row でボタン行より上に挿入。
+        H-5: 末尾で _resize_to_fit を呼びダイアログ高さを追従させる。
         """
         model = self.claude_model_var.get()
         if self._model_supports_effort(model):
-            self.effort_frame.pack(fill="x", padx=24, pady=2)
+            self.effort_frame.pack(fill="x", padx=24, pady=2, before=self.scale_row)
             self.temperature_frame.pack_forget()
         else:
-            self.temperature_frame.pack(fill="x", padx=24, pady=2)
+            self.temperature_frame.pack(
+                fill="x", padx=24, pady=2, before=self.scale_row
+            )
             self.effort_frame.pack_forget()
+        self._resize_to_fit()
 
     # ── effort 対応判定 ────────────────────────────────
     def _model_supports_effort(self, model):
@@ -625,6 +647,22 @@ class LLMConfigDialog(tk.Toplevel):
         # 前方互換：明示リストにないモデルはプレフィックスで判定
         has_opus_or_sonnet = "opus" in model or "sonnet" in model
         return has_opus_or_sonnet and "haiku" not in model
+
+    # ── ダイアログ高さ再計算（H-5）──────────────────────
+    def _resize_to_fit(self):
+        """プロバイダ/モデル切替後にダイアログ高さを再計算して現在位置で再適用する。
+
+        self._dialog_w を幅として維持し、winfo_reqheight から高さを算出する。
+        ウィンドウ破棄レースに備え TclError を最小スコープで保護（D-18）。
+        """
+        try:
+            self.update_idletasks()
+            h = max(480, self.winfo_reqheight() + 20)
+            x = self.winfo_x()
+            y = self.winfo_y()
+            self.geometry(f"{self._dialog_w}x{h}+{x}+{y}")
+        except tk.TclError:
+            pass
 
     # ── ステータス表示 ──────────────────────────────────
     def _set_lm_status(self, text, kind="info"):
