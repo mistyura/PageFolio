@@ -27,7 +27,7 @@ See: .planning/PROJECT.md (updated 2026-06-06)
 Phase: 7
 Plan: Not started
 Status: Phase 06 完了（06-04 ギャップクロージャ達成）
-Last activity: 2026-06-09 - v1.4.0 リリース完了（GitHub Release: https://github.com/mistyura/PageFolio/releases/tag/v1.4.0）
+Last activity: 2026-06-10 - Completed quick task 260610-qqq: v1.4.1 ホットフィックス（H-1〜H-5）
 
 ```
 [==========] v1.3.0 COMPLETE
@@ -151,6 +151,7 @@ Decisions are logged in PROJECT.md Key Decisions table.
 | 260607-ccz | OCR 抽出画面に「⚙ LLM 設定…」ボタンを追加し既存 LLMConfigDialog でプロバイダ・モデルを変更可能化（ライブ更新・05-05 UAT 発見の不具合修正） | 2026-06-07 | f210f76 | [260607-ccz-ocr-llm-llmconfigdialog](./quick/260607-ccz-ocr-llm-llmconfigdialog/) |
 | 260609-aaa | v1.4.0 ビルド（PyInstaller）・git push・GitHub Release 作成（PageFolio-v1.4.0-win64.zip） | 2026-06-09 | 9888c4f | [260609-aaa-v140-build-release](./quick/260609-aaa-v140-build-release/) |
 | 260610-aaa | v1.4.0 リリース内容コードレビュー・修正計画文書化（H-1〜H-4 / M-1〜M-11 / L-1〜L-6） | 2026-06-10 | - | [260610-aaa-v140-review-fixplan](./quick/260610-aaa-v140-review-fixplan/) |
+| 260610-qqq | v1.4.1 ホットフィックス（H-1〜H-5）: OCR max_tokens クランプ・Tesseract プロバイダ置換防止・並列度再クランプ・LLM 設定ダイアログ UI 修正 | 2026-06-10 | 1319c12 | [260610-qqq-review-md-260610-aaa-h-1-h-5-v1-4-1](./quick/260610-qqq-review-md-260610-aaa-h-1-h-5-v1-4-1/) |
 
 ## Deferred Items
 
@@ -165,13 +166,14 @@ Decisions are logged in PROJECT.md Key Decisions table.
 
 ## Session Continuity
 
-Last session: 2026-06-09T09:19:20.708Z
-Stopped at: context exhaustion at 76% (2026-06-09)
+Last session: 2026-06-10T00:00:00.000Z
+Stopped at: 260610-qqq 完了（v1.4.1 ホットフィックス H-1〜H-5）
 Resume file: None
 
 ## Operator Next Steps
 
-- v1.4.0 リリース完了・全差分コードレビュー実施済み（2026-06-10）
-- 次は **v1.4.1 ホットフィックス（H-1〜H-5）**。着手前に H-1（ocr_max_tokens=-1 → Claude/Gemini 400）と
-  H-2（Tesseract 選択時に LMStudioProvider へ置換）を実機再現確認すること
-- **変更着手時は [.planning/quick/260610-aaa-v140-review-fixplan/260610-aaa-REVIEW.md](./quick/260610-aaa-v140-review-fixplan/260610-aaa-REVIEW.md) を必ず参照**
+- v1.4.1 ホットフィックス（H-1〜H-5）完了（2026-06-10）
+- 次は **v1.4.2 安定化（M-1〜M-11）**。詳細は REVIEW.md を参照
+- **注意**: H-1（max_tokens クランプ）は実 API（Anthropic/Gemini）での 400 再現が未検証。
+  実機環境で確認することを推奨
+- M-1/M-2（producer-consumer）修正は L-1 の二重実装（ocr.py / ocr_dialog.py）に注意
