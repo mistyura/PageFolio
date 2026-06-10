@@ -715,10 +715,12 @@ class TestRunParallelBackoff:
             page_indices=[0],
             concurrency=1,
         )
-        # sleep が 5.0 で呼ばれていること（Retry-After 優先・D-15）
+        # interruptible_sleep は step 刻みで time.sleep を呼ぶため
+        # 合計が retry_after（5.0）に等しいことを検証する（Retry-After 優先・D-15）
         sleep_calls = [c.args[0] for c in mock_time.sleep.call_args_list]
-        assert any(s == 5.0 for s in sleep_calls), (
-            f"sleep(5.0) が呼ばれていない: {sleep_calls}"
+        total_slept = sum(sleep_calls)
+        assert abs(total_slept - 5.0) < 1e-9, (
+            f"sleep 合計 {total_slept} が 5.0 でない: {sleep_calls}"
         )
 
     def test_exponential_backoff_without_retry_after(self, monkeypatch):
@@ -747,9 +749,9 @@ class TestRunParallelBackoff:
             concurrency=1,
         )
         sleep_calls = [c.args[0] for c in mock_time.sleep.call_args_list]
-        # 少なくとも1回は RETRY_BASE_DELAY（1.0）以上で sleep されること
+        # interruptible_sleep は step 刻み→合計が RETRY_BASE_DELAY 以上
         assert len(sleep_calls) >= 1
-        assert all(s >= ocr.RETRY_BASE_DELAY for s in sleep_calls)
+        assert sum(sleep_calls) >= ocr.RETRY_BASE_DELAY
 
     def test_waiting_status_on_progress_called(self, monkeypatch):
         """リトライ中に on_progress が status='waiting' で呼ばれる（D-15）"""
@@ -1278,7 +1280,7 @@ class TestWorkerConcurrency:
         started_threads = []
 
         class StubThread:
-            def __init__(self, target=None, daemon=False):
+            def __init__(self, target=None, daemon=False, args=()):
                 self._target = target
 
             def start(self):
@@ -1332,13 +1334,15 @@ class TestWorkerConcurrency:
             _render_queue=q.Queue(maxsize=concurrency + 2),
             page_indices=[],
             _render_idx=0,
+            _run_gen=1,  # M-2 世代カウンタ
+            winfo_exists=lambda: True,  # M-2 ウィジェット存在チェック
             # after を即時実行スタブ（連鎖なし・完了分岐では after を呼ばない）
             after=lambda _ms, fn=None, *a: fn(*a) if fn else None,
         )
 
         from pagefolio.ocr_dialog import OCRDialog
 
-        OCRDialog._render_next_page(fake)
+        OCRDialog._render_next_page(fake, gen=1)
 
         # キューから None を取り出してカウントする
         null_count = 0
@@ -1510,6 +1514,7 @@ class TestOcrDialogOnRun:
             _render_idx=0,
             _workers_remaining=0,
             _worker_threads=[],
+            _run_gen=0,  # M-2 世代カウンタ
             text=types.SimpleNamespace(delete=lambda *a: None),
             scale_var=types.SimpleNamespace(get=lambda: "1.5"),
             timeout_var=types.SimpleNamespace(get=lambda: "120"),
@@ -1523,9 +1528,9 @@ class TestOcrDialogOnRun:
         # _is_cloud_provider: lmstudio は非クラウド → False
         fake._is_cloud_provider = lambda: False
         # _render_next_page を no-op に差し替え（スレッド起動しない）
-        fake._render_next_page = lambda: None
+        fake._render_next_page = lambda gen=None: None
         # _start_worker_thread を no-op に差し替え
-        fake._start_worker_thread = lambda: None
+        fake._start_worker_thread = lambda gen=None: None
         return fake
 
     def test_on_run_regenerates_lmstudio_provider_with_live_values(self, monkeypatch):
@@ -1719,3 +1724,151 @@ class TestConcurrencyReclamp:
         assert provider.max_concurrency == 1, (
             f"GeminiProvider.max_concurrency={provider.max_concurrency}、1 でない"
         )
+
+
+# ===== M-5 回帰テスト: clamp_retry_after / interruptible_sleep =====
+
+
+class TestClampRetryAfter:
+    """M-5: clamp_retry_after が retry_after を上限キャップ以内にクランプする。"""
+
+    def test_large_value_clamped_to_cap(self):
+        """86400 秒は cap (60.0) にクランプされる。"""
+        assert ocr.clamp_retry_after(86400.0) == 60.0
+
+    def test_small_value_unchanged(self):
+        """5.0 秒は cap 未満なのでそのまま返す。"""
+        assert ocr.clamp_retry_after(5.0) == 5.0
+
+    def test_zero_unchanged(self):
+        """0 はそのまま返す（スリープなし経路でも安全）。"""
+        assert ocr.clamp_retry_after(0) == 0
+
+    def test_custom_cap(self):
+        """cap を明示指定して動作確認。"""
+        assert ocr.clamp_retry_after(100.0, cap=30.0) == 30.0
+
+    def test_exactly_cap_unchanged(self):
+        """ちょうど cap と同値はそのまま返す（境界値）。"""
+        assert ocr.clamp_retry_after(60.0) == 60.0
+
+
+class TestInterruptibleSleep:
+    """M-5: interruptible_sleep が途中キャンセルで total 未満で打ち切る。"""
+
+    def test_cancels_before_total(self, monkeypatch):
+        """is_cancelled が 3 回目で True になると total 秒前に終了する。"""
+        call_count = {"n": 0}
+        sleep_calls = []
+
+        def fake_sleep(t):
+            sleep_calls.append(t)
+
+        monkeypatch.setattr(ocr.time, "sleep", fake_sleep)
+
+        def is_cancelled():
+            call_count["n"] += 1
+            return call_count["n"] >= 3  # 3 回目以降 True
+
+        ocr.interruptible_sleep(10.0, is_cancelled, step=0.5)
+        # 打ち切りにより sleep 合計が 10.0 未満になること
+        total_slept = sum(sleep_calls)
+        assert total_slept < 10.0, f"キャンセル前に {total_slept} 秒 sleep した"
+
+    def test_completes_when_not_cancelled(self, monkeypatch):
+        """is_cancelled が常に False なら step*N 回 sleep して終了する。"""
+        sleep_calls = []
+
+        def fake_sleep(t):
+            sleep_calls.append(t)
+
+        monkeypatch.setattr(ocr.time, "sleep", fake_sleep)
+
+        ocr.interruptible_sleep(1.0, lambda: False, step=0.5)
+        # 1.0 / 0.5 = 2 回 sleep されること
+        assert len(sleep_calls) == 2
+
+    def test_zero_total_no_sleep(self, monkeypatch):
+        """total=0 のとき sleep は呼ばれない。"""
+        called = {"n": 0}
+        monkeypatch.setattr(ocr.time, "sleep", lambda t: called.__setitem__("n", 1))
+        ocr.interruptible_sleep(0.0, lambda: False, step=0.5)
+        assert called["n"] == 0
+
+
+# ===== M-1 不変条件テスト: queue.Full 時に _render_idx を進めない =====
+
+
+class TestRenderNextPageQueueFullInvariant:
+    """M-1: queue.Full 時に _render_idx を進めず after(100) で再スケジュールされる。
+
+    _render_next_page を最小 fake で呼び出し、put_nowait が Full を raise したとき
+    _render_idx が変わらないことを検証する（pure-logic テスト・Tk 非依存）。
+    """
+
+    def _make_fake(self, render_idx, queue_behavior):
+        """_render_next_page 用 fake OCRDialog を生成する。
+
+        queue_behavior: 'full' | 'ok' でキューの動作を制御する。
+        """
+        import queue as q
+        import types
+
+        class FakeQueue:
+            def __init__(self, behavior):
+                self._behavior = behavior
+
+            def put_nowait(self, item):
+                if self._behavior == "full":
+                    raise q.Full()
+
+        after_calls = []
+
+        fake = types.SimpleNamespace(
+            concurrency=1,
+            _cancel_flag=threading.Event(),
+            _render_queue=FakeQueue(queue_behavior),
+            page_indices=[0],
+            _render_idx=render_idx,
+            results={},
+            _skipped_pages=set(),
+            errors={},
+            _ocr_scale=1.5,
+            _ocr_prompt="test",
+            _run_gen=1,  # M-2 世代カウンタ
+            winfo_exists=lambda: True,  # M-2 ウィジェット存在チェック
+            after=lambda ms, fn=None, *a: after_calls.append((ms, fn)),
+        )
+        # doc/page アクセスをスタブ化
+        import fitz
+
+        tmp_doc = fitz.open()
+        tmp_doc.new_page()
+        fake.doc = tmp_doc
+
+        return fake, after_calls
+
+    def test_queue_full_does_not_advance_render_idx(self, monkeypatch):
+        """queue.Full 時に _render_idx が変わらない（M-1 不変条件）。"""
+        import pagefolio.ocr_dialog as ocr_dialog_mod
+        from pagefolio.ocr_dialog import OCRDialog
+
+        # has_embedded_text が False を返すよう差し替え（Vision OCR 経路に入るため）
+
+        monkeypatch.setattr(ocr_dialog_mod, "has_embedded_text", lambda p: False)
+        monkeypatch.setattr(
+            ocr_dialog_mod, "page_to_png_b64", lambda p, scale=1.5: "fakeB64"
+        )
+
+        fake, after_calls = self._make_fake(render_idx=0, queue_behavior="full")
+        OCRDialog._render_next_page(fake, gen=1)
+
+        # _render_idx は 0 のまま（進んでいない）
+        assert fake._render_idx == 0, (
+            f"queue.Full 時に _render_idx が {fake._render_idx} に進んだ"
+        )
+        # after(100, ...) で再スケジュールされていること
+        reschedule_calls = [c for c in after_calls if c[0] == 100]
+        assert len(reschedule_calls) >= 1, "after(100, ...) が呼ばれていない"
+
+        fake.doc.close()

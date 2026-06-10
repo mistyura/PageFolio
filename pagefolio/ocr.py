@@ -51,6 +51,40 @@ EMBEDDED_TEXT_MIN_CHARS = 3
 MAX_RETRIES = 3  # リトライ最大回数（OCRRetryableError 時・無限ループ防止）
 RETRY_BASE_DELAY = 1.0  # 初回待機秒数（以降 base * 2**(attempt-1)）
 
+# M-5: Retry-After 上限クランプ（過大値で長時間 sleep する DoS を防止・T-rkp-01）
+RETRY_AFTER_CAP = 60.0  # 秒（サーバ指定の Retry-After をこの値以下にクランプ）
+
+
+def clamp_retry_after(retry_after, cap=RETRY_AFTER_CAP):
+    """retry_after（秒）を cap 以下にクランプして返す（M-5・T-rkp-01）。
+
+    引数:
+      retry_after: サーバ指定の Retry-After 値（秒・float または int）
+      cap:         上限秒数（既定: RETRY_AFTER_CAP=60.0）
+
+    戻り値: min(retry_after, cap)
+    """
+    return min(retry_after, cap)
+
+
+def interruptible_sleep(total, is_cancelled, step=0.5):
+    """total 秒を step 秒刻みで分割 sleep し、各ステップで is_cancelled を確認する。
+
+    is_cancelled() が True を返した時点で残り時間を打ち切り return する（M-5）。
+
+    引数:
+      total:        合計スリープ秒数（float）
+      is_cancelled: キャンセル判定関数（() -> bool）
+      step:         各スリープのステップ秒数（既定: 0.5）
+    """
+    remaining = total
+    while remaining > 0:
+        if is_cancelled():
+            return
+        chunk = min(step, remaining)
+        time.sleep(chunk)
+        remaining -= chunk
+
 
 def _resolve_api_key(provider_name, session_keys):
     """プロバイダ名とセッションキー辞書からAPIキーを解決する。
@@ -256,12 +290,16 @@ def run_with_bounded_buffer(
                                 except Exception as cb_e:
                                     logger.debug("on_done コールバック失敗: %s", cb_e)
                             break
-                        delay = (
+                        raw_delay = (
                             e.retry_after
                             if e.retry_after is not None
                             else RETRY_BASE_DELAY * (2 ** (attempt - 1))
                         )
-                        time.sleep(delay)
+                        delay = clamp_retry_after(raw_delay)
+                        interruptible_sleep(
+                            delay,
+                            lambda: bool(is_cancelled and is_cancelled()),
+                        )
                     except ConnectionError as e:
                         if fatal["msg"] is None:
                             fatal["msg"] = str(e)
@@ -398,12 +436,13 @@ def run_parallel(
                     except Exception as pe:
                         logger.debug("on_progress waiting コールバック失敗: %s", pe)
                 # Retry-After 優先・なければ指数バックオフ（1s→2s→4s→…）
-                delay = (
+                raw_delay = (
                     e.retry_after
                     if e.retry_after is not None
                     else RETRY_BASE_DELAY * (2 ** (attempt - 1))
                 )
-                time.sleep(delay)
+                delay = clamp_retry_after(raw_delay)
+                interruptible_sleep(delay, lambda: bool(_is_cancelled()))
             except ConnectionError as e:
                 return ("fatal_conn", page_idx, str(e))
             except TimeoutError as e:
@@ -522,9 +561,15 @@ def build_provider(settings, api_key=None, plugin_manager=None):
             timeout=int(settings.get("ocr_timeout", DEFAULT_OCR_TIMEOUT)),
         )
     # プラグイン登録プロバイダへのフォールバック（D-07）
+    # M-7: cls() は引数なしコンストラクタ契約。例外は RuntimeError に正規化。
     if plugin_manager is not None and name in plugin_manager._provider_registry:
         cls = plugin_manager._provider_registry[name]
-        return cls()
+        try:
+            return cls()
+        except Exception as e:
+            raise RuntimeError(
+                f"プラグインプロバイダ '{name}' の初期化に失敗しました: {e}"
+            ) from e
     raise ValueError(f"未対応のプロバイダ: {name}")
 
 
