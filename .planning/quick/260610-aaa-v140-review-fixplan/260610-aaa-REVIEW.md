@@ -97,14 +97,15 @@ usage: >
 
 ## 中優先度（M）— v1.4.2 安定化対象
 
-### M-1: producer のブロッキング put による UI フリーズ
+### M-1: producer のブロッキング put による UI フリーズ ✅
 
 - 該当: `pagefolio/ocr_dialog.py:950-964`（`put(timeout=0.1)` busy-loop）、`ocr_dialog.py:921`（`put(None)` 無タイムアウト）
 - 内容: キュー満杯時にメインスレッドが busy-loop / ブロックし、最悪 `ocr_timeout`（600 秒）UI 凍結。
 - 対応: `queue.Full` 時は `_render_idx` を進めず `self.after(100, self._render_next_page)` で
   再スケジュール。終了シグナルも `put_nowait` + 再スケジュール化。
+- 対応済み（v1.4.2 / commit: e98593f）
 
-### M-2: ダイアログ破棄後コールバック・世代ガード欠如
+### M-2: ダイアログ破棄後コールバック・世代ガード欠如 ✅
 
 - 該当: `pagefolio/ocr_dialog.py:1202-1215`（`_on_close`）、`:481-501`（`_clear_text`）、`:986-1113`（`_worker`）
 - 内容: 実行中に閉じても旧ワーカーが生存し、破棄済みウィジェットへの `after` で TclError。
@@ -112,8 +113,9 @@ usage: >
   viewer.py の `_preview_gen` 相当の世代ガードが OCRDialog にない。
 - 対応: `self._run_gen` を導入しワーカー起動時に捕捉。`after` 投函前と finish 系で
   世代一致 + `winfo_exists()` 確認。`_worker` 内 `after` を `try/except tk.TclError` で保護。
+- 対応済み（v1.4.2 / commit: e98593f）
 
-### M-3: `_supports_effort` の誤判定で 400
+### M-3: `_supports_effort` の誤判定で 400 ✅
 
 - 該当: `pagefolio/ocr_providers.py:255-268, 297-300`
 - 内容: `EFFORT_MODELS` 外でも `"sonnet" in model` で True になり、effort 非対応の
@@ -121,61 +123,70 @@ usage: >
   temperature を送って 400 の恐れ。
 - 対応: effort は `EFFORT_MODELS` 完全一致時のみ。temperature は haiku 系のみ。
   それ以外は両方省略（最も安全な前方互換）。単体テスト追加。
+- 対応済み（v1.4.2 / commit: 793080a）
 
-### M-4: gemini-2.5-pro で `thinkingBudget: 0` が拒否される可能性
+### M-4: gemini-2.5-pro で `thinkingBudget: 0` が拒否される可能性 ✅
 
 - 該当: `pagefolio/ocr_providers.py:481`（payload 固定）、`:445`（RECOMMENDED_MODELS に pro）
 - 内容: 2.5 Pro は thinking 無効化不可で 400 INVALID_ARGUMENT の見込み（実 API 未検証）。
 - 対応: pro 系モデルでは `thinkingConfig` を省略。実 API で検証。
+- 対応済み（v1.4.2 / commit: 793080a）
 
-### M-5: `Retry-After` を無検証で sleep・キャンセル不能
+### M-5: `Retry-After` を無検証で sleep・キャンセル不能 ✅
 
 - 該当: `pagefolio/ocr_providers.py:341, 539`、`pagefolio/ocr.py:259-264, 401-406`
 - 内容: サーバが `Retry-After: 86400` を返すとワーカーがその秒数スリープ。
   スリープ中は `is_cancelled` を見ないためキャンセルが効かない。
 - 対応: 上限クランプ（例 60 秒）+ 0.5 秒刻みスリープでループ内キャンセル確認。
+- 対応済み（v1.4.2 / commit: e98593f）
 
-### M-6: Gemini コスト概算が過小（課金警告として危険方向）
+### M-6: Gemini コスト概算が過小（課金警告として危険方向） ✅
 
 - 該当: `pagefolio/ocr_dialog.py:547-555`（`_estimate_cost`)
 - 内容: gemini-2.5-flash に旧 1.5-flash 世代単価（$0.075/$0.30 per MTok）を適用。
   実勢（入力 $0.30 / 出力 $2.50 程度）より大幅過小。
 - 対応: 単価を現行価格に更新 or 安全側（高め）に倒す。単価を定数辞書化しモデル名併記。
+- 対応済み（v1.4.2 / commit: 1530d22）
 
-### M-7: プラグインプロバイダ `cls()` 実体化が無防備
+### M-7: プラグインプロバイダ `cls()` 実体化が無防備 ✅
 
 - 該当: `pagefolio/ocr.py:517-519`、`ocr.py:575-588`（`_start_ocr` は ValueError のみ捕捉）
 - 内容: プラグインのコンストラクタ例外が Tk コールバック内未処理例外になる
   （「プラグイン失敗は他をクラッシュさせない」方針に違反）。`cls()` 引数なし契約も docstring 未記載。
 - 対応: build_provider のプラグイン分岐を try/except Exception で RuntimeError に正規化、
   または `_start_ocr` の捕捉を広げてエラー表示。docstring に契約追記。
+- 対応済み（v1.4.2 / commit: e98593f）
 
-### M-8: SettingsDialog 経由の LLMConfigDialog で plugin_manager が常に None
+### M-8: SettingsDialog 経由の LLMConfigDialog で plugin_manager が常に None ✅
 
 - 該当: `pagefolio/dialogs/settings.py:173`、`pagefolio/app.py:358`
 - 内容: `getattr(self, "_plugin_manager", None)` を設定するコードが存在せず常に None。
   設定画面経由ではプラグイン登録プロバイダが Combobox に出ない。
 - 対応: `SettingsDialog.__init__` に `plugin_manager` 引数を追加し app.py から渡す。
+- 対応済み（v1.4.2 / commit: 793080a）
 
-### M-9: ClaudeProvider レスポンスパースの KeyError 漏れ
+### M-9: ClaudeProvider レスポンスパースの KeyError 漏れ ✅
 
 - 該当: `pagefolio/ocr_providers.py:364-375`
 - 内容: `block["text"]` 直接アクセスだが except は `(json.JSONDecodeError, TypeError)` のみ。
   `text` キー欠落ブロックで素の KeyError が例外規約（RuntimeError 正規化）外に伝播。
 - 対応: except に KeyError 追加 or `block.get("text")` で None 除外。
+- 対応済み（v1.4.2 / commit: 793080a）
 
-### M-10: ハードコード日本語文言（i18n 違反）8 箇所
+### M-10: ハードコード日本語文言（i18n 違反）8 箇所 ✅
 
 - 該当: `pagefolio/ocr_dialog.py:573, 678`、`pagefolio/dialogs/llm_config.py:700, 711, 718, 734, 747, 754`
 - 内容: lang=en でも日本語表示。llm_config.py:705/741 の except 側文言は
   「通信失敗でも『未設定』と表示する」誤誘導も含む。
 - 対応: LANG 辞書へ ja/en キー追加。エラー文言はエラー内容ベースに分離。
+- 対応済み（v1.4.2 / commit: 1530d22）
 
-### M-11: `except (X, Exception)` という実質全捕捉の列挙
+### M-11: `except (X, Exception)` という実質全捕捉の列挙 ✅
 
 - 該当: `pagefolio/ocr_dialog.py:676`、`pagefolio/dialogs/llm_config.py:705, 741`
 - 内容: タプルに Exception が含まれ個別型列挙が無意味。規約趣旨に反する誤解を招く書き方。
 - 対応: 意図が全捕捉なら `except Exception as e:` に簡約。
+- 対応済み（v1.4.2 / commit: 1530d22）
 
 ---
 
