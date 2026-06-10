@@ -24,6 +24,35 @@ from pagefolio.ocr import (
 
 logger = logging.getLogger(__name__)
 
+# M-6: モデル別単価テーブル（$/MTok, 入力, 出力）
+# キーに完全一致しない場合は suffix ルールで判定するフォールバックへ進む
+OCR_PRICE_TABLE: dict[str, tuple[float, float]] = {
+    # Gemini
+    "gemini-2.5-flash": (0.30, 2.50),
+    "gemini-2.5-pro": (1.25, 10.0),
+    # Claude
+    "claude-3-haiku": (1.0, 5.0),
+    "claude-3-5-haiku": (1.0, 5.0),
+    "claude-haiku": (1.0, 5.0),
+    "claude-3-sonnet": (3.0, 15.0),
+    "claude-3-5-sonnet": (3.0, 15.0),
+    "claude-3-7-sonnet": (3.0, 15.0),
+    "claude-sonnet": (3.0, 15.0),
+    "claude-3-opus": (5.0, 25.0),
+    "claude-opus": (5.0, 25.0),
+}
+# フォールバック単価（不明モデル）
+_PRICE_FALLBACK = (5.0, 25.0)
+
+
+def _lookup_price(model: str) -> tuple[float, float]:
+    """OCR_PRICE_TABLE からモデル単価を取得する（部分一致フォールバック付き）。"""
+    # 完全一致優先
+    for key, prices in OCR_PRICE_TABLE.items():
+        if key in model:
+            return prices
+    return _PRICE_FALLBACK
+
 
 class OCRDialog(tk.Toplevel):
     """OCR 実行中の進行表示と結果のスクロール表示を行うダイアログ"""
@@ -544,40 +573,19 @@ class OCRDialog(tk.Toplevel):
     def _estimate_cost(self, model, page_count):
         """ページ数とモデルから概算コスト文字列を返す（D-10）。
 
-        Claude STACK.md 価格表: haiku $1/$5・sonnet $3/$15・opus $5/$25 MTok。
-        Gemini: gemini-2.5-flash $0.075/$0.30 MTok（参考値・従量課金警告が重要）。
+        OCR_PRICE_TABLE からモデル単価を取得する（M-6）。
         Vision 入力: 1枚あたり最大 1600 トークン相当を仮定。
         OCR 出力: 1ページあたり平均 500 トークンを想定した粗い見積もり。
         正確性より「課金が発生する」警告の存在が重要（D-10・Pitfall 8）。
         """
-        # Gemini モデル判定
-        if "gemini" in model:
-            if "pro" in model:
-                # gemini-2.5-pro 系: $1.25/$10 MTok（参考値）
-                input_price = 1.25
-                output_price = 10.0
-            else:
-                # gemini-2.5-flash 系: $0.075/$0.30 MTok（参考値）
-                input_price = 0.075
-                output_price = 0.30
-        # Claude モデル別 input 単価（$/MTok）— STACK.md 価格表
-        elif "haiku" in model:
-            input_price = 1.0  # haiku: $1/MTok
-            output_price = 5.0  # haiku: $5/MTok
-        elif "sonnet" in model:
-            input_price = 3.0  # sonnet: $3/MTok
-            output_price = 15.0  # sonnet: $15/MTok
-        else:
-            # opus（または不明モデル）
-            input_price = 5.0  # opus: $5/MTok
-            output_price = 25.0  # opus: $25/MTok
-
+        input_price, output_price = _lookup_price(model)
         # Vision 入力トークン見積もり: 約 1600 tokens/page（Anthropic/Google 参考値）
         # 出力トークン見積もり: 約 500 tokens/page（OCR 結果テキスト）
         input_tokens = page_count * 1600
         output_tokens = page_count * 500
         cost = (input_tokens * input_price + output_tokens * output_price) / 1_000_000
-        return f"約 ${cost:.3f} 程度"
+        lang = self.app.settings.get("lang", "ja")
+        return LANG[lang]["ocr_cost_estimate"].format(cost=cost)
 
     def _needs_session_key(self):
         """クラウドかつ API キー環境変数が未設定のときに True を返す。
@@ -692,9 +700,10 @@ class OCRDialog(tk.Toplevel):
             self.concurrency = max(
                 1, min(self.provider.max_concurrency, self.concurrency)
             )
-        except (ValueError, Exception) as e:
+        except Exception as e:
             logger.error("provider 再生成に失敗しました: %s", e)
-            self.progress_var.set(f"プロバイダ再生成エラー: {e}")
+            lang = self.app.settings.get("lang", "ja")
+            self.progress_var.set(LANG[lang]["ocr_provider_rebuild_error"].format(e=e))
 
     def _refresh_provider_dependent_ui(self):
         """プロバイダ依存 UI（表示ラベル・LM Studio 欄・セッションキー欄）を再評価する。

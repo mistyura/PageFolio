@@ -383,6 +383,20 @@ LANG = {
         "info_title": "情報",
         "warn_title": "警告",
         "confirm_title": "確認",
+        # M-10: 移植ハードコード文言
+        "ocr_cost_estimate": "約 ${cost:.3f} 程度",
+        "ocr_provider_rebuild_error": "プロバイダ再生成エラー: {e}",
+        "llm_fetching_claude_models": "⏳ Claude モデル一覧を取得中…",
+        "llm_fetching_gemini_models": "⏳ Gemini モデル一覧を取得中…",
+        "llm_env_key_unset_static": (
+            "環境変数 ANTHROPIC_API_KEY が未設定のため静的リストを表示中"
+        ),
+        "llm_env_key_unset_static_gemini": (
+            "環境変数 GEMINI_API_KEY/GOOGLE_API_KEY が未設定: 静的リスト表示中"
+        ),
+        "llm_model_fetch_failed": (
+            "{provider} モデル取得失敗（静的リストへフォールバック）: {e}"
+        ),
     },
     "en": {
         # Header / status
@@ -751,5 +765,19 @@ LANG = {
         "info_title": "Info",
         "warn_title": "Warning",
         "confirm_title": "Confirm",
+        # M-10: migrated hardcoded strings
+        "ocr_cost_estimate": "~${cost:.3f}",
+        "ocr_provider_rebuild_error": "Provider rebuild error: {e}",
+        "llm_fetching_claude_models": "⏳ Fetching Claude model list…",
+        "llm_fetching_gemini_models": "⏳ Fetching Gemini model list…",
+        "llm_env_key_unset_static": (
+            "ANTHROPIC_API_KEY not set — showing static model list"
+        ),
+        "llm_env_key_unset_static_gemini": (
+            "GEMINI_API_KEY/GOOGLE_API_KEY not set — showing static list"
+        ),
+        "llm_model_fetch_failed": (
+            "{provider} model fetch failed (falling back to static list): {e}"
+        ),
     },
 }

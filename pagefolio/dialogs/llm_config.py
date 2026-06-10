@@ -731,25 +731,27 @@ class LLMConfigDialog(tk.Toplevel):
         RECOMMENDED_MODELS を返すので静的リストが常に表示される（D-08）。
         api_key は os.environ 読み取りのみ。settings には書かない（D-01/D-05）。
         """
-        self._set_lm_status("⏳ Claude モデル一覧を取得中…", kind="info")
+        self._set_lm_status(self._L["llm_fetching_claude_models"], kind="info")
         # api_key は環境変数からのみ読み取る（settings への書き込み禁止・D-01/D-05）
         api_key = os.environ.get("ANTHROPIC_API_KEY", "")
         try:
             models = ClaudeProvider(api_key=api_key, model="").list_models()
-        except (ConnectionError, TimeoutError, RuntimeError, Exception) as e:
+        except Exception as e:
             # 例外時は静的推奨リストへフォールバック（D-08）
-            logger.warning("Claude モデル取得失敗（静的リストへフォールバック）: %s", e)
+            logger.warning(
+                self._L["llm_model_fetch_failed"].format(provider="Claude", e=e)
+            )
             models = ClaudeProvider.RECOMMENDED_MODELS
             self.claude_model_combo["values"] = models
             self._set_lm_status(
-                "環境変数 ANTHROPIC_API_KEY が未設定のため静的リストを表示中",
+                self._L["llm_env_key_unset_static"],
                 kind="info",
             )
             return
         self.claude_model_combo["values"] = models
         if not api_key:
             self._set_lm_status(
-                "環境変数 ANTHROPIC_API_KEY が未設定のため静的リストを表示中",
+                self._L["llm_env_key_unset_static"],
                 kind="info",
             )
         else:
@@ -765,27 +767,29 @@ class LLMConfigDialog(tk.Toplevel):
         RECOMMENDED_MODELS を返すので静的リストが常に表示される（D-08）。
         api_key は os.environ 読み取りのみ。settings には書かない（D-01/D-05）。
         """
-        self._set_lm_status("⏳ Gemini モデル一覧を取得中…", kind="info")
+        self._set_lm_status(self._L["llm_fetching_gemini_models"], kind="info")
         # api_key は環境変数からのみ読み取る（settings への書き込み禁止・D-01/D-05）
         api_key = os.environ.get("GEMINI_API_KEY") or os.environ.get(
             "GOOGLE_API_KEY", ""
         )
         try:
             models = GeminiProvider(api_key=api_key, model="").list_models()
-        except (ConnectionError, TimeoutError, RuntimeError, Exception) as e:
+        except Exception as e:
             # 例外時は静的推奨リストへフォールバック（D-08）
-            logger.warning("Gemini モデル取得失敗（静的リストへフォールバック）: %s", e)
+            logger.warning(
+                self._L["llm_model_fetch_failed"].format(provider="Gemini", e=e)
+            )
             models = GeminiProvider.RECOMMENDED_MODELS
             self.gemini_model_combo["values"] = models
             self._set_lm_status(
-                "環境変数 GEMINI_API_KEY/GOOGLE_API_KEY が未設定: 静的リスト表示中",
+                self._L["llm_env_key_unset_static_gemini"],
                 kind="info",
             )
             return
         self.gemini_model_combo["values"] = models
         if not api_key:
             self._set_lm_status(
-                "環境変数 GEMINI_API_KEY/GOOGLE_API_KEY が未設定: 静的リスト表示中",
+                self._L["llm_env_key_unset_static_gemini"],
                 kind="info",
             )
         else:
