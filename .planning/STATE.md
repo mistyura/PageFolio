@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v1.4.0
 milestone_name: OCR プロバイダ化 + クラウドAPI対応
 status: v1.4.0 完成・リリース済み（Phase 07 完了）
-last_updated: "2026-06-09T19:35:00.000Z"
-last_activity: 2026-06-09
+last_updated: "2026-06-10T00:00:00.000Z"
+last_activity: 2026-06-10
 progress:
   total_phases: 4
   completed_phases: 4
@@ -133,7 +133,9 @@ Decisions are logged in PROJECT.md Key Decisions table.
 
 ### Pending Todos
 
-None.
+- **v1.4.1 ホットフィックス（H-1〜H-4）**: v1.4.0 リリースレビューで検出した重大問題の修正。
+  **着手時は必ず [260610-aaa-REVIEW.md](./quick/260610-aaa-v140-review-fixplan/260610-aaa-REVIEW.md) を参照すること**
+  （指摘番号・該当箇所・対応方針・着手時の注意を記載済み）。
 
 ### Blockers/Concerns
 
@@ -147,6 +149,7 @@ None.
 |---|-------------|------|--------|-----------|
 | 260607-ccz | OCR 抽出画面に「⚙ LLM 設定…」ボタンを追加し既存 LLMConfigDialog でプロバイダ・モデルを変更可能化（ライブ更新・05-05 UAT 発見の不具合修正） | 2026-06-07 | f210f76 | [260607-ccz-ocr-llm-llmconfigdialog](./quick/260607-ccz-ocr-llm-llmconfigdialog/) |
 | 260609-aaa | v1.4.0 ビルド（PyInstaller）・git push・GitHub Release 作成（PageFolio-v1.4.0-win64.zip） | 2026-06-09 | 9888c4f | [260609-aaa-v140-build-release](./quick/260609-aaa-v140-build-release/) |
+| 260610-aaa | v1.4.0 リリース内容コードレビュー・修正計画文書化（H-1〜H-4 / M-1〜M-11 / L-1〜L-6） | 2026-06-10 | - | [260610-aaa-v140-review-fixplan](./quick/260610-aaa-v140-review-fixplan/) |
 
 ## Deferred Items
 
@@ -167,6 +170,7 @@ Resume file: None
 
 ## Operator Next Steps
 
-- Phase 06 全4プラン完了（06-01 GeminiProvider コア・06-02 逐次レンダリング・06-03 Gemini UI 統合・06-04 ギャップクロージャ）
-- SC-2（OCR-PERF-02）が BLOCKER から VERIFIED に復元（CR-01 LM Studio 並列度復元・CR-02 冪等ガード達成）
-- 次は Phase 07（Tesseract / PluginManager 登録フック — 任意・最終）または v1.4.0 リリース確認
+- v1.4.0 リリース完了・全差分コードレビュー実施済み（2026-06-10）
+- 次は **v1.4.1 ホットフィックス（H-1〜H-4）**。着手前に H-1（ocr_max_tokens=-1 → Claude/Gemini 400）と
+  H-2（Tesseract 選択時に LMStudioProvider へ置換）を実機再現確認すること
+- **変更着手時は [.planning/quick/260610-aaa-v140-review-fixplan/260610-aaa-REVIEW.md](./quick/260610-aaa-v140-review-fixplan/260610-aaa-REVIEW.md) を必ず参照**
