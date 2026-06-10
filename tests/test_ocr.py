@@ -1594,3 +1594,126 @@ class TestOcrProviderDefault:
         assert settings["ocr_provider"] == "off", (
             f"ocr_provider のデフォルト値が 'off' でない: {settings['ocr_provider']!r}"
         )
+
+
+# ===== H-1 回帰テスト: build_provider claude/gemini の max_tokens クランプ =====
+
+
+class TestBuildProviderMaxTokensClamp:
+    """H-1: build_provider が claude/gemini で ocr_max_tokens<=0 を 4096 にクランプする。
+
+    - ocr_max_tokens=-1（既定値）→ provider.max_tokens == 4096
+    - ocr_max_tokens=0 → provider.max_tokens == 4096（境界値）
+    - ocr_max_tokens=2048（正値）→ provider.max_tokens == 2048（クランプしない）
+    - lmstudio は -1 をそのまま渡す（LM Studio 専用の「モデル最大値委譲」）
+    """
+
+    def test_claude_default_minus1_clamped_to_4096(self, monkeypatch):
+        """claude: ocr_max_tokens=-1 のとき provider.max_tokens が 4096 になる（H-1）"""
+        monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+        settings = {"ocr_provider": "claude", "ocr_max_tokens": -1}
+        provider = ocr.build_provider(settings, api_key="k")
+        assert provider.max_tokens == 4096, (
+            f"claude: max_tokens={provider.max_tokens}、4096 にクランプされていない"
+        )
+
+    def test_claude_zero_clamped_to_4096(self, monkeypatch):
+        """claude: ocr_max_tokens=0 のとき provider.max_tokens が 4096 になる（境界値）"""
+        monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+        settings = {"ocr_provider": "claude", "ocr_max_tokens": 0}
+        provider = ocr.build_provider(settings, api_key="k")
+        assert provider.max_tokens == 4096, (
+            f"claude: max_tokens={provider.max_tokens}、0 が 4096 にクランプされていない"
+        )
+
+    def test_claude_positive_value_not_clamped(self, monkeypatch):
+        """claude: ocr_max_tokens=2048（正値）はそのまま渡される（クランプ不要）"""
+        monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+        settings = {"ocr_provider": "claude", "ocr_max_tokens": 2048}
+        provider = ocr.build_provider(settings, api_key="k")
+        assert provider.max_tokens == 2048, (
+            f"claude: max_tokens={provider.max_tokens}、正値 2048 が変更されている"
+        )
+
+    def test_gemini_default_minus1_clamped_to_4096(self, monkeypatch):
+        """gemini: ocr_max_tokens=-1 のとき provider.max_tokens が 4096 になる（H-1）"""
+        monkeypatch.delenv("GEMINI_API_KEY", raising=False)
+        monkeypatch.delenv("GOOGLE_API_KEY", raising=False)
+        settings = {"ocr_provider": "gemini", "ocr_max_tokens": -1}
+        provider = ocr.build_provider(settings, api_key="k")
+        assert provider.max_tokens == 4096, (
+            f"gemini: max_tokens={provider.max_tokens}、4096 にクランプされていない"
+        )
+
+    def test_gemini_zero_clamped_to_4096(self, monkeypatch):
+        """gemini: ocr_max_tokens=0 のとき provider.max_tokens が 4096 になる（境界値）"""
+        monkeypatch.delenv("GEMINI_API_KEY", raising=False)
+        monkeypatch.delenv("GOOGLE_API_KEY", raising=False)
+        settings = {"ocr_provider": "gemini", "ocr_max_tokens": 0}
+        provider = ocr.build_provider(settings, api_key="k")
+        assert provider.max_tokens == 4096, (
+            f"gemini: max_tokens={provider.max_tokens}、0 が 4096 にクランプされていない"
+        )
+
+    def test_gemini_positive_value_not_clamped(self, monkeypatch):
+        """gemini: ocr_max_tokens=2048（正値）はそのまま渡される（クランプ不要）"""
+        monkeypatch.delenv("GEMINI_API_KEY", raising=False)
+        monkeypatch.delenv("GOOGLE_API_KEY", raising=False)
+        settings = {"ocr_provider": "gemini", "ocr_max_tokens": 2048}
+        provider = ocr.build_provider(settings, api_key="k")
+        assert provider.max_tokens == 2048, (
+            f"gemini: max_tokens={provider.max_tokens}、正値 2048 が変更されている"
+        )
+
+    def test_lmstudio_minus1_not_clamped(self):
+        """lmstudio: ocr_max_tokens=-1 はクランプせずそのまま渡す（LM Studio 専用値）"""
+        settings = {"ocr_provider": "lmstudio", "ocr_max_tokens": -1}
+        provider = ocr.build_provider(settings)
+        assert provider.max_tokens == -1, (
+            f"lmstudio: max_tokens={provider.max_tokens}、-1 が変更されている"
+        )
+
+
+# ===== H-2 回帰テスト: _on_run / _apply_llm_settings のプロバイダ置換防止 =====
+
+
+class TestProviderReplacementPrevention:
+    """H-2: tesseract 選択時に LMStudioProvider へ置換されない。
+
+    _on_run と _apply_llm_settings の else 分岐が lmstudio/off 専用に限定され、
+    tesseract は build_provider 経由で TesseractProvider が返ること。
+    """
+
+    def test_build_provider_returns_tesseract_provider(self):
+        """build_provider: ocr_provider='tesseract' で TesseractProvider を返す"""
+        from pagefolio.ocr_providers import TesseractProvider
+
+        settings = {"ocr_provider": "tesseract"}
+        provider = ocr.build_provider(settings)
+        assert isinstance(provider, TesseractProvider), (
+            f"provider が TesseractProvider でない: {type(provider)}"
+        )
+
+
+# ===== H-3 回帰テスト: provider 再生成後の concurrency 再クランプ =====
+
+
+class TestConcurrencyReclamp:
+    """H-3: プロバイダ切替後 concurrency が provider.max_concurrency 以下に再クランプ。
+
+    build_provider で返るプロバイダの max_concurrency を確認する（実際の再クランプは
+    _on_run / _apply_llm_settings のロジックテストは UI 統合依存のため省略。
+    build_provider が正しい max_concurrency を持つプロバイダを返すことを検証）。
+    """
+
+    def test_gemini_provider_max_concurrency_is_1(self, monkeypatch):
+        """GeminiProvider.max_concurrency == 1 であることを確認（D-07）"""
+        monkeypatch.delenv("GEMINI_API_KEY", raising=False)
+        monkeypatch.delenv("GOOGLE_API_KEY", raising=False)
+        from pagefolio.ocr_providers import GeminiProvider
+
+        provider = ocr.build_provider({"ocr_provider": "gemini"}, api_key="k")
+        assert isinstance(provider, GeminiProvider)
+        assert provider.max_concurrency == 1, (
+            f"GeminiProvider.max_concurrency={provider.max_concurrency}、1 でない"
+        )
