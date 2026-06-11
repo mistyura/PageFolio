@@ -1487,6 +1487,7 @@ class TestClearResetsFatalState:
         fake.model_var = types.SimpleNamespace(get=lambda: "test-model")
         fake.max_tokens_var = types.SimpleNamespace(get=lambda: "-1")
         fake.temperature_var = types.SimpleNamespace(get=lambda: "0.1")
+        fake.force_ocr_var = types.SimpleNamespace(get=lambda: False)
         fake._L["ocr_progress_init"] = "init"
         fake._is_cloud_provider = lambda: False
         fake._render_next_page = lambda gen=None: None
@@ -1613,6 +1614,7 @@ class TestOcrDialogOnRun:
             model_var=types.SimpleNamespace(get=lambda: model),
             max_tokens_var=types.SimpleNamespace(get=lambda: str(max_tokens)),
             temperature_var=types.SimpleNamespace(get=lambda: str(temperature)),
+            force_ocr_var=types.SimpleNamespace(get=lambda: False),
             _L={"ocr_progress_init": "init"},
         )
         # _is_cloud_provider: lmstudio は非クラウド → False
@@ -1925,6 +1927,7 @@ class TestRenderNextPageQueueFullInvariant:
             errors={},
             _ocr_scale=1.5,
             _ocr_prompt="test",
+            _force_ocr=False,
             _run_gen=1,  # M-2 世代カウンタ
             winfo_exists=lambda: True,  # M-2 ウィジェット存在チェック
             after=lambda ms, fn=None, *a: after_calls.append((ms, fn)),
@@ -1962,3 +1965,94 @@ class TestRenderNextPageQueueFullInvariant:
         assert len(reschedule_calls) >= 1, "after(100, ...) が呼ばれていない"
 
         fake.doc.close()
+
+
+# ===== 埋め込みテキスト無視オプション（force OCR・v1.4.3）=====
+
+
+class TestForceOcrOption:
+    """「埋め込みテキストを無視して OCR を実行」オプションの動作検証。
+
+    ON: 埋め込みテキストありのページもスキップせず Vision OCR キューへ積む。
+    OFF（既定）: 従来どおり埋め込みテキストを results へ直接投入してスキップする。
+    """
+
+    def _make_fake(self, force_ocr):
+        """_render_next_page 用 fake OCRDialog（1 ページ・キュー記録付き）。"""
+        import types
+
+        put_items = []
+
+        fake = types.SimpleNamespace(
+            concurrency=1,
+            _cancel_flag=threading.Event(),
+            _render_queue=types.SimpleNamespace(
+                put_nowait=lambda item: put_items.append(item)
+            ),
+            page_indices=[0],
+            _render_idx=0,
+            results={},
+            _skipped_pages=set(),
+            errors={},
+            _ocr_scale=1.5,
+            _ocr_prompt="test",
+            _force_ocr=force_ocr,
+            _run_gen=1,
+            winfo_exists=lambda: True,
+            # 進捗更新・連鎖 after は実行しない（分岐結果のみ検証する）
+            after=lambda ms, fn=None, *a: None,
+        )
+        import fitz
+
+        tmp_doc = fitz.open()
+        tmp_doc.new_page()
+        fake.doc = tmp_doc
+        return fake, put_items
+
+    def test_force_ocr_on_queues_embedded_page(self, monkeypatch):
+        """ON: 埋め込みテキストありでもスキップせず Vision OCR キューへ積む。"""
+        import pagefolio.ocr_dialog as ocr_dialog_mod
+        from pagefolio.ocr_dialog import OCRDialog
+
+        monkeypatch.setattr(ocr_dialog_mod, "has_embedded_text", lambda p: True)
+        monkeypatch.setattr(
+            ocr_dialog_mod, "page_to_png_b64", lambda p, scale=1.5: "fakeB64"
+        )
+
+        fake, put_items = self._make_fake(force_ocr=True)
+        OCRDialog._render_next_page(fake, gen=1)
+
+        assert put_items == [(0, "fakeB64")], (
+            f"Vision OCR キューに積まれていない: {put_items}"
+        )
+        assert fake._skipped_pages == set(), "スキップ扱いになっている"
+        assert fake.results == {}, "results に直接投入されている"
+        fake.doc.close()
+
+    def test_force_ocr_off_skips_embedded_page(self, monkeypatch):
+        """OFF（既定）: 従来どおり埋め込みテキストを results へ投入してスキップする。"""
+        import pagefolio.ocr_dialog as ocr_dialog_mod
+        from pagefolio.ocr_dialog import OCRDialog
+
+        monkeypatch.setattr(ocr_dialog_mod, "has_embedded_text", lambda p: True)
+
+        fake, put_items = self._make_fake(force_ocr=False)
+        OCRDialog._render_next_page(fake, gen=1)
+
+        assert put_items == [], f"スキップ対象ページがキューへ積まれた: {put_items}"
+        assert fake._skipped_pages == {0}, "スキップ集合に登録されていない"
+        assert 0 in fake.results, "埋め込みテキストが results に投入されていない"
+        fake.doc.close()
+
+    def test_on_run_captures_force_ocr_var(self):
+        """_on_run がチェックボックス値を _force_ocr へ取り込む。"""
+        import types
+
+        from pagefolio.ocr_dialog import OCRDialog
+
+        fake = TestOcrDialogOnRun()._make_fake_for_on_run()
+        fake.force_ocr_var = types.SimpleNamespace(get=lambda: True)
+        fake._force_ocr = False
+        OCRDialog._on_run(fake)
+
+        assert fake._force_ocr is True, "_force_ocr にチェック値が反映されていない"

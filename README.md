@@ -132,6 +132,18 @@ tesseract --version
 tesseract --list-langs
 ```
 
+### 埋め込みテキストのスキップ / Embedded-Text Skip
+
+テキスト埋め込み済みのページは既定で OCR をスキップし、埋め込みテキストをそのまま抽出します。
+スキャナ付属 OCR などで埋め込みテキストの品質が悪い場合は、OCR ダイアログの
+「埋め込みテキストを無視して OCR を実行」をオンにすると全ページを Vision OCR で読み直せます
+（クラウドプロバイダではスキップされていたページも課金対象になる点に注意）。
+
+Pages that already contain embedded text are skipped by default and their text is extracted as-is.
+If the embedded text quality is poor (e.g., scanner-generated OCR layers), enable
+"Ignore embedded text and always run OCR" in the OCR dialog to re-read all pages with Vision OCR
+(note: with cloud providers, previously skipped pages will also incur charges).
+
 ### 推奨 Vision モデル（LM Studio）/ Recommended Vision Models
 
 小型モデル（5B 未満）は表組み・数値・固有名詞でハルシネーション（架空の文字列の生成）が起きやすいため、**7B 以上のモデルを推奨**します。

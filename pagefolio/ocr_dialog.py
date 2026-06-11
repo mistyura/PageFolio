@@ -96,6 +96,9 @@ class OCRDialog(tk.Toplevel):
         self.concurrency = max(1, min(MAX_OCR_CONCURRENCY, int(concurrency)))
         # セッションキー入力用（マスク表示・D-04）
         self.api_key_var = tk.StringVar()
+        # 埋め込みテキスト無視オプション（既定 OFF・クラウド課金に直結するため非永続）
+        self.force_ocr_var = tk.BooleanVar(value=False)
+        self._force_ocr = False
         # OCRProvider インスタンス（D-03: メインスレッド側でのみ使用）
         self.provider = provider
         self.results = {}  # page_idx -> text
@@ -382,6 +385,19 @@ class OCRDialog(tk.Toplevel):
             fg=C["TEXT_SUB"],
             font=self._font(-2),
         ).pack(anchor="w", padx=16)
+
+        # 埋め込みテキスト無視オプション（低品質な埋め込みを Vision OCR で再読込）
+        tk.Checkbutton(
+            self,
+            text=self._L["ocr_force_vision"],
+            variable=self.force_ocr_var,
+            bg=C["BG_DARK"],
+            fg=C["TEXT_MAIN"],
+            selectcolor=C["BG_CARD"],
+            activebackground=C["BG_DARK"],
+            activeforeground=C["TEXT_MAIN"],
+            font=self._font(-1),
+        ).pack(anchor="w", padx=16, pady=(2, 0))
 
         # セッションキー入力欄（クラウドかつ env 未設定時のみ表示・マスク・D-04）
         self._key_frame = tk.Frame(self, bg=C["BG_DARK"])
@@ -861,6 +877,10 @@ class OCRDialog(tk.Toplevel):
             self._ocr_timeout = 120
         self._effective_timeout = self._ocr_timeout
         self._ocr_prompt = OCR_PROMPTS.get(self.preset_var.get(), OCR_PROMPTS["text"])
+        try:
+            self._force_ocr = bool(self.force_ocr_var.get())
+        except (tk.TclError, ValueError):
+            self._force_ocr = False
 
         # CR-02（中立化版）: プロバイダ種別に応じて provider を再生成する
         # lmstudio / off → LMStudioProvider（live 値で再生成・後方互換維持）
@@ -1001,7 +1021,8 @@ class OCRDialog(tk.Toplevel):
         try:
             page = self.doc[page_idx]
             # D-05: has_embedded_text / get_text / page_to_png_b64 はメインスレッドのみ
-            if has_embedded_text(page):
+            # _force_ocr=True なら埋め込みテキストを無視して全ページ Vision OCR する
+            if not self._force_ocr and has_embedded_text(page):
                 # 埋め込みテキストあり: results に直接投入しスキップ（D-03 統合対象）
                 # T-04-09: 抽出テキストをログへ混入させない
                 extracted = page.get_text()
