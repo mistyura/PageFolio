@@ -2,7 +2,7 @@
 
 **PDF ページ整理ツール — Python + Tkinter 製 GUI アプリ**
 
-![Version](https://img.shields.io/badge/version-v1.4.2-blue)
+![Version](https://img.shields.io/badge/version-v1.4.3-blue)
 ![Stable](https://img.shields.io/badge/status-stable-green)
 
 A PDF page organizer built with Python + Tkinter.
@@ -134,16 +134,20 @@ tesseract --list-langs
 
 ### 推奨 Vision モデル（LM Studio）/ Recommended Vision Models
 
-小型モデル（4B 未満）は表組み・数値・固有名詞でハルシネーション（架空の文字列の生成）が起きやすいため、**7B 以上のモデルを推奨**します。
+小型モデル（5B 未満）は表組み・数値・固有名詞でハルシネーション（架空の文字列の生成）が起きやすいため、**7B 以上のモデルを推奨**します。
 
-Small models (<4B) tend to hallucinate especially on tables, numbers, and proper nouns. **7B+ models are recommended.**
+Small models (<5B) tend to hallucinate especially on tables, numbers, and proper nouns. **7B+ models are recommended.**
 
-| モデル / Model | サイズ | 備考 |
-|----------------|--------|------|
-| **Qwen2-VL-7B-Instruct** | 7B | 日本語 OCR・表組み認識ともに高精度。第一推奨 |
-| **MiniCPM-V 2.6** | 8B | OCR タスクに最適化。多言語対応 |
-| **InternVL2-8B** | 8B | 詳細な画像理解・OCR 両立 |
-| Gemma 3 / 4 (4B) | 4B | 軽量だが OCR 用途には精度不足 |
+動作確認済みモデル（量子化はいずれも 4bit / GGUF）:
+
+| モデル / Model | 配布元 | サイズ | 量子化 | ファイルサイズ | 備考 |
+|----------------|--------|--------|--------|----------------|------|
+| **MiniCPM-V 4.5** | openbmb | 8.2B | Q4_K_S | 5.49 GB | OCR タスクに最適化・多言語対応。第一推奨 |
+| **InternVL3.5 8B** | lmstudio-community | 8B | Q4_K_M | 5.31 GB | 詳細な画像理解・OCR 両立 |
+| **Qwen3 VL 8B** | qwen | 8B | Q4_K_M | 5.76 GB | 日本語 OCR・表組み認識に強い |
+| **Qwen3.5 9B** | qwen | 9B | Q4_K_M | 6.10 GB | Vision 対応の汎用モデル |
+| Gemma 4 E4B / E4B Instruct QAT | google / lmstudio-community | 7.5B | Q4_K_M / Q4_0 | 5.72〜5.89 GB | 軽量・Vision 対応 |
+| Gemma 4 E2B / E2B Instruct QAT | google / lmstudio-community | 4.6B | Q4_K_M / Q4_0 | 4.04〜4.11 GB | 最軽量だが OCR 用途には精度不足の可能性 |
 
 ### ハルシネーション対策 / Reducing Hallucinations
 

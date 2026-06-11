@@ -1410,6 +1410,96 @@ class TestFinishIdempotent:
         )
 
 
+# ===== H-6 回帰テスト: クリア後の再実行で前回の致命的エラーが残留しない =====
+
+
+class TestClearResetsFatalState:
+    """タイムアウト等の致命的エラー後に「クリア」→「読み取り実行」すると、
+    残留した _fatal_msg により全ワーカーが API 呼び出しをスキップして
+    旧エラーで即終了するバグの回帰テスト（H-6）。"""
+
+    def _make_fake_after_fatal(self):
+        """致命的エラー（タイムアウト）で終了した直後の fake OCRDialog を生成する。"""
+        import types
+
+        fake = types.SimpleNamespace(
+            _started=True,
+            _done=True,
+            _cancel_flag=threading.Event(),
+            _fatal_msg="Read timed out. (read timeout=300)",
+            _fatal_kind="timeout",
+            _done_count=3,
+            results={0: "old text"},
+            errors={1: "old error"},
+            _skipped_pages={2},
+            _render_queue=object(),
+            _ocr_page_indices=[0, 1, 2],
+            _run_gen=1,
+            text=types.SimpleNamespace(delete=lambda *a: None),
+            progress_bar={},
+            progress_var=types.SimpleNamespace(set=lambda _v: None),
+            copy_btn=types.SimpleNamespace(state=lambda _s: None),
+            save_btn=types.SimpleNamespace(state=lambda _s: None),
+            cancel_btn=types.SimpleNamespace(state=lambda _s: None),
+            run_btn=types.SimpleNamespace(state=lambda _s: None),
+            _llm_config_btn=types.SimpleNamespace(state=lambda _s: None),
+            _L={"ocr_run_first": "読み取り実行を押してください"},
+        )
+        return fake
+
+    def test_clear_text_resets_fatal_state(self):
+        """_clear_text が _fatal_msg / _fatal_kind / _done_count を初期化する。"""
+        from pagefolio.ocr_dialog import OCRDialog
+
+        fake = self._make_fake_after_fatal()
+        OCRDialog._clear_text(fake)
+
+        assert fake._fatal_msg is None, "_fatal_msg が残留している"
+        assert fake._fatal_kind is None, "_fatal_kind が残留している"
+        assert fake._done_count == 0, "_done_count が残留している"
+        assert fake._started is False
+        assert fake._done is False
+        assert fake.results == {} and fake.errors == {}
+
+    def test_on_run_resets_fatal_state(self):
+        """_on_run が実行開始時に _fatal_msg / _fatal_kind / _done_count を破棄する。"""
+        import types
+
+        from pagefolio.ocr_dialog import OCRDialog
+
+        app = types.SimpleNamespace(
+            settings={"ocr_provider": "lmstudio"},
+            _session_api_keys={},
+            plugin_manager=None,
+        )
+        fake = self._make_fake_after_fatal()
+        fake.app = app
+        fake.provider = None
+        fake._started = False  # クリア相当（再実行可能状態）
+        fake.concurrency = 1
+        fake._render_idx = 0
+        fake._workers_remaining = 0
+        fake._worker_threads = []
+        fake.scale_var = types.SimpleNamespace(get=lambda: "1.5")
+        fake.timeout_var = types.SimpleNamespace(get=lambda: "600")
+        fake.preset_var = types.SimpleNamespace(get=lambda: "text")
+        fake.url_var = types.SimpleNamespace(get=lambda: "http://localhost:1234")
+        fake.model_var = types.SimpleNamespace(get=lambda: "test-model")
+        fake.max_tokens_var = types.SimpleNamespace(get=lambda: "-1")
+        fake.temperature_var = types.SimpleNamespace(get=lambda: "0.1")
+        fake._L["ocr_progress_init"] = "init"
+        fake._is_cloud_provider = lambda: False
+        fake._render_next_page = lambda gen=None: None
+        fake._start_worker_thread = lambda gen=None: None
+
+        OCRDialog._on_run(fake)
+
+        assert fake._fatal_msg is None, "_on_run 後も _fatal_msg が残留している"
+        assert fake._fatal_kind is None, "_on_run 後も _fatal_kind が残留している"
+        assert fake._done_count == 0, "_on_run 後も _done_count が残留している"
+        assert fake._done is False, "_on_run 後も _done が True のまま"
+
+
 # ===== Gap 1: 04-04 CR-01 — 未対応プロバイダ名 ValueError 捕捉 =====
 
 

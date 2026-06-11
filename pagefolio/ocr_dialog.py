@@ -531,6 +531,12 @@ class OCRDialog(tk.Toplevel):
         self._started = False
         self._done = False
         self._cancel_flag.clear()
+        # H-6: 前回実行の致命的エラー・完了カウンタを破棄する。
+        # 残留すると再実行時に全ワーカーが has_fatal=True で API 呼び出しを
+        # スキップし、旧エラーで即終了してしまう（タイムアウト後の再実行バグ）。
+        self._fatal_msg = None
+        self._fatal_kind = None
+        self._done_count = 0
         # M-2: クリア時も旧世代を無効化する（再実行前に旧コールバックを排除）
         self._run_gen += 1
 
@@ -831,6 +837,12 @@ class OCRDialog(tk.Toplevel):
                 return
 
         self._started = True
+        self._done = False
+        # H-6: 実行開始時に前回実行の致命的エラー・完了カウンタを必ず破棄する
+        # （_clear_text を経由しない再実行経路でも残留状態を持ち込まないため）
+        self._fatal_msg = None
+        self._fatal_kind = None
+        self._done_count = 0
         self.run_btn.state(["disabled"])
         self._llm_config_btn.state(["disabled"])
         self.cancel_btn.state(["!disabled"])
