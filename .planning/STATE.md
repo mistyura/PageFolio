@@ -3,9 +3,9 @@ gsd_state_version: 1.0
 milestone: v1.4.0
 milestone_name: OCR プロバイダ化 + クラウドAPI対応
 status: Phase 06 完了（06-04 ギャップクロージャ達成）
-stopped_at: 260610-rkp 完了（v1.4.2 安定化 M-1〜M-11）
-last_updated: "2026-06-10T12:00:00.000Z"
-last_activity: "2026-06-10 - Completed quick task 260610-rkp: v1.4.2 M-1〜M-11 安定化修正"
+stopped_at: 260611-omi 完了（v1.4.3 確定・マージ・リビルド）
+last_updated: "2026-06-11T08:50:00.000Z"
+last_activity: "2026-06-11 - Completed quick task 260611-omi: claude/sleepy-fermi-y2z355 マージ → v1.4.3 確定 → リビルド"
 progress:
   total_phases: 4
   completed_phases: 3
@@ -155,6 +155,7 @@ Decisions are logged in PROJECT.md Key Decisions table.
 | 260610-qqq | v1.4.1 ホットフィックス（H-1〜H-5）: OCR max_tokens クランプ・Tesseract プロバイダ置換防止・並列度再クランプ・LLM 設定ダイアログ UI 修正 | 2026-06-10 | 1319c12 | [260610-qqq-review-md-260610-aaa-h-1-h-5-v1-4-1](./quick/260610-qqq-review-md-260610-aaa-h-1-h-5-v1-4-1/) |
 | 260610-rkp | v1.4.2 安定化（M-1〜M-11）: スレッド/ライフサイクル安定・プロバイダ API 堅牢化・UI/i18n/コスト一貫性 | 2026-06-10 | 7d68f97 | [260610-rkp-v1-4-2-review-md-m-1-m-11](./quick/260610-rkp-v1-4-2-review-md-m-1-m-11/) |
 | 260610-fast | CLAUDE.md を v1.4.2 時点の構成に最新化（dialogs/ パッケージ・OCR モジュール群反映、L-6 一部対応） | 2026-06-10 | bc4323d | — |
+| 260611-omi | ブランチ claude/sleepy-fermi-y2z355 を main へ fast-forward マージし v1.4.3 を確定（OCR クリア後再実行バグ H-6・Gemini gemma 400 エラー H-7・埋め込みテキスト無視オプション・429/5xx メッセージ分離・モデル名表示）。PyInstaller リビルド・ドキュメント更新 | 2026-06-11 | abfe97c | [260611-omi-claude-sleepy-fermi-y2z355-v1-4-3](./quick/260611-omi-claude-sleepy-fermi-y2z355-v1-4-3/) |
 
 ## Deferred Items
 
@@ -169,13 +170,16 @@ Decisions are logged in PROJECT.md Key Decisions table.
 
 ## Session Continuity
 
-Last session: 2026-06-10T11:25:28.795Z
-Stopped at: 260610-qqq 完了（v1.4.1 ホットフィックス H-1〜H-5）
+Last session: 2026-06-11T08:50:00.000Z
+Stopped at: 260611-omi 完了（v1.4.3 確定・マージ・リビルド）
 Resume file: None
 
 ## Operator Next Steps
 
-- v1.4.2 安定化（M-1〜M-11）完了（2026-06-10）
+- v1.4.3 確定（2026-06-11）: claude/sleepy-fermi-y2z355 を main へマージ・PyInstaller リビルド完了
+  - 内容: H-6（OCR クリア後再実行バグ）・H-7（Gemini gemma 400 エラー）・埋め込みテキスト無視オプション・
+    429/5xx メッセージ分離・OCR 画面のモデル名表示
+  - テスト 445 件グリーン・ruff クリーン
+- **未実施**: `git push origin main`・GitHub Release 作成（v1.4.0 では 260609-aaa で実施した手順を踏襲）
 - 次は **v1.5.0 以降（L-1〜L-6）バックログ**。詳細は REVIEW.md を参照
-- **注意**: M-3（EFFORT_MODELS 完全一致）・M-4（Gemini Pro thinkingConfig 省略）は
-  コードレビューベースの判断。実 API キー環境での動作確認を推奨
+- **注意**: H-7（Gemini gemma 400 エラー修正）は実 API キー環境での動作確認を推奨
