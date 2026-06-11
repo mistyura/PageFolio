@@ -470,13 +470,15 @@ class GeminiProvider(OCRProvider):
 
         M-4: pro 系モデルでは thinkingConfig を省略（2.5-pro は thinking 無効化不可）。
         flash 等（non-pro）は thinkingBudget=0 で thinking を無効化する（D-09）。
+        H-7: gemma 等の非 gemini 系モデルは thinkingConfig 非対応で
+        400 INVALID_ARGUMENT になるため、gemini の non-pro に限って送信する。
         """
         gen_config = {
             "temperature": self.temperature,
             "maxOutputTokens": self.max_tokens,
         }
-        # M-4: pro 系は thinkingConfig を送ると 400 INVALID_ARGUMENT の恐れ
-        if "pro" not in self.model:
+        # M-4/H-7: thinkingConfig は gemini の non-pro（flash 等）のみに送る
+        if self.model.startswith("gemini") and "pro" not in self.model:
             # flash 等: thinkingConfig は generationConfig 直下（Pitfall-C・D-09）
             gen_config["thinkingConfig"] = {"thinkingBudget": 0}
         return {

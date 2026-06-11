@@ -1230,6 +1230,22 @@ class TestGeminiProviderThinkingConfig:
             "gemini-2.5-flash の generationConfig に thinkingConfig が含まれない"
         )
 
+    def test_gemma_model_no_thinking_config(self):
+        """gemma 系モデルの payload に thinkingConfig が含まれない（H-7）。
+
+        Gemini API 経由の gemma モデルは thinkingConfig 非対応で
+        400 INVALID_ARGUMENT になるため省略する。
+        """
+        from pagefolio.ocr_providers import GeminiProvider
+
+        for model in ("gemma-3-27b-it", "gemma-4-26b-it"):
+            p = GeminiProvider(api_key="", model=model)
+            payload = p._build_payload("b64", "prompt")
+            cfg = payload["generationConfig"]
+            assert "thinkingConfig" not in cfg, (
+                f"{model} の generationConfig に thinkingConfig が含まれた"
+            )
+
 
 # ===== M-9 回帰テスト: ClaudeProvider text キー欠落で KeyError 非伝播 =====
 
