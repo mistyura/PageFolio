@@ -66,11 +66,27 @@ class OCRAPIKeyError(RuntimeError):
 
 
 class OCRRetryableError(RuntimeError):
-    """429/5xx リトライ可能エラー。retry_after（秒）を保持する。"""
+    """429/5xx リトライ可能エラー。retry_after（秒）と HTTP ステータスを保持する。
 
-    def __init__(self, message, retry_after=None):
+    code は 429（レート制限）と 5xx（サーバエラー）の表示分岐に使う。
+    不明な発生元（プラグイン等）では None のままでよい。
+    """
+
+    def __init__(self, message, retry_after=None, code=None):
         self.retry_after = retry_after
+        self.code = code
         super().__init__(message)
+
+
+def _retryable_http_message(code):
+    """HTTP ステータスコードからリトライ可能エラーの表示文言を組み立てる。
+
+    429 はレート制限、5xx はサーバ側エラーであり別物のため文言を分ける
+    （500 を「レート制限」と誤認させない）。
+    """
+    if code == 429:
+        return "HTTP 429: レート制限（リトライ可能）"
+    return f"HTTP {code}: サーバエラー（リトライ可能）"
 
 
 class LMStudioProvider(OCRProvider):
@@ -346,8 +362,9 @@ class ClaudeProvider(OCRProvider):
                     except (ValueError, TypeError):
                         retry_after = None
                 raise OCRRetryableError(
-                    f"HTTP {e.code}: レート制限またはサーバエラー（リトライ可能）",
+                    _retryable_http_message(e.code),
                     retry_after=retry_after,
+                    code=e.code,
                 ) from e
             # 4xx（429 以外）は retryable ではない
             try:
@@ -551,8 +568,9 @@ class GeminiProvider(OCRProvider):
                     except (ValueError, TypeError):
                         retry_after = None
                 raise OCRRetryableError(
-                    f"HTTP {e.code}: レート制限またはサーバエラー（リトライ可能）",
+                    _retryable_http_message(e.code),
                     retry_after=retry_after,
+                    code=e.code,
                 ) from e
             # 4xx（429 以外）は retryable ではない
             try:

@@ -304,6 +304,9 @@ LANG = {
             "実行しますか？"
         ),
         "ocr_waiting_retry": "p.{page}: レート制限のため待機中（リトライ {n}/{max}）",
+        "ocr_waiting_retry_server": (
+            "p.{page}: サーバエラーのためリトライ中（{n}/{max}）"
+        ),
         "ocr_provider_label": "OCR プロバイダ:",
         "ocr_provider_name_claude": "Claude (Anthropic)",
         "ocr_provider_name_lmstudio": "LM Studio",
@@ -689,6 +692,7 @@ LANG = {
             "Proceed?"
         ),
         "ocr_waiting_retry": "p.{page}: Rate-limited, waiting (retry {n}/{max})",
+        "ocr_waiting_retry_server": "p.{page}: Server error, retrying ({n}/{max})",
         "ocr_provider_label": "OCR Provider:",
         "ocr_provider_name_claude": "Claude (Anthropic)",
         "ocr_provider_name_lmstudio": "LM Studio",

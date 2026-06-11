@@ -626,6 +626,17 @@ class OCRDialog(tk.Toplevel):
         except tk.TclError:
             pass
 
+    @staticmethod
+    def _retry_wait_key(e):
+        """リトライ待機中の進捗表示に使う LANG キーを例外から決定する。
+
+        HTTP 429 のみ「レート制限」と表示し、5xx や code 不明（プラグイン等）は
+        「サーバエラー」と表示する（500 をレート制限と誤認させない）。
+        """
+        if getattr(e, "code", None) == 429:
+            return "ocr_waiting_retry"
+        return "ocr_waiting_retry_server"
+
     def _is_cloud_provider(self):
         """現在の ocr_provider 設定がクラウド系か判定する。
 
@@ -1178,12 +1189,15 @@ class OCRDialog(tk.Toplevel):
                         # M-2: 世代ガード後にのみ after を投函する
                         if gen is None or gen == self._run_gen:
                             n = attempt
+                            wait_key = self._retry_wait_key(e)
                             try:
                                 self.after(
                                     0,
-                                    lambda p=page_idx, _n=n: self.progress_var.set(
-                                        self._L["ocr_waiting_retry"].format(
-                                            page=p + 1, n=_n, max=MAX_RETRIES
+                                    lambda p=page_idx, _n=n, _k=wait_key: (
+                                        self.progress_var.set(
+                                            self._L[_k].format(
+                                                page=p + 1, n=_n, max=MAX_RETRIES
+                                            )
                                         )
                                     ),
                                 )

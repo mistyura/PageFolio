@@ -2126,3 +2126,32 @@ class TestProviderModelName:
         fake._L = {"ocr_model_label": "モデル:"}
         fake._provider_model_name = lambda: ""
         assert OCRDialog._model_display_text(fake) == ""
+
+
+# ===== 429/5xx リトライ表示分離（v1.4.3）=====
+
+
+class TestRetryWaitKey:
+    """_retry_wait_key が 429 とそれ以外で LANG キーを切り替えることを検証する。"""
+
+    def test_429_returns_rate_limit_key(self):
+        from pagefolio.ocr_dialog import OCRDialog
+        from pagefolio.ocr_providers import OCRRetryableError
+
+        e = OCRRetryableError("HTTP 429: レート制限（リトライ可能）", code=429)
+        assert OCRDialog._retry_wait_key(e) == "ocr_waiting_retry"
+
+    def test_500_returns_server_key(self):
+        from pagefolio.ocr_dialog import OCRDialog
+        from pagefolio.ocr_providers import OCRRetryableError
+
+        e = OCRRetryableError("HTTP 500: サーバエラー（リトライ可能）", code=500)
+        assert OCRDialog._retry_wait_key(e) == "ocr_waiting_retry_server"
+
+    def test_unknown_code_returns_server_key(self):
+        """code 不明（プラグイン由来等）はサーバエラー側のキーへ倒す。"""
+        from pagefolio.ocr_dialog import OCRDialog
+        from pagefolio.ocr_providers import OCRRetryableError
+
+        e = OCRRetryableError("plugin retryable")
+        assert OCRDialog._retry_wait_key(e) == "ocr_waiting_retry_server"

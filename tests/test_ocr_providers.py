@@ -1324,3 +1324,49 @@ class TestBuildProviderPluginRuntimeError:
 
         with pytest.raises(RuntimeError, match="broken"):
             build_provider(settings, plugin_manager=fake_pm)
+
+
+# ===== 429/5xx メッセージ分離（v1.4.3）=====
+
+
+class TestRetryableErrorMessageSplit:
+    """429 はレート制限、5xx はサーバエラーと文言が分かれることを検証する。
+
+    旧実装は「レート制限またはサーバエラー」と一括表示しており、
+    HTTP 500 をレート制限と誤認させていた。
+    """
+
+    def _patched_provider(self, monkeypatch, provider_kind, code):
+        from pagefolio import ocr_providers
+
+        def fake_urlopen(req, timeout=None):
+            raise _FakeHTTPError(code)
+
+        monkeypatch.setattr(ocr_providers.urllib.request, "urlopen", fake_urlopen)
+        if provider_kind == "claude":
+            return ocr_providers.ClaudeProvider(api_key="k", model="claude-sonnet-4-6")
+        return ocr_providers.GeminiProvider(api_key="k", model="gemini-2.5-flash")
+
+    @pytest.mark.parametrize("kind", ["claude", "gemini"])
+    def test_429_message_is_rate_limit(self, monkeypatch, kind):
+        """HTTP 429 では「レート制限」と表示し code=429 を保持する。"""
+        from pagefolio.ocr_providers import OCRRetryableError
+
+        p = self._patched_provider(monkeypatch, kind, 429)
+        with pytest.raises(OCRRetryableError) as ei:
+            p.ocr_image("Zg==", "p")
+        assert ei.value.code == 429
+        assert "レート制限" in str(ei.value)
+        assert "サーバエラー" not in str(ei.value)
+
+    @pytest.mark.parametrize("kind", ["claude", "gemini"])
+    def test_500_message_is_server_error(self, monkeypatch, kind):
+        """HTTP 500 では「サーバエラー」と表示し code=500 を保持する。"""
+        from pagefolio.ocr_providers import OCRRetryableError
+
+        p = self._patched_provider(monkeypatch, kind, 500)
+        with pytest.raises(OCRRetryableError) as ei:
+            p.ocr_image("Zg==", "p")
+        assert ei.value.code == 500
+        assert "サーバエラー" in str(ei.value)
+        assert "レート制限" not in str(ei.value)
