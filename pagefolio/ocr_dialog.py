@@ -179,23 +179,26 @@ class OCRDialog(tk.Toplevel):
             font=self._font(-1, "bold"),
         )
         self._provider_value_label.pack(side="left", padx=(6, 0))
-        # 現在選択されているモデル名（クラウド時は LM Studio 欄が消えるため明示する）
-        self._model_value_label = tk.Label(
-            prov_row,
-            text=self._model_display_text(),
-            bg=C["BG_DARK"],
-            fg=C["TEXT_SUB"],
-            font=self._font(-1),
-        )
-        self._model_value_label.pack(side="left", padx=(10, 0))
-        # LM Studio のモデル変更（Combobox 編集）を表示へ即時反映する
-        self.model_var.trace_add("write", lambda *_a: self._update_model_label())
         self._llm_config_btn = ttk.Button(
             prov_row,
             text=self._L["ocr_open_llm_config"],
             command=self._open_llm_config,
         )
         self._llm_config_btn.pack(side="left", padx=(12, 0))
+        # 現在選択されているモデル名（クラウド時は LM Studio 欄が消えるため明示する）
+        # 行の右端に配置: ボタンより後に pack するため、モデル名が長くても
+        # ボタンを押し出さず右端で切り詰められる
+        self._model_value_label = tk.Label(
+            prov_row,
+            text=self._model_display_text(),
+            bg=C["BG_DARK"],
+            fg=C["TEXT_SUB"],
+            font=self._font(-1),
+            anchor="e",
+        )
+        self._model_value_label.pack(side="right", padx=(10, 0))
+        # LM Studio のモデル変更（Combobox 編集）を表示へ即時反映する
+        self.model_var.trace_add("write", lambda *_a: self._update_model_label())
 
         # プロンプトプリセット
         pf = tk.Frame(self, bg=C["BG_DARK"])
