@@ -179,6 +179,17 @@ class OCRDialog(tk.Toplevel):
             font=self._font(-1, "bold"),
         )
         self._provider_value_label.pack(side="left", padx=(6, 0))
+        # 現在選択されているモデル名（クラウド時は LM Studio 欄が消えるため明示する）
+        self._model_value_label = tk.Label(
+            prov_row,
+            text=self._model_display_text(),
+            bg=C["BG_DARK"],
+            fg=C["TEXT_SUB"],
+            font=self._font(-1),
+        )
+        self._model_value_label.pack(side="left", padx=(10, 0))
+        # LM Studio のモデル変更（Combobox 編集）を表示へ即時反映する
+        self.model_var.trace_add("write", lambda *_a: self._update_model_label())
         self._llm_config_btn = ttk.Button(
             prov_row,
             text=self._L["ocr_open_llm_config"],
@@ -577,6 +588,41 @@ class OCRDialog(tk.Toplevel):
             return self._L["ocr_provider_name_lmstudio"]
         return name
 
+    def _provider_model_name(self):
+        """現在のプロバイダで使用されるモデル名を返す（表示用）。
+
+        claude / gemini は settings の各モデルキー、lmstudio は Combobox のライブ値、
+        tesseract はモデル概念がないため空文字を返す。
+        プラグインプロバイダは provider.model 属性をフォールバックとして参照する。
+        """
+        name = self.app.settings.get("ocr_provider", "")
+        if name == "claude":
+            return self.app.settings.get("claude_model", "claude-sonnet-4-6")
+        if name == "gemini":
+            return self.app.settings.get("gemini_model", "gemini-2.5-flash")
+        if name == "tesseract":
+            return ""
+        if name in ("lmstudio", "", "off"):
+            try:
+                return self.model_var.get().strip()
+            except tk.TclError:
+                return ""
+        return getattr(self.provider, "model", "") or ""
+
+    def _model_display_text(self):
+        """プロバイダ表示行に併記するモデル名テキストを返す（モデルなしは空文字）。"""
+        model = self._provider_model_name()
+        if not model:
+            return ""
+        return f"{self._L['ocr_model_label']} {model}"
+
+    def _update_model_label(self):
+        """モデル表示ラベルを現在の選択内容で更新する。"""
+        try:
+            self._model_value_label.configure(text=self._model_display_text())
+        except tk.TclError:
+            pass
+
     def _is_cloud_provider(self):
         """現在の ocr_provider 設定がクラウド系か判定する。
 
@@ -732,8 +778,9 @@ class OCRDialog(tk.Toplevel):
 
         _apply_llm_settings から呼ばれる。テストでは no-op に差し替え可能。
         """
-        # (c) プロバイダ表示ラベル更新
+        # (c) プロバイダ表示ラベル更新（モデル名併記も再評価）
         self._provider_value_label.configure(text=self._provider_display_name())
+        self._update_model_label()
         # (d) LM Studio 欄の可視性再評価
         # before= で元の位置（詳細設定行の前）へ戻す。素の pack() は
         # スレーブリスト末尾へ追加されダイアログ最下部に表示されてしまうため。

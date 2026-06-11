@@ -2056,3 +2056,73 @@ class TestForceOcrOption:
         OCRDialog._on_run(fake)
 
         assert fake._force_ocr is True, "_force_ocr にチェック値が反映されていない"
+
+
+# ===== 現在選択モデル表示（v1.4.3）=====
+
+
+class TestProviderModelName:
+    """_provider_model_name がプロバイダ別に正しいモデル名を返すことを検証する。"""
+
+    def _make_fake(self, provider_name, settings_extra=None, model_var_value=""):
+        import types
+
+        settings = {"ocr_provider": provider_name}
+        if settings_extra:
+            settings.update(settings_extra)
+        return types.SimpleNamespace(
+            app=types.SimpleNamespace(settings=settings),
+            provider=None,
+            model_var=types.SimpleNamespace(get=lambda: model_var_value),
+        )
+
+    def test_claude_model_from_settings(self):
+        from pagefolio.ocr_dialog import OCRDialog
+
+        fake = self._make_fake("claude", {"claude_model": "claude-haiku-4-5"})
+        assert OCRDialog._provider_model_name(fake) == "claude-haiku-4-5"
+
+    def test_gemini_model_from_settings(self):
+        from pagefolio.ocr_dialog import OCRDialog
+
+        fake = self._make_fake("gemini", {"gemini_model": "gemini-2.5-flash"})
+        assert OCRDialog._provider_model_name(fake) == "gemini-2.5-flash"
+
+    def test_lmstudio_model_from_combobox_live_value(self):
+        from pagefolio.ocr_dialog import OCRDialog
+
+        fake = self._make_fake("lmstudio", model_var_value=" minicpm-v-4_5 ")
+        assert OCRDialog._provider_model_name(fake) == "minicpm-v-4_5"
+
+    def test_tesseract_has_no_model(self):
+        from pagefolio.ocr_dialog import OCRDialog
+
+        fake = self._make_fake("tesseract")
+        assert OCRDialog._provider_model_name(fake) == ""
+
+    def test_plugin_provider_falls_back_to_provider_model(self):
+        import types
+
+        from pagefolio.ocr_dialog import OCRDialog
+
+        fake = self._make_fake("myplugin")
+        fake.provider = types.SimpleNamespace(model="plugin-model-1")
+        assert OCRDialog._provider_model_name(fake) == "plugin-model-1"
+
+    def test_model_display_text_with_model(self):
+        """モデルありの場合「モデル: <名前>」形式で返す。"""
+        from pagefolio.ocr_dialog import OCRDialog
+
+        fake = self._make_fake("gemini", {"gemini_model": "gemini-2.5-flash"})
+        fake._L = {"ocr_model_label": "モデル:"}
+        fake._provider_model_name = lambda: "gemini-2.5-flash"
+        assert OCRDialog._model_display_text(fake) == "モデル: gemini-2.5-flash"
+
+    def test_model_display_text_empty_when_no_model(self):
+        """モデルなし（tesseract 等）の場合は空文字を返す。"""
+        from pagefolio.ocr_dialog import OCRDialog
+
+        fake = self._make_fake("tesseract")
+        fake._L = {"ocr_model_label": "モデル:"}
+        fake._provider_model_name = lambda: ""
+        assert OCRDialog._model_display_text(fake) == ""

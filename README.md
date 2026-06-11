@@ -105,6 +105,12 @@ PageFolio supports multiple OCR providers since v1.4.0. Select a provider in the
 | **Gemini** | `GEMINI_API_KEY` or `GOOGLE_API_KEY` | High accuracy / Paid (free tier) |
 | **Tesseract** | Install Tesseract OCR separately | Local / Free / Offline / Lower accuracy than LLMs |
 
+> **Gemini プロバイダのモデル選択**: `gemini-2.5-flash` / `gemini-2.5-pro` を推奨します。
+> モデル一覧には gemma 系モデルも表示されますが、画像入力で HTTP 500 エラーが発生することがあり OCR には不向きです。
+>
+> **Model selection for the Gemini provider**: `gemini-2.5-flash` / `gemini-2.5-pro` are recommended.
+> Gemma models also appear in the model list, but they may fail with HTTP 500 on image input and are not suitable for OCR.
+
 ### 環境変数の設定 / Setting Environment Variables
 
 クラウドプロバイダを使用する場合は以下の環境変数を設定してください（設定ダイアログの入力欄でも一時設定可能）。
