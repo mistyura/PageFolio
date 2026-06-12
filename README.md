@@ -106,11 +106,15 @@ PageFolio supports multiple OCR providers since v1.4.0. Select a provider in the
 | **Gemini** | `GEMINI_API_KEY` or `GOOGLE_API_KEY` | High accuracy / Paid (free tier) |
 | **Tesseract** | Install Tesseract OCR separately | Local / Free / Offline / Lower accuracy than LLMs |
 
-> **Gemini プロバイダのモデル選択**: `gemini-2.5-flash` / `gemini-2.5-pro` を推奨します。
-> モデル一覧には gemma 系モデルも表示されますが、画像入力で HTTP 500 エラーが発生することがあり OCR には不向きです。
+> **Gemini プロバイダのモデル選択**: 安定性重視なら `gemini-2.5-flash` / `gemini-2.5-pro` を推奨します。
+> Gemma 4 系（`gemma-4-26b-a4b-it` / `gemma-4-31b-it`）も動作実績があり、無料枠を活かしやすい選択肢です。
+> ただしサーバ側要因で HTTP 500 が頻発する時期があるため、解像度は 1.5 程度に抑え、
+> 中断した場合は「⏯ 続きから再実行」で残りページを再開してください。
 >
-> **Model selection for the Gemini provider**: `gemini-2.5-flash` / `gemini-2.5-pro` are recommended.
-> Gemma models also appear in the model list, but they may fail with HTTP 500 on image input and are not suitable for OCR.
+> **Model selection for the Gemini provider**: For stability, `gemini-2.5-flash` / `gemini-2.5-pro` are recommended.
+> Gemma 4 models (`gemma-4-26b-a4b-it` / `gemma-4-31b-it`) are also verified to work and make good use of the free tier.
+> However, server-side HTTP 500 errors can spike at times — keep the resolution around 1.5 and
+> use "⏯ Resume" to continue with the remaining pages if a run is interrupted.
 
 ### 環境変数の設定 / Setting Environment Variables
 
