@@ -105,6 +105,10 @@ class OCRDialog(tk.Toplevel):
         self.errors = {}  # page_idx -> message
         # 埋め込みテキスト検出によりスキップされたページ集合
         self._skipped_pages = set()
+        # 今回の実行で処理するページリスト（再開時は未処理ページのみ）
+        self._run_pages = list(self.page_indices)
+        # 今回の実行開始時点のスキップ済み数（再開時の進捗計算基準）
+        self._skip_base = 0
         self._cancel_flag = threading.Event()
         self._worker_threads = []  # CR-01: 複数ワーカースレッドの保持
         self._done = False
@@ -142,8 +146,8 @@ class OCRDialog(tk.Toplevel):
     def _center(self, parent):
         self.update_idletasks()
         fs = self._font_size()
-        # クリア/コピー/保存/読み取り実行/キャンセル/閉じる の6ボタンが収まる横幅
-        w = max(1060, int(fs * 84))
+        # クリア/コピー/保存/再開/読み取り実行/キャンセル/閉じる の7ボタンが収まる横幅
+        w = max(1150, int(fs * 90))
         # 設定行(プロンプト/サーバ/モデル/詳細) + 進行表示 + 結果領域 + ボタン行
         h = max(680, int(fs * 56))
         px = parent.winfo_rootx() + parent.winfo_width() // 2
@@ -162,6 +166,7 @@ class OCRDialog(tk.Toplevel):
         ).pack(pady=(12, 6))
 
         # 実行プロバイダ表示（どのプロバイダで OCR するかを明示）
+        # 左寄せ: プロバイダ名 + モデル名 / 右寄せ: LLM 設定ボタン
         prov_row = tk.Frame(self, bg=C["BG_DARK"])
         prov_row.pack(fill="x", padx=16, pady=(0, 2))
         tk.Label(
@@ -179,24 +184,23 @@ class OCRDialog(tk.Toplevel):
             font=self._font(-1, "bold"),
         )
         self._provider_value_label.pack(side="left", padx=(6, 0))
-        self._llm_config_btn = ttk.Button(
-            prov_row,
-            text=self._L["ocr_open_llm_config"],
-            command=self._open_llm_config,
-        )
-        self._llm_config_btn.pack(side="left", padx=(12, 0))
         # 現在選択されているモデル名（クラウド時は LM Studio 欄が消えるため明示する）
-        # 行の右端に配置: ボタンより後に pack するため、モデル名が長くても
-        # ボタンを押し出さず右端で切り詰められる
         self._model_value_label = tk.Label(
             prov_row,
             text=self._model_display_text(),
             bg=C["BG_DARK"],
             fg=C["TEXT_SUB"],
             font=self._font(-1),
-            anchor="e",
+            anchor="w",
         )
-        self._model_value_label.pack(side="right", padx=(10, 0))
+        self._model_value_label.pack(side="left", padx=(12, 0))
+        # LLM 設定ボタンは行の右端に配置
+        self._llm_config_btn = ttk.Button(
+            prov_row,
+            text=self._L["ocr_open_llm_config"],
+            command=self._open_llm_config,
+        )
+        self._llm_config_btn.pack(side="right", padx=(10, 0))
         # LM Studio のモデル変更（Combobox 編集）を表示へ即時反映する
         self.model_var.trace_add("write", lambda *_a: self._update_model_label())
 
@@ -517,6 +521,15 @@ class OCRDialog(tk.Toplevel):
         )
         self.run_btn.pack(side="right", padx=4)
 
+        # 続きから再実行（エラー/未処理ページのみ・成功済み結果は保持）
+        self.resume_btn = ttk.Button(
+            btn_row,
+            text=self._L["ocr_resume"],
+            command=lambda: self._on_run(resume=True),
+        )
+        self.resume_btn.pack(side="right", padx=4)
+        self.resume_btn.state(["disabled"])
+
     # ── サーバ・モデル設定 ──
     def _fetch_models(self):
         """provider から利用可能モデル一覧を取得して Combobox に反映"""
@@ -557,6 +570,7 @@ class OCRDialog(tk.Toplevel):
         self.save_btn.state(["disabled"])
         self.cancel_btn.state(["disabled"])
         self.run_btn.state(["!disabled"])
+        self.resume_btn.state(["disabled"])
         self._llm_config_btn.state(["!disabled"])
         self._started = False
         self._done = False
@@ -569,6 +583,30 @@ class OCRDialog(tk.Toplevel):
         self._done_count = 0
         # M-2: クリア時も旧世代を無効化する（再実行前に旧コールバックを排除）
         self._run_gen += 1
+
+    # ── 再開（リスタート）判定 ──
+
+    def _pending_pages(self):
+        """結果が得られていないページ（エラー・未処理）の昇順リストを返す"""
+        return [p for p in self.page_indices if p not in self.results]
+
+    def _can_resume(self):
+        """「続きから再実行」が可能か（部分的な結果があり未処理ページが残っている）"""
+        return bool(self.results) and bool(self._pending_pages())
+
+    def _after_run_ui_reset(self):
+        """実行終了後（完了/キャンセル/エラー共通）のボタン状態リセット。
+
+        読み取り実行はクリアを経由せず再実行（リラン）できるよう再有効化し、
+        部分的な結果が残っている場合のみ「続きから再実行」を有効化する。
+        """
+        self._started = False
+        self.run_btn.state(["!disabled"])
+        self._llm_config_btn.state(["!disabled"])
+        if self._can_resume():
+            self.resume_btn.state(["!disabled"])
+        else:
+            self.resume_btn.state(["disabled"])
 
     # ── クラウドプロバイダ判定・コスト確認・セッションキー ──
 
@@ -836,7 +874,7 @@ class OCRDialog(tk.Toplevel):
         except tk.TclError:
             pass
 
-    def _confirm_cost(self):
+    def _confirm_cost(self, page_count=None):
         """クラウド送信前のコスト確認ダイアログを表示し、ユーザーの選択を bool で返す。
 
         毎回表示する（「今後表示しない」は設けない・D-11）。
@@ -845,6 +883,10 @@ class OCRDialog(tk.Toplevel):
           2. 対象ページ数と概算コスト
           3. 「ページ画像が外部 API に送信されます」「従量課金が発生します」
         OK で True・キャンセルで False を返す（成功基準5）。
+
+        引数:
+          page_count: 今回送信するページ数（None なら全対象ページ数。
+                      再開時は未処理ページ数を渡して過大見積もりを避ける）
         """
         name = self.app.settings.get("ocr_provider", "")
         if name == "gemini":
@@ -854,7 +896,8 @@ class OCRDialog(tk.Toplevel):
             # claude（デフォルト）
             model = self.app.settings.get("claude_model", "claude-sonnet-4-6")
             host = "api.anthropic.com"
-        page_count = len(self.page_indices)
+        if page_count is None:
+            page_count = len(self.page_indices)
         cost = self._estimate_cost(model, page_count)
         msg = self._L["ocr_cost_confirm_msg"].format(
             host=host,
@@ -868,13 +911,23 @@ class OCRDialog(tk.Toplevel):
         )
 
     # ── ワーカー ──
-    def _on_run(self):
-        """読み取り実行ボタン: OCR を開始する。
+    def _on_run(self, resume=False):
+        """読み取り実行 / 続きから再実行: OCR を開始する。
 
         メインスレッドでレンダリング/埋め込み判定後にワーカーを起動する。
         クラウドプロバイダ時は実行前にコスト確認ゲートを挟む（成功基準5・D-13）。
+
+        引数:
+          resume: True なら成功済み結果を保持し、エラー/未処理ページのみ
+                  再実行する（リスタート）。False は全ページ再実行（リラン）。
         """
         if self._started:
+            return
+
+        # 今回の実行対象を決定（再開時は未処理ページのみ）
+        resume = resume and self._can_resume()
+        run_pages = self._pending_pages() if resume else list(self.page_indices)
+        if not run_pages:
             return
 
         # ── クラウド実行ゲート（_started を True にする前）──
@@ -908,8 +961,8 @@ class OCRDialog(tk.Toplevel):
                 else:
                     self.app._session_api_keys["claude"] = key
 
-            # コスト確認ダイアログ（毎回・D-11・D-12）
-            if not self._confirm_cost():
+            # コスト確認ダイアログ（毎回・D-11・D-12。再開時は未処理ページ数で見積）
+            if not self._confirm_cost(len(run_pages)):
                 # キャンセル → OCR を始めない（成功基準5）
                 return
 
@@ -920,11 +973,26 @@ class OCRDialog(tk.Toplevel):
         self._fatal_msg = None
         self._fatal_kind = None
         self._done_count = 0
+        self._cancel_flag.clear()
+        if resume:
+            # 再実行対象の旧エラーを破棄（再実行結果で上書き表示するため）
+            for p in run_pages:
+                self.errors.pop(p, None)
+        else:
+            # リラン（全体再実行）: 前回の結果・エラー・スキップ状態を破棄
+            self.results.clear()
+            self.errors.clear()
+            self._skipped_pages.clear()
+        self._run_pages = run_pages
+        self._skip_base = len(self._skipped_pages)
         self.run_btn.state(["disabled"])
+        self.resume_btn.state(["disabled"])
         self._llm_config_btn.state(["disabled"])
         self.cancel_btn.state(["!disabled"])
         self.progress_var.set(self._L["ocr_progress_init"])
-        # 結果テキストエリアをクリア
+        self.progress_bar.configure(maximum=max(1, len(run_pages)))
+        self.progress_bar["value"] = 0
+        # 結果テキストエリアをクリア（完了時に全ページ分を統合して再描画する）
         self.text.delete("1.0", "end")
 
         # UI パラメータをここで取得（メインスレッド）
@@ -1059,7 +1127,7 @@ class OCRDialog(tk.Toplevel):
             self._finish_cancelled()
             return
 
-        total = len(self.page_indices)
+        total = len(self._run_pages)
         idx = self._render_idx
 
         if idx >= total:
@@ -1077,7 +1145,7 @@ class OCRDialog(tk.Toplevel):
                 self.after(100, lambda _g=g: self._render_next_page(_g))
             return  # _finish_complete は最終ワーカーが呼ぶ
 
-        page_idx = self.page_indices[idx]
+        page_idx = self._run_pages[idx]
 
         try:
             page = self.doc[page_idx]
@@ -1090,17 +1158,21 @@ class OCRDialog(tk.Toplevel):
                 self.results[page_idx] = extracted
                 self._skipped_pages.add(page_idx)
                 # スキップはキューに積まず次ページへ（progress bar を after で更新）
-                skipped_count = len(self._skipped_pages)
-                total_pages = len(self.page_indices)
+                # 今回の実行分の処理済み数 = Vision 完了数 + 今回の新規スキップ数
+                with self._done_lock:
+                    done_disp = (
+                        self._done_count + len(self._skipped_pages) - self._skip_base
+                    )
+                total_pages = len(self._run_pages)
                 self.after(
                     0,
-                    lambda d=skipped_count, t=total_pages: self.progress_var.set(
+                    lambda d=done_disp, t=total_pages: self.progress_var.set(
                         self._L["ocr_progress_ocr"].format(
                             done=d, total=t, page=page_idx + 1
                         )
                     ),
                 )
-                self.after(0, lambda d=skipped_count: self._on_progress_bar(d))
+                self.after(0, lambda d=done_disp: self._on_progress_bar(d))
             else:
                 # 埋め込みテキストなし: Vision OCR のためレンダリングしてキューへ積む
                 b64 = page_to_png_b64(page, scale=self._ocr_scale)
@@ -1147,7 +1219,7 @@ class OCRDialog(tk.Toplevel):
         M-2: gen 不一致時は after 投函前にガードして TclError を防ぐ。
         """
 
-        total = len(self.page_indices)
+        total = len(self._run_pages)
 
         while True:
             try:
@@ -1244,10 +1316,10 @@ class OCRDialog(tk.Toplevel):
             finally:
                 del b64  # 送信後即座に破棄（成功基準2・T-06-06）
 
-            # 統合プログレス更新（処理済み = done + skipped・D-03）
+            # 統合プログレス更新（処理済み = done + 今回の新規スキップ・D-03）
             # M-2: 世代ガード後にのみ after を投函する
             if gen is None or gen == self._run_gen:
-                skipped_count = len(self._skipped_pages)
+                skipped_count = len(self._skipped_pages) - self._skip_base
                 with self._done_lock:
                     total_done = self._done_count + skipped_count
                 try:
@@ -1338,9 +1410,12 @@ class OCRDialog(tk.Toplevel):
                 )
             )
         self.cancel_btn.state(["disabled"])
+        # 一部ページがエラーのまま完了した場合は再開案内を追記する
+        self._append_resume_hint()
         if self.results:
             self.copy_btn.state(["!disabled"])
             self.save_btn.state(["!disabled"])
+        self._after_run_ui_reset()
 
     def _finish_cancelled(self):
         if self._done:  # CR-02: 冪等ガード（二重呼び出し防止）
@@ -1350,9 +1425,11 @@ class OCRDialog(tk.Toplevel):
         self.cancel_btn.state(["disabled"])
         if self.results or self.errors:
             self._render_results_ordered()
+        self._append_resume_hint()
         if self.results:
             self.copy_btn.state(["!disabled"])
             self.save_btn.state(["!disabled"])
+        self._after_run_ui_reset()
 
     def _finish_error(self, msg, kind):
         if self._done:  # CR-02: 冪等ガード（二重呼び出し防止）
@@ -1373,11 +1450,25 @@ class OCRDialog(tk.Toplevel):
         if self.results or self.errors:
             self._render_results_ordered()
         self.text.insert("end", "\n" + user_msg + "\n")
+        self._append_resume_hint()
         self.text.see("end")
         self.cancel_btn.state(["disabled"])
         if self.results:
             self.copy_btn.state(["!disabled"])
             self.save_btn.state(["!disabled"])
+        self._after_run_ui_reset()
+
+    def _append_resume_hint(self):
+        """部分的に成功している場合、未処理ページ数と再開案内を結果欄に追記する"""
+        if not self._can_resume():
+            return
+        pending = self._pending_pages()
+        self.text.insert(
+            "end",
+            self._L["ocr_resume_hint"].format(n=len(pending), first=pending[0] + 1)
+            + "\n",
+        )
+        self.text.see("end")
 
     # ── 操作 ──
     def _on_cancel(self):

@@ -1327,12 +1327,13 @@ class TestWorkerConcurrency:
         import types
 
         concurrency = 3
-        # 0 ページ（page_indices 空）にすると即座に全ページ完了分岐へ到達する
+        # 0 ページ（_run_pages 空）にすると即座に全ページ完了分岐へ到達する
         fake = types.SimpleNamespace(
             concurrency=concurrency,
             _cancel_flag=threading.Event(),
             _render_queue=q.Queue(maxsize=concurrency + 2),
             page_indices=[],
+            _run_pages=[],
             _render_idx=0,
             _run_gen=1,  # M-2 世代カウンタ
             winfo_exists=lambda: True,  # M-2 ウィジェット存在チェック
@@ -1385,6 +1386,9 @@ class TestFinishIdempotent:
             save_btn=types.SimpleNamespace(state=lambda _s: None),
             _L={"ocr_cancelled": "キャンセルされました"},
             _render_results_ordered=mock_render,
+            # v1.4.4: 終了処理の共通エピローグは no-op（ボタン状態は対象外）
+            _append_resume_hint=lambda: None,
+            _after_run_ui_reset=lambda: None,
         )
         return fake, render_call_count
 
@@ -1422,6 +1426,12 @@ class TestClearResetsFatalState:
         """致命的エラー（タイムアウト）で終了した直後の fake OCRDialog を生成する。"""
         import types
 
+        class _StubProgressBar(dict):
+            """dict ベースの Progressbar スタブ（configure / 添字代入の両対応）"""
+
+            def configure(self, **kw):
+                self.update(kw)
+
         fake = types.SimpleNamespace(
             _started=True,
             _done=True,
@@ -1433,15 +1443,17 @@ class TestClearResetsFatalState:
             errors={1: "old error"},
             _skipped_pages={2},
             _render_queue=object(),
+            page_indices=[0, 1, 2],
             _ocr_page_indices=[0, 1, 2],
             _run_gen=1,
             text=types.SimpleNamespace(delete=lambda *a: None),
-            progress_bar={},
+            progress_bar=_StubProgressBar(),
             progress_var=types.SimpleNamespace(set=lambda _v: None),
             copy_btn=types.SimpleNamespace(state=lambda _s: None),
             save_btn=types.SimpleNamespace(state=lambda _s: None),
             cancel_btn=types.SimpleNamespace(state=lambda _s: None),
             run_btn=types.SimpleNamespace(state=lambda _s: None),
+            resume_btn=types.SimpleNamespace(state=lambda _s: None),
             _llm_config_btn=types.SimpleNamespace(state=lambda _s: None),
             _L={"ocr_run_first": "読み取り実行を押してください"},
         )
@@ -1589,17 +1601,29 @@ class TestOcrDialogOnRun:
             _session_api_keys={},
         )
 
+        class _StubProgressBar(dict):
+            """dict ベースの Progressbar スタブ（configure / 添字代入の両対応）"""
+
+            def configure(self, **kw):
+                self.update(kw)
+
         fake = types.SimpleNamespace(
             app=app,
             provider=None,
             _started=False,
             _done=False,
             progress_var=types.SimpleNamespace(set=lambda _v: None),
+            progress_bar=_StubProgressBar(),
             cancel_btn=types.SimpleNamespace(state=lambda _s: None),
             run_btn=types.SimpleNamespace(state=lambda _s: None),
+            resume_btn=types.SimpleNamespace(state=lambda _s: None),
             _llm_config_btn=types.SimpleNamespace(state=lambda _s: None),
             _cancel_flag=threading.Event(),
+            page_indices=[0],
             _ocr_page_indices=[0],
+            results={},
+            errors={},
+            _skipped_pages=set(),
             concurrency=1,
             _render_queue=None,
             _render_idx=0,
@@ -1921,10 +1945,14 @@ class TestRenderNextPageQueueFullInvariant:
             _cancel_flag=threading.Event(),
             _render_queue=FakeQueue(queue_behavior),
             page_indices=[0],
+            _run_pages=[0],
             _render_idx=render_idx,
             results={},
             _skipped_pages=set(),
+            _skip_base=0,
             errors={},
+            _done_lock=threading.Lock(),
+            _done_count=0,
             _ocr_scale=1.5,
             _ocr_prompt="test",
             _force_ocr=False,
@@ -1990,10 +2018,14 @@ class TestForceOcrOption:
                 put_nowait=lambda item: put_items.append(item)
             ),
             page_indices=[0],
+            _run_pages=[0],
             _render_idx=0,
             results={},
             _skipped_pages=set(),
+            _skip_base=0,
             errors={},
+            _done_lock=threading.Lock(),
+            _done_count=0,
             _ocr_scale=1.5,
             _ocr_prompt="test",
             _force_ocr=force_ocr,
@@ -2155,3 +2187,129 @@ class TestRetryWaitKey:
 
         e = OCRRetryableError("plugin retryable")
         assert OCRDialog._retry_wait_key(e) == "ocr_waiting_retry_server"
+
+
+# ===== OCR 再開（リラン/リスタート）機能（v1.4.4）=====
+
+
+class TestOcrResume:
+    """_pending_pages / _can_resume / _confirm_cost(page_count) の検証。
+
+    Tkinter ウィンドウを使わず SimpleNamespace の fake インスタンスに対して
+    未束縛呼び出しで検証する（TestOcrDialogLlmConfig と同パターン）。
+    """
+
+    def _make_fake(self, page_indices, results):
+        import types
+
+        from pagefolio.ocr_dialog import OCRDialog
+
+        fake = types.SimpleNamespace(
+            page_indices=list(page_indices),
+            results=dict(results),
+        )
+        fake._pending_pages = lambda: OCRDialog._pending_pages(fake)
+        return fake
+
+    # ── _pending_pages ──
+
+    def test_pending_pages_partial(self):
+        """成功済みページを除いた未処理ページを昇順で返す"""
+        from pagefolio.ocr_dialog import OCRDialog
+
+        fake = self._make_fake([0, 1, 2, 3], {0: "a", 2: "c"})
+        assert OCRDialog._pending_pages(fake) == [1, 3]
+
+    def test_pending_pages_all_done(self):
+        """全ページ成功済みなら空リスト"""
+        from pagefolio.ocr_dialog import OCRDialog
+
+        fake = self._make_fake([0, 1], {0: "a", 1: "b"})
+        assert OCRDialog._pending_pages(fake) == []
+
+    def test_pending_pages_none_done(self):
+        """結果ゼロなら全ページが未処理"""
+        from pagefolio.ocr_dialog import OCRDialog
+
+        fake = self._make_fake([3, 5, 7], {})
+        assert OCRDialog._pending_pages(fake) == [3, 5, 7]
+
+    def test_pending_pages_timeout_at_13(self):
+        """実例: 18ページ中 12 ページ成功 → p.13 以降（0始まり 12〜17）が残る"""
+        from pagefolio.ocr_dialog import OCRDialog
+
+        results = {i: f"text{i}" for i in range(12)}
+        fake = self._make_fake(list(range(18)), results)
+        assert OCRDialog._pending_pages(fake) == [12, 13, 14, 15, 16, 17]
+
+    # ── _can_resume ──
+
+    def test_can_resume_partial(self):
+        """部分的な結果あり + 未処理ありで True"""
+        from pagefolio.ocr_dialog import OCRDialog
+
+        fake = self._make_fake([0, 1, 2], {0: "a"})
+        assert OCRDialog._can_resume(fake) is True
+
+    def test_can_resume_no_results(self):
+        """結果ゼロ（全滅）は False（リランで全体再実行すべきケース）"""
+        from pagefolio.ocr_dialog import OCRDialog
+
+        fake = self._make_fake([0, 1, 2], {})
+        assert OCRDialog._can_resume(fake) is False
+
+    def test_can_resume_all_done(self):
+        """全ページ完了済みは False"""
+        from pagefolio.ocr_dialog import OCRDialog
+
+        fake = self._make_fake([0, 1], {0: "a", 1: "b"})
+        assert OCRDialog._can_resume(fake) is False
+
+    # ── _confirm_cost(page_count) ──
+
+    def _make_cost_fake(self):
+        import types
+
+        return types.SimpleNamespace(
+            app=types.SimpleNamespace(
+                settings={"ocr_provider": "gemini", "gemini_model": "gemini-2.5-flash"}
+            ),
+            page_indices=[0, 1, 2, 3, 4],
+            _L={
+                "ocr_cost_confirm_msg": "{host}|{count}|{cost}",
+                "ocr_cost_confirm_title": "confirm",
+            },
+            _estimate_cost=lambda model, n: f"${n}",
+        )
+
+    def test_confirm_cost_uses_given_page_count(self, monkeypatch):
+        """再開時: 渡した未処理ページ数で見積もる（全対象数ではなく）"""
+        import pagefolio.ocr_dialog as od
+        from pagefolio.ocr_dialog import OCRDialog
+
+        captured = {}
+
+        def fake_askyesno(title, msg, parent=None):
+            captured["msg"] = msg
+            return True
+
+        monkeypatch.setattr(od.messagebox, "askyesno", fake_askyesno)
+        fake = self._make_cost_fake()
+        assert OCRDialog._confirm_cost(fake, page_count=2) is True
+        assert "|2|$2" in captured["msg"]
+
+    def test_confirm_cost_defaults_to_all_pages(self, monkeypatch):
+        """page_count 省略時は従来どおり全対象ページ数で見積もる"""
+        import pagefolio.ocr_dialog as od
+        from pagefolio.ocr_dialog import OCRDialog
+
+        captured = {}
+
+        def fake_askyesno(title, msg, parent=None):
+            captured["msg"] = msg
+            return True
+
+        monkeypatch.setattr(od.messagebox, "askyesno", fake_askyesno)
+        fake = self._make_cost_fake()
+        OCRDialog._confirm_cost(fake)
+        assert "|5|$5" in captured["msg"]

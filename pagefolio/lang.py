@@ -390,6 +390,11 @@ LANG = {
         "ocr_server_label": "サーバ:",
         "ocr_model_label": "モデル:",
         "ocr_run": "▶ 読み取り実行",
+        "ocr_resume": "⏯ 続きから再実行",
+        "ocr_resume_hint": (
+            "未処理 {n}ページ（p.{first}〜）が残っています。"
+            "「⏯ 続きから再実行」で成功済みの結果を保持したまま再開できます。"
+        ),
         "ocr_fetch_models": "📥 モデル一覧取得",
         "ocr_open_llm_config": "⚙ LLM 設定…",
         "ocr_clear": "🧹 クリア",
@@ -800,6 +805,11 @@ LANG = {
         "ocr_server_label": "Server:",
         "ocr_model_label": "Model:",
         "ocr_run": "▶ Run OCR",
+        "ocr_resume": "⏯ Resume",
+        "ocr_resume_hint": (
+            "{n} unprocessed page(s) remaining (from p.{first}). "
+            "Use '⏯ Resume' to continue while keeping completed results."
+        ),
         "ocr_fetch_models": "📥 Fetch Models",
         "ocr_open_llm_config": "⚙ LLM Settings…",
         "ocr_clear": "🧹 Clear",
