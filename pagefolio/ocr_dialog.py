@@ -44,6 +44,10 @@ OCR_PRICE_TABLE: dict[str, tuple[float, float]] = {
 # フォールバック単価（不明モデル）
 _PRICE_FALLBACK = (5.0, 25.0)
 
+# サーキットブレーカー: リトライ上限到達がこのページ数連続したら実行を中断する
+# （サーバ側が完全に落ちている時に全ページ × リトライ待機を消化しないための保険）
+CB_CONSECUTIVE_FAILURES = 3
+
 
 def _lookup_price(model: str) -> tuple[float, float]:
     """OCR_PRICE_TABLE からモデル単価を取得する（部分一致フォールバック付き）。"""
@@ -122,6 +126,8 @@ class OCRDialog(tk.Toplevel):
         # CR-01: 致命的エラー情報（複数ワーカーで最初に発生したもの・Lock 保護）
         self._fatal_msg = None
         self._fatal_kind = None
+        # サーキットブレーカー: 連続リトライ上限到達ページ数（Lock 保護）
+        self._consec_err_count = 0
         # M-2: 世代カウンタ（ダイアログ破棄後の旧ワーカー after コールバックを無効化）
         # viewer.py の _preview_gen と同じパターン（世代一致 + winfo_exists）
         self._run_gen = 0
@@ -566,6 +572,7 @@ class OCRDialog(tk.Toplevel):
         self._ocr_page_indices.clear()
         self.progress_bar["value"] = 0
         self.progress_var.set(self._L["ocr_run_first"])
+        self._progress_label.configure(fg=C["SUCCESS"])
         self.copy_btn.state(["disabled"])
         self.save_btn.state(["disabled"])
         self.cancel_btn.state(["disabled"])
@@ -581,6 +588,7 @@ class OCRDialog(tk.Toplevel):
         self._fatal_msg = None
         self._fatal_kind = None
         self._done_count = 0
+        self._consec_err_count = 0
         # M-2: クリア時も旧世代を無効化する（再実行前に旧コールバックを排除）
         self._run_gen += 1
 
@@ -607,6 +615,34 @@ class OCRDialog(tk.Toplevel):
             self.resume_btn.state(["!disabled"])
         else:
             self.resume_btn.state(["disabled"])
+
+    # ── ページ結果記録（ワーカースレッドから呼ばれる・Lock 保護） ──
+
+    def _record_page_success(self, page_idx, text):
+        """ページ成功を記録し、連続失敗カウンタをリセットする"""
+        self.results[page_idx] = text
+        with self._done_lock:
+            self._done_count += 1
+            self._consec_err_count = 0
+
+    def _record_retryable_failure(self, page_idx, msg):
+        """リトライ上限到達ページを記録する。
+
+        連続失敗数が CB_CONSECUTIVE_FAILURES に達したらサーキットブレーカーとして
+        致命的エラー（kind="circuit_breaker"）を設定し、以降のページの API 呼び出しを
+        中断させる（サーバ側が落ちている時の無駄なリトライ消化を防ぐ）。
+        中断後も成功済み結果は保持され「続きから再実行」で再開できる。
+        """
+        self.errors[page_idx] = msg
+        with self._done_lock:
+            self._done_count += 1
+            self._consec_err_count += 1
+            if (
+                self._consec_err_count >= CB_CONSECUTIVE_FAILURES
+                and self._fatal_msg is None
+            ):
+                self._fatal_msg = msg
+                self._fatal_kind = "circuit_breaker"
 
     # ── クラウドプロバイダ判定・コスト確認・セッションキー ──
 
@@ -973,6 +1009,7 @@ class OCRDialog(tk.Toplevel):
         self._fatal_msg = None
         self._fatal_kind = None
         self._done_count = 0
+        self._consec_err_count = 0
         self._cancel_flag.clear()
         if resume:
             # 再実行対象の旧エラーを破棄（再実行結果で上書き表示するため）
@@ -990,6 +1027,8 @@ class OCRDialog(tk.Toplevel):
         self._llm_config_btn.state(["disabled"])
         self.cancel_btn.state(["!disabled"])
         self.progress_var.set(self._L["ocr_progress_init"])
+        # 前回エラー完了時の警告色を通常色（SUCCESS）へ戻す
+        self._progress_label.configure(fg=C["SUCCESS"])
         self.progress_bar.configure(maximum=max(1, len(run_pages)))
         self.progress_bar["value"] = 0
         # 結果テキストエリアをクリア（完了時に全ページ分を統合して再描画する）
@@ -1247,15 +1286,12 @@ class OCRDialog(tk.Toplevel):
                 for attempt in range(1, MAX_RETRIES + 1):
                     try:
                         text = self.provider.ocr_image(b64, self._ocr_prompt)
-                        self.results[page_idx] = text
-                        with self._done_lock:
-                            self._done_count += 1
+                        self._record_page_success(page_idx, text)
                         break
                     except OCRRetryableError as e:
                         if attempt >= MAX_RETRIES:
-                            self.errors[page_idx] = str(e)
-                            with self._done_lock:
-                                self._done_count += 1
+                            # リトライ上限到達: 連続失敗ならサーキットブレーカー発動
+                            self._record_retryable_failure(page_idx, str(e))
                             break
                         # リトライ待機中の進捗表示（D-15）
                         # M-2: 世代ガード後にのみ after を投函する
@@ -1403,6 +1439,16 @@ class OCRDialog(tk.Toplevel):
         self._done = True
         if self._cancel_flag.is_set():
             self.progress_var.set(self._L["ocr_cancelled"])
+        elif self.errors:
+            # エラーページありの完了: 件数を明示し警告色で表示する
+            self.progress_var.set(
+                self._L["ocr_complete_with_errors"].format(
+                    count=len(self.results),
+                    total=len(self.page_indices),
+                    err=len(self.errors),
+                )
+            )
+            self._progress_label.configure(fg=C["WARNING"])
         else:
             self.progress_var.set(
                 self._L["ocr_complete"].format(
@@ -1444,9 +1490,15 @@ class OCRDialog(tk.Toplevel):
                 timeout=getattr(self, "_effective_timeout", self.timeout_var.get()),
                 error=msg,
             )
+        elif kind == "circuit_breaker":
+            # サーキットブレーカー: 連続失敗による中断（成功済み結果は保持）
+            user_msg = self._L["ocr_err_circuit_breaker"].format(
+                n=CB_CONSECUTIVE_FAILURES, error=msg
+            )
         else:
             user_msg = msg
         self.progress_var.set(self._L["ocr_failed"])
+        self._progress_label.configure(fg=C["WARNING"])
         if self.results or self.errors:
             self._render_results_ordered()
         self.text.insert("end", "\n" + user_msg + "\n")

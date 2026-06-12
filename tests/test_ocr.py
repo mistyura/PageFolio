@@ -1449,6 +1449,7 @@ class TestClearResetsFatalState:
             text=types.SimpleNamespace(delete=lambda *a: None),
             progress_bar=_StubProgressBar(),
             progress_var=types.SimpleNamespace(set=lambda _v: None),
+            _progress_label=types.SimpleNamespace(configure=lambda **kw: None),
             copy_btn=types.SimpleNamespace(state=lambda _s: None),
             save_btn=types.SimpleNamespace(state=lambda _s: None),
             cancel_btn=types.SimpleNamespace(state=lambda _s: None),
@@ -1614,6 +1615,7 @@ class TestOcrDialogOnRun:
             _done=False,
             progress_var=types.SimpleNamespace(set=lambda _v: None),
             progress_bar=_StubProgressBar(),
+            _progress_label=types.SimpleNamespace(configure=lambda **kw: None),
             cancel_btn=types.SimpleNamespace(state=lambda _s: None),
             run_btn=types.SimpleNamespace(state=lambda _s: None),
             resume_btn=types.SimpleNamespace(state=lambda _s: None),
@@ -2313,3 +2315,149 @@ class TestOcrResume:
         fake = self._make_cost_fake()
         OCRDialog._confirm_cost(fake)
         assert "|5|$5" in captured["msg"]
+
+
+# ===== サーキットブレーカー / エラー件数つき完了表示（v1.4.4）=====
+
+
+class TestCircuitBreaker:
+    """連続リトライ上限到達で実行を中断するサーキットブレーカーの検証。
+
+    _record_page_success / _record_retryable_failure を fake インスタンスへの
+    未束縛呼び出しで検証する（Tkinter 不使用）。
+    """
+
+    def _make_fake(self):
+        import types
+
+        return types.SimpleNamespace(
+            results={},
+            errors={},
+            _done_lock=threading.Lock(),
+            _done_count=0,
+            _consec_err_count=0,
+            _fatal_msg=None,
+            _fatal_kind=None,
+        )
+
+    def test_trips_after_consecutive_failures(self):
+        """CB_CONSECUTIVE_FAILURES 回連続で失敗すると致命的エラーが設定される"""
+        from pagefolio.ocr_dialog import CB_CONSECUTIVE_FAILURES, OCRDialog
+
+        fake = self._make_fake()
+        for i in range(CB_CONSECUTIVE_FAILURES):
+            OCRDialog._record_retryable_failure(fake, i, f"HTTP 500 (p{i})")
+
+        assert fake._fatal_kind == "circuit_breaker"
+        assert fake._fatal_msg == f"HTTP 500 (p{CB_CONSECUTIVE_FAILURES - 1})"
+        assert len(fake.errors) == CB_CONSECUTIVE_FAILURES
+
+    def test_not_tripped_below_threshold(self):
+        """しきい値未満の失敗では中断しない"""
+        from pagefolio.ocr_dialog import CB_CONSECUTIVE_FAILURES, OCRDialog
+
+        fake = self._make_fake()
+        for i in range(CB_CONSECUTIVE_FAILURES - 1):
+            OCRDialog._record_retryable_failure(fake, i, "HTTP 500")
+
+        assert fake._fatal_msg is None
+        assert fake._fatal_kind is None
+
+    def test_success_resets_consecutive_counter(self):
+        """途中で成功すると連続カウンタがリセットされ中断しない"""
+        from pagefolio.ocr_dialog import CB_CONSECUTIVE_FAILURES, OCRDialog
+
+        fake = self._make_fake()
+        # しきい値-1 回失敗 → 成功 → さらにしきい値-1 回失敗
+        for i in range(CB_CONSECUTIVE_FAILURES - 1):
+            OCRDialog._record_retryable_failure(fake, i, "HTTP 500")
+        OCRDialog._record_page_success(fake, 10, "ok text")
+        for i in range(CB_CONSECUTIVE_FAILURES - 1):
+            OCRDialog._record_retryable_failure(fake, 20 + i, "HTTP 500")
+
+        assert fake._fatal_msg is None, "成功でカウンタがリセットされていない"
+        assert fake.results == {10: "ok text"}
+
+    def test_existing_fatal_not_overwritten(self):
+        """既に致命的エラーが設定済みなら上書きしない（CR-01 と同方針）"""
+        from pagefolio.ocr_dialog import CB_CONSECUTIVE_FAILURES, OCRDialog
+
+        fake = self._make_fake()
+        fake._fatal_msg = "timed out"
+        fake._fatal_kind = "timeout"
+        for i in range(CB_CONSECUTIVE_FAILURES):
+            OCRDialog._record_retryable_failure(fake, i, "HTTP 500")
+
+        assert fake._fatal_msg == "timed out"
+        assert fake._fatal_kind == "timeout"
+
+    def test_done_count_incremented(self):
+        """成功・失敗の両方で完了カウンタが進む（進捗表示の整合）"""
+        from pagefolio.ocr_dialog import OCRDialog
+
+        fake = self._make_fake()
+        OCRDialog._record_page_success(fake, 0, "text")
+        OCRDialog._record_retryable_failure(fake, 1, "HTTP 500")
+        assert fake._done_count == 2
+
+
+class TestFinishCompleteErrorDisplay:
+    """完了表示の改善: エラーページがある場合は件数を明示し警告色にする。"""
+
+    def _make_fake(self, results, errors, page_indices):
+        import types
+
+        progress = {"msg": None}
+        label_kw = {}
+
+        fake = types.SimpleNamespace(
+            _done=False,
+            _cancel_flag=threading.Event(),
+            results=dict(results),
+            errors=dict(errors),
+            page_indices=list(page_indices),
+            progress_var=types.SimpleNamespace(
+                set=lambda v: progress.__setitem__("msg", v)
+            ),
+            _progress_label=types.SimpleNamespace(
+                configure=lambda **kw: label_kw.update(kw)
+            ),
+            cancel_btn=types.SimpleNamespace(state=lambda _s: None),
+            copy_btn=types.SimpleNamespace(state=lambda _s: None),
+            save_btn=types.SimpleNamespace(state=lambda _s: None),
+            _append_resume_hint=lambda: None,
+            _after_run_ui_reset=lambda: None,
+            _L={
+                "ocr_complete": "完了: {count}/{total} ページ成功",
+                "ocr_complete_with_errors": (
+                    "⚠ 完了: {count}/{total} ページ成功・エラー {err}ページ"
+                ),
+                "ocr_cancelled": "キャンセルしました",
+            },
+        )
+        return fake, progress, label_kw
+
+    def test_complete_without_errors_uses_normal_message(self):
+        """エラーなし: 従来どおりの完了メッセージ・色変更なし"""
+        from pagefolio.ocr_dialog import OCRDialog
+
+        fake, progress, label_kw = self._make_fake(
+            results={0: "a", 1: "b"}, errors={}, page_indices=[0, 1]
+        )
+        OCRDialog._finish_complete(fake)
+
+        assert progress["msg"] == "完了: 2/2 ページ成功"
+        assert label_kw == {}, "エラーなしで色が変更された"
+
+    def test_complete_with_errors_shows_error_count(self):
+        """エラーあり: 件数つきメッセージ + 警告色（WARNING）"""
+        from pagefolio.constants import C
+        from pagefolio.ocr_dialog import OCRDialog
+
+        fake, progress, label_kw = self._make_fake(
+            results={0: "a", 2: "c"}, errors={1: "HTTP 500"}, page_indices=[0, 1, 2]
+        )
+        OCRDialog._finish_complete(fake)
+
+        assert progress["msg"] == "⚠ 完了: 2/3 ページ成功・エラー 1ページ"
+        assert label_kw.get("fg") == C["WARNING"], "警告色に変更されていない"

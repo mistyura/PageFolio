@@ -286,6 +286,9 @@ LANG = {
         "ocr_cancelling": "キャンセル中…",
         "ocr_cancelled": "キャンセルしました",
         "ocr_complete": "完了: {count}/{total} ページ成功",
+        "ocr_complete_with_errors": (
+            "⚠ 完了: {count}/{total} ページ成功・エラー {err}ページ"
+        ),
         "ocr_failed": "失敗しました",
         "ocr_page_separator": "--- Page {page} ---",
         "ocr_page_error": "[エラー] {error}",
@@ -310,6 +313,12 @@ LANG = {
             "OCR がタイムアウトしました ({timeout} 秒)。\n"
             "モデルが大きい場合は設定でタイムアウトを延ばしてください。\n"
             "\n詳細: {error}"
+        ),
+        "ocr_err_circuit_breaker": (
+            "⚠ {n}ページ連続でエラーが発生したため中断しました。\n"
+            "サーバ側が不安定な可能性があります。時間を置いてから\n"
+            "「⏯ 続きから再実行」で残りページを再開してください。\n"
+            "\n最後のエラー: {error}"
         ),
         "ocr_provider_unsupported": (
             "未対応の OCR プロバイダが設定されています: {name}\n"
@@ -704,6 +713,9 @@ LANG = {
         "ocr_cancelling": "Cancelling…",
         "ocr_cancelled": "Cancelled",
         "ocr_complete": "Done: {count}/{total} page(s) succeeded",
+        "ocr_complete_with_errors": (
+            "⚠ Done: {count}/{total} page(s) succeeded, {err} error page(s)"
+        ),
         "ocr_failed": "Failed",
         "ocr_page_separator": "--- Page {page} ---",
         "ocr_page_error": "[Error] {error}",
@@ -730,6 +742,12 @@ LANG = {
             "OCR timed out ({timeout}s).\n"
             "If the model is large, increase the timeout in settings.\n"
             "\nDetails: {error}"
+        ),
+        "ocr_err_circuit_breaker": (
+            "⚠ Aborted after {n} consecutive page errors.\n"
+            "The server may be unstable. Wait a while, then use\n"
+            "'⏯ Resume' to continue with the remaining pages.\n"
+            "\nLast error: {error}"
         ),
         "ocr_provider_unsupported": (
             "Unsupported OCR provider configured: {name}\nPlease check your settings."
