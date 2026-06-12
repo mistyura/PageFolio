@@ -3,9 +3,9 @@ gsd_state_version: 1.0
 milestone: v1.4.0
 milestone_name: OCR プロバイダ化 + クラウドAPI対応
 status: Phase 06 完了（06-04 ギャップクロージャ達成）
-stopped_at: 260611-omi 完了（v1.4.3 確定・マージ・リビルド）
-last_updated: "2026-06-11T08:50:00.000Z"
-last_activity: "2026-06-11 - Completed quick task 260611-omi: claude/sleepy-fermi-y2z355 マージ → v1.4.3 確定 → リビルド"
+stopped_at: 260612-shc 完了（v1.4.4 確定・マージ・リビルド・公開）
+last_updated: "2026-06-12T09:00:00.000Z"
+last_activity: "2026-06-12 - Completed quick task 260612-shc: claude/sharp-carson-zqfduf マージ → v1.4.4 確定 → リビルド → push/Release"
 progress:
   total_phases: 4
   completed_phases: 3
@@ -156,6 +156,7 @@ Decisions are logged in PROJECT.md Key Decisions table.
 | 260610-rkp | v1.4.2 安定化（M-1〜M-11）: スレッド/ライフサイクル安定・プロバイダ API 堅牢化・UI/i18n/コスト一貫性 | 2026-06-10 | 7d68f97 | [260610-rkp-v1-4-2-review-md-m-1-m-11](./quick/260610-rkp-v1-4-2-review-md-m-1-m-11/) |
 | 260610-fast | CLAUDE.md を v1.4.2 時点の構成に最新化（dialogs/ パッケージ・OCR モジュール群反映、L-6 一部対応） | 2026-06-10 | bc4323d | — |
 | 260611-omi | ブランチ claude/sleepy-fermi-y2z355 を main へ fast-forward マージし v1.4.3 を確定（OCR クリア後再実行バグ H-6・Gemini gemma 400 エラー H-7・埋め込みテキスト無視オプション・429/5xx メッセージ分離・モデル名表示）。PyInstaller リビルド・ドキュメント更新 | 2026-06-11 | abfe97c | [260611-omi-claude-sleepy-fermi-y2z355-v1-4-3](./quick/260611-omi-claude-sleepy-fermi-y2z355-v1-4-3/) |
+| 260612-shc | ブランチ claude/sharp-carson-zqfduf を main へ fast-forward マージし v1.4.4 を確定（ページ→画像変換・縮小保存の上書き修正・OCR リラン/続きから再実行/サーキットブレーカー・OCR ヘッダー UI 改善・README Gemma 実績更新）。PyInstaller リビルド・ドキュメント更新・push・GitHub Release | 2026-06-12 | f9ec869 | [260612-shc-sharp-carson-zqfduf-v1-4-4](./quick/260612-shc-sharp-carson-zqfduf-v1-4-4/) |
 
 ## Deferred Items
 
@@ -170,16 +171,20 @@ Decisions are logged in PROJECT.md Key Decisions table.
 
 ## Session Continuity
 
-Last session: 2026-06-11T08:50:00.000Z
-Stopped at: 260611-omi 完了（v1.4.3 確定・マージ・リビルド）
+Last session: 2026-06-12T09:00:00.000Z
+Stopped at: 260612-shc 完了（v1.4.4 確定・マージ・リビルド・公開）
 Resume file: None
 
 ## Operator Next Steps
 
-- v1.4.3 確定（2026-06-11）: claude/sleepy-fermi-y2z355 を main へマージ・PyInstaller リビルド完了
-  - 内容: H-6（OCR クリア後再実行バグ）・H-7（Gemini gemma 400 エラー）・埋め込みテキスト無視オプション・
-    429/5xx メッセージ分離・OCR 画面のモデル名表示
-  - テスト 445 件グリーン・ruff クリーン
-- **未実施**: `git push origin main`・GitHub Release 作成（v1.4.0 では 260609-aaa で実施した手順を踏襲）
+- v1.4.4 確定（2026-06-12）: claude/sharp-carson-zqfduf を main へ ff マージ・PyInstaller リビルド・
+  push・GitHub Release まで完了
+  - 内容: ページ→画像変換（AI/LLM 読取用途）・「縮小して保存」上書き修正・
+    OCR リラン/続きから再実行（リスタート）/サーキットブレーカー・OCR ヘッダー UI 改善・
+    README Gemma 注意書きの実績ベース更新
+  - テスト 490 件グリーン・ruff クリーン
 - 次は **v1.5.0 以降（L-1〜L-6）バックログ**。詳細は REVIEW.md を参照
-- **注意**: H-7（Gemini gemma 400 エラー修正）は実 API キー環境での動作確認を推奨
+- **注意**:
+  - クラウド OCR の推奨解像度は 1.5〜2.0（4.0 はペイロード肥大でタイムアウト誘発）
+  - gemma 系の HTTP 500 はサーバ側要因で日により変動（API 仕様変更ではない）
+  - H-7（Gemini gemma 400 エラー修正）は実 API キー環境での動作確認を引き続き推奨

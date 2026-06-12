@@ -85,7 +85,8 @@ status: complete
 | `dcd20e3` | OCR の続きから再実行（リスタート）機能とヘッダー UI 改善 |
 | `86201d5` | OCR にサーキットブレーカーとエラー件数つき完了表示を追加 |
 | `073b8ec` | README の Gemma 注意書きを動作実績ベースに更新 |
-| （本コミット） | 本サマリー文書の追加 |
+| `727b05f` | 本サマリー文書の追加 |
+| `f9ec869` | v1.4.4ビルド（PyInstaller リビルド成果物） |
 
 ## テスト
 
@@ -94,11 +95,17 @@ status: complete
   `TestFinishCompleteErrorDisplay`（2件）+ 既存 fake の新属性対応
 - 合計 490 件パス（v1.4.3 時点 445 → +45）
 
-## 残タスク（次セッション）
+## 確定作業（2026-06-12 実施）
 
-- [ ] `main` への fast-forward マージで v1.4.4 確定（過去の v1.4.3 確定手順と同様）
-- [ ] PyInstaller リビルド（`dist/PageFolio/`）+「v1.4.4ビルド」コミット
-- [ ] `.planning/STATE.md` の更新（Quick Tasks Completed / Session Continuity）
+- [x] `main` への fast-forward マージで v1.4.4 確定（`3e7b8d9..727b05f`、コンフリクトなし）
+- [x] 品質ゲート: `ruff check` クリーン / `pytest` 490 件パス
+- [x] PyInstaller リビルド（`dist/PageFolio/`）+「v1.4.4ビルド」コミット（`f9ec869`）
+- [x] `.planning/STATE.md` 更新（Quick Tasks Completed / Session Continuity / Operator Next Steps）
+- [x] `git push origin main`
+- [x] GitHub Release v1.4.4 作成（zip 添付）
+
+※ `.planning/config.json`（GSD モデルポリシー設定）はこの確定作業とは無関係の
+   ローカル変更のため、v1.4.4 コミット群には含めていない。
 
 ## 注意点・調整可能パラメータ
 
