@@ -439,6 +439,45 @@ class FileOpsMixin:
         except Exception as e:
             messagebox.showerror(self._t("err_title"), str(e))
 
+    def _is_current_file(self, path):
+        """path が現在開いているファイル自身かを判定する"""
+        if not path:
+            return False
+        candidates = [p for p in (self.filepath, getattr(self.doc, "name", "")) if p]
+        for cand in candidates:
+            try:
+                if os.path.exists(path) and os.path.samefile(path, cand):
+                    return True
+            except OSError as e:
+                logger.debug("samefile 判定失敗: %s", e)
+            if os.path.normcase(os.path.abspath(path)) == os.path.normcase(
+                os.path.abspath(cand)
+            ):
+                return True
+        return False
+
+    def _overwrite_current_file(self, path, **save_kwargs):
+        """開いている元ファイル自身へ上書き保存する。
+
+        fitz.Document が元ファイルのハンドルを保持しているため、
+        非インクリメンタル保存は同一パスへ直接 save() できず、
+        Windows では os.replace も PermissionError になる。
+        メモリ上へシリアライズ → doc を close してハンドル解放 →
+        tmp ファイル経由で os.replace → 新ファイルを開き直す。
+        書き込み失敗時はメモリ上の bytes から doc を復元して例外を再送出する。
+        """
+        data = self.doc.tobytes(**save_kwargs)
+        self.doc.close()
+        try:
+            tmp = path + ".tmp"
+            with open(tmp, "wb") as f:
+                f.write(data)
+            os.replace(tmp, path)
+            self.doc = fitz.open(path)
+        except Exception:
+            self.doc = fitz.open(stream=data, filetype="pdf")
+            raise
+
     def _save_file(self):
         """上書き保存 — 確認ダイアログ付き"""
         if not self.doc:
@@ -463,10 +502,8 @@ class FileOpsMixin:
                     self.filepath, incremental=True, encryption=fitz.PDF_ENCRYPT_KEEP
                 )
             except Exception as e:
-                logger.debug("incremental save 失敗、tmp ファイル経由で保存: %s", e)
-                tmp = self.filepath + ".tmp"
-                self.doc.save(tmp)
-                os.replace(tmp, self.filepath)
+                logger.debug("incremental save 失敗、開き直して保存: %s", e)
+                self._overwrite_current_file(self.filepath)
             self._set_status(
                 self._t("status_saved").format(name=os.path.basename(self.filepath))
             )
@@ -520,18 +557,29 @@ class FileOpsMixin:
         self.plugin_manager.fire_event("on_file_close", self)
 
     def _save_compressed(self):
-        """縮小最適化して名前を付けて保存（garbage=4, deflate=1, clean=1）"""
+        """縮小最適化して名前を付けて保存（garbage=4, deflate=1, clean=1）。
+        現在開いているファイル自身を指定した場合は上書き保存する。"""
         if not self.doc:
             messagebox.showinfo(self._t("info_title"), self._t("info_open_first"))
             return
-        path = filedialog.asksaveasfilename(
-            defaultextension=".pdf",
-            filetypes=[(self._t("filetypes_pdf"), "*.pdf")],
-        )
+        dialog_kwargs = {
+            "defaultextension": ".pdf",
+            "filetypes": [(self._t("filetypes_pdf"), "*.pdf")],
+        }
+        if self.filepath:
+            dialog_kwargs["initialdir"] = os.path.dirname(self.filepath)
+            dialog_kwargs["initialfile"] = os.path.basename(self.filepath)
+        path = filedialog.asksaveasfilename(**dialog_kwargs)
         if not path:
             return
+        save_kwargs = {"garbage": 4, "deflate": 1, "clean": 1}
         try:
-            self.doc.save(path, garbage=4, deflate=1, clean=1)
+            if self._is_current_file(path):
+                # 元ファイルへの上書き: ハンドル解放してから置き換える
+                self._overwrite_current_file(path, **save_kwargs)
+                self.filepath = path
+            else:
+                self.doc.save(path, **save_kwargs)
             self._set_status(
                 self._t("status_compressed").format(name=os.path.basename(path))
             )

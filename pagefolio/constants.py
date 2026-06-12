@@ -9,7 +9,7 @@ from pagefolio.lang import LANG  # noqa: F401
 from pagefolio.themes import THEMES, C  # noqa: F401
 
 # ===================== バージョン =====================
-APP_VERSION = "v1.4.3"
+APP_VERSION = "v1.4.4"
 
 # ===================== ファイル名定数 =====================
 SETTINGS_FILE = "pagefolio_settings.json"
@@ -21,3 +21,9 @@ SUPPORTED_EXTENSIONS = frozenset(
 )
 
 IMAGE_EXTENSIONS = frozenset({".png", ".jpg", ".jpeg", ".bmp", ".tiff", ".tif"})
+
+# ===================== 画像エクスポート =====================
+# 長辺ピクセル数プリセット（LLM 読取用途: Claude≈1568 / Gemini≈3072 が目安）
+EXPORT_LONG_EDGE_PRESETS = (1024, 1568, 2048, 3072)
+DEFAULT_EXPORT_LONG_EDGE = 1568
+DEFAULT_EXPORT_JPG_QUALITY = 85

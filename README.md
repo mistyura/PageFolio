@@ -2,7 +2,7 @@
 
 **PDF ページ整理ツール — Python + Tkinter 製 GUI アプリ**
 
-![Version](https://img.shields.io/badge/version-v1.4.3-blue)
+![Version](https://img.shields.io/badge/version-v1.4.4-blue)
 ![Stable](https://img.shields.io/badge/status-stable-green)
 
 A PDF page organizer built with Python + Tkinter.
@@ -39,7 +39,8 @@ It does **not** edit text or add annotations — it focuses on **page-level oper
 | 📎 挿入・結合 | 別 PDF からページを挿入 / 末尾に結合 |
 | 📐 ページ結合・リサイズ | 選択した複数ページを横並び/縦並びで1枚に結合（例: 2× A4 → 1× A3） |
 | ✂ 分割 | ページ範囲指定で分割 / 1ページずつ個別PDFに分割（縮小オプション付き） |
-| 🗜 縮小保存 | garbage収集 + 圧縮でファイルサイズを最適化して保存 |
+| 🖼 画像変換 | ページを画像ファイルに変換（1ページ1ファイル・PNG/JPEG・長辺ピクセル指定）。AI（LLM）にテキストを読み取らせる用途に最適 |
+| 🗜 縮小保存 | garbage収集 + 圧縮でファイルサイズを最適化して保存（元ファイルへの上書きにも対応） |
 | 🔀 D&D 並び替え | サムネイルをドラッグ＆ドロップでページ順を変更（複数ページ一括移動対応） |
 | 📕 ファイルを閉じる | アプリを終了せず現在のファイルだけを閉じる |
 | ↩ Undo / Redo | 最大20回の取り消し・やり直し（Ctrl+Z / Ctrl+Y） |

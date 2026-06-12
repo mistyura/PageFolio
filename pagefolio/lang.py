@@ -113,6 +113,32 @@ LANG = {
             "「はい」を選ぶとファイルサイズが小さくなりますが\n"
             "処理時間が増加する場合があります。"
         ),
+        # 画像エクスポート
+        "sec_export": "🖼 画像変換",
+        "btn_export_images": "🖼 ページを画像に変換…",
+        "export_dialog_title": "ページを画像に変換",
+        "export_heading": "ページを画像に変換",
+        "export_hint": (
+            "ページを画像ファイル（1ページ1ファイル）として保存します。\n"
+            "AI（LLM）にテキストを読み取らせる用途に適しています。"
+        ),
+        "export_scope_label": "対象ページ:",
+        "export_scope_all": "全ページ",
+        "export_scope_selected": "選択ページ（{n}ページ）",
+        "export_scope_range": "範囲指定:",
+        "export_range_hint": "例: 1-3, 5（1〜{n}）",
+        "export_size_label": "長辺ピクセル数:",
+        "export_size_hint": "AI読取の目安: Claude=1568 / Gemini=3072",
+        "export_format_label": "形式:",
+        "export_format_png": "PNG（文字がくっきり）",
+        "export_format_jpg": "JPEG（サイズ小）",
+        "export_quality_label": "JPEG品質:",
+        "export_apply": "✔ 変換実行",
+        "export_cancel": "キャンセル",
+        "export_no_pages": "変換対象のページがありません。",
+        "dlg_export_save_dir": "画像の保存先フォルダを選択",
+        "status_exporting": "画像変換中… {done}/{total}",
+        "status_exported": "{count}ページを画像に変換しました → {folder}",
         # プラグイン
         "btn_plugin_mgr": "🔌 プラグイン管理…",
         # 閲覧/編集モード
@@ -510,6 +536,32 @@ LANG = {
             "Choosing 'Yes' reduces file size but may\n"
             "increase processing time."
         ),
+        # Image export
+        "sec_export": "🖼 Image Export",
+        "btn_export_images": "🖼 Export Pages as Images…",
+        "export_dialog_title": "Export Pages as Images",
+        "export_heading": "Export Pages as Images",
+        "export_hint": (
+            "Save pages as image files (one file per page).\n"
+            "Useful for feeding pages to AI (LLM) for text reading."
+        ),
+        "export_scope_label": "Target pages:",
+        "export_scope_all": "All pages",
+        "export_scope_selected": "Selected pages ({n})",
+        "export_scope_range": "Range:",
+        "export_range_hint": "e.g. 1-3, 5 (1–{n})",
+        "export_size_label": "Long edge (px):",
+        "export_size_hint": "For AI reading: Claude=1568 / Gemini=3072",
+        "export_format_label": "Format:",
+        "export_format_png": "PNG (sharp text)",
+        "export_format_jpg": "JPEG (smaller size)",
+        "export_quality_label": "JPEG quality:",
+        "export_apply": "✔ Export",
+        "export_cancel": "Cancel",
+        "export_no_pages": "No pages to export.",
+        "dlg_export_save_dir": "Select folder for exported images",
+        "status_exporting": "Exporting images… {done}/{total}",
+        "status_exported": "Exported {count} page(s) as images → {folder}",
         # Plugin
         "btn_plugin_mgr": "🔌 Manage Plugins…",
         # View/Edit mode

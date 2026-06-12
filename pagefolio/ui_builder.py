@@ -534,6 +534,15 @@ class UIBuilderMixin:
             edit_only=True,
         )
 
+        # 画像エクスポート（読み取り専用操作のため閲覧モードでも使用可）
+        f_exp = section(self._t("sec_export"))
+        btn(
+            f_exp,
+            self._t("btn_export_images"),
+            self._export_pages_as_images,
+            needs_doc=True,
+        )
+
         f_ocr = section(self._t("sec_ocr"))
         self._ocr_buttons = []
         btn_ocr_current = btn(

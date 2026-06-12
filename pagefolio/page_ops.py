@@ -8,7 +8,70 @@ from tkinter import filedialog, messagebox, simpledialog
 
 import fitz
 
-from pagefolio.constants import IMAGE_EXTENSIONS, SUPPORTED_EXTENSIONS, C
+from pagefolio.constants import (
+    DEFAULT_EXPORT_JPG_QUALITY,
+    IMAGE_EXTENSIONS,
+    SUPPORTED_EXTENSIONS,
+    C,
+)
+
+
+def parse_page_ranges(text, max_page):
+    """ページ範囲文字列をパースして [(start, end), ...] のリストを返す。
+    ページ番号は1始まり、返り値も1始まり。無効時は None を返す。"""
+    ranges = []
+    text = text.strip()
+    if not text:
+        return None
+    for part in text.split(","):
+        part = part.strip()
+        if not part:
+            continue
+        if "-" in part:
+            tokens = part.split("-", 1)
+            try:
+                s, e = int(tokens[0].strip()), int(tokens[1].strip())
+            except ValueError:
+                return None
+            if s < 1 or e < 1 or s > max_page or e > max_page or s > e:
+                return None
+            ranges.append((s, e))
+        else:
+            try:
+                p = int(part)
+            except ValueError:
+                return None
+            if p < 1 or p > max_page:
+                return None
+            ranges.append((p, p))
+    return ranges if ranges else None
+
+
+def compute_export_scale(width_pt, height_pt, target_long_px):
+    """ページ寸法(pt)と目標長辺ピクセル数からレンダリング倍率を計算する"""
+    long_edge = max(width_pt, height_pt)
+    if long_edge <= 0 or target_long_px <= 0:
+        return 1.0
+    return target_long_px / long_edge
+
+
+def export_page_image(
+    page, out_path, target_long_px, fmt="png", jpg_quality=DEFAULT_EXPORT_JPG_QUALITY
+):
+    """fitz.Page を画像ファイルとして保存する。
+
+    page.rect（CropBox・回転反映後の表示矩形）の長辺が target_long_px に
+    なるよう倍率を計算してレンダリングするため、アプリ内で編集した
+    トリミング・回転の結果がそのまま画像に反映される。
+    注意: fitz.Page にアクセスするためメインスレッドで呼び出すこと。
+    """
+    scale = compute_export_scale(page.rect.width, page.rect.height, target_long_px)
+    mat = fitz.Matrix(scale, scale)
+    pix = page.get_pixmap(matrix=mat, alpha=False)
+    if fmt == "jpg":
+        pix.save(out_path, jpg_quality=jpg_quality)
+    else:
+        pix.save(out_path)
 
 
 class PageOpsMixin:
@@ -494,32 +557,7 @@ class PageOpsMixin:
     def _parse_page_ranges(self, text, max_page):
         """ページ範囲文字列をパースして [(start, end), ...] のリストを返す。
         ページ番号は1始まり、返り値も1始まり。無効時は None を返す。"""
-        ranges = []
-        text = text.strip()
-        if not text:
-            return None
-        for part in text.split(","):
-            part = part.strip()
-            if not part:
-                continue
-            if "-" in part:
-                tokens = part.split("-", 1)
-                try:
-                    s, e = int(tokens[0].strip()), int(tokens[1].strip())
-                except ValueError:
-                    return None
-                if s < 1 or e < 1 or s > max_page or e > max_page or s > e:
-                    return None
-                ranges.append((s, e))
-            else:
-                try:
-                    p = int(part)
-                except ValueError:
-                    return None
-                if p < 1 or p > max_page:
-                    return None
-                ranges.append((p, p))
-        return ranges if ranges else None
+        return parse_page_ranges(text, max_page)
 
     def _check_split_overwrite(self, folder, filenames):
         """分割先に同名ファイルがあれば確認ダイアログを表示。続行ならTrue。"""
@@ -615,6 +653,72 @@ class PageOpsMixin:
                 out.close()
             self._set_status(
                 self._t("status_split_each").format(count=n, folder=folder)
+            )
+        except Exception as e:
+            messagebox.showerror(self._t("err_title"), str(e))
+
+    # ── 画像エクスポート ──
+    def _export_pages_as_images(self):
+        """ページを画像ファイル（1ページ1ファイル）に変換するダイアログを開く"""
+        if not self._check_doc():
+            return
+        from pagefolio.dialogs import ExportImagesDialog
+
+        ExportImagesDialog(
+            self.root,
+            total_pages=len(self.doc),
+            selected_count=len(self.selected_pages),
+            callback=self._do_export_images,
+            lang=self.lang,
+        )
+
+    def _resolve_export_pages(self, options):
+        """エクスポート対象の 0 始まりページインデックスを昇順リストで返す"""
+        scope = options["scope"]
+        if scope == "selected":
+            return sorted(self.selected_pages)
+        if scope == "range":
+            pages = set()
+            for s, e in options["ranges"]:
+                pages.update(range(s - 1, e))
+            return sorted(pages)
+        return list(range(len(self.doc)))
+
+    def _do_export_images(self, options):
+        """ExportImagesDialog 確定後の画像変換処理（メインスレッドで実行）"""
+        if not self.doc:
+            return
+        pages = self._resolve_export_pages(options)
+        if not pages:
+            messagebox.showinfo(self._t("info_title"), self._t("export_no_pages"))
+            return
+        folder = filedialog.askdirectory(title=self._t("dlg_export_save_dir"))
+        if not folder:
+            return
+        base = "page"
+        if self.doc.name:
+            base = os.path.splitext(os.path.basename(self.doc.name))[0]
+        ext = "jpg" if options["fmt"] == "jpg" else "png"
+        digits = len(str(len(self.doc)))
+        filenames = [f"{base}_p{str(p + 1).zfill(digits)}.{ext}" for p in pages]
+        if not self._check_split_overwrite(folder, filenames):
+            return
+        total = len(pages)
+        try:
+            for k, p in enumerate(pages):
+                export_page_image(
+                    self.doc[p],
+                    os.path.join(folder, filenames[k]),
+                    options["long_px"],
+                    fmt=options["fmt"],
+                    jpg_quality=options.get("quality", DEFAULT_EXPORT_JPG_QUALITY),
+                )
+                self._set_status(
+                    self._t("status_exporting").format(done=k + 1, total=total)
+                )
+                self.root.update_idletasks()
+            self._set_status(
+                self._t("status_exported").format(count=total, folder=folder)
             )
         except Exception as e:
             messagebox.showerror(self._t("err_title"), str(e))
