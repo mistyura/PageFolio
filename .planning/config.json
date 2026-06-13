@@ -83,5 +83,19 @@
     "source_grounding_authority": "grep"
   },
   "mode": "yolo",
-  "granularity": "coarse"
+  "granularity": "coarse",
+  "response_language": "Japanese",
+  "context_window": 1000000,
+  "model_policy": {
+    "provider": "anthropic",
+    "budget": "high",
+    "high": "claude-opus-4-8",
+    "medium": "claude-opus-4-8",
+    "low": "claude-sonnet-4-6"
+  },
+  "model_profile_overrides": {
+    "claude": {
+      "haiku": "claude-sonnet-4-6"
+    }
+  }
 }
