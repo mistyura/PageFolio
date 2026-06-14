@@ -3,9 +3,9 @@
   "commit_docs": true,
   "parallelization": true,
   "search_gitignored": false,
-  "brave_search": false,
-  "firecrawl": false,
-  "exa_search": false,
+  "brave_search": null,
+  "firecrawl": null,
+  "exa_search": null,
   "git": {
     "branching_strategy": "none",
     "create_tag": true,
@@ -96,6 +96,20 @@
   "model_profile_overrides": {
     "claude": {
       "haiku": "claude-sonnet-4-6"
+    }
+  },
+  "review": {
+    "default_reviewers": [
+      "gemini",
+      "lm_studio"
+    ],
+    "models": {
+      "gemini": "gemini-3.5-flash",
+      "lm_studio": "google/gemma-4-12b-qat"
+    },
+    "lm_studio_host": "http://localhost:1234",
+    "max_prompt_tokens_per_reviewer": {
+      "lm_studio": 32000
     }
   }
 }
