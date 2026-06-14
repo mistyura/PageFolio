@@ -48,13 +48,13 @@ REQ-ID 形式: `OCR-[CATEGORY]-[NN]`。v1.3.0（`BUG`/`REFAC`/`TEST`）とは別
 
 ### OCR-EXT — 拡張（任意・最終フェーズ）
 
-- [ ] **OCR-EXT-01**: ユーザーは Tesseract（オフライン・無料・精度劣後注記つき）でページを OCR できる
-- [ ] **OCR-EXT-02**: PluginManager にカスタム OCR プロバイダ登録フック（`register_ocr_provider`）を追加し、サードパーティが独自バックエンドを登録できる
+- [x] **OCR-EXT-01**: ユーザーは Tesseract（オフライン・無料・精度劣後注記つき）でページを OCR できる
+- [x] **OCR-EXT-02**: PluginManager にカスタム OCR プロバイダ登録フック（`register_ocr_provider`）を追加し、サードパーティが独自バックエンドを登録できる
 
 ### OCR-QA — テスト・文言・ドキュメント
 
 - [x] **OCR-QA-01**: 各 Provider の payload 構築・レスポンス解析・テキスト埋め込みスキップ判定をモックでテストする（`tests/test_ocr.py`）
-- [ ] **OCR-QA-02**: プロバイダ名・APIキー未設定・精度注記・コスト警告の多言語文言（`lang.py`）と README/開発履歴を更新する
+- [x] **OCR-QA-02**: プロバイダ名・APIキー未設定・精度注記・コスト警告の多言語文言（`lang.py`）と README/開発履歴を更新する
 
 ---
 
@@ -99,9 +99,9 @@ REQ-ID 形式: `OCR-[CATEGORY]-[NN]`。v1.3.0（`BUG`/`REFAC`/`TEST`）とは別
 | OCR-PERF-02 | Phase 6 | Complete |
 | OCR-PERF-05 | Phase 6 | Complete |
 | OCR-QA-01 | Phase 6 | Complete |
-| OCR-EXT-01 | Phase 7 | Pending |
-| OCR-EXT-02 | Phase 7 | Pending |
-| OCR-QA-02 | Phase 7 | Pending |
+| OCR-EXT-01 | Phase 7 | Complete |
+| OCR-EXT-02 | Phase 7 | Complete |
+| OCR-QA-02 | Phase 7 | Complete |
 
 ---
 *Requirements defined: 2026-06-06 — Milestone v1.4.0 (OCR プロバイダ化 + クラウドAPI対応).*

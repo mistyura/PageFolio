@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.4.0
 milestone_name: OCR プロバイダ化 + クラウドAPI対応
-status: Phase 06 完了（06-04 ギャップクロージャ達成）
+status: Phase 07 完了 — v1.4.0 マイルストーン全フェーズ達成（遡及クローズアウト 2026-06-14）
 stopped_at: 260612-shc 完了（v1.4.4 確定・マージ・リビルド・公開）
-last_updated: "2026-06-12T09:00:00.000Z"
-last_activity: "2026-06-12 - Completed quick task 260612-shc: claude/sharp-carson-zqfduf マージ → v1.4.4 確定 → リビルド → push/Release"
+last_updated: "2026-06-14T13:24:38.948Z"
+last_activity: 2026-06-14
 progress:
   total_phases: 4
-  completed_phases: 3
+  completed_phases: 4
   total_plans: 14
-  completed_plans: 13
-  percent: 75
+  completed_plans: 14
+  percent: 100
 ---
 
 # Project State
@@ -21,25 +21,25 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-06)
 
 **Core value:** 大きな PDF でも Undo/Redo が正しく・速く動作し、コードが読みやすく保守しやすい状態にする
-**Current focus:** Phase 06 — gemini-provider
+**Current focus:** v1.4.0 完了（Phase 04〜07 全達成）— 次は v1.5.0 以降（L-1〜L-6）バックログ
 
 ## Current Position
 
-Phase: 7
-Plan: Not started
-Status: Phase 06 完了（06-04 ギャップクロージャ達成）
-Last activity: 2026-06-10 - Completed quick task 260610-rkp: v1.4.2 安定化（M-1〜M-11）
+Phase: 07
+Plan: Complete (1/1)
+Status: Phase 07 完了 — v1.4.0 マイルストーン達成（遡及クローズアウト 2026-06-14）
+Last activity: 2026-06-14
 
 ```
 [==========] v1.3.0 COMPLETE
-[========  ] v1.4.0 Phase 04 ████（完了）  Phase 05 ████（完了）  Phase 06 ████（完了）  Phase 07 ░░░░
+[==========] v1.4.0 Phase 04 ████（完了）  Phase 05 ████（完了）  Phase 06 ████（完了）  Phase 07 ████（完了）
 ```
 
 ## Performance Metrics
 
 **Velocity (v1.3.0 実績):**
 
-- Total plans completed: 14
+- Total plans completed: 15
 - Average duration: 約 22.5 分
 - Total execution time: 約 45 分
 
@@ -51,6 +51,7 @@ Last activity: 2026-06-10 - Completed quick task 260610-rkp: v1.4.2 安定化（
 | Phase 02 | 3 | - | - |
 | Phase 03 | 2 | - | - |
 | 06 | 4 | - | - |
+| 07 | 1 | - | - |
 
 *v1.4.0 フェーズ完了後に追記*
 | Phase 04-provider-abstraction P01 | 3min | 2 tasks | 2 files |
@@ -179,9 +180,11 @@ Resume file: None
 
 - v1.4.4 確定（2026-06-12）: claude/sharp-carson-zqfduf を main へ ff マージ・PyInstaller リビルド・
   push・GitHub Release まで完了
+
   - 内容: ページ→画像変換（AI/LLM 読取用途）・「縮小して保存」上書き修正・
     OCR リラン/続きから再実行（リスタート）/サーキットブレーカー・OCR ヘッダー UI 改善・
     README Gemma 注意書きの実績ベース更新
+
   - テスト 490 件グリーン・ruff クリーン
 - 次は **v1.5.0 以降（L-1〜L-6）バックログ**。詳細は REVIEW.md を参照
 - **注意**:

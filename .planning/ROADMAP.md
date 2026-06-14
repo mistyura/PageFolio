@@ -23,7 +23,7 @@
 - [ ] **Phase 4: プロバイダ抽象化** — `OCRProvider` 基底・LM Studio を Provider 実装へ移動・`run_parallel()` 一般化・テキスト埋め込みスキップ
 - [x] **Phase 5: Claude Provider + セキュリティ基盤 + プロバイダ選択 UI** — APIキーガード最優先・ClaudeProvider・確認ダイアログ・バックオフ・SettingsDialog UI (completed 2026-06-07)
 - [x] **Phase 6: Gemini Provider + 逐次レンダリング最適化** — GeminiProvider・ページ単位逐次化・`ocr_scale` 見直し・OCR モックテスト (検証: gaps_found — SC-2/OCR-PERF-02 BLOCKER → 06-04 ギャップクロージャで対応) (completed 2026-06-07)
-- [ ] **Phase 7: Tesseract + PluginManager 拡張 + QA** — TesseractProvider（任意）・プロバイダ登録フック・多言語文言・ドキュメント更新
+- [x] **Phase 7: Tesseract + PluginManager 拡張 + QA** — TesseractProvider（任意）・プロバイダ登録フック・多言語文言・ドキュメント更新 (completed 2026-06-14)
 
 ## Phase Details
 
@@ -139,4 +139,4 @@
 | 4. プロバイダ抽象化 | v1.4.0 | 3/3 | Complete | 2026-06-06 |
 | 5. Claude Provider + セキュリティ基盤 + プロバイダ選択 UI | v1.4.0 | 5/5 | Complete    | 2026-06-07 |
 | 6. Gemini Provider + 逐次レンダリング最適化 | v1.4.0 | 4/4 | Complete    | 2026-06-07 |
-| 7. Tesseract + PluginManager 拡張 + QA | v1.4.0 | 0/? | Not started | - |
+| 7. Tesseract + PluginManager 拡張 + QA | v1.4.0 | 1/1 | Complete    | 2026-06-14 |
