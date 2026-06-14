@@ -7,9 +7,12 @@ PageFolio の既存コードベースに対する最適化プロジェクト。
 
 **Core Value:** 大きな PDF でも Undo/Redo が正しく・速く動作し、コードが読みやすく保守しやすい状態にする。
 
-## Current Milestone: v1.4.0 OCR プロバイダ化 + クラウドAPI対応
+## Last Milestone: v1.4.0 OCR プロバイダ化 + クラウドAPI対応 — ✅ Shipped 2026-06-14
 
-**Goal:** 現行 OCR（LM Studio 専用）を `OCRProvider` 抽象化し、Gemini / Claude のクラウドAPIと Tesseract を差し替え可能にする。GPU 非搭載 PC を主想定とした低スペック対策とプラグイン登録機構まで含める。
+> v1.4.0 は全 4 フェーズ（Phase 04〜07）を達成して出荷済み。出荷後の安定化で現在 v1.4.4 まで進行。
+> 次マイルストーンは `/gsd-new-milestone` で確定する（候補は「Next Milestone Goals」参照）。
+
+**Goal（達成済み）:** 現行 OCR（LM Studio 専用）を `OCRProvider` 抽象化し、Gemini / Claude のクラウドAPIと Tesseract を差し替え可能にする。GPU 非搭載 PC を主想定とした低スペック対策とプラグイン登録機構まで含める。
 
 **Target features:**
 - プロバイダ抽象化（`OCRProvider` 基底・LM Studio を Provider 実装へリファクタ・`run_parallel()` 一般化）
@@ -79,10 +82,15 @@ PageFolio の既存コードベースに対する最適化プロジェクト。
 - ✓ TEST-02: BUG-03 の回帰テスト（`tests/test_viewer.py`）— Phase 2 で検証
 - ✓ DEBT-04 (REFAC-04): `settings._current_font_size` 外部アクセスを公開関数 `set_current_font_size()`/`get_current_font_size()` 経由に変更する — Phase 3 で検証（write/read 両面 API 化・stale binding 解消）
 - ✓ TEST-03: import 回帰テスト整備（`tests/test_imports.py`・4クラス34テスト）— Phase 3 で検証（REFAC-01〜04 の全 import パスを保護）
+- ✓ OCR-PROV-01/02・OCR-PERF-01: `OCRProvider` 抽象化・LM Studio Provider 化・`run_parallel()` 一般化・埋め込みテキストスキップ — v1.4.0 Phase 04
+- ✓ OCR-SEC-01・OCR-PROV-03・OCR-UI-01: APIキー平文保存ガード・Claude Provider・プロバイダ選択 UI・コスト確認 — v1.4.0 Phase 05
+- ✓ OCR-PROV-04・OCR-PERF-02/05・OCR-QA-01: Gemini Provider・逐次レンダリング・`ocr_scale` 見直し・OCR モックテスト — v1.4.0 Phase 06
+- ✓ OCR-EXT-01/02・OCR-QA-02: Tesseract Provider・`register_ocr_provider` フック・多言語文言/ドキュメント整備 — v1.4.0 Phase 07
+- ✓ アーカイブ詳細: `.planning/milestones/v1.4.0-REQUIREMENTS.md`
 
 ### Active
 
-- マイルストーン v1.4.0（OCR プロバイダ化 + クラウドAPI対応）の要件を定義中 → `.planning/REQUIREMENTS.md` を参照
+- 次マイルストーン（v1.5.0 以降）の要件は未定義。`/gsd-new-milestone` で確定する（候補は v1.4.0 リリースレビューの L-1〜L-6 軽微改善・下記 Next Milestone Goals）
 
 ### Out of Scope
 
@@ -102,8 +110,26 @@ PageFolio の既存コードベースに対する最適化プロジェクト。
 | DEBT-02：constants を `themes.py`/`lang.py` に分割し再エクスポート | 711行のモジュールを責務別に分割しつつ既存 import 表面を温存 | 検証済み（Phase 2・`C` 識別子保持で in-place 更新を維持） |
 | DEBT-04：`_current_font_size` を write/read 両面で公開 API 化（最小案不採用） | write のみ setter 化では dialogs の private import と stale binding が残る。setter/getter 一本化で DEBT-04 の趣旨（外部アクセス全廃）を満たす | 検証済み（Phase 3・`set_current_font_size`/`get_current_font_size`・単純代入のみ D-04） |
 | TEST-03：import 回帰テストを単一ファイル `tests/test_imports.py` に集約（明示 import + assert） | 動的 importlib 方式より「何が壊れたか」が一目瞭然。責務を 1 箇所に集約し見通しを確保 | 検証済み（Phase 3・D-06/D-09・Tk 非依存 import のみ） |
+| V14-D-01：OCR は `urllib.request` 直叩き・新規 pip 依存ゼロ（公式 SDK 不採用） | PyInstaller 肥大化を回避しつつ全プロバイダを統一実装 | ✓ Good（v1.4.0・Claude/Gemini/Tesseract 全実装で踏襲） |
+| V14-D-02：APIキーは環境変数＋セッションメモリのみ・`_SENSITIVE_KEYS` ガードで settings 非永続 | 平文保存による漏洩リスクを構造的に排除 | ✓ Good（v1.4.0 Phase 05・キー名のみログ・値は非出力） |
+| V14-D-03：既定 `ocr_provider: "off"` | 外部送信・課金を望まないユーザー向けの安全側デフォルト | ✓ Good（v1.4.0） |
+| V14-D-05/06：fitz `get_pixmap()` はメインスレッドのみ・逐次レンダリング（render→送信→破棄） | スレッドセーフ制約の遵守と低スペック PC のメモリ上限保証 | ✓ Good（v1.4.0 Phase 06・bounded buffer で機械保証） |
+| V14-D-08：Tesseract / PluginManager 登録フックは最終フェーズ（任意） | スコープ調整時に切りやすい位置に配置 | ✓ Good（v1.4.0 Phase 07・遡及クローズアウトで完了記録） |
 
 ## Current State
+
+**Shipped: v1.4.0 OCR プロバイダ化 + クラウドAPI対応 (2026-06-14)** — 4 フェーズ / 14 プラン / 26 タスク。出荷後の安定化で現在 **v1.4.4**（テスト 490 件グリーン・ruff クリーン）。
+
+- **OCR プロバイダ抽象化:** `OCRProvider` 基底 + `build_provider` ファクトリ。LM Studio / Claude / Gemini / Tesseract の 4 バックエンドを差し替え可能。
+- **セキュリティ:** APIキーは環境変数＋セッションメモリのみ。`_SENSITIVE_KEYS` ガードで settings.json への平文流入を構造的に防止。
+- **低スペック対策:** 埋め込みテキストスキップ・逐次レンダリング（bounded buffer）・`ocr_scale` 既定 1.5 でメモリ上限を保証。
+- **拡張性:** `PluginManager.register_ocr_provider` でサードパーティがカスタム OCR バックエンドを登録可能。
+- **UX:** プロバイダ選択 UI・コスト確認ダイアログ・指数バックオフリトライ・日英文言整備。
+- マイルストーン詳細: `.planning/milestones/v1.4.0-ROADMAP.md`・`.planning/MILESTONES.md`
+- 既知の遅延項目: Phase 04 検証ギャップ 1 + クイックタスク完了マーカー欠落 4（STATE.md「Deferred Items」・実作業は出荷済み）
+
+<details>
+<summary>Shipped: v1.3.0 コード最適化 MVP (2026-06-03)</summary>
 
 **Shipped: v1.3.0 コード最適化 MVP (2026-06-03)** — 3 フェーズ / 8 プラン / 全 10 要件達成。
 
@@ -114,12 +140,15 @@ PageFolio の既存コードベースに対する最適化プロジェクト。
 - **テスト:** Undo 往復・プレビュー回帰・import 回帰を整備。**pytest 199 件全通・ruff クリーン**。
 - コードベースマップ: `.planning/codebase/` / マイルストーン詳細: `.planning/milestones/v1.3.0-ROADMAP.md`・`.planning/MILESTONES.md`
 
+</details>
+
 ### Next Milestone Goals (候補・未確定)
 
-次マイルストーンの要件は `/gsd-new-milestone` で確定する。現時点の候補（Out of Scope から昇格しうるもの）:
+次マイルストーンの要件は `/gsd-new-milestone` で確定する。現時点の候補:
+- v1.4.0 リリースレビューの軽微改善バックログ（L-1〜L-6）の解消
+- Phase 04 検証ギャップ（人手テスト）の正式クローズ
 - サムネイル仮想化によるパフォーマンス改善（大量ページ対応）
 - 印刷機能 / 暗号化 PDF 対応（機能追加。最適化スコープからの拡張）
-- コードレビュー指摘の解消（`except` ロガー付与、`font_size` デフォルト統一など — 軽微な保守債）
 
 ## Evolution
 
@@ -132,4 +161,4 @@ PageFolio の既存コードベースに対する最適化プロジェクト。
 4. 決定事項 → Key Decisions を更新
 
 ---
-*Last updated: 2026-06-06 — Started milestone v1.4.0 (OCR プロバイダ化 + クラウドAPI対応).*
+*Last updated: 2026-06-14 — Completed milestone v1.4.0 (OCR プロバイダ化 + クラウドAPI対応).*

@@ -2,10 +2,10 @@
 gsd_state_version: 1.0
 milestone: v1.4.0
 milestone_name: OCR プロバイダ化 + クラウドAPI対応
-status: Phase 07 完了 — v1.4.0 マイルストーン全フェーズ達成（遡及クローズアウト 2026-06-14）
+status: Awaiting next milestone
 stopped_at: 260612-shc 完了（v1.4.4 確定・マージ・リビルド・公開）
-last_updated: "2026-06-14T13:24:38.948Z"
-last_activity: 2026-06-14
+last_updated: "2026-06-14T13:30:00.381Z"
+last_activity: 2026-06-14 — Milestone v1.4.0 completed and archived
 progress:
   total_phases: 4
   completed_phases: 4
@@ -25,15 +25,10 @@ See: .planning/PROJECT.md (updated 2026-06-06)
 
 ## Current Position
 
-Phase: 07
-Plan: Complete (1/1)
-Status: Phase 07 完了 — v1.4.0 マイルストーン達成（遡及クローズアウト 2026-06-14）
-Last activity: 2026-06-14
-
-```
-[==========] v1.3.0 COMPLETE
-[==========] v1.4.0 Phase 04 ████（完了）  Phase 05 ████（完了）  Phase 06 ████（完了）  Phase 07 ████（完了）
-```
+Phase: Milestone v1.4.0 complete
+Plan: —
+Status: Awaiting next milestone
+Last activity: 2026-06-14 — Milestone v1.4.0 completed and archived
 
 ## Performance Metrics
 
@@ -170,6 +165,18 @@ Decisions are logged in PROJECT.md Key Decisions table.
 | v2 | OCR 結果のページ埋め込み（検索可能 PDF 化） | Out of scope | v1.4.0 |
 | v2 | プロバイダ別の詳細な実コスト計測・課金トラッキング | Out of scope | v1.4.0 |
 
+### v1.4.0 クローズ時に Acknowledge した未クローズ項目（2026-06-14）
+
+実作業は v1.4.0〜v1.4.4 として出荷済み。記録上の完了マーカー欠落のため tech debt として遅延受容。
+
+| Category | Item | Status |
+|----------|------|--------|
+| verification | Phase 04 04-VERIFICATION.md | human_needed |
+| quick_task | 260607-ccz-ocr-llm-llmconfigdialog | unknown |
+| quick_task | 260610-aaa-v140-review-fixplan | missing |
+| quick_task | 260610-qqq-review-md-260610-aaa-h-1-h-5-v1-4-1 | unknown |
+| quick_task | 260610-rkp-v1-4-2-review-md-m-1-m-11 | unknown |
+
 ## Session Continuity
 
 Last session: 2026-06-12T09:00:00.000Z
@@ -178,16 +185,4 @@ Resume file: None
 
 ## Operator Next Steps
 
-- v1.4.4 確定（2026-06-12）: claude/sharp-carson-zqfduf を main へ ff マージ・PyInstaller リビルド・
-  push・GitHub Release まで完了
-
-  - 内容: ページ→画像変換（AI/LLM 読取用途）・「縮小して保存」上書き修正・
-    OCR リラン/続きから再実行（リスタート）/サーキットブレーカー・OCR ヘッダー UI 改善・
-    README Gemma 注意書きの実績ベース更新
-
-  - テスト 490 件グリーン・ruff クリーン
-- 次は **v1.5.0 以降（L-1〜L-6）バックログ**。詳細は REVIEW.md を参照
-- **注意**:
-  - クラウド OCR の推奨解像度は 1.5〜2.0（4.0 はペイロード肥大でタイムアウト誘発）
-  - gemma 系の HTTP 500 はサーバ側要因で日により変動（API 仕様変更ではない）
-  - H-7（Gemini gemma 400 エラー修正）は実 API キー環境での動作確認を引き続き推奨
+- Start the next milestone with /gsd-new-milestone
