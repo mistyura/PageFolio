@@ -42,6 +42,45 @@
 
 ---
 
+## Milestone: v1.4.0 — OCR プロバイダ化 + クラウドAPI対応
+
+**Shipped:** 2026-06-14
+**Phases:** 4（Phase 04〜07）| **Plans:** 14 | **Tasks:** 26 | **Sessions:** 複数（2026-06-06〜06-12 実装、06-14 にマイルストーンクローズ）
+
+### What Was Built
+- **OCRProvider 抽象化（Phase 04）**: `abc.ABC` 基底 `OCRProvider` + `build_provider` ファクトリ。LM Studio を Provider 実装へリファクタし `run_parallel()` を一般化。埋め込みテキストスキップで API 呼び出しを節約。
+- **Claude Provider + セキュリティ基盤（Phase 05）**: messages API による Claude OCR。`_SENSITIVE_KEYS` ガードで APIキー平文保存を構造的に防止。コスト確認ダイアログ・指数バックオフ・プロバイダ選択 UI。
+- **Gemini Provider + 逐次レンダリング（Phase 06）**: x-goog-api-key 認証・dual env var の GeminiProvider。`queue.Queue(maxsize=concurrency+1)` の bounded buffer で全ページ base64 一括保持を廃止しメモリ上限を機械保証。`ocr_scale` 既定 1.5。
+- **Tesseract + PluginManager（Phase 07）**: subprocess 直叩きのオフライン OCR（pytesseract 非依存）。`register_ocr_provider` フックでサードパーティ登録。日英文言・README・開発履歴を整備。
+
+### What Worked
+- **同型テンプレートでのプロバイダ横展開**: ClaudeProvider を雛形に GeminiProvider を実装（D-05）。インターフェース契約を Phase 04 で固めたことで Phase 05/06/07 が直線的に進んだ。
+- **セキュリティ最優先タスク化**: APIキーガード（`_SENSITIVE_KEYS`）を Phase 05 着手直前の最優先に置き、平文漏洩リスクを早期に潰した。
+- **ギャップクロージャの活用**: Phase 04/06 の検証で見つかった後方互換・並列度の BLOCKER を 04-04 / 06-04 のギャッププランで確実に解消。
+
+### What Was Inefficient
+- **Phase 07 の記録未クローズ**: 実装（commit `0c5dbfd`）は完了していたが SUMMARY.md 作成・STATE/ROADMAP 更新が漏れ、後続 v1.4.1〜v1.4.4 が記録不整合の上に積層。マイルストーンクローズ時に遡及クローズアウトが必要になった。
+- **クイックタスクの完了マーカー欠落**: v1.4.1〜v1.4.4 のクイックタスク 4 件が監査で [unknown]/[missing] 判定。出荷済みだが記録上の完了印が欠けていた。
+- **マイルストーン監査の人手検証ギャップ**: Phase 04 の `human_needed` 検証項目が未クローズのまま出荷。
+
+### Patterns Established
+- **二段プロバイダ解決**: `build_provider` 内蔵分岐 → `plugin_manager._provider_registry` フォールバック。
+- **フィーチャ検出フラグ**: 起動時 1 回だけ外部コマンド（Tesseract）の存在・能力を評価しモジュールフラグ化。
+- **APIキー非永続の徹底**: 環境変数＋セッションメモリ（`_session_api_keys`）のみ。`_SENSITIVE_KEYS` に大文字バリアントも登録。
+- **スレッド境界の明確化**: fitz `get_pixmap()` はメインスレッド限定、ワーカーには base64 bytes のみ渡す。
+
+### Key Lessons
+1. **実装完了とフェーズクローズは別物**: コミットが入っても SUMMARY.md・STATE・ROADMAP を即更新しないと、後続作業が記録不整合の上に積み上がる。フェーズ完了時に bookkeeping をその場で閉じる。
+2. **safe-resume ゲートが効いた**: execute-phase の「実装コミットあり・SUMMARY 欠落」検出が、既存コードの破壊的な再実装を未然に防いだ。
+3. インターフェース契約を最初のフェーズで固めると、同型プロバイダの横展開が安価になる。
+4. セキュリティ critical なガードは独立した最優先タスクとして前倒しする。
+
+### Cost Observations
+- Model mix: executor/verifier=opus（config: model_profile balanced・mode yolo）
+- Notable: ローカル main が origin より大幅先行のため GSD worktree 並列が #683 で自動降格。単一プランフェーズは main tree 逐次実行で十分。
+
+---
+
 ## Cross-Milestone Trends
 
 ### Process Evolution
@@ -49,14 +88,17 @@
 | Milestone | Sessions | Phases | Key Change |
 |-----------|----------|--------|------------|
 | v1.3.0 | 数 | 3 | GSD フルチェーン（discuss→plan→execute→verify）を最適化プロジェクトに初適用 |
+| v1.4.0 | 複数 | 4 | 機能追加マイルストーン（OCR プロバイダ化）を GSD で実施。ギャップクロージャ・遡及クローズアウトを経験 |
 
 ### Cumulative Quality
 
 | Milestone | Tests | Coverage | Zero-Dep Additions |
 |-----------|-------|----------|-------------------|
 | v1.3.0 | 199 passed | （未計測） | 全要件を新規依存ゼロで達成 |
+| v1.4.0 | 490 passed（v1.4.4 時点） | （未計測） | urllib 直叩きで全プロバイダを新規依存ゼロ実装 |
 
 ### Top Lessons (Verified Across Milestones)
 
 1. 詳細な locked decision（CONTEXT.md）が下流フェーズの手戻りを最小化する。
 2. 後方互換の境界は機械的テストで保護する（import 回帰テスト）。
+3. 実装完了直後にフェーズ記録（SUMMARY/STATE/ROADMAP）を閉じる。記録の遅延は後続作業の不整合を生む（v1.4.0 Phase 07 の教訓）。
