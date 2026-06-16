@@ -277,7 +277,7 @@ class PDFEditorApp(
             return event.action
 
         # 複数ファイルの場合は挿入順序ダイアログを出さずにそのまま処理するか、
-        # または MergeOrderDialog を出すか。既存の実装に合わせるなら _do_insert を直接呼ぶ
+        # または MergeOrderDialog を出す。既存実装に合わせ _do_insert を直接呼ぶ
         if len(pdf_paths) > 1:
             from pagefolio.dialogs import MergeOrderDialog
 

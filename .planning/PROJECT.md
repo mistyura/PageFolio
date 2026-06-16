@@ -7,10 +7,30 @@ PageFolio の既存コードベースに対する最適化プロジェクト。
 
 **Core Value:** 大きな PDF でも Undo/Redo が正しく・速く動作し、コードが読みやすく保守しやすい状態にする。
 
-## Last Milestone: v1.4.0 OCR プロバイダ化 + クラウドAPI対応 — ✅ Shipped 2026-06-14
+## Last Milestone: v1.5.0 基本機能・UI/UX改善・OCRカスタムプロンプト — ✅ Shipped 2026-06-16
 
-> v1.4.0 は全 4 フェーズ（Phase 04〜07）を達成して出荷済み。出荷後の安定化で現在 v1.4.4 まで進行。
+> v1.5.0 は全 4 フェーズ（Phase 1〜4）を達成して出荷済み（`APP_VERSION = v1.5.0`）。
+> 実装は `feature/v1.5.0-improvements` ブランチで別ワークフローにより完了し、2026-06-16 に文書を整合。
 > 次マイルストーンは `/gsd-new-milestone` で確定する（候補は「Next Milestone Goals」参照）。
+
+**Goal（達成済み）:** PDF 編集の基本機能を底上げ（白紙ページ挿入・テキスト透かし／ページ番号・TOC 保持）、UI/UX を改善（サムネイルサイズ動的変更・D&D 指定位置挿入・ショートカット動的読込）、OCR にカスタムプロンプトを導入する。
+
+**Target features:**
+- PDF ページ操作の拡充: 白紙ページ挿入・テキスト透かし／ページ番号追加・ページ操作時の TOC 保持
+- UI/UX 改善: サムネイルサイズ動的変更（スライダー）・サムネイルペインへの D&D 指定位置挿入・ショートカット動的読込（JSON ミニマム実装）
+- OCR カスタムプロンプト: `LLMConfigDialog` でプロンプトを入力・保存し OCR バックエンドへ受け渡し
+
+**Key context:**
+- 透かし・ページ番号は**テキストのみ**（画像ロゴは後回し）。
+- ショートカットは**`pagefolio_settings.json` の `shortcuts` キー編集のみ**のミニマム実装（専用 GUI タブなし）。
+- 他 OCR プロバイダ対応はスコープ外（既存の Provider 群を踏襲）。
+- 整合作業時に ruff E501 2 件を修正（`app.py` / `file_drop.py`）。テスト 490 件グリーン。
+- 要件・ロードマップ詳細: `.planning/milestones/v1.5.0-REQUIREMENTS.md` / `.planning/milestones/v1.5.0-ROADMAP.md`
+
+<details>
+<summary>Previous Milestone: v1.4.0 OCR プロバイダ化 + クラウドAPI対応 — ✅ Shipped 2026-06-14</summary>
+
+> v1.4.0 は全 4 フェーズ（Phase 04〜07）を達成して出荷済み。出荷後の安定化で v1.4.4 まで進行。
 
 **Goal（達成済み）:** 現行 OCR（LM Studio 専用）を `OCRProvider` 抽象化し、Gemini / Claude のクラウドAPIと Tesseract を差し替え可能にする。GPU 非搭載 PC を主想定とした低スペック対策とプラグイン登録機構まで含める。
 
@@ -31,6 +51,8 @@ PageFolio の既存コードベースに対する最適化プロジェクト。
 - プライバシー（外部送信）・コスト（従量課金）・レート制限（429）に配慮。クラウド並列度はローカルより絞る。
 - 後方互換維持（v1.4.0 マイナーバンプ）。
 - 設計の出典: `docs/OCRプロバイダ化_見積もり仕様.md`
+
+</details>
 
 ## Context
 
@@ -87,10 +109,15 @@ PageFolio の既存コードベースに対する最適化プロジェクト。
 - ✓ OCR-PROV-04・OCR-PERF-02/05・OCR-QA-01: Gemini Provider・逐次レンダリング・`ocr_scale` 見直し・OCR モックテスト — v1.4.0 Phase 06
 - ✓ OCR-EXT-01/02・OCR-QA-02: Tesseract Provider・`register_ocr_provider` フック・多言語文言/ドキュメント整備 — v1.4.0 Phase 07
 - ✓ アーカイブ詳細: `.planning/milestones/v1.4.0-REQUIREMENTS.md`
+- ✓ V15-PAGE-01/02/03: 白紙ページ挿入・テキスト透かし／ページ番号追加・ページ操作時の TOC 保持 — v1.5.0 Phase 1
+- ✓ V15-UIUX-01/02/03: サムネイルサイズ動的変更・D&D 指定位置挿入・ショートカット動的読込（JSON ミニマム） — v1.5.0 Phase 2
+- ✓ V15-OCR-01/02: OCR カスタムプロンプト入力／保存・OCR バックエンドへの受け渡し — v1.5.0 Phase 3
+- ✓ V15-QA-01/02: ruff クリーン・pytest 490 件全通過 — v1.5.0 Phase 4（整合時に E501 2 件修正）
+- ✓ アーカイブ詳細: `.planning/milestones/v1.5.0-REQUIREMENTS.md`
 
 ### Active
 
-- 次マイルストーン（v1.5.0 以降）の要件は未定義。`/gsd-new-milestone` で確定する（候補は v1.4.0 リリースレビューの L-1〜L-6 軽微改善・下記 Next Milestone Goals）
+- 次マイルストーン（v1.6.0 以降）の要件は未定義。`/gsd-new-milestone` で確定する（候補は下記 Next Milestone Goals）
 
 ### Out of Scope
 
@@ -118,7 +145,18 @@ PageFolio の既存コードベースに対する最適化プロジェクト。
 
 ## Current State
 
-**Shipped: v1.4.0 OCR プロバイダ化 + クラウドAPI対応 (2026-06-14)** — 4 フェーズ / 14 プラン / 26 タスク。出荷後の安定化で現在 **v1.4.4**（テスト 490 件グリーン・ruff クリーン）。
+**Shipped: v1.5.0 基本機能・UI/UX改善・OCRカスタムプロンプト (2026-06-16)** — 4 フェーズ。`APP_VERSION = v1.5.0`（テスト 490 件グリーン・ruff クリーン）。
+
+- **ページ操作の拡充:** 白紙ページ挿入・テキスト透かし／ページ番号追加（`insert_text`・テキストのみ）・削除/結合/分割時の TOC 保持調整。
+- **UI/UX:** サムネイルサイズ動的変更（`thumb_zoom_scale` スライダー）・サムネイルペインへの D&D 指定位置挿入・ショートカット動的読込（`shortcuts` キー・JSON ミニマム）。
+- **OCR:** `LLMConfigDialog` のカスタムプロンプト入力欄・`ocr_custom_prompt` 保存・OCR バックエンドへの受け渡し。
+- 実装は `feature/v1.5.0-improvements` ブランチ（別 WF 実装・2026-06-16 に文書整合・ruff E501 2 件修正）。
+- マイルストーン詳細: `.planning/milestones/v1.5.0-ROADMAP.md`・`.planning/MILESTONES.md`
+
+<details>
+<summary>Shipped: v1.4.0 OCR プロバイダ化 + クラウドAPI対応 (2026-06-14)</summary>
+
+**Shipped: v1.4.0 OCR プロバイダ化 + クラウドAPI対応 (2026-06-14)** — 4 フェーズ / 14 プラン / 26 タスク。出荷後の安定化で v1.4.4 まで進行（テスト 490 件グリーン・ruff クリーン）。
 
 - **OCR プロバイダ抽象化:** `OCRProvider` 基底 + `build_provider` ファクトリ。LM Studio / Claude / Gemini / Tesseract の 4 バックエンドを差し替え可能。
 - **セキュリティ:** APIキーは環境変数＋セッションメモリのみ。`_SENSITIVE_KEYS` ガードで settings.json への平文流入を構造的に防止。
@@ -127,6 +165,8 @@ PageFolio の既存コードベースに対する最適化プロジェクト。
 - **UX:** プロバイダ選択 UI・コスト確認ダイアログ・指数バックオフリトライ・日英文言整備。
 - マイルストーン詳細: `.planning/milestones/v1.4.0-ROADMAP.md`・`.planning/MILESTONES.md`
 - 既知の遅延項目: Phase 04 検証ギャップ 1 + クイックタスク完了マーカー欠落 4（STATE.md「Deferred Items」・実作業は出荷済み）
+
+</details>
 
 <details>
 <summary>Shipped: v1.3.0 コード最適化 MVP (2026-06-03)</summary>
@@ -144,7 +184,9 @@ PageFolio の既存コードベースに対する最適化プロジェクト。
 
 ### Next Milestone Goals (候補・未確定)
 
-次マイルストーンの要件は `/gsd-new-milestone` で確定する。現時点の候補:
+次マイルストーン（v1.6.0 以降）の要件は `/gsd-new-milestone` で確定する。現時点の候補:
+- v1.5.0 新機能（ページ操作・UI/UX）に対する自動テストの拡充（現状 OCR 系のみ追加・新機能の回帰テスト未整備）
+- 透かしの画像（ロゴ）対応・ショートカット設定の GUI 化（v1.5.0 でミニマム実装に留めた拡張）
 - v1.4.0 リリースレビューの軽微改善バックログ（L-1〜L-6）の解消
 - Phase 04 検証ギャップ（人手テスト）の正式クローズ
 - サムネイル仮想化によるパフォーマンス改善（大量ページ対応）
@@ -161,4 +203,4 @@ PageFolio の既存コードベースに対する最適化プロジェクト。
 4. 決定事項 → Key Decisions を更新
 
 ---
-*Last updated: 2026-06-14 — Completed milestone v1.4.0 (OCR プロバイダ化 + クラウドAPI対応).*
+*Last updated: 2026-06-16 — Completed milestone v1.5.0 (基本機能・UI/UX改善・OCRカスタムプロンプト).*

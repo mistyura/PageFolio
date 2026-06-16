@@ -4,7 +4,7 @@
 
 - ✅ **v1.3.0 コード最適化 MVP** — Phases 1-3 (shipped 2026-06-03) — [archive](milestones/v1.3.0-ROADMAP.md)
 - ✅ **v1.4.0 OCR プロバイダ化 + クラウドAPI対応** — Phases 4-7 (shipped 2026-06-14) — [archive](milestones/v1.4.0-ROADMAP.md)
-- 📋 **v1.5.0 以降** — 未確定（`/gsd-new-milestone` で計画）
+- ✅ **v1.5.0 基本機能・UI/UX改善・OCRカスタムプロンプト** — Phases 1-4 (shipped 2026-06-16) — [archive](milestones/v1.5.0-ROADMAP.md)
 
 ## Phases
 
@@ -32,7 +32,20 @@
 
 </details>
 
-### 📋 v1.5.0 以降 (未計画)
+<details>
+<summary>✅ v1.5.0 基本機能・UI/UX改善・OCRカスタムプロンプト (Phases 1-4) — SHIPPED 2026-06-16</summary>
+
+- [x] Phase 1: PDF ページ操作・編集機能の拡充 — completed 2026-06-16
+- [x] Phase 2: UI / UX とパフォーマンスの改善 — completed 2026-06-16
+- [x] Phase 3: AI・OCR連携のさらなる進化 — completed 2026-06-16
+- [x] Phase 4: テスト・品質保証 — completed 2026-06-16
+
+全フェーズの詳細・成功基準は [milestones/v1.5.0-ROADMAP.md](milestones/v1.5.0-ROADMAP.md) を参照。
+実装は `feature/v1.5.0-improvements` ブランチ（別 WF 実装・2026-06-16 に文書整合）。
+
+</details>
+
+### 📋 v1.6.0 以降 (未計画)
 
 次マイルストーンは `/gsd-new-milestone` で確定する。候補は PROJECT.md「Next Milestone Goals」を参照。
 
@@ -47,3 +60,7 @@
 | 5. Claude Provider + セキュリティ基盤 + プロバイダ選択 UI | v1.4.0 | 5/5 | Complete | 2026-06-07 |
 | 6. Gemini Provider + 逐次レンダリング最適化 | v1.4.0 | 4/4 | Complete | 2026-06-07 |
 | 7. Tesseract + PluginManager 拡張 + QA | v1.4.0 | 1/1 | Complete | 2026-06-14 |
+| 1. PDF ページ操作・編集機能の拡充 | v1.5.0 | — | Complete | 2026-06-16 |
+| 2. UI / UX とパフォーマンスの改善 | v1.5.0 | — | Complete | 2026-06-16 |
+| 3. AI・OCR連携のさらなる進化 | v1.5.0 | — | Complete | 2026-06-16 |
+| 4. テスト・品質保証 | v1.5.0 | — | Complete | 2026-06-16 |

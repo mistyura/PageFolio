@@ -1,16 +1,16 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.4.0
-milestone_name: OCR プロバイダ化 + クラウドAPI対応
+milestone: v1.5.0
+milestone_name: 基本機能・UI/UX改善・OCRカスタムプロンプト
 status: Awaiting next milestone
-stopped_at: 260612-shc 完了（v1.4.4 確定・マージ・リビルド・公開）
-last_updated: "2026-06-14T13:30:00.381Z"
-last_activity: 2026-06-14 — Milestone v1.4.0 completed and archived
+stopped_at: v1.5.0 出荷確定（feature/v1.5.0-improvements 実装・2026-06-16 文書整合・APP_VERSION=v1.5.0）
+last_updated: "2026-06-16T15:36:00.000Z"
+last_activity: 2026-06-16 — Milestone v1.5.0 completed and archived
 progress:
   total_phases: 4
   completed_phases: 4
-  total_plans: 14
-  completed_plans: 14
+  total_plans: 0
+  completed_plans: 0
   percent: 100
 ---
 
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-06)
 
 **Core value:** 大きな PDF でも Undo/Redo が正しく・速く動作し、コードが読みやすく保守しやすい状態にする
-**Current focus:** v1.4.0 完了（Phase 04〜07 全達成）— 次は v1.5.0 以降（L-1〜L-6）バックログ
+**Current focus:** v1.5.0 完了（Phase 1〜4 全達成）— 次は v1.6.0 以降（新機能の回帰テスト拡充・ロゴ透かし/ショートカット GUI 化等）
 
 ## Current Position
 
-Phase: Milestone v1.4.0 complete
+Phase: Milestone v1.5.0 complete
 Plan: —
 Status: Awaiting next milestone
-Last activity: 2026-06-14 — Milestone v1.4.0 completed and archived
+Last activity: 2026-06-16 — Milestone v1.5.0 completed and archived
 
 ## Performance Metrics
 

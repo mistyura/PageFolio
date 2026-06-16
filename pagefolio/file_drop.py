@@ -12,7 +12,10 @@ except ImportError:
 
 
 def _setup_file_drop(app):
-    """tkinterdnd2 による preview_canvas および thumb_canvas への D&D 登録。未インストール時はスキップ。"""
+    """tkinterdnd2 で preview_canvas / thumb_canvas に D&D 登録する。
+
+    未インストール時はスキップする。
+    """
     if not _HAS_TKDND:
         return
 
