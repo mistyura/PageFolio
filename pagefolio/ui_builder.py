@@ -197,6 +197,17 @@ class UIBuilderMixin:
             sel_frame, text=self._t("deselect"), command=self._deselect_all
         ).pack(side="left", padx=2)
 
+        self.thumb_zoom_var = tk.DoubleVar(value=self.settings.get("thumb_zoom", 1.0))
+        self.thumb_zoom_scale = ttk.Scale(
+            sel_frame,
+            from_=0.5,
+            to=2.5,
+            variable=self.thumb_zoom_var,
+            orient="horizontal",
+        )
+        self.thumb_zoom_scale.pack(side="right", fill="x", expand=True, padx=(10, 2))
+        self.thumb_zoom_scale.bind("<ButtonRelease-1>", self._on_thumb_zoom_release)
+
         canvas_frame = tk.Frame(parent, bg=C["BG_PANEL"])
         canvas_frame.pack(fill="both", expand=True, padx=4, pady=4)
 
@@ -445,6 +456,27 @@ class UIBuilderMixin:
             f2,
             self._t("btn_duplicate"),
             self._duplicate_page,
+            needs_doc=True,
+            edit_only=True,
+        )
+        btn(
+            f2,
+            self._t("btn_insert_blank"),
+            self._insert_blank_page,
+            needs_doc=True,
+            edit_only=True,
+        )
+        btn(
+            f2,
+            self._t("btn_watermark"),
+            self._add_watermark_text,
+            needs_doc=True,
+            edit_only=True,
+        )
+        btn(
+            f2,
+            self._t("btn_page_number"),
+            self._add_page_numbers,
             needs_doc=True,
             edit_only=True,
         )

@@ -103,19 +103,52 @@ class PDFEditorApp(
         # WM_DELETE_WINDOW
         self.root.protocol("WM_DELETE_WINDOW", self._quit)
 
-        # キーボードショートカット
-        self.root.bind("<Control-o>", lambda e: self._open_file())
-        self.root.bind("<Control-O>", lambda e: self._open_file())
-        self.root.bind("<Control-s>", lambda e: self._save_file())
-        self.root.bind("<Control-S>", lambda e: self._save_file())
-        self.root.bind("<Control-z>", lambda e: self._undo())
-        self.root.bind("<Control-Z>", lambda e: self._undo())
-        self.root.bind("<Control-y>", lambda e: self._redo())
-        self.root.bind("<Control-Y>", lambda e: self._redo())
-        self.root.bind("<Control-Shift-s>", lambda e: self._save_as())
-        self.root.bind("<Control-Shift-S>", lambda e: self._save_as())
-        self.root.bind("<Delete>", lambda e: self._delete_selected())
-        self.root.bind("<F5>", lambda e: self._toggle_edit_mode())
+        # キーボードショートカットの動的読み込み
+        default_shortcuts = {
+            "open_file": "<Control-o>",
+            "save_file": "<Control-s>",
+            "undo": "<Control-z>",
+            "redo": "<Control-y>",
+            "save_as": "<Control-S>",
+            "delete": "<Delete>",
+            "toggle_mode": "<F5>",
+        }
+
+        custom_shortcuts = self.settings.get("shortcuts", {})
+        shortcuts = {**default_shortcuts, **custom_shortcuts}
+
+        cmd_map = {
+            "open_file": self._open_file,
+            "save_file": self._save_file,
+            "undo": self._undo,
+            "redo": self._redo,
+            "save_as": self._save_as,
+            "delete": self._delete_selected,
+            "toggle_mode": self._toggle_edit_mode,
+            "rotate_right": lambda: self._rotate_selected(90),
+            "rotate_left": lambda: self._rotate_selected(270),
+            "rotate_180": lambda: self._rotate_selected(180),
+        }
+
+        for cmd_name, keysym in shortcuts.items():
+            func = cmd_map.get(cmd_name)
+            if func and keysym:
+                try:
+                    self.root.bind(keysym, lambda e, f=func: f())
+                    # 大文字小文字の対応 (Shift なし Control などのため)
+                    if (
+                        keysym.startswith("<Control-")
+                        and len(keysym) == 11
+                        and keysym[-2].islower()
+                    ):
+                        self.root.bind(
+                            keysym[:-2] + keysym[-2].upper() + ">",
+                            lambda e, f=func: f(),
+                        )
+                except Exception as ex:
+                    logger.warning(
+                        f"Failed to bind shortcut {keysym} for {cmd_name}: {ex}"
+                    )
 
     # ══════════════════════════════════════════
     #  ユーティリティ
@@ -209,6 +242,53 @@ class PDFEditorApp(
             MergeOrderDialog(
                 self.root, list(pdf_paths), self._do_open_merged, lang=self.lang
             )
+
+        return event.action
+
+    def _on_thumb_dnd_motion(self, event):
+        """外部からのファイルドラッグ時のインジケーター表示"""
+        if not self.doc:
+            return event.action
+        self._dnd_show_indicator(event)
+        return event.action
+
+    def _on_thumb_dnd_drop(self, event):
+        """サムネイルへのファイルドロップ（特定位置への挿入）"""
+        self._dnd_clear_indicator()
+        if not self.doc:
+            return self._on_dnd_drop(event)
+
+        dest = self._dnd_dest_index(event)
+        if dest is None:
+            return event.action
+
+        raw_paths = self.preview_canvas.tk.splitlist(event.data)
+        pdf_paths = [
+            p
+            for p in raw_paths
+            if os.path.splitext(p)[1].lower() in SUPPORTED_EXTENSIONS
+        ]
+
+        if not pdf_paths:
+            if raw_paths:
+                messagebox.showwarning(
+                    self._t("confirm_title"), self._t("dnd_pdf_only")
+                )
+            return event.action
+
+        # 複数ファイルの場合は挿入順序ダイアログを出さずにそのまま処理するか、
+        # または MergeOrderDialog を出すか。既存の実装に合わせるなら _do_insert を直接呼ぶ
+        if len(pdf_paths) > 1:
+            from pagefolio.dialogs import MergeOrderDialog
+
+            MergeOrderDialog(
+                self.root,
+                list(pdf_paths),
+                lambda ordered: self._do_insert(ordered, dest),
+                lang=self.lang,
+            )
+        else:
+            self._do_insert(pdf_paths, dest)
 
         return event.action
 

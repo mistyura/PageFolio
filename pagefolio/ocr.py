@@ -598,6 +598,7 @@ class OCRMixin:
         url = self.settings.get("lm_studio_url", DEFAULT_LM_STUDIO_URL)
         model = self.settings.get("lm_studio_model", "")
         preset = self.settings.get("ocr_prompt_preset", "text")
+        custom_prompt = self.settings.get("ocr_custom_prompt", "")
         scale = float(self.settings.get("ocr_scale", DEFAULT_OCR_SCALE))
         timeout = int(self.settings.get("ocr_timeout", DEFAULT_OCR_TIMEOUT))
         max_tokens = int(self.settings.get("ocr_max_tokens", DEFAULT_OCR_MAX_TOKENS))
@@ -665,4 +666,5 @@ class OCRMixin:
             provider=provider,
             lang=self.lang,
             font_func=self._font,
+            custom_prompt=custom_prompt,
         )

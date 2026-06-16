@@ -134,12 +134,24 @@ class ViewerMixin:
         if i in self.thumb_cache:
             return self.thumb_cache[i]
         page = self.doc[i]
-        mat = fitz.Matrix(0.22, 0.22)
+        zoom = getattr(self, "thumb_zoom_var", None)
+        z = zoom.get() if zoom else 1.0
+        mat = fitz.Matrix(0.22 * z, 0.22 * z)
         pix = page.get_pixmap(matrix=mat, alpha=False)
         img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
         photo = ImageTk.PhotoImage(img)
         self.thumb_cache[i] = photo
         return photo
+
+    def _on_thumb_zoom_release(self, event=None):
+        if not hasattr(self, "thumb_zoom_var"):
+            return
+        self.settings["thumb_zoom"] = self.thumb_zoom_var.get()
+        from pagefolio.settings import _save_settings
+
+        _save_settings(self.settings)
+        self._invalidate_thumb_cache()
+        self._refresh_all()
 
     # ── 表示更新 ──
     def _refresh_all(self):

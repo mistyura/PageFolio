@@ -110,6 +110,13 @@ class PageOpsMixin:
         self._save_undo("delete", targets=targets)
         for i in targets:
             self.doc.delete_page(i)
+
+        # Clean up TOC (remove entries pointing to deleted pages)
+        toc = self.doc.get_toc()
+        new_toc = [item for item in toc if item[2] != -1]
+        if len(new_toc) != len(toc):
+            self.doc.set_toc(new_toc)
+
         self.selected_pages.clear()
         self.current_page = min(self.current_page, max(0, len(self.doc) - 1))
         self._invalidate_thumb_cache()
@@ -134,6 +141,75 @@ class PageOpsMixin:
             self._set_status(self._t("status_duplicated").format(page=pno + 1))
         except Exception as e:
             messagebox.showerror(self._t("err_title"), str(e))
+
+    def _insert_blank_page(self):
+        """アクティブページの直後に白紙ページを挿入する"""
+        if not self._check_doc():
+            return
+        pno = self.current_page
+        self._save_undo("insert_blank", pno=pno)
+        try:
+            page = self.doc[pno]
+            w, h = page.rect.width, page.rect.height
+            self.doc.new_page(pno + 1, width=w, height=h)
+            self._invalidate_thumb_cache()
+            self.current_page = pno + 1
+            self._refresh_all()
+            self._set_status(
+                self._t("status_duplicated")
+                .replace("p.{page} を複製", "白紙ページ")
+                .replace("Duplicated p.{page} and ", "Blank page ")
+            )
+        except Exception as e:
+            messagebox.showerror(self._t("err_title"), str(e))
+
+    def _add_watermark_text(self):
+        """選択ページにテキスト透かしを追加する"""
+        if not self._check_doc():
+            return
+        targets = self._get_targets()
+        text = simpledialog.askstring(
+            self._t("btn_watermark"),
+            "透かしテキストを入力してください:\n(例: CONFIDENTIAL, 社外秘)",
+            parent=self.root,
+        )
+        if not text:
+            return
+        self._save_undo("watermark", targets=targets)
+        for i in targets:
+            page = self.doc[i]
+            rect = page.rect
+            center_p = fitz.Point(rect.width / 2 - len(text) * 10, rect.height / 2)
+            page.insert_text(
+                center_p,
+                text,
+                fontsize=48,
+                fontname="helv",
+                color=(0.8, 0.8, 0.8),
+                fill_opacity=0.5,
+                rotate=45,
+                overlay=True,
+            )
+        self._invalidate_thumb_cache(targets)
+        self._refresh_all()
+        self._set_status(f"透かしを追加しました ({len(targets)} ページ)")
+
+    def _add_page_numbers(self):
+        """選択ページにページ番号を印字する"""
+        if not self._check_doc():
+            return
+        targets = self._get_targets()
+        self._save_undo("page_numbers", targets=targets)
+        total = len(self.doc)
+        for _idx, i in enumerate(targets):
+            page = self.doc[i]
+            rect = page.rect
+            text = f"{i + 1} / {total}"
+            p = fitz.Point(rect.width - 60, rect.height - 30)
+            page.insert_text(p, text, fontsize=12, fontname="helv", color=(0, 0, 0))
+        self._invalidate_thumb_cache(targets)
+        self._refresh_all()
+        self._set_status(f"ページ番号を印字しました ({len(targets)} ページ)")
 
     # ── トリミング ──
     def _toggle_crop_mode(self):
@@ -541,7 +617,15 @@ class PageOpsMixin:
             total = 0
             for path in ordered_paths:
                 src = fitz.open(path)
+                current_toc = self.doc.get_toc()
+                page_offset = len(self.doc)
+                src_toc = src.get_toc()
+                for item in src_toc:
+                    item[2] += page_offset
+
                 self.doc.insert_pdf(src)
+                self.doc.set_toc(current_toc + src_toc)
+
                 total += len(src)
                 src.close()
             self._invalidate_thumb_cache()
@@ -615,6 +699,17 @@ class PageOpsMixin:
             for idx, (s, e) in enumerate(ranges):
                 out = fitz.open()
                 out.insert_pdf(self.doc, from_page=s - 1, to_page=e - 1)
+
+                # TOCの切り出しとページ番号のシフト
+                current_toc = self.doc.get_toc()
+                new_toc = []
+                for item in current_toc:
+                    lvl, title, pno = item[:3]
+                    if s <= pno <= e:
+                        new_toc.append([lvl, title, pno - s + 1] + item[3:])
+                if new_toc:
+                    out.set_toc(new_toc)
+
                 out_path = os.path.join(folder, filenames[idx])
                 out.save(out_path, **save_kwargs)
                 out.close()
@@ -648,6 +743,17 @@ class PageOpsMixin:
             for i in range(n):
                 out = fitz.open()
                 out.insert_pdf(self.doc, from_page=i, to_page=i)
+
+                # TOCの切り出し
+                current_toc = self.doc.get_toc()
+                new_toc = []
+                for item in current_toc:
+                    lvl, title, pno = item[:3]
+                    if pno == i + 1:
+                        new_toc.append([lvl, title, 1] + item[3:])
+                if new_toc:
+                    out.set_toc(new_toc)
+
                 out_path = os.path.join(folder, filenames[i])
                 out.save(out_path, **save_kwargs)
                 out.close()
