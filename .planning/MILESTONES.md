@@ -1,5 +1,20 @@
 # Milestones
 
+## v1.5.0 基本機能・UI/UX改善・OCRカスタムプロンプト (Shipped: 2026-06-16)
+
+**Phases completed:** 4 phases
+
+**Key accomplishments:**
+
+- PDF ページ操作の拡充: 白紙ページ挿入（`_insert_blank_page`）・テキスト透かし／ページ番号追加（`_add_watermark_text` / `_add_page_numbers`、`insert_text` ベース・テキストのみ）・ページ削除/結合/分割時の TOC（しおり）保持調整（`get_toc`/`set_toc`）を `page_ops.py` に追加した。
+- UI/UX 改善: ツールバーのスライダー（`thumb_zoom_scale`）によるサムネイルサイズ動的変更、外部 PDF のサムネイルペインへの D&D 指定位置挿入、`pagefolio_settings.json` の `shortcuts` キーによるショートカット動的読込（ミニマム実装・JSON 編集のみ）を実装した。
+- OCR 連携進化: `LLMConfigDialog` にカスタムプロンプト入力欄を追加し、`ocr_custom_prompt` 設定として保存・OCR バックエンドへ受け渡す経路を実装した。
+- 品質保証: ruff クリーン・pytest 490 件全通過。
+
+**Note:** 実装は `feature/v1.5.0-improvements` ブランチ（コミット `4d4ee75` 実装 / `0651bb0` マイルストーン文書）。本マイルストーンは別ワークフローで実装され、2026-06-16 に GSD 記録・プロジェクト文書（APP_VERSION/README/開発履歴/PROJECT/STATE/ROADMAP）を遡及的に整合させた。ruff の E501 2 件は整合作業時に修正済み。
+
+---
+
 ## v1.4.0 OCR プロバイダ化 + クラウドAPI対応 (Shipped: 2026-06-14)
 
 **Phases completed:** 4 phases, 14 plans, 26 tasks

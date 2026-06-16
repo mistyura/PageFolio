@@ -475,6 +475,43 @@ class LLMConfigDialog(tk.Toplevel):
             font=self._font(-2),
         ).pack(side="left", padx=4)
 
+        # ── カスタムプロンプト ──
+        prompt_row = tk.Frame(self, bg=C["BG_DARK"])
+        prompt_row.pack(fill="x", padx=24, pady=2)
+        tk.Label(
+            prompt_row,
+            text=self._L.get("ocr_custom_prompt_label", "カスタムプロンプト:"),
+            bg=C["BG_DARK"],
+            fg=C["TEXT_MAIN"],
+            font=self._font(-1),
+            width=20,
+            anchor="nw",
+        ).pack(side="left")
+        self.ocr_prompt_text = tk.Text(
+            prompt_row,
+            width=30,
+            height=3,
+            font=self._font(-1),
+            bg=C["BG_CARD"],
+            fg=C["TEXT_MAIN"],
+            insertbackground=C["TEXT_MAIN"],
+            wrap="word",
+        )
+        self.ocr_prompt_text.pack(side="left", fill="x", expand=True, padx=4)
+        # 初期値の挿入
+        default_prompt = self.current_settings.get("ocr_custom_prompt", "")
+        if default_prompt:
+            self.ocr_prompt_text.insert("1.0", default_prompt)
+        tk.Label(
+            prompt_row,
+            text=self._L.get(
+                "ocr_custom_prompt_hint", "(空欄でデフォルトのプロンプトを使用)"
+            ),
+            bg=C["BG_DARK"],
+            fg=C["TEXT_SUB"],
+            font=self._font(-2),
+        ).pack(side="left", padx=4, anchor="sw")
+
         # ── 並列度（concurrency）──
         conc_row = tk.Frame(self, bg=C["BG_DARK"])
         conc_row.pack(fill="x", padx=24, pady=2)
@@ -852,6 +889,9 @@ class LLMConfigDialog(tk.Toplevel):
             llm_settings["ocr_max_tokens"] = max(-1, min(MAX_OCR_MAX_TOKENS, mt))
         except (tk.TclError, ValueError):
             llm_settings["ocr_max_tokens"] = -1
+        llm_settings["ocr_custom_prompt"] = self.ocr_prompt_text.get(
+            "1.0", "end"
+        ).strip()
         try:
             tmp = float(self.ocr_temperature_var.get())
             llm_settings["ocr_temperature"] = max(0.0, min(2.0, tmp))

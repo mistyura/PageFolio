@@ -1505,6 +1505,7 @@ class TestClearResetsFatalState:
         fake._is_cloud_provider = lambda: False
         fake._render_next_page = lambda gen=None: None
         fake._start_worker_thread = lambda gen=None: None
+        fake.custom_prompt = ""
 
         OCRDialog._on_run(fake)
 
@@ -1641,6 +1642,7 @@ class TestOcrDialogOnRun:
             max_tokens_var=types.SimpleNamespace(get=lambda: str(max_tokens)),
             temperature_var=types.SimpleNamespace(get=lambda: str(temperature)),
             force_ocr_var=types.SimpleNamespace(get=lambda: False),
+            custom_prompt="",
             _L={"ocr_progress_init": "init"},
         )
         # _is_cloud_provider: lmstudio は非クラウド → False
@@ -1949,6 +1951,7 @@ class TestRenderNextPageQueueFullInvariant:
             page_indices=[0],
             _run_pages=[0],
             _render_idx=render_idx,
+            custom_prompt="",
             results={},
             _skipped_pages=set(),
             _skip_base=0,

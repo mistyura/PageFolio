@@ -78,6 +78,7 @@ class OCRDialog(tk.Toplevel):
         provider=None,
         lang="ja",
         font_func=None,
+        custom_prompt="",
     ):
         super().__init__(parent)
         self._L = LANG[lang]
@@ -98,13 +99,14 @@ class OCRDialog(tk.Toplevel):
         self.max_tokens_var = tk.IntVar(value=int(max_tokens))
         self.temperature_var = tk.DoubleVar(value=float(temperature))
         self.concurrency = max(1, min(MAX_OCR_CONCURRENCY, int(concurrency)))
+        self.provider = provider
+        self.custom_prompt = custom_prompt
         # セッションキー入力用（マスク表示・D-04）
         self.api_key_var = tk.StringVar()
         # 埋め込みテキスト無視オプション（既定 OFF・クラウド課金に直結するため非永続）
         self.force_ocr_var = tk.BooleanVar(value=False)
         self._force_ocr = False
         # OCRProvider インスタンス（D-03: メインスレッド側でのみ使用）
-        self.provider = provider
         self.results = {}  # page_idx -> text
         self.errors = {}  # page_idx -> message
         # 埋め込みテキスト検出によりスキップされたページ集合
@@ -1044,7 +1046,13 @@ class OCRDialog(tk.Toplevel):
         except (tk.TclError, ValueError):
             self._ocr_timeout = 120
         self._effective_timeout = self._ocr_timeout
-        self._ocr_prompt = OCR_PROMPTS.get(self.preset_var.get(), OCR_PROMPTS["text"])
+        # カスタムプロンプトがあればそれを優先し、なければプリセットを使用
+        if self.custom_prompt:
+            self._ocr_prompt = self.custom_prompt
+        else:
+            preset = self.preset_var.get()
+            self._ocr_prompt = OCR_PROMPTS.get(preset, OCR_PROMPTS["text"])
+
         try:
             self._force_ocr = bool(self.force_ocr_var.get())
         except (tk.TclError, ValueError):
