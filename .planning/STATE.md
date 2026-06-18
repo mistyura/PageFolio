@@ -1,17 +1,16 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.5.0
-milestone_name: 基本機能・UI/UX改善・OCRカスタムプロンプト
-status: Awaiting next milestone
-stopped_at: v1.5.0 出荷確定（feature/v1.5.0-improvements 実装・2026-06-16 文書整合・APP_VERSION=v1.5.0）
-last_updated: "2026-06-16T15:36:00.000Z"
-last_activity: 2026-06-16 — Milestone v1.5.0 completed and archived
+milestone: v1.6.0
+milestone_name: 品質向上・AI強化・設定/UI改善
+status: planning
+last_updated: "2026-06-18T08:43:43.664Z"
+last_activity: 2026-06-18
 progress:
-  total_phases: 4
-  completed_phases: 4
+  total_phases: 0
+  completed_phases: 0
   total_plans: 0
   completed_plans: 0
-  percent: 100
+  percent: 0
 ---
 
 # Project State
@@ -25,10 +24,10 @@ See: .planning/PROJECT.md (updated 2026-06-06)
 
 ## Current Position
 
-Phase: Milestone v1.5.0 complete
+Phase: Not started (defining requirements)
 Plan: —
-Status: Awaiting next milestone
-Last activity: 2026-06-16 — Milestone v1.5.0 completed and archived
+Status: Defining requirements
+Last activity: 2026-06-18 — Milestone v1.6.0 started
 
 ## Performance Metrics
 

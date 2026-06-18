@@ -7,6 +7,22 @@ PageFolio の既存コードベースに対する最適化プロジェクト。
 
 **Core Value:** 大きな PDF でも Undo/Redo が正しく・速く動作し、コードが読みやすく保守しやすい状態にする。
 
+## Current Milestone: v1.6.0 品質向上・AI強化・設定/UI改善
+
+**Goal:** 体感品質（回転プレビュー即時反映・エラーハンドリング UX）と AI 出力品質（Markdown 整形・プロバイダ別プロンプト最適化）を底上げし、設定の二重化を解消して大量ページ対応で UI を整える。
+
+**Target features:**
+- 設定/UI 改善: OCR パラメータ設定の「LLM設定」一元化（S1）・サムネイルサイズスライダーの配置変更（S2）・大量ページのページネーション表示（S3）
+- 品質向上（プランA）: 回転状態のプレビュー即時反映（H1）・API キー秘匿の監査（H2）・max_tokens / 429 の実機検証（H5）・エラーハンドリング UX 磨き（M1）
+- AI 強化（プランC）: OCR 結果の Markdown 整形表示（M3）・プロバイダ別プロンプト最適化（M4・Claude=XML タグ / Gemini=明示指示）
+
+**Key context:**
+- 出典は `.planning/NEXT-MILESTONE-HANDOFF.md`（統合ロードマップ + 2026-06-18 追記の仕様要望 S1〜S3）。
+- OAuth 接続は実装しない（確定事項）。Claude/Gemini とも API キー方式のみ・正規 API が非対応・配布バイナリに client secret を埋め込めないため。
+- S1: OCR 抽出画面のパラメータ UI は撤去 or 読み取り専用化（実装時判断）。設定は `LLMConfigDialog` に集約。
+- S3: D&D・複数選択は全ページインデックス管理のため、ページング導入時に「表示中ページ vs 全ページ」のインデックス整合に注意。表示件数は `pagefolio_settings.json` に永続化。
+- H5: max_tokens クランプ / 429 リトライは安全側修正のみでテスト担保。実 API での検証が残課題。
+
 ## Last Milestone: v1.5.0 基本機能・UI/UX改善・OCRカスタムプロンプト — ✅ Shipped 2026-06-16
 
 > v1.5.0 は全 4 フェーズ（Phase 1〜4）を達成して出荷済み（`APP_VERSION = v1.5.0`）。
@@ -117,7 +133,7 @@ PageFolio の既存コードベースに対する最適化プロジェクト。
 
 ### Active
 
-- 次マイルストーン（v1.6.0 以降）の要件は未定義。`/gsd-new-milestone` で確定する（候補は下記 Next Milestone Goals）
+- v1.6.0 の要件は `.planning/REQUIREMENTS.md` で定義（S1〜S3 + プランA: H1/H2/H5/M1 + プランC: M3/M4）。ロードマップ化は `.planning/ROADMAP.md` 参照。
 
 ### Out of Scope
 
@@ -203,4 +219,4 @@ PageFolio の既存コードベースに対する最適化プロジェクト。
 4. 決定事項 → Key Decisions を更新
 
 ---
-*Last updated: 2026-06-16 — Completed milestone v1.5.0 (基本機能・UI/UX改善・OCRカスタムプロンプト).*
+*Last updated: 2026-06-18 — Started milestone v1.6.0 (品質向上・AI強化・設定/UI改善).*
