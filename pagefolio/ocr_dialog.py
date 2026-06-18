@@ -287,12 +287,14 @@ class OCRDialog(tk.Toplevel):
             textvariable=self.model_var,
             font=self._font(-1),
             values=[],
+            state="disabled",
         )
         self.model_combo.pack(side="left", fill="x", expand=True, padx=4)
         ttk.Button(
             mf,
             text=self._L["ocr_fetch_models"],
             command=self._fetch_models,
+            state="disabled",
         ).pack(side="left", padx=2)
 
         # 詳細設定行（解像度 / タイムアウト / 最大トークン）
@@ -325,9 +327,10 @@ class OCRDialog(tk.Toplevel):
             width=5,
             font=self._font(-1),
             bg=C["BG_CARD"],
-            fg=C["TEXT_MAIN"],
+            fg=C["TEXT_SUB"],
             buttonbackground=C["BG_PANEL"],
             insertbackground=C["TEXT_MAIN"],
+            state="readonly",
         ).pack(side="left", padx=(0, 10))
         tk.Label(
             params_row,
@@ -345,9 +348,10 @@ class OCRDialog(tk.Toplevel):
             width=5,
             font=self._font(-1),
             bg=C["BG_CARD"],
-            fg=C["TEXT_MAIN"],
+            fg=C["TEXT_SUB"],
             buttonbackground=C["BG_PANEL"],
             insertbackground=C["TEXT_MAIN"],
+            state="readonly",
         ).pack(side="left", padx=(0, 10))
         tk.Label(
             params_row,
@@ -365,9 +369,10 @@ class OCRDialog(tk.Toplevel):
             width=8,
             font=self._font(-1),
             bg=C["BG_CARD"],
-            fg=C["TEXT_MAIN"],
+            fg=C["TEXT_SUB"],
             buttonbackground=C["BG_PANEL"],
             insertbackground=C["TEXT_MAIN"],
+            state="readonly",
         ).pack(side="left", padx=(0, 4))
         tk.Label(
             params_row,
@@ -392,9 +397,10 @@ class OCRDialog(tk.Toplevel):
             width=5,
             font=self._font(-1),
             bg=C["BG_CARD"],
-            fg=C["TEXT_MAIN"],
+            fg=C["TEXT_SUB"],
             buttonbackground=C["BG_PANEL"],
             insertbackground=C["TEXT_MAIN"],
+            state="readonly",
         ).pack(side="left", padx=(0, 4))
         tk.Label(
             params_row,
