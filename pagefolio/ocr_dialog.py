@@ -290,12 +290,6 @@ class OCRDialog(tk.Toplevel):
             state="disabled",
         )
         self.model_combo.pack(side="left", fill="x", expand=True, padx=4)
-        ttk.Button(
-            mf,
-            text=self._L["ocr_fetch_models"],
-            command=self._fetch_models,
-            state="disabled",
-        ).pack(side="left", padx=2)
 
         # 詳細設定行（解像度 / タイムアウト / 最大トークン）
         # self 属性化: ライブ更新時に LM Studio 欄を before= でこの行の前へ戻す
@@ -330,7 +324,9 @@ class OCRDialog(tk.Toplevel):
             fg=C["TEXT_SUB"],
             buttonbackground=C["BG_PANEL"],
             insertbackground=C["TEXT_MAIN"],
-            state="readonly",
+            disabledbackground=C["BG_CARD"],
+            disabledforeground=C["TEXT_SUB"],
+            state="disabled",
         ).pack(side="left", padx=(0, 10))
         tk.Label(
             params_row,
@@ -351,7 +347,9 @@ class OCRDialog(tk.Toplevel):
             fg=C["TEXT_SUB"],
             buttonbackground=C["BG_PANEL"],
             insertbackground=C["TEXT_MAIN"],
-            state="readonly",
+            disabledbackground=C["BG_CARD"],
+            disabledforeground=C["TEXT_SUB"],
+            state="disabled",
         ).pack(side="left", padx=(0, 10))
         tk.Label(
             params_row,
@@ -372,7 +370,9 @@ class OCRDialog(tk.Toplevel):
             fg=C["TEXT_SUB"],
             buttonbackground=C["BG_PANEL"],
             insertbackground=C["TEXT_MAIN"],
-            state="readonly",
+            disabledbackground=C["BG_CARD"],
+            disabledforeground=C["TEXT_SUB"],
+            state="disabled",
         ).pack(side="left", padx=(0, 4))
         tk.Label(
             params_row,
@@ -400,7 +400,9 @@ class OCRDialog(tk.Toplevel):
             fg=C["TEXT_SUB"],
             buttonbackground=C["BG_PANEL"],
             insertbackground=C["TEXT_MAIN"],
-            state="readonly",
+            disabledbackground=C["BG_CARD"],
+            disabledforeground=C["TEXT_SUB"],
+            state="disabled",
         ).pack(side="left", padx=(0, 4))
         tk.Label(
             params_row,
@@ -543,29 +545,6 @@ class OCRDialog(tk.Toplevel):
         )
         self.resume_btn.pack(side="right", padx=4)
         self.resume_btn.state(["disabled"])
-
-    # ── サーバ・モデル設定 ──
-    def _fetch_models(self):
-        """provider から利用可能モデル一覧を取得して Combobox に反映"""
-        if self.provider is None:
-            self.progress_var.set(
-                self._L["ocr_models_fetch_fail"].format(error="provider not set")
-            )
-            return
-        url = self.url_var.get().strip()
-        # 押下直後に「取得中…」を即時表示（HTTP 同期呼び出しによる UI 凍結対策）
-        self.progress_var.set(self._L["ocr_models_fetching"].format(url=url))
-        try:
-            self.update_idletasks()
-        except tk.TclError:
-            pass
-        try:
-            models = self.provider.list_models()
-        except (ConnectionError, TimeoutError, RuntimeError) as e:
-            self.progress_var.set(self._L["ocr_models_fetch_fail"].format(error=str(e)))
-            return
-        self.model_combo["values"] = models
-        self.progress_var.set(self._L["ocr_models_fetched"].format(count=len(models)))
 
     def _clear_text(self):
         """結果テキストエリア・進行表示・実行状態を初期化する"""
