@@ -16,6 +16,7 @@ from pagefolio.file_drop import _setup_file_drop
 from pagefolio.file_ops import FileOpsMixin
 from pagefolio.ocr import OCRMixin
 from pagefolio.page_ops import PageOpsMixin
+from pagefolio.pagination import clamp_page_size
 from pagefolio.plugins import PluginManager
 from pagefolio.settings import (
     _apply_theme,
@@ -74,6 +75,13 @@ class PDFEditorApp(
         self.filepath = None
         self.current_page = 0
         self.selected_pages = set()
+
+        # ページネーション窓状態の単一の真実（D-05）
+        # _page_window_start: 窓オフセット（全ページ index 起点・既定 0）
+        # _page_size: 表示件数（settings からクランプ復元・W1）
+        self._page_window_start = 0
+        self._page_size = clamp_page_size(self.settings.get("thumb_page_size", 20))
+
         self.thumb_images = []
         self.thumb_cache = {}
         self._dnd_src_idx = None

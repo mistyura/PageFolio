@@ -11,6 +11,7 @@ import fitz
 from PIL import Image, ImageTk
 
 from pagefolio.constants import C
+from pagefolio.pagination import to_global, window_bounds
 
 logger = logging.getLogger(__name__)
 
@@ -175,8 +176,11 @@ class ViewerMixin:
         """選択・カレント変更のみ — 画像再生成なし"""
         frames = self.thumb_inner.winfo_children()
         for i, frame in enumerate(frames):
-            is_sel = i in self.selected_pages
-            is_cur = i == self.current_page
+            # enumerate 位置（窓ローカル）を全ページ index へ変換し照合（Pitfall 1）
+            # selected_pages はローカル化せず全ページ index の不変条件を保つ（D-07）
+            g = to_global(i, self._page_window_start)
+            is_sel = g in self.selected_pages
+            is_cur = g == self.current_page
             bg = C["ACCENT"] if is_sel else (C["BG_CARD"] if is_cur else C["BG_PANEL"])
             frame.configure(bg=bg)
             for child in frame.winfo_children():
@@ -202,9 +206,10 @@ class ViewerMixin:
         self.thumb_images.clear()
         if not self.doc:
             return
-        placeholder_labels = [
-            self._add_thumb_placeholder(i) for i in range(len(self.doc))
-        ]
+        # 窓範囲 [lo, hi) のみ描画（D-10 端数最終窓クランプ）。
+        # i は全ページ index のまま _add_thumb_placeholder へ渡す（D-06 src 整合）。
+        lo, hi = window_bounds(self._page_window_start, self._page_size, len(self.doc))
+        placeholder_labels = [self._add_thumb_placeholder(i) for i in range(lo, hi)]
 
         def render_next(i):
             if self._thumb_gen != gen or not self.doc:
@@ -214,15 +219,16 @@ class ViewerMixin:
                     self._thumb_gen,
                 )
                 return
-            if i >= len(self.doc):
+            if i >= hi:
                 return
             photo = self._get_thumb_photo(i)
-            frame, lbl = placeholder_labels[i]
+            # placeholder_labels は窓ローカル添字（i - lo）で参照する
+            frame, lbl = placeholder_labels[i - lo]
             lbl.configure(image=photo)
             self.thumb_images.append(photo)
             self.root.after(0, lambda: render_next(i + 1))
 
-        self.root.after_idle(lambda: render_next(0))
+        self.root.after_idle(lambda: render_next(lo))
 
     def _add_thumb_placeholder(self, i):
         """プレースホルダー frame・lbl を作成しイベントをバインドして返す"""
