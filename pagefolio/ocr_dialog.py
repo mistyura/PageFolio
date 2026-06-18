@@ -805,6 +805,9 @@ class OCRDialog(tk.Toplevel):
         _save_settings(self.app.settings)
         # (c)〜(g) UI 更新
         self._refresh_provider_dependent_ui()
+        # 全プロバイダ共通: 読み取り専用の数値パラメータ表示を settings 値へ即時同期
+        # (D-03)。LM Studio 専用 (g) ブロックの外で行い claude/gemini でも反映する。
+        self._sync_param_vars_from_settings()
         # (f) provider インスタンスの再生成
         name = self.app.settings.get("ocr_provider", "")
         try:
@@ -868,6 +871,20 @@ class OCRDialog(tk.Toplevel):
             logger.error("provider 再生成に失敗しました: %s", e)
             lang = self.app.settings.get("lang", "ja")
             self.progress_var.set(LANG[lang]["ocr_provider_rebuild_error"].format(e=e))
+
+    def _sync_param_vars_from_settings(self):
+        """読み取り専用の数値パラメータ Tk 変数を app.settings の値へ同期する。
+
+        全プロバイダ共通（claude/gemini/lmstudio/off/tesseract）で呼ばれ、
+        読み取り専用 Spinbox の表示を LLM 設定の適用結果へ即時反映する（D-03）。
+        既定値は llm_config 側のフォールバックと整合させる。
+        値はログに出力しない（情報露出回避・T-01-01）。
+        """
+        settings = self.app.settings
+        self.scale_var.set(settings.get("ocr_scale", 1.5))
+        self.timeout_var.set(settings.get("ocr_timeout", 120))
+        self.max_tokens_var.set(settings.get("ocr_max_tokens", -1))
+        self.temperature_var.set(settings.get("ocr_temperature", 0.1))
 
     def _refresh_provider_dependent_ui(self):
         """プロバイダ依存 UI（表示ラベル・LM Studio 欄・セッションキー欄）を再評価する。

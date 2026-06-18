@@ -876,6 +876,8 @@ class TestOcrDialogLlmConfig:
         """Tkinter 不使用の fake OCRDialog インスタンスを生成する。"""
         import types
 
+        from pagefolio.ocr_dialog import OCRDialog
+
         settings = {
             "ocr_provider": "lmstudio",
             "lm_studio_url": "http://localhost:1234",
@@ -902,6 +904,11 @@ class TestOcrDialogLlmConfig:
         # url_var / model_var の set を記録できる SimpleNamespace
         fake.url_var = types.SimpleNamespace(set=lambda v: None)
         fake.model_var = types.SimpleNamespace(set=lambda v: None)
+        # 数値パラメータ var（読み取り専用表示の同期対象）
+        fake.scale_var = types.SimpleNamespace(set=lambda v: None)
+        fake.timeout_var = types.SimpleNamespace(set=lambda v: None)
+        fake.max_tokens_var = types.SimpleNamespace(set=lambda v: None)
+        fake.temperature_var = types.SimpleNamespace(set=lambda v: None)
 
         # _refresh_provider_dependent_ui を no-op に差し替え
         fake._refresh_called = False
@@ -910,6 +917,10 @@ class TestOcrDialogLlmConfig:
             fake._refresh_called = True
 
         fake._refresh_provider_dependent_ui = _no_op_refresh
+        # 数値同期は実メソッドを未束縛で呼ぶ（settings 値の同期挙動を維持）
+        fake._sync_param_vars_from_settings = lambda: (
+            OCRDialog._sync_param_vars_from_settings(fake)
+        )
         return fake
 
     # ── test 1: settings が更新される ──────────────────────────────────────
