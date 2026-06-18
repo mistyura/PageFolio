@@ -2,9 +2,13 @@
 gsd_state_version: 1.0
 milestone: v1.6.0
 milestone_name: 品質向上・AI強化・設定/UI改善
+current_phase: 1
+current_phase_name: 設定/UI 改善（OCR パラメータ一元化・スライダー配置）
 status: planning
-last_updated: "2026-06-18T08:43:43.664Z"
+stopped_at: Phase 1 context gathered
+last_updated: "2026-06-18T09:10:51.929Z"
 last_activity: 2026-06-18
+last_activity_desc: Milestone v1.6.0 ロードマップ作成（4 フェーズ・要件 9 件 100% 割当）
 progress:
   total_phases: 4
   completed_phases: 0
@@ -156,6 +160,7 @@ Decisions are logged in PROJECT.md Key Decisions table.
 - [v1.6.0 Phase 3 留意]: V16-QUAL-03（max_tokens/429 実機検証）は実 API または実機相当の検証手順が前提。安全側修正のみで未検証のため、検証手順と結果記録の方法を計画時に確定する。
 
 過去の懸念は全て解決済み:
+
   - ~~fitz のスレッドセーフ制約~~ → Phase 04 でスレッド境界を明確化（ワーカーには bytes のみ渡す）
   - ~~Gemini Free Tier 10 RPM~~ → Phase 06 で並列度 1 を既定化
   - ~~Claude temperature/effort の実 API 確認~~ → Phase 05 で完了
@@ -198,9 +203,9 @@ Decisions are logged in PROJECT.md Key Decisions table.
 
 ## Session Continuity
 
-Last session: 2026-06-18 — v1.6.0 ロードマップ作成（REQUIREMENTS.md の V16-* 全 9 件を 4 フェーズへ割当・100% 被覆検証・ROADMAP.md/REQUIREMENTS.md traceability 更新）
-Stopped at: ロードマップ確定。Phase 1（設定/UI 改善）の計画着手待ち
-Resume file: None
+Last session: 2026-06-18T09:10:51.917Z
+Stopped at: Phase 1 context gathered
+Resume file: .planning/phases/01-ui-ocr/01-CONTEXT.md
 
 ## Operator Next Steps
 
