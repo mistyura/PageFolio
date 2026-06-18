@@ -5,6 +5,7 @@
 - ✅ **v1.3.0 コード最適化 MVP** — Phases 1-3 (shipped 2026-06-03) — [archive](milestones/v1.3.0-ROADMAP.md)
 - ✅ **v1.4.0 OCR プロバイダ化 + クラウドAPI対応** — Phases 4-7 (shipped 2026-06-14) — [archive](milestones/v1.4.0-ROADMAP.md)
 - ✅ **v1.5.0 基本機能・UI/UX改善・OCRカスタムプロンプト** — Phases 1-4 (shipped 2026-06-16) — [archive](milestones/v1.5.0-ROADMAP.md)
+- 🚧 **v1.6.0 品質向上・AI強化・設定/UI改善** — Phases 1-4 (active, started 2026-06-18)
 
 ## Phases
 
@@ -45,11 +46,71 @@
 
 </details>
 
-### 📋 v1.6.0 以降 (未計画)
+### 🚧 v1.6.0 品質向上・AI強化・設定/UI改善 (Active)
 
-次マイルストーンは `/gsd-new-milestone` で確定する。候補は PROJECT.md「Next Milestone Goals」を参照。
+> **Goal:** 体感品質（回転プレビュー即時反映・エラーハンドリング UX）と AI 出力品質（Markdown 整形・プロバイダ別プロンプト最適化）を底上げし、設定の二重化を解消して大量ページ対応で UI を整える。
+> **要件出典:** [REQUIREMENTS.md](REQUIREMENTS.md)（V16-* 全 9 件）/ [NEXT-MILESTONE-HANDOFF.md](NEXT-MILESTONE-HANDOFF.md)
+
+- [ ] **Phase 1: 設定/UI 改善（OCR パラメータ一元化・スライダー配置）** — S1 二重設定の解消 + S2 サムネイルスライダーの常時可視化
+- [ ] **Phase 2: 大量ページのページネーション表示** — S3 サムネイル一覧をページ単位で区切り、D&D・複数選択をインデックス整合させる
+- [ ] **Phase 3: 体感品質・回転プレビュー & OCR 堅牢性（プランA）** — H1 回転即時反映 + H2 キー秘匿監査 + H5 実機検証 + M1 エラー UX 磨き
+- [ ] **Phase 4: AI 出力品質（プランC）** — M3 Markdown 整形表示 + M4 プロバイダ別プロンプト最適化
+
+## Phase Details
+
+> 以下は **アクティブな v1.6.0** のフェーズ詳細。過去マイルストーンの詳細は各アーカイブ（`milestones/*-ROADMAP.md`）を参照。
+
+### Phase 1: 設定/UI 改善（OCR パラメータ一元化・スライダー配置）
+**Goal**: OCR パラメータ設定の二重化を解消し、ユーザーが設定を一意に解決できる。加えてサムネイルサイズスライダーが左ペインを縮小しても常に見える。
+**Depends on**: Nothing (first phase of milestone)
+**Requirements**: V16-UI-01, V16-UI-02
+**Success Criteria** (what must be TRUE):
+  1. ユーザーは OCR パラメータ（タイムアウト・並列度・リトライ等）を「LLM設定」画面のみで設定でき、その値が一意に OCR 実行へ反映される
+  2. OCR テキスト抽出画面のパラメータ入力 UI が廃止または読み取り専用化され、「LLM設定」側の値と矛盾しない（どちらが効くか分からない状態が解消されている）
+  3. サムネイルサイズ変更スライダーが、左ペインを縮小しても常に見える位置（「全選択／解除」付近または「ページ一覧」ラベル横）に表示される
+  4. スライダーでサムネイルサイズを変更でき、機能は従来どおり動作する
+**Plans**: TBD
+**UI hint**: yes
+
+### Phase 2: 大量ページのページネーション表示
+**Goal**: 大量ページの PDF でもサムネイル一覧が高速に表示でき、ページング下でも D&D 並び替え・複数選択が全ページインデックスと整合する。
+**Depends on**: Phase 1
+**Requirements**: V16-UI-03
+**Success Criteria** (what must be TRUE):
+  1. ユーザーは大量ページの PDF でサムネイル一覧をページ単位（既定 20 ページ）で区切って表示できる
+  2. ユーザーは表示件数を変更でき、その値が `pagefolio_settings.json` に永続化されて次回起動時に復元される
+  3. ページング表示中でも D&D による並び替えが全ページインデックスと整合し、意図したページが正しい位置へ移動する
+  4. ページング表示中でも複数選択（`selected_pages`）が全ページインデックスを正しく指し、ページ操作が選択どおりに適用される
+**Plans**: TBD
+**UI hint**: yes
+
+### Phase 3: 体感品質・回転プレビュー & OCR 堅牢性（プランA）
+**Goal**: ページ回転がプレビューへ即時反映され、OCR のキー秘匿・レート制限/トークン超過時の挙動が監査・検証され、エラー時にユーザーが次のアクションを理解できる。
+**Depends on**: Phase 2
+**Requirements**: V16-QUAL-01, V16-QUAL-02, V16-QUAL-03, V16-QUAL-04
+**Success Criteria** (what must be TRUE):
+  1. ユーザーがページを回転すると、再読込やページ切替を待たずにプレビュー表示へ即時反映される
+  2. API キーが設定ファイル・ソースコード・ログに平文露出していないことが監査で再確認され、`_SENSITIVE_KEYS` ガード・環境変数/セッションメモリ限定の挙動が回帰テストで担保されている
+  3. max_tokens クランプと 429/レート制限リトライが実 API（または実機相当の検証手順）で期待どおり動作することが検証され、結果が記録されている
+  4. レート制限・トークン超過・応答途切れ時に、ユーザーが状況と次のアクション（待機・再試行・設定変更等）を理解できるエラーメッセージ／UX が提示される
+**Plans**: TBD
+**UI hint**: yes
+
+### Phase 4: AI 出力品質（プランC）
+**Goal**: OCR 結果が Markdown として読みやすく整形表示され、プロバイダ別に最適化されたプロンプトで出力品質が引き出される（既存カスタムプロンプト機構と両立）。
+**Depends on**: Phase 3
+**Requirements**: V16-AI-01, V16-AI-02
+**Success Criteria** (what must be TRUE):
+  1. ユーザーは OCR 結果ビューア（`OCRDialog`）で `markdown` プリセット出力を整形表示で閲覧でき、見出し・箇条書き等がプレーンテキストより読みやすく提示される
+  2. Claude では XML タグ構造、Gemini では明示指示など、プロバイダ別に最適化されたプロンプトテンプレートで OCR が実行される
+  3. プロバイダ別プロンプト最適化が、既存のカスタムプロンプト機構（v1.5.0）と矛盾なく両立し、ユーザーのカスタムプロンプトが引き続き機能する
+**Plans**: TBD
+**UI hint**: yes
 
 ## Progress
+
+**Execution Order (v1.6.0):**
+Phases execute in numeric order: 1 → 2 → 3 → 4
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
@@ -64,3 +125,7 @@
 | 2. UI / UX とパフォーマンスの改善 | v1.5.0 | — | Complete | 2026-06-16 |
 | 3. AI・OCR連携のさらなる進化 | v1.5.0 | — | Complete | 2026-06-16 |
 | 4. テスト・品質保証 | v1.5.0 | — | Complete | 2026-06-16 |
+| 1. 設定/UI 改善（OCR パラメータ一元化・スライダー配置） | v1.6.0 | 0/TBD | Not started | - |
+| 2. 大量ページのページネーション表示 | v1.6.0 | 0/TBD | Not started | - |
+| 3. 体感品質・回転プレビュー & OCR 堅牢性（プランA） | v1.6.0 | 0/TBD | Not started | - |
+| 4. AI 出力品質（プランC） | v1.6.0 | 0/TBD | Not started | - |

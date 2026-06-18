@@ -52,12 +52,12 @@
 
 | REQ-ID | Phase | Status |
 |--------|-------|--------|
-| V16-UI-01 | — | 未割当（roadmap で確定） |
-| V16-UI-02 | — | 未割当 |
-| V16-UI-03 | — | 未割当 |
-| V16-QUAL-01 | — | 未割当 |
-| V16-QUAL-02 | — | 未割当 |
-| V16-QUAL-03 | — | 未割当 |
-| V16-QUAL-04 | — | 未割当 |
-| V16-AI-01 | — | 未割当 |
-| V16-AI-02 | — | 未割当 |
+| V16-UI-01 | Phase 1 | Pending |
+| V16-UI-02 | Phase 1 | Pending |
+| V16-UI-03 | Phase 2 | Pending |
+| V16-QUAL-01 | Phase 3 | Pending |
+| V16-QUAL-02 | Phase 3 | Pending |
+| V16-QUAL-03 | Phase 3 | Pending |
+| V16-QUAL-04 | Phase 3 | Pending |
+| V16-AI-01 | Phase 4 | Pending |
+| V16-AI-02 | Phase 4 | Pending |

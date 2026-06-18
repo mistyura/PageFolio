@@ -6,7 +6,7 @@ status: planning
 last_updated: "2026-06-18T08:43:43.664Z"
 last_activity: 2026-06-18
 progress:
-  total_phases: 0
+  total_phases: 4
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -17,17 +17,28 @@ progress:
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-06-06)
+See: .planning/PROJECT.md (updated 2026-06-18)
 
 **Core value:** 大きな PDF でも Undo/Redo が正しく・速く動作し、コードが読みやすく保守しやすい状態にする
-**Current focus:** v1.5.0 完了（Phase 1〜4 全達成）— 次は v1.6.0 以降（新機能の回帰テスト拡充・ロゴ透かし/ショートカット GUI 化等）
+**Current focus:** v1.6.0 Phase 1（設定/UI 改善：OCR パラメータ一元化・サムネイルスライダー配置）。ロードマップ確定済み（全 9 要件を 4 フェーズへ割当）。
 
 ## Current Position
 
-Phase: Not started (defining requirements)
-Plan: —
-Status: Defining requirements
-Last activity: 2026-06-18 — Milestone v1.6.0 started
+Phase: 1 of 4 (設定/UI 改善（OCR パラメータ一元化・スライダー配置）)
+Plan: — of TBD
+Status: Ready to plan (roadmap created, awaiting phase planning)
+Last activity: 2026-06-18 — Milestone v1.6.0 ロードマップ作成（4 フェーズ・要件 9 件 100% 割当）
+
+Progress: [░░░░░░░░░░] 0%
+
+## v1.6.0 Phase Map
+
+| Phase | Name | Requirements | リスク/性質 |
+|-------|------|--------------|------------|
+| 1 | 設定/UI 改善（OCR パラメータ一元化・スライダー配置） | V16-UI-01, V16-UI-02 | UI 層中心・低〜中。S1 二重設定解消が主目的 |
+| 2 | 大量ページのページネーション表示 | V16-UI-03 | 高リスク（viewer/dnd/全ページインデックス整合） |
+| 3 | 体感品質・回転プレビュー & OCR 堅牢性（プランA） | V16-QUAL-01〜04 | viewer 即時反映 + OCR/エラー系の監査・検証・磨き |
+| 4 | AI 出力品質（プランC） | V16-AI-01, V16-AI-02 | OCRDialog/プロバイダ層中心 |
 
 ## Performance Metrics
 
@@ -66,6 +77,13 @@ Last activity: 2026-06-18 — Milestone v1.6.0 started
 ### Decisions
 
 Decisions are logged in PROJECT.md Key Decisions table.
+
+**v1.6.0 ロードマップ確定（2026-06-18）:**
+
+- V16-R-01: 全 9 要件を 4 フェーズへ割当（coarse 粒度・100% 被覆・孤立要件なし）。
+- V16-R-02: S3 ページネーション（V16-UI-03）は viewer/dnd/全ページインデックス整合の高リスクのため、S1/S2（UI 層中心）から切り離して **Phase 2 単独**に隔離。
+- V16-R-03: プランA（H1/H2/H5/M1）は viewer 即時反映と OCR/エラー系の混在だが、いずれも「体感品質・堅牢性」という単一目的で結束するため **Phase 3 に集約**。
+- V16-R-04: プランC（M3/M4）は OCRDialog/プロバイダ層中心で AI 出力品質という独立価値を持つため **Phase 4** とし、プランA 完了後（OCR 堅牢性の土台の上）に着手。
 
 **v1.3.0 確定済み決定事項（引き継ぎ）:**
 
@@ -130,11 +148,14 @@ Decisions are logged in PROJECT.md Key Decisions table.
 ### Pending Todos
 
 - なし（v1.4.1 ホットフィックス H-1〜H-5 は出荷済み・v1.5.0 まで完了）。
-  次マイルストーンの候補は [NEXT-MILESTONE-HANDOFF.md](./NEXT-MILESTONE-HANDOFF.md) を参照。
+  v1.6.0 要件は [REQUIREMENTS.md](./REQUIREMENTS.md)、フェーズ割当は [ROADMAP.md](./ROADMAP.md)、出典詳細は [NEXT-MILESTONE-HANDOFF.md](./NEXT-MILESTONE-HANDOFF.md) を参照。
 
 ### Blockers/Concerns
 
-- なし（過去の懸念は全て解決済み）:
+- [v1.6.0 Phase 2 リスク]: S3 ページネーション導入時、`selected_pages`・D&D は全ページインデックスで管理されているため「表示中ページのみ vs 全ページ」のインデックス整合に注意（PROJECT.md / HANDOFF §7 S3 補足）。Phase 2 計画時に詳細設計で吸収する。
+- [v1.6.0 Phase 3 留意]: V16-QUAL-03（max_tokens/429 実機検証）は実 API または実機相当の検証手順が前提。安全側修正のみで未検証のため、検証手順と結果記録の方法を計画時に確定する。
+
+過去の懸念は全て解決済み:
   - ~~fitz のスレッドセーフ制約~~ → Phase 04 でスレッド境界を明確化（ワーカーには bytes のみ渡す）
   - ~~Gemini Free Tier 10 RPM~~ → Phase 06 で並列度 1 を既定化
   - ~~Claude temperature/effort の実 API 確認~~ → Phase 05 で完了
@@ -177,10 +198,11 @@ Decisions are logged in PROJECT.md Key Decisions table.
 
 ## Session Continuity
 
-Last session: 2026-06-18 — v1.5.0 出荷後の改善点洗い出し・次マイルストーン引継ぎ文書（NEXT-MILESTONE-HANDOFF.md）作成・.planning 整理
-Stopped at: Awaiting next milestone（次マイルストーン候補は NEXT-MILESTONE-HANDOFF.md 参照）
+Last session: 2026-06-18 — v1.6.0 ロードマップ作成（REQUIREMENTS.md の V16-* 全 9 件を 4 フェーズへ割当・100% 被覆検証・ROADMAP.md/REQUIREMENTS.md traceability 更新）
+Stopped at: ロードマップ確定。Phase 1（設定/UI 改善）の計画着手待ち
 Resume file: None
 
 ## Operator Next Steps
 
-- Start the next milestone with /gsd-new-milestone
+- Phase 1 の計画を作成: `/gsd-plan-phase 1`（または `/gsd-execute-phase 1` で計画→実行を連結）
+- 各 Phase 完了ゲート（CLAUDE.md 準拠）: `ruff check . && ruff format .` + `pytest`（現行 490 件ベースライン）+ 開発履歴.md 追記 + `APP_VERSION` 同期
