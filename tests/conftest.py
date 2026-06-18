@@ -54,6 +54,23 @@ def sample_pdf_doc():
 
 
 @pytest.fixture()
+def large_pdf_doc():
+    """窓化境界値テスト用の 47 ページ PDF を fitz.Document として返す。
+
+    件数 20 → 最終窓 41–47（端数最終窓・D-10）の境界値検証に対応する。
+    純関数テストの大半は doc 不要（n_pages を引数で渡す）ため、本フィクスチャは
+    後続プラン（02-02/02-03）の窓化描画テスト用に用意する位置づけ。
+    既存 sample_pdf_doc と同じ generator + close 作法。
+    """
+    doc = fitz.open()
+    for i in range(47):
+        page = doc.new_page(width=595, height=842)  # A4
+        page.insert_text((72, 72), f"Page {i + 1}", fontsize=24)
+    yield doc
+    doc.close()
+
+
+@pytest.fixture()
 def multi_pdf_files(tmp_path):
     """結合・挿入テスト用に複数のPDFファイルを生成する。
     返り値は [path1, path2, path3] のリスト。
