@@ -197,15 +197,17 @@ class UIBuilderMixin:
             sel_frame, text=self._t("deselect"), command=self._deselect_all
         ).pack(side="left", padx=2)
 
+        zoom_frame = tk.Frame(parent, bg=C["BG_PANEL"])
+        zoom_frame.pack(fill="x", padx=6, pady=(0, 4))
         self.thumb_zoom_var = tk.DoubleVar(value=self.settings.get("thumb_zoom", 1.0))
         self.thumb_zoom_scale = ttk.Scale(
-            sel_frame,
+            zoom_frame,
             from_=0.5,
             to=2.5,
             variable=self.thumb_zoom_var,
             orient="horizontal",
         )
-        self.thumb_zoom_scale.pack(side="right", fill="x", expand=True, padx=(10, 2))
+        self.thumb_zoom_scale.pack(fill="x", expand=True, padx=2)
         self.thumb_zoom_scale.bind("<ButtonRelease-1>", self._on_thumb_zoom_release)
 
         canvas_frame = tk.Frame(parent, bg=C["BG_PANEL"])
