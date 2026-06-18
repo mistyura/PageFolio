@@ -91,7 +91,19 @@
   3. ページング表示中でも D&D による並び替えが全ページインデックスと整合し、意図したページが正しい位置へ移動する
   4. ページング表示中でも複数選択（`selected_pages`）が全ページインデックスを正しく指し、ページ操作が選択どおりに適用される
 
-**Plans**: TBD
+**Plans**: 3 plans
+**Wave 1**
+
+  - [ ] 02-01-PLAN.md — V16-UI-03: 窓計算・local↔global 変換の純ロジック層（pagination.py）新設 + 全境界値の純ロジック unit テスト（Wave 0 基盤）
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
+  - [ ] 02-02-PLAN.md — V16-UI-03: 表示件数 thumb_page_size 永続化（既定 20・クランプ）+ 窓状態属性 + サムネイル描画/選択照合の窓範囲化
+
+**Wave 3** *(blocked on Wave 2 completion)*
+
+  - [ ] 02-03-PLAN.md — V16-UI-03: ナビ/件数フッター UI（◀ ▶ ＋ 範囲ラベル ＋ Spinbox）+ D&D local→global 換算 + current_page 窓追従（D-11）+ i18n/版番同期
+
 **UI hint**: yes
 
 ### Phase 3: 体感品質・回転プレビュー & OCR 堅牢性（プランA）
@@ -142,6 +154,6 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 | 3. AI・OCR連携のさらなる進化 | v1.5.0 | — | Complete | 2026-06-16 |
 | 4. テスト・品質保証 | v1.5.0 | — | Complete | 2026-06-16 |
 | 1. 設定/UI 改善（OCR パラメータ一元化・スライダー配置） | v1.6.0 | 1/2 | In progress | - |
-| 2. 大量ページのページネーション表示 | v1.6.0 | 0/TBD | Not started | - |
+| 2. 大量ページのページネーション表示 | v1.6.0 | 0/3 | Not started | - |
 | 3. 体感品質・回転プレビュー & OCR 堅牢性（プランA） | v1.6.0 | 0/TBD | Not started | - |
 | 4. AI 出力品質（プランC） | v1.6.0 | 0/TBD | Not started | - |
