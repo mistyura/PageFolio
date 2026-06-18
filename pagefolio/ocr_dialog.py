@@ -282,12 +282,19 @@ class OCRDialog(tk.Toplevel):
             width=8,
             anchor="w",
         ).pack(side="left")
-        self.model_combo = ttk.Combobox(
+        # 編集導線は LLMConfigDialog へ一元化済みのため、モデル欄は読み取り専用表示。
+        # 4 つの数値 Spinbox と同様、disabled + 暗背景 + 可読色で編集不可にする。
+        self.model_combo = tk.Entry(
             mf,
             textvariable=self.model_var,
             font=self._font(-1),
-            values=[],
+            bg=C["BG_CARD"],
+            fg=C["TEXT_SUB"],
+            insertbackground=C["TEXT_MAIN"],
+            relief="flat",
             state="disabled",
+            disabledbackground=C["BG_CARD"],
+            disabledforeground=C["TEXT_SUB"],
         )
         self.model_combo.pack(side="left", fill="x", expand=True, padx=4)
 
