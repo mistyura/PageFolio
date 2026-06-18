@@ -341,17 +341,19 @@ def window_nav_state(window_start, page_size, n_pages):
 
 **確認推奨:** A1・A2 は実装時に窓往復・窓またぎ D&D の実機操作で挙動確認すれば確定する（純ロジックテストに加えた手動確認項目）。
 
-## Open Questions
+## Open Questions (RESOLVED)
+
+> 両問とも推奨が確定し、対応する実装が PLAN.md に反映済み（Q1 → 02-03 Task 2 `_on_page_size_change`、Q2 → 02-03 Task 1）。
 
 1. **件数変更時に窓追従でどの窓を表示するか**
    - What we know: D-11 は「current_page を含む窓へ追従」。件数変更は current を含む窓へ寄せる（Pattern 2）。
    - What's unclear: 件数を増やした直後に「現在の窓の先頭ページ」を含む窓に寄せるか「current_page」を含む窓に寄せるか、微妙に表示位置が変わる。
-   - Recommendation: D-11 に忠実に **current_page を含む窓**（`window_for_page(current_page, new_size)`）。これで「カレントを見失わない」意図に合致。
+   - RESOLVED: D-11 に忠実に **current_page を含む窓**（`window_for_page(current_page, new_size)`）。これで「カレントを見失わない」意図に合致。02-03 Task 2 に実装指定済み。
 
 2. **Spinbox の即時反映タイミング（裁量 D-05）**
    - What we know: 「変更が永続化され再描画される」ことは必須。
    - What's unclear: 矢印 1 クリックごとに保存/再描画するか、フォーカスアウトでまとめるか。
-   - Recommendation: `ttk.Spinbox` readonly + `command=` で矢印ごとに即反映。10 刻み・3 段階程度なので毎回再描画でも負荷は軽微。
+   - RESOLVED: `ttk.Spinbox` readonly + `command=` で矢印ごとに即反映。10 刻み・3 段階程度なので毎回再描画でも負荷は軽微。02-03 Task 1 に実装指定済み。
 
 ## Environment Availability
 
