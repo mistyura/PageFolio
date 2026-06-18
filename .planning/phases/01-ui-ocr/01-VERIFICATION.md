@@ -1,8 +1,9 @@
 ---
 phase: 01-ui-ocr
 verified: 2026-06-18T00:00:00Z
-status: human_needed
+status: passed
 score: 9/9 must-haves verified
+uat_result: 4/4 passed（人手検証完了 — UAT中に判明した読取専用不備3点と起動クラッシュ修正後、全 Success Criteria を実機確認）
 behavior_unverified: 0
 overrides_applied: 0
 re_verification: # 初回検証（前回 VERIFICATION.md なし）
