@@ -4,17 +4,17 @@ milestone: v1.6.0
 milestone_name: 品質向上・AI強化・設定/UI改善
 current_phase: 01
 current_phase_name: ui-ocr
-status: executing
-stopped_at: Completed 01-01-PLAN.md
-last_updated: "2026-06-18T09:42:39.743Z"
+status: verifying
+stopped_at: Completed 01-02-PLAN.md
+last_updated: "2026-06-18T09:56:19.499Z"
 last_activity: 2026-06-18
 last_activity_desc: Completed Phase 01 Plan 01（OCR パラメータ一元化）
 progress:
   total_phases: 4
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 2
-  completed_plans: 1
-  percent: 50
+  completed_plans: 2
+  percent: 25
 ---
 
 # Project State
@@ -30,7 +30,7 @@ See: .planning/PROJECT.md (updated 2026-06-18)
 
 Phase: 01 (ui-ocr) — EXECUTING
 Plan: 2 of 2
-Status: Executing Phase 01（Plan 01 完了）
+Status: Phase complete — ready for verification
 Last activity: 2026-06-18 — Completed Phase 01 Plan 01（OCR パラメータ一元化）
 
 Progress: [█████░░░░░] 50%
@@ -76,6 +76,7 @@ Progress: [█████░░░░░] 50%
 | Phase 06-gemini-provider P03 | 12min | 3 tasks | 9 files |
 | Phase 06-gemini-provider P04 (gap) | 6min | 3 tasks | 5 files |
 | Phase 01-ui-ocr P01 | 約25分 | 2 tasks | 3 files |
+| Phase 01-ui-ocr P02 | 約10分 | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -151,6 +152,8 @@ Decisions are logged in PROJECT.md Key Decisions table.
 - [Phase 06-04]: _SENSITIVE_KEYS に google_api_key / GOOGLE_API_KEY / GEMINI_API_KEY / ANTHROPIC_API_KEY 大文字バリアントを追加（WR-03）
 - [Phase 01-01]: OCRDialog の数値 Spinbox 4 種（scale/timeout/max_tokens/temperature）を state=readonly + fg=TEXT_SUB で読み取り専用化、model_combo/取得ボタンを disabled（編集導線を LLMConfigDialog へ一元化・V16-UI-01）
 - [Phase 01-01]: 数値同期を独立メソッド _sync_param_vars_from_settings に切り出し、_apply_llm_settings の provider 分岐外（全プロバイダ共通箇所）から呼び claude/gemini でも即時反映（D-03）。値はログ非出力（T-01-01）
+- [Phase ?]: [Phase 01-02]: サムネイルスライダーを独立 zoom_frame（全幅行）へ移設しボタンとの幅競合を解消（D-07/D-08）。範囲/変数/コールバック不変（D-09）。viewer.py/settings.py 未変更
+- [Phase ?]: [Phase 01-02]: APP_VERSION を v1.6.0 へ更新し README バッジ・開発履歴.md を同期（CLAUDE.md 規約）。pyproject.toml 未編集
 
 ### Pending Todos
 
@@ -206,9 +209,9 @@ Decisions are logged in PROJECT.md Key Decisions table.
 
 ## Session Continuity
 
-Last session: 2026-06-18
-Stopped at: Completed 01-01-PLAN.md
-Resume file: .planning/phases/01-ui-ocr/01-02-PLAN.md
+Last session: 2026-06-18T09:56:19.489Z
+Stopped at: Completed 01-02-PLAN.md
+Resume file: None
 
 ## Operator Next Steps
 
