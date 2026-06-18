@@ -11,7 +11,15 @@ import fitz
 from PIL import Image, ImageTk
 
 from pagefolio.constants import C
-from pagefolio.pagination import to_global, window_bounds
+from pagefolio.pagination import (
+    clamp_page_size,
+    clamp_window_start,
+    to_global,
+    window_bounds,
+    window_for_page,
+    window_label,
+    window_nav_state,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -154,12 +162,68 @@ class ViewerMixin:
         self._invalidate_thumb_cache()
         self._refresh_all()
 
+    # ── ページネーション（窓移動・件数変更）──
+    def _on_page_size_change(self, event=None):
+        """件数 Spinbox 確定時 — 保存 → 窓正規化 → 再描画（D-03/D-05）。
+
+        page_size_var.get() は空文字で TclError を投げうるため呼び出し側で捕捉し
+        既定 20 へフォールバックする。値域クランプは 02-01 の clamp_page_size。
+        thumb_cache はキーが全ページ index のため不変（_invalidate_thumb_cache を
+        呼ばない・Pitfall 2）。
+        """
+        try:
+            raw = self.page_size_var.get()
+        except (ValueError, tk.TclError):
+            raw = 20
+        self._page_size = clamp_page_size(raw)
+        self.settings["thumb_page_size"] = self._page_size
+        from pagefolio.settings import _save_settings
+
+        _save_settings(self.settings)
+        # current を含む窓へ追従してから再描画（D-11）。
+        self._page_window_start = window_for_page(self.current_page, self._page_size)
+        self._refresh_all()
+
+    def _prev_window(self):
+        """前の窓へ移動（保存不要・thumb_cache 非クリア）。"""
+        n = len(self.doc) if self.doc else 0
+        self._page_window_start = clamp_window_start(
+            self._page_window_start - self._page_size, self._page_size, n
+        )
+        self._refresh_all()
+
+    def _next_window(self):
+        """次の窓へ移動（保存不要・thumb_cache 非クリア）。"""
+        n = len(self.doc) if self.doc else 0
+        self._page_window_start = clamp_window_start(
+            self._page_window_start + self._page_size, self._page_size, n
+        )
+        self._refresh_all()
+
     # ── 表示更新 ──
     def _refresh_all(self):
+        # 描画前に窓を正規化する（集約点・Pitfall 5）。
+        # clamp_window_start で有効窓先頭へ寄せ、window_for_page で current を
+        # 含む窓へ追従する（操作後に current が窓外へ出ても自動追従・D-11）。
+        n = len(self.doc) if self.doc else 0
+        self._page_window_start = clamp_window_start(
+            self._page_window_start, self._page_size, n
+        )
+        self._page_window_start = window_for_page(self.current_page, self._page_size)
         self._build_thumbnails()
         self._show_preview()
         self._update_doc_buttons_state()
-        n = len(self.doc) if self.doc else 0
+        # ナビフッターのボタン state・範囲ラベルを更新（単一窓でも行は表示・
+        # ボタンのみ disabled・D-09）。
+        if hasattr(self, "_prev_window_btn"):
+            prev_en, next_en = window_nav_state(
+                self._page_window_start, self._page_size, n
+            )
+            self._prev_window_btn.state(["!disabled"] if prev_en else ["disabled"])
+            self._next_window_btn.state(["!disabled"] if next_en else ["disabled"])
+            self._window_range_label.configure(
+                text=window_label(self._page_window_start, self._page_size, n)
+            )
         self.page_label.configure(
             text=f"{self.current_page + 1} / {n}" if n else "- / -"
         )
