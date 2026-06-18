@@ -2,19 +2,19 @@
 gsd_state_version: 1.0
 milestone: v1.6.0
 milestone_name: 品質向上・AI強化・設定/UI改善
-current_phase: 1
-current_phase_name: 設定/UI 改善（OCR パラメータ一元化・スライダー配置）
-status: planning
-stopped_at: Phase 1 context gathered
-last_updated: "2026-06-18T09:10:51.929Z"
+current_phase: 01
+current_phase_name: ui-ocr
+status: executing
+stopped_at: Completed 01-01-PLAN.md
+last_updated: "2026-06-18T09:42:39.743Z"
 last_activity: 2026-06-18
-last_activity_desc: Milestone v1.6.0 ロードマップ作成（4 フェーズ・要件 9 件 100% 割当）
+last_activity_desc: Completed Phase 01 Plan 01（OCR パラメータ一元化）
 progress:
   total_phases: 4
   completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
-  percent: 0
+  total_plans: 2
+  completed_plans: 1
+  percent: 50
 ---
 
 # Project State
@@ -24,16 +24,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-18)
 
 **Core value:** 大きな PDF でも Undo/Redo が正しく・速く動作し、コードが読みやすく保守しやすい状態にする
-**Current focus:** v1.6.0 Phase 1（設定/UI 改善：OCR パラメータ一元化・サムネイルスライダー配置）。ロードマップ確定済み（全 9 要件を 4 フェーズへ割当）。
+**Current focus:** Phase 01 — ui-ocr
 
 ## Current Position
 
-Phase: 1 of 4 (設定/UI 改善（OCR パラメータ一元化・スライダー配置）)
-Plan: — of TBD
-Status: Ready to plan (roadmap created, awaiting phase planning)
-Last activity: 2026-06-18 — Milestone v1.6.0 ロードマップ作成（4 フェーズ・要件 9 件 100% 割当）
+Phase: 01 (ui-ocr) — EXECUTING
+Plan: 2 of 2
+Status: Executing Phase 01（Plan 01 完了）
+Last activity: 2026-06-18 — Completed Phase 01 Plan 01（OCR パラメータ一元化）
 
-Progress: [░░░░░░░░░░] 0%
+Progress: [█████░░░░░] 50%
 
 ## v1.6.0 Phase Map
 
@@ -75,6 +75,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 06-gemini-provider P02 | 20min | 3 tasks | 3 files |
 | Phase 06-gemini-provider P03 | 12min | 3 tasks | 9 files |
 | Phase 06-gemini-provider P04 (gap) | 6min | 3 tasks | 5 files |
+| Phase 01-ui-ocr P01 | 約25分 | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -148,6 +149,8 @@ Decisions are logged in PROJECT.md Key Decisions table.
 - [Phase 06-04]: _fatal_msg/_fatal_kind を共有属性に昇格し Lock 保護（複数ワーカーの致命的エラー報告・CR-01）
 - [Phase 06-04]: DEFAULT_OCR_SCALE = 1.5 に統一し D-11 既定と整合（WR-01）
 - [Phase 06-04]: _SENSITIVE_KEYS に google_api_key / GOOGLE_API_KEY / GEMINI_API_KEY / ANTHROPIC_API_KEY 大文字バリアントを追加（WR-03）
+- [Phase 01-01]: OCRDialog の数値 Spinbox 4 種（scale/timeout/max_tokens/temperature）を state=readonly + fg=TEXT_SUB で読み取り専用化、model_combo/取得ボタンを disabled（編集導線を LLMConfigDialog へ一元化・V16-UI-01）
+- [Phase 01-01]: 数値同期を独立メソッド _sync_param_vars_from_settings に切り出し、_apply_llm_settings の provider 分岐外（全プロバイダ共通箇所）から呼び claude/gemini でも即時反映（D-03）。値はログ非出力（T-01-01）
 
 ### Pending Todos
 
@@ -203,9 +206,9 @@ Decisions are logged in PROJECT.md Key Decisions table.
 
 ## Session Continuity
 
-Last session: 2026-06-18T09:10:51.917Z
-Stopped at: Phase 1 context gathered
-Resume file: .planning/phases/01-ui-ocr/01-CONTEXT.md
+Last session: 2026-06-18
+Stopped at: Completed 01-01-PLAN.md
+Resume file: .planning/phases/01-ui-ocr/01-02-PLAN.md
 
 ## Operator Next Steps
 
