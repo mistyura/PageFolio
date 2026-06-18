@@ -14,6 +14,7 @@ from pagefolio.constants import C
 from pagefolio.pagination import (
     clamp_page_size,
     clamp_window_start,
+    reconcile_window_start,
     to_global,
     window_bounds,
     window_for_page,
@@ -186,30 +187,44 @@ class ViewerMixin:
 
     def _prev_window(self):
         """前の窓へ移動（保存不要・thumb_cache 非クリア）。"""
-        n = len(self.doc) if self.doc else 0
-        self._page_window_start = clamp_window_start(
-            self._page_window_start - self._page_size, self._page_size, n
-        )
-        self._refresh_all()
+        self._move_window(-1)
 
     def _next_window(self):
         """次の窓へ移動（保存不要・thumb_cache 非クリア）。"""
-        n = len(self.doc) if self.doc else 0
+        self._move_window(+1)
+
+    def _move_window(self, direction):
+        """窓を direction（-1=前 / +1=次）へ移動する。
+
+        窓移動後に current_page を新窓の先頭へ追従させ、「current は常に窓内」
+        という不変条件を確立する（手動ナビ vs D-11 自動追従の対立解消・UAT 項目2）。
+        これにより _refresh_all の reconcile_window_start は「操作で current が
+        窓外へ押し出された」場合のみ追従する純粋な正規化として矛盾なく機能する。
+        thumb_cache はクリアしない（A1・Pitfall 2）。
+        """
+        if not self.doc:
+            return
+        n = len(self.doc)
         self._page_window_start = clamp_window_start(
-            self._page_window_start + self._page_size, self._page_size, n
+            self._page_window_start + direction * self._page_size, self._page_size, n
         )
+        # current を新窓先頭へ追従させ窓内不変条件を保つ（snap back 防止の要）。
+        self.current_page = self._page_window_start
         self._refresh_all()
+        self.plugin_manager.fire_event("on_page_change", self, self.current_page)
+        self._set_status(window_label(self._page_window_start, self._page_size, n))
 
     # ── 表示更新 ──
     def _refresh_all(self):
         # 描画前に窓を正規化する（集約点・Pitfall 5）。
-        # clamp_window_start で有効窓先頭へ寄せ、window_for_page で current を
-        # 含む窓へ追従する（操作後に current が窓外へ出ても自動追従・D-11）。
+        # reconcile_window_start が clamp_window_start で有効窓先頭へ寄せ、
+        # current_page が窓外へ出ている場合のみ window_for_page で追従する（D-11）。
+        # current_page が現窓内に収まっているときは手動ナビ（◀▶）/件数変更が
+        # 設定した窓を温存し、current の窓へ snap back しない（UAT 項目2 不具合修正）。
         n = len(self.doc) if self.doc else 0
-        self._page_window_start = clamp_window_start(
-            self._page_window_start, self._page_size, n
+        self._page_window_start = reconcile_window_start(
+            self._page_window_start, self.current_page, self._page_size, n
         )
-        self._page_window_start = window_for_page(self.current_page, self._page_size)
         self._build_thumbnails()
         self._show_preview()
         self._update_doc_buttons_state()

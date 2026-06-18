@@ -261,9 +261,7 @@ class UIBuilderMixin:
 
         # 件数 Spinbox は手入力を禁止する readonly（範囲外値が原理的に入らない・
         # Pitfall 3 / MEMORY: tkinter-readonly-widget-gotchas）。
-        self.page_size_var = tk.IntVar(
-            value=self.settings.get("thumb_page_size", 20)
-        )
+        self.page_size_var = tk.IntVar(value=self.settings.get("thumb_page_size", 20))
         page_size_spin = ttk.Spinbox(
             nav_frame,
             from_=10,

@@ -70,6 +70,30 @@ def clamp_window_start(window_start, page_size, n_pages):
     return max(0, min(window_start, last_start))
 
 
+def reconcile_window_start(window_start, current_page, page_size, n_pages):
+    """描画直前の窓正規化 + D-11 条件付き追従を 1 純関数に集約する。
+
+    手順:
+      1. clamp_window_start で window_start を有効窓の先頭へ寄せる
+         （削除・件数変更で無効化した窓を救済）。
+      2. current_page が正規化後の窓 [lo, hi) の **外** に出ている場合のみ
+         window_for_page(current_page, page_size) でその窓へ追従する（D-11）。
+         current_page が窓内に収まっている場合は手動ナビ（◀▶）/件数変更が
+         設定した窓を温存し、current_page の窓へ snap back しない。
+
+    D-11 原文（02-RESEARCH.md:21）: 「current_page が表示窓外へ出たら、その窓へ
+    自動切替」。追従は **窓外条件付き** であり無条件ではない。
+    n_pages<=0 or page_size<=0 では 0 を返す（堅牢性・T-2-01）。
+    """
+    normalized = clamp_window_start(window_start, page_size, n_pages)
+    if n_pages <= 0 or page_size <= 0:
+        return normalized
+    lo, hi = window_bounds(normalized, page_size, n_pages)
+    if current_page < lo or current_page >= hi:
+        return window_for_page(current_page, page_size)
+    return normalized
+
+
 def window_label(window_start, page_size, n_pages):
     """1 始まりの範囲文字列を返す（D-09/D-10）。
 

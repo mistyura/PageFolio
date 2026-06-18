@@ -12,6 +12,7 @@ import types
 from pagefolio.pagination import (
     clamp_page_size,
     clamp_window_start,
+    reconcile_window_start,
     to_global,
     to_local,
     window_bounds,
@@ -143,6 +144,67 @@ class TestClampWindowStart:
                     result = clamp_window_start(start, size, n)
                     assert result % size == 0
                     assert result < n
+
+
+class TestReconcileWindowStart:
+    """D-11 条件付き追従の純関数仕様。
+
+    reconcile_window_start は「操作で current_page が現窓の外へ押し出された」
+    場合のみ window_for_page(current_page) へ追従し、current が窓内なら
+    window_start を温存する正規化関数。手動窓ナビ（◀▶）は呼び出し側
+    （ViewerMixin._move_window）が current_page を新窓内へ追従させ「current は
+    常に窓内」の不変条件を保つため、この純関数には窓外入力として到達しない。
+    したがって「手動ナビで current が窓外のまま温存」という入力は仕様外であり、
+    純関数単独で (A) 手動離脱 と (B) 押し出し を区別する必要はない
+    （対立解消の詳細は TestMoveWindowHandler を参照）。
+    """
+
+    def test_current_in_window_preserves_start(self):
+        # current_page=25 は窓2 [20,40) 内 → window_start=20 を温存（追従しない）。
+        assert reconcile_window_start(20, 25, 20, 47) == 20
+
+    def test_current_outside_window_follows(self):
+        # current_page=5（窓1 在）だが window_start=20 → current が窓外。
+        # window_for_page(5,20)=0 へ追従（D-11）。
+        assert reconcile_window_start(20, 5, 20, 47) == 0
+
+    def test_current_outside_to_later_window_follows(self):
+        # current_page=45（窓3 在）だが window_start=0 → 窓外。
+        # window_for_page(45,20)=40 へ追従。
+        assert reconcile_window_start(0, 45, 20, 47) == 40
+
+    def test_current_at_window_lower_boundary_in(self):
+        # current==lo は窓内（境界の包含側）→ 温存。
+        assert reconcile_window_start(20, 20, 20, 47) == 20
+
+    def test_current_at_window_upper_boundary_out(self):
+        # current==hi（半開区間の外）→ 追従。window_start=20・hi=40・current=40。
+        assert reconcile_window_start(20, 40, 20, 47) == 40
+
+    def test_invalid_start_clamped_then_followed(self):
+        # 削除等で無効化した window_start=999 はまず clamp、その後 current 追従判定。
+        # n=25・size=20 → last_start=20。current=5 は窓2 外 → window_for_page(5)=0。
+        assert reconcile_window_start(999, 5, 20, 25) == 0
+
+    def test_invalid_start_clamped_current_in_clamped_window(self):
+        # window_start=999→clamp で 20。current=22 は窓2[20,25) 内 → 20 温存。
+        assert reconcile_window_start(999, 22, 20, 25) == 20
+
+    def test_doc_not_open(self):
+        assert reconcile_window_start(20, 0, 20, 0) == 0
+
+    def test_invalid_page_size(self):
+        assert reconcile_window_start(20, 0, 0, 47) == 0
+
+    def test_result_is_valid_window_head(self):
+        # 任意入力で戻り値は有効窓先頭（% size == 0 かつ < n）を満たす。
+        for n in (1, 20, 25, 40, 47, 100):
+            for size in (10, 20, 50):
+                for start in (0, size, size * 2, 999):
+                    for cur in (0, n // 2, n - 1):
+                        result = reconcile_window_start(start, cur, size, n)
+                        assert result % size == 0
+                        assert 0 <= result < n
 
 
 class TestNavState:
@@ -361,21 +423,27 @@ class TestThumbCacheRetention:
     def _make_stub(self):
         """副作用を無効化した最小スタブ。
 
-        _refresh_all は no-op、page_size_var は固定値 30 を返す簡易スタブ。
-        thumb_cache は既知の dict オブジェクト（id 監視対象）。
+        _refresh_all / _set_status / plugin_manager.fire_event は no-op、
+        page_size_var は固定値 30 を返す簡易スタブ。doc は長さ 47 の擬似配列
+        （_move_window が len(doc) を参照するため）。thumb_cache は既知の dict
+        オブジェクト（id 監視対象）。
         """
         cache = {0: object(), 1: object()}
         stub = types.SimpleNamespace(
             _page_window_start=20,
             _page_size=20,
             current_page=25,
-            doc=None,
+            doc=[None] * 47,
             thumb_cache=cache,
             settings={},
             page_size_var=types.SimpleNamespace(get=lambda: 30),
+            plugin_manager=types.SimpleNamespace(fire_event=lambda *a, **k: None),
         )
-        # _refresh_all を no-op スタブに差し替え（描画委譲を断つ）
+        # 描画・状態表示の委譲を no-op で断つ。_move_window は非束縛適用のため
+        # stub 上へ明示束縛する（SimpleNamespace は MRO を持たない）。
         stub._refresh_all = lambda: None
+        stub._set_status = lambda msg: None
+        stub._move_window = lambda direction: ViewerMixin._move_window(stub, direction)
         return stub
 
     def test_prev_window_keeps_cache_identity(self):
@@ -425,3 +493,79 @@ class TestThumbCacheRetention:
         ViewerMixin._on_page_size_change(stub)
         assert id(stub.thumb_cache) == before
         assert stub._page_size == 20
+
+
+class TestMoveWindowHandler:
+    """手動窓ナビ（◀▶）の不変条件: 窓移動後に current_page が新窓内へ追従する。
+
+    対立解消の要 — ViewerMixin._move_window が current を新窓先頭へ動かすことで
+    「current は常に窓内」を保証し、_refresh_all の reconcile_window_start を
+    (B) 操作による押し出し専用の追従へ純化する。これにより手動ナビ後に current の
+    窓へ snap back する不具合（UAT 項目2 NG）が原理的に発生しなくなる。純関数
+    単独では (A) 手動離脱 と (B) 押し出し を区別できないため、区別はこのハンドラ層
+    の不変条件確立で担保する（TestReconcileWindowStart docstring 参照）。
+    """
+
+    def _make_stub(self, window_start=0, page_size=20, current_page=5, n=47):
+        calls = {"page_change": 0}
+        stub = types.SimpleNamespace(
+            _page_window_start=window_start,
+            _page_size=page_size,
+            current_page=current_page,
+            doc=[None] * n,
+            thumb_cache={},
+            settings={},
+            plugin_manager=types.SimpleNamespace(
+                fire_event=lambda *a, **k: calls.__setitem__(
+                    "page_change", calls["page_change"] + 1
+                )
+            ),
+        )
+        stub._refresh_all = lambda: None
+        stub._set_status = lambda msg: None
+        stub._move_window = lambda direction: ViewerMixin._move_window(stub, direction)
+        stub._calls = calls
+        return stub
+
+    def test_next_window_moves_current_into_new_window(self):
+        # current=5（窓1 在）で次窓へ → window_start=20・current も新窓先頭 20 へ追従。
+        stub = self._make_stub(window_start=0, current_page=5, n=47)
+        ViewerMixin._next_window(stub)
+        assert stub._page_window_start == 20
+        assert stub.current_page == 20
+        lo, hi = window_bounds(stub._page_window_start, 20, 47)
+        assert lo <= stub.current_page < hi
+
+    def test_prev_window_moves_current_into_new_window(self):
+        # current=45（窓3 在）で前窓へ → window_start=20・current も 20 へ追従。
+        stub = self._make_stub(window_start=40, current_page=45, n=47)
+        ViewerMixin._prev_window(stub)
+        assert stub._page_window_start == 20
+        assert stub.current_page == 20
+
+    def test_move_window_invariant_keeps_current_inside(self):
+        # 旧バグ再現入力（窓2 在で current=窓1）は _move_window 経由では生じ得ない。
+        # 任意の窓・方向で移動後、current は必ず新窓内（= window_start）に収まる。
+        handlers = ((ViewerMixin._prev_window), (ViewerMixin._next_window))
+        for ws in (0, 20, 40):
+            for handler in handlers:
+                stub = self._make_stub(window_start=ws, current_page=ws, n=47)
+                handler(stub)
+                lo, hi = window_bounds(
+                    stub._page_window_start, stub._page_size, len(stub.doc)
+                )
+                assert lo <= stub.current_page < hi
+                assert stub.current_page == stub._page_window_start
+
+    def test_no_doc_is_noop(self):
+        stub = self._make_stub()
+        stub.doc = None
+        before = stub.current_page
+        ViewerMixin._next_window(stub)
+        assert stub.current_page == before
+        assert stub._calls["page_change"] == 0
+
+    def test_fires_page_change_event(self):
+        stub = self._make_stub(window_start=0, current_page=5, n=47)
+        ViewerMixin._next_window(stub)
+        assert stub._calls["page_change"] == 1
