@@ -2,18 +2,18 @@
 gsd_state_version: 1.0
 milestone: v1.6.0
 milestone_name: 品質向上・AI強化・設定/UI改善
-current_phase: 2
+current_phase: 02
 current_phase_name: 大量ページのページネーション表示
 status: executing
 stopped_at: Phase 2 context gathered
-last_updated: "2026-06-18T12:02:41.173Z"
+last_updated: "2026-06-18T12:15:55.350Z"
 last_activity: 2026-06-18
-last_activity_desc: Phase 01 complete, transitioned to Phase 2
+last_activity_desc: Phase 02 execution started
 progress:
   total_phases: 4
   completed_phases: 1
-  total_plans: 2
-  completed_plans: 2
+  total_plans: 5
+  completed_plans: 3
   percent: 25
 ---
 
@@ -24,14 +24,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-18)
 
 **Core value:** 大きな PDF でも Undo/Redo が正しく・速く動作し、コードが読みやすく保守しやすい状態にする
-**Current focus:** Phase 01 — ui-ocr
+**Current focus:** Phase 02 — 大量ページのページネーション表示
 
 ## Current Position
 
-Phase: 2 — 大量ページのページネーション表示
-Plan: Not started
+Phase: 02 (大量ページのページネーション表示) — EXECUTING
+Plan: 2 of 3
 Status: Ready to execute
-Last activity: 2026-06-18 — Phase 01 complete, transitioned to Phase 2
+Last activity: 2026-06-18 — Phase 02 execution started
 
 Progress: [█████░░░░░] 50%
 
@@ -78,6 +78,7 @@ Progress: [█████░░░░░] 50%
 | Phase 06-gemini-provider P04 (gap) | 6min | 3 tasks | 5 files |
 | Phase 01-ui-ocr P01 | 約25分 | 2 tasks | 3 files |
 | Phase 01-ui-ocr P02 | 約10分 | 2 tasks | 4 files |
+| Phase 02 P01 | 4min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -155,6 +156,8 @@ Decisions are logged in PROJECT.md Key Decisions table.
 - [Phase 01-01]: 数値同期を独立メソッド _sync_param_vars_from_settings に切り出し、_apply_llm_settings の provider 分岐外（全プロバイダ共通箇所）から呼び claude/gemini でも即時反映（D-03）。値はログ非出力（T-01-01）
 - [Phase ?]: [Phase 01-02]: サムネイルスライダーを独立 zoom_frame（全幅行）へ移設しボタンとの幅競合を解消（D-07/D-08）。範囲/変数/コールバック不変（D-09）。viewer.py/settings.py 未変更
 - [Phase ?]: [Phase 01-02]: APP_VERSION を v1.6.0 へ更新し README バッジ・開発履歴.md を同期（CLAUDE.md 規約）。pyproject.toml 未編集
+- [Phase ?]: [Phase 02-01]: ページネーション純ロジックを pagefolio/pagination.py に集約（Tk/fitz 非依存・8 純関数）。clamp_page_size をフェーズ内確定名に固定（W1）し 02-02/02-03 はこの名で import
+- [Phase ?]: [Phase 02-01]: 純関数は page_size<=0 / n_pages<=0 でも例外を投げず安全側へ倒す（T-2-01）。window_label は文言裁量と疎結合にし、テストは数値包含で照合
 
 ### Pending Todos
 
@@ -210,7 +213,7 @@ Decisions are logged in PROJECT.md Key Decisions table.
 
 ## Session Continuity
 
-Last session: 2026-06-18T11:11:47.413Z
+Last session: 2026-06-18T12:15:04.818Z
 Stopped at: Phase 2 context gathered
 Resume file: .planning/phases/02-pagination/02-CONTEXT.md
 
