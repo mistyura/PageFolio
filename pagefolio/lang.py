@@ -13,6 +13,8 @@ LANG = {
         "dnd_hint": "D&D で並替",
         "select_all": "全選択",
         "deselect": "解除",
+        # ページネーション（ナビ/件数フッター）
+        "page_size_label": "表示:",
         # プレビューツールバー
         "btn_prev": "◀",
         "btn_next": "▶",
@@ -453,6 +455,8 @@ LANG = {
         "dnd_hint": "Drag to reorder",
         "select_all": "Select All",
         "deselect": "Deselect",
+        # Pagination (nav / page-size footer)
+        "page_size_label": "Show:",
         # Preview toolbar
         "btn_prev": "◀",
         "btn_next": "▶",
