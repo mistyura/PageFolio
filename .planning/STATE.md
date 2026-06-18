@@ -130,16 +130,15 @@ Decisions are logged in PROJECT.md Key Decisions table.
 
 ### Pending Todos
 
-- **v1.4.1 ホットフィックス（H-1〜H-5）**: v1.4.0 リリースレビューで検出した重大問題 +
-  ユーザー報告（H-5: LLM 設定画面のプロバイダ切替時リサイズ不全）の修正。
-  **着手時は必ず [260610-aaa-REVIEW.md](./quick/260610-aaa-v140-review-fixplan/260610-aaa-REVIEW.md) を参照すること**
-  （指摘番号・該当箇所・対応方針・着手時の注意を記載済み）。
+- なし（v1.4.1 ホットフィックス H-1〜H-5 は出荷済み・v1.5.0 まで完了）。
+  次マイルストーンの候補は [NEXT-MILESTONE-HANDOFF.md](./NEXT-MILESTONE-HANDOFF.md) を参照。
 
 ### Blockers/Concerns
 
-- fitz のスレッドセーフ制約（スレッドに `fitz.Document` を渡せない）: Phase 04 でスレッド境界を明確化することで対処
-- Gemini Free Tier 10 RPM: Phase 06 で並列度 1 を起点に実測して調整
-- Claude temperature/effort の実 API 確認: Phase 05 の完了条件として組み込み済み
+- なし（過去の懸念は全て解決済み）:
+  - ~~fitz のスレッドセーフ制約~~ → Phase 04 でスレッド境界を明確化（ワーカーには bytes のみ渡す）
+  - ~~Gemini Free Tier 10 RPM~~ → Phase 06 で並列度 1 を既定化
+  - ~~Claude temperature/effort の実 API 確認~~ → Phase 05 で完了
 
 ### Quick Tasks Completed
 
@@ -179,8 +178,8 @@ Decisions are logged in PROJECT.md Key Decisions table.
 
 ## Session Continuity
 
-Last session: 2026-06-12T09:00:00.000Z
-Stopped at: 260612-shc 完了（v1.4.4 確定・マージ・リビルド・公開）
+Last session: 2026-06-18 — v1.5.0 出荷後の改善点洗い出し・次マイルストーン引継ぎ文書（NEXT-MILESTONE-HANDOFF.md）作成・.planning 整理
+Stopped at: Awaiting next milestone（次マイルストーン候補は NEXT-MILESTONE-HANDOFF.md 参照）
 Resume file: None
 
 ## Operator Next Steps
