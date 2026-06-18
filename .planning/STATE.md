@@ -5,15 +5,15 @@ milestone_name: 品質向上・AI強化・設定/UI改善
 current_phase: 02
 current_phase_name: 大量ページのページネーション表示
 status: executing
-stopped_at: Phase 2 context gathered
-last_updated: "2026-06-18T12:15:55.350Z"
+stopped_at: Completed 02-02-PLAN.md
+last_updated: "2026-06-18T12:25:42.902Z"
 last_activity: 2026-06-18
 last_activity_desc: Phase 02 execution started
 progress:
   total_phases: 4
   completed_phases: 1
   total_plans: 5
-  completed_plans: 3
+  completed_plans: 4
   percent: 25
 ---
 
@@ -29,7 +29,7 @@ See: .planning/PROJECT.md (updated 2026-06-18)
 ## Current Position
 
 Phase: 02 (大量ページのページネーション表示) — EXECUTING
-Plan: 2 of 3
+Plan: 3 of 3
 Status: Ready to execute
 Last activity: 2026-06-18 — Phase 02 execution started
 
@@ -79,6 +79,7 @@ Progress: [█████░░░░░] 50%
 | Phase 01-ui-ocr P01 | 約25分 | 2 tasks | 3 files |
 | Phase 01-ui-ocr P02 | 約10分 | 2 tasks | 4 files |
 | Phase 02 P01 | 4min | 2 tasks | 3 files |
+| Phase 02 P02 | 約12分 | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -158,6 +159,7 @@ Decisions are logged in PROJECT.md Key Decisions table.
 - [Phase ?]: [Phase 01-02]: APP_VERSION を v1.6.0 へ更新し README バッジ・開発履歴.md を同期（CLAUDE.md 規約）。pyproject.toml 未編集
 - [Phase ?]: [Phase 02-01]: ページネーション純ロジックを pagefolio/pagination.py に集約（Tk/fitz 非依存・8 純関数）。clamp_page_size をフェーズ内確定名に固定（W1）し 02-02/02-03 はこの名で import
 - [Phase ?]: [Phase 02-01]: 純関数は page_size<=0 / n_pages<=0 でも例外を投げず安全側へ倒す（T-2-01）。window_label は文言裁量と疎結合にし、テストは数値包含で照合
+- [Phase ?]: selected_pages は全ページ index 不変条件を保持し、照合側を to_global で窓変換（02-02・D-07・Pitfall 1 解消）
 
 ### Pending Todos
 
@@ -213,9 +215,9 @@ Decisions are logged in PROJECT.md Key Decisions table.
 
 ## Session Continuity
 
-Last session: 2026-06-18T12:15:04.818Z
-Stopped at: Phase 2 context gathered
-Resume file: .planning/phases/02-pagination/02-CONTEXT.md
+Last session: 2026-06-18T12:25:42.892Z
+Stopped at: Completed 02-02-PLAN.md
+Resume file: None
 
 ## Operator Next Steps
 

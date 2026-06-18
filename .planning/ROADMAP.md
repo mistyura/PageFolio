@@ -91,14 +91,14 @@
   3. ページング表示中でも D&D による並び替えが全ページインデックスと整合し、意図したページが正しい位置へ移動する
   4. ページング表示中でも複数選択（`selected_pages`）が全ページインデックスを正しく指し、ページ操作が選択どおりに適用される
 
-**Plans**: 1/3 plans executed
+**Plans**: 2/3 plans executed
 **Wave 1**
 
   - [x] 02-01-PLAN.md — V16-UI-03: 窓計算・local↔global 変換の純ロジック層（pagination.py）新設 + 全境界値の純ロジック unit テスト（Wave 0 基盤）
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-  - [ ] 02-02-PLAN.md — V16-UI-03: 表示件数 thumb_page_size 永続化（既定 20・クランプ）+ 窓状態属性 + サムネイル描画/選択照合の窓範囲化
+  - [x] 02-02-PLAN.md — V16-UI-03: 表示件数 thumb_page_size 永続化（既定 20・クランプ）+ 窓状態属性 + サムネイル描画/選択照合の窓範囲化
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
@@ -143,7 +143,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
 | 1. Undo/Redo 修正 | v1.3.0 | 2/2 | Complete    | 2026-06-03 |
-| 2. プレビュー最適化とリファクタリング | v1.3.0 | 1/3 | In Progress|  |
+| 2. プレビュー最適化とリファクタリング | v1.3.0 | 2/3 | In Progress|  |
 | 3. API 整理と回帰テスト | v1.3.0 | 2/2 | Complete | 2026-06-03 |
 | 4. プロバイダ抽象化 | v1.4.0 | 4/4 | Complete | 2026-06-06 |
 | 5. Claude Provider + セキュリティ基盤 + プロバイダ選択 UI | v1.4.0 | 5/5 | Complete | 2026-06-07 |
