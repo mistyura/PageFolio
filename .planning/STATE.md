@@ -4,17 +4,17 @@ milestone: v1.6.0
 milestone_name: 品質向上・AI強化・設定/UI改善
 current_phase: 02
 current_phase_name: 大量ページのページネーション表示
-status: executing
-stopped_at: Completed 02-02-PLAN.md
-last_updated: "2026-06-18T12:25:42.902Z"
-last_activity: 2026-06-18
-last_activity_desc: Phase 02 execution started
+status: phase_complete
+stopped_at: Completed 02-03-PLAN.md (Phase 02 complete + UAT 項目2 修正)
+last_updated: "2026-06-19T00:00:00.000Z"
+last_activity: 2026-06-19
+last_activity_desc: Phase 02 完了（02-03 + 窓ナビ snap back 修正）
 progress:
   total_phases: 4
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 5
-  completed_plans: 4
-  percent: 25
+  completed_plans: 5
+  percent: 50
 ---
 
 # Project State
@@ -28,10 +28,10 @@ See: .planning/PROJECT.md (updated 2026-06-18)
 
 ## Current Position
 
-Phase: 02 (大量ページのページネーション表示) — EXECUTING
-Plan: 3 of 3
-Status: Ready to execute
-Last activity: 2026-06-18 — Phase 02 execution started
+Phase: 02 (大量ページのページネーション表示) — COMPLETE
+Plan: 3 of 3 (02-03 完了)
+Status: Phase 02 完了。次は Phase 03 の計画（`/gsd-plan-phase 3`）
+Last activity: 2026-06-19 — Phase 02 完了（02-03 + UAT 項目2 窓ナビ snap back 修正）
 
 Progress: [█████░░░░░] 50%
 
@@ -160,6 +160,8 @@ Decisions are logged in PROJECT.md Key Decisions table.
 - [Phase ?]: [Phase 02-01]: ページネーション純ロジックを pagefolio/pagination.py に集約（Tk/fitz 非依存・8 純関数）。clamp_page_size をフェーズ内確定名に固定（W1）し 02-02/02-03 はこの名で import
 - [Phase ?]: [Phase 02-01]: 純関数は page_size<=0 / n_pages<=0 でも例外を投げず安全側へ倒す（T-2-01）。window_label は文言裁量と疎結合にし、テストは数値包含で照合
 - [Phase ?]: selected_pages は全ページ index 不変条件を保持し、照合側を to_global で窓変換（02-02・D-07・Pitfall 1 解消）
+- [Phase 02-03]: ナビ/件数フッター（◀▶＋範囲ラベル＋件数 Spinbox state=readonly）構築・D&D local→global 換算・ja/en 同一 LANG キー・_refresh_all 正規化を reconcile_window_start へ集約
+- [Phase 02-03]: 手動窓ナビと D-11 自動追従の対立はハンドラ層で解消（_move_window で窓移動後に current_page を新窓先頭へ追従＝「current は常に窓内」不変条件）。reconcile_window_start は (B) 操作による current 押し出し専用追従へ純化（UAT 項目2 修正・debug 260618-pagination-window-nav-snapback）
 
 ### Pending Todos
 
@@ -168,7 +170,7 @@ Decisions are logged in PROJECT.md Key Decisions table.
 
 ### Blockers/Concerns
 
-- [v1.6.0 Phase 2 リスク]: S3 ページネーション導入時、`selected_pages`・D&D は全ページインデックスで管理されているため「表示中ページのみ vs 全ページ」のインデックス整合に注意（PROJECT.md / HANDOFF §7 S3 補足）。Phase 2 計画時に詳細設計で吸収する。
+- ~~[v1.6.0 Phase 2 リスク]: S3 ページネーション導入時、`selected_pages`・D&D は全ページインデックスで管理されているため「表示中ページのみ vs 全ページ」のインデックス整合に注意~~ → **解決済み（Phase 02）**: `selected_pages` は全ページ index 不変条件を保持し照合側を `to_global` で窓変換（D-07）、D&D ドロップ先も `to_global` で換算（D-06）。さらに手動窓ナビ後の current snap back（UAT 項目2）も `_move_window` の窓内不変条件で解消。
 - [v1.6.0 Phase 3 留意]: V16-QUAL-03（max_tokens/429 実機検証）は実 API または実機相当の検証手順が前提。安全側修正のみで未検証のため、検証手順と結果記録の方法を計画時に確定する。
 
 過去の懸念は全て解決済み:
@@ -215,8 +217,8 @@ Decisions are logged in PROJECT.md Key Decisions table.
 
 ## Session Continuity
 
-Last session: 2026-06-18T12:25:42.892Z
-Stopped at: Completed 02-02-PLAN.md
+Last session: 2026-06-19T00:00:00.000Z
+Stopped at: Completed 02-03-PLAN.md (Phase 02 complete + UAT 項目2 修正)
 Resume file: None
 
 ## Operator Next Steps
