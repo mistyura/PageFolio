@@ -141,11 +141,11 @@
   2. Claude では XML タグ構造、Gemini では明示指示など、プロバイダ別に最適化されたプロンプトテンプレートで OCR が実行される
   3. プロバイダ別プロンプト最適化が、既存のカスタムプロンプト機構（v1.5.0）と矛盾なく両立し、ユーザーのカスタムプロンプトが引き続き機能する
 
-**Plans**: 3 plans
+**Plans**: 1/3 plans executed
 
 **Wave 1** *(並行実行可・files_modified 重複ゼロ — 純ロジック層)*
 
-  - [ ] 04-01-PLAN.md — V16-AI-01: Markdown→(行種別, インライン span) 変換の純関数層 `pagefolio/md_render.py`（`parse_markdown`）新設 + `tests/test_md_render.py`（Tk 非生成 unit）
+  - [x] 04-01-PLAN.md — V16-AI-01: Markdown→(行種別, インライン span) 変換の純関数層 `pagefolio/md_render.py`（`parse_markdown`）新設 + `tests/test_md_render.py`（Tk 非生成 unit）
   - [ ] 04-02-PLAN.md — V16-AI-02: プロバイダ別プロンプト解決の純関数層（`ocr.py` に `PROVIDER_OCR_PROMPTS`＝Claude=XML/Gemini=明示 + `resolve_ocr_prompt`）+ `tests/test_provider_ui.py` 拡張（カスタム上書き温存・LMStudio/Tesseract フォールバック）
 
 **Wave 2** *(blocked on Wave 1 — 配線/UI)*
@@ -164,7 +164,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 | 1. Undo/Redo 修正 | v1.3.0 | 2/2 | Complete    | 2026-06-03 |
 | 2. プレビュー最適化とリファクタリング | v1.3.0 | 2/3 | In Progress|  |
 | 3. API 整理と回帰テスト | v1.3.0 | 2/2 | Complete | 2026-06-03 |
-| 4. プロバイダ抽象化 | v1.4.0 | 4/4 | Complete | 2026-06-06 |
+| 4. プロバイダ抽象化 | v1.4.0 | 1/3 | In Progress|  |
 | 5. Claude Provider + セキュリティ基盤 + プロバイダ選択 UI | v1.4.0 | 5/5 | Complete | 2026-06-07 |
 | 6. Gemini Provider + 逐次レンダリング最適化 | v1.4.0 | 4/4 | Complete | 2026-06-07 |
 | 7. Tesseract + PluginManager 拡張 + QA | v1.4.0 | 1/1 | Complete | 2026-06-14 |

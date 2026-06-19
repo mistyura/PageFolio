@@ -23,7 +23,7 @@
 
 ### AI 強化（AI・プランC）
 
-- [ ] **V16-AI-01** (M3中): OCR 結果ビューア（`OCRDialog`）で、`markdown` プリセット出力が整形表示され、プレーンテキストよりも見出し・箇条書き等が読みやすく提示される。
+- [x] **V16-AI-01** (M3中): OCR 結果ビューア（`OCRDialog`）で、`markdown` プリセット出力が整形表示され、プレーンテキストよりも見出し・箇条書き等が読みやすく提示される。
 - [ ] **V16-AI-02** (M4中): プロバイダ別にプロンプトテンプレートが最適化され（Claude=XML タグ構造 / Gemini=明示指示）、OCR 精度・出力品質が引き出される。既存のカスタムプロンプト機構（v1.5.0）と両立する。
 
 ---
@@ -59,5 +59,5 @@
 | V16-QUAL-02 | Phase 3 | Pending |
 | V16-QUAL-03 | Phase 3 | Pending |
 | V16-QUAL-04 | Phase 3 | Pending |
-| V16-AI-01 | Phase 4 | Pending |
+| V16-AI-01 | Phase 4 | Complete |
 | V16-AI-02 | Phase 4 | Pending |

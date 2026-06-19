@@ -2,18 +2,18 @@
 gsd_state_version: 1.0
 milestone: v1.6.0
 milestone_name: 品質向上・AI強化・設定/UI改善
-current_phase: 03
-current_phase_name: 体感品質・回転プレビュー & OCR 堅牢性（プランA）
-status: phase_complete
+current_phase: 04
+current_phase_name: AI 出力品質（プランC）
+status: executing
 stopped_at: Phase 3 完了（03-01/02/03 全プラン）
-last_updated: "2026-06-19T11:30:00.000Z"
+last_updated: "2026-06-19T12:27:39.176Z"
 last_activity: 2026-06-19
-last_activity_desc: Phase 03 完了（V16-QUAL-01〜04・回転即時反映/OCR途切れ・待機秒数/キー秘匿監査）
+last_activity_desc: Phase 04 execution started
 progress:
   total_phases: 4
   completed_phases: 3
-  total_plans: 8
-  completed_plans: 8
+  total_plans: 11
+  completed_plans: 9
   percent: 75
 ---
 
@@ -24,14 +24,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-18)
 
 **Core value:** 大きな PDF でも Undo/Redo が正しく・速く動作し、コードが読みやすく保守しやすい状態にする
-**Current focus:** Phase 04 — AI 出力品質（プランC）の計画（Phase 03 完了済）
+**Current focus:** Phase 04 — AI 出力品質（プランC）
 
 ## Current Position
 
-Phase: 03 (体感品質・回転プレビュー & OCR 堅牢性（プランA）) — COMPLETE
-Plan: 3 of 3 (03-01/02/03 完了)
-Status: Phase 03 完了。次は Phase 04 の計画（`/gsd-plan-phase 4`）
-Last activity: 2026-06-19 — Phase 03 完了（V16-QUAL-01〜04）
+Phase: 04 (AI 出力品質（プランC）) — EXECUTING
+Plan: 2 of 3
+Status: Ready to execute
+Last activity: 2026-06-19 — Phase 04 execution started
 
 Progress: [███████░░░] 75%
 
@@ -80,6 +80,7 @@ Progress: [███████░░░] 75%
 | Phase 01-ui-ocr P02 | 約10分 | 2 tasks | 4 files |
 | Phase 02 P01 | 4min | 2 tasks | 3 files |
 | Phase 02 P02 | 約12分 | 2 tasks | 4 files |
+| Phase 04 P01 | 5min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -162,6 +163,8 @@ Decisions are logged in PROJECT.md Key Decisions table.
 - [Phase ?]: selected_pages は全ページ index 不変条件を保持し、照合側を to_global で窓変換（02-02・D-07・Pitfall 1 解消）
 - [Phase 02-03]: ナビ/件数フッター（◀▶＋範囲ラベル＋件数 Spinbox state=readonly）構築・D&D local→global 換算・ja/en 同一 LANG キー・_refresh_all 正規化を reconcile_window_start へ集約
 - [Phase 02-03]: 手動窓ナビと D-11 自動追従の対立はハンドラ層で解消（_move_window で窓移動後に current_page を新窓先頭へ追従＝「current は常に窓内」不変条件）。reconcile_window_start は (B) 操作による current 押し出し専用追従へ純化（UAT 項目2 修正・debug 260618-pagination-window-nav-snapback）
+- [Phase ?]: [Phase 04-01]: parse_markdown 判定優先順位 code>md_h2>md_h1>bullet>通常段落・in_code フラグでフェンス内見出しを構造抑止。md_render.py は Tk/fitz 非依存純ロジック層で 04-03 が import
+- [Phase ?]: [Phase 04-01]: _split_inline は **bold** のみ対応・空リスト不返却で [(text,None)] フォールバック。ReDoS 回避: 非貪欲+文字クラスのみ（線形時間）
 
 ### Pending Todos
 
@@ -217,7 +220,7 @@ Decisions are logged in PROJECT.md Key Decisions table.
 
 ## Session Continuity
 
-Last session: 2026-06-19T09:27:56.312Z
+Last session: 2026-06-19T12:27:29.115Z
 Stopped at: Phase 3 context gathered
 Resume file: .planning/phases/03-ocr-a/03-CONTEXT.md
 
