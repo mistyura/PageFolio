@@ -52,8 +52,8 @@
 > **要件出典:** [REQUIREMENTS.md](REQUIREMENTS.md)（V16-* 全 9 件）/ [NEXT-MILESTONE-HANDOFF.md](NEXT-MILESTONE-HANDOFF.md)
 
 - [x] **Phase 1: 設定/UI 改善（OCR パラメータ一元化・スライダー配置）** — S1 二重設定の解消 + S2 サムネイルスライダーの常時可視化 (completed 2026-06-18)
-- [ ] **Phase 2: 大量ページのページネーション表示** — S3 サムネイル一覧をページ単位で区切り、D&D・複数選択をインデックス整合させる
-- [ ] **Phase 3: 体感品質・回転プレビュー & OCR 堅牢性（プランA）** — H1 回転即時反映 + H2 キー秘匿監査 + H5 実機検証 + M1 エラー UX 磨き
+- [x] **Phase 2: 大量ページのページネーション表示** — S3 サムネイル一覧をページ単位で区切り、D&D・複数選択をインデックス整合 (completed 2026-06-19)
+- [x] **Phase 3: 体感品質・回転プレビュー & OCR 堅牢性（プランA）** — H1 回転即時反映 + H2 キー秘匿監査 + H5 実機検証 + M1 エラー UX 磨き (completed 2026-06-19)
 - [ ] **Phase 4: AI 出力品質（プランC）** — M3 Markdown 整形表示 + M4 プロバイダ別プロンプト最適化
 
 ## Phase Details
@@ -91,7 +91,7 @@
   3. ページング表示中でも D&D による並び替えが全ページインデックスと整合し、意図したページが正しい位置へ移動する
   4. ページング表示中でも複数選択（`selected_pages`）が全ページインデックスを正しく指し、ページ操作が選択どおりに適用される
 
-**Plans**: 2/3 plans executed
+**Plans**: 3/3 plans complete
 **Wave 1**
 
   - [x] 02-01-PLAN.md — V16-UI-03: 窓計算・local↔global 変換の純ロジック層（pagination.py）新設 + 全境界値の純ロジック unit テスト（Wave 0 基盤）
@@ -102,7 +102,7 @@
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
-  - [ ] 02-03-PLAN.md — V16-UI-03: ナビ/件数フッター UI（◀ ▶ ＋ 範囲ラベル ＋ Spinbox）+ D&D local→global 換算 + current_page 窓追従（D-11）+ i18n/版番同期
+  - [x] 02-03-PLAN.md — V16-UI-03: ナビ/件数フッター UI（◀ ▶ ＋ 範囲ラベル ＋ Spinbox）+ D&D local→global 換算 + current_page 窓追従（D-11）+ i18n/版番同期
 
 **UI hint**: yes
 
@@ -118,15 +118,15 @@
   3. max_tokens クランプと 429/レート制限リトライが実 API（または実機相当の検証手順）で期待どおり動作することが検証され、結果が記録されている
   4. レート制限・トークン超過・応答途切れ時に、ユーザーが状況と次のアクション（待機・再試行・設定変更等）を理解できるエラーメッセージ／UX が提示される
 
-**Plans**: 3 plans
+**Plans**: 3/3 plans complete
 **Wave 1** *(並行実行可・files_modified 重複ゼロ)*
 
-  - [ ] 03-01-PLAN.md — V16-QUAL-01: H1 回転プレビュー即時反映（実機 debug で真因特定 → 原因除去・回転 w/h 単体テスト・viewer/page_ops に閉じる）
-  - [ ] 03-02-PLAN.md — V16-QUAL-04: OCR 堅牢性（ocr_image_ex 段階導入で stop_reason/finishReason 途切れ検出＋部分テキスト保持・待機秒数 {sec} 文言・ja/en 同一 LANG キー）
+  - [x] 03-01-PLAN.md — V16-QUAL-01: H1 回転プレビュー即時反映（実機 debug で真因特定 → 原因除去・回転 w/h 単体テスト・viewer/page_ops に閉じる）
+  - [x] 03-02-PLAN.md — V16-QUAL-04: OCR 堅牢性（ocr_image_ex 段階導入で stop_reason/finishReason 途切れ検出＋部分テキスト保持・待機秒数 {sec} 文言・ja/en 同一 LANG キー）
 
 **Wave 2** *(blocked on 03-02: lang.py 確定後の parity 基準)*
 
-  - [ ] 03-03-PLAN.md — V16-QUAL-02/03: H2 キー秘匿監査回帰テスト（caplog 値非出力・ソース実キースキャン・LANG parity）＋ H5 実 API 検証チェックリスト（D-08）＋ 3 経路キー秘匿監査文書（D-10）・pagefolio/ ソース無改変
+  - [x] 03-03-PLAN.md — V16-QUAL-02/03: H2 キー秘匿監査回帰テスト（caplog 値非出力・ソース実キースキャン・LANG parity）＋ H5 実 API 検証チェックリスト（D-08）＋ 3 経路キー秘匿監査文書（D-10）・pagefolio/ ソース無改変
 
 **UI hint**: yes
 
@@ -162,7 +162,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 | 2. UI / UX とパフォーマンスの改善 | v1.5.0 | — | Complete | 2026-06-16 |
 | 3. AI・OCR連携のさらなる進化 | v1.5.0 | — | Complete | 2026-06-16 |
 | 4. テスト・品質保証 | v1.5.0 | — | Complete | 2026-06-16 |
-| 1. 設定/UI 改善（OCR パラメータ一元化・スライダー配置） | v1.6.0 | 1/2 | In progress | - |
-| 2. 大量ページのページネーション表示 | v1.6.0 | 0/3 | Not started | - |
-| 3. 体感品質・回転プレビュー & OCR 堅牢性（プランA） | v1.6.0 | 0/3 | Not started | - |
+| 1. 設定/UI 改善（OCR パラメータ一元化・スライダー配置） | v1.6.0 | 2/2 | Complete | 2026-06-18 |
+| 2. 大量ページのページネーション表示 | v1.6.0 | 3/3 | Complete | 2026-06-19 |
+| 3. 体感品質・回転プレビュー & OCR 堅牢性（プランA） | v1.6.0 | 3/3 | Complete | 2026-06-19 |
 | 4. AI 出力品質（プランC） | v1.6.0 | 0/TBD | Not started | - |
