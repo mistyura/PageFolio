@@ -1499,3 +1499,52 @@ class TestOcrImageExTruncation:
         text, truncated = p.ocr_image_ex("Zg==", "テスト")
         assert truncated is False
         assert text == "ローカル OCR"
+
+
+# ===== Plan 03-03: クラウドプロバイダのキー値ログ非出力（V16-QUAL-02 / D-11） =====
+
+
+class TestProviderKeyNotLogged:
+    """クラウドプロバイダ ocr_image が API キー値をログへ出さないことを確認する。
+
+    キー値（インスタンスに渡したダミーキー）が caplog.text に現れないことのみ
+    アサートする（キー名出力は監査対象外・Pitfall 4）。
+    """
+
+    def test_claude_key_value_not_logged(self, monkeypatch, caplog):
+        import logging
+
+        from pagefolio import ocr_providers
+
+        body = json.dumps({"content": [{"type": "text", "text": "ok"}]})
+
+        def fake_urlopen(req, timeout=None):
+            return _FakeClaudeResponse(body)
+
+        monkeypatch.setattr(ocr_providers.urllib.request, "urlopen", fake_urlopen)
+        p = ocr_providers.ClaudeProvider("sk-ant-LEAK-CLAUDE-KEY", "claude-sonnet-4-6")
+        with caplog.at_level(logging.DEBUG):
+            p.ocr_image("Zg==", "テスト")
+        assert "sk-ant-LEAK-CLAUDE-KEY" not in caplog.text, (
+            "Claude API キー値がログに出力された（D-11 違反）"
+        )
+
+    def test_gemini_key_value_not_logged(self, monkeypatch, caplog):
+        import logging
+
+        from pagefolio import ocr_providers
+
+        body = json.dumps({"candidates": [{"content": {"parts": [{"text": "ok"}]}}]})
+
+        def fake_urlopen(req, timeout=None):
+            return _FakeResponse(body)
+
+        monkeypatch.setattr(ocr_providers.urllib.request, "urlopen", fake_urlopen)
+        p = ocr_providers.GeminiProvider(
+            api_key="AIza-LEAK-GEMINI-KEY", model="gemini-2.5-flash"
+        )
+        with caplog.at_level(logging.DEBUG):
+            p.ocr_image("Zg==", "describe")
+        assert "AIza-LEAK-GEMINI-KEY" not in caplog.text, (
+            "Gemini API キー値がログに出力された（D-11 違反）"
+        )

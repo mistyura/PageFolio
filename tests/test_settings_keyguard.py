@@ -4,6 +4,7 @@
 """_save_settings の機密キー非永続化ガードテスト（成功基準1）"""
 
 import json
+import logging
 
 from pagefolio.settings import _SENSITIVE_KEYS, _load_settings, _save_settings
 
@@ -133,6 +134,26 @@ class TestSaveSettingsKeyGuard:
         assert saved["lang"] == "ja"
         assert saved["ocr_provider"] == "claude"
         assert saved["claude_model"] == "claude-sonnet-4-6"
+
+    def test_api_key_value_not_logged(self, tmp_path, monkeypatch, caplog):
+        """_save_settings がキー値をログへ平文出力しない（D-11・Pitfall 4）。
+
+        キー名（claude_api_key）は logger.error で出る仕様のため許容し、
+        キー値（sk-ant-...）が caplog.text に現れないことのみをアサートする。
+        """
+        settings_path = tmp_path / "test_settings.json"
+        monkeypatch.setattr(
+            "pagefolio.settings._get_settings_path",
+            lambda: str(settings_path),
+        )
+
+        settings = {"theme": "dark", "claude_api_key": "sk-ant-LEAK-VALUE-XYZ"}
+        with caplog.at_level(logging.DEBUG):
+            _save_settings(settings)
+
+        assert "sk-ant-LEAK-VALUE-XYZ" not in caplog.text, (
+            "APIキー値がログに平文出力された（D-11 違反）"
+        )
 
     def test_input_dict_not_mutated(self, tmp_path, monkeypatch):
         """_save_settings への入力 dict 自体は破壊的変更されない"""
