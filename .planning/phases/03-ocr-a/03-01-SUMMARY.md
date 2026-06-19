@@ -41,7 +41,7 @@ requirements-completed: [V16-QUAL-01]
 # Metrics
 duration: 約15分
 completed: 2026-06-19
-status: awaiting-checkpoint
+status: complete
 ---
 
 # Phase 03 Plan 01: 体感品質・回転プレビュー即時反映（H1）Summary
@@ -53,7 +53,7 @@ status: awaiting-checkpoint
 - **Duration:** 約15分
 - **Started:** 2026-06-19T10:42Z
 - **Completed (Task 1+2):** 2026-06-19T10:56Z
-- **Tasks:** 2 完了（Task 3 は blocking human-verify チェックポイントで保留）
+- **Tasks:** 3 完了（Task 1/2 実装＋ Task 3 human-verify 承認済み）
 - **Files modified:** 2
 
 ## Accomplishments
@@ -103,6 +103,19 @@ status: awaiting-checkpoint
 
 _Task 1 はコード生成のない調査タスクのため、結論を本 SUMMARY に記録（上記 Task 1 節）。_
 
+## Task 3: 実機 UAT（human-verify チェックポイント）— APPROVED
+
+**結果:** ✅ ユーザーにより **承認（approved）**（2026-06-19）。
+
+`<task type="checkpoint:human-verify" gate="blocking">` の実機目視確認をユーザーが実施し、回転即時反映が正しく動作することを確認した。検証観点:
+
+1. 単一選択回転 → 再読込・ページ送りせずプレビューがその場で回る ✅
+2. 複数選択一括回転 → 現在の窓内に見えている対象サムネイルが揃って回る（窓外は D-02/Pitfall 6 通り対象外）✅
+3. スクロール状態での回転 → 表示破綻なく回転後寸法で正しく表示 ✅
+4. 回転後の削除・ページ送り・窓ナビ（◀▶）で Phase 2 ページネーション挙動（snap back しない・窓内不変条件）に回帰なし ✅
+
+成功基準 V16-QUAL-01 成功基準1（回転がプレビューへ即時反映される・手動 UAT 承認）を満たした。
+
 ## Files Created/Modified
 - `tests/test_viewer.py` - 回転 w/h 単体テスト 3 件（90/270°入替・180°不変）を追加
 - `pagefolio/page_ops.py` - `_rotate_selected` に current を回転対象代表へ寄せる原因除去修正を追加
@@ -126,7 +139,8 @@ None - no external service configuration required.
 
 ## Next Phase Readiness
 - Task 1/2 完了・コミット済み。回転 w/h テストと原因除去修正は緑・回帰なし。
-- **Task 3（blocking human-verify チェックポイント）が未実施**。実機 GUI で回転即時反映の目視確認が必要（Ctrl+選択回転・複数選択一括回転・スクロール時回転・Phase 2 ページネーション非回帰）。ユーザー承認後に継続エージェントがプラン完了処理（STATE/ROADMAP 更新・最終コミット）を行う。
+- **Task 3（blocking human-verify チェックポイント）はユーザー承認済み（approved）**。実機 UAT で回転即時反映を確認済み。プラン 03-01 完了。
+- 同 Wave の 03-02、Wave 2 の 03-03 は本プランと独立。Phase 3 の残プラン実行に進める。
 
 ## Self-Check: PASSED
 
