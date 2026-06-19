@@ -4,17 +4,17 @@ milestone: v1.6.0
 milestone_name: 品質向上・AI強化・設定/UI改善
 current_phase: 04
 current_phase_name: AI 出力品質（プランC）
-status: executing
-stopped_at: Phase 3 完了（03-01/02/03 全プラン）
-last_updated: "2026-06-19T12:27:39.176Z"
-last_activity: 2026-06-19
-last_activity_desc: Completed 04-02-PLAN.md（V16-AI-02 プロンプト解決純関数層）
+status: phase_complete
+stopped_at: Phase 4 完了（04-01/02/03 全プラン・human-verify はユーザー判断でスキップ）
+last_updated: "2026-06-20T00:00:00.000Z"
+last_activity: 2026-06-20
+last_activity_desc: Completed 04-03-PLAN.md（OCRDialog 配線・V16-AI-01/02）。Phase 4 全プラン完了
 progress:
   total_phases: 4
-  completed_phases: 3
+  completed_phases: 4
   total_plans: 11
-  completed_plans: 10
-  percent: 83
+  completed_plans: 11
+  percent: 100
 ---
 
 # Project State
@@ -28,12 +28,12 @@ See: .planning/PROJECT.md (updated 2026-06-18)
 
 ## Current Position
 
-Phase: 04 (AI 出力品質（プランC）) — EXECUTING
-Plan: 3 of 3
-Status: Ready to execute
-Last activity: 2026-06-19 — 04-02-PLAN.md 完了（V16-AI-02 プロンプト解決純関数層）
+Phase: 04 (AI 出力品質（プランC）) — COMPLETE
+Plan: 3 of 3 — 完了
+Status: Phase complete（全 4 フェーズ達成・v1.6.0 マイルストーン完了候補）
+Last activity: 2026-06-20 — 04-03-PLAN.md 完了（OCRDialog 配線・V16-AI-01/02）。human-verify はユーザー判断でスキップ
 
-Progress: [████████░░] 83%
+Progress: [██████████] 100%
 
 ## v1.6.0 Phase Map
 
@@ -223,11 +223,12 @@ Decisions are logged in PROJECT.md Key Decisions table.
 
 ## Session Continuity
 
-Last session: 2026-06-19
-Stopped at: Completed 04-02-PLAN.md（V16-AI-02）
-Resume file: None
+Last session: 2026-06-20
+Stopped at: Completed 04-03-PLAN.md（OCRDialog 配線）。Phase 4 全プラン完了＝v1.6.0 全 4 フェーズ達成。human-verify はユーザー判断でスキップ（実機目視未検証）
+Resume file: None（.continue-here / HANDOFF.json は継続完了に伴い削除）
 
 ## Operator Next Steps
 
-- Phase 1 の計画を作成: `/gsd-plan-phase 1`（または `/gsd-execute-phase 1` で計画→実行を連結）
-- 各 Phase 完了ゲート（CLAUDE.md 準拠）: `ruff check . && ruff format .` + `pytest`（現行 490 件ベースライン）+ 開発履歴.md 追記 + `APP_VERSION` 同期
+- v1.6.0 全 4 フェーズ完了。マイルストーン締め: `/gsd-complete-milestone`（PR・ビルド・リリースは別途）
+- 残課題（任意）: 04-03 の human-verify 実機目視確認（markdown 整形表示・プロバイダ別プロンプト実 API 出力品質）— スキップ済のため必要なら手動実施
+- 各 Phase 完了ゲート（CLAUDE.md 準拠）: `ruff check . && ruff format .` + `pytest`（現行 597 件ベースライン）+ 開発履歴.md 追記 + `APP_VERSION` 同期

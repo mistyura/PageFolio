@@ -54,7 +54,7 @@
 - [x] **Phase 1: 設定/UI 改善（OCR パラメータ一元化・スライダー配置）** — S1 二重設定の解消 + S2 サムネイルスライダーの常時可視化 (completed 2026-06-18)
 - [x] **Phase 2: 大量ページのページネーション表示** — S3 サムネイル一覧をページ単位で区切り、D&D・複数選択をインデックス整合 (completed 2026-06-19)
 - [x] **Phase 3: 体感品質・回転プレビュー & OCR 堅牢性（プランA）** — H1 回転即時反映 + H2 キー秘匿監査 + H5 実機検証 + M1 エラー UX 磨き (completed 2026-06-19)
-- [ ] **Phase 4: AI 出力品質（プランC）** — M3 Markdown 整形表示 + M4 プロバイダ別プロンプト最適化
+- [x] **Phase 4: AI 出力品質（プランC）** — M3 Markdown 整形表示 + M4 プロバイダ別プロンプト最適化 (completed 2026-06-20)
 
 ## Phase Details
 
@@ -141,7 +141,7 @@
   2. Claude では XML タグ構造、Gemini では明示指示など、プロバイダ別に最適化されたプロンプトテンプレートで OCR が実行される
   3. プロバイダ別プロンプト最適化が、既存のカスタムプロンプト機構（v1.5.0）と矛盾なく両立し、ユーザーのカスタムプロンプトが引き続き機能する
 
-**Plans**: 2/3 plans executed
+**Plans**: 3/3 plans complete
 
 **Wave 1** *(並行実行可・files_modified 重複ゼロ — 純ロジック層)*
 
@@ -150,7 +150,7 @@
 
 **Wave 2** *(blocked on Wave 1 — 配線/UI)*
 
-  - [ ] 04-03-PLAN.md — V16-AI-01/02: `OCRDialog` 配線（`_on_run` を `resolve_ocr_prompt` へ・`_build` に md_* タグ・`_render_results_ordered` に `preset=="markdown"` 整形描画分岐）+ コピー/保存は raw 維持 + human-verify
+  - [x] 04-03-PLAN.md — V16-AI-01/02: `OCRDialog` 配線（`_on_run` を `resolve_ocr_prompt` へ・`_build` に md_* タグ・`_render_results_ordered` に `preset=="markdown"` 整形描画分岐）+ コピー/保存は raw 維持 + human-verify（ユーザー判断でスキップ） — completed 2026-06-20
 
 **UI hint**: yes
 
@@ -175,4 +175,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 | 1. 設定/UI 改善（OCR パラメータ一元化・スライダー配置） | v1.6.0 | 2/2 | Complete | 2026-06-18 |
 | 2. 大量ページのページネーション表示 | v1.6.0 | 3/3 | Complete | 2026-06-19 |
 | 3. 体感品質・回転プレビュー & OCR 堅牢性（プランA） | v1.6.0 | 3/3 | Complete | 2026-06-19 |
-| 4. AI 出力品質（プランC） | v1.6.0 | 2/3 | In Progress | - |
+| 4. AI 出力品質（プランC） | v1.6.0 | 3/3 | Complete | 2026-06-20 |
