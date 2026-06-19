@@ -41,9 +41,11 @@ PageFolio/
 │   ├── page_ops.py            # ページ操作 Mixin（回転/削除/トリミング/挿入/結合/分割）
 │   ├── viewer.py              # 表示 Mixin（プレビュー/ズーム/サムネイル/ポップアップ）
 │   ├── dnd.py                 # D&D Mixin（サムネイルのドラッグ並び替え）
-│   ├── ocr.py                 # OCR Mixin + ヘルパー（build_provider / 並列実行 / リトライ制御）
+│   ├── pagination.py          # サムネイル窓計算 / local↔global インデックス変換（Tk・fitz 非依存の純関数群）
+│   ├── ocr.py                 # OCR Mixin + ヘルパー（build_provider / 並列実行 / リトライ制御 / resolve_ocr_prompt）
 │   ├── ocr_providers.py       # OCR プロバイダ（LMStudio / Claude / Gemini / Tesseract）
-│   ├── ocr_dialog.py          # OCRDialog（複数ページ OCR 結果ビューア / エクスポート）
+│   ├── md_render.py           # Markdown→(行種別, インライン span) 変換の純関数（parse_markdown・Tk/fitz 非依存）
+│   ├── ocr_dialog.py          # OCRDialog（複数ページ OCR 結果ビューア / エクスポート / Markdown 整形描画）
 │   ├── dialogs/               # ダイアログパッケージ
 │   │   ├── __init__.py        # 後方互換 re-export（from pagefolio.dialogs import ...）
 │   │   ├── about.py           # AboutDialog
@@ -72,7 +74,10 @@ PageFolio/
 │   ├── test_settings_keyguard.py  # API キー非保存ガードテスト
 │   ├── test_ocr.py            # OCR ヘルパー / 並列実行テスト
 │   ├── test_ocr_providers.py  # OCR プロバイダ単体テスト
-│   └── test_provider_ui.py    # プロバイダ UI（ダイアログ連携）テスト
+│   ├── test_provider_ui.py    # プロバイダ UI（ダイアログ連携）/ resolve_ocr_prompt テスト
+│   ├── test_pagination.py     # ページネーション純ロジック（窓計算 / local↔global / 境界値）テスト
+│   ├── test_md_render.py      # parse_markdown 純関数（行種別 / インライン span）テスト
+│   └── test_source_keyguard.py  # pagefolio/ ソースの実 API キーパターン不在スキャン
 └── docs/                      # スクリーンショット画像
 
 （実行時に自動生成）
@@ -122,9 +127,14 @@ API キーは `_SENSITIVE_KEYS` ガードにより `pagefolio_settings.json` へ
 
 | モジュール | 主要クラス / 関数 | 責務 |
 |-----------|------------------|------|
-| `ocr.py` | `OCRMixin`, `build_provider`, `run_parallel`, `clamp_retry_after`, `interruptible_sleep` | プロバイダ生成・並列 OCR 実行・リトライ/キャンセル制御 |
-| `ocr_providers.py` | `OCRProvider`(ABC), `LMStudioProvider`, `ClaudeProvider`, `GeminiProvider`, `TesseractProvider` | 各バックエンドへの OCR リクエスト実装 |
-| `ocr_dialog.py` | `OCRDialog` | 複数ページ OCR の実行 UI・進捗・結果表示/エクスポート（`_run_gen` 世代ガード） |
+| `ocr.py` | `OCRMixin`, `build_provider`, `run_parallel`, `clamp_retry_after`, `interruptible_sleep`, `PROVIDER_OCR_PROMPTS`, `resolve_ocr_prompt` | プロバイダ生成・並列 OCR 実行・リトライ/キャンセル制御・プロバイダ別プロンプト解決（custom>provider別>汎用） |
+| `ocr_providers.py` | `OCRProvider`(ABC), `LMStudioProvider`, `ClaudeProvider`, `GeminiProvider`, `TesseractProvider` | 各バックエンドへの OCR リクエスト実装（`ocr_image_ex` で stop_reason/finishReason 途切れ検出） |
+| `md_render.py` | `parse_markdown`, `_split_inline` | OCR 結果 Markdown を (行種別, インライン span) へ変換する純関数（Tk/fitz 非依存・`ocr_dialog.py` の整形描画が消費） |
+| `ocr_dialog.py` | `OCRDialog` | 複数ページ OCR の実行 UI・進捗・結果表示/エクスポート（`_run_gen` 世代ガード）・`preset=="markdown"` 整形描画（`_insert_markdown`）・コピー/保存は raw 維持 |
+
+### ページネーション
+
+`pagination.py` はサムネイル一覧の窓表示（既定 20・範囲 10〜100）の純ロジック層。窓計算・件数クランプ・ローカル位置 ↔ 全ページインデックス変換（`to_global` 等）を Tk/fitz 非依存の純関数群として集約する。`selected_pages` は全ページインデックスのまま保持し、描画・D&D・選択照合の側で窓変換する（散在による窓またぎバグを構造的に防止）。
 
 ### `pagefolio/dialogs/`（パッケージ）
 
@@ -265,7 +275,7 @@ C = dict(THEMES["dark"])  # 実行時に _apply_theme() で更新
 
 ## 今後の追加予定機能
 
-- [ ] ページの回転状態をプレビューに即時反映
+- [x] ページの回転状態をプレビューに即時反映（v1.6.0 / V16-QUAL-01）
 - [ ] PDF のパスワード解除対応
 - [ ] 印刷機能
 
