@@ -11,15 +11,16 @@ import tkinter as tk
 from tkinter import filedialog, messagebox, ttk
 
 from pagefolio.constants import LANG, C
+from pagefolio.md_render import parse_markdown
 from pagefolio.ocr import (
     DEFAULT_OCR_CONCURRENCY,
     MAX_OCR_CONCURRENCY,
     MAX_OCR_MAX_TOKENS,
     MAX_RETRIES,
-    OCR_PROMPTS,
     build_provider,
     has_embedded_text,
     page_to_png_b64,
+    resolve_ocr_prompt,
 )
 
 logger = logging.getLogger(__name__)
@@ -500,6 +501,16 @@ class OCRDialog(tk.Toplevel):
         self.text.configure(yscrollcommand=sb.set)
         sb.pack(side="right", fill="y")
         self.text.pack(fill="both", expand=True)
+
+        # Markdown 整形タグ定義（色は C[]・フォントは _font・V16-AI-01）。
+        # 受入基準の単一行 grep ゲートを満たすため fmt:off で折返しを抑止。
+        # fmt: off
+        self.text.tag_configure("md_h1", font=self._font(4, "bold"), foreground=C["ACCENT"])  # noqa: E501
+        self.text.tag_configure("md_h2", font=self._font(2, "bold"), foreground=C["ACCENT"])  # noqa: E501
+        self.text.tag_configure("md_bullet", lmargin1=20, lmargin2=36)
+        self.text.tag_configure("md_code", background=C["BG_PANEL"], font=("Consolas", self._font_size()))  # noqa: E501
+        self.text.tag_configure("md_bold", font=self._font(-1, "bold"))
+        # fmt: on
 
         # ボタン行
         btn_row = tk.Frame(self, bg=C["BG_DARK"])
@@ -1082,12 +1093,11 @@ class OCRDialog(tk.Toplevel):
         except (tk.TclError, ValueError):
             self._ocr_timeout = 120
         self._effective_timeout = self._ocr_timeout
-        # カスタムプロンプトがあればそれを優先し、なければプリセットを使用
-        if self.custom_prompt:
-            self._ocr_prompt = self.custom_prompt
-        else:
-            preset = self.preset_var.get()
-            self._ocr_prompt = OCR_PROMPTS.get(preset, OCR_PROMPTS["text"])
+        # provider 名はプロンプト解決の前に無条件取得（下流の再生成分岐と共用）。
+        name = self.app.settings.get("ocr_provider", "")
+        # プロンプト解決は resolve_ocr_prompt に集約（優先順位は純関数側で担保）。
+        prompt = resolve_ocr_prompt(self.preset_var.get(), name, self.custom_prompt)
+        self._ocr_prompt = prompt
 
         try:
             self._force_ocr = bool(self.force_ocr_var.get())
@@ -1117,7 +1127,6 @@ class OCRDialog(tk.Toplevel):
             _prov = self.provider
             temperature = getattr(_prov, "temperature", 0.1) if _prov else 0.1
 
-        name = self.app.settings.get("ocr_provider", "")
         if name == "claude":
             # claude: build_provider 経由でキー注入（D-01/D-05）
             from pagefolio.ocr import _resolve_api_key
@@ -1453,8 +1462,31 @@ class OCRDialog(tk.Toplevel):
         """進捗バーの値だけを更新する（テキスト挿入なし）"""
         self.progress_bar["value"] = done
 
+    def _insert_markdown(self, text):
+        """parse_markdown の戻り値を text へ整形挿入する薄い描画ヘルパー。
+
+        preset == "markdown" の本文のみで呼ばれる（Pitfall 2: text/table や
+        Tesseract/LMStudio 素出力には当てない構造的ガードは呼び出し側）。
+        各 span を insert し inline_tag があれば tag_add、行末で行レベルタグ
+        （kind）を行全体へ tag_add する（04-RESEARCH.md:137-146）。整形は表示
+        専用でコピー/保存（_format_full_text）は raw 維持（Pitfall 5）。
+        """
+        for kind, spans in parse_markdown(text):
+            line_start = self.text.index("end-1c")
+            for span_text, inline_tag in spans:
+                if inline_tag:
+                    self.text.insert("end", span_text, inline_tag)
+                else:
+                    self.text.insert("end", span_text)
+            self.text.insert("end", "\n")
+            if kind:
+                self.text.tag_add(kind, line_start, "end-1c")
+
     def _render_results_ordered(self):
         """results / errors をページ順に text へ流し込む（並列実行後の一括描画）"""
+        # preset == "markdown" のときのみ整形描画（Pitfall 2 構造的ガード）。
+        # text/table や Tesseract/LMStudio 素出力には Markdown パーサを当てない。
+        markdown = self.preset_var.get() == "markdown"
         for page_idx in self.page_indices:
             sep = self._L["ocr_page_separator"].format(page=page_idx + 1)
             self.text.insert("end", f"\n{sep}\n")
@@ -1463,9 +1495,9 @@ class OCRDialog(tk.Toplevel):
                 skip_notice = self._L["ocr_text_skip_notice"].format(page=page_idx + 1)
                 self.text.insert("end", f"[{skip_notice}]\n")
                 if page_idx in self.results:
-                    self.text.insert("end", self.results[page_idx] + "\n")
+                    self._insert_results_body(page_idx, markdown)
             elif page_idx in self.results:
-                self.text.insert("end", self.results[page_idx] + "\n")
+                self._insert_results_body(page_idx, markdown)
                 # D-05: max_tokens 途切れページは部分テキストの後に専用文言を併記
                 if page_idx in self._truncated_pages:
                     notice = self._L["ocr_err_truncated"].format(page=page_idx + 1)
@@ -1477,6 +1509,16 @@ class OCRDialog(tk.Toplevel):
                     + "\n",
                 )
         self.text.see("end")
+
+    def _insert_results_body(self, page_idx, markdown):
+        """results 本文の挿入のみを担う。markdown のときだけ整形描画する。
+
+        markdown == False のときは従来の素朴 insert を完全に温存（後方互換）。
+        """
+        if markdown:
+            self._insert_markdown(self.results[page_idx])
+        else:
+            self.text.insert("end", self.results[page_idx] + "\n")
 
     def _finish_complete(self):
         if self._done:  # CR-02: 冪等ガード（二重呼び出し防止）
