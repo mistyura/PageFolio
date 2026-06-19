@@ -11,6 +11,7 @@ import types
 
 import pytest
 
+from pagefolio.ocr import OCR_PROMPTS, resolve_ocr_prompt
 from pagefolio.ocr_providers import ClaudeProvider
 
 # ══════════════════════════════════════════════════════════════
@@ -548,3 +549,40 @@ class TestSettingsDialogPluginManager:
 
         sig_params = list(inspect.signature(SettingsDialog.__init__).parameters.keys())
         assert "plugin_manager" in sig_params
+
+
+# ══════════════════════════════════════════════════════════════
+#  V16-AI-02: resolve_ocr_prompt（プロバイダ別プロンプト解決純関数）
+# ══════════════════════════════════════════════════════════════
+
+
+class TestResolveOcrPrompt:
+    """V16-AI-02: resolve_ocr_prompt の優先順位とフォールバックを検証する。
+
+    Tk/ネットワーク非依存の純関数のため、スタブや Tk 生成は一切不要。
+    優先順位: custom 上書き > プロバイダ別テンプレート > 汎用 OCR_PROMPTS。
+    """
+
+    def test_custom_overrides_provider_template(self):
+        """custom_prompt が非空ならプロバイダ別テンプレより優先（成功基準3）。"""
+        assert resolve_ocr_prompt("markdown", "claude", "MY CUSTOM") == "MY CUSTOM"
+
+    def test_lmstudio_falls_back_to_generic(self):
+        """lmstudio は汎用 OCR_PROMPTS へフォールバックする（Pitfall 4）。"""
+        assert resolve_ocr_prompt("text", "lmstudio", "") == OCR_PROMPTS["text"]
+
+    def test_tesseract_falls_back_to_generic(self):
+        """tesseract は汎用 OCR_PROMPTS へフォールバックする（Pitfall 4）。"""
+        assert resolve_ocr_prompt("text", "tesseract", "") == OCR_PROMPTS["text"]
+
+    def test_claude_markdown_uses_provider_template(self):
+        """claude/markdown は汎用プリセットと異なる別テンプレートを返す。"""
+        assert resolve_ocr_prompt("markdown", "claude", "") != OCR_PROMPTS["markdown"]
+
+    def test_gemini_markdown_uses_provider_template(self):
+        """gemini/markdown は汎用プリセットと異なる別テンプレートを返す。"""
+        assert resolve_ocr_prompt("markdown", "gemini", "") != OCR_PROMPTS["markdown"]
+
+    def test_unknown_preset_falls_back_to_text(self):
+        """未定義 preset は既定で OCR_PROMPTS['text'] へフォールバックする。"""
+        assert resolve_ocr_prompt("zzz", "off", "") == OCR_PROMPTS["text"]
