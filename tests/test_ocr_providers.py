@@ -1370,3 +1370,181 @@ class TestRetryableErrorMessageSplit:
         assert ei.value.code == 500
         assert "サーバエラー" in str(ei.value)
         assert "レート制限" not in str(ei.value)
+
+
+# ===== Plan 03-02: ocr_image_ex 途切れ検出（V16-QUAL-04 / D-05・A2） =====
+
+
+class TestOcrImageExTruncation:
+    """ocr_image_ex の応答途切れ検出と部分テキスト保持を確認する。
+
+    途切れは例外でなく (text, truncated) タプルのフラグで運ぶ（Pitfall 2）。
+    部分テキストは破棄せず常に返す（D-05 必達）。
+    """
+
+    def test_claude_truncated_detects_and_keeps_text(self, monkeypatch):
+        """Claude stop_reason==max_tokens → (部分テキスト, True)・テキスト保持"""
+        from pagefolio import ocr_providers
+
+        body = json.dumps(
+            {
+                "content": [{"type": "text", "text": "途中まで"}],
+                "stop_reason": "max_tokens",
+            }
+        )
+
+        def fake_urlopen(req, timeout=None):
+            return _FakeClaudeResponse(body)
+
+        monkeypatch.setattr(ocr_providers.urllib.request, "urlopen", fake_urlopen)
+        p = ocr_providers.ClaudeProvider("key", "claude-sonnet-4-6")
+        text, truncated = p.ocr_image_ex("Zg==", "テスト")
+        assert truncated is True
+        assert text == "途中まで"  # 部分テキストが破棄されない（D-05）
+
+    def test_claude_normal_not_truncated(self, monkeypatch):
+        """Claude stop_reason==end_turn → (テキスト, False)"""
+        from pagefolio import ocr_providers
+
+        body = json.dumps(
+            {
+                "content": [{"type": "text", "text": "完了テキスト"}],
+                "stop_reason": "end_turn",
+            }
+        )
+
+        def fake_urlopen(req, timeout=None):
+            return _FakeClaudeResponse(body)
+
+        monkeypatch.setattr(ocr_providers.urllib.request, "urlopen", fake_urlopen)
+        p = ocr_providers.ClaudeProvider("key", "claude-sonnet-4-6")
+        text, truncated = p.ocr_image_ex("Zg==", "テスト")
+        assert truncated is False
+        assert text == "完了テキスト"
+
+    def test_claude_missing_stop_reason_not_truncated(self, monkeypatch):
+        """Claude stop_reason 欠落（.get 安全アクセス）→ (テキスト, False)"""
+        from pagefolio import ocr_providers
+
+        body = json.dumps({"content": [{"type": "text", "text": "本文"}]})
+
+        def fake_urlopen(req, timeout=None):
+            return _FakeClaudeResponse(body)
+
+        monkeypatch.setattr(ocr_providers.urllib.request, "urlopen", fake_urlopen)
+        p = ocr_providers.ClaudeProvider("key", "claude-sonnet-4-6")
+        text, truncated = p.ocr_image_ex("Zg==", "テスト")
+        assert truncated is False
+        assert text == "本文"
+
+    def test_gemini_truncated_detects_and_keeps_text(self, monkeypatch):
+        """Gemini finishReason==MAX_TOKENS → (部分テキスト, True)・テキスト保持"""
+        from pagefolio import ocr_providers
+
+        body = json.dumps(
+            {
+                "candidates": [
+                    {
+                        "content": {"parts": [{"text": "途中で切れ"}]},
+                        "finishReason": "MAX_TOKENS",
+                    }
+                ]
+            }
+        )
+
+        def fake_urlopen(req, timeout=None):
+            return _FakeResponse(body)
+
+        monkeypatch.setattr(ocr_providers.urllib.request, "urlopen", fake_urlopen)
+        p = ocr_providers.GeminiProvider(api_key="k", model="gemini-2.5-flash")
+        text, truncated = p.ocr_image_ex("Zg==", "describe")
+        assert truncated is True
+        assert text == "途中で切れ"  # 部分テキストが破棄されない（D-05）
+
+    def test_gemini_normal_not_truncated(self, monkeypatch):
+        """Gemini finishReason==STOP → (テキスト, False)"""
+        from pagefolio import ocr_providers
+
+        body = json.dumps(
+            {
+                "candidates": [
+                    {
+                        "content": {"parts": [{"text": "全文"}]},
+                        "finishReason": "STOP",
+                    }
+                ]
+            }
+        )
+
+        def fake_urlopen(req, timeout=None):
+            return _FakeResponse(body)
+
+        monkeypatch.setattr(ocr_providers.urllib.request, "urlopen", fake_urlopen)
+        p = ocr_providers.GeminiProvider(api_key="k", model="gemini-2.5-flash")
+        text, truncated = p.ocr_image_ex("Zg==", "describe")
+        assert truncated is False
+        assert text == "全文"
+
+    def test_base_default_lmstudio_backward_compat(self, monkeypatch):
+        """途切れ未対応プロバイダ（LM Studio）は基底デフォルトで常に False"""
+        from pagefolio import ocr_providers
+
+        body = json.dumps({"choices": [{"message": {"content": "ローカル OCR"}}]})
+
+        def fake_urlopen(req, timeout=None):
+            return _FakeResponse(body)
+
+        monkeypatch.setattr(ocr_providers.urllib.request, "urlopen", fake_urlopen)
+        p = ocr_providers.LMStudioProvider("http://localhost:1234", "local-model")
+        text, truncated = p.ocr_image_ex("Zg==", "テスト")
+        assert truncated is False
+        assert text == "ローカル OCR"
+
+
+# ===== Plan 03-03: クラウドプロバイダのキー値ログ非出力（V16-QUAL-02 / D-11） =====
+
+
+class TestProviderKeyNotLogged:
+    """クラウドプロバイダ ocr_image が API キー値をログへ出さないことを確認する。
+
+    キー値（インスタンスに渡したダミーキー）が caplog.text に現れないことのみ
+    アサートする（キー名出力は監査対象外・Pitfall 4）。
+    """
+
+    def test_claude_key_value_not_logged(self, monkeypatch, caplog):
+        import logging
+
+        from pagefolio import ocr_providers
+
+        body = json.dumps({"content": [{"type": "text", "text": "ok"}]})
+
+        def fake_urlopen(req, timeout=None):
+            return _FakeClaudeResponse(body)
+
+        monkeypatch.setattr(ocr_providers.urllib.request, "urlopen", fake_urlopen)
+        p = ocr_providers.ClaudeProvider("sk-ant-LEAK-CLAUDE-KEY", "claude-sonnet-4-6")
+        with caplog.at_level(logging.DEBUG):
+            p.ocr_image("Zg==", "テスト")
+        assert "sk-ant-LEAK-CLAUDE-KEY" not in caplog.text, (
+            "Claude API キー値がログに出力された（D-11 違反）"
+        )
+
+    def test_gemini_key_value_not_logged(self, monkeypatch, caplog):
+        import logging
+
+        from pagefolio import ocr_providers
+
+        body = json.dumps({"candidates": [{"content": {"parts": [{"text": "ok"}]}}]})
+
+        def fake_urlopen(req, timeout=None):
+            return _FakeResponse(body)
+
+        monkeypatch.setattr(ocr_providers.urllib.request, "urlopen", fake_urlopen)
+        p = ocr_providers.GeminiProvider(
+            api_key="AIza-LEAK-GEMINI-KEY", model="gemini-2.5-flash"
+        )
+        with caplog.at_level(logging.DEBUG):
+            p.ocr_image("Zg==", "describe")
+        assert "AIza-LEAK-GEMINI-KEY" not in caplog.text, (
+            "Gemini API キー値がログに出力された（D-11 違反）"
+        )

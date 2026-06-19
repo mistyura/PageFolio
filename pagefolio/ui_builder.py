@@ -197,15 +197,17 @@ class UIBuilderMixin:
             sel_frame, text=self._t("deselect"), command=self._deselect_all
         ).pack(side="left", padx=2)
 
+        zoom_frame = tk.Frame(parent, bg=C["BG_PANEL"])
+        zoom_frame.pack(fill="x", padx=6, pady=(0, 4))
         self.thumb_zoom_var = tk.DoubleVar(value=self.settings.get("thumb_zoom", 1.0))
         self.thumb_zoom_scale = ttk.Scale(
-            sel_frame,
+            zoom_frame,
             from_=0.5,
             to=2.5,
             variable=self.thumb_zoom_var,
             orient="horizontal",
         )
-        self.thumb_zoom_scale.pack(side="right", fill="x", expand=True, padx=(10, 2))
+        self.thumb_zoom_scale.pack(fill="x", expand=True, padx=2)
         self.thumb_zoom_scale.bind("<ButtonRelease-1>", self._on_thumb_zoom_release)
 
         canvas_frame = tk.Frame(parent, bg=C["BG_PANEL"])
@@ -235,6 +237,49 @@ class UIBuilderMixin:
                 int(-1 * (e.delta / 120)), "units"
             ),
         )
+
+        # ナビ/件数フッター行（◀ ▶ ＋ 範囲ラベル ＋ 件数 Spinbox）。
+        # 単一窓でも行は常に表示し、ボタンのみ disabled になる（D-02/D-09）。
+        nav_frame = tk.Frame(parent, bg=C["BG_PANEL"])
+        nav_frame.pack(fill="x", padx=6, pady=(0, 6))
+        self._prev_window_btn = ttk.Button(
+            nav_frame, text="◀", width=3, command=self._prev_window
+        )
+        self._prev_window_btn.pack(side="left", padx=(0, 2))
+        self._next_window_btn = ttk.Button(
+            nav_frame, text="▶", width=3, command=self._next_window
+        )
+        self._next_window_btn.pack(side="left", padx=2)
+        self._window_range_label = tk.Label(
+            nav_frame,
+            text="- / -",
+            bg=C["BG_PANEL"],
+            fg=C["TEXT_MAIN"],
+            font=self._font(-2),
+        )
+        self._window_range_label.pack(side="left", padx=6)
+
+        # 件数 Spinbox は手入力を禁止する readonly（範囲外値が原理的に入らない・
+        # Pitfall 3 / MEMORY: tkinter-readonly-widget-gotchas）。
+        self.page_size_var = tk.IntVar(value=self.settings.get("thumb_page_size", 20))
+        page_size_spin = ttk.Spinbox(
+            nav_frame,
+            from_=10,
+            to=100,
+            increment=10,
+            state="readonly",
+            textvariable=self.page_size_var,
+            command=self._on_page_size_change,
+            width=4,
+        )
+        page_size_spin.pack(side="right", padx=(2, 0))
+        tk.Label(
+            nav_frame,
+            text=self._t("page_size_label"),
+            bg=C["BG_PANEL"],
+            fg=C["TEXT_SUB"],
+            font=self._font(-2),
+        ).pack(side="right", padx=(0, 2))
 
     def _build_preview(self, parent):
         toolbar_h = max(52, int(self.font_size * 4.5))

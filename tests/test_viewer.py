@@ -59,3 +59,49 @@ class TestPreviewRender:
         assert len(samples) == w * h * 3, (
             f"samples の長さ ({len(samples)}) が w*h*3 ({w * h * 3}) と一致しない"
         )
+
+
+class TestRotationReflectsInPreviewPixmap:
+    """回転が _render_preview_pixmap に即時反映されること（V16-QUAL-01 / D-03）。
+
+    PyMuPDF の set_rotation → get_pixmap は回転を即時反映するため、
+    90/270° で pixmap の width/height が入れ替わり、180° では不変になる。
+    H1 のバグは pixmap 層ではなく Canvas 層/セレクション意味論にある（Pitfall 1）。
+    これらのテストは pixmap 層が回転を正しく反映することの回帰防止アンカー。
+    """
+
+    def test_rotate_90_swaps_wh(self):
+        """90° 回転で width/height が入れ替わること（400×600 → 600×400 相当）"""
+        doc = fitz.open()
+        doc.new_page(width=400, height=600)
+        stub = _make_stub(doc)
+        _, w0, h0 = stub._render_preview_pixmap(0, 1.0)
+        doc[0].set_rotation(90)
+        _, w1, h1 = stub._render_preview_pixmap(0, 1.0)
+        assert (w1, h1) == (h0, w0), (
+            f"90° で w/h が入れ替わらない: ({w0},{h0}) → ({w1},{h1})"
+        )
+
+    def test_rotate_180_keeps_wh(self):
+        """180° 回転で width/height が不変であること"""
+        doc = fitz.open()
+        doc.new_page(width=400, height=600)
+        stub = _make_stub(doc)
+        _, w0, h0 = stub._render_preview_pixmap(0, 1.0)
+        doc[0].set_rotation(180)
+        _, w1, h1 = stub._render_preview_pixmap(0, 1.0)
+        assert (w1, h1) == (w0, h0), (
+            f"180° で w/h が変化した: ({w0},{h0}) → ({w1},{h1})"
+        )
+
+    def test_rotate_270_swaps_wh(self):
+        """270° 回転で width/height が入れ替わること"""
+        doc = fitz.open()
+        doc.new_page(width=400, height=600)
+        stub = _make_stub(doc)
+        _, w0, h0 = stub._render_preview_pixmap(0, 1.0)
+        doc[0].set_rotation(270)
+        _, w1, h1 = stub._render_preview_pixmap(0, 1.0)
+        assert (w1, h1) == (h0, w0), (
+            f"270° で w/h が入れ替わらない: ({w0},{h0}) → ({w1},{h1})"
+        )

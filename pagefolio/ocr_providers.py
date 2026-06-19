@@ -56,6 +56,26 @@ class OCRProvider(abc.ABC):
           ConnectionError / TimeoutError / RuntimeError（クラス docstring 参照）
         """
 
+    def ocr_image_ex(self, b64_png, prompt, **kwargs):
+        """OCR テキストと応答途切れフラグのタプルを返す（段階導入・A1）。
+
+        引数:
+          b64_png: PNG 画像の base64 文字列
+          prompt:  OCR 指示テキスト
+          **kwargs: プロバイダ固有の追加パラメータ
+
+        戻り値: (text, truncated) のタプル（typing.Tuple[str, bool] 相当）。
+          truncated はトークン超過等で応答が途切れたとき True。
+          基底デフォルトは (ocr_image(...), False) で、途切れ未対応プロバイダ
+          （LM Studio / Tesseract）はこのまま後方互換となる。途切れを検出する
+          プロバイダ（Claude / Gemini）のみオーバーライドする。
+          部分テキストは破棄せず常に返す（途切れは「成功＋警告」・D-05）。
+
+        例外:
+          ocr_image() と同一の例外規約（クラス docstring 参照）。
+        """
+        return (self.ocr_image(b64_png, prompt, **kwargs), False)
+
 
 class OCRAPIKeyError(RuntimeError):
     """APIキー未設定を示す専用例外。環境変数名を保持する。"""
@@ -320,21 +340,12 @@ class ClaudeProvider(OCRProvider):
         # それ以外（未知モデル）: 両方省略（最も安全な前方互換）
         return payload
 
-    def ocr_image(self, b64_png, prompt, **kwargs):
-        """Anthropic messages API を呼び出して OCR テキストを返す。
+    def _post_messages(self, b64_png, prompt):
+        """messages API へ POST し HTTP レスポンス body（str）を返す（内部）。
 
-        引数:
-          b64_png: PNG 画像の base64 文字列
-          prompt:  OCR 指示テキスト
-          **kwargs: 未使用（インターフェース互換のため受け取る）
-
-        戻り値: OCR 結果テキスト（str）
-
-        例外:
-          OCRRetryableError: HTTP 429 または 5xx（リトライ可能）
-          ConnectionError: 接続失敗
-          TimeoutError:    タイムアウト
-          RuntimeError:    HTTP 4xx（429 以外）またはレスポンス形式不正
+        HTTP / 接続 / タイムアウトの例外マッピングは ocr_image と同一規約
+        （OCRRetryableError / RuntimeError / TimeoutError / ConnectionError）。
+        ocr_image と ocr_image_ex の両方から呼ばれる共有経路。
         """
         payload = self._build_payload(b64_png, prompt)
         data = json.dumps(payload).encode("utf-8")
@@ -350,7 +361,7 @@ class ClaudeProvider(OCRProvider):
         )
         try:
             with urllib.request.urlopen(req, timeout=self.timeout) as resp:  # noqa: S310
-                body = resp.read().decode("utf-8")
+                return resp.read().decode("utf-8")
         except urllib.error.HTTPError as e:
             # 429 または 5xx はリトライ可能として OCRRetryableError を送出する
             if e.code == 429 or e.code >= 500:
@@ -380,21 +391,63 @@ class ClaudeProvider(OCRProvider):
                 raise TimeoutError(f"timed out after {self.timeout}s") from e
             raise ConnectionError(str(reason)) from e
 
-        # レスポンス解析: type=="text" ブロックを走査して結合
-        # M-9: block.get("text") で text キー欠落ブロックを安全にスキップ
-        # content[0] 決め打ち禁止（Pitfall 6）
+    @staticmethod
+    def _extract_text(result, body):
+        """Claude messages レスポンス（dict）から text ブロックを結合して返す。
+
+        M-9: block.get("text") で text キー欠落ブロックを安全にスキップ。
+        content[0] 決め打ち禁止（Pitfall 6）。text が無ければ RuntimeError。
+        """
+        texts = [
+            block.get("text")
+            for block in result.get("content", [])
+            if block.get("type") == "text" and block.get("text")
+        ]
+        if not texts:
+            raise RuntimeError(f"Unexpected response format: {body[:500]}")
+        return "\n".join(texts)
+
+    def ocr_image(self, b64_png, prompt, **kwargs):
+        """Anthropic messages API を呼び出して OCR テキストを返す。
+
+        引数:
+          b64_png: PNG 画像の base64 文字列
+          prompt:  OCR 指示テキスト
+          **kwargs: 未使用（インターフェース互換のため受け取る）
+
+        戻り値: OCR 結果テキスト（str）
+
+        例外:
+          OCRRetryableError: HTTP 429 または 5xx（リトライ可能）
+          ConnectionError: 接続失敗
+          TimeoutError:    タイムアウト
+          RuntimeError:    HTTP 4xx（429 以外）またはレスポンス形式不正
+        """
+        body = self._post_messages(b64_png, prompt)
         try:
             result = json.loads(body)
-            texts = [
-                block.get("text")
-                for block in result.get("content", [])
-                if block.get("type") == "text" and block.get("text")
-            ]
-            if not texts:
-                raise RuntimeError(f"Unexpected response format: {body[:500]}")
-            return "\n".join(texts)
+            return self._extract_text(result, body)
         except (json.JSONDecodeError, TypeError) as e:
             raise RuntimeError(f"Unexpected response format: {body[:500]}") from e
+
+    def ocr_image_ex(self, b64_png, prompt, **kwargs):
+        """OCR テキストと途切れフラグ (text, truncated) を返す（D-05・A2）。
+
+        stop_reason == "max_tokens" のとき truncated=True。途切れても部分
+        テキストは破棄せず返す（途切れは「成功＋警告」として扱う・Pitfall 2）。
+
+        戻り値: (text, truncated) のタプル（str, bool）
+        例外:  ocr_image() と同一規約
+        """
+        body = self._post_messages(b64_png, prompt)
+        try:
+            result = json.loads(body)
+            text = self._extract_text(result, body)
+        except (json.JSONDecodeError, TypeError) as e:
+            raise RuntimeError(f"Unexpected response format: {body[:500]}") from e
+        # stop_reason は外部入力のため .get() 安全アクセス（A2）
+        truncated = result.get("stop_reason") == "max_tokens"
+        return (text, truncated)
 
     def list_models(self):
         """Anthropic /v1/models から vision 対応モデル ID リストを取得する。
@@ -525,21 +578,11 @@ class GeminiProvider(OCRProvider):
             raise RuntimeError(f"Gemini: no text in response: {body}")
         return "\n".join(texts)
 
-    def ocr_image(self, b64_png, prompt, **kwargs):
-        """Gemini generateContent API を呼び出して OCR テキストを返す。
+    def _post_generate(self, b64_png, prompt):
+        """generateContent API へ POST し HTTP レスポンス body（str）を返す（内部）。
 
-        引数:
-          b64_png: PNG 画像の base64 文字列
-          prompt:  OCR 指示テキスト
-          **kwargs: 未使用（インターフェース互換のため受け取る）
-
-        戻り値: OCR 結果テキスト（str）
-
-        例外:
-          OCRRetryableError: HTTP 429 または 5xx（リトライ可能）
-          ConnectionError: 接続失敗
-          TimeoutError:    タイムアウト
-          RuntimeError:    HTTP 4xx（429 以外）またはレスポンス形式不正・ブロック
+        HTTP / 接続 / タイムアウトの例外マッピングは ocr_image と同一規約。
+        ocr_image と ocr_image_ex の両方から呼ばれる共有経路。
         """
         endpoint = self.GENERATE_CONTENT_ENDPOINT.format(model=self.model)
         payload = self._build_payload(b64_png, prompt)
@@ -556,7 +599,7 @@ class GeminiProvider(OCRProvider):
         )
         try:
             with urllib.request.urlopen(req, timeout=self.timeout) as resp:  # noqa: S310
-                body = resp.read().decode("utf-8")
+                return resp.read().decode("utf-8")
         except urllib.error.HTTPError as e:
             # 429 または 5xx はリトライ可能（ClaudeProvider と同一構造）
             if e.code == 429 or e.code >= 500:
@@ -586,12 +629,59 @@ class GeminiProvider(OCRProvider):
                 raise TimeoutError(f"timed out after {self.timeout}s") from e
             raise ConnectionError(str(reason)) from e
 
+    @staticmethod
+    def _is_truncated(result):
+        """Gemini レスポンスが finishReason==MAX_TOKENS で途切れたか判定する（A2）。
+
+        candidates / finishReason は外部入力のため .get() 安全アクセス。
+        candidates 欠落時は False（途切れではない）。
+        """
+        candidates = result.get("candidates", [])
+        if not candidates:
+            return False
+        return candidates[0].get("finishReason") == "MAX_TOKENS"
+
+    def ocr_image(self, b64_png, prompt, **kwargs):
+        """Gemini generateContent API を呼び出して OCR テキストを返す。
+
+        引数:
+          b64_png: PNG 画像の base64 文字列
+          prompt:  OCR 指示テキスト
+          **kwargs: 未使用（インターフェース互換のため受け取る）
+
+        戻り値: OCR 結果テキスト（str）
+
+        例外:
+          OCRRetryableError: HTTP 429 または 5xx（リトライ可能）
+          ConnectionError: 接続失敗
+          TimeoutError:    タイムアウト
+          RuntimeError:    HTTP 4xx（429 以外）またはレスポンス形式不正・ブロック
+        """
+        body = self._post_generate(b64_png, prompt)
         # レスポンス解析: candidates[].content.parts[].text を結合
         try:
             result = json.loads(body)
             return self._parse_response(result)
         except (json.JSONDecodeError, TypeError) as e:
             raise RuntimeError(f"Unexpected response format: {body[:500]}") from e
+
+    def ocr_image_ex(self, b64_png, prompt, **kwargs):
+        """OCR テキストと途切れフラグ (text, truncated) を返す（D-05・A2）。
+
+        finishReason == "MAX_TOKENS" のとき truncated=True。途切れても部分
+        テキストは破棄せず返す（途切れは「成功＋警告」として扱う・Pitfall 2）。
+
+        戻り値: (text, truncated) のタプル（str, bool）
+        例外:  ocr_image() と同一規約
+        """
+        body = self._post_generate(b64_png, prompt)
+        try:
+            result = json.loads(body)
+            text = self._parse_response(result)
+        except (json.JSONDecodeError, TypeError) as e:
+            raise RuntimeError(f"Unexpected response format: {body[:500]}") from e
+        truncated = self._is_truncated(result)
+        return (text, truncated)
 
     def list_models(self):
         """Gemini /v1beta/models から generateContent 対応モデル ID リストを取得する。

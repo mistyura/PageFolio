@@ -68,13 +68,16 @@ class LLMConfigDialog(tk.Toplevel):
         # Tesseract 未インストール時の選択リセット用（D-02）
         self._last_valid_provider = current_settings.get("ocr_provider", "off")
 
-        self._build()
-        self.update_idletasks()
+        # _dialog_w は _build() 内の _resize_to_fit() が参照するため、_build() より
+        # 前に確定させておく（未設定だと AttributeError でダイアログが開けない）。
         try:
             fs = int(self._font(0)[1])
         except Exception:
             fs = get_current_font_size()
         self._dialog_w = max(540, int(fs * 44))
+
+        self._build()
+        self.update_idletasks()
         h = max(480, self.winfo_reqheight() + 20)
         px = parent.winfo_rootx() + parent.winfo_width() // 2
         py = parent.winfo_rooty() + parent.winfo_height() // 2

@@ -62,6 +62,9 @@ def _load_settings():
         "ocr_effort": "low",  # effort 対応モデル時の既定値（D-17）
         # Phase 6: Gemini Provider 設定（APIキーではない無害な設定値・D-08）
         "gemini_model": "gemini-2.5-flash",  # D-08: 推奨モデル既定値
+        # Phase 02: サムネイル表示件数（D-04: 既定 20・許容 10〜100）
+        # 読み出しは pagination.clamp_page_size 経由で範囲外/非数値を倒す（W1）
+        "thumb_page_size": 20,
     }
     try:
         path = _get_settings_path()

@@ -85,6 +85,16 @@ class PageOpsMixin:
         for i in targets:
             page = self.doc[i]
             page.set_rotation((page.rotation + deg) % 360)
+        # H1 即時反映（V16-QUAL-01 / 真因 a・セレクション意味論）:
+        # プレビューは常に current_page を描画するため、回転対象 targets に
+        # current_page が含まれない場合（Ctrl+クリックで current 以外を選択）、
+        # 回転後もプレビューが回転対象外のページを表示し続け「回らない」ように
+        # 見える。current を回転対象の代表（昇順の先頭）へ寄せ、回転結果が
+        # 即座にプレビューへ反映されるようにする。3 ステップ順序
+        # （回転適用 → _invalidate_thumb_cache → _refresh_all）と
+        # _refresh_all 内の reconcile_window_start 窓正規化は温存する。
+        if targets and self.current_page not in targets:
+            self.current_page = min(targets)
         self._invalidate_thumb_cache(targets)
         self._refresh_all()
         self._set_status(self._t("status_rotated").format(count=len(targets), deg=deg))

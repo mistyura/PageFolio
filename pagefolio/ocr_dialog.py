@@ -11,15 +11,16 @@ import tkinter as tk
 from tkinter import filedialog, messagebox, ttk
 
 from pagefolio.constants import LANG, C
+from pagefolio.md_render import parse_markdown
 from pagefolio.ocr import (
     DEFAULT_OCR_CONCURRENCY,
     MAX_OCR_CONCURRENCY,
     MAX_OCR_MAX_TOKENS,
     MAX_RETRIES,
-    OCR_PROMPTS,
     build_provider,
     has_embedded_text,
     page_to_png_b64,
+    resolve_ocr_prompt,
 )
 
 logger = logging.getLogger(__name__)
@@ -111,6 +112,8 @@ class OCRDialog(tk.Toplevel):
         self.errors = {}  # page_idx -> message
         # 埋め込みテキスト検出によりスキップされたページ集合
         self._skipped_pages = set()
+        # max_tokens 超過で応答が途切れたページ集合（D-05・部分テキストは保持）
+        self._truncated_pages = set()
         # 今回の実行で処理するページリスト（再開時は未処理ページのみ）
         self._run_pages = list(self.page_indices)
         # 今回の実行開始時点のスキップ済み数（再開時の進捗計算基準）
@@ -282,18 +285,21 @@ class OCRDialog(tk.Toplevel):
             width=8,
             anchor="w",
         ).pack(side="left")
-        self.model_combo = ttk.Combobox(
+        # 編集導線は LLMConfigDialog へ一元化済みのため、モデル欄は読み取り専用表示。
+        # 4 つの数値 Spinbox と同様、disabled + 暗背景 + 可読色で編集不可にする。
+        self.model_combo = tk.Entry(
             mf,
             textvariable=self.model_var,
             font=self._font(-1),
-            values=[],
+            bg=C["BG_CARD"],
+            fg=C["TEXT_SUB"],
+            insertbackground=C["TEXT_MAIN"],
+            relief="flat",
+            state="disabled",
+            disabledbackground=C["BG_CARD"],
+            disabledforeground=C["TEXT_SUB"],
         )
         self.model_combo.pack(side="left", fill="x", expand=True, padx=4)
-        ttk.Button(
-            mf,
-            text=self._L["ocr_fetch_models"],
-            command=self._fetch_models,
-        ).pack(side="left", padx=2)
 
         # 詳細設定行（解像度 / タイムアウト / 最大トークン）
         # self 属性化: ライブ更新時に LM Studio 欄を before= でこの行の前へ戻す
@@ -325,9 +331,12 @@ class OCRDialog(tk.Toplevel):
             width=5,
             font=self._font(-1),
             bg=C["BG_CARD"],
-            fg=C["TEXT_MAIN"],
+            fg=C["TEXT_SUB"],
             buttonbackground=C["BG_PANEL"],
             insertbackground=C["TEXT_MAIN"],
+            disabledbackground=C["BG_CARD"],
+            disabledforeground=C["TEXT_SUB"],
+            state="disabled",
         ).pack(side="left", padx=(0, 10))
         tk.Label(
             params_row,
@@ -345,9 +354,12 @@ class OCRDialog(tk.Toplevel):
             width=5,
             font=self._font(-1),
             bg=C["BG_CARD"],
-            fg=C["TEXT_MAIN"],
+            fg=C["TEXT_SUB"],
             buttonbackground=C["BG_PANEL"],
             insertbackground=C["TEXT_MAIN"],
+            disabledbackground=C["BG_CARD"],
+            disabledforeground=C["TEXT_SUB"],
+            state="disabled",
         ).pack(side="left", padx=(0, 10))
         tk.Label(
             params_row,
@@ -365,9 +377,12 @@ class OCRDialog(tk.Toplevel):
             width=8,
             font=self._font(-1),
             bg=C["BG_CARD"],
-            fg=C["TEXT_MAIN"],
+            fg=C["TEXT_SUB"],
             buttonbackground=C["BG_PANEL"],
             insertbackground=C["TEXT_MAIN"],
+            disabledbackground=C["BG_CARD"],
+            disabledforeground=C["TEXT_SUB"],
+            state="disabled",
         ).pack(side="left", padx=(0, 4))
         tk.Label(
             params_row,
@@ -392,9 +407,12 @@ class OCRDialog(tk.Toplevel):
             width=5,
             font=self._font(-1),
             bg=C["BG_CARD"],
-            fg=C["TEXT_MAIN"],
+            fg=C["TEXT_SUB"],
             buttonbackground=C["BG_PANEL"],
             insertbackground=C["TEXT_MAIN"],
+            disabledbackground=C["BG_CARD"],
+            disabledforeground=C["TEXT_SUB"],
+            state="disabled",
         ).pack(side="left", padx=(0, 4))
         tk.Label(
             params_row,
@@ -484,6 +502,16 @@ class OCRDialog(tk.Toplevel):
         sb.pack(side="right", fill="y")
         self.text.pack(fill="both", expand=True)
 
+        # Markdown 整形タグ定義（色は C[]・フォントは _font・V16-AI-01）。
+        # 受入基準の単一行 grep ゲートを満たすため fmt:off で折返しを抑止。
+        # fmt: off
+        self.text.tag_configure("md_h1", font=self._font(4, "bold"), foreground=C["ACCENT"])  # noqa: E501
+        self.text.tag_configure("md_h2", font=self._font(2, "bold"), foreground=C["ACCENT"])  # noqa: E501
+        self.text.tag_configure("md_bullet", lmargin1=20, lmargin2=36)
+        self.text.tag_configure("md_code", background=C["BG_PANEL"], font=("Consolas", self._font_size()))  # noqa: E501
+        self.text.tag_configure("md_bold", font=self._font(-1, "bold"))
+        # fmt: on
+
         # ボタン行
         btn_row = tk.Frame(self, bg=C["BG_DARK"])
         btn_row.pack(fill="x", padx=16, pady=(8, 12))
@@ -537,29 +565,6 @@ class OCRDialog(tk.Toplevel):
         )
         self.resume_btn.pack(side="right", padx=4)
         self.resume_btn.state(["disabled"])
-
-    # ── サーバ・モデル設定 ──
-    def _fetch_models(self):
-        """provider から利用可能モデル一覧を取得して Combobox に反映"""
-        if self.provider is None:
-            self.progress_var.set(
-                self._L["ocr_models_fetch_fail"].format(error="provider not set")
-            )
-            return
-        url = self.url_var.get().strip()
-        # 押下直後に「取得中…」を即時表示（HTTP 同期呼び出しによる UI 凍結対策）
-        self.progress_var.set(self._L["ocr_models_fetching"].format(url=url))
-        try:
-            self.update_idletasks()
-        except tk.TclError:
-            pass
-        try:
-            models = self.provider.list_models()
-        except (ConnectionError, TimeoutError, RuntimeError) as e:
-            self.progress_var.set(self._L["ocr_models_fetch_fail"].format(error=str(e)))
-            return
-        self.model_combo["values"] = models
-        self.progress_var.set(self._L["ocr_models_fetched"].format(count=len(models)))
 
     def _clear_text(self):
         """結果テキストエリア・進行表示・実行状態を初期化する"""
@@ -620,12 +625,21 @@ class OCRDialog(tk.Toplevel):
 
     # ── ページ結果記録（ワーカースレッドから呼ばれる・Lock 保護） ──
 
-    def _record_page_success(self, page_idx, text):
-        """ページ成功を記録し、連続失敗カウンタをリセットする"""
+    def _record_page_success(self, page_idx, text, truncated=False):
+        """ページ成功を記録し、連続失敗カウンタをリセットする。
+
+        truncated=True のとき当該ページを _truncated_pages に登録する。
+        途切れは「成功＋警告」であり部分テキストは破棄せず results に保持する
+        （D-05）。途切れ通知は _render_results_ordered で当該ページに併記する。
+        """
         self.results[page_idx] = text
         with self._done_lock:
             self._done_count += 1
             self._consec_err_count = 0
+            if truncated:
+                self._truncated_pages.add(page_idx)
+            else:
+                self._truncated_pages.discard(page_idx)
 
     def _record_retryable_failure(self, page_idx, msg):
         """リトライ上限到達ページを記録する。
@@ -713,6 +727,20 @@ class OCRDialog(tk.Toplevel):
             return "ocr_waiting_retry"
         return "ocr_waiting_retry_server"
 
+    def _build_retry_wait_message(self, wait_key, page_idx, attempt, delay):
+        """リトライ待機中の進捗表示文言を生成する純粋ヘルパー（Tk 非依存）。
+
+        実 delay（clamp_retry_after でクランプ済の実待機秒）由来の round(delay) を
+        sec として文言へ埋め込む（D-06）。delay を文言生成より前に算出して渡す
+        ことで「表示する待機秒数が実待機値と一致する」順序を回帰テストで担保する
+        （_worker での順序入替が崩れたら直接アサートで落ちる）。
+        external I/O や after は含めず、_retry_wait_key と同じくテスト可能な純度を
+        保つ（self._L 参照のためインスタンスメソッド）。
+        """
+        return self._L[wait_key].format(
+            page=page_idx + 1, n=attempt, max=MAX_RETRIES, sec=round(delay)
+        )
+
     def _is_cloud_provider(self):
         """現在の ocr_provider 設定がクラウド系か判定する。
 
@@ -799,6 +827,9 @@ class OCRDialog(tk.Toplevel):
         _save_settings(self.app.settings)
         # (c)〜(g) UI 更新
         self._refresh_provider_dependent_ui()
+        # 全プロバイダ共通: 読み取り専用の数値パラメータ表示を settings 値へ即時同期
+        # (D-03)。LM Studio 専用 (g) ブロックの外で行い claude/gemini でも反映する。
+        self._sync_param_vars_from_settings()
         # (f) provider インスタンスの再生成
         name = self.app.settings.get("ocr_provider", "")
         try:
@@ -862,6 +893,20 @@ class OCRDialog(tk.Toplevel):
             logger.error("provider 再生成に失敗しました: %s", e)
             lang = self.app.settings.get("lang", "ja")
             self.progress_var.set(LANG[lang]["ocr_provider_rebuild_error"].format(e=e))
+
+    def _sync_param_vars_from_settings(self):
+        """読み取り専用の数値パラメータ Tk 変数を app.settings の値へ同期する。
+
+        全プロバイダ共通（claude/gemini/lmstudio/off/tesseract）で呼ばれ、
+        読み取り専用 Spinbox の表示を LLM 設定の適用結果へ即時反映する（D-03）。
+        既定値は llm_config 側のフォールバックと整合させる。
+        値はログに出力しない（情報露出回避・T-01-01）。
+        """
+        settings = self.app.settings
+        self.scale_var.set(settings.get("ocr_scale", 1.5))
+        self.timeout_var.set(settings.get("ocr_timeout", 120))
+        self.max_tokens_var.set(settings.get("ocr_max_tokens", -1))
+        self.temperature_var.set(settings.get("ocr_temperature", 0.1))
 
     def _refresh_provider_dependent_ui(self):
         """プロバイダ依存 UI（表示ラベル・LM Studio 欄・セッションキー欄）を再評価する。
@@ -1014,14 +1059,16 @@ class OCRDialog(tk.Toplevel):
         self._consec_err_count = 0
         self._cancel_flag.clear()
         if resume:
-            # 再実行対象の旧エラーを破棄（再実行結果で上書き表示するため）
+            # 再実行対象の旧エラー・旧途切れ状態を破棄（再実行結果で上書きするため）
             for p in run_pages:
                 self.errors.pop(p, None)
+                self._truncated_pages.discard(p)
         else:
-            # リラン（全体再実行）: 前回の結果・エラー・スキップ状態を破棄
+            # リラン（全体再実行）: 前回の結果・エラー・スキップ・途切れ状態を破棄
             self.results.clear()
             self.errors.clear()
             self._skipped_pages.clear()
+            self._truncated_pages.clear()
         self._run_pages = run_pages
         self._skip_base = len(self._skipped_pages)
         self.run_btn.state(["disabled"])
@@ -1046,12 +1093,11 @@ class OCRDialog(tk.Toplevel):
         except (tk.TclError, ValueError):
             self._ocr_timeout = 120
         self._effective_timeout = self._ocr_timeout
-        # カスタムプロンプトがあればそれを優先し、なければプリセットを使用
-        if self.custom_prompt:
-            self._ocr_prompt = self.custom_prompt
-        else:
-            preset = self.preset_var.get()
-            self._ocr_prompt = OCR_PROMPTS.get(preset, OCR_PROMPTS["text"])
+        # provider 名はプロンプト解決の前に無条件取得（下流の再生成分岐と共用）。
+        name = self.app.settings.get("ocr_provider", "")
+        # プロンプト解決は resolve_ocr_prompt に集約（優先順位は純関数側で担保）。
+        prompt = resolve_ocr_prompt(self.preset_var.get(), name, self.custom_prompt)
+        self._ocr_prompt = prompt
 
         try:
             self._force_ocr = bool(self.force_ocr_var.get())
@@ -1081,7 +1127,6 @@ class OCRDialog(tk.Toplevel):
             _prov = self.provider
             temperature = getattr(_prov, "temperature", 0.1) if _prov else 0.1
 
-        name = self.app.settings.get("ocr_provider", "")
         if name == "claude":
             # claude: build_provider 経由でキー注入（D-01/D-05）
             from pagefolio.ocr import _resolve_api_key
@@ -1293,44 +1338,41 @@ class OCRDialog(tk.Toplevel):
 
                 for attempt in range(1, MAX_RETRIES + 1):
                     try:
-                        text = self.provider.ocr_image(b64, self._ocr_prompt)
-                        self._record_page_success(page_idx, text)
+                        text, truncated = self.provider.ocr_image_ex(
+                            b64, self._ocr_prompt
+                        )
+                        self._record_page_success(page_idx, text, truncated=truncated)
                         break
                     except OCRRetryableError as e:
                         if attempt >= MAX_RETRIES:
                             # リトライ上限到達: 連続失敗ならサーキットブレーカー発動
                             self._record_retryable_failure(page_idx, str(e))
                             break
-                        # リトライ待機中の進捗表示（D-15）
-                        # M-2: 世代ガード後にのみ after を投函する
-                        if gen is None or gen == self._run_gen:
-                            n = attempt
-                            wait_key = self._retry_wait_key(e)
-                            try:
-                                self.after(
-                                    0,
-                                    lambda p=page_idx, _n=n, _k=wait_key: (
-                                        self.progress_var.set(
-                                            self._L[_k].format(
-                                                page=p + 1, n=_n, max=MAX_RETRIES
-                                            )
-                                        )
-                                    ),
-                                )
-                            except tk.TclError:
-                                pass
                         # M-5: interruptible_sleep でキャンセル応答性向上
                         from pagefolio.ocr import (
                             clamp_retry_after,
                             interruptible_sleep,
                         )
 
+                        # D-06: 実待機秒（delay）を待機文言生成より前に算出し、
+                        # 表示する秒数が実待機値（クランプ後）と一致するようにする
                         raw_delay = (
                             e.retry_after
                             if e.retry_after is not None
                             else 1.0 * (2 ** (attempt - 1))
                         )
                         delay = clamp_retry_after(raw_delay)
+                        # リトライ待機中の進捗表示（D-15）
+                        # M-2: 世代ガード後にのみ after を投函する
+                        if gen is None or gen == self._run_gen:
+                            wait_key = self._retry_wait_key(e)
+                            msg = self._build_retry_wait_message(
+                                wait_key, page_idx, attempt, delay
+                            )
+                            try:
+                                self.after(0, lambda m=msg: self.progress_var.set(m))
+                            except tk.TclError:
+                                pass
                         interruptible_sleep(delay, self._cancel_flag.is_set)
                     except ConnectionError as e:
                         with self._done_lock:
@@ -1420,8 +1462,31 @@ class OCRDialog(tk.Toplevel):
         """進捗バーの値だけを更新する（テキスト挿入なし）"""
         self.progress_bar["value"] = done
 
+    def _insert_markdown(self, text):
+        """parse_markdown の戻り値を text へ整形挿入する薄い描画ヘルパー。
+
+        preset == "markdown" の本文のみで呼ばれる（Pitfall 2: text/table や
+        Tesseract/LMStudio 素出力には当てない構造的ガードは呼び出し側）。
+        各 span を insert し inline_tag があれば tag_add、行末で行レベルタグ
+        （kind）を行全体へ tag_add する（04-RESEARCH.md:137-146）。整形は表示
+        専用でコピー/保存（_format_full_text）は raw 維持（Pitfall 5）。
+        """
+        for kind, spans in parse_markdown(text):
+            line_start = self.text.index("end-1c")
+            for span_text, inline_tag in spans:
+                if inline_tag:
+                    self.text.insert("end", span_text, inline_tag)
+                else:
+                    self.text.insert("end", span_text)
+            self.text.insert("end", "\n")
+            if kind:
+                self.text.tag_add(kind, line_start, "end-1c")
+
     def _render_results_ordered(self):
         """results / errors をページ順に text へ流し込む（並列実行後の一括描画）"""
+        # preset == "markdown" のときのみ整形描画（Pitfall 2 構造的ガード）。
+        # text/table や Tesseract/LMStudio 素出力には Markdown パーサを当てない。
+        markdown = self.preset_var.get() == "markdown"
         for page_idx in self.page_indices:
             sep = self._L["ocr_page_separator"].format(page=page_idx + 1)
             self.text.insert("end", f"\n{sep}\n")
@@ -1430,9 +1495,13 @@ class OCRDialog(tk.Toplevel):
                 skip_notice = self._L["ocr_text_skip_notice"].format(page=page_idx + 1)
                 self.text.insert("end", f"[{skip_notice}]\n")
                 if page_idx in self.results:
-                    self.text.insert("end", self.results[page_idx] + "\n")
+                    self._insert_results_body(page_idx, markdown)
             elif page_idx in self.results:
-                self.text.insert("end", self.results[page_idx] + "\n")
+                self._insert_results_body(page_idx, markdown)
+                # D-05: max_tokens 途切れページは部分テキストの後に専用文言を併記
+                if page_idx in self._truncated_pages:
+                    notice = self._L["ocr_err_truncated"].format(page=page_idx + 1)
+                    self.text.insert("end", f"[{notice}]\n")
             elif page_idx in self.errors:
                 self.text.insert(
                     "end",
@@ -1440,6 +1509,16 @@ class OCRDialog(tk.Toplevel):
                     + "\n",
                 )
         self.text.see("end")
+
+    def _insert_results_body(self, page_idx, markdown):
+        """results 本文の挿入のみを担う。markdown のときだけ整形描画する。
+
+        markdown == False のときは従来の素朴 insert を完全に温存（後方互換）。
+        """
+        if markdown:
+            self._insert_markdown(self.results[page_idx])
+        else:
+            self.text.insert("end", self.results[page_idx] + "\n")
 
     def _finish_complete(self):
         if self._done:  # CR-02: 冪等ガード（二重呼び出し防止）
