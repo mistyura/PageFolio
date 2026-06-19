@@ -876,6 +876,8 @@ class TestOcrDialogLlmConfig:
         """Tkinter 不使用の fake OCRDialog インスタンスを生成する。"""
         import types
 
+        from pagefolio.ocr_dialog import OCRDialog
+
         settings = {
             "ocr_provider": "lmstudio",
             "lm_studio_url": "http://localhost:1234",
@@ -902,6 +904,11 @@ class TestOcrDialogLlmConfig:
         # url_var / model_var の set を記録できる SimpleNamespace
         fake.url_var = types.SimpleNamespace(set=lambda v: None)
         fake.model_var = types.SimpleNamespace(set=lambda v: None)
+        # 数値パラメータ var（読み取り専用表示の同期対象）
+        fake.scale_var = types.SimpleNamespace(set=lambda v: None)
+        fake.timeout_var = types.SimpleNamespace(set=lambda v: None)
+        fake.max_tokens_var = types.SimpleNamespace(set=lambda v: None)
+        fake.temperature_var = types.SimpleNamespace(set=lambda v: None)
 
         # _refresh_provider_dependent_ui を no-op に差し替え
         fake._refresh_called = False
@@ -910,6 +917,10 @@ class TestOcrDialogLlmConfig:
             fake._refresh_called = True
 
         fake._refresh_provider_dependent_ui = _no_op_refresh
+        # 数値同期は実メソッドを未束縛で呼ぶ（settings 値の同期挙動を維持）
+        fake._sync_param_vars_from_settings = lambda: (
+            OCRDialog._sync_param_vars_from_settings(fake)
+        )
         return fake
 
     # ── test 1: settings が更新される ──────────────────────────────────────
@@ -1442,6 +1453,7 @@ class TestClearResetsFatalState:
             results={0: "old text"},
             errors={1: "old error"},
             _skipped_pages={2},
+            _truncated_pages=set(),
             _render_queue=object(),
             page_indices=[0, 1, 2],
             _ocr_page_indices=[0, 1, 2],
@@ -1627,6 +1639,7 @@ class TestOcrDialogOnRun:
             results={},
             errors={},
             _skipped_pages=set(),
+            _truncated_pages=set(),
             concurrency=1,
             _render_queue=None,
             _render_idx=0,
@@ -2027,6 +2040,7 @@ class TestForceOcrOption:
             _render_idx=0,
             results={},
             _skipped_pages=set(),
+            _truncated_pages=set(),
             _skip_base=0,
             errors={},
             _done_lock=threading.Lock(),
@@ -2194,6 +2208,62 @@ class TestRetryWaitKey:
         assert OCRDialog._retry_wait_key(e) == "ocr_waiting_retry_server"
 
 
+class TestRetryWaitMessage:
+    """_build_retry_wait_message が実 delay 由来の sec を文言へ反映することを検証する。
+
+    Tk root 非依存。types.SimpleNamespace に _L（LANG 辞書）を持たせ未束縛呼び出しで
+    検証する。delay は clamp_retry_after でクランプ済の実待機秒を渡す前提で、
+    クランプ前の生 raw_delay が文言へ漏れないこと（D-06 順序入替の回帰防止）を担保する。
+    """
+
+    def _make_fake(self, lang="ja"):
+        import types
+
+        from pagefolio.lang import LANG
+
+        return types.SimpleNamespace(_L=LANG[lang])
+
+    def test_429_message_contains_clamped_sec(self):
+        """429: 実 delay（clamp 後）由来の round(delay) が文言に含まれる。"""
+        from pagefolio.ocr import clamp_retry_after
+        from pagefolio.ocr_dialog import OCRDialog
+
+        fake = self._make_fake("ja")
+        delay = clamp_retry_after(5.0)  # クランプ範囲内 → 5.0
+        msg = OCRDialog._build_retry_wait_message(
+            fake, "ocr_waiting_retry", page_idx=0, attempt=1, delay=delay
+        )
+        assert "5" in msg
+        assert "1/" in msg  # リトライ番号 n が反映される
+        assert "待機" in msg  # ja 固定語
+
+    def test_5xx_message_uses_clamped_value_not_raw(self):
+        """5xx: 巨大 raw_delay はクランプ上限（60）で表示され生値が漏れない。"""
+        from pagefolio.ocr import clamp_retry_after
+        from pagefolio.ocr_dialog import OCRDialog
+
+        fake = self._make_fake("ja")
+        raw_delay = 86400.0
+        delay = clamp_retry_after(raw_delay)  # クランプ上限 → 60.0
+        msg = OCRDialog._build_retry_wait_message(
+            fake, "ocr_waiting_retry_server", page_idx=2, attempt=2, delay=delay
+        )
+        assert "60" in msg  # クランプ後の実待機秒
+        assert "86400" not in msg  # クランプ前の生値は漏れない
+
+    def test_no_keyerror_for_both_langs_and_keys(self):
+        """ja/en × 両キーで KeyError/IndexError を投げない（{sec} 整合）。"""
+        from pagefolio.ocr_dialog import OCRDialog
+
+        for lang in ("ja", "en"):
+            fake = self._make_fake(lang)
+            for key in ("ocr_waiting_retry", "ocr_waiting_retry_server"):
+                msg = OCRDialog._build_retry_wait_message(
+                    fake, key, page_idx=0, attempt=1, delay=3.0
+                )
+                assert "3" in msg
+
+
 # ===== OCR 再開（リラン/リスタート）機能（v1.4.4）=====
 
 
@@ -2336,6 +2406,7 @@ class TestCircuitBreaker:
         return types.SimpleNamespace(
             results={},
             errors={},
+            _truncated_pages=set(),
             _done_lock=threading.Lock(),
             _done_count=0,
             _consec_err_count=0,

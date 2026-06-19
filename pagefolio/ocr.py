@@ -31,6 +31,77 @@ OCR_PROMPTS = {
     ),
 }
 
+# プロバイダ別 OCR プロンプトテンプレート（V16-AI-02）
+# provider → preset → 文言。claude / gemini のみ定義し、それ以外
+# （lmstudio / tesseract / off）は汎用 OCR_PROMPTS へフォールバックする
+# （Pitfall 4: Tesseract は prompt を無視・LMStudio はモデル依存）。
+# claude は XML タグで構造を明示すると精度が上がる傾向、gemini は
+# 明示的・命令的な指示を好む傾向に合わせて文言を分けている [ASSUMED]。
+PROVIDER_OCR_PROMPTS: "dict[str, dict[str, str]]" = {
+    "claude": {
+        "text": (
+            "<task>画像内のテキストをすべて正確に書き出す</task>\n"
+            "<rules>本文のみを出力する。装飾的な前置き・説明・後書きは"
+            "一切付けない。</rules>"
+        ),
+        "table": (
+            "<task>画像内の表を Markdown テーブル形式で書き出す</task>\n"
+            "<rules>表は | で区切った Markdown テーブルで再現する。"
+            "表以外の説明や前置きは出力しない。本文のみ。</rules>"
+        ),
+        "markdown": (
+            "<task>画像内の文書を Markdown で書き出す</task>\n"
+            "<rules>見出し(#)・箇条書き(-)・表(|)を元の構造どおりに使う。"
+            "装飾的な前置きや説明文は出力しない。本文のみ。</rules>"
+        ),
+    },
+    "gemini": {
+        "text": (
+            "次の画像を OCR し、写っているテキストをすべて正確に書き出して"
+            "ください。前置き・後書き・説明は付けず、本文のみを返してください。"
+        ),
+        "table": (
+            "次の画像内の表を OCR し、Markdown テーブル形式で出力してください。"
+            "表以外の説明や前置きは付けず、テーブル本文のみを返してください。"
+        ),
+        "markdown": (
+            "次の画像を OCR し、結果を Markdown 形式で出力してください。"
+            "必ず見出し・リスト・表を元の構造どおりに再現し、"
+            "前置き・後書き・コードフェンスは付けず本文のみを返してください。"
+        ),
+    },
+}
+
+
+def resolve_ocr_prompt(preset, provider_name, custom_prompt=""):
+    """OCR プロンプトを解決する純関数（Tk/ネットワーク非依存・文字列合成のみ）。
+
+    優先順位:
+      1. custom_prompt が非空ならそのまま返す（カスタム上書き最優先）
+      2. PROVIDER_OCR_PROMPTS[provider_name][preset]（プロバイダ別テンプレート）
+      3. OCR_PROMPTS.get(preset, OCR_PROMPTS["text"])（汎用プリセット・既定 text）
+
+    後方互換: custom_prompt 上書きは現行 _on_run（ocr_dialog.py:1086-1087）の
+    「カスタムがあれば完全上書き」挙動を温存する（成功基準3・Pitfall 3）。
+    未定義 provider/preset の既定フォールバックは OCR_PROMPTS["text"] で、
+    既存 _on_run（ocr_dialog.py:1090）の既定値と一致させて挙動を変えない
+    （Pitfall 4: lmstudio / tesseract / off は汎用プロンプトへフォールバック）。
+
+    引数:
+      preset:        プロンプトプリセット名（"text" / "table" / "markdown" 等）
+      provider_name: プロバイダ名（"claude" / "gemini" / "lmstudio" / ...）
+      custom_prompt: ユーザー指定のカスタムプロンプト（非空なら最優先）
+
+    戻り値: 解決済みプロンプト文字列
+    """
+    if custom_prompt:
+        return custom_prompt
+    by_provider = PROVIDER_OCR_PROMPTS.get(provider_name, {})
+    if preset in by_provider:
+        return by_provider[preset]
+    return OCR_PROMPTS.get(preset, OCR_PROMPTS["text"])
+
+
 DEFAULT_LM_STUDIO_URL = "http://localhost:1234"
 DEFAULT_OCR_TIMEOUT = 120  # 秒
 DEFAULT_OCR_SCALE = 1.5  # D-11: 新規既定 1.5 に統一（WR-01）

@@ -81,6 +81,45 @@
 
 ---
 
+## Milestone: v1.6.0 — 品質向上・AI強化・設定/UI改善
+
+**Shipped:** 2026-06-20
+**Phases:** 4 | **Plans:** 11 | **Tasks:** 23 | **Sessions:** 複数（2026-06-18〜06-20 実装、06-20 にマイルストーンクローズ）
+
+### What Was Built
+- **設定/UI 改善（Phase 1）**: OCRDialog の数値パラメータ 4 Spinbox + model_combo を読み取り専用化し、編集導線を「⚙ LLM 設定…」へ一元化（全プロバイダ共通箇所でライブ同期）。二重入力（V16-UI-01）を解消。サムネイルスライダーを独立全幅行へ移設（V16-UI-02）。
+- **ページネーション表示（Phase 2）**: 大量ページのサムネイル一覧を窓表示（既定 20）。index 変換（local↔global）を Tk/fitz 非依存の純ロジック層 `pagination.py` へ集約し、D&D/複数選択の全ページインデックス整合を機械保証。current_page 窓追従の不変条件で UAT snap back も解消（V16-UI-03）。
+- **体感品質・OCR 堅牢性（Phase 3）**: 回転プレビュー即時反映をセレクション意味論の原因除去で修正（回転 w/h 単体テストを回帰アンカー化）。API キー秘匿の 3 経路回帰テスト化（caplog 値非出力・ソース実キースキャン・LANG parity）+ H5 実 API 検証チェックリスト（V16-QUAL-01〜04・pagefolio/ ソース無改変）。
+- **AI 出力品質（Phase 4）**: OCR 結果 Markdown を (行種別, インライン span) へ変換する純関数 `parse_markdown` + プロバイダ別プロンプト解決 `resolve_ocr_prompt`（Claude=XML/Gemini=明示・custom 温存）を新設し、OCRDialog の薄い描画/解決層へ配線。コピー/保存は raw 維持（V16-AI-01/02）。
+
+### What Worked
+- **純ロジック層への切り出しが一貫して効いた**: `pagination.py`（Phase 2）・`md_render.parse_markdown` / `resolve_ocr_prompt`（Phase 4）を Tk 非依存の純関数として先に確定し、UI 配線を「純関数の戻り値を insert/tag_add するだけ」の薄い層に保てた。unit テストがヘッドレスで網羅でき、Wave1（純関数）→ Wave2（配線）の依存が明快。
+- **実機 debug で真因特定**: Phase 3 H1 回転即時反映は表層パッチでなくセレクション意味論まで掘って原因除去。
+- **safe-resume が誤マッチを防いだ**: 現 Phase 4(04-ai-c) の成果物がディスク不在と検出し、旧 v1.4.0 Phase4(04-provider-abstraction) の feat コミット誤マッチを退けて新規着手（フェーズ採番のマイルストーン跨ぎ問題）。
+
+### What Was Inefficient
+- **executor の Bash 権限拒否**: gsd-executor の Bash が ruff/pytest/git で拒否され、04-03 の検証・コミット・継続をオーケストレータがインライン代行する必要が生じた。
+- **受入 grep ゲート × ruff format 折返しの衝突**: 単一行 grep 受入基準と ruff format の自動折返しが衝突し、`# fmt: off`/`# noqa: E501` の回避を要した（メソッドスコープ awk 受入への移行が再発防止候補）。
+- **バージョン番号の二重化**: マイルストーン途中で APP_VERSION を v1.7.0 へ一時バンプ後、49e9893 で v1.6.0 へ巻き戻し。開発履歴.md に v1.7.0 エントリが残り、クローズ時に出荷版番の確認が必要になった（V16-D-04・整合は残課題）。
+- **human-verify スキップ**: Phase 4 の gate=blocking チェックポイントをユーザー判断でスキップしクローズ。実描画/実 API 出力品質は未検証で deferred 受容。
+
+### Patterns Established
+- **Wave1 純関数 → Wave2 薄い配線**: ロジックを Tk/fitz 非依存の純関数へ集約し、UI 層は描画/解決の呼び出しのみに留める。表示専用の整形（tk.Text タグ）とエクスポート（raw 維持）を分離。
+- **index 整合の純ロジック層化**: ページング等の「表示窓 vs 全体」整合は local↔global 変換を 1 モジュールへ集約し境界値 unit テストで固める。
+- **監査=検証フェーズ**: セキュリティ監査（キー秘匿）はソース無改変で回帰テスト・実キースキャン・チェックリスト整備に徹する。
+
+### Key Lessons
+1. **純関数先行は配線フェーズを安価にする**: UI に触れる前にロジックを Tk 非依存純関数へ落とすと、テスト網羅・後方互換ガード・配線の薄さが同時に得られる。
+2. **バージョン番号は一度バンプしたら巻き戻さない**: 途中バンプ→巻き戻しは履歴ドキュメントに不整合の痕跡を残す。版番はマイルストーン完了時に一度だけ確定する方針を徹底する。
+3. **オーケストレータのインライン代行は権限拒否の確実なリカバリ**: executor の Bash 拒否時は再 spawn せず、検証・コミット・継続をオーケストレータが直接実施するのが速い。
+4. **human-verify スキップは記録に残す**: gate=blocking のスキップは VERIFICATION を human_needed のまま deferred 受容として明示記録する。
+
+### Cost Observations
+- Model mix: executor=opus（parallelization 設定 true だが #683 で逐次降格）・reviewer/verifier=sonnet
+- Notable: local main が origin 先行のため worktree 並列を逐次実行へ降格（既知パターン）。Wave1 純関数は files_modified 重複ゼロで並行実行。
+
+---
+
 ## Cross-Milestone Trends
 
 ### Process Evolution
@@ -89,6 +128,7 @@
 |-----------|----------|--------|------------|
 | v1.3.0 | 数 | 3 | GSD フルチェーン（discuss→plan→execute→verify）を最適化プロジェクトに初適用 |
 | v1.4.0 | 複数 | 4 | 機能追加マイルストーン（OCR プロバイダ化）を GSD で実施。ギャップクロージャ・遡及クローズアウトを経験 |
+| v1.6.0 | 複数 | 4 | Wave1 純関数 → Wave2 配線の二段構成を定着。executor Bash 拒否のインライン代行・版番二重化・human-verify スキップを経験 |
 
 ### Cumulative Quality
 
@@ -96,9 +136,12 @@
 |-----------|-------|----------|-------------------|
 | v1.3.0 | 199 passed | （未計測） | 全要件を新規依存ゼロで達成 |
 | v1.4.0 | 490 passed（v1.4.4 時点） | （未計測） | urllib 直叩きで全プロバイダを新規依存ゼロ実装 |
+| v1.6.0 | 597 passed | （未計測） | pagination.py / md_render.py を標準ライブラリのみで新設 |
 
 ### Top Lessons (Verified Across Milestones)
 
 1. 詳細な locked decision（CONTEXT.md）が下流フェーズの手戻りを最小化する。
 2. 後方互換の境界は機械的テストで保護する（import 回帰テスト）。
 3. 実装完了直後にフェーズ記録（SUMMARY/STATE/ROADMAP）を閉じる。記録の遅延は後続作業の不整合を生む（v1.4.0 Phase 07 の教訓）。
+4. ロジックは Tk/fitz 非依存の純関数へ先に落とし、UI 層を薄い配線に保つとテスト網羅と後方互換が安価になる（v1.6.0）。
+5. バージョン番号はマイルストーン完了時に一度だけ確定し、途中バンプ→巻き戻しを避ける（v1.6.0）。

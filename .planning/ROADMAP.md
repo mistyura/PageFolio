@@ -5,6 +5,7 @@
 - ✅ **v1.3.0 コード最適化 MVP** — Phases 1-3 (shipped 2026-06-03) — [archive](milestones/v1.3.0-ROADMAP.md)
 - ✅ **v1.4.0 OCR プロバイダ化 + クラウドAPI対応** — Phases 4-7 (shipped 2026-06-14) — [archive](milestones/v1.4.0-ROADMAP.md)
 - ✅ **v1.5.0 基本機能・UI/UX改善・OCRカスタムプロンプト** — Phases 1-4 (shipped 2026-06-16) — [archive](milestones/v1.5.0-ROADMAP.md)
+- ✅ **v1.6.0 品質向上・AI強化・設定/UI改善** — Phases 1-4 (shipped 2026-06-20) — [archive](milestones/v1.6.0-ROADMAP.md)
 
 ## Phases
 
@@ -45,9 +46,18 @@
 
 </details>
 
-### 📋 v1.6.0 以降 (未計画)
+<details>
+<summary>✅ v1.6.0 品質向上・AI強化・設定/UI改善 (Phases 1-4) — SHIPPED 2026-06-20</summary>
 
-次マイルストーンは `/gsd-new-milestone` で確定する。候補は PROJECT.md「Next Milestone Goals」を参照。
+- [x] Phase 1: 設定/UI 改善（OCR パラメータ一元化・スライダー配置） (2/2 plans) — completed 2026-06-18
+- [x] Phase 2: 大量ページのページネーション表示 (3/3 plans) — completed 2026-06-19
+- [x] Phase 3: 体感品質・回転プレビュー & OCR 堅牢性（プランA） (3/3 plans) — completed 2026-06-19
+- [x] Phase 4: AI 出力品質（プランC） (3/3 plans) — completed 2026-06-20
+
+全フェーズの詳細・成功基準・プラン内訳は [milestones/v1.6.0-ROADMAP.md](milestones/v1.6.0-ROADMAP.md) を参照。
+Phase 4 の human-verify チェックポイントはユーザー判断でスキップ（実機目視未検証・コード検証済）。締め前監査の 5 件は受容済（STATE.md「Deferred Items」参照）。
+
+</details>
 
 ## Progress
 
@@ -64,3 +74,7 @@
 | 2. UI / UX とパフォーマンスの改善 | v1.5.0 | — | Complete | 2026-06-16 |
 | 3. AI・OCR連携のさらなる進化 | v1.5.0 | — | Complete | 2026-06-16 |
 | 4. テスト・品質保証 | v1.5.0 | — | Complete | 2026-06-16 |
+| 1. 設定/UI 改善（OCR パラメータ一元化・スライダー配置） | v1.6.0 | 2/2 | Complete | 2026-06-18 |
+| 2. 大量ページのページネーション表示 | v1.6.0 | 3/3 | Complete | 2026-06-19 |
+| 3. 体感品質・回転プレビュー & OCR 堅牢性（プランA） | v1.6.0 | 3/3 | Complete | 2026-06-19 |
+| 4. AI 出力品質（プランC） | v1.6.0 | 3/3 | Complete | 2026-06-20 |

@@ -1,16 +1,19 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.5.0
-milestone_name: 基本機能・UI/UX改善・OCRカスタムプロンプト
-status: Awaiting next milestone
-stopped_at: v1.5.0 出荷確定（feature/v1.5.0-improvements 実装・2026-06-16 文書整合・APP_VERSION=v1.5.0）
-last_updated: "2026-06-16T15:36:00.000Z"
-last_activity: 2026-06-16 — Milestone v1.5.0 completed and archived
+milestone: v1.6.0
+milestone_name: 品質向上・AI強化・設定/UI改善
+current_phase: null
+current_phase_name: null
+status: milestone_complete
+stopped_at: Milestone v1.6.0 完了・アーカイブ済（全 4 フェーズ・11 プラン・23 タスク）。次マイルストーン待ち
+last_updated: "2026-06-20T00:00:00.000Z"
+last_activity: 2026-06-20
+last_activity_desc: Milestone v1.6.0 completed and archived（v1.6.0 出荷確定）
 progress:
   total_phases: 4
   completed_phases: 4
-  total_plans: 0
-  completed_plans: 0
+  total_plans: 11
+  completed_plans: 11
   percent: 100
 ---
 
@@ -18,23 +21,32 @@ progress:
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-06-06)
+See: .planning/PROJECT.md (updated 2026-06-20)
 
 **Core value:** 大きな PDF でも Undo/Redo が正しく・速く動作し、コードが読みやすく保守しやすい状態にする
-**Current focus:** v1.5.0 完了（Phase 1〜4 全達成）— 次は v1.6.0 以降（新機能の回帰テスト拡充・ロゴ透かし/ショートカット GUI 化等）
+**Current focus:** 次マイルストーンの計画（`/gsd-new-milestone`）
 
 ## Current Position
 
-Phase: Milestone v1.5.0 complete
+Phase: Milestone v1.6.0 complete（全 4 フェーズ達成・出荷）
 Plan: —
 Status: Awaiting next milestone
-Last activity: 2026-06-16 — Milestone v1.5.0 completed and archived
+Last activity: 2026-06-20 — Milestone v1.6.0 completed and archived
+
+## v1.6.0 Phase Map
+
+| Phase | Name | Requirements | リスク/性質 |
+|-------|------|--------------|------------|
+| 1 | 設定/UI 改善（OCR パラメータ一元化・スライダー配置） | V16-UI-01, V16-UI-02 | UI 層中心・低〜中。S1 二重設定解消が主目的 |
+| 2 | 大量ページのページネーション表示 | V16-UI-03 | 高リスク（viewer/dnd/全ページインデックス整合） |
+| 3 | 体感品質・回転プレビュー & OCR 堅牢性（プランA） | V16-QUAL-01〜04 | viewer 即時反映 + OCR/エラー系の監査・検証・磨き |
+| 4 | AI 出力品質（プランC） | V16-AI-01, V16-AI-02 | OCRDialog/プロバイダ層中心 |
 
 ## Performance Metrics
 
 **Velocity (v1.3.0 実績):**
 
-- Total plans completed: 15
+- Total plans completed: 17
 - Average duration: 約 22.5 分
 - Total execution time: 約 45 分
 
@@ -47,6 +59,7 @@ Last activity: 2026-06-16 — Milestone v1.5.0 completed and archived
 | Phase 03 | 2 | - | - |
 | 06 | 4 | - | - |
 | 07 | 1 | - | - |
+| 01 | 2 | - | - |
 
 *v1.4.0 フェーズ完了後に追記*
 | Phase 04-provider-abstraction P01 | 3min | 2 tasks | 2 files |
@@ -61,12 +74,25 @@ Last activity: 2026-06-16 — Milestone v1.5.0 completed and archived
 | Phase 06-gemini-provider P02 | 20min | 3 tasks | 3 files |
 | Phase 06-gemini-provider P03 | 12min | 3 tasks | 9 files |
 | Phase 06-gemini-provider P04 (gap) | 6min | 3 tasks | 5 files |
+| Phase 01-ui-ocr P01 | 約25分 | 2 tasks | 3 files |
+| Phase 01-ui-ocr P02 | 約10分 | 2 tasks | 4 files |
+| Phase 02 P01 | 4min | 2 tasks | 3 files |
+| Phase 02 P02 | 約12分 | 2 tasks | 4 files |
+| Phase 04 P01 | 5min | 2 tasks | 2 files |
+| Phase 04 P02 | 4min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
 ### Decisions
 
 Decisions are logged in PROJECT.md Key Decisions table.
+
+**v1.6.0 ロードマップ確定（2026-06-18）:**
+
+- V16-R-01: 全 9 要件を 4 フェーズへ割当（coarse 粒度・100% 被覆・孤立要件なし）。
+- V16-R-02: S3 ページネーション（V16-UI-03）は viewer/dnd/全ページインデックス整合の高リスクのため、S1/S2（UI 層中心）から切り離して **Phase 2 単独**に隔離。
+- V16-R-03: プランA（H1/H2/H5/M1）は viewer 即時反映と OCR/エラー系の混在だが、いずれも「体感品質・堅牢性」という単一目的で結束するため **Phase 3 に集約**。
+- V16-R-04: プランC（M3/M4）は OCRDialog/プロバイダ層中心で AI 出力品質という独立価値を持つため **Phase 4** とし、プランA 完了後（OCR 堅牢性の土台の上）に着手。
 
 **v1.3.0 確定済み決定事項（引き継ぎ）:**
 
@@ -127,19 +153,35 @@ Decisions are logged in PROJECT.md Key Decisions table.
 - [Phase 06-04]: _fatal_msg/_fatal_kind を共有属性に昇格し Lock 保護（複数ワーカーの致命的エラー報告・CR-01）
 - [Phase 06-04]: DEFAULT_OCR_SCALE = 1.5 に統一し D-11 既定と整合（WR-01）
 - [Phase 06-04]: _SENSITIVE_KEYS に google_api_key / GOOGLE_API_KEY / GEMINI_API_KEY / ANTHROPIC_API_KEY 大文字バリアントを追加（WR-03）
+- [Phase 01-01]: OCRDialog の数値 Spinbox 4 種（scale/timeout/max_tokens/temperature）を state=readonly + fg=TEXT_SUB で読み取り専用化、model_combo/取得ボタンを disabled（編集導線を LLMConfigDialog へ一元化・V16-UI-01）
+- [Phase 01-01]: 数値同期を独立メソッド _sync_param_vars_from_settings に切り出し、_apply_llm_settings の provider 分岐外（全プロバイダ共通箇所）から呼び claude/gemini でも即時反映（D-03）。値はログ非出力（T-01-01）
+- [Phase ?]: [Phase 01-02]: サムネイルスライダーを独立 zoom_frame（全幅行）へ移設しボタンとの幅競合を解消（D-07/D-08）。範囲/変数/コールバック不変（D-09）。viewer.py/settings.py 未変更
+- [Phase ?]: [Phase 01-02]: APP_VERSION を v1.6.0 へ更新し README バッジ・開発履歴.md を同期（CLAUDE.md 規約）。pyproject.toml 未編集
+- [Phase ?]: [Phase 02-01]: ページネーション純ロジックを pagefolio/pagination.py に集約（Tk/fitz 非依存・8 純関数）。clamp_page_size をフェーズ内確定名に固定（W1）し 02-02/02-03 はこの名で import
+- [Phase ?]: [Phase 02-01]: 純関数は page_size<=0 / n_pages<=0 でも例外を投げず安全側へ倒す（T-2-01）。window_label は文言裁量と疎結合にし、テストは数値包含で照合
+- [Phase ?]: selected_pages は全ページ index 不変条件を保持し、照合側を to_global で窓変換（02-02・D-07・Pitfall 1 解消）
+- [Phase 02-03]: ナビ/件数フッター（◀▶＋範囲ラベル＋件数 Spinbox state=readonly）構築・D&D local→global 換算・ja/en 同一 LANG キー・_refresh_all 正規化を reconcile_window_start へ集約
+- [Phase 02-03]: 手動窓ナビと D-11 自動追従の対立はハンドラ層で解消（_move_window で窓移動後に current_page を新窓先頭へ追従＝「current は常に窓内」不変条件）。reconcile_window_start は (B) 操作による current 押し出し専用追従へ純化（UAT 項目2 修正・debug 260618-pagination-window-nav-snapback）
+- [Phase ?]: [Phase 04-01]: parse_markdown 判定優先順位 code>md_h2>md_h1>bullet>通常段落・in_code フラグでフェンス内見出しを構造抑止。md_render.py は Tk/fitz 非依存純ロジック層で 04-03 が import
+- [Phase ?]: [Phase 04-01]: _split_inline は **bold** のみ対応・空リスト不返却で [(text,None)] フォールバック。ReDoS 回避: 非貪欲+文字クラスのみ（線形時間）
+- [Phase 04-02]: resolve_ocr_prompt 解決優先順位を custom(非空) > PROVIDER_OCR_PROMPTS[provider][preset] > OCR_PROMPTS.get(preset, OCR_PROMPTS['text']) に固定（既存 _on_run/ocr_dialog.py:1090 既定 text と一致・後方互換）
+- [Phase 04-02]: PROVIDER_OCR_PROMPTS は claude(XML タグ)/gemini(明示指示) × text/table/markdown のみ定義。lmstudio/tesseract/off は汎用 OCR_PROMPTS フォールバック（Pitfall 4: Tesseract は prompt 無視）。Tk/ネットワーク非依存純関数で 04-03 が import
 
 ### Pending Todos
 
-- **v1.4.1 ホットフィックス（H-1〜H-5）**: v1.4.0 リリースレビューで検出した重大問題 +
-  ユーザー報告（H-5: LLM 設定画面のプロバイダ切替時リサイズ不全）の修正。
-  **着手時は必ず [260610-aaa-REVIEW.md](./quick/260610-aaa-v140-review-fixplan/260610-aaa-REVIEW.md) を参照すること**
-  （指摘番号・該当箇所・対応方針・着手時の注意を記載済み）。
+- なし（v1.4.1 ホットフィックス H-1〜H-5 は出荷済み・v1.5.0 まで完了）。
+  v1.6.0 要件は [REQUIREMENTS.md](./REQUIREMENTS.md)、フェーズ割当は [ROADMAP.md](./ROADMAP.md)、出典詳細は [NEXT-MILESTONE-HANDOFF.md](./NEXT-MILESTONE-HANDOFF.md) を参照。
 
 ### Blockers/Concerns
 
-- fitz のスレッドセーフ制約（スレッドに `fitz.Document` を渡せない）: Phase 04 でスレッド境界を明確化することで対処
-- Gemini Free Tier 10 RPM: Phase 06 で並列度 1 を起点に実測して調整
-- Claude temperature/effort の実 API 確認: Phase 05 の完了条件として組み込み済み
+- ~~[v1.6.0 Phase 2 リスク]: S3 ページネーション導入時、`selected_pages`・D&D は全ページインデックスで管理されているため「表示中ページのみ vs 全ページ」のインデックス整合に注意~~ → **解決済み（Phase 02）**: `selected_pages` は全ページ index 不変条件を保持し照合側を `to_global` で窓変換（D-07）、D&D ドロップ先も `to_global` で換算（D-06）。さらに手動窓ナビ後の current snap back（UAT 項目2）も `_move_window` の窓内不変条件で解消。
+- [v1.6.0 Phase 3 留意]: V16-QUAL-03（max_tokens/429 実機検証）は実 API または実機相当の検証手順が前提。安全側修正のみで未検証のため、検証手順と結果記録の方法を計画時に確定する。
+
+過去の懸念は全て解決済み:
+
+  - ~~fitz のスレッドセーフ制約~~ → Phase 04 でスレッド境界を明確化（ワーカーには bytes のみ渡す）
+  - ~~Gemini Free Tier 10 RPM~~ → Phase 06 で並列度 1 を既定化
+  - ~~Claude temperature/effort の実 API 確認~~ → Phase 05 で完了
 
 ### Quick Tasks Completed
 
@@ -177,11 +219,23 @@ Decisions are logged in PROJECT.md Key Decisions table.
 | quick_task | 260610-qqq-review-md-260610-aaa-h-1-h-5-v1-4-1 | unknown |
 | quick_task | 260610-rkp-v1-4-2-review-md-m-1-m-11 | unknown |
 
+### v1.6.0 クローズ時に Acknowledge した項目（2026-06-20）
+
+締め前監査の 5 件をユーザー判断で受容してクローズ。Phase 04 検証は human-verify スキップ由来（コード検証済・実描画/実 API のみ未確認）。クイックタスク 4 件は v1.4.0 期の記録マーカー欠落で既受容済の再掲。
+
+| Category | Item | Status |
+|----------|------|--------|
+| verification | Phase 04（04-ai-c）04-VERIFICATION.md | human_needed（markdown 整形表示・実 API 出力品質の実機目視がスキップ・コード起因ブロッカーなし） |
+| quick_task | 260607-ccz-ocr-llm-llmconfigdialog | unknown（既受容・v1.4.0 期） |
+| quick_task | 260610-aaa-v140-review-fixplan | missing（既受容・v1.4.0 期） |
+| quick_task | 260610-qqq-review-md-260610-aaa-h-1-h-5-v1-4-1 | unknown（既受容・v1.4.0 期） |
+| quick_task | 260610-rkp-v1-4-2-review-md-m-1-m-11 | unknown（既受容・v1.4.0 期） |
+
 ## Session Continuity
 
-Last session: 2026-06-12T09:00:00.000Z
-Stopped at: 260612-shc 完了（v1.4.4 確定・マージ・リビルド・公開）
-Resume file: None
+Last session: 2026-06-20
+Stopped at: Completed 04-03-PLAN.md（OCRDialog 配線）。Phase 4 全プラン完了＝v1.6.0 全 4 フェーズ達成。human-verify はユーザー判断でスキップ（実機目視未検証）
+Resume file: None（.continue-here / HANDOFF.json は継続完了に伴い削除）
 
 ## Operator Next Steps
 

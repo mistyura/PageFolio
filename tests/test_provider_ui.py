@@ -11,6 +11,7 @@ import types
 
 import pytest
 
+from pagefolio.ocr import OCR_PROMPTS, resolve_ocr_prompt
 from pagefolio.ocr_providers import ClaudeProvider
 
 # ══════════════════════════════════════════════════════════════
@@ -444,6 +445,85 @@ class TestConfirmCost:
         assert "$" in captured_msg["msg"]
 
 
+# ══════════════════════════════════════════════════════════════
+#  V16-UI-01: _sync_param_vars_from_settings（数値パラメータの全プロバイダ共通同期）
+# ══════════════════════════════════════════════════════════════
+
+
+class _VarStub:
+    """tk Variable の .set() 呼び出し値を記録するスタブ。"""
+
+    def __init__(self):
+        self.value = None
+
+    def set(self, value):
+        """set された値を記録する。"""
+        self.value = value
+
+
+def _make_sync_stub(settings):
+    """_sync_param_vars_from_settings を Tk 生成なしで呼ぶスタブを返す。"""
+    from pagefolio.ocr_dialog import OCRDialog
+
+    stub = types.SimpleNamespace(
+        app=types.SimpleNamespace(settings=dict(settings)),
+        scale_var=_VarStub(),
+        timeout_var=_VarStub(),
+        max_tokens_var=_VarStub(),
+        temperature_var=_VarStub(),
+    )
+    stub._sync_param_vars_from_settings = lambda: (
+        OCRDialog._sync_param_vars_from_settings(stub)
+    )
+    return stub
+
+
+class TestSyncParamVarsFromSettings:
+    """V16-UI-01: 数値パラメータが全プロバイダで settings 値へ同期されることを検証。"""
+
+    def test_all_vars_set_from_settings(self):
+        """4 変数すべてが settings の ocr_* 値で .set() される。"""
+        stub = _make_sync_stub(
+            settings={
+                "ocr_scale": 2.5,
+                "ocr_timeout": 300,
+                "ocr_max_tokens": 4096,
+                "ocr_temperature": 0.7,
+            }
+        )
+        stub._sync_param_vars_from_settings()
+        assert stub.scale_var.value == 2.5
+        assert stub.timeout_var.value == 300
+        assert stub.max_tokens_var.value == 4096
+        assert stub.temperature_var.value == 0.7
+
+    def test_missing_keys_fall_back_to_defaults(self):
+        """settings 欠損時は llm_config と整合する既定値へフォールバックする。"""
+        stub = _make_sync_stub(settings={})
+        stub._sync_param_vars_from_settings()
+        assert stub.scale_var.value == 1.5
+        assert stub.timeout_var.value == 120
+        assert stub.max_tokens_var.value == -1
+        assert stub.temperature_var.value == 0.1
+
+    def test_sync_called_for_cloud_provider_settings(self):
+        """claude/gemini 等の provider 設定でも全変数が同期される（分岐外実行）。"""
+        stub = _make_sync_stub(
+            settings={
+                "ocr_provider": "claude",
+                "ocr_scale": 3.0,
+                "ocr_timeout": 60,
+                "ocr_max_tokens": 8192,
+                "ocr_temperature": 0.0,
+            }
+        )
+        stub._sync_param_vars_from_settings()
+        assert stub.scale_var.value == 3.0
+        assert stub.timeout_var.value == 60
+        assert stub.max_tokens_var.value == 8192
+        assert stub.temperature_var.value == 0.0
+
+
 # ===== M-8 回帰テスト: SettingsDialog に plugin_manager 引数追加 =====
 
 
@@ -469,3 +549,40 @@ class TestSettingsDialogPluginManager:
 
         sig_params = list(inspect.signature(SettingsDialog.__init__).parameters.keys())
         assert "plugin_manager" in sig_params
+
+
+# ══════════════════════════════════════════════════════════════
+#  V16-AI-02: resolve_ocr_prompt（プロバイダ別プロンプト解決純関数）
+# ══════════════════════════════════════════════════════════════
+
+
+class TestResolveOcrPrompt:
+    """V16-AI-02: resolve_ocr_prompt の優先順位とフォールバックを検証する。
+
+    Tk/ネットワーク非依存の純関数のため、スタブや Tk 生成は一切不要。
+    優先順位: custom 上書き > プロバイダ別テンプレート > 汎用 OCR_PROMPTS。
+    """
+
+    def test_custom_overrides_provider_template(self):
+        """custom_prompt が非空ならプロバイダ別テンプレより優先（成功基準3）。"""
+        assert resolve_ocr_prompt("markdown", "claude", "MY CUSTOM") == "MY CUSTOM"
+
+    def test_lmstudio_falls_back_to_generic(self):
+        """lmstudio は汎用 OCR_PROMPTS へフォールバックする（Pitfall 4）。"""
+        assert resolve_ocr_prompt("text", "lmstudio", "") == OCR_PROMPTS["text"]
+
+    def test_tesseract_falls_back_to_generic(self):
+        """tesseract は汎用 OCR_PROMPTS へフォールバックする（Pitfall 4）。"""
+        assert resolve_ocr_prompt("text", "tesseract", "") == OCR_PROMPTS["text"]
+
+    def test_claude_markdown_uses_provider_template(self):
+        """claude/markdown は汎用プリセットと異なる別テンプレートを返す。"""
+        assert resolve_ocr_prompt("markdown", "claude", "") != OCR_PROMPTS["markdown"]
+
+    def test_gemini_markdown_uses_provider_template(self):
+        """gemini/markdown は汎用プリセットと異なる別テンプレートを返す。"""
+        assert resolve_ocr_prompt("markdown", "gemini", "") != OCR_PROMPTS["markdown"]
+
+    def test_unknown_preset_falls_back_to_text(self):
+        """未定義 preset は既定で OCR_PROMPTS['text'] へフォールバックする。"""
+        assert resolve_ocr_prompt("zzz", "off", "") == OCR_PROMPTS["text"]

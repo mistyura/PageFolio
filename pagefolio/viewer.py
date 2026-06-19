@@ -11,6 +11,16 @@ import fitz
 from PIL import Image, ImageTk
 
 from pagefolio.constants import C
+from pagefolio.pagination import (
+    clamp_page_size,
+    clamp_window_start,
+    reconcile_window_start,
+    to_global,
+    window_bounds,
+    window_for_page,
+    window_label,
+    window_nav_state,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -153,12 +163,82 @@ class ViewerMixin:
         self._invalidate_thumb_cache()
         self._refresh_all()
 
+    # ── ページネーション（窓移動・件数変更）──
+    def _on_page_size_change(self, event=None):
+        """件数 Spinbox 確定時 — 保存 → 窓正規化 → 再描画（D-03/D-05）。
+
+        page_size_var.get() は空文字で TclError を投げうるため呼び出し側で捕捉し
+        既定 20 へフォールバックする。値域クランプは 02-01 の clamp_page_size。
+        thumb_cache はキーが全ページ index のため不変（_invalidate_thumb_cache を
+        呼ばない・Pitfall 2）。
+        """
+        try:
+            raw = self.page_size_var.get()
+        except (ValueError, tk.TclError):
+            raw = 20
+        self._page_size = clamp_page_size(raw)
+        self.settings["thumb_page_size"] = self._page_size
+        from pagefolio.settings import _save_settings
+
+        _save_settings(self.settings)
+        # current を含む窓へ追従してから再描画（D-11）。
+        self._page_window_start = window_for_page(self.current_page, self._page_size)
+        self._refresh_all()
+
+    def _prev_window(self):
+        """前の窓へ移動（保存不要・thumb_cache 非クリア）。"""
+        self._move_window(-1)
+
+    def _next_window(self):
+        """次の窓へ移動（保存不要・thumb_cache 非クリア）。"""
+        self._move_window(+1)
+
+    def _move_window(self, direction):
+        """窓を direction（-1=前 / +1=次）へ移動する。
+
+        窓移動後に current_page を新窓の先頭へ追従させ、「current は常に窓内」
+        という不変条件を確立する（手動ナビ vs D-11 自動追従の対立解消・UAT 項目2）。
+        これにより _refresh_all の reconcile_window_start は「操作で current が
+        窓外へ押し出された」場合のみ追従する純粋な正規化として矛盾なく機能する。
+        thumb_cache はクリアしない（A1・Pitfall 2）。
+        """
+        if not self.doc:
+            return
+        n = len(self.doc)
+        self._page_window_start = clamp_window_start(
+            self._page_window_start + direction * self._page_size, self._page_size, n
+        )
+        # current を新窓先頭へ追従させ窓内不変条件を保つ（snap back 防止の要）。
+        self.current_page = self._page_window_start
+        self._refresh_all()
+        self.plugin_manager.fire_event("on_page_change", self, self.current_page)
+        self._set_status(window_label(self._page_window_start, self._page_size, n))
+
     # ── 表示更新 ──
     def _refresh_all(self):
+        # 描画前に窓を正規化する（集約点・Pitfall 5）。
+        # reconcile_window_start が clamp_window_start で有効窓先頭へ寄せ、
+        # current_page が窓外へ出ている場合のみ window_for_page で追従する（D-11）。
+        # current_page が現窓内に収まっているときは手動ナビ（◀▶）/件数変更が
+        # 設定した窓を温存し、current の窓へ snap back しない（UAT 項目2 不具合修正）。
+        n = len(self.doc) if self.doc else 0
+        self._page_window_start = reconcile_window_start(
+            self._page_window_start, self.current_page, self._page_size, n
+        )
         self._build_thumbnails()
         self._show_preview()
         self._update_doc_buttons_state()
-        n = len(self.doc) if self.doc else 0
+        # ナビフッターのボタン state・範囲ラベルを更新（単一窓でも行は表示・
+        # ボタンのみ disabled・D-09）。
+        if hasattr(self, "_prev_window_btn"):
+            prev_en, next_en = window_nav_state(
+                self._page_window_start, self._page_size, n
+            )
+            self._prev_window_btn.state(["!disabled"] if prev_en else ["disabled"])
+            self._next_window_btn.state(["!disabled"] if next_en else ["disabled"])
+            self._window_range_label.configure(
+                text=window_label(self._page_window_start, self._page_size, n)
+            )
         self.page_label.configure(
             text=f"{self.current_page + 1} / {n}" if n else "- / -"
         )
@@ -175,8 +255,11 @@ class ViewerMixin:
         """選択・カレント変更のみ — 画像再生成なし"""
         frames = self.thumb_inner.winfo_children()
         for i, frame in enumerate(frames):
-            is_sel = i in self.selected_pages
-            is_cur = i == self.current_page
+            # enumerate 位置（窓ローカル）を全ページ index へ変換し照合（Pitfall 1）
+            # selected_pages はローカル化せず全ページ index の不変条件を保つ（D-07）
+            g = to_global(i, self._page_window_start)
+            is_sel = g in self.selected_pages
+            is_cur = g == self.current_page
             bg = C["ACCENT"] if is_sel else (C["BG_CARD"] if is_cur else C["BG_PANEL"])
             frame.configure(bg=bg)
             for child in frame.winfo_children():
@@ -202,9 +285,10 @@ class ViewerMixin:
         self.thumb_images.clear()
         if not self.doc:
             return
-        placeholder_labels = [
-            self._add_thumb_placeholder(i) for i in range(len(self.doc))
-        ]
+        # 窓範囲 [lo, hi) のみ描画（D-10 端数最終窓クランプ）。
+        # i は全ページ index のまま _add_thumb_placeholder へ渡す（D-06 src 整合）。
+        lo, hi = window_bounds(self._page_window_start, self._page_size, len(self.doc))
+        placeholder_labels = [self._add_thumb_placeholder(i) for i in range(lo, hi)]
 
         def render_next(i):
             if self._thumb_gen != gen or not self.doc:
@@ -214,15 +298,16 @@ class ViewerMixin:
                     self._thumb_gen,
                 )
                 return
-            if i >= len(self.doc):
+            if i >= hi:
                 return
             photo = self._get_thumb_photo(i)
-            frame, lbl = placeholder_labels[i]
+            # placeholder_labels は窓ローカル添字（i - lo）で参照する
+            frame, lbl = placeholder_labels[i - lo]
             lbl.configure(image=photo)
             self.thumb_images.append(photo)
             self.root.after(0, lambda: render_next(i + 1))
 
-        self.root.after_idle(lambda: render_next(0))
+        self.root.after_idle(lambda: render_next(lo))
 
     def _add_thumb_placeholder(self, i):
         """プレースホルダー frame・lbl を作成しイベントをバインドして返す"""

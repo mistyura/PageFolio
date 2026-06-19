@@ -6,6 +6,7 @@
 import tkinter as tk
 
 from pagefolio.constants import C
+from pagefolio.pagination import to_global, window_bounds
 
 
 class DnDMixin:
@@ -97,6 +98,11 @@ class DnDMixin:
         if dest is None or src is None:
             return
         n = len(self.doc)
+        # dest は窓内フレーム位置（ローカル）。to_global で全ページ index へ換算する
+        # （変換は本 1 箇所のみ・Anti-Pattern「散在させない」・D-06）。src は
+        # _add_thumb_placeholder が全ページ index で束縛するため変換不要。
+        lo, _hi = window_bounds(self._page_window_start, self._page_size, n)
+        dest = to_global(dest, lo)
         dest = max(0, min(dest, n))
         if src in self.selected_pages and len(self.selected_pages) > 1:
             sorted_sel = sorted(self.selected_pages)
