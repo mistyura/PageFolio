@@ -141,12 +141,12 @@
   2. Claude では XML タグ構造、Gemini では明示指示など、プロバイダ別に最適化されたプロンプトテンプレートで OCR が実行される
   3. プロバイダ別プロンプト最適化が、既存のカスタムプロンプト機構（v1.5.0）と矛盾なく両立し、ユーザーのカスタムプロンプトが引き続き機能する
 
-**Plans**: 1/3 plans executed
+**Plans**: 2/3 plans executed
 
 **Wave 1** *(並行実行可・files_modified 重複ゼロ — 純ロジック層)*
 
   - [x] 04-01-PLAN.md — V16-AI-01: Markdown→(行種別, インライン span) 変換の純関数層 `pagefolio/md_render.py`（`parse_markdown`）新設 + `tests/test_md_render.py`（Tk 非生成 unit）
-  - [ ] 04-02-PLAN.md — V16-AI-02: プロバイダ別プロンプト解決の純関数層（`ocr.py` に `PROVIDER_OCR_PROMPTS`＝Claude=XML/Gemini=明示 + `resolve_ocr_prompt`）+ `tests/test_provider_ui.py` 拡張（カスタム上書き温存・LMStudio/Tesseract フォールバック）
+  - [x] 04-02-PLAN.md — V16-AI-02: プロバイダ別プロンプト解決の純関数層（`ocr.py` に `PROVIDER_OCR_PROMPTS`＝Claude=XML/Gemini=明示 + `resolve_ocr_prompt`）+ `tests/test_provider_ui.py` 拡張（カスタム上書き温存・LMStudio/Tesseract フォールバック）
 
 **Wave 2** *(blocked on Wave 1 — 配線/UI)*
 
@@ -175,4 +175,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 | 1. 設定/UI 改善（OCR パラメータ一元化・スライダー配置） | v1.6.0 | 2/2 | Complete | 2026-06-18 |
 | 2. 大量ページのページネーション表示 | v1.6.0 | 3/3 | Complete | 2026-06-19 |
 | 3. 体感品質・回転プレビュー & OCR 堅牢性（プランA） | v1.6.0 | 3/3 | Complete | 2026-06-19 |
-| 4. AI 出力品質（プランC） | v1.6.0 | 0/3 | Planned | - |
+| 4. AI 出力品質（プランC） | v1.6.0 | 2/3 | In Progress | - |

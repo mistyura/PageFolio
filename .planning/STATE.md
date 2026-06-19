@@ -8,13 +8,13 @@ status: executing
 stopped_at: Phase 3 完了（03-01/02/03 全プラン）
 last_updated: "2026-06-19T12:27:39.176Z"
 last_activity: 2026-06-19
-last_activity_desc: Phase 04 execution started
+last_activity_desc: Completed 04-02-PLAN.md（V16-AI-02 プロンプト解決純関数層）
 progress:
   total_phases: 4
   completed_phases: 3
   total_plans: 11
-  completed_plans: 9
-  percent: 75
+  completed_plans: 10
+  percent: 83
 ---
 
 # Project State
@@ -29,11 +29,11 @@ See: .planning/PROJECT.md (updated 2026-06-18)
 ## Current Position
 
 Phase: 04 (AI 出力品質（プランC）) — EXECUTING
-Plan: 2 of 3
+Plan: 3 of 3
 Status: Ready to execute
-Last activity: 2026-06-19 — Phase 04 execution started
+Last activity: 2026-06-19 — 04-02-PLAN.md 完了（V16-AI-02 プロンプト解決純関数層）
 
-Progress: [███████░░░] 75%
+Progress: [████████░░] 83%
 
 ## v1.6.0 Phase Map
 
@@ -81,6 +81,7 @@ Progress: [███████░░░] 75%
 | Phase 02 P01 | 4min | 2 tasks | 3 files |
 | Phase 02 P02 | 約12分 | 2 tasks | 4 files |
 | Phase 04 P01 | 5min | 2 tasks | 2 files |
+| Phase 04 P02 | 4min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -165,6 +166,8 @@ Decisions are logged in PROJECT.md Key Decisions table.
 - [Phase 02-03]: 手動窓ナビと D-11 自動追従の対立はハンドラ層で解消（_move_window で窓移動後に current_page を新窓先頭へ追従＝「current は常に窓内」不変条件）。reconcile_window_start は (B) 操作による current 押し出し専用追従へ純化（UAT 項目2 修正・debug 260618-pagination-window-nav-snapback）
 - [Phase ?]: [Phase 04-01]: parse_markdown 判定優先順位 code>md_h2>md_h1>bullet>通常段落・in_code フラグでフェンス内見出しを構造抑止。md_render.py は Tk/fitz 非依存純ロジック層で 04-03 が import
 - [Phase ?]: [Phase 04-01]: _split_inline は **bold** のみ対応・空リスト不返却で [(text,None)] フォールバック。ReDoS 回避: 非貪欲+文字クラスのみ（線形時間）
+- [Phase 04-02]: resolve_ocr_prompt 解決優先順位を custom(非空) > PROVIDER_OCR_PROMPTS[provider][preset] > OCR_PROMPTS.get(preset, OCR_PROMPTS['text']) に固定（既存 _on_run/ocr_dialog.py:1090 既定 text と一致・後方互換）
+- [Phase 04-02]: PROVIDER_OCR_PROMPTS は claude(XML タグ)/gemini(明示指示) × text/table/markdown のみ定義。lmstudio/tesseract/off は汎用 OCR_PROMPTS フォールバック（Pitfall 4: Tesseract は prompt 無視）。Tk/ネットワーク非依存純関数で 04-03 が import
 
 ### Pending Todos
 
@@ -220,9 +223,9 @@ Decisions are logged in PROJECT.md Key Decisions table.
 
 ## Session Continuity
 
-Last session: 2026-06-19T12:27:29.115Z
-Stopped at: Phase 3 context gathered
-Resume file: .planning/phases/03-ocr-a/03-CONTEXT.md
+Last session: 2026-06-19
+Stopped at: Completed 04-02-PLAN.md（V16-AI-02）
+Resume file: None
 
 ## Operator Next Steps
 
