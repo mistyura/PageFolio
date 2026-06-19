@@ -343,9 +343,15 @@ LANG = {
             "従量課金が発生します。\n"
             "実行しますか？"
         ),
-        "ocr_waiting_retry": "p.{page}: レート制限のため待機中（リトライ {n}/{max}）",
+        "ocr_waiting_retry": (
+            "p.{page}: レート制限のため待機中（約 {sec} 秒・リトライ {n}/{max}）"
+        ),
         "ocr_waiting_retry_server": (
-            "p.{page}: サーバエラーのためリトライ中（{n}/{max}）"
+            "p.{page}: サーバエラーのためリトライ中（約 {sec} 秒・{n}/{max}）"
+        ),
+        "ocr_err_truncated": (
+            "p.{page}: 応答が max_tokens で途切れました。"
+            "LLM 設定で max_tokens を増やして再実行してください。"
         ),
         "ocr_provider_label": "OCR プロバイダ:",
         "ocr_provider_name_claude": "Claude (Anthropic)",
@@ -776,8 +782,16 @@ LANG = {
             "Usage charges will apply.\n"
             "Proceed?"
         ),
-        "ocr_waiting_retry": "p.{page}: Rate-limited, waiting (retry {n}/{max})",
-        "ocr_waiting_retry_server": "p.{page}: Server error, retrying ({n}/{max})",
+        "ocr_waiting_retry": (
+            "p.{page}: Rate-limited, waiting (~{sec}s, retry {n}/{max})"
+        ),
+        "ocr_waiting_retry_server": (
+            "p.{page}: Server error, retrying (~{sec}s, {n}/{max})"
+        ),
+        "ocr_err_truncated": (
+            "p.{page}: Response was truncated at max_tokens. "
+            "Increase max_tokens in LLM settings and retry."
+        ),
         "ocr_provider_label": "OCR Provider:",
         "ocr_provider_name_claude": "Claude (Anthropic)",
         "ocr_provider_name_lmstudio": "LM Studio",

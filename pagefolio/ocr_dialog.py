@@ -111,6 +111,8 @@ class OCRDialog(tk.Toplevel):
         self.errors = {}  # page_idx -> message
         # 埋め込みテキスト検出によりスキップされたページ集合
         self._skipped_pages = set()
+        # max_tokens 超過で応答が途切れたページ集合（D-05・部分テキストは保持）
+        self._truncated_pages = set()
         # 今回の実行で処理するページリスト（再開時は未処理ページのみ）
         self._run_pages = list(self.page_indices)
         # 今回の実行開始時点のスキップ済み数（再開時の進捗計算基準）
@@ -612,12 +614,21 @@ class OCRDialog(tk.Toplevel):
 
     # ── ページ結果記録（ワーカースレッドから呼ばれる・Lock 保護） ──
 
-    def _record_page_success(self, page_idx, text):
-        """ページ成功を記録し、連続失敗カウンタをリセットする"""
+    def _record_page_success(self, page_idx, text, truncated=False):
+        """ページ成功を記録し、連続失敗カウンタをリセットする。
+
+        truncated=True のとき当該ページを _truncated_pages に登録する。
+        途切れは「成功＋警告」であり部分テキストは破棄せず results に保持する
+        （D-05）。途切れ通知は _render_results_ordered で当該ページに併記する。
+        """
         self.results[page_idx] = text
         with self._done_lock:
             self._done_count += 1
             self._consec_err_count = 0
+            if truncated:
+                self._truncated_pages.add(page_idx)
+            else:
+                self._truncated_pages.discard(page_idx)
 
     def _record_retryable_failure(self, page_idx, msg):
         """リトライ上限到達ページを記録する。
@@ -704,6 +715,20 @@ class OCRDialog(tk.Toplevel):
         if getattr(e, "code", None) == 429:
             return "ocr_waiting_retry"
         return "ocr_waiting_retry_server"
+
+    def _build_retry_wait_message(self, wait_key, page_idx, attempt, delay):
+        """リトライ待機中の進捗表示文言を生成する純粋ヘルパー（Tk 非依存）。
+
+        実 delay（clamp_retry_after でクランプ済の実待機秒）由来の round(delay) を
+        sec として文言へ埋め込む（D-06）。delay を文言生成より前に算出して渡す
+        ことで「表示する待機秒数が実待機値と一致する」順序を回帰テストで担保する
+        （_worker での順序入替が崩れたら直接アサートで落ちる）。
+        external I/O や after は含めず、_retry_wait_key と同じくテスト可能な純度を
+        保つ（self._L 参照のためインスタンスメソッド）。
+        """
+        return self._L[wait_key].format(
+            page=page_idx + 1, n=attempt, max=MAX_RETRIES, sec=round(delay)
+        )
 
     def _is_cloud_provider(self):
         """現在の ocr_provider 設定がクラウド系か判定する。
@@ -1023,14 +1048,16 @@ class OCRDialog(tk.Toplevel):
         self._consec_err_count = 0
         self._cancel_flag.clear()
         if resume:
-            # 再実行対象の旧エラーを破棄（再実行結果で上書き表示するため）
+            # 再実行対象の旧エラー・旧途切れ状態を破棄（再実行結果で上書きするため）
             for p in run_pages:
                 self.errors.pop(p, None)
+                self._truncated_pages.discard(p)
         else:
-            # リラン（全体再実行）: 前回の結果・エラー・スキップ状態を破棄
+            # リラン（全体再実行）: 前回の結果・エラー・スキップ・途切れ状態を破棄
             self.results.clear()
             self.errors.clear()
             self._skipped_pages.clear()
+            self._truncated_pages.clear()
         self._run_pages = run_pages
         self._skip_base = len(self._skipped_pages)
         self.run_btn.state(["disabled"])
@@ -1302,44 +1329,41 @@ class OCRDialog(tk.Toplevel):
 
                 for attempt in range(1, MAX_RETRIES + 1):
                     try:
-                        text = self.provider.ocr_image(b64, self._ocr_prompt)
-                        self._record_page_success(page_idx, text)
+                        text, truncated = self.provider.ocr_image_ex(
+                            b64, self._ocr_prompt
+                        )
+                        self._record_page_success(page_idx, text, truncated=truncated)
                         break
                     except OCRRetryableError as e:
                         if attempt >= MAX_RETRIES:
                             # リトライ上限到達: 連続失敗ならサーキットブレーカー発動
                             self._record_retryable_failure(page_idx, str(e))
                             break
-                        # リトライ待機中の進捗表示（D-15）
-                        # M-2: 世代ガード後にのみ after を投函する
-                        if gen is None or gen == self._run_gen:
-                            n = attempt
-                            wait_key = self._retry_wait_key(e)
-                            try:
-                                self.after(
-                                    0,
-                                    lambda p=page_idx, _n=n, _k=wait_key: (
-                                        self.progress_var.set(
-                                            self._L[_k].format(
-                                                page=p + 1, n=_n, max=MAX_RETRIES
-                                            )
-                                        )
-                                    ),
-                                )
-                            except tk.TclError:
-                                pass
                         # M-5: interruptible_sleep でキャンセル応答性向上
                         from pagefolio.ocr import (
                             clamp_retry_after,
                             interruptible_sleep,
                         )
 
+                        # D-06: 実待機秒（delay）を待機文言生成より前に算出し、
+                        # 表示する秒数が実待機値（クランプ後）と一致するようにする
                         raw_delay = (
                             e.retry_after
                             if e.retry_after is not None
                             else 1.0 * (2 ** (attempt - 1))
                         )
                         delay = clamp_retry_after(raw_delay)
+                        # リトライ待機中の進捗表示（D-15）
+                        # M-2: 世代ガード後にのみ after を投函する
+                        if gen is None or gen == self._run_gen:
+                            wait_key = self._retry_wait_key(e)
+                            msg = self._build_retry_wait_message(
+                                wait_key, page_idx, attempt, delay
+                            )
+                            try:
+                                self.after(0, lambda m=msg: self.progress_var.set(m))
+                            except tk.TclError:
+                                pass
                         interruptible_sleep(delay, self._cancel_flag.is_set)
                     except ConnectionError as e:
                         with self._done_lock:
@@ -1442,6 +1466,10 @@ class OCRDialog(tk.Toplevel):
                     self.text.insert("end", self.results[page_idx] + "\n")
             elif page_idx in self.results:
                 self.text.insert("end", self.results[page_idx] + "\n")
+                # D-05: max_tokens 途切れページは部分テキストの後に専用文言を併記
+                if page_idx in self._truncated_pages:
+                    notice = self._L["ocr_err_truncated"].format(page=page_idx + 1)
+                    self.text.insert("end", f"[{notice}]\n")
             elif page_idx in self.errors:
                 self.text.insert(
                     "end",
