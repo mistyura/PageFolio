@@ -52,7 +52,8 @@ PageFolio/
 │   │   ├── settings.py        # SettingsDialog
 │   │   ├── plugin.py          # PluginDialog
 │   │   ├── merge.py           # MergeOrderDialog / MergeResizeDialog
-│   │   └── llm_config.py      # LLMConfigDialog（OCR プロバイダ / モデル設定）
+│   │   ├── llm_config.py      # LLMConfigDialog（OCR プロバイダ / モデル設定）
+│   │   └── export_images.py   # ExportImagesDialog（ページ→画像変換 / 範囲・スケール指定）
 │   └── file_drop.py           # ファイル D&D（tkinterdnd2 連携）
 ├── pagefolio.ico              # アプリアイコン
 ├── PageFolio.spec             # PyInstaller ビルド定義（onedir 形式）
@@ -77,6 +78,9 @@ PageFolio/
 │   ├── test_provider_ui.py    # プロバイダ UI（ダイアログ連携）/ resolve_ocr_prompt テスト
 │   ├── test_pagination.py     # ページネーション純ロジック（窓計算 / local↔global / 境界値）テスト
 │   ├── test_md_render.py      # parse_markdown 純関数（行種別 / インライン span）テスト
+│   ├── test_export_images.py  # ページ→画像変換（範囲パース / スケール計算 / 出力）テスト
+│   ├── test_save_overwrite.py # 縮小して保存（上書き）ヘルパーのテスト
+│   ├── test_lang_parity.py    # ja/en LANG キー一致 / プレースホルダ整合の回帰テスト
 │   └── test_source_keyguard.py  # pagefolio/ ソースの実 API キーパターン不在スキャン
 └── docs/                      # スクリーンショット画像
 
