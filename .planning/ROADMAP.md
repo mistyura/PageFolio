@@ -118,7 +118,16 @@
   3. max_tokens クランプと 429/レート制限リトライが実 API（または実機相当の検証手順）で期待どおり動作することが検証され、結果が記録されている
   4. レート制限・トークン超過・応答途切れ時に、ユーザーが状況と次のアクション（待機・再試行・設定変更等）を理解できるエラーメッセージ／UX が提示される
 
-**Plans**: TBD
+**Plans**: 3 plans
+**Wave 1** *(並行実行可・files_modified 重複ゼロ)*
+
+  - [ ] 03-01-PLAN.md — V16-QUAL-01: H1 回転プレビュー即時反映（実機 debug で真因特定 → 原因除去・回転 w/h 単体テスト・viewer/page_ops に閉じる）
+  - [ ] 03-02-PLAN.md — V16-QUAL-04: OCR 堅牢性（ocr_image_ex 段階導入で stop_reason/finishReason 途切れ検出＋部分テキスト保持・待機秒数 {sec} 文言・ja/en 同一 LANG キー）
+
+**Wave 2** *(blocked on 03-02: lang.py 確定後の parity 基準)*
+
+  - [ ] 03-03-PLAN.md — V16-QUAL-02/03: H2 キー秘匿監査回帰テスト（caplog 値非出力・ソース実キースキャン・LANG parity）＋ H5 実 API 検証チェックリスト（D-08）＋ 3 経路キー秘匿監査文書（D-10）・pagefolio/ ソース無改変
+
 **UI hint**: yes
 
 ### Phase 4: AI 出力品質（プランC）
@@ -155,5 +164,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 | 4. テスト・品質保証 | v1.5.0 | — | Complete | 2026-06-16 |
 | 1. 設定/UI 改善（OCR パラメータ一元化・スライダー配置） | v1.6.0 | 1/2 | In progress | - |
 | 2. 大量ページのページネーション表示 | v1.6.0 | 0/3 | Not started | - |
-| 3. 体感品質・回転プレビュー & OCR 堅牢性（プランA） | v1.6.0 | 0/TBD | Not started | - |
+| 3. 体感品質・回転プレビュー & OCR 堅牢性（プランA） | v1.6.0 | 0/3 | Not started | - |
 | 4. AI 出力品質（プランC） | v1.6.0 | 0/TBD | Not started | - |
