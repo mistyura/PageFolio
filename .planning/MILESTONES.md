@@ -1,5 +1,20 @@
 # Milestones
 
+## v1.6.0 品質向上・AI強化・設定/UI改善 (Shipped: 2026-06-20)
+
+**Phases completed:** 4 phases, 11 plans, 23 tasks
+
+**Known deferred items at close:** 5（Phase 04 04-VERIFICATION.md human_needed〔human-verify スキップ〕+ v1.4.0 期クイックタスク 4 件・既受容。詳細は STATE.md「Deferred Items」）
+
+**Key accomplishments:**
+
+- OCRDialog の数値パラメータ 4 Spinbox と model_combo を読み取り専用化し、LLM 設定の適用結果を全プロバイダ共通箇所で即時同期して OCR パラメータの二重入力（V16-UI-01）を解消した
+- H1 回転プレビュー即時反映バグの真因をセレクション意味論と特定し、_rotate_selected で current_page を回転対象へ寄せる原因除去で修正。90/270°入替・180°不変の回転 w/h 単体テストを回帰防止アンカーとして追加。
+- OCR 結果 Markdown を (行種別, インライン span) へ変換する Tk/fitz 非依存の純関数 parse_markdown / _split_inline を新設し、9 件の Tk 非生成 unit テストで網羅検証
+- 単一プリセットのみだった OCR_PROMPTS を「プリセット × プロバイダ × カスタム」へ昇格させ、Claude=XML タグ／Gemini=明示指示のプロバイダ別テンプレート PROVIDER_OCR_PROMPTS と純関数 resolve_ocr_prompt を pagefolio/ocr.py に新設、6 件の Tk 非生成 unit テストで優先順位とフォールバックを検証
+
+---
+
 ## v1.5.0 基本機能・UI/UX改善・OCRカスタムプロンプト (Shipped: 2026-06-16)
 
 **Phases completed:** 4 phases

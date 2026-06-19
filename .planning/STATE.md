@@ -2,13 +2,13 @@
 gsd_state_version: 1.0
 milestone: v1.6.0
 milestone_name: 品質向上・AI強化・設定/UI改善
-current_phase: 04
-current_phase_name: AI 出力品質（プランC）
-status: phase_complete
-stopped_at: Phase 4 完了（04-01/02/03 全プラン・human-verify はユーザー判断でスキップ）
+current_phase: null
+current_phase_name: null
+status: milestone_complete
+stopped_at: Milestone v1.6.0 完了・アーカイブ済（全 4 フェーズ・11 プラン・23 タスク）。次マイルストーン待ち
 last_updated: "2026-06-20T00:00:00.000Z"
 last_activity: 2026-06-20
-last_activity_desc: Completed 04-03-PLAN.md（OCRDialog 配線・V16-AI-01/02）。Phase 4 全プラン完了
+last_activity_desc: Milestone v1.6.0 completed and archived（v1.6.0 出荷確定）
 progress:
   total_phases: 4
   completed_phases: 4
@@ -21,19 +21,17 @@ progress:
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-06-18)
+See: .planning/PROJECT.md (updated 2026-06-20)
 
 **Core value:** 大きな PDF でも Undo/Redo が正しく・速く動作し、コードが読みやすく保守しやすい状態にする
-**Current focus:** Phase 04 — AI 出力品質（プランC）
+**Current focus:** 次マイルストーンの計画（`/gsd-new-milestone`）
 
 ## Current Position
 
-Phase: 04 (AI 出力品質（プランC）) — COMPLETE
-Plan: 3 of 3 — 完了
-Status: Phase complete（全 4 フェーズ達成・v1.6.0 マイルストーン完了候補）
-Last activity: 2026-06-20 — 04-03-PLAN.md 完了（OCRDialog 配線・V16-AI-01/02）。human-verify はユーザー判断でスキップ
-
-Progress: [██████████] 100%
+Phase: Milestone v1.6.0 complete（全 4 フェーズ達成・出荷）
+Plan: —
+Status: Awaiting next milestone
+Last activity: 2026-06-20 — Milestone v1.6.0 completed and archived
 
 ## v1.6.0 Phase Map
 
@@ -221,6 +219,18 @@ Decisions are logged in PROJECT.md Key Decisions table.
 | quick_task | 260610-qqq-review-md-260610-aaa-h-1-h-5-v1-4-1 | unknown |
 | quick_task | 260610-rkp-v1-4-2-review-md-m-1-m-11 | unknown |
 
+### v1.6.0 クローズ時に Acknowledge した項目（2026-06-20）
+
+締め前監査の 5 件をユーザー判断で受容してクローズ。Phase 04 検証は human-verify スキップ由来（コード検証済・実描画/実 API のみ未確認）。クイックタスク 4 件は v1.4.0 期の記録マーカー欠落で既受容済の再掲。
+
+| Category | Item | Status |
+|----------|------|--------|
+| verification | Phase 04（04-ai-c）04-VERIFICATION.md | human_needed（markdown 整形表示・実 API 出力品質の実機目視がスキップ・コード起因ブロッカーなし） |
+| quick_task | 260607-ccz-ocr-llm-llmconfigdialog | unknown（既受容・v1.4.0 期） |
+| quick_task | 260610-aaa-v140-review-fixplan | missing（既受容・v1.4.0 期） |
+| quick_task | 260610-qqq-review-md-260610-aaa-h-1-h-5-v1-4-1 | unknown（既受容・v1.4.0 期） |
+| quick_task | 260610-rkp-v1-4-2-review-md-m-1-m-11 | unknown（既受容・v1.4.0 期） |
+
 ## Session Continuity
 
 Last session: 2026-06-20
@@ -229,6 +239,4 @@ Resume file: None（.continue-here / HANDOFF.json は継続完了に伴い削除
 
 ## Operator Next Steps
 
-- v1.6.0 全 4 フェーズ完了。マイルストーン締め: `/gsd-complete-milestone`（PR・ビルド・リリースは別途）
-- 残課題（任意）: 04-03 の human-verify 実機目視確認（markdown 整形表示・プロバイダ別プロンプト実 API 出力品質）— スキップ済のため必要なら手動実施
-- 各 Phase 完了ゲート（CLAUDE.md 準拠）: `ruff check . && ruff format .` + `pytest`（現行 597 件ベースライン）+ 開発履歴.md 追記 + `APP_VERSION` 同期
+- Start the next milestone with /gsd-new-milestone

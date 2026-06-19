@@ -7,9 +7,12 @@ PageFolio の既存コードベースに対する最適化プロジェクト。
 
 **Core Value:** 大きな PDF でも Undo/Redo が正しく・速く動作し、コードが読みやすく保守しやすい状態にする。
 
-## Current Milestone: v1.6.0 品質向上・AI強化・設定/UI改善
+## Last Milestone: v1.6.0 品質向上・AI強化・設定/UI改善 — ✅ Shipped 2026-06-20
 
-**Goal:** 体感品質（回転プレビュー即時反映・エラーハンドリング UX）と AI 出力品質（Markdown 整形・プロバイダ別プロンプト最適化）を底上げし、設定の二重化を解消して大量ページ対応で UI を整える。
+> v1.6.0 は全 4 フェーズ（Phase 1〜4・11 プラン・23 タスク）を達成して出荷済み（`APP_VERSION = v1.6.0`・テスト 597 件グリーン）。
+> 次マイルストーンは `/gsd-new-milestone` で確定する（候補は「Next Milestone Goals」参照）。
+
+**Goal（達成済み）:** 体感品質（回転プレビュー即時反映・エラーハンドリング UX）と AI 出力品質（Markdown 整形・プロバイダ別プロンプト最適化）を底上げし、設定の二重化を解消して大量ページ対応で UI を整える。
 
 **Target features:**
 - 設定/UI 改善: OCR パラメータ設定の「LLM設定」一元化（S1）・サムネイルサイズスライダーの配置変更（S2）・大量ページのページネーション表示（S3）
@@ -23,7 +26,7 @@ PageFolio の既存コードベースに対する最適化プロジェクト。
 - S3: D&D・複数選択は全ページインデックス管理のため、ページング導入時に「表示中ページ vs 全ページ」のインデックス整合に注意。表示件数は `pagefolio_settings.json` に永続化。
 - H5: max_tokens クランプ / 429 リトライは安全側修正のみでテスト担保。実 API での検証が残課題。
 
-## Last Milestone: v1.5.0 基本機能・UI/UX改善・OCRカスタムプロンプト — ✅ Shipped 2026-06-16
+## Previous Milestone: v1.5.0 基本機能・UI/UX改善・OCRカスタムプロンプト — ✅ Shipped 2026-06-16
 
 > v1.5.0 は全 4 フェーズ（Phase 1〜4）を達成して出荷済み（`APP_VERSION = v1.5.0`）。
 > 実装は `feature/v1.5.0-improvements` ブランチで別ワークフローにより完了し、2026-06-16 に文書を整合。
@@ -130,10 +133,15 @@ PageFolio の既存コードベースに対する最適化プロジェクト。
 - ✓ V15-OCR-01/02: OCR カスタムプロンプト入力／保存・OCR バックエンドへの受け渡し — v1.5.0 Phase 3
 - ✓ V15-QA-01/02: ruff クリーン・pytest 490 件全通過 — v1.5.0 Phase 4（整合時に E501 2 件修正）
 - ✓ アーカイブ詳細: `.planning/milestones/v1.5.0-REQUIREMENTS.md`
+- ✓ V16-UI-01/02: OCR パラメータの「LLM設定」一元化（OCRDialog 数値 UI 読み取り専用化）・サムネイルスライダー常時可視化 — v1.6.0 Phase 1
+- ✓ V16-UI-03: 大量ページのページネーション表示（窓表示・件数永続化・D&D/複数選択の全ページインデックス整合・`pagination.py` 純ロジック層） — v1.6.0 Phase 2
+- ✓ V16-QUAL-01/02/03/04: 回転プレビュー即時反映・API キー秘匿の 3 経路回帰テスト化・max_tokens/429 実機検証チェックリスト・エラー UX 磨き — v1.6.0 Phase 3
+- ✓ V16-AI-01/02: OCR 結果の Markdown 整形表示（tk.Text タグ）・プロバイダ別プロンプト最適化（Claude=XML/Gemini=明示・カスタム両立） — v1.6.0 Phase 4（human-verify はスキップ・コード検証済）
+- ✓ アーカイブ詳細: `.planning/milestones/v1.6.0-REQUIREMENTS.md`
 
 ### Active
 
-- v1.6.0 の要件は `.planning/REQUIREMENTS.md` で定義（S1〜S3 + プランA: H1/H2/H5/M1 + プランC: M3/M4）。ロードマップ化は `.planning/ROADMAP.md` 参照。
+- なし（v1.6.0 全 9 要件を達成・出荷）。次マイルストーンの要件は `/gsd-new-milestone` で定義する（候補は「Next Milestone Goals」参照）。
 
 ### Out of Scope
 
@@ -158,8 +166,25 @@ PageFolio の既存コードベースに対する最適化プロジェクト。
 | V14-D-03：既定 `ocr_provider: "off"` | 外部送信・課金を望まないユーザー向けの安全側デフォルト | ✓ Good（v1.4.0） |
 | V14-D-05/06：fitz `get_pixmap()` はメインスレッドのみ・逐次レンダリング（render→送信→破棄） | スレッドセーフ制約の遵守と低スペック PC のメモリ上限保証 | ✓ Good（v1.4.0 Phase 06・bounded buffer で機械保証） |
 | V14-D-08：Tesseract / PluginManager 登録フックは最終フェーズ（任意） | スコープ調整時に切りやすい位置に配置 | ✓ Good（v1.4.0 Phase 07・遡及クローズアウトで完了記録） |
+| V16-D-01：ページネーションの index 変換を純ロジック層 `pagination.py`（local↔global）へ集約 | viewer/dnd/選択照合の全ページインデックス整合を 1 箇所で機械保証しテスト可能化 | ✓ Good（v1.6.0 Phase 2・窓追従の不変条件で UAT snap back も解消） |
+| V16-D-02：Markdown 整形は純関数 `parse_markdown`（Tk 非依存）+ OCRDialog の薄い描画層へ配線・コピー/保存は raw 維持 | 描画ロジックを純関数化して unit テスト可能にし、エクスポートは整形非反映で情報露出経路を増やさない | ✓ Good（v1.6.0 Phase 4・表示専用タグ） |
+| V16-D-03：プロバイダ別プロンプトは `resolve_ocr_prompt`（custom > provider別 > 汎用）で純関数解決 | カスタムプロンプト両立を構造的に担保しつつ Claude=XML/Gemini=明示を分離 | ✓ Good（v1.6.0 Phase 4・後方互換） |
+| V16-D-04：出荷バージョンを v1.6.0 に確定（途中 v1.7.0 へ一時バンプ後 49e9893 で巻き戻し） | APP_VERSION/README/GSD ラベルの一致を優先。開発履歴.md の v1.7.0 エントリは v1.6.0 へ整合予定 | ⚠️ Revisit（開発履歴.md の版番整合が残課題） |
+| V16-D-05：Phase 4 human-verify をユーザー判断でスキップしクローズ | コード・自動ゲートは全通過。実描画/実 API 出力品質のみ未検証で deferred 受容 | ⚠️ Revisit（必要時に実機目視） |
 
 ## Current State
+
+**Shipped: v1.6.0 品質向上・AI強化・設定/UI改善 (2026-06-20)** — 4 フェーズ / 11 プラン / 23 タスク。`APP_VERSION = v1.6.0`（テスト 597 件グリーン・ruff クリーン）。
+
+- **設定/UI 改善:** OCR パラメータの「LLM設定」一元化（OCRDialog 数値 UI 読み取り専用化・全プロバイダ共通ライブ同期）・サムネイルサイズスライダーを独立全幅行へ移設（左ペイン縮小時も常時可視）。
+- **大量ページ対応:** サムネイル一覧のページネーション表示（既定 20・窓表示）・件数永続化・ナビフッター。D&D/複数選択の全ページインデックス整合を純ロジック層 `pagination.py`（local↔global 変換）へ集約。
+- **体感品質・OCR 堅牢性:** 回転プレビュー即時反映（セレクション意味論の原因除去）・API キー秘匿の 3 経路回帰テスト化・max_tokens/429 実機検証チェックリスト・OCR 応答途切れ検出と部分テキスト保持・待機秒数併記。
+- **AI 出力品質:** OCR 結果ビューアの `markdown` プリセットを tk.Text タグで整形表示（見出し/箇条書き/コード/強調）・プロバイダ別プロンプト最適化（Claude=XML タグ/Gemini=明示指示・カスタムプロンプト両立）・コピー/保存は raw 維持。
+- Phase 4 の human-verify チェックポイントはユーザー判断でスキップ（実機目視未検証・コード/自動ゲート〔ruff・pytest597・コードレビュー・目標検証〕は通過）。
+- マイルストーン詳細: `.planning/milestones/v1.6.0-ROADMAP.md`・`.planning/MILESTONES.md`
+
+<details>
+<summary>Shipped: v1.5.0 基本機能・UI/UX改善・OCRカスタムプロンプト (2026-06-16)</summary>
 
 **Shipped: v1.5.0 基本機能・UI/UX改善・OCRカスタムプロンプト (2026-06-16)** — 4 フェーズ。`APP_VERSION = v1.5.0`（テスト 490 件グリーン・ruff クリーン）。
 
@@ -168,6 +193,8 @@ PageFolio の既存コードベースに対する最適化プロジェクト。
 - **OCR:** `LLMConfigDialog` のカスタムプロンプト入力欄・`ocr_custom_prompt` 保存・OCR バックエンドへの受け渡し。
 - 実装は `feature/v1.5.0-improvements` ブランチ（別 WF 実装・2026-06-16 に文書整合・ruff E501 2 件修正）。
 - マイルストーン詳細: `.planning/milestones/v1.5.0-ROADMAP.md`・`.planning/MILESTONES.md`
+
+</details>
 
 <details>
 <summary>Shipped: v1.4.0 OCR プロバイダ化 + クラウドAPI対応 (2026-06-14)</summary>
@@ -219,4 +246,4 @@ PageFolio の既存コードベースに対する最適化プロジェクト。
 4. 決定事項 → Key Decisions を更新
 
 ---
-*Last updated: 2026-06-18 — Started milestone v1.6.0 (品質向上・AI強化・設定/UI改善).*
+*Last updated: 2026-06-20 after v1.6.0 milestone (品質向上・AI強化・設定/UI改善) — 全 4 フェーズ達成・出荷.*
