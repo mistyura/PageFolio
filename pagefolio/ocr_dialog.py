@@ -348,7 +348,7 @@ class OCRDialog(tk.Toplevel):
         tk.Spinbox(
             params_row,
             from_=10,
-            to=600,
+            to=900,
             increment=10,
             textvariable=self.timeout_var,
             width=5,
@@ -1089,7 +1089,7 @@ class OCRDialog(tk.Toplevel):
         except (tk.TclError, ValueError):
             self._ocr_scale = 1.5  # WR-01: D-11 整合（例外フォールバック統一）
         try:
-            self._ocr_timeout = max(10, min(600, int(self.timeout_var.get())))
+            self._ocr_timeout = max(10, min(900, int(self.timeout_var.get())))
         except (tk.TclError, ValueError):
             self._ocr_timeout = 120
         self._effective_timeout = self._ocr_timeout

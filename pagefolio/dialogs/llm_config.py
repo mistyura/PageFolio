@@ -431,7 +431,7 @@ class LLMConfigDialog(tk.Toplevel):
         tk.Spinbox(
             to_row,
             from_=10,
-            to=600,
+            to=900,
             increment=10,
             textvariable=self.ocr_timeout_var,
             width=6,
@@ -883,7 +883,7 @@ class LLMConfigDialog(tk.Toplevel):
             llm_settings["ocr_scale"] = 1.5  # WR-01: D-11 整合
         try:
             llm_settings["ocr_timeout"] = max(
-                10, min(600, int(self.ocr_timeout_var.get()))
+                10, min(900, int(self.ocr_timeout_var.get()))
             )
         except (tk.TclError, ValueError):
             llm_settings["ocr_timeout"] = 120
