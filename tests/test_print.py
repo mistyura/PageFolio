@@ -62,17 +62,53 @@ class TestWritePrintTempfile:
 class TestSendToPrinter:
     def test_uses_startfile_when_available(self, tmp_path, monkeypatch):
         calls = []
-        monkeypatch.setattr(
-            print_ops.os,
-            "startfile",
-            lambda p, verb: calls.append((p, verb)),
-            raising=False,
-        )
+
+        def fake_startfile(p, verb=None):
+            calls.append((p, verb))
+
+        monkeypatch.setattr(print_ops.os, "startfile", fake_startfile, raising=False)
         app = _DummyPrintApp(doc=_make_doc())
         target = str(tmp_path / "x.pdf")
         app._send_to_printer(target)
         assert calls == [(target, "print")]
         assert app.status is not None
+        app.doc.close()
+
+    def test_falls_back_to_open_when_print_verb_unassociated(
+        self, tmp_path, monkeypatch
+    ):
+        # 印刷動詞が未関連付け（WinError 1155 相当）→ open 動詞で再試行
+        calls = []
+
+        def fake_startfile(p, verb=None):
+            calls.append((p, verb))
+            if verb == "print":
+                raise OSError(1155, "no app associated")
+
+        monkeypatch.setattr(print_ops.os, "startfile", fake_startfile, raising=False)
+        app = _DummyPrintApp(doc=_make_doc())
+        target = str(tmp_path / "x.pdf")
+        app._send_to_printer(target)
+        assert calls == [(target, "print"), (target, None)]
+        assert "opened" in app.status or app.status is not None
+        app.doc.close()
+
+    def test_no_handler_shows_error(self, tmp_path, monkeypatch):
+        # print も open も失敗 → エラー表示・status は更新されない
+        def fake_startfile(p, verb=None):
+            raise OSError(1155, "no app associated")
+
+        monkeypatch.setattr(print_ops.os, "startfile", fake_startfile, raising=False)
+        shown = {"error": False}
+        monkeypatch.setattr(
+            print_ops.messagebox,
+            "showerror",
+            lambda *a, **k: shown.__setitem__("error", True),
+        )
+        app = _DummyPrintApp(doc=_make_doc())
+        app._send_to_printer(str(tmp_path / "x.pdf"))
+        assert shown["error"] is True
+        assert app.status is None
         app.doc.close()
 
     def test_unsupported_os_shows_info(self, tmp_path, monkeypatch):

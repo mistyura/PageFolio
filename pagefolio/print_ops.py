@@ -49,8 +49,11 @@ class PrintOpsMixin:
     def _send_to_printer(self, path):
         """OS の印刷機能へファイルを渡す。
 
-        Windows では ``os.startfile(path, "print")`` で既定 PDF アプリの印刷
-        動詞を起動する。それ以外の OS では未対応である旨を通知する。
+        Windows ではまず ``os.startfile(path, "print")`` で既定 PDF アプリの印刷
+        動詞を起動する。印刷動詞が関連付けられていない場合（WinError 1155 等）は、
+        既定アプリで PDF を開く（"open" 動詞）フォールバックを試み、ユーザーが
+        アプリ側から手動で印刷できるようにする。どちらも失敗した場合は、PDF を
+        開くアプリが無い旨を案内する。それ以外の OS では未対応である旨を通知する。
         """
         startfile = getattr(os, "startfile", None)
         if startfile is None:
@@ -58,13 +61,19 @@ class PrintOpsMixin:
                 self._t("info_title"), self._t("info_print_unsupported")
             )
             return
+        name = os.path.basename(path)
         try:
             startfile(path, "print")
-            self._set_status(
-                self._t("status_print_sent").format(name=os.path.basename(path))
-            )
-        except Exception as e:
-            logger.exception("印刷ジョブ送信失敗: %s", e)
+            self._set_status(self._t("status_print_sent").format(name=name))
+            return
+        except OSError as e:
+            # 印刷動詞が未関連付け等。既定アプリで開くフォールバックへ。
+            logger.warning("印刷動詞の起動に失敗、open 動詞で再試行: %s", e)
+        try:
+            startfile(path)
+            self._set_status(self._t("status_print_opened").format(name=name))
+        except OSError as e:
+            logger.exception("既定アプリでのオープンにも失敗: %s", e)
             messagebox.showerror(
-                self._t("err_print_title"), self._t("err_print_msg").format(e=e)
+                self._t("err_print_title"), self._t("err_print_no_handler")
             )

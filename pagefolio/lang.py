@@ -72,8 +72,16 @@ LANG = {
         "sec_print": "🖨 印刷",
         "btn_print": "🖨 印刷… (Ctrl+P)",
         "status_print_sent": "印刷ジョブを送信しました: {name}",
+        "status_print_opened": (
+            "既定のPDFアプリで開きました。アプリ側で印刷してください: {name}"
+        ),
         "err_print_title": "印刷エラー",
         "err_print_msg": "印刷に失敗しました:\n{e}",
+        "err_print_no_handler": (
+            "PDF を開くアプリが見つからないため印刷できませんでした。\n"
+            "PDF の既定アプリ（Adobe Acrobat Reader・Microsoft Edge など）を\n"
+            "設定してから、もう一度お試しください。"
+        ),
         "info_print_unsupported": (
             "印刷はこの OS では未対応です（Windows でご利用ください）。"
         ),
@@ -559,8 +567,16 @@ LANG = {
         "sec_print": "🖨 Print",
         "btn_print": "🖨 Print… (Ctrl+P)",
         "status_print_sent": "Print job sent: {name}",
+        "status_print_opened": (
+            "Opened in the default PDF app. Please print from there: {name}"
+        ),
         "err_print_title": "Print Error",
         "err_print_msg": "Failed to print:\n{e}",
+        "err_print_no_handler": (
+            "Could not print because no PDF application was found.\n"
+            "Set a default PDF app (e.g. Adobe Acrobat Reader or Microsoft Edge)\n"
+            "and try again."
+        ),
         "info_print_unsupported": (
             "Printing is not supported on this OS (please use Windows)."
         ),
