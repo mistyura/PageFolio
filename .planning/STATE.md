@@ -31,7 +31,7 @@ See: .planning/PROJECT.md (updated 2026-06-20)
 Phase: Milestone v1.6.0 complete（全 4 フェーズ達成・出荷）
 Plan: —
 Status: Awaiting next milestone
-Last activity: 2026-06-20 — Milestone v1.6.0 completed and archived
+Last activity: 2026-06-23 — Completed quick task 260623-rel: v1.6.1 マージ・リリース（GitHub Release v1.6.1 公開）
 
 ## v1.6.0 Phase Map
 
@@ -197,6 +197,7 @@ Decisions are logged in PROJECT.md Key Decisions table.
 | 260612-shc | ブランチ claude/sharp-carson-zqfduf を main へ fast-forward マージし v1.4.4 を確定（ページ→画像変換・縮小保存の上書き修正・OCR リラン/続きから再実行/サーキットブレーカー・OCR ヘッダー UI 改善・README Gemma 実績更新）。PyInstaller リビルド・ドキュメント更新・push・GitHub Release | 2026-06-12 | f9ec869 | [260612-shc-sharp-carson-zqfduf-v1-4-4](./quick/260612-shc-sharp-carson-zqfduf-v1-4-4/) |
 | 260622-grm | OCR テキスト抽出画面・LLM 設定ダイアログのタイムアウト上限を 600 秒 → 900 秒へ拡大（Spinbox 上限・クランプ計 4 箇所）。APP_VERSION を v1.6.1 へ更新・README/開発履歴.md 同期 | 2026-06-22 | 2bff34b | [260622-grm-great-maxwell-k67sbc-v1-6-1](./quick/260622-grm-great-maxwell-k67sbc-v1-6-1/) |
 | 260623-pwp | PDF パスワード対応（付与/解除・AES-256・暗号化PDFの認証オープン）と印刷機能（Ctrl+P・既定PDFハンドラ送信）を v1.6.1 に追加。新規 `password.py`/`print_ops.py`・テスト 16 件追加（計 611 件） | 2026-06-23 | — | [260623-pwp-great-maxwell-k67sbc-password-print](./quick/260623-pwp-great-maxwell-k67sbc-password-print/) |
+| 260623-rel | ブランチ claude/great-maxwell-k67sbc を main へマージし v1.6.1 をリリース。pytest 613 件グリーン・ruff クリーン検証、PyInstaller リビルド（`dist/PageFolio` 更新）、PR #25 マージ、注釈付きタグ `v1.6.1` 付与、GitHub Release を Latest 公開（PageFolio-v1.6.1-win64.zip + .sha256 添付） | 2026-06-23 | fd20608 | [260623-rel-v161-merge-release](./quick/260623-rel-v161-merge-release/) |
 
 ## Deferred Items
 
