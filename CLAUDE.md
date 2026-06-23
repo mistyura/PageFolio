@@ -39,6 +39,7 @@ PageFolio/
 │   ├── ui_builder.py          # UI構築 Mixin（スタイル・レイアウト）
 │   ├── file_ops.py            # ファイル操作 Mixin（open/save/undo/redo）
 │   ├── page_ops.py            # ページ操作 Mixin（回転/削除/トリミング/挿入/結合/分割）
+│   ├── print_ops.py           # 印刷 Mixin（PrintOpsMixin / write_print_tempfile）
 │   ├── viewer.py              # 表示 Mixin（プレビュー/ズーム/サムネイル/ポップアップ）
 │   ├── dnd.py                 # D&D Mixin（サムネイルのドラッグ並び替え）
 │   ├── pagination.py          # サムネイル窓計算 / local↔global インデックス変換（Tk・fitz 非依存の純関数群）
@@ -53,7 +54,8 @@ PageFolio/
 │   │   ├── plugin.py          # PluginDialog
 │   │   ├── merge.py           # MergeOrderDialog / MergeResizeDialog
 │   │   ├── llm_config.py      # LLMConfigDialog（OCR プロバイダ / モデル設定）
-│   │   └── export_images.py   # ExportImagesDialog（ページ→画像変換 / 範囲・スケール指定）
+│   │   ├── export_images.py   # ExportImagesDialog（ページ→画像変換 / 範囲・スケール指定）
+│   │   └── password.py        # SetPasswordDialog（パスワード付与の入力 UI）
 │   └── file_drop.py           # ファイル D&D（tkinterdnd2 連携）
 ├── pagefolio.ico              # アプリアイコン
 ├── PageFolio.spec             # PyInstaller ビルド定義（onedir 形式）
@@ -80,6 +82,8 @@ PageFolio/
 │   ├── test_md_render.py      # parse_markdown 純関数（行種別 / インライン span）テスト
 │   ├── test_export_images.py  # ページ→画像変換（範囲パース / スケール計算 / 出力）テスト
 │   ├── test_save_overwrite.py # 縮小して保存（上書き）ヘルパーのテスト
+│   ├── test_password.py       # PDF パスワード付与/解除・暗号化保存ヘルパーのテスト
+│   ├── test_print.py          # 印刷一時ファイル生成 / OS 分岐のテスト
 │   ├── test_lang_parity.py    # ja/en LANG キー一致 / プレースホルダ整合の回帰テスト
 │   └── test_source_keyguard.py  # pagefolio/ ソースの実 API キーパターン不在スキャン
 └── docs/                      # スクリーンショット画像
@@ -114,18 +118,19 @@ API キーは `_SENSITIVE_KEYS` ガードにより `pagefolio_settings.json` へ
 
 ### `pagefolio/app.py`
 
-`PDFEditorApp` メインクラス。6つの Mixin を統合し、`__init__`・キーバインド・ユーティリティメソッドを持つ。
+`PDFEditorApp` メインクラス。7つの Mixin を統合し、`__init__`・キーバインド・ユーティリティメソッドを持つ。
 
 ### Mixin モジュール群
 
 | モジュール | Mixin クラス | 責務 |
 |-----------|-------------|------|
 | `ui_builder.py` | `UIBuilderMixin` | スタイル定義・レイアウト構築 |
-| `file_ops.py` | `FileOpsMixin` | ファイル操作・Undo/Redo |
+| `file_ops.py` | `FileOpsMixin` | ファイル操作・Undo/Redo・パスワード付与/解除 |
 | `page_ops.py` | `PageOpsMixin` | ページ回転・削除・トリミング・挿入・結合・分割 |
 | `viewer.py` | `ViewerMixin` | プレビュー・ズーム・サムネイル・ポップアップ |
 | `dnd.py` | `DnDMixin` | サムネイル D&D 並び替え |
 | `ocr.py` | `OCRMixin` | OCR 起動・プロバイダ生成（`build_provider`）・ボタン状態管理 |
+| `print_ops.py` | `PrintOpsMixin` | 印刷（既定 PDF ハンドラへ送信・`write_print_tempfile`） |
 
 ### OCR モジュール群
 
@@ -265,7 +270,8 @@ C = dict(THEMES["dark"])  # 実行時に _apply_theme() で更新
 
 - トリミングは **選択中のページ全体** に一括適用（複数選択時は相対座標変換で各ページに適用）
 - D&D による複数ページ一括移動は **選択ページをまとめて移動**（単一ページ D&D も引き続き動作）
-- 暗号化・パスワード保護 PDF は開けない場合がある
+- パスワード保護 PDF は開く際にパスワード入力を求める（`_authenticate_doc`）。パスワードの付与（AES-256）/解除は「🔒 パスワード」セクションから別名保存で行う
+- 印刷は OS の既定 PDF ハンドラへ送る方式（Windows: `os.startfile(path, "print")`）。Windows 以外は未対応で情報通知に留める
 - `set_cropbox` によるトリミングはメタデータ上の cropbox 変更であり、PDF の物理的なページサイズは変わらない
 - サムネイルは `fitz.Matrix(0.22, 0.22)` のスケールで生成（変更時はパフォーマンスに注意）
 - プレビューは `self.zoom * 1.5` のスケールで生成
@@ -280,8 +286,8 @@ C = dict(THEMES["dark"])  # 実行時に _apply_theme() で更新
 ## 今後の追加予定機能
 
 - [x] ページの回転状態をプレビューに即時反映（v1.6.0 / V16-QUAL-01）
-- [ ] PDF のパスワード解除対応
-- [ ] 印刷機能
+- [x] PDF のパスワード対応（付与/解除・AES-256）（v1.6.1）
+- [x] 印刷機能（Ctrl+P・既定 PDF ハンドラ送信）（v1.6.1）
 
 > 実装済みの機能リストは [開発履歴.md](開発履歴.md) を参照。
 

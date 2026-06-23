@@ -5,13 +5,32 @@
 
 import logging
 import os
-from tkinter import filedialog, messagebox
+from tkinter import filedialog, messagebox, simpledialog
 
 import fitz
 
 from pagefolio.constants import IMAGE_EXTENSIONS, SUPPORTED_EXTENSIONS
 
 logger = logging.getLogger(__name__)
+
+
+class PDFPasswordError(Exception):
+    """パスワード付き PDF の認証がキャンセル/失敗したことを表す例外。"""
+
+
+def save_with_password(doc, path, password):
+    """doc を AES-256 で暗号化し、owner/user 両方に password を設定して保存する。"""
+    doc.save(
+        path,
+        encryption=fitz.PDF_ENCRYPT_AES_256,
+        owner_pw=password,
+        user_pw=password,
+    )
+
+
+def save_without_password(doc, path):
+    """doc を暗号化なし（パスワード解除済み）で保存する。"""
+    doc.save(path, encryption=fitz.PDF_ENCRYPT_NONE)
 
 
 class FileOpsMixin:
@@ -369,29 +388,69 @@ class FileOpsMixin:
         MergeOrderDialog(self.root, paths, self._do_open_merged, lang=self.lang)
 
     def _open_path_as_pdf(self, path):
-        """ファイルをPDF互換のDocumentとして開く。画像の場合はPDFに変換する。"""
+        """ファイルをPDF互換のDocumentとして開く。画像の場合はPDFに変換する。
+
+        暗号化 PDF はパスワードを入力させて認証する。直近に開いたファイルが
+        パスワードを要求したかは ``self._opened_needed_password`` に記録する
+        （呼び出し側がパスワード解除メニューの活性判定に利用）。
+        """
         ext = os.path.splitext(path)[1].lower()
         if ext in IMAGE_EXTENSIONS:
             img_doc = fitz.open(path)
             pdf_bytes = img_doc.convert_to_pdf()
             img_doc.close()
+            self._opened_needed_password = False
             return fitz.open(stream=pdf_bytes, filetype="pdf")
-        return fitz.open(path)
+        doc = fitz.open(path)
+        self._opened_needed_password = bool(doc.needs_pass)
+        if doc.needs_pass:
+            if not self._authenticate_doc(doc, path):
+                doc.close()
+                raise PDFPasswordError(self._t("status_password_cancelled"))
+        return doc
+
+    def _authenticate_doc(self, doc, path):
+        """パスワードを入力させて doc を認証する。成功で True、キャンセルで False。"""
+        name = os.path.basename(path)
+        prompt = self._t("open_password_prompt").format(name=name)
+        while True:
+            pw = simpledialog.askstring(
+                self._t("open_password_title"),
+                prompt,
+                show="*",
+                parent=self.root,
+            )
+            if pw is None:
+                return False
+            if doc.authenticate(pw):
+                return True
+            prompt = self._t("err_password_wrong").format(name=name)
 
     def _do_open_merged(self, ordered_paths):
         """結合順ダイアログ確定後、結合して開く"""
+        merged = fitz.open()
         try:
-            if self.doc:
-                self.doc.close()
-            merged = fitz.open()
             total = 0
             for path in ordered_paths:
                 src = self._open_path_as_pdf(path)
                 merged.insert_pdf(src)
                 total += len(src)
                 src.close()
+        except PDFPasswordError:
+            merged.close()
+            self._set_status(self._t("status_password_cancelled"))
+            return
+        except Exception as e:
+            merged.close()
+            messagebox.showerror(self._t("err_title"), str(e))
+            return
+        try:
+            if self.doc:
+                self.doc.close()
             self.doc = merged
             self.filepath = None
+            # 結合後の出力は暗号化なしの新規ドキュメント
+            self.pdf_has_password = False
             self.current_page = 0
             self.selected_pages.clear()
             self._undo_stack.clear()
@@ -411,11 +470,22 @@ class FileOpsMixin:
 
     def _open_pdf_path(self, path):
         """パス指定でPDFを開く（ダイアログ / D&D 共用）"""
+        # 認証成功まで現在の doc を閉じない（パスワードキャンセル時の取り違え防止）
+        try:
+            new_doc = self._open_path_as_pdf(path)
+        except PDFPasswordError:
+            self._set_status(self._t("status_password_cancelled"))
+            return
+        except Exception as e:
+            messagebox.showerror(self._t("err_title"), str(e))
+            return
+        had_password = getattr(self, "_opened_needed_password", False)
         try:
             if self.doc:
                 self.doc.close()
-            self.doc = self._open_path_as_pdf(path)
+            self.doc = new_doc
             self.filepath = path
+            self.pdf_has_password = had_password
             self.current_page = 0
             self.selected_pages.clear()
             self._undo_stack.clear()
@@ -545,6 +615,7 @@ class FileOpsMixin:
             logger.debug("doc.close 失敗: %s", e)
         self.doc = None
         self.filepath = None
+        self.pdf_has_password = False
         self.current_page = 0
         self.selected_pages.clear()
         self._undo_stack.clear()
@@ -582,6 +653,86 @@ class FileOpsMixin:
                 self.doc.save(path, **save_kwargs)
             self._set_status(
                 self._t("status_compressed").format(name=os.path.basename(path))
+            )
+        except Exception as e:
+            messagebox.showerror(self._t("err_title"), str(e))
+
+    # ══════════════════════════════════════════
+    #  パスワード（暗号化）操作
+    # ══════════════════════════════════════════
+    def _suggest_save_name(self, suffix):
+        """現在のファイル名に suffix を付けた保存ダイアログ用 kwargs を返す。"""
+        kwargs = {
+            "defaultextension": ".pdf",
+            "filetypes": [(self._t("filetypes_pdf"), "*.pdf")],
+        }
+        if self.filepath:
+            base = os.path.basename(self.filepath)
+            stem, _ext = os.path.splitext(base)
+            kwargs["initialdir"] = os.path.dirname(self.filepath)
+            kwargs["initialfile"] = f"{stem}{suffix}.pdf"
+        return kwargs
+
+    def _set_password(self):
+        """パスワードを設定（暗号化）して名前を付けて保存する。"""
+        if not self.doc:
+            messagebox.showinfo(self._t("info_title"), self._t("info_open_first"))
+            return
+        from pagefolio.dialogs import SetPasswordDialog
+
+        SetPasswordDialog(self.root, self._font, self._do_set_password, lang=self.lang)
+
+    def _do_set_password(self, password):
+        """SetPasswordDialog 確定後に暗号化保存を実行する。"""
+        path = filedialog.asksaveasfilename(
+            **self._suggest_save_name(self._t("pwd_suffix_protected"))
+        )
+        if not path:
+            return
+        kwargs = {
+            "encryption": fitz.PDF_ENCRYPT_AES_256,
+            "owner_pw": password,
+            "user_pw": password,
+        }
+        try:
+            if self._is_current_file(path):
+                # 元ファイルへ上書き → 開き直し後に同じパスワードで再認証し継続利用可に
+                self._overwrite_current_file(path, **kwargs)
+                self.filepath = path
+                if self.doc.needs_pass:
+                    self.doc.authenticate(password)
+                self.pdf_has_password = True
+            else:
+                save_with_password(self.doc, path, password)
+            self._set_status(
+                self._t("status_password_set").format(name=os.path.basename(path))
+            )
+        except Exception as e:
+            messagebox.showerror(self._t("err_title"), str(e))
+
+    def _remove_password(self):
+        """パスワード（暗号化）を解除して名前を付けて保存する。"""
+        if not self.doc:
+            messagebox.showinfo(self._t("info_title"), self._t("info_open_first"))
+            return
+        if not getattr(self, "pdf_has_password", False):
+            messagebox.showinfo(self._t("info_title"), self._t("info_no_password"))
+            return
+        path = filedialog.asksaveasfilename(
+            **self._suggest_save_name(self._t("pwd_suffix_decrypted"))
+        )
+        if not path:
+            return
+        kwargs = {"encryption": fitz.PDF_ENCRYPT_NONE}
+        try:
+            if self._is_current_file(path):
+                self._overwrite_current_file(path, **kwargs)
+                self.filepath = path
+                self.pdf_has_password = False
+            else:
+                save_without_password(self.doc, path)
+            self._set_status(
+                self._t("status_password_removed").format(name=os.path.basename(path))
             )
         except Exception as e:
             messagebox.showerror(self._t("err_title"), str(e))

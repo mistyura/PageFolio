@@ -2,7 +2,7 @@
 
 **PDF ページ整理ツール — Python + Tkinter 製 GUI アプリ**
 
-![Version](https://img.shields.io/badge/version-v1.6.0-blue)
+![Version](https://img.shields.io/badge/version-v1.6.1-blue)
 ![Stable](https://img.shields.io/badge/status-stable-green)
 
 A PDF page organizer built with Python + Tkinter.
@@ -41,6 +41,8 @@ It does **not** edit text or add annotations — it focuses on **page-level oper
 | ✂ 分割 | ページ範囲指定で分割 / 1ページずつ個別PDFに分割（縮小オプション付き） |
 | 🖼 画像変換 | ページを画像ファイルに変換（1ページ1ファイル・PNG/JPEG・長辺ピクセル指定）。AI（LLM）にテキストを読み取らせる用途に最適 |
 | 🗜 縮小保存 | garbage収集 + 圧縮でファイルサイズを最適化して保存（元ファイルへの上書きにも対応） |
+| 🔒 パスワード | パスワードの付与（AES-256 暗号化）/ 解除。保護された PDF は開く際にパスワード入力を要求 |
+| 🖨 印刷 | 現在のドキュメントを既定の PDF ハンドラ経由で印刷（Ctrl+P・編集結果を反映） |
 | 🔀 D&D 並び替え | サムネイルをドラッグ＆ドロップでページ順を変更（複数ページ一括移動対応） |
 | 📄 ページネーション表示 | 大量ページの PDF でサムネイル一覧をページ単位（既定 20・範囲 10〜100）で窓表示。ナビフッターと表示件数の永続化に対応（D&D・複数選択は全ページインデックスと整合） |
 | 📕 ファイルを閉じる | アプリを終了せず現在のファイルだけを閉じる |
@@ -81,7 +83,8 @@ No Python installation required.
 
 - トリミング・回転・削除は **選択中のページ** が対象です（未選択の場合は現在ページ）
 - 保存前にアプリを閉じると編集内容は失われます
-- 暗号化・パスワード保護された PDF は開けない場合があります
+- パスワード保護された PDF は開く際にパスワードの入力が必要です（パスワードの付与/解除は「🔒 パスワード」から）
+- 印刷は OS の既定 PDF アプリを利用します（Windows のみ対応）
 
 ---
 
