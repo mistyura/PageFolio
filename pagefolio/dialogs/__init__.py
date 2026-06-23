@@ -11,5 +11,6 @@ from pagefolio.dialogs.about import AboutDialog  # noqa: F401
 from pagefolio.dialogs.export_images import ExportImagesDialog  # noqa: F401
 from pagefolio.dialogs.llm_config import LLMConfigDialog  # noqa: F401
 from pagefolio.dialogs.merge import MergeOrderDialog, MergeResizeDialog  # noqa: F401
+from pagefolio.dialogs.password import SetPasswordDialog  # noqa: F401
 from pagefolio.dialogs.plugin import PluginDialog  # noqa: F401
 from pagefolio.dialogs.settings import SettingsDialog  # noqa: F401

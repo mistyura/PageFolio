@@ -18,6 +18,7 @@ from pagefolio.ocr import OCRMixin
 from pagefolio.page_ops import PageOpsMixin
 from pagefolio.pagination import clamp_page_size
 from pagefolio.plugins import PluginManager
+from pagefolio.print_ops import PrintOpsMixin
 from pagefolio.settings import (
     _apply_theme,
     _load_settings,
@@ -31,7 +32,13 @@ logger = logging.getLogger(__name__)
 
 
 class PDFEditorApp(
-    UIBuilderMixin, FileOpsMixin, PageOpsMixin, ViewerMixin, DnDMixin, OCRMixin
+    UIBuilderMixin,
+    FileOpsMixin,
+    PageOpsMixin,
+    ViewerMixin,
+    DnDMixin,
+    OCRMixin,
+    PrintOpsMixin,
 ):
     MAX_UNDO = 20
 
@@ -73,6 +80,9 @@ class PDFEditorApp(
 
         self.doc = None
         self.filepath = None
+        # 開いている PDF が元々パスワード保護されていたか（解除メニューの活性判定）
+        self.pdf_has_password = False
+        self._opened_needed_password = False
         self.current_page = 0
         self.selected_pages = set()
 
@@ -120,6 +130,7 @@ class PDFEditorApp(
             "save_as": "<Control-S>",
             "delete": "<Delete>",
             "toggle_mode": "<F5>",
+            "print_pdf": "<Control-p>",
         }
 
         custom_shortcuts = self.settings.get("shortcuts", {})
@@ -133,6 +144,7 @@ class PDFEditorApp(
             "save_as": self._save_as,
             "delete": self._delete_selected,
             "toggle_mode": self._toggle_edit_mode,
+            "print_pdf": self._print_pdf,
             "rotate_right": lambda: self._rotate_selected(90),
             "rotate_left": lambda: self._rotate_selected(270),
             "rotate_180": lambda: self._rotate_selected(180),

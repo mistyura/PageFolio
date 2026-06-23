@@ -38,6 +38,45 @@ LANG = {
         "btn_save_as": "名前を付けて保存 (Ctrl+Shift+S)",
         "btn_close_file": "📕 ファイルを閉じる",
         "btn_quit": "✕ 終了",
+        # パスワード（暗号化）
+        "sec_security": "🔒 パスワード",
+        "btn_set_password": "🔒 パスワードを設定して保存…",
+        "btn_remove_password": "🔓 パスワードを解除して保存…",
+        "pwd_dialog_title": "パスワードを設定",
+        "pwd_dialog_heading": "パスワードを設定",
+        "pwd_dialog_hint": (
+            "PDF を AES-256 で暗号化します。\n"
+            "設定したパスワードは開く際に必要になります。忘れないでください。"
+        ),
+        "pwd_label": "パスワード:",
+        "pwd_confirm_label": "確認入力:",
+        "pwd_show": "パスワードを表示",
+        "pwd_apply": "✔ 設定して保存…",
+        "pwd_cancel": "キャンセル",
+        "pwd_empty": "パスワードを入力してください。",
+        "pwd_mismatch": "パスワードが一致しません。",
+        "pwd_suffix_protected": "_protected",
+        "pwd_suffix_decrypted": "_decrypted",
+        "open_password_title": "パスワード入力",
+        "open_password_prompt": (
+            "「{name}」はパスワードで保護されています。\nパスワードを入力してください:"
+        ),
+        "err_password_wrong": (
+            "パスワードが違います。\n「{name}」のパスワードを再入力してください:"
+        ),
+        "status_password_cancelled": "パスワード入力をキャンセルしました",
+        "status_password_set": "パスワードを設定して保存しました: {name}",
+        "status_password_removed": "パスワードを解除して保存しました: {name}",
+        "info_no_password": "このファイルにはパスワードが設定されていません。",
+        # 印刷
+        "sec_print": "🖨 印刷",
+        "btn_print": "🖨 印刷… (Ctrl+P)",
+        "status_print_sent": "印刷ジョブを送信しました: {name}",
+        "err_print_title": "印刷エラー",
+        "err_print_msg": "印刷に失敗しました:\n{e}",
+        "info_print_unsupported": (
+            "印刷はこの OS では未対応です（Windows でご利用ください）。"
+        ),
         # Undo/Redo
         "btn_undo": "↩ Ctrl+Z",
         "btn_redo": "↪ Ctrl+Y",
@@ -486,6 +525,45 @@ LANG = {
         "btn_save_as": "Save As (Ctrl+Shift+S)",
         "btn_close_file": "📕 Close File",
         "btn_quit": "✕ Quit",
+        # Password (encryption)
+        "sec_security": "🔒 Password",
+        "btn_set_password": "🔒 Set Password & Save…",
+        "btn_remove_password": "🔓 Remove Password & Save…",
+        "pwd_dialog_title": "Set Password",
+        "pwd_dialog_heading": "Set Password",
+        "pwd_dialog_hint": (
+            "Encrypt the PDF with AES-256.\n"
+            "The password will be required to open the file. Don't forget it."
+        ),
+        "pwd_label": "Password:",
+        "pwd_confirm_label": "Confirm:",
+        "pwd_show": "Show password",
+        "pwd_apply": "✔ Set & Save…",
+        "pwd_cancel": "Cancel",
+        "pwd_empty": "Please enter a password.",
+        "pwd_mismatch": "Passwords do not match.",
+        "pwd_suffix_protected": "_protected",
+        "pwd_suffix_decrypted": "_decrypted",
+        "open_password_title": "Enter Password",
+        "open_password_prompt": (
+            '"{name}" is password-protected.\nPlease enter the password:'
+        ),
+        "err_password_wrong": (
+            'Incorrect password.\nRe-enter the password for "{name}":'
+        ),
+        "status_password_cancelled": "Password entry cancelled",
+        "status_password_set": "Saved with password: {name}",
+        "status_password_removed": "Saved with password removed: {name}",
+        "info_no_password": "This file has no password set.",
+        # Print
+        "sec_print": "🖨 Print",
+        "btn_print": "🖨 Print… (Ctrl+P)",
+        "status_print_sent": "Print job sent: {name}",
+        "err_print_title": "Print Error",
+        "err_print_msg": "Failed to print:\n{e}",
+        "info_print_unsupported": (
+            "Printing is not supported on this OS (please use Windows)."
+        ),
         # Undo/Redo
         "btn_undo": "↩ Ctrl+Z",
         "btn_redo": "↪ Ctrl+Y",

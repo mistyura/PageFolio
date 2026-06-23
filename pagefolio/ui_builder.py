@@ -447,6 +447,25 @@ class UIBuilderMixin:
         btn(f, self._t("btn_close_file"), self._close_file, needs_doc=True)
         btn(f, self._t("btn_quit"), self._quit, "Danger.TButton")
 
+        # パスワード（暗号化）— 別名保存のため閲覧モードでも使用可
+        f_sec = section(self._t("sec_security"))
+        btn(
+            f_sec,
+            self._t("btn_set_password"),
+            self._set_password,
+            needs_doc=True,
+        )
+        btn(
+            f_sec,
+            self._t("btn_remove_password"),
+            self._remove_password,
+            needs_doc=True,
+        )
+
+        # 印刷 — 既定の PDF ハンドラへ送るため閲覧モードでも使用可
+        f_print = section(self._t("sec_print"))
+        btn(f_print, self._t("btn_print"), self._print_pdf, needs_doc=True)
+
         f_ur = section(self._t("sec_undo"))
         ur_row = tk.Frame(f_ur, bg=C["BG_CARD"])
         ur_row.pack(fill="x", padx=6, pady=2)
