@@ -203,6 +203,16 @@ def _resolve_api_key(provider_name, session_keys):
         # どちらも未設定 → 主変数名 GEMINI_API_KEY でエラー（D-06）
         raise OCRAPIKeyError("GEMINI_API_KEY")
 
+    if provider_name == "runpod":
+        env_var = "RUNPOD_API_KEY"
+        key = os.environ.get(env_var)
+        if key:
+            return key
+        key = session_keys.get("runpod", "")
+        if key:
+            return key
+        raise OCRAPIKeyError(env_var)
+
     # 未対応プロバイダ
     raise OCRAPIKeyError(f"{provider_name.upper()}_API_KEY")
 
@@ -623,6 +633,29 @@ def build_provider(settings, api_key=None, plugin_manager=None):
             max_tokens=mt,
             temperature=float(settings.get("ocr_temperature", DEFAULT_OCR_TEMPERATURE)),
         )
+    elif name == "ollama":
+        from pagefolio.ocr_providers import OllamaProvider
+
+        return OllamaProvider(
+            url=settings.get("ollama_url", "http://localhost:11434"),
+            model=settings.get("ollama_model", ""),
+            timeout=int(settings.get("ocr_timeout", DEFAULT_OCR_TIMEOUT)),
+            max_tokens=int(settings.get("ocr_max_tokens", DEFAULT_OCR_MAX_TOKENS)),
+            temperature=float(settings.get("ocr_temperature", DEFAULT_OCR_TEMPERATURE)),
+        )
+    elif name == "runpod":
+        from pagefolio.ocr_providers import RunPodProvider
+
+        mt = int(settings.get("ocr_max_tokens", DEFAULT_OCR_MAX_TOKENS))
+        mt = 4096 if mt <= 0 else mt
+        return RunPodProvider(
+            api_key=api_key or "",
+            url=settings.get("runpod_url", ""),
+            model=settings.get("runpod_model", ""),
+            timeout=int(settings.get("ocr_timeout", DEFAULT_OCR_TIMEOUT)),
+            max_tokens=mt,
+            temperature=float(settings.get("ocr_temperature", DEFAULT_OCR_TEMPERATURE)),
+        )
     elif name == "tesseract":
         from pagefolio.ocr_providers import TesseractProvider
 
@@ -684,7 +717,7 @@ class OCRMixin:
         # 中止する（成功基準2 は OCRDialog._on_run が担保）。
         name = self.settings.get("ocr_provider", "")
         api_key = None
-        _cloud_providers = {"claude", "gemini"}  # Phase 6: gemini 追加
+        _cloud_providers = {"claude", "gemini", "runpod"}  # Phase 6: gemini 追加, runpod 追加
         if name in _cloud_providers:
             from pagefolio.ocr_providers import OCRAPIKeyError
 

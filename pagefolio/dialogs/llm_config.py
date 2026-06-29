@@ -108,7 +108,7 @@ class LLMConfigDialog(tk.Toplevel):
             value=self.current_settings.get("ocr_provider", "off"),
         )
         # プロバイダ一覧を動的構築（D-08）: 基本 + tesseract + プラグイン登録
-        _base_providers = ["off", "lmstudio", "claude", "gemini", "tesseract"]
+        _base_providers = ["off", "lmstudio", "ollama", "runpod", "claude", "gemini", "tesseract"]
         _plugin_extras = (
             list(self._plugin_manager._provider_registry.keys())
             if self._plugin_manager
@@ -208,6 +208,147 @@ class LLMConfigDialog(tk.Toplevel):
             lm_btn_row,
             text=self._L["settings_lm_test"],
             command=self._test_connection,
+        ).pack(side="left", padx=2)
+
+        # ── Ollama 固有欄（ollama 選択時のみ表示）──
+        self.ollama_section_frame = tk.Frame(self, bg=C["BG_DARK"])
+
+        # URL
+        ollama_url_row = tk.Frame(self.ollama_section_frame, bg=C["BG_DARK"])
+        ollama_url_row.pack(fill="x", padx=0, pady=2)
+        tk.Label(
+            ollama_url_row,
+            text=self._L["settings_ollama_url"],
+            bg=C["BG_DARK"],
+            fg=C["TEXT_MAIN"],
+            font=self._font(-1),
+            width=20,
+            anchor="w",
+        ).pack(side="left")
+        self.ollama_url_var = tk.StringVar(
+            value=self.current_settings.get("ollama_url", "http://localhost:11434"),
+        )
+        tk.Entry(
+            ollama_url_row,
+            textvariable=self.ollama_url_var,
+            font=self._font(-1),
+            bg=C["BG_CARD"],
+            fg=C["TEXT_MAIN"],
+            insertbackground=C["TEXT_MAIN"],
+            relief="flat",
+        ).pack(side="left", fill="x", expand=True, padx=4)
+
+        # Ollama モデル
+        ollama_model_row = tk.Frame(self.ollama_section_frame, bg=C["BG_DARK"])
+        ollama_model_row.pack(fill="x", padx=0, pady=2)
+        tk.Label(
+            ollama_model_row,
+            text=self._L["settings_ollama_model"],
+            bg=C["BG_DARK"],
+            fg=C["TEXT_MAIN"],
+            font=self._font(-1),
+            width=20,
+            anchor="w",
+        ).pack(side="left")
+        self.ollama_model_var = tk.StringVar(
+            value=self.current_settings.get("ollama_model", ""),
+        )
+        self.ollama_model_combo = ttk.Combobox(
+            ollama_model_row,
+            textvariable=self.ollama_model_var,
+            font=self._font(-1),
+            values=[],
+        )
+        self.ollama_model_combo.pack(side="left", fill="x", expand=True, padx=4)
+
+        tk.Label(
+            self.ollama_section_frame,
+            text=self._L["settings_ollama_model_hint"],
+            bg=C["BG_DARK"],
+            fg=C["TEXT_SUB"],
+            font=self._font(-2),
+        ).pack(anchor="w")
+
+        # Ollama 接続テスト・モデル取得ボタン
+        ollama_btn_row = tk.Frame(self.ollama_section_frame, bg=C["BG_DARK"])
+        ollama_btn_row.pack(fill="x", padx=0, pady=(6, 2))
+        ttk.Button(
+            ollama_btn_row,
+            text=self._L["settings_lm_fetch_models"],
+            command=self._fetch_ollama_models,
+        ).pack(side="left", padx=2)
+        ttk.Button(
+            ollama_btn_row,
+            text=self._L["settings_lm_test"],
+            command=self._test_ollama_connection,
+        ).pack(side="left", padx=2)
+
+        # ── RunPod 固有欄（runpod 選択時のみ表示）──
+        self.runpod_section_frame = tk.Frame(self, bg=C["BG_DARK"])
+
+        # URL
+        runpod_url_row = tk.Frame(self.runpod_section_frame, bg=C["BG_DARK"])
+        runpod_url_row.pack(fill="x", padx=0, pady=2)
+        tk.Label(
+            runpod_url_row,
+            text=self._L["settings_runpod_url"],
+            bg=C["BG_DARK"],
+            fg=C["TEXT_MAIN"],
+            font=self._font(-1),
+            width=20,
+            anchor="w",
+        ).pack(side="left")
+        self.runpod_url_var = tk.StringVar(
+            value=self.current_settings.get("runpod_url", ""),
+        )
+        tk.Entry(
+            runpod_url_row,
+            textvariable=self.runpod_url_var,
+            font=self._font(-1),
+            bg=C["BG_CARD"],
+            fg=C["TEXT_MAIN"],
+            insertbackground=C["TEXT_MAIN"],
+            relief="flat",
+        ).pack(side="left", fill="x", expand=True, padx=4)
+
+        # RunPod モデル
+        runpod_model_row = tk.Frame(self.runpod_section_frame, bg=C["BG_DARK"])
+        runpod_model_row.pack(fill="x", padx=0, pady=2)
+        tk.Label(
+            runpod_model_row,
+            text=self._L["settings_runpod_model"],
+            bg=C["BG_DARK"],
+            fg=C["TEXT_MAIN"],
+            font=self._font(-1),
+            width=20,
+            anchor="w",
+        ).pack(side="left")
+        self.runpod_model_var = tk.StringVar(
+            value=self.current_settings.get("runpod_model", ""),
+        )
+        self.runpod_model_combo = ttk.Combobox(
+            runpod_model_row,
+            textvariable=self.runpod_model_var,
+            font=self._font(-1),
+            values=[],
+        )
+        self.runpod_model_combo.pack(side="left", fill="x", expand=True, padx=4)
+
+        tk.Label(
+            self.runpod_section_frame,
+            text=self._L["settings_runpod_model_hint"],
+            bg=C["BG_DARK"],
+            fg=C["TEXT_SUB"],
+            font=self._font(-2),
+        ).pack(anchor="w")
+
+        # RunPod モデル更新ボタン
+        runpod_btn_row = tk.Frame(self.runpod_section_frame, bg=C["BG_DARK"])
+        runpod_btn_row.pack(fill="x", padx=0, pady=(4, 2))
+        ttk.Button(
+            runpod_btn_row,
+            text=self._L["ocr_model_refresh"],
+            command=self._refresh_runpod_models,
         ).pack(side="left", padx=2)
 
         # ── Claude 固有欄（claude 選択時のみ表示）──
@@ -608,6 +749,22 @@ class LLMConfigDialog(tk.Toplevel):
         else:
             self.url_section_frame.pack_forget()
 
+        # Ollama 固有欄
+        if provider == "ollama":
+            self.ollama_section_frame.pack(
+                fill="x", padx=24, pady=(4, 2), before=self.scale_row
+            )
+        else:
+            self.ollama_section_frame.pack_forget()
+
+        # RunPod 固有欄
+        if provider == "runpod":
+            self.runpod_section_frame.pack(
+                fill="x", padx=24, pady=(4, 2), before=self.scale_row
+            )
+        else:
+            self.runpod_section_frame.pack_forget()
+
         # Claude 固有欄
         if provider == "claude":
             self.claude_section_frame.pack(
@@ -763,6 +920,81 @@ class LLMConfigDialog(tk.Toplevel):
             self._L["settings_lm_test_ok"].format(count=len(models)), kind="ok"
         )
 
+    # ── Ollama モデル取得・テスト ────────────────────────
+    def _fetch_ollama_models(self):
+        """Ollama からモデル一覧を取得して Combobox に反映する。"""
+        url = self.ollama_url_var.get().strip()
+        if not url:
+            self._set_lm_status(
+                self._L["settings_lm_test_fail"].format(error="URL is empty"),
+                kind="fail",
+            )
+            return
+        self._set_lm_status(self._L["settings_lm_testing"].format(url=url), kind="info")
+        try:
+            from pagefolio.ocr_providers import OllamaProvider
+            models = OllamaProvider(url=url, model="").list_models()
+        except (ConnectionError, TimeoutError, RuntimeError) as e:
+            self._set_lm_status(
+                self._L["settings_lm_test_fail"].format(error=str(e)), kind="fail"
+            )
+            return
+        self.ollama_model_combo["values"] = models
+        self._set_lm_status(
+            self._L["settings_lm_test_ok"].format(count=len(models)), kind="ok"
+        )
+
+    def _test_ollama_connection(self):
+        """Ollama への接続をテストする。"""
+        url = self.ollama_url_var.get().strip()
+        if not url:
+            self._set_lm_status(
+                self._L["settings_lm_test_fail"].format(error="URL is empty"),
+                kind="fail",
+            )
+            return
+        self._set_lm_status(self._L["settings_lm_testing"].format(url=url), kind="info")
+        try:
+            from pagefolio.ocr_providers import OllamaProvider
+            models = OllamaProvider(url=url, model="").list_models()
+        except (ConnectionError, TimeoutError, RuntimeError) as e:
+            self._set_lm_status(
+                self._L["settings_lm_test_fail"].format(error=str(e)), kind="fail"
+            )
+            return
+        self._set_lm_status(
+            self._L["settings_lm_test_ok"].format(count=len(models)), kind="ok"
+        )
+
+    # ── RunPod モデル更新 ───────────────────────────────
+    def _refresh_runpod_models(self):
+        """RunPod モデル一覧を取得して Combobox に反映する。"""
+        self._set_lm_status(self._L["llm_fetching_runpod_models"], kind="info")
+        api_key = os.environ.get("RUNPOD_API_KEY", "")
+        url = self.runpod_url_var.get().strip()
+        if not api_key:
+            self._set_lm_status(
+                self._L["llm_env_key_unset_static_runpod"],
+                kind="info",
+            )
+            return
+        try:
+            from pagefolio.ocr_providers import RunPodProvider
+            models = RunPodProvider(api_key=api_key, url=url, model="").list_models()
+        except Exception as e:
+            logger.warning(
+                self._L["llm_model_fetch_failed"].format(provider="RunPod", e=e)
+            )
+            self._set_lm_status(
+                str(e),
+                kind="fail",
+            )
+            return
+        self.runpod_model_combo["values"] = models
+        self._set_lm_status(
+            self._L["settings_lm_test_ok"].format(count=len(models)), kind="ok"
+        )
+
     # ── Claude モデル更新 ───────────────────────────────
     def _refresh_claude_models(self):
         """Claude モデル一覧を取得して Combobox に反映する。
@@ -855,6 +1087,16 @@ class LLMConfigDialog(tk.Toplevel):
             "http://localhost:1234"
         )
         llm_settings["lm_studio_model"] = self.lm_model_var.get().strip()
+
+        # Ollama 設定
+        llm_settings["ollama_url"] = self.ollama_url_var.get().strip() or (
+            "http://localhost:11434"
+        )
+        llm_settings["ollama_model"] = self.ollama_model_var.get().strip()
+
+        # RunPod 設定
+        llm_settings["runpod_url"] = self.runpod_url_var.get().strip()
+        llm_settings["runpod_model"] = self.runpod_model_var.get().strip()
 
         # Claude 設定（claude_model・ocr_effort は api_key と異なり無害な設定値）
         llm_settings["claude_model"] = (

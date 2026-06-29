@@ -839,3 +839,290 @@ class TesseractProvider(OCRProvider):
         戻り値: ["tesseract"]（固定の単一エントリ）
         """
         return ["tesseract"]
+
+
+class OllamaProvider(OCRProvider):
+    """Ollama OpenAI 互換 API プロバイダ（urllib 直叩き）。
+
+    Ollama の /v1/chat/completions エンドポイントを使って OCR を実行する。
+    接続先は settings 由来の URL（既定: http://localhost:11434）を使用する。
+    """
+
+    default_concurrency = 2
+    max_concurrency = 8
+
+    def __init__(self, url, model, timeout=120, max_tokens=-1, temperature=0.1):
+        """初期化。
+
+        引数:
+          url:         Ollama サーバの URL（例: "http://localhost:11434"）
+          model:       使用するモデル名（空文字なら "llava" にフォールバック）
+          timeout:     HTTP タイムアウト秒数（既定: 120）
+          max_tokens:  最大トークン数（-1 でモデル最大値に委ねる）
+          temperature: 温度パラメータ（OCR 用途は低温推奨、既定: 0.1）
+        """
+        self.url = url or "http://localhost:11434"
+        self.model = model
+        self.timeout = timeout
+        self.max_tokens = max_tokens
+        self.temperature = temperature
+
+    def _build_payload(self, b64_png, prompt):
+        """Ollama Chat Completions リクエストボディを構築する（内部メソッド）。"""
+        return {
+            "model": self.model or "llava",
+            "messages": [
+                {
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "image_url",
+                            "image_url": {
+                                "url": f"data:image/png;base64,{b64_png}",
+                            },
+                        },
+                        {"type": "text", "text": prompt},
+                    ],
+                }
+            ],
+            "max_tokens": self.max_tokens,
+            "temperature": self.temperature,
+            "stream": False,
+        }
+
+    def ocr_image(self, b64_png, prompt, **kwargs):
+        """Ollama Chat Completions API を呼び出して OCR テキストを返す。
+
+        引数:
+          b64_png: PNG 画像の base64 文字列
+          prompt:  OCR 指示テキスト
+          **kwargs: 未使用（インターフェース互換のため受け取る）
+
+        戻り値: OCR 結果テキスト（str）
+
+        例外:
+          ConnectionError: 接続失敗（Ollama 未起動等）
+          TimeoutError:    タイムアウト
+          RuntimeError:    HTTP エラー（4xx/5xx）またはレスポンス形式不正
+        """
+        endpoint = self.url.rstrip("/") + "/v1/chat/completions"
+        payload = self._build_payload(b64_png, prompt)
+        data = json.dumps(payload).encode("utf-8")
+        req = urllib.request.Request(  # noqa: S310
+            endpoint,
+            data=data,
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        try:
+            with urllib.request.urlopen(req, timeout=self.timeout) as resp:  # noqa: S310
+                body = resp.read().decode("utf-8")
+        except urllib.error.HTTPError as e:
+            try:
+                err_body = e.read().decode("utf-8", errors="replace")
+            except Exception:
+                err_body = ""
+            raise RuntimeError(f"HTTP {e.code}: {err_body or e.reason}") from e
+        except socket.timeout as e:
+            raise TimeoutError(f"timed out after {self.timeout}s") from e
+        except urllib.error.URLError as e:
+            reason = getattr(e, "reason", e)
+            if isinstance(reason, socket.timeout):
+                raise TimeoutError(f"timed out after {self.timeout}s") from e
+            raise ConnectionError(str(reason)) from e
+
+        try:
+            result = json.loads(body)
+            return result["choices"][0]["message"]["content"]
+        except (KeyError, IndexError, json.JSONDecodeError, TypeError) as e:
+            raise RuntimeError(f"Unexpected response format: {body[:500]}") from e
+
+    def list_models(self):
+        """Ollama /v1/models からモデル ID リストを取得する。
+
+        戻り値: モデル ID 文字列のリスト（list[str]）。None id は除外される。
+
+        例外:
+          ConnectionError: 接続失敗
+          TimeoutError:    タイムアウト
+          RuntimeError:    HTTP エラーまたはレスポンス形式不正
+        """
+        timeout = 10  # モデル一覧取得は短めのタイムアウト
+        endpoint = self.url.rstrip("/") + "/v1/models"
+        req = urllib.request.Request(endpoint, method="GET")  # noqa: S310
+        try:
+            with urllib.request.urlopen(req, timeout=timeout) as resp:  # noqa: S310
+                body = resp.read().decode("utf-8")
+        except socket.timeout as e:
+            raise TimeoutError(f"timed out after {timeout}s") from e
+        except urllib.error.HTTPError as e:
+            raise RuntimeError(f"HTTP {e.code}: {e.reason}") from e
+        except urllib.error.URLError as e:
+            reason = getattr(e, "reason", e)
+            if isinstance(reason, socket.timeout):
+                raise TimeoutError(f"timed out after {timeout}s") from e
+            raise ConnectionError(str(reason)) from e
+
+        try:
+            data = json.loads(body)
+        except json.JSONDecodeError as e:
+            raise RuntimeError(f"Unexpected response: {body[:500]}") from e
+        return [m.get("id") for m in data.get("data", []) if m.get("id")]
+
+
+class RunPodProvider(OCRProvider):
+    """RunPod Serverless OpenAI 互換 Vision API プロバイダ（urllib 直叩き）。
+
+    RunPod の API キーは環境変数 RUNPOD_API_KEY から取得し、settings には保存しない。
+    接続先エンドポイント URL は settings 由来の URL を使用する。
+    """
+
+    default_concurrency = 2
+    max_concurrency = 4
+
+    def __init__(self, api_key, url, model, timeout=120, max_tokens=-1, temperature=0.1):
+        """初期化。
+
+        引数:
+          api_key:     RunPod API キー（環境変数 RUNPOD_API_KEY 由来）
+          url:         RunPod Serverless エンドポイント URL
+          model:       使用するモデル名（空文字なら "runpod-model" にフォールバック）
+          timeout:     HTTP タイムアウト秒数（既定: 120）
+          max_tokens:  最大トークン数（-1 でモデル最大値に委ねる）
+          temperature: 温度パラメータ（OCR 用途は低温推奨、既定: 0.1）
+        """
+        self.api_key = api_key
+        self.url = url
+        self.model = model
+        self.timeout = timeout
+        self.max_tokens = max_tokens
+        self.temperature = temperature
+
+    def _build_payload(self, b64_png, prompt):
+        """RunPod Chat Completions リクエストボディを構築する（内部メソッド）。"""
+        return {
+            "model": self.model or "runpod-model",
+            "messages": [
+                {
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "image_url",
+                            "image_url": {
+                                "url": f"data:image/png;base64,{b64_png}",
+                            },
+                        },
+                        {"type": "text", "text": prompt},
+                    ],
+                }
+            ],
+            "max_tokens": self.max_tokens,
+            "temperature": self.temperature,
+            "stream": False,
+        }
+
+    def ocr_image(self, b64_png, prompt, **kwargs):
+        """RunPod Serverless API を呼び出して OCR テキストを返す。
+
+        引数:
+          b64_png: PNG 画像の base64 文字列
+          prompt:  OCR 指示テキスト
+          **kwargs: 未使用（インターフェース互換のため受け取る）
+
+        戻り値: OCR 結果テキスト（str）
+
+        例外:
+          OCRAPIKeyError:  APIキー未設定
+          ConnectionError: 接続失敗
+          TimeoutError:    タイムアウト
+          RuntimeError:    HTTP エラー（4xx/5xx）またはレスポンス形式不正
+        """
+        if not self.api_key:
+            raise OCRAPIKeyError("RUNPOD_API_KEY")
+        if not self.url:
+            raise RuntimeError("RunPod エンドポイントURLが設定されていません")
+
+        base_url = self.url.rstrip("/")
+        if base_url.endswith("/v1"):
+            endpoint = base_url + "/chat/completions"
+        elif "/v1/" in base_url and not base_url.endswith("/chat/completions"):
+            endpoint = base_url + "/chat/completions"
+        else:
+            endpoint = base_url + "/chat/completions"
+
+        payload = self._build_payload(b64_png, prompt)
+        data = json.dumps(payload).encode("utf-8")
+        req = urllib.request.Request(  # noqa: S310
+            endpoint,
+            data=data,
+            headers={
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {self.api_key}",
+            },
+            method="POST",
+        )
+        try:
+            with urllib.request.urlopen(req, timeout=self.timeout) as resp:  # noqa: S310
+                body = resp.read().decode("utf-8")
+        except urllib.error.HTTPError as e:
+            if e.code == 429 or e.code >= 500:
+                retry_after = None
+                raw_retry = e.headers.get("Retry-After") if e.headers else None
+                if raw_retry:
+                    try:
+                        retry_after = float(raw_retry)
+                    except (ValueError, TypeError):
+                        retry_after = None
+                raise OCRRetryableError(
+                    _retryable_http_message(e.code),
+                    retry_after=retry_after,
+                    code=e.code,
+                ) from e
+            try:
+                err_body = e.read().decode("utf-8", errors="replace")
+            except Exception:
+                err_body = ""
+            raise RuntimeError(f"HTTP {e.code}: {err_body or e.reason}") from e
+        except socket.timeout as e:
+            raise TimeoutError(f"timed out after {self.timeout}s") from e
+        except urllib.error.URLError as e:
+            reason = getattr(e, "reason", e)
+            if isinstance(reason, socket.timeout):
+                raise TimeoutError(f"timed out after {self.timeout}s") from e
+            raise ConnectionError(str(reason)) from e
+
+        try:
+            result = json.loads(body)
+            return result["choices"][0]["message"]["content"]
+        except (KeyError, IndexError, json.JSONDecodeError, TypeError) as e:
+            raise RuntimeError(f"Unexpected response format: {body[:500]}") from e
+
+    def list_models(self):
+        """RunPod /models からモデル ID リストを取得する。"""
+        if not self.api_key or not self.url:
+            return [self.model] if self.model else ["runpod-model"]
+
+        timeout = 10
+        base_url = self.url.rstrip("/")
+        if base_url.endswith("/v1"):
+            endpoint = base_url + "/models"
+        else:
+            endpoint = base_url + "/models"
+
+        req = urllib.request.Request(  # noqa: S310
+            endpoint,
+            headers={"Authorization": f"Bearer {self.api_key}"},
+            method="GET",
+        )
+        try:
+            with urllib.request.urlopen(req, timeout=timeout) as resp:  # noqa: S310
+                body = resp.read().decode("utf-8")
+        except Exception:
+            return [self.model] if self.model else ["runpod-model"]
+
+        try:
+            data = json.loads(body)
+            return [m.get("id") for m in data.get("data", []) if m.get("id")]
+        except Exception:
+            return [self.model] if self.model else ["runpod-model"]
+

@@ -23,6 +23,8 @@ _SENSITIVE_KEYS = {
     "GEMINI_API_KEY",  # WR-03: 大文字バリアント
     "GOOGLE_API_KEY",  # WR-03: Gemini フォールバックキー名（大文字・D-06）
     "ANTHROPIC_API_KEY",  # WR-03: 大文字バリアント
+    "runpod_api_key",  # RunPod APIキー（小文字）
+    "RUNPOD_API_KEY",  # RunPod APIキー（大文字）
 }
 
 
@@ -49,6 +51,10 @@ def _load_settings():
         # OCR (LM Studio) 関連デフォルト値
         "lm_studio_url": "http://localhost:1234",
         "lm_studio_model": "",
+        "ollama_url": "http://localhost:11434",
+        "ollama_model": "",
+        "runpod_url": "",
+        "runpod_model": "",
         "ocr_prompt_preset": "text",
         "ocr_scale": 1.5,  # D-11: 新規ユーザー既定を 1.5 へ変更（低スペック PC 推奨）
         "ocr_timeout": 120,
