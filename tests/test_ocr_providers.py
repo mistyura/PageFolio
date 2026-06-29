@@ -1555,7 +1555,8 @@ class TestOllamaProvider:
     """OllamaProvider の振る舞いを確認する"""
 
     def test_subclass_and_basic(self):
-        from pagefolio.ocr_providers import OllamaProvider, OCRProvider
+        from pagefolio.ocr_providers import OCRProvider, OllamaProvider
+
         assert issubclass(OllamaProvider, OCRProvider)
         p = OllamaProvider("http://localhost:11434", "llava")
         assert p.url == "http://localhost:11434"
@@ -1565,6 +1566,7 @@ class TestOllamaProvider:
 
     def test_ocr_image_success(self, monkeypatch):
         from pagefolio import ocr_providers
+
         body = json.dumps({"choices": [{"message": {"content": "Ollama OCR"}}]})
 
         def fake_urlopen(req, timeout=None):
@@ -1583,7 +1585,8 @@ class TestRunPodProvider:
     """RunPodProvider の振る舞いを確認する"""
 
     def test_subclass_and_basic(self):
-        from pagefolio.ocr_providers import RunPodProvider, OCRProvider
+        from pagefolio.ocr_providers import OCRProvider, RunPodProvider
+
         assert issubclass(RunPodProvider, OCRProvider)
         p = RunPodProvider("api-key", "https://api.runpod.ai/v1/endpoint", "model")
         assert p.api_key == "api-key"
@@ -1591,14 +1594,17 @@ class TestRunPodProvider:
         assert p.model == "model"
 
     def test_ocr_image_missing_key(self):
-        from pagefolio.ocr_providers import RunPodProvider, OCRAPIKeyError
+        from pagefolio.ocr_providers import OCRAPIKeyError, RunPodProvider
+
         p = RunPodProvider("", "https://api.runpod.ai/v1/endpoint", "model")
         import pytest
+
         with pytest.raises(OCRAPIKeyError):
             p.ocr_image("Zg==", "テスト")
 
     def test_ocr_image_success(self, monkeypatch):
         from pagefolio import ocr_providers
+
         body = json.dumps({"choices": [{"message": {"content": "RunPod OCR"}}]})
 
         def fake_urlopen(req, timeout=None):
@@ -1609,20 +1615,29 @@ class TestRunPodProvider:
             return _FakeResponse(body)
 
         monkeypatch.setattr(ocr_providers.urllib.request, "urlopen", fake_urlopen)
-        p = ocr_providers.RunPodProvider("test-runpod-key", "https://api.runpod.ai/v1/endpoint", "model")
+        p = ocr_providers.RunPodProvider(
+            "test-runpod-key",
+            "https://api.runpod.ai/v1/endpoint",
+            "model",
+        )
         assert p.ocr_image("Zg==", "テスト") == "RunPod OCR"
 
     def test_key_value_not_logged(self, monkeypatch, caplog):
         import logging
+
         from pagefolio import ocr_providers
+
         body = json.dumps({"choices": [{"message": {"content": "RunPod OCR"}}]})
 
         def fake_urlopen(req, timeout=None):
             return _FakeResponse(body)
 
         monkeypatch.setattr(ocr_providers.urllib.request, "urlopen", fake_urlopen)
-        p = ocr_providers.RunPodProvider("rpod-LEAK-KEY", "https://api.runpod.ai/v1/endpoint", "model")
+        p = ocr_providers.RunPodProvider(
+            "rpod-LEAK-KEY",
+            "https://api.runpod.ai/v1/endpoint",
+            "model",
+        )
         with caplog.at_level(logging.DEBUG):
             p.ocr_image("Zg==", "テスト")
         assert "rpod-LEAK-KEY" not in caplog.text, "RunPod APIキーがログに出力された"
-

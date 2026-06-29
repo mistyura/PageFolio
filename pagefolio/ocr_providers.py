@@ -980,7 +980,9 @@ class RunPodProvider(OCRProvider):
     default_concurrency = 2
     max_concurrency = 4
 
-    def __init__(self, api_key, url, model, timeout=120, max_tokens=-1, temperature=0.1):
+    def __init__(
+        self, api_key, url, model, timeout=120, max_tokens=-1, temperature=0.1
+    ):
         """初期化。
 
         引数:
@@ -1125,4 +1127,3 @@ class RunPodProvider(OCRProvider):
             return [m.get("id") for m in data.get("data", []) if m.get("id")]
         except Exception:
             return [self.model] if self.model else ["runpod-model"]
-

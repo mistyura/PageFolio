@@ -108,7 +108,15 @@ class LLMConfigDialog(tk.Toplevel):
             value=self.current_settings.get("ocr_provider", "off"),
         )
         # プロバイダ一覧を動的構築（D-08）: 基本 + tesseract + プラグイン登録
-        _base_providers = ["off", "lmstudio", "ollama", "runpod", "claude", "gemini", "tesseract"]
+        _base_providers = [
+            "off",
+            "lmstudio",
+            "ollama",
+            "runpod",
+            "claude",
+            "gemini",
+            "tesseract",
+        ]
         _plugin_extras = (
             list(self._plugin_manager._provider_registry.keys())
             if self._plugin_manager
@@ -933,6 +941,7 @@ class LLMConfigDialog(tk.Toplevel):
         self._set_lm_status(self._L["settings_lm_testing"].format(url=url), kind="info")
         try:
             from pagefolio.ocr_providers import OllamaProvider
+
             models = OllamaProvider(url=url, model="").list_models()
         except (ConnectionError, TimeoutError, RuntimeError) as e:
             self._set_lm_status(
@@ -956,6 +965,7 @@ class LLMConfigDialog(tk.Toplevel):
         self._set_lm_status(self._L["settings_lm_testing"].format(url=url), kind="info")
         try:
             from pagefolio.ocr_providers import OllamaProvider
+
             models = OllamaProvider(url=url, model="").list_models()
         except (ConnectionError, TimeoutError, RuntimeError) as e:
             self._set_lm_status(
@@ -980,6 +990,7 @@ class LLMConfigDialog(tk.Toplevel):
             return
         try:
             from pagefolio.ocr_providers import RunPodProvider
+
             models = RunPodProvider(api_key=api_key, url=url, model="").list_models()
         except Exception as e:
             logger.warning(

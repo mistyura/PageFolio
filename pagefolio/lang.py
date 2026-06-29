@@ -462,7 +462,9 @@ LANG = {
         "settings_runpod_model_hint": "（RunPod Serverless endpoint 用）",
         "llm_fetching_ollama_models": "⏳ Ollama モデル一覧を取得中…",
         "llm_fetching_runpod_models": "⏳ RunPod モデル一覧を取得中…",
-        "llm_env_key_unset_static_runpod": "環境変数 RUNPOD_API_KEY が未設定です。環境変数を設定してください。",
+        "llm_env_key_unset_static_runpod": (
+            "環境変数 RUNPOD_API_KEY が未設定です。環境変数を設定してください。"
+        ),
         # OCR ダイアログ
         "ocr_server_label": "サーバ:",
         "ocr_model_label": "モデル:",
@@ -956,7 +958,9 @@ LANG = {
         "settings_runpod_model_hint": "(for RunPod Serverless endpoint)",
         "llm_fetching_ollama_models": "⏳ Fetching Ollama models…",
         "llm_fetching_runpod_models": "⏳ Fetching RunPod models…",
-        "llm_env_key_unset_static_runpod": "RUNPOD_API_KEY not set — please configure the environment variable.",
+        "llm_env_key_unset_static_runpod": (
+            "RUNPOD_API_KEY not set — please configure the environment variable."
+        ),
         # OCR dialog
         "ocr_server_label": "Server:",
         "ocr_model_label": "Model:",

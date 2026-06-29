@@ -717,7 +717,11 @@ class OCRMixin:
         # 中止する（成功基準2 は OCRDialog._on_run が担保）。
         name = self.settings.get("ocr_provider", "")
         api_key = None
-        _cloud_providers = {"claude", "gemini", "runpod"}  # Phase 6: gemini 追加, runpod 追加
+        _cloud_providers = {
+            "claude",
+            "gemini",
+            "runpod",
+        }  # Phase 6: gemini 追加, runpod 追加
         if name in _cloud_providers:
             from pagefolio.ocr_providers import OCRAPIKeyError
 
