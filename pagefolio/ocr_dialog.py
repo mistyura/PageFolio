@@ -744,15 +744,19 @@ class OCRDialog(tk.Toplevel):
     def _is_cloud_provider(self):
         """現在の ocr_provider 設定がクラウド系か判定する。
 
-        claude / gemini であれば True を返す（D-13・Pitfall-F）。
+        claude / gemini / runpod であれば True を返す（D-13・Pitfall-F）。
         """
-        from pagefolio.ocr_providers import ClaudeProvider, GeminiProvider
+        from pagefolio.ocr_providers import (
+            ClaudeProvider,
+            GeminiProvider,
+            RunPodProvider,
+        )
 
         name = self.app.settings.get("ocr_provider", "")
-        if name in ("claude", "gemini"):
+        if name in ("claude", "gemini", "runpod"):
             return True
         # isinstance ガード（provider インスタンスが差し替わっていても対応）
-        if isinstance(self.provider, (ClaudeProvider, GeminiProvider)):
+        if isinstance(self.provider, (ClaudeProvider, GeminiProvider, RunPodProvider)):
             return True
         return False
 
@@ -778,8 +782,11 @@ class OCRDialog(tk.Toplevel):
 
         claude: ANTHROPIC_API_KEY が未設定なら True。
         gemini: GEMINI_API_KEY/GOOGLE_API_KEY 両方未設定なら True（D-06/Pitfall-G）。
+        runpod: RUNPOD_API_KEY が未設定なら True。
         環境変数が設定済みであれば入力欄を表示しない（D-02/D-03）。
         """
+        from pagefolio.ocr_providers import RunPodProvider
+
         if not self._is_cloud_provider():
             return False
         name = self.app.settings.get("ocr_provider", "")
@@ -788,6 +795,8 @@ class OCRDialog(tk.Toplevel):
             return not bool(
                 os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
             )
+        elif name == "runpod" or isinstance(self.provider, RunPodProvider):
+            return not bool(os.environ.get("RUNPOD_API_KEY"))
         # claude（デフォルト）: ANTHROPIC_API_KEY を確認
         return not bool(os.environ.get("ANTHROPIC_API_KEY"))
 
@@ -862,6 +871,36 @@ class OCRDialog(tk.Toplevel):
                     api_key=api_key,
                     plugin_manager=getattr(self.app, "plugin_manager", None),
                 )
+            elif name == "ollama":
+                from pagefolio.ocr_providers import OllamaProvider
+
+                self.provider = OllamaProvider(
+                    url=self.app.settings.get("ollama_url", "http://localhost:11434"),
+                    model=self.app.settings.get("ollama_model", ""),
+                    timeout=int(self.app.settings.get("ocr_timeout", 120)),
+                    max_tokens=int(self.app.settings.get("ocr_max_tokens", -1)),
+                    temperature=float(self.app.settings.get("ocr_temperature", 0.1)),
+                )
+                self.url_var.set(
+                    self.app.settings.get("ollama_url", "http://localhost:11434")
+                )
+                self.model_var.set(self.app.settings.get("ollama_model", ""))
+            elif name == "runpod":
+                from pagefolio.ocr import _resolve_api_key, build_provider
+                from pagefolio.ocr_providers import OCRAPIKeyError
+
+                session_keys = getattr(self.app, "_session_api_keys", {})
+                try:
+                    api_key = _resolve_api_key("runpod", session_keys)
+                except OCRAPIKeyError:
+                    api_key = ""
+                self.provider = build_provider(
+                    self.app.settings,
+                    api_key=api_key,
+                    plugin_manager=getattr(self.app, "plugin_manager", None),
+                )
+                self.url_var.set(self.app.settings.get("runpod_url", ""))
+                self.model_var.set(self.app.settings.get("runpod_model", ""))
             elif name in ("lmstudio", "", "off"):
                 from pagefolio.ocr_providers import LMStudioProvider
 
@@ -1127,11 +1166,11 @@ class OCRDialog(tk.Toplevel):
             _prov = self.provider
             temperature = getattr(_prov, "temperature", 0.1) if _prov else 0.1
 
+        from pagefolio.ocr import _resolve_api_key
+        from pagefolio.ocr_providers import OCRAPIKeyError
+
         if name == "claude":
             # claude: build_provider 経由でキー注入（D-01/D-05）
-            from pagefolio.ocr import _resolve_api_key
-            from pagefolio.ocr_providers import OCRAPIKeyError
-
             session_keys = getattr(self.app, "_session_api_keys", {})
             try:
                 api_key = _resolve_api_key("claude", session_keys)
@@ -1144,12 +1183,30 @@ class OCRDialog(tk.Toplevel):
             )
         elif name == "gemini":
             # gemini: build_provider 経由でキー注入（D-01/D-05/T-06-11）
-            from pagefolio.ocr import _resolve_api_key
-            from pagefolio.ocr_providers import OCRAPIKeyError
-
             session_keys = getattr(self.app, "_session_api_keys", {})
             try:
                 api_key = _resolve_api_key("gemini", session_keys)
+            except OCRAPIKeyError:
+                api_key = ""
+            self.provider = build_provider(
+                self.app.settings,
+                api_key=api_key,
+                plugin_manager=getattr(self.app, "plugin_manager", None),
+            )
+        elif name == "ollama":
+            from pagefolio.ocr_providers import OllamaProvider
+
+            self.provider = OllamaProvider(
+                url=url,
+                model=model,
+                timeout=self._effective_timeout,
+                max_tokens=max_tokens,
+                temperature=temperature,
+            )
+        elif name == "runpod":
+            session_keys = getattr(self.app, "_session_api_keys", {})
+            try:
+                api_key = _resolve_api_key("runpod", session_keys)
             except OCRAPIKeyError:
                 api_key = ""
             self.provider = build_provider(

@@ -1548,3 +1548,96 @@ class TestProviderKeyNotLogged:
         assert "AIza-LEAK-GEMINI-KEY" not in caplog.text, (
             "Gemini API キー値がログに出力された（D-11 違反）"
         )
+
+
+# ===== OllamaProvider & RunPodProvider =====
+class TestOllamaProvider:
+    """OllamaProvider の振る舞いを確認する"""
+
+    def test_subclass_and_basic(self):
+        from pagefolio.ocr_providers import OCRProvider, OllamaProvider
+
+        assert issubclass(OllamaProvider, OCRProvider)
+        p = OllamaProvider("http://localhost:11434", "llava")
+        assert p.url == "http://localhost:11434"
+        assert p.model == "llava"
+        assert p.default_concurrency == 2
+        assert p.max_concurrency == 8
+
+    def test_ocr_image_success(self, monkeypatch):
+        from pagefolio import ocr_providers
+
+        body = json.dumps({"choices": [{"message": {"content": "Ollama OCR"}}]})
+
+        def fake_urlopen(req, timeout=None):
+            assert req.full_url == "http://localhost:11434/v1/chat/completions"
+            payload = json.loads(req.data.decode("utf-8"))
+            assert payload["model"] == "llava"
+            assert payload["messages"][0]["content"][1]["text"] == "テスト"
+            return _FakeResponse(body)
+
+        monkeypatch.setattr(ocr_providers.urllib.request, "urlopen", fake_urlopen)
+        p = ocr_providers.OllamaProvider("http://localhost:11434", "llava")
+        assert p.ocr_image("Zg==", "テスト") == "Ollama OCR"
+
+
+class TestRunPodProvider:
+    """RunPodProvider の振る舞いを確認する"""
+
+    def test_subclass_and_basic(self):
+        from pagefolio.ocr_providers import OCRProvider, RunPodProvider
+
+        assert issubclass(RunPodProvider, OCRProvider)
+        p = RunPodProvider("api-key", "https://api.runpod.ai/v1/endpoint", "model")
+        assert p.api_key == "api-key"
+        assert p.url == "https://api.runpod.ai/v1/endpoint"
+        assert p.model == "model"
+
+    def test_ocr_image_missing_key(self):
+        from pagefolio.ocr_providers import OCRAPIKeyError, RunPodProvider
+
+        p = RunPodProvider("", "https://api.runpod.ai/v1/endpoint", "model")
+        import pytest
+
+        with pytest.raises(OCRAPIKeyError):
+            p.ocr_image("Zg==", "テスト")
+
+    def test_ocr_image_success(self, monkeypatch):
+        from pagefolio import ocr_providers
+
+        body = json.dumps({"choices": [{"message": {"content": "RunPod OCR"}}]})
+
+        def fake_urlopen(req, timeout=None):
+            assert req.full_url == "https://api.runpod.ai/v1/endpoint/chat/completions"
+            assert req.headers["Authorization"] == "Bearer test-runpod-key"
+            payload = json.loads(req.data.decode("utf-8"))
+            assert payload["model"] == "model"
+            return _FakeResponse(body)
+
+        monkeypatch.setattr(ocr_providers.urllib.request, "urlopen", fake_urlopen)
+        p = ocr_providers.RunPodProvider(
+            "test-runpod-key",
+            "https://api.runpod.ai/v1/endpoint",
+            "model",
+        )
+        assert p.ocr_image("Zg==", "テスト") == "RunPod OCR"
+
+    def test_key_value_not_logged(self, monkeypatch, caplog):
+        import logging
+
+        from pagefolio import ocr_providers
+
+        body = json.dumps({"choices": [{"message": {"content": "RunPod OCR"}}]})
+
+        def fake_urlopen(req, timeout=None):
+            return _FakeResponse(body)
+
+        monkeypatch.setattr(ocr_providers.urllib.request, "urlopen", fake_urlopen)
+        p = ocr_providers.RunPodProvider(
+            "rpod-LEAK-KEY",
+            "https://api.runpod.ai/v1/endpoint",
+            "model",
+        )
+        with caplog.at_level(logging.DEBUG):
+            p.ocr_image("Zg==", "テスト")
+        assert "rpod-LEAK-KEY" not in caplog.text, "RunPod APIキーがログに出力された"

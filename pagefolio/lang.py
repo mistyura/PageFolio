@@ -450,9 +450,21 @@ LANG = {
         "settings_open_llm_config": "🔍 LLM 設定…",
         # LLM 設定ダイアログ（OCR と設定で共有）
         "llm_config_title": "LLM 設定",
-        "llm_config_heading": "🔍 LLM 設定 (LM Studio)",
+        "llm_config_heading": "🔍 LLM 設定",
         "llm_config_apply": "✓ 適用",
         "llm_config_cancel": "✕ キャンセル",
+        # Ollama / RunPod 設定
+        "settings_ollama_url": "Ollama URL:",
+        "settings_ollama_model": "Ollama モデル:",
+        "settings_ollama_model_hint": "（空欄: ollama のデフォルトモデルを使用）",
+        "settings_runpod_url": "RunPod エンドポイントURL:",
+        "settings_runpod_model": "RunPod モデル名 (任意):",
+        "settings_runpod_model_hint": "（RunPod Serverless endpoint 用）",
+        "llm_fetching_ollama_models": "⏳ Ollama モデル一覧を取得中…",
+        "llm_fetching_runpod_models": "⏳ RunPod モデル一覧を取得中…",
+        "llm_env_key_unset_static_runpod": (
+            "環境変数 RUNPOD_API_KEY が未設定です。環境変数を設定してください。"
+        ),
         # OCR ダイアログ
         "ocr_server_label": "サーバ:",
         "ocr_model_label": "モデル:",
@@ -934,9 +946,21 @@ LANG = {
         "settings_open_llm_config": "🔍 LLM Settings…",
         # LLM config dialog (shared by OCR & Settings)
         "llm_config_title": "LLM Settings",
-        "llm_config_heading": "🔍 LLM Settings (LM Studio)",
+        "llm_config_heading": "🔍 LLM Settings",
         "llm_config_apply": "✓ Apply",
         "llm_config_cancel": "✕ Cancel",
+        # Ollama / RunPod settings
+        "settings_ollama_url": "Ollama URL:",
+        "settings_ollama_model": "Ollama Model:",
+        "settings_ollama_model_hint": "(empty = use default model in Ollama)",
+        "settings_runpod_url": "RunPod Endpoint URL:",
+        "settings_runpod_model": "RunPod Model Name (Optional):",
+        "settings_runpod_model_hint": "(for RunPod Serverless endpoint)",
+        "llm_fetching_ollama_models": "⏳ Fetching Ollama models…",
+        "llm_fetching_runpod_models": "⏳ Fetching RunPod models…",
+        "llm_env_key_unset_static_runpod": (
+            "RUNPOD_API_KEY not set — please configure the environment variable."
+        ),
         # OCR dialog
         "ocr_server_label": "Server:",
         "ocr_model_label": "Model:",
