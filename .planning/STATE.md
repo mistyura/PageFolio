@@ -1,14 +1,14 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.6.0
-milestone_name: 品質向上・AI強化・設定/UI改善
+milestone: v1.6.2
+milestone_name: Ollama・RunPod プロバイダ追加・設定画面リプレース（ポイントリリース）
 current_phase: null
 current_phase_name: null
 status: milestone_complete
-stopped_at: Milestone v1.6.0 完了・アーカイブ済（全 4 フェーズ・11 プラン・23 タスク）。次マイルストーン待ち
-last_updated: "2026-06-20T00:00:00.000Z"
-last_activity: 2026-06-20
-last_activity_desc: Milestone v1.6.0 completed and archived（v1.6.0 出荷確定）
+stopped_at: v1.6.2 出荷完了（feature/add-ollama-runpod を PR #26 で main マージ・タグ v1.6.2・GitHub Release Latest 公開）。最後の GSD フェーズマイルストーンは v1.6.0。次マイルストーン待ち
+last_updated: "2026-06-30T00:00:00.000Z"
+last_activity: 2026-06-30
+last_activity_desc: v1.6.2 出荷確定（Ollama・RunPod プロバイダ追加・設定画面リプレース）。v1.6.1/v1.6.2 を MILESTONES.md へ遡及記録
 progress:
   total_phases: 4
   completed_phases: 4
@@ -28,10 +28,10 @@ See: .planning/PROJECT.md (updated 2026-06-20)
 
 ## Current Position
 
-Phase: Milestone v1.6.0 complete（全 4 フェーズ達成・出荷）
+Phase: v1.6.2 出荷済み（最後の GSD フェーズマイルストーンは v1.6.0・全 4 フェーズ達成）
 Plan: —
 Status: Awaiting next milestone
-Last activity: 2026-06-23 — Completed quick task 260623-rel: v1.6.1 マージ・リリース（GitHub Release v1.6.1 公開）
+Last activity: 2026-06-30 — v1.6.2 リリース（feature/add-ollama-runpod を PR #26 で main マージ・タグ v1.6.2・GitHub Release Latest 公開）。v1.6.1/v1.6.2 を MILESTONES.md へ遡及記録
 
 ## v1.6.0 Phase Map
 
@@ -198,13 +198,14 @@ Decisions are logged in PROJECT.md Key Decisions table.
 | 260622-grm | OCR テキスト抽出画面・LLM 設定ダイアログのタイムアウト上限を 600 秒 → 900 秒へ拡大（Spinbox 上限・クランプ計 4 箇所）。APP_VERSION を v1.6.1 へ更新・README/開発履歴.md 同期 | 2026-06-22 | 2bff34b | [260622-grm-great-maxwell-k67sbc-v1-6-1](./quick/260622-grm-great-maxwell-k67sbc-v1-6-1/) |
 | 260623-pwp | PDF パスワード対応（付与/解除・AES-256・暗号化PDFの認証オープン）と印刷機能（Ctrl+P・既定PDFハンドラ送信）を v1.6.1 に追加。新規 `password.py`/`print_ops.py`・テスト 16 件追加（計 611 件） | 2026-06-23 | — | [260623-pwp-great-maxwell-k67sbc-password-print](./quick/260623-pwp-great-maxwell-k67sbc-password-print/) |
 | 260623-rel | ブランチ claude/great-maxwell-k67sbc を main へマージし v1.6.1 をリリース。pytest 613 件グリーン・ruff クリーン検証、PyInstaller リビルド（`dist/PageFolio` 更新）、PR #25 マージ、注釈付きタグ `v1.6.1` 付与、GitHub Release を Latest 公開（PageFolio-v1.6.1-win64.zip + .sha256 添付） | 2026-06-23 | fd20608 | [260623-rel-v161-merge-release](./quick/260623-rel-v161-merge-release/) |
+| 260630-rel | ブランチ feature/add-ollama-runpod（Ollama・RunPod プロバイダ追加・設定画面リプレース）を main へマージし v1.6.2 をリリース。ruff クリーン・pytest 619 件グリーン検証、PR #26 マージ、注釈付きタグ `v1.6.2` 付与、GitHub Release を Latest 公開（バイナリ zip 未添付）。v1.6.1/v1.6.2 を MILESTONES.md へ遡及記録 | 2026-06-30 | ae16c22 | — |
 
 ## Deferred Items
 
 | Category | Item | Status | Deferred At |
 |----------|------|--------|-------------|
-| v2 | 暗号化 PDF 対応 | Out of scope | Init |
-| v2 | 印刷機能 | Out of scope | Init |
+| ~~v2~~ | ~~暗号化 PDF 対応~~ | **Shipped v1.6.1**（パスワード付与/解除・AES-256・認証オープン） | Init |
+| ~~v2~~ | ~~印刷機能~~ | **Shipped v1.6.1**（Ctrl+P・既定 PDF ハンドラ送信） | Init |
 | v2 | プラグイン API バージョン管理 | Out of scope | Init |
 | v2 | OS キーストア連携（Windows Credential Manager）による APIキー永続化 | Out of scope | v1.4.0 |
 | v2 | OCR 結果のページ埋め込み（検索可能 PDF 化） | Out of scope | v1.4.0 |

@@ -1,5 +1,36 @@
 # Milestones
 
+## v1.6.2 Ollama・RunPod プロバイダ追加・設定画面リプレース (Shipped: 2026-06-30)
+
+**Type:** ポイントリリース（GSD フェーズなし・`feature/add-ollama-runpod` ブランチ作業）
+
+**Key accomplishments:**
+
+- LLM（OCR）設定に **Ollama** / **RunPod** プロバイダを追加（`pagefolio/ocr_providers.py` +288 行）
+- プロバイダ選択・モデル設定 UI（`pagefolio/dialogs/llm_config.py`）をリプレース（+255 行）
+- 新プロバイダを OCR 実行経路（`ocr.py` / `ocr_dialog.py`）へ配線、文言（ja/en 同一キー）・既定設定を追加
+- プロバイダ単体テストを追加（`tests/test_ocr_providers.py` +93 行）
+- 品質保証: ruff クリーン・pytest 619 件グリーン
+
+**Note:** GSD フェーズ外のブランチ作業。実装コミット `60c3acc` / ビルド `c4fbc2d`、`main` へ PR #26 でマージ（マージコミット `ae16c22`）。注釈付きタグ `v1.6.2`・GitHub Release を Latest 公開（2026-06-30、バイナリ zip は未添付）。本エントリは出荷後に遡及追記。
+
+---
+
+## v1.6.1 パスワード対応・印刷機能・OCR タイムアウト上限拡大 (Shipped: 2026-06-23)
+
+**Type:** ポイントリリース（GSD フェーズなし・クイックタスク 260622 / 260623）
+
+**Key accomplishments:**
+
+- PDF パスワード対応（付与/解除・AES-256・暗号化 PDF の認証オープン）— 新規 `pagefolio/file_ops.py` 連携・`dialogs/password.py`
+- 印刷機能（Ctrl+P・既定 PDF ハンドラ送信）— 新規 `pagefolio/print_ops.py`
+- OCR テキスト抽出画面・LLM 設定ダイアログのタイムアウト上限を 600 秒 → 900 秒へ拡大（クランプ計 4 箇所）
+- 品質保証: ruff クリーン・pytest 613 件グリーン（パスワード/印刷テスト 16 件追加）
+
+**Note:** GSD フェーズ外のクイックタスク群。260622-grm（タイムアウト拡大・`2bff34b`）+ 260623-pwp（パスワード/印刷）を `claude/great-maxwell-k67sbc` ブランチで実装し、260623-rel で `main` へ PR #25 マージ（`fd20608`）・注釈付きタグ `v1.6.1`・GitHub Release を Latest 公開。STATE.md「Quick Tasks Completed」には記録済みだったが MILESTONES.md 未記載のため遡及追記。
+
+---
+
 ## v1.6.0 品質向上・AI強化・設定/UI改善 (Shipped: 2026-06-20)
 
 **Phases completed:** 4 phases, 11 plans, 23 tasks
