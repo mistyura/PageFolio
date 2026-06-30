@@ -5,7 +5,7 @@ milestone_name: Ollama・RunPod プロバイダ追加・設定画面リプレー
 current_phase: null
 current_phase_name: null
 status: milestone_complete
-stopped_at: v1.6.2 出荷完了（feature/add-ollama-runpod を PR #26 で main マージ・タグ v1.6.2・GitHub Release Latest 公開）。最後の GSD フェーズマイルストーンは v1.6.0。次マイルストーン待ち
+stopped_at: v1.6.2 出荷完了（feature/add-ollama-runpod を PR #26 で main マージ・タグ v1.6.2-1・GitHub Release Latest 公開・zip+sha256 添付）。タグは immutable release 衝突回避で -1 サフィックス。最後の GSD フェーズマイルストーンは v1.6.0。次マイルストーン待ち
 last_updated: "2026-06-30T00:00:00.000Z"
 last_activity: 2026-06-30
 last_activity_desc: v1.6.2 出荷確定（Ollama・RunPod プロバイダ追加・設定画面リプレース）。v1.6.1/v1.6.2 を MILESTONES.md へ遡及記録
@@ -31,7 +31,7 @@ See: .planning/PROJECT.md (updated 2026-06-20)
 Phase: v1.6.2 出荷済み（最後の GSD フェーズマイルストーンは v1.6.0・全 4 フェーズ達成）
 Plan: —
 Status: Awaiting next milestone
-Last activity: 2026-06-30 — v1.6.2 リリース（feature/add-ollama-runpod を PR #26 で main マージ・タグ v1.6.2・GitHub Release Latest 公開）。v1.6.1/v1.6.2 を MILESTONES.md へ遡及記録
+Last activity: 2026-06-30 — v1.6.2 リリース（feature/add-ollama-runpod を PR #26 で main マージ・タグ v1.6.2-1・GitHub Release Latest 公開・zip+sha256 添付）。v1.6.1/v1.6.2 を MILESTONES.md へ遡及記録
 
 ## v1.6.0 Phase Map
 
@@ -198,7 +198,7 @@ Decisions are logged in PROJECT.md Key Decisions table.
 | 260622-grm | OCR テキスト抽出画面・LLM 設定ダイアログのタイムアウト上限を 600 秒 → 900 秒へ拡大（Spinbox 上限・クランプ計 4 箇所）。APP_VERSION を v1.6.1 へ更新・README/開発履歴.md 同期 | 2026-06-22 | 2bff34b | [260622-grm-great-maxwell-k67sbc-v1-6-1](./quick/260622-grm-great-maxwell-k67sbc-v1-6-1/) |
 | 260623-pwp | PDF パスワード対応（付与/解除・AES-256・暗号化PDFの認証オープン）と印刷機能（Ctrl+P・既定PDFハンドラ送信）を v1.6.1 に追加。新規 `password.py`/`print_ops.py`・テスト 16 件追加（計 611 件） | 2026-06-23 | — | [260623-pwp-great-maxwell-k67sbc-password-print](./quick/260623-pwp-great-maxwell-k67sbc-password-print/) |
 | 260623-rel | ブランチ claude/great-maxwell-k67sbc を main へマージし v1.6.1 をリリース。pytest 613 件グリーン・ruff クリーン検証、PyInstaller リビルド（`dist/PageFolio` 更新）、PR #25 マージ、注釈付きタグ `v1.6.1` 付与、GitHub Release を Latest 公開（PageFolio-v1.6.1-win64.zip + .sha256 添付） | 2026-06-23 | fd20608 | [260623-rel-v161-merge-release](./quick/260623-rel-v161-merge-release/) |
-| 260630-rel | ブランチ feature/add-ollama-runpod（Ollama・RunPod プロバイダ追加・設定画面リプレース）を main へマージし v1.6.2 をリリース。ruff クリーン・pytest 619 件グリーン検証、PR #26 マージ、注釈付きタグ `v1.6.2` 付与、GitHub Release を Latest 公開（バイナリ zip 未添付）。v1.6.1/v1.6.2 を MILESTONES.md へ遡及記録 | 2026-06-30 | ae16c22 | — |
+| 260630-rel | ブランチ feature/add-ollama-runpod（Ollama・RunPod プロバイダ追加・設定画面リプレース）を main へマージし v1.6.2 をリリース。ruff クリーン・pytest 619 件グリーン検証、PR #26 マージ、注釈付きタグ `v1.6.2-1` 付与（immutable release のタグ名再利用ブロック回避で `-1` サフィックス）、GitHub Release を Latest 公開（`PageFolio-v1.6.2-win64.zip` + `.sha256` 添付）。v1.6.1/v1.6.2 を MILESTONES.md へ遡及記録 | 2026-06-30 | ae16c22 | — |
 
 ## Deferred Items
 
