@@ -524,6 +524,55 @@ class TestSyncParamVarsFromSettings:
         assert stub.temperature_var.value == 0.0
 
 
+def _make_apply_llm_settings_stub(settings, provider=None):
+    """_apply_llm_settings を Tk 生成なしで呼ぶスタブを返す。"""
+    stub = types.SimpleNamespace(
+        app=types.SimpleNamespace(settings=dict(settings)),
+        custom_prompt="旧プロンプト",
+        provider=provider or ClaudeProvider(api_key="x", model="claude-sonnet-4-6"),
+        concurrency=1,
+        _refresh_provider_dependent_ui=lambda: None,
+        _sync_param_vars_from_settings=lambda: None,
+        progress_var=_VarStub(),
+        url_var=_VarStub(),
+        model_var=_VarStub(),
+    )
+    return stub
+
+
+class TestApplyLlmSettingsCustomPromptSync:
+    """LLM 設定ダイアログでカスタムプロンプトを変更した直後の OCR 実行が
+    最新値を使うことを検証する回帰テスト（1回前のプロンプトが使われるバグの修正）。
+    """
+
+    def test_custom_prompt_refreshed_after_apply(self, monkeypatch):
+        """_apply_llm_settings 後、custom_prompt が app.settings の最新値になる。"""
+        from pagefolio.ocr_dialog import OCRDialog
+
+        monkeypatch.setattr("pagefolio.settings._save_settings", lambda settings: None)
+        stub = _make_apply_llm_settings_stub(
+            settings={"ocr_provider": "tesseract", "ocr_custom_prompt": ""}
+        )
+        OCRDialog._apply_llm_settings(
+            stub, {"ocr_custom_prompt": "新しいカスタムプロンプト"}
+        )
+        assert stub.custom_prompt == "新しいカスタムプロンプト"
+
+    def test_custom_prompt_cleared_when_emptied(self, monkeypatch):
+        """空欄に変更した場合も self.custom_prompt が空文字へ同期される。"""
+        from pagefolio.ocr_dialog import OCRDialog
+
+        monkeypatch.setattr("pagefolio.settings._save_settings", lambda settings: None)
+        stub = _make_apply_llm_settings_stub(
+            settings={
+                "ocr_provider": "tesseract",
+                "ocr_custom_prompt": "旧プロンプト",
+            }
+        )
+        OCRDialog._apply_llm_settings(stub, {"ocr_custom_prompt": ""})
+        assert stub.custom_prompt == ""
+
+
 # ===== M-8 回帰テスト: SettingsDialog に plugin_manager 引数追加 =====
 
 

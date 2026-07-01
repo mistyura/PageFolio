@@ -834,6 +834,10 @@ class OCRDialog(tk.Toplevel):
         from pagefolio.settings import _save_settings
 
         _save_settings(self.app.settings)
+        # self.custom_prompt は __init__ 時点の値をキャッシュしているだけで
+        # 以降の app.settings 更新が反映されないため、ここで明示的に同期する
+        # （さもないと _on_run が 1 回前のカスタムプロンプトを使い続ける）
+        self.custom_prompt = self.app.settings.get("ocr_custom_prompt", "")
         # (c)〜(g) UI 更新
         self._refresh_provider_dependent_ui()
         # 全プロバイダ共通: 読み取り専用の数値パラメータ表示を settings 値へ即時同期
