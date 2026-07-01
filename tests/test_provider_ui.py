@@ -524,6 +524,223 @@ class TestSyncParamVarsFromSettings:
         assert stub.temperature_var.value == 0.0
 
 
+def _make_apply_llm_settings_stub(settings, provider=None):
+    """_apply_llm_settings を Tk 生成なしで呼ぶスタブを返す。"""
+    stub = types.SimpleNamespace(
+        app=types.SimpleNamespace(settings=dict(settings)),
+        custom_prompt="旧プロンプト",
+        provider=provider or ClaudeProvider(api_key="x", model="claude-sonnet-4-6"),
+        concurrency=1,
+        _refresh_provider_dependent_ui=lambda: None,
+        _sync_param_vars_from_settings=lambda: None,
+        progress_var=_VarStub(),
+        url_var=_VarStub(),
+        model_var=_VarStub(),
+    )
+    return stub
+
+
+class TestApplyLlmSettingsCustomPromptSync:
+    """LLM 設定ダイアログでカスタムプロンプトを変更した直後の OCR 実行が
+    最新値を使うことを検証する回帰テスト（1回前のプロンプトが使われるバグの修正）。
+    """
+
+    def test_custom_prompt_refreshed_after_apply(self, monkeypatch):
+        """_apply_llm_settings 後、custom_prompt が app.settings の最新値になる。"""
+        from pagefolio.ocr_dialog import OCRDialog
+
+        monkeypatch.setattr("pagefolio.settings._save_settings", lambda settings: None)
+        stub = _make_apply_llm_settings_stub(
+            settings={"ocr_provider": "tesseract", "ocr_custom_prompt": ""}
+        )
+        OCRDialog._apply_llm_settings(
+            stub, {"ocr_custom_prompt": "新しいカスタムプロンプト"}
+        )
+        assert stub.custom_prompt == "新しいカスタムプロンプト"
+
+    def test_custom_prompt_cleared_when_emptied(self, monkeypatch):
+        """空欄に変更した場合も self.custom_prompt が空文字へ同期される。"""
+        from pagefolio.ocr_dialog import OCRDialog
+
+        monkeypatch.setattr("pagefolio.settings._save_settings", lambda settings: None)
+        stub = _make_apply_llm_settings_stub(
+            settings={
+                "ocr_provider": "tesseract",
+                "ocr_custom_prompt": "旧プロンプト",
+            }
+        )
+        OCRDialog._apply_llm_settings(stub, {"ocr_custom_prompt": ""})
+        assert stub.custom_prompt == ""
+
+
+class _FakeToplevel:
+    """winfo_exists/lift/focus_force のみを備えた tk.Toplevel の最小スタブ。"""
+
+    def __init__(self, *args, **kwargs):
+        self.args = args
+        self.kwargs = kwargs
+        self._exists = True
+        self.lifted = False
+        self.focused = False
+
+    def winfo_exists(self):
+        return self._exists
+
+    def lift(self):
+        self.lifted = True
+
+    def focus_force(self):
+        self.focused = True
+
+    def destroy(self):
+        self._exists = False
+
+
+class TestOpenSettingsDoubleLaunchGuard:
+    """設定ダイアログの二重起動ガード（同一 SettingsDialog を使い回す）を検証する。
+
+    ガード前は連続クリック等で SettingsDialog が複数生成され、それぞれが
+    current_settings の独立したコピーを持つため、片方の変更がもう片方の
+    「適用」/「キャンセル」で消失し得た（適用しても更新されないように見える
+    バグの一因）。
+    """
+
+    def test_second_call_reuses_existing_dialog(self, monkeypatch):
+        """既に開いている間は新規 SettingsDialog を生成せず既存を再利用する。"""
+        from pagefolio.app import PDFEditorApp
+
+        monkeypatch.setattr("pagefolio.app.SettingsDialog", _FakeToplevel)
+        stub = types.SimpleNamespace(
+            root=object(),
+            settings={},
+            _apply_settings=lambda s: None,
+            _font=lambda delta=0, weight=None: ("Segoe UI", 10),
+        )
+        PDFEditorApp._open_settings(stub)
+        first = stub._settings_dialog
+        PDFEditorApp._open_settings(stub)
+        second = stub._settings_dialog
+
+        assert first is second
+        assert first.lifted is True
+        assert first.focused is True
+
+    def test_new_dialog_created_after_previous_closed(self, monkeypatch):
+        """前のダイアログが閉じられていれば新規に生成する。"""
+        from pagefolio.app import PDFEditorApp
+
+        monkeypatch.setattr("pagefolio.app.SettingsDialog", _FakeToplevel)
+        stub = types.SimpleNamespace(
+            root=object(),
+            settings={},
+            _apply_settings=lambda s: None,
+            _font=lambda delta=0, weight=None: ("Segoe UI", 10),
+        )
+        PDFEditorApp._open_settings(stub)
+        first = stub._settings_dialog
+        first.destroy()
+        PDFEditorApp._open_settings(stub)
+        second = stub._settings_dialog
+
+        assert first is not second
+
+
+class TestSettingsDialogOpenLlmConfigPersists:
+    """設定ダイアログの LLM 設定サブダイアログで「適用」を押した際に
+    即座に永続化されることを検証する回帰テスト。
+
+    修正前は on_apply が self.current_settings（コピー）を更新するだけで
+    _save_settings を呼んでいなかったため、LLM 設定側で「適用」した直後に
+    外側の設定ダイアログを「キャンセル」で閉じると変更が失われていた
+    （「LLM設定が『適用』を押しても更新されない」バグ）。
+    """
+
+    def test_llm_apply_saves_immediately(self, monkeypatch):
+        """LLM 設定ダイアログの on_apply が _save_settings を呼ぶことを確認する。"""
+        import types as _types
+
+        from pagefolio.dialogs.settings import SettingsDialog
+
+        saved = {}
+        monkeypatch.setattr(
+            "pagefolio.settings._save_settings", lambda settings: saved.update(settings)
+        )
+
+        captured_kwargs = {}
+
+        class _FakeLLMConfigDialog:
+            def __init__(self, *args, **kwargs):
+                captured_kwargs.update(kwargs)
+
+        monkeypatch.setattr(
+            "pagefolio.dialogs.llm_config.LLMConfigDialog", _FakeLLMConfigDialog
+        )
+
+        stub = _types.SimpleNamespace(
+            current_settings={"ocr_provider": "lmstudio", "ocr_custom_prompt": "old"},
+            _font=lambda delta=0, weight=None: ("Segoe UI", 10),
+            _plugin_manager=None,
+        )
+        SettingsDialog._open_llm_config(stub)
+
+        # on_apply が呼ばれる前は _save_settings は未実行
+        assert saved == {}
+        on_apply = captured_kwargs["on_apply"]
+        on_apply({"ocr_provider": "claude", "ocr_custom_prompt": "new"})
+
+        assert saved.get("ocr_provider") == "claude"
+        assert saved.get("ocr_custom_prompt") == "new"
+        assert stub.current_settings["ocr_provider"] == "claude"
+
+
+class TestOpenLlmConfigDoubleLaunchGuard:
+    """LLM 設定サブダイアログ（設定画面経由・OCR ダイアログ経由）の
+    二重起動ガードを検証する回帰テスト。
+    """
+
+    def test_settings_dialog_reuses_existing_llm_config_dialog(self, monkeypatch):
+        """SettingsDialog._open_llm_config は既存ダイアログを再利用する。"""
+        from pagefolio.dialogs.settings import SettingsDialog
+
+        monkeypatch.setattr(
+            "pagefolio.dialogs.llm_config.LLMConfigDialog", _FakeToplevel
+        )
+        stub = types.SimpleNamespace(
+            current_settings={"ocr_provider": "lmstudio"},
+            _font=lambda delta=0, weight=None: ("Segoe UI", 10),
+            _plugin_manager=None,
+        )
+        SettingsDialog._open_llm_config(stub)
+        first = stub._llm_config_dialog
+        SettingsDialog._open_llm_config(stub)
+        second = stub._llm_config_dialog
+
+        assert first is second
+        assert first.lifted is True
+
+    def test_ocr_dialog_reuses_existing_llm_config_dialog(self, monkeypatch):
+        """OCRDialog._open_llm_config は既存ダイアログを再利用する。"""
+        from pagefolio.ocr_dialog import OCRDialog
+
+        monkeypatch.setattr(
+            "pagefolio.dialogs.llm_config.LLMConfigDialog", _FakeToplevel
+        )
+        stub = types.SimpleNamespace(
+            _started=False,
+            _done=False,
+            app=types.SimpleNamespace(settings={}, plugin_manager=None),
+            _font=lambda delta=0, weight=None: ("Segoe UI", 10),
+            _apply_llm_settings=lambda s: None,
+        )
+        OCRDialog._open_llm_config(stub)
+        first = stub._llm_config_dialog
+        OCRDialog._open_llm_config(stub)
+        second = stub._llm_config_dialog
+
+        assert first is second
+        assert first.lifted is True
+
+
 # ===== M-8 回帰テスト: SettingsDialog に plugin_manager 引数追加 =====
 
 

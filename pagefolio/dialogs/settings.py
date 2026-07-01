@@ -160,15 +160,32 @@ class SettingsDialog(tk.Toplevel):
             logger.debug("フォントプレビュー更新失敗: %s", e)
 
     def _open_llm_config(self):
-        """LLM 設定ダイアログを開き、適用時に current_settings を更新する"""
+        """LLM 設定ダイアログを開く（二重起動ガード付き）。
+
+        適用時に current_settings を更新する。
+        """
+        existing = getattr(self, "_llm_config_dialog", None)
+        if existing is not None and existing.winfo_exists():
+            existing.lift()
+            existing.focus_force()
+            return
+
         from pagefolio.dialogs.llm_config import LLMConfigDialog
 
         lang = self.current_settings.get("lang", "ja")
 
         def on_apply(llm_settings):
+            # current_settings は SettingsDialog 自身のコピーで、外側の「適用」
+            # ボタン（_apply）を押すまで呼び出し元 app には反映されない。
+            # ここで即座に永続化しないと、LLM 設定側の「適用」を押した直後に
+            # 外側ダイアログを「キャンセル」で閉じた場合、変更が無かったことに
+            # なってしまう（「適用しても更新されない」バグ）ため、ここで先に保存する。
             self.current_settings.update(llm_settings)
+            from pagefolio.settings import _save_settings
 
-        LLMConfigDialog(
+            _save_settings(self.current_settings)
+
+        self._llm_config_dialog = LLMConfigDialog(
             self,
             self.current_settings,
             on_apply=on_apply,

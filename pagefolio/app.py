@@ -454,9 +454,20 @@ class PDFEditorApp(
     #  設定ダイアログ
     # ══════════════════════════════════════════
     def _open_settings(self):
-        """設定ダイアログを開く"""
+        """設定ダイアログを開く（二重起動ガード付き）。
+
+        既に開いている場合は新規生成せず既存ウィンドウを前面へ出す。
+        二重起動すると current_settings のコピーが2つ独立に存在し、
+        片方の変更がもう片方の「適用」/「キャンセル」で消失し得るため
+        （「LLM設定を適用しても更新されない」に見えるバグの一因）。
+        """
+        existing = getattr(self, "_settings_dialog", None)
+        if existing is not None and existing.winfo_exists():
+            existing.lift()
+            existing.focus_force()
+            return
         # M-8: plugin_manager を渡して LLMConfigDialog でプラグインプロバイダを表示
-        SettingsDialog(
+        self._settings_dialog = SettingsDialog(
             self.root,
             self.settings,
             self._apply_settings,

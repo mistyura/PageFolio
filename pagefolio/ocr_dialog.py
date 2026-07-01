@@ -806,14 +806,19 @@ class OCRDialog(tk.Toplevel):
         """プロバイダ表示行の「⚙ LLM 設定…」ボタンから LLMConfigDialog を開く。
 
         実行中（_started かつ未完了）は即 return してプロバイダ変更を阻止する
-        （T-CCZ-02）。
+        （T-CCZ-02）。既に開いている場合も二重起動せず既存ウィンドウを前面へ出す。
         """
         if self._started and not self._done:
+            return
+        existing = getattr(self, "_llm_config_dialog", None)
+        if existing is not None and existing.winfo_exists():
+            existing.lift()
+            existing.focus_force()
             return
         from pagefolio.dialogs.llm_config import LLMConfigDialog
 
         lang = self.app.settings.get("lang", "ja")
-        LLMConfigDialog(
+        self._llm_config_dialog = LLMConfigDialog(
             self,
             self.app.settings,
             on_apply=self._apply_llm_settings,
@@ -834,6 +839,10 @@ class OCRDialog(tk.Toplevel):
         from pagefolio.settings import _save_settings
 
         _save_settings(self.app.settings)
+        # self.custom_prompt は __init__ 時点の値をキャッシュしているだけで
+        # 以降の app.settings 更新が反映されないため、ここで明示的に同期する
+        # （さもないと _on_run が 1 回前のカスタムプロンプトを使い続ける）
+        self.custom_prompt = self.app.settings.get("ocr_custom_prompt", "")
         # (c)〜(g) UI 更新
         self._refresh_provider_dependent_ui()
         # 全プロバイダ共通: 読み取り専用の数値パラメータ表示を settings 値へ即時同期
