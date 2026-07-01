@@ -573,6 +573,54 @@ class TestApplyLlmSettingsCustomPromptSync:
         assert stub.custom_prompt == ""
 
 
+class TestSettingsDialogOpenLlmConfigPersists:
+    """設定ダイアログの LLM 設定サブダイアログで「適用」を押した際に
+    即座に永続化されることを検証する回帰テスト。
+
+    修正前は on_apply が self.current_settings（コピー）を更新するだけで
+    _save_settings を呼んでいなかったため、LLM 設定側で「適用」した直後に
+    外側の設定ダイアログを「キャンセル」で閉じると変更が失われていた
+    （「LLM設定が『適用』を押しても更新されない」バグ）。
+    """
+
+    def test_llm_apply_saves_immediately(self, monkeypatch):
+        """LLM 設定ダイアログの on_apply が _save_settings を呼ぶことを確認する。"""
+        import types as _types
+
+        from pagefolio.dialogs.settings import SettingsDialog
+
+        saved = {}
+        monkeypatch.setattr(
+            "pagefolio.settings._save_settings", lambda settings: saved.update(settings)
+        )
+
+        captured_kwargs = {}
+
+        class _FakeLLMConfigDialog:
+            def __init__(self, *args, **kwargs):
+                captured_kwargs.update(kwargs)
+
+        monkeypatch.setattr(
+            "pagefolio.dialogs.llm_config.LLMConfigDialog", _FakeLLMConfigDialog
+        )
+
+        stub = _types.SimpleNamespace(
+            current_settings={"ocr_provider": "lmstudio", "ocr_custom_prompt": "old"},
+            _font=lambda delta=0, weight=None: ("Segoe UI", 10),
+            _plugin_manager=None,
+        )
+        SettingsDialog._open_llm_config(stub)
+
+        # on_apply が呼ばれる前は _save_settings は未実行
+        assert saved == {}
+        on_apply = captured_kwargs["on_apply"]
+        on_apply({"ocr_provider": "claude", "ocr_custom_prompt": "new"})
+
+        assert saved.get("ocr_provider") == "claude"
+        assert saved.get("ocr_custom_prompt") == "new"
+        assert stub.current_settings["ocr_provider"] == "claude"
+
+
 # ===== M-8 回帰テスト: SettingsDialog に plugin_manager 引数追加 =====
 
 

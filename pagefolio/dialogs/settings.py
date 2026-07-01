@@ -166,7 +166,15 @@ class SettingsDialog(tk.Toplevel):
         lang = self.current_settings.get("lang", "ja")
 
         def on_apply(llm_settings):
+            # current_settings は SettingsDialog 自身のコピーで、外側の「適用」
+            # ボタン（_apply）を押すまで呼び出し元 app には反映されない。
+            # ここで即座に永続化しないと、LLM 設定側の「適用」を押した直後に
+            # 外側ダイアログを「キャンセル」で閉じた場合、変更が無かったことに
+            # なってしまう（「適用しても更新されない」バグ）ため、ここで先に保存する。
             self.current_settings.update(llm_settings)
+            from pagefolio.settings import _save_settings
+
+            _save_settings(self.current_settings)
 
         LLMConfigDialog(
             self,
