@@ -1,5 +1,21 @@
 # Milestones
 
+## v1.6.3 OCR/設定ダイアログのバグ修正3件 (Shipped: 2026-07-01)
+
+**Type:** ポイントリリース（GSD フェーズなし・`claude/llm-prompt-output-lag-jx8i98` ブランチ作業）
+
+**Key accomplishments:**
+
+- **OCR カスタムプロンプトが1回前の値で実行される不具合を修正**（`ocr_dialog.py`）— 直前に編集したプロンプトが即座に反映される
+- **設定ダイアログの LLM 設定サブダイアログで「適用」が永続化されない不具合を修正**（`dialogs/settings.py`）
+- **設定ダイアログ・LLM 設定ダイアログの二重起動を防止するガードを追加**（`app.py`）
+- 回帰テストを追加（`tests/test_provider_ui.py` +217 行）
+- 品質保証: ruff クリーン・pytest 626 件グリーン
+
+**Note:** GSD フェーズ外のブランチ作業。実装 3 コミット（`86408e3` / `487dac4` / `106c2a0`）を `claude/llm-prompt-output-lag-jx8i98` ブランチで実装し、`main` へ PR #27 でマージ（マージコミット `e4cdd96`）。ビルド `3fcf5ea`（PyInstaller onedir リビルド）。注釈付きタグ `v1.6.3`（未使用のためサフィックスなし）・GitHub Release を Latest 公開（`PageFolio-v1.6.3-win64.zip` + `.sha256` 添付、SHA-256 `c0c28922…`）。`APP_VERSION`/README バッジ/開発履歴.md はブランチ内で v1.6.3 へ同期済み。
+
+---
+
 ## v1.6.2 Ollama・RunPod プロバイダ追加・設定画面リプレース (Shipped: 2026-06-30)
 
 **Type:** ポイントリリース（GSD フェーズなし・`feature/add-ollama-runpod` ブランチ作業）

@@ -1,14 +1,14 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.6.2
-milestone_name: Ollama・RunPod プロバイダ追加・設定画面リプレース（ポイントリリース）
+milestone: v1.6.3
+milestone_name: OCR/設定ダイアログのバグ修正3件（ポイントリリース）
 current_phase: null
 current_phase_name: null
 status: milestone_complete
-stopped_at: v1.6.2 出荷完了（feature/add-ollama-runpod を PR #26 で main マージ・タグ v1.6.2-1・GitHub Release Latest 公開・zip+sha256 添付）。タグは immutable release 衝突回避で -1 サフィックス。最後の GSD フェーズマイルストーンは v1.6.0。次マイルストーン待ち
-last_updated: "2026-06-30T00:00:00.000Z"
-last_activity: 2026-06-30
-last_activity_desc: v1.6.2 出荷確定（Ollama・RunPod プロバイダ追加・設定画面リプレース）。v1.6.1/v1.6.2 を MILESTONES.md へ遡及記録
+stopped_at: v1.6.3 出荷完了（claude/llm-prompt-output-lag-jx8i98 を PR #27 で main マージ・タグ v1.6.3・GitHub Release Latest 公開・zip+sha256 添付）。タグは未使用のためサフィックスなし。最後の GSD フェーズマイルストーンは v1.6.0。次マイルストーン待ち
+last_updated: "2026-07-01T00:00:00.000Z"
+last_activity: 2026-07-01
+last_activity_desc: v1.6.3 出荷確定（OCR カスタムプロンプト遅延・LLM 設定「適用」永続化・ダイアログ二重起動防止のバグ修正3件）。PyInstaller リビルド・MILESTONES.md 記録
 progress:
   total_phases: 4
   completed_phases: 4
@@ -28,10 +28,10 @@ See: .planning/PROJECT.md (updated 2026-06-20)
 
 ## Current Position
 
-Phase: v1.6.2 出荷済み（最後の GSD フェーズマイルストーンは v1.6.0・全 4 フェーズ達成）
+Phase: v1.6.3 出荷済み（最後の GSD フェーズマイルストーンは v1.6.0・全 4 フェーズ達成）
 Plan: —
 Status: Awaiting next milestone
-Last activity: 2026-06-30 — v1.6.2 リリース（feature/add-ollama-runpod を PR #26 で main マージ・タグ v1.6.2-1・GitHub Release Latest 公開・zip+sha256 添付）。v1.6.1/v1.6.2 を MILESTONES.md へ遡及記録
+Last activity: 2026-07-01 — v1.6.3 リリース（claude/llm-prompt-output-lag-jx8i98 を PR #27 で main マージ・タグ v1.6.3・GitHub Release Latest 公開・zip+sha256 添付）。OCR/設定ダイアログのバグ修正3件・pytest 626 件グリーン
 
 ## v1.6.0 Phase Map
 
