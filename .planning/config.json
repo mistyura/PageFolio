@@ -88,14 +88,14 @@
   "context_window": 1000000,
   "model_policy": {
     "provider": "anthropic",
-    "budget": "high",
+    "budget": "medium",
     "high": "claude-opus-4-8",
-    "medium": "claude-opus-4-8",
-    "low": "claude-sonnet-4-6"
+    "medium": "claude-sonnet-5",
+    "low": "claude-sonnet-5"
   },
   "model_profile_overrides": {
     "claude": {
-      "haiku": "claude-sonnet-4-6"
+      "haiku": "claude-sonnet-5"
     }
   },
   "review": {
