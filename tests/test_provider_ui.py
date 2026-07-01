@@ -573,6 +573,78 @@ class TestApplyLlmSettingsCustomPromptSync:
         assert stub.custom_prompt == ""
 
 
+class _FakeToplevel:
+    """winfo_exists/lift/focus_force のみを備えた tk.Toplevel の最小スタブ。"""
+
+    def __init__(self, *args, **kwargs):
+        self.args = args
+        self.kwargs = kwargs
+        self._exists = True
+        self.lifted = False
+        self.focused = False
+
+    def winfo_exists(self):
+        return self._exists
+
+    def lift(self):
+        self.lifted = True
+
+    def focus_force(self):
+        self.focused = True
+
+    def destroy(self):
+        self._exists = False
+
+
+class TestOpenSettingsDoubleLaunchGuard:
+    """設定ダイアログの二重起動ガード（同一 SettingsDialog を使い回す）を検証する。
+
+    ガード前は連続クリック等で SettingsDialog が複数生成され、それぞれが
+    current_settings の独立したコピーを持つため、片方の変更がもう片方の
+    「適用」/「キャンセル」で消失し得た（適用しても更新されないように見える
+    バグの一因）。
+    """
+
+    def test_second_call_reuses_existing_dialog(self, monkeypatch):
+        """既に開いている間は新規 SettingsDialog を生成せず既存を再利用する。"""
+        from pagefolio.app import PDFEditorApp
+
+        monkeypatch.setattr("pagefolio.app.SettingsDialog", _FakeToplevel)
+        stub = types.SimpleNamespace(
+            root=object(),
+            settings={},
+            _apply_settings=lambda s: None,
+            _font=lambda delta=0, weight=None: ("Segoe UI", 10),
+        )
+        PDFEditorApp._open_settings(stub)
+        first = stub._settings_dialog
+        PDFEditorApp._open_settings(stub)
+        second = stub._settings_dialog
+
+        assert first is second
+        assert first.lifted is True
+        assert first.focused is True
+
+    def test_new_dialog_created_after_previous_closed(self, monkeypatch):
+        """前のダイアログが閉じられていれば新規に生成する。"""
+        from pagefolio.app import PDFEditorApp
+
+        monkeypatch.setattr("pagefolio.app.SettingsDialog", _FakeToplevel)
+        stub = types.SimpleNamespace(
+            root=object(),
+            settings={},
+            _apply_settings=lambda s: None,
+            _font=lambda delta=0, weight=None: ("Segoe UI", 10),
+        )
+        PDFEditorApp._open_settings(stub)
+        first = stub._settings_dialog
+        first.destroy()
+        PDFEditorApp._open_settings(stub)
+        second = stub._settings_dialog
+
+        assert first is not second
+
+
 class TestSettingsDialogOpenLlmConfigPersists:
     """設定ダイアログの LLM 設定サブダイアログで「適用」を押した際に
     即座に永続化されることを検証する回帰テスト。
@@ -619,6 +691,54 @@ class TestSettingsDialogOpenLlmConfigPersists:
         assert saved.get("ocr_provider") == "claude"
         assert saved.get("ocr_custom_prompt") == "new"
         assert stub.current_settings["ocr_provider"] == "claude"
+
+
+class TestOpenLlmConfigDoubleLaunchGuard:
+    """LLM 設定サブダイアログ（設定画面経由・OCR ダイアログ経由）の
+    二重起動ガードを検証する回帰テスト。
+    """
+
+    def test_settings_dialog_reuses_existing_llm_config_dialog(self, monkeypatch):
+        """SettingsDialog._open_llm_config は既存ダイアログを再利用する。"""
+        from pagefolio.dialogs.settings import SettingsDialog
+
+        monkeypatch.setattr(
+            "pagefolio.dialogs.llm_config.LLMConfigDialog", _FakeToplevel
+        )
+        stub = types.SimpleNamespace(
+            current_settings={"ocr_provider": "lmstudio"},
+            _font=lambda delta=0, weight=None: ("Segoe UI", 10),
+            _plugin_manager=None,
+        )
+        SettingsDialog._open_llm_config(stub)
+        first = stub._llm_config_dialog
+        SettingsDialog._open_llm_config(stub)
+        second = stub._llm_config_dialog
+
+        assert first is second
+        assert first.lifted is True
+
+    def test_ocr_dialog_reuses_existing_llm_config_dialog(self, monkeypatch):
+        """OCRDialog._open_llm_config は既存ダイアログを再利用する。"""
+        from pagefolio.ocr_dialog import OCRDialog
+
+        monkeypatch.setattr(
+            "pagefolio.dialogs.llm_config.LLMConfigDialog", _FakeToplevel
+        )
+        stub = types.SimpleNamespace(
+            _started=False,
+            _done=False,
+            app=types.SimpleNamespace(settings={}, plugin_manager=None),
+            _font=lambda delta=0, weight=None: ("Segoe UI", 10),
+            _apply_llm_settings=lambda s: None,
+        )
+        OCRDialog._open_llm_config(stub)
+        first = stub._llm_config_dialog
+        OCRDialog._open_llm_config(stub)
+        second = stub._llm_config_dialog
+
+        assert first is second
+        assert first.lifted is True
 
 
 # ===== M-8 回帰テスト: SettingsDialog に plugin_manager 引数追加 =====

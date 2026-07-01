@@ -806,14 +806,19 @@ class OCRDialog(tk.Toplevel):
         """プロバイダ表示行の「⚙ LLM 設定…」ボタンから LLMConfigDialog を開く。
 
         実行中（_started かつ未完了）は即 return してプロバイダ変更を阻止する
-        （T-CCZ-02）。
+        （T-CCZ-02）。既に開いている場合も二重起動せず既存ウィンドウを前面へ出す。
         """
         if self._started and not self._done:
+            return
+        existing = getattr(self, "_llm_config_dialog", None)
+        if existing is not None and existing.winfo_exists():
+            existing.lift()
+            existing.focus_force()
             return
         from pagefolio.dialogs.llm_config import LLMConfigDialog
 
         lang = self.app.settings.get("lang", "ja")
-        LLMConfigDialog(
+        self._llm_config_dialog = LLMConfigDialog(
             self,
             self.app.settings,
             on_apply=self._apply_llm_settings,
