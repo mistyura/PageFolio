@@ -492,6 +492,32 @@ LANG = {
             "ハルシネーション抑制: 温度↓・解像度↑。"
             "推奨モデル: Qwen2-VL-7B / MiniCPM-V / InternVL2 8B 以上"
         ),
+        # 全ページ統合サマリ生成
+        "ocr_summary_btn": "📊 サマリ作成",
+        "ocr_summary_separator": "--- Summary ---",
+        "ocr_summary_running": "全ページのサマリを生成中…",
+        "ocr_summary_waiting_retry": (
+            "サマリ生成: 待機中（約 {sec} 秒・リトライ {n}/{max}）"
+        ),
+        "ocr_summary_complete": "サマリ生成が完了しました",
+        "ocr_summary_failed": "サマリ生成に失敗しました: {error}",
+        "ocr_summary_truncated": (
+            "[サマリが max_tokens で途切れました。"
+            "LLM 設定で max_tokens を増やして再実行してください]"
+        ),
+        "ocr_summary_unsupported": (
+            "このプロバイダ ({name}) はサマリ生成に対応していません"
+        ),
+        "ocr_summary_cost_confirm_msg": (
+            "送信先: {host}\n"
+            "対象: 全ページの OCR 結果テキスト（約 {chars} 文字）\n\n"
+            "OCR 結果テキストが外部 API に送信されます。\n"
+            "従量課金が発生します。\n"
+            "実行しますか？"
+        ),
+        "ocr_summary_cancelled": "サマリ生成をキャンセルしました",
+        "ocr_summary_prompt_label": "サマリプロンプト:",
+        "ocr_summary_prompt_hint": "(空欄で既定のサマリ指示を使用)",
         # 共通エラー
         "err_title": "エラー",
         "info_title": "情報",
@@ -988,6 +1014,32 @@ LANG = {
             "To reduce hallucinations: lower temp / raise scale. "
             "Recommended models: Qwen2-VL-7B / MiniCPM-V / InternVL2 8B+"
         ),
+        # Multi-page merged summary
+        "ocr_summary_btn": "📊 Create Summary",
+        "ocr_summary_separator": "--- Summary ---",
+        "ocr_summary_running": "Generating summary of all pages…",
+        "ocr_summary_waiting_retry": (
+            "Summary: waiting (about {sec}s, retry {n}/{max})"
+        ),
+        "ocr_summary_complete": "Summary generated",
+        "ocr_summary_failed": "Summary generation failed: {error}",
+        "ocr_summary_truncated": (
+            "[Summary was truncated at max_tokens. "
+            "Increase max_tokens in LLM settings and try again]"
+        ),
+        "ocr_summary_unsupported": (
+            "This provider ({name}) does not support summary generation"
+        ),
+        "ocr_summary_cost_confirm_msg": (
+            "Destination: {host}\n"
+            "Payload: OCR text of all pages (about {chars} chars)\n\n"
+            "The OCR result text will be sent to an external API.\n"
+            "Usage-based charges will apply.\n"
+            "Proceed?"
+        ),
+        "ocr_summary_cancelled": "Summary generation cancelled",
+        "ocr_summary_prompt_label": "Summary prompt:",
+        "ocr_summary_prompt_hint": "(blank: use the default summary instruction)",
         # Common error
         "err_title": "Error",
         "info_title": "Info",

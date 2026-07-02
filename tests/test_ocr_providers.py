@@ -1641,3 +1641,302 @@ class TestRunPodProvider:
         with caplog.at_level(logging.DEBUG):
             p.ocr_image("Zg==", "テスト")
         assert "rpod-LEAK-KEY" not in caplog.text, "RunPod APIキーがログに出力された"
+
+
+# ===== 全ページ統合サマリ: complete_text_ex / supports_text_prompt =====
+
+
+class TestCompleteTextBase:
+    """基底 OCRProvider の complete_text_ex / supports_text_prompt を確認する"""
+
+    def _make_concrete(self):
+        from pagefolio.ocr_providers import OCRProvider
+
+        class Concrete(OCRProvider):
+            def ocr_image(self, b64_png, prompt, **kwargs):
+                return "text"
+
+            def list_models(self):
+                return []
+
+        return Concrete()
+
+    def test_supports_text_prompt_default_false(self):
+        """基底クラスの supports_text_prompt 既定値は False"""
+        from pagefolio.ocr_providers import OCRProvider
+
+        assert OCRProvider.supports_text_prompt is False
+
+    def test_complete_text_ex_raises_not_implemented(self):
+        """既定の complete_text_ex は NotImplementedError を送出する"""
+        obj = self._make_concrete()
+        with pytest.raises(NotImplementedError):
+            obj.complete_text_ex("text", "prompt")
+
+    def test_tesseract_not_supported(self):
+        """Tesseract は非 LLM のため supports_text_prompt=False のまま"""
+        from pagefolio.ocr_providers import TesseractProvider
+
+        assert TesseractProvider.supports_text_prompt is False
+        p = TesseractProvider()
+        with pytest.raises(NotImplementedError):
+            p.complete_text_ex("text", "prompt")
+
+    def test_llm_providers_supported(self):
+        """LLM 系プロバイダは supports_text_prompt=True"""
+        from pagefolio.ocr_providers import (
+            ClaudeProvider,
+            GeminiProvider,
+            LMStudioProvider,
+            OllamaProvider,
+            RunPodProvider,
+        )
+
+        for cls in (
+            LMStudioProvider,
+            ClaudeProvider,
+            GeminiProvider,
+            OllamaProvider,
+            RunPodProvider,
+        ):
+            assert cls.supports_text_prompt is True, cls.__name__
+
+
+class TestLMStudioCompleteText:
+    """LMStudioProvider.complete_text_ex / _build_text_payload を確認する"""
+
+    def test_text_payload_has_no_image_block(self):
+        """_build_text_payload に image_url ブロックが含まれない"""
+        from pagefolio.ocr_providers import LMStudioProvider
+
+        p = LMStudioProvider("http://localhost:1234", "m")
+        payload = p._build_text_payload("doc text", "summarize")
+        content = payload["messages"][0]["content"]
+        assert all(c["type"] == "text" for c in content)
+        assert content[0]["text"] == "doc text"
+        assert content[1]["text"] == "summarize"
+
+    def test_success_returns_text_and_not_truncated(self, monkeypatch):
+        """正常レスポンスから (text, False) を返す"""
+        from pagefolio import ocr_providers
+
+        def fake_urlopen(req, timeout=None):
+            body = json.dumps(
+                {
+                    "choices": [
+                        {"message": {"content": "summary"}, "finish_reason": "stop"}
+                    ]
+                }
+            )
+            return _FakeResponse(body)
+
+        monkeypatch.setattr(ocr_providers.urllib.request, "urlopen", fake_urlopen)
+        p = ocr_providers.LMStudioProvider("http://localhost:1234", "m")
+        assert p.complete_text_ex("doc", "sum") == ("summary", False)
+
+    def test_truncated_on_finish_reason_length(self, monkeypatch):
+        """finish_reason == "length" のとき truncated=True"""
+        from pagefolio import ocr_providers
+
+        def fake_urlopen(req, timeout=None):
+            body = json.dumps(
+                {
+                    "choices": [
+                        {"message": {"content": "part"}, "finish_reason": "length"}
+                    ]
+                }
+            )
+            return _FakeResponse(body)
+
+        monkeypatch.setattr(ocr_providers.urllib.request, "urlopen", fake_urlopen)
+        p = ocr_providers.LMStudioProvider("http://localhost:1234", "m")
+        assert p.complete_text_ex("doc", "sum") == ("part", True)
+
+    def test_bad_response_raises_runtime_error(self, monkeypatch):
+        """レスポンス形式不正で RuntimeError"""
+        from pagefolio import ocr_providers
+
+        def fake_urlopen(req, timeout=None):
+            return _FakeResponse(json.dumps({"unexpected": True}))
+
+        monkeypatch.setattr(ocr_providers.urllib.request, "urlopen", fake_urlopen)
+        p = ocr_providers.LMStudioProvider("http://localhost:1234", "m")
+        with pytest.raises(RuntimeError):
+            p.complete_text_ex("doc", "sum")
+
+
+class TestClaudeCompleteText:
+    """ClaudeProvider.complete_text_ex / _build_text_payload を確認する"""
+
+    def test_text_payload_has_no_image_block(self):
+        """_build_text_payload に image ブロックが含まれない"""
+        from pagefolio.ocr_providers import ClaudeProvider
+
+        p = ClaudeProvider(api_key="k", model="claude-sonnet-4-6")
+        payload = p._build_text_payload("doc text", "summarize")
+        content = payload["messages"][0]["content"]
+        assert all(c["type"] == "text" for c in content)
+        assert content[0]["text"] == "doc text"
+        assert content[1]["text"] == "summarize"
+
+    def test_text_payload_gen_params_match_build_payload(self):
+        """effort/temperature 分岐が _build_payload と同一（共有ヘルパー検証）"""
+        from pagefolio.ocr_providers import ClaudeProvider
+
+        # effort 対応モデル: output_config のみ
+        p = ClaudeProvider(api_key="k", model="claude-sonnet-4-6", effort="high")
+        img = p._build_payload("Zg==", "x")
+        txt = p._build_text_payload("doc", "x")
+        assert txt.get("output_config") == img.get("output_config")
+        assert "temperature" not in txt and "temperature" not in img
+        # haiku 系: temperature のみ
+        p2 = ClaudeProvider(api_key="k", model="claude-haiku-4-5", temperature=0.3)
+        img2 = p2._build_payload("Zg==", "x")
+        txt2 = p2._build_text_payload("doc", "x")
+        assert txt2.get("temperature") == img2.get("temperature") == 0.3
+        assert "output_config" not in txt2 and "output_config" not in img2
+
+    def test_truncated_on_max_tokens(self, monkeypatch):
+        """stop_reason == "max_tokens" のとき truncated=True"""
+        from pagefolio import ocr_providers
+
+        def fake_urlopen(req, timeout=None):
+            body = json.dumps(
+                {
+                    "content": [{"type": "text", "text": "partial summary"}],
+                    "stop_reason": "max_tokens",
+                }
+            )
+            return _FakeResponse(body)
+
+        monkeypatch.setattr(ocr_providers.urllib.request, "urlopen", fake_urlopen)
+        p = ocr_providers.ClaudeProvider(api_key="k", model="claude-sonnet-4-6")
+        assert p.complete_text_ex("doc", "sum") == ("partial summary", True)
+
+    def test_retryable_on_429(self, monkeypatch):
+        """HTTP 429 で OCRRetryableError を送出する"""
+        from pagefolio import ocr_providers
+
+        def fake_urlopen(req, timeout=None):
+            raise urllib.error.HTTPError(
+                "https://api.anthropic.com/v1/messages",
+                429,
+                "Too Many Requests",
+                {"Retry-After": "5"},
+                io.BytesIO(b""),
+            )
+
+        monkeypatch.setattr(ocr_providers.urllib.request, "urlopen", fake_urlopen)
+        p = ocr_providers.ClaudeProvider(api_key="k", model="claude-sonnet-4-6")
+        with pytest.raises(ocr_providers.OCRRetryableError) as ei:
+            p.complete_text_ex("doc", "sum")
+        assert ei.value.retry_after == 5.0
+
+
+class TestGeminiCompleteText:
+    """GeminiProvider.complete_text_ex / _build_text_payload を確認する"""
+
+    def test_text_payload_has_no_inline_data(self):
+        """_build_text_payload に inline_data（画像）が含まれない"""
+        from pagefolio.ocr_providers import GeminiProvider
+
+        p = GeminiProvider(api_key="k", model="gemini-2.5-flash")
+        payload = p._build_text_payload("doc text", "summarize")
+        parts = payload["contents"][0]["parts"]
+        assert all("inline_data" not in part for part in parts)
+        assert parts[0]["text"] == "doc text"
+        assert parts[1]["text"] == "summarize"
+
+    def test_text_payload_generation_config_matches(self):
+        """generationConfig が _build_payload と同一（thinkingConfig 分岐含む）"""
+        from pagefolio.ocr_providers import GeminiProvider
+
+        p = GeminiProvider(api_key="k", model="gemini-2.5-flash")
+        img = p._build_payload("Zg==", "x")
+        txt = p._build_text_payload("doc", "x")
+        assert txt["generationConfig"] == img["generationConfig"]
+
+    def test_truncated_on_max_tokens(self, monkeypatch):
+        """finishReason == "MAX_TOKENS" のとき truncated=True"""
+        from pagefolio import ocr_providers
+
+        def fake_urlopen(req, timeout=None):
+            body = json.dumps(
+                {
+                    "candidates": [
+                        {
+                            "content": {"parts": [{"text": "partial"}]},
+                            "finishReason": "MAX_TOKENS",
+                        }
+                    ]
+                }
+            )
+            return _FakeResponse(body)
+
+        monkeypatch.setattr(ocr_providers.urllib.request, "urlopen", fake_urlopen)
+        p = ocr_providers.GeminiProvider(api_key="k", model="gemini-2.5-flash")
+        assert p.complete_text_ex("doc", "sum") == ("partial", True)
+
+    def test_blocked_raises_runtime_error(self, monkeypatch):
+        """candidates 空（安全フィルタブロック）で RuntimeError"""
+        from pagefolio import ocr_providers
+
+        def fake_urlopen(req, timeout=None):
+            body = json.dumps({"promptFeedback": {"blockReason": "SAFETY"}})
+            return _FakeResponse(body)
+
+        monkeypatch.setattr(ocr_providers.urllib.request, "urlopen", fake_urlopen)
+        p = ocr_providers.GeminiProvider(api_key="k", model="gemini-2.5-flash")
+        with pytest.raises(RuntimeError):
+            p.complete_text_ex("doc", "sum")
+
+
+class TestOllamaRunPodCompleteText:
+    """Ollama / RunPod の complete_text_ex を確認する"""
+
+    def test_ollama_text_payload_has_no_image_block(self):
+        from pagefolio.ocr_providers import OllamaProvider
+
+        p = OllamaProvider("http://localhost:11434", "llava")
+        content = p._build_text_payload("doc", "sum")["messages"][0]["content"]
+        assert all(c["type"] == "text" for c in content)
+
+    def test_ollama_truncated_on_length(self, monkeypatch):
+        from pagefolio import ocr_providers
+
+        def fake_urlopen(req, timeout=None):
+            body = json.dumps(
+                {
+                    "choices": [
+                        {"message": {"content": "part"}, "finish_reason": "length"}
+                    ]
+                }
+            )
+            return _FakeResponse(body)
+
+        monkeypatch.setattr(ocr_providers.urllib.request, "urlopen", fake_urlopen)
+        p = ocr_providers.OllamaProvider("http://localhost:11434", "llava")
+        assert p.complete_text_ex("doc", "sum") == ("part", True)
+
+    def test_runpod_missing_key_raises(self):
+        """RunPod: APIキー未設定で OCRAPIKeyError"""
+        from pagefolio.ocr_providers import OCRAPIKeyError, RunPodProvider
+
+        p = RunPodProvider("", "https://api.runpod.ai/v1/endpoint", "m")
+        with pytest.raises(OCRAPIKeyError):
+            p.complete_text_ex("doc", "sum")
+
+    def test_runpod_success(self, monkeypatch):
+        from pagefolio import ocr_providers
+
+        def fake_urlopen(req, timeout=None):
+            body = json.dumps(
+                {"choices": [{"message": {"content": "sum"}, "finish_reason": "stop"}]}
+            )
+            return _FakeResponse(body)
+
+        monkeypatch.setattr(ocr_providers.urllib.request, "urlopen", fake_urlopen)
+        p = ocr_providers.RunPodProvider(
+            "key", "https://api.runpod.ai/v1/endpoint", "m"
+        )
+        assert p.complete_text_ex("doc", "sum") == ("sum", False)

@@ -11,7 +11,13 @@ import types
 
 import pytest
 
-from pagefolio.ocr import OCR_PROMPTS, resolve_ocr_prompt
+from pagefolio.ocr import (
+    DEFAULT_SUMMARY_PROMPT,
+    OCR_PROMPTS,
+    PROVIDER_SUMMARY_PROMPTS,
+    resolve_ocr_prompt,
+    resolve_summary_prompt,
+)
 from pagefolio.ocr_providers import ClaudeProvider
 
 # ══════════════════════════════════════════════════════════════
@@ -533,6 +539,7 @@ def _make_apply_llm_settings_stub(settings, provider=None):
         concurrency=1,
         _refresh_provider_dependent_ui=lambda: None,
         _sync_param_vars_from_settings=lambda: None,
+        _update_summary_btn_state=lambda: None,
         progress_var=_VarStub(),
         url_var=_VarStub(),
         model_var=_VarStub(),
@@ -728,6 +735,7 @@ class TestOpenLlmConfigDoubleLaunchGuard:
         stub = types.SimpleNamespace(
             _started=False,
             _done=False,
+            _summary_running=False,
             app=types.SimpleNamespace(settings={}, plugin_manager=None),
             _font=lambda delta=0, weight=None: ("Segoe UI", 10),
             _apply_llm_settings=lambda s: None,
@@ -803,3 +811,34 @@ class TestResolveOcrPrompt:
     def test_unknown_preset_falls_back_to_text(self):
         """未定義 preset は既定で OCR_PROMPTS['text'] へフォールバックする。"""
         assert resolve_ocr_prompt("zzz", "off", "") == OCR_PROMPTS["text"]
+
+
+class TestResolveSummaryPrompt:
+    """resolve_summary_prompt の優先順位とフォールバックを検証する。
+
+    Tk/ネットワーク非依存の純関数（resolve_ocr_prompt と同型）。
+    優先順位: custom 上書き > プロバイダ別テンプレート > DEFAULT_SUMMARY_PROMPT。
+    """
+
+    def test_custom_overrides_provider_template(self):
+        """custom_prompt が非空ならプロバイダ別テンプレより優先される。"""
+        assert resolve_summary_prompt("claude", "MY SUMMARY") == "MY SUMMARY"
+
+    def test_claude_uses_provider_template(self):
+        """claude はプロバイダ別サマリテンプレートを返す。"""
+        expected = PROVIDER_SUMMARY_PROMPTS["claude"]
+        assert resolve_summary_prompt("claude", "") == expected
+
+    def test_gemini_uses_provider_template(self):
+        """gemini はプロバイダ別サマリテンプレートを返す。"""
+        expected = PROVIDER_SUMMARY_PROMPTS["gemini"]
+        assert resolve_summary_prompt("gemini", "") == expected
+
+    def test_lmstudio_falls_back_to_default(self):
+        """lmstudio は DEFAULT_SUMMARY_PROMPT へフォールバックする。"""
+        assert resolve_summary_prompt("lmstudio", "") == DEFAULT_SUMMARY_PROMPT
+
+    def test_off_falls_back_to_default(self):
+        """off / 未知プロバイダは DEFAULT_SUMMARY_PROMPT へフォールバックする。"""
+        assert resolve_summary_prompt("off", "") == DEFAULT_SUMMARY_PROMPT
+        assert resolve_summary_prompt("unknown_xyz", "") == DEFAULT_SUMMARY_PROMPT

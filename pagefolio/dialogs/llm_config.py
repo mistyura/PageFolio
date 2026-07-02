@@ -664,6 +664,43 @@ class LLMConfigDialog(tk.Toplevel):
             font=self._font(-2),
         ).pack(side="left", padx=4, anchor="sw")
 
+        # ── サマリプロンプト（全ページ統合サマリ生成用）──
+        summary_row = tk.Frame(self, bg=C["BG_DARK"])
+        summary_row.pack(fill="x", padx=24, pady=2)
+        tk.Label(
+            summary_row,
+            text=self._L.get("ocr_summary_prompt_label", "サマリプロンプト:"),
+            bg=C["BG_DARK"],
+            fg=C["TEXT_MAIN"],
+            font=self._font(-1),
+            width=20,
+            anchor="nw",
+        ).pack(side="left")
+        self.ocr_summary_prompt_text = tk.Text(
+            summary_row,
+            width=30,
+            height=3,
+            font=self._font(-1),
+            bg=C["BG_CARD"],
+            fg=C["TEXT_MAIN"],
+            insertbackground=C["TEXT_MAIN"],
+            wrap="word",
+        )
+        self.ocr_summary_prompt_text.pack(side="left", fill="x", expand=True, padx=4)
+        # 初期値の挿入
+        default_summary_prompt = self.current_settings.get("ocr_summary_prompt", "")
+        if default_summary_prompt:
+            self.ocr_summary_prompt_text.insert("1.0", default_summary_prompt)
+        tk.Label(
+            summary_row,
+            text=self._L.get(
+                "ocr_summary_prompt_hint", "(空欄で既定のサマリ指示を使用)"
+            ),
+            bg=C["BG_DARK"],
+            fg=C["TEXT_SUB"],
+            font=self._font(-2),
+        ).pack(side="left", padx=4, anchor="sw")
+
         # ── 並列度（concurrency）──
         conc_row = tk.Frame(self, bg=C["BG_DARK"])
         conc_row.pack(fill="x", padx=24, pady=2)
@@ -1146,6 +1183,9 @@ class LLMConfigDialog(tk.Toplevel):
         except (tk.TclError, ValueError):
             llm_settings["ocr_max_tokens"] = -1
         llm_settings["ocr_custom_prompt"] = self.ocr_prompt_text.get(
+            "1.0", "end"
+        ).strip()
+        llm_settings["ocr_summary_prompt"] = self.ocr_summary_prompt_text.get(
             "1.0", "end"
         ).strip()
         try:

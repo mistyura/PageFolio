@@ -29,6 +29,8 @@ class OCRProvider(abc.ABC):
 
     default_concurrency: int = 2
     max_concurrency: int = 8
+    # テキストのみ補完（complete_text_ex）対応フラグ。LLM 系プロバイダで True。
+    supports_text_prompt: bool = False
 
     @abc.abstractmethod
     def ocr_image(self, b64_png, prompt, **kwargs):
@@ -76,6 +78,31 @@ class OCRProvider(abc.ABC):
         """
         return (self.ocr_image(b64_png, prompt, **kwargs), False)
 
+    def complete_text_ex(self, text, prompt, **kwargs):
+        """テキストのみを LLM に送信し (text, truncated) を返す（サマリ生成用）。
+
+        引数:
+          text:   入力テキスト（複数ページの OCR 結果連結など）
+          prompt: 指示テキスト（サマリ生成指示など）
+          **kwargs: プロバイダ固有の追加パラメータ
+
+        戻り値: (text, truncated) のタプル（str, bool）。
+          truncated はトークン超過等で応答が途切れたとき True。
+          部分テキストは破棄せず常に返す（途切れは「成功＋警告」・D-05）。
+
+        既定は NotImplementedError（Tesseract 等の非 LLM プロバイダ）。
+        supports_text_prompt が True のプロバイダのみオーバーライドする。
+        送信中の 1 リクエストは urlopen の制約上、即時中断できない
+        （キャンセルは呼び出し側のリトライ待機でのみ反応する）。
+
+        例外:
+          ocr_image() と同一の例外規約（クラス docstring 参照）に加え、
+          非対応プロバイダでは NotImplementedError。
+        """
+        raise NotImplementedError(
+            f"{type(self).__name__} はテキストのみの補完に対応していません"
+        )
+
 
 class OCRAPIKeyError(RuntimeError):
     """APIキー未設定を示す専用例外。環境変数名を保持する。"""
@@ -118,6 +145,7 @@ class LMStudioProvider(OCRProvider):
 
     default_concurrency = 2
     max_concurrency = 8
+    supports_text_prompt = True
 
     def __init__(self, url, model, timeout=120, max_tokens=-1, temperature=0.1):
         """初期化。
@@ -158,6 +186,59 @@ class LMStudioProvider(OCRProvider):
             "stream": False,
         }
 
+    def _build_text_payload(self, text, prompt):
+        """テキストのみの Chat Completions リクエストボディを構築する（内部）。
+
+        画像ブロックを含めない点以外は _build_payload と同一構造。
+        ブロック順は既存の「画像→プロンプト」に対応する「文書テキスト→指示」。
+        """
+        return {
+            "model": self.model or "local-model",
+            "messages": [
+                {
+                    "role": "user",
+                    "content": [
+                        {"type": "text", "text": text},
+                        {"type": "text", "text": prompt},
+                    ],
+                }
+            ],
+            "max_tokens": self.max_tokens,
+            "temperature": self.temperature,
+            "stream": False,
+        }
+
+    def _post_chat(self, payload):
+        """Chat Completions へ POST し HTTP レスポンス body（str）を返す（内部）。
+
+        HTTP / 接続 / タイムアウトの例外マッピングは ocr_image と同一規約。
+        ocr_image と complete_text_ex の両方から呼ばれる共有経路。
+        """
+        endpoint = self.url.rstrip("/") + "/v1/chat/completions"
+        data = json.dumps(payload).encode("utf-8")
+        req = urllib.request.Request(  # noqa: S310
+            endpoint,
+            data=data,
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        try:
+            with urllib.request.urlopen(req, timeout=self.timeout) as resp:  # noqa: S310
+                return resp.read().decode("utf-8")
+        except urllib.error.HTTPError as e:
+            try:
+                err_body = e.read().decode("utf-8", errors="replace")
+            except Exception:
+                err_body = ""
+            raise RuntimeError(f"HTTP {e.code}: {err_body or e.reason}") from e
+        except socket.timeout as e:
+            raise TimeoutError(f"timed out after {self.timeout}s") from e
+        except urllib.error.URLError as e:
+            reason = getattr(e, "reason", e)
+            if isinstance(reason, socket.timeout):
+                raise TimeoutError(f"timed out after {self.timeout}s") from e
+            raise ConnectionError(str(reason)) from e
+
     def ocr_image(self, b64_png, prompt, **kwargs):
         """LM Studio Chat Completions API を呼び出して OCR テキストを返す。
 
@@ -173,37 +254,31 @@ class LMStudioProvider(OCRProvider):
           TimeoutError:    タイムアウト
           RuntimeError:    HTTP エラー（4xx/5xx）またはレスポンス形式不正
         """
-        endpoint = self.url.rstrip("/") + "/v1/chat/completions"
-        payload = self._build_payload(b64_png, prompt)
-        data = json.dumps(payload).encode("utf-8")
-        req = urllib.request.Request(  # noqa: S310
-            endpoint,
-            data=data,
-            headers={"Content-Type": "application/json"},
-            method="POST",
-        )
-        try:
-            with urllib.request.urlopen(req, timeout=self.timeout) as resp:  # noqa: S310
-                body = resp.read().decode("utf-8")
-        except urllib.error.HTTPError as e:
-            try:
-                err_body = e.read().decode("utf-8", errors="replace")
-            except Exception:
-                err_body = ""
-            raise RuntimeError(f"HTTP {e.code}: {err_body or e.reason}") from e
-        except socket.timeout as e:
-            raise TimeoutError(f"timed out after {self.timeout}s") from e
-        except urllib.error.URLError as e:
-            reason = getattr(e, "reason", e)
-            if isinstance(reason, socket.timeout):
-                raise TimeoutError(f"timed out after {self.timeout}s") from e
-            raise ConnectionError(str(reason)) from e
-
+        body = self._post_chat(self._build_payload(b64_png, prompt))
         try:
             result = json.loads(body)
             return result["choices"][0]["message"]["content"]
         except (KeyError, IndexError, json.JSONDecodeError, TypeError) as e:
             raise RuntimeError(f"Unexpected response format: {body[:500]}") from e
+
+    def complete_text_ex(self, text, prompt, **kwargs):
+        """テキストのみを送信し (text, truncated) を返す（サマリ生成用）。
+
+        finish_reason == "length" のとき truncated=True。部分テキストは
+        破棄せず返す（途切れは「成功＋警告」・D-05）。
+
+        戻り値: (text, truncated) のタプル（str, bool）
+        例外:  ocr_image() と同一規約
+        """
+        body = self._post_chat(self._build_text_payload(text, prompt))
+        try:
+            result = json.loads(body)
+            choice = result["choices"][0]
+            out = choice["message"]["content"]
+        except (KeyError, IndexError, json.JSONDecodeError, TypeError) as e:
+            raise RuntimeError(f"Unexpected response format: {body[:500]}") from e
+        truncated = choice.get("finish_reason") == "length"
+        return (out, truncated)
 
     def list_models(self):
         """LM Studio /v1/models からモデル ID リストを取得する。
@@ -247,6 +322,7 @@ class ClaudeProvider(OCRProvider):
 
     default_concurrency = 2
     max_concurrency = 2
+    supports_text_prompt = True
 
     ANTHROPIC_VERSION = "2023-06-01"
     MESSAGES_ENDPOINT = "https://api.anthropic.com/v1/messages"
@@ -331,6 +407,17 @@ class ClaudeProvider(OCRProvider):
                 }
             ],
         }
+        return self._apply_gen_params(payload)
+
+    def _apply_gen_params(self, payload):
+        """モデル種別に応じた生成パラメータを payload に付与する（内部・M-3）。
+
+        3 分岐で安全なパラメータを付与する:
+          - effort 対応（EFFORT_MODELS 完全一致）→ output_config.effort のみ
+          - haiku 系 → temperature のみ
+          - 未知モデル → 両方省略（最も安全な前方互換・D-16）
+        _build_payload と _build_text_payload の共有経路。
+        """
         if self._supports_effort():
             # effort 対応モデル: output_config を付与（temperature は送らない）
             payload["output_config"] = {"effort": self.effort}
@@ -340,6 +427,27 @@ class ClaudeProvider(OCRProvider):
         # それ以外（未知モデル）: 両方省略（最も安全な前方互換）
         return payload
 
+    def _build_text_payload(self, text, prompt):
+        """テキストのみの messages API リクエストボディを構築する（内部）。
+
+        画像ブロックを含めない点以外は _build_payload と同一構造。
+        ブロック順は既存の「画像→プロンプト」に対応する「文書テキスト→指示」。
+        """
+        payload = {
+            "model": self.model,
+            "max_tokens": self.max_tokens,
+            "messages": [
+                {
+                    "role": "user",
+                    "content": [
+                        {"type": "text", "text": text},
+                        {"type": "text", "text": prompt},
+                    ],
+                }
+            ],
+        }
+        return self._apply_gen_params(payload)
+
     def _post_messages(self, b64_png, prompt):
         """messages API へ POST し HTTP レスポンス body（str）を返す（内部）。
 
@@ -347,7 +455,13 @@ class ClaudeProvider(OCRProvider):
         （OCRRetryableError / RuntimeError / TimeoutError / ConnectionError）。
         ocr_image と ocr_image_ex の両方から呼ばれる共有経路。
         """
-        payload = self._build_payload(b64_png, prompt)
+        return self._post_payload(self._build_payload(b64_png, prompt))
+
+    def _post_payload(self, payload):
+        """messages API へ payload を POST し HTTP レスポンス body（str）を返す。
+
+        _post_messages（画像あり）と complete_text_ex（テキストのみ）の共有経路。
+        """
         data = json.dumps(payload).encode("utf-8")
         req = urllib.request.Request(  # noqa: S310
             self.MESSAGES_ENDPOINT,
@@ -449,6 +563,24 @@ class ClaudeProvider(OCRProvider):
         truncated = result.get("stop_reason") == "max_tokens"
         return (text, truncated)
 
+    def complete_text_ex(self, text, prompt, **kwargs):
+        """テキストのみを送信し (text, truncated) を返す（サマリ生成用）。
+
+        stop_reason == "max_tokens" のとき truncated=True。部分テキストは
+        破棄せず返す（途切れは「成功＋警告」・D-05）。
+
+        戻り値: (text, truncated) のタプル（str, bool）
+        例外:  ocr_image() と同一規約
+        """
+        body = self._post_payload(self._build_text_payload(text, prompt))
+        try:
+            result = json.loads(body)
+            out = self._extract_text(result, body)
+        except (json.JSONDecodeError, TypeError) as e:
+            raise RuntimeError(f"Unexpected response format: {body[:500]}") from e
+        truncated = result.get("stop_reason") == "max_tokens"
+        return (out, truncated)
+
     def list_models(self):
         """Anthropic /v1/models から vision 対応モデル ID リストを取得する。
 
@@ -511,6 +643,7 @@ class GeminiProvider(OCRProvider):
 
     default_concurrency = 1  # D-07: Gemini Free Tier 10 RPM 対応
     max_concurrency = 1  # D-07: 並列度上限
+    supports_text_prompt = True
 
     GENERATE_CONTENT_ENDPOINT = (
         "https://generativelanguage.googleapis.com/v1beta/models/"
@@ -543,14 +676,6 @@ class GeminiProvider(OCRProvider):
         H-7: gemma 等の非 gemini 系モデルは thinkingConfig 非対応で
         400 INVALID_ARGUMENT になるため、gemini の non-pro に限って送信する。
         """
-        gen_config = {
-            "temperature": self.temperature,
-            "maxOutputTokens": self.max_tokens,
-        }
-        # M-4/H-7: thinkingConfig は gemini の non-pro（flash 等）のみに送る
-        if self.model.startswith("gemini") and "pro" not in self.model:
-            # flash 等: thinkingConfig は generationConfig 直下（Pitfall-C・D-09）
-            gen_config["thinkingConfig"] = {"thinkingBudget": 0}
         return {
             "contents": [
                 {
@@ -560,7 +685,41 @@ class GeminiProvider(OCRProvider):
                     ]
                 }
             ],
-            "generationConfig": gen_config,
+            "generationConfig": self._build_generation_config(),
+        }
+
+    def _build_generation_config(self):
+        """generationConfig（temperature / maxOutputTokens / thinking）を構築する。
+
+        _build_payload と _build_text_payload の共有経路（M-4/H-7 の
+        thinkingConfig 分岐を一元化）。
+        """
+        gen_config = {
+            "temperature": self.temperature,
+            "maxOutputTokens": self.max_tokens,
+        }
+        # M-4/H-7: thinkingConfig は gemini の non-pro（flash 等）のみに送る
+        if self.model.startswith("gemini") and "pro" not in self.model:
+            # flash 等: thinkingConfig は generationConfig 直下（Pitfall-C・D-09）
+            gen_config["thinkingConfig"] = {"thinkingBudget": 0}
+        return gen_config
+
+    def _build_text_payload(self, text, prompt):
+        """テキストのみの generateContent リクエストボディを構築する（内部）。
+
+        inline_data（画像）を含めない点以外は _build_payload と同一構造。
+        パーツ順は既存の「画像→プロンプト」に対応する「文書テキスト→指示」。
+        """
+        return {
+            "contents": [
+                {
+                    "parts": [
+                        {"text": text},
+                        {"text": prompt},
+                    ]
+                }
+            ],
+            "generationConfig": self._build_generation_config(),
         }
 
     def _parse_response(self, body):
@@ -584,8 +743,14 @@ class GeminiProvider(OCRProvider):
         HTTP / 接続 / タイムアウトの例外マッピングは ocr_image と同一規約。
         ocr_image と ocr_image_ex の両方から呼ばれる共有経路。
         """
+        return self._post_payload(self._build_payload(b64_png, prompt))
+
+    def _post_payload(self, payload):
+        """generateContent API へ payload を POST し body（str）を返す（内部）。
+
+        _post_generate（画像あり）と complete_text_ex（テキストのみ）の共有経路。
+        """
         endpoint = self.GENERATE_CONTENT_ENDPOINT.format(model=self.model)
-        payload = self._build_payload(b64_png, prompt)
         data = json.dumps(payload).encode("utf-8")
         req = urllib.request.Request(  # noqa: S310
             endpoint,
@@ -682,6 +847,24 @@ class GeminiProvider(OCRProvider):
             raise RuntimeError(f"Unexpected response format: {body[:500]}") from e
         truncated = self._is_truncated(result)
         return (text, truncated)
+
+    def complete_text_ex(self, text, prompt, **kwargs):
+        """テキストのみを送信し (text, truncated) を返す（サマリ生成用）。
+
+        finishReason == "MAX_TOKENS" のとき truncated=True。部分テキストは
+        破棄せず返す（途切れは「成功＋警告」・D-05）。
+
+        戻り値: (text, truncated) のタプル（str, bool）
+        例外:  ocr_image() と同一規約
+        """
+        body = self._post_payload(self._build_text_payload(text, prompt))
+        try:
+            result = json.loads(body)
+            out = self._parse_response(result)
+        except (json.JSONDecodeError, TypeError) as e:
+            raise RuntimeError(f"Unexpected response format: {body[:500]}") from e
+        truncated = self._is_truncated(result)
+        return (out, truncated)
 
     def list_models(self):
         """Gemini /v1beta/models から generateContent 対応モデル ID リストを取得する。
@@ -850,6 +1033,7 @@ class OllamaProvider(OCRProvider):
 
     default_concurrency = 2
     max_concurrency = 8
+    supports_text_prompt = True
 
     def __init__(self, url, model, timeout=120, max_tokens=-1, temperature=0.1):
         """初期化。
@@ -890,6 +1074,59 @@ class OllamaProvider(OCRProvider):
             "stream": False,
         }
 
+    def _build_text_payload(self, text, prompt):
+        """テキストのみの Chat Completions リクエストボディを構築する（内部）。
+
+        画像ブロックを含めない点以外は _build_payload と同一構造。
+        ブロック順は既存の「画像→プロンプト」に対応する「文書テキスト→指示」。
+        """
+        return {
+            "model": self.model or "llava",
+            "messages": [
+                {
+                    "role": "user",
+                    "content": [
+                        {"type": "text", "text": text},
+                        {"type": "text", "text": prompt},
+                    ],
+                }
+            ],
+            "max_tokens": self.max_tokens,
+            "temperature": self.temperature,
+            "stream": False,
+        }
+
+    def _post_chat(self, payload):
+        """Chat Completions へ POST し HTTP レスポンス body（str）を返す（内部）。
+
+        HTTP / 接続 / タイムアウトの例外マッピングは ocr_image と同一規約。
+        ocr_image と complete_text_ex の両方から呼ばれる共有経路。
+        """
+        endpoint = self.url.rstrip("/") + "/v1/chat/completions"
+        data = json.dumps(payload).encode("utf-8")
+        req = urllib.request.Request(  # noqa: S310
+            endpoint,
+            data=data,
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        try:
+            with urllib.request.urlopen(req, timeout=self.timeout) as resp:  # noqa: S310
+                return resp.read().decode("utf-8")
+        except urllib.error.HTTPError as e:
+            try:
+                err_body = e.read().decode("utf-8", errors="replace")
+            except Exception:
+                err_body = ""
+            raise RuntimeError(f"HTTP {e.code}: {err_body or e.reason}") from e
+        except socket.timeout as e:
+            raise TimeoutError(f"timed out after {self.timeout}s") from e
+        except urllib.error.URLError as e:
+            reason = getattr(e, "reason", e)
+            if isinstance(reason, socket.timeout):
+                raise TimeoutError(f"timed out after {self.timeout}s") from e
+            raise ConnectionError(str(reason)) from e
+
     def ocr_image(self, b64_png, prompt, **kwargs):
         """Ollama Chat Completions API を呼び出して OCR テキストを返す。
 
@@ -905,37 +1142,31 @@ class OllamaProvider(OCRProvider):
           TimeoutError:    タイムアウト
           RuntimeError:    HTTP エラー（4xx/5xx）またはレスポンス形式不正
         """
-        endpoint = self.url.rstrip("/") + "/v1/chat/completions"
-        payload = self._build_payload(b64_png, prompt)
-        data = json.dumps(payload).encode("utf-8")
-        req = urllib.request.Request(  # noqa: S310
-            endpoint,
-            data=data,
-            headers={"Content-Type": "application/json"},
-            method="POST",
-        )
-        try:
-            with urllib.request.urlopen(req, timeout=self.timeout) as resp:  # noqa: S310
-                body = resp.read().decode("utf-8")
-        except urllib.error.HTTPError as e:
-            try:
-                err_body = e.read().decode("utf-8", errors="replace")
-            except Exception:
-                err_body = ""
-            raise RuntimeError(f"HTTP {e.code}: {err_body or e.reason}") from e
-        except socket.timeout as e:
-            raise TimeoutError(f"timed out after {self.timeout}s") from e
-        except urllib.error.URLError as e:
-            reason = getattr(e, "reason", e)
-            if isinstance(reason, socket.timeout):
-                raise TimeoutError(f"timed out after {self.timeout}s") from e
-            raise ConnectionError(str(reason)) from e
-
+        body = self._post_chat(self._build_payload(b64_png, prompt))
         try:
             result = json.loads(body)
             return result["choices"][0]["message"]["content"]
         except (KeyError, IndexError, json.JSONDecodeError, TypeError) as e:
             raise RuntimeError(f"Unexpected response format: {body[:500]}") from e
+
+    def complete_text_ex(self, text, prompt, **kwargs):
+        """テキストのみを送信し (text, truncated) を返す（サマリ生成用）。
+
+        finish_reason == "length" のとき truncated=True。部分テキストは
+        破棄せず返す（途切れは「成功＋警告」・D-05）。
+
+        戻り値: (text, truncated) のタプル（str, bool）
+        例外:  ocr_image() と同一規約
+        """
+        body = self._post_chat(self._build_text_payload(text, prompt))
+        try:
+            result = json.loads(body)
+            choice = result["choices"][0]
+            out = choice["message"]["content"]
+        except (KeyError, IndexError, json.JSONDecodeError, TypeError) as e:
+            raise RuntimeError(f"Unexpected response format: {body[:500]}") from e
+        truncated = choice.get("finish_reason") == "length"
+        return (out, truncated)
 
     def list_models(self):
         """Ollama /v1/models からモデル ID リストを取得する。
@@ -979,6 +1210,7 @@ class RunPodProvider(OCRProvider):
 
     default_concurrency = 2
     max_concurrency = 4
+    supports_text_prompt = True
 
     def __init__(
         self, api_key, url, model, timeout=120, max_tokens=-1, temperature=0.1
@@ -1023,6 +1255,28 @@ class RunPodProvider(OCRProvider):
             "stream": False,
         }
 
+    def _build_text_payload(self, text, prompt):
+        """テキストのみの Chat Completions リクエストボディを構築する（内部）。
+
+        画像ブロックを含めない点以外は _build_payload と同一構造。
+        ブロック順は既存の「画像→プロンプト」に対応する「文書テキスト→指示」。
+        """
+        return {
+            "model": self.model or "runpod-model",
+            "messages": [
+                {
+                    "role": "user",
+                    "content": [
+                        {"type": "text", "text": text},
+                        {"type": "text", "text": prompt},
+                    ],
+                }
+            ],
+            "max_tokens": self.max_tokens,
+            "temperature": self.temperature,
+            "stream": False,
+        }
+
     def ocr_image(self, b64_png, prompt, **kwargs):
         """RunPod Serverless API を呼び出して OCR テキストを返す。
 
@@ -1039,20 +1293,44 @@ class RunPodProvider(OCRProvider):
           TimeoutError:    タイムアウト
           RuntimeError:    HTTP エラー（4xx/5xx）またはレスポンス形式不正
         """
+        body = self._post_chat(self._build_payload(b64_png, prompt))
+        try:
+            result = json.loads(body)
+            return result["choices"][0]["message"]["content"]
+        except (KeyError, IndexError, json.JSONDecodeError, TypeError) as e:
+            raise RuntimeError(f"Unexpected response format: {body[:500]}") from e
+
+    def complete_text_ex(self, text, prompt, **kwargs):
+        """テキストのみを送信し (text, truncated) を返す（サマリ生成用）。
+
+        finish_reason == "length" のとき truncated=True。部分テキストは
+        破棄せず返す（途切れは「成功＋警告」・D-05）。
+
+        戻り値: (text, truncated) のタプル（str, bool）
+        例外:  ocr_image() と同一規約
+        """
+        body = self._post_chat(self._build_text_payload(text, prompt))
+        try:
+            result = json.loads(body)
+            choice = result["choices"][0]
+            out = choice["message"]["content"]
+        except (KeyError, IndexError, json.JSONDecodeError, TypeError) as e:
+            raise RuntimeError(f"Unexpected response format: {body[:500]}") from e
+        truncated = choice.get("finish_reason") == "length"
+        return (out, truncated)
+
+    def _post_chat(self, payload):
+        """Chat Completions へ POST し HTTP レスポンス body（str）を返す（内部）。
+
+        API キー / URL 未設定チェックと 429/5xx の OCRRetryableError 変換を含む。
+        ocr_image と complete_text_ex の両方から呼ばれる共有経路。
+        """
         if not self.api_key:
             raise OCRAPIKeyError("RUNPOD_API_KEY")
         if not self.url:
             raise RuntimeError("RunPod エンドポイントURLが設定されていません")
 
-        base_url = self.url.rstrip("/")
-        if base_url.endswith("/v1"):
-            endpoint = base_url + "/chat/completions"
-        elif "/v1/" in base_url and not base_url.endswith("/chat/completions"):
-            endpoint = base_url + "/chat/completions"
-        else:
-            endpoint = base_url + "/chat/completions"
-
-        payload = self._build_payload(b64_png, prompt)
+        endpoint = self.url.rstrip("/") + "/chat/completions"
         data = json.dumps(payload).encode("utf-8")
         req = urllib.request.Request(  # noqa: S310
             endpoint,
@@ -1065,7 +1343,7 @@ class RunPodProvider(OCRProvider):
         )
         try:
             with urllib.request.urlopen(req, timeout=self.timeout) as resp:  # noqa: S310
-                body = resp.read().decode("utf-8")
+                return resp.read().decode("utf-8")
         except urllib.error.HTTPError as e:
             if e.code == 429 or e.code >= 500:
                 retry_after = None
@@ -1092,12 +1370,6 @@ class RunPodProvider(OCRProvider):
             if isinstance(reason, socket.timeout):
                 raise TimeoutError(f"timed out after {self.timeout}s") from e
             raise ConnectionError(str(reason)) from e
-
-        try:
-            result = json.loads(body)
-            return result["choices"][0]["message"]["content"]
-        except (KeyError, IndexError, json.JSONDecodeError, TypeError) as e:
-            raise RuntimeError(f"Unexpected response format: {body[:500]}") from e
 
     def list_models(self):
         """RunPod /models からモデル ID リストを取得する。"""
