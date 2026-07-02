@@ -5,14 +5,14 @@ date: 2026-07-02
 status: complete
 ---
 
-# Summary: 複数ページ OCR の全ページ統合サマリ生成機能（v1.7.0）
+# Summary: 複数ページ OCR の全ページ統合サマリ生成機能（v1.6.4）
 
 ブランチ: `claude/ocr-multipage-summary-5y1qe4`（コミット `11001a6`）
 品質確認: `ruff check` / `ruff format` クリーン / `pytest` 667 件パス
 （※実行環境に tkinter 3.11 が無く、`python3.12` で pytest を実行）
 
 複数ページ OCR で各ページ毎の表しか作成されなかった問題に対し、全ページの OCR
-結果を LLM へ再送信して統合サマリ（マージ表）を生成する機能を v1.7.0 として実装した。
+結果を LLM へ再送信して統合サマリ（マージ表）を生成する機能を v1.6.4 として実装した。
 
 ## 実施内容
 
@@ -69,7 +69,7 @@ status: complete
 | `pagefolio/ocr_dialog.py` | サマリボタン・`_on_summary` / `_summary_worker` / 完了ハンドラ・`_ensure_cloud_session_key` 抽出・`_format_pages_text` 分離 |
 | `pagefolio/dialogs/llm_config.py` | 「サマリプロンプト」欄・`ocr_summary_prompt` 収集 |
 | `pagefolio/lang.py` | `ocr_summary_*` キー（ja/en） |
-| `pagefolio/constants.py` | `APP_VERSION` v1.7.0 |
+| `pagefolio/constants.py` | `APP_VERSION` v1.6.4 |
 | `tests/test_ocr_providers.py` / `tests/test_provider_ui.py` / `tests/test_ocr.py` | 新規テスト 41 件・既存 fake へ新属性追加 |
 | CLAUDE.md / 開発履歴.md / README.md | ドキュメント・バッジ更新 |
 

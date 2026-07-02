@@ -6,7 +6,7 @@ type: quick
 mode: quick
 ---
 
-# Plan: 複数ページ OCR の全ページ統合サマリ生成機能（v1.7.0）
+# Plan: 複数ページ OCR の全ページ統合サマリ生成機能（v1.6.4）
 
 ## 背景
 
@@ -82,10 +82,10 @@ OCR 完了後に全ページの OCR 結果テキストを LLM へ再送信し、
 - **action**: 新規テスト 41 件（text-only payload に画像ブロックが無いこと・途切れ検出・
   429 リトライ・RunPod キー未設定・プロンプト解決純関数・`_format_full_text` サマリ連結・
   `_update_summary_btn_state`・`_summary_worker` 各経路・`_on_summary_done` 描画）。
-  既存 fake（`types.SimpleNamespace`）へ新属性を追加。`APP_VERSION` を v1.7.0 へ更新し
+  既存 fake（`types.SimpleNamespace`）へ新属性を追加。`APP_VERSION` を v1.6.4 へ更新し
   README バッジ・開発履歴.md・CLAUDE.md の OCR モジュール表を同期。
 - **verify**: `ruff check . && ruff format .`・`pytest`（667 件）グリーン
-- **done**: v1.7.0 としてドキュメント・バージョンが揃う
+- **done**: v1.6.4 としてドキュメント・バージョンが揃う
 
 ## must_haves
 
