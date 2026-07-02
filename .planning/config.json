@@ -87,15 +87,17 @@
   "response_language": "Japanese",
   "context_window": 1000000,
   "model_policy": {
-    "provider": "anthropic",
-    "budget": "medium",
-    "high": "claude-opus-4-8",
+    "provider": "anthropic-fable",
+    "budget": "custom",
+    "high": "claude-fable-5",
     "medium": "claude-sonnet-5",
     "low": "claude-sonnet-5"
   },
   "model_profile_overrides": {
     "claude": {
-      "haiku": "claude-sonnet-5"
+      "haiku": "claude-sonnet-5",
+      "opus": "claude-fable-5",
+      "sonnet": "claude-sonnet-5"
     }
   },
   "review": {
