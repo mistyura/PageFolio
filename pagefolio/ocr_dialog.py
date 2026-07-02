@@ -21,6 +21,7 @@ from pagefolio.ocr import (
     has_embedded_text,
     page_to_png_b64,
     resolve_ocr_prompt,
+    resolve_summary_prompt,
 )
 
 logger = logging.getLogger(__name__)
@@ -136,6 +137,14 @@ class OCRDialog(tk.Toplevel):
         # M-2: 世代カウンタ（ダイアログ破棄後の旧ワーカー after コールバックを無効化）
         # viewer.py の _preview_gen と同じパターン（世代一致 + winfo_exists）
         self._run_gen = 0
+        # 全ページ統合サマリ（OCR 完了後に「サマリ作成」で手動トリガー）
+        self.summary_result = None  # str | None（成功時のサマリ本文・raw）
+        self._summary_truncated = False  # サマリ応答が max_tokens で途切れたか
+        self._summary_running = False
+        # OCR 用 _cancel_flag とは分離する。OCR キャンセル直後は旧ワーカーが
+        # queue ループに残留している可能性があり、サマリ開始時に clear() すると
+        # 旧ワーカーがキャンセル確認で抜けられなくなるため共有しない。
+        self._summary_cancel_flag = threading.Event()
 
         self._build()
         self._center(parent)
@@ -528,6 +537,13 @@ class OCRDialog(tk.Toplevel):
         self.save_btn.pack(side="left", padx=4)
         self.save_btn.state(["disabled"])
 
+        # 全ページ統合サマリ（OCR 完了後に有効化・supports_text_prompt 必須）
+        self.summary_btn = ttk.Button(
+            btn_row, text=self._L["ocr_summary_btn"], command=self._on_summary
+        )
+        self.summary_btn.pack(side="left", padx=4)
+        self.summary_btn.state(["disabled"])
+
         self.clear_btn = ttk.Button(
             btn_row, text=self._L["ocr_clear"], command=self._clear_text
         )
@@ -568,8 +584,10 @@ class OCRDialog(tk.Toplevel):
 
     def _clear_text(self):
         """結果テキストエリア・進行表示・実行状態を初期化する"""
-        # 実行中はクリア不可（キャンセルしてから再度押す想定）
+        # 実行中（OCR / サマリ生成）はクリア不可（キャンセルしてから再度押す想定）
         if self._started and not self._done:
+            return
+        if self._summary_running:
             return
         self.text.delete("1.0", "end")
         self.results.clear()
@@ -589,6 +607,11 @@ class OCRDialog(tk.Toplevel):
         self._started = False
         self._done = False
         self._cancel_flag.clear()
+        # サマリ状態も破棄（旧サマリを新しい実行へ持ち込まない）
+        self.summary_result = None
+        self._summary_truncated = False
+        self._summary_cancel_flag.clear()
+        self.summary_btn.state(["disabled"])
         # H-6: 前回実行の致命的エラー・完了カウンタを破棄する。
         # 残留すると再実行時に全ワーカーが has_fatal=True で API 呼び出しを
         # スキップし、旧エラーで即終了してしまう（タイムアウト後の再実行バグ）。
@@ -622,6 +645,21 @@ class OCRDialog(tk.Toplevel):
             self.resume_btn.state(["!disabled"])
         else:
             self.resume_btn.state(["disabled"])
+        self._update_summary_btn_state()
+
+    def _update_summary_btn_state(self):
+        """サマリ作成ボタンの有効/無効を再評価する。
+
+        OCR 結果があり、サマリ生成中でなく、かつ現在のプロバイダがテキストの
+        み補完に対応している場合のみ有効化する（Tesseract 等の非 LLM
+        プロバイダは構造的に無効のまま・三重ガードの 1 段目）。
+        """
+        ok = (
+            bool(self.results)
+            and not self._summary_running
+            and getattr(self.provider, "supports_text_prompt", False)
+        )
+        self.summary_btn.state(["!disabled"] if ok else ["disabled"])
 
     # ── ページ結果記録（ワーカースレッドから呼ばれる・Lock 保護） ──
 
@@ -805,10 +843,13 @@ class OCRDialog(tk.Toplevel):
     def _open_llm_config(self):
         """プロバイダ表示行の「⚙ LLM 設定…」ボタンから LLMConfigDialog を開く。
 
-        実行中（_started かつ未完了）は即 return してプロバイダ変更を阻止する
-        （T-CCZ-02）。既に開いている場合も二重起動せず既存ウィンドウを前面へ出す。
+        実行中（_started かつ未完了、またはサマリ生成中）は即 return して
+        プロバイダ変更を阻止する（T-CCZ-02・スレッド安全確保）。
+        既に開いている場合も二重起動せず既存ウィンドウを前面へ出す。
         """
         if self._started and not self._done:
+            return
+        if self._summary_running:
             return
         existing = getattr(self, "_llm_config_dialog", None)
         if existing is not None and existing.winfo_exists():
@@ -941,6 +982,8 @@ class OCRDialog(tk.Toplevel):
             logger.error("provider 再生成に失敗しました: %s", e)
             lang = self.app.settings.get("lang", "ja")
             self.progress_var.set(LANG[lang]["ocr_provider_rebuild_error"].format(e=e))
+        # provider 差し替えで supports_text_prompt が変わり得るため再評価する
+        self._update_summary_btn_state()
 
     def _sync_param_vars_from_settings(self):
         """読み取り専用の数値パラメータ Tk 変数を app.settings の値へ同期する。
@@ -1041,6 +1084,67 @@ class OCRDialog(tk.Toplevel):
             parent=self,
         )
 
+    def _confirm_summary_cost(self, char_count):
+        """サマリ生成前のクラウド送信確認ダイアログを表示し、選択を bool で返す。
+
+        _confirm_cost と同方針で毎回表示する（D-11）。画像ではなく OCR 結果
+        テキストの送信であることと概算文字数を明示する。
+
+        引数:
+          char_count: 送信する全ページ連結テキストの文字数
+        """
+        name = self.app.settings.get("ocr_provider", "")
+        if name == "gemini":
+            host = "generativelanguage.googleapis.com"
+        else:
+            # claude（デフォルト・_confirm_cost と同じフォールバック）
+            host = "api.anthropic.com"
+        msg = self._L["ocr_summary_cost_confirm_msg"].format(
+            host=host,
+            chars=char_count,
+        )
+        return messagebox.askyesno(
+            self._L["ocr_cost_confirm_title"],
+            msg,
+            parent=self,
+        )
+
+    def _ensure_cloud_session_key(self):
+        """クラウド実行前のセッションキー確認。続行可否を bool で返す。
+
+        環境変数未設定のときのみ入力欄の値を検証し、_session_api_keys へ
+        格納する（settings には入れない・D-01/D-03/T-06-11）。キー未入力なら
+        エラーを表示して False を返す（成功基準2・T-05-19）。
+        _on_run と _on_summary の共有経路。
+        """
+        if not self._needs_session_key():
+            return True
+        name = self.app.settings.get("ocr_provider", "")
+        key = self.api_key_var.get().strip()
+        if not key:
+            # キー未入力 → エラー表示して中止
+            if name == "gemini":
+                # gemini: ocr_api_key_missing_gemini（dual env var 説明・D-06）
+                messagebox.showerror(
+                    self._L["err_title"],
+                    self._L["ocr_api_key_missing_gemini"],
+                    parent=self,
+                )
+            else:
+                # claude（デフォルト）
+                messagebox.showerror(
+                    self._L["err_title"],
+                    self._L["ocr_api_key_missing"].format(env_var="ANTHROPIC_API_KEY"),
+                    parent=self,
+                )
+            return False
+        # _session_api_keys に格納（settings には入れない・D-01/D-03/T-06-11）
+        if name == "gemini":
+            self.app._session_api_keys["gemini"] = key
+        else:
+            self.app._session_api_keys["claude"] = key
+        return True
+
     # ── ワーカー ──
     def _on_run(self, resume=False):
         """読み取り実行 / 続きから再実行: OCR を開始する。
@@ -1052,7 +1156,7 @@ class OCRDialog(tk.Toplevel):
           resume: True なら成功済み結果を保持し、エラー/未処理ページのみ
                   再実行する（リスタート）。False は全ページ再実行（リラン）。
         """
-        if self._started:
+        if self._started or self._summary_running:
             return
 
         # 今回の実行対象を決定（再開時は未処理ページのみ）
@@ -1063,34 +1167,9 @@ class OCRDialog(tk.Toplevel):
 
         # ── クラウド実行ゲート（_started を True にする前）──
         if self._is_cloud_provider():
-            name = self.app.settings.get("ocr_provider", "")
-            # セッションキー入力（環境変数未設定時のみ）
-            if self._needs_session_key():
-                key = self.api_key_var.get().strip()
-                if not key:
-                    # キー未入力 → エラー表示して中止（成功基準2・T-05-19）
-                    if name == "gemini":
-                        # gemini: ocr_api_key_missing_gemini（dual env var 説明・D-06）
-                        messagebox.showerror(
-                            self._L["err_title"],
-                            self._L["ocr_api_key_missing_gemini"],
-                            parent=self,
-                        )
-                    else:
-                        # claude（デフォルト）
-                        messagebox.showerror(
-                            self._L["err_title"],
-                            self._L["ocr_api_key_missing"].format(
-                                env_var="ANTHROPIC_API_KEY"
-                            ),
-                            parent=self,
-                        )
-                    return
-                # _session_api_keys に格納（settings には入れない・D-01/D-03/T-06-11）
-                if name == "gemini":
-                    self.app._session_api_keys["gemini"] = key
-                else:
-                    self.app._session_api_keys["claude"] = key
+            # セッションキー入力（環境変数未設定時のみ・成功基準2・T-05-19）
+            if not self._ensure_cloud_session_key():
+                return
 
             # コスト確認ダイアログ（毎回・D-11・D-12。再開時は未処理ページ数で見積）
             if not self._confirm_cost(len(run_pages)):
@@ -1106,6 +1185,12 @@ class OCRDialog(tk.Toplevel):
         self._done_count = 0
         self._consec_err_count = 0
         self._cancel_flag.clear()
+        # 再実行で結果セットが変わるため旧サマリは破棄する
+        # （_render_results_ordered は results のみ再描画するため表示からも消える）
+        self.summary_result = None
+        self._summary_truncated = False
+        self._summary_cancel_flag.clear()
+        self.summary_btn.state(["disabled"])
         if resume:
             # 再実行対象の旧エラー・旧途切れ状態を破棄（再実行結果で上書きするため）
             for p in run_pages:
@@ -1677,14 +1762,16 @@ class OCRDialog(tk.Toplevel):
 
     # ── 操作 ──
     def _on_cancel(self):
-        # キャンセルボタンは実行中のみ有効
+        # キャンセルボタンは実行中（OCR / サマリ生成）のみ有効
         self._cancel_flag.set()
+        self._summary_cancel_flag.set()
         self.cancel_btn.state(["disabled"])
         self.progress_var.set(self._L["ocr_cancelling"])
 
     def _on_close(self):
-        # 未開始または完了済みなら確認なしで閉じる
-        if not self._started or self._done:
+        # 未開始または完了済み（かつサマリ生成中でない）なら確認なしで閉じる
+        running = (self._started and not self._done) or self._summary_running
+        if not running:
             # M-2: 閉じる前に世代を無効化し旧ワーカーの after を排除する
             self._run_gen += 1
             self.destroy()
@@ -1697,11 +1784,17 @@ class OCRDialog(tk.Toplevel):
         if not ok:
             return
         self._cancel_flag.set()
+        self._summary_cancel_flag.set()
         # M-2: 閉じる前に世代を無効化し旧ワーカーの after を排除する
         self._run_gen += 1
         self.destroy()
 
-    def _format_full_text(self):
+    def _format_pages_text(self):
+        """ページ本文のみをセパレータ付きで連結して返す（サマリは含めない）。
+
+        サマリ生成の LLM 入力と _format_full_text の共有経路。サマリを再生成
+        するとき旧サマリが入力へ混入しないよう、サマリ本文はここに含めない。
+        """
         parts = []
         for page_idx in self.page_indices:
             if page_idx not in self.results:
@@ -1710,6 +1803,191 @@ class OCRDialog(tk.Toplevel):
             parts.append(sep)
             parts.append(self.results[page_idx])
         return "\n".join(parts)
+
+    def _format_full_text(self):
+        """コピー/保存用の全文（ページ本文 + サマリ・raw 維持）を返す。"""
+        text = self._format_pages_text()
+        if not self.summary_result:
+            return text
+        parts = [text] if text else []
+        parts.append(self._L["ocr_summary_separator"])
+        parts.append(self.summary_result)
+        return "\n".join(parts)
+
+    # ── 全ページ統合サマリ ──
+    def _on_summary(self):
+        """サマリ作成: 全ページの OCR 結果テキストを LLM へ送信し統合サマリを生成。
+
+        手動トリガー（クラウドコスト配慮）。OCR 完了後（results あり）のみ実行
+        できる。実行はワーカースレッド 1 本 + _run_gen 世代ガード + サマリ専用
+        キャンセルフラグで制御する。プロンプトは settings["ocr_summary_prompt"]
+        （カスタム）> プロバイダ別 > 既定 の順で解決する（resolve_summary_prompt）。
+        """
+        if (self._started and not self._done) or self._summary_running:
+            return
+        if not self.results:
+            return
+        # 三重ガードの 2 段目（1 段目はボタン無効化・3 段目は NotImplementedError）
+        if not getattr(self.provider, "supports_text_prompt", False):
+            messagebox.showerror(
+                self._L["err_title"],
+                self._L["ocr_summary_unsupported"].format(
+                    name=self._provider_display_name()
+                ),
+                parent=self,
+            )
+            return
+
+        # メインスレッドで入力を確定（ページ本文のみ・旧サマリは含めない）
+        full_text = self._format_pages_text()
+        if not full_text:
+            return
+        name = self.app.settings.get("ocr_provider", "")
+        prompt = resolve_summary_prompt(
+            name, self.app.settings.get("ocr_summary_prompt", "")
+        )
+
+        # ── クラウド実行ゲート（OCR 実行時と同方針・毎回確認）──
+        if self._is_cloud_provider():
+            if not self._ensure_cloud_session_key():
+                return
+            if not self._confirm_summary_cost(len(full_text)):
+                return
+
+        # 実行状態へ遷移
+        self._summary_running = True
+        self._summary_cancel_flag.clear()
+        self.summary_result = None
+        self._summary_truncated = False
+        self.run_btn.state(["disabled"])
+        self.resume_btn.state(["disabled"])
+        self.clear_btn.state(["disabled"])
+        self.copy_btn.state(["disabled"])
+        self.save_btn.state(["disabled"])
+        self.summary_btn.state(["disabled"])
+        self._llm_config_btn.state(["disabled"])
+        self.cancel_btn.state(["!disabled"])
+        self.progress_var.set(self._L["ocr_summary_running"])
+        self._progress_label.configure(fg=C["SUCCESS"])
+
+        # M-2: 世代を進めて捕捉する（OCR 完了後のため既存ワーカーへの副作用は
+        # なく、残留していた旧 after があってもここで無効化される）
+        self._run_gen += 1
+        gen = self._run_gen
+        threading.Thread(
+            target=self._summary_worker, args=(gen, full_text, prompt), daemon=True
+        ).start()
+
+    def _summary_worker(self, gen, full_text, prompt):
+        """バックグラウンドスレッド: complete_text_ex を単発呼び出しする。
+
+        _worker と同じリトライ規約（指数バックオフ + clamp_retry_after +
+        interruptible_sleep）。キャンセル判定はサマリ専用 _summary_cancel_flag
+        のみを見る。終端は世代ガード後に after(0) でメインスレッドへ投函する
+        （M-2 と同パターン・tk.TclError 捕捉）。urlopen の制約上、送信中の
+        1 リクエストは即時中断できない（キャンセルはリトライ待機でのみ反応）。
+        """
+        from pagefolio.ocr import clamp_retry_after, interruptible_sleep
+        from pagefolio.ocr_providers import OCRRetryableError
+
+        result = None
+        error_msg = None
+        for attempt in range(1, MAX_RETRIES + 1):
+            if self._summary_cancel_flag.is_set():
+                break
+            try:
+                result = self.provider.complete_text_ex(full_text, prompt)
+                break
+            except OCRRetryableError as e:
+                if attempt >= MAX_RETRIES:
+                    error_msg = str(e)
+                    break
+                # D-06: 実待機秒（クランプ後）を文言生成より前に算出する
+                raw_delay = (
+                    e.retry_after
+                    if e.retry_after is not None
+                    else 1.0 * (2 ** (attempt - 1))
+                )
+                delay = clamp_retry_after(raw_delay)
+                if gen is None or gen == self._run_gen:
+                    msg = self._L["ocr_summary_waiting_retry"].format(
+                        n=attempt, max=MAX_RETRIES, sec=round(delay)
+                    )
+                    try:
+                        self.after(0, lambda m=msg: self.progress_var.set(m))
+                    except tk.TclError:
+                        pass
+                interruptible_sleep(delay, self._summary_cancel_flag.is_set)
+            except NotImplementedError as e:
+                # 三重ガードの 3 段目（プロバイダ差し替え等のすり抜け対策）
+                error_msg = str(e)
+                break
+            except (ConnectionError, TimeoutError, RuntimeError) as e:
+                error_msg = str(e)
+                break
+            except Exception as e:
+                logger.exception("サマリ生成呼び出し失敗: %s", e)
+                error_msg = str(e)
+                break
+
+        # M-2: 世代ガード後にのみ終了処理 after を投函する
+        if gen is not None and gen != self._run_gen:
+            return
+        try:
+            if self._summary_cancel_flag.is_set():
+                self.after(0, self._on_summary_cancelled)
+            elif result is not None:
+                text, truncated = result
+                self.after(0, lambda t=text, tr=truncated: self._on_summary_done(t, tr))
+            else:
+                self.after(0, lambda m=error_msg or "": self._on_summary_error(m))
+        except tk.TclError:
+            pass
+
+    def _on_summary_done(self, text, truncated):
+        """サマリ生成成功（メインスレッド）: 結果保持・末尾へ追記・UI 復帰。
+
+        表示は preset=="markdown" のときのみ整形描画（_insert_results_body と
+        同じ構造的ガード）。コピー/保存は raw 維持（_format_full_text）。
+        途切れ（truncated）は「成功＋警告」として部分サマリを保持する（D-05）。
+        """
+        self.summary_result = text
+        self._summary_truncated = truncated
+        self.text.insert("end", f"\n{self._L['ocr_summary_separator']}\n")
+        if self.preset_var.get() == "markdown":
+            self._insert_markdown(text)
+        else:
+            self.text.insert("end", text + "\n")
+        if truncated:
+            self.text.insert("end", self._L["ocr_summary_truncated"] + "\n")
+        self.text.see("end")
+        self.progress_var.set(self._L["ocr_summary_complete"])
+        self._progress_label.configure(fg=C["WARNING"] if truncated else C["SUCCESS"])
+        self._summary_ui_reset()
+
+    def _on_summary_error(self, msg):
+        """サマリ生成失敗（メインスレッド）: OCR 結果は破壊せず再実行可能に戻す。"""
+        self.progress_var.set(self._L["ocr_summary_failed"].format(error=msg))
+        self._progress_label.configure(fg=C["WARNING"])
+        self._summary_ui_reset()
+
+    def _on_summary_cancelled(self):
+        """サマリ生成キャンセル（メインスレッド）。"""
+        self.progress_var.set(self._L["ocr_summary_cancelled"])
+        self._summary_ui_reset()
+
+    def _summary_ui_reset(self):
+        """サマリ実行終了後（成功/失敗/キャンセル共通）の UI 復帰。
+
+        _after_run_ui_reset が run/resume/llm_config/サマリボタンを再評価する。
+        """
+        self._summary_running = False
+        self.cancel_btn.state(["disabled"])
+        self.clear_btn.state(["!disabled"])
+        if self.results:
+            self.copy_btn.state(["!disabled"])
+            self.save_btn.state(["!disabled"])
+        self._after_run_ui_reset()
 
     def _copy_to_clipboard(self):
         text = self._format_full_text()

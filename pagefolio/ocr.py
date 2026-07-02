@@ -102,6 +102,55 @@ def resolve_ocr_prompt(preset, provider_name, custom_prompt=""):
     return OCR_PROMPTS.get(preset, OCR_PROMPTS["text"])
 
 
+# 全ページ統合サマリ生成用の既定プロンプト（ドメイン非依存）。
+# レシート集計のような業務固有の列指定は ocr_summary_prompt（カスタム）で
+# 上書きする想定。入力テキストは "--- Page N ---" 区切りの全ページ連結。
+DEFAULT_SUMMARY_PROMPT = (
+    '以下は複数ページ文書の OCR 結果です（"--- Page N ---" がページ区切り）。'
+    "全ページの内容を統合したサマリを作成してください。"
+    "表形式のデータが含まれる場合は、全ページをマージした一覧表を "
+    "Markdown テーブルで作成し、合計行も付けてください。"
+    "前置き・後書き・説明は不要です。"
+)
+
+# プロバイダ別サマリプロンプト（PROVIDER_OCR_PROMPTS と同型・claude/gemini のみ）
+PROVIDER_SUMMARY_PROMPTS: "dict[str, str]" = {
+    "claude": (
+        "<task>複数ページ文書の OCR 結果を統合したサマリを作成する</task>\n"
+        '<input>"--- Page N ---" がページ区切りの全ページ連結テキスト</input>\n'
+        "<rules>表形式のデータが含まれる場合は、全ページをマージした一覧表を "
+        "| 区切りの Markdown テーブルで作成し、合計行も付ける。"
+        "装飾的な前置き・説明・後書きは一切付けない。本文のみ。</rules>"
+    ),
+    "gemini": (
+        '次のテキストは複数ページ文書の OCR 結果です（"--- Page N ---" が'
+        "ページ区切り）。全ページの内容を統合したサマリを作成してください。"
+        "表形式のデータが含まれる場合は、全ページをマージした一覧表を "
+        "Markdown テーブルで作成し、合計行も付けてください。"
+        "前置き・後書き・コードフェンスは付けず本文のみを返してください。"
+    ),
+}
+
+
+def resolve_summary_prompt(provider_name, custom_prompt=""):
+    """サマリ生成プロンプトを解決する純関数（resolve_ocr_prompt と同型）。
+
+    優先順位:
+      1. custom_prompt が非空ならそのまま返す（カスタム上書き最優先）
+      2. PROVIDER_SUMMARY_PROMPTS[provider_name]（プロバイダ別テンプレート）
+      3. DEFAULT_SUMMARY_PROMPT（汎用既定）
+
+    引数:
+      provider_name: プロバイダ名（"claude" / "gemini" / "lmstudio" / ...）
+      custom_prompt: settings["ocr_summary_prompt"] 由来のカスタムプロンプト
+
+    戻り値: 解決済みプロンプト文字列
+    """
+    if custom_prompt:
+        return custom_prompt
+    return PROVIDER_SUMMARY_PROMPTS.get(provider_name, DEFAULT_SUMMARY_PROMPT)
+
+
 DEFAULT_LM_STUDIO_URL = "http://localhost:1234"
 DEFAULT_OCR_TIMEOUT = 120  # 秒
 DEFAULT_OCR_SCALE = 1.5  # D-11: 新規既定 1.5 に統一（WR-01）

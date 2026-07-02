@@ -921,6 +921,8 @@ class TestOcrDialogLlmConfig:
         fake._sync_param_vars_from_settings = lambda: (
             OCRDialog._sync_param_vars_from_settings(fake)
         )
+        # サマリボタン再評価は no-op（UI 非依存テストのため）
+        fake._update_summary_btn_state = lambda: None
         return fake
 
     # ── test 1: settings が更新される ──────────────────────────────────────
@@ -1469,6 +1471,12 @@ class TestClearResetsFatalState:
             resume_btn=types.SimpleNamespace(state=lambda _s: None),
             _llm_config_btn=types.SimpleNamespace(state=lambda _s: None),
             _L={"ocr_run_first": "読み取り実行を押してください"},
+            # サマリ関連（_clear_text / _on_run がリセットする新属性）
+            summary_result=None,
+            _summary_truncated=False,
+            _summary_running=False,
+            _summary_cancel_flag=threading.Event(),
+            summary_btn=types.SimpleNamespace(state=lambda _s: None),
         )
         return fake
 
@@ -1657,6 +1665,12 @@ class TestOcrDialogOnRun:
             force_ocr_var=types.SimpleNamespace(get=lambda: False),
             custom_prompt="",
             _L={"ocr_progress_init": "init"},
+            # サマリ関連（_on_run がリセットする新属性）
+            summary_result=None,
+            _summary_truncated=False,
+            _summary_running=False,
+            _summary_cancel_flag=threading.Event(),
+            summary_btn=types.SimpleNamespace(state=lambda _s: None),
         )
         # _is_cloud_provider: lmstudio は非クラウド → False
         fake._is_cloud_provider = lambda: False
@@ -2535,3 +2549,320 @@ class TestFinishCompleteErrorDisplay:
 
         assert progress["msg"] == "⚠ 完了: 2/3 ページ成功・エラー 1ページ"
         assert label_kw.get("fg") == C["WARNING"], "警告色に変更されていない"
+
+
+# ===== 全ページ統合サマリ: OCRDialog サマリロジック =====
+
+
+class _SummaryTextStub:
+    """tk.Text の insert/see を記録する最小スタブ。"""
+
+    def __init__(self):
+        self.inserted = []
+
+    def insert(self, _index, text, *tags):
+        self.inserted.append(text)
+
+    def see(self, _index):
+        pass
+
+
+class _SummaryFakeProvider(OCRProvider):
+    """complete_text_ex を差し込める偽 Provider（サマリテスト用）。"""
+
+    supports_text_prompt = True
+
+    def __init__(self, complete_side_effect=None):
+        self.complete_side_effect = complete_side_effect
+        self.calls = []
+
+    def ocr_image(self, b64_png, prompt, **kwargs):
+        return "text"
+
+    def list_models(self):
+        return []
+
+    def complete_text_ex(self, text, prompt, **kwargs):
+        self.calls.append((text, prompt))
+        if callable(self.complete_side_effect):
+            return self.complete_side_effect(text, prompt)
+        if isinstance(self.complete_side_effect, Exception):
+            raise self.complete_side_effect
+        return ("merged summary", False)
+
+
+class TestFormatFullTextWithSummary:
+    """_format_pages_text / _format_full_text のサマリ連結を検証する。"""
+
+    def _make_fake(self, results, summary_result=None):
+        import types
+
+        from pagefolio.constants import LANG
+        from pagefolio.ocr_dialog import OCRDialog
+
+        fake = types.SimpleNamespace(
+            _L=LANG["ja"],
+            page_indices=sorted(results),
+            results=results,
+            summary_result=summary_result,
+        )
+        # _format_full_text → _format_pages_text の内部呼び出しを未束縛で解決
+        fake._format_pages_text = lambda: OCRDialog._format_pages_text(fake)
+        return fake
+
+    def test_pages_text_excludes_summary(self):
+        """_format_pages_text はサマリを含めない（LLM 入力への混入防止）。"""
+        from pagefolio.ocr_dialog import OCRDialog
+
+        fake = self._make_fake({0: "p1", 1: "p2"}, summary_result="OLD SUMMARY")
+        text = OCRDialog._format_pages_text(fake)
+        assert "OLD SUMMARY" not in text
+        assert "p1" in text and "p2" in text
+
+    def test_full_text_without_summary_unchanged(self):
+        """summary_result が None のとき従来どおりページ本文のみを返す。"""
+        from pagefolio.ocr_dialog import OCRDialog
+
+        fake = self._make_fake({0: "p1"})
+        text = OCRDialog._format_full_text(fake)
+        assert text == "--- Page 1 ---\np1"
+
+    def test_full_text_appends_summary_raw(self):
+        """summary_result があるときセパレータ + raw サマリを末尾に含める。"""
+        from pagefolio.constants import LANG
+        from pagefolio.ocr_dialog import OCRDialog
+
+        fake = self._make_fake({0: "p1"}, summary_result="**SUM**")
+        text = OCRDialog._format_full_text(fake)
+        sep = LANG["ja"]["ocr_summary_separator"]
+        assert text.endswith(f"{sep}\n**SUM**")
+        # raw 維持（Markdown 整形は表示専用）
+        assert "**SUM**" in text
+
+
+class TestUpdateSummaryBtnState:
+    """_update_summary_btn_state の有効化条件を検証する。"""
+
+    def _make_fake(self, results, provider, summary_running=False):
+        import types
+
+        recorded = {}
+        fake = types.SimpleNamespace(
+            results=results,
+            provider=provider,
+            _summary_running=summary_running,
+            summary_btn=types.SimpleNamespace(state=lambda s: recorded.update(state=s)),
+        )
+        return fake, recorded
+
+    def test_enabled_with_results_and_supported_provider(self):
+        from pagefolio.ocr_dialog import OCRDialog
+
+        fake, recorded = self._make_fake({0: "a"}, _SummaryFakeProvider())
+        OCRDialog._update_summary_btn_state(fake)
+        assert recorded["state"] == ["!disabled"]
+
+    def test_disabled_without_results(self):
+        from pagefolio.ocr_dialog import OCRDialog
+
+        fake, recorded = self._make_fake({}, _SummaryFakeProvider())
+        OCRDialog._update_summary_btn_state(fake)
+        assert recorded["state"] == ["disabled"]
+
+    def test_disabled_for_unsupported_provider(self):
+        """supports_text_prompt=False（Tesseract 等）では無効のまま。"""
+        import types
+
+        from pagefolio.ocr_dialog import OCRDialog
+
+        provider = types.SimpleNamespace()  # supports_text_prompt 属性なし
+        fake, recorded = self._make_fake({0: "a"}, provider)
+        OCRDialog._update_summary_btn_state(fake)
+        assert recorded["state"] == ["disabled"]
+
+    def test_disabled_while_summary_running(self):
+        from pagefolio.ocr_dialog import OCRDialog
+
+        fake, recorded = self._make_fake(
+            {0: "a"}, _SummaryFakeProvider(), summary_running=True
+        )
+        OCRDialog._update_summary_btn_state(fake)
+        assert recorded["state"] == ["disabled"]
+
+
+class TestSummaryWorker:
+    """_summary_worker のリトライ・キャンセル・世代ガードを検証する。"""
+
+    def _make_fake(self, provider, gen=1):
+        """after 投函を記録する fake OCRDialog を返す。"""
+        import types
+
+        from pagefolio.constants import LANG
+
+        posted = []
+
+        def fake_after(_delay, cb):
+            posted.append(cb)
+
+        fake = types.SimpleNamespace(
+            _L=LANG["ja"],
+            provider=provider,
+            _run_gen=gen,
+            _summary_cancel_flag=threading.Event(),
+            after=fake_after,
+            progress_var=types.SimpleNamespace(set=lambda _v: None),
+        )
+        # 完了ハンドラは記録用スタブ（after 経由で呼ばれる）
+        fake._summary_outcome = {}
+        fake._on_summary_done = lambda t, tr: fake._summary_outcome.update(done=(t, tr))
+        fake._on_summary_error = lambda m: fake._summary_outcome.update(error=m)
+        fake._on_summary_cancelled = lambda: fake._summary_outcome.update(
+            cancelled=True
+        )
+        return fake, posted
+
+    def _run_posted(self, posted):
+        """after へ投函されたコールバックを順に実行する（メインスレッド相当）。"""
+        for cb in posted:
+            cb()
+
+    def test_success_posts_done(self):
+        """正常系: (text, truncated) が _on_summary_done へ渡る。"""
+        from pagefolio.ocr_dialog import OCRDialog
+
+        provider = _SummaryFakeProvider()
+        fake, posted = self._make_fake(provider)
+        OCRDialog._summary_worker(fake, 1, "full text", "prompt")
+        self._run_posted(posted)
+
+        assert fake._summary_outcome == {"done": ("merged summary", False)}
+        assert provider.calls == [("full text", "prompt")]
+
+    def test_gen_mismatch_posts_nothing(self):
+        """世代不一致（ダイアログ破棄・再実行後）は after を投函しない。"""
+        from pagefolio.ocr_dialog import OCRDialog
+
+        fake, posted = self._make_fake(_SummaryFakeProvider(), gen=2)
+        OCRDialog._summary_worker(fake, 1, "full text", "prompt")
+
+        assert posted == []
+
+    def test_retry_limit_posts_error(self, monkeypatch):
+        """OCRRetryableError が MAX_RETRIES 回続くと _on_summary_error へ。"""
+        from pagefolio.ocr_dialog import OCRDialog
+        from pagefolio.ocr_providers import OCRRetryableError
+
+        monkeypatch.setattr(ocr, "interruptible_sleep", lambda *a, **kw: None)
+
+        def always_retryable(_text, _prompt):
+            raise OCRRetryableError("HTTP 429", retry_after=0.0, code=429)
+
+        provider = _SummaryFakeProvider(complete_side_effect=always_retryable)
+        fake, posted = self._make_fake(provider)
+        OCRDialog._summary_worker(fake, 1, "full text", "prompt")
+        self._run_posted(posted)
+
+        assert "error" in fake._summary_outcome
+        assert "429" in fake._summary_outcome["error"]
+        assert len(provider.calls) == ocr.MAX_RETRIES
+
+    def test_cancel_posts_cancelled(self):
+        """キャンセルフラグが立っていると _on_summary_cancelled へ。"""
+        from pagefolio.ocr_dialog import OCRDialog
+
+        provider = _SummaryFakeProvider()
+        fake, posted = self._make_fake(provider)
+        fake._summary_cancel_flag.set()
+        OCRDialog._summary_worker(fake, 1, "full text", "prompt")
+        self._run_posted(posted)
+
+        assert fake._summary_outcome == {"cancelled": True}
+        assert provider.calls == [], "キャンセル済みなのに API が呼ばれた"
+
+    def test_runtime_error_posts_error(self):
+        """RuntimeError（4xx 等）は即座に _on_summary_error へ。"""
+        from pagefolio.ocr_dialog import OCRDialog
+
+        provider = _SummaryFakeProvider(
+            complete_side_effect=RuntimeError("HTTP 401: unauthorized")
+        )
+        fake, posted = self._make_fake(provider)
+        OCRDialog._summary_worker(fake, 1, "full text", "prompt")
+        self._run_posted(posted)
+
+        assert "401" in fake._summary_outcome["error"]
+
+    def test_not_implemented_posts_error(self):
+        """NotImplementedError（三重ガード 3 段目）も _on_summary_error へ。"""
+        from pagefolio.ocr_dialog import OCRDialog
+
+        provider = _SummaryFakeProvider(
+            complete_side_effect=NotImplementedError("非対応プロバイダ")
+        )
+        fake, posted = self._make_fake(provider)
+        OCRDialog._summary_worker(fake, 1, "full text", "prompt")
+        self._run_posted(posted)
+
+        assert "error" in fake._summary_outcome
+
+
+class TestOnSummaryDone:
+    """_on_summary_done の描画・状態遷移を検証する。"""
+
+    def _make_fake(self, preset="text"):
+        import types
+
+        from pagefolio.constants import LANG
+
+        text_stub = _SummaryTextStub()
+        fake = types.SimpleNamespace(
+            _L=LANG["ja"],
+            text=text_stub,
+            preset_var=types.SimpleNamespace(get=lambda: preset),
+            progress_var=types.SimpleNamespace(set=lambda _v: None),
+            _progress_label=types.SimpleNamespace(configure=lambda **kw: None),
+            summary_result=None,
+            _summary_truncated=False,
+            _summary_ui_reset=lambda: None,
+            _insert_markdown=lambda _t: None,
+        )
+        return fake, text_stub
+
+    def test_done_stores_result_and_inserts(self):
+        """成功時に summary_result を保持しセパレータ + 本文を追記する。"""
+        from pagefolio.constants import LANG
+        from pagefolio.ocr_dialog import OCRDialog
+
+        fake, text_stub = self._make_fake()
+        OCRDialog._on_summary_done(fake, "SUM", False)
+
+        assert fake.summary_result == "SUM"
+        assert fake._summary_truncated is False
+        joined = "".join(text_stub.inserted)
+        assert LANG["ja"]["ocr_summary_separator"] in joined
+        assert "SUM" in joined
+
+    def test_done_truncated_appends_notice(self):
+        """truncated=True のとき途切れ通知を併記する。"""
+        from pagefolio.constants import LANG
+        from pagefolio.ocr_dialog import OCRDialog
+
+        fake, text_stub = self._make_fake()
+        OCRDialog._on_summary_done(fake, "PART", True)
+
+        assert fake._summary_truncated is True
+        joined = "".join(text_stub.inserted)
+        assert LANG["ja"]["ocr_summary_truncated"] in joined
+
+    def test_done_markdown_uses_insert_markdown(self):
+        """preset=="markdown" のとき本文は _insert_markdown 経由で描画する。"""
+        from pagefolio.ocr_dialog import OCRDialog
+
+        fake, text_stub = self._make_fake(preset="markdown")
+        rendered = []
+        fake._insert_markdown = lambda t: rendered.append(t)
+        OCRDialog._on_summary_done(fake, "# SUM", False)
+
+        assert rendered == ["# SUM"]
+        # 素の insert には本文が入らない（セパレータのみ）
+        assert all("# SUM" not in s for s in text_stub.inserted)
