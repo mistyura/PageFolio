@@ -46,7 +46,7 @@ PageFolio/
 │   ├── dnd.py                 # D&D Mixin（サムネイルのドラッグ並び替え）
 │   ├── pagination.py          # サムネイル窓計算 / local↔global インデックス変換（Tk・fitz 非依存の純関数群）
 │   ├── ocr.py                 # OCR Mixin + ヘルパー（build_provider / 並列実行 / リトライ制御 / resolve_ocr_prompt）
-│   ├── ocr_providers.py       # OCR プロバイダ（LMStudio / Claude / Gemini / Tesseract）
+│   ├── ocr_providers.py       # OCR プロバイダ（LMStudio / Claude / Gemini / Tesseract / Ollama / RunPod）
 │   ├── md_render.py           # Markdown→(行種別, インライン span) 変換の純関数（parse_markdown・Tk/fitz 非依存）
 │   ├── ocr_dialog.py          # OCRDialog（複数ページ OCR 結果ビューア / エクスポート / Markdown 整形描画）
 │   ├── dialogs/               # ダイアログパッケージ
@@ -141,7 +141,7 @@ API キーは `_SENSITIVE_KEYS` ガードにより `pagefolio_settings.json` へ
 | モジュール | 主要クラス / 関数 | 責務 |
 |-----------|------------------|------|
 | `ocr.py` | `OCRMixin`, `build_provider`, `run_parallel`, `clamp_retry_after`, `interruptible_sleep`, `PROVIDER_OCR_PROMPTS`, `resolve_ocr_prompt`, `PROVIDER_SUMMARY_PROMPTS`, `resolve_summary_prompt` | プロバイダ生成・並列 OCR 実行・リトライ/キャンセル制御・プロバイダ別プロンプト解決（custom>provider別>汎用）・サマリプロンプト解決 |
-| `ocr_providers.py` | `OCRProvider`(ABC), `LMStudioProvider`, `ClaudeProvider`, `GeminiProvider`, `TesseractProvider` | 各バックエンドへの OCR リクエスト実装（`ocr_image_ex` で stop_reason/finishReason 途切れ検出・`complete_text_ex`/`supports_text_prompt` で text-only 補完＝全ページ統合サマリ生成。Tesseract は非対応） |
+| `ocr_providers.py` | `OCRProvider`(ABC), `LMStudioProvider`, `ClaudeProvider`, `GeminiProvider`, `TesseractProvider`, `OllamaProvider`, `RunPodProvider` | 各バックエンドへの OCR リクエスト実装（`ocr_image_ex` で stop_reason/finishReason 途切れ検出・`complete_text_ex`/`supports_text_prompt` で text-only 補完＝全ページ統合サマリ生成。Tesseract は非対応） |
 | `md_render.py` | `parse_markdown`, `_split_inline` | OCR 結果 Markdown を (行種別, インライン span) へ変換する純関数（Tk/fitz 非依存・`ocr_dialog.py` の整形描画が消費） |
 | `ocr_dialog.py` | `OCRDialog` | 複数ページ OCR の実行 UI・進捗・結果表示/エクスポート（`_run_gen` 世代ガード）・`preset=="markdown"` 整形描画（`_insert_markdown`）・コピー/保存は raw 維持・「📊 サマリ作成」による全ページ統合サマリ生成（`_on_summary`/`_summary_worker`・サマリ専用キャンセルフラグ） |
 
@@ -281,7 +281,7 @@ C = dict(THEMES["dark"])  # 実行時に _apply_theme() で更新
 - サムネイルは `fitz.Matrix(0.22, 0.22)` のスケールで生成（変更時はパフォーマンスに注意）
 - プレビューは `self.zoom * 1.5` のスケールで生成
 - 右ペインはスクロール可能な Canvas 構成（`_build_tools_scrollable` で実装）
-- クラウド OCR（Claude / Gemini）はページ画像を base64 で外部 API へ https 送信する（Tesseract / LM Studio はローカル完結）
+- クラウド OCR（Claude / Gemini / RunPod）はページ画像を base64 で外部 API へ https 送信する（Tesseract / LM Studio / Ollama はローカル完結）。RunPod の API キーは環境変数 `RUNPOD_API_KEY` のみ
 - API キーは設定ファイルに保存されず、環境変数またはセッションメモリ（`app._session_api_keys`）のみ
 - OCR のリトライ待機は `Retry-After` を 60 秒上限にクランプし、0.5 秒刻みでキャンセルを確認する（`clamp_retry_after` / `interruptible_sleep`）
 - `fitz.Document` はスレッド間で共有しない（OCR はメインスレッドでレンダリングした base64 のみワーカーへ渡す）
