@@ -1,61 +1,58 @@
 # Coding Conventions
 
-**Analysis Date:** 2026-06-10
+**Analysis Date:** 2026-07-03
 
 ## Naming Patterns
 
 **Files:**
-- Module files use `snake_case.py` (e.g., `ui_builder.py`, `file_ops.py`, `page_ops.py`, `ocr.py`)
+- Modules use `snake_case.py` (e.g., `file_ops.py`, `ui_builder.py`, `page_ops.py`, `ocr_providers.py`)
 - Test files use `test_<module>.py` prefix (e.g., `test_pdf_ops.py`, `test_plugins.py`, `test_ocr.py`)
-- Dialog modules in subpackage: `about.py`, `settings.py`, `plugin.py`, `merge.py`, `llm_config.py`
+- Dialogs stored in `pagefolio/dialogs/` subpackage with individual files per dialog type (e.g., `settings.py`, `merge.py`, `llm_config.py`)
 
 **Classes:**
-- Use PascalCase (e.g., `PDFEditorApp`, `UIBuilderMixin`, `FileOpsMixin`)
-- Mixin classes end with `Mixin` suffix (e.g., `UIBuilderMixin`, `ViewerMixin`, `DnDMixin`, `OCRMixin`)
+- PascalCase for all classes (e.g., `PDFEditorApp`, `FileOpsMixin`, `SettingsDialog`)
+- Mixin classes end with `Mixin` suffix (e.g., `UIBuilderMixin`, `ViewerMixin`, `DnDMixin`, `OCRMixin`, `PageOpsMixin`)
 - Dialog classes end with `Dialog` suffix (e.g., `AboutDialog`, `SettingsDialog`, `PluginDialog`, `MergeOrderDialog`)
-- Base classes use clear inheritance names (e.g., `OCRProvider` abstract base)
+- Custom exception classes end with `Error` suffix (e.g., `PDFPasswordError`, `OCRAPIKeyError`)
 
-**Methods and Functions:**
-- Private/internal methods use `_` prefix (e.g., `_build_styles`, `_refresh_all`, `_set_status`, `_check_doc`)
-- Event handlers use `_on_<event>` or `_do_<action>` convention (e.g., `_on_dnd_drop`, `_do_merge`, `_on_file_open`)
-- Public API methods use plain names without prefix (e.g., `discover_plugins`, `load_plugin`, `fire_event`)
-- Getter/setter pairs use `get_<attr>`/`set_<attr>` (e.g., `get_current_font_size()`, `set_current_font_size()`)
-- Test methods use `test_<feature>` format describing what is tested (e.g., `test_open_valid_pdf`, `test_rotate_90`, `test_discover_plugins`)
+**Functions & Methods:**
+- Use `snake_case` for all function/method names (e.g., `_refresh_all`, `_set_status`, `_capture_page_blob`)
+- `_` prefix for private/internal methods (e.g., `_build_styles`, `_do_merge`, `_refresh_all`)
+- Tk event handlers use `_on_` or `_do_` prefix (e.g., `_on_merge`, `_do_insert`, `_on_run`)
+- Public API methods use plain names (e.g., `discover_plugins`, `load_plugin`, `fire_event`, `ocr_image`)
 
-**Variables and Attributes:**
-- Instance attributes use `snake_case` (e.g., `self.current_page`, `self.selected_pages`, `self.thumb_cache`, `self._undo_stack`)
-- Private attributes use `_` prefix (e.g., `self._undo_stack`, `self._redo_stack`, `self._preview_gen`, `self._session_api_keys`)
-- Cache/state variables clearly indicate purpose (e.g., `thumb_cache`, `crop_rect`, `crop_drag_start`, `_pending_click`)
-- Generation counters for thread safety use `_<component>_gen` suffix (e.g., `self._preview_gen`, `self._thumb_gen`)
+**Variables & Attributes:**
+- `snake_case` for all variable names (e.g., `current_page`, `selected_pages`, `thumb_cache`, `font_size`)
+- Boolean variables often prefixed with `is_` or `has_` but not required (e.g., `edit_mode`, `pdf_has_password`)
+- Theme colors accessed via `C["KEY"]` dict (e.g., `C["BG_DARK"]`, `C["ACCENT"]`, `C["TEXT_MAIN"]`), never hardcoded hex strings
+- Settings dict keys use `snake_case` (e.g., `font_size`, `thumb_page_size`, `window_geometry`)
 
 **Constants:**
-- Use `UPPER_SNAKE_CASE` (e.g., `APP_VERSION`, `SETTINGS_FILE`, `PLUGINS_DIR`, `MAX_UNDO`, `SUPPORTED_EXTENSIONS`)
-- Theme color constants accessed via `C["KEY"]` dictionary (e.g., `C["BG_DARK"]`, `C["ACCENT"]`, `C["TEXT_MAIN"]`)
-- Never hardcode hex color strings in code—always use the `C` dict
-- Configuration constants defined at module level (e.g., `DEFAULT_LM_STUDIO_URL`, `DEFAULT_OCR_TIMEOUT`, `DEFAULT_OCR_SCALE`)
-- Security-related constants as frozensets (e.g., `SUPPORTED_EXTENSIONS`, `IMAGE_EXTENSIONS`, `_SENSITIVE_KEYS`)
+- `UPPER_SNAKE_CASE` for module-level constants (e.g., `APP_VERSION`, `MAX_UNDO`, `SUPPORTED_EXTENSIONS`, `MOSAIC_BLOCK`)
+- `frozenset` for immutable extension sets (e.g., `SUPPORTED_EXTENSIONS`, `IMAGE_EXTENSIONS`)
+- Dictionary constants like `THEMES`, `LANG`, `OCR_PROMPTS` defined in dedicated modules
 
 ## Code Style
 
 **Formatting:**
-- Line length: 88 characters (Ruff configuration in `pyproject.toml`)
-- Indentation: 4 spaces (PEP 8)
-- No trailing whitespace
+- Line length: 88 characters (configured in `pyproject.toml`)
+- 4-space indentation (Python standard)
+- Tool: Ruff 0.15.7 for linting and auto-formatting
 
-**Linting:**
-- Tool: Ruff (`v0.15.7`)
-- Command: `ruff check . && ruff format .`
-- Enabled rules: `["E", "F", "W", "I", "S", "B"]` (E: errors, F: undefined names, W: warnings, I: imports, S: security, B: bugbear)
-- Per-file exceptions: `tests/**/*.py` exempt from `S101` (assert allowed in tests only)
+**Linting Rules (Ruff):**
+- Selected rule categories: `E` (errors), `F` (Pyflakes), `W` (warnings), `I` (isort imports), `S` (security), `B` (bugbear)
+- All errors/warnings must be fixed before commit
+- Exception: `S101` (assert) is allowed in `tests/**/*.py`
+- Run before commit: `ruff check . && ruff format .`
 
-**Import Organization:**
+**Imports:**
+- Use absolute imports from `pagefolio` package (e.g., `from pagefolio.constants import LANG, C`)
+- Organize imports in standard Python order: stdlib, third-party, local
+- Use `# noqa: F401` when re-exporting (e.g., in `__init__.py` and `constants.py`)
+- Use `# noqa: E402` for post-path-insert imports (e.g., in test files that modify `sys.path`)
+- Avoid circular imports by structuring modules as pure functions or classes with minimal coupling
 
-Order imports as:
-1. Standard library (`import os`, `import json`, `import logging`, etc.)
-2. Third-party packages (`import tkinter`, `import fitz`, `import pytest`, etc.)
-3. Local application (`from pagefolio.constants import ...`, `from pagefolio.app import ...`)
-
-Example from `pagefolio/app.py`:
+**Import Organization Example (from `pagefolio/app.py`):**
 ```python
 import logging
 import os
@@ -65,228 +62,180 @@ from tkinter import messagebox
 
 from pagefolio.constants import LANG, SUPPORTED_EXTENSIONS, C
 from pagefolio.dialogs import PluginDialog, SettingsDialog
-from pagefolio.file_ops import FileOpsMixin
-from pagefolio.plugins import PluginManager
+from pagefolio.dnd import DnDMixin
+from pagefolio.file_drop import _setup_file_drop
+# ... more imports
 ```
-
-**Module Docstrings:**
-- Every module has a top-level docstring (triple-quoted) describing its purpose
-- Format: One line description on first line, optional details below
-- Example: `"""ファイル操作 Mixin — open/save/undo/redo"""`
-
-**Class and Method Docstrings:**
-- Public methods and classes typically have single-line docstrings (brief description)
-- Complex methods include parameter documentation
-- Example:
-  ```python
-  def _apply_inverse(self, state):
-      """現在の doc 状態から逆デルタを構築して返す。
-      _restore_state 内で逆操作を適用する直前に呼ぶ。
-      返り値は pdf_bytes キーを持たない op 別 state dict。
-      """
-  ```
 
 ## Error Handling
 
-**Patterns:**
+**Exception Handling:**
+- Never use bare `except:` — always `except Exception as e:`
+- Catch specific exceptions when possible (e.g., `except FileNotFoundError:`, `except fitz.FileNotFoundError:`)
+- Log exceptions with context using `logger.error()` or `logger.exception()`
+- User-facing errors use `messagebox.showerror()` from tkinter
 
-1. **Explicit Exception Types:**
-   - NEVER use bare `except:` clause
-   - Always use `except Exception as e:` or specific exception types
-   - Example from `pagefolio/app.py`:
-     ```python
-     except Exception as e:
-         logger.debug("ジオメトリ復元失敗: %s", e)
-     ```
+**Exception Patterns:**
 
-2. **User-Visible Errors:**
-   - Use `messagebox.showerror()` for file operations and user-facing failures
-   - Use `messagebox.showinfo()` for informational messages
-   - Use `messagebox.askyesno()` for confirmation dialogs
-   - Example from `pagefolio/page_ops.py`:
-     ```python
-     except Exception as e:
-         messagebox.showerror(self._t("err_title"), str(e))
-     ```
+*File operations:*
+```python
+try:
+    doc = fitz.open(filepath)
+except (FileNotFoundError, fitz.FileNotFoundError) as e:
+    logger.error("Failed to open PDF: %s", e)
+    messagebox.showerror(self._t("error_title"), self._t("error_open_failed"))
+```
 
-3. **Logging Errors:**
-   - Use `logger.debug()` for recoverable errors (UI state issues, temporary failures)
-   - Use `logger.exception()` for unexpected exceptions (log full traceback)
-   - Use `logger.error()` for security violations (e.g., sensitive key leakage detection)
-   - Example from `pagefolio/settings.py`:
-     ```python
-     logger.error(
-         "機密キー '%s' が settings に混入しています（保存から除外します）", k
-     )
-     ```
+*Password-protected PDFs:*
+```python
+except fitz.FileError as e:
+    if "encrypted" in str(e).lower():
+        # Handle password-required case
+    else:
+        raise
+```
 
-4. **Silent Failures:**
-   - Background render threads silently discard results when generation counter has advanced
-   - Plugin lifecycle callbacks are individually wrapped so one plugin failure doesn't crash others
-   - Rationale: UI remains responsive; non-critical async operations don't block main thread
+*Custom exceptions:*
+```python
+class PDFPasswordError(Exception):
+    """パスワード付き PDF の認証がキャンセル/失敗したことを表す例外。"""
+
+class OCRAPIKeyError(RuntimeError):
+    """API キーが見つからない場合の例外。"""
+    def __init__(self, env_var):
+        self.env_var = env_var
+        super().__init__(f"API key not found: {env_var}")
+```
 
 ## Logging
 
-**Framework:** Python's built-in `logging` module
+**Framework:** Standard library `logging` module
 
-**Initialization:**
-- Each module declares: `logger = logging.getLogger(__name__)`
-- App-level setup in `pagefolio/app.py.__init__()`:
-  ```python
-  logging.basicConfig(
-      level=logging.WARNING,
-      format="%(levelname)s:%(name)s:%(message)s",
-  )
-  ```
+**Logger Setup:**
+- Each module creates its own logger: `logger = logging.getLogger(__name__)`
+- Root logger configured in `PDFEditorApp.__init__()` with WARNING level
+- Format: `"%(levelname)s:%(name)s:%(message)s"`
+
+**Logging Levels:**
+- `logger.debug()` — Detailed diagnostic info (e.g., geometry restoration, slow operations)
+- `logger.info()` — General informational messages (rarely used in current codebase)
+- `logger.warning()` — Warning conditions (default level set in app)
+- `logger.error()` — Error conditions with context (exceptions, failed operations)
+- `logger.exception()` — Error with full exception traceback (when catching in handlers)
 
 **Patterns:**
+```python
+logger.debug("ジオメトリ復元失敗: %s", e)
+logger.error("Failed to open PDF: %s", filepath)
+logger.exception("Unexpected error during OCR")
+```
 
-- **Debug level:** Recoverable issues, state changes that may aid diagnostics
-  - Window geometry save/restore failures
-  - Button state updates that fail
-  - File I/O edge cases
-  - Example: `logger.debug("ジオメトリ復元失敗: %s", e)`
-
-- **Exception level:** Unexpected errors with full traceback
-  - Plugin UI construction failures
-  - OCR backend unexpected exceptions
-  - Example: `logger.exception("プラグイン UI 構築失敗: %s", e)`
-
-- **Error level:** Security and critical issues
-  - Sensitive key leakage detection
-  - Example: `logger.error("機密キー '%s' が settings に混入しています")`
-
-## Comments
+## Comments & Documentation
 
 **When to Comment:**
-- Complex undo/redo state reconstruction logic
-- Non-obvious PDF transformation mathematics (crop box clamping, coordinate transforms)
-- Security-critical decisions (API key handling, file path validation)
-- Plugin lifecycle edge cases
-- Rationale for generation counter patterns in threading code
+- Non-obvious algorithms or design decisions
+- Complex state machines or Blob lifecycle management
+- Bug workarounds or PyMuPDF quirks
+- Section headers for logical groupings (using `# ══════════════════════`)
 
-**Comment Style:**
-- Use inline comments (`#`) for single-line explanations
-- Use section dividers for related groups of methods:
-  ```python
-  # ══════════════════════════════════════════
-  #  Undo / Redo
-  # ══════════════════════════════════════════
-  ```
-- Use task tags in comments to mark implementation notes:
-  - `# D-01:` Design decision with tag reference
-  - `# M-5:` Milestone or bug fix reference
-  - `# WR-03:` Work-related context
+**Section Headers:**
+```python
+# ══════════════════════════════════════════
+#  Undo / Redo
+# ══════════════════════════════════════════
+def _save_undo(self, op, **kwargs):
+    ...
+```
 
-**Language:** All comments written in Japanese (マークダウン記号含む). Exception: code identifiers (variable names, function calls) remain in English.
+**Module Docstrings:**
+All modules include docstrings in Japanese (e.g., `"""ファイル操作 Mixin — open/save/undo/redo"""`)
+
+**Function Docstrings:**
+Complex functions include docstrings explaining parameters and behavior:
+```python
+def _capture_page_blob(self, page_i):
+    """page_i の 1 ページを単独 PDF として Blob 化して返す。
+
+    delete / insert / merge / page_edit 系デルタの共有キャプチャ経路。
+    64KiB 以上はディスク退避（FileBlob）、未満はメモリ保持（MemBlob）。
+    """
+```
 
 ## Function Design
 
-**Size Guidelines:**
-- Mixin methods typically 10–30 lines
-- Complex methods (undo/redo logic) may reach 50+ lines but are broken into focused sub-steps
-- Utility functions 5–15 lines
-- Event handlers 5–20 lines
+**Size & Complexity:**
+- Keep functions focused and single-responsibility
+- Long Mixin classes are acceptable (each Mixin clusters related methods by responsibility)
+- Helper functions extract common patterns (e.g., `_blob_bytes()`, `resolve_ocr_prompt()`)
 
 **Parameters:**
-- Mixin methods receive `self` context (no `app` parameter needed)
-- Dialog constructors take `(parent, font_func, lang="ja")` signature
-- Callback functions receive event object as `event` parameter
-- Optional keyword arguments use `**kwargs` for flexibility in undo/redo metadata
+- Use keyword arguments for complex functions (e.g., `_save_undo(self, op, **kwargs)`)
+- Avoid excessive positional arguments; group related params into dicts or dataclasses
+- Type hints use inline Python 3.8-compatible syntax (no `from __future__ import annotations`)
 
 **Return Values:**
-- Methods operating on documents return `None` (side-effect based)
-- Validation methods return `bool` (e.g., `_check_doc() -> bool`)
-- Query methods return data structures (lists, sets, dicts)
-- Builders return constructed widgets (e.g., `_build_ui() -> None` but builds `self.*`)
+- Functions return concrete values or `None`, no sentinel values like `-1`
+- Use tuples for multiple return values (e.g., `(page_i, cropbox_tuple)`)
+- Generators used for thread-safe state updates (e.g., `_run_gen` in OCR dialog)
 
 ## Module Design
 
 **Exports:**
-- Mixin modules export single class inheriting from Mixin (e.g., `FileOpsMixin`)
-- Dialog modules export dialog class and optionally helper functions
-- Utility modules export public functions (prefixed with `_` for internal/sensitive)
-- Constants module re-exports from `lang.py`, `themes.py` for backward compatibility
+- Public APIs defined at module top level (e.g., `OCRProvider` base class, `PluginManager`)
+- Private/helper functions prefixed with `_` (e.g., `_setup_file_drop()`, `_apply_theme()`)
+- Re-exports used for backward compatibility (e.g., `pagefolio/constants.py` re-exports `THEMES`, `LANG`, `C`)
 
 **Barrel Files:**
-- `pagefolio/__init__.py`: Re-exports main API (PDFEditorApp, dialogs, constants)
-- `pagefolio/dialogs/__init__.py`: Re-exports all dialog classes
-- Pattern: `from pagefolio.dialogs import SettingsDialog` (vs. `from pagefolio.dialogs.settings import SettingsDialog`)
+- `pagefolio/__init__.py` exports public classes for simple imports: `from pagefolio import PluginManager, PDFEditorPlugin`
+- `pagefolio/dialogs/__init__.py` re-exports all dialog classes for `from pagefolio.dialogs import SettingsDialog` compatibility
+- Re-exports use `# noqa: F401` to silence unused import warnings
 
-**Backward Compatibility:**
-- `constants.py` re-exports `THEMES`, `C`, `LANG` to maintain `from pagefolio.constants import THEMES`
-- `__init__.py` maintains public surface for all dialog classes and utilities
-- Test suite verifies backward compatibility explicitly (`tests/test_imports.py`)
+## Theme & UI Patterns
 
-## Theme Usage
+**Theme Color Usage:**
+- Always reference colors via `C["KEY"]` dict, never hardcoded hex strings
+- Available keys: `BG_DARK`, `BG_PANEL`, `BG_CARD`, `ACCENT`, `TEXT_MAIN`, `TEXT_SUB`, `SUCCESS`, `WARNING`, `DANGER_BG`, `DANGER_FG`, `CROP_ON_BG`
+- Theme dict `C` is updated at runtime by `_apply_theme()` in settings module
 
-**Pattern:**
-- Never hardcode color values (e.g., `"#1a1a2e"`)
-- Always use: `C["BG_DARK"]`, `C["ACCENT"]`, `C["TEXT_MAIN"]`, etc.
-- Runtime theme dict `C` is updated by `_apply_theme()` in `settings.py`
-- All Tkinter style definitions in `ui_builder.py` reference `C` dict
-
-**Example:**
-```python
-style.configure(
-    "TLabel",
-    background=C["BG_DARK"],
-    foreground=C["TEXT_MAIN"],
-    font=("Segoe UI", fs),
-)
-```
-
-## Font Size Handling
-
-**Pattern:**
-- Never hardcode font sizes (e.g., `font=("Segoe UI", 12)`)
-- Use helper method `self._font(delta)` where available
-- For dialogs, accept `font_func` parameter in constructor
-- Example:
-  ```python
-  tk.Label(self, font=self._font(0))  # Use base size
-  tk.Label(self, font=self._font(8, weight="bold"))  # Base + 8, bold
-  ```
-- Font size range: 8–16 (clamped in settings)
-- Module-level helper: `pagefolio.settings._make_font(delta=0, weight=None, base_size=10)`
-
-## Button Styling
-
-**Standard Patterns:**
-- `"TButton"` — regular operation buttons
-- `"Accent.TButton"` — primary/important actions (main features)
+**Button Styles (ttk.Button `style` parameter):**
+- `"TButton"` — standard operations (default)
+- `"Accent.TButton"` — primary/important actions (highlights accent color)
 - `"Danger.TButton"` — destructive operations (delete, quit)
-- `"CropOn.TButton"` — toggle state ON (crop mode active)
+- `"CropOn.TButton"` — trim mode active indicator
 
-**Example Usage:**
-```python
-ttk.Button(parent, text="Delete", style="Danger.TButton", command=self._delete_selected)
-ttk.Button(parent, text="Crop", style="CropOn.TButton", command=self._toggle_crop_mode)
-```
+**Font Handling:**
+- Never hardcode font sizes; use `self._font(delta)` helper method
+- `_font(delta, weight="")` returns `("Segoe UI", base_size + delta, weight)` tuple
+- Tkinter widgets use `font=self._font(0)` for normal size, `self._font(2, "bold")` for headings
 
-## Security & Sensitive Data
+## State Management Conventions
 
-**API Key Handling:**
-- API keys NEVER stored in `pagefolio_settings.json`
-- Session-only storage in `self._session_api_keys` (in-memory, process scoped)
-- Priority: Environment variable → Session memory (in `_resolve_api_key` in `pagefolio/ocr.py`)
-- `_SENSITIVE_KEYS` frozenset in `settings.py` acts as structural guard
+**Instance Attributes (in `PDFEditorApp`):**
+- `self.doc` — Current `fitz.Document` or `None` when no file open
+- `self.filepath` — String path to open file or `None`
+- `self.current_page` — 0-based page index (integer)
+- `self.selected_pages` — `set[int]` for multi-page selection
+- `self._undo_stack` / `self._redo_stack` — `deque` with operation state dicts
+- `self.thumb_cache` — `dict[int, ImageTk.PhotoImage]` for thumbnail cache
+- `self.settings` — `dict` with user preferences (loaded from JSON)
+- `self.font_size` — Integer 8–16 (base size for relative font calculations)
+- `self.edit_mode` — Boolean (persisted in settings)
 
-**Example of correct pattern:**
-```python
-# ❌ WRONG: Never let API keys reach settings dict
-settings["api_key"] = "sk-..."
+**Never Mutate:**
+- Call `_push_evicting()` instead of directly appending to undo/redo stacks (to release Blob files)
+- Call `_clear_undo_stacks()` to clean up both stacks (not separate clears)
+- Use `_dispose_state()` to release Blob objects in states
 
-# ✅ RIGHT: Use session-only storage
-self._session_api_keys["claude"] = "sk-..."
-```
+## Forbidden Patterns
 
-## Docstring Language
-
-**Default Language:** Japanese (日本語)
-
-All docstrings, comments, and user-facing strings are written in Japanese. Exception: code identifiers remain in English.
+**Prohibited:**
+- Bare `except:` clause (always specify exception type)
+- `# type: ignore` comments without approval (never use)
+- Hardcoded hex color strings (use `C` dict instead)
+- Hardcoded font sizes (use `_font()` helper)
+- Direct append to `_undo_stack` / `_redo_stack` without `_push_evicting()`
+- `pyproject.toml` edits (sacred configuration)
 
 ---
 
-*Convention analysis: 2026-06-10*
+*Convention analysis: 2026-07-03*
