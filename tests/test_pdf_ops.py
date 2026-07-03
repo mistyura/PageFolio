@@ -1464,3 +1464,108 @@ class TestPageEditRedactMosaic:
         assert r2 is not None
         assert r2.x0 == 0 and r2.y0 == 0
         assert r2.x1 == 595 and r2.y1 == 842
+
+
+class TestContentOpsUndoFix:
+    """insert_blank / watermark / page_numbers の undo no-op バグ修正（v1.7.0）。
+
+    旧実装は _save_undo に存在しない op 名を渡しており、undo しても何も
+    起こらなかった。insert_blank は既存 insert op、watermark / page_numbers
+    は page_edit op へ置き換えて undo/redo 往復を検証する。
+    """
+
+    def _make_app(self, doc):
+        import collections
+        import types
+
+        import pagefolio.file_ops as fo
+        import pagefolio.page_ops as po
+        import pagefolio.redact_ops as ro
+
+        class FakeApp(fo.FileOpsMixin, po.PageOpsMixin, ro.RedactOpsMixin):
+            MAX_UNDO = 20
+
+            def __init__(self, d):
+                self.doc = d
+                self.current_page = 0
+                self.selected_pages = set()
+                self._undo_stack = collections.deque(maxlen=self.MAX_UNDO)
+                self._redo_stack = collections.deque(maxlen=self.MAX_UNDO)
+                self._preview_gen = 0
+                self._thumb_gen = 0
+                self.root = None
+
+            def _check_doc(self):
+                return self.doc is not None
+
+            def _get_targets(self):
+                return sorted(self.selected_pages) or [self.current_page]
+
+            def _invalidate_thumb_cache(self, *a, **kw):
+                pass
+
+            def _refresh_all(self):
+                pass
+
+            def _t(self, key):
+                return key
+
+            def _set_status(self, *a):
+                pass
+
+        app = FakeApp(doc)
+        app.plugin_manager = types.SimpleNamespace(fire_event=lambda *a, **kw: None)
+        return app
+
+    def test_insert_blank_roundtrip(self, sample_pdf_doc):
+        """白紙挿入 → undo でページ数が戻る → redo で再挿入"""
+        app = self._make_app(sample_pdf_doc)
+        app.current_page = 0
+        app._insert_blank_page()
+        assert len(app.doc) == 4
+        assert app.doc[1].get_text().strip() == ""  # 白紙
+
+        app._undo()
+        assert len(app.doc) == 3
+        assert "Page 2" in app.doc[1].get_text()
+
+        app._redo()
+        assert len(app.doc) == 4
+        assert app.doc[1].get_text().strip() == ""
+
+    def test_watermark_roundtrip(self, sample_pdf_doc, monkeypatch):
+        """透かし追加 → undo でテキストが消える → redo で再追加"""
+        import pagefolio.page_ops as po
+
+        app = self._make_app(sample_pdf_doc)
+        app.selected_pages = {0, 1}
+        monkeypatch.setattr(
+            po.simpledialog, "askstring", lambda *a, **kw: "CONFIDENTIAL"
+        )
+        app._add_watermark_text()
+        assert "CONFIDENTIAL" in app.doc[0].get_text()
+        assert "CONFIDENTIAL" in app.doc[1].get_text()
+        assert "CONFIDENTIAL" not in app.doc[2].get_text()
+
+        app._undo()
+        for i in range(3):
+            assert "CONFIDENTIAL" not in app.doc[i].get_text()
+        assert "Page 1" in app.doc[0].get_text()  # 元の内容は保持
+
+        app._redo()
+        assert "CONFIDENTIAL" in app.doc[0].get_text()
+
+    def test_page_numbers_roundtrip(self, sample_pdf_doc):
+        """ページ番号印字 → undo で消える → redo で再印字"""
+        app = self._make_app(sample_pdf_doc)
+        app.selected_pages = {0, 1, 2}
+        app._add_page_numbers()
+        assert "1 / 3" in app.doc[0].get_text()
+        assert "3 / 3" in app.doc[2].get_text()
+
+        app._undo()
+        assert "1 / 3" not in app.doc[0].get_text()
+        assert "Page 1" in app.doc[0].get_text()
+
+        app._redo()
+        assert "1 / 3" in app.doc[0].get_text()

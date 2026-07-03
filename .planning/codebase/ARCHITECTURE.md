@@ -64,7 +64,7 @@
 |-----------|----------------|------|
 | `PDFEditorApp` | Root class; mixin aggregation; state holder; event dispatch; settings lifecycle | `pagefolio/app.py` |
 | `UIBuilderMixin` | Theme configuration; ttk style setup; layout construction (paned, canvas, frames) | `pagefolio/ui_builder.py` |
-| `FileOpsMixin` | File open/save/saveas; undo/redo stacks; snapshot serialization | `pagefolio/file_ops.py` |
+| `FileOpsMixin` | File open/save/saveas; undo/redo stacks; op 別デルタ + Blob ライフサイクル管理 | `pagefolio/file_ops.py` |
 | `PageOpsMixin` | Page rotation, deletion, cropping (CropBox), duplication, merge, split | `pagefolio/page_ops.py` |
 | `ViewerMixin` | Preview rendering (fitz→PIL→Tk); zoom; thumbnail generation & cache; selection UI | `pagefolio/viewer.py` |
 | `DnDMixin` | Thumbnail drag-and-drop reordering; ghost images; drop indicators | `pagefolio/dnd.py` |
@@ -83,7 +83,7 @@
 **Key Characteristics:**
 - **Mixin inheritance model**: `PDFEditorApp` aggregates 6 functional mixins (UI, file, page, viewer, D&D, OCR) avoiding deep hierarchy
 - **State centralization**: All mutable state lives in `PDFEditorApp` instance; methods operate on `self.*` attributes
-- **Snapshot-based undo**: Complete PDF serialization (`bytes`) pushed to `deque` with max 20 snapshots
+- **Delta-based undo**: op 別逆デルタ（rotate=回転値 / crop=cropbox / delete・page_edit=ページ単位 bytes 等）を `deque(maxlen=20)` に保持。64KiB 以上のページ bytes は `UndoBlobStore`（`undo_store.py`）で tempfile へ退避しメモリから解放（v1.7.0）
 - **Background rendering**: Preview and thumbnail generation dispatched to daemon threads; generation counters prevent stale updates
 - **Plugin hooks**: 10+ event callbacks fire on document/page operations for extensibility
 - **Two-layer dialog system**: Base dialogs in `pagefolio/dialogs/`, specialized OCR in `ocr_dialog.py`
@@ -253,7 +253,7 @@
 
 - **Threading:** Tkinter main thread only. Preview/thumbnail renders spawn daemon threads; generation counters (`_preview_gen`, `_thumb_gen`) prevent stale overwrites. OCR uses `ThreadPoolExecutor` for provider calls.
 - **Global state:** Module-level `C` (theme dict) and `_current_font_size` in `pagefolio/settings.py` are mutable singletons. Updated at startup and when theme/font changes.
-- **Undo limit:** Hard-coded `MAX_UNDO = 20` in `app.py`. Each snapshot is full PDF serialization (~100KB–1MB depending on page count).
+- **Undo limit:** Hard-coded `MAX_UNDO = 20` in `app.py`. 各エントリは op 別デルタ（full PDF シリアライズではない）。ページ bytes を持つデルタ（delete/page_edit/insert 系/merge 系/merge_resize）は `_capture_page_blob` 経由で Blob 化され、64KiB 以上は `pagefolio_undo_` 一時ディレクトリへ退避。deque 溢れ・redo クリア・消費時に `_dispose_state` で解放、ファイルクローズ/終了時に `_clear_undo_stacks` が purge、atexit でも回収（v1.7.0）。
 - **CropBox safety:** All crop operations must clamp CropBox inside page's MediaBox before calling `set_cropbox()` (`page_ops.py` line ~130).
 - **API key isolation:** Settings file never contains API keys (guarded by `_SENSITIVE_KEYS` in `settings.py`). Keys resolved from environment vars or session dict `self._session_api_keys`.
 - **No file locking:** `fitz.Document` read-only after open; modifications staged in memory and written on save.
@@ -282,7 +282,7 @@
 
 **Why it's wrong:** Multiple open documents consume memory and can cause file locking issues; fitz documents aren't safely serializable across threads
 
-**Do this instead:** Use `self.doc.tobytes()` to snapshot and `fitz.open(stream=bytes_data)` to restore. Store as bytes in undo stack.
+**Do this instead:** ページ単位のキャプチャは必ず `_capture_page_blob(page_i)` を使う（Blob 化・64KiB 以上はディスク退避）。復元は `fitz.open(stream=self._blob_bytes(data))`。`self.doc.tobytes()` の全体シリアライズを undo スタックへ入れてはならない。
 
 ### Starting Background Threads Without Generation Counter
 

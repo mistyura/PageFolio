@@ -39,18 +39,95 @@ class FileOpsMixin:
     # ══════════════════════════════════════════
     #  Undo / Redo
     # ══════════════════════════════════════════
-    def _capture_page_bytes(self, page_i):
-        """page_i の 1 ページを単独 PDF の bytes としてキャプチャする。
+    def _get_undo_store(self):
+        """undo デルタ用 Blob ストアを返す（遅延生成）。
+
+        遅延生成のため、__init__ を通らないテスト用フェイクでも
+        そのまま動作する。
+        """
+        store = getattr(self, "_undo_blob_store", None)
+        if store is None:
+            from pagefolio.undo_store import UndoBlobStore
+
+            store = UndoBlobStore()
+            self._undo_blob_store = store
+        return store
+
+    def _capture_page_blob(self, page_i):
+        """page_i の 1 ページを単独 PDF として Blob 化して返す。
 
         delete / insert / merge / page_edit 系デルタの共有キャプチャ経路。
-        v1.7.0 でページ bytes をディスク退避（Blob 化）する際は
-        この関数だけを差し替える（差し替え面の 1 点化）。
+        64KiB 以上はディスク退避（FileBlob）、未満はメモリ保持（MemBlob）。
         """
         tmp = fitz.open()
         tmp.insert_pdf(self.doc, from_page=page_i, to_page=page_i)
         data = tmp.tobytes()
         tmp.close()
-        return data
+        return self._get_undo_store().put(data)
+
+    @staticmethod
+    def _blob_bytes(data):
+        """Blob（load() を持つ）または生 bytes からページ bytes を取り出す。
+
+        既存テスト・プラグイン等が生 bytes を state に入れても動く後方互換層。
+        """
+        return data.load() if hasattr(data, "load") else data
+
+    def _dispose_state(self, state):
+        """state 内の Blob を解放する（evict・redo クリア・消費時に呼ぶ）。
+
+        生 bytes（Blob でない値）は無視する（後方互換）。
+        """
+
+        def _release(x):
+            if hasattr(x, "release"):
+                x.release()
+
+        op = state.get("op")
+        data = state.get("data")
+        if data is None:
+            return
+        if op in ("delete", "delete_redo", "page_edit", "insert_undo", "insert_redo"):
+            for _i, blob in data:
+                _release(blob)
+        elif op == "merge_undo":
+            _old_count, captured = data
+            for _i, blob in captured:
+                _release(blob)
+        elif op in ("merge_resize", "merge_resize_undo"):
+            _release(data.get("merged_bytes"))
+            for _i, blob in data.get("orig_pages", []):
+                _release(blob)
+
+    def _push_evicting(self, stack, state):
+        """deque へ push する前に、溢れて evict される最古 state を解放する。
+
+        deque(maxlen) の自動 evict は要素を黙って捨てるため、FileBlob の
+        一時ファイルが残ってしまう。append 前にフックして解放する。
+        maxlen が None のスタック（テスト用フェイク等）では何もしない。
+        """
+        if stack.maxlen is not None and len(stack) == stack.maxlen and stack:
+            self._dispose_state(stack[0])
+        stack.append(state)
+
+    def _clear_redo_stack(self):
+        """redo スタックを Blob 解放付きでクリアする。"""
+        for st in self._redo_stack:
+            self._dispose_state(st)
+        self._redo_stack.clear()
+
+    def _clear_undo_stacks(self):
+        """undo/redo 両スタックを Blob 解放付きでクリアし、ストアを purge する。
+
+        ファイルオープン / クローズ / アプリ終了時に呼ぶ。
+        """
+        for st in list(self._undo_stack) + list(self._redo_stack):
+            self._dispose_state(st)
+        self._undo_stack.clear()
+        self._redo_stack.clear()
+        store = getattr(self, "_undo_blob_store", None)
+        if store is not None:
+            store.purge()
 
     def _save_undo(self, op, **kwargs):
         if not self.doc:
@@ -68,13 +145,13 @@ class FileOpsMixin:
             state["data"] = (page_i, (cb.x0, cb.y0, cb.x1, cb.y1))
         elif op == "delete":
             state["data"] = [
-                (i, self._capture_page_bytes(i)) for i in sorted(kwargs["targets"])
+                (i, self._capture_page_blob(i)) for i in sorted(kwargs["targets"])
             ]
         elif op == "page_edit":
             # ページ内容の破壊的編集（黒塗り・モザイク等）: 適用前のページを
             # bytes でキャプチャする。ページ数不変・対称 op（対 op 不要）
             state["data"] = [
-                (i, self._capture_page_bytes(i)) for i in sorted(kwargs["targets"])
+                (i, self._capture_page_blob(i)) for i in sorted(kwargs["targets"])
             ]
         elif op == "move":
             state["data"] = (kwargs["src"], kwargs["actual_dest"])
@@ -89,11 +166,11 @@ class FileOpsMixin:
         elif op == "bulk_crop":
             state["data"] = kwargs["crop_data"]  # [(page_i, (x0,y0,x1,y1)), ...]
         elif op == "merge_resize":
-            # data = {"insert_at": int, "merged_bytes": bytes,
-            #         "orig_pages": [(idx, bytes)]}
+            # data = {"insert_at": int, "merged_bytes": bytes|Blob,
+            #         "orig_pages": [(idx, bytes|Blob)]}
             state["data"] = kwargs["data"]
-        self._undo_stack.append(state)
-        self._redo_stack.clear()
+        self._push_evicting(self._undo_stack, state)
+        self._clear_redo_stack()
 
     def _undo(self):
         if not self._undo_stack:
@@ -101,7 +178,11 @@ class FileOpsMixin:
             return
         state = self._undo_stack.pop()
         inverse = self._restore_state(state)
-        self._redo_stack.append(inverse)
+        # 消費済み state の Blob を解放する。ただし逆デルタが同一 data を
+        # 共有する op（insert_undo→insert_redo / merge_resize 系）は解放しない
+        if inverse.get("data") is not state.get("data"):
+            self._dispose_state(state)
+        self._push_evicting(self._redo_stack, inverse)
         self._set_status(self._t("undo_done"))
 
     def _redo(self):
@@ -110,7 +191,9 @@ class FileOpsMixin:
             return
         state = self._redo_stack.pop()
         inverse = self._restore_state(state)
-        self._undo_stack.append(inverse)
+        if inverse.get("data") is not state.get("data"):
+            self._dispose_state(state)
+        self._push_evicting(self._undo_stack, inverse)
         self._set_status(self._t("redo_done"))
 
     def _apply_inverse(self, state):
@@ -140,8 +223,7 @@ class FileOpsMixin:
             # op="delete_redo": 現在（挿入済み）のページ bytes をキャプチャして保存。
             inv["op"] = "delete_redo"
             inv["data"] = [
-                (page_i, self._capture_page_bytes(page_i))
-                for page_i, _ in state["data"]
+                (page_i, self._capture_page_blob(page_i)) for page_i, _ in state["data"]
             ]
         elif op == "delete_redo":
             # delete_redo の逆（redo 後に undo するため）:
@@ -149,15 +231,13 @@ class FileOpsMixin:
             # その逆は「削除ページを復元（insert）」= delete op として bytes を返す。
             inv["op"] = "delete"
             inv["data"] = [
-                (page_i, self._capture_page_bytes(page_i))
-                for page_i, _ in state["data"]
+                (page_i, self._capture_page_blob(page_i)) for page_i, _ in state["data"]
             ]
         elif op == "page_edit":
             # page_edit は対称 op: 逆デルタ = 適用後（現在）のページ bytes。
             # undo→redo 往復でも同じ op のまま入れ替わる
             inv["data"] = [
-                (page_i, self._capture_page_bytes(page_i))
-                for page_i, _ in state["data"]
+                (page_i, self._capture_page_blob(page_i)) for page_i, _ in state["data"]
             ]
         elif op == "move":
             # move の逆: move_page(src, dest) の逆順列を計算して bulk_move で逆操作。
@@ -207,7 +287,7 @@ class FileOpsMixin:
             insert_at, num = state["data"]
             inv["op"] = "insert_undo"
             inv["data"] = [
-                (i, self._capture_page_bytes(i))
+                (i, self._capture_page_blob(i))
                 for i in range(insert_at, insert_at + num)
             ]
         elif op == "insert_undo":
@@ -219,7 +299,7 @@ class FileOpsMixin:
             num = len(state["data"])
             inv["op"] = "insert_undo"
             inv["data"] = [
-                (i, self._capture_page_bytes(i))
+                (i, self._capture_page_blob(i))
                 for i in range(insert_at, insert_at + num)
             ]
         elif op == "merge":
@@ -229,7 +309,7 @@ class FileOpsMixin:
             inv["data"] = (
                 old_count,
                 [
-                    (i, self._capture_page_bytes(i))
+                    (i, self._capture_page_blob(i))
                     for i in range(old_count, len(self.doc))
                 ],
             )
@@ -268,7 +348,7 @@ class FileOpsMixin:
         elif op == "delete":
             # undo: 昇順で再挿入（インデックスずれ防止）
             for page_i, page_bytes in state["data"]:
-                tmp = fitz.open(stream=page_bytes, filetype="pdf")
+                tmp = fitz.open(stream=self._blob_bytes(page_bytes), filetype="pdf")
                 self.doc.insert_pdf(tmp, start_at=page_i)
                 tmp.close()
         elif op == "delete_redo":
@@ -282,7 +362,7 @@ class FileOpsMixin:
             # 他ページのインデックスはずれない
             for page_i, page_bytes in state["data"]:
                 self.doc.delete_page(page_i)
-                tmp = fitz.open(stream=page_bytes, filetype="pdf")
+                tmp = fitz.open(stream=self._blob_bytes(page_bytes), filetype="pdf")
                 self.doc.insert_pdf(tmp, start_at=page_i)
                 tmp.close()
         elif op == "move":
@@ -315,14 +395,14 @@ class FileOpsMixin:
         elif op == "insert_undo":
             # insert_undo: キャプチャした bytes を昇順で再挿入
             for page_i, page_bytes in state["data"]:
-                tmp = fitz.open(stream=page_bytes, filetype="pdf")
+                tmp = fitz.open(stream=self._blob_bytes(page_bytes), filetype="pdf")
                 self.doc.insert_pdf(tmp, start_at=page_i)
                 tmp.close()
         elif op == "insert_redo":
             # insert_redo: insert の再実行相当。キャプチャした bytes を昇順で再挿入する
             # （insert→undo→redo の連鎖では「再挿入」が正しい挙動）。
             for page_i, page_bytes in state["data"]:
-                tmp = fitz.open(stream=page_bytes, filetype="pdf")
+                tmp = fitz.open(stream=self._blob_bytes(page_bytes), filetype="pdf")
                 self.doc.insert_pdf(tmp, start_at=page_i)
                 tmp.close()
         elif op == "merge":
@@ -333,7 +413,7 @@ class FileOpsMixin:
             # merge_undo: キャプチャした bytes を昇順で再追加
             old_count, captured = state["data"]
             for page_i, page_bytes in captured:
-                tmp = fitz.open(stream=page_bytes, filetype="pdf")
+                tmp = fitz.open(stream=self._blob_bytes(page_bytes), filetype="pdf")
                 self.doc.insert_pdf(tmp, start_at=page_i)
                 tmp.close()
         elif op == "merge_resize":
@@ -344,7 +424,7 @@ class FileOpsMixin:
             self.doc.delete_page(insert_at)
             # 元ページを昇順で再挿入
             for idx, page_bytes in sorted(d["orig_pages"], key=lambda x: x[0]):
-                tmp = fitz.open(stream=page_bytes, filetype="pdf")
+                tmp = fitz.open(stream=self._blob_bytes(page_bytes), filetype="pdf")
                 self.doc.insert_pdf(tmp, start_at=idx)
                 tmp.close()
         elif op == "merge_resize_undo":
@@ -355,7 +435,7 @@ class FileOpsMixin:
             orig_indices = sorted([idx for idx, _ in d["orig_pages"]], reverse=True)
             for idx in orig_indices:
                 self.doc.delete_page(idx)
-            tmp = fitz.open(stream=d["merged_bytes"], filetype="pdf")
+            tmp = fitz.open(stream=self._blob_bytes(d["merged_bytes"]), filetype="pdf")
             self.doc.insert_pdf(tmp, start_at=insert_at)
             tmp.close()
         elif op == "bulk_move":
@@ -471,8 +551,7 @@ class FileOpsMixin:
             self.pdf_has_password = False
             self.current_page = 0
             self.selected_pages.clear()
-            self._undo_stack.clear()
-            self._redo_stack.clear()
+            self._clear_undo_stacks()
             self._invalidate_thumb_cache()
             self._preview_gen += 1
             self._thumb_gen += 1
@@ -506,8 +585,7 @@ class FileOpsMixin:
             self.pdf_has_password = had_password
             self.current_page = 0
             self.selected_pages.clear()
-            self._undo_stack.clear()
-            self._redo_stack.clear()
+            self._clear_undo_stacks()
             self._invalidate_thumb_cache()
             self._preview_gen += 1
             self._thumb_gen += 1
@@ -636,8 +714,7 @@ class FileOpsMixin:
         self.pdf_has_password = False
         self.current_page = 0
         self.selected_pages.clear()
-        self._undo_stack.clear()
-        self._redo_stack.clear()
+        self._clear_undo_stacks()
         self._invalidate_thumb_cache()
         self._preview_gen += 1
         self._thumb_gen += 1

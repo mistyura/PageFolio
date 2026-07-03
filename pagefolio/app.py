@@ -319,9 +319,11 @@ class PDFEditorApp(
         self._save_window_state()
         if self.doc:
             if messagebox.askyesno(self._t("confirm_title"), self._t("quit_confirm")):
+                self._clear_undo_stacks()  # Blob 解放 + 一時ディレクトリ purge
                 self.doc.close()
                 self.root.destroy()
         else:
+            self._clear_undo_stacks()
             self.root.destroy()
 
     def _set_status(self, msg):

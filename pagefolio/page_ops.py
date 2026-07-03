@@ -157,11 +157,15 @@ class PageOpsMixin:
         if not self._check_doc():
             return
         pno = self.current_page
-        self._save_undo("insert_blank", pno=pno)
+        # 既存 insert op を再利用（insert_at=pno+1・挿入後に件数 1 を確定）。
+        # 旧 op 名 "insert_blank" は _restore_state に分岐がなく undo が
+        # no-op だったバグの修正（v1.7.0）
+        self._save_undo("insert", insert_at=pno + 1)
         try:
             page = self.doc[pno]
             w, h = page.rect.width, page.rect.height
             self.doc.new_page(pno + 1, width=w, height=h)
+            self._undo_stack[-1]["data"][1] = 1  # 挿入件数を確定
             self._invalidate_thumb_cache()
             self.current_page = pno + 1
             self._refresh_all()
@@ -185,11 +189,17 @@ class PageOpsMixin:
         )
         if not text:
             return
-        self._save_undo("watermark", targets=targets)
+        # コンテンツ改変系のため page_edit op（適用前ページ bytes）で undo 対応。
+        # 旧 op 名 "watermark" は undo が no-op だったバグの修正（v1.7.0）
+        self._save_undo("page_edit", targets=targets)
         for i in targets:
             page = self.doc[i]
             rect = page.rect
             center_p = fitz.Point(rect.width / 2 - len(text) * 10, rect.height / 2)
+            # insert_text の rotate は 90 度単位のみ許容のため、斜め 45 度は
+            # morph（ページ中心を pivot とした回転行列）で実現する
+            # （旧 rotate=45 は ValueError で透かし追加自体が失敗していた）
+            pivot = fitz.Point(rect.width / 2, rect.height / 2)
             page.insert_text(
                 center_p,
                 text,
@@ -197,8 +207,8 @@ class PageOpsMixin:
                 fontname="helv",
                 color=(0.8, 0.8, 0.8),
                 fill_opacity=0.5,
-                rotate=45,
                 overlay=True,
+                morph=(pivot, fitz.Matrix(45)),
             )
         self._invalidate_thumb_cache(targets)
         self._refresh_all()
@@ -209,7 +219,9 @@ class PageOpsMixin:
         if not self._check_doc():
             return
         targets = self._get_targets()
-        self._save_undo("page_numbers", targets=targets)
+        # コンテンツ改変系のため page_edit op で undo 対応（"watermark" と同様の
+        # no-op バグ修正・v1.7.0）
+        self._save_undo("page_edit", targets=targets)
         total = len(self.doc)
         for _idx, i in enumerate(targets):
             page = self.doc[i]
@@ -578,14 +590,12 @@ class PageOpsMixin:
                     offset += src_rect.height
                 new_page.show_pdf_page(target_rect, self.doc, src_pno)
 
-            # 元ページと結合ページの bytes をキャプチャして op 別デルタで保存（D-05）
+            # 元ページと結合ページを Blob 化して op 別デルタで保存
+            # （D-05・64KiB 以上はディスク退避）
             insert_at = targets[0]
-            orig_pages = []
-            for idx in sorted(targets):
-                tmp = fitz.open()
-                tmp.insert_pdf(self.doc, from_page=idx, to_page=idx)
-                orig_pages.append((idx, tmp.tobytes()))
-                tmp.close()
+            orig_pages = [
+                (idx, self._capture_page_blob(idx)) for idx in sorted(targets)
+            ]
             merged_bytes = new_doc.tobytes()
             new_doc.close()
 
@@ -593,7 +603,7 @@ class PageOpsMixin:
                 "merge_resize",
                 data={
                     "insert_at": insert_at,
-                    "merged_bytes": merged_bytes,
+                    "merged_bytes": self._get_undo_store().put(merged_bytes),
                     "orig_pages": orig_pages,
                 },
             )

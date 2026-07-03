@@ -37,7 +37,8 @@ PageFolio/
 │   ├── plugins.py             # プラグインシステム（PDFEditorPlugin, PluginManager）
 │   ├── app.py                 # PDFEditorApp 本体（Mixin 統合 + 状態管理）
 │   ├── ui_builder.py          # UI構築 Mixin（スタイル・レイアウト）
-│   ├── file_ops.py            # ファイル操作 Mixin（open/save/undo/redo）
+│   ├── file_ops.py            # ファイル操作 Mixin（open/save/undo/redo・Blob ライフサイクル）
+│   ├── undo_store.py          # undo デルタのディスク退避ストア（MemBlob/FileBlob/UndoBlobStore・Tk/fitz 非依存）
 │   ├── page_ops.py            # ページ操作 Mixin（回転/削除/トリミング/挿入/結合/分割）
 │   ├── redact_ops.py          # ページ編集 Mixin（黒塗り redaction / モザイク・page_edit undo）
 │   ├── print_ops.py           # 印刷 Mixin（PrintOpsMixin / write_print_tempfile）
@@ -85,6 +86,7 @@ PageFolio/
 │   ├── test_save_overwrite.py # 縮小して保存（上書き）ヘルパーのテスト
 │   ├── test_password.py       # PDF パスワード付与/解除・暗号化保存ヘルパーのテスト
 │   ├── test_print.py          # 印刷一時ファイル生成 / OS 分岐のテスト
+│   ├── test_undo_stress.py    # 120 ページ PDF の Undo/Redo 連続ストレス（メモリ・Blob 不変条件・eviction）
 │   ├── test_lang_parity.py    # ja/en LANG キー一致 / プレースホルダ整合の回帰テスト
 │   └── test_source_keyguard.py  # pagefolio/ ソースの実 API キーパターン不在スキャン
 └── docs/                      # スクリーンショット画像
@@ -552,7 +554,8 @@ PageFolio の既存コードベースに対する最適化プロジェクト。
 
 - **Threading:** UI runs on the Tkinter main thread. Preview and thumbnail renders are processed on the main thread via `root.after()` chained calls; generation counters (`_preview_gen`, `_thumb_gen`) prevent stale results from overwriting newer ones. OCR uses `ThreadPoolExecutor`.
 - **Global state:** `C` (theme dict) and `_current_font_size` in `pagefolio/settings.py` are module-level mutable singletons updated at runtime.
-- **Undo limit:** Hard-coded to `MAX_UNDO = 20` in `pagefolio/app.py`. 各エントリは操作固有のデルタ dict（rotate: 回転値リスト、crop: cropbox タプル、delete: ページ単位 bytes 等）であり、full PDF シリアライズではない。
+- **Undo limit:** Hard-coded to `MAX_UNDO = 20` in `pagefolio/app.py`. 各エントリは操作固有のデルタ dict（rotate: 回転値リスト、crop: cropbox タプル、delete/page_edit: ページ単位 Blob 等）であり、full PDF シリアライズではない。
+- **Undo Blob ライフサイクル（v1.7.0）:** ページ単位のキャプチャは必ず `_capture_page_blob(page_i)` 経由で行う（64KiB 以上は `UndoBlobStore` が tempfile へ退避・未満は MemBlob）。復元側は `self._blob_bytes(data)` で bytes を取り出す（生 bytes 後方互換）。解放は deque 溢れ（`_push_evicting`）・redo クリア（`_clear_redo_stack`）・消費時（`_undo`/`_redo` 内の identity 比較付き dispose）・ファイルクローズ/終了時（`_clear_undo_stacks` → purge）＋ atexit。スタックへの直接 `append`/`clear` は禁止（Blob がリークする）。
 - **CropBox safety:** All crop operations must clamp the `CropBox` inside the page's `MediaBox` before calling `set_cropbox()` (`pagefolio/page_ops.py`).
 
 ## Anti-Patterns
