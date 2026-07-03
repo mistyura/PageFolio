@@ -225,6 +225,8 @@ class PageOpsMixin:
     def _toggle_crop_mode(self):
         self.crop_mode = not self.crop_mode
         if self.crop_mode:
+            # 黒塗りモードとは相互排他（redact_ops.py 側と対）
+            self._redact_mode_off()
             self.crop_toggle_btn.configure(
                 text=self._t("crop_mode_on"), style="CropOn.TButton"
             )
@@ -236,8 +238,25 @@ class PageOpsMixin:
             self.preview_canvas.configure(cursor="")
             self._clear_crop_overlay()
 
+    def _canvas_rect_to_pdf(self, sx, sy, ex, ey):
+        """プレビューキャンバス座標の矩形を PDF 点座標（page 左上原点）へ変換する。
+
+        プレビューは self.zoom * 1.5 倍で描画され、画像はキャンバス上で
+        pad=10 オフセットされている（viewer.py の _show_preview と対応）。
+        トリミング・黒塗り・モザイクの矩形選択が共用する。
+        """
+        scale = self.zoom * 1.5
+        img_offset = 10
+        return (
+            (sx - img_offset) / scale,
+            (sy - img_offset) / scale,
+            (ex - img_offset) / scale,
+            (ey - img_offset) / scale,
+        )
+
     def _crop_drag_start(self, event):
-        if not self.crop_mode:
+        # 矩形選択はトリミングと黒塗り/モザイクで共用する
+        if not (self.crop_mode or self.redact_mode):
             return
         cx = self.preview_canvas.canvasx(event.x)
         cy = self.preview_canvas.canvasy(event.y)
@@ -246,7 +265,7 @@ class PageOpsMixin:
         self._clear_crop_overlay()
 
     def _crop_drag_move(self, event):
-        if not self.crop_mode or not self.crop_drag_start:
+        if not (self.crop_mode or self.redact_mode) or not self.crop_drag_start:
             return
         cx = self.preview_canvas.canvasx(event.x)
         cy = self.preview_canvas.canvasy(event.y)
@@ -291,18 +310,14 @@ class PageOpsMixin:
                 self.preview_canvas.coords(self.crop_rect_id, sx, sy, ex, ey)
 
         self.crop_rect = (sx, sy, ex, ey)
-        scale = self.zoom * 1.5
-        img_offset = 10
-        px0 = int((sx - img_offset) / scale)
-        py0 = int((sy - img_offset) / scale)
-        px1 = int((ex - img_offset) / scale)
-        py1 = int((ey - img_offset) / scale)
+        fx0, fy0, fx1, fy1 = self._canvas_rect_to_pdf(sx, sy, ex, ey)
+        px0, py0, px1, py1 = int(fx0), int(fy0), int(fx1), int(fy1)
         self.crop_info_var.set(
             f"({px0},{py0}) - ({px1},{py1})  {px1 - px0}×{py1 - py0} pt"
         )
 
     def _crop_drag_end(self, event):
-        if not self.crop_mode:
+        if not (self.crop_mode or self.redact_mode):
             return
         self._crop_drag_move(event)
 
@@ -334,13 +349,7 @@ class PageOpsMixin:
                 return
         if len(targets) == 1:
             self._save_undo("crop", page_i=self.current_page)
-            sx, sy, ex, ey = self.crop_rect
-            scale = self.zoom * 1.5
-            img_offset = 10
-            x0_pdf = (sx - img_offset) / scale
-            y0_pdf = (sy - img_offset) / scale
-            x1_pdf = (ex - img_offset) / scale
-            y1_pdf = (ey - img_offset) / scale
+            x0_pdf, y0_pdf, x1_pdf, y1_pdf = self._canvas_rect_to_pdf(*self.crop_rect)
             page = self.doc[self.current_page]
             mb = page.mediabox
             new_rect = fitz.Rect(
@@ -369,13 +378,7 @@ class PageOpsMixin:
                 )
                 return
         else:
-            sx, sy, ex, ey = self.crop_rect
-            scale = self.zoom * 1.5
-            img_offset = 10
-            x0_pdf = (sx - img_offset) / scale
-            y0_pdf = (sy - img_offset) / scale
-            x1_pdf = (ex - img_offset) / scale
-            y1_pdf = (ey - img_offset) / scale
+            x0_pdf, y0_pdf, x1_pdf, y1_pdf = self._canvas_rect_to_pdf(*self.crop_rect)
             cur_mb = self.doc[self.current_page].mediabox
             rel = (
                 x0_pdf / cur_mb.width,

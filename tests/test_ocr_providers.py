@@ -1940,3 +1940,202 @@ class TestOllamaRunPodCompleteText:
             "key", "https://api.runpod.ai/v1/endpoint", "m"
         )
         assert p.complete_text_ex("doc", "sum") == ("sum", False)
+
+
+class TestParseRetryAfter:
+    """parse_retry_after 純関数の検証"""
+
+    def test_numeric_string(self):
+        from pagefolio.ocr_providers import parse_retry_after
+
+        assert parse_retry_after({"Retry-After": "30"}) == 30.0
+        assert parse_retry_after({"Retry-After": "1.5"}) == 1.5
+
+    def test_none_headers(self):
+        from pagefolio.ocr_providers import parse_retry_after
+
+        assert parse_retry_after(None) is None
+
+    def test_missing_header(self):
+        from pagefolio.ocr_providers import parse_retry_after
+
+        assert parse_retry_after({}) is None
+
+    def test_http_date_format_returns_none(self):
+        """HTTP-date 形式（数値でない）は None（従来挙動と同じ）"""
+        from pagefolio.ocr_providers import parse_retry_after
+
+        assert parse_retry_after({"Retry-After": "Wed, 21 Oct 2026 07:28:00 GMT"}) is (
+            None
+        )
+
+
+class TestLooksLikeContextError:
+    """looks_like_context_error 純関数の検証"""
+
+    @pytest.mark.parametrize("code", [400, 413, 422])
+    def test_context_markers_detected(self, code):
+        from pagefolio.ocr_providers import looks_like_context_error
+
+        assert looks_like_context_error(code, '{"error": "context_length_exceeded"}')
+        assert looks_like_context_error(code, "Prompt is too long: 250000 tokens")
+        assert looks_like_context_error(code, "exceeds the maximum number of tokens")
+
+    def test_case_insensitive(self):
+        from pagefolio.ocr_providers import looks_like_context_error
+
+        assert looks_like_context_error(400, "CONTEXT LENGTH exceeded")
+
+    def test_other_400_body_not_detected(self):
+        from pagefolio.ocr_providers import looks_like_context_error
+
+        assert not looks_like_context_error(400, "invalid api key")
+        assert not looks_like_context_error(400, "")
+        assert not looks_like_context_error(400, None)
+
+    def test_non_4xx_codes_not_detected(self):
+        """429/5xx はリトライ側で扱うため context 判定しない"""
+        from pagefolio.ocr_providers import looks_like_context_error
+
+        assert not looks_like_context_error(429, "context length")
+        assert not looks_like_context_error(500, "context length")
+
+
+class TestLMStudioRetrySymmetry:
+    """LMStudio の 429/5xx リトライ対称化（v1.6.5）の検証。
+
+    従来は全 HTTPError が RuntimeError 化されサマリ生成でリトライされなかった。
+    クラウド系（Claude/Gemini/RunPod）と同じ OCRRetryableError へ対称化する。
+    """
+
+    def test_429_raises_retryable_with_retry_after(self, monkeypatch):
+        from pagefolio import ocr_providers
+        from pagefolio.ocr_providers import OCRRetryableError
+
+        def fake_urlopen(req, timeout=None):
+            raise _FakeHTTPError(
+                429, "Too Many Requests", b"rate limit", headers={"Retry-After": "30"}
+            )
+
+        monkeypatch.setattr(ocr_providers.urllib.request, "urlopen", fake_urlopen)
+        p = ocr_providers.LMStudioProvider("http://x", "m")
+        with pytest.raises(OCRRetryableError) as ei:
+            p.complete_text_ex("doc", "sum")
+        assert ei.value.retry_after == 30.0
+        assert ei.value.code == 429
+
+    def test_500_raises_retryable(self, monkeypatch):
+        from pagefolio import ocr_providers
+        from pagefolio.ocr_providers import OCRRetryableError
+
+        def fake_urlopen(req, timeout=None):
+            raise _FakeHTTPError(500, "Server Error", b"oops")
+
+        monkeypatch.setattr(ocr_providers.urllib.request, "urlopen", fake_urlopen)
+        p = ocr_providers.LMStudioProvider("http://x", "m")
+        with pytest.raises(OCRRetryableError):
+            p.ocr_image("Zg==", "p")
+
+    def test_401_raises_plain_runtime_error(self, monkeypatch):
+        """401（認証エラー）はリトライ対象外の RuntimeError のまま"""
+        from pagefolio import ocr_providers
+        from pagefolio.ocr_providers import OCRRetryableError
+
+        def fake_urlopen(req, timeout=None):
+            raise _FakeHTTPError(401, "Unauthorized", b"bad key")
+
+        monkeypatch.setattr(ocr_providers.urllib.request, "urlopen", fake_urlopen)
+        p = ocr_providers.LMStudioProvider("http://x", "m")
+        with pytest.raises(RuntimeError) as ei:
+            p.complete_text_ex("doc", "sum")
+        assert not isinstance(ei.value, OCRRetryableError)
+        assert "401" in str(ei.value)
+
+    def test_400_context_error_raises_context_length(self, monkeypatch):
+        from pagefolio import ocr_providers
+        from pagefolio.ocr_providers import OCRContextLengthError
+
+        def fake_urlopen(req, timeout=None):
+            raise _FakeHTTPError(
+                400, "Bad Request", b'{"error": "context_length_exceeded"}'
+            )
+
+        monkeypatch.setattr(ocr_providers.urllib.request, "urlopen", fake_urlopen)
+        p = ocr_providers.LMStudioProvider("http://x", "m")
+        with pytest.raises(OCRContextLengthError):
+            p.complete_text_ex("doc", "sum")
+
+
+class TestOllamaRetrySymmetry:
+    """Ollama の 429/5xx リトライ対称化（v1.6.5）の検証"""
+
+    def test_429_raises_retryable(self, monkeypatch):
+        from pagefolio import ocr_providers
+        from pagefolio.ocr_providers import OCRRetryableError
+
+        def fake_urlopen(req, timeout=None):
+            raise _FakeHTTPError(429, "Too Many Requests", b"rate limit")
+
+        monkeypatch.setattr(ocr_providers.urllib.request, "urlopen", fake_urlopen)
+        p = ocr_providers.OllamaProvider("http://x", "m")
+        with pytest.raises(OCRRetryableError):
+            p.complete_text_ex("doc", "sum")
+
+    def test_400_context_error_raises_context_length(self, monkeypatch):
+        from pagefolio import ocr_providers
+        from pagefolio.ocr_providers import OCRContextLengthError
+
+        def fake_urlopen(req, timeout=None):
+            raise _FakeHTTPError(400, "Bad Request", b"too many tokens in prompt")
+
+        monkeypatch.setattr(ocr_providers.urllib.request, "urlopen", fake_urlopen)
+        p = ocr_providers.OllamaProvider("http://x", "m")
+        with pytest.raises(OCRContextLengthError):
+            p.complete_text_ex("doc", "sum")
+
+    def test_404_raises_plain_runtime_error(self, monkeypatch):
+        from pagefolio import ocr_providers
+        from pagefolio.ocr_providers import OCRRetryableError
+
+        def fake_urlopen(req, timeout=None):
+            raise _FakeHTTPError(404, "Not Found", b"no such model")
+
+        monkeypatch.setattr(ocr_providers.urllib.request, "urlopen", fake_urlopen)
+        p = ocr_providers.OllamaProvider("http://x", "m")
+        with pytest.raises(RuntimeError) as ei:
+            p.ocr_image("Zg==", "p")
+        assert not isinstance(ei.value, OCRRetryableError)
+
+
+class TestCloudContextLengthError:
+    """クラウド系プロバイダの context 超過 → OCRContextLengthError 検証"""
+
+    def test_claude_prompt_too_long(self, monkeypatch):
+        from pagefolio import ocr_providers
+        from pagefolio.ocr_providers import OCRContextLengthError
+
+        def fake_urlopen(req, timeout=None):
+            raise _FakeHTTPError(
+                400,
+                "Bad Request",
+                b'{"error": {"message": "prompt is too long: 250000 tokens"}}',
+            )
+
+        monkeypatch.setattr(ocr_providers.urllib.request, "urlopen", fake_urlopen)
+        p = ocr_providers.ClaudeProvider("key", "claude-sonnet-4-6")
+        with pytest.raises(OCRContextLengthError):
+            p.complete_text_ex("doc", "sum")
+
+    def test_gemini_token_limit(self, monkeypatch):
+        from pagefolio import ocr_providers
+        from pagefolio.ocr_providers import OCRContextLengthError
+
+        def fake_urlopen(req, timeout=None):
+            raise _FakeHTTPError(
+                400, "Bad Request", b"input exceeds the maximum number of tokens"
+            )
+
+        monkeypatch.setattr(ocr_providers.urllib.request, "urlopen", fake_urlopen)
+        p = ocr_providers.GeminiProvider("key", "gemini-2.5-flash")
+        with pytest.raises(OCRContextLengthError):
+            p.complete_text_ex("doc", "sum")

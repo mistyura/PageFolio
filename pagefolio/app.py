@@ -19,6 +19,7 @@ from pagefolio.page_ops import PageOpsMixin
 from pagefolio.pagination import clamp_page_size
 from pagefolio.plugins import PluginManager
 from pagefolio.print_ops import PrintOpsMixin
+from pagefolio.redact_ops import RedactOpsMixin
 from pagefolio.settings import (
     _apply_theme,
     _load_settings,
@@ -35,6 +36,7 @@ class PDFEditorApp(
     UIBuilderMixin,
     FileOpsMixin,
     PageOpsMixin,
+    RedactOpsMixin,
     ViewerMixin,
     DnDMixin,
     OCRMixin,
@@ -100,6 +102,7 @@ class PDFEditorApp(
         self.crop_rect = None
         self.crop_drag_start = None
         self.crop_mode = False
+        self.redact_mode = False
 
         # Undo / Redo
         self._undo_stack = deque(maxlen=self.MAX_UNDO)
@@ -498,6 +501,7 @@ class PDFEditorApp(
         self.crop_rect = None
         self.crop_drag_start = None
         self.crop_mode = False
+        self.redact_mode = False
         self.crop_overlay_ids = []
         self.crop_rect_id = None
         self._plugin_ui_frame = None

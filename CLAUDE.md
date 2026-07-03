@@ -39,6 +39,7 @@ PageFolio/
 │   ├── ui_builder.py          # UI構築 Mixin（スタイル・レイアウト）
 │   ├── file_ops.py            # ファイル操作 Mixin（open/save/undo/redo）
 │   ├── page_ops.py            # ページ操作 Mixin（回転/削除/トリミング/挿入/結合/分割）
+│   ├── redact_ops.py          # ページ編集 Mixin（黒塗り redaction / モザイク・page_edit undo）
 │   ├── print_ops.py           # 印刷 Mixin（PrintOpsMixin / write_print_tempfile）
 │   ├── viewer.py              # 表示 Mixin（プレビュー/ズーム/サムネイル/ポップアップ）
 │   ├── dnd.py                 # D&D Mixin（サムネイルのドラッグ並び替え）
@@ -118,7 +119,7 @@ API キーは `_SENSITIVE_KEYS` ガードにより `pagefolio_settings.json` へ
 
 ### `pagefolio/app.py`
 
-`PDFEditorApp` メインクラス。7つの Mixin を統合し、`__init__`・キーバインド・ユーティリティメソッドを持つ。
+`PDFEditorApp` メインクラス。8つの Mixin を統合し、`__init__`・キーバインド・ユーティリティメソッドを持つ。
 
 ### Mixin モジュール群
 
@@ -127,6 +128,7 @@ API キーは `_SENSITIVE_KEYS` ガードにより `pagefolio_settings.json` へ
 | `ui_builder.py` | `UIBuilderMixin` | スタイル定義・レイアウト構築 |
 | `file_ops.py` | `FileOpsMixin` | ファイル操作・Undo/Redo・パスワード付与/解除 |
 | `page_ops.py` | `PageOpsMixin` | ページ回転・削除・トリミング・挿入・結合・分割 |
+| `redact_ops.py` | `RedactOpsMixin` | ページ編集（黒塗り redaction・モザイク）。矩形選択はトリミングと共用・undo は `page_edit` op（適用前ページ bytes） |
 | `viewer.py` | `ViewerMixin` | プレビュー・ズーム・サムネイル・ポップアップ |
 | `dnd.py` | `DnDMixin` | サムネイル D&D 並び替え |
 | `ocr.py` | `OCRMixin` | OCR 起動・プロバイダ生成（`build_provider`）・ボタン状態管理 |
@@ -273,6 +275,7 @@ C = dict(THEMES["dark"])  # 実行時に _apply_theme() で更新
 - パスワード保護 PDF は開く際にパスワード入力を求める（`_authenticate_doc`）。パスワードの付与（AES-256）/解除は「🔒 パスワード」セクションから別名保存で行う
 - 印刷は OS の既定 PDF ハンドラへ送る方式（Windows: `os.startfile(path, "print")`）。Windows 以外は未対応で情報通知に留める
 - `set_cropbox` によるトリミングはメタデータ上の cropbox 変更であり、PDF の物理的なページサイズは変わらない
+- 黒塗り・モザイク（`redact_ops.py`）は **破壊的操作**: `apply_redactions()` は矩形下のテキスト・画像を実削除し、矩形に交差する注釈も削除される（PyMuPDF 仕様）。undo は `page_edit` op（適用前ページ bytes）で可能。矩形は未回転のページ座標系で適用される（トリミングと同じ制約）
 - サムネイルは `fitz.Matrix(0.22, 0.22)` のスケールで生成（変更時はパフォーマンスに注意）
 - プレビューは `self.zoom * 1.5` のスケールで生成
 - 右ペインはスクロール可能な Canvas 構成（`_build_tools_scrollable` で実装）

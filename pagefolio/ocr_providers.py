@@ -20,11 +20,14 @@ class OCRProvider(abc.ABC):
 
     例外規約:
       ocr_image() および list_models() は以下のいずれかを raise しうる:
-        ConnectionError  — 接続失敗（ネットワーク到達不能、サーバ未起動）
-        TimeoutError     — タイムアウト
-        OCRAPIKeyError   — APIキー未設定（クラウドプロバイダのみ）
-        RuntimeError     — APIエラー（4xx/5xx、Vision非対応モデル等）
-                           またはレスポンス形式不正
+        ConnectionError       — 接続失敗（ネットワーク到達不能、サーバ未起動）
+        TimeoutError          — タイムアウト
+        OCRAPIKeyError        — APIキー未設定（クラウドプロバイダのみ）
+        OCRRetryableError     — HTTP 429/5xx（リトライ可能・全プロバイダ共通）
+        OCRContextLengthError — 入力がコンテキスト長上限を超過（400/413/422
+                                + body 判定。主に complete_text_ex で発生）
+        RuntimeError          — その他 APIエラー（4xx、Vision非対応モデル等）
+                                またはレスポンス形式不正
     """
 
     default_concurrency: int = 2
@@ -136,6 +139,82 @@ def _retryable_http_message(code):
     return f"HTTP {code}: サーバエラー（リトライ可能）"
 
 
+class OCRContextLengthError(RuntimeError):
+    """入力がモデルのコンテキスト長上限を超えたことを示す専用例外。
+
+    サマリ生成（全ページ連結テキスト）で入力過大の 4xx を検出し、
+    「ページ数を減らして再実行」の専用ガイダンス表示に使う。
+    判定漏れは従来どおり RuntimeError に落ちる（安全側フォールバック）。
+    """
+
+
+# コンテキスト長超過エラーの body 判定マーカー（小文字比較）。
+# OpenAI 互換: context_length_exceeded / Claude: prompt is too long
+# Gemini: exceeds the maximum number of tokens / 汎用: context length 等
+_CONTEXT_ERROR_MARKERS = (
+    "context_length_exceeded",
+    "context length",
+    "maximum context",
+    "maximum number of tokens",
+    "too many tokens",
+    "prompt is too long",
+    "input token",
+    "token limit",
+)
+
+
+def parse_retry_after(headers):
+    """Retry-After ヘッダー値を float 秒として解析する（純関数）。
+
+    headers が None・ヘッダー欠落・数値でない値（HTTP-date 形式等）は
+    None を返す。全プロバイダの 429/5xx 変換で共用する。
+    """
+    raw = headers.get("Retry-After") if headers else None
+    if not raw:
+        return None
+    try:
+        return float(raw)
+    except (ValueError, TypeError):
+        return None
+
+
+def looks_like_context_error(code, body):
+    """HTTP エラーがコンテキスト長超過らしいかを判定する純関数。
+
+    400/413/422 のいずれかで、かつ body に既知のマーカー文字列が
+    含まれるとき True。マーカーは小文字比較。
+    """
+    if code not in (400, 413, 422):
+        return False
+    lowered = (body or "").lower()
+    return any(marker in lowered for marker in _CONTEXT_ERROR_MARKERS)
+
+
+def _raise_mapped_http_error(e):
+    """urllib.error.HTTPError を共通例外規約へ変換して送出する（内部共有）。
+
+    429/5xx           → OCRRetryableError（Retry-After を反映）
+    コンテキスト長超過 → OCRContextLengthError（400/413/422 + body 判定）
+    その他 4xx        → RuntimeError（従来文言 "HTTP {code}: {body}" を維持）
+
+    全プロバイダの HTTPError ハンドラから呼ばれ、リトライ挙動を対称化する。
+    """
+    if e.code == 429 or e.code >= 500:
+        raise OCRRetryableError(
+            _retryable_http_message(e.code),
+            retry_after=parse_retry_after(e.headers),
+            code=e.code,
+        ) from e
+    try:
+        err_body = e.read().decode("utf-8", errors="replace")
+    except Exception:
+        err_body = ""
+    message = f"HTTP {e.code}: {err_body or e.reason}"
+    if looks_like_context_error(e.code, err_body):
+        raise OCRContextLengthError(message) from e
+    raise RuntimeError(message) from e
+
+
 class LMStudioProvider(OCRProvider):
     """LM Studio OpenAI 互換 Vision API プロバイダ（urllib 直叩き）。
 
@@ -226,11 +305,7 @@ class LMStudioProvider(OCRProvider):
             with urllib.request.urlopen(req, timeout=self.timeout) as resp:  # noqa: S310
                 return resp.read().decode("utf-8")
         except urllib.error.HTTPError as e:
-            try:
-                err_body = e.read().decode("utf-8", errors="replace")
-            except Exception:
-                err_body = ""
-            raise RuntimeError(f"HTTP {e.code}: {err_body or e.reason}") from e
+            _raise_mapped_http_error(e)
         except socket.timeout as e:
             raise TimeoutError(f"timed out after {self.timeout}s") from e
         except urllib.error.URLError as e:
@@ -252,7 +327,8 @@ class LMStudioProvider(OCRProvider):
         例外:
           ConnectionError: 接続失敗（LM Studio 未起動等）
           TimeoutError:    タイムアウト
-          RuntimeError:    HTTP エラー（4xx/5xx）またはレスポンス形式不正
+          OCRRetryableError: HTTP 429/5xx（リトライ可能）
+          RuntimeError:    HTTP 4xx（429 以外）またはレスポンス形式不正
         """
         body = self._post_chat(self._build_payload(b64_png, prompt))
         try:
@@ -477,26 +553,8 @@ class ClaudeProvider(OCRProvider):
             with urllib.request.urlopen(req, timeout=self.timeout) as resp:  # noqa: S310
                 return resp.read().decode("utf-8")
         except urllib.error.HTTPError as e:
-            # 429 または 5xx はリトライ可能として OCRRetryableError を送出する
-            if e.code == 429 or e.code >= 500:
-                retry_after = None
-                raw_retry = e.headers.get("Retry-After") if e.headers else None
-                if raw_retry:
-                    try:
-                        retry_after = float(raw_retry)
-                    except (ValueError, TypeError):
-                        retry_after = None
-                raise OCRRetryableError(
-                    _retryable_http_message(e.code),
-                    retry_after=retry_after,
-                    code=e.code,
-                ) from e
-            # 4xx（429 以外）は retryable ではない
-            try:
-                err_body = e.read().decode("utf-8", errors="replace")
-            except Exception:
-                err_body = ""
-            raise RuntimeError(f"HTTP {e.code}: {err_body or e.reason}") from e
+            # 429/5xx → OCRRetryableError、コンテキスト長超過 → 専用例外（共有）
+            _raise_mapped_http_error(e)
         except socket.timeout as e:
             raise TimeoutError(f"timed out after {self.timeout}s") from e
         except urllib.error.URLError as e:
@@ -766,26 +824,8 @@ class GeminiProvider(OCRProvider):
             with urllib.request.urlopen(req, timeout=self.timeout) as resp:  # noqa: S310
                 return resp.read().decode("utf-8")
         except urllib.error.HTTPError as e:
-            # 429 または 5xx はリトライ可能（ClaudeProvider と同一構造）
-            if e.code == 429 or e.code >= 500:
-                retry_after = None
-                raw_retry = e.headers.get("Retry-After") if e.headers else None
-                if raw_retry:
-                    try:
-                        retry_after = float(raw_retry)
-                    except (ValueError, TypeError):
-                        retry_after = None
-                raise OCRRetryableError(
-                    _retryable_http_message(e.code),
-                    retry_after=retry_after,
-                    code=e.code,
-                ) from e
-            # 4xx（429 以外）は retryable ではない
-            try:
-                err_body = e.read().decode("utf-8", errors="replace")
-            except Exception:
-                err_body = ""
-            raise RuntimeError(f"HTTP {e.code}: {err_body or e.reason}") from e
+            # 429/5xx → OCRRetryableError、コンテキスト長超過 → 専用例外（共有）
+            _raise_mapped_http_error(e)
         except socket.timeout as e:
             raise TimeoutError(f"timed out after {self.timeout}s") from e
         except urllib.error.URLError as e:
@@ -1114,11 +1154,8 @@ class OllamaProvider(OCRProvider):
             with urllib.request.urlopen(req, timeout=self.timeout) as resp:  # noqa: S310
                 return resp.read().decode("utf-8")
         except urllib.error.HTTPError as e:
-            try:
-                err_body = e.read().decode("utf-8", errors="replace")
-            except Exception:
-                err_body = ""
-            raise RuntimeError(f"HTTP {e.code}: {err_body or e.reason}") from e
+            # 429/5xx → OCRRetryableError、コンテキスト長超過 → 専用例外（共有）
+            _raise_mapped_http_error(e)
         except socket.timeout as e:
             raise TimeoutError(f"timed out after {self.timeout}s") from e
         except urllib.error.URLError as e:
@@ -1140,7 +1177,8 @@ class OllamaProvider(OCRProvider):
         例外:
           ConnectionError: 接続失敗（Ollama 未起動等）
           TimeoutError:    タイムアウト
-          RuntimeError:    HTTP エラー（4xx/5xx）またはレスポンス形式不正
+          OCRRetryableError: HTTP 429/5xx（リトライ可能）
+          RuntimeError:    HTTP 4xx（429 以外）またはレスポンス形式不正
         """
         body = self._post_chat(self._build_payload(b64_png, prompt))
         try:
@@ -1291,7 +1329,8 @@ class RunPodProvider(OCRProvider):
           OCRAPIKeyError:  APIキー未設定
           ConnectionError: 接続失敗
           TimeoutError:    タイムアウト
-          RuntimeError:    HTTP エラー（4xx/5xx）またはレスポンス形式不正
+          OCRRetryableError: HTTP 429/5xx（リトライ可能）
+          RuntimeError:    HTTP 4xx（429 以外）またはレスポンス形式不正
         """
         body = self._post_chat(self._build_payload(b64_png, prompt))
         try:
@@ -1345,24 +1384,8 @@ class RunPodProvider(OCRProvider):
             with urllib.request.urlopen(req, timeout=self.timeout) as resp:  # noqa: S310
                 return resp.read().decode("utf-8")
         except urllib.error.HTTPError as e:
-            if e.code == 429 or e.code >= 500:
-                retry_after = None
-                raw_retry = e.headers.get("Retry-After") if e.headers else None
-                if raw_retry:
-                    try:
-                        retry_after = float(raw_retry)
-                    except (ValueError, TypeError):
-                        retry_after = None
-                raise OCRRetryableError(
-                    _retryable_http_message(e.code),
-                    retry_after=retry_after,
-                    code=e.code,
-                ) from e
-            try:
-                err_body = e.read().decode("utf-8", errors="replace")
-            except Exception:
-                err_body = ""
-            raise RuntimeError(f"HTTP {e.code}: {err_body or e.reason}") from e
+            # 429/5xx → OCRRetryableError、コンテキスト長超過 → 専用例外（共有）
+            _raise_mapped_http_error(e)
         except socket.timeout as e:
             raise TimeoutError(f"timed out after {self.timeout}s") from e
         except urllib.error.URLError as e:

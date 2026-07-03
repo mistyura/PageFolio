@@ -7,6 +7,7 @@ import logging
 import os
 import queue
 import threading
+import time
 import tkinter as tk
 from tkinter import filedialog, messagebox, ttk
 
@@ -49,6 +50,15 @@ _PRICE_FALLBACK = (5.0, 25.0)
 # サーキットブレーカー: リトライ上限到達がこのページ数連続したら実行を中断する
 # （サーバ側が完全に落ちている時に全ページ × リトライ待機を消化しないための保険）
 CB_CONSECUTIVE_FAILURES = 3
+
+# サマリ生成専用のタイムアウト下限（秒）。全ページ連結テキストの要約は
+# OCR 1 ページより大幅に長いため、provider.timeout がこれ未満なら実行中のみ
+# 引き上げる（_on_summary で退避 → _summary_ui_reset で復元）
+SUMMARY_TIMEOUT_MIN = 300
+
+# サマリ入力がこの文字数を超えたら追加確認を出す（コンテキスト長超過の事前警告。
+# トークン厳密概算はモデル依存で不可能なため文字数閾値の警告に留める）
+SUMMARY_TOO_LONG_CHARS = 200_000
 
 
 def _lookup_price(model: str) -> tuple[float, float]:
@@ -145,6 +155,12 @@ class OCRDialog(tk.Toplevel):
         # queue ループに残留している可能性があり、サマリ開始時に clear() すると
         # 旧ワーカーがキャンセル確認で抜けられなくなるため共有しない。
         self._summary_cancel_flag = threading.Event()
+        # サマリ実行中のみ provider.timeout を引き上げるための退避値
+        self._summary_prev_timeout = None
+        # サマリ進捗表示（indeterminate パルス + 経過秒数ティッカー）
+        self._summary_tick_id = None  # after id（ティッカー再スケジュール用）
+        self._summary_base_msg = ""  # ティッカーが合成するベース文言
+        self._summary_started_at = 0.0  # time.monotonic() 開始時刻
 
         self._build()
         self._center(parent)
@@ -1854,6 +1870,24 @@ class OCRDialog(tk.Toplevel):
             if not self._confirm_summary_cost(len(full_text)):
                 return
 
+        # ── 入力過大の事前警告（コンテキスト長超過しやすい規模・全プロバイダ）──
+        if len(full_text) > SUMMARY_TOO_LONG_CHARS:
+            proceed = messagebox.askyesno(
+                self._L["ocr_cost_confirm_title"],
+                self._L["ocr_summary_too_long_confirm"].format(chars=len(full_text)),
+                parent=self,
+            )
+            if not proceed:
+                return
+
+        # サマリ専用タイムアウト: 全ページ連結テキストは OCR 1 ページより長い
+        # ため、実行中のみ provider.timeout を SUMMARY_TIMEOUT_MIN まで引き上げる
+        # （サマリ中は OCR 実行ボタンが disabled のため provider は共有されない。
+        # _summary_ui_reset で必ず復元する）
+        self._summary_prev_timeout = getattr(self.provider, "timeout", None)
+        if self._summary_prev_timeout is not None:
+            self.provider.timeout = max(self._summary_prev_timeout, SUMMARY_TIMEOUT_MIN)
+
         # 実行状態へ遷移
         self._summary_running = True
         self._summary_cancel_flag.clear()
@@ -1870,13 +1904,72 @@ class OCRDialog(tk.Toplevel):
         self.progress_var.set(self._L["ocr_summary_running"])
         self._progress_label.configure(fg=C["SUCCESS"])
 
+        # 進捗表示: サマリは単発 API 呼び出しのため determinate バーでは
+        # 一切動かない。indeterminate パルス + 経過秒数ティッカーで
+        # 「処理が進行している」ことを可視化する（体感フリーズ防止）
+        self._summary_base_msg = self._L["ocr_summary_running"]
+        self._summary_started_at = time.monotonic()
+        self.progress_bar.configure(mode="indeterminate")
+        self.progress_bar.start(12)
+
         # M-2: 世代を進めて捕捉する（OCR 完了後のため既存ワーカーへの副作用は
         # なく、残留していた旧 after があってもここで無効化される）
         self._run_gen += 1
         gen = self._run_gen
+        self._summary_tick_id = self.after(1000, lambda: self._summary_tick(gen))
         threading.Thread(
             target=self._summary_worker, args=(gen, full_text, prompt), daemon=True
         ).start()
+
+    def _summary_tick(self, gen):
+        """サマリ実行中の経過秒数を 1 秒間隔で表示する（メインスレッド）。
+
+        世代ガード（gen != _run_gen）または実行終了で自然停止する。
+        リトライ待機文言（_set_summary_base_msg）ともここで合成される。
+        """
+        if gen != self._run_gen or not self._summary_running:
+            return
+        try:
+            sec = int(time.monotonic() - self._summary_started_at)
+            self.progress_var.set(
+                self._L["ocr_summary_elapsed"].format(
+                    msg=self._summary_base_msg, sec=sec
+                )
+            )
+            self._summary_tick_id = self.after(1000, lambda: self._summary_tick(gen))
+        except tk.TclError:
+            # ダイアログ破棄後に発火した場合は静かに停止する
+            self._summary_tick_id = None
+
+    def _set_summary_base_msg(self, msg):
+        """ティッカーのベース文言を更新し、経過表示を即時反映する。
+
+        _summary_worker のリトライ待機通知から after(0) で呼ばれる。
+        progress_var を直接上書きしない（次のティックで消される）ための経路。
+        """
+        self._summary_base_msg = msg
+        sec = int(time.monotonic() - self._summary_started_at)
+        self.progress_var.set(self._L["ocr_summary_elapsed"].format(msg=msg, sec=sec))
+
+    def _summary_progress_stop(self):
+        """サマリ進捗表示の停止: ティッカー解除 + バーを determinate へ復元。
+
+        バーは OCR 完了時の満杯表示（maximum=対象ページ数）に戻す。
+        成功/失敗/キャンセル共通で _summary_ui_reset から呼ばれる。
+        """
+        if self._summary_tick_id is not None:
+            try:
+                self.after_cancel(self._summary_tick_id)
+            except tk.TclError:
+                pass
+            self._summary_tick_id = None
+        try:
+            self.progress_bar.stop()
+            maximum = max(1, len(self.page_indices))
+            self.progress_bar.configure(mode="determinate", maximum=maximum)
+            self.progress_bar["value"] = maximum
+        except tk.TclError:
+            pass
 
     def _summary_worker(self, gen, full_text, prompt):
         """バックグラウンドスレッド: complete_text_ex を単発呼び出しする。
@@ -1888,10 +1981,11 @@ class OCRDialog(tk.Toplevel):
         1 リクエストは即時中断できない（キャンセルはリトライ待機でのみ反応）。
         """
         from pagefolio.ocr import clamp_retry_after, interruptible_sleep
-        from pagefolio.ocr_providers import OCRRetryableError
+        from pagefolio.ocr_providers import OCRContextLengthError, OCRRetryableError
 
         result = None
         error_msg = None
+        error_kind = None
         for attempt in range(1, MAX_RETRIES + 1):
             if self._summary_cancel_flag.is_set():
                 break
@@ -1914,7 +2008,9 @@ class OCRDialog(tk.Toplevel):
                         n=attempt, max=MAX_RETRIES, sec=round(delay)
                     )
                     try:
-                        self.after(0, lambda m=msg: self.progress_var.set(m))
+                        # progress_var 直接更新ではなくベース文言更新経由
+                        # （経過秒数ティッカーとの表示競合を避ける）
+                        self.after(0, lambda m=msg: self._set_summary_base_msg(m))
                     except tk.TclError:
                         pass
                 interruptible_sleep(delay, self._summary_cancel_flag.is_set)
@@ -1922,7 +2018,17 @@ class OCRDialog(tk.Toplevel):
                 # 三重ガードの 3 段目（プロバイダ差し替え等のすり抜け対策）
                 error_msg = str(e)
                 break
-            except (ConnectionError, TimeoutError, RuntimeError) as e:
+            except OCRContextLengthError as e:
+                # 入力（全ページ連結テキスト）がコンテキスト長上限を超過。
+                # リトライしても解消しないため専用ガイダンスで即中断する
+                error_msg = str(e)
+                error_kind = "ctx"
+                break
+            except TimeoutError as e:
+                error_msg = str(e)
+                error_kind = "timeout"
+                break
+            except (ConnectionError, RuntimeError) as e:
                 error_msg = str(e)
                 break
             except Exception as e:
@@ -1940,7 +2046,12 @@ class OCRDialog(tk.Toplevel):
                 text, truncated = result
                 self.after(0, lambda t=text, tr=truncated: self._on_summary_done(t, tr))
             else:
-                self.after(0, lambda m=error_msg or "": self._on_summary_error(m))
+                self.after(
+                    0,
+                    lambda m=error_msg or "", k=error_kind: self._on_summary_error(
+                        m, k
+                    ),
+                )
         except tk.TclError:
             pass
 
@@ -1965,9 +2076,24 @@ class OCRDialog(tk.Toplevel):
         self._progress_label.configure(fg=C["WARNING"] if truncated else C["SUCCESS"])
         self._summary_ui_reset()
 
-    def _on_summary_error(self, msg):
-        """サマリ生成失敗（メインスレッド）: OCR 結果は破壊せず再実行可能に戻す。"""
-        self.progress_var.set(self._L["ocr_summary_failed"].format(error=msg))
+    def _on_summary_error(self, msg, kind=None):
+        """サマリ生成失敗（メインスレッド）: OCR 結果は破壊せず再実行可能に戻す。
+
+        kind に応じて専用ガイダンスを表示する:
+          "ctx"     — コンテキスト長超過（ページ数を減らして再実行の案内）
+          "timeout" — タイムアウト（タイムアウト延長・対象削減の案内）
+          None      — 従来の汎用文言（安全側フォールバック）
+        """
+        if kind == "ctx":
+            display = self._L["ocr_summary_ctx_exceeded"]
+        elif kind == "timeout":
+            # provider.timeout は _summary_ui_reset で復元される前なので
+            # ここではサマリ実行に使われた実タイムアウト値が読める
+            sec = int(getattr(self.provider, "timeout", 0) or 0)
+            display = self._L["ocr_summary_timeout"].format(sec=sec)
+        else:
+            display = self._L["ocr_summary_failed"].format(error=msg)
+        self.progress_var.set(display)
         self._progress_label.configure(fg=C["WARNING"])
         self._summary_ui_reset()
 
@@ -1980,8 +2106,14 @@ class OCRDialog(tk.Toplevel):
         """サマリ実行終了後（成功/失敗/キャンセル共通）の UI 復帰。
 
         _after_run_ui_reset が run/resume/llm_config/サマリボタンを再評価する。
+        サマリ実行中に引き上げた provider.timeout もここで復元する。
         """
+        prev = getattr(self, "_summary_prev_timeout", None)
+        if prev is not None:
+            self.provider.timeout = prev
+            self._summary_prev_timeout = None
         self._summary_running = False
+        self._summary_progress_stop()
         self.cancel_btn.state(["disabled"])
         self.clear_btn.state(["!disabled"])
         if self.results:

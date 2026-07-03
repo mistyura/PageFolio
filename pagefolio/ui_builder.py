@@ -580,6 +580,37 @@ class UIBuilderMixin:
             edit_only=True,
         )
 
+        # ページ編集（黒塗り・モザイク）— トリミングと同じ矩形選択を共用
+        f3b = section(self._t("sec_redact"))
+        self.redact_toggle_btn = ttk.Button(
+            f3b, text=self._t("redact_mode_off"), command=self._toggle_redact_mode
+        )
+        self.redact_toggle_btn.pack(fill="x", padx=8, pady=(4, 2))
+        self._doc_buttons.append(self.redact_toggle_btn)
+        self._edit_only_buttons.append(self.redact_toggle_btn)
+        tk.Label(
+            f3b,
+            text=self._t("redact_hint"),
+            bg=C["BG_CARD"],
+            fg=C["TEXT_SUB"],
+            font=self._font(-2),
+        ).pack(anchor="w", padx=8)
+        btn(
+            f3b,
+            self._t("btn_apply_redact"),
+            self._apply_redact,
+            "Danger.TButton",
+            needs_doc=True,
+            edit_only=True,
+        )
+        btn(
+            f3b,
+            self._t("btn_apply_mosaic"),
+            self._apply_mosaic,
+            needs_doc=True,
+            edit_only=True,
+        )
+
         f4 = section(self._t("sec_insert"))
         btn(
             f4,

@@ -1335,3 +1335,132 @@ class TestMergeResizeLogic:
         assert out_w == 595 + 420
         assert out_h == 842
         doc.close()
+
+
+class TestPageEditRedactMosaic:
+    """page_edit op（黒塗り・モザイク）の undo/redo 往復と適用ロジックの検証"""
+
+    def _make_fake_app(self, doc):
+        """FileOpsMixin + RedactOpsMixin を使う FakeApp を生成する"""
+        import collections
+        import types
+
+        import pagefolio.file_ops as fo
+        import pagefolio.redact_ops as ro
+
+        class FakeApp(fo.FileOpsMixin, ro.RedactOpsMixin):
+            MAX_UNDO = 20
+
+            def __init__(self, d):
+                self.doc = d
+                self.current_page = 0
+                self.selected_pages = set()
+                self._undo_stack = collections.deque(maxlen=self.MAX_UNDO)
+                self._redo_stack = collections.deque(maxlen=self.MAX_UNDO)
+                self._preview_gen = 0
+                self._thumb_gen = 0
+
+            def _invalidate_thumb_cache(self, *a, **kw):
+                pass
+
+            def _refresh_all(self):
+                pass
+
+            def _t(self, key):
+                return key
+
+            def _set_status(self, *a):
+                pass
+
+        app = FakeApp(doc)
+        app.plugin_manager = types.SimpleNamespace(fire_event=lambda *a, **kw: None)
+        return app
+
+    def test_page_edit_roundtrip(self, sample_pdf_doc):
+        """page_edit: 黒塗り → undo で復元（digest 一致）→ redo で再黒塗り"""
+        from pagefolio.redact_ops import RedactOpsMixin
+
+        app = self._make_fake_app(sample_pdf_doc)
+        before_digest = _page_digest(app.doc[0])
+        assert "Page 1" in app.doc[0].get_text()
+
+        # do: 黒塗り適用（テキストを覆う矩形）
+        app._save_undo("page_edit", targets=[0])
+        RedactOpsMixin._redact_page(app.doc[0], fitz.Rect(60, 50, 300, 110))
+        assert "Page 1" not in app.doc[0].get_text()
+        after_digest = _page_digest(app.doc[0])
+
+        # undo: ページ内容が完全に復元される
+        app._undo()
+        assert len(app.doc) == 3
+        assert "Page 1" in app.doc[0].get_text()
+        assert _page_digest(app.doc[0]) == before_digest
+
+        # redo: 黒塗りが再適用される
+        app._redo()
+        assert "Page 1" not in app.doc[0].get_text()
+        assert _page_digest(app.doc[0]) == after_digest
+
+        # 二往復目も安定（対称 op の入れ替わり検証）
+        app._undo()
+        assert _page_digest(app.doc[0]) == before_digest
+
+        # pdf_bytes キーなし（op 別デルタ不変条件）
+        for entry in list(app._undo_stack) + list(app._redo_stack):
+            assert "pdf_bytes" not in entry
+
+    def test_page_edit_multi_page(self, sample_pdf_doc):
+        """page_edit: 複数ページ一括適用 → undo で全ページ復元"""
+        from pagefolio.redact_ops import RedactOpsMixin
+
+        app = self._make_fake_app(sample_pdf_doc)
+        digests = [_page_digest(app.doc[i]) for i in range(3)]
+
+        app._save_undo("page_edit", targets=[0, 1, 2])
+        for i in range(3):
+            RedactOpsMixin._redact_page(app.doc[i], fitz.Rect(60, 50, 300, 110))
+            assert f"Page {i + 1}" not in app.doc[i].get_text()
+
+        app._undo()
+        for i in range(3):
+            assert _page_digest(app.doc[i]) == digests[i]
+            assert f"Page {i + 1}" in app.doc[i].get_text()
+
+    def test_redact_removes_text_permanently(self, sample_pdf_doc):
+        """黒塗りは保存後もテキストが復元不能（真の墨消し）"""
+        from pagefolio.redact_ops import RedactOpsMixin
+
+        doc = sample_pdf_doc
+        RedactOpsMixin._redact_page(doc[0], fitz.Rect(60, 50, 300, 110))
+        # 保存 → 再オープンしても消えている
+        reopened = fitz.open(stream=doc.tobytes(), filetype="pdf")
+        assert "Page 1" not in reopened[0].get_text()
+        reopened.close()
+
+    def test_mosaic_removes_text_and_inserts_image(self, sample_pdf_doc):
+        """モザイクは下地テキストを実削除し、ピクセル化画像を焼き込む"""
+        from pagefolio.redact_ops import RedactOpsMixin
+
+        page = sample_pdf_doc[0]
+        n_before = len(page.get_images(full=True))
+        RedactOpsMixin._mosaic_page(page, fitz.Rect(60, 50, 300, 110))
+        assert "Page 1" not in page.get_text()
+        assert len(page.get_images(full=True)) > n_before
+
+    def test_page_rect_from_rel_clamp(self, sample_pdf_doc):
+        """相対座標→ページ矩形変換: mediabox クランプと空・微小の除外"""
+        from pagefolio.redact_ops import RedactOpsMixin
+
+        page = sample_pdf_doc[0]  # 595x842
+        r = RedactOpsMixin._page_rect_from_rel(page, (0.1, 0.1, 0.5, 0.2))
+        assert r is not None
+        assert abs(r.x0 - 59.5) < 0.01
+        assert abs(r.y1 - 168.4) < 0.01
+
+        # 空矩形 → None
+        assert RedactOpsMixin._page_rect_from_rel(page, (0.5, 0.5, 0.5, 0.5)) is None
+        # ページ外にはみ出す指定はクランプされる
+        r2 = RedactOpsMixin._page_rect_from_rel(page, (-0.5, -0.5, 1.5, 1.5))
+        assert r2 is not None
+        assert r2.x0 == 0 and r2.y0 == 0
+        assert r2.x1 == 595 and r2.y1 == 842
