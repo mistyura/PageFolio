@@ -9,7 +9,7 @@ from pagefolio.lang import LANG  # noqa: F401
 from pagefolio.themes import THEMES, C  # noqa: F401
 
 # ===================== バージョン =====================
-APP_VERSION = "v1.6.4"
+APP_VERSION = "v1.7.0"
 
 # ===================== ファイル名定数 =====================
 SETTINGS_FILE = "pagefolio_settings.json"
@@ -21,6 +21,11 @@ SUPPORTED_EXTENSIONS = frozenset(
 )
 
 IMAGE_EXTENSIONS = frozenset({".png", ".jpg", ".jpeg", ".bmp", ".tiff", ".tif"})
+
+# ===================== ページ編集（黒塗り・モザイク）=====================
+# モザイクのブロック粗さ（2 倍レンダリング画像に対する縮小率。
+# 大きいほど粗いモザイクになる）
+MOSAIC_BLOCK = 16
 
 # ===================== 画像エクスポート =====================
 # 長辺ピクセル数プリセット（LLM 読取用途: Claude≈1568 / Gemini≈3072 が目安）

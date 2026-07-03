@@ -2711,11 +2711,14 @@ class TestSummaryWorker:
             _summary_cancel_flag=threading.Event(),
             after=fake_after,
             progress_var=types.SimpleNamespace(set=lambda _v: None),
+            _set_summary_base_msg=lambda _m: None,
         )
         # 完了ハンドラは記録用スタブ（after 経由で呼ばれる）
         fake._summary_outcome = {}
         fake._on_summary_done = lambda t, tr: fake._summary_outcome.update(done=(t, tr))
-        fake._on_summary_error = lambda m: fake._summary_outcome.update(error=m)
+        fake._on_summary_error = lambda m, k=None: fake._summary_outcome.update(
+            error=m, error_kind=k
+        )
         fake._on_summary_cancelled = lambda: fake._summary_outcome.update(
             cancelled=True
         )
@@ -2866,3 +2869,177 @@ class TestOnSummaryDone:
         assert rendered == ["# SUM"]
         # 素の insert には本文が入らない（セパレータのみ）
         assert all("# SUM" not in s for s in text_stub.inserted)
+
+
+class TestSummaryWorkerErrorKinds:
+    """_summary_worker の例外シミュレーション（v1.6.5 安定化）。
+
+    ネットワーク切断 / タイムアウト / 不正 API キー / context 超過の各経路で
+    クラッシュせず kind 別に _on_summary_error へ到達することを検証する。
+    """
+
+    def _make_fake(self, provider, gen=1):
+        import types
+
+        from pagefolio.constants import LANG
+
+        posted = []
+
+        def fake_after(_delay, cb):
+            posted.append(cb)
+
+        fake = types.SimpleNamespace(
+            _L=LANG["ja"],
+            provider=provider,
+            _run_gen=gen,
+            _summary_cancel_flag=threading.Event(),
+            after=fake_after,
+            progress_var=types.SimpleNamespace(set=lambda _v: None),
+            _set_summary_base_msg=lambda _m: None,
+        )
+        fake._summary_outcome = {}
+        fake._on_summary_done = lambda t, tr: fake._summary_outcome.update(done=(t, tr))
+        fake._on_summary_error = lambda m, k=None: fake._summary_outcome.update(
+            error=m, error_kind=k
+        )
+        fake._on_summary_cancelled = lambda: fake._summary_outcome.update(
+            cancelled=True
+        )
+        return fake, posted
+
+    def _run(self, provider):
+        from pagefolio.ocr_dialog import OCRDialog
+
+        fake, posted = self._make_fake(provider)
+        OCRDialog._summary_worker(fake, 1, "full text", "prompt")
+        for cb in posted:
+            cb()
+        return fake._summary_outcome, provider
+
+    def test_connection_error_posts_generic_error(self):
+        """ネットワーク切断（ConnectionError）: 汎用 kind・リトライなし即中断"""
+        outcome, provider = self._run(
+            _SummaryFakeProvider(
+                complete_side_effect=ConnectionError("connection refused")
+            )
+        )
+        assert "connection refused" in outcome["error"]
+        assert outcome["error_kind"] is None
+        assert len(provider.calls) == 1  # リトライしない
+
+    def test_timeout_error_posts_timeout_kind(self):
+        """タイムアウト: kind='timeout' で専用文言経路へ"""
+        outcome, provider = self._run(
+            _SummaryFakeProvider(
+                complete_side_effect=TimeoutError("timed out after 300s")
+            )
+        )
+        assert outcome["error_kind"] == "timeout"
+        assert len(provider.calls) == 1
+
+    def test_invalid_api_key_posts_generic_error(self):
+        """不正 API キー（HTTP 401 相当の RuntimeError）: 汎用 kind"""
+        outcome, _ = self._run(
+            _SummaryFakeProvider(
+                complete_side_effect=RuntimeError("HTTP 401: invalid x-api-key")
+            )
+        )
+        assert "401" in outcome["error"]
+        assert outcome["error_kind"] is None
+
+    def test_context_length_error_posts_ctx_kind(self):
+        """context window 超過: kind='ctx'・リトライせず即中断"""
+        from pagefolio.ocr_providers import OCRContextLengthError
+
+        outcome, provider = self._run(
+            _SummaryFakeProvider(
+                complete_side_effect=OCRContextLengthError(
+                    "HTTP 400: context_length_exceeded"
+                )
+            )
+        )
+        assert outcome["error_kind"] == "ctx"
+        assert len(provider.calls) == 1
+
+
+class TestOnSummaryErrorKinds:
+    """_on_summary_error の kind 別文言表示と UI 復帰の検証（メインスレッド側）"""
+
+    def _make_fake(self, timeout=300):
+        import types
+
+        from pagefolio.constants import LANG
+
+        recorded = {}
+        fake = types.SimpleNamespace(
+            _L=LANG["ja"],
+            provider=types.SimpleNamespace(timeout=timeout),
+            progress_var=types.SimpleNamespace(set=lambda v: recorded.update(msg=v)),
+            _progress_label=types.SimpleNamespace(
+                configure=lambda **kw: recorded.update(fg=kw.get("fg"))
+            ),
+            _summary_ui_reset=lambda: recorded.update(reset=True),
+        )
+        return fake, recorded
+
+    def test_ctx_kind_shows_guidance(self):
+        from pagefolio.constants import LANG
+        from pagefolio.ocr_dialog import OCRDialog
+
+        fake, recorded = self._make_fake()
+        OCRDialog._on_summary_error(fake, "HTTP 400: ...", "ctx")
+        assert recorded["msg"] == LANG["ja"]["ocr_summary_ctx_exceeded"]
+        assert recorded["reset"] is True
+
+    def test_timeout_kind_shows_seconds(self):
+        from pagefolio.ocr_dialog import OCRDialog
+
+        fake, recorded = self._make_fake(timeout=300)
+        OCRDialog._on_summary_error(fake, "timed out", "timeout")
+        assert "300" in recorded["msg"]
+        assert recorded["reset"] is True
+
+    def test_default_kind_keeps_legacy_message(self):
+        """kind なし（判定漏れ）は従来の汎用文言に安全側フォールバック"""
+        from pagefolio.ocr_dialog import OCRDialog
+
+        fake, recorded = self._make_fake()
+        OCRDialog._on_summary_error(fake, "some error", None)
+        assert "some error" in recorded["msg"]
+        assert recorded["reset"] is True
+
+
+class TestSummaryTimeoutRaise:
+    """サマリ専用タイムアウト引き上げ（SUMMARY_TIMEOUT_MIN）と復元の検証"""
+
+    def test_ui_reset_restores_timeout(self):
+        import types
+
+        from pagefolio.ocr_dialog import OCRDialog
+
+        recorded = {}
+        provider = types.SimpleNamespace(timeout=120)
+        fake = types.SimpleNamespace(
+            provider=provider,
+            _summary_prev_timeout=120,
+            _summary_running=True,
+            cancel_btn=types.SimpleNamespace(state=lambda s: None),
+            clear_btn=types.SimpleNamespace(state=lambda s: None),
+            copy_btn=types.SimpleNamespace(state=lambda s: None),
+            save_btn=types.SimpleNamespace(state=lambda s: None),
+            results={},
+            _after_run_ui_reset=lambda: recorded.update(after_reset=True),
+            _summary_progress_stop=lambda: recorded.update(progress_stop=True),
+        )
+        # 実行中は引き上げ済みとして 300 に設定されている想定
+        provider.timeout = 300
+        OCRDialog._summary_ui_reset(fake)
+        assert provider.timeout == 120  # 復元
+        assert fake._summary_prev_timeout is None
+        assert fake._summary_running is False
+        assert recorded.get("progress_stop") is True
+
+    def test_summary_timeout_min_constant(self):
+        from pagefolio.ocr_dialog import SUMMARY_TIMEOUT_MIN
+
+        assert SUMMARY_TIMEOUT_MIN == 300

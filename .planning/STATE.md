@@ -1,14 +1,14 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.6.3
-milestone_name: OCR/設定ダイアログのバグ修正3件（ポイントリリース）
+milestone: v1.7.0
+milestone_name: Undo/Redo メモリ最適化（ディスク退避）+ ストレステスト自動化
 current_phase: null
 current_phase_name: null
 status: milestone_complete
-stopped_at: v1.6.3 出荷完了（claude/llm-prompt-output-lag-jx8i98 を PR #27 で main マージ・タグ v1.6.3・GitHub Release Latest 公開・zip+sha256 添付）。タグは未使用のためサフィックスなし。最後の GSD フェーズマイルストーンは v1.6.0。次マイルストーン待ち
-last_updated: "2026-07-01T00:00:00.000Z"
-last_activity: 2026-07-01
-last_activity_desc: v1.6.3 出荷確定（OCR カスタムプロンプト遅延・LLM 設定「適用」永続化・ダイアログ二重起動防止のバグ修正3件）。PyInstaller リビルド・MILESTONES.md 記録
+stopped_at: v1.6.5（サマリ安定化 + 黒塗り/モザイク）と v1.7.0（undo ディスク退避 + ストレステスト）を claude/v1-6-5-v1-7-0-planning-3rqiah ブランチで実装・push 済み。main へのマージ・タグ・GitHub Release・PyInstaller リビルドは未実施（次セッション）
+last_updated: "2026-07-03T00:00:00.000Z"
+last_activity: 2026-07-03
+last_activity_desc: v1.6.5 + v1.7.0 実装完了（pytest 707 件グリーン・ruff クリーン）。UndoBlobStore ディスク退避・page_edit op・黒塗り/モザイク・サマリエラーハンドリング統一・undo no-op 3 操作と透かし rotate=45 の既存バグ修正
 progress:
   total_phases: 4
   completed_phases: 4
@@ -28,10 +28,10 @@ See: .planning/PROJECT.md (updated 2026-06-20)
 
 ## Current Position
 
-Phase: v1.6.3 出荷済み（最後の GSD フェーズマイルストーンは v1.6.0・全 4 フェーズ達成）
+Phase: v1.6.5 + v1.7.0 実装完了（`claude/v1-6-5-v1-7-0-planning-3rqiah` ブランチ・push 済み）
 Plan: —
-Status: Awaiting next milestone
-Last activity: 2026-07-01 — v1.6.3 リリース（claude/llm-prompt-output-lag-jx8i98 を PR #27 で main マージ・タグ v1.6.3・GitHub Release Latest 公開・zip+sha256 添付）。OCR/設定ダイアログのバグ修正3件・pytest 626 件グリーン
+Status: main マージ・タグ・GitHub Release・PyInstaller リビルド待ち（次セッション）
+Last activity: 2026-07-03 — v1.6.5（サマリ生成の安定化・進捗 UX・エラーハンドリング統一・黒塗り/モザイク新機能）と v1.7.0（undo デルタの UndoBlobStore ディスク退避・undo no-op 3 操作/透かし rotate=45 バグ修正・120 ページストレステスト自動化）を実装。pytest 707 件グリーン
 
 ## v1.6.0 Phase Map
 
@@ -198,6 +198,7 @@ Decisions are logged in PROJECT.md Key Decisions table.
 | 260622-grm | OCR テキスト抽出画面・LLM 設定ダイアログのタイムアウト上限を 600 秒 → 900 秒へ拡大（Spinbox 上限・クランプ計 4 箇所）。APP_VERSION を v1.6.1 へ更新・README/開発履歴.md 同期 | 2026-06-22 | 2bff34b | [260622-grm-great-maxwell-k67sbc-v1-6-1](./quick/260622-grm-great-maxwell-k67sbc-v1-6-1/) |
 | 260623-pwp | PDF パスワード対応（付与/解除・AES-256・暗号化PDFの認証オープン）と印刷機能（Ctrl+P・既定PDFハンドラ送信）を v1.6.1 に追加。新規 `password.py`/`print_ops.py`・テスト 16 件追加（計 611 件） | 2026-06-23 | — | [260623-pwp-great-maxwell-k67sbc-password-print](./quick/260623-pwp-great-maxwell-k67sbc-password-print/) |
 | 260623-rel | ブランチ claude/great-maxwell-k67sbc を main へマージし v1.6.1 をリリース。pytest 613 件グリーン・ruff クリーン検証、PyInstaller リビルド（`dist/PageFolio` 更新）、PR #25 マージ、注釈付きタグ `v1.6.1` 付与、GitHub Release を Latest 公開（PageFolio-v1.6.1-win64.zip + .sha256 添付） | 2026-06-23 | fd20608 | [260623-rel-v161-merge-release](./quick/260623-rel-v161-merge-release/) |
+| 260703-svm | v1.6.5（サマリ生成の安定化・進捗UX・エラーハンドリング統一・黒塗り/モザイク）+ v1.7.0（undo デルタの UndoBlobStore ディスク退避・undo no-op 3操作/透かし rotate=45 バグ修正・120ページストレステスト自動化）を実装。pytest 707 件グリーン | 2026-07-03 | 8949f65 / 3146706 | [260703-v165-v170-stabilization-memopt](./quick/260703-v165-v170-stabilization-memopt/) |
 | 260630-rel | ブランチ feature/add-ollama-runpod（Ollama・RunPod プロバイダ追加・設定画面リプレース）を main へマージし v1.6.2 をリリース。ruff クリーン・pytest 619 件グリーン検証、PR #26 マージ、注釈付きタグ `v1.6.2-1` 付与（immutable release のタグ名再利用ブロック回避で `-1` サフィックス）、GitHub Release を Latest 公開（`PageFolio-v1.6.2-win64.zip` + `.sha256` 添付）。v1.6.1/v1.6.2 を MILESTONES.md へ遡及記録 | 2026-06-30 | ae16c22 | — |
 
 ## Deferred Items

@@ -26,6 +26,7 @@ LANG = {
         "sec_undo": "↩ 元に戻す / やり直す",
         "sec_page": "📄 ページ操作（選択ページ）",
         "sec_crop": "✂ トリミング（現在ページ）",
+        "sec_redact": "⬛ ページ編集（黒塗り・モザイク）",
         "sec_insert": "📎 挿入・結合",
         "sec_plugin": "🔌 プラグイン",
         # 設定セクションボタン
@@ -106,6 +107,12 @@ LANG = {
         "crop_no_sel": "範囲未選択",
         "btn_crop": "✔ 選択範囲でトリミング",
         "btn_crop_reset": "✕ 選択範囲をリセット",
+        # ページ編集（黒塗り・モザイク）
+        "redact_mode_off": "⬛ 範囲選択モード OFF",
+        "redact_mode_on": "🔴 範囲選択モード ON  (クリックで OFF)",
+        "redact_hint": "プレビュー上でドラッグして範囲を指定",
+        "btn_apply_redact": "⬛ 選択範囲を黒塗り",
+        "btn_apply_mosaic": "▦ 選択範囲をモザイク",
         # 挿入・結合
         "btn_insert_head": "先頭に挿入",
         "btn_insert_tail": "末尾に挿入",
@@ -251,6 +258,16 @@ LANG = {
         "err_crop_msg": (
             "CropBoxの設定に失敗しました。\n範囲を調整して再度お試しください。\n\n{e}"
         ),
+        # ページ編集（黒塗り・モザイク）
+        "info_redact_drag": "プレビュー上でドラッグして編集範囲を選択してください",
+        "confirm_bulk_redact": (
+            "選択中の{count}ページすべてに適用しますか？\n"
+            "（範囲内のテキスト・画像はファイルから完全に削除されます。"
+            "元に戻すには Undo を使用してください）"
+        ),
+        "status_redacted": "{count}ページに黒塗りを適用しました",
+        "status_mosaic": "{count}ページにモザイクを適用しました",
+        "err_redact_small": "適用できる範囲がありません。もう一度ドラッグしてください",
         # 挿入・結合ステータス
         "dlg_insert_title": "挿入するファイルを選択（PDF/画像、複数可）",
         "dlg_insert_pos_title": "挿入位置",
@@ -518,6 +535,20 @@ LANG = {
         "ocr_summary_cancelled": "サマリ生成をキャンセルしました",
         "ocr_summary_prompt_label": "サマリプロンプト:",
         "ocr_summary_prompt_hint": "(空欄で既定のサマリ指示を使用)",
+        "ocr_summary_ctx_exceeded": (
+            "サマリ生成に失敗しました: テキストがモデルのコンテキスト長上限を"
+            "超えています。OCR 対象ページ数を減らして再実行してください"
+        ),
+        "ocr_summary_timeout": (
+            "サマリ生成がタイムアウトしました（{sec} 秒）。"
+            "LLM 設定でタイムアウトを延長するか、対象ページ数を減らしてください"
+        ),
+        "ocr_summary_too_long_confirm": (
+            "送信テキストが非常に長いため（約 {chars} 文字）、\n"
+            "モデルのコンテキスト長上限を超えて失敗する可能性があります。\n\n"
+            "このまま実行しますか？"
+        ),
+        "ocr_summary_elapsed": "{msg}（{sec} 秒経過）",
         # 共通エラー
         "err_title": "エラー",
         "info_title": "情報",
@@ -559,6 +590,7 @@ LANG = {
         "sec_undo": "↩ Undo / Redo",
         "sec_page": "📄 Page Operations",
         "sec_crop": "✂ Crop (Current Page)",
+        "sec_redact": "⬛ Page Edit (Redact / Mosaic)",
         "sec_insert": "📎 Insert / Merge",
         "sec_plugin": "🔌 Plugins",
         # Settings section buttons
@@ -639,6 +671,12 @@ LANG = {
         "crop_no_sel": "No selection",
         "btn_crop": "✔ Crop to Selection",
         "btn_crop_reset": "✕ Reset Selection",
+        # Page edit (redact / mosaic)
+        "redact_mode_off": "⬛ Select Mode OFF",
+        "redact_mode_on": "🔴 Select Mode ON  (click to OFF)",
+        "redact_hint": "Drag on preview to select the area",
+        "btn_apply_redact": "⬛ Redact Selection",
+        "btn_apply_mosaic": "▦ Mosaic Selection",
         # Insert/Merge
         "btn_insert_head": "Insert at Beginning",
         "btn_insert_tail": "Insert at End",
@@ -779,6 +817,16 @@ LANG = {
         "err_crop_msg": (
             "Failed to set CropBox.\nAdjust the selection and try again.\n\n{e}"
         ),
+        # Page edit (redact / mosaic)
+        "info_redact_drag": "Drag on the preview to select an area to edit",
+        "confirm_bulk_redact": (
+            "Apply to all {count} selected page(s)?\n"
+            "(Text and images inside the area are permanently removed "
+            "from the file. Use Undo to revert.)"
+        ),
+        "status_redacted": "Applied redaction to {count} page(s)",
+        "status_mosaic": "Applied mosaic to {count} page(s)",
+        "err_redact_small": "No applicable area. Please drag again.",
         # Insert/Merge status
         "dlg_insert_title": "Select file(s) to insert (PDF/image)",
         "dlg_insert_pos_title": "Insert Position",
@@ -1040,6 +1088,20 @@ LANG = {
         "ocr_summary_cancelled": "Summary generation cancelled",
         "ocr_summary_prompt_label": "Summary prompt:",
         "ocr_summary_prompt_hint": "(blank: use the default summary instruction)",
+        "ocr_summary_ctx_exceeded": (
+            "Summary generation failed: the text exceeds the model's "
+            "context window. Reduce the number of OCR pages and try again"
+        ),
+        "ocr_summary_timeout": (
+            "Summary generation timed out ({sec}s). "
+            "Increase the timeout in LLM settings or reduce the pages"
+        ),
+        "ocr_summary_too_long_confirm": (
+            "The text to send is very long (about {chars} chars),\n"
+            "and may exceed the model's context window.\n\n"
+            "Proceed anyway?"
+        ),
+        "ocr_summary_elapsed": "{msg} ({sec}s elapsed)",
         # Common error
         "err_title": "Error",
         "info_title": "Info",

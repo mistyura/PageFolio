@@ -157,11 +157,15 @@ class PageOpsMixin:
         if not self._check_doc():
             return
         pno = self.current_page
-        self._save_undo("insert_blank", pno=pno)
+        # 既存 insert op を再利用（insert_at=pno+1・挿入後に件数 1 を確定）。
+        # 旧 op 名 "insert_blank" は _restore_state に分岐がなく undo が
+        # no-op だったバグの修正（v1.7.0）
+        self._save_undo("insert", insert_at=pno + 1)
         try:
             page = self.doc[pno]
             w, h = page.rect.width, page.rect.height
             self.doc.new_page(pno + 1, width=w, height=h)
+            self._undo_stack[-1]["data"][1] = 1  # 挿入件数を確定
             self._invalidate_thumb_cache()
             self.current_page = pno + 1
             self._refresh_all()
@@ -185,11 +189,17 @@ class PageOpsMixin:
         )
         if not text:
             return
-        self._save_undo("watermark", targets=targets)
+        # コンテンツ改変系のため page_edit op（適用前ページ bytes）で undo 対応。
+        # 旧 op 名 "watermark" は undo が no-op だったバグの修正（v1.7.0）
+        self._save_undo("page_edit", targets=targets)
         for i in targets:
             page = self.doc[i]
             rect = page.rect
             center_p = fitz.Point(rect.width / 2 - len(text) * 10, rect.height / 2)
+            # insert_text の rotate は 90 度単位のみ許容のため、斜め 45 度は
+            # morph（ページ中心を pivot とした回転行列）で実現する
+            # （旧 rotate=45 は ValueError で透かし追加自体が失敗していた）
+            pivot = fitz.Point(rect.width / 2, rect.height / 2)
             page.insert_text(
                 center_p,
                 text,
@@ -197,8 +207,8 @@ class PageOpsMixin:
                 fontname="helv",
                 color=(0.8, 0.8, 0.8),
                 fill_opacity=0.5,
-                rotate=45,
                 overlay=True,
+                morph=(pivot, fitz.Matrix(45)),
             )
         self._invalidate_thumb_cache(targets)
         self._refresh_all()
@@ -209,7 +219,9 @@ class PageOpsMixin:
         if not self._check_doc():
             return
         targets = self._get_targets()
-        self._save_undo("page_numbers", targets=targets)
+        # コンテンツ改変系のため page_edit op で undo 対応（"watermark" と同様の
+        # no-op バグ修正・v1.7.0）
+        self._save_undo("page_edit", targets=targets)
         total = len(self.doc)
         for _idx, i in enumerate(targets):
             page = self.doc[i]
@@ -225,6 +237,8 @@ class PageOpsMixin:
     def _toggle_crop_mode(self):
         self.crop_mode = not self.crop_mode
         if self.crop_mode:
+            # 黒塗りモードとは相互排他（redact_ops.py 側と対）
+            self._redact_mode_off()
             self.crop_toggle_btn.configure(
                 text=self._t("crop_mode_on"), style="CropOn.TButton"
             )
@@ -236,8 +250,25 @@ class PageOpsMixin:
             self.preview_canvas.configure(cursor="")
             self._clear_crop_overlay()
 
+    def _canvas_rect_to_pdf(self, sx, sy, ex, ey):
+        """プレビューキャンバス座標の矩形を PDF 点座標（page 左上原点）へ変換する。
+
+        プレビューは self.zoom * 1.5 倍で描画され、画像はキャンバス上で
+        pad=10 オフセットされている（viewer.py の _show_preview と対応）。
+        トリミング・黒塗り・モザイクの矩形選択が共用する。
+        """
+        scale = self.zoom * 1.5
+        img_offset = 10
+        return (
+            (sx - img_offset) / scale,
+            (sy - img_offset) / scale,
+            (ex - img_offset) / scale,
+            (ey - img_offset) / scale,
+        )
+
     def _crop_drag_start(self, event):
-        if not self.crop_mode:
+        # 矩形選択はトリミングと黒塗り/モザイクで共用する
+        if not (self.crop_mode or self.redact_mode):
             return
         cx = self.preview_canvas.canvasx(event.x)
         cy = self.preview_canvas.canvasy(event.y)
@@ -246,7 +277,7 @@ class PageOpsMixin:
         self._clear_crop_overlay()
 
     def _crop_drag_move(self, event):
-        if not self.crop_mode or not self.crop_drag_start:
+        if not (self.crop_mode or self.redact_mode) or not self.crop_drag_start:
             return
         cx = self.preview_canvas.canvasx(event.x)
         cy = self.preview_canvas.canvasy(event.y)
@@ -291,18 +322,14 @@ class PageOpsMixin:
                 self.preview_canvas.coords(self.crop_rect_id, sx, sy, ex, ey)
 
         self.crop_rect = (sx, sy, ex, ey)
-        scale = self.zoom * 1.5
-        img_offset = 10
-        px0 = int((sx - img_offset) / scale)
-        py0 = int((sy - img_offset) / scale)
-        px1 = int((ex - img_offset) / scale)
-        py1 = int((ey - img_offset) / scale)
+        fx0, fy0, fx1, fy1 = self._canvas_rect_to_pdf(sx, sy, ex, ey)
+        px0, py0, px1, py1 = int(fx0), int(fy0), int(fx1), int(fy1)
         self.crop_info_var.set(
             f"({px0},{py0}) - ({px1},{py1})  {px1 - px0}×{py1 - py0} pt"
         )
 
     def _crop_drag_end(self, event):
-        if not self.crop_mode:
+        if not (self.crop_mode or self.redact_mode):
             return
         self._crop_drag_move(event)
 
@@ -334,13 +361,7 @@ class PageOpsMixin:
                 return
         if len(targets) == 1:
             self._save_undo("crop", page_i=self.current_page)
-            sx, sy, ex, ey = self.crop_rect
-            scale = self.zoom * 1.5
-            img_offset = 10
-            x0_pdf = (sx - img_offset) / scale
-            y0_pdf = (sy - img_offset) / scale
-            x1_pdf = (ex - img_offset) / scale
-            y1_pdf = (ey - img_offset) / scale
+            x0_pdf, y0_pdf, x1_pdf, y1_pdf = self._canvas_rect_to_pdf(*self.crop_rect)
             page = self.doc[self.current_page]
             mb = page.mediabox
             new_rect = fitz.Rect(
@@ -369,13 +390,7 @@ class PageOpsMixin:
                 )
                 return
         else:
-            sx, sy, ex, ey = self.crop_rect
-            scale = self.zoom * 1.5
-            img_offset = 10
-            x0_pdf = (sx - img_offset) / scale
-            y0_pdf = (sy - img_offset) / scale
-            x1_pdf = (ex - img_offset) / scale
-            y1_pdf = (ey - img_offset) / scale
+            x0_pdf, y0_pdf, x1_pdf, y1_pdf = self._canvas_rect_to_pdf(*self.crop_rect)
             cur_mb = self.doc[self.current_page].mediabox
             rel = (
                 x0_pdf / cur_mb.width,
@@ -575,14 +590,12 @@ class PageOpsMixin:
                     offset += src_rect.height
                 new_page.show_pdf_page(target_rect, self.doc, src_pno)
 
-            # 元ページと結合ページの bytes をキャプチャして op 別デルタで保存（D-05）
+            # 元ページと結合ページを Blob 化して op 別デルタで保存
+            # （D-05・64KiB 以上はディスク退避）
             insert_at = targets[0]
-            orig_pages = []
-            for idx in sorted(targets):
-                tmp = fitz.open()
-                tmp.insert_pdf(self.doc, from_page=idx, to_page=idx)
-                orig_pages.append((idx, tmp.tobytes()))
-                tmp.close()
+            orig_pages = [
+                (idx, self._capture_page_blob(idx)) for idx in sorted(targets)
+            ]
             merged_bytes = new_doc.tobytes()
             new_doc.close()
 
@@ -590,7 +603,7 @@ class PageOpsMixin:
                 "merge_resize",
                 data={
                     "insert_at": insert_at,
-                    "merged_bytes": merged_bytes,
+                    "merged_bytes": self._get_undo_store().put(merged_bytes),
                     "orig_pages": orig_pages,
                 },
             )

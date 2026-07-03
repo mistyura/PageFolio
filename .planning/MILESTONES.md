@@ -1,5 +1,37 @@
 # Milestones
 
+## v1.7.0 Undo/Redo メモリ最適化（ディスク退避）+ ストレステスト自動化 (Shipped: 2026-07-03)
+
+**Type:** マイナーアップデート（`claude/v1-6-5-v1-7-0-planning-3rqiah` ブランチ作業・v1.6.5 と同一ブランチ）
+
+**Key accomplishments:**
+
+- **undo デルタのディスク退避**: 新規 `pagefolio/undo_store.py`（`MemBlob`/`FileBlob`/`UndoBlobStore`・64KiB 閾値・atexit purge）。ページ bytes を保持する全デルタ（delete/page_edit/insert 系/merge 系/merge_resize）を `_capture_page_blob` 経由の Blob へ移行
+- **Blob ライフサイクル管理**: deque 溢れ evict（`_push_evicting`）・redo クリア・消費時 dispose（同一 data 共有 op は identity 比較で除外）・クローズ/終了時 `_clear_undo_stacks`（purge）
+- **undo no-op バグ修正**: 白紙挿入（→ insert op 再利用）・透かし・ページ番号（→ page_edit op）の 3 操作
+- **透かし追加の ValueError 修正**: `insert_text(rotate=45)` は無効値 → `morph=(pivot, Matrix(45))` へ（新規テストで発見した既存バグ）
+- **ストレステスト自動化**: `tests/test_undo_stress.py`（120 ページ・1 ページ 64KiB 超の決定的フィクスチャ。正当性 25 サイクル・tracemalloc + Blob 不変条件・eviction 検証・実行約 7 秒）
+- 品質保証: ruff クリーン・pytest 707 件グリーン。`.planning/codebase/ARCHITECTURE.md` の旧「full PDF serialization」記述を実態へ修正
+
+**Note:** 要件書の前提「操作のたびに doc.tobytes() 全体保持」は旧仕様（v1.3.0 でデルタ化済み）であり、実際のメモリ消費源（ページ単位 bytes × 2 スタック × 20 世代）のディスク退避として再定義して実装（要件書アプローチ案②）。
+
+---
+
+## v1.6.5 サマリ生成の安定化 + ページ編集（黒塗り・モザイク） (Shipped: 2026-07-03)
+
+**Type:** 安定化パッチ + 機能追加（`claude/v1-6-5-v1-7-0-planning-3rqiah` ブランチ作業）
+
+**Key accomplishments:**
+
+- **サマリ進捗 UX 強化**: indeterminate パルス + 経過秒数ティッカー（`_summary_tick`）で体感フリーズを防止。リトライ待機文言と合成表示
+- **エラーハンドリング徹底**: LM Studio/Ollama の 429/5xx を `OCRRetryableError` へマップ（5 プロバイダのリトライ対称化・`_raise_mapped_http_error` 共通化）。`OCRContextLengthError`（context window 超過の専用ガイダンス）・タイムアウト専用文言・サマリ専用タイムアウト 300 秒・20 万文字超の事前警告。全失敗経路で OCR 結果非破壊・再実行可能
+- **ページ編集機能**: 黒塗り（`apply_redactions` による真の墨消し）・モザイク（下地実削除 + NEAREST ピクセル化画像焼き込み）を新規 `pagefolio/redact_ops.py` として実装。トリミングと同カテゴリ・矩形選択共用・相互排他・複数ページ相対座標一括適用
+- **undo 基盤**: 新 op `page_edit`（適用前ページ bytes・対称）・`_capture_page_bytes` 共通化（v1.7.0 ディスク退避の 1 点差し替え面）・座標変換 `_canvas_rect_to_pdf` ヘルパー化（3 箇所の重複排除）
+- 例外シミュレーションテスト（ネットワーク切断/タイムアウト/不正キー/429/context 超過）等 33 件追加
+- 品質保証: ruff クリーン・pytest 700 件グリーン
+
+---
+
 ## v1.6.3 OCR/設定ダイアログのバグ修正3件 (Shipped: 2026-07-01)
 
 **Type:** ポイントリリース（GSD フェーズなし・`claude/llm-prompt-output-lag-jx8i98` ブランチ作業）
