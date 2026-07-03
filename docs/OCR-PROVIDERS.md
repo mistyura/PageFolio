@@ -2,7 +2,7 @@
 # OCR プロバイダガイド
 
 PageFolio の OCR 機能は、`pagefolio/ocr_providers.py` で定義された抽象基底クラス `OCRProvider` を中心に構成されています。
-4 つの組み込みプロバイダと、プラグインによるカスタムプロバイダ追加の仕組みを提供します。
+6 つの組み込みプロバイダと、プラグインによるカスタムプロバイダ追加の仕組みを提供します。
 
 ---
 
@@ -30,6 +30,8 @@ PageFolio の OCR 機能は、`pagefolio/ocr_providers.py` で定義された抽
 | LM Studio | `lmstudio` | 不要 | ローカル | 2 |
 | Claude | `claude` | `ANTHROPIC_API_KEY` | クラウド（HTTPS） | 2 |
 | Gemini | `gemini` | `GEMINI_API_KEY` | クラウド（HTTPS） | 1 |
+| Ollama | `ollama` | 不要 | ローカル | 2 |
+| RunPod | `runpod` | `RUNPOD_API_KEY` | クラウド（HTTPS） | 2 |
 | Tesseract | `tesseract` | 不要 | ローカル（オフライン） | 1 |
 
 ---
@@ -352,6 +354,8 @@ def build_provider(settings, api_key=None, plugin_manager=None) -> OCRProvider:
 | `"lmstudio"` / `""` / `"off"` | `LMStudioProvider` |
 | `"claude"` | `ClaudeProvider` |
 | `"gemini"` | `GeminiProvider` |
+| `"ollama"` | `OllamaProvider` |
+| `"runpod"` | `RunPodProvider` |
 | `"tesseract"` | `TesseractProvider` |
 | 上記以外 | プラグインレジストリを検索 → 未登録なら `ValueError` |
 

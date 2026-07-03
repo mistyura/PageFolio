@@ -1,32 +1,68 @@
+<!-- generated-by: gsd-doc-writer -->
 # PageFolio
 
-**PDF ページ整理ツール — Python + Tkinter 製 GUI アプリ**
+**PDF ページ整理ツール** — Python + Tkinter 製の Windows 11 向け GUI アプリケーション。
+テキスト編集や注釈追加は行わず、**ページ単位の操作**（回転・削除・トリミング・結合・分割・OCR など）に特化しています。
 
 ![Version](https://img.shields.io/badge/version-v1.7.0-blue)
 ![Stable](https://img.shields.io/badge/status-stable-green)
+![License](https://img.shields.io/badge/license-MIT-lightgrey)
 
-A PDF page organizer built with Python + Tkinter.
-Windows 11 で動作します / Runs on Windows 11.
-
-> 📝 このプロジェクトは [Claude Code](https://claude.ai/code)（Anthropic）を活用して開発されています。
-> AI との協調開発のユースケースとして公開しており、開発指示書（`CLAUDE.md`）と開発履歴（`開発履歴.md`）も併せて公開しています。
->
-> This project is developed with [Claude Code](https://claude.ai/code) by Anthropic,
-> and published as a use case of AI-assisted development.
+> 📝 本プロジェクトは [Claude Code](https://claude.ai/code)（Anthropic）を活用して開発されています。AI との協調開発のユースケースとして、開発指示書 [CLAUDE.md](CLAUDE.md) と変更履歴 [開発履歴.md](開発履歴.md) も公開しています。
 
 ---
 
-## 概要 / Overview
+## インストール
 
-PageFolio は PDF のページを整理・編集するための GUI ツールです。
-テキスト編集や注釈追加は行いません。**ページ単位の操作に特化しています。**
+### エンドユーザー向け（実行ファイル）
 
-PageFolio is a GUI tool for organizing and editing PDF pages.
-It does **not** edit text or add annotations — it focuses on **page-level operations**.
+Python のインストールは不要です。[Releases](https://github.com/mistyura/PageFolio/releases) から最新の `PageFolio-vX.X.X-win64.zip` をダウンロードし、任意のフォルダに展開して `PageFolio.exe` を実行してください。
+
+> `--onedir` 形式で配布しているため、`PageFolio.exe` と `_internal/` フォルダは同じディレクトリに置いたまま利用してください。
+
+### 開発者向け（ソースから実行）
+
+Python 3.8 以上が必要です。
+
+```bash
+git clone https://github.com/mistyura/PageFolio.git
+cd PageFolio
+pip install -r requirements.txt
+```
 
 ---
 
-## 機能 / Features
+## クイックスタート
+
+```bash
+python pagefolio.py
+```
+
+1. 起動したウィンドウに PDF・PNG・JPG・BMP・TIFF ファイルをドラッグ＆ドロップするか、「ファイルを開く」から選択します（複数選択時は自動的に結合されます）。
+2. サムネイル一覧からページを選択し、右側の操作パネルで回転・削除・トリミングなどを実行します。
+3. 「保存」または「名前を付けて保存」で結果を書き出します。
+
+`python -m pagefolio` でも同じアプリを起動できます。
+
+---
+
+## 使い方の例
+
+### ページの回転・削除
+
+サムネイル一覧で複数ページを選択（Ctrl+クリック）した状態で回転ボタンを押すと、選択した全ページがまとめて回転します。削除も同様に選択ページ単位で実行されます。
+
+### PDF の結合・分割
+
+「挿入・結合」から別の PDF ファイルを指定すると、現在のドキュメントの末尾（または指定位置）にページが追加されます。「分割」ではページ範囲を指定して複数の PDF に分割でき、1 ページずつ個別ファイルに分割することも可能です。
+
+### OCR によるテキスト抽出
+
+右パネルの OCR セクションでプロバイダ（LM Studio / Claude / Gemini / Tesseract のいずれか）を選び、対象ページを指定して実行すると、`OCRDialog` に抽出結果が表示されます。結果はテキストまたは Markdown 整形表示でコピー・保存できます。詳細は [docs/OCR-PROVIDERS.md](docs/OCR-PROVIDERS.md) を参照してください。
+
+---
+
+## 機能一覧
 
 | 機能 | 説明 |
 |------|------|
@@ -39,36 +75,24 @@ It does **not** edit text or add annotations — it focuses on **page-level oper
 | 📎 挿入・結合 | 別 PDF からページを挿入 / 末尾に結合 |
 | 📐 ページ結合・リサイズ | 選択した複数ページを横並び/縦並びで1枚に結合（例: 2× A4 → 1× A3） |
 | ✂ 分割 | ページ範囲指定で分割 / 1ページずつ個別PDFに分割（縮小オプション付き） |
-| 🖼 画像変換 | ページを画像ファイルに変換（1ページ1ファイル・PNG/JPEG・長辺ピクセル指定）。AI（LLM）にテキストを読み取らせる用途に最適 |
+| 🖼 画像変換 | ページを画像ファイルに変換（1ページ1ファイル・PNG/JPEG・長辺ピクセル指定） |
+| ⬛ 黒塗り・モザイク | ページ上の矩形領域を黒塗り/モザイクで破壊的に編集（`apply_redactions()` によるテキスト・画像の実削除） |
 | 🗜 縮小保存 | garbage収集 + 圧縮でファイルサイズを最適化して保存（元ファイルへの上書きにも対応） |
 | 🔒 パスワード | パスワードの付与（AES-256 暗号化）/ 解除。保護された PDF は開く際にパスワード入力を要求 |
-| 🖨 印刷 | 現在のドキュメントを既定の PDF ハンドラ経由で印刷（Ctrl+P・編集結果を反映） |
+| 🖨 印刷 | 現在のドキュメントを既定の PDF ハンドラ経由で印刷（Ctrl+P・編集結果を反映、Windows のみ） |
 | 🔀 D&D 並び替え | サムネイルをドラッグ＆ドロップでページ順を変更（複数ページ一括移動対応） |
-| 📄 ページネーション表示 | 大量ページの PDF でサムネイル一覧をページ単位（既定 20・範囲 10〜100）で窓表示。ナビフッターと表示件数の永続化に対応（D&D・複数選択は全ページインデックスと整合） |
-| 📕 ファイルを閉じる | アプリを終了せず現在のファイルだけを閉じる |
-| ↩ Undo / Redo | 最大20回の取り消し・やり直し（Ctrl+Z / Ctrl+Y） |
+| 📄 ページネーション表示 | 大量ページの PDF でサムネイル一覧をページ単位（既定 20・範囲 10〜100）で窓表示 |
+| 🔍 OCR テキスト抽出 | LM Studio / Claude / Gemini / Tesseract の複数プロバイダに対応 |
+| ↩ Undo / Redo | 最大20回の取り消し・やり直し（Ctrl+Z / Ctrl+Y）。大きな PDF でもディスク退避によりメモリを最適化 |
 | 🔍 プレビュー | ズーム・スクロール対応、ページ拡大表示 |
 | 👁 閲覧/編集モード | ヘッダーボタン（F5）でモード切替。閲覧モードは編集ボタンが非活性 |
 | ⚙ テーマ・フォント | ダーク / ライト / システム連動、フォントサイズ変更 |
 | 🪟 ウィンドウ状態引き継ぎ | 前回終了時のウィンドウ位置・サイズを次回起動時に復元 |
+| 🧩 プラグイン | サードパーティ製プラグインによる機能拡張（`pagefolio/plugins.py`） |
 
 ---
 
-## ダウンロード / Download
-
-[Releases](https://github.com/mistyura/PageFolio/releases) から最新の `PageFolio-vX.X.X-onedir.zip` をダウンロードし、任意のフォルダに展開して `PageFolio.exe` を実行してください。
-Python のインストールは不要です。
-
-Download the latest `PageFolio-vX.X.X-onedir.zip` from [Releases](https://github.com/mistyura/PageFolio/releases), extract it to any folder, and run `PageFolio.exe`.
-No Python installation required.
-
-> v1.1.2-4 以降は `--onedir` 形式で配布しています。zip 内の `PageFolio.exe` と `_internal/` フォルダは同じディレクトリに置いたままご利用ください。
->
-> Starting with v1.1.2-4, releases are distributed in `--onedir` format. Keep `PageFolio.exe` and the `_internal/` folder together in the same directory.
-
----
-
-## 画面構成 / Screenshots
+## 画面構成
 
 ![ダークテーマ（日本語）](docs/メイン（ダーク）-日本語.png)
 ![ダークテーマ（複数選択）](docs/メイン（ダーク）-日本語-2.png)
@@ -79,177 +103,52 @@ No Python installation required.
 
 ---
 
-## 注意事項 / Notes
+## 注意事項
 
 - トリミング・回転・削除は **選択中のページ** が対象です（未選択の場合は現在ページ）
 - 保存前にアプリを閉じると編集内容は失われます
 - パスワード保護された PDF は開く際にパスワードの入力が必要です（パスワードの付与/解除は「🔒 パスワード」から）
+- 黒塗り・モザイクは破壊的操作です。矩形下のテキスト・画像・交差する注釈が実際に削除されます（`page_edit` の Undo で復元可能）
 - 印刷は OS の既定 PDF アプリを利用します（Windows のみ対応）
+- クラウド OCR（Claude / Gemini）はページ画像を base64 で外部 API へ送信します。API キーは設定ファイルに保存されず、環境変数またはセッション中のメモリのみに保持されます
 
 ---
 
-## 🔍 OCR テキスト抽出 / OCR Text Extraction
+## ドキュメント
 
-v1.4.0 より複数の OCR プロバイダに対応しました。設定ダイアログでプロバイダを選択してください。
-
-PageFolio supports multiple OCR providers since v1.4.0. Select a provider in the settings dialog.
-
-### OCR プロバイダ一覧 / OCR Providers
-
-| プロバイダ | 必要な設定 | 特徴 |
-|-----------|-----------|------|
-| **LM Studio** | ローカルサーバ起動 | ローカル・無料・GPU 推奨・高精度 |
-| **Claude** | `ANTHROPIC_API_KEY` 環境変数 | 高精度・有料（従量課金） |
-| **Gemini** | `GEMINI_API_KEY` または `GOOGLE_API_KEY` | 高精度・有料（無料枠あり） |
-| **Tesseract** | Tesseract OCR を別途インストール | ローカル・無料・オフライン対応・精度は LLM より劣る |
-
-| Provider | Required Setup | Notes |
-|----------|---------------|-------|
-| **LM Studio** | Local server running | Local / Free / GPU recommended |
-| **Claude** | `ANTHROPIC_API_KEY` env var | High accuracy / Paid |
-| **Gemini** | `GEMINI_API_KEY` or `GOOGLE_API_KEY` | High accuracy / Paid (free tier) |
-| **Tesseract** | Install Tesseract OCR separately | Local / Free / Offline / Lower accuracy than LLMs |
-
-> **Gemini プロバイダのモデル選択**: 安定性重視なら `gemini-2.5-flash` / `gemini-2.5-pro` を推奨します。
-> Gemma 4 系（`gemma-4-26b-a4b-it` / `gemma-4-31b-it`）も動作実績があり、無料枠を活かしやすい選択肢です。
-> ただしサーバ側要因で HTTP 500 が頻発する時期があるため、解像度は 1.5 程度に抑え、
-> 中断した場合は「⏯ 続きから再実行」で残りページを再開してください。
->
-> **Model selection for the Gemini provider**: For stability, `gemini-2.5-flash` / `gemini-2.5-pro` are recommended.
-> Gemma 4 models (`gemma-4-26b-a4b-it` / `gemma-4-31b-it`) are also verified to work and make good use of the free tier.
-> However, server-side HTTP 500 errors can spike at times — keep the resolution around 1.5 and
-> use "⏯ Resume" to continue with the remaining pages if a run is interrupted.
-
-### 環境変数の設定 / Setting Environment Variables
-
-クラウドプロバイダを使用する場合は以下の環境変数を設定してください（設定ダイアログの入力欄でも一時設定可能）。
-
-```
-set ANTHROPIC_API_KEY=your_key_here
-set GEMINI_API_KEY=your_key_here
-```
-
-### Tesseract のインストール / Installing Tesseract
-
-Tesseract プロバイダを使用するには Tesseract OCR を別途インストールし、PATH を通す必要があります。
-
-To use the Tesseract provider, install Tesseract OCR separately and add it to your PATH.
-
-**Windows:**
-
-1. [UB Mannheim ビルド](https://github.com/UB-Mannheim/tesseract/wiki) からインストーラをダウンロード
-2. インストール時に日本語認識用の `jpn` 言語パックを追加
-3. インストール後、PATH に Tesseract の実行ファイルパスを追加（例: `C:\Program Files\Tesseract-OCR`）
-
-```
-# インストール確認 / Verify installation
-tesseract --version
-tesseract --list-langs
-```
-
-### 埋め込みテキストのスキップ / Embedded-Text Skip
-
-テキスト埋め込み済みのページは既定で OCR をスキップし、埋め込みテキストをそのまま抽出します。
-スキャナ付属 OCR などで埋め込みテキストの品質が悪い場合は、OCR ダイアログの
-「埋め込みテキストを無視して OCR を実行」をオンにすると全ページを Vision OCR で読み直せます
-（クラウドプロバイダではスキップされていたページも課金対象になる点に注意）。
-
-Pages that already contain embedded text are skipped by default and their text is extracted as-is.
-If the embedded text quality is poor (e.g., scanner-generated OCR layers), enable
-"Ignore embedded text and always run OCR" in the OCR dialog to re-read all pages with Vision OCR
-(note: with cloud providers, previously skipped pages will also incur charges).
-
-### 推奨 Vision モデル（LM Studio）/ Recommended Vision Models
-
-小型モデル（5B 未満）は表組み・数値・固有名詞でハルシネーション（架空の文字列の生成）が起きやすいため、**7B 以上のモデルを推奨**します。
-
-Small models (<5B) tend to hallucinate especially on tables, numbers, and proper nouns. **7B+ models are recommended.**
-
-動作確認済みモデル（量子化はいずれも 4bit / GGUF）:
-
-| モデル / Model | 配布元 | サイズ | 量子化 | ファイルサイズ | 備考 |
-|----------------|--------|--------|--------|----------------|------|
-| **MiniCPM-V 4.5** | openbmb | 8.2B | Q4_K_S | 5.49 GB | OCR タスクに最適化・多言語対応。第一推奨 |
-| **InternVL3.5 8B** | lmstudio-community | 8B | Q4_K_M | 5.31 GB | 詳細な画像理解・OCR 両立 |
-| **Qwen3 VL 8B** | qwen | 8B | Q4_K_M | 5.76 GB | 日本語 OCR・表組み認識に強い |
-| **Qwen3.5 9B** | qwen | 9B | Q4_K_M | 6.10 GB | Vision 対応の汎用モデル |
-| Gemma 4 E4B / E4B Instruct QAT | google / lmstudio-community | 7.5B | Q4_K_M / Q4_0 | 5.72〜5.89 GB | 軽量・Vision 対応 |
-| Gemma 4 E2B / E2B Instruct QAT | google / lmstudio-community | 4.6B | Q4_K_M / Q4_0 | 4.04〜4.11 GB | 最軽量だが OCR 用途には精度不足の可能性 |
-
-### ハルシネーション対策 / Reducing Hallucinations
-
-OCR ダイアログ右上の「詳細設定」で次のパラメータを調整できます:
-
-- **解像度** (1.0〜4.0): 高いほど認識精度向上（推奨 3.0〜4.0）
-- **最大トークン** (-1: 無制限): 出力途中切れの解消
-- **温度** (0.0〜2.0): **0.0〜0.2 推奨**。ランダム性を抑え架空文字を抑制
-- **タイムアウト** (10〜600 秒): 高解像度時は 240+ 秒推奨
-
-LM Studio 側の **Context Length** も明細書・長い文書の場合は 8192 以上に増やしてください。
-
-### Markdown 整形表示・プロバイダ別プロンプト（v1.6.0）/ Markdown Rendering & Provider-specific Prompts
-
-- **Markdown 整形表示**: OCR 結果ビューアで `Markdown` プリセットを選ぶと、見出し・箇条書き・コード・強調が整形表示され、プレーンテキストより読みやすくなります（コピー/保存は raw Markdown のまま）。
-- **プロバイダ別プロンプト最適化**: Claude では XML タグ構造、Gemini では明示的な指示文など、プロバイダごとに最適化したプロンプトテンプレートで OCR を実行します。`LLMConfigDialog` で設定したカスタムプロンプトを入力した場合は、引き続きそちらが優先されます。
-
-- **Markdown rendering**: Selecting the `Markdown` preset in the OCR result viewer renders headings, bullet lists, code, and emphasis for better readability than plain text (copy/save still returns raw Markdown).
-- **Provider-specific prompts**: OCR runs with prompt templates optimized per provider (XML-tag structure for Claude, explicit instructions for Gemini). A custom prompt set in `LLMConfigDialog` still takes precedence.
+| ドキュメント | 内容 |
+|--------------|------|
+| [docs/GETTING-STARTED.md](docs/GETTING-STARTED.md) | 開発環境での動作確認までの手順 |
+| [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) | ローカル開発・ビルドコマンド・コードスタイル・ブランチ運用 |
+| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | モジュール構成・データフロー・拡張ポイント |
+| [docs/TESTING.md](docs/TESTING.md) | テストフレームワーク・実行方法・カバレッジ |
+| [docs/CONFIGURATION.md](docs/CONFIGURATION.md) | `pagefolio_settings.json` の設定項目リファレンス |
+| [docs/OCR-PROVIDERS.md](docs/OCR-PROVIDERS.md) | OCR プロバイダの詳細・モデル選定・ハルシネーション対策 |
+| [docs/PLUGINS.md](docs/PLUGINS.md) | プラグイン開発ガイド |
+| [CONTRIBUTING.md](CONTRIBUTING.md) | 貢献ガイドライン（PR プロセス・Issue 報告） |
+| [CLAUDE.md](CLAUDE.md) | AI（Claude Code）向け開発指示書 |
+| [開発履歴.md](開発履歴.md) | バージョンごとの変更ログ |
 
 ---
 
-## 🐛 バグ報告・フィードバック / Bug Reports
+## 貢献
 
+バグ報告・機能提案・コード貢献は歓迎します。詳細は [CONTRIBUTING.md](CONTRIBUTING.md) を参照してください。
 不具合・要望は [Issues](https://github.com/mistyura/PageFolio/issues) からお知らせください。
-Please report bugs or feature requests via [Issues](https://github.com/mistyura/PageFolio/issues).
 
 ---
 
-## 開発者向け / For Developers
-
-### Python から実行 / Run from Python
-
-```bash
-pip install pymupdf pillow
-python pagefolio.py
-```
-
-Python 3.8 以上が必要です / Requires Python 3.8+
-
-### EXE ビルド / Build EXE
-
-```bash
-pip install pyinstaller
-pyinstaller --onedir --noconsole --icon=pagefolio.ico --name=PageFolio pagefolio.py
-```
-
-`dist/PageFolio/` フォルダに `PageFolio.exe` と `_internal/` 一式が生成されます。配布時は `dist/PageFolio/` をフォルダごと zip 化してください。
-
-### 開発ツール / Development Tools
-
-| ツール | 用途 |
-|--------|------|
-| [Ruff](https://docs.astral.sh/ruff/) | リント・フォーマット |
-| [pytest](https://docs.pytest.org/) | テスト |
-| [PyInstaller](https://pyinstaller.org/) | EXE ビルド |
+## テスト・リント
 
 ```bash
 ruff check . && ruff format .   # リント・フォーマット
-pytest                           # テスト実行
+pytest                          # テスト実行
 ```
 
-テストは GUI (Tkinter) を起動せずにヘッドレスで実行可能です。
-All tests run headless without launching the Tkinter GUI.
-
-### AI 協調開発 / AI-assisted Development
-
-機能追加・バグ修正・UI改善のほぼすべてを Claude Code との対話で実装しています。
-詳細は以下を参照してください。
-
-- **[CLAUDE.md](CLAUDE.md)** — Claude に渡す構造化された開発指示書（モジュール構成・コーディング規約）
-- **[開発履歴.md](開発履歴.md)** — 各バージョンの変更ログ
+テストは GUI (Tkinter) を起動せずにヘッドレスで実行できます。詳細は [docs/TESTING.md](docs/TESTING.md) を参照してください。
 
 ---
 
-## ライセンス / License
+## ライセンス
 
-MIT License — see [LICENSE](LICENSE)
+MIT License — 詳細は [LICENSE](LICENSE) を参照してください。
