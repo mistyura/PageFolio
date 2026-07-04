@@ -64,24 +64,24 @@
 
 ## Traceability
 
-フェーズ割当はロードマップ作成時に記入。
+フェーズ割当は 2026-07-04 のロードマップ作成時に確定（v1.7.1 Phase 1〜4・被覆 17/17・孤立要件なし）。
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| V171-KEY-01 | — | Pending |
-| V171-KEY-02 | — | Pending |
-| V171-KEY-03 | — | Pending |
-| V171-KEY-04 | — | Pending |
-| V171-UIUX-01 | — | Pending |
-| V171-UIUX-02 | — | Pending |
-| V171-UIUX-03 | — | Pending |
-| V171-OCR-01 | — | Pending |
-| V171-OCR-02 | — | Pending |
-| V171-OCR-03 | — | Pending |
-| V171-OCR-04 | — | Pending |
-| V171-PAGE-01 | — | Pending |
-| V171-PAGE-02 | — | Pending |
-| V171-PAGE-03 | — | Pending |
-| V171-TEST-01 | — | Pending |
-| V171-TEST-02 | — | Pending |
-| V171-TEST-03 | — | Pending |
+| V171-KEY-01 | Phase 1 | Pending |
+| V171-KEY-02 | Phase 1 | Pending |
+| V171-KEY-03 | Phase 1 | Pending |
+| V171-KEY-04 | Phase 1 | Pending |
+| V171-UIUX-01 | Phase 4 | Pending |
+| V171-UIUX-02 | Phase 4 | Pending |
+| V171-UIUX-03 | Phase 4 | Pending |
+| V171-OCR-01 | Phase 2 | Pending |
+| V171-OCR-02 | Phase 2 | Pending |
+| V171-OCR-03 | Phase 2 | Pending |
+| V171-OCR-04 | Phase 2 | Pending |
+| V171-PAGE-01 | Phase 3 | Pending |
+| V171-PAGE-02 | Phase 3 | Pending |
+| V171-PAGE-03 | Phase 3 | Pending |
+| V171-TEST-01 | Phase 3 | Pending |
+| V171-TEST-02 | Phase 1 | Pending |
+| V171-TEST-03 | Phase 4 | Pending |

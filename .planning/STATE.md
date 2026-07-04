@@ -2,11 +2,11 @@
 gsd_state_version: 1.0
 milestone: v1.7.1
 milestone_name: 現機能ブラッシュアップ + APIキー入力欄
-status: planning
-last_updated: "2026-07-04T14:24:43.648Z"
+status: active
+last_updated: "2026-07-04"
 last_activity: 2026-07-04
 progress:
-  total_phases: 0
+  total_phases: 4
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -17,26 +17,28 @@ progress:
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-06-20)
+See: .planning/PROJECT.md (updated 2026-07-04)
 
 **Core value:** 大きな PDF でも Undo/Redo が正しく・速く動作し、コードが読みやすく保守しやすい状態にする
-**Current focus:** 次マイルストーンの計画（`/gsd-new-milestone`）
+**Current focus:** v1.7.1 Phase 1（APIキー入力欄・LLM設定への一元化）の計画（`/gsd-plan-phase 1`）
 
 ## Current Position
 
-Phase: Not started (defining requirements)
+Phase: 1 of 4 (APIキー入力欄（LLM設定への一元化）) — Not started
 Plan: —
-Status: Defining requirements
-Last activity: 2026-07-04 — Milestone v1.7.1 started
+Status: Roadmap created — ready to plan Phase 1
+Last activity: 2026-07-04 — v1.7.1 ロードマップ確定（4 フェーズ・17/17 要件被覆）
 
-## v1.6.0 Phase Map
+Progress: [░░░░░░░░░░] 0%
+
+## v1.7.1 Phase Map
 
 | Phase | Name | Requirements | リスク/性質 |
 |-------|------|--------------|------------|
-| 1 | 設定/UI 改善（OCR パラメータ一元化・スライダー配置） | V16-UI-01, V16-UI-02 | UI 層中心・低〜中。S1 二重設定解消が主目的 |
-| 2 | 大量ページのページネーション表示 | V16-UI-03 | 高リスク（viewer/dnd/全ページインデックス整合） |
-| 3 | 体感品質・回転プレビュー & OCR 堅牢性（プランA） | V16-QUAL-01〜04 | viewer 即時反映 + OCR/エラー系の監査・検証・磨き |
-| 4 | AI 出力品質（プランC） | V16-AI-01, V16-AI-02 | OCRDialog/プロバイダ層中心 |
+| 1 | APIキー入力欄（LLM設定への一元化） | V171-KEY-01〜04, V171-TEST-02 | LLMConfigDialog / OCRDialog / ocr.py のキー解決に閉じたまとまり。優先順反転（入力値→環境変数）＋ 非保存ガード維持 |
+| 2 | OCR 磨き込み（レビュー残の現行照合と二重実装解消） | V171-OCR-01〜04 | **高リスク**: OCR-04（L-1 producer-consumer 一本化）は独立プランへ隔離。L 系は計画時に現行コード照合で活き残り確定 |
+| 3 | ページ操作磨き込み + v1.5.0 回帰テスト | V171-PAGE-01〜03, V171-TEST-01 | page_ops/redact_ops 面。PAGE-02/03 は「棚卸し→改善」型（具体項目は計画時確定）。TEST-01 は同面の回帰テスト |
+| 4 | UI/UX 磨き込み + 既知バグ棚卸し | V171-UIUX-01〜03, V171-TEST-03 | dialogs/lang 面。UIUX-01（ショートカット GUI）は Phase 3 の読込回帰テスト整備後。TEST-03 は最終スイープ |
 
 ## Performance Metrics
 
@@ -82,6 +84,15 @@ Last activity: 2026-07-04 — Milestone v1.7.1 started
 ### Decisions
 
 Decisions are logged in PROJECT.md Key Decisions table.
+
+**v1.7.1 ロードマップ確定（2026-07-04）:**
+
+- V171-R-01: 全 17 要件を 4 フェーズへ割当（coarse 粒度・100% 被覆・孤立要件なし）。フェーズ採番はマイルストーンごとに Phase 1 起点へリセット（プロジェクト方針）。
+- V171-R-02: V171-TEST-02（APIキー機能のテスト）は検証対象と同居させ **Phase 1 に同梱**（KEY 系は LLMConfigDialog/OCRDialog/ocr.py のキー解決に閉じたまとまり）。
+- V171-R-03: V171-OCR-04（L-1 producer-consumer 一本化）は `ocr.py`/`ocr_dialog.py` 横断の高リスク項目のため、**Phase 2 内の独立プランへ隔離**して他の OCR 磨き込みと分離実行する。
+- V171-R-04: V171-TEST-01（v1.5.0 回帰テスト）は同じ page_ops 面を触る **Phase 3 に同梱**し、透かし画像対応（PAGE-01）の前提となるテキスト透かし回帰を先に固める。ショートカット読込の回帰テストを Phase 3 で整備してから Phase 4 の GUI 化（UIUX-01）へ進む順序とする。
+- V171-R-05: L-1〜L-6 は v1.4.0 期レビュー由来で v1.6.0〜v1.7.0 に解消済み項目があるため、各フェーズの**計画時に現行コード照合で「活き残り」を確定**してから対象化する（成功基準にも明記）。
+- V171-R-06: 「棚卸し→改善」型要件（PAGE-02/03・TEST-03）は棚卸し結果と対応項目を計画時に確定・記録し、成功基準の照合対象とする。
 
 **v1.6.0 ロードマップ確定（2026-06-18）:**
 
@@ -165,19 +176,22 @@ Decisions are logged in PROJECT.md Key Decisions table.
 
 ### Pending Todos
 
-- なし（v1.4.1 ホットフィックス H-1〜H-5 は出荷済み・v1.5.0 まで完了）。
-  v1.6.0 要件は [REQUIREMENTS.md](./REQUIREMENTS.md)、フェーズ割当は [ROADMAP.md](./ROADMAP.md)、出典詳細は [NEXT-MILESTONE-HANDOFF.md](./NEXT-MILESTONE-HANDOFF.md) を参照。
+- なし。v1.7.1 要件は [REQUIREMENTS.md](./REQUIREMENTS.md)、フェーズ割当は [ROADMAP.md](./ROADMAP.md) を参照。
 
 ### Blockers/Concerns
 
-- ~~[v1.6.0 Phase 2 リスク]: S3 ページネーション導入時、`selected_pages`・D&D は全ページインデックスで管理されているため「表示中ページのみ vs 全ページ」のインデックス整合に注意~~ → **解決済み（Phase 02）**: `selected_pages` は全ページ index 不変条件を保持し照合側を `to_global` で窓変換（D-07）、D&D ドロップ先も `to_global` で換算（D-06）。さらに手動窓ナビ後の current snap back（UAT 項目2）も `_move_window` の窓内不変条件で解消。
-- [v1.6.0 Phase 3 留意]: V16-QUAL-03（max_tokens/429 実機検証）は実 API または実機相当の検証手順が前提。安全側修正のみで未検証のため、検証手順と結果記録の方法を計画時に確定する。
+- [v1.7.1 Phase 1 留意]: キー解決の優先順を「入力値 → 環境変数」へ**反転**する（現行は環境変数優先・OCRDialog 側）。`_resolve_api_key` の読み取り専用原則（Phase 05-03 決定）と `_SENSITIVE_KEYS` 非保存ガード（V14-D-02）は維持したまま解決順のみ変更する。
+- [v1.7.1 Phase 2 リスク]: V171-OCR-04（L-1 producer-consumer 一本化）は `ocr.py`/`ocr_dialog.py` 横断の高リスク。計画時に独立プランへ隔離し、既存 OCR テスト群（並列・キャンセル・進捗・リトライ）をグリーン維持の安全網とする。
+- [v1.7.1 全般留意]: L-1〜L-6 は v1.4.0 期レビュー由来で v1.6.0〜v1.7.0 に解消済み項目がある（例: stop_reason 途切れ検出は v1.6.0 Phase 3 で実装済み）。各フェーズの計画時に現行コード照合を行い、活き残りのみを対象とする。
+- [v1.7.1 Phase 3/4 留意]: PAGE-02/03・TEST-03 は「棚卸し→改善」型。棚卸し結果と対応項目を計画時に確定・記録し、成功基準の照合対象とする。
+- [v1.6.0 Phase 3 継続]: V16-QUAL-03（max_tokens/429 実機検証）は実 API 前提のチェックリスト化まで完了。実機実施は未了のまま受容済み。
 
 過去の懸念は全て解決済み:
 
   - ~~fitz のスレッドセーフ制約~~ → Phase 04 でスレッド境界を明確化（ワーカーには bytes のみ渡す）
   - ~~Gemini Free Tier 10 RPM~~ → Phase 06 で並列度 1 を既定化
   - ~~Claude temperature/effort の実 API 確認~~ → Phase 05 で完了
+  - ~~S3 ページネーションのインデックス整合~~ → v1.6.0 Phase 02 で `pagination.py` 純ロジック層に集約して解決
 
 ### Quick Tasks Completed
 
@@ -207,6 +221,7 @@ Decisions are logged in PROJECT.md Key Decisions table.
 | v2 | OS キーストア連携（Windows Credential Manager）による APIキー永続化 | Out of scope | v1.4.0 |
 | v2 | OCR 結果のページ埋め込み（検索可能 PDF 化） | Out of scope | v1.4.0 |
 | v2 | プロバイダ別の詳細な実コスト計測・課金トラッキング | Out of scope | v1.4.0 |
+| Future | PERF-01: サムネイル仮想化によるパフォーマンス改善（大量ページ対応） | Future Requirements | v1.7.1 |
 
 ### v1.4.0 クローズ時に Acknowledge した未クローズ項目（2026-06-14）
 
@@ -234,10 +249,11 @@ Decisions are logged in PROJECT.md Key Decisions table.
 
 ## Session Continuity
 
-Last session: 2026-06-20
-Stopped at: Completed 04-03-PLAN.md（OCRDialog 配線）。Phase 4 全プラン完了＝v1.6.0 全 4 フェーズ達成。human-verify はユーザー判断でスキップ（実機目視未検証）
-Resume file: None（.continue-here / HANDOFF.json は継続完了に伴い削除）
+Last session: 2026-07-04
+Stopped at: v1.7.1 ロードマップ確定（4 フェーズ・17/17 要件被覆・REQUIREMENTS.md トレーサビリティ記入済み）
+Resume file: None
 
 ## Operator Next Steps
 
-- Start the next milestone with /gsd-new-milestone
+- Plan Phase 1 with `/gsd-plan-phase 1`（APIキー入力欄・LLM設定への一元化）
+- 計画時の前提: L 系要件は現行コード照合で活き残りを確定してから対象化（V171-R-05）
