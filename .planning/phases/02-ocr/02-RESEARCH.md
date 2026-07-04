@@ -480,22 +480,27 @@ def _producer():
 
 **リスク低減策:** A1/A2 は設計判断であり実装時の柔軟性を残すよう Architecture Patterns セクションで「Claude's Discretion」と明記済み。A3 は実装後に体感確認（`checkpoint:human-verify` 相当の確認）を計画に含めることを推奨。
 
-## Open Questions
+## Open Questions (RESOLVED)
+
+> 3 問すべて計画時（2026-07-05 /gsd-plan-phase 2）に解決済み。採用結論は各質問末尾の **RESOLVED** 行を参照。
 
 1. **`run_with_bounded_buffer` を完全削除するか、後方互換のため薄いラッパーとして残すか**
    - What we know: 本番コードからの参照はゼロ（`build_provider`/`OCRMixin` から未参照）。テストのみが直接呼んでいる。
    - What's unclear: プラグイン開発者や外部ドキュメント（README 等）がこの関数名を公開 API として言及していないか未確認。
    - Recommendation: `grep -rn "run_with_bounded_buffer" README.md 開発履歴.md plugins/` で外部言及がないことを確認してから完全削除する。あれば非推奨コメント付きでエイリアス関数として残す。
+   - **RESOLVED（02-04-PLAN.md Task 2）:** 完全削除を採用。実行時に grep で外部参照ゼロを確認してから削除する手順を Task 2 の action に組み込み済み。
 
 2. **`_fetch_models`/`_test_connection` 統合時の戻り値契約（Combobox 更新の有無）をどう表現するか**
    - What we know: 唯一の実質差分は「取得したモデル一覧を Combobox に反映するか否か」。
    - What's unclear: 共通ヘルパーに bool フラグを渡す方式か、`_fetch_models` が `_test_connection` を内部で呼ぶ方式か、実装上の優劣は僅差。
    - Recommendation: 既存の呼び出し元（ボタンの `command=`）を変えずに済む「内部ヘルパー抽出 + 各関数はそれぞれ薄いラッパーとして残す」方式を推奨（呼び出し元の変更ゼロで済む）。
+   - **RESOLVED（02-03-PLAN.md Task 2）:** 推奨どおり共通ヘルパー抽出方式を採用。Combobox 更新の有無は bool フラグでパラメータ化し、`_fetch_models`/`_test_connection` は薄いラッパーとして残す（呼び出し元は不変）。
 
 3. **ClaudeProvider `list_models` ページネーション対応は本フェーズでやるか Phase 4 送りか**
    - What we know: 現行モデル数（`RECOMMENDED_MODELS` 3件 + API から返る実モデル数）はページ上限を超えていない可能性が高い。
    - What's unclear: Anthropic API のデフォルトページサイズと現在の登録モデル総数の実測値。
    - Recommendation: 計画時に「V171-OCR-01 の対象に含めるか」を明示的に判断する。含める場合は `has_more`/`last_id` を辿るループ実装が必要（軽微だが未実装のためゼロから書く）。含めない場合は Phase 4 の V171-TEST-03 棚卸しへ明示的に送る。
+   - **RESOLVED（02-03-PLAN.md Task 1）:** 本フェーズ（V171-OCR-01）に含める。スコープ縮小禁止方針に従い `has_more`/`last_id` カーソルを辿るページネーションを実装する。
 
 ## Environment Availability
 
