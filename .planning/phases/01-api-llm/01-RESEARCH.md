@@ -437,14 +437,14 @@ def _refresh_claude_models(self):
 
 **この表が示す通り、いずれも実装確認レベルの軽微な仮定であり、要件解釈に関わる重大な仮定はない**（コード調査により大半の疑問が VERIFIED 済みのため）。
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. **APIキー欄の pack 順序（モデル行の前 or 後）**
+1. **RESOLVED: APIキー欄の pack 順序（モデル行の前 or 後）** — Recommendation どおり「モデル取得ボタン行の直前」で確定（01-02-PLAN.md Task 1 に反映済み）
    - What we know: D-01 は「各セクションフレーム内に1欄追加」とのみ指定し、正確な行順序は Claude's Discretion に委ねられている。
    - What's unclear: モデル選択行の直前に置くか直後に置くか（UX 上はモデル取得ボタンの直前＝「まずキーを入れてから疎通確認」の流れが自然）。
    - Recommendation: モデル取得ボタン行の直前（モデル選択行の直後）に配置し、「キー入力 → その場でモデル取得（D-10 の疎通確認体験）」という操作順を UI レイアウトでも表現する。
 
-2. **RunPod 用エラーメッセージ文言の新規キー名**
+2. **RESOLVED: RunPod 用エラーメッセージ文言の新規キー名** — Recommendation どおり `ocr_api_key_missing_runpod` を新設で確定（01-01-PLAN.md Task 3 に反映済み）
    - What we know: `ocr_api_key_missing`（claude）・`ocr_api_key_missing_gemini` は既存。RunPod 用は存在しない（Pitfall 4）。
    - What's unclear: 新規キー名を `ocr_api_key_missing_runpod` にするか、既存 `ocr_api_key_missing` を汎用化して `{provider}`/`{env_var}` 両プレースホルダ化するか。
    - Recommendation: 既存パターン踏襲（claude 用・gemini 用が別キーで存在する）を維持し `ocr_api_key_missing_runpod` を新設する方が既存コードとの一貫性が高く、書き換え範囲も小さい。
