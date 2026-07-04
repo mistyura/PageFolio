@@ -157,10 +157,11 @@ PageFolio の既存コードベースに対する最適化プロジェクト。
 - ✓ V16-QUAL-01/02/03/04: 回転プレビュー即時反映・API キー秘匿の 3 経路回帰テスト化・max_tokens/429 実機検証チェックリスト・エラー UX 磨き — v1.6.0 Phase 3
 - ✓ V16-AI-01/02: OCR 結果の Markdown 整形表示（tk.Text タグ）・プロバイダ別プロンプト最適化（Claude=XML/Gemini=明示・カスタム両立） — v1.6.0 Phase 4（human-verify はスキップ・コード検証済）
 - ✓ アーカイブ詳細: `.planning/milestones/v1.6.0-REQUIREMENTS.md`
+- ✓ V171-KEY-01/02/03/04・V171-TEST-02: LLM設定ダイアログへの APIキー入力欄一元化・キー解決順反転（入力値→環境変数）・OCRDialog 旧キーUI 撤去・RunPod セッションキー対応・送信先確認ダイアログの RunPod 分岐（CR-01 解消） — v1.7.1 Phase 1
 
 ### Active
 
-- v1.7.1 の要件を定義中（`/gsd-new-milestone` 実行中）。確定後 REQUIREMENTS.md に REQ-ID 付きで記載。
+- v1.7.1 の残要件（V171-TEST-01・V171-TEST-03 ほか Phase 2〜4 分）は継続中。詳細は `.planning/REQUIREMENTS.md` 参照。
 
 ### Out of Scope
 
@@ -192,6 +193,8 @@ PageFolio の既存コードベースに対する最適化プロジェクト。
 | V16-D-05：Phase 4 human-verify をユーザー判断でスキップしクローズ | コード・自動ゲートは全通過。実描画/実 API 出力品質のみ未検証で deferred 受容 | ⚠️ Revisit（必要時に実機目視） |
 
 ## Current State
+
+**進行中: v1.7.1 現機能ブラッシュアップ + APIキー入力欄** — Phase 1（APIキー入力欄）完了（2026-07-04）。4 プラン全完了（Wave 4 は 01-VERIFICATION.md CR-01 のギャップ閉塞）。`pytest 728 件グリーン・ruff クリーン`。Phase 2（OCR 磨き込み）へ継続。
 
 **Shipped: v1.6.0 品質向上・AI強化・設定/UI改善 (2026-06-20)** — 4 フェーズ / 11 プラン / 23 タスク。`APP_VERSION = v1.6.0`（テスト 597 件グリーン・ruff クリーン）。
 
@@ -265,4 +268,4 @@ PageFolio の既存コードベースに対する最適化プロジェクト。
 4. 決定事項 → Key Decisions を更新
 
 ---
-*Last updated: 2026-07-04 — v1.7.1 マイルストーン（現機能ブラッシュアップ + APIキー入力欄）開始.*
+*Last updated: 2026-07-05 — v1.7.1 Phase 1（APIキー入力欄）完了.*
