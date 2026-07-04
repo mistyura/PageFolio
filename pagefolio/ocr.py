@@ -209,11 +209,11 @@ def interruptible_sleep(total, is_cancelled, step=0.5):
 def _resolve_api_key(provider_name, session_keys):
     """プロバイダ名とセッションキー辞書からAPIキーを解決する。
 
-    優先順位: 環境変数 > セッションキー（D-02）。
+    優先順位: セッションキー(入力値) > 環境変数（V171-KEY-02・優先順反転）。
     解決できなければ OCRAPIKeyError を raise する（成功基準2）。
 
     引数:
-      provider_name: プロバイダ名（現時点では "claude" のみ対応）
+      provider_name: プロバイダ名（claude / gemini / runpod）
       session_keys:  プロバイダ別セッションキー辞書（例: {"claude": "sk-ant-..."}）
 
     戻り値: APIキー文字列
@@ -221,7 +221,7 @@ def _resolve_api_key(provider_name, session_keys):
     例外:
       OCRAPIKeyError — 環境変数もセッションキーも未設定の場合（env_var 属性付き）
 
-    注意: os.environ への書き込みは一切行わない（D-05・読み取りのみ）。
+    注意: os.environ への書き込みは一切行わない（読み取り専用原則の継続）。
     """
     import os
 
@@ -229,24 +229,26 @@ def _resolve_api_key(provider_name, session_keys):
 
     if provider_name == "claude":
         env_var = "ANTHROPIC_API_KEY"
-        # 環境変数を優先（D-02）
-        key = os.environ.get(env_var)
+        # セッションキー(入力値)を優先（V171-KEY-02）
+        key = session_keys.get("claude", "")
         if key:
             return key
-        # 環境変数未設定のときのみセッションキーを使用
-        key = session_keys.get("claude", "")
+        # セッションキー未設定のときのみ環境変数へフォールバック
+        key = os.environ.get(env_var)
         if key:
             return key
         # どちらも未設定 → 実行前に明示エラーを raise（成功基準2）
         raise OCRAPIKeyError(env_var)
 
     if provider_name == "gemini":
-        # GEMINI_API_KEY 優先・未設定なら GOOGLE_API_KEY フォールバック（D-06）
-        # os.environ への書き込みは行わない（D-05・読み取りのみ）
-        key = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
+        # セッションキー(入力値)を優先（V171-KEY-02）
+        key = session_keys.get("gemini", "")
         if key:
             return key
-        key = session_keys.get("gemini", "")
+        # dual env var の内部優先順は不変：GEMINI_API_KEY 優先・
+        # 未設定なら GOOGLE_API_KEY フォールバック（D-06）。
+        # os.environ への書き込みは行わない（読み取り専用原則）。
+        key = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
         if key:
             return key
         # どちらも未設定 → 主変数名 GEMINI_API_KEY でエラー（D-06）
@@ -254,10 +256,10 @@ def _resolve_api_key(provider_name, session_keys):
 
     if provider_name == "runpod":
         env_var = "RUNPOD_API_KEY"
-        key = os.environ.get(env_var)
+        key = session_keys.get("runpod", "")
         if key:
             return key
-        key = session_keys.get("runpod", "")
+        key = os.environ.get(env_var)
         if key:
             return key
         raise OCRAPIKeyError(env_var)
