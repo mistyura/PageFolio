@@ -396,7 +396,7 @@ LANG = {
         # Phase 5: Claude Provider / セキュリティ UI 文言（D-06/D-07/D-12/D-15/D-17）
         "ocr_api_key_missing": (
             "APIキーが設定されていません（{env_var}）。"
-            "環境変数を設定するか、入力欄にキーを入力してください。"
+            "LLM設定ダイアログで APIキーを入力するか、環境変数を設定してください。"
         ),
         "ocr_session_key_label": "APIキー（このセッションのみ・保存されません）:",
         "ocr_cost_confirm_title": "クラウド送信の確認",
@@ -424,8 +424,13 @@ LANG = {
         "ocr_provider_name_gemini": "Gemini (Google AI)",
         "ocr_api_key_missing_gemini": (
             "Gemini APIキーが設定されていません。"
-            "環境変数 GEMINI_API_KEY（または GOOGLE_API_KEY）を設定するか、"
-            "入力欄にキーを入力してください。"
+            "LLM設定ダイアログで APIキーを入力するか、"
+            "環境変数 GEMINI_API_KEY（または GOOGLE_API_KEY）を設定してください。"
+        ),
+        "ocr_api_key_missing_runpod": (
+            "RunPod APIキーが設定されていません。"
+            "LLM設定ダイアログで APIキーを入力するか、"
+            "環境変数 RUNPOD_API_KEY を設定してください。"
         ),
         "ocr_scale_tradeoff_hint": ("低=速い/安い・高=精度。低スペック PC は 1.5 推奨"),
         "ocr_effort_label": "推論強度 (effort):",
@@ -470,6 +475,16 @@ LANG = {
         "llm_config_heading": "🔍 LLM 設定",
         "llm_config_apply": "✓ 適用",
         "llm_config_cancel": "✕ キャンセル",
+        # APIキー入力欄（V171-KEY-01・LLM設定への一元化）
+        "llm_api_key_label": "APIキー:",
+        "llm_key_toggle_show": "👁 表示",
+        "llm_key_toggle_hide": "🙈 隠す",
+        "llm_key_session_note": (
+            "※ セッション限定（アプリ終了で破棄・設定ファイルには保存されません）"
+        ),
+        "llm_key_env_set_note": (
+            "環境変数 {env_var} 設定済み（ここで入力した値が優先されます）"
+        ),
         # Ollama / RunPod 設定
         "settings_ollama_url": "Ollama URL:",
         "settings_ollama_model": "Ollama モデル:",
@@ -480,7 +495,8 @@ LANG = {
         "llm_fetching_ollama_models": "⏳ Ollama モデル一覧を取得中…",
         "llm_fetching_runpod_models": "⏳ RunPod モデル一覧を取得中…",
         "llm_env_key_unset_static_runpod": (
-            "環境変数 RUNPOD_API_KEY が未設定です。環境変数を設定してください。"
+            "APIキー未設定のため推奨モデル一覧を表示中"
+            "（RUNPOD_API_KEY 環境変数または上の入力欄にキーを入力してください）"
         ),
         # OCR ダイアログ
         "ocr_server_label": "サーバ:",
@@ -560,10 +576,13 @@ LANG = {
         "llm_fetching_claude_models": "⏳ Claude モデル一覧を取得中…",
         "llm_fetching_gemini_models": "⏳ Gemini モデル一覧を取得中…",
         "llm_env_key_unset_static": (
-            "環境変数 ANTHROPIC_API_KEY が未設定のため静的リストを表示中"
+            "APIキー未設定のため推奨モデル一覧を表示中"
+            "（ANTHROPIC_API_KEY 環境変数または上の入力欄にキーを入力してください）"
         ),
         "llm_env_key_unset_static_gemini": (
-            "環境変数 GEMINI_API_KEY/GOOGLE_API_KEY が未設定: 静的リスト表示中"
+            "APIキー未設定のため推奨モデル一覧を表示中"
+            "（GEMINI_API_KEY/GOOGLE_API_KEY 環境変数または"
+            "上の入力欄にキーを入力してください）"
         ),
         "llm_model_fetch_failed": (
             "{provider} モデル取得失敗（静的リストへフォールバック）: {e}"
@@ -951,7 +970,7 @@ LANG = {
         # Phase 5: Claude Provider / security UI messages (D-06/D-07/D-12/D-15/D-17)
         "ocr_api_key_missing": (
             "API key is not configured ({env_var}). "
-            "Set the environment variable or enter the key in the input field."
+            "Enter it in the LLM settings dialog, or set the environment variable."
         ),
         "ocr_session_key_label": "API Key (this session only — not saved):",
         "ocr_cost_confirm_title": "Confirm Cloud Submission",
@@ -979,8 +998,13 @@ LANG = {
         "ocr_provider_name_gemini": "Gemini (Google AI)",
         "ocr_api_key_missing_gemini": (
             "Gemini API key is not configured. "
-            "Set the environment variable GEMINI_API_KEY (or GOOGLE_API_KEY), "
-            "or enter the key in the input field."
+            "Enter it in the LLM settings dialog, or set the environment "
+            "variable GEMINI_API_KEY (or GOOGLE_API_KEY)."
+        ),
+        "ocr_api_key_missing_runpod": (
+            "RunPod API key is not configured. "
+            "Enter it in the LLM settings dialog, or set the "
+            "RUNPOD_API_KEY environment variable."
         ),
         "ocr_scale_tradeoff_hint": (
             "Low=fast/cheap, High=accuracy. 1.5 recommended for low-spec PCs."
@@ -1023,6 +1047,17 @@ LANG = {
         "llm_config_heading": "🔍 LLM Settings",
         "llm_config_apply": "✓ Apply",
         "llm_config_cancel": "✕ Cancel",
+        # API key input row (V171-KEY-01 — unified into LLM settings)
+        "llm_api_key_label": "API Key:",
+        "llm_key_toggle_show": "👁 Show",
+        "llm_key_toggle_hide": "🙈 Hide",
+        "llm_key_session_note": (
+            "* Session only (discarded on app exit — never saved to the settings file)"
+        ),
+        "llm_key_env_set_note": (
+            "Environment variable {env_var} is set (the value entered "
+            "here takes priority)"
+        ),
         # Ollama / RunPod settings
         "settings_ollama_url": "Ollama URL:",
         "settings_ollama_model": "Ollama Model:",
@@ -1033,7 +1068,8 @@ LANG = {
         "llm_fetching_ollama_models": "⏳ Fetching Ollama models…",
         "llm_fetching_runpod_models": "⏳ Fetching RunPod models…",
         "llm_env_key_unset_static_runpod": (
-            "RUNPOD_API_KEY not set — please configure the environment variable."
+            "API key not set — showing recommended models "
+            "(enter a key above or set RUNPOD_API_KEY)"
         ),
         # OCR dialog
         "ocr_server_label": "Server:",
@@ -1113,10 +1149,12 @@ LANG = {
         "llm_fetching_claude_models": "⏳ Fetching Claude model list…",
         "llm_fetching_gemini_models": "⏳ Fetching Gemini model list…",
         "llm_env_key_unset_static": (
-            "ANTHROPIC_API_KEY not set — showing static model list"
+            "API key not set — showing recommended models "
+            "(enter a key above or set ANTHROPIC_API_KEY)"
         ),
         "llm_env_key_unset_static_gemini": (
-            "GEMINI_API_KEY/GOOGLE_API_KEY not set — showing static list"
+            "API key not set — showing recommended models "
+            "(enter a key above or set GEMINI_API_KEY/GOOGLE_API_KEY)"
         ),
         "llm_model_fetch_failed": (
             "{provider} model fetch failed (falling back to static list): {e}"
