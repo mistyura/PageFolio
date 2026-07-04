@@ -842,3 +842,178 @@ class TestResolveSummaryPrompt:
         """off / 未知プロバイダは DEFAULT_SUMMARY_PROMPT へフォールバックする。"""
         assert resolve_summary_prompt("off", "") == DEFAULT_SUMMARY_PROMPT
         assert resolve_summary_prompt("unknown_xyz", "") == DEFAULT_SUMMARY_PROMPT
+
+
+# ══════════════════════════════════════════════════════════════
+#  V171-KEY-01/04: LLMConfigDialog._apply の APIキー非流入・
+#  _session_api_keys 格納/クリア・RunPod スロット回帰テスト
+# ══════════════════════════════════════════════════════════════
+
+
+class _GetVarStub:
+    """tk.StringVar/IntVar/DoubleVar の .get() のみを模したスタブ。"""
+
+    def __init__(self, value):
+        self._value = value
+
+    def get(self):
+        """設定済みの値をそのまま返す。"""
+        return self._value
+
+
+class _GetTextStub:
+    """tk.Text.get(start, end) のみを模したスタブ。"""
+
+    def __init__(self, value=""):
+        self._value = value
+
+    def get(self, _start, _end):
+        """設定済みの値をそのまま返す（start/end 引数は無視）。"""
+        return self._value
+
+
+def _make_apply_key_stub(session_api_keys, claude_key="", gemini_key="", runpod_key=""):
+    """LLMConfigDialog._apply を Tk 生成なしで呼ぶための最小スタブを返す。
+
+    _apply が参照する全属性（プロバイダ別設定行・数値設定・カスタムプロンプト）
+    を実際の値で埋め、session_api_keys 引数は複製せず参照をそのまま持たせる
+    （app._session_api_keys の実体共有を再現するため）。
+    """
+    stub = types.SimpleNamespace(
+        _session_api_keys=session_api_keys,
+        provider_var=_GetVarStub("claude"),
+        lm_url_var=_GetVarStub("http://localhost:1234"),
+        lm_model_var=_GetVarStub(""),
+        ollama_url_var=_GetVarStub("http://localhost:11434"),
+        ollama_model_var=_GetVarStub(""),
+        runpod_url_var=_GetVarStub(""),
+        runpod_model_var=_GetVarStub(""),
+        claude_model_var=_GetVarStub("claude-sonnet-4-6"),
+        effort_var=_GetVarStub("low"),
+        gemini_model_var=_GetVarStub("gemini-2.5-flash"),
+        ocr_scale_var=_GetVarStub(1.5),
+        ocr_timeout_var=_GetVarStub(120),
+        ocr_max_tokens_var=_GetVarStub(-1),
+        ocr_prompt_text=_GetTextStub(""),
+        ocr_summary_prompt_text=_GetTextStub(""),
+        ocr_temperature_var=_GetVarStub(0.1),
+        ocr_concurrency_var=_GetVarStub(2),
+        claude_api_key_var=_GetVarStub(claude_key),
+        gemini_api_key_var=_GetVarStub(gemini_key),
+        runpod_api_key_var=_GetVarStub(runpod_key),
+        on_apply=None,
+        destroy=lambda: None,
+    )
+    return stub
+
+
+class TestApiKeyNotInSettings:
+    """V171-KEY-01: APIキー入力値が on_apply へ渡る llm_settings dict に含まれない。"""
+
+    def test_claude_key_not_in_llm_settings(self):
+        """claude 欄にダミーキーを入れて _apply しても api_key 系キーが現れない。"""
+        from pagefolio.dialogs.llm_config import LLMConfigDialog
+
+        session = {}
+        stub = _make_apply_key_stub(session, claude_key="sk-ant-DUMMY-TEST-KEY")
+        captured = {}
+        stub.on_apply = lambda s: captured.update(s)
+        LLMConfigDialog._apply(stub)
+
+        assert not any("api_key" in k.lower() for k in captured), (
+            f"llm_settings に api_key 系キーが含まれている: {list(captured.keys())}"
+        )
+
+    def test_all_provider_keys_not_in_llm_settings(self):
+        """claude/gemini/runpod 全欄にダミーキーを入れても llm_settings は非流入。"""
+        from pagefolio.dialogs.llm_config import LLMConfigDialog
+
+        session = {}
+        stub = _make_apply_key_stub(
+            session,
+            claude_key="sk-ant-DUMMY",
+            gemini_key="AIza-DUMMY",
+            runpod_key="rp-DUMMY",
+        )
+        captured = {}
+        stub.on_apply = lambda s: captured.update(s)
+        LLMConfigDialog._apply(stub)
+
+        assert not any("api_key" in k.lower() for k in captured)
+
+
+class TestSessionKeyStoreAndClear:
+    """V171-KEY-01: 非空入力は _session_api_keys へ格納・空欄はクリア（D-04/D-06）。"""
+
+    def test_non_empty_key_stored_in_session(self):
+        """非空の claude 欄入力は _session_api_keys["claude"] に格納される。"""
+        from pagefolio.dialogs.llm_config import LLMConfigDialog
+
+        session = {}
+        stub = _make_apply_key_stub(session, claude_key="sk-ant-DUMMY-TEST-KEY")
+        LLMConfigDialog._apply(stub)
+
+        assert session["claude"] == "sk-ant-DUMMY-TEST-KEY"
+
+    def test_empty_key_clears_existing_session_entry(self):
+        """空欄で _apply すると既存の provider エントリが除去される（D-06）。"""
+        from pagefolio.dialogs.llm_config import LLMConfigDialog
+
+        session = {"claude": "old-dummy-key"}
+        stub = _make_apply_key_stub(session, claude_key="")
+        LLMConfigDialog._apply(stub)
+
+        assert "claude" not in session
+
+    def test_whitespace_only_key_treated_as_empty(self):
+        """空白のみの入力は空欄扱いでクリアされる（.strip() 適用）。"""
+        from pagefolio.dialogs.llm_config import LLMConfigDialog
+
+        session = {"gemini": "old-dummy-key"}
+        stub = _make_apply_key_stub(session, gemini_key="   ")
+        LLMConfigDialog._apply(stub)
+
+        assert "gemini" not in session
+
+
+class TestRunpodSessionKeySlot:
+    """V171-KEY-04: RunPod 欄の値が _session_api_keys["runpod"] に格納され、
+    "claude" スロットを汚染しない（Pitfall 1 の回帰防止）。
+    """
+
+    def test_runpod_key_goes_to_runpod_slot(self):
+        """runpod 欄のダミーキーが _session_api_keys["runpod"] に入る。"""
+        from pagefolio.dialogs.llm_config import LLMConfigDialog
+
+        session = {}
+        stub = _make_apply_key_stub(session, runpod_key="rp-DUMMY-TEST-KEY")
+        LLMConfigDialog._apply(stub)
+
+        assert session.get("runpod") == "rp-DUMMY-TEST-KEY"
+
+    def test_runpod_key_does_not_pollute_claude_slot(self):
+        """runpod 欄にのみ値を入れても "claude" スロットは汚染されない。"""
+        from pagefolio.dialogs.llm_config import LLMConfigDialog
+
+        session = {}
+        stub = _make_apply_key_stub(session, runpod_key="rp-DUMMY-TEST-KEY")
+        LLMConfigDialog._apply(stub)
+
+        assert "claude" not in session
+
+    def test_all_three_slots_independent(self):
+        """claude/gemini/runpod の3欄を入力すると各自のスロットへ独立格納される。"""
+        from pagefolio.dialogs.llm_config import LLMConfigDialog
+
+        session = {}
+        stub = _make_apply_key_stub(
+            session,
+            claude_key="sk-ant-DUMMY",
+            gemini_key="AIza-DUMMY",
+            runpod_key="rp-DUMMY",
+        )
+        LLMConfigDialog._apply(stub)
+
+        assert session["claude"] == "sk-ant-DUMMY"
+        assert session["gemini"] == "AIza-DUMMY"
+        assert session["runpod"] == "rp-DUMMY"
