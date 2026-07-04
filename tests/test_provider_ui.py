@@ -200,7 +200,6 @@ def _make_dialog_stub(settings, provider=None, page_indices=None):
     )
     stub._is_cloud_provider = lambda: OCRDialog._is_cloud_provider(stub)
     stub._estimate_cost = lambda m, c: OCRDialog._estimate_cost(stub, m, c)
-    stub._needs_session_key = lambda: OCRDialog._needs_session_key(stub)
     return stub
 
 
@@ -332,46 +331,123 @@ class TestEstimateCost:
         assert "0.021" in result
 
 
-class TestNeedsSessionKey:
-    """OCR-UI-03: _needs_session_key の動作検証。"""
+class TestCheckCloudApiKey:
+    """V171-KEY-02/03: _check_cloud_api_key（撤去された _ensure_cloud_session_key の
+    後継）の動作検証。値の収集は一切行わず _resolve_api_key の解決可否のみを
+    確認する軽量ゲートであることを担保する。
+    """
 
-    def test_env_set_returns_false(self, monkeypatch):
-        """ANTHROPIC_API_KEY が環境変数に設定済みなら False を返す。"""
-        monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-test-key")
-        stub = _make_dialog_stub(settings={"ocr_provider": "claude"})
-        assert stub._needs_session_key() is False
+    _ALL_ENV_VARS = (
+        "ANTHROPIC_API_KEY",
+        "GEMINI_API_KEY",
+        "GOOGLE_API_KEY",
+        "RUNPOD_API_KEY",
+    )
 
-    def test_env_unset_cloud_returns_true(self, monkeypatch):
-        """ANTHROPIC_API_KEY が未設定かつ claude プロバイダなら True を返す。"""
-        monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
-        stub = _make_dialog_stub(settings={"ocr_provider": "claude"})
-        assert stub._needs_session_key() is True
+    def _make_stub(self, ocr_provider, session_keys=None):
+        """_check_cloud_api_key 呼び出し用スタブを返す。
 
-    def test_lmstudio_env_unset_returns_false(self, monkeypatch):
-        """lmstudio はクラウドではないため env 未設定でも False。"""
-        monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
-        stub = _make_dialog_stub(settings={"ocr_provider": "lmstudio"})
-        assert stub._needs_session_key() is False
+        OCRDialog._check_cloud_api_key は self.app.settings /
+        self.app._session_api_keys / self._L（messagebox の parent）を参照する。
+        """
+        from pagefolio.constants import LANG
+        from pagefolio.ocr_dialog import OCRDialog
 
-    def test_gemini_env_unset_returns_true(self, monkeypatch):
-        """gemini で GEMINI_API_KEY/GOOGLE_API_KEY 両方未設定なら True（D-06）。"""
-        monkeypatch.delenv("GEMINI_API_KEY", raising=False)
-        monkeypatch.delenv("GOOGLE_API_KEY", raising=False)
-        stub = _make_dialog_stub(settings={"ocr_provider": "gemini"})
-        assert stub._needs_session_key() is True
+        stub = types.SimpleNamespace(
+            app=types.SimpleNamespace(
+                settings={"ocr_provider": ocr_provider},
+                _session_api_keys=dict(session_keys or {}),
+            ),
+            provider=None,
+            _L=LANG["ja"],
+        )
+        stub._is_cloud_provider = lambda: OCRDialog._is_cloud_provider(stub)
+        stub._check_cloud_api_key = lambda: OCRDialog._check_cloud_api_key(stub)
+        return stub
 
-    def test_gemini_gemini_api_key_set_returns_false(self, monkeypatch):
-        """GEMINI_API_KEY が設定済みなら gemini でも False。"""
-        monkeypatch.setenv("GEMINI_API_KEY", "test-gemini-key")
-        stub = _make_dialog_stub(settings={"ocr_provider": "gemini"})
-        assert stub._needs_session_key() is False
+    def _clear_all_env(self, monkeypatch):
+        for var in self._ALL_ENV_VARS:
+            monkeypatch.delenv(var, raising=False)
 
-    def test_gemini_google_api_key_fallback_returns_false(self, monkeypatch):
-        """GEMINI_API_KEY 未設定でも GOOGLE_API_KEY があれば False。"""
-        monkeypatch.delenv("GEMINI_API_KEY", raising=False)
-        monkeypatch.setenv("GOOGLE_API_KEY", "test-google-key")
-        stub = _make_dialog_stub(settings={"ocr_provider": "gemini"})
-        assert stub._needs_session_key() is False
+    def test_non_cloud_provider_returns_true_without_messagebox(self, monkeypatch):
+        """lmstudio 等の非クラウドプロバイダは常に True・messagebox 非呼び出し。"""
+        stub = self._make_stub("lmstudio")
+        called = []
+        monkeypatch.setattr(
+            "pagefolio.ocr_dialog.messagebox.showerror",
+            lambda *a, **kw: called.append((a, kw)),
+        )
+        assert stub._check_cloud_api_key() is True
+        assert called == []
+
+    @pytest.mark.parametrize("provider", ["claude", "gemini", "runpod"])
+    def test_unresolved_shows_error_and_returns_false(self, monkeypatch, provider):
+        """入力値・環境変数とも未設定なら messagebox.showerror が呼ばれ False を
+        返す。"""
+        self._clear_all_env(monkeypatch)
+        stub = self._make_stub(provider)
+        captured = {}
+
+        def mock_showerror(title, msg, parent=None):
+            captured["title"] = title
+            captured["msg"] = msg
+            captured["parent"] = parent
+
+        monkeypatch.setattr("pagefolio.ocr_dialog.messagebox.showerror", mock_showerror)
+        assert stub._check_cloud_api_key() is False
+        assert captured  # messagebox.showerror が1回呼ばれた
+        assert captured["parent"] is stub
+
+    @pytest.mark.parametrize("provider", ["claude", "gemini", "runpod"])
+    def test_session_key_resolves_without_messagebox(self, monkeypatch, provider):
+        """入力値（セッションキー）が設定済みなら True・messagebox 非呼び出し。"""
+        self._clear_all_env(monkeypatch)
+        stub = self._make_stub(provider, session_keys={provider: "dummy-test-key"})
+        called = []
+        monkeypatch.setattr(
+            "pagefolio.ocr_dialog.messagebox.showerror",
+            lambda *a, **kw: called.append((a, kw)),
+        )
+        assert stub._check_cloud_api_key() is True
+        assert called == []
+
+    @pytest.mark.parametrize(
+        "provider, env_var",
+        [
+            ("claude", "ANTHROPIC_API_KEY"),
+            ("gemini", "GEMINI_API_KEY"),
+            ("runpod", "RUNPOD_API_KEY"),
+        ],
+    )
+    def test_env_var_resolves_without_messagebox(self, monkeypatch, provider, env_var):
+        """環境変数のみ設定済みでも True・messagebox 非呼び出し（フォールバック）。"""
+        self._clear_all_env(monkeypatch)
+        monkeypatch.setenv(env_var, "dummy-env-key")
+        stub = self._make_stub(provider)
+        called = []
+        monkeypatch.setattr(
+            "pagefolio.ocr_dialog.messagebox.showerror",
+            lambda *a, **kw: called.append((a, kw)),
+        )
+        assert stub._check_cloud_api_key() is True
+        assert called == []
+
+    def test_runpod_session_key_does_not_use_claude_slot(self, monkeypatch):
+        """RunPod のセッションキーが claude スロットへ誤格納されない（Pitfall 1 回帰）。
+
+        _check_cloud_api_key は値の収集を行わないため、claude スロットのみに
+        キーがある状態で runpod を選択すると解決不能（誤って claude 経由で
+        解決してしまわない）ことを確認する。
+        """
+        self._clear_all_env(monkeypatch)
+        stub = self._make_stub("runpod", session_keys={"claude": "claude-only-key"})
+        called = []
+        monkeypatch.setattr(
+            "pagefolio.ocr_dialog.messagebox.showerror",
+            lambda *a, **kw: called.append((a, kw)),
+        )
+        assert stub._check_cloud_api_key() is False
+        assert called
 
 
 class TestConfirmCost:
