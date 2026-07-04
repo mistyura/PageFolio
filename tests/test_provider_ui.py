@@ -453,24 +453,40 @@ class TestCheckCloudApiKey:
 class TestConfirmCost:
     """OCR-UI-03: _confirm_cost の動作検証（messagebox モック）。"""
 
-    def _make_confirm_stub(self, page_indices, model="claude-sonnet-4-6"):
-        """_confirm_cost 呼び出し用スタブを返す。
+    def _make_confirm_stub(
+        self,
+        page_indices,
+        model="claude-sonnet-4-6",
+        provider="claude",
+        runpod_url=None,
+        runpod_model=None,
+    ):
+        """_confirm_cost / _confirm_summary_cost 呼び出し用スタブを返す。
 
-        OCRDialog._confirm_cost は self.app.settings / self.page_indices /
-        self._L / self（parent として messagebox に渡す）を参照する。
+        OCRDialog._confirm_cost / _confirm_summary_cost は self.app.settings /
+        self.page_indices / self._L / self（parent として messagebox に渡す）を
+        参照する。provider="runpod" の場合、runpod_url / runpod_model を
+        settings へ差し込める（CR-01 回帰テスト用）。
         """
         from pagefolio.constants import LANG
         from pagefolio.ocr_dialog import OCRDialog
 
+        settings = {"ocr_provider": provider, "claude_model": model}
+        if runpod_url is not None:
+            settings["runpod_url"] = runpod_url
+        if runpod_model is not None:
+            settings["runpod_model"] = runpod_model
+
         stub = types.SimpleNamespace(
-            app=types.SimpleNamespace(
-                settings={"ocr_provider": "claude", "claude_model": model}
-            ),
+            app=types.SimpleNamespace(settings=settings),
             page_indices=list(page_indices),
             _L=LANG["ja"],
         )
         stub._estimate_cost = lambda m, c: OCRDialog._estimate_cost(stub, m, c)
         stub._confirm_cost = lambda: OCRDialog._confirm_cost(stub)
+        stub._confirm_summary_cost = lambda cc: OCRDialog._confirm_summary_cost(
+            stub, cc
+        )
         return stub
 
     def test_confirm_cost_calls_askyesno(self, monkeypatch):
@@ -525,6 +541,65 @@ class TestConfirmCost:
         stub._confirm_cost()
         assert "1" in captured_msg["msg"]
         assert "$" in captured_msg["msg"]
+
+    def test_confirm_cost_runpod_shows_runpod_host(self, monkeypatch):
+        """CR-01: RunPod選択時、_confirm_cost は runpod_url を送信先として開示し
+        api.anthropic.com を表示しない。
+        """
+        stub = self._make_confirm_stub(
+            page_indices=[0],
+            provider="runpod",
+            runpod_url="http://runpod.example/x",
+            runpod_model="qwen-vl",
+        )
+        captured = {}
+        monkeypatch.setattr(
+            "pagefolio.ocr_dialog.messagebox.askyesno",
+            lambda title, msg, parent=None: captured.update({"msg": msg}) or True,
+        )
+        stub._confirm_cost()
+        assert "http://runpod.example/x" in captured["msg"]
+        assert "api.anthropic.com" not in captured["msg"]
+
+    def test_confirm_summary_cost_runpod_shows_runpod_host(self, monkeypatch):
+        """CR-01: RunPod選択時、_confirm_summary_cost も runpod_url を送信先として
+        開示し api.anthropic.com を表示しない。
+        """
+        stub = self._make_confirm_stub(
+            page_indices=[0],
+            provider="runpod",
+            runpod_url="http://runpod.example/x",
+            runpod_model="qwen-vl",
+        )
+        captured = {}
+        monkeypatch.setattr(
+            "pagefolio.ocr_dialog.messagebox.askyesno",
+            lambda title, msg, parent=None: captured.update({"msg": msg}) or True,
+        )
+        stub._confirm_summary_cost(1000)
+        assert "http://runpod.example/x" in captured["msg"]
+        assert "api.anthropic.com" not in captured["msg"]
+
+    def test_confirm_cost_runpod_url_unset_shows_placeholder(self, monkeypatch):
+        """runpod_url 未設定時、host は llm_runpod_host_unset のプレースホルダに
+        なり api.anthropic.com へフォールバックしない。
+        """
+        from pagefolio.constants import LANG
+
+        stub = self._make_confirm_stub(
+            page_indices=[0],
+            provider="runpod",
+            runpod_url="",
+            runpod_model="qwen-vl",
+        )
+        captured = {}
+        monkeypatch.setattr(
+            "pagefolio.ocr_dialog.messagebox.askyesno",
+            lambda title, msg, parent=None: captured.update({"msg": msg}) or True,
+        )
+        stub._confirm_cost()
+        assert LANG["ja"]["llm_runpod_host_unset"] in captured["msg"]
+        assert "api.anthropic.com" not in captured["msg"]
 
 
 # ══════════════════════════════════════════════════════════════
