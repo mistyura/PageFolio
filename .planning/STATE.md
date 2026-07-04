@@ -6,14 +6,14 @@ current_phase: 01
 current_phase_name: api-llm
 status: executing
 stopped_at: Phase 1 context gathered
-last_updated: "2026-07-04T15:57:19.248Z"
+last_updated: "2026-07-04T16:15:51.100Z"
 last_activity: 2026-07-04
 last_activity_desc: Phase 01 execution started
 progress:
   total_phases: 4
   completed_phases: 0
   total_plans: 3
-  completed_plans: 1
+  completed_plans: 2
   percent: 0
 ---
 
@@ -29,7 +29,7 @@ See: .planning/PROJECT.md (updated 2026-07-04)
 ## Current Position
 
 Phase: 01 (api-llm) — EXECUTING
-Plan: 2 of 3
+Plan: 3 of 3
 Status: Ready to execute
 Last activity: 2026-07-04 — Phase 01 execution started
 
@@ -83,6 +83,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 04 P01 | 5min | 2 tasks | 2 files |
 | Phase 04 P02 | 4min | 2 tasks | 2 files |
 | Phase 01-api-llm P01 | 5min | 3 tasks | 3 files |
+| Phase 01-api-llm P02 | 15min | 3 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -181,6 +182,9 @@ Decisions are logged in PROJECT.md Key Decisions table.
 - [Phase 01-01]: V171-KEY-02: _resolve_api_key の優先順を session_keys(入力値) > 環境変数へ反転（claude/gemini/runpod全分岐・gemini dual env内部順序は不変）
 - [Phase 01-01]: 既存の env優先固定テストは新規追加でなく書き換え・リネームで対応（Pitfall 4）。RunPod版 TestResolveApiKeyRunPod を新設
 - [Phase 01-01]: llm_env_key_unset_static系ヒント文言をUI-SPEC D-11準拠へja/en同時更新（新規キー追加なし）。ocr_session_key_labelはPlan03の撤去タスクと同時削除する方針で本プランでは維持
+- [Phase ?]: [Phase 01-02]: LLMConfigDialog に session_api_keys 引数を追加し複製せず参照保持。claude/gemini/runpod 各セクションへマスク付き APIキー入力欄+トグル+セッション限定注記を追加し _apply で app._session_api_keys へ同期（llm_settings 非流入維持）
+- [Phase ?]: [Phase 01-02]: app.py._open_settings は getattr(self, '_session_api_keys', None) 経由で SettingsDialog へ渡す（既存 SimpleNamespace テストスタブとの後方互換のための防御的パターン）。SettingsDialog は session_api_keys を複製せず参照保持し LLMConfigDialog へ中継（RESEARCH.md Pitfall 5対応）
+- [Phase ?]: [Phase 01-02]: _refresh_claude_models/_refresh_gemini_models/_refresh_runpod_models をライブ入力値優先→環境変数フォールバックへ変更（D-10）。OCRDialog経由の session_api_keys配線は Plan 03の担当範囲として明示的に対象外
 
 ### Pending Todos
 
@@ -257,7 +261,7 @@ Decisions are logged in PROJECT.md Key Decisions table.
 
 ## Session Continuity
 
-Last session: 2026-07-04T15:51:59.085Z
+Last session: 2026-07-04T16:15:51.083Z
 Stopped at: Phase 1 context gathered
 Resume file: .planning/phases/01-api-llm/01-CONTEXT.md
 
