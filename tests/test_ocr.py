@@ -529,10 +529,10 @@ class TestBuildProvider:
 
 
 class TestResolveApiKey:
-    """_resolve_api_key の動作検証（キー解決・環境変数優先・未設定時エラー）"""
+    """_resolve_api_key の動作検証（キー解決・入力値優先・未設定時エラー・V171-KEY-02）"""  # noqa: E501
 
-    def test_env_var_present_returns_env_value(self, monkeypatch):
-        """環境変数 ANTHROPIC_API_KEY があればその値を返す（成功基準3・D-02）"""
+    def test_env_var_used_when_session_key_absent(self, monkeypatch):
+        """session_keys が空で環境変数があればその値を返す（フォールバック）"""
         from pagefolio.ocr import _resolve_api_key
 
         monkeypatch.setenv("ANTHROPIC_API_KEY", "env-key-abc")
@@ -540,20 +540,20 @@ class TestResolveApiKey:
         assert result == "env-key-abc"
 
     def test_env_var_absent_session_key_returned(self, monkeypatch):
-        """環境変数未設定・セッションキーあり → セッションキーを返す（D-02）"""
+        """環境変数未設定・セッションキーあり → セッションキーを返す"""
         from pagefolio.ocr import _resolve_api_key
 
         monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
         result = _resolve_api_key("claude", {"claude": "sess-key"})
         assert result == "sess-key"
 
-    def test_env_var_takes_priority_over_session_key(self, monkeypatch):
-        """session_keys にキーがあっても環境変数を優先して返す（D-02 優先順位）"""
+    def test_session_key_takes_priority_over_env_var(self, monkeypatch):
+        """session_keys（入力値）があれば環境変数より優先して返す（V171-KEY-02・優先順反転）"""
         from pagefolio.ocr import _resolve_api_key
 
-        monkeypatch.setenv("ANTHROPIC_API_KEY", "env-wins")
+        monkeypatch.setenv("ANTHROPIC_API_KEY", "env-value")
         result = _resolve_api_key("claude", {"claude": "session-key"})
-        assert result == "env-wins"
+        assert result == "session-key"
 
     def test_no_env_no_session_raises_ocr_api_key_error(self, monkeypatch):
         """環境変数もセッションキーもなければ OCRAPIKeyError を raise（成功基準2）"""
@@ -566,7 +566,7 @@ class TestResolveApiKey:
         assert ei.value.env_var == "ANTHROPIC_API_KEY"
 
     def test_os_environ_not_written(self, monkeypatch):
-        """_resolve_api_key は os.environ への書き込みを行わない（D-05）"""
+        """_resolve_api_key は os.environ への書き込みを行わない（読み取り専用原則）"""
         from pagefolio.ocr import _resolve_api_key
 
         monkeypatch.setenv("ANTHROPIC_API_KEY", "original-key")
@@ -1081,10 +1081,10 @@ class TestOcrDialogLlmConfig:
 
 
 class TestResolveApiKeyGemini:
-    """_resolve_api_key gemini の dual env var 解決を検証する（D-06・OCR-QA-01）"""
+    """_resolve_api_key gemini の dual env var を検証（D-06・V171-KEY-02 優先順反転）"""
 
     def test_gemini_api_key_priority(self, monkeypatch):
-        """GEMINI_API_KEY が優先されること（両方設定時）"""
+        """session_keys 未設定時、GEMINI_API_KEY が GOOGLE_API_KEY より優先（dual env 内部順序は不変）"""  # noqa: E501
         from pagefolio.ocr import _resolve_api_key
 
         monkeypatch.setenv("GEMINI_API_KEY", "primary-key")
@@ -1093,7 +1093,7 @@ class TestResolveApiKeyGemini:
         assert key == "primary-key"
 
     def test_google_api_key_fallback(self, monkeypatch):
-        """GEMINI_API_KEY 未設定で GOOGLE_API_KEY フォールバック（D-06）"""
+        """GEMINI_API_KEY 未設定で GOOGLE_API_KEY フォールバック（D-06・session未設定時）"""  # noqa: E501
         from pagefolio.ocr import _resolve_api_key
 
         monkeypatch.delenv("GEMINI_API_KEY", raising=False)
@@ -1122,13 +1122,66 @@ class TestResolveApiKeyGemini:
             _resolve_api_key("gemini", {})
         assert ei.value.env_var == "GEMINI_API_KEY"
 
-    def test_env_takes_priority_over_session_key(self, monkeypatch):
-        """環境変数があれば session_keys より優先する（D-02）"""
+    def test_session_key_takes_priority_over_env_var(self, monkeypatch):
+        """session_keys（入力値）があれば環境変数より優先する（V171-KEY-02・優先順反転）"""
         from pagefolio.ocr import _resolve_api_key
 
-        monkeypatch.setenv("GEMINI_API_KEY", "env-wins")
+        monkeypatch.setenv("GEMINI_API_KEY", "env-value")
         key = _resolve_api_key("gemini", {"gemini": "session-key"})
-        assert key == "env-wins"
+        assert key == "session-key"
+
+    def test_os_environ_not_written(self, monkeypatch):
+        """_resolve_api_key(gemini) は os.environ への書き込みを行わない（読取専用）"""
+        from pagefolio.ocr import _resolve_api_key
+
+        monkeypatch.setenv("GEMINI_API_KEY", "original-key")
+        _resolve_api_key("gemini", {"gemini": "session-key"})
+        import os
+
+        assert os.environ.get("GEMINI_API_KEY") == "original-key"
+
+
+# ===== _resolve_api_key runpod（Task 1: 01-01・V171-KEY-04 新設）=====
+
+
+class TestResolveApiKeyRunPod:
+    """_resolve_api_key runpod を検証（V171-KEY-04・入力優先/フォールバック/raise）"""
+
+    def test_session_key_takes_priority_over_env_var(self, monkeypatch):
+        """session_keys（入力値）があれば環境変数より優先する（V171-KEY-02・優先順反転）"""
+        from pagefolio.ocr import _resolve_api_key
+
+        monkeypatch.setenv("RUNPOD_API_KEY", "env-value")
+        key = _resolve_api_key("runpod", {"runpod": "session-key"})
+        assert key == "session-key"
+
+    def test_env_var_used_when_session_key_absent(self, monkeypatch):
+        """session_keys が空で環境変数 RUNPOD_API_KEY があればその値を返す（フォールバック）"""  # noqa: E501
+        from pagefolio.ocr import _resolve_api_key
+
+        monkeypatch.setenv("RUNPOD_API_KEY", "env-key-abc")
+        key = _resolve_api_key("runpod", {})
+        assert key == "env-key-abc"
+
+    def test_no_env_no_session_raises_ocr_api_key_error(self, monkeypatch):
+        """環境変数もセッションキーもなければ OCRAPIKeyError を raise（成功基準2）"""
+        from pagefolio.ocr import _resolve_api_key
+        from pagefolio.ocr_providers import OCRAPIKeyError
+
+        monkeypatch.delenv("RUNPOD_API_KEY", raising=False)
+        with pytest.raises(OCRAPIKeyError) as ei:
+            _resolve_api_key("runpod", {})
+        assert ei.value.env_var == "RUNPOD_API_KEY"
+
+    def test_os_environ_not_written(self, monkeypatch):
+        """_resolve_api_key(runpod) は os.environ への書き込みを行わない（読取専用）"""
+        from pagefolio.ocr import _resolve_api_key
+
+        monkeypatch.setenv("RUNPOD_API_KEY", "original-key")
+        _resolve_api_key("runpod", {"runpod": "sess"})
+        import os
+
+        assert os.environ.get("RUNPOD_API_KEY") == "original-key"
 
 
 # ===== build_provider gemini 分岐（Task 1: 06-01）=====
