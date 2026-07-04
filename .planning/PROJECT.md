@@ -7,6 +7,25 @@ PageFolio の既存コードベースに対する最適化プロジェクト。
 
 **Core Value:** 大きな PDF でも Undo/Redo が正しく・速く動作し、コードが読みやすく保守しやすい状態にする。
 
+## Current Milestone: v1.7.1 現機能ブラッシュアップ + APIキー入力欄
+
+**Goal:** 既存機能（UI/UX・OCR・ページ操作）を磨き込み、テスト・安定性を底上げする。あわせて LLM 設定ダイアログにセッション限定の APIキー入力欄を追加し、キー設定導線を一元化する。
+
+**Target features:**
+- **APIキー入力欄（LLMConfigDialog）**: クラウド3種（Claude / Gemini / RunPod）に入力欄追加。保存はしない（`_session_api_keys` 方式）。解決優先順は **入力値 → 環境変数**、両方なしはエラー表示。OCRDialog 側の既存セッションキー入力欄は撤去し LLM 設定に一元化
+- **UI/UX の磨き込み**: 既存画面の操作性・表示・文言・エラー表示の一貫性改善
+- **OCR 機能の磨き込み**: 実行フロー・結果ビューア・プロバイダ周りの使い勝手改善
+- **ページ操作の磨き込み**: 透かし・回転・トリミング・黒塗り等の既存操作の改善
+- **テスト・安定性の底上げ**: v1.5.0 新機能の回帰テスト拡充・既知の軽微バグ解消
+
+**Key context:**
+- 現行のキー解決は「環境変数優先・未設定時のみ入力値」（OCRDialog 側）。本マイルストーンで **入力値優先へ反転** する
+- RunPod は現状 `RUNPOD_API_KEY` 環境変数のみ対応 → セッションキー機構（`_session_api_keys`）への組み込みが新規
+- APIキーの settings.json 非永続化（`_SENSITIVE_KEYS` ガード）は維持（V14-D-02 踏襲）
+- ブラッシュアップ具体項目は要件定義で確定（候補: Next Milestone Goals・v1.4.0 レビュー L-1〜L-6）
+
+> 補足: v1.6.1〜v1.7.0（パスワード/印刷・Ollama/RunPod・サマリ安定化・黒塗り/モザイク・undo ディスク退避）はクイックタスク・別ブランチ経由で出荷済み。詳細は `.planning/MILESTONES.md` 参照。
+
 ## Last Milestone: v1.6.0 品質向上・AI強化・設定/UI改善 — ✅ Shipped 2026-06-20
 
 > v1.6.0 は全 4 フェーズ（Phase 1〜4・11 プラン・23 タスク）を達成して出荷済み（`APP_VERSION = v1.6.0`・テスト 597 件グリーン）。
@@ -141,7 +160,7 @@ PageFolio の既存コードベースに対する最適化プロジェクト。
 
 ### Active
 
-- なし（v1.6.0 全 9 要件を達成・出荷）。次マイルストーンの要件は `/gsd-new-milestone` で定義する（候補は「Next Milestone Goals」参照）。
+- v1.7.1 の要件を定義中（`/gsd-new-milestone` 実行中）。確定後 REQUIREMENTS.md に REQ-ID 付きで記載。
 
 ### Out of Scope
 
@@ -246,4 +265,4 @@ PageFolio の既存コードベースに対する最適化プロジェクト。
 4. 決定事項 → Key Decisions を更新
 
 ---
-*Last updated: 2026-06-20 after v1.6.0 milestone (品質向上・AI強化・設定/UI改善) — 全 4 フェーズ達成・出荷.*
+*Last updated: 2026-07-04 — v1.7.1 マイルストーン（現機能ブラッシュアップ + APIキー入力欄）開始.*

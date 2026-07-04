@@ -1,20 +1,16 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.7.0
-milestone_name: Undo/Redo メモリ最適化（ディスク退避）+ ストレステスト自動化
-current_phase: null
-current_phase_name: null
-status: milestone_complete
-stopped_at: v1.6.5（サマリ安定化 + 黒塗り/モザイク）と v1.7.0（undo ディスク退避 + ストレステスト）を claude/v1-6-5-v1-7-0-planning-3rqiah ブランチで実装・push 済み。main へのマージ・タグ・GitHub Release・PyInstaller リビルドは未実施（次セッション）
-last_updated: "2026-07-03T00:00:00.000Z"
-last_activity: 2026-07-03
-last_activity_desc: v1.6.5 + v1.7.0 実装完了（pytest 707 件グリーン・ruff クリーン）。UndoBlobStore ディスク退避・page_edit op・黒塗り/モザイク・サマリエラーハンドリング統一・undo no-op 3 操作と透かし rotate=45 の既存バグ修正
+milestone: v1.7.1
+milestone_name: 現機能ブラッシュアップ + APIキー入力欄
+status: planning
+last_updated: "2026-07-04T14:24:43.648Z"
+last_activity: 2026-07-04
 progress:
-  total_phases: 4
-  completed_phases: 4
-  total_plans: 11
-  completed_plans: 11
-  percent: 100
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
@@ -28,10 +24,10 @@ See: .planning/PROJECT.md (updated 2026-06-20)
 
 ## Current Position
 
-Phase: v1.6.5 + v1.7.0 実装完了（`claude/v1-6-5-v1-7-0-planning-3rqiah` ブランチ・push 済み）
+Phase: Not started (defining requirements)
 Plan: —
-Status: main マージ・タグ・GitHub Release・PyInstaller リビルド待ち（次セッション）
-Last activity: 2026-07-03 — v1.6.5（サマリ生成の安定化・進捗 UX・エラーハンドリング統一・黒塗り/モザイク新機能）と v1.7.0（undo デルタの UndoBlobStore ディスク退避・undo no-op 3 操作/透かし rotate=45 バグ修正・120 ページストレステスト自動化）を実装。pytest 707 件グリーン
+Status: Defining requirements
+Last activity: 2026-07-04 — Milestone v1.7.1 started
 
 ## v1.6.0 Phase Map
 
