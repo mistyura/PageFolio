@@ -717,8 +717,9 @@ def build_provider(settings, api_key=None, plugin_manager=None):
         )
     # プラグイン登録プロバイダへのフォールバック（D-07）
     # M-7: cls() は引数なしコンストラクタ契約。例外は RuntimeError に正規化。
-    if plugin_manager is not None and name in plugin_manager._provider_registry:
-        cls = plugin_manager._provider_registry[name]
+    # D-10: get_ocr_provider() 公開アクセサ経由で参照（私有属性への直接アクセス廃止）
+    cls = plugin_manager.get_ocr_provider(name) if plugin_manager is not None else None
+    if cls is not None:
         try:
             return cls()
         except Exception as e:

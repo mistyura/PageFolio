@@ -729,3 +729,13 @@ class TestPublicAccessors:
         pm = pagefolio.PluginManager()
         pm.register_ocr_provider("myprov", DummyProvider)
         assert pm.list_ocr_providers() == ["myprov"]
+
+    def test_build_provider_resolves_via_public_accessor(self):
+        """build_provider が get_ocr_provider() 経由で解決すること（D-10）"""
+        from pagefolio.ocr import build_provider
+
+        DummyProvider = _make_dummy_provider_class()
+        pm = pagefolio.PluginManager()
+        pm.register_ocr_provider("myprov", DummyProvider)
+        provider = build_provider({"ocr_provider": "myprov"}, plugin_manager=pm)
+        assert isinstance(provider, DummyProvider)

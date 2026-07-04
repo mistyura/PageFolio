@@ -124,9 +124,7 @@ class LLMConfigDialog(tk.Toplevel):
             "tesseract",
         ]
         _plugin_extras = (
-            list(self._plugin_manager._provider_registry.keys())
-            if self._plugin_manager
-            else []
+            self._plugin_manager.list_ocr_providers() if self._plugin_manager else []
         )
         self.provider_combo = ttk.Combobox(
             provider_row,
