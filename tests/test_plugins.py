@@ -599,3 +599,133 @@ class TestPluginManagerProviderRegistry:
         pm = pagefolio.PluginManager()
         with pytest.raises(ValueError):
             build_provider({"ocr_provider": "completely_unknown"}, plugin_manager=pm)
+
+
+# ===== Phase 02-01: register_ocr_provider 堅牢化・unload 解除・公開アクセサ =====
+
+
+def _make_dummy_provider_class():
+    """テスト用の OCRProvider サブクラスを生成する"""
+    from pagefolio.ocr_providers import OCRProvider
+
+    class DummyProvider(OCRProvider):
+        def ocr_image(self, b64_png, prompt, **kwargs):
+            return "dummy"
+
+        def list_models(self):
+            return ["dummy"]
+
+    return DummyProvider
+
+
+class TestRegisterOcrProviderDuplicatePolicy:
+    """register_ocr_provider の重複名ポリシー検証（D-08）"""
+
+    def test_register_duplicate_builtin_name_rejected_with_warning(self, caplog):
+        """組み込み名 tesseract への登録は拒否され registry 非追加・WARNING が出る"""
+        DummyProvider = _make_dummy_provider_class()
+        pm = pagefolio.PluginManager()
+        with caplog.at_level("WARNING"):
+            pm.register_ocr_provider("tesseract", DummyProvider)
+        assert "tesseract" not in pm._provider_registry
+        assert any(record.levelname == "WARNING" for record in caplog.records)
+
+    def test_register_plugin_duplicate_name_overwrites_with_warning(self, caplog):
+        """プラグイン同士の重複名登録は後勝ちで上書きされ WARNING が出る"""
+        DummyA = _make_dummy_provider_class()
+        DummyB = _make_dummy_provider_class()
+        pm = pagefolio.PluginManager()
+        pm.register_ocr_provider("myprov", DummyA)
+        with caplog.at_level("WARNING"):
+            pm.register_ocr_provider("myprov", DummyB)
+        assert pm._provider_registry["myprov"] is DummyB
+        assert any(record.levelname == "WARNING" for record in caplog.records)
+
+    def test_register_non_subclass_still_raises_type_error(self):
+        """非サブクラス登録は重複名ポリシーより先に TypeError 送出（既存挙動）"""
+        pm = pagefolio.PluginManager()
+        with pytest.raises(TypeError):
+            pm.register_ocr_provider("tesseract", object)
+
+
+class TestUnloadPluginDeregistersProvider:
+    """unload_plugin による OCR プロバイダ登録解除（D-09）"""
+
+    def _create_ocr_plugin_file(self, path, name="OcrPlugin"):
+        """on_load でカスタム OCR プロバイダを登録するプラグインファイルを生成"""
+        code = textwrap.dedent(f"""\
+            import pagefolio
+            from pagefolio.ocr_providers import OCRProvider
+
+
+            class DummyProvider(OCRProvider):
+                def ocr_image(self, b64_png, prompt, **kwargs):
+                    return "dummy"
+
+                def list_models(self):
+                    return ["dummy"]
+
+
+            class {name}(pagefolio.PDFEditorPlugin):
+                name = "{name}"
+                version = "1.0.0"
+
+                def on_load(self, app):
+                    app.plugin_manager.register_ocr_provider("myprov", DummyProvider)
+        """)
+        path.write_text(code, encoding="utf-8")
+        return path
+
+    def test_unload_deregisters_provider(self, tmp_path):
+        """unload_plugin 後、そのプラグインが登録した名前が registry から消える"""
+
+        class _App:
+            pass
+
+        pm = pagefolio.PluginManager()
+        app = _App()
+        app.plugin_manager = pm
+        plugin_file = self._create_ocr_plugin_file(tmp_path / "ocr_plug.py")
+        pm.load_plugin("ocr_plug", str(plugin_file), app=app)
+
+        assert pm.get_ocr_provider("myprov") is not None
+
+        pm.unload_plugin("ocr_plug")
+
+        assert pm.get_ocr_provider("myprov") is None
+        assert "myprov" not in pm.list_ocr_providers()
+
+    def test_unload_deregisters_provider_owner_tracking_cleared(self, tmp_path):
+        """unload 後、owner 辞書からも解除されること（再登録時に誤検出しない）"""
+
+        class _App:
+            pass
+
+        pm = pagefolio.PluginManager()
+        app = _App()
+        app.plugin_manager = pm
+        plugin_file = self._create_ocr_plugin_file(tmp_path / "ocr_plug.py")
+        pm.load_plugin("ocr_plug", str(plugin_file), app=app)
+        pm.unload_plugin("ocr_plug")
+
+        assert "myprov" not in pm._provider_owners
+
+
+class TestPublicAccessors:
+    """get_ocr_provider / list_ocr_providers の公開アクセサテスト（D-10）"""
+
+    def test_public_accessor_get_ocr_provider_returns_registered_class(self):
+        DummyProvider = _make_dummy_provider_class()
+        pm = pagefolio.PluginManager()
+        pm.register_ocr_provider("myprov", DummyProvider)
+        assert pm.get_ocr_provider("myprov") is DummyProvider
+
+    def test_public_accessor_get_ocr_provider_returns_none_for_unknown(self):
+        pm = pagefolio.PluginManager()
+        assert pm.get_ocr_provider("unknown") is None
+
+    def test_public_accessor_list_ocr_providers_returns_registered_names(self):
+        DummyProvider = _make_dummy_provider_class()
+        pm = pagefolio.PluginManager()
+        pm.register_ocr_provider("myprov", DummyProvider)
+        assert pm.list_ocr_providers() == ["myprov"]
