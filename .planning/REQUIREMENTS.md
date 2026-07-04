@@ -10,9 +10,9 @@
 ### APIキー入力欄（KEY）
 
 - [ ] **V171-KEY-01**: ユーザーは LLM設定ダイアログで Claude / Gemini / RunPod の APIキーを入力できる（セッション限定・`settings.json` へは保存されない）
-- [ ] **V171-KEY-02**: キー解決は「入力値 → 環境変数」の優先順で行われ、両方未設定の場合はエラーが表示される
+- [x] **V171-KEY-02**: キー解決は「入力値 → 環境変数」の優先順で行われ、両方未設定の場合はエラーが表示される
 - [ ] **V171-KEY-03**: OCRDialog 側の既存セッションキー入力欄は撤去され、キー設定導線が LLM設定ダイアログに一元化される
-- [ ] **V171-KEY-04**: RunPod もセッションキー機構（`_session_api_keys`）で扱える
+- [x] **V171-KEY-04**: RunPod もセッションキー機構（`_session_api_keys`）で扱える
 
 ### UI/UX 磨き込み（UIUX）
 
@@ -36,7 +36,7 @@
 ### テスト・安定性（TEST）
 
 - [ ] **V171-TEST-01**: v1.5.0 新機能（白紙挿入・透かし・ページ番号・TOC 保持・D&D 挿入・ショートカット読込）の回帰テストが整備される
-- [ ] **V171-TEST-02**: APIキー新機能のテストが整備される（優先順解決・非保存ガード回帰）
+- [x] **V171-TEST-02**: APIキー新機能のテストが整備される（優先順解決・非保存ガード回帰）
 - [ ] **V171-TEST-03**: 既知軽微バグが棚卸しされ、活き残りが解消される（L-6 の現行照合と重複しない範囲）
 
 ## Key Context
@@ -69,9 +69,9 @@
 | Requirement | Phase | Status |
 |-------------|-------|--------|
 | V171-KEY-01 | Phase 1 | Pending |
-| V171-KEY-02 | Phase 1 | Pending |
+| V171-KEY-02 | Phase 1 | Complete |
 | V171-KEY-03 | Phase 1 | Pending |
-| V171-KEY-04 | Phase 1 | Pending |
+| V171-KEY-04 | Phase 1 | Complete |
 | V171-UIUX-01 | Phase 4 | Pending |
 | V171-UIUX-02 | Phase 4 | Pending |
 | V171-UIUX-03 | Phase 4 | Pending |
@@ -83,5 +83,5 @@
 | V171-PAGE-02 | Phase 3 | Pending |
 | V171-PAGE-03 | Phase 3 | Pending |
 | V171-TEST-01 | Phase 3 | Pending |
-| V171-TEST-02 | Phase 1 | Pending |
+| V171-TEST-02 | Phase 1 | Complete |
 | V171-TEST-03 | Phase 4 | Pending |

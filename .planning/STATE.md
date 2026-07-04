@@ -2,18 +2,18 @@
 gsd_state_version: 1.0
 milestone: v1.7.1
 milestone_name: 現機能ブラッシュアップ + APIキー入力欄
-current_phase: 1
-current_phase_name: APIキー入力欄（LLM設定への一元化）
-status: active
+current_phase: 01
+current_phase_name: api-llm
+status: executing
 stopped_at: Phase 1 context gathered
-last_updated: "2026-07-04T14:55:38.598Z"
+last_updated: "2026-07-04T15:57:19.248Z"
 last_activity: 2026-07-04
-last_activity_desc: v1.7.1 ロードマップ確定（4 フェーズ・17/17 要件被覆）
+last_activity_desc: Phase 01 execution started
 progress:
   total_phases: 4
   completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
+  total_plans: 3
+  completed_plans: 1
   percent: 0
 ---
 
@@ -24,14 +24,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-07-04)
 
 **Core value:** 大きな PDF でも Undo/Redo が正しく・速く動作し、コードが読みやすく保守しやすい状態にする
-**Current focus:** v1.7.1 Phase 1（APIキー入力欄・LLM設定への一元化）の計画（`/gsd-plan-phase 1`）
+**Current focus:** Phase 01 — api-llm
 
 ## Current Position
 
-Phase: 1 of 4 (APIキー入力欄（LLM設定への一元化）) — Not started
-Plan: —
-Status: Roadmap created — ready to plan Phase 1
-Last activity: 2026-07-04 — v1.7.1 ロードマップ確定（4 フェーズ・17/17 要件被覆）
+Phase: 01 (api-llm) — EXECUTING
+Plan: 2 of 3
+Status: Ready to execute
+Last activity: 2026-07-04 — Phase 01 execution started
 
 Progress: [░░░░░░░░░░] 0%
 
@@ -82,6 +82,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 02 P02 | 約12分 | 2 tasks | 4 files |
 | Phase 04 P01 | 5min | 2 tasks | 2 files |
 | Phase 04 P02 | 4min | 2 tasks | 2 files |
+| Phase 01-api-llm P01 | 5min | 3 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -177,6 +178,9 @@ Decisions are logged in PROJECT.md Key Decisions table.
 - [Phase ?]: [Phase 04-01]: _split_inline は **bold** のみ対応・空リスト不返却で [(text,None)] フォールバック。ReDoS 回避: 非貪欲+文字クラスのみ（線形時間）
 - [Phase 04-02]: resolve_ocr_prompt 解決優先順位を custom(非空) > PROVIDER_OCR_PROMPTS[provider][preset] > OCR_PROMPTS.get(preset, OCR_PROMPTS['text']) に固定（既存 _on_run/ocr_dialog.py:1090 既定 text と一致・後方互換）
 - [Phase 04-02]: PROVIDER_OCR_PROMPTS は claude(XML タグ)/gemini(明示指示) × text/table/markdown のみ定義。lmstudio/tesseract/off は汎用 OCR_PROMPTS フォールバック（Pitfall 4: Tesseract は prompt 無視）。Tk/ネットワーク非依存純関数で 04-03 が import
+- [Phase 01-01]: V171-KEY-02: _resolve_api_key の優先順を session_keys(入力値) > 環境変数へ反転（claude/gemini/runpod全分岐・gemini dual env内部順序は不変）
+- [Phase 01-01]: 既存の env優先固定テストは新規追加でなく書き換え・リネームで対応（Pitfall 4）。RunPod版 TestResolveApiKeyRunPod を新設
+- [Phase 01-01]: llm_env_key_unset_static系ヒント文言をUI-SPEC D-11準拠へja/en同時更新（新規キー追加なし）。ocr_session_key_labelはPlan03の撤去タスクと同時削除する方針で本プランでは維持
 
 ### Pending Todos
 
@@ -253,7 +257,7 @@ Decisions are logged in PROJECT.md Key Decisions table.
 
 ## Session Continuity
 
-Last session: 2026-07-04T14:55:38.585Z
+Last session: 2026-07-04T15:51:59.085Z
 Stopped at: Phase 1 context gathered
 Resume file: .planning/phases/01-api-llm/01-CONTEXT.md
 
