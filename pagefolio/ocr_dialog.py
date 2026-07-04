@@ -694,7 +694,8 @@ class OCRDialog(tk.Toplevel):
         """現在の ocr_provider 設定を人間可読なプロバイダ表示名に変換する。
 
         claude → "Claude (Anthropic)"・gemini → "Gemini (Google AI)"
-        lmstudio/"" → "LM Studio"。未知の名前はそのまま返す（フォールバック）。
+        runpod → "RunPod (Serverless)"・lmstudio/"" → "LM Studio"。
+        未知の名前はそのまま返す（フォールバック）。
         """
         from pagefolio.ocr_providers import ClaudeProvider, GeminiProvider
 
@@ -705,6 +706,8 @@ class OCRDialog(tk.Toplevel):
             return self._L["ocr_provider_name_gemini"]
         if name == "tesseract":
             return self._L["ocr_provider_name_tesseract"]
+        if name == "runpod":
+            return self._L["ocr_provider_name_runpod"]
         if name in ("lmstudio", ""):
             return self._L["ocr_provider_name_lmstudio"]
         return name
@@ -1014,7 +1017,8 @@ class OCRDialog(tk.Toplevel):
 
         毎回表示する（「今後表示しない」は設けない・D-11）。
         ダイアログ内容（D-12 の3点）:
-          1. 送信先ホスト（プロバイダ別: claude→api.anthropic.com/gemini→googleapis）
+          1. 送信先ホスト（プロバイダ別: claude→api.anthropic.com/gemini→googleapis
+             /runpod→ユーザー設定の runpod_url）
           2. 対象ページ数と概算コスト
           3. 「ページ画像が外部 API に送信されます」「従量課金が発生します」
         OK で True・キャンセルで False を返す（成功基準5）。
@@ -1027,6 +1031,12 @@ class OCRDialog(tk.Toplevel):
         if name == "gemini":
             model = self.app.settings.get("gemini_model", "gemini-2.5-flash")
             host = "generativelanguage.googleapis.com"
+        elif name == "runpod":
+            model = self.app.settings.get("runpod_model", "") or "runpod"
+            host = (
+                self.app.settings.get("runpod_url", "")
+                or self._L["llm_runpod_host_unset"]
+            )
         else:
             # claude（デフォルト）
             model = self.app.settings.get("claude_model", "claude-sonnet-4-6")
@@ -1057,6 +1067,11 @@ class OCRDialog(tk.Toplevel):
         name = self.app.settings.get("ocr_provider", "")
         if name == "gemini":
             host = "generativelanguage.googleapis.com"
+        elif name == "runpod":
+            host = (
+                self.app.settings.get("runpod_url", "")
+                or self._L["llm_runpod_host_unset"]
+            )
         else:
             # claude（デフォルト・_confirm_cost と同じフォールバック）
             host = "api.anthropic.com"

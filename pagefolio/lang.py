@@ -450,6 +450,8 @@ LANG = {
             "jpn 言語パックが見つかりません。eng のみで実行します"
         ),
         "ocr_provider_name_tesseract": "Tesseract (ローカル)",
+        # CR-01: RunPod ローカライズ表示名（WR-02）
+        "ocr_provider_name_runpod": "RunPod (Serverless)",
         # LM Studio 設定
         "settings_lm_studio_section": "🔍 LM Studio (OCR)",
         "settings_lm_url": "URL:",
@@ -497,6 +499,8 @@ LANG = {
             "APIキー未設定のため推奨モデル一覧を表示中"
             "（RUNPOD_API_KEY 環境変数または上の入力欄にキーを入力してください）"
         ),
+        # CR-01: RunPod 送信先プレースホルダ（runpod_url 未設定時）
+        "llm_runpod_host_unset": "（RunPod エンドポイント URL 未設定）",
         # OCR ダイアログ
         "ocr_server_label": "サーバ:",
         "ocr_model_label": "モデル:",
@@ -1022,6 +1026,8 @@ LANG = {
             "jpn language pack not found. Running with eng only."
         ),
         "ocr_provider_name_tesseract": "Tesseract (Local)",
+        # CR-01: RunPod localized display name (WR-02)
+        "ocr_provider_name_runpod": "RunPod (Serverless)",
         # LM Studio settings
         "settings_lm_studio_section": "🔍 LM Studio (OCR)",
         "settings_lm_url": "URL:",
@@ -1069,6 +1075,8 @@ LANG = {
             "API key not set — showing recommended models "
             "(enter a key above or set RUNPOD_API_KEY)"
         ),
+        # CR-01: RunPod destination placeholder (runpod_url not set)
+        "llm_runpod_host_unset": "(RunPod endpoint URL not set)",
         # OCR dialog
         "ocr_server_label": "Server:",
         "ocr_model_label": "Model:",
