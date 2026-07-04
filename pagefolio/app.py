@@ -478,6 +478,7 @@ class PDFEditorApp(
             self._apply_settings,
             self._font,
             plugin_manager=getattr(self, "plugin_manager", None),
+            session_api_keys=getattr(self, "_session_api_keys", None),
         )
 
     def _apply_settings(self, new_settings):

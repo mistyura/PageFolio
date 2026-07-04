@@ -17,7 +17,13 @@ logger = logging.getLogger(__name__)
 # ══════════════════════════════════════════
 class SettingsDialog(tk.Toplevel):
     def __init__(
-        self, parent, current_settings, callback, font_func=None, plugin_manager=None
+        self,
+        parent,
+        current_settings,
+        callback,
+        font_func=None,
+        plugin_manager=None,
+        session_api_keys=None,
     ):
         super().__init__(parent)
         lang = current_settings.get("lang", "ja")
@@ -32,6 +38,11 @@ class SettingsDialog(tk.Toplevel):
         self._font = font_func
         # M-8: plugin_manager を保持して LLMConfigDialog へ渡す
         self._plugin_manager = plugin_manager
+        # V171-KEY-01: session_api_keys は複製せず参照をそのまま保持する
+        # （複製すると app._session_api_keys の実体へ変更が反映されない・Pitfall 5）。
+        self._session_api_keys = (
+            session_api_keys if session_api_keys is not None else {}
+        )
 
         self._build()
         self.update_idletasks()
@@ -192,6 +203,7 @@ class SettingsDialog(tk.Toplevel):
             font_func=self._font,
             lang=lang,
             plugin_manager=getattr(self, "_plugin_manager", None),
+            session_api_keys=getattr(self, "_session_api_keys", None),
         )
 
     def _apply(self):
