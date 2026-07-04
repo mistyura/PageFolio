@@ -1303,8 +1303,7 @@ class TestBuildProviderPluginRuntimeError:
 
     def test_plugin_constructor_exception_normalized_to_runtime_error(self):
         """cls() が例外を投げると RuntimeError（素の例外が漏れない）。"""
-        import types
-
+        import pagefolio
         from pagefolio.ocr import build_provider
         from pagefolio.ocr_providers import OCRProvider
 
@@ -1318,12 +1317,14 @@ class TestBuildProviderPluginRuntimeError:
             def list_models(self):
                 return []
 
-        registry = {"broken": BrokenPlugin}
-        fake_pm = types.SimpleNamespace(_provider_registry=registry)
+        # D-10: 公開アクセサ get_ocr_provider() 経由で解決されるため、
+        # 実 PluginManager を使い register_ocr_provider 経由で登録する
+        pm = pagefolio.PluginManager()
+        pm.register_ocr_provider("broken", BrokenPlugin)
         settings = {"ocr_provider": "broken"}
 
         with pytest.raises(RuntimeError, match="broken"):
-            build_provider(settings, plugin_manager=fake_pm)
+            build_provider(settings, plugin_manager=pm)
 
 
 # ===== 429/5xx メッセージ分離（v1.4.3）=====
