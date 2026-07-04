@@ -201,16 +201,23 @@ usage: >
 - 対応: どちらかに一本化 or ヘルパーをテスト専用と明記し仕様統一。
   **M-1/M-2 修正時は両実装への影響を必ず確認すること。**
 
-### L-2: `register_ocr_provider` の名前検証・アンロード解除なし
+### L-2: `register_ocr_provider` の名前検証・アンロード解除なし ✅ (c70ae29)
 
 - 該当: `pagefolio/plugins.py`
 - 組み込み名と同名登録は黙って無視・プラグイン無効化後も登録残留。
 - 対応: 重複名 `logger.warning`・unload 時の登録解除。
+- **解消済み（v1.7.1 Phase 2-01・commit c70ae29）:** 組み込み名衝突は拒否+警告、
+  プラグイン同士の重複は後勝ち上書き+警告（D-08）。unload_plugin で owner ベース
+  の登録解除を追加（D-09）。
 
-### L-3: `plugin_manager._provider_registry` への私有属性直接アクセス
+### L-3: `plugin_manager._provider_registry` への私有属性直接アクセス ✅ (3e15369)
 
 - 該当: `pagefolio/ocr.py:517`、`pagefolio/dialogs/llm_config.py:110`
 - 対応: `PluginManager.get_ocr_provider(name)` 等の公開アクセサ追加。
+- **解消済み（v1.7.1 Phase 2-01・commit c70ae29 で公開アクセサ新設・commit 3e15369 で
+  ocr.py/llm_config.py の私有アクセスを置換）:** `get_ocr_provider(name)` /
+  `list_ocr_providers()` を新設し（D-10）、両ファイルの `_provider_registry` 直接
+  アクセスを置換済み。
 
 ### L-4: TesseractProvider が `tesseract_lang` 設定を無視
 
