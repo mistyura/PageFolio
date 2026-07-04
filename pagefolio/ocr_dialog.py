@@ -4,7 +4,6 @@
 """OCR ダイアログ — 進行表示・キャンセル・結果エクスポート"""
 
 import logging
-import os
 import queue
 import threading
 import time
@@ -113,8 +112,6 @@ class OCRDialog(tk.Toplevel):
         self.concurrency = max(1, min(MAX_OCR_CONCURRENCY, int(concurrency)))
         self.provider = provider
         self.custom_prompt = custom_prompt
-        # セッションキー入力用（マスク表示・D-04）
-        self.api_key_var = tk.StringVar()
         # 埋め込みテキスト無視オプション（既定 OFF・クラウド課金に直結するため非永続）
         self.force_ocr_var = tk.BooleanVar(value=False)
         self._force_ocr = False
@@ -468,31 +465,8 @@ class OCRDialog(tk.Toplevel):
             font=self._font(-1),
         ).pack(anchor="w", padx=16, pady=(2, 0))
 
-        # セッションキー入力欄（クラウドかつ env 未設定時のみ表示・マスク・D-04）
-        self._key_frame = tk.Frame(self, bg=C["BG_DARK"])
-        if self._needs_session_key():
-            self._key_frame.pack(fill="x", padx=16, pady=(4, 0))
-        tk.Label(
-            self._key_frame,
-            text=self._L["ocr_session_key_label"],
-            bg=C["BG_DARK"],
-            fg=C["WARNING"],
-            font=self._font(-1),
-        ).pack(side="left")
-        self.api_key_entry = tk.Entry(
-            self._key_frame,
-            show="*",
-            textvariable=self.api_key_var,
-            font=self._font(-1),
-            bg=C["BG_CARD"],
-            fg=C["TEXT_MAIN"],
-            insertbackground=C["TEXT_MAIN"],
-            relief="flat",
-        )
-        self.api_key_entry.pack(side="left", fill="x", expand=True, padx=(4, 0))
-
         # 進行表示
-        # self 属性化: ライブ更新時にセッションキー欄を before= でこのラベルの前へ戻す
+        # self 属性化: ライブ更新時に各種欄を before= でこのラベルの前へ戻す
         self.progress_var = tk.StringVar(value=self._L["ocr_run_first"])
         self._progress_label = tk.Label(
             self,
@@ -831,29 +805,6 @@ class OCRDialog(tk.Toplevel):
         lang = self.app.settings.get("lang", "ja")
         return LANG[lang]["ocr_cost_estimate"].format(cost=cost)
 
-    def _needs_session_key(self):
-        """クラウドかつ API キー環境変数が未設定のときに True を返す。
-
-        claude: ANTHROPIC_API_KEY が未設定なら True。
-        gemini: GEMINI_API_KEY/GOOGLE_API_KEY 両方未設定なら True（D-06/Pitfall-G）。
-        runpod: RUNPOD_API_KEY が未設定なら True。
-        環境変数が設定済みであれば入力欄を表示しない（D-02/D-03）。
-        """
-        from pagefolio.ocr_providers import RunPodProvider
-
-        if not self._is_cloud_provider():
-            return False
-        name = self.app.settings.get("ocr_provider", "")
-        if name == "gemini":
-            # dual env var: GEMINI_API_KEY 優先・GOOGLE_API_KEY フォールバック（D-06）
-            return not bool(
-                os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
-            )
-        elif name == "runpod" or isinstance(self.provider, RunPodProvider):
-            return not bool(os.environ.get("RUNPOD_API_KEY"))
-        # claude（デフォルト）: ANTHROPIC_API_KEY を確認
-        return not bool(os.environ.get("ANTHROPIC_API_KEY"))
-
     # ── LLM 設定ボタン・ライブ更新 ──────────────────────────────────────────
 
     def _open_llm_config(self):
@@ -882,6 +833,7 @@ class OCRDialog(tk.Toplevel):
             font_func=self._font,
             lang=lang,
             plugin_manager=getattr(self.app, "plugin_manager", None),
+            session_api_keys=getattr(self.app, "_session_api_keys", None),
         )
 
     def _apply_llm_settings(self, llm_settings):
@@ -1016,7 +968,7 @@ class OCRDialog(tk.Toplevel):
         self.temperature_var.set(settings.get("ocr_temperature", 0.1))
 
     def _refresh_provider_dependent_ui(self):
-        """プロバイダ依存 UI（表示ラベル・LM Studio 欄・セッションキー欄）を再評価する。
+        """プロバイダ依存 UI（表示ラベル・LM Studio 欄）を再評価する。
 
         _apply_llm_settings から呼ばれる。テストでは no-op に差し替え可能。
         """
@@ -1037,13 +989,6 @@ class OCRDialog(tk.Toplevel):
         else:
             self._lmstudio_server_frame.pack_forget()
             self._lmstudio_model_frame.pack_forget()
-        # (e) セッションキー欄の可視性再評価（before= で進行表示の前へ戻す）
-        if self._needs_session_key():
-            self._key_frame.pack(
-                fill="x", padx=16, pady=(4, 0), before=self._progress_label
-            )
-        else:
-            self._key_frame.pack_forget()
         # (f) 行の増減でボタン行が隠れないよう、必要に応じてウィンドウ高さを拡張
         self._grow_to_fit()
 
@@ -1125,40 +1070,40 @@ class OCRDialog(tk.Toplevel):
             parent=self,
         )
 
-    def _ensure_cloud_session_key(self):
-        """クラウド実行前のセッションキー確認。続行可否を bool で返す。
+    def _check_cloud_api_key(self):
+        """クラウド実行前に APIキーが解決可能か確認する（成功基準2・撤去後の代替）。
 
-        環境変数未設定のときのみ入力欄の値を検証し、_session_api_keys へ
-        格納する（settings には入れない・D-01/D-03/T-06-11）。キー未入力なら
-        エラーを表示して False を返す（成功基準2・T-05-19）。
+        入力 UI は LLMConfigDialog に一元化されたため、この関数は値の収集を
+        一切行わず _resolve_api_key の解決可否のみを確認する（値の保持・返却は
+        しない）。未解決なら3プロバイダ別の明示エラーを表示して False を返す。
         _on_run と _on_summary の共有経路。
         """
-        if not self._needs_session_key():
+        if not self._is_cloud_provider():
             return True
+        from pagefolio.ocr import _resolve_api_key
+        from pagefolio.ocr_providers import OCRAPIKeyError
+
         name = self.app.settings.get("ocr_provider", "")
-        key = self.api_key_var.get().strip()
-        if not key:
-            # キー未入力 → エラー表示して中止
-            if name == "gemini":
-                # gemini: ocr_api_key_missing_gemini（dual env var 説明・D-06）
-                messagebox.showerror(
-                    self._L["err_title"],
-                    self._L["ocr_api_key_missing_gemini"],
-                    parent=self,
-                )
-            else:
-                # claude（デフォルト）
-                messagebox.showerror(
-                    self._L["err_title"],
-                    self._L["ocr_api_key_missing"].format(env_var="ANTHROPIC_API_KEY"),
-                    parent=self,
-                )
+        session_keys = getattr(self.app, "_session_api_keys", {})
+        try:
+            _resolve_api_key(name, session_keys)
+        except OCRAPIKeyError:
+            msg_key = {
+                "claude": "ocr_api_key_missing",
+                "gemini": "ocr_api_key_missing_gemini",
+                "runpod": "ocr_api_key_missing_runpod",
+            }.get(name, "ocr_api_key_missing")
+            env_var = {
+                "claude": "ANTHROPIC_API_KEY",
+                "gemini": "GEMINI_API_KEY",
+                "runpod": "RUNPOD_API_KEY",
+            }.get(name, "")
+            messagebox.showerror(
+                self._L["err_title"],
+                self._L[msg_key].format(env_var=env_var),
+                parent=self,
+            )
             return False
-        # _session_api_keys に格納（settings には入れない・D-01/D-03/T-06-11）
-        if name == "gemini":
-            self.app._session_api_keys["gemini"] = key
-        else:
-            self.app._session_api_keys["claude"] = key
         return True
 
     # ── ワーカー ──
@@ -1183,8 +1128,8 @@ class OCRDialog(tk.Toplevel):
 
         # ── クラウド実行ゲート（_started を True にする前）──
         if self._is_cloud_provider():
-            # セッションキー入力（環境変数未設定時のみ・成功基準2・T-05-19）
-            if not self._ensure_cloud_session_key():
+            # APIキー解決確認（成功基準2・T-05-19）
+            if not self._check_cloud_api_key():
                 return
 
             # コスト確認ダイアログ（毎回・D-11・D-12。再開時は未処理ページ数で見積）
@@ -1865,7 +1810,7 @@ class OCRDialog(tk.Toplevel):
 
         # ── クラウド実行ゲート（OCR 実行時と同方針・毎回確認）──
         if self._is_cloud_provider():
-            if not self._ensure_cloud_session_key():
+            if not self._check_cloud_api_key():
                 return
             if not self._confirm_summary_cost(len(full_text)):
                 return

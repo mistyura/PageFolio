@@ -398,7 +398,6 @@ LANG = {
             "APIキーが設定されていません（{env_var}）。"
             "LLM設定ダイアログで APIキーを入力するか、環境変数を設定してください。"
         ),
-        "ocr_session_key_label": "APIキー（このセッションのみ・保存されません）:",
         "ocr_cost_confirm_title": "クラウド送信の確認",
         "ocr_cost_confirm_msg": (
             "送信先: {host}\n"
@@ -972,7 +971,6 @@ LANG = {
             "API key is not configured ({env_var}). "
             "Enter it in the LLM settings dialog, or set the environment variable."
         ),
-        "ocr_session_key_label": "API Key (this session only — not saved):",
         "ocr_cost_confirm_title": "Confirm Cloud Submission",
         "ocr_cost_confirm_msg": (
             "Destination: {host}\n"
