@@ -11,7 +11,7 @@
 
 - [x] **V171-KEY-01**: ユーザーは LLM設定ダイアログで Claude / Gemini / RunPod の APIキーを入力できる（セッション限定・`settings.json` へは保存されない）
 - [x] **V171-KEY-02**: キー解決は「入力値 → 環境変数」の優先順で行われ、両方未設定の場合はエラーが表示される
-- [ ] **V171-KEY-03**: OCRDialog 側の既存セッションキー入力欄は撤去され、キー設定導線が LLM設定ダイアログに一元化される
+- [x] **V171-KEY-03**: OCRDialog 側の既存セッションキー入力欄は撤去され、キー設定導線が LLM設定ダイアログに一元化される
 - [x] **V171-KEY-04**: RunPod もセッションキー機構（`_session_api_keys`）で扱える
 
 ### UI/UX 磨き込み（UIUX）
@@ -70,7 +70,7 @@
 |-------------|-------|--------|
 | V171-KEY-01 | Phase 1 | Complete |
 | V171-KEY-02 | Phase 1 | Complete |
-| V171-KEY-03 | Phase 1 | Pending |
+| V171-KEY-03 | Phase 1 | Complete |
 | V171-KEY-04 | Phase 1 | Complete |
 | V171-UIUX-01 | Phase 4 | Pending |
 | V171-UIUX-02 | Phase 4 | Pending |
