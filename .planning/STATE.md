@@ -5,15 +5,15 @@ milestone_name: 現機能ブラッシュアップ + APIキー入力欄
 current_phase: 01
 current_phase_name: api-llm
 status: executing
-stopped_at: Completed 01-03-PLAN.md
-last_updated: "2026-07-04T17:06:59.776Z"
+stopped_at: Completed 01-04-PLAN.md
+last_updated: "2026-07-04T17:19:41.091Z"
 last_activity: 2026-07-04
-last_activity_desc: Phase 01 execution started
+last_activity_desc: 01-04完了
 progress:
   total_phases: 4
   completed_phases: 1
-  total_plans: 3
-  completed_plans: 3
+  total_plans: 4
+  completed_plans: 4
   percent: 25
 ---
 
@@ -29,11 +29,11 @@ See: .planning/PROJECT.md (updated 2026-07-04)
 ## Current Position
 
 Phase: 01 (api-llm) — EXECUTING
-Plan: 3 of 3
-Status: Ready to execute
-Last activity: 2026-07-04 — Phase 01 execution started
+Plan: 4 of 4
+Status: Phase 01 全4プラン完了（01-04 CR-01ギャップ閉塞済み）
+Last activity: 2026-07-04 — 01-04完了
 
-Progress: [░░░░░░░░░░] 0%
+Progress: [██▌░░░░░░░] 25%
 
 ## v1.7.1 Phase Map
 
@@ -85,6 +85,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 01-api-llm P01 | 5min | 3 tasks | 3 files |
 | Phase 01-api-llm P02 | 15min | 3 tasks | 4 files |
 | Phase 01-api-llm P03 | 10min | 2 tasks | 3 files |
+| Phase 01-api-llm P04 | 15min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -188,6 +189,8 @@ Decisions are logged in PROJECT.md Key Decisions table.
 - [Phase ?]: [Phase 01-02]: _refresh_claude_models/_refresh_gemini_models/_refresh_runpod_models をライブ入力値優先→環境変数フォールバックへ変更（D-10）。OCRDialog経由の session_api_keys配線は Plan 03の担当範囲として明示的に対象外
 - [Phase 01-03]: OCRDialogのクラウド実行ゲートを値収集なし確認専用の_check_cloud_api_keyへ一本化（RunPodのclaudeスロット誤格納バグを構造的に解消・Pitfall 1） — 撤去に伴う成功基準2の明示エラー欠落を防ぐため（Pitfall 2）
 - [Phase 01-03]: OCRDialog._open_llm_configはgetattr(self.app,'_session_api_keys',None)経由でLLMConfigDialogへ配線（Plan02のapp.py._open_settingsと同じ防御的パターン。既存の完全SimpleNamespaceスタブとの後方互換）
+- [Phase ?]: [Phase 01-04 CR-01]: _confirm_cost/_confirm_summary_cost へ elif runpod 分岐を追加し host=runpod_url・model=runpod_model から取得。未設定時は llm_runpod_host_unset プレースホルダで api.anthropic.com へのフォールスルーを防止
+- [Phase ?]: [Phase 01-04 WR-02]: _provider_display_name に runpod 分岐追加・ocr_provider_name_runpod をja/en LANGへ新設
 
 ### Pending Todos
 
@@ -264,7 +267,7 @@ Decisions are logged in PROJECT.md Key Decisions table.
 
 ## Session Continuity
 
-Last session: 2026-07-04T16:31:13.154Z
+Last session: 2026-07-04T17:19:13.074Z
 Stopped at: Completed 01-03-PLAN.md
 Resume file: None
 
