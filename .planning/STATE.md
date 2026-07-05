@@ -4,17 +4,17 @@ milestone: v1.7.1
 milestone_name: 現機能ブラッシュアップ + APIキー入力欄
 current_phase: 04
 current_phase_name: ui-ux
-status: executing
-stopped_at: Completed 04-03-PLAN.md
-last_updated: "2026-07-05T10:20:28.651Z"
+status: verifying
+stopped_at: Completed 04-04-PLAN.md
+last_updated: "2026-07-05T10:32:58.036Z"
 last_activity: 2026-07-05
 last_activity_desc: Phase 04 execution started
 progress:
   total_phases: 4
-  completed_phases: 3
+  completed_phases: 4
   total_plans: 16
-  completed_plans: 15
-  percent: 75
+  completed_plans: 16
+  percent: 100
 ---
 
 # Project State
@@ -30,7 +30,7 @@ See: .planning/PROJECT.md (updated 2026-07-04)
 
 Phase: 04 (ui-ux) — EXECUTING
 Plan: 4 of 4
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-07-05 — Phase 04 execution started
 
 Progress: [█████░░░░░] 50%
@@ -98,6 +98,7 @@ Progress: [█████░░░░░] 50%
 | Phase 04 P01 | 3min | 3 tasks | 2 files |
 | Phase 04 P02 | 12min | 3 tasks | 6 files |
 | Phase 04 P03 | 20min | 3 tasks | 5 files |
+| Phase 04 P04 | 9min | 3 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -229,6 +230,8 @@ Decisions are logged in PROJECT.md Key Decisions table.
 - [Phase ?]: [Phase 04-03]: _apply_llm_settings_live は _rebuild_ui を呼ばずに self.settings.update+_save_settingsのみ行う軽量反映（nested on_apply から _rebuild_ui を呼ぶと開いているSettingsDialog自体が破棄されるため）
 - [Phase ?]: [Phase 04-03]: SettingsDialog.on_llm_apply は後方互換の任意引数とし getattr(self,'_on_llm_apply',None) で防御的に参照する
 - [Phase ?]: [Phase 04-03]: _probe_ollama_provider は _probe_lm_provider と同型のupdate_comboパラメータ化ヘルパーでOllama重複解消(C2)。lang.pyの未配線キー削除は04-04へ委譲
+- [Phase ?]: [Phase 04-04]: lang.py の未使用キー検出は引用符付き完全一致方式（pagefolio/(lang.py除く)・tests/・plugins/を走査・_ALLOWLIST機構）でD-11回帰テストを常設
+- [Phase ?]: [Phase 04-04]: D-11テスト自身が新規発見したocr_progress/ocr_progress_render（Phase2統合プログレス化で不要化）をRESEARCH確定9件と同時に削除（D-19全件解消の趣旨）
 
 ### Pending Todos
 
@@ -305,8 +308,8 @@ Decisions are logged in PROJECT.md Key Decisions table.
 
 ## Session Continuity
 
-Last session: 2026-07-05T10:20:28.638Z
-Stopped at: Completed 04-03-PLAN.md
+Last session: 2026-07-05T10:32:58.024Z
+Stopped at: Completed 04-04-PLAN.md
 Resume file: None
 
 ## Operator Next Steps
