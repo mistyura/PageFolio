@@ -2,18 +2,18 @@
 gsd_state_version: 1.0
 milestone: v1.7.1
 milestone_name: 現機能ブラッシュアップ + APIキー入力欄
-current_phase: 3
-current_phase_name: ページ操作磨き込み + v1.5.0 回帰テスト
-status: Ready to execute
+current_phase: 03
+current_phase_name: v1-5-0
+status: executing
 stopped_at: Phase 3 planned
-last_updated: "2026-07-05T05:29:56.000Z"
+last_updated: "2026-07-05T05:57:11.517Z"
 last_activity: 2026-07-05
-last_activity_desc: Phase 3 planned (4 plans / 3 waves)
+last_activity_desc: Phase 03 execution started
 progress:
   total_phases: 4
   completed_phases: 2
   total_plans: 12
-  completed_plans: 8
+  completed_plans: 9
   percent: 50
 ---
 
@@ -24,14 +24,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-07-04)
 
 **Core value:** 大きな PDF でも Undo/Redo が正しく・速く動作し、コードが読みやすく保守しやすい状態にする
-**Current focus:** Phase 3 — ページ操作磨き込み + v1.5.0 回帰テスト
+**Current focus:** Phase 03 — v1-5-0
 
 ## Current Position
 
-Phase: 3 — ページ操作磨き込み + v1.5.0 回帰テスト
-Plan: 4 plans ready (03-01〜03-04, 3 waves) — not executed
-Status: Phase 3 planned — 03-01 画像透かし（V171-PAGE-01）/ 03-02 v1.5.0 回帰テスト（V171-TEST-01）が Wave 1 並行、03-03 回転/トリミング棚卸し＋`_derotate_rect` 基盤（V171-PAGE-03）が Wave 2、03-04 黒塗り/モザイク棚卸し（V171-PAGE-02）が Wave 3。plan-checker 検証済（blocker 0 / warning 1 は RESEARCH.md 表記で解消済）
-Last activity: 2026-07-05 — Phase 3 planning complete
+Phase: 03 (v1-5-0) — EXECUTING
+Plan: 2 of 4
+Status: Ready to execute
+Last activity: 2026-07-05 — Phase 03 execution started
 
 Progress: [█████░░░░░] 50%
 
@@ -90,6 +90,7 @@ Progress: [█████░░░░░] 50%
 | Phase 02 P02 | 25min | 2 tasks | 9 files |
 | Phase 02 P03 | 35min | 2 tasks | 6 files |
 | Phase 02 P04 | 約55分 | 3 tasks | 7 files |
+| Phase 03-v1-5-0 P01 | 6min | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -205,6 +206,8 @@ Decisions are logged in PROJECT.md Key Decisions table.
 - [Phase ?]: [Phase 02-04]: producer-consumerをpagefolio/ocr_pipeline.py（Tk/fitz非依存）へ一本化。PipelineState/consume_one/try_enqueue/send_sentinelsに集約しocr_dialog.pyを薄いラッパー化（D-01/D-02）
 - [Phase ?]: [Phase 02-04]: consume_oneがPipelineStateへのstate更新を内部完結させ、dialog側コールバックはresults/errors辞書ブックキーピングのみ担当する設計にして二重計上を防止
 - [Phase ?]: [Phase 02-04]: L-6aはrender_failed_pages集合+_done_disp()合算ヘルパーで進捗100%到達を保証。L-6gはis_fatal()分岐でfatal後のrender継続を停止
+- [Phase 03-01]: PNGは既存アルファ0.5乗算・JPEGはRGBA変換後に均一128をputalphaで50%透過付与（D-03）
+- [Phase 03-01]: _watermark_image_rectは幅50%縮小を既定とし縦長画像で高さがページ高さ90%超の場合は高さ基準へクランプ（Claude's Discretion）
 
 ### Pending Todos
 
@@ -281,7 +284,7 @@ Decisions are logged in PROJECT.md Key Decisions table.
 
 ## Session Continuity
 
-Last session: 2026-07-05
+Last session: 2026-07-05T05:57:11.496Z
 Stopped at: Phase 3 planned (4 plans / 3 waves)
 Resume file: .planning/phases/03-v1-5-0/03-01-PLAN.md
 
