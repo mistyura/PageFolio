@@ -5,7 +5,6 @@
 
 import base64
 import logging
-import queue
 import sys
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -209,11 +208,11 @@ def interruptible_sleep(total, is_cancelled, step=0.5):
 def _resolve_api_key(provider_name, session_keys):
     """プロバイダ名とセッションキー辞書からAPIキーを解決する。
 
-    優先順位: 環境変数 > セッションキー（D-02）。
+    優先順位: セッションキー(入力値) > 環境変数（V171-KEY-02・優先順反転）。
     解決できなければ OCRAPIKeyError を raise する（成功基準2）。
 
     引数:
-      provider_name: プロバイダ名（現時点では "claude" のみ対応）
+      provider_name: プロバイダ名（claude / gemini / runpod）
       session_keys:  プロバイダ別セッションキー辞書（例: {"claude": "sk-ant-..."}）
 
     戻り値: APIキー文字列
@@ -221,7 +220,7 @@ def _resolve_api_key(provider_name, session_keys):
     例外:
       OCRAPIKeyError — 環境変数もセッションキーも未設定の場合（env_var 属性付き）
 
-    注意: os.environ への書き込みは一切行わない（D-05・読み取りのみ）。
+    注意: os.environ への書き込みは一切行わない（読み取り専用原則の継続）。
     """
     import os
 
@@ -229,24 +228,26 @@ def _resolve_api_key(provider_name, session_keys):
 
     if provider_name == "claude":
         env_var = "ANTHROPIC_API_KEY"
-        # 環境変数を優先（D-02）
-        key = os.environ.get(env_var)
+        # セッションキー(入力値)を優先（V171-KEY-02）
+        key = session_keys.get("claude", "")
         if key:
             return key
-        # 環境変数未設定のときのみセッションキーを使用
-        key = session_keys.get("claude", "")
+        # セッションキー未設定のときのみ環境変数へフォールバック
+        key = os.environ.get(env_var)
         if key:
             return key
         # どちらも未設定 → 実行前に明示エラーを raise（成功基準2）
         raise OCRAPIKeyError(env_var)
 
     if provider_name == "gemini":
-        # GEMINI_API_KEY 優先・未設定なら GOOGLE_API_KEY フォールバック（D-06）
-        # os.environ への書き込みは行わない（D-05・読み取りのみ）
-        key = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
+        # セッションキー(入力値)を優先（V171-KEY-02）
+        key = session_keys.get("gemini", "")
         if key:
             return key
-        key = session_keys.get("gemini", "")
+        # dual env var の内部優先順は不変：GEMINI_API_KEY 優先・
+        # 未設定なら GOOGLE_API_KEY フォールバック（D-06）。
+        # os.environ への書き込みは行わない（読み取り専用原則）。
+        key = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
         if key:
             return key
         # どちらも未設定 → 主変数名 GEMINI_API_KEY でエラー（D-06）
@@ -254,10 +255,10 @@ def _resolve_api_key(provider_name, session_keys):
 
     if provider_name == "runpod":
         env_var = "RUNPOD_API_KEY"
-        key = os.environ.get(env_var)
+        key = session_keys.get("runpod", "")
         if key:
             return key
-        key = session_keys.get("runpod", "")
+        key = os.environ.get(env_var)
         if key:
             return key
         raise OCRAPIKeyError(env_var)
@@ -299,201 +300,6 @@ def has_embedded_text(page, threshold=EMBEDDED_TEXT_MIN_CHARS):
     except Exception as e:
         logger.debug("has_embedded_text: get_text() 失敗（OCR を実行します）: %s", e)
         return False  # 安全側=OCR 実行
-
-
-def run_with_bounded_buffer(
-    provider,
-    render_fn,
-    page_indices,
-    concurrency=None,
-    prompt="",
-    on_done=None,
-    is_cancelled=None,
-):
-    """Tk 非依存の producer-consumer ループ（OCR-PERF-02・D-13・テスト可能化）。
-
-    上限付きバッファ（queue.Queue(maxsize=workers+1)）でページ単位の
-    render→送信→破棄パイプラインを実現し、全ページ base64 の同時メモリ保持を防ぐ。
-
-    引数:
-      provider:      OCRProvider インスタンス（ocr_image / max_concurrency を持つ）
-      render_fn:     page_idx -> b64_png str | None（メインスレッド前提だが Tk 非依存）
-                     None を返すとそのページはスキップ（キューに積まない）
-      page_indices:  対象ページの順序付きリスト
-      concurrency:   消費者スレッド数（None なら provider.default_concurrency を使用）
-                     [1, provider.max_concurrency] にクランプされる（D-10）
-      prompt:        OCR 指示テキスト
-      on_done:       (page_idx, status, text_or_error) 完了コールバック
-                     status: "ok" | "err" | "skip" | "fatal_conn" | "fatal_timeout"
-      is_cancelled:  () -> bool キャンセル判定（None なら常に False）
-
-    戻り値: (results, errors, fatal_msg, fatal_kind) のタプル
-      results:    {page_idx: text}
-      errors:     {page_idx: message}（ページ単位の失敗）
-      fatal_msg / fatal_kind: 致命的エラーの最初の発生時のメッセージと種別
-                             （無ければ None）
-
-    注意: render_fn はメインスレッド前提（fitz.Page 呼び出しを含む場合）。
-    テストでは直接 lambda を渡して Tk 依存ゼロで呼び出せる（D-13）。
-    """
-    from pagefolio.ocr_providers import OCRRetryableError
-
-    # 並列度クランプ（D-10）
-    if concurrency is None:
-        concurrency = provider.default_concurrency
-    workers = max(1, min(provider.max_concurrency, int(concurrency)))
-    # バッファ上限 = workers + 1（余裕係数 1: 1 スロット処理中に次を先読み・D-02）
-    maxsize = max(1, workers + 1)
-    buf = queue.Queue(maxsize=maxsize)
-
-    results = {}
-    errors = {}
-    fatal = {"msg": None, "kind": None}
-
-    def _is_cancelled():
-        return bool(is_cancelled and is_cancelled())
-
-    def _producer():
-        """page_indices を順に走査し render_fn でレンダリングしてバッファへ積む。"""
-        try:
-            for page_idx in page_indices:
-                if _is_cancelled():
-                    break
-                try:
-                    b64 = render_fn(page_idx)
-                except Exception as e:
-                    logger.exception("render_fn 失敗 (p.%d): %s", page_idx, e)
-                    errors[page_idx] = f"render error: {e}"
-                    # キャンセルシグナルとして None は使わないので次ページへ
-                    continue
-                if b64 is None:
-                    # render_fn が None を返した → スキップ
-                    continue
-                # キャンセル検出付きブロッキング put（Pitfall-B）
-                while True:
-                    if _is_cancelled():
-                        return
-                    try:
-                        buf.put((page_idx, b64), timeout=0.1)
-                        break
-                    except queue.Full:
-                        continue
-        finally:
-            # workers 本分の終了シグナルを送る（Pitfall-E）
-            for _ in range(workers):
-                buf.put(None)
-
-    def _consumer():
-        """バッファから取り出して provider.ocr_image を呼び送信後に b64 を破棄する。"""
-        while True:
-            try:
-                item = buf.get(timeout=1.0)
-            except queue.Empty:
-                if _is_cancelled():
-                    break
-                continue
-
-            if item is None:
-                break  # 完了シグナル
-
-            page_idx, b64 = item
-            try:
-                if _is_cancelled() or fatal["msg"] is not None:
-                    continue
-                # OCRRetryableError は指数バックオフでリトライ（run_parallel と同じ）
-                for attempt in range(1, MAX_RETRIES + 1):
-                    try:
-                        text = provider.ocr_image(b64, prompt)
-                        results[page_idx] = text
-                        if on_done is not None:
-                            try:
-                                on_done(page_idx, "ok", text)
-                            except Exception as cb_e:
-                                logger.debug("on_done コールバック失敗: %s", cb_e)
-                        break
-                    except OCRRetryableError as e:
-                        if attempt >= MAX_RETRIES:
-                            errors[page_idx] = str(e)
-                            if on_done is not None:
-                                try:
-                                    on_done(page_idx, "err", str(e))
-                                except Exception as cb_e:
-                                    logger.debug("on_done コールバック失敗: %s", cb_e)
-                            break
-                        raw_delay = (
-                            e.retry_after
-                            if e.retry_after is not None
-                            else RETRY_BASE_DELAY * (2 ** (attempt - 1))
-                        )
-                        delay = clamp_retry_after(raw_delay)
-                        interruptible_sleep(
-                            delay,
-                            lambda: bool(is_cancelled and is_cancelled()),
-                        )
-                    except ConnectionError as e:
-                        if fatal["msg"] is None:
-                            fatal["msg"] = str(e)
-                            fatal["kind"] = "connection"
-                        if on_done is not None:
-                            try:
-                                on_done(page_idx, "fatal_conn", str(e))
-                            except Exception as cb_e:
-                                logger.debug("on_done コールバック失敗: %s", cb_e)
-                        break
-                    except TimeoutError as e:
-                        if fatal["msg"] is None:
-                            fatal["msg"] = str(e)
-                            fatal["kind"] = "timeout"
-                        if on_done is not None:
-                            try:
-                                on_done(page_idx, "fatal_timeout", str(e))
-                            except Exception as cb_e:
-                                logger.debug("on_done コールバック失敗: %s", cb_e)
-                        break
-                    except RuntimeError as e:
-                        errors[page_idx] = str(e)
-                        if on_done is not None:
-                            try:
-                                on_done(page_idx, "err", str(e))
-                            except Exception as cb_e:
-                                logger.debug("on_done コールバック失敗: %s", cb_e)
-                        break
-                    except Exception as e:
-                        logger.exception("OCR 呼び出し失敗: %s", e)
-                        errors[page_idx] = str(e)
-                        if on_done is not None:
-                            try:
-                                on_done(page_idx, "err", str(e))
-                            except Exception as cb_e:
-                                logger.debug("on_done コールバック失敗: %s", cb_e)
-                        break
-            finally:
-                del b64  # 送信後即座に破棄（成功基準2・T-06-06）
-
-    # 生産者を別スレッドで起動し、消費者を ThreadPoolExecutor で並列実行する
-    import threading
-
-    producer_thread = threading.Thread(target=_producer, daemon=True)
-    producer_thread.start()
-
-    executor = ThreadPoolExecutor(max_workers=workers)
-    try:
-        futures = [executor.submit(_consumer) for _ in range(workers)]
-        for fut in futures:
-            try:
-                fut.result()
-            except Exception as e:
-                logger.exception("consumer スレッド例外: %s", e)
-    finally:
-        # WR-02: cancel_futures は Python 3.9+ 追加（3.8 互換分岐）
-        if sys.version_info >= (3, 9):
-            executor.shutdown(wait=False, cancel_futures=True)
-        else:
-            executor.shutdown(wait=False)
-
-    producer_thread.join(timeout=5.0)
-
-    return results, errors, fatal["msg"], fatal["kind"]
 
 
 def run_parallel(
@@ -550,6 +356,10 @@ def run_parallel(
         from pagefolio.ocr_providers import OCRRetryableError
 
         for attempt in range(1, MAX_RETRIES + 1):
+            # WR-02: リトライ待機直後の再開時にもキャンセル/fatal を再確認し、
+            # Cancel 後に追加の課金対象 API 呼び出しが発生しないようにする。
+            if _is_cancelled() or fatal["msg"] is not None:
+                return ("cancel", page_idx, None)
             try:
                 # Provider 非依存: per-page で provider.ocr_image を呼ぶ（D-04）
                 text = provider.ocr_image(b64, prompt)
@@ -706,17 +516,22 @@ def build_provider(settings, api_key=None, plugin_manager=None):
             temperature=float(settings.get("ocr_temperature", DEFAULT_OCR_TEMPERATURE)),
         )
     elif name == "tesseract":
-        from pagefolio.ocr_providers import TesseractProvider
+        from pagefolio.ocr_providers import TesseractProvider, _detect_tesseract
 
+        # D-05: build_provider 呼び出しの都度、言語パック検出を再評価する
+        # （再起動なしで追加した言語パックを反映）。
+        _, _tesseract_langs = _detect_tesseract()
         return TesseractProvider(
             lang=settings.get("tesseract_lang", "jpn+eng"),
             psm=int(settings.get("tesseract_psm", 3)),
             timeout=int(settings.get("ocr_timeout", DEFAULT_OCR_TIMEOUT)),
+            available_langs=_tesseract_langs,
         )
     # プラグイン登録プロバイダへのフォールバック（D-07）
     # M-7: cls() は引数なしコンストラクタ契約。例外は RuntimeError に正規化。
-    if plugin_manager is not None and name in plugin_manager._provider_registry:
-        cls = plugin_manager._provider_registry[name]
+    # D-10: get_ocr_provider() 公開アクセサ経由で参照（私有属性への直接アクセス廃止）
+    cls = plugin_manager.get_ocr_provider(name) if plugin_manager is not None else None
+    if cls is not None:
         try:
             return cls()
         except Exception as e:

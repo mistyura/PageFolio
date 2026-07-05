@@ -14,3 +14,4 @@ from pagefolio.dialogs.merge import MergeOrderDialog, MergeResizeDialog  # noqa:
 from pagefolio.dialogs.password import SetPasswordDialog  # noqa: F401
 from pagefolio.dialogs.plugin import PluginDialog  # noqa: F401
 from pagefolio.dialogs.settings import SettingsDialog  # noqa: F401
+from pagefolio.dialogs.shortcuts import ShortcutsDialog  # noqa: F401

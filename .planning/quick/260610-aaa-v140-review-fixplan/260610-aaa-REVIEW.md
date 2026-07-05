@@ -192,7 +192,7 @@ usage: >
 
 ## 低優先度（L）— バックログ（v1.5.0 以降）
 
-### L-1: producer-consumer ロジックの二重実装
+### L-1: producer-consumer ロジックの二重実装 ✅ (c4cd9da)
 
 - 該当: `pagefolio/ocr.py:140-328`（`run_with_bounded_buffer`・本番未使用）と
   `pagefolio/ocr_dialog.py:891-1113`（独自実装）
@@ -200,24 +200,49 @@ usage: >
   ヘルパーの docstring はスレッドモデルと矛盾（render_fn を producer スレッドから呼ぶ）。
 - 対応: どちらかに一本化 or ヘルパーをテスト専用と明記し仕様統一。
   **M-1/M-2 修正時は両実装への影響を必ず確認すること。**
+- **解消済み（v1.7.1 Phase 2-04・commit c4cd9da で新モジュール `ocr_pipeline.py`
+  新設・後続コミットで `ocr_dialog.py` 配線）:** `ocr_dialog.py` の実戦挙動
+  （非ブロッキング put・世代ガード・waiting 進捗・skip status・render 失敗時
+  on_done）を仕様として `pagefolio/ocr_pipeline.py`（Tk/fitz 非依存）へ
+  producer-consumer ロジックを一本化した（D-01/D-02）。`PipelineState`
+  （共有カウンタ・fatal/サーキットブレーカー判定）・`consume_one`（1アイテム
+  消費）・`try_enqueue`/`send_sentinels`（非ブロッキング enqueue/sentinel）
+  に集約し、`ocr_dialog.py` の `_render_next_page`/`_worker` はこれらを呼ぶ
+  薄いラッパーへ縮小した。本番未使用だった `ocr.py::run_with_bounded_buffer`
+  は削除し、消費していたテストは `tests/test_ocr_pipeline.py` へ移設・拡充。
 
-### L-2: `register_ocr_provider` の名前検証・アンロード解除なし
+### L-2: `register_ocr_provider` の名前検証・アンロード解除なし ✅ (c70ae29)
 
 - 該当: `pagefolio/plugins.py`
 - 組み込み名と同名登録は黙って無視・プラグイン無効化後も登録残留。
 - 対応: 重複名 `logger.warning`・unload 時の登録解除。
+- **解消済み（v1.7.1 Phase 2-01・commit c70ae29）:** 組み込み名衝突は拒否+警告、
+  プラグイン同士の重複は後勝ち上書き+警告（D-08）。unload_plugin で owner ベース
+  の登録解除を追加（D-09）。
 
-### L-3: `plugin_manager._provider_registry` への私有属性直接アクセス
+### L-3: `plugin_manager._provider_registry` への私有属性直接アクセス ✅ (3e15369)
 
 - 該当: `pagefolio/ocr.py:517`、`pagefolio/dialogs/llm_config.py:110`
 - 対応: `PluginManager.get_ocr_provider(name)` 等の公開アクセサ追加。
+- **解消済み（v1.7.1 Phase 2-01・commit c70ae29 で公開アクセサ新設・commit 3e15369 で
+  ocr.py/llm_config.py の私有アクセスを置換）:** `get_ocr_provider(name)` /
+  `list_ocr_providers()` を新設し（D-10）、両ファイルの `_provider_registry` 直接
+  アクセスを置換済み。
 
-### L-4: TesseractProvider が `tesseract_lang` 設定を無視
+### L-4: TesseractProvider が `tesseract_lang` 設定を無視 ✅ (3448d79, bf723f2)
 
 - 該当: `pagefolio/ocr_providers.py:669-697`
 - `ocr_image` は常に `_TESSERACT_LANGS` から自動決定し `self.lang` 未使用。
   `_TESSERACT_LANGS` は import 時固定（言語パック追加は再起動まで反映されない）。
 - 対応: `self.lang` が利用可能なら優先・不可なら自動フォールバック。
+- **解消済み（v1.7.1 Phase 2-02・commit 3448d79）:** `TesseractProvider.__init__` に
+  `available_langs` 引数を追加し、段階的縮退（要求言語の利用可能な部分集合を優先・
+  全滅時のみ現行自動決定へ縮退）で `self.effective_lang` を確定（D-06）。
+  `_detect_tesseract()` は import 時固定をやめ `build_provider`/`LLMConfigDialog`
+  生成時に都度呼び直す（D-05・Pitfall 2 解消で `llm_config.py` も同一関数を参照）。
+  **commit bf723f2:** フォールバック発生時は OCRDialog 内の非モーダル WARNING 注記
+  （`_maybe_show_lang_fallback_notice`）で要求/実効言語を1回表示し、OCR 結果 raw
+  には混入させない（D-07）。
 
 ### L-5: lang.py 未使用キー 3 件
 
@@ -227,14 +252,46 @@ usage: >
 ### L-6: その他の軽微事項
 
 - レンダー失敗ページでプログレスバーが 100% に達しない（`ocr_dialog.py:965-967`）
+  ✅ 解消済み（v1.7.1 Phase 2-04・L-1 一本化に吸収・D-03）: `_render_next_page`
+  の render 失敗 except 節でも当該ページを `_render_failed_pages` へ計上し
+  progress_var/progress_bar を更新するようにした（`_done_disp()` に集約）。
+  レンダー失敗ページがあっても進捗が全ページ数（100%）に到達する
 - ClaudeProvider `list_models` のページネーション・`stop_reason`（截断検出）未対応
+  ✅ ページネーション対応済み（v1.7.1 Phase 2-03・commit 892244c）: `has_more`/
+  `last_id` カーソルを辿り全ページのモデルを連結（1ページ完結時は従来と同一結果）。
+  `stop_reason`（截断検出）は v1.6.0 Phase 3 で解消済み（別途）
 - Gemini エラーメッセージの body 切り詰めなし（`ocr_providers.py:497` → `str(body)[:500]` に統一）
+  ✅ 解消済み（v1.7.1 Phase 2-03・commit 892244c）: `_raise_mapped_http_error` の
+  `err_body` を 500 文字へ切り詰め。全プロバイダ共通ヘルパー経由のため
+  LMStudio/Claude/Gemini/Ollama/RunPod 全てに波及
 - LM Studio URL のスキーム未検証（http/https のみ許可ガード推奨）・
   Gemini モデル名の URL 未エスケープ（`urllib.parse.quote` 推奨）
+  ✅ 解消済み（v1.7.1 Phase 2-03・commit 892244c）: `_require_http_scheme(url)`
+  共通ヘルパーを LM Studio/Ollama/RunPod の計6箇所（`_post_chat`/`list_models`）へ
+  統一適用（D-13・適用先拡張）。Gemini は `quote(self.model, safe="")` でモデル名を
+  URL パスセグメントとしてエスケープ
 - producer が fatal 発生後も全ページ render 継続（`ocr.py:192-216`）
+  ✅ 解消済み（v1.7.1 Phase 2-04・L-1 一本化に吸収・D-03）: `_render_next_page`
+  冒頭で `self._pstate.is_fatal()` を確認し、fatal 確定後は残ページの render を
+  継続せず全ワーカー分の sentinel を送出して終了へ向かう分岐を追加した。
+  一本化にあたり `run_with_bounded_buffer._producer`（未使用ヘルパー）の
+  fatal 未チェックの欠陥は新実装へ持ち込んでいない
 - sentinel `buf.put(None)` の暗黙容量不変条件（`ocr.py:217-220`）の明文化
+  ✅ 解消済み（v1.7.1 Phase 2-04・L-1 一本化に吸収・D-03・commit c4cd9da）:
+  `pagefolio/ocr_pipeline.py` のモジュール docstring に「終端シグナルは
+  合計 workers 本・送信済み分は再送しない・バッファ満杯時は部分送出して
+  呼び出し元が再送する」不変条件を明文化し、`send_sentinels()` の戻り値
+  （実際に送れた本数）としてテストで担保した
 - `_fetch_models` / `_test_connection` のほぼ完全重複（`llm_config.py:649-690`）
+  ✅ 解消済み（v1.7.1 Phase 2-03・commit 14d09f5）: 共通ヘルパー
+  `_probe_lm_provider(update_combo)` へ集約（LM Studio ペアのみ・呼び出し元
+  `_fetch_models`/`_test_connection` は薄いラッパーとして存置）。Ollama ペア
+  （`_fetch_ollama_models`/`_test_ollama_connection`）は D-11 に従い対象外
+  （Phase 4/V171-TEST-03 へ繰り越し）
 - OCR ダイアログ内で "off" 切替時に `app._update_ocr_buttons_state()` 未呼出
+  ✅ 解消済み（v1.7.1 Phase 2-03・commit 14d09f5）: `_apply_llm_settings` 末尾
+  （try/except 外側）に呼び出しを追加し、provider 再生成の例外有無に関わらず
+  ツールバー OCR ボタン状態を同期
 - **CLAUDE.md「ファイル構成」の更新**: `dialogs.py` → `dialogs/` パッケージ、
   `lang.py` / `themes.py` / `ocr.py` / `ocr_dialog.py` / `ocr_providers.py` が未記載
   ✅ 対応済み（2026-06-10 / CLAUDE.md 最新化タスクで反映）

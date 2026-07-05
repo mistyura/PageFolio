@@ -6,7 +6,7 @@
 import tkinter as tk
 from tkinter import ttk
 
-from pagefolio.constants import C
+from pagefolio.constants import MOSAIC_BLOCK, C
 
 
 class UIBuilderMixin:
@@ -350,6 +350,24 @@ class UIBuilderMixin:
         self.preview_canvas.bind("<ButtonPress-1>", self._crop_drag_start)
         self.preview_canvas.bind("<B1-Motion>", self._crop_drag_move)
         self.preview_canvas.bind("<ButtonRelease-1>", self._crop_drag_end)
+        # 確定済み矩形の矢印キー微調整（D-09）: 移動 1pt / Shift+矢印で
+        # 右下辺リサイズ。preview_canvas.focus_set() は _crop_drag_start 側。
+        self.preview_canvas.bind("<Left>", lambda e: self._nudge_crop_rect(-1, 0))
+        self.preview_canvas.bind("<Right>", lambda e: self._nudge_crop_rect(1, 0))
+        self.preview_canvas.bind("<Up>", lambda e: self._nudge_crop_rect(0, -1))
+        self.preview_canvas.bind("<Down>", lambda e: self._nudge_crop_rect(0, 1))
+        self.preview_canvas.bind(
+            "<Shift-Left>", lambda e: self._nudge_crop_rect(-1, 0, resize=True)
+        )
+        self.preview_canvas.bind(
+            "<Shift-Right>", lambda e: self._nudge_crop_rect(1, 0, resize=True)
+        )
+        self.preview_canvas.bind(
+            "<Shift-Up>", lambda e: self._nudge_crop_rect(0, -1, resize=True)
+        )
+        self.preview_canvas.bind(
+            "<Shift-Down>", lambda e: self._nudge_crop_rect(0, 1, resize=True)
+        )
         self.zoom = 1.0
         self.preview_img_ref = None
         self.crop_rect_id = None
@@ -539,6 +557,13 @@ class UIBuilderMixin:
         )
         btn(
             f2,
+            self._t("btn_watermark_image"),
+            self._add_watermark_image,
+            needs_doc=True,
+            edit_only=True,
+        )
+        btn(
+            f2,
             self._t("btn_page_number"),
             self._add_page_numbers,
             needs_doc=True,
@@ -579,6 +604,13 @@ class UIBuilderMixin:
             needs_doc=True,
             edit_only=True,
         )
+        btn(
+            f3,
+            self._t("btn_crop_margin"),
+            self._crop_by_margin,
+            needs_doc=True,
+            edit_only=True,
+        )
 
         # ページ編集（黒塗り・モザイク）— トリミングと同じ矩形選択を共用
         f3b = section(self._t("sec_redact"))
@@ -595,6 +627,28 @@ class UIBuilderMixin:
             fg=C["TEXT_SUB"],
             font=self._font(-2),
         ).pack(anchor="w", padx=8)
+
+        # モザイク粒度スライダー（D-06・thumb_zoom_scale と同型パターン）
+        tk.Label(
+            f3b,
+            text=self._t("mosaic_block_label"),
+            bg=C["BG_CARD"],
+            fg=C["TEXT_SUB"],
+            font=self._font(-2),
+        ).pack(anchor="w", padx=8, pady=(4, 0))
+        self.mosaic_block_var = tk.IntVar(
+            value=self.settings.get("mosaic_block", MOSAIC_BLOCK)
+        )
+        self.mosaic_block_scale = ttk.Scale(
+            f3b,
+            from_=4,
+            to=32,
+            variable=self.mosaic_block_var,
+            orient="horizontal",
+        )
+        self.mosaic_block_scale.pack(fill="x", expand=True, padx=8, pady=(2, 4))
+        self.mosaic_block_scale.bind("<ButtonRelease-1>", self._on_mosaic_block_release)
+
         btn(
             f3b,
             self._t("btn_apply_redact"),
@@ -607,6 +661,14 @@ class UIBuilderMixin:
             f3b,
             self._t("btn_apply_mosaic"),
             self._apply_mosaic,
+            needs_doc=True,
+            edit_only=True,
+        )
+        btn(
+            f3b,
+            self._t("btn_redact_clear"),
+            self._clear_redact_rects,
+            "Danger.TButton",
             needs_doc=True,
             edit_only=True,
         )

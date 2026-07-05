@@ -260,6 +260,58 @@ class TestPdfSplit:
         result.close()
         doc.close()
 
+    def test_split_by_range_no_input_shows_error(self, sample_pdf_doc, monkeypatch):
+        """範囲未入力時は showerror + err_title で表示され showinfo は使わない
+        （C7回帰）。"""
+        import collections
+        import types
+
+        import pagefolio.file_ops as fo
+        import pagefolio.page_ops as po
+
+        class FakeApp(fo.FileOpsMixin, po.PageOpsMixin):
+            MAX_UNDO = 20
+
+            def __init__(self, d):
+                self.doc = d
+                self.current_page = 0
+                self.selected_pages = set()
+                self._undo_stack = collections.deque(maxlen=self.MAX_UNDO)
+                self._redo_stack = collections.deque(maxlen=self.MAX_UNDO)
+                self._preview_gen = 0
+                self._thumb_gen = 0
+                self.root = None
+
+            def _check_doc(self):
+                return self.doc is not None
+
+            def _t(self, key):
+                return key
+
+            def _set_status(self, *a):
+                pass
+
+        app = FakeApp(sample_pdf_doc)
+        app.plugin_manager = types.SimpleNamespace(fire_event=lambda *a, **kw: None)
+
+        calls = {"showerror": [], "showinfo": []}
+        monkeypatch.setattr(po.simpledialog, "askstring", lambda *a, **kw: "")
+        monkeypatch.setattr(
+            po.messagebox,
+            "showerror",
+            lambda title, msg: calls["showerror"].append((title, msg)),
+        )
+        monkeypatch.setattr(
+            po.messagebox,
+            "showinfo",
+            lambda title, msg: calls["showinfo"].append((title, msg)),
+        )
+
+        app._split_by_range()
+
+        assert calls["showerror"] == [("err_title", "err_split_no_range")]
+        assert calls["showinfo"] == []
+
 
 # ===== トリミング (CropBox) =====
 
@@ -1524,6 +1576,9 @@ class TestContentOpsUndoFix:
         app._insert_blank_page()
         assert len(app.doc) == 4
         assert app.doc[1].get_text().strip() == ""  # 白紙
+        # 白紙ページは元ページ（A4 595×842）とサイズ一致（D-14）
+        assert app.doc[1].rect.width == app.doc[0].rect.width
+        assert app.doc[1].rect.height == app.doc[0].rect.height
 
         app._undo()
         assert len(app.doc) == 3
@@ -1532,6 +1587,8 @@ class TestContentOpsUndoFix:
         app._redo()
         assert len(app.doc) == 4
         assert app.doc[1].get_text().strip() == ""
+        assert app.doc[1].rect.width == app.doc[0].rect.width
+        assert app.doc[1].rect.height == app.doc[0].rect.height
 
     def test_watermark_roundtrip(self, sample_pdf_doc, monkeypatch):
         """透かし追加 → undo でテキストが消える → redo で再追加"""
@@ -1551,9 +1608,12 @@ class TestContentOpsUndoFix:
         for i in range(3):
             assert "CONFIDENTIAL" not in app.doc[i].get_text()
         assert "Page 1" in app.doc[0].get_text()  # 元の内容は保持
+        assert "Page 2" in app.doc[1].get_text()  # 両選択ページとも元テキスト保持
+        assert "Page 3" in app.doc[2].get_text()  # 未選択ページも不変
 
         app._redo()
         assert "CONFIDENTIAL" in app.doc[0].get_text()
+        assert "CONFIDENTIAL" in app.doc[1].get_text()
 
     def test_page_numbers_roundtrip(self, sample_pdf_doc):
         """ページ番号印字 → undo で消える → redo で再印字"""
@@ -1566,6 +1626,11 @@ class TestContentOpsUndoFix:
         app._undo()
         assert "1 / 3" not in app.doc[0].get_text()
         assert "Page 1" in app.doc[0].get_text()
+        assert "2 / 3" not in app.doc[1].get_text()
+        assert "Page 2" in app.doc[1].get_text()
+        assert "3 / 3" not in app.doc[2].get_text()
+        assert "Page 3" in app.doc[2].get_text()
 
         app._redo()
         assert "1 / 3" in app.doc[0].get_text()
+        assert "3 / 3" in app.doc[2].get_text()

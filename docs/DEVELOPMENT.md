@@ -33,7 +33,7 @@ python pagefolio.py
 
 ### 設定ファイルについて
 
-初回起動時に `pagefolio_settings.json` がプロジェクトルートに自動生成されます。このファイルはユーザー設定（テーマ、フォントサイズ、ウィンドウ位置等）を保持します。API キーはセキュリティ上の理由からこのファイルには保存されません（`_SENSITIVE_KEYS` ガードにより除外）。
+初回起動時に `pagefolio_settings.json` がプロジェクトルートに自動生成されます。このファイルはユーザー設定（テーマ、フォントサイズ、ウィンドウ位置等）を保持します。API キーはセキュリティ上の理由からこのファイルには保存されません（`_SENSITIVE_KEYS` ガードにより除外）。詳細は [CONFIGURATION.md](CONFIGURATION.md) を参照してください。
 
 ---
 
@@ -52,7 +52,7 @@ python pagefolio.py
 
 ### PyInstaller ビルドについて
 
-`PageFolio.spec` を使用した onedir 形式のビルドを行います。生成物は `dist/PageFolio/` ディレクトリに配置されます。ビルド前に `venv` が有効化されていることを確認してください。
+`PageFolio.spec` を使用した onedir 形式のビルドを行います。生成物は `dist/PageFolio/` ディレクトリに配置されます。`PageFolio.spec` はリポジトリでは `.gitignore` 対象（`*.spec`）のため、手元で `pyinstaller` コマンドから生成する必要があります。`dist/PageFolio/` はリビルドのたびにコミットして追跡する運用です。ビルド前に `venv` が有効化されていることを確認してください。
 
 ---
 
@@ -85,6 +85,7 @@ fixable = ["ALL"]
 - `# type: ignore` の無断使用禁止
 - テーマカラーはハードコード禁止 — `C["BG_DARK"]` 等のテーマ辞書を使う
 - フォントサイズはハードコード禁止 — `self._font(delta)` ヘルパーを使う
+- `pyproject.toml` の編集は禁止
 
 ### ファイル編集後のチェック
 
@@ -99,11 +100,14 @@ pytest
 
 ## ブランチ運用
 
-`.github/PULL_REQUEST_TEMPLATE.md` は現時点では存在しません。詳細な貢献ガイドラインは [CONTRIBUTING.md](../CONTRIBUTING.md) を参照してください。以下は CLAUDE.md に記載された開発フローをもとにした運用方針です。
+このリポジトリに `.github/PULL_REQUEST_TEMPLATE.md` および CI ワークフロー（`.github/workflows/`）は現時点で存在しません。詳細な貢献ガイドラインは [../CONTRIBUTING.md](../CONTRIBUTING.md) を参照してください。以下はそのブランチ命名規則です。
 
 - メインブランチ: `main`
+- バグ修正: `fix/短い説明`（例: `fix/thumbnail-dnd-drop`）
+- 機能追加: `feat/短い説明`（例: `feat/password-unlock`）
+- ドキュメント: `docs/短い説明`（例: `docs/update-architecture`）
+- リファクタリング: `refactor/短い説明`
 - コミットメッセージは**日本語**で記述する（例: `ページ回転機能のバグを修正`）
-- 機能修正・バグ修正ともに `main` ブランチへのコミットを基本とする（単独開発）
 - 1 タスクずつ完了させてから次のタスクへ進む
 
 ### コミットメッセージ例
@@ -119,36 +123,52 @@ docs: DEVELOPMENT.md を追加
 
 ## PR プロセス
 
-現時点では PR テンプレートは設定されていません。将来チーム開発に移行する場合は `.github/PULL_REQUEST_TEMPLATE.md` を追加することを推奨します。
+CI ワークフローは未構成のため、PR 提出前にローカルで以下を確認してください。
 
-コード変更を送る際の推奨チェックリスト:
+- [ ] `ruff check . && ruff format .` でリント・フォーマットが通ること
+- [ ] `python -c "import ast; ast.parse(open('pagefolio.py', encoding='utf-8').read())"` で構文確認
+- [ ] `pytest` でテストがすべて通ること
+- [ ] 新機能・バグ修正に対応するテストを追加または更新したこと
+- [ ] `開発履歴.md` に変更内容を追記したこと
+- [ ] バージョン変更が必要な場合は `pagefolio/constants.py` の `APP_VERSION`・`開発履歴.md`・`README.md` のバッジを同期したこと
 
-- `ruff check . && ruff format .` でリント・フォーマット確認
-- `python -c "import ast; ast.parse(open('pagefolio.py', encoding='utf-8').read())"` で構文確認
-- `pytest` でテスト通過確認
-- `開発履歴.md` に変更内容を追記
-- バージョン変更時は `pagefolio/constants.py` の `APP_VERSION`・`開発履歴.md`・`README.md` バッジを同期
+### レビュープロセス
+
+1. `main` からブランチを切り、変更をコミットする
+2. GitHub で PR を作成し、変更の目的と動作確認方法を説明する
+3. ローカルで `ruff check . && ruff format .` がパスすることを確認する
+4. `pytest` の結果をコメントまたはログで共有する
+5. レビュワーのフィードバックに対応してから `main` へマージする
 
 ---
 
 ## テスト
 
-テストの詳細は [TESTING.md](TESTING.md) を参照してください（未生成の場合は `tests/` ディレクトリを直接参照）。
+テストの詳細は [TESTING.md](TESTING.md) を参照してください。
 
-テストファイル一覧:
+テストファイル一覧（`tests/`）:
 
 | ファイル | 内容 |
 |---------|------|
-| `tests/conftest.py` | 共通フィクスチャ |
-| `tests/test_imports.py` | パッケージ import / 後方互換テスト |
-| `tests/test_utils.py` | ユーティリティ関数テスト |
-| `tests/test_pdf_ops.py` | PDF 操作テスト |
-| `tests/test_plugins.py` | PluginManager テスト |
-| `tests/test_viewer.py` | プレビュー / サムネイル描画テスト |
-| `tests/test_settings_keyguard.py` | API キー非保存ガードテスト |
-| `tests/test_ocr.py` | OCR ヘルパー / 並列実行テスト |
-| `tests/test_ocr_providers.py` | OCR プロバイダ単体テスト |
-| `tests/test_provider_ui.py` | プロバイダ UI（ダイアログ連携）テスト |
+| `conftest.py` | テスト用共通フィクスチャ |
+| `test_imports.py` | パッケージ import / 後方互換テスト |
+| `test_utils.py` | ユーティリティ関数テスト |
+| `test_pdf_ops.py` | PDF 操作テスト |
+| `test_plugins.py` | PluginManager テスト |
+| `test_viewer.py` | プレビュー / サムネイル描画テスト |
+| `test_settings_keyguard.py` | API キー非保存ガードテスト |
+| `test_ocr.py` | OCR ヘルパー / 並列実行テスト |
+| `test_ocr_providers.py` | OCR プロバイダ単体テスト |
+| `test_provider_ui.py` | プロバイダ UI（ダイアログ連携）/ resolve_ocr_prompt テスト |
+| `test_pagination.py` | ページネーション純ロジック（窓計算 / local↔global / 境界値）テスト |
+| `test_md_render.py` | parse_markdown 純関数（行種別 / インライン span）テスト |
+| `test_export_images.py` | ページ→画像変換（範囲パース / スケール計算 / 出力）テスト |
+| `test_save_overwrite.py` | 縮小して保存（上書き）ヘルパーのテスト |
+| `test_password.py` | PDF パスワード付与/解除・暗号化保存ヘルパーのテスト |
+| `test_print.py` | 印刷一時ファイル生成 / OS 分岐のテスト |
+| `test_undo_stress.py` | 120 ページ PDF の Undo/Redo 連続ストレス（メモリ・Blob 不変条件・eviction） |
+| `test_lang_parity.py` | ja/en LANG キー一致 / プレースホルダ整合の回帰テスト |
+| `test_source_keyguard.py` | pagefolio/ ソースの実 API キーパターン不在スキャン |
 
 ---
 
@@ -156,5 +176,9 @@ docs: DEVELOPMENT.md を追加
 
 - [ARCHITECTURE.md](ARCHITECTURE.md) — システム構成とコンポーネント図
 - [CONFIGURATION.md](CONFIGURATION.md) — 設定ファイルと環境変数の詳細
+- [TESTING.md](TESTING.md) — テストフレームワークと実行方法の詳細
 - [../README.md](../README.md) — エンドユーザー向け使用概要
+- [../CONTRIBUTING.md](../CONTRIBUTING.md) — 貢献ガイドライン
 - [../CLAUDE.md](../CLAUDE.md) — AI 向け開発指示書（詳細なコーディング規約含む）
+</content>
+</invoke>

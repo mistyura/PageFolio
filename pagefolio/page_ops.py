@@ -3,14 +3,17 @@
 # Released under the MIT License
 """ページ操作 Mixin — 回転・削除・トリミング・挿入・結合・分割"""
 
+import io
 import os
 from tkinter import filedialog, messagebox, simpledialog
 
 import fitz
+from PIL import Image
 
 from pagefolio.constants import (
     DEFAULT_EXPORT_JPG_QUALITY,
     IMAGE_EXTENSIONS,
+    PT_PER_MM,
     SUPPORTED_EXTENSIONS,
     C,
 )
@@ -72,6 +75,43 @@ def export_page_image(
         pix.save(out_path, jpg_quality=jpg_quality)
     else:
         pix.save(out_path)
+
+
+def _format_crop_info(rect_w_pt, rect_h_pt, mb_w_pt, mb_h_pt):
+    """crop_info 表示文字列を「45×60mm（28%）」形式で返す純関数（D-11）。
+
+    mm 換算＋ページ占有率（面積比）を表示する。mb（mediabox）幅高さが
+    0 以下のときは占有率 0% を返す安全側フォールバック。
+    """
+    w_mm = rect_w_pt / PT_PER_MM
+    h_mm = rect_h_pt / PT_PER_MM
+    pct = 0.0
+    if mb_w_pt > 0 and mb_h_pt > 0:
+        pct = (rect_w_pt * rect_h_pt) / (mb_w_pt * mb_h_pt) * 100
+    return f"{w_mm:.0f}×{h_mm:.0f}mm（{pct:.0f}%）"
+
+
+def compute_margin_crop_rect(
+    current_cropbox,
+    margin_top_pt,
+    margin_bottom_pt,
+    margin_left_pt,
+    margin_right_pt,
+):
+    """現在の cropbox から四辺の余白(pt)を差し引いた新 cropbox を返す（D-10）。
+
+    差し引いた結果の幅/高さが 1pt 未満になる場合は None（安全側フォール
+    バック・T-3-03。既存 _crop_page の EPS/is_empty チェックと同型）。
+    基準は「現在の cropbox」（A2・今見えている範囲からさらに削る）。
+    """
+    cb = current_cropbox
+    x0 = cb.x0 + margin_left_pt
+    y0 = cb.y0 + margin_top_pt
+    x1 = cb.x1 - margin_right_pt
+    y1 = cb.y1 - margin_bottom_pt
+    if x1 - x0 < 1 or y1 - y0 < 1:
+        return None
+    return (x0, y0, x1, y1)
 
 
 class PageOpsMixin:
@@ -214,6 +254,66 @@ class PageOpsMixin:
         self._refresh_all()
         self._set_status(f"透かしを追加しました ({len(targets)} ページ)")
 
+    def _add_watermark_image(self):
+        """選択ページに画像（ロゴ等）透かしを追加する（V171-PAGE-01・D-01〜D-04）。
+
+        _add_watermark_text と同型のフロー（ボタン→選択→即適用→page_edit
+        undo）。page.insert_image に不透明度引数はないため、Pillow で
+        アルファチャンネルを事前合成してから焼き込む（D-03）。
+        """
+        if not self._check_doc():
+            return
+        targets = self._get_targets()
+        path = filedialog.askopenfilename(
+            title=self._t("btn_watermark_image"),
+            filetypes=[(self._t("filetypes_image"), "*.png *.jpg *.jpeg")],
+        )
+        if not path:
+            return
+        try:
+            with Image.open(path) as im:
+                img = im.convert("RGBA")
+        except Exception as e:
+            messagebox.showerror(self._t("err_title"), str(e))
+            return
+
+        # 既存アルファ（PNG）は 0.5 乗算で尊重、JPEG は convert("RGBA") で
+        # a=255 一様のため結果的に均一 50% 透過になる（D-03・Pitfall 1）。
+        r, g, b, a = img.split()
+        a = a.point(lambda v: int(v * 0.5))
+        img.putalpha(a)
+        buf = io.BytesIO()
+        img.save(buf, format="PNG")
+        img_bytes = buf.getvalue()
+        iw, ih = img.size
+
+        self._save_undo("page_edit", targets=targets)
+        for i in targets:
+            page = self.doc[i]
+            rect = self._watermark_image_rect(page.rect, iw, ih)
+            page.insert_image(rect, stream=img_bytes)  # rotate なし=水平のまま(D-03)
+        self._invalidate_thumb_cache(targets)
+        self._refresh_all()
+        self._set_status(f"画像透かしを追加しました ({len(targets)} ページ)")
+
+    @staticmethod
+    def _watermark_image_rect(page_rect, img_w, img_h):
+        """ページ中央・ページ幅の約50%に収まるよう縮小した配置矩形を返す（D-02）。
+
+        極端な縦長画像で高さがページ高さの90%を超える場合は高さ基準へ
+        クランプする（Claude's Discretion）。
+        """
+        target_w = page_rect.width * 0.5
+        scale = target_w / img_w if img_w else 1.0
+        target_h = img_h * scale
+        if target_h > page_rect.height * 0.9:
+            scale = (page_rect.height * 0.9) / img_h if img_h else 1.0
+            target_w = img_w * scale
+            target_h = img_h * scale
+        x0 = (page_rect.width - target_w) / 2
+        y0 = (page_rect.height - target_h) / 2
+        return fitz.Rect(x0, y0, x0 + target_w, y0 + target_h)
+
     def _add_page_numbers(self):
         """選択ページにページ番号を印字する"""
         if not self._check_doc():
@@ -250,6 +350,28 @@ class PageOpsMixin:
             self.preview_canvas.configure(cursor="")
             self._clear_crop_overlay()
 
+    @staticmethod
+    def _derotate_rect(page, x0, y0, x1, y1):
+        """表示（回転後）座標系の矩形を、mediabox/cropbox が使う未回転座標系
+        へ変換する（D-08）。
+
+        page.rotation が 0 のとき恒等（入力の min/max 正規化のみ）。
+        90/180/270 のとき page.derotation_matrix で正しく逆変換する。
+        黒塗り/モザイク/トリミングの 3 操作が共用する共通ヘルパー
+        （回転座標変換ロジックの重複実装禁止・03-CONTEXT.md D-08）。
+        """
+        if page.rotation == 0:
+            return (min(x0, x1), min(y0, y1), max(x0, x1), max(y0, y1))
+        dm = page.derotation_matrix
+        p0 = fitz.Point(x0, y0) * dm
+        p1 = fitz.Point(x1, y1) * dm
+        return (
+            min(p0.x, p1.x),
+            min(p0.y, p1.y),
+            max(p0.x, p1.x),
+            max(p0.y, p1.y),
+        )
+
     def _canvas_rect_to_pdf(self, sx, sy, ex, ey):
         """プレビューキャンバス座標の矩形を PDF 点座標（page 左上原点）へ変換する。
 
@@ -270,6 +392,9 @@ class PageOpsMixin:
         # 矩形選択はトリミングと黒塗り/モザイクで共用する
         if not (self.crop_mode or self.redact_mode):
             return
+        # 矢印キー微調整（D-09）を受け付けるためキーボードフォーカスを
+        # canvas へ移す（クリック後でないと Tk はキーイベントを渡さない）
+        self.preview_canvas.focus_set()
         cx = self.preview_canvas.canvasx(event.x)
         cy = self.preview_canvas.canvasy(event.y)
         self.crop_drag_start = (cx, cy)
@@ -283,6 +408,18 @@ class PageOpsMixin:
         cy = self.preview_canvas.canvasy(event.y)
         x0, y0 = self.crop_drag_start
         sx, sy, ex, ey = min(x0, cx), min(y0, cy), max(x0, cx), max(y0, cy)
+        self.crop_rect = (sx, sy, ex, ey)
+        self._redraw_crop_overlay()
+
+    def _redraw_crop_overlay(self):
+        """self.crop_rect を元にオーバーレイ矩形/crop_info 表示を再描画する。
+
+        _crop_drag_move（ドラッグ中）と _nudge_crop_rect（矢印キー微調整・
+        D-09）が共用する。
+        """
+        if not self.crop_rect:
+            return
+        sx, sy, ex, ey = self.crop_rect
 
         sr = self.preview_canvas.cget("scrollregion")
         if sr:
@@ -321,17 +458,54 @@ class PageOpsMixin:
             if self.crop_rect_id:
                 self.preview_canvas.coords(self.crop_rect_id, sx, sy, ex, ey)
 
-        self.crop_rect = (sx, sy, ex, ey)
         fx0, fy0, fx1, fy1 = self._canvas_rect_to_pdf(sx, sy, ex, ey)
-        px0, py0, px1, py1 = int(fx0), int(fy0), int(fx1), int(fy1)
+        mb = self.doc[self.current_page].mediabox
         self.crop_info_var.set(
-            f"({px0},{py0}) - ({px1},{py1})  {px1 - px0}×{py1 - py0} pt"
+            _format_crop_info(fx1 - fx0, fy1 - fy0, mb.width, mb.height)
         )
+
+    def _nudge_crop_rect(self, dx_pt, dy_pt, resize=False):
+        """確定済み矩形を矢印キーで移動/右下辺リサイズする（D-09）。
+
+        dx_pt/dy_pt は pt 単位（呼び出し側は通常 ±1pt）。
+        _canvas_rect_to_pdf と同じ scale で canvas 距離へ換算する。
+        crop_mode/redact_mode が OFF、または矩形未確定のときは無効化。
+        """
+        if not (self.crop_mode or self.redact_mode):
+            return
+        if not self.crop_rect:
+            return
+        scale = self.zoom * 1.5
+        sx, sy, ex, ey = self.crop_rect
+        dx, dy = dx_pt * scale, dy_pt * scale
+        if resize:
+            ex, ey = ex + dx, ey + dy
+        else:
+            sx, sy, ex, ey = sx + dx, sy + dy, ex + dx, ey + dy
+        self.crop_rect = (sx, sy, ex, ey)
+        self._redraw_crop_overlay()
 
     def _crop_drag_end(self, event):
         if not (self.crop_mode or self.redact_mode):
             return
         self._crop_drag_move(event)
+        if self.redact_mode and self.crop_rect:
+            # 複数矩形蓄積（D-07）: 確定矩形を self._redact_rects へ追加し、
+            # 持続オーバーレイ（実線アウトラインのみ・stipple省略）として
+            # 残す。次のドラッグに備え crop_rect はクリアする（トリミング
+            # の単一矩形挙動は crop_mode 側で不変）。
+            self._redact_rects = getattr(self, "_redact_rects", [])
+            self._redact_rect_overlay_ids = getattr(
+                self, "_redact_rect_overlay_ids", []
+            )
+            self._redact_rects.append(self.crop_rect)
+            sx, sy, ex, ey = self.crop_rect
+            oid = self.preview_canvas.create_rectangle(
+                sx, sy, ex, ey, outline=C["ACCENT"], width=2
+            )
+            self._redact_rect_overlay_ids.append(oid)
+            self.crop_rect = None
+            self._clear_crop_overlay()
 
     def _clear_crop_overlay(self):
         for oid in self.crop_overlay_ids:
@@ -363,6 +537,11 @@ class PageOpsMixin:
             self._save_undo("crop", page_i=self.current_page)
             x0_pdf, y0_pdf, x1_pdf, y1_pdf = self._canvas_rect_to_pdf(*self.crop_rect)
             page = self.doc[self.current_page]
+            # 表示（回転後）座標 → 未回転座標（D-08・mediabox 相対化の前に
+            # 挟む1本道・二重補正防止）
+            x0_pdf, y0_pdf, x1_pdf, y1_pdf = self._derotate_rect(
+                page, x0_pdf, y0_pdf, x1_pdf, y1_pdf
+            )
             mb = page.mediabox
             new_rect = fitz.Rect(
                 mb.x0 + x0_pdf, mb.y0 + y0_pdf, mb.x0 + x1_pdf, mb.y0 + y1_pdf
@@ -391,7 +570,12 @@ class PageOpsMixin:
                 return
         else:
             x0_pdf, y0_pdf, x1_pdf, y1_pdf = self._canvas_rect_to_pdf(*self.crop_rect)
-            cur_mb = self.doc[self.current_page].mediabox
+            base_page = self.doc[self.current_page]
+            # 表示（回転後）座標 → 未回転座標（D-08・単一分岐と同じ1本道）
+            x0_pdf, y0_pdf, x1_pdf, y1_pdf = self._derotate_rect(
+                base_page, x0_pdf, y0_pdf, x1_pdf, y1_pdf
+            )
+            cur_mb = base_page.mediabox
             rel = (
                 x0_pdf / cur_mb.width,
                 y0_pdf / cur_mb.height,
@@ -445,6 +629,82 @@ class PageOpsMixin:
         else:
             self._set_status(self._t("status_bulk_cropped").format(count=len(targets)))
             self.plugin_manager.fire_event("on_page_crop", self, targets)
+
+    def _crop_by_margin(self):
+        """『上下左右から何mmを削るか』の余白指定で選択ページを一括トリミング
+        する（D-10）。基準は現在の cropbox（A2・今見えている範囲からさらに
+        削る）。undo は既存 bulk_crop op（適用前 cropbox）を流用する。
+        """
+        if not self._check_doc():
+            return
+        targets = self._get_targets()
+        margins_mm = []
+        for key in (
+            "crop_margin_top",
+            "crop_margin_bottom",
+            "crop_margin_left",
+            "crop_margin_right",
+        ):
+            v = simpledialog.askfloat(
+                self._t("dlg_crop_margin_title"),
+                self._t(key),
+                minvalue=0,
+                parent=self.root,
+            )
+            if v is None:
+                return
+            margins_mm.append(v)
+        top_pt, bottom_pt, left_pt, right_pt = (m * PT_PER_MM for m in margins_mm)
+
+        crop_data = []
+        for i in targets:
+            cb = self.doc[i].cropbox
+            crop_data.append((i, (cb.x0, cb.y0, cb.x1, cb.y1)))
+        self._save_undo("bulk_crop", crop_data=crop_data)
+
+        EPS = 0.01
+        applied = []
+        for i in targets:
+            page = self.doc[i]
+            cb = page.cropbox
+            mb = page.mediabox
+            new_coords = compute_margin_crop_rect(
+                cb, top_pt, bottom_pt, left_pt, right_pt
+            )
+            if new_coords is None:
+                continue
+            new_rect = fitz.Rect(*new_coords)
+            new_rect = fitz.Rect(
+                max(round(new_rect.x0, 2), mb.x0 + EPS),
+                max(round(new_rect.y0, 2), mb.y0 + EPS),
+                min(round(new_rect.x1, 2), mb.x1 - EPS),
+                min(round(new_rect.y1, 2), mb.y1 - EPS),
+            )
+            if (
+                new_rect.is_empty
+                or new_rect.is_infinite
+                or new_rect.width < 1
+                or new_rect.height < 1
+            ):
+                continue
+            try:
+                page.set_cropbox(new_rect)
+                applied.append(i)
+            except ValueError:
+                continue
+
+        if not applied:
+            # 1 ページも適用されなかった場合は直前に積んだ undo エントリを
+            # 取り除く（doc は無変更のため・_apply_page_edit と同じ作法）
+            if self._undo_stack:
+                self._undo_stack.pop()
+            messagebox.showerror(self._t("err_title"), self._t("err_crop_small"))
+            return
+
+        self._invalidate_thumb_cache(applied)
+        self._refresh_all()
+        self._set_status(self._t("status_bulk_cropped").format(count=len(applied)))
+        self.plugin_manager.fire_event("on_page_crop", self, applied)
 
     # ── 挿入・結合 ──
     def _insert_from_file(self, mode="pos"):
@@ -691,7 +951,7 @@ class PageOpsMixin:
         if range_str is None:
             return
         if not range_str.strip():
-            messagebox.showinfo(self._t("info_title"), self._t("err_split_no_range"))
+            messagebox.showerror(self._t("err_title"), self._t("err_split_no_range"))
             return
         ranges = self._parse_page_ranges(range_str, n)
         if ranges is None:

@@ -11,11 +11,10 @@ from tkinter import ttk
 from pagefolio.constants import LANG, C
 from pagefolio.ocr import MAX_OCR_MAX_TOKENS
 from pagefolio.ocr_providers import (
-    _TESSERACT_AVAILABLE,
-    _TESSERACT_LANGS,
     ClaudeProvider,
     GeminiProvider,
     LMStudioProvider,
+    _detect_tesseract,
 )
 from pagefolio.settings import get_current_font_size
 
@@ -49,6 +48,7 @@ class LLMConfigDialog(tk.Toplevel):
         font_func=None,
         lang="ja",
         plugin_manager=None,
+        session_api_keys=None,
     ):
         super().__init__(parent)
         self._L = LANG[lang]
@@ -65,8 +65,16 @@ class LLMConfigDialog(tk.Toplevel):
             )
         )
         self._plugin_manager = plugin_manager
+        # V171-KEY-01: session_api_keys は複製せず参照をそのまま保持する
+        # （複製すると app._session_api_keys の実体へ変更が反映されない）。
+        self._session_api_keys = (
+            session_api_keys if session_api_keys is not None else {}
+        )
         # Tesseract 未インストール時の選択リセット用（D-02）
         self._last_valid_provider = current_settings.get("ocr_provider", "off")
+        # D-05/Pitfall 2: ocr_providers.py と同じ _detect_tesseract() を都度呼び、
+        # ダイアログを開く度に再評価する（再起動なしで言語パック追加を反映）。
+        self._tesseract_available, self._tesseract_langs = _detect_tesseract()
 
         # _dialog_w は _build() 内の _resize_to_fit() が参照するため、_build() より
         # 前に確定させておく（未設定だと AttributeError でダイアログが開けない）。
@@ -118,9 +126,7 @@ class LLMConfigDialog(tk.Toplevel):
             "tesseract",
         ]
         _plugin_extras = (
-            list(self._plugin_manager._provider_registry.keys())
-            if self._plugin_manager
-            else []
+            self._plugin_manager.list_ocr_providers() if self._plugin_manager else []
         )
         self.provider_combo = ttk.Combobox(
             provider_row,
@@ -133,7 +139,7 @@ class LLMConfigDialog(tk.Toplevel):
         self.provider_combo.pack(side="left", padx=4)
         self.provider_combo.bind("<<ComboboxSelected>>", self._on_provider_change)
         # Tesseract 未インストール時の案内ラベル（D-02）
-        if not _TESSERACT_AVAILABLE:
+        if not self._tesseract_available:
             tk.Label(
                 provider_row,
                 text=self._L.get(
@@ -144,6 +150,18 @@ class LLMConfigDialog(tk.Toplevel):
                 fg=C["TEXT_SUB"],
                 font=self._font(-2),
             ).pack(side="left", padx=(8, 0))
+
+        # ── 固有設定見出し（D-15: 選択中プロバイダ固有の設定）──
+        # 常時表示・非トグル。以下の各プロバイダ固有セクションフレームは
+        # before=self.scale_row でこの見出しの後ろへ挿入される（_on_provider_change）。
+        self._provider_section_heading = tk.Label(
+            self,
+            text=self._L["llm_config_provider_section"],
+            bg=C["BG_DARK"],
+            fg=C["WARNING"],
+            font=self._font(0, "bold"),
+        )
+        self._provider_section_heading.pack(anchor="w", padx=24, pady=(6, 2))
 
         # ── LM Studio 固有欄（lmstudio 選択時のみ表示）──
         self.url_section_frame = tk.Frame(self, bg=C["BG_DARK"])
@@ -350,6 +368,68 @@ class LLMConfigDialog(tk.Toplevel):
             font=self._font(-2),
         ).pack(anchor="w")
 
+        # RunPod APIキー入力欄（D-01/D-02/D-03・V171-KEY-01/04）
+        runpod_key_row = tk.Frame(self.runpod_section_frame, bg=C["BG_DARK"])
+        runpod_key_row.pack(fill="x", padx=0, pady=2)
+        tk.Label(
+            runpod_key_row,
+            text=self._L["llm_api_key_label"],
+            bg=C["BG_DARK"],
+            fg=C["TEXT_MAIN"],
+            font=self._font(-1),
+            width=20,
+            anchor="w",
+        ).pack(side="left")
+        self.runpod_api_key_var = tk.StringVar(
+            value=self._session_api_keys.get("runpod", ""),
+        )
+        self.runpod_api_key_entry = tk.Entry(
+            runpod_key_row,
+            show="*",
+            textvariable=self.runpod_api_key_var,
+            font=self._font(-1),
+            bg=C["BG_CARD"],
+            fg=C["TEXT_MAIN"],
+            insertbackground=C["TEXT_MAIN"],
+            relief="flat",
+        )
+        self.runpod_api_key_entry.pack(side="left", fill="x", expand=True, padx=4)
+        self._runpod_key_shown = False
+
+        def _toggle_runpod_key():
+            self._runpod_key_shown = not self._runpod_key_shown
+            self.runpod_api_key_entry.configure(
+                show="" if self._runpod_key_shown else "*"
+            )
+            runpod_key_toggle_btn.configure(
+                text=self._L["llm_key_toggle_hide"]
+                if self._runpod_key_shown
+                else self._L["llm_key_toggle_show"]
+            )
+
+        runpod_key_toggle_btn = ttk.Button(
+            runpod_key_row,
+            text=self._L["llm_key_toggle_show"],
+            width=4,
+            command=_toggle_runpod_key,
+        )
+        runpod_key_toggle_btn.pack(side="left", padx=(2, 0))
+
+        runpod_note = self._L["llm_key_session_note"]
+        if os.environ.get("RUNPOD_API_KEY"):
+            runpod_note += " " + self._L["llm_key_env_set_note"].format(
+                env_var="RUNPOD_API_KEY"
+            )
+        tk.Label(
+            self.runpod_section_frame,
+            text=runpod_note,
+            bg=C["BG_DARK"],
+            fg=C["TEXT_SUB"],
+            font=self._font(-2),
+            wraplength=460,
+            justify="left",
+        ).pack(anchor="w", pady=(0, 2))
+
         # RunPod モデル更新ボタン
         runpod_btn_row = tk.Frame(self.runpod_section_frame, bg=C["BG_DARK"])
         runpod_btn_row.pack(fill="x", padx=0, pady=(4, 2))
@@ -386,6 +466,68 @@ class LLMConfigDialog(tk.Toplevel):
         self.claude_model_combo.pack(side="left", fill="x", expand=True, padx=4)
         self.claude_model_combo.bind("<<ComboboxSelected>>", self._on_model_change)
 
+        # Claude APIキー入力欄（D-01/D-02/D-03・V171-KEY-01）
+        claude_key_row = tk.Frame(self.claude_section_frame, bg=C["BG_DARK"])
+        claude_key_row.pack(fill="x", padx=0, pady=2)
+        tk.Label(
+            claude_key_row,
+            text=self._L["llm_api_key_label"],
+            bg=C["BG_DARK"],
+            fg=C["TEXT_MAIN"],
+            font=self._font(-1),
+            width=20,
+            anchor="w",
+        ).pack(side="left")
+        self.claude_api_key_var = tk.StringVar(
+            value=self._session_api_keys.get("claude", ""),
+        )
+        self.claude_api_key_entry = tk.Entry(
+            claude_key_row,
+            show="*",
+            textvariable=self.claude_api_key_var,
+            font=self._font(-1),
+            bg=C["BG_CARD"],
+            fg=C["TEXT_MAIN"],
+            insertbackground=C["TEXT_MAIN"],
+            relief="flat",
+        )
+        self.claude_api_key_entry.pack(side="left", fill="x", expand=True, padx=4)
+        self._claude_key_shown = False
+
+        def _toggle_claude_key():
+            self._claude_key_shown = not self._claude_key_shown
+            self.claude_api_key_entry.configure(
+                show="" if self._claude_key_shown else "*"
+            )
+            claude_key_toggle_btn.configure(
+                text=self._L["llm_key_toggle_hide"]
+                if self._claude_key_shown
+                else self._L["llm_key_toggle_show"]
+            )
+
+        claude_key_toggle_btn = ttk.Button(
+            claude_key_row,
+            text=self._L["llm_key_toggle_show"],
+            width=4,
+            command=_toggle_claude_key,
+        )
+        claude_key_toggle_btn.pack(side="left", padx=(2, 0))
+
+        claude_note = self._L["llm_key_session_note"]
+        if os.environ.get("ANTHROPIC_API_KEY"):
+            claude_note += " " + self._L["llm_key_env_set_note"].format(
+                env_var="ANTHROPIC_API_KEY"
+            )
+        tk.Label(
+            self.claude_section_frame,
+            text=claude_note,
+            bg=C["BG_DARK"],
+            fg=C["TEXT_SUB"],
+            font=self._font(-2),
+            wraplength=460,
+            justify="left",
+        ).pack(anchor="w", pady=(0, 2))
+
         # claude モデル更新ボタン
         claude_btn_row = tk.Frame(self.claude_section_frame, bg=C["BG_DARK"])
         claude_btn_row.pack(fill="x", padx=0, pady=(4, 2))
@@ -421,6 +563,71 @@ class LLMConfigDialog(tk.Toplevel):
         )
         self.gemini_model_combo.pack(side="left", fill="x", expand=True, padx=4)
 
+        # Gemini APIキー入力欄（D-01/D-02/D-03・V171-KEY-01）
+        gemini_key_row = tk.Frame(self.gemini_section_frame, bg=C["BG_DARK"])
+        gemini_key_row.pack(fill="x", padx=0, pady=2)
+        tk.Label(
+            gemini_key_row,
+            text=self._L["llm_api_key_label"],
+            bg=C["BG_DARK"],
+            fg=C["TEXT_MAIN"],
+            font=self._font(-1),
+            width=20,
+            anchor="w",
+        ).pack(side="left")
+        self.gemini_api_key_var = tk.StringVar(
+            value=self._session_api_keys.get("gemini", ""),
+        )
+        self.gemini_api_key_entry = tk.Entry(
+            gemini_key_row,
+            show="*",
+            textvariable=self.gemini_api_key_var,
+            font=self._font(-1),
+            bg=C["BG_CARD"],
+            fg=C["TEXT_MAIN"],
+            insertbackground=C["TEXT_MAIN"],
+            relief="flat",
+        )
+        self.gemini_api_key_entry.pack(side="left", fill="x", expand=True, padx=4)
+        self._gemini_key_shown = False
+
+        def _toggle_gemini_key():
+            self._gemini_key_shown = not self._gemini_key_shown
+            self.gemini_api_key_entry.configure(
+                show="" if self._gemini_key_shown else "*"
+            )
+            gemini_key_toggle_btn.configure(
+                text=self._L["llm_key_toggle_hide"]
+                if self._gemini_key_shown
+                else self._L["llm_key_toggle_show"]
+            )
+
+        gemini_key_toggle_btn = ttk.Button(
+            gemini_key_row,
+            text=self._L["llm_key_toggle_show"],
+            width=4,
+            command=_toggle_gemini_key,
+        )
+        gemini_key_toggle_btn.pack(side="left", padx=(2, 0))
+
+        gemini_note = self._L["llm_key_session_note"]
+        gemini_env_var = (
+            "GEMINI_API_KEY" if os.environ.get("GEMINI_API_KEY") else "GOOGLE_API_KEY"
+        )
+        if os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY"):
+            gemini_note += " " + self._L["llm_key_env_set_note"].format(
+                env_var=gemini_env_var
+            )
+        tk.Label(
+            self.gemini_section_frame,
+            text=gemini_note,
+            bg=C["BG_DARK"],
+            fg=C["TEXT_SUB"],
+            font=self._font(-2),
+            wraplength=460,
+            justify="left",
+        ).pack(anchor="w", pady=(0, 2))
+
         # gemini モデル更新ボタン
         gemini_btn_row = tk.Frame(self.gemini_section_frame, bg=C["BG_DARK"])
         gemini_btn_row.pack(fill="x", padx=0, pady=(4, 2))
@@ -448,7 +655,7 @@ class LLMConfigDialog(tk.Toplevel):
         ).pack(anchor="w", pady=(4, 2))
 
         # 言語フォールバック案内（jpn 未インストール時のみ表示）
-        if "jpn" not in _TESSERACT_LANGS:
+        if "jpn" not in self._tesseract_langs:
             tk.Label(
                 self.tesseract_section_frame,
                 text=self._L.get(
@@ -459,6 +666,18 @@ class LLMConfigDialog(tk.Toplevel):
                 fg=C["TEXT_SUB"],
                 font=self._font(-2),
             ).pack(anchor="w", pady=(0, 2))
+
+        # ── 共通設定見出し（D-15: 全プロバイダ共通の設定）──
+        # 未パック状態で生成し、_on_provider_change 内で before=self.scale_row
+        # を使って毎回「固有設定エリアの直後・共通パラメータ群の先頭」へ再配置する
+        # （プロバイダ固有フレームと同じ挿入先アンカーのため call 順で位置決めする）。
+        self._common_section_heading = tk.Label(
+            self,
+            text=self._L["llm_config_common_section"],
+            bg=C["BG_DARK"],
+            fg=C["WARNING"],
+            font=self._font(0, "bold"),
+        )
 
         # ── effort 欄（claude かつ effort 対応モデル時のみ表示）──
         self.effort_frame = tk.Frame(self, bg=C["BG_DARK"])
@@ -772,7 +991,7 @@ class LLMConfigDialog(tk.Toplevel):
         provider = self.provider_var.get()
 
         # Tesseract 未インストール時: 選択を前の有効プロバイダに戻す（D-02 代替）
-        if provider == "tesseract" and not _TESSERACT_AVAILABLE:
+        if provider == "tesseract" and not self._tesseract_available:
             self.provider_var.set(self._last_valid_provider)
             self._set_lm_status(
                 self._L.get(
@@ -817,6 +1036,10 @@ class LLMConfigDialog(tk.Toplevel):
             )
             self.gemini_section_frame.pack_forget()
             self.tesseract_section_frame.pack_forget()
+            # D-15: 固有設定の直後・共通パラメータ群の先頭に見出しを再配置
+            self._common_section_heading.pack(
+                anchor="w", padx=24, pady=(6, 2), before=self.scale_row
+            )
             # モデルに応じて effort/temperature を切替
             self._on_model_change()
         elif provider == "gemini":
@@ -827,6 +1050,9 @@ class LLMConfigDialog(tk.Toplevel):
             self.claude_section_frame.pack_forget()
             self.tesseract_section_frame.pack_forget()
             self.effort_frame.pack_forget()
+            self._common_section_heading.pack(
+                anchor="w", padx=24, pady=(6, 2), before=self.scale_row
+            )
             self.temperature_frame.pack(
                 fill="x", padx=24, pady=2, before=self.scale_row
             )
@@ -840,6 +1066,9 @@ class LLMConfigDialog(tk.Toplevel):
             self.gemini_section_frame.pack_forget()
             self.effort_frame.pack_forget()
             self.temperature_frame.pack_forget()
+            self._common_section_heading.pack(
+                anchor="w", padx=24, pady=(6, 2), before=self.scale_row
+            )
             self._resize_to_fit()
         else:
             self.claude_section_frame.pack_forget()
@@ -847,6 +1076,9 @@ class LLMConfigDialog(tk.Toplevel):
             self.tesseract_section_frame.pack_forget()
             # lmstudio / off では temperature 欄を表示し effort 欄を隠す（従来挙動）
             self.effort_frame.pack_forget()
+            self._common_section_heading.pack(
+                anchor="w", padx=24, pady=(6, 2), before=self.scale_row
+            )
             self.temperature_frame.pack(
                 fill="x", padx=24, pady=2, before=self.scale_row
             )
@@ -922,8 +1154,17 @@ class LLMConfigDialog(tk.Toplevel):
             pass
 
     # ── LM Studio モデル取得 ────────────────────────────
-    def _fetch_models(self):
-        """LM Studio からモデル一覧を取得して Combobox に反映する。"""
+    def _probe_lm_provider(self, update_combo):
+        """LM Studio への接続確認・モデル取得の共有ヘルパー（L-6i）。
+
+        `_fetch_models`（モデル取得）と `_test_connection`（接続テストのみ）は
+        「取得結果を Combobox へ反映するか」のみが差分のため、update_combo
+        フラグでパラメータ化して重複ロジックを1箇所に集約する。
+
+        引数:
+          update_combo: True のとき取得したモデル一覧を
+                        self.lm_model_combo["values"] へ反映する。
+        """
         url = self.lm_url_var.get().strip()
         if not url:
             self._set_lm_status(
@@ -939,35 +1180,33 @@ class LLMConfigDialog(tk.Toplevel):
                 self._L["settings_lm_test_fail"].format(error=str(e)), kind="fail"
             )
             return
-        self.lm_model_combo["values"] = models
+        if update_combo:
+            self.lm_model_combo["values"] = models
         self._set_lm_status(
             self._L["settings_lm_test_ok"].format(count=len(models)), kind="ok"
         )
+
+    def _fetch_models(self):
+        """LM Studio からモデル一覧を取得して Combobox に反映する。"""
+        self._probe_lm_provider(update_combo=True)
 
     def _test_connection(self):
         """LM Studio への接続をテストする。"""
-        url = self.lm_url_var.get().strip()
-        if not url:
-            self._set_lm_status(
-                self._L["settings_lm_test_fail"].format(error="URL is empty"),
-                kind="fail",
-            )
-            return
-        self._set_lm_status(self._L["settings_lm_testing"].format(url=url), kind="info")
-        try:
-            models = LMStudioProvider(url=url, model="").list_models()
-        except (ConnectionError, TimeoutError, RuntimeError) as e:
-            self._set_lm_status(
-                self._L["settings_lm_test_fail"].format(error=str(e)), kind="fail"
-            )
-            return
-        self._set_lm_status(
-            self._L["settings_lm_test_ok"].format(count=len(models)), kind="ok"
-        )
+        self._probe_lm_provider(update_combo=False)
 
     # ── Ollama モデル取得・テスト ────────────────────────
-    def _fetch_ollama_models(self):
-        """Ollama からモデル一覧を取得して Combobox に反映する。"""
+    def _probe_ollama_provider(self, update_combo):
+        """Ollama への接続確認・モデル取得の共有ヘルパー（C2）。
+
+        `_fetch_ollama_models`（モデル取得）と `_test_ollama_connection`
+        （接続テストのみ）は「取得結果を Combobox へ反映するか」のみが差分のため、
+        update_combo フラグでパラメータ化して重複ロジックを1箇所に集約する
+        （LM Studio 用 `_probe_lm_provider` と同型の統合）。
+
+        引数:
+          update_combo: True のとき取得したモデル一覧を
+                        self.ollama_model_combo["values"] へ反映する。
+        """
         url = self.ollama_url_var.get().strip()
         if not url:
             self._set_lm_status(
@@ -985,39 +1224,30 @@ class LLMConfigDialog(tk.Toplevel):
                 self._L["settings_lm_test_fail"].format(error=str(e)), kind="fail"
             )
             return
-        self.ollama_model_combo["values"] = models
+        if update_combo:
+            self.ollama_model_combo["values"] = models
         self._set_lm_status(
             self._L["settings_lm_test_ok"].format(count=len(models)), kind="ok"
         )
+
+    def _fetch_ollama_models(self):
+        """Ollama からモデル一覧を取得して Combobox に反映する。"""
+        self._probe_ollama_provider(update_combo=True)
 
     def _test_ollama_connection(self):
         """Ollama への接続をテストする。"""
-        url = self.ollama_url_var.get().strip()
-        if not url:
-            self._set_lm_status(
-                self._L["settings_lm_test_fail"].format(error="URL is empty"),
-                kind="fail",
-            )
-            return
-        self._set_lm_status(self._L["settings_lm_testing"].format(url=url), kind="info")
-        try:
-            from pagefolio.ocr_providers import OllamaProvider
-
-            models = OllamaProvider(url=url, model="").list_models()
-        except (ConnectionError, TimeoutError, RuntimeError) as e:
-            self._set_lm_status(
-                self._L["settings_lm_test_fail"].format(error=str(e)), kind="fail"
-            )
-            return
-        self._set_lm_status(
-            self._L["settings_lm_test_ok"].format(count=len(models)), kind="ok"
-        )
+        self._probe_ollama_provider(update_combo=False)
 
     # ── RunPod モデル更新 ───────────────────────────────
     def _refresh_runpod_models(self):
-        """RunPod モデル一覧を取得して Combobox に反映する。"""
+        """RunPod モデル一覧を取得して Combobox に反映する。
+
+        D-10: ダイアログ入力欄のライブ値（OK 前でも）を環境変数より優先する。
+        """
         self._set_lm_status(self._L["llm_fetching_runpod_models"], kind="info")
-        api_key = os.environ.get("RUNPOD_API_KEY", "")
+        api_key = self.runpod_api_key_var.get().strip() or os.environ.get(
+            "RUNPOD_API_KEY", ""
+        )
         url = self.runpod_url_var.get().strip()
         if not api_key:
             self._set_lm_status(
@@ -1049,11 +1279,13 @@ class LLMConfigDialog(tk.Toplevel):
 
         ANTHROPIC_API_KEY が未設定でも ClaudeProvider.list_models が
         RECOMMENDED_MODELS を返すので静的リストが常に表示される（D-08）。
-        api_key は os.environ 読み取りのみ。settings には書かない（D-01/D-05）。
+        api_key は settings に書かない（D-01/D-05）。
+        D-10: ダイアログ入力欄のライブ値（OK 前でも）を環境変数より優先する。
         """
         self._set_lm_status(self._L["llm_fetching_claude_models"], kind="info")
-        # api_key は環境変数からのみ読み取る（settings への書き込み禁止・D-01/D-05）
-        api_key = os.environ.get("ANTHROPIC_API_KEY", "")
+        api_key = self.claude_api_key_var.get().strip() or os.environ.get(
+            "ANTHROPIC_API_KEY", ""
+        )
         try:
             models = ClaudeProvider(api_key=api_key, model="").list_models()
         except Exception as e:
@@ -1085,12 +1317,12 @@ class LLMConfigDialog(tk.Toplevel):
 
         GEMINI_API_KEY / GOOGLE_API_KEY が未設定でも GeminiProvider.list_models が
         RECOMMENDED_MODELS を返すので静的リストが常に表示される（D-08）。
-        api_key は os.environ 読み取りのみ。settings には書かない（D-01/D-05）。
+        api_key は settings に書かない（D-01/D-05）。
+        D-10: ダイアログ入力欄のライブ値（OK 前でも）を環境変数より優先する。
         """
         self._set_lm_status(self._L["llm_fetching_gemini_models"], kind="info")
-        # api_key は環境変数からのみ読み取る（settings への書き込み禁止・D-01/D-05）
-        api_key = os.environ.get("GEMINI_API_KEY") or os.environ.get(
-            "GOOGLE_API_KEY", ""
+        api_key = self.gemini_api_key_var.get().strip() or (
+            os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY", "")
         )
         try:
             models = GeminiProvider(api_key=api_key, model="").list_models()
@@ -1159,10 +1391,12 @@ class LLMConfigDialog(tk.Toplevel):
             self.gemini_model_var.get().strip() or "gemini-2.5-flash"
         )
 
-        # Tesseract 設定（D-04: lang は _TESSERACT_LANGS 由来の固定値）
-        llm_settings["tesseract_lang"] = (
-            "jpn+eng" if "jpn" in _TESSERACT_LANGS else "eng"
-        )
+        # Tesseract 設定（D-04: lang は self._tesseract_langs 由来の固定値。
+        # D-05: ダイアログ生成時に再検出済みの値を使う。getattr フォールバックは
+        # _apply を Tk 生成なしスタブ経由で呼ぶ既存テスト経路の安全確保のため
+        # （Phase 05-03 の _session_api_keys と同型パターン）
+        _tess_langs = getattr(self, "_tesseract_langs", frozenset())
+        llm_settings["tesseract_lang"] = "jpn+eng" if "jpn" in _tess_langs else "eng"
 
         # 共通数値設定（クランプして格納）
         try:
@@ -1198,6 +1432,19 @@ class LLMConfigDialog(tk.Toplevel):
             llm_settings["ocr_concurrency"] = max(1, min(8, conc))
         except (tk.TclError, ValueError):
             llm_settings["ocr_concurrency"] = 2
+
+        # セッション限定 APIキーの同期（D-04/D-06・V171-KEY-01/04）
+        # llm_settings dict には絶対に入れない（成功基準1・T-05-12）。
+        for provider_key, var in (
+            ("claude", self.claude_api_key_var),
+            ("gemini", self.gemini_api_key_var),
+            ("runpod", self.runpod_api_key_var),
+        ):
+            key = var.get().strip()
+            if key:
+                self._session_api_keys[provider_key] = key
+            else:
+                self._session_api_keys.pop(provider_key, None)
 
         self.destroy()
         if self.on_apply:

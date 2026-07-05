@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "defaultMode": "bypassPermissions"
+  },
+  "enabledMcpjsonServers": [
+    "gsd-workflow",
+    "gsd-browser"
+  ]
+}

@@ -11,8 +11,31 @@ import socket
 import subprocess
 import urllib.error
 import urllib.request
+from urllib.parse import quote, urlsplit
 
 logger = logging.getLogger(__name__)
+
+# L-6e/D-13: ユーザー入力 URL/エンドポイントを持つ全プロバイダ
+# （LM Studio / Ollama / RunPod）へ共通適用する許可スキーム。
+_ALLOWED_URL_SCHEMES = ("http", "https")
+
+
+def _require_http_scheme(url):
+    """url のスキームが http/https のみであることを検証する（L-6e・D-13）。
+
+    リクエスト送信の直前（`_post_chat`/`list_models` 冒頭）で呼ぶこと。
+    コンストラクタでの eager 検証は行わない（空URL/入力途中の値でも
+    プロバイダのインスタンス化自体は失敗させない既存方針との整合・A2）。
+
+    引数:
+      url: 検証対象の URL 文字列
+
+    例外:
+      RuntimeError: スキームが http/https 以外（file:// 等の悪用防止）
+    """
+    scheme = urlsplit(url).scheme.lower()
+    if scheme not in _ALLOWED_URL_SCHEMES:
+        raise RuntimeError(f"サポートされていない URL スキームです: {scheme or url}")
 
 
 class OCRProvider(abc.ABC):
@@ -209,6 +232,9 @@ def _raise_mapped_http_error(e):
         err_body = e.read().decode("utf-8", errors="replace")
     except Exception:
         err_body = ""
+    # L-6d: 巨大レスポンスによる UI/ログ肥大を防ぐため一定長で切り詰める
+    # （全プロバイダ共通ヘルパーのため 5 プロバイダ全てのエラーメッセージに波及）。
+    err_body = err_body[:500]
     message = f"HTTP {e.code}: {err_body or e.reason}"
     if looks_like_context_error(e.code, err_body):
         raise OCRContextLengthError(message) from e
@@ -293,6 +319,7 @@ class LMStudioProvider(OCRProvider):
         HTTP / 接続 / タイムアウトの例外マッピングは ocr_image と同一規約。
         ocr_image と complete_text_ex の両方から呼ばれる共有経路。
         """
+        _require_http_scheme(self.url)
         endpoint = self.url.rstrip("/") + "/v1/chat/completions"
         data = json.dumps(payload).encode("utf-8")
         req = urllib.request.Request(  # noqa: S310
@@ -366,6 +393,7 @@ class LMStudioProvider(OCRProvider):
           TimeoutError:    タイムアウト
           RuntimeError:    HTTP エラーまたはレスポンス形式不正
         """
+        _require_http_scheme(self.url)
         timeout = 10  # モデル一覧取得は短めのタイムアウト
         endpoint = self.url.rstrip("/") + "/v1/models"
         req = urllib.request.Request(endpoint, method="GET")  # noqa: S310
@@ -639,26 +667,18 @@ class ClaudeProvider(OCRProvider):
         truncated = result.get("stop_reason") == "max_tokens"
         return (out, truncated)
 
-    def list_models(self):
-        """Anthropic /v1/models から vision 対応モデル ID リストを取得する。
+    def _fetch_models_page(self, after_id=None):
+        """Anthropic /v1/models を1ページ分呼び出し、レスポンス dict を返す（内部）。
 
-        キー未設定（空文字/None）の場合は API を呼ばず
-        RECOMMENDED_MODELS を返す（D-08）。
-
-        戻り値: モデル ID 文字列のリスト（list[str]）
-
-        例外:
-          ConnectionError: 接続失敗
-          TimeoutError:    タイムアウト
-          RuntimeError:    HTTP エラーまたはレスポンス形式不正
+        after_id 指定時はカーソルを進めて次ページを取得する（L-6b）。
+        HTTP / 接続 / タイムアウトの例外マッピングは list_models と同一規約。
         """
-        if not self.api_key:
-            # キー未設定・オフライン時でも選択肢が出るよう静的リストを返す（D-08）
-            return list(self.RECOMMENDED_MODELS)
-
         timeout = 10
+        endpoint = self.MODELS_ENDPOINT
+        if after_id:
+            endpoint = f"{endpoint}?after_id={quote(after_id, safe='')}"
         req = urllib.request.Request(  # noqa: S310
-            self.MODELS_ENDPOINT,
+            endpoint,
             headers={
                 "x-api-key": self.api_key,
                 "anthropic-version": self.ANTHROPIC_VERSION,
@@ -679,17 +699,48 @@ class ClaudeProvider(OCRProvider):
             raise ConnectionError(str(reason)) from e
 
         try:
-            data = json.loads(body)
+            return json.loads(body)
         except json.JSONDecodeError as e:
             raise RuntimeError(f"Unexpected response: {body[:500]}") from e
 
-        # capabilities.image_input.supported が True のモデルのみ返す
-        return [
-            m.get("id")
-            for m in data.get("data", [])
-            if m.get("id")
-            and m.get("capabilities", {}).get("image_input", {}).get("supported", False)
-        ]
+    def list_models(self):
+        """Anthropic /v1/models から vision 対応モデル ID リストを取得する。
+
+        キー未設定（空文字/None）の場合は API を呼ばず
+        RECOMMENDED_MODELS を返す（D-08）。
+
+        L-6b: `has_more`/`last_id` カーソルを辿り全ページのモデルを連結して
+        返す（1 ページで完結する応答では従来と同じ結果になる後方互換）。
+
+        戻り値: モデル ID 文字列のリスト（list[str]）
+
+        例外:
+          ConnectionError: 接続失敗
+          TimeoutError:    タイムアウト
+          RuntimeError:    HTTP エラーまたはレスポンス形式不正
+        """
+        if not self.api_key:
+            # キー未設定・オフライン時でも選択肢が出るよう静的リストを返す（D-08）
+            return list(self.RECOMMENDED_MODELS)
+
+        results = []
+        after_id = None
+        while True:
+            data = self._fetch_models_page(after_id=after_id)
+            # capabilities.image_input.supported が True のモデルのみ返す
+            results.extend(
+                m.get("id")
+                for m in data.get("data", [])
+                if m.get("id")
+                and m.get("capabilities", {})
+                .get("image_input", {})
+                .get("supported", False)
+            )
+            if data.get("has_more") and data.get("last_id"):
+                after_id = data.get("last_id")
+                continue
+            break
+        return results
 
 
 class GeminiProvider(OCRProvider):
@@ -808,7 +859,10 @@ class GeminiProvider(OCRProvider):
 
         _post_generate（画像あり）と complete_text_ex（テキストのみ）の共有経路。
         """
-        endpoint = self.GENERATE_CONTENT_ENDPOINT.format(model=self.model)
+        # L-6f: モデル名を URL パスセグメントとしてエスケープする
+        # （予約文字を含むモデル名で意図しないパス/クエリにならないよう防止）。
+        safe_model = quote(self.model, safe="")
+        endpoint = self.GENERATE_CONTENT_ENDPOINT.format(model=safe_model)
         data = json.dumps(payload).encode("utf-8")
         req = urllib.request.Request(  # noqa: S310
             endpoint,
@@ -958,7 +1012,13 @@ class GeminiProvider(OCRProvider):
 
 
 def _detect_tesseract():
-    """起動時に一度だけ呼ばれる Tesseract 存在チェック関数。
+    """Tesseract の存在・インストール済み言語を検出する関数。
+
+    D-05: import 時に一度だけ固定するのではなく、TesseractProvider の生成時
+    （build_provider 呼び出しの都度・llm_config.py の UI 構築時）に**都度呼び出し
+    可能**な関数として設計する。呼び出しコストは subprocess 起動2回（数十ms）で
+    頻度的に無視できる。呼び出しの都度 subprocess を起動しないこと（並列 OCR の
+    ocr_image からは呼ばない — Anti-Pattern）。
 
     戻り値: (available: bool, langs: frozenset[str]) のタプル。
     Tesseract が見つかれば (True, {インストール済み言語...}) を、
@@ -990,10 +1050,6 @@ def _detect_tesseract():
         return False, frozenset()
 
 
-# アプリ起動時に一度だけ評価（D-01）
-_TESSERACT_AVAILABLE, _TESSERACT_LANGS = _detect_tesseract()
-
-
 class TesseractProvider(OCRProvider):
     """Tesseract OCR プロバイダ（subprocess 直呼び・ネットワーク不要）。
 
@@ -1008,18 +1064,54 @@ class TesseractProvider(OCRProvider):
 
     RECOMMENDED_LANGS: list = ["jpn+eng", "eng", "jpn"]
 
-    def __init__(self, lang="jpn+eng", psm=3, timeout=60):
+    def __init__(self, lang="jpn+eng", psm=3, timeout=60, available_langs=None):
         """初期化。
 
         引数:
-          lang:    Tesseract に渡す言語コード（例: "jpn+eng"）。
-                   実際の ocr_image 実行時は _TESSERACT_LANGS による自動解決を優先する。
+          lang:    Tesseract に渡す要求言語コード（例: "jpn+eng"）。"+" 区切りで
+                   複数指定可能。段階的縮退（D-06）により実際に使われる言語は
+                   self.effective_lang に確定される。
           psm:     ページセグメンテーションモード（3=全自動、6=単一ブロック）
           timeout: subprocess タイムアウト秒数（既定: 60）
+          available_langs: 検出済みの利用可能言語集合（frozenset[str] 等）。
+                   None（既定）のときはこの場で _detect_tesseract() を呼び直し
+                   再検出する（D-05: プロバイダ生成時に都度再評価・再起動不要で
+                   言語パック追加を反映）。呼び出し元（build_provider 等）が
+                   再検出済みの結果を明示的に渡すことも可能。
         """
         self.lang = lang
         self.psm = psm
         self.timeout = timeout
+        if available_langs is None:
+            _, available_langs = _detect_tesseract()
+        self.available_langs = available_langs or frozenset()
+        # D-06: __init__ 時点で段階的縮退を確定し、ocr_image は都度計算しない
+        self.effective_lang, self.lang_fallback = self._resolve_lang(
+            self.lang, self.available_langs
+        )
+        # フォールバック発生時の注記表示（D-07・Task 2）が読む要求/実効ペア
+        self.requested_lang = self.lang
+
+    @staticmethod
+    def _resolve_lang(requested_raw, available_langs):
+        """段階的縮退で実効言語を確定する（D-06）。
+
+        まず要求言語（"+" 区切り）のうち利用可能な部分集合を、要求の指定順を
+        保ったまま残す。部分集合が非空ならそれを実効言語とする。空（＝全滅、
+        または要求自体が空）なら現行の自動決定（jpn 利用可→"jpn+eng" /
+        なし→"eng"）へ落とす。常にどちらかの分岐で値を返し、例外は送出しない
+        （必ず何かしらの言語で実行できることを保証する）。
+
+        戻り値: (effective_lang: str, fallback_occurred: bool) のタプル。
+        fallback_occurred は「要求言語が非空で、かつ実効言語が要求と完全一致
+        しない」場合に True になる。
+        """
+        requested = [t for t in (requested_raw or "").split("+") if t]
+        subset = [t for t in requested if t in available_langs]
+        if subset:
+            return "+".join(subset), subset != requested
+        auto = "jpn+eng" if "jpn" in available_langs else "eng"
+        return auto, bool(requested)
 
     def ocr_image(self, b64_png, prompt, **kwargs):
         """Tesseract を stdin パイプ方式で呼び出して OCR テキストを返す。
@@ -1035,8 +1127,9 @@ class TesseractProvider(OCRProvider):
           RuntimeError:  tesseract コマンドが見つからない、または終了コード != 0
           TimeoutError:  tesseract がタイムアウト（D-T2）
         """
-        # jpn が利用可能なら jpn+eng、なければ eng にフォールバック（D-04）
-        lang = "jpn+eng" if "jpn" in _TESSERACT_LANGS else "eng"
+        # -l へ渡すのは __init__ で段階的縮退済みの実効言語のみ（検出済み集合
+        # との積を取った結果）。生の self.lang を直接渡さない（T-2-T01 mitigate）。
+        lang = self.effective_lang
         png_bytes = base64.b64decode(b64_png)
         try:
             result = subprocess.run(  # noqa: S603
@@ -1142,6 +1235,7 @@ class OllamaProvider(OCRProvider):
         HTTP / 接続 / タイムアウトの例外マッピングは ocr_image と同一規約。
         ocr_image と complete_text_ex の両方から呼ばれる共有経路。
         """
+        _require_http_scheme(self.url)
         endpoint = self.url.rstrip("/") + "/v1/chat/completions"
         data = json.dumps(payload).encode("utf-8")
         req = urllib.request.Request(  # noqa: S310
@@ -1216,6 +1310,7 @@ class OllamaProvider(OCRProvider):
           TimeoutError:    タイムアウト
           RuntimeError:    HTTP エラーまたはレスポンス形式不正
         """
+        _require_http_scheme(self.url)
         timeout = 10  # モデル一覧取得は短めのタイムアウト
         endpoint = self.url.rstrip("/") + "/v1/models"
         req = urllib.request.Request(endpoint, method="GET")  # noqa: S310
@@ -1368,6 +1463,7 @@ class RunPodProvider(OCRProvider):
             raise OCRAPIKeyError("RUNPOD_API_KEY")
         if not self.url:
             raise RuntimeError("RunPod エンドポイントURLが設定されていません")
+        _require_http_scheme(self.url)
 
         endpoint = self.url.rstrip("/") + "/chat/completions"
         data = json.dumps(payload).encode("utf-8")
@@ -1398,13 +1494,10 @@ class RunPodProvider(OCRProvider):
         """RunPod /models からモデル ID リストを取得する。"""
         if not self.api_key or not self.url:
             return [self.model] if self.model else ["runpod-model"]
+        _require_http_scheme(self.url)
 
         timeout = 10
-        base_url = self.url.rstrip("/")
-        if base_url.endswith("/v1"):
-            endpoint = base_url + "/models"
-        else:
-            endpoint = base_url + "/models"
+        endpoint = self.url.rstrip("/") + "/models"
 
         req = urllib.request.Request(  # noqa: S310
             endpoint,
@@ -1414,11 +1507,18 @@ class RunPodProvider(OCRProvider):
         try:
             with urllib.request.urlopen(req, timeout=timeout) as resp:  # noqa: S310
                 body = resp.read().decode("utf-8")
-        except Exception:
-            return [self.model] if self.model else ["runpod-model"]
+        except socket.timeout as e:
+            raise TimeoutError(f"timed out after {timeout}s") from e
+        except urllib.error.HTTPError as e:
+            raise RuntimeError(f"HTTP {e.code}: {e.reason}") from e
+        except urllib.error.URLError as e:
+            reason = getattr(e, "reason", e)
+            if isinstance(reason, socket.timeout):
+                raise TimeoutError(f"timed out after {timeout}s") from e
+            raise ConnectionError(str(reason)) from e
 
         try:
             data = json.loads(body)
-            return [m.get("id") for m in data.get("data", []) if m.get("id")]
-        except Exception:
-            return [self.model] if self.model else ["runpod-model"]
+        except json.JSONDecodeError as e:
+            raise RuntimeError(f"Unexpected response: {body[:500]}") from e
+        return [m.get("id") for m in data.get("data", []) if m.get("id")]

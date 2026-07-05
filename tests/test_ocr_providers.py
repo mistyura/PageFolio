@@ -1129,10 +1129,11 @@ class TestTesseractProviderOcrImage:
             p.ocr_image(base64.b64encode(b"fake_png").decode(), "describe")
 
     def test_lang_fallback_to_eng_when_jpn_not_available(self, monkeypatch):
-        """_TESSERACT_LANGS に jpn がない場合 -l eng が渡されること（D-04）"""
+        """自動決定フォールバック: 利用可能言語に jpn がない場合 -l eng が渡される
+        （D-06 の「全滅時のみ自動決定」分岐・意図的な仕様変更で書き換え。
+        旧ロジックは _TESSERACT_LANGS のモジュール定数を直接見ていたが、新ロジックは
+        available_langs を明示的にコンストラクタへ渡す形で検証する）。"""
         from pagefolio import ocr_providers
-
-        monkeypatch.setattr(ocr_providers, "_TESSERACT_LANGS", frozenset({"eng"}))
 
         captured = {}
 
@@ -1146,7 +1147,7 @@ class TestTesseractProviderOcrImage:
             return FakeResult()
 
         monkeypatch.setattr(ocr_providers.subprocess, "run", fake_run)
-        p = ocr_providers.TesseractProvider()
+        p = ocr_providers.TesseractProvider(available_langs=frozenset({"eng"}))
         import base64
 
         p.ocr_image(base64.b64encode(b"fake_png").decode(), "describe")
@@ -1155,6 +1156,105 @@ class TestTesseractProviderOcrImage:
         assert captured["cmd"][lang_idx] == "eng", (
             f"Expected 'eng' but got '{captured['cmd'][lang_idx]}'"
         )
+
+    def test_effective_lang_partial_subset_preserves_order(self, monkeypatch):
+        """段階的縮退: 一部利用可能なら要求順を保った部分集合が -l に渡る（D-06）"""
+        from pagefolio import ocr_providers
+
+        captured = {}
+
+        class FakeResult:
+            returncode = 0
+            stdout = b"text\n"
+            stderr = b""
+
+        def fake_run(cmd, **kw):
+            captured["cmd"] = cmd
+            return FakeResult()
+
+        monkeypatch.setattr(ocr_providers.subprocess, "run", fake_run)
+        p = ocr_providers.TesseractProvider(
+            lang="deu+jpn+eng", available_langs=frozenset({"jpn", "eng"})
+        )
+        assert p.effective_lang == "jpn+eng"
+        assert p.lang_fallback is True
+
+        import base64
+
+        p.ocr_image(base64.b64encode(b"fake_png").decode(), "describe")
+        lang_idx = captured["cmd"].index("-l") + 1
+        assert captured["cmd"][lang_idx] == "jpn+eng"
+
+    def test_effective_lang_full_miss_falls_back_to_auto_decide(self, monkeypatch):
+        """段階的縮退: 部分集合が空なら自動決定へ縮退し例外を送出しない（D-06）"""
+        from pagefolio import ocr_providers
+
+        captured = {}
+
+        class FakeResult:
+            returncode = 0
+            stdout = b"text\n"
+            stderr = b""
+
+        def fake_run(cmd, **kw):
+            captured["cmd"] = cmd
+            return FakeResult()
+
+        monkeypatch.setattr(ocr_providers.subprocess, "run", fake_run)
+        p = ocr_providers.TesseractProvider(
+            lang="deu+fra", available_langs=frozenset({"jpn", "eng"})
+        )
+        assert p.effective_lang == "jpn+eng"
+        assert p.lang_fallback is True
+
+        import base64
+
+        # 例外を送出せず、いずれかの言語で実行される
+        result = p.ocr_image(base64.b64encode(b"fake_png").decode(), "describe")
+        assert result == "text"
+        lang_idx = captured["cmd"].index("-l") + 1
+        assert captured["cmd"][lang_idx] == "jpn+eng"
+
+    def test_effective_lang_exact_match_no_fallback(self):
+        """要求言語が全て利用可能なら fallback は発生しない（D-06）"""
+        from pagefolio import ocr_providers
+
+        p = ocr_providers.TesseractProvider(
+            lang="jpn+eng", available_langs=frozenset({"jpn", "eng"})
+        )
+        assert p.effective_lang == "jpn+eng"
+        assert p.lang_fallback is False
+
+    def test_effective_lang_empty_lang_matches_auto_decision(self):
+        """lang が空/未指定でも現行の自動決定と一致し fallback は False（D-06）"""
+        from pagefolio import ocr_providers
+
+        p = ocr_providers.TesseractProvider(lang="", available_langs=frozenset({"eng"}))
+        assert p.effective_lang == "eng"
+        assert p.lang_fallback is False
+
+    def test_tesseract_redetect_reflects_new_langpacks(self, monkeypatch):
+        """build_provider を模した2回のプロバイダ生成間で言語パック追加が
+        再起動なしで反映される（D-05: available_langs=None のとき都度
+        _detect_tesseract() を呼び直す）"""
+        from pagefolio import ocr_providers
+
+        calls = {"n": 0}
+
+        def fake_detect():
+            calls["n"] += 1
+            if calls["n"] == 1:
+                return True, frozenset({"eng"})
+            return True, frozenset({"eng", "jpn"})
+
+        monkeypatch.setattr(ocr_providers, "_detect_tesseract", fake_detect)
+
+        p1 = ocr_providers.TesseractProvider(lang="jpn+eng")
+        p2 = ocr_providers.TesseractProvider(lang="jpn+eng")
+
+        assert p1.effective_lang == "eng"
+        assert p2.effective_lang == "jpn+eng"
+        assert calls["n"] == 2
 
 
 # ===== M-3 回帰テスト: _supports_effort 厳格化 =====
@@ -1303,8 +1403,7 @@ class TestBuildProviderPluginRuntimeError:
 
     def test_plugin_constructor_exception_normalized_to_runtime_error(self):
         """cls() が例外を投げると RuntimeError（素の例外が漏れない）。"""
-        import types
-
+        import pagefolio
         from pagefolio.ocr import build_provider
         from pagefolio.ocr_providers import OCRProvider
 
@@ -1318,12 +1417,14 @@ class TestBuildProviderPluginRuntimeError:
             def list_models(self):
                 return []
 
-        registry = {"broken": BrokenPlugin}
-        fake_pm = types.SimpleNamespace(_provider_registry=registry)
+        # D-10: 公開アクセサ get_ocr_provider() 経由で解決されるため、
+        # 実 PluginManager を使い register_ocr_provider 経由で登録する
+        pm = pagefolio.PluginManager()
+        pm.register_ocr_provider("broken", BrokenPlugin)
         settings = {"ocr_provider": "broken"}
 
         with pytest.raises(RuntimeError, match="broken"):
-            build_provider(settings, plugin_manager=fake_pm)
+            build_provider(settings, plugin_manager=pm)
 
 
 # ===== 429/5xx メッセージ分離（v1.4.3）=====
@@ -2139,3 +2240,254 @@ class TestCloudContextLengthError:
         p = ocr_providers.GeminiProvider("key", "gemini-2.5-flash")
         with pytest.raises(OCRContextLengthError):
             p.complete_text_ex("doc", "sum")
+
+
+# ===== Phase 2 Plan 03: L-6 一括解消（V171-OCR-01） =====
+
+
+class TestRequireHttpScheme:
+    """_require_http_scheme(url) の振る舞いを確認する（L-6e/D-13）。"""
+
+    def test_file_scheme_raises_runtime_error(self):
+        from pagefolio.ocr_providers import _require_http_scheme
+
+        with pytest.raises(RuntimeError):
+            _require_http_scheme("file:///etc/passwd")
+
+    def test_ftp_scheme_raises_runtime_error(self):
+        from pagefolio.ocr_providers import _require_http_scheme
+
+        with pytest.raises(RuntimeError):
+            _require_http_scheme("ftp://example.com/x")
+
+    def test_http_scheme_passes(self):
+        from pagefolio.ocr_providers import _require_http_scheme
+
+        _require_http_scheme("http://localhost:1234")
+
+    def test_https_scheme_passes(self):
+        from pagefolio.ocr_providers import _require_http_scheme
+
+        _require_http_scheme("https://api.example.com")
+
+
+class TestUrlSchemeEnforcedOnProviders:
+    """LM Studio / Ollama / RunPod が非 http/https URL で RuntimeError を送出する
+    ことを確認する（L-6e/D-13・3プロバイダへの統一適用）。"""
+
+    def test_lmstudio_ocr_image_rejects_file_scheme(self):
+        from pagefolio import ocr_providers
+
+        p = ocr_providers.LMStudioProvider("file:///etc/passwd", "m")
+        with pytest.raises(RuntimeError):
+            p.ocr_image("Zg==", "p")
+
+    def test_lmstudio_list_models_rejects_file_scheme(self):
+        from pagefolio import ocr_providers
+
+        p = ocr_providers.LMStudioProvider("file:///etc/passwd", "m")
+        with pytest.raises(RuntimeError):
+            p.list_models()
+
+    def test_ollama_ocr_image_rejects_file_scheme(self):
+        from pagefolio import ocr_providers
+
+        p = ocr_providers.OllamaProvider("file:///etc/passwd", "m")
+        with pytest.raises(RuntimeError):
+            p.ocr_image("Zg==", "p")
+
+    def test_ollama_list_models_rejects_file_scheme(self):
+        from pagefolio import ocr_providers
+
+        p = ocr_providers.OllamaProvider("file:///etc/passwd", "m")
+        with pytest.raises(RuntimeError):
+            p.list_models()
+
+    def test_runpod_ocr_image_rejects_file_scheme(self):
+        from pagefolio import ocr_providers
+
+        p = ocr_providers.RunPodProvider("key", "file:///etc/passwd", "m")
+        with pytest.raises(RuntimeError):
+            p.ocr_image("Zg==", "p")
+
+    def test_runpod_list_models_rejects_file_scheme(self):
+        from pagefolio import ocr_providers
+
+        p = ocr_providers.RunPodProvider("key", "file:///etc/passwd", "m")
+        with pytest.raises(RuntimeError):
+            p.list_models()
+
+    def test_lmstudio_http_scheme_still_works(self, monkeypatch):
+        """http スキームは引き続き正常動作する（回帰なし確認）。"""
+        from pagefolio import ocr_providers
+
+        def fake_urlopen(req, timeout=None):
+            body = json.dumps({"choices": [{"message": {"content": "ok"}}]})
+            return _FakeResponse(body)
+
+        monkeypatch.setattr(ocr_providers.urllib.request, "urlopen", fake_urlopen)
+        p = ocr_providers.LMStudioProvider("http://localhost:1234", "m")
+        assert p.ocr_image("Zg==", "p") == "ok"
+
+
+class TestGeminiModelEscape:
+    """Gemini モデル名の URL エスケープを確認する（L-6f）。"""
+
+    def test_reserved_chars_are_quoted_in_endpoint(self, monkeypatch):
+        from pagefolio import ocr_providers
+
+        captured = {}
+
+        def fake_urlopen(req, timeout=None):
+            captured["url"] = req.full_url
+            body = json.dumps(
+                {"candidates": [{"content": {"parts": [{"text": "ok"}]}}]}
+            )
+            return _FakeResponse(body)
+
+        monkeypatch.setattr(ocr_providers.urllib.request, "urlopen", fake_urlopen)
+        p = ocr_providers.GeminiProvider(api_key="k", model="models/foo?x=1&y=2")
+        p.ocr_image("Zg==", "describe")
+        # 予約文字（/ ? & =）がパーセントエンコードされ、意図しないクエリ文字列に
+        # ならないこと
+        assert "?x=1" not in captured["url"]
+        assert "models%2Ffoo%3Fx%3D1%26y%3D2" in captured["url"]
+
+    def test_plain_model_name_endpoint_unchanged(self, monkeypatch):
+        from pagefolio import ocr_providers
+
+        captured = {}
+
+        def fake_urlopen(req, timeout=None):
+            captured["url"] = req.full_url
+            body = json.dumps(
+                {"candidates": [{"content": {"parts": [{"text": "ok"}]}}]}
+            )
+            return _FakeResponse(body)
+
+        monkeypatch.setattr(ocr_providers.urllib.request, "urlopen", fake_urlopen)
+        p = ocr_providers.GeminiProvider(api_key="k", model="gemini-2.5-flash")
+        p.ocr_image("Zg==", "describe")
+        assert "gemini-2.5-flash:generateContent" in captured["url"]
+
+
+class TestErrorBodyTruncation:
+    """_raise_mapped_http_error のエラーメッセージ body 切り詰めを確認する（L-6d）。"""
+
+    def test_long_body_truncated_to_500_chars(self, monkeypatch):
+        from pagefolio import ocr_providers
+
+        long_body = "x" * 2000
+
+        def fake_urlopen(req, timeout=None):
+            raise _FakeHTTPError(400, "Bad Request", long_body.encode("utf-8"))
+
+        monkeypatch.setattr(ocr_providers.urllib.request, "urlopen", fake_urlopen)
+        p = ocr_providers.LMStudioProvider("http://x", "m")
+        with pytest.raises(RuntimeError) as ei:
+            p.ocr_image("Zg==", "p")
+        # メッセージは "HTTP 400: " プレフィックス + 切り詰め後 body（500文字以下）
+        body_in_message = str(ei.value).split(": ", 1)[1]
+        assert len(body_in_message) <= 500
+
+    def test_short_body_not_truncated(self, monkeypatch):
+        from pagefolio import ocr_providers
+
+        def fake_urlopen(req, timeout=None):
+            raise _FakeHTTPError(400, "Bad Request", b"short error")
+
+        monkeypatch.setattr(ocr_providers.urllib.request, "urlopen", fake_urlopen)
+        p = ocr_providers.LMStudioProvider("http://x", "m")
+        with pytest.raises(RuntimeError) as ei:
+            p.ocr_image("Zg==", "p")
+        assert "short error" in str(ei.value)
+
+    def test_truncation_applies_across_all_providers(self, monkeypatch):
+        """全プロバイダ共通ヘルパー経由であることを Gemini でも確認（Pitfall 4）。"""
+        from pagefolio import ocr_providers
+
+        long_body = "y" * 2000
+
+        def fake_urlopen(req, timeout=None):
+            raise _FakeHTTPError(400, "Bad Request", long_body.encode("utf-8"))
+
+        monkeypatch.setattr(ocr_providers.urllib.request, "urlopen", fake_urlopen)
+        p = ocr_providers.GeminiProvider(api_key="k", model="gemini-2.5-flash")
+        with pytest.raises(RuntimeError) as ei:
+            p.ocr_image("Zg==", "describe")
+        body_in_message = str(ei.value).split(": ", 1)[1]
+        assert len(body_in_message) <= 500
+
+
+class TestClaudeListModelsPagination:
+    """ClaudeProvider.list_models のページネーション対応を確認する（L-6b）。"""
+
+    def test_single_page_backward_compatible(self, monkeypatch):
+        """has_more が無い/False の単発応答は従来どおり1回のみ呼び出す。"""
+        from pagefolio import ocr_providers
+
+        calls = {"n": 0}
+
+        def fake_urlopen(req, timeout=None):
+            calls["n"] += 1
+            body = json.dumps(
+                {
+                    "data": [
+                        {
+                            "id": "claude-sonnet-4-6",
+                            "capabilities": {"image_input": {"supported": True}},
+                        }
+                    ],
+                    "has_more": False,
+                }
+            )
+            return _FakeClaudeResponse(body)
+
+        monkeypatch.setattr(ocr_providers.urllib.request, "urlopen", fake_urlopen)
+        p = ocr_providers.ClaudeProvider("my-key", "claude-sonnet-4-6")
+        result = p.list_models()
+        assert result == ["claude-sonnet-4-6"]
+        assert calls["n"] == 1
+
+    def test_multi_page_concatenates_all_models(self, monkeypatch):
+        """has_more/last_id で2ページ辿り、全モデルを連結して返す。"""
+        from pagefolio import ocr_providers
+
+        calls = {"n": 0}
+
+        def fake_urlopen(req, timeout=None):
+            calls["n"] += 1
+            if calls["n"] == 1:
+                assert "after_id" not in req.full_url
+                body = json.dumps(
+                    {
+                        "data": [
+                            {
+                                "id": "claude-model-a",
+                                "capabilities": {"image_input": {"supported": True}},
+                            }
+                        ],
+                        "has_more": True,
+                        "last_id": "model-a-cursor",
+                    }
+                )
+            else:
+                assert "after_id=model-a-cursor" in req.full_url
+                body = json.dumps(
+                    {
+                        "data": [
+                            {
+                                "id": "claude-model-b",
+                                "capabilities": {"image_input": {"supported": True}},
+                            }
+                        ],
+                        "has_more": False,
+                    }
+                )
+            return _FakeClaudeResponse(body)
+
+        monkeypatch.setattr(ocr_providers.urllib.request, "urlopen", fake_urlopen)
+        p = ocr_providers.ClaudeProvider("my-key", "claude-sonnet-4-6")
+        result = p.list_models()
+        assert result == ["claude-model-a", "claude-model-b"]
+        assert calls["n"] == 2

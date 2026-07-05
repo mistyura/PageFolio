@@ -1,102 +1,100 @@
 # Testing Patterns
 
-**Analysis Date:** 2026-06-10
+**Analysis Date:** 2026-07-03
 
 ## Test Framework
 
 **Runner:**
-- pytest (v9.0.2)
-- Config location: `pyproject.toml` (under `[tool.pytest.ini_options]`)
-- Config:
-  ```toml
-  [tool.pytest.ini_options]
-  testpaths = ["tests"]
-  pythonpath = ["src"]
-  ```
+- pytest 9.0.2
+- Config: `pyproject.toml`
+- Test paths: `tests/` directory
+- Python path: `src` (for import resolution)
 
 **Assertion Library:**
-- Built-in `assert` statements (standard Python unittest style)
-- Also uses `pytest.raises()` for exception testing
+- Python built-in `assert` statements (enabled in tests via `# noqa: S101`)
+- pytest assertions (`pytest.raises()`, `pytest.approx()`)
+- Manual equality checks
 
 **Run Commands:**
+
 ```bash
-pytest                    # Run all tests
-pytest tests/test_*.py    # Run specific test file
-pytest -v                 # Verbose output with test names
-pytest -x                 # Stop on first failure
-pytest --cov=pagefolio    # Run with coverage (requires pytest-cov)
+pytest                          # Run all tests
+pytest -v                       # Verbose output with test names
+pytest tests/test_pdf_ops.py    # Run specific test file
+pytest tests/test_pdf_ops.py::TestPageRotate::test_rotate_90  # Run specific test
+pytest -k "rotate"              # Run tests matching keyword
+pytest --cov                    # Generate coverage report
+pytest -x                       # Stop on first failure
+pytest -s                       # Show print statements
 ```
 
 ## Test File Organization
 
 **Location:**
-- Test files co-located in `tests/` directory (separate from source)
-- Tests import from `pagefolio` package using sys.path manipulation for portability
+- All tests in `tests/` directory at project root
+- One test file per source module (e.g., `test_pdf_ops.py` for PDF operations)
+- Some cross-cutting concern tests exist (e.g., `test_settings_keyguard.py`, `test_lang_parity.py`)
 
-**Naming:**
-- Pattern: `test_<module>.py` matching source modules
-- Example mappings:
-  - `tests/test_pdf_ops.py` tests PDF operations via fitz API
-  - `tests/test_ocr.py` tests OCR utilities and parallel execution
-  - `tests/test_plugins.py` tests PluginManager
-  - `tests/test_utils.py` tests utility functions (settings, fonts)
-  - `tests/test_imports.py` tests backward compatibility and import paths
+**Naming Convention:**
+- Test files: `test_<module>.py` (e.g., `test_file_ops.py`, `test_ocr_providers.py`)
+- Test classes: `Test<FeatureName>` (e.g., `TestPdfOpen`, `TestPdfSave`, `TestPageRotate`)
+- Test methods: `test_<scenario>` (e.g., `test_open_valid_pdf`, `test_rotate_90`, `test_is_abc_subclass`)
 
-**File Count:**
-- 11 test files total
-- 412+ test methods across all files
-- Estimated coverage: Core functionality and regression tests
+**Directory Structure:**
+```
+tests/
+├── conftest.py               # Shared fixtures (sample PDFs, temp paths)
+├── test_imports.py           # Package import and backward-compat tests
+├── test_utils.py             # Utility functions
+├── test_pdf_ops.py           # PDF read/write operations
+├── test_plugins.py           # PluginManager tests
+├── test_viewer.py            # Preview/thumbnail rendering
+├── test_settings_keyguard.py # Settings file API key safety checks
+├── test_ocr.py               # OCR module utilities
+├── test_ocr_providers.py     # OCR provider implementations
+├── test_provider_ui.py       # Provider UI integration tests
+├── test_pagination.py        # Page window calculation (pure functions)
+├── test_md_render.py         # Markdown parsing (pure functions)
+├── test_export_images.py     # Page-to-image export
+├── test_save_overwrite.py    # Shrink-and-save helper
+├── test_password.py          # PDF password operations
+├── test_print.py             # Print temp file generation
+├── test_undo_stress.py       # 120-page Undo/Redo stress test
+├── test_lang_parity.py       # Language key consistency
+└── test_source_keyguard.py   # Source code API key pattern scan
+```
 
 ## Test Structure
 
 **Suite Organization:**
 
-Test classes use the pattern `Test<Feature>` to group related tests. Each class tests one component or feature:
+Test classes group related test methods by feature/class:
 
 ```python
 class TestPdfOpen:
     """PDF ファイルの読み込みテスト"""
+    
     def test_open_valid_pdf(self, sample_pdf):
-        ...
+        """正常な PDF を開ける"""
+    
     def test_open_nonexistent_file_raises(self, tmp_path):
-        ...
+        """存在しないファイルを開くとエラー"""
 
-class TestPageRotate:
-    """ページ回転テスト（_rotate_selected と同等のロジック）"""
-    def test_rotate_90(self, sample_pdf_doc):
-        ...
+
+class TestPdfSave:
+    """PDF ファイルの保存テスト"""
+    
+    def test_save_new_file(self, sample_pdf_doc, tmp_path):
+        """新しいファイルとして保存できる"""
 ```
 
-**Fixtures (Shared Setup):**
+**Setup & Teardown:**
+- pytest fixtures used for setup (e.g., `@pytest.fixture()`)
+- Fixtures handle cleanup with `yield` pattern or context managers
+- `conftest.py` defines shared fixtures available across all tests
 
-Defined in `tests/conftest.py`. Available to all test files:
-
+**Example Fixture (Generator Pattern):**
 ```python
-@pytest.fixture()
-def tmp_settings(tmp_path):
-    """一時ディレクトリに設定ファイルを作成・管理するフィクスチャ。
-    返り値は (settings_path, write_fn) のタプル。
-    write_fn(data) で設定を書き込む。
-    """
-    settings_path = tmp_path / "pagefolio_settings.json"
-    def write_fn(data):
-        settings_path.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
-    return settings_path, write_fn
-
-@pytest.fixture()
-def sample_pdf(tmp_path):
-    """テスト用の3ページPDFをメモリ上で生成し、tmp_pathに保存して返す。
-    返り値は PDF ファイルパス (str)。
-    """
-    doc = fitz.open()
-    for i in range(3):
-        page = doc.new_page(width=595, height=842)  # A4
-        page.insert_text((72, 72), f"Page {i + 1}", fontsize=24)
-    pdf_path = str(tmp_path / "test_sample.pdf")
-    doc.save(pdf_path)
-    doc.close()
-    return pdf_path
-
 @pytest.fixture()
 def sample_pdf_doc():
     """テスト用の3ページPDFをメモリ上で生成し、fitz.Document として返す。
@@ -106,295 +104,299 @@ def sample_pdf_doc():
     for i in range(3):
         page = doc.new_page(width=595, height=842)
         page.insert_text((72, 72), f"Page {i + 1}", fontsize=24)
-    yield doc
-    doc.close()
-
-@pytest.fixture()
-def multi_pdf_files(tmp_path):
-    """結合・挿入テスト用に複数のPDFファイルを生成する。
-    返り値は [path1, path2, path3] のリスト。
-    """
-    # Creates 3 PDFs with 1, 2, 3 pages respectively
-    ...
-    return paths
+    yield doc  # Test receives doc
+    doc.close()  # Cleanup after test
 ```
 
-**Setup and Teardown:**
-
-- Fixtures use `yield` for resource cleanup (preferred over setup/teardown methods)
-- Example: `sample_pdf_doc` fixture closes document after test via `yield`
-- Temporary files created via pytest's `tmp_path` fixture (auto-cleaned)
-
-## Test Structure Example
-
-From `tests/test_pdf_ops.py`:
+**Assertion Patterns:**
 
 ```python
-"""PDF 操作のテスト。
-pagefolio.py のPDF操作ロジックは Tkinter に強く結合しているため、
-fitz API を直接使ってアプリと同等の操作が正しく動くことを検証する。
-"""
+# Equality
+assert len(doc) == 3
+assert os.path.exists(save_path)
+assert "Page 1" in text
 
-import os
-from unittest.mock import patch
-import fitz
-import pytest
-import pagefolio
+# Exception raising
+with pytest.raises(FileNotFoundError):
+    fitz.open(nonexistent)
 
-class TestPdfOpen:
-    """PDF ファイルの読み込みテスト"""
+with pytest.raises((FileNotFoundError, fitz.FileNotFoundError)):
+    fitz.open(path)
 
-    def test_open_valid_pdf(self, sample_pdf):
-        """正常な PDF を開ける"""
-        doc = fitz.open(sample_pdf)
-        assert len(doc) == 3
-        doc.close()
+# Membership & attributes
+assert "text-abc" in result
+assert issubclass(OCRProvider, abc.ABC)
+assert pm.plugins == {}
 
-    def test_open_nonexistent_file_raises(self, tmp_path):
-        """存在しないファイルを開くとエラー"""
-        with pytest.raises((FileNotFoundError, fitz.FileNotFoundError)):
-            fitz.open(str(tmp_path / "nonexistent.pdf"))
+# String operations
+assert result.startswith("data:image/png;base64,")
+assert "Modified" in text
+```
 
-    def test_page_text_content(self, sample_pdf):
-        """各ページのテキスト内容が正しい"""
-        doc = fitz.open(sample_pdf)
-        for i in range(3):
-            text = doc[i].get_text()
-            assert f"Page {i + 1}" in text
-        doc.close()
+## Fixtures
+
+**Shared Fixtures (in `conftest.py`):**
+
+| Fixture | Purpose | Type |
+|---------|---------|------|
+| `tmp_settings` | Temp settings JSON file path + write function | Tuple `(Path, callable)` |
+| `sample_pdf` | 3-page test PDF, saved to temp path | String (filepath) |
+| `sample_pdf_doc` | 3-page PDF as `fitz.Document` in memory | `fitz.Document` (auto-closed) |
+| `large_pdf_doc` | 47-page PDF for window boundary tests | `fitz.Document` (auto-closed) |
+| `multi_pdf_files` | 3 PDFs (1/2/3 pages) in temp dir | List of paths |
+
+**Fixture Usage:**
+```python
+def test_save_preserves_content(self, sample_pdf_doc, tmp_path):
+    """sample_pdf_doc and tmp_path are injected by pytest"""
+    save_path = str(tmp_path / "saved.pdf")
+    sample_pdf_doc.save(save_path)
+    # Test uses both fixtures
 ```
 
 ## Mocking
 
-**Framework:** `unittest.mock` (Python standard library)
+**Framework:** `unittest.mock` from standard library
 
 **Patterns:**
 
-1. **Monkeypatch (pytest built-in):**
-   ```python
-   def test_discover_plugins(self, tmp_path, monkeypatch):
-       plugins_dir = tmp_path / "plugins"
-       plugins_dir.mkdir()
-       (plugins_dir / "my_plugin.py").write_text("# dummy", encoding="utf-8")
-       monkeypatch.setattr(_plugins_mod, "_get_plugins_dir", lambda: str(plugins_dir))
-       pm = pagefolio.PluginManager()
-       found = pm.discover_plugins()
-       assert "my_plugin" in [pid for pid, _ in found]
-   ```
+*Monkeypatch (preferred for simple value replacement):*
+```python
+def test_discover_from_directory(self, tmp_path, monkeypatch):
+    plugins_dir = tmp_path / "plugins"
+    plugins_dir.mkdir()
+    # Replace function with temp value
+    monkeypatch.setattr(_plugins_mod, "_get_plugins_dir", lambda: str(plugins_dir))
+    pm = pagefolio.PluginManager()
+    found = pm.discover_plugins()
+```
 
-2. **unittest.mock.patch():**
-   ```python
-   from unittest.mock import patch
-   
-   def test_load_settings(self, tmp_settings):
-       path, write_fn = tmp_settings
-       write_fn({"theme": "light", "font_size": 14})
-       with patch.object(_settings_mod, "_get_settings_path", return_value=str(path)):
-           settings = pagefolio._load_settings()
-       assert settings["theme"] == "light"
-   ```
+*Fake Response Objects (for HTTP/socket mocking):*
+```python
+class _FakeResponse:
+    """urllib.request.urlopen の文脈マネージャーをモック"""
+    
+    def __init__(self, body):
+        self._body = body.encode("utf-8") if isinstance(body, str) else body
+    
+    def __enter__(self):
+        return self
+    
+    def __exit__(self, exc_type, exc, tb):
+        return False
+    
+    def read(self):
+        return self._body
 
-3. **Test Doubles (Custom Fakes):**
-   ```python
-   class FakeProvider(OCRProvider):
-       """run_parallel テスト用の偽 Provider。"""
-       default_concurrency = 2
-       max_concurrency = 4
-   
-       def __init__(self, side_effect=None):
-           self._side_effect = side_effect
-   
-       def ocr_image(self, b64_png, prompt, **kwargs):
-           if self._side_effect is not None:
-               return self._side_effect(b64_png, prompt)
-           return f"text-{b64_png}"
-   
-       def list_models(self):
-           return ["fake-model"]
-   ```
+def test_lmstudio_payload(self, monkeypatch):
+    p = LMStudioProvider(url="http://x", model="m")
+    monkeypatch.setattr("urllib.request.urlopen", 
+                       lambda req, timeout=None: _FakeResponse(json_body))
+```
+
+*Subclass Mocking (for abstract base classes):*
+```python
+class FakeProvider(OCRProvider):
+    """run_parallel テスト用の偽 Provider"""
+    
+    default_concurrency = 2
+    max_concurrency = 4
+    
+    def __init__(self, side_effect=None):
+        self._side_effect = side_effect
+    
+    def ocr_image(self, b64_png, prompt, **kwargs):
+        if self._side_effect is not None:
+            return self._side_effect(b64_png, prompt)
+        return f"text-{b64_png}"
+    
+    def list_models(self):
+        return ["fake-model"]
+```
 
 **What to Mock:**
-- External API calls (LM Studio, Claude, Gemini)
-- File system paths (to use `tmp_path` instead of real files)
-- Plugin discovery (to avoid loading real plugins during tests)
-- Settings file I/O (to use temporary settings)
+- External services (HTTP, sockets) → use fake response classes
+- File system → use `tmp_path` fixture
+- Module-level functions → use `monkeypatch.setattr()`
+- Abstract methods → subclass and implement
 
 **What NOT to Mock:**
-- PDF operations via fitz (test real PDF functionality)
-- Core business logic (test actual algorithms)
-- Data structures (test real collections, not mocks)
-- Dialog classes (verify symbol existence only, don't instantiate in headless tests)
-
-## Fixtures and Factories
-
-**Test Data:**
-
-Fixtures create realistic test PDFs in memory:
-```python
-@pytest.fixture()
-def sample_pdf_doc():
-    """テスト用の3ページPDFをメモリ上で生成"""
-    doc = fitz.open()
-    for i in range(3):
-        page = doc.new_page(width=595, height=842)  # A4
-        page.insert_text((72, 72), f"Page {i + 1}", fontsize=24)
-    yield doc
-    doc.close()
-```
-
-**Location:**
-- Shared fixtures: `tests/conftest.py`
-- Test-specific fixtures: Defined within test classes with `@pytest.fixture(autouse=True)`
-- Example from `tests/test_pdf_ops.py`:
-  ```python
-  @pytest.fixture(autouse=True)
-  def setup_test(self, tmp_path, monkeypatch):
-      """Each test method gets fresh temp directory"""
-      self.tmp_dir = tmp_path
-  ```
-
-## Coverage
-
-**Requirements:** No hard coverage target enforced. Testing follows pragmatic approach:
-- Core business logic (PDF operations, undo/redo): thorough coverage
-- UI state management: targeted tests for complex state machines
-- External integrations: mocked to avoid flaky network tests
-- Plugin system: comprehensive regression tests
-
-**View Coverage:**
-```bash
-pytest --cov=pagefolio --cov-report=html
-# Opens htmlcov/index.html in browser
-```
+- PyMuPDF (`fitz`) operations — test with real PDF objects in memory
+- Settings I/O — use real JSON write in temp directory
+- Plugin loading — actually load test plugin files from temp directory
+- OCR provider logic — test directly with fake data, not mocked calls
 
 ## Test Types
 
 **Unit Tests:**
-- Focus: Individual functions and methods in isolation
-- Scope: `_load_settings()`, `page_to_png_b64()`, `clamp_retry_after()`, utility functions
-- Approach: Use fixtures and mocks to isolate units
-- Location: Most of `tests/test_utils.py`, `tests/test_ocr.py`, `tests/test_ocr_providers.py`
+- Scope: Single function or method
+- Approach: Isolate pure logic (e.g., `resolve_ocr_prompt()`, `parse_markdown()`)
+- Location: `test_ocr.py` (OCR utilities), `test_pagination.py` (window calculations), `test_md_render.py` (markdown parsing)
+- Example: `TestPageToPngB64.test_returns_valid_base64_png()` — verifies PNG encoding
 
 **Integration Tests:**
-- Focus: Multi-component workflows (file open → page rotate → save)
-- Scope: Undo/redo state reconstruction, plugin lifecycle, PDF merge operations
-- Approach: Use real fitz.Document and temporary files
-- Location: `tests/test_pdf_ops.py`, `tests/test_plugins.py`, `tests/test_viewer.py`
+- Scope: Multiple components working together
+- Approach: Test with real fixtures (actual PDFs, real settings JSON)
+- Location: `test_pdf_ops.py` (open + save workflow), `test_plugins.py` (discovery + load + unload)
+- Example: `TestPdfSave.test_save_preserves_content()` — open PDF, modify, save, re-open, verify
+
+**Stress/Memory Tests:**
+- Scope: Behavior under heavy load or repeated operations
+- Approach: Large datasets (120-page PDFs), many cycles (25+ repeat operations)
+- Location: `test_undo_stress.py` — Undo/Redo across 120 pages with memory validation
+- Example: Verify Blob disposal, deque eviction, no file leaks
 
 **Regression Tests:**
-- Focus: Backward compatibility and import paths
-- Scope: Verify dialogs can be imported, constants re-exported correctly
-- Approach: Explicit import statements + hasattr checks
-- Location: `tests/test_imports.py` (comprehensive import compatibility suite)
+- Scope: Language key parity, API key safety, source code scans
+- Approach: Automated consistency checks
+- Location: `test_lang_parity.py`, `test_settings_keyguard.py`, `test_source_keyguard.py`
+- Example: Ensure all `LANG["ja"]` keys exist in `LANG["en"]`
 
-**E2E Tests:**
-- Status: Not yet implemented
-- Note: Would require Tkinter event simulation or GUI automation
-- Future: Consider `pytest-qt` equivalent for Tkinter if needed
+**E2E / Dialog Tests:**
+- Scope: Not formally used (Tkinter makes it difficult)
+- Approach: Manual testing or `test_provider_ui.py` mocking dialog state
+- Note: Dialog logic tested via callback function mocking, not window interaction
 
 ## Common Patterns
 
-**Async Testing (Threading):**
+**Async/Threading Testing:**
 
-From `tests/test_ocr.py`:
+Most threading is tested via callback mocking rather than actual thread execution:
+
 ```python
-def test_run_parallel_concurrent(self):
-    """複数ページを並列 OCR する"""
-    provider = FakeProvider()
-    pages = [f"page{i}" for i in range(4)]
+def test_concurrent_calls_use_threadpool(self, monkeypatch):
+    """Verify ThreadPoolExecutor.map is called with correct concurrency"""
+    calls = []
     
-    def render_fn(idx):
-        return f"b64-page{idx}"
+    def fake_map(fn, items):
+        calls.append(("map", len(items)))
+        return [fn(item) for item in items]
     
-    results = list(ocr.run_parallel(
-        pages, render_fn, provider, "prompt", concurrency=2
-    ))
-    assert len(results) == 4
-    assert all("text-" in r for r in results)
+    monkeypatch.setattr(ThreadPoolExecutor, "map", fake_map)
+    # Now test actual code that uses ThreadPoolExecutor
 ```
 
-**Handling Async Render Threads:**
-- Generation counters (`_preview_gen`, `_thumb_gen`) prevent race conditions
-- Stale results automatically discarded if counter advances
-- No explicit thread mocking needed—tests run synchronously
+OCR dialog's `_run_gen()` method tested by checking state updates without actually running threads:
+
+```python
+def test_ocr_dialog_generation_guard(self, monkeypatch):
+    """_run_gen prevents stale results from overwriting newer ones"""
+    # Mock OCR execution
+    # Verify only latest generation result is applied
+```
 
 **Error Testing:**
 
-1. **Exception Type Verification:**
-   ```python
-   def test_open_nonexistent_file_raises(self, tmp_path):
-       with pytest.raises((FileNotFoundError, fitz.FileNotFoundError)):
-           fitz.open(str(tmp_path / "nonexistent.pdf"))
-   ```
+```python
+def test_open_nonexistent_file_raises(self, tmp_path):
+    """存在しないファイルを開くとエラー"""
+    with pytest.raises((FileNotFoundError, fitz.FileNotFoundError)):
+        fitz.open(str(tmp_path / "nonexistent.pdf"))
 
-2. **Exception Message Matching (pytest 7+):**
-   ```python
-   with pytest.raises(ValueError, match="API key required"):
-       _resolve_api_key("unknown_provider", {})
-   ```
+def test_ocr_api_key_missing_raises(self):
+    """API キーが見つからない場合は OCRAPIKeyError を発生"""
+    from pagefolio.ocr_providers import OCRAPIKeyError
+    
+    with pytest.raises(OCRAPIKeyError) as exc_info:
+        # Code that tries to read missing API key
+    
+    assert exc_info.value.env_var == "EXPECTED_KEY"
+    assert "EXPECTED_KEY" in str(exc_info.value)
+```
 
-3. **Custom Exception Handling:**
-   ```python
-   def test_api_key_error_on_missing_key(self):
-       from pagefolio.ocr_providers import OCRAPIKeyError
-       
-       with pytest.raises(OCRAPIKeyError):
-           # Trigger missing API key path
-           provider.ocr_image(b64, prompt)
-   ```
+**Parametrized Tests:**
 
-## Special Test Concerns
+```python
+@pytest.mark.parametrize("theme,expected", [
+    ("dark", {"BG_DARK": "#1a1a2e", ...}),
+    ("light", {"BG_DARK": "#f0f0f5", ...}),
+])
+def test_theme_colors(theme, expected):
+    """Each theme applies correct color palette"""
+    _apply_theme(theme)
+    for key, val in expected.items():
+        assert C[key] == val
+```
 
-**Headless Mode (No Tkinter Root):**
-- Dialog classes NOT instantiated in tests (would require event loop)
-- Instead: verify class existence via `hasattr()` and import statements
-- Rationale: `test_imports.py` ensures dialog classes are importable and exist
-- Example from `tests/test_imports.py`:
-  ```python
-  def test_dialogs_subpackage_about(self):
-      """pagefolio.dialogs から AboutDialog を import できる"""
-      from pagefolio.dialogs import AboutDialog
-      assert AboutDialog is not None
-  ```
+**State Isolation:**
 
-**Settings Persistence:**
-- Use `tmp_settings` fixture to create temporary settings files
-- Patch `_get_settings_path()` to point to temporary location
-- Never test against real `pagefolio_settings.json`
-- Example:
-  ```python
-  def test_save_settings_excludes_keys(self, tmp_settings):
-      path, write_fn = tmp_settings
-      with patch.object(_settings_mod, "_get_settings_path", return_value=str(path)):
-          settings = {"theme": "dark", "claude_api_key": "sk-..."}
-          pagefolio._save_settings(settings)
-          # Verify API key not in saved JSON
-          saved = json.loads(path.read_text())
-          assert "claude_api_key" not in saved
-  ```
+Each test starts with clean state:
+- New `fitz.Document` per test (not shared)
+- New temp directory per test (via `tmp_path`)
+- New settings dict per test (via `tmp_settings` fixture)
+- Plugin manager fresh instance per test
 
-**Plugin Loading Isolation:**
-- Plugins are discovered via monkeypatch to `_get_plugins_dir()`
-- Real plugins in `plugins/` are never loaded during tests
-- Each test class that uses plugins creates isolated temporary plugin directories
-- Example from `tests/test_plugins.py`:
-  ```python
-  def test_discover_plugins(self, tmp_path, monkeypatch):
-      plugins_dir = tmp_path / "plugins"
-      plugins_dir.mkdir()
-      (plugins_dir / "my_plugin.py").write_text("# dummy")
-      monkeypatch.setattr(_plugins_mod, "_get_plugins_dir", lambda: str(plugins_dir))
-      found = pm.discover_plugins()
-  ```
+## Coverage
 
-## Language in Tests
+**Requirements:** No enforced minimum (project uses coverage for awareness, not gating)
 
-**Test Documentation:**
-- Docstrings in Japanese (e.g., `"""PDF ファイルの読み込みテスト"""`)
-- Comments in Japanese
-- Test method names in English (snake_case describing behavior)
-- Exception messages and assertions in English (referring to code identifiers)
+**View Coverage:**
+```bash
+pytest --cov=pagefolio --cov-report=term-missing
+pytest --cov=pagefolio --cov-report=html  # Generates htmlcov/index.html
+```
+
+**Current Focus Areas:**
+- Core PDF operations: `test_pdf_ops.py` (95%+ coverage)
+- Pure utility functions: `test_ocr.py`, `test_pagination.py`, `test_md_render.py` (high coverage)
+- Plugin system: `test_plugins.py` (comprehensive)
+- Undo/Redo: `test_undo_stress.py` (detailed stress testing)
+- Settings & safety: `test_settings_keyguard.py`, `test_source_keyguard.py` (100% critical)
+
+**Not Covered (By Design):**
+- Full UI interaction (Tkinter makes this expensive; tested manually)
+- Thread-heavy OCR dialog (mocked or stubbed; real integration via manual QA)
+- External API integrations (Claude, Gemini, LM Studio) — tested with fake providers
+
+## Test Data
+
+**PDF Fixtures:**
+- `sample_pdf`: 3-page A4 PDF with simple text, ~20KB
+- `sample_pdf_doc`: Same as `sample_pdf` but as in-memory `fitz.Document`
+- `large_pdf_doc`: 47-page PDF for pagination boundary tests
+- `multi_pdf_files`: [1-page, 2-page, 3-page] PDFs for merge/insert tests
+- `stress_pdf_bytes`: 120-page PDF with noise images (≈64KiB per page) for Undo/Redo stress testing
+
+**Settings Fixtures:**
+- `tmp_settings`: Tuple of (temp path to JSON, write function) for safe settings I/O testing
+
+**Generate Test Data:**
+All fixtures use `fitz.open()` to generate PDFs in memory:
+```python
+doc = fitz.open()  # Create blank PDF
+for i in range(3):
+    page = doc.new_page(width=595, height=842)  # A4 size
+    page.insert_text((72, 72), f"Page {i + 1}", fontsize=24)
+data = doc.tobytes()  # Serialize to bytes
+doc.close()
+```
+
+## Best Practices
+
+**1. Use Fixtures for Setup**
+Always use pytest fixtures for setup, not class-level setup methods. This ensures test isolation.
+
+**2. Name Tests Clearly**
+Test names should describe the scenario and expected behavior: `test_rotate_90`, `test_open_nonexistent_file_raises`
+
+**3. One Assertion Per Test** (where practical)
+Each test should verify one specific behavior. Use multiple test methods for different scenarios.
+
+**4. Avoid Test Interdependence**
+Each test should be runnable independently; don't rely on test execution order.
+
+**5. Use `tmp_path` for File I/O**
+Never write to the actual project directory or user's home; always use `tmp_path` fixture.
+
+**6. Mock External Services**
+For HTTP/socket calls, use fake response objects; never make real network calls in tests.
+
+**7. Test Edge Cases**
+Include tests for boundary conditions (empty input, max size, error cases).
+
+**8. Comment Complex Assertions**
+If test logic is non-obvious, add a comment explaining what is being verified.
 
 ---
 
-*Testing analysis: 2026-06-10*
+*Testing analysis: 2026-07-03*

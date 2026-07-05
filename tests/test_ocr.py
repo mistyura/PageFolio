@@ -529,10 +529,10 @@ class TestBuildProvider:
 
 
 class TestResolveApiKey:
-    """_resolve_api_key の動作検証（キー解決・環境変数優先・未設定時エラー）"""
+    """_resolve_api_key の動作検証（キー解決・入力値優先・未設定時エラー・V171-KEY-02）"""  # noqa: E501
 
-    def test_env_var_present_returns_env_value(self, monkeypatch):
-        """環境変数 ANTHROPIC_API_KEY があればその値を返す（成功基準3・D-02）"""
+    def test_env_var_used_when_session_key_absent(self, monkeypatch):
+        """session_keys が空で環境変数があればその値を返す（フォールバック）"""
         from pagefolio.ocr import _resolve_api_key
 
         monkeypatch.setenv("ANTHROPIC_API_KEY", "env-key-abc")
@@ -540,20 +540,20 @@ class TestResolveApiKey:
         assert result == "env-key-abc"
 
     def test_env_var_absent_session_key_returned(self, monkeypatch):
-        """環境変数未設定・セッションキーあり → セッションキーを返す（D-02）"""
+        """環境変数未設定・セッションキーあり → セッションキーを返す"""
         from pagefolio.ocr import _resolve_api_key
 
         monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
         result = _resolve_api_key("claude", {"claude": "sess-key"})
         assert result == "sess-key"
 
-    def test_env_var_takes_priority_over_session_key(self, monkeypatch):
-        """session_keys にキーがあっても環境変数を優先して返す（D-02 優先順位）"""
+    def test_session_key_takes_priority_over_env_var(self, monkeypatch):
+        """session_keys（入力値）があれば環境変数より優先して返す（V171-KEY-02・優先順反転）"""
         from pagefolio.ocr import _resolve_api_key
 
-        monkeypatch.setenv("ANTHROPIC_API_KEY", "env-wins")
+        monkeypatch.setenv("ANTHROPIC_API_KEY", "env-value")
         result = _resolve_api_key("claude", {"claude": "session-key"})
-        assert result == "env-wins"
+        assert result == "session-key"
 
     def test_no_env_no_session_raises_ocr_api_key_error(self, monkeypatch):
         """環境変数もセッションキーもなければ OCRAPIKeyError を raise（成功基準2）"""
@@ -566,7 +566,7 @@ class TestResolveApiKey:
         assert ei.value.env_var == "ANTHROPIC_API_KEY"
 
     def test_os_environ_not_written(self, monkeypatch):
-        """_resolve_api_key は os.environ への書き込みを行わない（D-05）"""
+        """_resolve_api_key は os.environ への書き込みを行わない（読み取り専用原則）"""
         from pagefolio.ocr import _resolve_api_key
 
         monkeypatch.setenv("ANTHROPIC_API_KEY", "original-key")
@@ -1081,10 +1081,10 @@ class TestOcrDialogLlmConfig:
 
 
 class TestResolveApiKeyGemini:
-    """_resolve_api_key gemini の dual env var 解決を検証する（D-06・OCR-QA-01）"""
+    """_resolve_api_key gemini の dual env var を検証（D-06・V171-KEY-02 優先順反転）"""
 
     def test_gemini_api_key_priority(self, monkeypatch):
-        """GEMINI_API_KEY が優先されること（両方設定時）"""
+        """session_keys 未設定時、GEMINI_API_KEY が GOOGLE_API_KEY より優先（dual env 内部順序は不変）"""  # noqa: E501
         from pagefolio.ocr import _resolve_api_key
 
         monkeypatch.setenv("GEMINI_API_KEY", "primary-key")
@@ -1093,7 +1093,7 @@ class TestResolveApiKeyGemini:
         assert key == "primary-key"
 
     def test_google_api_key_fallback(self, monkeypatch):
-        """GEMINI_API_KEY 未設定で GOOGLE_API_KEY フォールバック（D-06）"""
+        """GEMINI_API_KEY 未設定で GOOGLE_API_KEY フォールバック（D-06・session未設定時）"""  # noqa: E501
         from pagefolio.ocr import _resolve_api_key
 
         monkeypatch.delenv("GEMINI_API_KEY", raising=False)
@@ -1122,13 +1122,66 @@ class TestResolveApiKeyGemini:
             _resolve_api_key("gemini", {})
         assert ei.value.env_var == "GEMINI_API_KEY"
 
-    def test_env_takes_priority_over_session_key(self, monkeypatch):
-        """環境変数があれば session_keys より優先する（D-02）"""
+    def test_session_key_takes_priority_over_env_var(self, monkeypatch):
+        """session_keys（入力値）があれば環境変数より優先する（V171-KEY-02・優先順反転）"""
         from pagefolio.ocr import _resolve_api_key
 
-        monkeypatch.setenv("GEMINI_API_KEY", "env-wins")
+        monkeypatch.setenv("GEMINI_API_KEY", "env-value")
         key = _resolve_api_key("gemini", {"gemini": "session-key"})
-        assert key == "env-wins"
+        assert key == "session-key"
+
+    def test_os_environ_not_written(self, monkeypatch):
+        """_resolve_api_key(gemini) は os.environ への書き込みを行わない（読取専用）"""
+        from pagefolio.ocr import _resolve_api_key
+
+        monkeypatch.setenv("GEMINI_API_KEY", "original-key")
+        _resolve_api_key("gemini", {"gemini": "session-key"})
+        import os
+
+        assert os.environ.get("GEMINI_API_KEY") == "original-key"
+
+
+# ===== _resolve_api_key runpod（Task 1: 01-01・V171-KEY-04 新設）=====
+
+
+class TestResolveApiKeyRunPod:
+    """_resolve_api_key runpod を検証（V171-KEY-04・入力優先/フォールバック/raise）"""
+
+    def test_session_key_takes_priority_over_env_var(self, monkeypatch):
+        """session_keys（入力値）があれば環境変数より優先する（V171-KEY-02・優先順反転）"""
+        from pagefolio.ocr import _resolve_api_key
+
+        monkeypatch.setenv("RUNPOD_API_KEY", "env-value")
+        key = _resolve_api_key("runpod", {"runpod": "session-key"})
+        assert key == "session-key"
+
+    def test_env_var_used_when_session_key_absent(self, monkeypatch):
+        """session_keys が空で環境変数 RUNPOD_API_KEY があればその値を返す（フォールバック）"""  # noqa: E501
+        from pagefolio.ocr import _resolve_api_key
+
+        monkeypatch.setenv("RUNPOD_API_KEY", "env-key-abc")
+        key = _resolve_api_key("runpod", {})
+        assert key == "env-key-abc"
+
+    def test_no_env_no_session_raises_ocr_api_key_error(self, monkeypatch):
+        """環境変数もセッションキーもなければ OCRAPIKeyError を raise（成功基準2）"""
+        from pagefolio.ocr import _resolve_api_key
+        from pagefolio.ocr_providers import OCRAPIKeyError
+
+        monkeypatch.delenv("RUNPOD_API_KEY", raising=False)
+        with pytest.raises(OCRAPIKeyError) as ei:
+            _resolve_api_key("runpod", {})
+        assert ei.value.env_var == "RUNPOD_API_KEY"
+
+    def test_os_environ_not_written(self, monkeypatch):
+        """_resolve_api_key(runpod) は os.environ への書き込みを行わない（読取専用）"""
+        from pagefolio.ocr import _resolve_api_key
+
+        monkeypatch.setenv("RUNPOD_API_KEY", "original-key")
+        _resolve_api_key("runpod", {"runpod": "sess"})
+        import os
+
+        assert os.environ.get("RUNPOD_API_KEY") == "original-key"
 
 
 # ===== build_provider gemini 分岐（Task 1: 06-01）=====
@@ -1174,104 +1227,9 @@ class TestBuildProviderGemini:
             assert key not in settings, f"settings に {key} が混入している"
 
 
-# ===== producer-consumer メモリ非蓄積リグレッション（D-13・成功基準2）=====
-
-
-class TestProducerConsumerMemory:
-    """run_with_bounded_buffer の同時保持画像数がバッファ上限を超えないことを検証する。
-
-    FakeProvider の ocr_image 呼び出し時点で in-flight な b64 の数が
-    concurrency + 1 （バッファ上限）を超えないことを threading.Lock で計測する（D-13）。
-    """
-
-    def test_in_flight_count_never_exceeds_maxsize(self):
-        """同時保持画像数が concurrency+1 以内に収まること（T-06-06・成功基準2）"""
-        in_flight_count = [0]
-        max_observed = [0]
-        lock = threading.Lock()
-        concurrency = 2
-
-        def counting_side_effect(b64, prompt):
-            with lock:
-                in_flight_count[0] += 1
-                max_observed[0] = max(max_observed[0], in_flight_count[0])
-            time.sleep(0.01)  # API 処理時間を模擬
-            with lock:
-                in_flight_count[0] -= 1
-            return f"text-{b64}"
-
-        provider = FakeProvider(side_effect=counting_side_effect)
-        # max_concurrency を concurrency に合わせるためモンキーパッチ
-        provider.default_concurrency = concurrency
-        provider.max_concurrency = concurrency
-
-        page_indices = list(range(20))  # 20 ページ（100 ページの代替）
-        results, errors, fm, fk = ocr.run_with_bounded_buffer(
-            provider=provider,
-            render_fn=lambda i: f"b64-page-{i}",
-            page_indices=page_indices,
-            concurrency=concurrency,
-            prompt="",
-        )
-        expected_maxsize = concurrency + 1
-        assert max_observed[0] <= expected_maxsize, (
-            f"同時保持数 {max_observed[0]} がバッファ上限 {expected_maxsize} を超えた"
-        )
-        assert len(results) == len(page_indices), (
-            f"結果取りこぼし: {len(results)} / {len(page_indices)} ページ"
-        )
-        assert fm is None
-
-    def test_all_results_collected_no_missing(self):
-        """全ページの結果が results に揃い取りこぼしがないこと"""
-        provider = FakeProvider()
-        page_indices = list(range(20))
-        results, errors, fm, fk = ocr.run_with_bounded_buffer(
-            provider=provider,
-            render_fn=lambda i: f"b64-{i}",
-            page_indices=page_indices,
-            concurrency=2,
-            prompt="",
-        )
-        assert len(results) == len(page_indices)
-        for i in page_indices:
-            assert i in results, f"ページ {i} の結果が欠落"
-
-    def test_cancel_terminates_without_deadlock(self):
-        """is_cancelled が途中で True になると残ページを処理せず有限時間で終了する。
-
-        デッドロックしないことをタイムアウトなし（pytest のデフォルト）で検証する。
-        """
-        call_count = [0]
-        cancel_after = 5  # 5 回呼び出し後にキャンセル
-
-        def side_effect(b64, prompt):
-            with threading.Lock():
-                call_count[0] += 1
-            time.sleep(0.01)
-            return f"text-{b64}"
-
-        provider = FakeProvider(side_effect=side_effect)
-        cancel_event = threading.Event()
-
-        def is_cancelled():
-            if call_count[0] >= cancel_after:
-                cancel_event.set()
-            return cancel_event.is_set()
-
-        page_indices = list(range(50))
-        results, errors, fm, fk = ocr.run_with_bounded_buffer(
-            provider=provider,
-            render_fn=lambda i: f"b64-{i}",
-            page_indices=page_indices,
-            concurrency=1,
-            prompt="",
-            is_cancelled=is_cancelled,
-        )
-        # キャンセル後は全ページは処理されない
-        assert len(results) < len(page_indices), (
-            "キャンセル後も全ページが処理されている（キャンセルが効いていない）"
-        )
+# ===== producer-consumer メモリ非蓄積リグレッションは =====
+# ===== tests/test_ocr_pipeline.py へ移設（旧 TestProducerConsumerMemory）=====
+# （run_with_bounded_buffer 削除に伴う移設・D-02/02-04）
 
 
 # ===== OCRDialog 並列度回帰テスト（CR-01 修正検証・Task 2: 06-04）=====
@@ -1304,7 +1262,7 @@ class TestWorkerConcurrency:
         fake = types.SimpleNamespace(
             concurrency=concurrency,
             _worker_threads=[],
-            _workers_remaining=0,
+            _pstate=None,
         )
         # _worker は no-op（スタブ Thread は実際には実行しない）
         fake._worker = lambda: None
@@ -1318,7 +1276,7 @@ class TestWorkerConcurrency:
         OCRDialog._start_worker_thread(fake)
 
         assert len(started) == 4, f"起動スレッド数が {len(started)} 本（期待: 4 本）"
-        assert fake._workers_remaining == 4
+        assert fake._pstate.workers_remaining == 4
 
     def test_single_thread_for_gemini(self, monkeypatch):
         """concurrency=1（Gemini 等）のとき 1 本のみ起動される（後方互換）。"""
@@ -1328,7 +1286,7 @@ class TestWorkerConcurrency:
         OCRDialog._start_worker_thread(fake)
 
         assert len(started) == 1, f"起動スレッド数が {len(started)} 本（期待: 1 本）"
-        assert fake._workers_remaining == 1
+        assert fake._pstate.workers_remaining == 1
 
     def test_termination_signals_match_concurrency(self):
         """全ページ完了時にキューへ送られた None の数が concurrency 本（CR-01）。
@@ -1348,6 +1306,7 @@ class TestWorkerConcurrency:
             page_indices=[],
             _run_pages=[],
             _render_idx=0,
+            _pstate=None,
             _run_gen=1,  # M-2 世代カウンタ
             winfo_exists=lambda: True,  # M-2 ウィジェット存在チェック
             # after を即時実行スタブ（連鎖なし・完了分岐では after を呼ばない）
@@ -1432,12 +1391,15 @@ class TestFinishIdempotent:
 
 class TestClearResetsFatalState:
     """タイムアウト等の致命的エラー後に「クリア」→「読み取り実行」すると、
-    残留した _fatal_msg により全ワーカーが API 呼び出しをスキップして
-    旧エラーで即終了するバグの回帰テスト（H-6）。"""
+    残留した PipelineState.fatal_msg により全ワーカーが API 呼び出しを
+    スキップして旧エラーで即終了するバグの回帰テスト（H-6・D-01/D-02 で
+    PipelineState へ一本化後は self._pstate ごと破棄されることを検証する）。"""
 
     def _make_fake_after_fatal(self):
         """致命的エラー（タイムアウト）で終了した直後の fake OCRDialog を生成する。"""
         import types
+
+        from pagefolio.ocr_pipeline import PipelineState
 
         class _StubProgressBar(dict):
             """dict ベースの Progressbar スタブ（configure / 添字代入の両対応）"""
@@ -1445,17 +1407,21 @@ class TestClearResetsFatalState:
             def configure(self, **kw):
                 self.update(kw)
 
+        pstate = PipelineState(workers=1)
+        pstate.fatal_msg = "Read timed out. (read timeout=300)"
+        pstate.fatal_kind = "timeout"
+        pstate.done_count = 3
+
         fake = types.SimpleNamespace(
             _started=True,
             _done=True,
             _cancel_flag=threading.Event(),
-            _fatal_msg="Read timed out. (read timeout=300)",
-            _fatal_kind="timeout",
-            _done_count=3,
+            _pstate=pstate,
             results={0: "old text"},
             errors={1: "old error"},
             _skipped_pages={2},
             _truncated_pages=set(),
+            _render_failed_pages=set(),
             _render_queue=object(),
             page_indices=[0, 1, 2],
             _ocr_page_indices=[0, 1, 2],
@@ -1481,21 +1447,19 @@ class TestClearResetsFatalState:
         return fake
 
     def test_clear_text_resets_fatal_state(self):
-        """_clear_text が _fatal_msg / _fatal_kind / _done_count を初期化する。"""
+        """_clear_text が self._pstate（fatal_msg/fatal_kind/done_count）を破棄する。"""
         from pagefolio.ocr_dialog import OCRDialog
 
         fake = self._make_fake_after_fatal()
         OCRDialog._clear_text(fake)
 
-        assert fake._fatal_msg is None, "_fatal_msg が残留している"
-        assert fake._fatal_kind is None, "_fatal_kind が残留している"
-        assert fake._done_count == 0, "_done_count が残留している"
+        assert fake._pstate is None, "_pstate（fatal 状態含む）が残留している"
         assert fake._started is False
         assert fake._done is False
         assert fake.results == {} and fake.errors == {}
 
     def test_on_run_resets_fatal_state(self):
-        """_on_run が実行開始時に _fatal_msg / _fatal_kind / _done_count を破棄する。"""
+        """_on_run が実行開始時に self._pstate（旧 fatal 状態）を破棄する。"""
         import types
 
         from pagefolio.ocr_dialog import OCRDialog
@@ -1511,7 +1475,6 @@ class TestClearResetsFatalState:
         fake._started = False  # クリア相当（再実行可能状態）
         fake.concurrency = 1
         fake._render_idx = 0
-        fake._workers_remaining = 0
         fake._worker_threads = []
         fake.scale_var = types.SimpleNamespace(get=lambda: "1.5")
         fake.timeout_var = types.SimpleNamespace(get=lambda: "600")
@@ -1525,13 +1488,14 @@ class TestClearResetsFatalState:
         fake._is_cloud_provider = lambda: False
         fake._render_next_page = lambda gen=None: None
         fake._start_worker_thread = lambda gen=None: None
+        fake._maybe_show_lang_fallback_notice = lambda: None
         fake.custom_prompt = ""
 
         OCRDialog._on_run(fake)
 
-        assert fake._fatal_msg is None, "_on_run 後も _fatal_msg が残留している"
-        assert fake._fatal_kind is None, "_on_run 後も _fatal_kind が残留している"
-        assert fake._done_count == 0, "_on_run 後も _done_count が残留している"
+        assert fake._pstate is None, (
+            "_on_run 後も _pstate（fatal 状態含む）が残留している"
+        )
         assert fake._done is False, "_on_run 後も _done が True のまま"
 
 
@@ -1648,10 +1612,11 @@ class TestOcrDialogOnRun:
             errors={},
             _skipped_pages=set(),
             _truncated_pages=set(),
+            _render_failed_pages=set(),
             concurrency=1,
             _render_queue=None,
             _render_idx=0,
-            _workers_remaining=0,
+            _pstate=None,
             _worker_threads=[],
             _run_gen=0,  # M-2 世代カウンタ
             text=types.SimpleNamespace(delete=lambda *a: None),
@@ -1678,6 +1643,8 @@ class TestOcrDialogOnRun:
         fake._render_next_page = lambda gen=None: None
         # _start_worker_thread を no-op に差し替え
         fake._start_worker_thread = lambda gen=None: None
+        # D-07: フォールバック注記更新を no-op に差し替え（Tk ラベル未スタブのため）
+        fake._maybe_show_lang_fallback_notice = lambda: None
         return fake
 
     def test_on_run_regenerates_lmstudio_provider_with_live_values(self, monkeypatch):
@@ -1971,6 +1938,8 @@ class TestRenderNextPageQueueFullInvariant:
 
         after_calls = []
 
+        from pagefolio.ocr_pipeline import PipelineState
+
         fake = types.SimpleNamespace(
             concurrency=1,
             _cancel_flag=threading.Event(),
@@ -1982,9 +1951,10 @@ class TestRenderNextPageQueueFullInvariant:
             results={},
             _skipped_pages=set(),
             _skip_base=0,
+            _render_failed_pages=set(),
+            _render_failed_base=0,
             errors={},
-            _done_lock=threading.Lock(),
-            _done_count=0,
+            _pstate=PipelineState(workers=1),
             _ocr_scale=1.5,
             _ocr_prompt="test",
             _force_ocr=False,
@@ -2041,6 +2011,9 @@ class TestForceOcrOption:
         """_render_next_page 用 fake OCRDialog（1 ページ・キュー記録付き）。"""
         import types
 
+        from pagefolio.ocr_dialog import OCRDialog
+        from pagefolio.ocr_pipeline import PipelineState
+
         put_items = []
 
         fake = types.SimpleNamespace(
@@ -2056,9 +2029,10 @@ class TestForceOcrOption:
             _skipped_pages=set(),
             _truncated_pages=set(),
             _skip_base=0,
+            _render_failed_pages=set(),
+            _render_failed_base=0,
             errors={},
-            _done_lock=threading.Lock(),
-            _done_count=0,
+            _pstate=PipelineState(workers=1),
             _ocr_scale=1.5,
             _ocr_prompt="test",
             _force_ocr=force_ocr,
@@ -2067,6 +2041,8 @@ class TestForceOcrOption:
             # 進捗更新・連鎖 after は実行しない（分岐結果のみ検証する）
             after=lambda ms, fn=None, *a: None,
         )
+        # _done_disp は OCRDialog の実メソッドへ委譲（skip 分岐で呼ばれる）
+        fake._done_disp = lambda: OCRDialog._done_disp(fake)
         import fitz
 
         tmp_doc = fitz.open()
@@ -2404,14 +2380,18 @@ class TestOcrResume:
         assert "|5|$5" in captured["msg"]
 
 
-# ===== サーキットブレーカー / エラー件数つき完了表示（v1.4.4）=====
+# ===== 完了カウンタ用コールバックの辞書ブックキーピング（D-01/D-02 で再編）=====
+# サーキットブレーカーのトリップ判定・done カウンタ更新自体は
+# ocr_pipeline.PipelineState へ一本化済み（D-01/D-02・02-04）。
+# 該当の回帰テストは tests/test_ocr_pipeline.py::TestPipelineState を参照。
 
 
-class TestCircuitBreaker:
-    """連続リトライ上限到達で実行を中断するサーキットブレーカーの検証。
+class TestRecordCallbacks:
+    """_record_page_success / _record_page_error の辞書ブックキーピングを検証する。
 
-    _record_page_success / _record_retryable_failure を fake インスタンスへの
-    未束縛呼び出しで検証する（Tkinter 不使用）。
+    カウンタ更新・サーキットブレーカー判定は ocr_pipeline.consume_one が
+    PipelineState 経由で行う（D-01/D-02）ため、ここでは results/errors/
+    _truncated_pages への反映のみを検証する（Tkinter 不使用）。
     """
 
     def _make_fake(self):
@@ -2421,72 +2401,46 @@ class TestCircuitBreaker:
             results={},
             errors={},
             _truncated_pages=set(),
-            _done_lock=threading.Lock(),
-            _done_count=0,
-            _consec_err_count=0,
-            _fatal_msg=None,
-            _fatal_kind=None,
         )
 
-    def test_trips_after_consecutive_failures(self):
-        """CB_CONSECUTIVE_FAILURES 回連続で失敗すると致命的エラーが設定される"""
-        from pagefolio.ocr_dialog import CB_CONSECUTIVE_FAILURES, OCRDialog
-
-        fake = self._make_fake()
-        for i in range(CB_CONSECUTIVE_FAILURES):
-            OCRDialog._record_retryable_failure(fake, i, f"HTTP 500 (p{i})")
-
-        assert fake._fatal_kind == "circuit_breaker"
-        assert fake._fatal_msg == f"HTTP 500 (p{CB_CONSECUTIVE_FAILURES - 1})"
-        assert len(fake.errors) == CB_CONSECUTIVE_FAILURES
-
-    def test_not_tripped_below_threshold(self):
-        """しきい値未満の失敗では中断しない"""
-        from pagefolio.ocr_dialog import CB_CONSECUTIVE_FAILURES, OCRDialog
-
-        fake = self._make_fake()
-        for i in range(CB_CONSECUTIVE_FAILURES - 1):
-            OCRDialog._record_retryable_failure(fake, i, "HTTP 500")
-
-        assert fake._fatal_msg is None
-        assert fake._fatal_kind is None
-
-    def test_success_resets_consecutive_counter(self):
-        """途中で成功すると連続カウンタがリセットされ中断しない"""
-        from pagefolio.ocr_dialog import CB_CONSECUTIVE_FAILURES, OCRDialog
-
-        fake = self._make_fake()
-        # しきい値-1 回失敗 → 成功 → さらにしきい値-1 回失敗
-        for i in range(CB_CONSECUTIVE_FAILURES - 1):
-            OCRDialog._record_retryable_failure(fake, i, "HTTP 500")
-        OCRDialog._record_page_success(fake, 10, "ok text")
-        for i in range(CB_CONSECUTIVE_FAILURES - 1):
-            OCRDialog._record_retryable_failure(fake, 20 + i, "HTTP 500")
-
-        assert fake._fatal_msg is None, "成功でカウンタがリセットされていない"
-        assert fake.results == {10: "ok text"}
-
-    def test_existing_fatal_not_overwritten(self):
-        """既に致命的エラーが設定済みなら上書きしない（CR-01 と同方針）"""
-        from pagefolio.ocr_dialog import CB_CONSECUTIVE_FAILURES, OCRDialog
-
-        fake = self._make_fake()
-        fake._fatal_msg = "timed out"
-        fake._fatal_kind = "timeout"
-        for i in range(CB_CONSECUTIVE_FAILURES):
-            OCRDialog._record_retryable_failure(fake, i, "HTTP 500")
-
-        assert fake._fatal_msg == "timed out"
-        assert fake._fatal_kind == "timeout"
-
-    def test_done_count_incremented(self):
-        """成功・失敗の両方で完了カウンタが進む（進捗表示の整合）"""
+    def test_record_page_success_stores_result(self):
+        """成功時に results へ本文が格納される"""
         from pagefolio.ocr_dialog import OCRDialog
 
         fake = self._make_fake()
         OCRDialog._record_page_success(fake, 0, "text")
-        OCRDialog._record_retryable_failure(fake, 1, "HTTP 500")
-        assert fake._done_count == 2
+
+        assert fake.results == {0: "text"}
+        assert 0 not in fake._truncated_pages
+
+    def test_record_page_success_truncated_tracks_page(self):
+        """truncated=True のページは _truncated_pages に登録される（D-05）"""
+        from pagefolio.ocr_dialog import OCRDialog
+
+        fake = self._make_fake()
+        OCRDialog._record_page_success(fake, 3, "partial", truncated=True)
+
+        assert fake.results == {3: "partial"}
+        assert 3 in fake._truncated_pages
+
+    def test_record_page_success_clears_prior_truncation(self):
+        """再実行等で truncated=False になったら旧途切れ登録を解除する"""
+        from pagefolio.ocr_dialog import OCRDialog
+
+        fake = self._make_fake()
+        fake._truncated_pages.add(5)
+        OCRDialog._record_page_success(fake, 5, "full text", truncated=False)
+
+        assert 5 not in fake._truncated_pages
+
+    def test_record_page_error_stores_message(self):
+        """非致命的ページエラー時に errors へメッセージが格納される"""
+        from pagefolio.ocr_dialog import OCRDialog
+
+        fake = self._make_fake()
+        OCRDialog._record_page_error(fake, 2, "HTTP 500")
+
+        assert fake.errors == {2: "HTTP 500"}
 
 
 class TestFinishCompleteErrorDisplay:

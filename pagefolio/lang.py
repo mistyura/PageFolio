@@ -20,6 +20,11 @@ LANG = {
         "btn_next": "▶",
         "btn_zoom_in": "＋",
         "btn_zoom_out": "－",
+        # ページ拡大ポップアップ
+        "popup_page_title": "ページ {i} / {n}",
+        "popup_zoom_out": "🔍 縮小",
+        "popup_zoom_in": "🔍 拡大",
+        "popup_close": "✕ 閉じる",
         # ツールセクション見出し
         "sec_settings": "⚙ 設定",
         "sec_file": "📂 ファイル",
@@ -98,6 +103,7 @@ LANG = {
         "btn_duplicate": "📋 現在ページを複製",
         "btn_insert_blank": "📄 白紙ページを挿入",
         "btn_watermark": "🔤 透かしを追加…",
+        "btn_watermark_image": "🖼 画像透かしを追加…",
         "btn_page_number": "🔢 ページ番号を印字…",
         "status_duplicated": "p.{page} を複製して直後に挿入しました",
         # トリミング
@@ -107,12 +113,20 @@ LANG = {
         "crop_no_sel": "範囲未選択",
         "btn_crop": "✔ 選択範囲でトリミング",
         "btn_crop_reset": "✕ 選択範囲をリセット",
+        "btn_crop_margin": "📐 余白指定でトリミング…",
+        "dlg_crop_margin_title": "余白指定トリミング（mm）",
+        "crop_margin_top": "上の余白 (mm):",
+        "crop_margin_bottom": "下の余白 (mm):",
+        "crop_margin_left": "左の余白 (mm):",
+        "crop_margin_right": "右の余白 (mm):",
         # ページ編集（黒塗り・モザイク）
         "redact_mode_off": "⬛ 範囲選択モード OFF",
         "redact_mode_on": "🔴 範囲選択モード ON  (クリックで OFF)",
         "redact_hint": "プレビュー上でドラッグして範囲を指定",
+        "mosaic_block_label": "モザイク粒度",
         "btn_apply_redact": "⬛ 選択範囲を黒塗り",
         "btn_apply_mosaic": "▦ 選択範囲をモザイク",
+        "btn_redact_clear": "🗑 矩形をクリア",
         # 挿入・結合
         "btn_insert_head": "先頭に挿入",
         "btn_insert_tail": "末尾に挿入",
@@ -162,7 +176,6 @@ LANG = {
             "保存先に同名ファイルが存在します:\n\n{files}\n\n上書きしますか？"
         ),
         # 縮小保存
-        "sec_compress": "🗜 縮小保存",
         "btn_save_compressed": "🗜 縮小して保存…",
         "status_compressed": "縮小保存しました: {name}",
         "compress_split_confirm_title": "分割時の縮小保存",
@@ -312,6 +325,31 @@ LANG = {
         "settings_preview_text": "サンプルテキスト  Sample Text  123",
         "settings_apply": "✔ 適用",
         "settings_cancel": "キャンセル",
+        # ショートカット設定ダイアログ（V171-UIUX-01・D-01〜D-08）
+        "shortcuts_title": "ショートカット設定",
+        "shortcuts_col_command": "操作",
+        "shortcuts_col_key": "キー",
+        "shortcuts_btn_change": "変更",
+        "shortcuts_btn_clear": "解除",
+        "shortcuts_btn_save": "保存",
+        "shortcuts_btn_reset_all": "既定に戻す",
+        "shortcuts_btn_cancel": "キャンセル",
+        "shortcuts_unassigned": "未割当",
+        "shortcuts_capture_waiting": "キーを押してください…（Escでキャンセル）",
+        "shortcuts_dup_error": (
+            "このキーは既に「{cmd}」に割り当てられています。別のキーを選んでください。"
+        ),
+        "shortcut_cmd_open_file": "ファイルを開く",
+        "shortcut_cmd_save_file": "上書き保存",
+        "shortcut_cmd_undo": "元に戻す",
+        "shortcut_cmd_redo": "やり直す",
+        "shortcut_cmd_save_as": "名前を付けて保存",
+        "shortcut_cmd_delete": "選択ページを削除",
+        "shortcut_cmd_toggle_mode": "閲覧/編集モード切替",
+        "shortcut_cmd_print_pdf": "印刷",
+        "shortcut_cmd_rotate_right": "右へ90°回転",
+        "shortcut_cmd_rotate_left": "左へ90°回転",
+        "shortcut_cmd_rotate_180": "180°回転",
         # 結合順ダイアログ
         "merge_title": "結合順の確認・変更",
         "merge_heading": "結合順の確認・並び替え",
@@ -349,8 +387,6 @@ LANG = {
         "ocr_dialog_title": "OCR",
         "ocr_dialog_heading": "🔍 OCR テキスト抽出",
         "ocr_progress_init": "準備中…",
-        "ocr_progress": "{cur}/{total} ページ処理中… (p.{page})",
-        "ocr_progress_render": "画像変換中… ({cur}/{total})",
         "ocr_progress_ocr": "読み取り完了 ({done}/{total}) — p.{page}",
         "ocr_cancelling": "キャンセル中…",
         "ocr_cancelled": "キャンセルしました",
@@ -396,9 +432,8 @@ LANG = {
         # Phase 5: Claude Provider / セキュリティ UI 文言（D-06/D-07/D-12/D-15/D-17）
         "ocr_api_key_missing": (
             "APIキーが設定されていません（{env_var}）。"
-            "環境変数を設定するか、入力欄にキーを入力してください。"
+            "LLM設定ダイアログで APIキーを入力するか、環境変数を設定してください。"
         ),
-        "ocr_session_key_label": "APIキー（このセッションのみ・保存されません）:",
         "ocr_cost_confirm_title": "クラウド送信の確認",
         "ocr_cost_confirm_msg": (
             "送信先: {host}\n"
@@ -424,20 +459,20 @@ LANG = {
         "ocr_provider_name_gemini": "Gemini (Google AI)",
         "ocr_api_key_missing_gemini": (
             "Gemini APIキーが設定されていません。"
-            "環境変数 GEMINI_API_KEY（または GOOGLE_API_KEY）を設定するか、"
-            "入力欄にキーを入力してください。"
+            "LLM設定ダイアログで APIキーを入力するか、"
+            "環境変数 GEMINI_API_KEY（または GOOGLE_API_KEY）を設定してください。"
+        ),
+        "ocr_api_key_missing_runpod": (
+            "RunPod APIキーが設定されていません。"
+            "LLM設定ダイアログで APIキーを入力するか、"
+            "環境変数 RUNPOD_API_KEY を設定してください。"
         ),
         "ocr_scale_tradeoff_hint": ("低=速い/安い・高=精度。低スペック PC は 1.5 推奨"),
         "ocr_effort_label": "推論強度 (effort):",
-        "ocr_provider_off_hint": "OCR は無効です。設定でプロバイダを選択してください。",
         "ocr_model_refresh": "モデル更新",
         # Phase 7: Tesseract Provider 文言（D-09）
         "tesseract_accuracy_warning": (
             "※ Tesseract の精度は LLM ベースのプロバイダより劣ります"
-        ),
-        "tesseract_not_installed": (
-            "Tesseract がインストールされていません"
-            "（tesseract コマンドが見つかりません）"
         ),
         "tesseract_not_installed_hint": (
             "Tesseract がインストールされていません。他のプロバイダを使用してください"
@@ -445,9 +480,19 @@ LANG = {
         "tesseract_lang_fallback": (
             "jpn 言語パックが見つかりません。eng のみで実行します"
         ),
+        # D-07: OCRDialog 非モーダル注記（段階的縮退フォールバック発生時・1回のみ表示）
+        "ocr_tesseract_lang_fallback_notice": (
+            "⚠ 指定言語 {requested} は利用不可のため {effective} で実行します"
+        ),
         "ocr_provider_name_tesseract": "Tesseract (ローカル)",
+        # CR-01: RunPod ローカライズ表示名（WR-02）
+        "ocr_provider_name_runpod": "RunPod (Serverless)",
+        # 設定ダイアログ セクション見出し（D-16・3セクション構成）
+        "settings_section_appearance": "外観",
+        "settings_section_operation": "操作",
+        "settings_open_shortcuts": "⌨ ショートカット設定…",
         # LM Studio 設定
-        "settings_lm_studio_section": "🔍 LM Studio (OCR)",
+        "settings_lm_studio_section": "⚙ AI・OCR 設定",
         "settings_lm_url": "URL:",
         "settings_lm_model": "モデル:",
         "settings_lm_model_hint": (
@@ -464,12 +509,25 @@ LANG = {
         "settings_ocr_concurrency_hint": (
             "(1〜8 / 推奨2。LM Studio が並列受付に対応しない場合は1相当)"
         ),
-        "settings_open_llm_config": "🔍 LLM 設定…",
+        "settings_open_llm_config": "⚙ LLM 設定…",
         # LLM 設定ダイアログ（OCR と設定で共有）
         "llm_config_title": "LLM 設定",
-        "llm_config_heading": "🔍 LLM 設定",
+        "llm_config_heading": "⚙ LLM 設定",
+        # D-15: 共通/固有グルーピング見出し
+        "llm_config_provider_section": "選択中プロバイダ固有の設定",
+        "llm_config_common_section": "全プロバイダ共通の設定",
         "llm_config_apply": "✓ 適用",
         "llm_config_cancel": "✕ キャンセル",
+        # APIキー入力欄（V171-KEY-01・LLM設定への一元化）
+        "llm_api_key_label": "APIキー:",
+        "llm_key_toggle_show": "👁 表示",
+        "llm_key_toggle_hide": "🙈 隠す",
+        "llm_key_session_note": (
+            "※ セッション限定（アプリ終了で破棄・設定ファイルには保存されません）"
+        ),
+        "llm_key_env_set_note": (
+            "環境変数 {env_var} 設定済み（ここで入力した値が優先されます）"
+        ),
         # Ollama / RunPod 設定
         "settings_ollama_url": "Ollama URL:",
         "settings_ollama_model": "Ollama モデル:",
@@ -477,11 +535,13 @@ LANG = {
         "settings_runpod_url": "RunPod エンドポイントURL:",
         "settings_runpod_model": "RunPod モデル名 (任意):",
         "settings_runpod_model_hint": "（RunPod Serverless endpoint 用）",
-        "llm_fetching_ollama_models": "⏳ Ollama モデル一覧を取得中…",
         "llm_fetching_runpod_models": "⏳ RunPod モデル一覧を取得中…",
         "llm_env_key_unset_static_runpod": (
-            "環境変数 RUNPOD_API_KEY が未設定です。環境変数を設定してください。"
+            "APIキー未設定のため推奨モデル一覧を表示中"
+            "（RUNPOD_API_KEY 環境変数または上の入力欄にキーを入力してください）"
         ),
+        # CR-01: RunPod 送信先プレースホルダ（runpod_url 未設定時）
+        "llm_runpod_host_unset": "（RunPod エンドポイント URL 未設定）",
         # OCR ダイアログ
         "ocr_server_label": "サーバ:",
         "ocr_model_label": "モデル:",
@@ -491,12 +551,8 @@ LANG = {
             "未処理 {n}ページ（p.{first}〜）が残っています。"
             "「⏯ 続きから再実行」で成功済みの結果を保持したまま再開できます。"
         ),
-        "ocr_fetch_models": "📥 モデル一覧取得",
         "ocr_open_llm_config": "⚙ LLM 設定…",
         "ocr_clear": "🧹 クリア",
-        "ocr_models_fetched": "{count} モデルを取得しました",
-        "ocr_models_fetch_fail": "モデル取得失敗: {error}",
-        "ocr_models_fetching": "⏳ モデル一覧を取得中… ({url})",
         "ocr_run_first": "「読み取り実行」を押すと開始します",
         "ocr_params_label": "詳細設定:",
         "ocr_scale_short": "解像度:",
@@ -552,7 +608,6 @@ LANG = {
         # 共通エラー
         "err_title": "エラー",
         "info_title": "情報",
-        "warn_title": "警告",
         "confirm_title": "確認",
         # M-10: 移植ハードコード文言
         "ocr_cost_estimate": "約 ${cost:.3f} 程度",
@@ -560,10 +615,13 @@ LANG = {
         "llm_fetching_claude_models": "⏳ Claude モデル一覧を取得中…",
         "llm_fetching_gemini_models": "⏳ Gemini モデル一覧を取得中…",
         "llm_env_key_unset_static": (
-            "環境変数 ANTHROPIC_API_KEY が未設定のため静的リストを表示中"
+            "APIキー未設定のため推奨モデル一覧を表示中"
+            "（ANTHROPIC_API_KEY 環境変数または上の入力欄にキーを入力してください）"
         ),
         "llm_env_key_unset_static_gemini": (
-            "環境変数 GEMINI_API_KEY/GOOGLE_API_KEY が未設定: 静的リスト表示中"
+            "APIキー未設定のため推奨モデル一覧を表示中"
+            "（GEMINI_API_KEY/GOOGLE_API_KEY 環境変数または"
+            "上の入力欄にキーを入力してください）"
         ),
         "llm_model_fetch_failed": (
             "{provider} モデル取得失敗（静的リストへフォールバック）: {e}"
@@ -584,6 +642,11 @@ LANG = {
         "btn_next": "▶",
         "btn_zoom_in": "＋",
         "btn_zoom_out": "－",
+        # Page enlargement popup
+        "popup_page_title": "Page {i} / {n}",
+        "popup_zoom_out": "🔍 Zoom Out",
+        "popup_zoom_in": "🔍 Zoom In",
+        "popup_close": "✕ Close",
         # Tool section titles
         "sec_settings": "⚙ Settings",
         "sec_file": "📂 File",
@@ -662,6 +725,7 @@ LANG = {
         "btn_duplicate": "📋 Duplicate Current Page",
         "btn_insert_blank": "📄 Insert Blank Page",
         "btn_watermark": "🔤 Add Watermark...",
+        "btn_watermark_image": "🖼 Add Image Watermark...",
         "btn_page_number": "🔢 Add Page Numbers...",
         "status_duplicated": "Duplicated p.{page} and inserted after it",
         # Crop
@@ -671,12 +735,20 @@ LANG = {
         "crop_no_sel": "No selection",
         "btn_crop": "✔ Crop to Selection",
         "btn_crop_reset": "✕ Reset Selection",
+        "btn_crop_margin": "📐 Crop by Margin…",
+        "dlg_crop_margin_title": "Crop by Margin (mm)",
+        "crop_margin_top": "Top margin (mm):",
+        "crop_margin_bottom": "Bottom margin (mm):",
+        "crop_margin_left": "Left margin (mm):",
+        "crop_margin_right": "Right margin (mm):",
         # Page edit (redact / mosaic)
         "redact_mode_off": "⬛ Select Mode OFF",
         "redact_mode_on": "🔴 Select Mode ON  (click to OFF)",
         "redact_hint": "Drag on preview to select the area",
+        "mosaic_block_label": "Mosaic Granularity",
         "btn_apply_redact": "⬛ Redact Selection",
         "btn_apply_mosaic": "▦ Mosaic Selection",
+        "btn_redact_clear": "🗑 Clear Rectangles",
         # Insert/Merge
         "btn_insert_head": "Insert at Beginning",
         "btn_insert_tail": "Insert at End",
@@ -726,7 +798,6 @@ LANG = {
             "The following file(s) already exist:\n\n{files}\n\nOverwrite?"
         ),
         # Compress save
-        "sec_compress": "🗜 Compress & Save",
         "btn_save_compressed": "🗜 Save Compressed…",
         "status_compressed": "Saved compressed: {name}",
         "compress_split_confirm_title": "Compress Split Files?",
@@ -870,6 +941,31 @@ LANG = {
         "settings_preview_text": "Sample Text  サンプルテキスト  123",
         "settings_apply": "✔ Apply",
         "settings_cancel": "Cancel",
+        # Shortcuts settings dialog (V171-UIUX-01 / D-01 to D-08)
+        "shortcuts_title": "Shortcut Settings",
+        "shortcuts_col_command": "Command",
+        "shortcuts_col_key": "Key",
+        "shortcuts_btn_change": "Change",
+        "shortcuts_btn_clear": "Clear",
+        "shortcuts_btn_save": "Save",
+        "shortcuts_btn_reset_all": "Reset to Defaults",
+        "shortcuts_btn_cancel": "Cancel",
+        "shortcuts_unassigned": "Unassigned",
+        "shortcuts_capture_waiting": "Press a key… (Esc to cancel)",
+        "shortcuts_dup_error": (
+            'This key is already assigned to "{cmd}". Please choose another key.'
+        ),
+        "shortcut_cmd_open_file": "Open File",
+        "shortcut_cmd_save_file": "Save",
+        "shortcut_cmd_undo": "Undo",
+        "shortcut_cmd_redo": "Redo",
+        "shortcut_cmd_save_as": "Save As",
+        "shortcut_cmd_delete": "Delete Selected Pages",
+        "shortcut_cmd_toggle_mode": "Toggle View/Edit Mode",
+        "shortcut_cmd_print_pdf": "Print",
+        "shortcut_cmd_rotate_right": "Rotate Right 90°",
+        "shortcut_cmd_rotate_left": "Rotate Left 90°",
+        "shortcut_cmd_rotate_180": "Rotate 180°",
         # Merge order dialog
         "merge_title": "Confirm Merge Order",
         "merge_heading": "Confirm & Reorder",
@@ -903,8 +999,6 @@ LANG = {
         "ocr_dialog_title": "OCR",
         "ocr_dialog_heading": "🔍 OCR Text Extraction",
         "ocr_progress_init": "Preparing…",
-        "ocr_progress": "Processing {cur}/{total} pages… (p.{page})",
-        "ocr_progress_render": "Rendering images… ({cur}/{total})",
         "ocr_progress_ocr": "OCR done ({done}/{total}) — p.{page}",
         "ocr_cancelling": "Cancelling…",
         "ocr_cancelled": "Cancelled",
@@ -951,9 +1045,8 @@ LANG = {
         # Phase 5: Claude Provider / security UI messages (D-06/D-07/D-12/D-15/D-17)
         "ocr_api_key_missing": (
             "API key is not configured ({env_var}). "
-            "Set the environment variable or enter the key in the input field."
+            "Enter it in the LLM settings dialog, or set the environment variable."
         ),
-        "ocr_session_key_label": "API Key (this session only — not saved):",
         "ocr_cost_confirm_title": "Confirm Cloud Submission",
         "ocr_cost_confirm_msg": (
             "Destination: {host}\n"
@@ -979,29 +1072,42 @@ LANG = {
         "ocr_provider_name_gemini": "Gemini (Google AI)",
         "ocr_api_key_missing_gemini": (
             "Gemini API key is not configured. "
-            "Set the environment variable GEMINI_API_KEY (or GOOGLE_API_KEY), "
-            "or enter the key in the input field."
+            "Enter it in the LLM settings dialog, or set the environment "
+            "variable GEMINI_API_KEY (or GOOGLE_API_KEY)."
+        ),
+        "ocr_api_key_missing_runpod": (
+            "RunPod API key is not configured. "
+            "Enter it in the LLM settings dialog, or set the "
+            "RUNPOD_API_KEY environment variable."
         ),
         "ocr_scale_tradeoff_hint": (
             "Low=fast/cheap, High=accuracy. 1.5 recommended for low-spec PCs."
         ),
         "ocr_effort_label": "Inference Effort:",
-        "ocr_provider_off_hint": "OCR is disabled. Select a provider in Settings.",
         "ocr_model_refresh": "Refresh Models",
         # Phase 7: Tesseract Provider messages (D-09)
         "tesseract_accuracy_warning": (
             "Note: Tesseract accuracy is lower than LLM-based providers."
         ),
-        "tesseract_not_installed": ("Tesseract is not installed (command not found)."),
         "tesseract_not_installed_hint": (
             "Tesseract is not installed. Please use another provider."
         ),
         "tesseract_lang_fallback": (
             "jpn language pack not found. Running with eng only."
         ),
+        # D-07: OCRDialog non-modal notice (shown once when degraded fallback occurs)
+        "ocr_tesseract_lang_fallback_notice": (
+            "⚠ Requested language {requested} is unavailable; running with {effective}"
+        ),
         "ocr_provider_name_tesseract": "Tesseract (Local)",
+        # CR-01: RunPod localized display name (WR-02)
+        "ocr_provider_name_runpod": "RunPod (Serverless)",
+        # Settings dialog section headings (D-16 — 3-section layout)
+        "settings_section_appearance": "Appearance",
+        "settings_section_operation": "Operation",
+        "settings_open_shortcuts": "⌨ Shortcut Settings…",
         # LM Studio settings
-        "settings_lm_studio_section": "🔍 LM Studio (OCR)",
+        "settings_lm_studio_section": "⚙ AI / OCR Settings",
         "settings_lm_url": "URL:",
         "settings_lm_model": "Model:",
         "settings_lm_model_hint": "(empty = auto-use model loaded in LM Studio)",
@@ -1017,12 +1123,26 @@ LANG = {
             "(1-8 / 2 recommended. Effective only if LM Studio serves "
             "requests in parallel)"
         ),
-        "settings_open_llm_config": "🔍 LLM Settings…",
+        "settings_open_llm_config": "⚙ LLM Settings…",
         # LLM config dialog (shared by OCR & Settings)
         "llm_config_title": "LLM Settings",
-        "llm_config_heading": "🔍 LLM Settings",
+        "llm_config_heading": "⚙ LLM Settings",
+        # D-15: common/provider-specific grouping headings
+        "llm_config_provider_section": "Selected Provider's Settings",
+        "llm_config_common_section": "Common Settings (All Providers)",
         "llm_config_apply": "✓ Apply",
         "llm_config_cancel": "✕ Cancel",
+        # API key input row (V171-KEY-01 — unified into LLM settings)
+        "llm_api_key_label": "API Key:",
+        "llm_key_toggle_show": "👁 Show",
+        "llm_key_toggle_hide": "🙈 Hide",
+        "llm_key_session_note": (
+            "* Session only (discarded on app exit — never saved to the settings file)"
+        ),
+        "llm_key_env_set_note": (
+            "Environment variable {env_var} is set (the value entered "
+            "here takes priority)"
+        ),
         # Ollama / RunPod settings
         "settings_ollama_url": "Ollama URL:",
         "settings_ollama_model": "Ollama Model:",
@@ -1030,11 +1150,13 @@ LANG = {
         "settings_runpod_url": "RunPod Endpoint URL:",
         "settings_runpod_model": "RunPod Model Name (Optional):",
         "settings_runpod_model_hint": "(for RunPod Serverless endpoint)",
-        "llm_fetching_ollama_models": "⏳ Fetching Ollama models…",
         "llm_fetching_runpod_models": "⏳ Fetching RunPod models…",
         "llm_env_key_unset_static_runpod": (
-            "RUNPOD_API_KEY not set — please configure the environment variable."
+            "API key not set — showing recommended models "
+            "(enter a key above or set RUNPOD_API_KEY)"
         ),
+        # CR-01: RunPod destination placeholder (runpod_url not set)
+        "llm_runpod_host_unset": "(RunPod endpoint URL not set)",
         # OCR dialog
         "ocr_server_label": "Server:",
         "ocr_model_label": "Model:",
@@ -1044,12 +1166,8 @@ LANG = {
             "{n} unprocessed page(s) remaining (from p.{first}). "
             "Use '⏯ Resume' to continue while keeping completed results."
         ),
-        "ocr_fetch_models": "📥 Fetch Models",
         "ocr_open_llm_config": "⚙ LLM Settings…",
         "ocr_clear": "🧹 Clear",
-        "ocr_models_fetched": "Fetched {count} model(s)",
-        "ocr_models_fetch_fail": "Fetch failed: {error}",
-        "ocr_models_fetching": "⏳ Fetching models… ({url})",
         "ocr_run_first": 'Press "Run OCR" to start',
         "ocr_params_label": "Advanced:",
         "ocr_scale_short": "Scale:",
@@ -1105,7 +1223,6 @@ LANG = {
         # Common error
         "err_title": "Error",
         "info_title": "Info",
-        "warn_title": "Warning",
         "confirm_title": "Confirm",
         # M-10: migrated hardcoded strings
         "ocr_cost_estimate": "~${cost:.3f}",
@@ -1113,10 +1230,12 @@ LANG = {
         "llm_fetching_claude_models": "⏳ Fetching Claude model list…",
         "llm_fetching_gemini_models": "⏳ Fetching Gemini model list…",
         "llm_env_key_unset_static": (
-            "ANTHROPIC_API_KEY not set — showing static model list"
+            "API key not set — showing recommended models "
+            "(enter a key above or set ANTHROPIC_API_KEY)"
         ),
         "llm_env_key_unset_static_gemini": (
-            "GEMINI_API_KEY/GOOGLE_API_KEY not set — showing static list"
+            "API key not set — showing recommended models "
+            "(enter a key above or set GEMINI_API_KEY/GOOGLE_API_KEY)"
         ),
         "llm_model_fetch_failed": (
             "{provider} model fetch failed (falling back to static list): {e}"

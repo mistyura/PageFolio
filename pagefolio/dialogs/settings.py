@@ -17,7 +17,15 @@ logger = logging.getLogger(__name__)
 # ══════════════════════════════════════════
 class SettingsDialog(tk.Toplevel):
     def __init__(
-        self, parent, current_settings, callback, font_func=None, plugin_manager=None
+        self,
+        parent,
+        current_settings,
+        callback,
+        font_func=None,
+        plugin_manager=None,
+        session_api_keys=None,
+        app=None,
+        on_llm_apply=None,
     ):
         super().__init__(parent)
         lang = current_settings.get("lang", "ja")
@@ -32,6 +40,19 @@ class SettingsDialog(tk.Toplevel):
         self._font = font_func
         # M-8: plugin_manager を保持して LLMConfigDialog へ渡す
         self._plugin_manager = plugin_manager
+        # V171-KEY-01: session_api_keys は複製せず参照をそのまま保持する
+        # （複製すると app._session_api_keys の実体へ変更が反映されない・Pitfall 5）。
+        self._session_api_keys = (
+            session_api_keys if session_api_keys is not None else {}
+        )
+        # V171-UIUX-01・D-01: ShortcutsDialog は app._cmd_map/_default_shortcuts/
+        # _bind_shortcuts を参照するため app 参照を保持する（後方互換の任意引数）。
+        self._app = app
+        # V171-UIUX-03・D-14: LLMConfigDialog のネスト適用を外側 Apply/Cancel と
+        # 独立して app.settings（メモリ）へ即時反映するためのコールバック
+        # （後方互換の任意引数。OCRDialog 側のネストしない起動経路には影響
+        # しない・Pitfall 5）。
+        self._on_llm_apply = on_llm_apply
 
         self._build()
         self.update_idletasks()
@@ -50,6 +71,15 @@ class SettingsDialog(tk.Toplevel):
             fg=C["ACCENT"],
             font=self._font(2, "bold"),
         ).pack(pady=(14, 10))
+
+        # ── 外観セクション（テーマ・フォント）──
+        tk.Label(
+            self,
+            text=self._L["settings_section_appearance"],
+            bg=C["BG_DARK"],
+            fg=C["WARNING"],
+            font=self._font(0, "bold"),
+        ).pack(anchor="w", padx=24, pady=(4, 2))
 
         tf = tk.Frame(self, bg=C["BG_DARK"])
         tf.pack(fill="x", padx=24, pady=6)
@@ -122,7 +152,24 @@ class SettingsDialog(tk.Toplevel):
         self.preview_label.pack(padx=24, pady=8, fill="x")
         self.font_var.trace_add("write", self._update_preview)
 
-        # ── LM Studio (OCR) セクション ──
+        # ── 操作セクション（ショートカット）──
+        sep_op = tk.Frame(self, bg=C["BG_CARD"], height=1)
+        sep_op.pack(fill="x", padx=24, pady=(8, 4))
+        tk.Label(
+            self,
+            text=self._L["settings_section_operation"],
+            bg=C["BG_DARK"],
+            fg=C["WARNING"],
+            font=self._font(0, "bold"),
+        ).pack(anchor="w", padx=24, pady=(4, 2))
+
+        ttk.Button(
+            self,
+            text=self._L["settings_open_shortcuts"],
+            command=self._open_shortcuts_dialog,
+        ).pack(anchor="w", padx=24, pady=(2, 8))
+
+        # ── AI・OCR セクション（旧 LM Studio (OCR)）──
         sep = tk.Frame(self, bg=C["BG_CARD"], height=1)
         sep.pack(fill="x", padx=24, pady=(8, 4))
         tk.Label(
@@ -184,6 +231,13 @@ class SettingsDialog(tk.Toplevel):
             from pagefolio.settings import _save_settings
 
             _save_settings(self.current_settings)
+            # D-14: ディスク保存に加え、外側 Apply/Cancel から独立して
+            # app.settings（メモリ）へも即時反映する（C4 の不整合解消）。
+            # getattr は既存の SimpleNamespace スタブ（_on_llm_apply 未設定）
+            # との後方互換のための防御的パターン。
+            on_llm_apply = getattr(self, "_on_llm_apply", None)
+            if on_llm_apply:
+                on_llm_apply(dict(llm_settings))
 
         self._llm_config_dialog = LLMConfigDialog(
             self,
@@ -192,6 +246,34 @@ class SettingsDialog(tk.Toplevel):
             font_func=self._font,
             lang=lang,
             plugin_manager=getattr(self, "_plugin_manager", None),
+            session_api_keys=getattr(self, "_session_api_keys", None),
+        )
+
+    def _open_shortcuts_dialog(self):
+        """ショートカット設定ダイアログを開く（二重起動ガード付き・D-01）。
+
+        app 参照（`_cmd_map`/`_default_shortcuts`/`_bind_shortcuts`）が
+        取得できない場合は何もしない（後方互換のための防御的パターン）。
+        """
+        existing = getattr(self, "_shortcuts_dialog", None)
+        if existing is not None and existing.winfo_exists():
+            existing.lift()
+            existing.focus_force()
+            return
+
+        app = getattr(self, "_app", None)
+        if app is None:
+            logger.warning("ShortcutsDialog を開けません: app 参照が未設定です")
+            return
+
+        from pagefolio.dialogs.shortcuts import ShortcutsDialog
+
+        lang = self.current_settings.get("lang", "ja")
+        self._shortcuts_dialog = ShortcutsDialog(
+            self,
+            app,
+            font_func=self._font,
+            lang=lang,
         )
 
     def _apply(self):

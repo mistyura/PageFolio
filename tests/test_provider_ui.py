@@ -200,7 +200,6 @@ def _make_dialog_stub(settings, provider=None, page_indices=None):
     )
     stub._is_cloud_provider = lambda: OCRDialog._is_cloud_provider(stub)
     stub._estimate_cost = lambda m, c: OCRDialog._estimate_cost(stub, m, c)
-    stub._needs_session_key = lambda: OCRDialog._needs_session_key(stub)
     return stub
 
 
@@ -332,69 +331,162 @@ class TestEstimateCost:
         assert "0.021" in result
 
 
-class TestNeedsSessionKey:
-    """OCR-UI-03: _needs_session_key の動作検証。"""
+class TestCheckCloudApiKey:
+    """V171-KEY-02/03: _check_cloud_api_key（撤去された _ensure_cloud_session_key の
+    後継）の動作検証。値の収集は一切行わず _resolve_api_key の解決可否のみを
+    確認する軽量ゲートであることを担保する。
+    """
 
-    def test_env_set_returns_false(self, monkeypatch):
-        """ANTHROPIC_API_KEY が環境変数に設定済みなら False を返す。"""
-        monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-test-key")
-        stub = _make_dialog_stub(settings={"ocr_provider": "claude"})
-        assert stub._needs_session_key() is False
+    _ALL_ENV_VARS = (
+        "ANTHROPIC_API_KEY",
+        "GEMINI_API_KEY",
+        "GOOGLE_API_KEY",
+        "RUNPOD_API_KEY",
+    )
 
-    def test_env_unset_cloud_returns_true(self, monkeypatch):
-        """ANTHROPIC_API_KEY が未設定かつ claude プロバイダなら True を返す。"""
-        monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
-        stub = _make_dialog_stub(settings={"ocr_provider": "claude"})
-        assert stub._needs_session_key() is True
+    def _make_stub(self, ocr_provider, session_keys=None):
+        """_check_cloud_api_key 呼び出し用スタブを返す。
 
-    def test_lmstudio_env_unset_returns_false(self, monkeypatch):
-        """lmstudio はクラウドではないため env 未設定でも False。"""
-        monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
-        stub = _make_dialog_stub(settings={"ocr_provider": "lmstudio"})
-        assert stub._needs_session_key() is False
-
-    def test_gemini_env_unset_returns_true(self, monkeypatch):
-        """gemini で GEMINI_API_KEY/GOOGLE_API_KEY 両方未設定なら True（D-06）。"""
-        monkeypatch.delenv("GEMINI_API_KEY", raising=False)
-        monkeypatch.delenv("GOOGLE_API_KEY", raising=False)
-        stub = _make_dialog_stub(settings={"ocr_provider": "gemini"})
-        assert stub._needs_session_key() is True
-
-    def test_gemini_gemini_api_key_set_returns_false(self, monkeypatch):
-        """GEMINI_API_KEY が設定済みなら gemini でも False。"""
-        monkeypatch.setenv("GEMINI_API_KEY", "test-gemini-key")
-        stub = _make_dialog_stub(settings={"ocr_provider": "gemini"})
-        assert stub._needs_session_key() is False
-
-    def test_gemini_google_api_key_fallback_returns_false(self, monkeypatch):
-        """GEMINI_API_KEY 未設定でも GOOGLE_API_KEY があれば False。"""
-        monkeypatch.delenv("GEMINI_API_KEY", raising=False)
-        monkeypatch.setenv("GOOGLE_API_KEY", "test-google-key")
-        stub = _make_dialog_stub(settings={"ocr_provider": "gemini"})
-        assert stub._needs_session_key() is False
-
-
-class TestConfirmCost:
-    """OCR-UI-03: _confirm_cost の動作検証（messagebox モック）。"""
-
-    def _make_confirm_stub(self, page_indices, model="claude-sonnet-4-6"):
-        """_confirm_cost 呼び出し用スタブを返す。
-
-        OCRDialog._confirm_cost は self.app.settings / self.page_indices /
-        self._L / self（parent として messagebox に渡す）を参照する。
+        OCRDialog._check_cloud_api_key は self.app.settings /
+        self.app._session_api_keys / self._L（messagebox の parent）を参照する。
         """
         from pagefolio.constants import LANG
         from pagefolio.ocr_dialog import OCRDialog
 
         stub = types.SimpleNamespace(
             app=types.SimpleNamespace(
-                settings={"ocr_provider": "claude", "claude_model": model}
+                settings={"ocr_provider": ocr_provider},
+                _session_api_keys=dict(session_keys or {}),
             ),
+            provider=None,
+            _L=LANG["ja"],
+        )
+        stub._is_cloud_provider = lambda: OCRDialog._is_cloud_provider(stub)
+        stub._check_cloud_api_key = lambda: OCRDialog._check_cloud_api_key(stub)
+        return stub
+
+    def _clear_all_env(self, monkeypatch):
+        for var in self._ALL_ENV_VARS:
+            monkeypatch.delenv(var, raising=False)
+
+    def test_non_cloud_provider_returns_true_without_messagebox(self, monkeypatch):
+        """lmstudio 等の非クラウドプロバイダは常に True・messagebox 非呼び出し。"""
+        stub = self._make_stub("lmstudio")
+        called = []
+        monkeypatch.setattr(
+            "pagefolio.ocr_dialog.messagebox.showerror",
+            lambda *a, **kw: called.append((a, kw)),
+        )
+        assert stub._check_cloud_api_key() is True
+        assert called == []
+
+    @pytest.mark.parametrize("provider", ["claude", "gemini", "runpod"])
+    def test_unresolved_shows_error_and_returns_false(self, monkeypatch, provider):
+        """入力値・環境変数とも未設定なら messagebox.showerror が呼ばれ False を
+        返す。"""
+        self._clear_all_env(monkeypatch)
+        stub = self._make_stub(provider)
+        captured = {}
+
+        def mock_showerror(title, msg, parent=None):
+            captured["title"] = title
+            captured["msg"] = msg
+            captured["parent"] = parent
+
+        monkeypatch.setattr("pagefolio.ocr_dialog.messagebox.showerror", mock_showerror)
+        assert stub._check_cloud_api_key() is False
+        assert captured  # messagebox.showerror が1回呼ばれた
+        assert captured["parent"] is stub
+
+    @pytest.mark.parametrize("provider", ["claude", "gemini", "runpod"])
+    def test_session_key_resolves_without_messagebox(self, monkeypatch, provider):
+        """入力値（セッションキー）が設定済みなら True・messagebox 非呼び出し。"""
+        self._clear_all_env(monkeypatch)
+        stub = self._make_stub(provider, session_keys={provider: "dummy-test-key"})
+        called = []
+        monkeypatch.setattr(
+            "pagefolio.ocr_dialog.messagebox.showerror",
+            lambda *a, **kw: called.append((a, kw)),
+        )
+        assert stub._check_cloud_api_key() is True
+        assert called == []
+
+    @pytest.mark.parametrize(
+        "provider, env_var",
+        [
+            ("claude", "ANTHROPIC_API_KEY"),
+            ("gemini", "GEMINI_API_KEY"),
+            ("runpod", "RUNPOD_API_KEY"),
+        ],
+    )
+    def test_env_var_resolves_without_messagebox(self, monkeypatch, provider, env_var):
+        """環境変数のみ設定済みでも True・messagebox 非呼び出し（フォールバック）。"""
+        self._clear_all_env(monkeypatch)
+        monkeypatch.setenv(env_var, "dummy-env-key")
+        stub = self._make_stub(provider)
+        called = []
+        monkeypatch.setattr(
+            "pagefolio.ocr_dialog.messagebox.showerror",
+            lambda *a, **kw: called.append((a, kw)),
+        )
+        assert stub._check_cloud_api_key() is True
+        assert called == []
+
+    def test_runpod_session_key_does_not_use_claude_slot(self, monkeypatch):
+        """RunPod のセッションキーが claude スロットへ誤格納されない（Pitfall 1 回帰）。
+
+        _check_cloud_api_key は値の収集を行わないため、claude スロットのみに
+        キーがある状態で runpod を選択すると解決不能（誤って claude 経由で
+        解決してしまわない）ことを確認する。
+        """
+        self._clear_all_env(monkeypatch)
+        stub = self._make_stub("runpod", session_keys={"claude": "claude-only-key"})
+        called = []
+        monkeypatch.setattr(
+            "pagefolio.ocr_dialog.messagebox.showerror",
+            lambda *a, **kw: called.append((a, kw)),
+        )
+        assert stub._check_cloud_api_key() is False
+        assert called
+
+
+class TestConfirmCost:
+    """OCR-UI-03: _confirm_cost の動作検証（messagebox モック）。"""
+
+    def _make_confirm_stub(
+        self,
+        page_indices,
+        model="claude-sonnet-4-6",
+        provider="claude",
+        runpod_url=None,
+        runpod_model=None,
+    ):
+        """_confirm_cost / _confirm_summary_cost 呼び出し用スタブを返す。
+
+        OCRDialog._confirm_cost / _confirm_summary_cost は self.app.settings /
+        self.page_indices / self._L / self（parent として messagebox に渡す）を
+        参照する。provider="runpod" の場合、runpod_url / runpod_model を
+        settings へ差し込める（CR-01 回帰テスト用）。
+        """
+        from pagefolio.constants import LANG
+        from pagefolio.ocr_dialog import OCRDialog
+
+        settings = {"ocr_provider": provider, "claude_model": model}
+        if runpod_url is not None:
+            settings["runpod_url"] = runpod_url
+        if runpod_model is not None:
+            settings["runpod_model"] = runpod_model
+
+        stub = types.SimpleNamespace(
+            app=types.SimpleNamespace(settings=settings),
             page_indices=list(page_indices),
             _L=LANG["ja"],
         )
         stub._estimate_cost = lambda m, c: OCRDialog._estimate_cost(stub, m, c)
         stub._confirm_cost = lambda: OCRDialog._confirm_cost(stub)
+        stub._confirm_summary_cost = lambda cc: OCRDialog._confirm_summary_cost(
+            stub, cc
+        )
         return stub
 
     def test_confirm_cost_calls_askyesno(self, monkeypatch):
@@ -449,6 +541,65 @@ class TestConfirmCost:
         stub._confirm_cost()
         assert "1" in captured_msg["msg"]
         assert "$" in captured_msg["msg"]
+
+    def test_confirm_cost_runpod_shows_runpod_host(self, monkeypatch):
+        """CR-01: RunPod選択時、_confirm_cost は runpod_url を送信先として開示し
+        api.anthropic.com を表示しない。
+        """
+        stub = self._make_confirm_stub(
+            page_indices=[0],
+            provider="runpod",
+            runpod_url="http://runpod.example/x",
+            runpod_model="qwen-vl",
+        )
+        captured = {}
+        monkeypatch.setattr(
+            "pagefolio.ocr_dialog.messagebox.askyesno",
+            lambda title, msg, parent=None: captured.update({"msg": msg}) or True,
+        )
+        stub._confirm_cost()
+        assert "http://runpod.example/x" in captured["msg"]
+        assert "api.anthropic.com" not in captured["msg"]
+
+    def test_confirm_summary_cost_runpod_shows_runpod_host(self, monkeypatch):
+        """CR-01: RunPod選択時、_confirm_summary_cost も runpod_url を送信先として
+        開示し api.anthropic.com を表示しない。
+        """
+        stub = self._make_confirm_stub(
+            page_indices=[0],
+            provider="runpod",
+            runpod_url="http://runpod.example/x",
+            runpod_model="qwen-vl",
+        )
+        captured = {}
+        monkeypatch.setattr(
+            "pagefolio.ocr_dialog.messagebox.askyesno",
+            lambda title, msg, parent=None: captured.update({"msg": msg}) or True,
+        )
+        stub._confirm_summary_cost(1000)
+        assert "http://runpod.example/x" in captured["msg"]
+        assert "api.anthropic.com" not in captured["msg"]
+
+    def test_confirm_cost_runpod_url_unset_shows_placeholder(self, monkeypatch):
+        """runpod_url 未設定時、host は llm_runpod_host_unset のプレースホルダに
+        なり api.anthropic.com へフォールバックしない。
+        """
+        from pagefolio.constants import LANG
+
+        stub = self._make_confirm_stub(
+            page_indices=[0],
+            provider="runpod",
+            runpod_url="",
+            runpod_model="qwen-vl",
+        )
+        captured = {}
+        monkeypatch.setattr(
+            "pagefolio.ocr_dialog.messagebox.askyesno",
+            lambda title, msg, parent=None: captured.update({"msg": msg}) or True,
+        )
+        stub._confirm_cost()
+        assert LANG["ja"]["llm_runpod_host_unset"] in captured["msg"]
+        assert "api.anthropic.com" not in captured["msg"]
 
 
 # ══════════════════════════════════════════════════════════════
@@ -530,10 +681,23 @@ class TestSyncParamVarsFromSettings:
         assert stub.temperature_var.value == 0.0
 
 
-def _make_apply_llm_settings_stub(settings, provider=None):
-    """_apply_llm_settings を Tk 生成なしで呼ぶスタブを返す。"""
+def _make_apply_llm_settings_stub(settings, provider=None, app_extra=None):
+    """_apply_llm_settings を Tk 生成なしで呼ぶスタブを返す。
+
+    D-07: _maybe_show_lang_fallback_notice が参照する属性
+    （_lang_fallback_notice_var/_lang_fallback_label/_L）も併せて用意し、
+    provider 再生成の try/except に AttributeError が黙って飲み込まれない
+    ようにする（試験対象コードパスを実際に通す）。
+
+    app_extra: app 側 SimpleNamespace に追加する属性の dict（L-6j の
+    _update_ocr_buttons_state スタブ差し込み等に使用）。省略時は既存の
+    app（_update_ocr_buttons_state 属性なし）のまま後方互換を保つ。
+    """
+    app_kwargs = {"settings": dict(settings)}
+    if app_extra:
+        app_kwargs.update(app_extra)
     stub = types.SimpleNamespace(
-        app=types.SimpleNamespace(settings=dict(settings)),
+        app=types.SimpleNamespace(**app_kwargs),
         custom_prompt="旧プロンプト",
         provider=provider or ClaudeProvider(api_key="x", model="claude-sonnet-4-6"),
         concurrency=1,
@@ -543,6 +707,18 @@ def _make_apply_llm_settings_stub(settings, provider=None):
         progress_var=_VarStub(),
         url_var=_VarStub(),
         model_var=_VarStub(),
+        _lang_fallback_notice_var=_VarStub(),
+        _lang_fallback_label=types.SimpleNamespace(
+            winfo_ismapped=lambda: False,
+            pack=lambda **kw: None,
+            pack_forget=lambda: None,
+        ),
+        progress_bar=object(),
+        _L={
+            "ocr_tesseract_lang_fallback_notice": (
+                "⚠ 指定言語 {requested} は利用不可のため {effective} で実行します"
+            )
+        },
     )
     return stub
 
@@ -578,6 +754,64 @@ class TestApplyLlmSettingsCustomPromptSync:
         )
         OCRDialog._apply_llm_settings(stub, {"ocr_custom_prompt": ""})
         assert stub.custom_prompt == ""
+
+
+class TestApplyLlmSettingsOffToggleButtons:
+    """L-6j: "off" 切替時にツールバー OCR ボタン状態が同期されることを確認する。
+
+    _apply_llm_settings が app._update_ocr_buttons_state() を呼ぶこと
+    （provider 再生成の正常系・例外系いずれでも呼ばれること・Pitfall 6）を検証する。
+    """
+
+    def test_update_ocr_buttons_state_called_on_off(self, monkeypatch):
+        """provider='off' へ切替後、app._update_ocr_buttons_state が呼ばれる。"""
+        from pagefolio.ocr_dialog import OCRDialog
+
+        monkeypatch.setattr("pagefolio.settings._save_settings", lambda settings: None)
+        calls = {"n": 0}
+        stub = _make_apply_llm_settings_stub(
+            settings={"ocr_provider": "off"},
+            app_extra={
+                "_update_ocr_buttons_state": lambda: calls.__setitem__(
+                    "n", calls["n"] + 1
+                )
+            },
+        )
+        OCRDialog._apply_llm_settings(stub, {"ocr_provider": "off"})
+        assert calls["n"] == 1
+
+    def test_update_ocr_buttons_state_called_even_on_provider_exception(
+        self, monkeypatch
+    ):
+        """provider 再生成が例外で失敗しても呼ばれる（Pitfall 6）。"""
+        from pagefolio.ocr_dialog import OCRDialog
+
+        monkeypatch.setattr("pagefolio.settings._save_settings", lambda settings: None)
+        # tesseract/プラグイン分岐は build_provider を呼ぶため、これを失敗させる
+        monkeypatch.setattr(
+            "pagefolio.ocr.build_provider",
+            lambda *a, **k: (_ for _ in ()).throw(RuntimeError("boom")),
+        )
+        calls = {"n": 0}
+        stub = _make_apply_llm_settings_stub(
+            settings={"ocr_provider": "some-unknown-provider"},
+            app_extra={
+                "_update_ocr_buttons_state": lambda: calls.__setitem__(
+                    "n", calls["n"] + 1
+                )
+            },
+        )
+        OCRDialog._apply_llm_settings(stub, {"ocr_provider": "some-unknown-provider"})
+        assert calls["n"] == 1
+
+    def test_no_error_when_app_lacks_update_ocr_buttons_state(self, monkeypatch):
+        """app に _update_ocr_buttons_state が無くても例外を出さない（後方互換）。"""
+        from pagefolio.ocr_dialog import OCRDialog
+
+        monkeypatch.setattr("pagefolio.settings._save_settings", lambda settings: None)
+        stub = _make_apply_llm_settings_stub(settings={"ocr_provider": "off"})
+        # AttributeError 等を出さず正常終了すること
+        OCRDialog._apply_llm_settings(stub, {"ocr_provider": "off"})
 
 
 class _FakeToplevel:
@@ -621,6 +855,7 @@ class TestOpenSettingsDoubleLaunchGuard:
             root=object(),
             settings={},
             _apply_settings=lambda s: None,
+            _apply_llm_settings_live=lambda s: None,
             _font=lambda delta=0, weight=None: ("Segoe UI", 10),
         )
         PDFEditorApp._open_settings(stub)
@@ -641,6 +876,7 @@ class TestOpenSettingsDoubleLaunchGuard:
             root=object(),
             settings={},
             _apply_settings=lambda s: None,
+            _apply_llm_settings_live=lambda s: None,
             _font=lambda delta=0, weight=None: ("Segoe UI", 10),
         )
         PDFEditorApp._open_settings(stub)
@@ -842,3 +1078,561 @@ class TestResolveSummaryPrompt:
         """off / 未知プロバイダは DEFAULT_SUMMARY_PROMPT へフォールバックする。"""
         assert resolve_summary_prompt("off", "") == DEFAULT_SUMMARY_PROMPT
         assert resolve_summary_prompt("unknown_xyz", "") == DEFAULT_SUMMARY_PROMPT
+
+
+# ══════════════════════════════════════════════════════════════
+#  V171-KEY-01/04: LLMConfigDialog._apply の APIキー非流入・
+#  _session_api_keys 格納/クリア・RunPod スロット回帰テスト
+# ══════════════════════════════════════════════════════════════
+
+
+class _GetVarStub:
+    """tk.StringVar/IntVar/DoubleVar の .get() のみを模したスタブ。"""
+
+    def __init__(self, value):
+        self._value = value
+
+    def get(self):
+        """設定済みの値をそのまま返す。"""
+        return self._value
+
+
+class _GetTextStub:
+    """tk.Text.get(start, end) のみを模したスタブ。"""
+
+    def __init__(self, value=""):
+        self._value = value
+
+    def get(self, _start, _end):
+        """設定済みの値をそのまま返す（start/end 引数は無視）。"""
+        return self._value
+
+
+def _make_apply_key_stub(session_api_keys, claude_key="", gemini_key="", runpod_key=""):
+    """LLMConfigDialog._apply を Tk 生成なしで呼ぶための最小スタブを返す。
+
+    _apply が参照する全属性（プロバイダ別設定行・数値設定・カスタムプロンプト）
+    を実際の値で埋め、session_api_keys 引数は複製せず参照をそのまま持たせる
+    （app._session_api_keys の実体共有を再現するため）。
+    """
+    stub = types.SimpleNamespace(
+        _session_api_keys=session_api_keys,
+        provider_var=_GetVarStub("claude"),
+        lm_url_var=_GetVarStub("http://localhost:1234"),
+        lm_model_var=_GetVarStub(""),
+        ollama_url_var=_GetVarStub("http://localhost:11434"),
+        ollama_model_var=_GetVarStub(""),
+        runpod_url_var=_GetVarStub(""),
+        runpod_model_var=_GetVarStub(""),
+        claude_model_var=_GetVarStub("claude-sonnet-4-6"),
+        effort_var=_GetVarStub("low"),
+        gemini_model_var=_GetVarStub("gemini-2.5-flash"),
+        ocr_scale_var=_GetVarStub(1.5),
+        ocr_timeout_var=_GetVarStub(120),
+        ocr_max_tokens_var=_GetVarStub(-1),
+        ocr_prompt_text=_GetTextStub(""),
+        ocr_summary_prompt_text=_GetTextStub(""),
+        ocr_temperature_var=_GetVarStub(0.1),
+        ocr_concurrency_var=_GetVarStub(2),
+        claude_api_key_var=_GetVarStub(claude_key),
+        gemini_api_key_var=_GetVarStub(gemini_key),
+        runpod_api_key_var=_GetVarStub(runpod_key),
+        on_apply=None,
+        destroy=lambda: None,
+    )
+    return stub
+
+
+class TestApiKeyNotInSettings:
+    """V171-KEY-01: APIキー入力値が on_apply へ渡る llm_settings dict に含まれない。"""
+
+    def test_claude_key_not_in_llm_settings(self):
+        """claude 欄にダミーキーを入れて _apply しても api_key 系キーが現れない。"""
+        from pagefolio.dialogs.llm_config import LLMConfigDialog
+
+        session = {}
+        stub = _make_apply_key_stub(session, claude_key="sk-ant-DUMMY-TEST-KEY")
+        captured = {}
+        stub.on_apply = lambda s: captured.update(s)
+        LLMConfigDialog._apply(stub)
+
+        assert not any("api_key" in k.lower() for k in captured), (
+            f"llm_settings に api_key 系キーが含まれている: {list(captured.keys())}"
+        )
+
+    def test_all_provider_keys_not_in_llm_settings(self):
+        """claude/gemini/runpod 全欄にダミーキーを入れても llm_settings は非流入。"""
+        from pagefolio.dialogs.llm_config import LLMConfigDialog
+
+        session = {}
+        stub = _make_apply_key_stub(
+            session,
+            claude_key="sk-ant-DUMMY",
+            gemini_key="AIza-DUMMY",
+            runpod_key="rp-DUMMY",
+        )
+        captured = {}
+        stub.on_apply = lambda s: captured.update(s)
+        LLMConfigDialog._apply(stub)
+
+        assert not any("api_key" in k.lower() for k in captured)
+
+
+class TestSessionKeyStoreAndClear:
+    """V171-KEY-01: 非空入力は _session_api_keys へ格納・空欄はクリア（D-04/D-06）。"""
+
+    def test_non_empty_key_stored_in_session(self):
+        """非空の claude 欄入力は _session_api_keys["claude"] に格納される。"""
+        from pagefolio.dialogs.llm_config import LLMConfigDialog
+
+        session = {}
+        stub = _make_apply_key_stub(session, claude_key="sk-ant-DUMMY-TEST-KEY")
+        LLMConfigDialog._apply(stub)
+
+        assert session["claude"] == "sk-ant-DUMMY-TEST-KEY"
+
+    def test_empty_key_clears_existing_session_entry(self):
+        """空欄で _apply すると既存の provider エントリが除去される（D-06）。"""
+        from pagefolio.dialogs.llm_config import LLMConfigDialog
+
+        session = {"claude": "old-dummy-key"}
+        stub = _make_apply_key_stub(session, claude_key="")
+        LLMConfigDialog._apply(stub)
+
+        assert "claude" not in session
+
+    def test_whitespace_only_key_treated_as_empty(self):
+        """空白のみの入力は空欄扱いでクリアされる（.strip() 適用）。"""
+        from pagefolio.dialogs.llm_config import LLMConfigDialog
+
+        session = {"gemini": "old-dummy-key"}
+        stub = _make_apply_key_stub(session, gemini_key="   ")
+        LLMConfigDialog._apply(stub)
+
+        assert "gemini" not in session
+
+
+class TestRunpodSessionKeySlot:
+    """V171-KEY-04: RunPod 欄の値が _session_api_keys["runpod"] に格納され、
+    "claude" スロットを汚染しない（Pitfall 1 の回帰防止）。
+    """
+
+    def test_runpod_key_goes_to_runpod_slot(self):
+        """runpod 欄のダミーキーが _session_api_keys["runpod"] に入る。"""
+        from pagefolio.dialogs.llm_config import LLMConfigDialog
+
+        session = {}
+        stub = _make_apply_key_stub(session, runpod_key="rp-DUMMY-TEST-KEY")
+        LLMConfigDialog._apply(stub)
+
+        assert session.get("runpod") == "rp-DUMMY-TEST-KEY"
+
+    def test_runpod_key_does_not_pollute_claude_slot(self):
+        """runpod 欄にのみ値を入れても "claude" スロットは汚染されない。"""
+        from pagefolio.dialogs.llm_config import LLMConfigDialog
+
+        session = {}
+        stub = _make_apply_key_stub(session, runpod_key="rp-DUMMY-TEST-KEY")
+        LLMConfigDialog._apply(stub)
+
+        assert "claude" not in session
+
+    def test_all_three_slots_independent(self):
+        """claude/gemini/runpod の3欄を入力すると各自のスロットへ独立格納される。"""
+        from pagefolio.dialogs.llm_config import LLMConfigDialog
+
+        session = {}
+        stub = _make_apply_key_stub(
+            session,
+            claude_key="sk-ant-DUMMY",
+            gemini_key="AIza-DUMMY",
+            runpod_key="rp-DUMMY",
+        )
+        LLMConfigDialog._apply(stub)
+
+        assert session["claude"] == "sk-ant-DUMMY"
+        assert session["gemini"] == "AIza-DUMMY"
+        assert session["runpod"] == "rp-DUMMY"
+
+
+# ══════════════════════════════════════════════════════════════
+#  D-07: OCRDialog._maybe_show_lang_fallback_notice
+#  （Tesseract 段階的縮退フォールバックの非モーダル WARNING 注記）
+# ══════════════════════════════════════════════════════════════
+
+
+class _FakeStringVar:
+    """tk.StringVar の最小スタブ（Tk 生成なしでロジックのみ検証）。"""
+
+    def __init__(self, value=""):
+        self._value = value
+
+    def set(self, value):
+        self._value = value
+
+    def get(self):
+        return self._value
+
+
+class _FakeLabel:
+    """tk.Label の最小スタブ。pack/pack_forget 呼び出しと表示状態のみ記録する。"""
+
+    def __init__(self):
+        self.mapped = False
+        self.pack_calls = []
+        self.pack_forget_calls = 0
+
+    def winfo_ismapped(self):
+        return self.mapped
+
+    def pack(self, **kwargs):
+        self.mapped = True
+        self.pack_calls.append(kwargs)
+
+    def pack_forget(self):
+        self.mapped = False
+        self.pack_forget_calls += 1
+
+
+def _make_lang_fallback_fake(provider):
+    """_maybe_show_lang_fallback_notice 用の最小 fake OCRDialog を返す。
+
+    OCR 結果テキスト（raw）への混入がないことも検証できるよう、
+    self.text.insert 呼び出しを記録するスタブを併せて用意する。
+    """
+    from pagefolio.constants import LANG
+
+    text_inserts = []
+    fake = types.SimpleNamespace(
+        provider=provider,
+        _L=LANG["ja"],
+        _lang_fallback_notice_var=_FakeStringVar(),
+        _lang_fallback_label=_FakeLabel(),
+        progress_bar=object(),
+        text=types.SimpleNamespace(insert=lambda *a, **k: text_inserts.append((a, k))),
+    )
+    return fake, text_inserts
+
+
+class TestMaybeShowLangFallbackNotice:
+    """D-07: フォールバック発生時に1回だけ非モーダル注記を表示し、
+    OCR 結果 raw には混入させない。非発生時は注記を出さない。"""
+
+    def test_notice_shown_when_fallback_true(self):
+        """lang_fallback=True のプロバイダで注記が表示され要求/実効言語を含む"""
+        from pagefolio.ocr_dialog import OCRDialog
+
+        provider = types.SimpleNamespace(
+            lang_fallback=True, requested_lang="deu+fra", effective_lang="jpn+eng"
+        )
+        fake, text_inserts = _make_lang_fallback_fake(provider)
+
+        OCRDialog._maybe_show_lang_fallback_notice(fake)
+
+        msg = fake._lang_fallback_notice_var.get()
+        assert "deu+fra" in msg
+        assert "jpn+eng" in msg
+        assert fake._lang_fallback_label.mapped is True
+        assert text_inserts == [], "OCR結果テキスト(raw)に注記が混入してはいけない"
+
+    def test_notice_hidden_when_no_fallback(self):
+        """lang_fallback=False のときは注記が消え非表示になる"""
+        from pagefolio.ocr_dialog import OCRDialog
+
+        provider = types.SimpleNamespace(lang_fallback=False)
+        fake, _ = _make_lang_fallback_fake(provider)
+        fake._lang_fallback_label.mapped = True  # 前回表示状態を模擬
+
+        OCRDialog._maybe_show_lang_fallback_notice(fake)
+
+        assert fake._lang_fallback_notice_var.get() == ""
+        assert fake._lang_fallback_label.mapped is False
+
+    def test_notice_hidden_for_provider_without_lang_fallback_attr(self):
+        """lang_fallback 属性を持たないプロバイダ（claude 等）でも例外なく非表示"""
+        from pagefolio.ocr_dialog import OCRDialog
+
+        provider = types.SimpleNamespace()  # lang_fallback 属性なし
+        fake, _ = _make_lang_fallback_fake(provider)
+
+        OCRDialog._maybe_show_lang_fallback_notice(fake)
+
+        assert fake._lang_fallback_notice_var.get() == ""
+        assert fake._lang_fallback_label.mapped is False
+
+    def test_notice_hidden_when_provider_is_none(self):
+        """provider が None（未生成）でも例外なく非表示のまま"""
+        from pagefolio.ocr_dialog import OCRDialog
+
+        fake, _ = _make_lang_fallback_fake(None)
+
+        OCRDialog._maybe_show_lang_fallback_notice(fake)
+
+        assert fake._lang_fallback_notice_var.get() == ""
+        assert fake._lang_fallback_label.mapped is False
+
+
+# ══════════════════════════════════════════════════════════════
+#  D-14: LLMConfigDialog ネスト適用の独立トランザクション化
+#  （app._apply_llm_settings_live・SettingsDialog.on_llm_apply cascade）
+# ══════════════════════════════════════════════════════════════
+
+
+class TestApplyLlmSettingsLive:
+    """D-14: app._apply_llm_settings_live が app.settings（メモリ）へ即時反映し、
+    _rebuild_ui を呼ばない軽量反映であることを検証する。
+    """
+
+    def test_updates_memory_settings_without_rebuild(self, monkeypatch):
+        """settings が更新され、既存キー（theme 等）は保持され、_rebuild_ui は
+        呼ばれない。"""
+        from pagefolio.app import PDFEditorApp
+
+        monkeypatch.setattr("pagefolio.app._save_settings", lambda s: None)
+        rebuild_calls = {"n": 0}
+        stub = types.SimpleNamespace(
+            settings={"theme": "dark", "font_size": 10},
+            _rebuild_ui=lambda: rebuild_calls.__setitem__("n", rebuild_calls["n"] + 1),
+        )
+        PDFEditorApp._apply_llm_settings_live(stub, {"ocr_provider": "claude"})
+
+        assert stub.settings["ocr_provider"] == "claude"
+        assert stub.settings["theme"] == "dark"
+        assert rebuild_calls["n"] == 0
+
+    def test_saves_to_disk(self, monkeypatch):
+        """_save_settings が更新後の settings で呼ばれる（ディスク永続化）。"""
+        from pagefolio.app import PDFEditorApp
+
+        saved = {}
+        monkeypatch.setattr("pagefolio.app._save_settings", lambda s: saved.update(s))
+        stub = types.SimpleNamespace(settings={"theme": "dark"})
+        PDFEditorApp._apply_llm_settings_live(
+            stub, {"claude_model": "claude-sonnet-4-6"}
+        )
+        assert saved.get("claude_model") == "claude-sonnet-4-6"
+
+    def test_api_key_like_values_not_specially_filtered(self, monkeypatch):
+        """本メソッド自体は渡された dict をそのまま反映するだけであり、api_key
+        非流入の担保は呼び出し元（LLMConfigDialog._apply・TestApiKeyNotInSettings）
+        の責務であることを確認する（api_key を含まない dict なら正常反映）。
+        """
+        from pagefolio.app import PDFEditorApp
+
+        monkeypatch.setattr("pagefolio.app._save_settings", lambda s: None)
+        stub = types.SimpleNamespace(settings={})
+        PDFEditorApp._apply_llm_settings_live(stub, {"ocr_provider": "claude"})
+        assert not any("api_key" in k.lower() for k in stub.settings)
+
+
+class TestSettingsDialogNestedApplyCascade:
+    """D-14/C4/C5: LLMConfigDialog（ネスト側）の適用が、外側 SettingsDialog の
+    Apply/Cancel と独立して app.settings（メモリ）へ即時反映されることを検証する。
+    """
+
+    def _patch_fake_llm_config_dialog(self, monkeypatch):
+        """LLMConfigDialog を捕捉スタブへ差し替え、渡された kwargs を回収する。"""
+        captured_kwargs = {}
+
+        class _FakeLLMConfigDialog:
+            def __init__(self, *args, **kwargs):
+                captured_kwargs.update(kwargs)
+
+        monkeypatch.setattr(
+            "pagefolio.dialogs.llm_config.LLMConfigDialog", _FakeLLMConfigDialog
+        )
+        return captured_kwargs
+
+    def test_nested_apply_calls_on_llm_apply_callback(self, monkeypatch):
+        """on_llm_apply が設定済みなら、ネスト適用時に新しい llm_settings で
+        呼ばれる。"""
+        from pagefolio.dialogs.settings import SettingsDialog
+
+        monkeypatch.setattr("pagefolio.settings._save_settings", lambda settings: None)
+        captured_kwargs = self._patch_fake_llm_config_dialog(monkeypatch)
+
+        live_calls = []
+        stub = types.SimpleNamespace(
+            current_settings={"ocr_provider": "lmstudio"},
+            _font=lambda delta=0, weight=None: ("Segoe UI", 10),
+            _plugin_manager=None,
+            _on_llm_apply=lambda s: live_calls.append(s),
+        )
+        SettingsDialog._open_llm_config(stub)
+
+        on_apply = captured_kwargs["on_apply"]
+        on_apply({"ocr_provider": "claude"})
+
+        assert live_calls == [{"ocr_provider": "claude"}]
+
+    def test_outer_cancel_does_not_revert_memory_reflection(self, monkeypatch):
+        """外側 SettingsDialog をキャンセル（外側 callback 非呼び出し）しても、
+        ネスト適用済みの LLM 設定は app.settings（メモリ）に残ったまま
+        （C4: ディスクとメモリの不整合解消の回帰）。
+        """
+        from pagefolio.app import PDFEditorApp
+        from pagefolio.dialogs.settings import SettingsDialog
+
+        monkeypatch.setattr("pagefolio.settings._save_settings", lambda settings: None)
+        monkeypatch.setattr("pagefolio.app._save_settings", lambda settings: None)
+        captured_kwargs = self._patch_fake_llm_config_dialog(monkeypatch)
+
+        app_stub = types.SimpleNamespace(
+            settings={"theme": "dark", "ocr_provider": "lmstudio"}
+        )
+        settings_dialog_stub = types.SimpleNamespace(
+            current_settings={"ocr_provider": "lmstudio"},
+            _font=lambda delta=0, weight=None: ("Segoe UI", 10),
+            _plugin_manager=None,
+            _on_llm_apply=lambda s: PDFEditorApp._apply_llm_settings_live(app_stub, s),
+        )
+        SettingsDialog._open_llm_config(settings_dialog_stub)
+        on_apply = captured_kwargs["on_apply"]
+        on_apply({"ocr_provider": "claude"})
+
+        # 外側 SettingsDialog._apply/callback は一切呼んでいない（＝キャンセル相当）
+        # にもかかわらず app.settings は新しい値のまま。
+        assert app_stub.settings["ocr_provider"] == "claude"
+        assert app_stub.settings["theme"] == "dark"
+
+    def test_no_on_llm_apply_does_not_raise(self, monkeypatch):
+        """on_llm_apply 未設定（後方互換・既存 SimpleNamespace スタブ等）でも
+        例外を出さずに完了する。"""
+        from pagefolio.dialogs.settings import SettingsDialog
+
+        monkeypatch.setattr("pagefolio.settings._save_settings", lambda settings: None)
+        captured_kwargs = self._patch_fake_llm_config_dialog(monkeypatch)
+
+        stub = types.SimpleNamespace(
+            current_settings={"ocr_provider": "lmstudio"},
+            _font=lambda delta=0, weight=None: ("Segoe UI", 10),
+            _plugin_manager=None,
+            # _on_llm_apply 属性を意図的に設定しない
+        )
+        SettingsDialog._open_llm_config(stub)
+        on_apply = captured_kwargs["on_apply"]
+        on_apply({"ocr_provider": "claude"})  # 例外なく完了すること
+
+    def test_api_key_not_propagated_through_cascade(self, monkeypatch):
+        """LLMConfigDialog._apply が生成する llm_settings（api_key 非流入）が
+        そのままネスト経由で app.settings へ渡ってもキー混入しないことを、
+        cascade 経路全体で確認する。
+        """
+        from pagefolio.dialogs.llm_config import LLMConfigDialog
+        from pagefolio.dialogs.settings import SettingsDialog
+
+        monkeypatch.setattr("pagefolio.settings._save_settings", lambda settings: None)
+        captured_kwargs = self._patch_fake_llm_config_dialog(monkeypatch)
+
+        live_settings = {}
+        stub = types.SimpleNamespace(
+            current_settings={"ocr_provider": "lmstudio"},
+            _font=lambda delta=0, weight=None: ("Segoe UI", 10),
+            _plugin_manager=None,
+            _on_llm_apply=lambda s: live_settings.update(s),
+        )
+        SettingsDialog._open_llm_config(stub)
+        on_apply = captured_kwargs["on_apply"]
+
+        apply_stub = _make_apply_key_stub({}, claude_key="sk-ant-DUMMY-TEST-KEY")
+        apply_stub.on_apply = on_apply
+        LLMConfigDialog._apply(apply_stub)
+
+        assert not any("api_key" in k.lower() for k in live_settings)
+
+
+# ══════════════════════════════════════════════════════════════
+#  C2: Ollama モデル取得/接続テストの共通ヘルパー統合
+#  （_probe_ollama_provider・_probe_lm_provider 同型）
+# ══════════════════════════════════════════════════════════════
+
+
+class _OllamaComboStub:
+    """ttk.Combobox の ["values"] = ... 代入のみを記録するスタブ。"""
+
+    def __init__(self):
+        self.values = None
+
+    def __setitem__(self, key, value):
+        if key == "values":
+            self.values = value
+
+
+class TestProbeOllamaProvider:
+    """C2: _probe_ollama_provider が _probe_lm_provider と同型の共通ヘルパーとして
+    Ollama のモデル取得/接続テストを統合していることを検証する。
+    """
+
+    def _make_stub(self, url="http://localhost:11434"):
+        from pagefolio.constants import LANG
+        from pagefolio.dialogs.llm_config import LLMConfigDialog
+
+        status = {}
+        stub = types.SimpleNamespace(
+            ollama_url_var=_GetVarStub(url),
+            ollama_model_combo=_OllamaComboStub(),
+            _L=LANG["ja"],
+            _set_lm_status=lambda text, kind="info": status.update(
+                {"text": text, "kind": kind}
+            ),
+        )
+        stub._probe_ollama_provider = lambda update_combo: (
+            LLMConfigDialog._probe_ollama_provider(stub, update_combo)
+        )
+        return stub, status
+
+    def test_update_combo_true_reflects_models(self, monkeypatch):
+        """update_combo=True のとき Combobox の values にモデル一覧が反映される。"""
+        stub, status = self._make_stub()
+        monkeypatch.setattr(
+            "pagefolio.ocr_providers.OllamaProvider.list_models",
+            lambda self: ["llava", "llama3.2-vision"],
+        )
+        stub._probe_ollama_provider(update_combo=True)
+        assert stub.ollama_model_combo.values == ["llava", "llama3.2-vision"]
+        assert status["kind"] == "ok"
+
+    def test_update_combo_false_does_not_touch_combo(self, monkeypatch):
+        """update_combo=False（接続テストのみ）では Combobox の values を変更しない。"""
+        stub, status = self._make_stub()
+        monkeypatch.setattr(
+            "pagefolio.ocr_providers.OllamaProvider.list_models",
+            lambda self: ["llava"],
+        )
+        stub._probe_ollama_provider(update_combo=False)
+        assert stub.ollama_model_combo.values is None
+        assert status["kind"] == "ok"
+
+    def test_empty_url_shows_fail_status(self):
+        """URL 空欄はエラーステータス表示となり Combobox は変更されない。"""
+        stub, status = self._make_stub(url="")
+        stub._probe_ollama_provider(update_combo=True)
+        assert status["kind"] == "fail"
+        assert stub.ollama_model_combo.values is None
+
+    def test_connection_error_shows_fail_status(self, monkeypatch):
+        """list_models が ConnectionError を送出した場合は fail ステータスになる。"""
+        stub, status = self._make_stub()
+
+        def _raise(self):
+            raise ConnectionError("boom")
+
+        monkeypatch.setattr(
+            "pagefolio.ocr_providers.OllamaProvider.list_models", _raise
+        )
+        stub._probe_ollama_provider(update_combo=True)
+        assert status["kind"] == "fail"
+
+    def test_fetch_and_test_are_thin_wrappers(self):
+        """_fetch_ollama_models/_test_ollama_connection が
+        _probe_ollama_provider(update_combo=...) を呼ぶ薄いラッパーであり、
+        旧重複本体が除去されていることをソース上で確認する。
+        """
+        import pathlib
+
+        src = pathlib.Path("pagefolio/dialogs/llm_config.py").read_text(
+            encoding="utf-8"
+        )
+        assert "self._probe_ollama_provider(update_combo=True)" in src
+        assert "self._probe_ollama_provider(update_combo=False)" in src
+        assert src.count("def _test_ollama_connection") == 1

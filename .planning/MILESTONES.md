@@ -1,5 +1,30 @@
 # Milestones
 
+## v1.7.1 現機能ブラッシュアップ + APIキー入力欄 (Shipped: 2026-07-05)
+
+**Phases completed:** 4 phases, 16 plans, 41 tasks
+
+**Key accomplishments:**
+
+- `_resolve_api_key` の解決優先順を「環境変数優先」から「セッションキー(入力値)優先」へ反転し、claude/gemini書き換え + RunPod新設の回帰テストと、後続プラン参照用のLANGキー（ja/en）を整備
+- LLMConfigDialog の claude/gemini/runpod 各セクションにマスク付き APIキー入力欄・トグル・セッション限定注記を追加し、SettingsDialog 経由の session_api_keys 配線とモデル取得のライブ値優先解決を実装
+- OCRDialog の旧セッションキー入力欄（api_key_var/_key_frame）とヘルパー（_needs_session_key/_ensure_cloud_session_key）を撤去し、値収集をしない軽量ゲート _check_cloud_api_key へ置換。RunPod キーの claude スロット誤格納バグを構造的に解消し、後継テスト TestCheckCloudApiKey で3プロバイダの明示エラーを回帰保証
+- `_confirm_cost`/`_confirm_summary_cost` に `elif name == "runpod":` 分岐を追加し、RunPod選択時に `api.anthropic.com`/claudeモデルを誤開示していたCritical欠陥（01-REVIEW.md CR-01）を解消
+- register_ocr_provider に重複名ポリシー(組み込み名衝突拒否・プラグイン間後勝ち上書き)と unload 時の owner ベース解除を追加し、get_ocr_provider/list_ocr_providers 公開アクセサ経由へ ocr.py/llm_config.py の私有アクセスを置換
+- TesseractProviderへ段階的縮退(effective_lang/lang_fallback)とプロバイダ生成時の都度言語再検出を実装し、フォールバック発生時はOCRDialogの非モーダルWARNING注記(OCR結果rawには非混入)で1回通知する
+- OCRプロバイダ層のURLスキーム検証統一適用・Gemini quoteエスケープ・エラーbody切り詰め・Claude list_modelsページネーションに加え、LLMConfigDialogの重複解消とoff切替時のOCRボタン状態同期をV171-OCR-01（L-6）として一括実装
+- producer-consumer の二重実装（ocr.py の未使用ヘルパー vs ocr_dialog.py 実戦実装）を新モジュール ocr_pipeline.py（Tk/fitz 非依存）へ一本化し、レンダー失敗時の進捗停滞（L-6a）・fatal 後の render 継続（L-6g）を同時修正、sentinel 容量不変条件（L-6h）を明文化
+- PNG/JPEG画像をページ中央・幅約50%・50%透過で焼き込む `_add_watermark_image`/`_watermark_image_rect` を実装し、既存テキスト透かしと同型の page_edit undo で完全復元可能にした
+- D&D挿入位置計算とショートカットマージを純関数へ抽出し、TOC保持・D&D・ショートカットの3系統回帰テストを新規ファイルへ整備、既存undo往復テストへ内容検証を追加
+- page.derotation_matrix を使う共通ヘルパー_derotate_rectで黒塗り/モザイク/トリミングの座標ズレを構造的に解消し、矢印キー微調整・mm指定トリミング・crop_infoのmm＋%表示を実装
+- 黒塗り/モザイクを連続適用可能にし、モザイク粒度スライダー・複数矩形一括適用（1回undo）・page.derotation_matrixによる回転座標対応を`_apply_page_edit`へ統合
+- `app.py` にkeysym組み立て/重複検出/表示変換の3純関数を追加し、`__init__` 直書きバインドを再実行可能な `_bind_shortcuts()` メソッドへ抽出
+- 新設 ShortcutsDialog で cmd_map 全11コマンドを実キーキャプチャ編集・保存時重複拒否可能にし、SettingsDialog を外観/操作/AI・OCR の3セクションへ再編・🔍→⚙アイコン改称
+- LLMConfigDialog に共通/固有見出しを追加しネスト適用を独立トランザクション化（D-14）、Ollamaモデル取得/接続テストをLM Studio型の共通ヘルパーへ統合（C2）
+- viewer.py 拡大ポップアップの LANG キー化（C6）・page_ops.py 分割エラーの messagebox 種別統一（C7）・lang.py 確定未使用11キー削除 + D-11 未使用キー検出回帰テスト常設
+
+---
+
 ## v1.7.0 Undo/Redo メモリ最適化（ディスク退避）+ ストレステスト自動化 (Shipped: 2026-07-03)
 
 **Type:** マイナーアップデート（`claude/v1-6-5-v1-7-0-planning-3rqiah` ブランチ作業・v1.6.5 と同一ブランチ）

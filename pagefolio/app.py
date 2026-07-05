@@ -32,6 +32,78 @@ from pagefolio.viewer import ViewerMixin
 logger = logging.getLogger(__name__)
 
 
+def merge_shortcuts(default_shortcuts, custom_shortcuts):
+    """既定＋ユーザー設定のショートカット辞書をマージする（後勝ち）。
+
+    Tk/fitz 非依存の純関数（V171-TEST-01・D-13）。
+    """
+    return {**default_shortcuts, **custom_shortcuts}
+
+
+def shift_variant_keysym(keysym):
+    """Control-小文字 の keysym から Shift 補完用の大文字版 keysym を返す。
+
+    対象外パターンは None を返す。Tk/fitz 非依存の純関数（V171-TEST-01・D-13）。
+    """
+    if keysym.startswith("<Control-") and len(keysym) == 11 and keysym[-2].islower():
+        return keysym[:-2] + keysym[-2].upper() + ">"
+    return None
+
+
+_SHORTCUT_MOD_ORDER = ("Control", "Alt", "Shift")
+
+
+def build_keysym_from_event(
+    state, keysym, shift_mask=0x1, control_mask=0x4, alt_mask=0x20000
+):
+    """event.state ビットマスクと event.keysym から Tk bind 用文字列を組み立てる。
+
+    ショートカット GUI 編集の実キーキャプチャ方式を支える純関数（V171-UIUX-01・D-02）。
+    修飾は Control, Alt, Shift の順で連結し、修飾なしの場合はキー単体を返す。
+    """
+    mods = []
+    if state & control_mask:
+        mods.append("Control")
+    if state & alt_mask:
+        mods.append("Alt")
+    if state & shift_mask:
+        mods.append("Shift")
+    if not mods:
+        return f"<{keysym}>"
+    return f"<{'-'.join(mods)}-{keysym}>"
+
+
+def find_duplicate_binding(shortcuts, cmd_name, new_keysym):
+    """新規割当キーが自分以外のコマンドと重複していないか判定する。
+
+    重複割当を保存時に拒否する要件を支える純関数（V171-UIUX-01・D-04）。
+    衝突しているコマンド名を返し、衝突がなければ None を返す。
+    """
+    if not new_keysym:
+        return None
+    for other_cmd, other_keysym in shortcuts.items():
+        if other_cmd != cmd_name and other_keysym == new_keysym:
+            return other_cmd
+    return None
+
+
+def keysym_to_display(keysym):
+    """Tk keysym 文字列を人間可読な表示形式へ変換する。
+
+    ショートカット一覧の可読性向上を支える純関数（V171-UIUX-01・D-07）。
+    内部保存は Tk keysym のまま変えず、表示専用に変換する。
+    """
+    if not keysym:
+        return ""
+    inner = keysym.strip("<>")
+    parts = inner.split("-")
+    *mods, key = parts
+    display_mods = {"Control": "Ctrl", "Alt": "Alt", "Shift": "Shift"}
+    out = [display_mods.get(m, m) for m in mods]
+    out.append(key.upper() if len(key) == 1 else key)
+    return "+".join(out)
+
+
 class PDFEditorApp(
     UIBuilderMixin,
     FileOpsMixin,
@@ -124,8 +196,9 @@ class PDFEditorApp(
         # WM_DELETE_WINDOW
         self.root.protocol("WM_DELETE_WINDOW", self._quit)
 
-        # キーボードショートカットの動的読み込み
-        default_shortcuts = {
+        # キーボードショートカットの動的読み込み（既定 8 種・後続 04-02 の
+        # ShortcutsDialog 保存時にも self._bind_shortcuts() を再利用する・D-05）
+        self._default_shortcuts = {
             "open_file": "<Control-o>",
             "save_file": "<Control-s>",
             "undo": "<Control-z>",
@@ -136,10 +209,7 @@ class PDFEditorApp(
             "print_pdf": "<Control-p>",
         }
 
-        custom_shortcuts = self.settings.get("shortcuts", {})
-        shortcuts = {**default_shortcuts, **custom_shortcuts}
-
-        cmd_map = {
+        self._cmd_map = {
             "open_file": self._open_file,
             "save_file": self._save_file,
             "undo": self._undo,
@@ -153,25 +223,40 @@ class PDFEditorApp(
             "rotate_180": lambda: self._rotate_selected(180),
         }
 
+        self._bind_shortcuts()
+
+    def _bind_shortcuts(self):
+        """settings["shortcuts"] から現在のキーバインドを（再）構築する（D-05）。
+
+        再呼び出し時は前回バインドした keysym（shift variant 含む）を
+        先に unbind してから新設定で再バインドする（旧キーが残らない・Pitfall 1）。
+        """
+        for old_keysym in getattr(self, "_bound_keysyms", []):
+            try:
+                self.root.unbind(old_keysym)
+            except Exception as e:
+                logger.debug("ショートカット unbind 失敗: %s", e)
+
+        custom_shortcuts = self.settings.get("shortcuts", {})
+        shortcuts = merge_shortcuts(self._default_shortcuts, custom_shortcuts)
+
+        bound = []
         for cmd_name, keysym in shortcuts.items():
-            func = cmd_map.get(cmd_name)
+            func = self._cmd_map.get(cmd_name)
             if func and keysym:
                 try:
                     self.root.bind(keysym, lambda e, f=func: f())
+                    bound.append(keysym)
                     # 大文字小文字の対応 (Shift なし Control などのため)
-                    if (
-                        keysym.startswith("<Control-")
-                        and len(keysym) == 11
-                        and keysym[-2].islower()
-                    ):
-                        self.root.bind(
-                            keysym[:-2] + keysym[-2].upper() + ">",
-                            lambda e, f=func: f(),
-                        )
+                    variant = shift_variant_keysym(keysym)
+                    if variant is not None:
+                        self.root.bind(variant, lambda e, f=func: f())
+                        bound.append(variant)
                 except Exception as ex:
                     logger.warning(
                         f"Failed to bind shortcut {keysym} for {cmd_name}: {ex}"
                     )
+        self._bound_keysyms = bound
 
     # ══════════════════════════════════════════
     #  ユーティリティ
@@ -472,13 +557,30 @@ class PDFEditorApp(
             existing.focus_force()
             return
         # M-8: plugin_manager を渡して LLMConfigDialog でプラグインプロバイダを表示
+        # V171-UIUX-01・D-01: app=self を渡し ShortcutsDialog から _cmd_map 等を参照
         self._settings_dialog = SettingsDialog(
             self.root,
             self.settings,
             self._apply_settings,
             self._font,
             plugin_manager=getattr(self, "plugin_manager", None),
+            session_api_keys=getattr(self, "_session_api_keys", None),
+            app=self,
+            on_llm_apply=self._apply_llm_settings_live,
         )
+
+    def _apply_llm_settings_live(self, llm_settings):
+        """LLMConfigDialog のネスト適用を app.settings（メモリ）へ即時反映する（D-14）。
+
+        SettingsDialog 経由のネスト適用（on_llm_apply）から呼ばれる軽量反映
+        メソッド。テーマ/フォントは llm_settings に含まれないため
+        `_rebuild_ui()` は呼ばない（ここで呼ぶと、開いている SettingsDialog
+        Toplevel まで `root.winfo_children()` の destroy 対象になってしまう）。
+        外側 SettingsDialog のキャンセルとは独立して確定させることで、
+        ディスク（`_save_settings` 済み）とメモリの不整合（C4）を解消する。
+        """
+        self.settings.update(llm_settings)
+        _save_settings(self.settings)
 
     def _apply_settings(self, new_settings):
         """設定変更を適用してUIを再構築"""
