@@ -4,15 +4,15 @@ milestone: v1.7.1
 milestone_name: 現機能ブラッシュアップ + APIキー入力欄
 current_phase: 3
 current_phase_name: ページ操作磨き込み + v1.5.0 回帰テスト
-status: completed
-stopped_at: Phase 3 context gathered
-last_updated: "2026-07-05T04:02:30.135Z"
+status: Ready to execute
+stopped_at: Phase 3 planned
+last_updated: "2026-07-05T05:29:56.000Z"
 last_activity: 2026-07-05
-last_activity_desc: Phase 02 complete, transitioned to Phase 3
+last_activity_desc: Phase 3 planned (4 plans / 3 waves)
 progress:
   total_phases: 4
   completed_phases: 2
-  total_plans: 8
+  total_plans: 12
   completed_plans: 8
   percent: 50
 ---
@@ -24,14 +24,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-07-04)
 
 **Core value:** 大きな PDF でも Undo/Redo が正しく・速く動作し、コードが読みやすく保守しやすい状態にする
-**Current focus:** Phase 02 — OCR 磨き込み（レビュー残の現行照合と二重実装解消）
+**Current focus:** Phase 3 — ページ操作磨き込み + v1.5.0 回帰テスト
 
 ## Current Position
 
 Phase: 3 — ページ操作磨き込み + v1.5.0 回帰テスト
-Plan: Not started
-Status: Wave 4 (02-04) complete — producer-consumer 一本化（L-1・新設 ocr_pipeline.py）+ L-6a/L-6g/L-6h 同時解消。V171-OCR-01〜04 全充足。次は Phase 03（ページ操作磨き込み + v1.5.0 回帰テスト）
-Last activity: 2026-07-05 — Phase 02 complete, transitioned to Phase 3
+Plan: 4 plans ready (03-01〜03-04, 3 waves) — not executed
+Status: Phase 3 planned — 03-01 画像透かし（V171-PAGE-01）/ 03-02 v1.5.0 回帰テスト（V171-TEST-01）が Wave 1 並行、03-03 回転/トリミング棚卸し＋`_derotate_rect` 基盤（V171-PAGE-03）が Wave 2、03-04 黒塗り/モザイク棚卸し（V171-PAGE-02）が Wave 3。plan-checker 検証済（blocker 0 / warning 1 は RESEARCH.md 表記で解消済）
+Last activity: 2026-07-05 — Phase 3 planning complete
 
 Progress: [█████░░░░░] 50%
 
@@ -281,11 +281,12 @@ Decisions are logged in PROJECT.md Key Decisions table.
 
 ## Session Continuity
 
-Last session: 2026-07-05T04:02:30.118Z
-Stopped at: Phase 3 context gathered
-Resume file: .planning/phases/03-v1-5-0/03-CONTEXT.md
+Last session: 2026-07-05
+Stopped at: Phase 3 planned (4 plans / 3 waves)
+Resume file: .planning/phases/03-v1-5-0/03-01-PLAN.md
 
 ## Operator Next Steps
 
-- Plan Phase 1 with `/gsd-plan-phase 1`（APIキー入力欄・LLM設定への一元化）
-- 計画時の前提: L 系要件は現行コード照合で活き残りを確定してから対象化（V171-R-05）
+- Execute Phase 3 with `/gsd-execute-phase 3`（Wave 1: 03-01・03-02 並行 → Wave 2: 03-03 → Wave 3: 03-04）
+- 実行時の留意: 03-04 完了後に CLAUDE.md §既知の制限「矩形は未回転のページ座標系で適用」を D-08 解消後の内容へ更新（03-04 verification に明記済み）
+- A1（`insert_image` の SMask 半透明の実描画）と矩形ドラッグ操作感は end-of-phase human-verify 対象（VALIDATION.md Manual-Only）

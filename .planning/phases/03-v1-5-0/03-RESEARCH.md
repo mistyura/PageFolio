@@ -451,22 +451,22 @@ def _nudge_crop_rect(self, dx_pt, dy_pt, resize=False):
 
 **If this table is empty:** N/A（上記 4 件が該当）。
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **数値指定トリミングの基準（mediabox か 現在の cropbox か）**
    - What we know: CONTEXT.md D-10 は「上下左右から何mm削るか」とだけ記述。矩形座標の直接入力は対象外と明記。
    - What's unclear: 起点が「まっさらな mediabox」か「今表示されている cropbox（既にトリミング済みの場合はその状態）」か。
-   - Recommendation: 「現在の cropbox から差し引く」を既定実装とする（A2）。ページ操作の UX として直感的（「今見えている範囲からさらに削る」）であり、既存のドラッグトリミングとも整合する。
+   - RESOLVED: 「現在の cropbox から差し引く」を既定実装とする（A2）。ページ操作の UX として直感的（「今見えている範囲からさらに削る」）であり、既存のドラッグトリミングとも整合する。→ 03-03 PLAN Task 3 に反映済み。
 
 2. **黒塗り/モザイクの複数矩形オーバーレイの描画方式**
    - What we know: 単一矩形時は 4 象限 stipple（外側を薄暗く）＋実線矩形。CONTEXT.md D-07 は「ドラッグ完了のたびに矩形をリストへ追加しオーバーレイ表示」とだけ指定し、詳細は Claude's Discretion。
    - What's unclear: 複数矩形時も stipple 方式を維持するか、各矩形を単純な実線アウトラインのみにするか（stipple の重ね合わせは計算が複雑になりやすい）。
-   - Recommendation: 複数矩形時は各矩形を実線アウトラインのみで描画し、stipple（外側暗化）は省略する方が実装・保守コストが低い。UAT で見た目の分かりやすさを確認する。
+   - RESOLVED: 複数矩形時は各矩形を実線アウトラインのみで描画し、stipple（外側暗化）は省略する（実装・保守コストが低い）。UAT で見た目の分かりやすさを確認する。→ 03-04 PLAN Task 2 に反映済み。
 
 3. **回転座標ヘルパーの配置場所（page_ops.py static か新規純ロジックモジュールか）**
    - What we know: CONTEXT.md は「純関数化してテストで担保」を要求するが配置は Claude's Discretion。
    - What's unclear: `fitz.Page` オブジェクトを引数に取る時点で `pagination.py` ほど厳密な Tk/fitz 非依存にはできない。
-   - Recommendation: `page_ops.py` 内 `@staticmethod`（Pattern 2 の形）で十分。新規モジュール化は本フェーズの投資対効果としては過剰。
+   - RESOLVED: `page_ops.py` 内 `@staticmethod`（Pattern 2 の形・`_derotate_rect`）で実装する。新規モジュール化は本フェーズの投資対効果としては過剰。→ 03-03 PLAN Task 1 に反映済み。
 
 ## Environment Availability
 
