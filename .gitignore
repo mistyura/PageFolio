@@ -66,6 +66,5 @@ com[1-9]
 com[1-9].*
 lpt[1-9]
 lpt[1-9].*
-dist/
 PageFolio-*.zip.sha256
 PageFolio-*.zip
