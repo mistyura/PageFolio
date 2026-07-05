@@ -1524,6 +1524,9 @@ class TestContentOpsUndoFix:
         app._insert_blank_page()
         assert len(app.doc) == 4
         assert app.doc[1].get_text().strip() == ""  # 白紙
+        # 白紙ページは元ページ（A4 595×842）とサイズ一致（D-14）
+        assert app.doc[1].rect.width == app.doc[0].rect.width
+        assert app.doc[1].rect.height == app.doc[0].rect.height
 
         app._undo()
         assert len(app.doc) == 3
@@ -1532,6 +1535,8 @@ class TestContentOpsUndoFix:
         app._redo()
         assert len(app.doc) == 4
         assert app.doc[1].get_text().strip() == ""
+        assert app.doc[1].rect.width == app.doc[0].rect.width
+        assert app.doc[1].rect.height == app.doc[0].rect.height
 
     def test_watermark_roundtrip(self, sample_pdf_doc, monkeypatch):
         """透かし追加 → undo でテキストが消える → redo で再追加"""
@@ -1551,9 +1556,12 @@ class TestContentOpsUndoFix:
         for i in range(3):
             assert "CONFIDENTIAL" not in app.doc[i].get_text()
         assert "Page 1" in app.doc[0].get_text()  # 元の内容は保持
+        assert "Page 2" in app.doc[1].get_text()  # 両選択ページとも元テキスト保持
+        assert "Page 3" in app.doc[2].get_text()  # 未選択ページも不変
 
         app._redo()
         assert "CONFIDENTIAL" in app.doc[0].get_text()
+        assert "CONFIDENTIAL" in app.doc[1].get_text()
 
     def test_page_numbers_roundtrip(self, sample_pdf_doc):
         """ページ番号印字 → undo で消える → redo で再印字"""
@@ -1566,6 +1574,11 @@ class TestContentOpsUndoFix:
         app._undo()
         assert "1 / 3" not in app.doc[0].get_text()
         assert "Page 1" in app.doc[0].get_text()
+        assert "2 / 3" not in app.doc[1].get_text()
+        assert "Page 2" in app.doc[1].get_text()
+        assert "3 / 3" not in app.doc[2].get_text()
+        assert "Page 3" in app.doc[2].get_text()
 
         app._redo()
         assert "1 / 3" in app.doc[0].get_text()
+        assert "3 / 3" in app.doc[2].get_text()
