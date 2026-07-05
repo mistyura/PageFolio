@@ -158,10 +158,13 @@ PageFolio の既存コードベースに対する最適化プロジェクト。
 - ✓ V16-AI-01/02: OCR 結果の Markdown 整形表示（tk.Text タグ）・プロバイダ別プロンプト最適化（Claude=XML/Gemini=明示・カスタム両立） — v1.6.0 Phase 4（human-verify はスキップ・コード検証済）
 - ✓ アーカイブ詳細: `.planning/milestones/v1.6.0-REQUIREMENTS.md`
 - ✓ V171-KEY-01/02/03/04・V171-TEST-02: LLM設定ダイアログへの APIキー入力欄一元化・キー解決順反転（入力値→環境変数）・OCRDialog 旧キーUI 撤去・RunPod セッションキー対応・送信先確認ダイアログの RunPod 分岐（CR-01 解消） — v1.7.1 Phase 1
+- ✓ V171-OCR-01/02/03/04: L-6 小物一括解消・tesseract_lang 尊重・プラグイン registry 堅牢化・producer-consumer 一本化（`ocr_pipeline.py` 新設） — v1.7.1 Phase 2
+- ✓ V171-PAGE-01/02/03・V171-TEST-01: 画像透かし対応・黒塗り/モザイク使い勝手改善・回転/トリミング操作性改善（`_derotate_rect` 共通基盤）・v1.5.0 新機能の回帰テスト整備 — v1.7.1 Phase 3
+- ✓ V171-UIUX-01/02/03・V171-TEST-03: ショートカット GUI 編集（ShortcutsDialog）・エラー表示/文言一貫性監査（i18n化・messagebox統一・未使用キー削除）・SettingsDialog/LLMConfigDialog セクション再編・既知軽微バグ棚卸し解消 — v1.7.1 Phase 4
 
 ### Active
 
-- v1.7.1 の残要件（V171-TEST-01・V171-TEST-03 ほか Phase 2〜4 分）は継続中。詳細は `.planning/REQUIREMENTS.md` 参照。
+- なし。v1.7.1 の全 17 要件が Complete（被覆 17/17・孤立要件なし）。`/gsd-complete-milestone` でマイルストーンを確定・アーカイブ可能。
 
 ### Out of Scope
 
@@ -191,10 +194,13 @@ PageFolio の既存コードベースに対する最適化プロジェクト。
 | V16-D-03：プロバイダ別プロンプトは `resolve_ocr_prompt`（custom > provider別 > 汎用）で純関数解決 | カスタムプロンプト両立を構造的に担保しつつ Claude=XML/Gemini=明示を分離 | ✓ Good（v1.6.0 Phase 4・後方互換） |
 | V16-D-04：出荷バージョンを v1.6.0 に確定（途中 v1.7.0 へ一時バンプ後 49e9893 で巻き戻し） | APP_VERSION/README/GSD ラベルの一致を優先。開発履歴.md の v1.7.0 エントリは v1.6.0 へ整合予定 | ⚠️ Revisit（開発履歴.md の版番整合が残課題） |
 | V16-D-05：Phase 4 human-verify をユーザー判断でスキップしクローズ | コード・自動ゲートは全通過。実描画/実 API 出力品質のみ未検証で deferred 受容 | ⚠️ Revisit（必要時に実機目視） |
+| V171-D-14：ネスト LLMConfigDialog 適用は `app._apply_llm_settings_live`（`_rebuild_ui()` を呼ばない軽量反映）を独立トランザクション化 | nested on_apply から `_rebuild_ui()` を呼ぶと開いている SettingsDialog Toplevel ごと破棄されるため。ディスク/メモリ整合を cascade テストで担保 | ✓ Good（v1.7.1 Phase 4） |
+| V171-D-11：未使用 LANG キー検出は引用符付き完全一致（AST走査不採用） | 動的キー合成がコードベース全体でゼロ件（確認済み）のため grep 相当で十分。プレフィックス衝突（`tesseract_not_installed` 等）は完全一致で誤削除を回避 | ✓ Good（v1.7.1 Phase 4・回帰テスト常設） |
+| V171-D-05：ShortcutsDialog は保存ボタン押下まで一時コピー（`self._shortcuts`）のみ編集し、実バインド/settings へは未反映（キャンセルで無効化） | 実キーキャプチャの GUI 化で誤操作時の即時反映事故を防ぐ | ✓ Good（v1.7.1 Phase 4） |
 
 ## Current State
 
-**進行中: v1.7.1 現機能ブラッシュアップ + APIキー入力欄** — Phase 1（APIキー入力欄）完了（2026-07-04）。Phase 2（OCR 磨き込み）完了（2026-07-05）。4 プラン全完了（プラグイン registry 堅牢化・Tesseract 言語尊重・L-6 小物一括解消・producer-consumer 一本化＝新設 `ocr_pipeline.py`）。V171-OCR-01〜04 全充足。コードレビューで Critical 2 件（Python 3.8 互換性破壊・RunPod エラー抑殺）含む 6 件修正済み。`pytest 780 件グリーン・ruff クリーン`。Phase 3（ページ操作磨き込み + v1.5.0 回帰テスト）完了（2026-07-05）。4 プラン全完了（画像透かし・v1.5.0 回帰テスト整備・回転/トリミング棚卸し + `_derotate_rect` 共通基盤・黒塗り/モザイク棚卸し）。V171-PAGE-01〜03・V171-TEST-01 全充足。コードレビューで Critical 0 件（Warning 3 件はバージョン表記整合など軽微・Info 4 件）。`pytest 833 件グリーン・ruff クリーン`。Phase 4（UI/UX 磨き込み + 既知バグ棚卸し）へ継続。
+**完了: v1.7.1 現機能ブラッシュアップ + APIキー入力欄** — 全4フェーズ完了（Phase 1: 2026-07-04、Phase 2〜4: 2026-07-05）。V171-* 全17要件 Complete（被覆17/17・孤立要件なし）。Phase 4（UI/UX 磨き込み + 既知バグ棚卸し）は ShortcutsDialog 新設（実キーキャプチャ）・SettingsDialog 3セクション再編・LLMConfigDialog 共通/固有整理 + ネスト適用トランザクション化・Ollama/LM Studio 重複解消・i18n/エラー表示一貫性監査（未使用キー11件削除）を実施。コードレビュー Critical 0件（Warning 2件は ShortcutsDialog の非致命的な UX 課題・follow-up 候補）。セキュリティ監査 threats_open: 0（脅威8件 closed）。`pytest 859 件グリーン・ruff クリーン`。人手UAT 7件はユーザー判断で一旦pass（実機目視未検証・コード/自動ゲートは全通過、v1.6.0 Phase 4 と同様の運用）。`/gsd-complete-milestone` でマイルストーン確定待ち。
 
 **Shipped: v1.6.0 品質向上・AI強化・設定/UI改善 (2026-06-20)** — 4 フェーズ / 11 プラン / 23 タスク。`APP_VERSION = v1.6.0`（テスト 597 件グリーン・ruff クリーン）。
 
@@ -268,4 +274,4 @@ PageFolio の既存コードベースに対する最適化プロジェクト。
 4. 決定事項 → Key Decisions を更新
 
 ---
-*Last updated: 2026-07-05 — v1.7.1 Phase 2（OCR 磨き込み）完了.*
+*Last updated: 2026-07-05 — v1.7.1 Phase 4（UI/UX 磨き込み + 既知バグ棚卸し）完了、全マイルストーン完了.*

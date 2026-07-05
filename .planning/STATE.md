@@ -3,37 +3,37 @@ gsd_state_version: 1.0
 milestone: v1.7.1
 milestone_name: 現機能ブラッシュアップ + APIキー入力欄
 current_phase: 04
-current_phase_name: ui-ux
-status: verifying
-stopped_at: Completed 04-04-PLAN.md
-last_updated: "2026-07-05T10:32:58.036Z"
+status: milestone_complete
+stopped_at: Phase 4 complete — v1.7.1 milestone 100% complete, awaiting /gsd-complete-milestone
+last_updated: "2026-07-05T11:08:34.950Z"
 last_activity: 2026-07-05
-last_activity_desc: Phase 04 execution started
+last_activity_desc: v1.7.1 milestone complete (4/4 phases)
 progress:
   total_phases: 4
   completed_phases: 4
   total_plans: 16
   completed_plans: 16
   percent: 100
+current_phase_name: ui-ux
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-07-04)
+See: .planning/PROJECT.md (updated 2026-07-05)
 
 **Core value:** 大きな PDF でも Undo/Redo が正しく・速く動作し、コードが読みやすく保守しやすい状態にする
-**Current focus:** Phase 04 — ui-ux
+**Current focus:** v1.7.1 milestone complete — ready for `/gsd-complete-milestone`
 
 ## Current Position
 
-Phase: 04 (ui-ux) — EXECUTING
+Phase: 04 (ui-ux) — COMPLETE (last phase of v1.7.1)
 Plan: 4 of 4
-Status: Phase complete — ready for verification
-Last activity: 2026-07-05 — Phase 04 execution started
+Status: Milestone complete — ready for /gsd-complete-milestone
+Last activity: 2026-07-05 — v1.7.1 milestone complete (4/4 phases, 16/16 plans)
 
-Progress: [█████░░░░░] 50%
+Progress: [████████████████████] 16/16 plans (100%)
 
 ## v1.7.1 Phase Map
 
@@ -48,7 +48,7 @@ Progress: [█████░░░░░] 50%
 
 **Velocity (v1.3.0 実績):**
 
-- Total plans completed: 25
+- Total plans completed: 29
 - Average duration: 約 22.5 分
 - Total execution time: 約 45 分
 
@@ -64,6 +64,7 @@ Progress: [█████░░░░░] 50%
 | 01 | 4 | - | - |
 | 02 | 4 | - | - |
 | 03 | 4 | - | - |
+| 04 | 4 | - | - |
 
 *v1.4.0 フェーズ完了後に追記*
 | Phase 04-provider-abstraction P01 | 3min | 2 tasks | 2 files |
@@ -239,11 +240,9 @@ Decisions are logged in PROJECT.md Key Decisions table.
 
 ### Blockers/Concerns
 
-- [v1.7.1 Phase 1 留意]: キー解決の優先順を「入力値 → 環境変数」へ**反転**する（現行は環境変数優先・OCRDialog 側）。`_resolve_api_key` の読み取り専用原則（Phase 05-03 決定）と `_SENSITIVE_KEYS` 非保存ガード（V14-D-02）は維持したまま解決順のみ変更する。
-- [v1.7.1 Phase 2 リスク]: V171-OCR-04（L-1 producer-consumer 一本化）は `ocr.py`/`ocr_dialog.py` 横断の高リスク。計画時に独立プランへ隔離し、既存 OCR テスト群（並列・キャンセル・進捗・リトライ）をグリーン維持の安全網とする。
-- [v1.7.1 全般留意]: L-1〜L-6 は v1.4.0 期レビュー由来で v1.6.0〜v1.7.0 に解消済み項目がある（例: stop_reason 途切れ検出は v1.6.0 Phase 3 で実装済み）。各フェーズの計画時に現行コード照合を行い、活き残りのみを対象とする。
-- [v1.7.1 Phase 3/4 留意]: PAGE-02/03・TEST-03 は「棚卸し→改善」型。棚卸し結果と対応項目を計画時に確定・記録し、成功基準の照合対象とする。
 - [v1.6.0 Phase 3 継続]: V16-QUAL-03（max_tokens/429 実機検証）は実 API 前提のチェックリスト化まで完了。実機実施は未了のまま受容済み。
+- [v1.7.1 Phase 4 follow-up（非ブロッキング）]: コードレビュー(04-REVIEW.md) WR-01 ShortcutsDialog のキャプチャ対象切替時に前行の「キーを押してください」表示が残留する表示バグ、WR-02 修飾キーなしの単キーもショートカット登録できてしまい `root` 直下ウィジェット（ページサイズ Spinbox 等）の通常入力と衝突しうる。データ損失なし・次マイルストーンでの改善候補。
+- [v1.7.1 Phase 4 UAT]: 人手確認7件はユーザー判断で一旦pass（実機目視未検証・コード/自動ゲートは全通過、v1.6.0 Phase 4 と同様の運用）。次マイルストーンで実機目視が必要になった場合は 04-UAT.md 参照。
 
 過去の懸念は全て解決済み:
 
@@ -251,6 +250,10 @@ Decisions are logged in PROJECT.md Key Decisions table.
   - ~~Gemini Free Tier 10 RPM~~ → Phase 06 で並列度 1 を既定化
   - ~~Claude temperature/effort の実 API 確認~~ → Phase 05 で完了
   - ~~S3 ページネーションのインデックス整合~~ → v1.6.0 Phase 02 で `pagination.py` 純ロジック層に集約して解決
+  - ~~v1.7.1 キー解決優先順の反転~~ → Phase 1 で完了（入力値→環境変数）
+  - ~~v1.7.1 OCR-04 producer-consumer 一本化~~ → Phase 2 で `ocr_pipeline.py` へ一本化完了
+  - ~~v1.7.1 L-1〜L-6 現行照合~~ → 各フェーズ計画時に照合済み、活き残りは全解消
+  - ~~v1.7.1 PAGE-02/03・TEST-03 棚卸し→改善~~ → Phase 3/4 で棚卸し・解消完了
 
 ### Quick Tasks Completed
 
@@ -308,12 +311,12 @@ Decisions are logged in PROJECT.md Key Decisions table.
 
 ## Session Continuity
 
-Last session: 2026-07-05T10:32:58.024Z
-Stopped at: Completed 04-04-PLAN.md
+Last session: 2026-07-05T11:30:00.000Z
+Stopped at: Phase 4 complete — v1.7.1 milestone 100% complete (4/4 phases, 17/17 requirements), ready for /gsd-complete-milestone
 Resume file: None
 
 ## Operator Next Steps
 
-- Execute Phase 3 with `/gsd-execute-phase 3`（Wave 1: 03-01・03-02 並行 → Wave 2: 03-03 → Wave 3: 03-04）
-- 実行時の留意: 03-04 完了後に CLAUDE.md §既知の制限「矩形は未回転のページ座標系で適用」を D-08 解消後の内容へ更新（03-04 verification に明記済み）
-- A1（`insert_image` の SMask 半透明の実描画）と矩形ドラッグ操作感は end-of-phase human-verify 対象（VALIDATION.md Manual-Only）
+- Run `/gsd-complete-milestone v1.7.1` to archive the milestone and prepare for the next version.
+- Follow-up candidates for a future milestone (non-blocking): ShortcutsDialog WR-01（stale capture label）/ WR-02（modifier-less shortcut collision）— see 04-REVIEW.md.
+- 04-UAT.md の7項目は「一旦pass」（実機目視未検証）。必要になれば実機で再確認。
