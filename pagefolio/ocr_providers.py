@@ -1497,11 +1497,7 @@ class RunPodProvider(OCRProvider):
         _require_http_scheme(self.url)
 
         timeout = 10
-        base_url = self.url.rstrip("/")
-        if base_url.endswith("/v1"):
-            endpoint = base_url + "/models"
-        else:
-            endpoint = base_url + "/models"
+        endpoint = self.url.rstrip("/") + "/models"
 
         req = urllib.request.Request(  # noqa: S310
             endpoint,
