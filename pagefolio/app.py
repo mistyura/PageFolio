@@ -45,11 +45,7 @@ def shift_variant_keysym(keysym):
 
     対象外パターンは None を返す。Tk/fitz 非依存の純関数（V171-TEST-01・D-13）。
     """
-    if (
-        keysym.startswith("<Control-")
-        and len(keysym) == 11
-        and keysym[-2].islower()
-    ):
+    if keysym.startswith("<Control-") and len(keysym) == 11 and keysym[-2].islower():
         return keysym[:-2] + keysym[-2].upper() + ">"
     return None
 
