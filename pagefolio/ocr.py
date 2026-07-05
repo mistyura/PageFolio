@@ -356,6 +356,10 @@ def run_parallel(
         from pagefolio.ocr_providers import OCRRetryableError
 
         for attempt in range(1, MAX_RETRIES + 1):
+            # WR-02: リトライ待機直後の再開時にもキャンセル/fatal を再確認し、
+            # Cancel 後に追加の課金対象 API 呼び出しが発生しないようにする。
+            if _is_cancelled() or fatal["msg"] is not None:
+                return ("cancel", page_idx, None)
             try:
                 # Provider 非依存: per-page で provider.ocr_image を呼ぶ（D-04）
                 text = provider.ocr_image(b64, prompt)

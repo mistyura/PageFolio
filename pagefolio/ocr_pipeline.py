@@ -221,6 +221,10 @@ def consume_one(
     from pagefolio.ocr_providers import OCRRetryableError
 
     for attempt in range(1, MAX_RETRIES + 1):
+        # WR-02: リトライ待機直後の再開時にもキャンセル/fatal を再確認し、
+        # Cancel 後に追加の課金対象 API 呼び出しが発生しないようにする。
+        if _is_cancelled() or state.is_fatal():
+            return
         try:
             text, truncated = provider.ocr_image_ex(b64, prompt)
             state.record_success()
