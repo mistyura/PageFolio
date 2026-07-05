@@ -242,14 +242,35 @@ usage: >
 ### L-6: その他の軽微事項
 
 - レンダー失敗ページでプログレスバーが 100% に達しない（`ocr_dialog.py:965-967`）
+  — L-1（producer-consumer 一本化）独立プランへ吸収（D-03・v1.7.1 Phase 2-04 予定）
 - ClaudeProvider `list_models` のページネーション・`stop_reason`（截断検出）未対応
+  ✅ ページネーション対応済み（v1.7.1 Phase 2-03・commit 892244c）: `has_more`/
+  `last_id` カーソルを辿り全ページのモデルを連結（1ページ完結時は従来と同一結果）。
+  `stop_reason`（截断検出）は v1.6.0 Phase 3 で解消済み（別途）
 - Gemini エラーメッセージの body 切り詰めなし（`ocr_providers.py:497` → `str(body)[:500]` に統一）
+  ✅ 解消済み（v1.7.1 Phase 2-03・commit 892244c）: `_raise_mapped_http_error` の
+  `err_body` を 500 文字へ切り詰め。全プロバイダ共通ヘルパー経由のため
+  LMStudio/Claude/Gemini/Ollama/RunPod 全てに波及
 - LM Studio URL のスキーム未検証（http/https のみ許可ガード推奨）・
   Gemini モデル名の URL 未エスケープ（`urllib.parse.quote` 推奨）
+  ✅ 解消済み（v1.7.1 Phase 2-03・commit 892244c）: `_require_http_scheme(url)`
+  共通ヘルパーを LM Studio/Ollama/RunPod の計6箇所（`_post_chat`/`list_models`）へ
+  統一適用（D-13・適用先拡張）。Gemini は `quote(self.model, safe="")` でモデル名を
+  URL パスセグメントとしてエスケープ
 - producer が fatal 発生後も全ページ render 継続（`ocr.py:192-216`）
+  — L-1（producer-consumer 一本化）独立プランへ吸収（D-03・v1.7.1 Phase 2-04 予定）
 - sentinel `buf.put(None)` の暗黙容量不変条件（`ocr.py:217-220`）の明文化
+  — L-1（producer-consumer 一本化）独立プランへ吸収（D-03・v1.7.1 Phase 2-04 予定）
 - `_fetch_models` / `_test_connection` のほぼ完全重複（`llm_config.py:649-690`）
+  ✅ 解消済み（v1.7.1 Phase 2-03・commit 14d09f5）: 共通ヘルパー
+  `_probe_lm_provider(update_combo)` へ集約（LM Studio ペアのみ・呼び出し元
+  `_fetch_models`/`_test_connection` は薄いラッパーとして存置）。Ollama ペア
+  （`_fetch_ollama_models`/`_test_ollama_connection`）は D-11 に従い対象外
+  （Phase 4/V171-TEST-03 へ繰り越し）
 - OCR ダイアログ内で "off" 切替時に `app._update_ocr_buttons_state()` 未呼出
+  ✅ 解消済み（v1.7.1 Phase 2-03・commit 14d09f5）: `_apply_llm_settings` 末尾
+  （try/except 外側）に呼び出しを追加し、provider 再生成の例外有無に関わらず
+  ツールバー OCR ボタン状態を同期
 - **CLAUDE.md「ファイル構成」の更新**: `dialogs.py` → `dialogs/` パッケージ、
   `lang.py` / `themes.py` / `ocr.py` / `ocr_dialog.py` / `ocr_providers.py` が未記載
   ✅ 対応済み（2026-06-10 / CLAUDE.md 最新化タスクで反映）
