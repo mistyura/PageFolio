@@ -32,6 +32,28 @@ from pagefolio.viewer import ViewerMixin
 logger = logging.getLogger(__name__)
 
 
+def merge_shortcuts(default_shortcuts, custom_shortcuts):
+    """既定＋ユーザー設定のショートカット辞書をマージする（後勝ち）。
+
+    Tk/fitz 非依存の純関数（V171-TEST-01・D-13）。
+    """
+    return {**default_shortcuts, **custom_shortcuts}
+
+
+def shift_variant_keysym(keysym):
+    """Control-小文字 の keysym から Shift 補完用の大文字版 keysym を返す。
+
+    対象外パターンは None を返す。Tk/fitz 非依存の純関数（V171-TEST-01・D-13）。
+    """
+    if (
+        keysym.startswith("<Control-")
+        and len(keysym) == 11
+        and keysym[-2].islower()
+    ):
+        return keysym[:-2] + keysym[-2].upper() + ">"
+    return None
+
+
 class PDFEditorApp(
     UIBuilderMixin,
     FileOpsMixin,
@@ -137,7 +159,7 @@ class PDFEditorApp(
         }
 
         custom_shortcuts = self.settings.get("shortcuts", {})
-        shortcuts = {**default_shortcuts, **custom_shortcuts}
+        shortcuts = merge_shortcuts(default_shortcuts, custom_shortcuts)
 
         cmd_map = {
             "open_file": self._open_file,
@@ -159,15 +181,9 @@ class PDFEditorApp(
                 try:
                     self.root.bind(keysym, lambda e, f=func: f())
                     # 大文字小文字の対応 (Shift なし Control などのため)
-                    if (
-                        keysym.startswith("<Control-")
-                        and len(keysym) == 11
-                        and keysym[-2].islower()
-                    ):
-                        self.root.bind(
-                            keysym[:-2] + keysym[-2].upper() + ">",
-                            lambda e, f=func: f(),
-                        )
+                    variant = shift_variant_keysym(keysym)
+                    if variant is not None:
+                        self.root.bind(variant, lambda e, f=func: f())
                 except Exception as ex:
                     logger.warning(
                         f"Failed to bind shortcut {keysym} for {cmd_name}: {ex}"

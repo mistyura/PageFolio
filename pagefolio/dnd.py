@@ -9,6 +9,26 @@ from pagefolio.constants import C
 from pagefolio.pagination import to_global, window_bounds
 
 
+def compute_dnd_dest_index(cursor_y, frame_bounds):
+    """cursor_y と各フレームの (y, height) タプル列から挿入先インデックスを返す。
+
+    frame_bounds: [(y0, height), ...]（窓ローカル順）。Tk/fitz 非依存の純関数
+    （V171-TEST-01・D-13・RESEARCH.md Pattern 5）。
+    """
+    if not frame_bounds:
+        return None
+    first_y = frame_bounds[0][0]
+    last_y, last_h = frame_bounds[-1]
+    if cursor_y < first_y:
+        return 0
+    if cursor_y > last_y + last_h:
+        return len(frame_bounds)
+    for i, (fy, fh) in enumerate(frame_bounds):
+        if cursor_y < fy + fh / 2:
+            return i
+    return len(frame_bounds)
+
+
 class DnDMixin:
     """PDFEditorApp のD&Dメソッド群"""
 
@@ -72,25 +92,18 @@ class DnDMixin:
             self._dnd_indicator = None
 
     def _dnd_dest_index(self, event):
-        """マウス位置から挿入先を計算"""
+        """マウス位置から挿入先を計算（Tk 依存の薄いラッパー・D-13）。
+
+        座標収集（winfo_*/canvasy/event）のみ担当し、核心の比較ロジックは
+        module-level 純関数 compute_dnd_dest_index へ委譲する。
+        """
         frames = self.thumb_inner.winfo_children()
         if not frames:
             return None
         canvas_y = event.y_root - self.thumb_canvas.winfo_rooty()
         cy = self.thumb_canvas.canvasy(canvas_y)
-        first_y = frames[0].winfo_y()
-        last_frame = frames[-1]
-        last_bottom = last_frame.winfo_y() + last_frame.winfo_height()
-        if cy < first_y:
-            return 0
-        if cy > last_bottom:
-            return len(frames)
-        for i, fr in enumerate(frames):
-            fy = fr.winfo_y()
-            fh = fr.winfo_height()
-            if cy < fy + fh / 2:
-                return i
-        return len(frames)
+        frame_bounds = [(fr.winfo_y(), fr.winfo_height()) for fr in frames]
+        return compute_dnd_dest_index(cy, frame_bounds)
 
     def _dnd_drop(self, event):
         src = self._dnd_src_idx
