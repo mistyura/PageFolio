@@ -195,6 +195,6 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 | 3. 体感品質・回転プレビュー & OCR 堅牢性（プランA） | v1.6.0 | 3/3 | Complete | 2026-06-19 |
 | 4. AI 出力品質（プランC） | v1.6.0 | 3/3 | Complete | 2026-06-20 |
 | 1. APIキー入力欄（LLM設定への一元化） | v1.7.1 | 0/3 | Not started | - |
-| 2. OCR 磨き込み（レビュー残の現行照合と二重実装解消） | v1.7.1 | 1/4 | In Progress | - |
+| 2. OCR 磨き込み（レビュー残の現行照合と二重実装解消） | v1.7.1 | 2/4 | In Progress | - |
 | 3. ページ操作磨き込み + v1.5.0 回帰テスト | v1.7.1 | 0/? | Not started | - |
 | 4. UI/UX 磨き込み + 既知バグ棚卸し | v1.7.1 | 0/? | Not started | - |
