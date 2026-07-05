@@ -34,7 +34,7 @@ logger = logging.getLogger(__name__)
 
 # M-6: モデル別単価テーブル（$/MTok, 入力, 出力）
 # キーに完全一致しない場合は suffix ルールで判定するフォールバックへ進む
-OCR_PRICE_TABLE: dict[str, tuple[float, float]] = {
+OCR_PRICE_TABLE: "dict[str, tuple[float, float]]" = {
     # Gemini
     "gemini-2.5-flash": (0.30, 2.50),
     "gemini-2.5-pro": (1.25, 10.0),
