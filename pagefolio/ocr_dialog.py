@@ -969,6 +969,13 @@ class OCRDialog(tk.Toplevel):
             logger.error("provider 再生成に失敗しました: %s", e)
             lang = self.app.settings.get("lang", "ja")
             self.progress_var.set(LANG[lang]["ocr_provider_rebuild_error"].format(e=e))
+        # L-6j: "off" 切替時にメイン画面ツールバーの OCR ボタン状態を同期する。
+        # provider 再生成が例外で失敗しても必ず実行されるよう try/except の
+        # 外側（Pitfall 6）に置く。app 属性は既存の防御的パターン（getattr
+        # フォールバック）に倣い、SimpleNamespace スタブとの後方互換を保つ。
+        update_ocr_buttons = getattr(self.app, "_update_ocr_buttons_state", None)
+        if callable(update_ocr_buttons):
+            update_ocr_buttons()
         # provider 差し替えで supports_text_prompt が変わり得るため再評価する
         self._update_summary_btn_state()
 

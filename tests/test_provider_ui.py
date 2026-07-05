@@ -681,16 +681,23 @@ class TestSyncParamVarsFromSettings:
         assert stub.temperature_var.value == 0.0
 
 
-def _make_apply_llm_settings_stub(settings, provider=None):
+def _make_apply_llm_settings_stub(settings, provider=None, app_extra=None):
     """_apply_llm_settings を Tk 生成なしで呼ぶスタブを返す。
 
     D-07: _maybe_show_lang_fallback_notice が参照する属性
     （_lang_fallback_notice_var/_lang_fallback_label/_L）も併せて用意し、
     provider 再生成の try/except に AttributeError が黙って飲み込まれない
     ようにする（試験対象コードパスを実際に通す）。
+
+    app_extra: app 側 SimpleNamespace に追加する属性の dict（L-6j の
+    _update_ocr_buttons_state スタブ差し込み等に使用）。省略時は既存の
+    app（_update_ocr_buttons_state 属性なし）のまま後方互換を保つ。
     """
+    app_kwargs = {"settings": dict(settings)}
+    if app_extra:
+        app_kwargs.update(app_extra)
     stub = types.SimpleNamespace(
-        app=types.SimpleNamespace(settings=dict(settings)),
+        app=types.SimpleNamespace(**app_kwargs),
         custom_prompt="旧プロンプト",
         provider=provider or ClaudeProvider(api_key="x", model="claude-sonnet-4-6"),
         concurrency=1,
@@ -747,6 +754,64 @@ class TestApplyLlmSettingsCustomPromptSync:
         )
         OCRDialog._apply_llm_settings(stub, {"ocr_custom_prompt": ""})
         assert stub.custom_prompt == ""
+
+
+class TestApplyLlmSettingsOffToggleButtons:
+    """L-6j: "off" 切替時にツールバー OCR ボタン状態が同期されることを確認する。
+
+    _apply_llm_settings が app._update_ocr_buttons_state() を呼ぶこと
+    （provider 再生成の正常系・例外系いずれでも呼ばれること・Pitfall 6）を検証する。
+    """
+
+    def test_update_ocr_buttons_state_called_on_off(self, monkeypatch):
+        """provider='off' へ切替後、app._update_ocr_buttons_state が呼ばれる。"""
+        from pagefolio.ocr_dialog import OCRDialog
+
+        monkeypatch.setattr("pagefolio.settings._save_settings", lambda settings: None)
+        calls = {"n": 0}
+        stub = _make_apply_llm_settings_stub(
+            settings={"ocr_provider": "off"},
+            app_extra={
+                "_update_ocr_buttons_state": lambda: calls.__setitem__(
+                    "n", calls["n"] + 1
+                )
+            },
+        )
+        OCRDialog._apply_llm_settings(stub, {"ocr_provider": "off"})
+        assert calls["n"] == 1
+
+    def test_update_ocr_buttons_state_called_even_on_provider_exception(
+        self, monkeypatch
+    ):
+        """provider 再生成が例外で失敗しても呼ばれる（Pitfall 6）。"""
+        from pagefolio.ocr_dialog import OCRDialog
+
+        monkeypatch.setattr("pagefolio.settings._save_settings", lambda settings: None)
+        # tesseract/プラグイン分岐は build_provider を呼ぶため、これを失敗させる
+        monkeypatch.setattr(
+            "pagefolio.ocr.build_provider",
+            lambda *a, **k: (_ for _ in ()).throw(RuntimeError("boom")),
+        )
+        calls = {"n": 0}
+        stub = _make_apply_llm_settings_stub(
+            settings={"ocr_provider": "some-unknown-provider"},
+            app_extra={
+                "_update_ocr_buttons_state": lambda: calls.__setitem__(
+                    "n", calls["n"] + 1
+                )
+            },
+        )
+        OCRDialog._apply_llm_settings(stub, {"ocr_provider": "some-unknown-provider"})
+        assert calls["n"] == 1
+
+    def test_no_error_when_app_lacks_update_ocr_buttons_state(self, monkeypatch):
+        """app に _update_ocr_buttons_state が無くても例外を出さない（後方互換）。"""
+        from pagefolio.ocr_dialog import OCRDialog
+
+        monkeypatch.setattr("pagefolio.settings._save_settings", lambda settings: None)
+        stub = _make_apply_llm_settings_stub(settings={"ocr_provider": "off"})
+        # AttributeError 等を出さず正常終了すること
+        OCRDialog._apply_llm_settings(stub, {"ocr_provider": "off"})
 
 
 class _FakeToplevel:

@@ -1117,8 +1117,17 @@ class LLMConfigDialog(tk.Toplevel):
             pass
 
     # ── LM Studio モデル取得 ────────────────────────────
-    def _fetch_models(self):
-        """LM Studio からモデル一覧を取得して Combobox に反映する。"""
+    def _probe_lm_provider(self, update_combo):
+        """LM Studio への接続確認・モデル取得の共有ヘルパー（L-6i）。
+
+        `_fetch_models`（モデル取得）と `_test_connection`（接続テストのみ）は
+        「取得結果を Combobox へ反映するか」のみが差分のため、update_combo
+        フラグでパラメータ化して重複ロジックを1箇所に集約する。
+
+        引数:
+          update_combo: True のとき取得したモデル一覧を
+                        self.lm_model_combo["values"] へ反映する。
+        """
         url = self.lm_url_var.get().strip()
         if not url:
             self._set_lm_status(
@@ -1134,31 +1143,19 @@ class LLMConfigDialog(tk.Toplevel):
                 self._L["settings_lm_test_fail"].format(error=str(e)), kind="fail"
             )
             return
-        self.lm_model_combo["values"] = models
+        if update_combo:
+            self.lm_model_combo["values"] = models
         self._set_lm_status(
             self._L["settings_lm_test_ok"].format(count=len(models)), kind="ok"
         )
 
+    def _fetch_models(self):
+        """LM Studio からモデル一覧を取得して Combobox に反映する。"""
+        self._probe_lm_provider(update_combo=True)
+
     def _test_connection(self):
         """LM Studio への接続をテストする。"""
-        url = self.lm_url_var.get().strip()
-        if not url:
-            self._set_lm_status(
-                self._L["settings_lm_test_fail"].format(error="URL is empty"),
-                kind="fail",
-            )
-            return
-        self._set_lm_status(self._L["settings_lm_testing"].format(url=url), kind="info")
-        try:
-            models = LMStudioProvider(url=url, model="").list_models()
-        except (ConnectionError, TimeoutError, RuntimeError) as e:
-            self._set_lm_status(
-                self._L["settings_lm_test_fail"].format(error=str(e)), kind="fail"
-            )
-            return
-        self._set_lm_status(
-            self._L["settings_lm_test_ok"].format(count=len(models)), kind="ok"
-        )
+        self._probe_lm_provider(update_combo=False)
 
     # ── Ollama モデル取得・テスト ────────────────────────
     def _fetch_ollama_models(self):
