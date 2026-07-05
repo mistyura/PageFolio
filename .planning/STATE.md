@@ -2,19 +2,19 @@
 gsd_state_version: 1.0
 milestone: v1.7.1
 milestone_name: 現機能ブラッシュアップ + APIキー入力欄
-current_phase: 04
+current_phase: —
 status: milestone_complete
-stopped_at: Phase 4 complete — v1.7.1 milestone 100% complete, awaiting /gsd-complete-milestone
-last_updated: "2026-07-05T11:08:34.950Z"
+stopped_at: v1.7.1 milestone archived (4/4 phases, 17/17 requirements) — awaiting /gsd-new-milestone
+last_updated: "2026-07-05T11:18:03.013Z"
 last_activity: 2026-07-05
-last_activity_desc: v1.7.1 milestone complete (4/4 phases)
+last_activity_desc: Milestone v1.7.1 completed and archived
 progress:
   total_phases: 4
   completed_phases: 4
   total_plans: 16
   completed_plans: 16
   percent: 100
-current_phase_name: ui-ux
+current_phase_name: —
 ---
 
 # Project State
@@ -28,12 +28,10 @@ See: .planning/PROJECT.md (updated 2026-07-05)
 
 ## Current Position
 
-Phase: 04 (ui-ux) — COMPLETE (last phase of v1.7.1)
-Plan: 4 of 4
-Status: Milestone complete — ready for /gsd-complete-milestone
-Last activity: 2026-07-05 — v1.7.1 milestone complete (4/4 phases, 16/16 plans)
-
-Progress: [████████████████████] 16/16 plans (100%)
+Phase: Milestone v1.7.1 complete
+Plan: —
+Status: Awaiting next milestone
+Last activity: 2026-07-05 — Milestone v1.7.1 completed and archived
 
 ## v1.7.1 Phase Map
 
@@ -309,6 +307,17 @@ Decisions are logged in PROJECT.md Key Decisions table.
 | quick_task | 260610-qqq-review-md-260610-aaa-h-1-h-5-v1-4-1 | unknown（既受容・v1.4.0 期） |
 | quick_task | 260610-rkp-v1-4-2-review-md-m-1-m-11 | unknown（既受容・v1.4.0 期） |
 
+### v1.7.1 クローズ時に Acknowledge した項目（2026-07-05）
+
+締め前監査（audit-open）で同一の4件が再検出されたが、v1.4.0・v1.6.0 クローズ時に既受容済（記録上の完了マーカー欠落のみ・実作業は出荷済み）のため、ユーザー判断で今回も受容してクローズ。closeout_type=override_closeout（4件は quick_task の記録マーカー欠落のみ。フェーズ検証は4/4 passed・要件は17/17 Complete で verified）。
+
+| Category | Item | Status |
+|----------|------|--------|
+| quick_task | 260607-ccz-ocr-llm-llmconfigdialog | unknown（既受容の再掲） |
+| quick_task | 260610-aaa-v140-review-fixplan | missing（既受容の再掲） |
+| quick_task | 260610-qqq-review-md-260610-aaa-h-1-h-5-v1-4-1 | unknown（既受容の再掲） |
+| quick_task | 260610-rkp-v1-4-2-review-md-m-1-m-11 | unknown（既受容の再掲） |
+
 ## Session Continuity
 
 Last session: 2026-07-05T11:30:00.000Z
@@ -317,6 +326,4 @@ Resume file: None
 
 ## Operator Next Steps
 
-- Run `/gsd-complete-milestone v1.7.1` to archive the milestone and prepare for the next version.
-- Follow-up candidates for a future milestone (non-blocking): ShortcutsDialog WR-01（stale capture label）/ WR-02（modifier-less shortcut collision）— see 04-REVIEW.md.
-- 04-UAT.md の7項目は「一旦pass」（実機目視未検証）。必要になれば実機で再確認。
+- Start the next milestone with /gsd-new-milestone

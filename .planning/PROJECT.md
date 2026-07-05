@@ -7,29 +7,37 @@ PageFolio の既存コードベースに対する最適化プロジェクト。
 
 **Core Value:** 大きな PDF でも Undo/Redo が正しく・速く動作し、コードが読みやすく保守しやすい状態にする。
 
-## Current Milestone: v1.7.1 現機能ブラッシュアップ + APIキー入力欄
+## Current Milestone
 
-**Goal:** 既存機能（UI/UX・OCR・ページ操作）を磨き込み、テスト・安定性を底上げする。あわせて LLM 設定ダイアログにセッション限定の APIキー入力欄を追加し、キー設定導線を一元化する。
+_(未定 — `/gsd-new-milestone` で次のマイルストーンを確定)_
 
-**Target features:**
-- **APIキー入力欄（LLMConfigDialog）**: クラウド3種（Claude / Gemini / RunPod）に入力欄追加。保存はしない（`_session_api_keys` 方式）。解決優先順は **入力値 → 環境変数**、両方なしはエラー表示。OCRDialog 側の既存セッションキー入力欄は撤去し LLM 設定に一元化
-- **UI/UX の磨き込み**: 既存画面の操作性・表示・文言・エラー表示の一貫性改善
-- **OCR 機能の磨き込み**: 実行フロー・結果ビューア・プロバイダ周りの使い勝手改善
-- **ページ操作の磨き込み**: 透かし・回転・トリミング・黒塗り等の既存操作の改善
-- **テスト・安定性の底上げ**: v1.5.0 新機能の回帰テスト拡充・既知の軽微バグ解消
+## Last Milestone: v1.7.1 現機能ブラッシュアップ + APIキー入力欄 — ✅ Shipped 2026-07-05
+
+> v1.7.1 は全 4 フェーズ（Phase 1〜4・16 プラン・41 タスク）を達成して出荷済み（`APP_VERSION = v1.7.1`・テスト 859 件グリーン・ruff クリーン）。V171-* 全 17 要件 Complete（被覆 17/17・孤立要件なし）。
+> 次マイルストーンは `/gsd-new-milestone` で確定する（候補は「Next Milestone Goals」参照）。
+
+**Goal（達成済み）:** 既存機能（UI/UX・OCR・ページ操作）を磨き込み、テスト・安定性を底上げした。あわせて LLM 設定ダイアログにセッション限定の APIキー入力欄を追加し、キー設定導線を一元化した。
+
+**Target features（達成済み）:**
+- **APIキー入力欄の一元化**: LLMConfigDialog に Claude/Gemini/RunPod のマスク付きキー入力欄・トグル・セッション限定注記を追加。解決優先順を「入力値 → 環境変数」へ反転し、OCRDialog 側の旧セッションキー UI を撤去して導線を一元化（送信先確認ダイアログの RunPod 誤開示 CR-01 も解消）
+- **OCR 磨き込み**: プラグイン OCR registry 堅牢化（重複名ポリシー・unload 時登録解除・公開アクセサ）・Tesseract 言語の段階的縮退フォールバック・producer-consumer 実行パイプラインを新設 `ocr_pipeline.py` へ一本化・L-6 小物一括解消
+- **ページ操作磨き込み**: 画像（ロゴ）透かし対応・黒塗り/モザイクの連続適用+粒度スライダー・`_derotate_rect` 共通ヘルパーによる回転座標統一（黒塗り/モザイク/トリミングの座標ズレを構造的に解消）
+- **UI/UX 磨き込み**: ShortcutsDialog 新設（実キーキャプチャ編集・重複拒否）・SettingsDialog 3セクション再編・LLMConfigDialog 共通/固有グルーピング・i18n/エラー表示一貫性監査（未使用 LANG キー 11件削除）
+- **テスト・安定性**: v1.5.0 新機能（TOC 保持・D&D 挿入・ショートカット読込）の回帰テスト整備・APIキー機能の回帰テスト整備・既知軽微バグの棚卸し解消
 
 **Key context:**
-- 現行のキー解決は「環境変数優先・未設定時のみ入力値」（OCRDialog 側）。本マイルストーンで **入力値優先へ反転** する
-- RunPod は現状 `RUNPOD_API_KEY` 環境変数のみ対応 → セッションキー機構（`_session_api_keys`）への組み込みが新規
+- キー解決の優先順を「環境変数優先・未設定時のみ入力値」から「入力値 → 環境変数」へ反転（OCRDialog 側の旧仕様を置き換え）。RunPod もセッションキー機構（`_session_api_keys`）に新規対応
 - APIキーの settings.json 非永続化（`_SENSITIVE_KEYS` ガード）は維持（V14-D-02 踏襲）
-- ブラッシュアップ具体項目は要件定義で確定（候補: Next Milestone Goals・v1.4.0 レビュー L-1〜L-6）
+- L-1〜L-6（v1.4.0 期レビュー由来）は各フェーズ計画時に現行コード照合で「活き残り」を確定した上で解消（v1.6.0〜v1.7.0 で解消済みの項目は対象外に整理）
+- コードレビュー Critical 0件（Warning 2件は ShortcutsDialog の非致命的 UX 課題・follow-up 候補）。セキュリティ監査 threats_open: 0（脅威8件 closed）
+- 人手 UAT 7件はユーザー判断で一旦 pass（実機目視未検証・コード/自動ゲートは全通過、v1.6.0 Phase 4 と同様の運用）
 
-> 補足: v1.6.1〜v1.7.0（パスワード/印刷・Ollama/RunPod・サマリ安定化・黒塗り/モザイク・undo ディスク退避）はクイックタスク・別ブランチ経由で出荷済み。詳細は `.planning/MILESTONES.md` 参照。
+> 補足: v1.6.1〜v1.7.0（パスワード/印刷・Ollama/RunPod・バグ修正・サマリ安定化・黒塗り/モザイク・undo ディスク退避）は GSD フェーズ外のポイントリリースとして出荷済み。詳細は `.planning/MILESTONES.md` 参照。
 
-## Last Milestone: v1.6.0 品質向上・AI強化・設定/UI改善 — ✅ Shipped 2026-06-20
+<details>
+<summary>Previous Milestone: v1.6.0 品質向上・AI強化・設定/UI改善 — ✅ Shipped 2026-06-20</summary>
 
 > v1.6.0 は全 4 フェーズ（Phase 1〜4・11 プラン・23 タスク）を達成して出荷済み（`APP_VERSION = v1.6.0`・テスト 597 件グリーン）。
-> 次マイルストーンは `/gsd-new-milestone` で確定する（候補は「Next Milestone Goals」参照）。
 
 **Goal（達成済み）:** 体感品質（回転プレビュー即時反映・エラーハンドリング UX）と AI 出力品質（Markdown 整形・プロバイダ別プロンプト最適化）を底上げし、設定の二重化を解消して大量ページ対応で UI を整える。
 
@@ -45,11 +53,13 @@ PageFolio の既存コードベースに対する最適化プロジェクト。
 - S3: D&D・複数選択は全ページインデックス管理のため、ページング導入時に「表示中ページ vs 全ページ」のインデックス整合に注意。表示件数は `pagefolio_settings.json` に永続化。
 - H5: max_tokens クランプ / 429 リトライは安全側修正のみでテスト担保。実 API での検証が残課題。
 
-## Previous Milestone: v1.5.0 基本機能・UI/UX改善・OCRカスタムプロンプト — ✅ Shipped 2026-06-16
+</details>
+
+<details>
+<summary>Previous Milestone: v1.5.0 基本機能・UI/UX改善・OCRカスタムプロンプト — ✅ Shipped 2026-06-16</summary>
 
 > v1.5.0 は全 4 フェーズ（Phase 1〜4）を達成して出荷済み（`APP_VERSION = v1.5.0`）。
 > 実装は `feature/v1.5.0-improvements` ブランチで別ワークフローにより完了し、2026-06-16 に文書を整合。
-> 次マイルストーンは `/gsd-new-milestone` で確定する（候補は「Next Milestone Goals」参照）。
 
 **Goal（達成済み）:** PDF 編集の基本機能を底上げ（白紙ページ挿入・テキスト透かし／ページ番号・TOC 保持）、UI/UX を改善（サムネイルサイズ動的変更・D&D 指定位置挿入・ショートカット動的読込）、OCR にカスタムプロンプトを導入する。
 
@@ -59,11 +69,13 @@ PageFolio の既存コードベースに対する最適化プロジェクト。
 - OCR カスタムプロンプト: `LLMConfigDialog` でプロンプトを入力・保存し OCR バックエンドへ受け渡し
 
 **Key context:**
-- 透かし・ページ番号は**テキストのみ**（画像ロゴは後回し）。
-- ショートカットは**`pagefolio_settings.json` の `shortcuts` キー編集のみ**のミニマム実装（専用 GUI タブなし）。
-- 他 OCR プロバイダ対応はスコープ外（既存の Provider 群を踏襲）。
+- 透かし・ページ番号は**テキストのみ**（画像ロゴは後回し。v1.7.1 Phase 3 で対応済み）。
+- ショートカットは**`pagefolio_settings.json` の `shortcuts` キー編集のみ**のミニマム実装（専用 GUI タブなし。v1.7.1 Phase 4 で ShortcutsDialog により GUI 化済み）。
+- 他 OCR プロバイダ対応はスコープ外（既存の Provider 群を踏襲。v1.6.2 で Ollama/RunPod を追加済み）。
 - 整合作業時に ruff E501 2 件を修正（`app.py` / `file_drop.py`）。テスト 490 件グリーン。
 - 要件・ロードマップ詳細: `.planning/milestones/v1.5.0-REQUIREMENTS.md` / `.planning/milestones/v1.5.0-ROADMAP.md`
+
+</details>
 
 <details>
 <summary>Previous Milestone: v1.4.0 OCR プロバイダ化 + クラウドAPI対応 — ✅ Shipped 2026-06-14</summary>
@@ -99,7 +111,7 @@ PageFolio の既存コードベースに対する最適化プロジェクト。
 | リポジトリ | `C:\Users\shdwf\work\project\PageFolio` |
 | 言語 | Python 3.8+ / Tkinter |
 | 現在バージョン | `pagefolio/constants.py` の `APP_VERSION` を参照 |
-| テスト | pytest（現在小規模） |
+| テスト | pytest（859 件・充実） |
 | リント | ruff |
 
 既存コードベースマップ: `.planning/codebase/`
@@ -164,15 +176,14 @@ PageFolio の既存コードベースに対する最適化プロジェクト。
 
 ### Active
 
-- なし。v1.7.1 の全 17 要件が Complete（被覆 17/17・孤立要件なし）。`/gsd-complete-milestone` でマイルストーンを確定・アーカイブ可能。
+- なし。v1.7.1 出荷済み（全 17 要件 Complete・被覆 17/17・孤立要件なし）。次マイルストーンの要件は `/gsd-new-milestone` で確定する（候補は「Next Milestone Goals」参照）。
 
 ### Out of Scope
 
-- 暗号化 PDF 対応 — 別機能追加であり本プロジェクトの最適化スコープ外
-- 印刷機能 — 同上
-- OCR エンジンの拡張 — 同上
+- OS キーストア連携（Windows Credential Manager）による APIキー永続化 — セッション限定方針を維持（V14-D-02 踏襲）。永続化は別マイルストーン判断
+- OAuth 接続 — 正規 API が非対応・配布バイナリに client secret を埋め込めないため確定除外
+- OCR 結果のページ埋め込み（検索可能 PDF 化） — v1.4.0 から継続除外
 - プラグイン API バージョン管理 — 今後の別タスク
-- UI/UX デザインの変更 — 本プロジェクトは内部品質に集中
 
 ## Key Decisions
 
@@ -200,7 +211,17 @@ PageFolio の既存コードベースに対する最適化プロジェクト。
 
 ## Current State
 
-**完了: v1.7.1 現機能ブラッシュアップ + APIキー入力欄** — 全4フェーズ完了（Phase 1: 2026-07-04、Phase 2〜4: 2026-07-05）。V171-* 全17要件 Complete（被覆17/17・孤立要件なし）。Phase 4（UI/UX 磨き込み + 既知バグ棚卸し）は ShortcutsDialog 新設（実キーキャプチャ）・SettingsDialog 3セクション再編・LLMConfigDialog 共通/固有整理 + ネスト適用トランザクション化・Ollama/LM Studio 重複解消・i18n/エラー表示一貫性監査（未使用キー11件削除）を実施。コードレビュー Critical 0件（Warning 2件は ShortcutsDialog の非致命的な UX 課題・follow-up 候補）。セキュリティ監査 threats_open: 0（脅威8件 closed）。`pytest 859 件グリーン・ruff クリーン`。人手UAT 7件はユーザー判断で一旦pass（実機目視未検証・コード/自動ゲートは全通過、v1.6.0 Phase 4 と同様の運用）。`/gsd-complete-milestone` でマイルストーン確定待ち。
+**Shipped: v1.7.1 現機能ブラッシュアップ + APIキー入力欄 (2026-07-05)** — 4 フェーズ / 16 プラン / 41 タスク。`APP_VERSION = v1.7.1`（テスト 859 件グリーン・ruff クリーン）。V171-* 全17要件 Complete（被覆17/17・孤立要件なし）。
+
+- **APIキー入力欄:** LLMConfigDialog に Claude/Gemini/RunPod のマスク付き入力欄・トグル・セッション限定注記を追加。解決優先順を「入力値→環境変数」へ反転し、OCRDialog の旧セッションキー UI を撤去して導線を一元化（送信先確認ダイアログの RunPod 誤開示 CR-01 も解消）。
+- **OCR 磨き込み:** プラグイン OCR registry 堅牢化（重複名ポリシー・unload 解除・公開アクセサ）・Tesseract 言語の段階的縮退フォールバック・producer-consumer 実行パイプラインを新設 `ocr_pipeline.py` へ一本化・L-6 小物一括解消。
+- **ページ操作磨き込み:** 画像（ロゴ）透かし対応・黒塗り/モザイクの連続適用+粒度スライダー・`_derotate_rect` 共通ヘルパーで回転座標を統一。
+- **UI/UX 磨き込み:** ShortcutsDialog 新設（実キーキャプチャ・重複拒否）・SettingsDialog 3セクション再編・LLMConfigDialog 共通/固有整理・i18n/エラー表示一貫性監査（未使用キー11件削除）。
+- コードレビュー Critical 0件（Warning 2件は ShortcutsDialog の非致命的 follow-up 候補）。セキュリティ監査 threats_open: 0（脅威8件 closed）。人手UAT 7件はユーザー判断で一旦pass（実機目視未検証・コード/自動ゲートは全通過）。
+- マイルストーン詳細: `.planning/milestones/v1.7.1-ROADMAP.md`・`.planning/MILESTONES.md`
+
+<details>
+<summary>Shipped: v1.6.0 品質向上・AI強化・設定/UI改善 (2026-06-20)</summary>
 
 **Shipped: v1.6.0 品質向上・AI強化・設定/UI改善 (2026-06-20)** — 4 フェーズ / 11 プラン / 23 タスク。`APP_VERSION = v1.6.0`（テスト 597 件グリーン・ruff クリーン）。
 
@@ -210,6 +231,8 @@ PageFolio の既存コードベースに対する最適化プロジェクト。
 - **AI 出力品質:** OCR 結果ビューアの `markdown` プリセットを tk.Text タグで整形表示（見出し/箇条書き/コード/強調）・プロバイダ別プロンプト最適化（Claude=XML タグ/Gemini=明示指示・カスタムプロンプト両立）・コピー/保存は raw 維持。
 - Phase 4 の human-verify チェックポイントはユーザー判断でスキップ（実機目視未検証・コード/自動ゲート〔ruff・pytest597・コードレビュー・目標検証〕は通過）。
 - マイルストーン詳細: `.planning/milestones/v1.6.0-ROADMAP.md`・`.planning/MILESTONES.md`
+
+</details>
 
 <details>
 <summary>Shipped: v1.5.0 基本機能・UI/UX改善・OCRカスタムプロンプト (2026-06-16)</summary>
@@ -255,13 +278,11 @@ PageFolio の既存コードベースに対する最適化プロジェクト。
 
 ### Next Milestone Goals (候補・未確定)
 
-次マイルストーン（v1.6.0 以降）の要件は `/gsd-new-milestone` で確定する。現時点の候補:
-- v1.5.0 新機能（ページ操作・UI/UX）に対する自動テストの拡充（現状 OCR 系のみ追加・新機能の回帰テスト未整備）
-- 透かしの画像（ロゴ）対応・ショートカット設定の GUI 化（v1.5.0 でミニマム実装に留めた拡張）
-- v1.4.0 リリースレビューの軽微改善バックログ（L-1〜L-6）の解消
-- Phase 04 検証ギャップ（人手テスト）の正式クローズ
-- サムネイル仮想化によるパフォーマンス改善（大量ページ対応）
-- 印刷機能 / 暗号化 PDF 対応（機能追加。最適化スコープからの拡張）
+次マイルストーンの要件は `/gsd-new-milestone` で確定する。現時点の候補:
+- PERF-01: サムネイル仮想化によるパフォーマンス改善（大量ページ対応・REQUIREMENTS.md Future Requirements から継続）
+- ShortcutsDialog の非致命的 follow-up（WR-01: キャプチャ対象切替時の前行表示残留、WR-02: 修飾キーなし単キー登録が通常入力ウィジェットと衝突しうる。04-REVIEW.md 参照）
+- human-verify/UAT の実機目視の正式実施（v1.4.0 Phase04・v1.6.0 Phase04・v1.7.1 Phase04 で計3回ユーザー判断により一旦pass・コード/自動ゲートは全通過）
+- 開発履歴.md の v1.7.0 表記整合（V16-D-04 で認識済みの残課題）
 
 ## Evolution
 
@@ -274,4 +295,4 @@ PageFolio の既存コードベースに対する最適化プロジェクト。
 4. 決定事項 → Key Decisions を更新
 
 ---
-*Last updated: 2026-07-05 — v1.7.1 Phase 4（UI/UX 磨き込み + 既知バグ棚卸し）完了、全マイルストーン完了.*
+*Last updated: 2026-07-05 — v1.7.1 milestone shipped and archived (/gsd-complete-milestone). Awaiting next milestone.*
