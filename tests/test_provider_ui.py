@@ -855,6 +855,7 @@ class TestOpenSettingsDoubleLaunchGuard:
             root=object(),
             settings={},
             _apply_settings=lambda s: None,
+            _apply_llm_settings_live=lambda s: None,
             _font=lambda delta=0, weight=None: ("Segoe UI", 10),
         )
         PDFEditorApp._open_settings(stub)
@@ -875,6 +876,7 @@ class TestOpenSettingsDoubleLaunchGuard:
             root=object(),
             settings={},
             _apply_settings=lambda s: None,
+            _apply_llm_settings_live=lambda s: None,
             _font=lambda delta=0, weight=None: ("Segoe UI", 10),
         )
         PDFEditorApp._open_settings(stub)
@@ -1368,3 +1370,172 @@ class TestMaybeShowLangFallbackNotice:
 
         assert fake._lang_fallback_notice_var.get() == ""
         assert fake._lang_fallback_label.mapped is False
+
+
+# ══════════════════════════════════════════════════════════════
+#  D-14: LLMConfigDialog ネスト適用の独立トランザクション化
+#  （app._apply_llm_settings_live・SettingsDialog.on_llm_apply cascade）
+# ══════════════════════════════════════════════════════════════
+
+
+class TestApplyLlmSettingsLive:
+    """D-14: app._apply_llm_settings_live が app.settings（メモリ）へ即時反映し、
+    _rebuild_ui を呼ばない軽量反映であることを検証する。
+    """
+
+    def test_updates_memory_settings_without_rebuild(self, monkeypatch):
+        """settings が更新され、既存キー（theme 等）は保持され、_rebuild_ui は
+        呼ばれない。"""
+        from pagefolio.app import PDFEditorApp
+
+        monkeypatch.setattr("pagefolio.app._save_settings", lambda s: None)
+        rebuild_calls = {"n": 0}
+        stub = types.SimpleNamespace(
+            settings={"theme": "dark", "font_size": 10},
+            _rebuild_ui=lambda: rebuild_calls.__setitem__("n", rebuild_calls["n"] + 1),
+        )
+        PDFEditorApp._apply_llm_settings_live(stub, {"ocr_provider": "claude"})
+
+        assert stub.settings["ocr_provider"] == "claude"
+        assert stub.settings["theme"] == "dark"
+        assert rebuild_calls["n"] == 0
+
+    def test_saves_to_disk(self, monkeypatch):
+        """_save_settings が更新後の settings で呼ばれる（ディスク永続化）。"""
+        from pagefolio.app import PDFEditorApp
+
+        saved = {}
+        monkeypatch.setattr("pagefolio.app._save_settings", lambda s: saved.update(s))
+        stub = types.SimpleNamespace(settings={"theme": "dark"})
+        PDFEditorApp._apply_llm_settings_live(
+            stub, {"claude_model": "claude-sonnet-4-6"}
+        )
+        assert saved.get("claude_model") == "claude-sonnet-4-6"
+
+    def test_api_key_like_values_not_specially_filtered(self, monkeypatch):
+        """本メソッド自体は渡された dict をそのまま反映するだけであり、api_key
+        非流入の担保は呼び出し元（LLMConfigDialog._apply・TestApiKeyNotInSettings）
+        の責務であることを確認する（api_key を含まない dict なら正常反映）。
+        """
+        from pagefolio.app import PDFEditorApp
+
+        monkeypatch.setattr("pagefolio.app._save_settings", lambda s: None)
+        stub = types.SimpleNamespace(settings={})
+        PDFEditorApp._apply_llm_settings_live(stub, {"ocr_provider": "claude"})
+        assert not any("api_key" in k.lower() for k in stub.settings)
+
+
+class TestSettingsDialogNestedApplyCascade:
+    """D-14/C4/C5: LLMConfigDialog（ネスト側）の適用が、外側 SettingsDialog の
+    Apply/Cancel と独立して app.settings（メモリ）へ即時反映されることを検証する。
+    """
+
+    def _patch_fake_llm_config_dialog(self, monkeypatch):
+        """LLMConfigDialog を捕捉スタブへ差し替え、渡された kwargs を回収する。"""
+        captured_kwargs = {}
+
+        class _FakeLLMConfigDialog:
+            def __init__(self, *args, **kwargs):
+                captured_kwargs.update(kwargs)
+
+        monkeypatch.setattr(
+            "pagefolio.dialogs.llm_config.LLMConfigDialog", _FakeLLMConfigDialog
+        )
+        return captured_kwargs
+
+    def test_nested_apply_calls_on_llm_apply_callback(self, monkeypatch):
+        """on_llm_apply が設定済みなら、ネスト適用時に新しい llm_settings で
+        呼ばれる。"""
+        from pagefolio.dialogs.settings import SettingsDialog
+
+        monkeypatch.setattr("pagefolio.settings._save_settings", lambda settings: None)
+        captured_kwargs = self._patch_fake_llm_config_dialog(monkeypatch)
+
+        live_calls = []
+        stub = types.SimpleNamespace(
+            current_settings={"ocr_provider": "lmstudio"},
+            _font=lambda delta=0, weight=None: ("Segoe UI", 10),
+            _plugin_manager=None,
+            _on_llm_apply=lambda s: live_calls.append(s),
+        )
+        SettingsDialog._open_llm_config(stub)
+
+        on_apply = captured_kwargs["on_apply"]
+        on_apply({"ocr_provider": "claude"})
+
+        assert live_calls == [{"ocr_provider": "claude"}]
+
+    def test_outer_cancel_does_not_revert_memory_reflection(self, monkeypatch):
+        """外側 SettingsDialog をキャンセル（外側 callback 非呼び出し）しても、
+        ネスト適用済みの LLM 設定は app.settings（メモリ）に残ったまま
+        （C4: ディスクとメモリの不整合解消の回帰）。
+        """
+        from pagefolio.app import PDFEditorApp
+        from pagefolio.dialogs.settings import SettingsDialog
+
+        monkeypatch.setattr("pagefolio.settings._save_settings", lambda settings: None)
+        monkeypatch.setattr("pagefolio.app._save_settings", lambda settings: None)
+        captured_kwargs = self._patch_fake_llm_config_dialog(monkeypatch)
+
+        app_stub = types.SimpleNamespace(
+            settings={"theme": "dark", "ocr_provider": "lmstudio"}
+        )
+        settings_dialog_stub = types.SimpleNamespace(
+            current_settings={"ocr_provider": "lmstudio"},
+            _font=lambda delta=0, weight=None: ("Segoe UI", 10),
+            _plugin_manager=None,
+            _on_llm_apply=lambda s: PDFEditorApp._apply_llm_settings_live(app_stub, s),
+        )
+        SettingsDialog._open_llm_config(settings_dialog_stub)
+        on_apply = captured_kwargs["on_apply"]
+        on_apply({"ocr_provider": "claude"})
+
+        # 外側 SettingsDialog._apply/callback は一切呼んでいない（＝キャンセル相当）
+        # にもかかわらず app.settings は新しい値のまま。
+        assert app_stub.settings["ocr_provider"] == "claude"
+        assert app_stub.settings["theme"] == "dark"
+
+    def test_no_on_llm_apply_does_not_raise(self, monkeypatch):
+        """on_llm_apply 未設定（後方互換・既存 SimpleNamespace スタブ等）でも
+        例外を出さずに完了する。"""
+        from pagefolio.dialogs.settings import SettingsDialog
+
+        monkeypatch.setattr("pagefolio.settings._save_settings", lambda settings: None)
+        captured_kwargs = self._patch_fake_llm_config_dialog(monkeypatch)
+
+        stub = types.SimpleNamespace(
+            current_settings={"ocr_provider": "lmstudio"},
+            _font=lambda delta=0, weight=None: ("Segoe UI", 10),
+            _plugin_manager=None,
+            # _on_llm_apply 属性を意図的に設定しない
+        )
+        SettingsDialog._open_llm_config(stub)
+        on_apply = captured_kwargs["on_apply"]
+        on_apply({"ocr_provider": "claude"})  # 例外なく完了すること
+
+    def test_api_key_not_propagated_through_cascade(self, monkeypatch):
+        """LLMConfigDialog._apply が生成する llm_settings（api_key 非流入）が
+        そのままネスト経由で app.settings へ渡ってもキー混入しないことを、
+        cascade 経路全体で確認する。
+        """
+        from pagefolio.dialogs.llm_config import LLMConfigDialog
+        from pagefolio.dialogs.settings import SettingsDialog
+
+        monkeypatch.setattr("pagefolio.settings._save_settings", lambda settings: None)
+        captured_kwargs = self._patch_fake_llm_config_dialog(monkeypatch)
+
+        live_settings = {}
+        stub = types.SimpleNamespace(
+            current_settings={"ocr_provider": "lmstudio"},
+            _font=lambda delta=0, weight=None: ("Segoe UI", 10),
+            _plugin_manager=None,
+            _on_llm_apply=lambda s: live_settings.update(s),
+        )
+        SettingsDialog._open_llm_config(stub)
+        on_apply = captured_kwargs["on_apply"]
+
+        apply_stub = _make_apply_key_stub({}, claude_key="sk-ant-DUMMY-TEST-KEY")
+        apply_stub.on_apply = on_apply
+        LLMConfigDialog._apply(apply_stub)
+
+        assert not any("api_key" in k.lower() for k in live_settings)

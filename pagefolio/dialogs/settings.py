@@ -25,6 +25,7 @@ class SettingsDialog(tk.Toplevel):
         plugin_manager=None,
         session_api_keys=None,
         app=None,
+        on_llm_apply=None,
     ):
         super().__init__(parent)
         lang = current_settings.get("lang", "ja")
@@ -47,6 +48,11 @@ class SettingsDialog(tk.Toplevel):
         # V171-UIUX-01・D-01: ShortcutsDialog は app._cmd_map/_default_shortcuts/
         # _bind_shortcuts を参照するため app 参照を保持する（後方互換の任意引数）。
         self._app = app
+        # V171-UIUX-03・D-14: LLMConfigDialog のネスト適用を外側 Apply/Cancel と
+        # 独立して app.settings（メモリ）へ即時反映するためのコールバック
+        # （後方互換の任意引数。OCRDialog 側のネストしない起動経路には影響
+        # しない・Pitfall 5）。
+        self._on_llm_apply = on_llm_apply
 
         self._build()
         self.update_idletasks()
@@ -225,6 +231,13 @@ class SettingsDialog(tk.Toplevel):
             from pagefolio.settings import _save_settings
 
             _save_settings(self.current_settings)
+            # D-14: ディスク保存に加え、外側 Apply/Cancel から独立して
+            # app.settings（メモリ）へも即時反映する（C4 の不整合解消）。
+            # getattr は既存の SimpleNamespace スタブ（_on_llm_apply 未設定）
+            # との後方互換のための防御的パターン。
+            on_llm_apply = getattr(self, "_on_llm_apply", None)
+            if on_llm_apply:
+                on_llm_apply(dict(llm_settings))
 
         self._llm_config_dialog = LLMConfigDialog(
             self,

@@ -566,7 +566,21 @@ class PDFEditorApp(
             plugin_manager=getattr(self, "plugin_manager", None),
             session_api_keys=getattr(self, "_session_api_keys", None),
             app=self,
+            on_llm_apply=self._apply_llm_settings_live,
         )
+
+    def _apply_llm_settings_live(self, llm_settings):
+        """LLMConfigDialog のネスト適用を app.settings（メモリ）へ即時反映する（D-14）。
+
+        SettingsDialog 経由のネスト適用（on_llm_apply）から呼ばれる軽量反映
+        メソッド。テーマ/フォントは llm_settings に含まれないため
+        `_rebuild_ui()` は呼ばない（ここで呼ぶと、開いている SettingsDialog
+        Toplevel まで `root.winfo_children()` の destroy 対象になってしまう）。
+        外側 SettingsDialog のキャンセルとは独立して確定させることで、
+        ディスク（`_save_settings` 済み）とメモリの不整合（C4）を解消する。
+        """
+        self.settings.update(llm_settings)
+        _save_settings(self.settings)
 
     def _apply_settings(self, new_settings):
         """設定変更を適用してUIを再構築"""
