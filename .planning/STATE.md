@@ -5,15 +5,15 @@ milestone_name: 現機能ブラッシュアップ + APIキー入力欄
 current_phase: 04
 current_phase_name: ui-ux
 status: executing
-stopped_at: Completed 04-01-PLAN.md
-last_updated: "2026-07-05T09:46:33.579Z"
+stopped_at: Completed 04-02-PLAN.md
+last_updated: "2026-07-05T10:00:28.845Z"
 last_activity: 2026-07-05
 last_activity_desc: Phase 04 execution started
 progress:
   total_phases: 4
   completed_phases: 3
   total_plans: 16
-  completed_plans: 13
+  completed_plans: 14
   percent: 75
 ---
 
@@ -29,7 +29,7 @@ See: .planning/PROJECT.md (updated 2026-07-04)
 ## Current Position
 
 Phase: 04 (ui-ux) — EXECUTING
-Plan: 2 of 4
+Plan: 3 of 4
 Status: Ready to execute
 Last activity: 2026-07-05 — Phase 04 execution started
 
@@ -96,6 +96,7 @@ Progress: [█████░░░░░] 50%
 | Phase 03-v1-5-0 P03 | 7min | 3 tasks | 5 files |
 | Phase 03-v1-5-0 P04 | 18min | 2 tasks | 6 files |
 | Phase 04 P01 | 3min | 3 tasks | 2 files |
+| Phase 04 P02 | 12min | 3 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -221,6 +222,8 @@ Decisions are logged in PROJECT.md Key Decisions table.
 - [Phase ?]: [Phase 03-04]: _apply_page_edit(kind, block=None) へ改修し、self._redact_rects（蓄積）＋crop_rectから対象矩形集合を構築。_save_undoはループ外1回のみ、各矩形は_derotate_rect経由でmediabox相対化する1本道（D-05〜D-08統合）
 - [Phase ?]: [Phase 04-01]: build_keysym_from_event の修飾子連結順は Control, Alt, Shift の順に固定（RESEARCH.md Pattern 1 準拠）
 - [Phase ?]: [Phase 04-01]: _bind_shortcuts() は self._bound_keysyms で前回バインドした keysym(shift variant含む)を追跡し、再呼び出し時に全て unbind してから再バインドする
+- [Phase ?]: [Phase 04-02]: ShortcutsDialog は保存前 self._shortcuts の working copy のみ編集し、保存時に既定と異なる項目のみ settings['shortcuts'] へ完全置換してから app._bind_shortcuts→_save_settings の順で即時反映する
+- [Phase ?]: [Phase 04-02]: SettingsDialog.__init__ に後方互換の app=None を追加し、_open_settings で app=self を渡すことで ShortcutsDialog へ app 参照を配線した
 
 ### Pending Todos
 
@@ -297,8 +300,8 @@ Decisions are logged in PROJECT.md Key Decisions table.
 
 ## Session Continuity
 
-Last session: 2026-07-05T09:46:33.566Z
-Stopped at: Completed 04-01-PLAN.md
+Last session: 2026-07-05T10:00:28.833Z
+Stopped at: Completed 04-02-PLAN.md
 Resume file: None
 
 ## Operator Next Steps

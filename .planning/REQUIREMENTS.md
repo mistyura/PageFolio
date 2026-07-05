@@ -16,9 +16,9 @@
 
 ### UI/UX 磨き込み（UIUX）
 
-- [ ] **V171-UIUX-01**: ユーザーはショートカットを設定ダイアログの GUI で編集できる（JSON 直接編集不要）
+- [x] **V171-UIUX-01**: ユーザーはショートカットを設定ダイアログの GUI で編集できる（JSON 直接編集不要）
 - [ ] **V171-UIUX-02**: エラー表示・文言の一貫性が監査・修正される（ja/en 辞書の欠落/未使用キー含む・L-5 吸収）
-- [ ] **V171-UIUX-03**: SettingsDialog / LLMConfigDialog の項目配置・セクションが整理される
+- [x] **V171-UIUX-03**: SettingsDialog / LLMConfigDialog の項目配置・セクションが整理される
 
 ### OCR 磨き込み（OCR）
 
@@ -72,9 +72,9 @@
 | V171-KEY-02 | Phase 1 | Complete |
 | V171-KEY-03 | Phase 1 | Complete |
 | V171-KEY-04 | Phase 1 | Complete |
-| V171-UIUX-01 | Phase 4 | Pending |
+| V171-UIUX-01 | Phase 4 | Complete |
 | V171-UIUX-02 | Phase 4 | Pending |
-| V171-UIUX-03 | Phase 4 | Pending |
+| V171-UIUX-03 | Phase 4 | Complete |
 | V171-OCR-01 | Phase 2 | Complete |
 | V171-OCR-02 | Phase 2 | Complete |
 | V171-OCR-03 | Phase 2 | Complete |
