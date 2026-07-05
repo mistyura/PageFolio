@@ -280,7 +280,8 @@ C = dict(THEMES["dark"])  # 実行時に _apply_theme() で更新
 - パスワード保護 PDF は開く際にパスワード入力を求める（`_authenticate_doc`）。パスワードの付与（AES-256）/解除は「🔒 パスワード」セクションから別名保存で行う
 - 印刷は OS の既定 PDF ハンドラへ送る方式（Windows: `os.startfile(path, "print")`）。Windows 以外は未対応で情報通知に留める
 - `set_cropbox` によるトリミングはメタデータ上の cropbox 変更であり、PDF の物理的なページサイズは変わらない
-- 黒塗り・モザイク（`redact_ops.py`）は **破壊的操作**: `apply_redactions()` は矩形下のテキスト・画像を実削除し、矩形に交差する注釈も削除される（PyMuPDF 仕様）。undo は `page_edit` op（適用前ページ bytes）で可能。矩形は未回転のページ座標系で適用される（トリミングと同じ制約）
+- 黒塗り・モザイク（`redact_ops.py`）は **破壊的操作**: `apply_redactions()` は矩形下のテキスト・画像を実削除し、矩形に交差する注釈も削除される（PyMuPDF 仕様）。undo は `page_edit` op（適用前ページ bytes）で可能。回転表示中のページでも `page_ops.py` の共通ヘルパー `_derotate_rect`（`page.derotation_matrix` 使用）により表示座標→未回転座標へ変換されるため、トリミング・黒塗り・モザイクの3操作すべてで「見たままの位置」に適用される（v1.7.1 Phase 3・D-08 で解消）
+- 黒塗り/モザイクは連続適用（明示トグルで OFF にするまでモード維持）に対応し、複数矩形を追加してから一括適用できる。1回の Undo で全矩形がまとめて戻る（v1.7.1 Phase 3・D-05/D-07）。モザイクの粒度は右ペインのスライダーで調整でき `pagefolio_settings.json` に永続化される（D-06）
 - サムネイルは `fitz.Matrix(0.22, 0.22)` のスケールで生成（変更時はパフォーマンスに注意）
 - プレビューは `self.zoom * 1.5` のスケールで生成
 - 右ペインはスクロール可能な Canvas 構成（`_build_tools_scrollable` で実装）
