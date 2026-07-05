@@ -13,6 +13,7 @@ from PIL import Image
 from pagefolio.constants import (
     DEFAULT_EXPORT_JPG_QUALITY,
     IMAGE_EXTENSIONS,
+    PT_PER_MM,
     SUPPORTED_EXTENSIONS,
     C,
 )
@@ -74,6 +75,20 @@ def export_page_image(
         pix.save(out_path, jpg_quality=jpg_quality)
     else:
         pix.save(out_path)
+
+
+def _format_crop_info(rect_w_pt, rect_h_pt, mb_w_pt, mb_h_pt):
+    """crop_info 表示文字列を「45×60mm（28%）」形式で返す純関数（D-11）。
+
+    mm 換算＋ページ占有率（面積比）を表示する。mb（mediabox）幅高さが
+    0 以下のときは占有率 0% を返す安全側フォールバック。
+    """
+    w_mm = rect_w_pt / PT_PER_MM
+    h_mm = rect_h_pt / PT_PER_MM
+    pct = 0.0
+    if mb_w_pt > 0 and mb_h_pt > 0:
+        pct = (rect_w_pt * rect_h_pt) / (mb_w_pt * mb_h_pt) * 100
+    return f"{w_mm:.0f}×{h_mm:.0f}mm（{pct:.0f}%）"
 
 
 class PageOpsMixin:
@@ -312,6 +327,28 @@ class PageOpsMixin:
             self.preview_canvas.configure(cursor="")
             self._clear_crop_overlay()
 
+    @staticmethod
+    def _derotate_rect(page, x0, y0, x1, y1):
+        """表示（回転後）座標系の矩形を、mediabox/cropbox が使う未回転座標系
+        へ変換する（D-08）。
+
+        page.rotation が 0 のとき恒等（入力の min/max 正規化のみ）。
+        90/180/270 のとき page.derotation_matrix で正しく逆変換する。
+        黒塗り/モザイク/トリミングの 3 操作が共用する共通ヘルパー
+        （回転座標変換ロジックの重複実装禁止・03-CONTEXT.md D-08）。
+        """
+        if page.rotation == 0:
+            return (min(x0, x1), min(y0, y1), max(x0, x1), max(y0, y1))
+        dm = page.derotation_matrix
+        p0 = fitz.Point(x0, y0) * dm
+        p1 = fitz.Point(x1, y1) * dm
+        return (
+            min(p0.x, p1.x),
+            min(p0.y, p1.y),
+            max(p0.x, p1.x),
+            max(p0.y, p1.y),
+        )
+
     def _canvas_rect_to_pdf(self, sx, sy, ex, ey):
         """プレビューキャンバス座標の矩形を PDF 点座標（page 左上原点）へ変換する。
 
@@ -385,9 +422,9 @@ class PageOpsMixin:
 
         self.crop_rect = (sx, sy, ex, ey)
         fx0, fy0, fx1, fy1 = self._canvas_rect_to_pdf(sx, sy, ex, ey)
-        px0, py0, px1, py1 = int(fx0), int(fy0), int(fx1), int(fy1)
+        mb = self.doc[self.current_page].mediabox
         self.crop_info_var.set(
-            f"({px0},{py0}) - ({px1},{py1})  {px1 - px0}×{py1 - py0} pt"
+            _format_crop_info(fx1 - fx0, fy1 - fy0, mb.width, mb.height)
         )
 
     def _crop_drag_end(self, event):
@@ -425,6 +462,11 @@ class PageOpsMixin:
             self._save_undo("crop", page_i=self.current_page)
             x0_pdf, y0_pdf, x1_pdf, y1_pdf = self._canvas_rect_to_pdf(*self.crop_rect)
             page = self.doc[self.current_page]
+            # 表示（回転後）座標 → 未回転座標（D-08・mediabox 相対化の前に
+            # 挟む1本道・二重補正防止）
+            x0_pdf, y0_pdf, x1_pdf, y1_pdf = self._derotate_rect(
+                page, x0_pdf, y0_pdf, x1_pdf, y1_pdf
+            )
             mb = page.mediabox
             new_rect = fitz.Rect(
                 mb.x0 + x0_pdf, mb.y0 + y0_pdf, mb.x0 + x1_pdf, mb.y0 + y1_pdf
@@ -453,7 +495,12 @@ class PageOpsMixin:
                 return
         else:
             x0_pdf, y0_pdf, x1_pdf, y1_pdf = self._canvas_rect_to_pdf(*self.crop_rect)
-            cur_mb = self.doc[self.current_page].mediabox
+            base_page = self.doc[self.current_page]
+            # 表示（回転後）座標 → 未回転座標（D-08・単一分岐と同じ1本道）
+            x0_pdf, y0_pdf, x1_pdf, y1_pdf = self._derotate_rect(
+                base_page, x0_pdf, y0_pdf, x1_pdf, y1_pdf
+            )
+            cur_mb = base_page.mediabox
             rel = (
                 x0_pdf / cur_mb.width,
                 y0_pdf / cur_mb.height,

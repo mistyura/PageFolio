@@ -164,3 +164,71 @@ class TestImageWatermarkLang:
     def test_key_exists_in_both_languages(self):
         assert "btn_watermark_image" in LANG["ja"]
         assert "btn_watermark_image" in LANG["en"]
+
+
+class TestDerotateRect:
+    """_derotate_rect の座標変換検証（D-08）。回転0で恒等（正規化のみ）、
+    90/180/270 で page.derotation_matrix による正しい逆変換を検証する。"""
+
+    def _make_doc(self, rotation, w=200, h=100):
+        doc = fitz.open()
+        doc.new_page(width=w, height=h)
+        page = doc[0]
+        page.set_rotation(rotation)
+        return doc, page
+
+    def test_derotate_identity_when_rotation_zero(self):
+        doc, page = self._make_doc(0)
+        result = po.PageOpsMixin._derotate_rect(page, 10, 20, 60, 80)
+        assert result == (10, 20, 60, 80)
+        doc.close()
+
+    def test_derotate_identity_normalizes_swapped_points(self):
+        doc, page = self._make_doc(0)
+        # x0>x1, y0>y1 で渡しても min/max 正規化される
+        result = po.PageOpsMixin._derotate_rect(page, 60, 80, 10, 20)
+        assert result == (10, 20, 60, 80)
+        doc.close()
+
+    def _assert_roundtrip(self, rotation):
+        doc, page = self._make_doc(rotation)
+        x0, y0, x1, y1 = 10, 20, 60, 80
+        rx0, ry0, rx1, ry1 = po.PageOpsMixin._derotate_rect(page, x0, y0, x1, y1)
+        # 未回転座標を rotation_matrix で表示座標へ戻すと元の入力に一致する
+        rm = page.rotation_matrix
+        p0 = fitz.Point(rx0, ry0) * rm
+        p1 = fitz.Point(rx1, ry1) * rm
+        got = (min(p0.x, p1.x), min(p0.y, p1.y), max(p0.x, p1.x), max(p0.y, p1.y))
+        expected = (min(x0, x1), min(y0, y1), max(x0, x1), max(y0, y1))
+        assert all(abs(got[i] - expected[i]) < 0.01 for i in range(4))
+        doc.close()
+
+    def test_derotate_rotation_90_roundtrip(self):
+        self._assert_roundtrip(90)
+
+    def test_derotate_rotation_180_roundtrip(self):
+        self._assert_roundtrip(180)
+
+    def test_derotate_rotation_270_roundtrip(self):
+        self._assert_roundtrip(270)
+
+
+class TestFormatCropInfo:
+    """_format_crop_info の mm/％ 文字列検証（D-11・純関数）。"""
+
+    def test_format_crop_info_mm_and_percent(self):
+        # 100mm x 50mm 相当の pt サイズ、mediabox 200mm x 100mm 相当 → 25%
+        w_pt = 100 * po.PT_PER_MM
+        h_pt = 50 * po.PT_PER_MM
+        mb_w_pt = 200 * po.PT_PER_MM
+        mb_h_pt = 100 * po.PT_PER_MM
+        result = po._format_crop_info(w_pt, h_pt, mb_w_pt, mb_h_pt)
+        assert "100" in result
+        assert "50" in result
+        assert "25" in result
+        assert "mm" in result
+        assert "%" in result
+
+    def test_format_crop_info_zero_mediabox_safe(self):
+        result = po._format_crop_info(10, 10, 0, 0)
+        assert "0%" in result
