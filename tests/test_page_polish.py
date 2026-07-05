@@ -303,3 +303,51 @@ class TestCropPolish:
         app._nudge_crop_rect(0, -1)
         sx, sy, ex, ey = app.crop_rect
         assert abs(sy - (10.0 - scale)) < 0.001
+
+
+class TestMarginCrop:
+    """compute_margin_crop_rect（純関数）と _crop_by_margin（FakeApp）の
+    検証（D-10）。"""
+
+    def test_margin_crop_basic_subtraction(self):
+        cb = fitz.Rect(0, 0, 200, 100)
+        result = po.compute_margin_crop_rect(cb, 10, 10, 5, 5)
+        assert result == (5, 10, 195, 90)
+
+    def test_margin_crop_too_small_returns_none(self):
+        cb = fitz.Rect(0, 0, 10, 10)
+        result = po.compute_margin_crop_rect(cb, 5, 5, 5, 5)
+        assert result is None
+
+    def test_margin_crop_negative_margin_allowed_by_function(self):
+        # 純関数自体は負値もそのまま計算する（入力側の minvalue=0 でガード）
+        cb = fitz.Rect(0, 0, 200, 100)
+        result = po.compute_margin_crop_rect(cb, -5, 0, 0, 0)
+        assert result[1] == -5  # y0 = cb.y0 + margin_top(-5)
+
+    def test_margin_crop_apply_and_undo(self, sample_pdf_doc, monkeypatch):
+        app = _make_app(sample_pdf_doc)
+        app.current_page = 0
+        values = iter([10.0, 10.0, 5.0, 5.0])  # top, bottom, left, right (mm)
+        monkeypatch.setattr(po.simpledialog, "askfloat", lambda *a, **kw: next(values))
+        orig_cb = app.doc[0].cropbox
+
+        app._crop_by_margin()
+        new_cb = app.doc[0].cropbox
+        assert new_cb.width < orig_cb.width
+        assert new_cb.height < orig_cb.height
+
+        app._undo()
+        restored_cb = app.doc[0].cropbox
+        assert abs(restored_cb.width - orig_cb.width) < 0.02
+        assert abs(restored_cb.height - orig_cb.height) < 0.02
+
+    def test_margin_crop_cancel_is_noop(self, sample_pdf_doc, monkeypatch):
+        app = _make_app(sample_pdf_doc)
+        monkeypatch.setattr(po.simpledialog, "askfloat", lambda *a, **kw: None)
+        orig_cb = app.doc[0].cropbox
+
+        app._crop_by_margin()
+
+        assert app.doc[0].cropbox == orig_cb
+        assert len(app._undo_stack) == 0

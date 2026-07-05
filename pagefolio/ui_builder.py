@@ -604,6 +604,13 @@ class UIBuilderMixin:
             needs_doc=True,
             edit_only=True,
         )
+        btn(
+            f3,
+            self._t("btn_crop_margin"),
+            self._crop_by_margin,
+            needs_doc=True,
+            edit_only=True,
+        )
 
         # ページ編集（黒塗り・モザイク）— トリミングと同じ矩形選択を共用
         f3b = section(self._t("sec_redact"))

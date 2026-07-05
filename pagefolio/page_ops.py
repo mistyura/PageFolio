@@ -91,6 +91,29 @@ def _format_crop_info(rect_w_pt, rect_h_pt, mb_w_pt, mb_h_pt):
     return f"{w_mm:.0f}×{h_mm:.0f}mm（{pct:.0f}%）"
 
 
+def compute_margin_crop_rect(
+    current_cropbox,
+    margin_top_pt,
+    margin_bottom_pt,
+    margin_left_pt,
+    margin_right_pt,
+):
+    """現在の cropbox から四辺の余白(pt)を差し引いた新 cropbox を返す（D-10）。
+
+    差し引いた結果の幅/高さが 1pt 未満になる場合は None（安全側フォール
+    バック・T-3-03。既存 _crop_page の EPS/is_empty チェックと同型）。
+    基準は「現在の cropbox」（A2・今見えている範囲からさらに削る）。
+    """
+    cb = current_cropbox
+    x0 = cb.x0 + margin_left_pt
+    y0 = cb.y0 + margin_top_pt
+    x1 = cb.x1 - margin_right_pt
+    y1 = cb.y1 - margin_bottom_pt
+    if x1 - x0 < 1 or y1 - y0 < 1:
+        return None
+    return (x0, y0, x1, y1)
+
+
 class PageOpsMixin:
     """PDFEditorApp のページ操作メソッド群"""
 
@@ -589,6 +612,82 @@ class PageOpsMixin:
         else:
             self._set_status(self._t("status_bulk_cropped").format(count=len(targets)))
             self.plugin_manager.fire_event("on_page_crop", self, targets)
+
+    def _crop_by_margin(self):
+        """『上下左右から何mmを削るか』の余白指定で選択ページを一括トリミング
+        する（D-10）。基準は現在の cropbox（A2・今見えている範囲からさらに
+        削る）。undo は既存 bulk_crop op（適用前 cropbox）を流用する。
+        """
+        if not self._check_doc():
+            return
+        targets = self._get_targets()
+        margins_mm = []
+        for key in (
+            "crop_margin_top",
+            "crop_margin_bottom",
+            "crop_margin_left",
+            "crop_margin_right",
+        ):
+            v = simpledialog.askfloat(
+                self._t("dlg_crop_margin_title"),
+                self._t(key),
+                minvalue=0,
+                parent=self.root,
+            )
+            if v is None:
+                return
+            margins_mm.append(v)
+        top_pt, bottom_pt, left_pt, right_pt = (m * PT_PER_MM for m in margins_mm)
+
+        crop_data = []
+        for i in targets:
+            cb = self.doc[i].cropbox
+            crop_data.append((i, (cb.x0, cb.y0, cb.x1, cb.y1)))
+        self._save_undo("bulk_crop", crop_data=crop_data)
+
+        EPS = 0.01
+        applied = []
+        for i in targets:
+            page = self.doc[i]
+            cb = page.cropbox
+            mb = page.mediabox
+            new_coords = compute_margin_crop_rect(
+                cb, top_pt, bottom_pt, left_pt, right_pt
+            )
+            if new_coords is None:
+                continue
+            new_rect = fitz.Rect(*new_coords)
+            new_rect = fitz.Rect(
+                max(round(new_rect.x0, 2), mb.x0 + EPS),
+                max(round(new_rect.y0, 2), mb.y0 + EPS),
+                min(round(new_rect.x1, 2), mb.x1 - EPS),
+                min(round(new_rect.y1, 2), mb.y1 - EPS),
+            )
+            if (
+                new_rect.is_empty
+                or new_rect.is_infinite
+                or new_rect.width < 1
+                or new_rect.height < 1
+            ):
+                continue
+            try:
+                page.set_cropbox(new_rect)
+                applied.append(i)
+            except ValueError:
+                continue
+
+        if not applied:
+            # 1 ページも適用されなかった場合は直前に積んだ undo エントリを
+            # 取り除く（doc は無変更のため・_apply_page_edit と同じ作法）
+            if self._undo_stack:
+                self._undo_stack.pop()
+            messagebox.showerror(self._t("err_title"), self._t("err_crop_small"))
+            return
+
+        self._invalidate_thumb_cache(applied)
+        self._refresh_all()
+        self._set_status(self._t("status_bulk_cropped").format(count=len(applied)))
+        self.plugin_manager.fire_event("on_page_crop", self, applied)
 
     # ── 挿入・結合 ──
     def _insert_from_file(self, mode="pos"):
