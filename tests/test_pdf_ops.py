@@ -260,6 +260,58 @@ class TestPdfSplit:
         result.close()
         doc.close()
 
+    def test_split_by_range_no_input_shows_error(self, sample_pdf_doc, monkeypatch):
+        """範囲未入力時は showerror + err_title で表示され showinfo は使わない
+        （C7回帰）。"""
+        import collections
+        import types
+
+        import pagefolio.file_ops as fo
+        import pagefolio.page_ops as po
+
+        class FakeApp(fo.FileOpsMixin, po.PageOpsMixin):
+            MAX_UNDO = 20
+
+            def __init__(self, d):
+                self.doc = d
+                self.current_page = 0
+                self.selected_pages = set()
+                self._undo_stack = collections.deque(maxlen=self.MAX_UNDO)
+                self._redo_stack = collections.deque(maxlen=self.MAX_UNDO)
+                self._preview_gen = 0
+                self._thumb_gen = 0
+                self.root = None
+
+            def _check_doc(self):
+                return self.doc is not None
+
+            def _t(self, key):
+                return key
+
+            def _set_status(self, *a):
+                pass
+
+        app = FakeApp(sample_pdf_doc)
+        app.plugin_manager = types.SimpleNamespace(fire_event=lambda *a, **kw: None)
+
+        calls = {"showerror": [], "showinfo": []}
+        monkeypatch.setattr(po.simpledialog, "askstring", lambda *a, **kw: "")
+        monkeypatch.setattr(
+            po.messagebox,
+            "showerror",
+            lambda title, msg: calls["showerror"].append((title, msg)),
+        )
+        monkeypatch.setattr(
+            po.messagebox,
+            "showinfo",
+            lambda title, msg: calls["showinfo"].append((title, msg)),
+        )
+
+        app._split_by_range()
+
+        assert calls["showerror"] == [("err_title", "err_split_no_range")]
+        assert calls["showinfo"] == []
+
 
 # ===== トリミング (CropBox) =====
 

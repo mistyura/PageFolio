@@ -951,7 +951,7 @@ class PageOpsMixin:
         if range_str is None:
             return
         if not range_str.strip():
-            messagebox.showinfo(self._t("info_title"), self._t("err_split_no_range"))
+            messagebox.showerror(self._t("err_title"), self._t("err_split_no_range"))
             return
         ranges = self._parse_page_ranges(range_str, n)
         if ranges is None:
