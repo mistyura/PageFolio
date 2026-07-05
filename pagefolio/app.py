@@ -50,6 +50,60 @@ def shift_variant_keysym(keysym):
     return None
 
 
+_SHORTCUT_MOD_ORDER = ("Control", "Alt", "Shift")
+
+
+def build_keysym_from_event(
+    state, keysym, shift_mask=0x1, control_mask=0x4, alt_mask=0x20000
+):
+    """event.state ビットマスクと event.keysym から Tk bind 用文字列を組み立てる。
+
+    ショートカット GUI 編集の実キーキャプチャ方式を支える純関数（V171-UIUX-01・D-02）。
+    修飾は Control, Alt, Shift の順で連結し、修飾なしの場合はキー単体を返す。
+    """
+    mods = []
+    if state & control_mask:
+        mods.append("Control")
+    if state & alt_mask:
+        mods.append("Alt")
+    if state & shift_mask:
+        mods.append("Shift")
+    if not mods:
+        return f"<{keysym}>"
+    return f"<{'-'.join(mods)}-{keysym}>"
+
+
+def find_duplicate_binding(shortcuts, cmd_name, new_keysym):
+    """新規割当キーが自分以外のコマンドと重複していないか判定する。
+
+    重複割当を保存時に拒否する要件を支える純関数（V171-UIUX-01・D-04）。
+    衝突しているコマンド名を返し、衝突がなければ None を返す。
+    """
+    if not new_keysym:
+        return None
+    for other_cmd, other_keysym in shortcuts.items():
+        if other_cmd != cmd_name and other_keysym == new_keysym:
+            return other_cmd
+    return None
+
+
+def keysym_to_display(keysym):
+    """Tk keysym 文字列を人間可読な表示形式へ変換する。
+
+    ショートカット一覧の可読性向上を支える純関数（V171-UIUX-01・D-07）。
+    内部保存は Tk keysym のまま変えず、表示専用に変換する。
+    """
+    if not keysym:
+        return ""
+    inner = keysym.strip("<>")
+    parts = inner.split("-")
+    *mods, key = parts
+    display_mods = {"Control": "Ctrl", "Alt": "Alt", "Shift": "Shift"}
+    out = [display_mods.get(m, m) for m in mods]
+    out.append(key.upper() if len(key) == 1 else key)
+    return "+".join(out)
+
+
 class PDFEditorApp(
     UIBuilderMixin,
     FileOpsMixin,
