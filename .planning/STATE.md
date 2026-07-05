@@ -4,17 +4,17 @@ milestone: v1.7.1
 milestone_name: 現機能ブラッシュアップ + APIキー入力欄
 current_phase: 03
 current_phase_name: v1-5-0
-status: executing
+status: verifying
 stopped_at: Completed 03-03-PLAN.md
-last_updated: "2026-07-05T06:26:38.833Z"
+last_updated: "2026-07-05T06:48:40.291Z"
 last_activity: 2026-07-05
 last_activity_desc: Phase 03 execution started
 progress:
   total_phases: 4
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 12
-  completed_plans: 11
-  percent: 50
+  completed_plans: 12
+  percent: 75
 ---
 
 # Project State
@@ -30,7 +30,7 @@ See: .planning/PROJECT.md (updated 2026-07-04)
 
 Phase: 03 (v1-5-0) — EXECUTING
 Plan: 4 of 4
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-07-05 — Phase 03 execution started
 
 Progress: [█████░░░░░] 50%
@@ -93,6 +93,7 @@ Progress: [█████░░░░░] 50%
 | Phase 03-v1-5-0 P01 | 6min | 2 tasks | 4 files |
 | Phase 03-v1-5-0 P02 | 7min | 3 tasks | 4 files |
 | Phase 03-v1-5-0 P03 | 7min | 3 tasks | 5 files |
+| Phase 03-v1-5-0 P04 | 18min | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -215,6 +216,7 @@ Decisions are logged in PROJECT.md Key Decisions table.
 - [Phase ?]: [Phase 03-03]: _derotate_rectはpage.rotation==0で早期returnし恒等（正規化のみ）を返す。90/180/270のみpage.derotation_matrixを計算（無回転ページでの余計な行列計算回避）
 - [Phase ?]: [Phase 03-03]: crop_info（_format_crop_info）はderotate前のcanvas→pdf変換値をそのまま使う。画面上で見た選択サイズをmm表示するのが直感的なため（derotateは_crop_page適用時のみ必要）
 - [Phase ?]: [Phase 03-03]: _crop_by_marginのundoは新規opを作らず既存bulk_crop opを再利用（file_ops.pyの_apply_inverseが既に対称処理を実装済み）
+- [Phase ?]: [Phase 03-04]: _apply_page_edit(kind, block=None) へ改修し、self._redact_rects（蓄積）＋crop_rectから対象矩形集合を構築。_save_undoはループ外1回のみ、各矩形は_derotate_rect経由でmediabox相対化する1本道（D-05〜D-08統合）
 
 ### Pending Todos
 
@@ -291,7 +293,7 @@ Decisions are logged in PROJECT.md Key Decisions table.
 
 ## Session Continuity
 
-Last session: 2026-07-05T06:26:38.819Z
+Last session: 2026-07-05T06:46:02.015Z
 Stopped at: Completed 03-03-PLAN.md
 Resume file: None
 

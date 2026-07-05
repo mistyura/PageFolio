@@ -30,7 +30,7 @@
 ### ページ操作磨き込み（PAGE）
 
 - [x] **V171-PAGE-01**: ユーザーは画像（ロゴ）を透かしとして追加できる（v1.5.0 テキストのみ制限の解除）
-- [ ] **V171-PAGE-02**: 黒塗り/モザイクの使い勝手が改善される（具体項目は棚卸しで確定）
+- [x] **V171-PAGE-02**: 黒塗り/モザイクの使い勝手が改善される（具体項目は棚卸しで確定）
 - [x] **V171-PAGE-03**: 回転/トリミングの操作性が改善される（具体項目は棚卸しで確定）
 
 ### テスト・安定性（TEST）
@@ -80,7 +80,7 @@
 | V171-OCR-03 | Phase 2 | Complete |
 | V171-OCR-04 | Phase 2 | Complete |
 | V171-PAGE-01 | Phase 3 | Complete |
-| V171-PAGE-02 | Phase 3 | Pending |
+| V171-PAGE-02 | Phase 3 | Complete |
 | V171-PAGE-03 | Phase 3 | Complete |
 | V171-TEST-01 | Phase 3 | Complete |
 | V171-TEST-02 | Phase 1 | Complete |
