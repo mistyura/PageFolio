@@ -5,15 +5,15 @@ milestone_name: 現機能ブラッシュアップ + APIキー入力欄
 current_phase: 03
 current_phase_name: v1-5-0
 status: executing
-stopped_at: Phase 3 planned
-last_updated: "2026-07-05T06:08:58.076Z"
+stopped_at: Completed 03-03-PLAN.md
+last_updated: "2026-07-05T06:26:38.833Z"
 last_activity: 2026-07-05
 last_activity_desc: Phase 03 execution started
 progress:
   total_phases: 4
   completed_phases: 2
   total_plans: 12
-  completed_plans: 10
+  completed_plans: 11
   percent: 50
 ---
 
@@ -29,7 +29,7 @@ See: .planning/PROJECT.md (updated 2026-07-04)
 ## Current Position
 
 Phase: 03 (v1-5-0) — EXECUTING
-Plan: 3 of 4
+Plan: 4 of 4
 Status: Ready to execute
 Last activity: 2026-07-05 — Phase 03 execution started
 
@@ -92,6 +92,7 @@ Progress: [█████░░░░░] 50%
 | Phase 02 P04 | 約55分 | 3 tasks | 7 files |
 | Phase 03-v1-5-0 P01 | 6min | 2 tasks | 4 files |
 | Phase 03-v1-5-0 P02 | 7min | 3 tasks | 4 files |
+| Phase 03-v1-5-0 P03 | 7min | 3 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -211,6 +212,9 @@ Decisions are logged in PROJECT.md Key Decisions table.
 - [Phase 03-01]: _watermark_image_rectは幅50%縮小を既定とし縦長画像で高さがページ高さ90%超の場合は高さ基準へクランプ（Claude's Discretion）
 - [Phase 03-v1-5-0]: [Phase 03-02]: compute_dnd_dest_index / merge_shortcuts / shift_variant_keysym を純関数へ抽出（Tk依存の薄いラッパー化・D-13）
 - [Phase 03-v1-5-0]: [Phase 03-02]: v1.5.0回帰テストをtests/test_v150_regression.pyへ新規分離（D-15・test_pdf_ops.py肥大化防止）
+- [Phase ?]: [Phase 03-03]: _derotate_rectはpage.rotation==0で早期returnし恒等（正規化のみ）を返す。90/180/270のみpage.derotation_matrixを計算（無回転ページでの余計な行列計算回避）
+- [Phase ?]: [Phase 03-03]: crop_info（_format_crop_info）はderotate前のcanvas→pdf変換値をそのまま使う。画面上で見た選択サイズをmm表示するのが直感的なため（derotateは_crop_page適用時のみ必要）
+- [Phase ?]: [Phase 03-03]: _crop_by_marginのundoは新規opを作らず既存bulk_crop opを再利用（file_ops.pyの_apply_inverseが既に対称処理を実装済み）
 
 ### Pending Todos
 
@@ -287,9 +291,9 @@ Decisions are logged in PROJECT.md Key Decisions table.
 
 ## Session Continuity
 
-Last session: 2026-07-05T06:08:25.339Z
-Stopped at: Phase 3 planned (4 plans / 3 waves)
-Resume file: .planning/phases/03-v1-5-0/03-01-PLAN.md
+Last session: 2026-07-05T06:26:38.819Z
+Stopped at: Completed 03-03-PLAN.md
+Resume file: None
 
 ## Operator Next Steps
 
