@@ -1402,7 +1402,10 @@ class OCRDialog(tk.Toplevel):
 
         if self._cancel_flag.is_set():
             # キャンセル: 全ワーカー分の終了シグナルを送る（CR-01 Pitfall-E）
-            send_sentinels(self._render_queue, self.concurrency)
+            # WR-01: 部分送出時は残り本数のみを再試行し worker のポーリング残留を防ぐ
+            sent = send_sentinels(self._render_queue, self.concurrency)
+            if sent < self.concurrency:
+                self._retry_sentinels(gen, self.concurrency - sent)
             self._finish_cancelled()
             return
 
@@ -1411,7 +1414,10 @@ class OCRDialog(tk.Toplevel):
             # 全ワーカー分の終了シグナルを送るのみに留め、終了処理自体は
             # 最終ワーカー側（_worker の decrement_worker 判定）に委ねる。
             # ここで直接呼んでも _finish_error の冪等ガードにより二重実行しない。
-            send_sentinels(self._render_queue, self.concurrency)
+            # WR-01: 部分送出時は残り本数のみを再試行し worker のポーリング残留を防ぐ
+            sent = send_sentinels(self._render_queue, self.concurrency)
+            if sent < self.concurrency:
+                self._retry_sentinels(gen, self.concurrency - sent)
             self._finish_error(self._pstate.fatal_msg, kind=self._pstate.fatal_kind)
             return
 
@@ -1482,6 +1488,25 @@ class OCRDialog(tk.Toplevel):
         # 次のページを after(0) で連鎖（UI フリーズ回避）
         g = gen
         self.after(0, lambda _g=g: self._render_next_page(_g))
+
+    def _retry_sentinels(self, gen, remaining):
+        """WR-01: キュー満杯で部分送出になった終了シグナルの残り分のみを再試行する。
+
+        cancel / fatal 経路専用のヘルパー。send_sentinels の契約
+        （「戻り値が count 未満なら残り本数のみ再試行」）を守り、
+        既に送信済みの本数を再送しない。世代ガードで旧世代の再試行は無視する。
+        """
+        if gen is not None and gen != self._run_gen:
+            return
+        try:
+            if not self.winfo_exists():
+                return
+        except Exception:
+            return
+        sent = send_sentinels(self._render_queue, remaining)
+        if sent < remaining:
+            left = remaining - sent
+            self.after(50, lambda _g=gen, n=left: self._retry_sentinels(_g, n))
 
     def _start_worker_thread(self, gen=None):
         """consumer（ワーカー）スレッドを self.concurrency 本起動する（CR-01）。
