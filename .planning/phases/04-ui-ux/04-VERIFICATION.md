@@ -1,29 +1,36 @@
 ---
 phase: 04-ui-ux
 verified: 2026-07-05T00:00:00Z
-status: human_needed
+status: passed
 score: 19/19 must-haves verified
 behavior_unverified: 0
 overrides_applied: 0
 human_verification:
+
   - test: "SettingsDialog の「⌨ ショートカット設定…」ボタンから ShortcutsDialog を開き、各行の「変更」を押して実キーを押下し、keysym が正しくキャプチャされる（修飾キー単体 Control_L 等では確定せず待機継続する）ことを目視確認する"
     expected: "行のキー表示が押下したキーの人間可読表記（例: Ctrl+O）へ更新され、修飾キー単体では待機状態が続く"
     why_human: "Tkinter の実 KeyPress イベントはこの環境で自動生成できず、既存テストスイートにも event_generate を使う実ウィジェットテストが存在しない（04-RESEARCH.md D-20 の既定運用）"
+
   - test: "同一キーを別コマンドへ割り当てて「保存」を押し、衝突コマンド名を含むエラーダイアログが表示され保存が拒否されることを目視確認する"
     expected: "showerror ダイアログに衝突コマンドの表示名が含まれ、settings への書き込みが行われずダイアログも閉じない"
     why_human: "messagebox の実描画・文言の視覚的な正しさは自動テストでは検証できない"
+
   - test: "ショートカットを保存した直後（ダイアログを閉じる前）に、新しいキーで実際にコマンドが起動することを目視確認する"
     expected: "保存ボタン押下時点で app._bind_shortcuts() が呼ばれ、新キーが即座に有効になる"
     why_human: "実際のキー入力とコマンド実行の因果は Tk イベントループの実挙動でしか確認できない"
+
   - test: "SettingsDialog が「外観」「操作」「AI・OCR」の3セクションで表示され、見出しの視覚的な区切り・アイコン（⚙）が意図通りであることを目視確認する"
     expected: "3セクションが区切り線とともに順に表示され、旧🔍アイコンが⚙に置き換わっている"
     why_human: "レイアウトの視覚的妥当性はコード上のpack順序からは完全には保証できず実描画の確認が必要"
+
   - test: "LLMConfigDialog を開き、「選択中プロバイダ固有の設定」「全プロバイダ共通の設定」の2見出しが正しい位置に表示され、プロバイダ切替（LM Studio/Ollama/RunPod/Claude/Gemini/Tesseract/off）で固有セクションが正しく入れ替わることを目視確認する"
     expected: "見出し順序が 固有見出し→固有フレーム→共通見出し→共通パラメータ という設計通りに視覚的に維持される"
     why_human: "before=self.scale_row による挿入順序はコードから論理的に確認済みだが、実際のレイアウト崩れ（余白・折返し等）は実描画でのみ検出できる"
+
   - test: "外側 SettingsDialog を開いた状態で「⚙ LLM 設定…」から LLMConfigDialog を開き、値を変更して「適用」を押した後、外側 SettingsDialog を「キャンセル」で閉じても、再度設定を開くと LLM 設定の変更が保持されていることを目視確認する"
     expected: "外側キャンセル後も LLM 設定（例: プロバイダ選択やタイムアウト値）が変更後の値のまま維持される"
     why_human: "cascade の単体ロジックは test_provider_ui.py の TestSettingsDialogNestedApplyCascade で回帰テスト済みだが、実際のダイアログ往復操作での見え方は実機確認が望ましい"
+
   - test: "拡大ポップアップ（サムネイルまたはページをダブルクリック等で開く画面）を lang='en' 設定で開き、タイトル・縮小/拡大/閉じるボタンが英語で表示され日本語が一切出ないことを目視確認する"
     expected: "ポップアップの全文言が英語（Page N / M、Zoom Out、Zoom In、Close）で表示される"
     why_human: "実際のポップアップ描画（フォント・レイアウト込み）は自動テストでは検証できない"
