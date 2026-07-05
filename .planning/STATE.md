@@ -5,16 +5,16 @@ milestone_name: 現機能ブラッシュアップ + APIキー入力欄
 current_phase: 02
 current_phase_name: OCR 磨き込み（レビュー残の現行照合と二重実装解消）
 status: executing
-stopped_at: Phase 02 Wave 1 (02-01) complete
-last_updated: "2026-07-05T07:45:00.000Z"
+stopped_at: Phase 02 Wave 2 (02-02) complete
+last_updated: "2026-07-05T01:21:39.597Z"
 last_activity: 2026-07-05
-last_activity_desc: Phase 02 Wave 1 (02-01) complete — OCR provider registry 堅牢化
+last_activity_desc: Phase 02 Wave 2 (02-02) complete
 progress:
   total_phases: 4
   completed_phases: 1
   total_plans: 8
-  completed_plans: 5
-  percent: 31
+  completed_plans: 6
+  percent: 25
 ---
 
 # Project State
@@ -29,11 +29,11 @@ See: .planning/PROJECT.md (updated 2026-07-04)
 ## Current Position
 
 Phase: 02 (OCR 磨き込み（レビュー残の現行照合と二重実装解消）) — EXECUTING
-Plan: 02-01 complete (1/4), next is 02-02
-Status: Wave 1 (02-01) complete — register_ocr_provider 堅牢化・公開アクセサ追加。Wave 2 (02-02) へ進行
-Last activity: 2026-07-05 — Phase 02 Wave 1 (02-01) complete
+Plan: 02-02 complete (2/4), next is 02-03
+Status: Wave 2 (02-02) complete — TesseractProvider 段階的縮退・プロバイダ生成時再検出・OCRDialog 非モーダル注記。Wave 3 (02-03) へ進行
+Last activity: 2026-07-05 — Phase 02 Wave 2 (02-02) complete
 
-Progress: [███░░░░░░░] 31%
+Progress: [██░░░░░░░░] 25%
 
 ## v1.7.1 Phase Map
 
@@ -86,6 +86,7 @@ Progress: [███░░░░░░░] 31%
 | Phase 01-api-llm P02 | 15min | 3 tasks | 4 files |
 | Phase 01-api-llm P03 | 10min | 2 tasks | 3 files |
 | Phase 01-api-llm P04 | 15min | 2 tasks | 3 files |
+| Phase 02 P02 | 25min | 2 tasks | 9 files |
 
 ## Accumulated Context
 
@@ -191,6 +192,9 @@ Decisions are logged in PROJECT.md Key Decisions table.
 - [Phase 01-03]: OCRDialog._open_llm_configはgetattr(self.app,'_session_api_keys',None)経由でLLMConfigDialogへ配線（Plan02のapp.py._open_settingsと同じ防御的パターン。既存の完全SimpleNamespaceスタブとの後方互換）
 - [Phase ?]: [Phase 01-04 CR-01]: _confirm_cost/_confirm_summary_cost へ elif runpod 分岐を追加し host=runpod_url・model=runpod_model から取得。未設定時は llm_runpod_host_unset プレースホルダで api.anthropic.com へのフォールスルーを防止
 - [Phase ?]: [Phase 01-04 WR-02]: _provider_display_name に runpod 分岐追加・ocr_provider_name_runpod をja/en LANGへ新設
+- [Phase ?]: [Phase 02-02]: TesseractProvider に available_langs 引数を追加し __init__ 時点で effective_lang/lang_fallback を段階的縮退(D-06)で確定。ocr_image は都度計算しない
+- [Phase ?]: [Phase 02-02]: _detect_tesseract() を import時固定からプロバイダ生成時の都度呼び出しへ変更(D-05)。ocr.py/llm_config.py が同一関数を都度呼ぶ形へ統一(Pitfall 2解消)
+- [Phase ?]: [Phase 02-02]: フォールバック注記は progress_var とは独立した専用ラベルにし provider 再生成時のみ更新することで1回のみ表示を担保(D-07)
 
 ### Pending Todos
 
@@ -267,7 +271,7 @@ Decisions are logged in PROJECT.md Key Decisions table.
 
 ## Session Continuity
 
-Last session: 2026-07-04T23:08:27.509Z
+Last session: 2026-07-05T01:21:06.298Z
 Stopped at: Phase 2 context gathered
 Resume file: .planning/phases/02-ocr/02-CONTEXT.md
 
