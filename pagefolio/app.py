@@ -557,6 +557,7 @@ class PDFEditorApp(
             existing.focus_force()
             return
         # M-8: plugin_manager を渡して LLMConfigDialog でプラグインプロバイダを表示
+        # V171-UIUX-01・D-01: app=self を渡し ShortcutsDialog から _cmd_map 等を参照
         self._settings_dialog = SettingsDialog(
             self.root,
             self.settings,
@@ -564,6 +565,7 @@ class PDFEditorApp(
             self._font,
             plugin_manager=getattr(self, "plugin_manager", None),
             session_api_keys=getattr(self, "_session_api_keys", None),
+            app=self,
         )
 
     def _apply_settings(self, new_settings):
