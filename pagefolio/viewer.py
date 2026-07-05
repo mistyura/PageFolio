@@ -404,7 +404,7 @@ class ViewerMixin:
         def update_nav():
             i = popup_state["idx"]
             page_lbl.configure(text=f"{i + 1} / {n}")
-            popup.title(f"ページ {i + 1} / {n}")
+            popup.title(self._t("popup_page_title").format(i=i + 1, n=n))
             if n <= 1:
                 prev_btn.state(["disabled"])
                 next_btn.state(["disabled"])
@@ -491,16 +491,19 @@ class ViewerMixin:
         zoom_lbl.pack(side="right", padx=8)
         ttk.Button(
             toolbar,
-            text="🔍 縮小",
+            text=self._t("popup_zoom_out"),
             command=zoom_out,
         ).pack(side="right", padx=4, pady=10)
         ttk.Button(
             toolbar,
-            text="🔍 拡大",
+            text=self._t("popup_zoom_in"),
             command=zoom_in,
         ).pack(side="right", padx=4, pady=10)
         ttk.Button(
-            toolbar, text="✕ 閉じる", command=popup.destroy, style="Danger.TButton"
+            toolbar,
+            text=self._t("popup_close"),
+            command=popup.destroy,
+            style="Danger.TButton",
         ).pack(side="right", padx=8, pady=10)
 
         frame = tk.Frame(popup, bg=C["PREVIEW_BG"])

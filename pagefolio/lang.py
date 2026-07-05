@@ -20,6 +20,11 @@ LANG = {
         "btn_next": "▶",
         "btn_zoom_in": "＋",
         "btn_zoom_out": "－",
+        # ページ拡大ポップアップ
+        "popup_page_title": "ページ {i} / {n}",
+        "popup_zoom_out": "🔍 縮小",
+        "popup_zoom_in": "🔍 拡大",
+        "popup_close": "✕ 閉じる",
         # ツールセクション見出し
         "sec_settings": "⚙ 設定",
         "sec_file": "📂 ファイル",
@@ -651,6 +656,11 @@ LANG = {
         "btn_next": "▶",
         "btn_zoom_in": "＋",
         "btn_zoom_out": "－",
+        # Page enlargement popup
+        "popup_page_title": "Page {i} / {n}",
+        "popup_zoom_out": "🔍 Zoom Out",
+        "popup_zoom_in": "🔍 Zoom In",
+        "popup_close": "✕ Close",
         # Tool section titles
         "sec_settings": "⚙ Settings",
         "sec_file": "📂 File",
