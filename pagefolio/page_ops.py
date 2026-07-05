@@ -3,10 +3,12 @@
 # Released under the MIT License
 """ページ操作 Mixin — 回転・削除・トリミング・挿入・結合・分割"""
 
+import io
 import os
 from tkinter import filedialog, messagebox, simpledialog
 
 import fitz
+from PIL import Image
 
 from pagefolio.constants import (
     DEFAULT_EXPORT_JPG_QUALITY,
@@ -213,6 +215,66 @@ class PageOpsMixin:
         self._invalidate_thumb_cache(targets)
         self._refresh_all()
         self._set_status(f"透かしを追加しました ({len(targets)} ページ)")
+
+    def _add_watermark_image(self):
+        """選択ページに画像（ロゴ等）透かしを追加する（V171-PAGE-01・D-01〜D-04）。
+
+        _add_watermark_text と同型のフロー（ボタン→選択→即適用→page_edit
+        undo）。page.insert_image に不透明度引数はないため、Pillow で
+        アルファチャンネルを事前合成してから焼き込む（D-03）。
+        """
+        if not self._check_doc():
+            return
+        targets = self._get_targets()
+        path = filedialog.askopenfilename(
+            title=self._t("btn_watermark_image"),
+            filetypes=[(self._t("filetypes_image"), "*.png *.jpg *.jpeg")],
+        )
+        if not path:
+            return
+        try:
+            with Image.open(path) as im:
+                img = im.convert("RGBA")
+        except Exception as e:
+            messagebox.showerror(self._t("err_title"), str(e))
+            return
+
+        # 既存アルファ（PNG）は 0.5 乗算で尊重、JPEG は convert("RGBA") で
+        # a=255 一様のため結果的に均一 50% 透過になる（D-03・Pitfall 1）。
+        r, g, b, a = img.split()
+        a = a.point(lambda v: int(v * 0.5))
+        img.putalpha(a)
+        buf = io.BytesIO()
+        img.save(buf, format="PNG")
+        img_bytes = buf.getvalue()
+        iw, ih = img.size
+
+        self._save_undo("page_edit", targets=targets)
+        for i in targets:
+            page = self.doc[i]
+            rect = self._watermark_image_rect(page.rect, iw, ih)
+            page.insert_image(rect, stream=img_bytes)  # rotate なし=水平のまま(D-03)
+        self._invalidate_thumb_cache(targets)
+        self._refresh_all()
+        self._set_status(f"画像透かしを追加しました ({len(targets)} ページ)")
+
+    @staticmethod
+    def _watermark_image_rect(page_rect, img_w, img_h):
+        """ページ中央・ページ幅の約50%に収まるよう縮小した配置矩形を返す（D-02）。
+
+        極端な縦長画像で高さがページ高さの90%を超える場合は高さ基準へ
+        クランプする（Claude's Discretion）。
+        """
+        target_w = page_rect.width * 0.5
+        scale = target_w / img_w if img_w else 1.0
+        target_h = img_h * scale
+        if target_h > page_rect.height * 0.9:
+            scale = (page_rect.height * 0.9) / img_h if img_h else 1.0
+            target_w = img_w * scale
+            target_h = img_h * scale
+        x0 = (page_rect.width - target_w) / 2
+        y0 = (page_rect.height - target_h) / 2
+        return fitz.Rect(x0, y0, x0 + target_w, y0 + target_h)
 
     def _add_page_numbers(self):
         """選択ページにページ番号を印字する"""
