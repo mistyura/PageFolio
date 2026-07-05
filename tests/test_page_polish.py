@@ -234,6 +234,109 @@ class TestFormatCropInfo:
         assert "0%" in result
 
 
+def _make_redact_app(doc, redact_mode=True):
+    """_apply_page_edit のTk依存部分を最小スタブ化したFakeApp（D-05/D-06/
+    D-07/D-08検証用）。_make_app に redact_mode・crop_rect 関連の Tk
+    スタブ（preview_canvas/crop_info_var/crop_overlay_ids/crop_rect_id）
+    と settings 辞書を追加する。
+    """
+    app = _make_app(doc)
+    app.redact_mode = redact_mode
+    app.crop_mode = False
+    app.crop_rect = None
+    app.crop_overlay_ids = []
+    app.crop_rect_id = None
+    app.settings = {}
+    app.zoom = 1.0
+
+    class _CropInfoVar:
+        def set(self, *_a, **_kw):
+            pass
+
+    class _PreviewCanvas:
+        def delete(self, *_a, **_kw):
+            pass
+
+        def configure(self, *_a, **_kw):
+            pass
+
+    app.crop_info_var = _CropInfoVar()
+    app.preview_canvas = _PreviewCanvas()
+    return app
+
+
+class TestRedactPolish:
+    """黒塗り/モザイクの棚卸し4項目（D-05連続適用・D-06モザイク粒度・
+    D-07複数矩形一括適用・D-08回転座標対応）の検証（V171-PAGE-02）。"""
+
+    def test_redact_mode_persist_after_apply(self, sample_pdf_doc):
+        """D-05: 適用後もモードがTrueのまま維持される（連続適用）。"""
+        app = _make_redact_app(sample_pdf_doc, redact_mode=True)
+        app.current_page = 0
+        app.crop_rect = (25.0, 25.0, 325.0, 175.0)
+
+        app._apply_page_edit("redact")
+
+        assert app.redact_mode is True
+        assert app.crop_rect is None  # 適用済み矩形のみクリア
+
+    def test_mosaic_block_granularity_changes_output(self, sample_pdf_doc, monkeypatch):
+        """D-06: block値によって縮小後サイズ（粗さ）が変わる。"""
+        from PIL import Image as PILImage
+
+        sizes = []
+        orig_resize = PILImage.Image.resize
+
+        def spy_resize(im_self, size, *a, **kw):
+            sizes.append(size)
+            return orig_resize(im_self, size, *a, **kw)
+
+        monkeypatch.setattr(PILImage.Image, "resize", spy_resize)
+
+        rect = fitz.Rect(60, 50, 300, 110)
+        ro.RedactOpsMixin._mosaic_page(sample_pdf_doc[0], rect, block=8)
+        small_size_8 = sizes[0]
+
+        sizes.clear()
+        ro.RedactOpsMixin._mosaic_page(sample_pdf_doc[1], rect, block=24)
+        small_size_24 = sizes[0]
+
+        assert small_size_8[0] > small_size_24[0]
+        assert small_size_8[1] > small_size_24[1]
+
+    def test_mosaic_block_default_backward_compatible(self, sample_pdf_doc):
+        """D-06: block引数省略時は既存のMOSAIC_BLOCK既定値のまま動作する
+        （後方互換）。"""
+        page = sample_pdf_doc[2]
+        rect = fitz.Rect(60, 50, 300, 110)
+        n_images_before = len(page.get_images(full=True))
+        ro.RedactOpsMixin._mosaic_page(page, rect)  # block省略
+        assert len(page.get_images(full=True)) > n_images_before
+
+    def test_apply_mosaic_uses_mosaic_block_setting(self, sample_pdf_doc, monkeypatch):
+        """D-06: _apply_mosaic が settings['mosaic_block'] を _apply_page_edit
+        へ渡す。"""
+        app = _make_redact_app(sample_pdf_doc, redact_mode=True)
+        app.current_page = 0
+        app.crop_rect = (25.0, 25.0, 325.0, 175.0)
+        app.settings = {"mosaic_block": 20}
+
+        captured = {}
+        orig = ro.RedactOpsMixin._apply_page_edit
+
+        def spy(self, kind, block=None):
+            captured["block"] = block
+            return orig(self, kind, block=block)
+
+        monkeypatch.setattr(ro.RedactOpsMixin, "_apply_page_edit", spy)
+        app._apply_mosaic()
+        assert captured["block"] == 20
+
+    def test_mosaic_block_label_lang_parity(self):
+        assert "mosaic_block_label" in LANG["ja"]
+        assert "mosaic_block_label" in LANG["en"]
+
+
 def _make_crop_app(doc):
     """_nudge_crop_rect のロジック検証用 FakeApp（D-09）。
 

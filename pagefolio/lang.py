@@ -118,6 +118,7 @@ LANG = {
         "redact_mode_off": "⬛ 範囲選択モード OFF",
         "redact_mode_on": "🔴 範囲選択モード ON  (クリックで OFF)",
         "redact_hint": "プレビュー上でドラッグして範囲を指定",
+        "mosaic_block_label": "モザイク粒度",
         "btn_apply_redact": "⬛ 選択範囲を黒塗り",
         "btn_apply_mosaic": "▦ 選択範囲をモザイク",
         # 挿入・結合
@@ -715,6 +716,7 @@ LANG = {
         "redact_mode_off": "⬛ Select Mode OFF",
         "redact_mode_on": "🔴 Select Mode ON  (click to OFF)",
         "redact_hint": "Drag on preview to select the area",
+        "mosaic_block_label": "Mosaic Granularity",
         "btn_apply_redact": "⬛ Redact Selection",
         "btn_apply_mosaic": "▦ Mosaic Selection",
         # Insert/Merge

@@ -6,7 +6,7 @@
 import tkinter as tk
 from tkinter import ttk
 
-from pagefolio.constants import C
+from pagefolio.constants import MOSAIC_BLOCK, C
 
 
 class UIBuilderMixin:
@@ -627,6 +627,30 @@ class UIBuilderMixin:
             fg=C["TEXT_SUB"],
             font=self._font(-2),
         ).pack(anchor="w", padx=8)
+
+        # モザイク粒度スライダー（D-06・thumb_zoom_scale と同型パターン）
+        tk.Label(
+            f3b,
+            text=self._t("mosaic_block_label"),
+            bg=C["BG_CARD"],
+            fg=C["TEXT_SUB"],
+            font=self._font(-2),
+        ).pack(anchor="w", padx=8, pady=(4, 0))
+        self.mosaic_block_var = tk.IntVar(
+            value=self.settings.get("mosaic_block", MOSAIC_BLOCK)
+        )
+        self.mosaic_block_scale = ttk.Scale(
+            f3b,
+            from_=4,
+            to=32,
+            variable=self.mosaic_block_var,
+            orient="horizontal",
+        )
+        self.mosaic_block_scale.pack(fill="x", expand=True, padx=8, pady=(2, 4))
+        self.mosaic_block_scale.bind(
+            "<ButtonRelease-1>", self._on_mosaic_block_release
+        )
+
         btn(
             f3b,
             self._t("btn_apply_redact"),

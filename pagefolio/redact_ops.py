@@ -66,15 +66,25 @@ class RedactOpsMixin:
         self._apply_page_edit("redact")
 
     def _apply_mosaic(self):
-        """選択矩形をモザイクとして対象ページへ適用する。"""
-        self._apply_page_edit("mosaic")
+        """選択矩形をモザイクとして対象ページへ適用する（D-06）。
 
-    def _apply_page_edit(self, kind):
+        粒度は settings["mosaic_block"] から取得する（未設定時は既定値の
+        MOSAIC_BLOCK を温存・constants.py は書き換えない）。
+        """
+        block = int(self.settings.get("mosaic_block", MOSAIC_BLOCK))
+        self._apply_page_edit("mosaic", block=block)
+
+    def _apply_page_edit(self, kind, block=None):
         """黒塗り/モザイクの共通適用フロー。
 
         トリミングの一括適用（_crop_page の bulk 分岐）と同じく、現在
         ページ上の選択矩形を相対座標へ変換し、各対象ページのページサイズ
         に合わせて適用する。undo は page_edit op（適用前 bytes）。
+
+        適用後もモードは維持される（D-05・連続適用）。終了は明示トグル
+        （_toggle_redact_mode）でのみ OFF になる。相互排他ロジック
+        （_toggle_redact_mode/_toggle_crop_mode）には一切触れない
+        （RESEARCH.md Pitfall 3）。
         """
         if not self._check_doc():
             return
@@ -109,7 +119,7 @@ class RedactOpsMixin:
                 if kind == "redact":
                     self._redact_page(page, rect)
                 else:
-                    self._mosaic_page(page, rect)
+                    self._mosaic_page(page, rect, block=block or MOSAIC_BLOCK)
                 applied.append(i)
             except Exception as e:
                 logger.error("ページ編集失敗 (kind=%s, page=%s): %s", kind, i, e)
@@ -122,9 +132,10 @@ class RedactOpsMixin:
             messagebox.showerror(self._t("err_title"), self._t("err_redact_small"))
             return
 
-        # 後片付け（トリミング適用完了と同じ作法）
+        # 後片付け（D-05: 連続適用のため _redact_mode_off は呼ばない。
+        # 矩形オーバーレイのみクリアしモードは維持する）
         self.crop_rect = None
-        self._redact_mode_off()
+        self._clear_crop_overlay()
         self.crop_info_var.set(self._t("crop_no_sel"))
         self._invalidate_thumb_cache(applied)
         self._refresh_all()
@@ -163,7 +174,7 @@ class RedactOpsMixin:
         page.apply_redactions()
 
     @staticmethod
-    def _mosaic_page(page, rect):
+    def _mosaic_page(page, rect, block=MOSAIC_BLOCK):
         """rect をモザイク化する。
 
         手順:
@@ -172,11 +183,16 @@ class RedactOpsMixin:
           3. redaction で下地コンテンツを実削除（モザイク下からの
              テキスト抽出漏えいを防ぐ — 画像を重ねるだけでは不十分）
           4. モザイク画像を rect へ焼き込み（insert_image）
+
+        block: モザイクの粒度（大きいほど粗い）。既定は MOSAIC_BLOCK
+        （constants.py・不変）。D-06 では呼び出し元 _apply_mosaic が
+        settings["mosaic_block"] を渡す（未設定時はこの既定値のまま・
+        後方互換）。
         """
         pix = page.get_pixmap(clip=rect, matrix=fitz.Matrix(2, 2))
         img = Image.frombytes("RGB", (pix.width, pix.height), pix.samples)
         small = img.resize(
-            (max(1, img.width // MOSAIC_BLOCK), max(1, img.height // MOSAIC_BLOCK)),
+            (max(1, img.width // block), max(1, img.height // block)),
             Image.NEAREST,
         )
         mosaic = small.resize(img.size, Image.NEAREST)
@@ -185,3 +201,16 @@ class RedactOpsMixin:
         page.add_redact_annot(rect)
         page.apply_redactions()
         page.insert_image(rect, stream=buf.getvalue())
+
+    def _on_mosaic_block_release(self, event=None):
+        """モザイク粒度スライダーの変更値を settings へ永続化する（D-06）。
+
+        既存 thumb_zoom スライダー（viewer.py._on_thumb_zoom_release）と
+        同型の保存フロー。
+        """
+        if not hasattr(self, "mosaic_block_var"):
+            return
+        self.settings["mosaic_block"] = int(self.mosaic_block_var.get())
+        from pagefolio.settings import _save_settings
+
+        _save_settings(self.settings)
