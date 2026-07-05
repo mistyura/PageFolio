@@ -11,8 +11,31 @@ import socket
 import subprocess
 import urllib.error
 import urllib.request
+from urllib.parse import quote, urlsplit
 
 logger = logging.getLogger(__name__)
+
+# L-6e/D-13: ユーザー入力 URL/エンドポイントを持つ全プロバイダ
+# （LM Studio / Ollama / RunPod）へ共通適用する許可スキーム。
+_ALLOWED_URL_SCHEMES = ("http", "https")
+
+
+def _require_http_scheme(url):
+    """url のスキームが http/https のみであることを検証する（L-6e・D-13）。
+
+    リクエスト送信の直前（`_post_chat`/`list_models` 冒頭）で呼ぶこと。
+    コンストラクタでの eager 検証は行わない（空URL/入力途中の値でも
+    プロバイダのインスタンス化自体は失敗させない既存方針との整合・A2）。
+
+    引数:
+      url: 検証対象の URL 文字列
+
+    例外:
+      RuntimeError: スキームが http/https 以外（file:// 等の悪用防止）
+    """
+    scheme = urlsplit(url).scheme.lower()
+    if scheme not in _ALLOWED_URL_SCHEMES:
+        raise RuntimeError(f"サポートされていない URL スキームです: {scheme or url}")
 
 
 class OCRProvider(abc.ABC):
@@ -209,6 +232,9 @@ def _raise_mapped_http_error(e):
         err_body = e.read().decode("utf-8", errors="replace")
     except Exception:
         err_body = ""
+    # L-6d: 巨大レスポンスによる UI/ログ肥大を防ぐため一定長で切り詰める
+    # （全プロバイダ共通ヘルパーのため 5 プロバイダ全てのエラーメッセージに波及）。
+    err_body = err_body[:500]
     message = f"HTTP {e.code}: {err_body or e.reason}"
     if looks_like_context_error(e.code, err_body):
         raise OCRContextLengthError(message) from e
@@ -293,6 +319,7 @@ class LMStudioProvider(OCRProvider):
         HTTP / 接続 / タイムアウトの例外マッピングは ocr_image と同一規約。
         ocr_image と complete_text_ex の両方から呼ばれる共有経路。
         """
+        _require_http_scheme(self.url)
         endpoint = self.url.rstrip("/") + "/v1/chat/completions"
         data = json.dumps(payload).encode("utf-8")
         req = urllib.request.Request(  # noqa: S310
@@ -366,6 +393,7 @@ class LMStudioProvider(OCRProvider):
           TimeoutError:    タイムアウト
           RuntimeError:    HTTP エラーまたはレスポンス形式不正
         """
+        _require_http_scheme(self.url)
         timeout = 10  # モデル一覧取得は短めのタイムアウト
         endpoint = self.url.rstrip("/") + "/v1/models"
         req = urllib.request.Request(endpoint, method="GET")  # noqa: S310
@@ -639,26 +667,18 @@ class ClaudeProvider(OCRProvider):
         truncated = result.get("stop_reason") == "max_tokens"
         return (out, truncated)
 
-    def list_models(self):
-        """Anthropic /v1/models から vision 対応モデル ID リストを取得する。
+    def _fetch_models_page(self, after_id=None):
+        """Anthropic /v1/models を1ページ分呼び出し、レスポンス dict を返す（内部）。
 
-        キー未設定（空文字/None）の場合は API を呼ばず
-        RECOMMENDED_MODELS を返す（D-08）。
-
-        戻り値: モデル ID 文字列のリスト（list[str]）
-
-        例外:
-          ConnectionError: 接続失敗
-          TimeoutError:    タイムアウト
-          RuntimeError:    HTTP エラーまたはレスポンス形式不正
+        after_id 指定時はカーソルを進めて次ページを取得する（L-6b）。
+        HTTP / 接続 / タイムアウトの例外マッピングは list_models と同一規約。
         """
-        if not self.api_key:
-            # キー未設定・オフライン時でも選択肢が出るよう静的リストを返す（D-08）
-            return list(self.RECOMMENDED_MODELS)
-
         timeout = 10
+        endpoint = self.MODELS_ENDPOINT
+        if after_id:
+            endpoint = f"{endpoint}?after_id={quote(after_id, safe='')}"
         req = urllib.request.Request(  # noqa: S310
-            self.MODELS_ENDPOINT,
+            endpoint,
             headers={
                 "x-api-key": self.api_key,
                 "anthropic-version": self.ANTHROPIC_VERSION,
@@ -679,17 +699,48 @@ class ClaudeProvider(OCRProvider):
             raise ConnectionError(str(reason)) from e
 
         try:
-            data = json.loads(body)
+            return json.loads(body)
         except json.JSONDecodeError as e:
             raise RuntimeError(f"Unexpected response: {body[:500]}") from e
 
-        # capabilities.image_input.supported が True のモデルのみ返す
-        return [
-            m.get("id")
-            for m in data.get("data", [])
-            if m.get("id")
-            and m.get("capabilities", {}).get("image_input", {}).get("supported", False)
-        ]
+    def list_models(self):
+        """Anthropic /v1/models から vision 対応モデル ID リストを取得する。
+
+        キー未設定（空文字/None）の場合は API を呼ばず
+        RECOMMENDED_MODELS を返す（D-08）。
+
+        L-6b: `has_more`/`last_id` カーソルを辿り全ページのモデルを連結して
+        返す（1 ページで完結する応答では従来と同じ結果になる後方互換）。
+
+        戻り値: モデル ID 文字列のリスト（list[str]）
+
+        例外:
+          ConnectionError: 接続失敗
+          TimeoutError:    タイムアウト
+          RuntimeError:    HTTP エラーまたはレスポンス形式不正
+        """
+        if not self.api_key:
+            # キー未設定・オフライン時でも選択肢が出るよう静的リストを返す（D-08）
+            return list(self.RECOMMENDED_MODELS)
+
+        results = []
+        after_id = None
+        while True:
+            data = self._fetch_models_page(after_id=after_id)
+            # capabilities.image_input.supported が True のモデルのみ返す
+            results.extend(
+                m.get("id")
+                for m in data.get("data", [])
+                if m.get("id")
+                and m.get("capabilities", {})
+                .get("image_input", {})
+                .get("supported", False)
+            )
+            if data.get("has_more") and data.get("last_id"):
+                after_id = data.get("last_id")
+                continue
+            break
+        return results
 
 
 class GeminiProvider(OCRProvider):
@@ -808,7 +859,10 @@ class GeminiProvider(OCRProvider):
 
         _post_generate（画像あり）と complete_text_ex（テキストのみ）の共有経路。
         """
-        endpoint = self.GENERATE_CONTENT_ENDPOINT.format(model=self.model)
+        # L-6f: モデル名を URL パスセグメントとしてエスケープする
+        # （予約文字を含むモデル名で意図しないパス/クエリにならないよう防止）。
+        safe_model = quote(self.model, safe="")
+        endpoint = self.GENERATE_CONTENT_ENDPOINT.format(model=safe_model)
         data = json.dumps(payload).encode("utf-8")
         req = urllib.request.Request(  # noqa: S310
             endpoint,
@@ -1181,6 +1235,7 @@ class OllamaProvider(OCRProvider):
         HTTP / 接続 / タイムアウトの例外マッピングは ocr_image と同一規約。
         ocr_image と complete_text_ex の両方から呼ばれる共有経路。
         """
+        _require_http_scheme(self.url)
         endpoint = self.url.rstrip("/") + "/v1/chat/completions"
         data = json.dumps(payload).encode("utf-8")
         req = urllib.request.Request(  # noqa: S310
@@ -1255,6 +1310,7 @@ class OllamaProvider(OCRProvider):
           TimeoutError:    タイムアウト
           RuntimeError:    HTTP エラーまたはレスポンス形式不正
         """
+        _require_http_scheme(self.url)
         timeout = 10  # モデル一覧取得は短めのタイムアウト
         endpoint = self.url.rstrip("/") + "/v1/models"
         req = urllib.request.Request(endpoint, method="GET")  # noqa: S310
@@ -1407,6 +1463,7 @@ class RunPodProvider(OCRProvider):
             raise OCRAPIKeyError("RUNPOD_API_KEY")
         if not self.url:
             raise RuntimeError("RunPod エンドポイントURLが設定されていません")
+        _require_http_scheme(self.url)
 
         endpoint = self.url.rstrip("/") + "/chat/completions"
         data = json.dumps(payload).encode("utf-8")
@@ -1437,6 +1494,7 @@ class RunPodProvider(OCRProvider):
         """RunPod /models からモデル ID リストを取得する。"""
         if not self.api_key or not self.url:
             return [self.model] if self.model else ["runpod-model"]
+        _require_http_scheme(self.url)
 
         timeout = 10
         base_url = self.url.rstrip("/")
