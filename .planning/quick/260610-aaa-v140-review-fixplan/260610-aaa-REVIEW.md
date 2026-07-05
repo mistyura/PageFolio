@@ -219,12 +219,20 @@ usage: >
   `list_ocr_providers()` を新設し（D-10）、両ファイルの `_provider_registry` 直接
   アクセスを置換済み。
 
-### L-4: TesseractProvider が `tesseract_lang` 設定を無視
+### L-4: TesseractProvider が `tesseract_lang` 設定を無視 ✅ (3448d79, bf723f2)
 
 - 該当: `pagefolio/ocr_providers.py:669-697`
 - `ocr_image` は常に `_TESSERACT_LANGS` から自動決定し `self.lang` 未使用。
   `_TESSERACT_LANGS` は import 時固定（言語パック追加は再起動まで反映されない）。
 - 対応: `self.lang` が利用可能なら優先・不可なら自動フォールバック。
+- **解消済み（v1.7.1 Phase 2-02・commit 3448d79）:** `TesseractProvider.__init__` に
+  `available_langs` 引数を追加し、段階的縮退（要求言語の利用可能な部分集合を優先・
+  全滅時のみ現行自動決定へ縮退）で `self.effective_lang` を確定（D-06）。
+  `_detect_tesseract()` は import 時固定をやめ `build_provider`/`LLMConfigDialog`
+  生成時に都度呼び直す（D-05・Pitfall 2 解消で `llm_config.py` も同一関数を参照）。
+  **commit bf723f2:** フォールバック発生時は OCRDialog 内の非モーダル WARNING 注記
+  （`_maybe_show_lang_fallback_notice`）で要求/実効言語を1回表示し、OCR 結果 raw
+  には混入させない（D-07）。
 
 ### L-5: lang.py 未使用キー 3 件
 
