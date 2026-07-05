@@ -35,7 +35,7 @@
 
 ### テスト・安定性（TEST）
 
-- [ ] **V171-TEST-01**: v1.5.0 新機能（白紙挿入・透かし・ページ番号・TOC 保持・D&D 挿入・ショートカット読込）の回帰テストが整備される
+- [x] **V171-TEST-01**: v1.5.0 新機能（白紙挿入・透かし・ページ番号・TOC 保持・D&D 挿入・ショートカット読込）の回帰テストが整備される
 - [x] **V171-TEST-02**: APIキー新機能のテストが整備される（優先順解決・非保存ガード回帰）
 - [ ] **V171-TEST-03**: 既知軽微バグが棚卸しされ、活き残りが解消される（L-6 の現行照合と重複しない範囲）
 
@@ -82,6 +82,6 @@
 | V171-PAGE-01 | Phase 3 | Complete |
 | V171-PAGE-02 | Phase 3 | Pending |
 | V171-PAGE-03 | Phase 3 | Pending |
-| V171-TEST-01 | Phase 3 | Pending |
+| V171-TEST-01 | Phase 3 | Complete |
 | V171-TEST-02 | Phase 1 | Complete |
 | V171-TEST-03 | Phase 4 | Pending |
