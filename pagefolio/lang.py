@@ -516,6 +516,9 @@ LANG = {
         # LLM 設定ダイアログ（OCR と設定で共有）
         "llm_config_title": "LLM 設定",
         "llm_config_heading": "⚙ LLM 設定",
+        # D-15: 共通/固有グルーピング見出し
+        "llm_config_provider_section": "選択中プロバイダ固有の設定",
+        "llm_config_common_section": "全プロバイダ共通の設定",
         "llm_config_apply": "✓ 適用",
         "llm_config_cancel": "✕ キャンセル",
         # APIキー入力欄（V171-KEY-01・LLM設定への一元化）
@@ -1133,6 +1136,9 @@ LANG = {
         # LLM config dialog (shared by OCR & Settings)
         "llm_config_title": "LLM Settings",
         "llm_config_heading": "⚙ LLM Settings",
+        # D-15: common/provider-specific grouping headings
+        "llm_config_provider_section": "Selected Provider's Settings",
+        "llm_config_common_section": "Common Settings (All Providers)",
         "llm_config_apply": "✓ Apply",
         "llm_config_cancel": "✕ Cancel",
         # API key input row (V171-KEY-01 — unified into LLM settings)

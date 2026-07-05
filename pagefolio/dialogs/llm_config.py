@@ -151,6 +151,18 @@ class LLMConfigDialog(tk.Toplevel):
                 font=self._font(-2),
             ).pack(side="left", padx=(8, 0))
 
+        # ── 固有設定見出し（D-15: 選択中プロバイダ固有の設定）──
+        # 常時表示・非トグル。以下の各プロバイダ固有セクションフレームは
+        # before=self.scale_row でこの見出しの後ろへ挿入される（_on_provider_change）。
+        self._provider_section_heading = tk.Label(
+            self,
+            text=self._L["llm_config_provider_section"],
+            bg=C["BG_DARK"],
+            fg=C["WARNING"],
+            font=self._font(0, "bold"),
+        )
+        self._provider_section_heading.pack(anchor="w", padx=24, pady=(6, 2))
+
         # ── LM Studio 固有欄（lmstudio 選択時のみ表示）──
         self.url_section_frame = tk.Frame(self, bg=C["BG_DARK"])
 
@@ -655,6 +667,18 @@ class LLMConfigDialog(tk.Toplevel):
                 font=self._font(-2),
             ).pack(anchor="w", pady=(0, 2))
 
+        # ── 共通設定見出し（D-15: 全プロバイダ共通の設定）──
+        # 未パック状態で生成し、_on_provider_change 内で before=self.scale_row
+        # を使って毎回「固有設定エリアの直後・共通パラメータ群の先頭」へ再配置する
+        # （プロバイダ固有フレームと同じ挿入先アンカーのため call 順で位置決めする）。
+        self._common_section_heading = tk.Label(
+            self,
+            text=self._L["llm_config_common_section"],
+            bg=C["BG_DARK"],
+            fg=C["WARNING"],
+            font=self._font(0, "bold"),
+        )
+
         # ── effort 欄（claude かつ effort 対応モデル時のみ表示）──
         self.effort_frame = tk.Frame(self, bg=C["BG_DARK"])
         effort_row = tk.Frame(self.effort_frame, bg=C["BG_DARK"])
@@ -1012,6 +1036,10 @@ class LLMConfigDialog(tk.Toplevel):
             )
             self.gemini_section_frame.pack_forget()
             self.tesseract_section_frame.pack_forget()
+            # D-15: 固有設定の直後・共通パラメータ群の先頭に見出しを再配置
+            self._common_section_heading.pack(
+                anchor="w", padx=24, pady=(6, 2), before=self.scale_row
+            )
             # モデルに応じて effort/temperature を切替
             self._on_model_change()
         elif provider == "gemini":
@@ -1022,6 +1050,9 @@ class LLMConfigDialog(tk.Toplevel):
             self.claude_section_frame.pack_forget()
             self.tesseract_section_frame.pack_forget()
             self.effort_frame.pack_forget()
+            self._common_section_heading.pack(
+                anchor="w", padx=24, pady=(6, 2), before=self.scale_row
+            )
             self.temperature_frame.pack(
                 fill="x", padx=24, pady=2, before=self.scale_row
             )
@@ -1035,6 +1066,9 @@ class LLMConfigDialog(tk.Toplevel):
             self.gemini_section_frame.pack_forget()
             self.effort_frame.pack_forget()
             self.temperature_frame.pack_forget()
+            self._common_section_heading.pack(
+                anchor="w", padx=24, pady=(6, 2), before=self.scale_row
+            )
             self._resize_to_fit()
         else:
             self.claude_section_frame.pack_forget()
@@ -1042,6 +1076,9 @@ class LLMConfigDialog(tk.Toplevel):
             self.tesseract_section_frame.pack_forget()
             # lmstudio / off では temperature 欄を表示し effort 欄を隠す（従来挙動）
             self.effort_frame.pack_forget()
+            self._common_section_heading.pack(
+                anchor="w", padx=24, pady=(6, 2), before=self.scale_row
+            )
             self.temperature_frame.pack(
                 fill="x", padx=24, pady=2, before=self.scale_row
             )
