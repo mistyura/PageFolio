@@ -232,3 +232,74 @@ class TestFormatCropInfo:
     def test_format_crop_info_zero_mediabox_safe(self):
         result = po._format_crop_info(10, 10, 0, 0)
         assert "0%" in result
+
+
+def _make_crop_app(doc):
+    """_nudge_crop_rect のロジック検証用 FakeApp（D-09）。
+
+    _redraw_crop_overlay は preview_canvas（Tk）へ依存するためスタブ化し、
+    移動/リサイズの数値ロジックのみを検証する。
+    """
+
+    class FakeCropApp(po.PageOpsMixin):
+        def __init__(self, d):
+            self.doc = d
+            self.current_page = 0
+            self.zoom = 1.0
+            self.crop_mode = True
+            self.redact_mode = False
+            self.crop_rect = None
+
+        def _redraw_crop_overlay(self):
+            pass
+
+    return FakeCropApp(doc)
+
+
+class TestCropPolish:
+    """_nudge_crop_rect の移動/リサイズロジック検証（D-09）。"""
+
+    def test_nudge_noop_when_rect_unset(self, sample_pdf_doc):
+        app = _make_crop_app(sample_pdf_doc)
+        app._nudge_crop_rect(1, 0)
+        assert app.crop_rect is None
+
+    def test_nudge_noop_when_mode_off(self, sample_pdf_doc):
+        app = _make_crop_app(sample_pdf_doc)
+        app.crop_mode = False
+        app.redact_mode = False
+        app.crop_rect = (10.0, 10.0, 50.0, 50.0)
+        app._nudge_crop_rect(1, 0)
+        assert app.crop_rect == (10.0, 10.0, 50.0, 50.0)
+
+    def test_nudge_move(self, sample_pdf_doc):
+        app = _make_crop_app(sample_pdf_doc)
+        app.crop_rect = (10.0, 10.0, 50.0, 50.0)
+        scale = app.zoom * 1.5
+        app._nudge_crop_rect(1, 0)
+        sx, sy, ex, ey = app.crop_rect
+        assert abs(sx - (10.0 + scale)) < 0.001
+        assert abs(ex - (50.0 + scale)) < 0.001
+        assert sy == 10.0
+        assert ey == 50.0
+
+    def test_nudge_resize(self, sample_pdf_doc):
+        app = _make_crop_app(sample_pdf_doc)
+        app.crop_rect = (10.0, 10.0, 50.0, 50.0)
+        scale = app.zoom * 1.5
+        app._nudge_crop_rect(0, 1, resize=True)
+        sx, sy, ex, ey = app.crop_rect
+        assert sx == 10.0
+        assert sy == 10.0
+        assert ex == 50.0
+        assert abs(ey - (50.0 + scale)) < 0.001
+
+    def test_nudge_redact_mode_also_works(self, sample_pdf_doc):
+        app = _make_crop_app(sample_pdf_doc)
+        app.crop_mode = False
+        app.redact_mode = True
+        app.crop_rect = (10.0, 10.0, 50.0, 50.0)
+        scale = app.zoom * 1.5
+        app._nudge_crop_rect(0, -1)
+        sx, sy, ex, ey = app.crop_rect
+        assert abs(sy - (10.0 - scale)) < 0.001

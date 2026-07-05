@@ -369,6 +369,9 @@ class PageOpsMixin:
         # 矩形選択はトリミングと黒塗り/モザイクで共用する
         if not (self.crop_mode or self.redact_mode):
             return
+        # 矢印キー微調整（D-09）を受け付けるためキーボードフォーカスを
+        # canvas へ移す（クリック後でないと Tk はキーイベントを渡さない）
+        self.preview_canvas.focus_set()
         cx = self.preview_canvas.canvasx(event.x)
         cy = self.preview_canvas.canvasy(event.y)
         self.crop_drag_start = (cx, cy)
@@ -382,6 +385,18 @@ class PageOpsMixin:
         cy = self.preview_canvas.canvasy(event.y)
         x0, y0 = self.crop_drag_start
         sx, sy, ex, ey = min(x0, cx), min(y0, cy), max(x0, cx), max(y0, cy)
+        self.crop_rect = (sx, sy, ex, ey)
+        self._redraw_crop_overlay()
+
+    def _redraw_crop_overlay(self):
+        """self.crop_rect を元にオーバーレイ矩形/crop_info 表示を再描画する。
+
+        _crop_drag_move（ドラッグ中）と _nudge_crop_rect（矢印キー微調整・
+        D-09）が共用する。
+        """
+        if not self.crop_rect:
+            return
+        sx, sy, ex, ey = self.crop_rect
 
         sr = self.preview_canvas.cget("scrollregion")
         if sr:
@@ -420,12 +435,32 @@ class PageOpsMixin:
             if self.crop_rect_id:
                 self.preview_canvas.coords(self.crop_rect_id, sx, sy, ex, ey)
 
-        self.crop_rect = (sx, sy, ex, ey)
         fx0, fy0, fx1, fy1 = self._canvas_rect_to_pdf(sx, sy, ex, ey)
         mb = self.doc[self.current_page].mediabox
         self.crop_info_var.set(
             _format_crop_info(fx1 - fx0, fy1 - fy0, mb.width, mb.height)
         )
+
+    def _nudge_crop_rect(self, dx_pt, dy_pt, resize=False):
+        """確定済み矩形を矢印キーで移動/右下辺リサイズする（D-09）。
+
+        dx_pt/dy_pt は pt 単位（呼び出し側は通常 ±1pt）。
+        _canvas_rect_to_pdf と同じ scale で canvas 距離へ換算する。
+        crop_mode/redact_mode が OFF、または矩形未確定のときは無効化。
+        """
+        if not (self.crop_mode or self.redact_mode):
+            return
+        if not self.crop_rect:
+            return
+        scale = self.zoom * 1.5
+        sx, sy, ex, ey = self.crop_rect
+        dx, dy = dx_pt * scale, dy_pt * scale
+        if resize:
+            ex, ey = ex + dx, ey + dy
+        else:
+            sx, sy, ex, ey = sx + dx, sy + dy, ex + dx, ey + dy
+        self.crop_rect = (sx, sy, ex, ey)
+        self._redraw_crop_overlay()
 
     def _crop_drag_end(self, event):
         if not (self.crop_mode or self.redact_mode):

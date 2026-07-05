@@ -350,6 +350,24 @@ class UIBuilderMixin:
         self.preview_canvas.bind("<ButtonPress-1>", self._crop_drag_start)
         self.preview_canvas.bind("<B1-Motion>", self._crop_drag_move)
         self.preview_canvas.bind("<ButtonRelease-1>", self._crop_drag_end)
+        # 確定済み矩形の矢印キー微調整（D-09）: 移動 1pt / Shift+矢印で
+        # 右下辺リサイズ。preview_canvas.focus_set() は _crop_drag_start 側。
+        self.preview_canvas.bind("<Left>", lambda e: self._nudge_crop_rect(-1, 0))
+        self.preview_canvas.bind("<Right>", lambda e: self._nudge_crop_rect(1, 0))
+        self.preview_canvas.bind("<Up>", lambda e: self._nudge_crop_rect(0, -1))
+        self.preview_canvas.bind("<Down>", lambda e: self._nudge_crop_rect(0, 1))
+        self.preview_canvas.bind(
+            "<Shift-Left>", lambda e: self._nudge_crop_rect(-1, 0, resize=True)
+        )
+        self.preview_canvas.bind(
+            "<Shift-Right>", lambda e: self._nudge_crop_rect(1, 0, resize=True)
+        )
+        self.preview_canvas.bind(
+            "<Shift-Up>", lambda e: self._nudge_crop_rect(0, -1, resize=True)
+        )
+        self.preview_canvas.bind(
+            "<Shift-Down>", lambda e: self._nudge_crop_rect(0, 1, resize=True)
+        )
         self.zoom = 1.0
         self.preview_img_ref = None
         self.crop_rect_id = None
