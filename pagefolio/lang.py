@@ -321,6 +321,31 @@ LANG = {
         "settings_preview_text": "サンプルテキスト  Sample Text  123",
         "settings_apply": "✔ 適用",
         "settings_cancel": "キャンセル",
+        # ショートカット設定ダイアログ（V171-UIUX-01・D-01〜D-08）
+        "shortcuts_title": "ショートカット設定",
+        "shortcuts_col_command": "操作",
+        "shortcuts_col_key": "キー",
+        "shortcuts_btn_change": "変更",
+        "shortcuts_btn_clear": "解除",
+        "shortcuts_btn_save": "保存",
+        "shortcuts_btn_reset_all": "既定に戻す",
+        "shortcuts_btn_cancel": "キャンセル",
+        "shortcuts_unassigned": "未割当",
+        "shortcuts_capture_waiting": "キーを押してください…（Escでキャンセル）",
+        "shortcuts_dup_error": (
+            "このキーは既に「{cmd}」に割り当てられています。別のキーを選んでください。"
+        ),
+        "shortcut_cmd_open_file": "ファイルを開く",
+        "shortcut_cmd_save_file": "上書き保存",
+        "shortcut_cmd_undo": "元に戻す",
+        "shortcut_cmd_redo": "やり直す",
+        "shortcut_cmd_save_as": "名前を付けて保存",
+        "shortcut_cmd_delete": "選択ページを削除",
+        "shortcut_cmd_toggle_mode": "閲覧/編集モード切替",
+        "shortcut_cmd_print_pdf": "印刷",
+        "shortcut_cmd_rotate_right": "右へ90°回転",
+        "shortcut_cmd_rotate_left": "左へ90°回転",
+        "shortcut_cmd_rotate_180": "180°回転",
         # 結合順ダイアログ
         "merge_title": "結合順の確認・変更",
         "merge_heading": "結合順の確認・並び替え",
@@ -465,8 +490,12 @@ LANG = {
         "ocr_provider_name_tesseract": "Tesseract (ローカル)",
         # CR-01: RunPod ローカライズ表示名（WR-02）
         "ocr_provider_name_runpod": "RunPod (Serverless)",
+        # 設定ダイアログ セクション見出し（D-16・3セクション構成）
+        "settings_section_appearance": "外観",
+        "settings_section_operation": "操作",
+        "settings_open_shortcuts": "⌨ ショートカット設定…",
         # LM Studio 設定
-        "settings_lm_studio_section": "🔍 LM Studio (OCR)",
+        "settings_lm_studio_section": "⚙ AI・OCR 設定",
         "settings_lm_url": "URL:",
         "settings_lm_model": "モデル:",
         "settings_lm_model_hint": (
@@ -483,10 +512,10 @@ LANG = {
         "settings_ocr_concurrency_hint": (
             "(1〜8 / 推奨2。LM Studio が並列受付に対応しない場合は1相当)"
         ),
-        "settings_open_llm_config": "🔍 LLM 設定…",
+        "settings_open_llm_config": "⚙ LLM 設定…",
         # LLM 設定ダイアログ（OCR と設定で共有）
         "llm_config_title": "LLM 設定",
-        "llm_config_heading": "🔍 LLM 設定",
+        "llm_config_heading": "⚙ LLM 設定",
         "llm_config_apply": "✓ 適用",
         "llm_config_cancel": "✕ キャンセル",
         # APIキー入力欄（V171-KEY-01・LLM設定への一元化）
@@ -914,6 +943,31 @@ LANG = {
         "settings_preview_text": "Sample Text  サンプルテキスト  123",
         "settings_apply": "✔ Apply",
         "settings_cancel": "Cancel",
+        # Shortcuts settings dialog (V171-UIUX-01 / D-01 to D-08)
+        "shortcuts_title": "Shortcut Settings",
+        "shortcuts_col_command": "Command",
+        "shortcuts_col_key": "Key",
+        "shortcuts_btn_change": "Change",
+        "shortcuts_btn_clear": "Clear",
+        "shortcuts_btn_save": "Save",
+        "shortcuts_btn_reset_all": "Reset to Defaults",
+        "shortcuts_btn_cancel": "Cancel",
+        "shortcuts_unassigned": "Unassigned",
+        "shortcuts_capture_waiting": "Press a key… (Esc to cancel)",
+        "shortcuts_dup_error": (
+            'This key is already assigned to "{cmd}". Please choose another key.'
+        ),
+        "shortcut_cmd_open_file": "Open File",
+        "shortcut_cmd_save_file": "Save",
+        "shortcut_cmd_undo": "Undo",
+        "shortcut_cmd_redo": "Redo",
+        "shortcut_cmd_save_as": "Save As",
+        "shortcut_cmd_delete": "Delete Selected Pages",
+        "shortcut_cmd_toggle_mode": "Toggle View/Edit Mode",
+        "shortcut_cmd_print_pdf": "Print",
+        "shortcut_cmd_rotate_right": "Rotate Right 90°",
+        "shortcut_cmd_rotate_left": "Rotate Left 90°",
+        "shortcut_cmd_rotate_180": "Rotate 180°",
         # Merge order dialog
         "merge_title": "Confirm Merge Order",
         "merge_heading": "Confirm & Reorder",
@@ -1054,8 +1108,12 @@ LANG = {
         "ocr_provider_name_tesseract": "Tesseract (Local)",
         # CR-01: RunPod localized display name (WR-02)
         "ocr_provider_name_runpod": "RunPod (Serverless)",
+        # Settings dialog section headings (D-16 — 3-section layout)
+        "settings_section_appearance": "Appearance",
+        "settings_section_operation": "Operation",
+        "settings_open_shortcuts": "⌨ Shortcut Settings…",
         # LM Studio settings
-        "settings_lm_studio_section": "🔍 LM Studio (OCR)",
+        "settings_lm_studio_section": "⚙ AI / OCR Settings",
         "settings_lm_url": "URL:",
         "settings_lm_model": "Model:",
         "settings_lm_model_hint": "(empty = auto-use model loaded in LM Studio)",
@@ -1071,10 +1129,10 @@ LANG = {
             "(1-8 / 2 recommended. Effective only if LM Studio serves "
             "requests in parallel)"
         ),
-        "settings_open_llm_config": "🔍 LLM Settings…",
+        "settings_open_llm_config": "⚙ LLM Settings…",
         # LLM config dialog (shared by OCR & Settings)
         "llm_config_title": "LLM Settings",
-        "llm_config_heading": "🔍 LLM Settings",
+        "llm_config_heading": "⚙ LLM Settings",
         "llm_config_apply": "✓ Apply",
         "llm_config_cancel": "✕ Cancel",
         # API key input row (V171-KEY-01 — unified into LLM settings)

@@ -224,9 +224,7 @@ class ShortcutsDialog(tk.Toplevel):
         if dup_cmd is not None:
             messagebox.showerror(
                 self._L["err_title"],
-                self._L["shortcuts_dup_error"].format(
-                    cmd=self._label_for_cmd(dup_cmd)
-                ),
+                self._L["shortcuts_dup_error"].format(cmd=self._label_for_cmd(dup_cmd)),
             )
             self._end_capture()
             self._refresh_row(cmd_name)
