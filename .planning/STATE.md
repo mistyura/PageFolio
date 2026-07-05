@@ -5,15 +5,15 @@ milestone_name: 現機能ブラッシュアップ + APIキー入力欄
 current_phase: 02
 current_phase_name: OCR 磨き込み（レビュー残の現行照合と二重実装解消）
 status: executing
-stopped_at: Phase 02 Wave 2 (02-02) complete
-last_updated: "2026-07-05T01:21:39.597Z"
+stopped_at: Phase 02 Wave 3 (02-03) complete
+last_updated: "2026-07-05T01:40:37.605Z"
 last_activity: 2026-07-05
-last_activity_desc: Phase 02 Wave 2 (02-02) complete
+last_activity_desc: Phase 02 Wave 3 (02-03) complete
 progress:
   total_phases: 4
   completed_phases: 1
   total_plans: 8
-  completed_plans: 6
+  completed_plans: 7
   percent: 25
 ---
 
@@ -29,9 +29,9 @@ See: .planning/PROJECT.md (updated 2026-07-04)
 ## Current Position
 
 Phase: 02 (OCR 磨き込み（レビュー残の現行照合と二重実装解消）) — EXECUTING
-Plan: 02-02 complete (2/4), next is 02-03
-Status: Wave 2 (02-02) complete — TesseractProvider 段階的縮退・プロバイダ生成時再検出・OCRDialog 非モーダル注記。Wave 3 (02-03) へ進行
-Last activity: 2026-07-05 — Phase 02 Wave 2 (02-02) complete
+Plan: 02-03 complete (3/4), next is 02-04
+Status: Wave 3 (02-03) complete — URLスキーム検証統一適用・Gemini quoteエスケープ・エラーbody切り詰め・Claude list_modelsページネーション・LLMConfigDialog重複解消・offボタン同期。Wave 4 (02-04・L-1 producer-consumer一本化) へ進行
+Last activity: 2026-07-05 — Phase 02 Wave 3 (02-03) complete
 
 Progress: [██░░░░░░░░] 25%
 
@@ -87,6 +87,7 @@ Progress: [██░░░░░░░░] 25%
 | Phase 01-api-llm P03 | 10min | 2 tasks | 3 files |
 | Phase 01-api-llm P04 | 15min | 2 tasks | 3 files |
 | Phase 02 P02 | 25min | 2 tasks | 9 files |
+| Phase 02 P03 | 35min | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -195,6 +196,10 @@ Decisions are logged in PROJECT.md Key Decisions table.
 - [Phase ?]: [Phase 02-02]: TesseractProvider に available_langs 引数を追加し __init__ 時点で effective_lang/lang_fallback を段階的縮退(D-06)で確定。ocr_image は都度計算しない
 - [Phase ?]: [Phase 02-02]: _detect_tesseract() を import時固定からプロバイダ生成時の都度呼び出しへ変更(D-05)。ocr.py/llm_config.py が同一関数を都度呼ぶ形へ統一(Pitfall 2解消)
 - [Phase ?]: [Phase 02-02]: フォールバック注記は progress_var とは独立した専用ラベルにし provider 再生成時のみ更新することで1回のみ表示を担保(D-07)
+- [Phase ?]: [Phase 02-03] _require_http_scheme はリクエスト送信直前（_post_chat/list_models冒頭）で呼び、コンストラクタでのeager検証はしない（A2）
+- [Phase ?]: [Phase 02-03] ClaudeProvider.list_models は _fetch_models_page(after_id) へ切り出しhas_more/last_idカーソルをwhileループで辿る設計（1ページ完結時は後方互換）
+- [Phase ?]: [Phase 02-03] _probe_lm_provider(update_combo) 重複解消はLM Studioペアのみに限定、OllamaペアはD-11に従い対象外のまま維持（Pitfall 5回避）
+- [Phase ?]: [Phase 02-03] _update_ocr_buttons_state呼び出しはgetattr+callableチェックの防御的パターンとし、既存SimpleNamespaceスタブとの後方互換を維持
 
 ### Pending Todos
 
@@ -271,7 +276,7 @@ Decisions are logged in PROJECT.md Key Decisions table.
 
 ## Session Continuity
 
-Last session: 2026-07-05T01:21:06.298Z
+Last session: 2026-07-05T01:38:38.707Z
 Stopped at: Phase 2 context gathered
 Resume file: .planning/phases/02-ocr/02-CONTEXT.md
 
