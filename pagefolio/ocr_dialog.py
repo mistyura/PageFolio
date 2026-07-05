@@ -23,6 +23,12 @@ from pagefolio.ocr import (
     resolve_ocr_prompt,
     resolve_summary_prompt,
 )
+from pagefolio.ocr_pipeline import (
+    PipelineState,
+    consume_one,
+    send_sentinels,
+    try_enqueue,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -132,15 +138,13 @@ class OCRDialog(tk.Toplevel):
         self._started = False
         self._render_queue = None  # queue.Queue（_on_run で初期化・producer-consumer）
         self._ocr_page_indices = []  # スキップ除外後の Vision OCR 対象ページリスト
-        # CR-01: 共有 done カウンタ保護 Lock および調整カウンタ
-        self._done_lock = threading.Lock()
-        self._done_count = 0  # Lock 配下の Vision OCR 完了ページ数
-        self._workers_remaining = 0  # 残ワーカー数（0 になった最終ワーカーが終了処理）
-        # CR-01: 致命的エラー情報（複数ワーカーで最初に発生したもの・Lock 保護）
-        self._fatal_msg = None
-        self._fatal_kind = None
-        # サーキットブレーカー: 連続リトライ上限到達ページ数（Lock 保護）
-        self._consec_err_count = 0
+        # D-01/D-02: producer-consumer 共有状態（done カウンタ・fatal 情報・
+        # サーキットブレーカーカウンタ・残ワーカー数）は ocr_pipeline.PipelineState
+        # へ一本化した（_start_worker_thread で concurrency 本分を渡して生成）。
+        self._pstate = None
+        # L-6a: レンダー失敗ページ集合（_skipped_pages と同型で進捗計上に使う）
+        self._render_failed_pages = set()
+        self._render_failed_base = 0  # 今回実行開始時点のレンダー失敗済み数
         # M-2: 世代カウンタ（ダイアログ破棄後の旧ワーカー after コールバックを無効化）
         # viewer.py の _preview_gen と同じパターン（世代一致 + winfo_exists）
         self._run_gen = 0
@@ -616,13 +620,11 @@ class OCRDialog(tk.Toplevel):
         self._summary_truncated = False
         self._summary_cancel_flag.clear()
         self.summary_btn.state(["disabled"])
-        # H-6: 前回実行の致命的エラー・完了カウンタを破棄する。
-        # 残留すると再実行時に全ワーカーが has_fatal=True で API 呼び出しを
+        # H-6: 前回実行の致命的エラー・完了カウンタを破棄する（PipelineState ごと）。
+        # 残留すると再実行時に全ワーカーが is_fatal()=True で API 呼び出しを
         # スキップし、旧エラーで即終了してしまう（タイムアウト後の再実行バグ）。
-        self._fatal_msg = None
-        self._fatal_kind = None
-        self._done_count = 0
-        self._consec_err_count = 0
+        self._pstate = None
+        self._render_failed_pages.clear()
         # M-2: クリア時も旧世代を無効化する（再実行前に旧コールバックを排除）
         self._run_gen += 1
 
@@ -668,39 +670,45 @@ class OCRDialog(tk.Toplevel):
     # ── ページ結果記録（ワーカースレッドから呼ばれる・Lock 保護） ──
 
     def _record_page_success(self, page_idx, text, truncated=False):
-        """ページ成功を記録し、連続失敗カウンタをリセットする。
+        """ページ成功時の結果辞書ブックキーピング（consume_one の on_success 用）。
 
         truncated=True のとき当該ページを _truncated_pages に登録する。
         途切れは「成功＋警告」であり部分テキストは破棄せず results に保持する
         （D-05）。途切れ通知は _render_results_ordered で当該ページに併記する。
+        done カウンタ/連続失敗カウンタのリセットは ocr_pipeline.consume_one が
+        呼び出し前に PipelineState.record_success() 経由で済ませている
+        （D-01/D-02・二重計上防止のためここでは触らない）。
         """
         self.results[page_idx] = text
-        with self._done_lock:
-            self._done_count += 1
-            self._consec_err_count = 0
-            if truncated:
-                self._truncated_pages.add(page_idx)
-            else:
-                self._truncated_pages.discard(page_idx)
+        if truncated:
+            self._truncated_pages.add(page_idx)
+        else:
+            self._truncated_pages.discard(page_idx)
 
-    def _record_retryable_failure(self, page_idx, msg):
-        """リトライ上限到達ページを記録する。
+    def _record_page_error(self, page_idx, msg):
+        """非致命的ページエラー時の結果辞書ブックキーピング（consume_one の
+        on_page_error コールバック）。
 
-        連続失敗数が CB_CONSECUTIVE_FAILURES に達したらサーキットブレーカーとして
-        致命的エラー（kind="circuit_breaker"）を設定し、以降のページの API 呼び出しを
-        中断させる（サーバ側が落ちている時の無駄なリトライ消化を防ぐ）。
-        中断後も成功済み結果は保持され「続きから再実行」で再開できる。
+        リトライ上限到達（サーキットブレーカー判定含む）・RuntimeError・
+        その他 Exception のいずれの経路でも呼ばれる。カウンタ更新/サーキット
+        ブレーカー判定は ocr_pipeline.consume_one が呼び出し前に
+        PipelineState.record_retryable_failure()/record_page_error() 経由で
+        済ませている（D-01/D-02・二重計上防止のためここでは触らない）。
         """
         self.errors[page_idx] = msg
-        with self._done_lock:
-            self._done_count += 1
-            self._consec_err_count += 1
-            if (
-                self._consec_err_count >= CB_CONSECUTIVE_FAILURES
-                and self._fatal_msg is None
-            ):
-                self._fatal_msg = msg
-                self._fatal_kind = "circuit_breaker"
+
+    def _done_disp(self):
+        """今回実行分の「処理済み」件数（進捗バー/進捗文言表示用）を算出する。
+
+        Vision OCR 完了数（PipelineState.done_count）+ 今回の新規スキップ数
+        （埋め込みテキスト検出）+ 今回の新規レンダー失敗数、の合計。レンダー
+        失敗ページも「処理済み」として計上することで、進捗が全ページ数
+        （100%）に到達するようにする（L-6a）。
+        """
+        done_count = self._pstate.done_count if self._pstate is not None else 0
+        skipped = len(self._skipped_pages) - self._skip_base
+        render_failed = len(self._render_failed_pages) - self._render_failed_base
+        return done_count + skipped + render_failed
 
     # ── クラウドプロバイダ判定・コスト確認・セッションキー ──
 
@@ -1206,11 +1214,9 @@ class OCRDialog(tk.Toplevel):
         self._started = True
         self._done = False
         # H-6: 実行開始時に前回実行の致命的エラー・完了カウンタを必ず破棄する
-        # （_clear_text を経由しない再実行経路でも残留状態を持ち込まないため）
-        self._fatal_msg = None
-        self._fatal_kind = None
-        self._done_count = 0
-        self._consec_err_count = 0
+        # （_clear_text を経由しない再実行経路でも残留状態を持ち込まないため）。
+        # 実際の PipelineState は _start_worker_thread で concurrency 確定後に生成する。
+        self._pstate = None
         self._cancel_flag.clear()
         # 再実行で結果セットが変わるため旧サマリは破棄する
         # （_render_results_ordered は results のみ再描画するため表示からも消える）
@@ -1223,14 +1229,17 @@ class OCRDialog(tk.Toplevel):
             for p in run_pages:
                 self.errors.pop(p, None)
                 self._truncated_pages.discard(p)
+                self._render_failed_pages.discard(p)  # L-6a: 再開対象は再挑戦させる
         else:
             # リラン（全体再実行）: 前回の結果・エラー・スキップ・途切れ状態を破棄
             self.results.clear()
             self.errors.clear()
             self._skipped_pages.clear()
             self._truncated_pages.clear()
+            self._render_failed_pages.clear()
         self._run_pages = run_pages
         self._skip_base = len(self._skipped_pages)
+        self._render_failed_base = len(self._render_failed_pages)  # L-6a
         self.run_btn.state(["disabled"])
         self.resume_btn.state(["disabled"])
         self._llm_config_btn.state(["disabled"])
@@ -1376,9 +1385,11 @@ class OCRDialog(tk.Toplevel):
     def _render_next_page(self, gen=None):
         """メインスレッド（生産者）: 1 ページ render → キューに積む（after(0) 連鎖）。
 
-        fitz アクセスはここのみ（D-04 必達）。M-1: put_nowait で non-blocking。
+        fitz アクセスはここのみ（D-04 必達）。M-1: try_enqueue で non-blocking。
         M-2: gen 不一致または winfo_exists() False なら早期 return（世代ガード）。
-        全ページ完了またはキャンセル時に None 終了シグナルで worker を終わらせる。
+        全ページ完了・キャンセル・fatal 確定時に None 終了シグナルで worker を
+        終わらせる（enqueue/sentinel は ocr_pipeline.try_enqueue/send_sentinels
+        経由・D-01/D-02）。
         """
         # M-2: 世代ガード（ダイアログ破棄後 / キャンセル→再実行の旧コールバック排除）
         if gen is not None and gen != self._run_gen:
@@ -1391,12 +1402,17 @@ class OCRDialog(tk.Toplevel):
 
         if self._cancel_flag.is_set():
             # キャンセル: 全ワーカー分の終了シグナルを送る（CR-01 Pitfall-E）
-            for _ in range(self.concurrency):
-                try:
-                    self._render_queue.put_nowait(None)
-                except queue.Full:
-                    pass
+            send_sentinels(self._render_queue, self.concurrency)
             self._finish_cancelled()
+            return
+
+        if self._pstate is not None and self._pstate.is_fatal():
+            # L-6g: fatal 確定後は producer も残ページの render を継続しない。
+            # 全ワーカー分の終了シグナルを送るのみに留め、終了処理自体は
+            # 最終ワーカー側（_worker の decrement_worker 判定）に委ねる。
+            # ここで直接呼んでも _finish_error の冪等ガードにより二重実行しない。
+            send_sentinels(self._render_queue, self.concurrency)
+            self._finish_error(self._pstate.fatal_msg, kind=self._pstate.fatal_kind)
             return
 
         total = len(self._run_pages)
@@ -1404,14 +1420,8 @@ class OCRDialog(tk.Toplevel):
 
         if idx >= total:
             # 全ページ完了: 全ワーカー分の終了シグナルを送る（CR-01 Pitfall-E）
-            # M-1: put_nowait で non-blocking に送信。Full なら after(100) で再試行。
-            sent = 0
-            for _ in range(self.concurrency):
-                try:
-                    self._render_queue.put_nowait(None)
-                    sent += 1
-                except queue.Full:
-                    break
+            # M-1: 非ブロッキングで送信。部分送出なら after(100) で残りを再試行。
+            sent = send_sentinels(self._render_queue, self.concurrency)
             if sent < self.concurrency:
                 g = gen
                 self.after(100, lambda _g=g: self._render_next_page(_g))
@@ -1430,11 +1440,7 @@ class OCRDialog(tk.Toplevel):
                 self.results[page_idx] = extracted
                 self._skipped_pages.add(page_idx)
                 # スキップはキューに積まず次ページへ（progress bar を after で更新）
-                # 今回の実行分の処理済み数 = Vision 完了数 + 今回の新規スキップ数
-                with self._done_lock:
-                    done_disp = (
-                        self._done_count + len(self._skipped_pages) - self._skip_base
-                    )
+                done_disp = self._done_disp()
                 total_pages = len(self._run_pages)
                 self.after(
                     0,
@@ -1448,18 +1454,29 @@ class OCRDialog(tk.Toplevel):
             else:
                 # 埋め込みテキストなし: Vision OCR のためレンダリングしてキューへ積む
                 b64 = page_to_png_b64(page, scale=self._ocr_scale)
-                # M-1: put_nowait で non-blocking に積む。Full なら同一ページを
-                # after(100) で再スケジュール（_render_idx を進めない）。
-                try:
-                    self._render_queue.put_nowait((page_idx, b64))
-                except queue.Full:
-                    # キューが満杯: このページを再試行（_render_idx 不変）
+                # M-1: 非ブロッキングで積む。Full なら同一ページを after(100) で
+                # 再スケジュール（_render_idx を進めない）。
+                if not try_enqueue(self._render_queue, (page_idx, b64)):
                     g = gen
                     self.after(100, lambda _g=g: self._render_next_page(_g))
                     return
         except Exception as e:
             logger.exception("ページ処理失敗 (p.%d): %s", page_idx, e)
             self.errors[page_idx] = f"image conversion error: {e}"
+            # L-6a: レンダー失敗ページも「処理済み」として進捗計上する。
+            # 計上しないと進捗バーが 100% に到達しないまま完了してしまう。
+            self._render_failed_pages.add(page_idx)
+            done_disp = self._done_disp()
+            total_pages = len(self._run_pages)
+            self.after(
+                0,
+                lambda d=done_disp, t=total_pages: self.progress_var.set(
+                    self._L["ocr_progress_ocr"].format(
+                        done=d, total=t, page=page_idx + 1
+                    )
+                ),
+            )
+            self.after(0, lambda d=done_disp: self._on_progress_bar(d))
 
         self._render_idx += 1
         # 次のページを after(0) で連鎖（UI フリーズ回避）
@@ -1472,26 +1489,40 @@ class OCRDialog(tk.Toplevel):
         producer 開始前に先行起動する。全ワーカー終了後に最終ワーカーが
         終了処理（_render_results_ordered / _finish_complete 等）を一度だけ呼ぶ。
         M-2: gen を各ワーカーに伝搬して世代ガードを有効化する。
+        D-01/D-02: 共有状態は ocr_pipeline.PipelineState へ一本化。
         """
         self._worker_threads = []
-        self._workers_remaining = self.concurrency
+        self._pstate = PipelineState(self.concurrency)
         for _ in range(self.concurrency):
             t = threading.Thread(target=self._worker, args=(gen,), daemon=True)
             t.start()
             self._worker_threads.append(t)
 
     def _worker(self, gen=None):
-        """バックグラウンドスレッド（消費者）: キューから取り出して API 送信。
+        """バックグラウンドスレッド（消費者）: キューから取り出し ocr_pipeline へ委譲。
 
         fitz/get_pixmap/page_to_png_b64/self.doc[ は一切使用しない（D-04 必達）。
-        キューから取り出した b64 は送信後に即座に del する（成功基準2・T-06-06）。
-        統合プログレス（処理済み done+skipped/total）で進捗を表示する（D-03）。
-        CR-01: 複数ワーカーが共有 done カウンタを Lock 配下で更新する。
+        1 アイテムの処理（リトライ/バックオフ/fatal 判定）は
+        ocr_pipeline.consume_one に委譲する薄いラッパー（D-01/D-02 一本化）。
+        キューから取り出した b64 は consume_one 呼び出し後に即座に del する
+        （成功基準2・T-06-06）。統合プログレス（処理済み done+skipped+
+        render_failed/total）で進捗を表示する（D-03・L-6a）。
+        CR-01: 複数ワーカーが共有 PipelineState 経由で done カウンタを更新する。
                最終ワーカーのみ終了処理（_render_results_ordered / _finish_*）を呼ぶ。
         M-2: gen 不一致時は after 投函前にガードして TclError を防ぐ。
         """
 
         total = len(self._run_pages)
+
+        def _on_retry_wait(page_idx, attempt, delay, exc):
+            # リトライ待機中の進捗表示（D-15）。M-2: 世代ガード後にのみ after 投函。
+            if gen is None or gen == self._run_gen:
+                wait_key = self._retry_wait_key(exc)
+                msg = self._build_retry_wait_message(wait_key, page_idx, attempt, delay)
+                try:
+                    self.after(0, lambda m=msg: self.progress_var.set(m))
+                except tk.TclError:
+                    pass
 
         while True:
             try:
@@ -1507,106 +1538,41 @@ class OCRDialog(tk.Toplevel):
 
             page_idx, b64 = item
             try:
-                with self._done_lock:
-                    has_fatal = self._fatal_msg is not None
-                if self._cancel_flag.is_set() or has_fatal:
-                    # キャンセル or 致命的エラー後は API 呼び出しをスキップ
-                    continue
-
-                # OCRRetryableError は run_parallel と同じ指数バックオフでリトライ
-                from pagefolio.ocr_providers import OCRRetryableError
-
-                for attempt in range(1, MAX_RETRIES + 1):
-                    try:
-                        text, truncated = self.provider.ocr_image_ex(
-                            b64, self._ocr_prompt
-                        )
-                        self._record_page_success(page_idx, text, truncated=truncated)
-                        break
-                    except OCRRetryableError as e:
-                        if attempt >= MAX_RETRIES:
-                            # リトライ上限到達: 連続失敗ならサーキットブレーカー発動
-                            self._record_retryable_failure(page_idx, str(e))
-                            break
-                        # M-5: interruptible_sleep でキャンセル応答性向上
-                        from pagefolio.ocr import (
-                            clamp_retry_after,
-                            interruptible_sleep,
-                        )
-
-                        # D-06: 実待機秒（delay）を待機文言生成より前に算出し、
-                        # 表示する秒数が実待機値（クランプ後）と一致するようにする
-                        raw_delay = (
-                            e.retry_after
-                            if e.retry_after is not None
-                            else 1.0 * (2 ** (attempt - 1))
-                        )
-                        delay = clamp_retry_after(raw_delay)
-                        # リトライ待機中の進捗表示（D-15）
-                        # M-2: 世代ガード後にのみ after を投函する
-                        if gen is None or gen == self._run_gen:
-                            wait_key = self._retry_wait_key(e)
-                            msg = self._build_retry_wait_message(
-                                wait_key, page_idx, attempt, delay
-                            )
-                            try:
-                                self.after(0, lambda m=msg: self.progress_var.set(m))
-                            except tk.TclError:
-                                pass
-                        interruptible_sleep(delay, self._cancel_flag.is_set)
-                    except ConnectionError as e:
-                        with self._done_lock:
-                            if self._fatal_msg is None:
-                                self._fatal_msg = str(e)
-                                self._fatal_kind = "connection"
-                            self._done_count += 1
-                        break
-                    except TimeoutError as e:
-                        with self._done_lock:
-                            if self._fatal_msg is None:
-                                self._fatal_msg = str(e)
-                                self._fatal_kind = "timeout"
-                            self._done_count += 1
-                        break
-                    except RuntimeError as e:
-                        self.errors[page_idx] = str(e)
-                        with self._done_lock:
-                            self._done_count += 1
-                        break
-                    except Exception as e:
-                        logger.exception("OCR 呼び出し失敗: %s", e)
-                        self.errors[page_idx] = str(e)
-                        with self._done_lock:
-                            self._done_count += 1
-                        break
+                consume_one(
+                    self.provider,
+                    item,
+                    self._ocr_prompt,
+                    self._pstate,
+                    cancel_check=self._cancel_flag.is_set,
+                    breaker_threshold=CB_CONSECUTIVE_FAILURES,
+                    on_success=lambda p, t, tr: self._record_page_success(
+                        p, t, truncated=tr
+                    ),
+                    on_page_error=self._record_page_error,
+                    on_retry_wait=_on_retry_wait,
+                )
             finally:
                 del b64  # 送信後即座に破棄（成功基準2・T-06-06）
 
-            # 統合プログレス更新（処理済み = done + 今回の新規スキップ・D-03）
+            # 統合プログレス更新（処理済み = done + skip + render_failed・D-03/L-6a）
             # M-2: 世代ガード後にのみ after を投函する
             if gen is None or gen == self._run_gen:
-                skipped_count = len(self._skipped_pages) - self._skip_base
-                with self._done_lock:
-                    total_done = self._done_count + skipped_count
+                done_disp = self._done_disp()
                 try:
                     self.after(
                         0,
-                        lambda d=total_done, p=page_idx: self.progress_var.set(
+                        lambda d=done_disp, p=page_idx: self.progress_var.set(
                             self._L["ocr_progress_ocr"].format(
                                 done=d, total=total, page=p + 1
                             )
                         ),
                     )
-                    self.after(0, lambda d=total_done: self._on_progress_bar(d))
+                    self.after(0, lambda d=done_disp: self._on_progress_bar(d))
                 except tk.TclError:
                     pass
 
         # CR-01: 残ワーカー数を減らし、最終ワーカーのみ終了処理を実行する
-        with self._done_lock:
-            self._workers_remaining -= 1
-            is_last = self._workers_remaining == 0
-            fatal_msg = self._fatal_msg
-            fatal_kind = self._fatal_kind
+        is_last, fatal_msg, fatal_kind = self._pstate.decrement_worker()
 
         if not is_last:
             return  # 最終ワーカー以外は何もしない

@@ -46,6 +46,7 @@ PageFolio/
 │   ├── dnd.py                 # D&D Mixin（サムネイルのドラッグ並び替え）
 │   ├── pagination.py          # サムネイル窓計算 / local↔global インデックス変換（Tk・fitz 非依存の純関数群）
 │   ├── ocr.py                 # OCR Mixin + ヘルパー（build_provider / 並列実行 / リトライ制御 / resolve_ocr_prompt）
+│   ├── ocr_pipeline.py        # OCR 実行パイプライン純ロジック層（PipelineState/consume_one/try_enqueue/send_sentinels・Tk/fitz 非依存の producer-consumer 一本化）
 │   ├── ocr_providers.py       # OCR プロバイダ（LMStudio / Claude / Gemini / Tesseract / Ollama / RunPod）
 │   ├── md_render.py           # Markdown→(行種別, インライン span) 変換の純関数（parse_markdown・Tk/fitz 非依存）
 │   ├── ocr_dialog.py          # OCRDialog（複数ページ OCR 結果ビューア / エクスポート / Markdown 整形描画）
@@ -78,6 +79,7 @@ PageFolio/
 │   ├── test_viewer.py         # プレビュー / サムネイル描画テスト
 │   ├── test_settings_keyguard.py  # API キー非保存ガードテスト
 │   ├── test_ocr.py            # OCR ヘルパー / 並列実行テスト
+│   ├── test_ocr_pipeline.py   # OCR 実行パイプライン純ロジック層（PipelineState/consume_one/enqueue系）テスト
 │   ├── test_ocr_providers.py  # OCR プロバイダ単体テスト
 │   ├── test_provider_ui.py    # プロバイダ UI（ダイアログ連携）/ resolve_ocr_prompt テスト
 │   ├── test_pagination.py     # ページネーション純ロジック（窓計算 / local↔global / 境界値）テスト
@@ -141,9 +143,10 @@ API キーは `_SENSITIVE_KEYS` ガードにより `pagefolio_settings.json` へ
 | モジュール | 主要クラス / 関数 | 責務 |
 |-----------|------------------|------|
 | `ocr.py` | `OCRMixin`, `build_provider`, `run_parallel`, `clamp_retry_after`, `interruptible_sleep`, `PROVIDER_OCR_PROMPTS`, `resolve_ocr_prompt`, `PROVIDER_SUMMARY_PROMPTS`, `resolve_summary_prompt` | プロバイダ生成・並列 OCR 実行・リトライ/キャンセル制御・プロバイダ別プロンプト解決（custom>provider別>汎用）・サマリプロンプト解決 |
+| `ocr_pipeline.py` | `PipelineState`, `consume_one`, `try_enqueue`, `send_sentinels` | 複数ページ画像 OCR 実行パイプラインの producer-consumer 純ロジック層（Tk/fitz 非依存）。共有カウンタ/fatal 判定/サーキットブレーカーは `PipelineState`、1 アイテム消費（リトライ/バックオフ/fatal 判定）は `consume_one`、非ブロッキング enqueue/sentinel 送出は `try_enqueue`/`send_sentinels` に集約（D-01/D-02・L-1 一本化） |
 | `ocr_providers.py` | `OCRProvider`(ABC), `LMStudioProvider`, `ClaudeProvider`, `GeminiProvider`, `TesseractProvider`, `OllamaProvider`, `RunPodProvider` | 各バックエンドへの OCR リクエスト実装（`ocr_image_ex` で stop_reason/finishReason 途切れ検出・`complete_text_ex`/`supports_text_prompt` で text-only 補完＝全ページ統合サマリ生成。Tesseract は非対応） |
 | `md_render.py` | `parse_markdown`, `_split_inline` | OCR 結果 Markdown を (行種別, インライン span) へ変換する純関数（Tk/fitz 非依存・`ocr_dialog.py` の整形描画が消費） |
-| `ocr_dialog.py` | `OCRDialog` | 複数ページ OCR の実行 UI・進捗・結果表示/エクスポート（`_run_gen` 世代ガード）・`preset=="markdown"` 整形描画（`_insert_markdown`）・コピー/保存は raw 維持・「📊 サマリ作成」による全ページ統合サマリ生成（`_on_summary`/`_summary_worker`・サマリ専用キャンセルフラグ） |
+| `ocr_dialog.py` | `OCRDialog` | 複数ページ OCR の実行 UI・進捗・結果表示/エクスポート（`_run_gen` 世代ガード）・`preset=="markdown"` 整形描画（`_insert_markdown`）・コピー/保存は raw 維持・「📊 サマリ作成」による全ページ統合サマリ生成（`_on_summary`/`_summary_worker`・サマリ専用キャンセルフラグ）。`_render_next_page`/`_worker` は `ocr_pipeline` の関数/`PipelineState` を呼ぶ薄いラッパー（D-01・fitz/Tk 依存部分のみ保持） |
 
 ### ページネーション
 

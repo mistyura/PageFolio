@@ -1262,7 +1262,7 @@ class TestWorkerConcurrency:
         fake = types.SimpleNamespace(
             concurrency=concurrency,
             _worker_threads=[],
-            _workers_remaining=0,
+            _pstate=None,
         )
         # _worker は no-op（スタブ Thread は実際には実行しない）
         fake._worker = lambda: None
@@ -1276,7 +1276,7 @@ class TestWorkerConcurrency:
         OCRDialog._start_worker_thread(fake)
 
         assert len(started) == 4, f"起動スレッド数が {len(started)} 本（期待: 4 本）"
-        assert fake._workers_remaining == 4
+        assert fake._pstate.workers_remaining == 4
 
     def test_single_thread_for_gemini(self, monkeypatch):
         """concurrency=1（Gemini 等）のとき 1 本のみ起動される（後方互換）。"""
@@ -1286,7 +1286,7 @@ class TestWorkerConcurrency:
         OCRDialog._start_worker_thread(fake)
 
         assert len(started) == 1, f"起動スレッド数が {len(started)} 本（期待: 1 本）"
-        assert fake._workers_remaining == 1
+        assert fake._pstate.workers_remaining == 1
 
     def test_termination_signals_match_concurrency(self):
         """全ページ完了時にキューへ送られた None の数が concurrency 本（CR-01）。
@@ -1306,6 +1306,7 @@ class TestWorkerConcurrency:
             page_indices=[],
             _run_pages=[],
             _render_idx=0,
+            _pstate=None,
             _run_gen=1,  # M-2 世代カウンタ
             winfo_exists=lambda: True,  # M-2 ウィジェット存在チェック
             # after を即時実行スタブ（連鎖なし・完了分岐では after を呼ばない）
@@ -1390,12 +1391,15 @@ class TestFinishIdempotent:
 
 class TestClearResetsFatalState:
     """タイムアウト等の致命的エラー後に「クリア」→「読み取り実行」すると、
-    残留した _fatal_msg により全ワーカーが API 呼び出しをスキップして
-    旧エラーで即終了するバグの回帰テスト（H-6）。"""
+    残留した PipelineState.fatal_msg により全ワーカーが API 呼び出しを
+    スキップして旧エラーで即終了するバグの回帰テスト（H-6・D-01/D-02 で
+    PipelineState へ一本化後は self._pstate ごと破棄されることを検証する）。"""
 
     def _make_fake_after_fatal(self):
         """致命的エラー（タイムアウト）で終了した直後の fake OCRDialog を生成する。"""
         import types
+
+        from pagefolio.ocr_pipeline import PipelineState
 
         class _StubProgressBar(dict):
             """dict ベースの Progressbar スタブ（configure / 添字代入の両対応）"""
@@ -1403,17 +1407,21 @@ class TestClearResetsFatalState:
             def configure(self, **kw):
                 self.update(kw)
 
+        pstate = PipelineState(workers=1)
+        pstate.fatal_msg = "Read timed out. (read timeout=300)"
+        pstate.fatal_kind = "timeout"
+        pstate.done_count = 3
+
         fake = types.SimpleNamespace(
             _started=True,
             _done=True,
             _cancel_flag=threading.Event(),
-            _fatal_msg="Read timed out. (read timeout=300)",
-            _fatal_kind="timeout",
-            _done_count=3,
+            _pstate=pstate,
             results={0: "old text"},
             errors={1: "old error"},
             _skipped_pages={2},
             _truncated_pages=set(),
+            _render_failed_pages=set(),
             _render_queue=object(),
             page_indices=[0, 1, 2],
             _ocr_page_indices=[0, 1, 2],
@@ -1439,21 +1447,19 @@ class TestClearResetsFatalState:
         return fake
 
     def test_clear_text_resets_fatal_state(self):
-        """_clear_text が _fatal_msg / _fatal_kind / _done_count を初期化する。"""
+        """_clear_text が self._pstate（fatal_msg/fatal_kind/done_count）を破棄する。"""
         from pagefolio.ocr_dialog import OCRDialog
 
         fake = self._make_fake_after_fatal()
         OCRDialog._clear_text(fake)
 
-        assert fake._fatal_msg is None, "_fatal_msg が残留している"
-        assert fake._fatal_kind is None, "_fatal_kind が残留している"
-        assert fake._done_count == 0, "_done_count が残留している"
+        assert fake._pstate is None, "_pstate（fatal 状態含む）が残留している"
         assert fake._started is False
         assert fake._done is False
         assert fake.results == {} and fake.errors == {}
 
     def test_on_run_resets_fatal_state(self):
-        """_on_run が実行開始時に _fatal_msg / _fatal_kind / _done_count を破棄する。"""
+        """_on_run が実行開始時に self._pstate（旧 fatal 状態）を破棄する。"""
         import types
 
         from pagefolio.ocr_dialog import OCRDialog
@@ -1469,7 +1475,6 @@ class TestClearResetsFatalState:
         fake._started = False  # クリア相当（再実行可能状態）
         fake.concurrency = 1
         fake._render_idx = 0
-        fake._workers_remaining = 0
         fake._worker_threads = []
         fake.scale_var = types.SimpleNamespace(get=lambda: "1.5")
         fake.timeout_var = types.SimpleNamespace(get=lambda: "600")
@@ -1488,9 +1493,9 @@ class TestClearResetsFatalState:
 
         OCRDialog._on_run(fake)
 
-        assert fake._fatal_msg is None, "_on_run 後も _fatal_msg が残留している"
-        assert fake._fatal_kind is None, "_on_run 後も _fatal_kind が残留している"
-        assert fake._done_count == 0, "_on_run 後も _done_count が残留している"
+        assert fake._pstate is None, (
+            "_on_run 後も _pstate（fatal 状態含む）が残留している"
+        )
         assert fake._done is False, "_on_run 後も _done が True のまま"
 
 
@@ -1607,10 +1612,11 @@ class TestOcrDialogOnRun:
             errors={},
             _skipped_pages=set(),
             _truncated_pages=set(),
+            _render_failed_pages=set(),
             concurrency=1,
             _render_queue=None,
             _render_idx=0,
-            _workers_remaining=0,
+            _pstate=None,
             _worker_threads=[],
             _run_gen=0,  # M-2 世代カウンタ
             text=types.SimpleNamespace(delete=lambda *a: None),
@@ -1932,6 +1938,8 @@ class TestRenderNextPageQueueFullInvariant:
 
         after_calls = []
 
+        from pagefolio.ocr_pipeline import PipelineState
+
         fake = types.SimpleNamespace(
             concurrency=1,
             _cancel_flag=threading.Event(),
@@ -1943,9 +1951,10 @@ class TestRenderNextPageQueueFullInvariant:
             results={},
             _skipped_pages=set(),
             _skip_base=0,
+            _render_failed_pages=set(),
+            _render_failed_base=0,
             errors={},
-            _done_lock=threading.Lock(),
-            _done_count=0,
+            _pstate=PipelineState(workers=1),
             _ocr_scale=1.5,
             _ocr_prompt="test",
             _force_ocr=False,
@@ -2002,6 +2011,9 @@ class TestForceOcrOption:
         """_render_next_page 用 fake OCRDialog（1 ページ・キュー記録付き）。"""
         import types
 
+        from pagefolio.ocr_dialog import OCRDialog
+        from pagefolio.ocr_pipeline import PipelineState
+
         put_items = []
 
         fake = types.SimpleNamespace(
@@ -2017,9 +2029,10 @@ class TestForceOcrOption:
             _skipped_pages=set(),
             _truncated_pages=set(),
             _skip_base=0,
+            _render_failed_pages=set(),
+            _render_failed_base=0,
             errors={},
-            _done_lock=threading.Lock(),
-            _done_count=0,
+            _pstate=PipelineState(workers=1),
             _ocr_scale=1.5,
             _ocr_prompt="test",
             _force_ocr=force_ocr,
@@ -2028,6 +2041,8 @@ class TestForceOcrOption:
             # 進捗更新・連鎖 after は実行しない（分岐結果のみ検証する）
             after=lambda ms, fn=None, *a: None,
         )
+        # _done_disp は OCRDialog の実メソッドへ委譲（skip 分岐で呼ばれる）
+        fake._done_disp = lambda: OCRDialog._done_disp(fake)
         import fitz
 
         tmp_doc = fitz.open()
@@ -2365,14 +2380,18 @@ class TestOcrResume:
         assert "|5|$5" in captured["msg"]
 
 
-# ===== サーキットブレーカー / エラー件数つき完了表示（v1.4.4）=====
+# ===== 完了カウンタ用コールバックの辞書ブックキーピング（D-01/D-02 で再編）=====
+# サーキットブレーカーのトリップ判定・done カウンタ更新自体は
+# ocr_pipeline.PipelineState へ一本化済み（D-01/D-02・02-04）。
+# 該当の回帰テストは tests/test_ocr_pipeline.py::TestPipelineState を参照。
 
 
-class TestCircuitBreaker:
-    """連続リトライ上限到達で実行を中断するサーキットブレーカーの検証。
+class TestRecordCallbacks:
+    """_record_page_success / _record_page_error の辞書ブックキーピングを検証する。
 
-    _record_page_success / _record_retryable_failure を fake インスタンスへの
-    未束縛呼び出しで検証する（Tkinter 不使用）。
+    カウンタ更新・サーキットブレーカー判定は ocr_pipeline.consume_one が
+    PipelineState 経由で行う（D-01/D-02）ため、ここでは results/errors/
+    _truncated_pages への反映のみを検証する（Tkinter 不使用）。
     """
 
     def _make_fake(self):
@@ -2382,72 +2401,46 @@ class TestCircuitBreaker:
             results={},
             errors={},
             _truncated_pages=set(),
-            _done_lock=threading.Lock(),
-            _done_count=0,
-            _consec_err_count=0,
-            _fatal_msg=None,
-            _fatal_kind=None,
         )
 
-    def test_trips_after_consecutive_failures(self):
-        """CB_CONSECUTIVE_FAILURES 回連続で失敗すると致命的エラーが設定される"""
-        from pagefolio.ocr_dialog import CB_CONSECUTIVE_FAILURES, OCRDialog
-
-        fake = self._make_fake()
-        for i in range(CB_CONSECUTIVE_FAILURES):
-            OCRDialog._record_retryable_failure(fake, i, f"HTTP 500 (p{i})")
-
-        assert fake._fatal_kind == "circuit_breaker"
-        assert fake._fatal_msg == f"HTTP 500 (p{CB_CONSECUTIVE_FAILURES - 1})"
-        assert len(fake.errors) == CB_CONSECUTIVE_FAILURES
-
-    def test_not_tripped_below_threshold(self):
-        """しきい値未満の失敗では中断しない"""
-        from pagefolio.ocr_dialog import CB_CONSECUTIVE_FAILURES, OCRDialog
-
-        fake = self._make_fake()
-        for i in range(CB_CONSECUTIVE_FAILURES - 1):
-            OCRDialog._record_retryable_failure(fake, i, "HTTP 500")
-
-        assert fake._fatal_msg is None
-        assert fake._fatal_kind is None
-
-    def test_success_resets_consecutive_counter(self):
-        """途中で成功すると連続カウンタがリセットされ中断しない"""
-        from pagefolio.ocr_dialog import CB_CONSECUTIVE_FAILURES, OCRDialog
-
-        fake = self._make_fake()
-        # しきい値-1 回失敗 → 成功 → さらにしきい値-1 回失敗
-        for i in range(CB_CONSECUTIVE_FAILURES - 1):
-            OCRDialog._record_retryable_failure(fake, i, "HTTP 500")
-        OCRDialog._record_page_success(fake, 10, "ok text")
-        for i in range(CB_CONSECUTIVE_FAILURES - 1):
-            OCRDialog._record_retryable_failure(fake, 20 + i, "HTTP 500")
-
-        assert fake._fatal_msg is None, "成功でカウンタがリセットされていない"
-        assert fake.results == {10: "ok text"}
-
-    def test_existing_fatal_not_overwritten(self):
-        """既に致命的エラーが設定済みなら上書きしない（CR-01 と同方針）"""
-        from pagefolio.ocr_dialog import CB_CONSECUTIVE_FAILURES, OCRDialog
-
-        fake = self._make_fake()
-        fake._fatal_msg = "timed out"
-        fake._fatal_kind = "timeout"
-        for i in range(CB_CONSECUTIVE_FAILURES):
-            OCRDialog._record_retryable_failure(fake, i, "HTTP 500")
-
-        assert fake._fatal_msg == "timed out"
-        assert fake._fatal_kind == "timeout"
-
-    def test_done_count_incremented(self):
-        """成功・失敗の両方で完了カウンタが進む（進捗表示の整合）"""
+    def test_record_page_success_stores_result(self):
+        """成功時に results へ本文が格納される"""
         from pagefolio.ocr_dialog import OCRDialog
 
         fake = self._make_fake()
         OCRDialog._record_page_success(fake, 0, "text")
-        OCRDialog._record_retryable_failure(fake, 1, "HTTP 500")
-        assert fake._done_count == 2
+
+        assert fake.results == {0: "text"}
+        assert 0 not in fake._truncated_pages
+
+    def test_record_page_success_truncated_tracks_page(self):
+        """truncated=True のページは _truncated_pages に登録される（D-05）"""
+        from pagefolio.ocr_dialog import OCRDialog
+
+        fake = self._make_fake()
+        OCRDialog._record_page_success(fake, 3, "partial", truncated=True)
+
+        assert fake.results == {3: "partial"}
+        assert 3 in fake._truncated_pages
+
+    def test_record_page_success_clears_prior_truncation(self):
+        """再実行等で truncated=False になったら旧途切れ登録を解除する"""
+        from pagefolio.ocr_dialog import OCRDialog
+
+        fake = self._make_fake()
+        fake._truncated_pages.add(5)
+        OCRDialog._record_page_success(fake, 5, "full text", truncated=False)
+
+        assert 5 not in fake._truncated_pages
+
+    def test_record_page_error_stores_message(self):
+        """非致命的ページエラー時に errors へメッセージが格納される"""
+        from pagefolio.ocr_dialog import OCRDialog
+
+        fake = self._make_fake()
+        OCRDialog._record_page_error(fake, 2, "HTTP 500")
+
+        assert fake.errors == {2: "HTTP 500"}
 
 
 class TestFinishCompleteErrorDisplay:

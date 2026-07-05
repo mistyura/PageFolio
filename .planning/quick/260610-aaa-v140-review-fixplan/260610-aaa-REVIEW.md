@@ -192,7 +192,7 @@ usage: >
 
 ## 低優先度（L）— バックログ（v1.5.0 以降）
 
-### L-1: producer-consumer ロジックの二重実装
+### L-1: producer-consumer ロジックの二重実装 ✅ (c4cd9da)
 
 - 該当: `pagefolio/ocr.py:140-328`（`run_with_bounded_buffer`・本番未使用）と
   `pagefolio/ocr_dialog.py:891-1113`（独自実装）
@@ -200,6 +200,16 @@ usage: >
   ヘルパーの docstring はスレッドモデルと矛盾（render_fn を producer スレッドから呼ぶ）。
 - 対応: どちらかに一本化 or ヘルパーをテスト専用と明記し仕様統一。
   **M-1/M-2 修正時は両実装への影響を必ず確認すること。**
+- **解消済み（v1.7.1 Phase 2-04・commit c4cd9da で新モジュール `ocr_pipeline.py`
+  新設・後続コミットで `ocr_dialog.py` 配線）:** `ocr_dialog.py` の実戦挙動
+  （非ブロッキング put・世代ガード・waiting 進捗・skip status・render 失敗時
+  on_done）を仕様として `pagefolio/ocr_pipeline.py`（Tk/fitz 非依存）へ
+  producer-consumer ロジックを一本化した（D-01/D-02）。`PipelineState`
+  （共有カウンタ・fatal/サーキットブレーカー判定）・`consume_one`（1アイテム
+  消費）・`try_enqueue`/`send_sentinels`（非ブロッキング enqueue/sentinel）
+  に集約し、`ocr_dialog.py` の `_render_next_page`/`_worker` はこれらを呼ぶ
+  薄いラッパーへ縮小した。本番未使用だった `ocr.py::run_with_bounded_buffer`
+  は削除し、消費していたテストは `tests/test_ocr_pipeline.py` へ移設・拡充。
 
 ### L-2: `register_ocr_provider` の名前検証・アンロード解除なし ✅ (c70ae29)
 
@@ -242,7 +252,10 @@ usage: >
 ### L-6: その他の軽微事項
 
 - レンダー失敗ページでプログレスバーが 100% に達しない（`ocr_dialog.py:965-967`）
-  — L-1（producer-consumer 一本化）独立プランへ吸収（D-03・v1.7.1 Phase 2-04 予定）
+  ✅ 解消済み（v1.7.1 Phase 2-04・L-1 一本化に吸収・D-03）: `_render_next_page`
+  の render 失敗 except 節でも当該ページを `_render_failed_pages` へ計上し
+  progress_var/progress_bar を更新するようにした（`_done_disp()` に集約）。
+  レンダー失敗ページがあっても進捗が全ページ数（100%）に到達する
 - ClaudeProvider `list_models` のページネーション・`stop_reason`（截断検出）未対応
   ✅ ページネーション対応済み（v1.7.1 Phase 2-03・commit 892244c）: `has_more`/
   `last_id` カーソルを辿り全ページのモデルを連結（1ページ完結時は従来と同一結果）。
@@ -258,9 +271,17 @@ usage: >
   統一適用（D-13・適用先拡張）。Gemini は `quote(self.model, safe="")` でモデル名を
   URL パスセグメントとしてエスケープ
 - producer が fatal 発生後も全ページ render 継続（`ocr.py:192-216`）
-  — L-1（producer-consumer 一本化）独立プランへ吸収（D-03・v1.7.1 Phase 2-04 予定）
+  ✅ 解消済み（v1.7.1 Phase 2-04・L-1 一本化に吸収・D-03）: `_render_next_page`
+  冒頭で `self._pstate.is_fatal()` を確認し、fatal 確定後は残ページの render を
+  継続せず全ワーカー分の sentinel を送出して終了へ向かう分岐を追加した。
+  一本化にあたり `run_with_bounded_buffer._producer`（未使用ヘルパー）の
+  fatal 未チェックの欠陥は新実装へ持ち込んでいない
 - sentinel `buf.put(None)` の暗黙容量不変条件（`ocr.py:217-220`）の明文化
-  — L-1（producer-consumer 一本化）独立プランへ吸収（D-03・v1.7.1 Phase 2-04 予定）
+  ✅ 解消済み（v1.7.1 Phase 2-04・L-1 一本化に吸収・D-03・commit c4cd9da）:
+  `pagefolio/ocr_pipeline.py` のモジュール docstring に「終端シグナルは
+  合計 workers 本・送信済み分は再送しない・バッファ満杯時は部分送出して
+  呼び出し元が再送する」不変条件を明文化し、`send_sentinels()` の戻り値
+  （実際に送れた本数）としてテストで担保した
 - `_fetch_models` / `_test_connection` のほぼ完全重複（`llm_config.py:649-690`）
   ✅ 解消済み（v1.7.1 Phase 2-03・commit 14d09f5）: 共通ヘルパー
   `_probe_lm_provider(update_combo)` へ集約（LM Studio ペアのみ・呼び出し元
