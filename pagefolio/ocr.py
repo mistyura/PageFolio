@@ -708,12 +708,16 @@ def build_provider(settings, api_key=None, plugin_manager=None):
             temperature=float(settings.get("ocr_temperature", DEFAULT_OCR_TEMPERATURE)),
         )
     elif name == "tesseract":
-        from pagefolio.ocr_providers import TesseractProvider
+        from pagefolio.ocr_providers import TesseractProvider, _detect_tesseract
 
+        # D-05: build_provider 呼び出しの都度、言語パック検出を再評価する
+        # （再起動なしで追加した言語パックを反映）。
+        _, _tesseract_langs = _detect_tesseract()
         return TesseractProvider(
             lang=settings.get("tesseract_lang", "jpn+eng"),
             psm=int(settings.get("tesseract_psm", 3)),
             timeout=int(settings.get("ocr_timeout", DEFAULT_OCR_TIMEOUT)),
+            available_langs=_tesseract_langs,
         )
     # プラグイン登録プロバイダへのフォールバック（D-07）
     # M-7: cls() は引数なしコンストラクタ契約。例外は RuntimeError に正規化。

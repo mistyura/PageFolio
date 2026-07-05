@@ -958,7 +958,13 @@ class GeminiProvider(OCRProvider):
 
 
 def _detect_tesseract():
-    """起動時に一度だけ呼ばれる Tesseract 存在チェック関数。
+    """Tesseract の存在・インストール済み言語を検出する関数。
+
+    D-05: import 時に一度だけ固定するのではなく、TesseractProvider の生成時
+    （build_provider 呼び出しの都度・llm_config.py の UI 構築時）に**都度呼び出し
+    可能**な関数として設計する。呼び出しコストは subprocess 起動2回（数十ms）で
+    頻度的に無視できる。呼び出しの都度 subprocess を起動しないこと（並列 OCR の
+    ocr_image からは呼ばない — Anti-Pattern）。
 
     戻り値: (available: bool, langs: frozenset[str]) のタプル。
     Tesseract が見つかれば (True, {インストール済み言語...}) を、
@@ -990,10 +996,6 @@ def _detect_tesseract():
         return False, frozenset()
 
 
-# アプリ起動時に一度だけ評価（D-01）
-_TESSERACT_AVAILABLE, _TESSERACT_LANGS = _detect_tesseract()
-
-
 class TesseractProvider(OCRProvider):
     """Tesseract OCR プロバイダ（subprocess 直呼び・ネットワーク不要）。
 
@@ -1008,18 +1010,54 @@ class TesseractProvider(OCRProvider):
 
     RECOMMENDED_LANGS: list = ["jpn+eng", "eng", "jpn"]
 
-    def __init__(self, lang="jpn+eng", psm=3, timeout=60):
+    def __init__(self, lang="jpn+eng", psm=3, timeout=60, available_langs=None):
         """初期化。
 
         引数:
-          lang:    Tesseract に渡す言語コード（例: "jpn+eng"）。
-                   実際の ocr_image 実行時は _TESSERACT_LANGS による自動解決を優先する。
+          lang:    Tesseract に渡す要求言語コード（例: "jpn+eng"）。"+" 区切りで
+                   複数指定可能。段階的縮退（D-06）により実際に使われる言語は
+                   self.effective_lang に確定される。
           psm:     ページセグメンテーションモード（3=全自動、6=単一ブロック）
           timeout: subprocess タイムアウト秒数（既定: 60）
+          available_langs: 検出済みの利用可能言語集合（frozenset[str] 等）。
+                   None（既定）のときはこの場で _detect_tesseract() を呼び直し
+                   再検出する（D-05: プロバイダ生成時に都度再評価・再起動不要で
+                   言語パック追加を反映）。呼び出し元（build_provider 等）が
+                   再検出済みの結果を明示的に渡すことも可能。
         """
         self.lang = lang
         self.psm = psm
         self.timeout = timeout
+        if available_langs is None:
+            _, available_langs = _detect_tesseract()
+        self.available_langs = available_langs or frozenset()
+        # D-06: __init__ 時点で段階的縮退を確定し、ocr_image は都度計算しない
+        self.effective_lang, self.lang_fallback = self._resolve_lang(
+            self.lang, self.available_langs
+        )
+        # フォールバック発生時の注記表示（D-07・Task 2）が読む要求/実効ペア
+        self.requested_lang = self.lang
+
+    @staticmethod
+    def _resolve_lang(requested_raw, available_langs):
+        """段階的縮退で実効言語を確定する（D-06）。
+
+        まず要求言語（"+" 区切り）のうち利用可能な部分集合を、要求の指定順を
+        保ったまま残す。部分集合が非空ならそれを実効言語とする。空（＝全滅、
+        または要求自体が空）なら現行の自動決定（jpn 利用可→"jpn+eng" /
+        なし→"eng"）へ落とす。常にどちらかの分岐で値を返し、例外は送出しない
+        （必ず何かしらの言語で実行できることを保証する）。
+
+        戻り値: (effective_lang: str, fallback_occurred: bool) のタプル。
+        fallback_occurred は「要求言語が非空で、かつ実効言語が要求と完全一致
+        しない」場合に True になる。
+        """
+        requested = [t for t in (requested_raw or "").split("+") if t]
+        subset = [t for t in requested if t in available_langs]
+        if subset:
+            return "+".join(subset), subset != requested
+        auto = "jpn+eng" if "jpn" in available_langs else "eng"
+        return auto, bool(requested)
 
     def ocr_image(self, b64_png, prompt, **kwargs):
         """Tesseract を stdin パイプ方式で呼び出して OCR テキストを返す。
@@ -1035,8 +1073,9 @@ class TesseractProvider(OCRProvider):
           RuntimeError:  tesseract コマンドが見つからない、または終了コード != 0
           TimeoutError:  tesseract がタイムアウト（D-T2）
         """
-        # jpn が利用可能なら jpn+eng、なければ eng にフォールバック（D-04）
-        lang = "jpn+eng" if "jpn" in _TESSERACT_LANGS else "eng"
+        # -l へ渡すのは __init__ で段階的縮退済みの実効言語のみ（検出済み集合
+        # との積を取った結果）。生の self.lang を直接渡さない（T-2-T01 mitigate）。
+        lang = self.effective_lang
         png_bytes = base64.b64decode(b64_png)
         try:
             result = subprocess.run(  # noqa: S603

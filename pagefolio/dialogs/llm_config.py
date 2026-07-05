@@ -11,11 +11,10 @@ from tkinter import ttk
 from pagefolio.constants import LANG, C
 from pagefolio.ocr import MAX_OCR_MAX_TOKENS
 from pagefolio.ocr_providers import (
-    _TESSERACT_AVAILABLE,
-    _TESSERACT_LANGS,
     ClaudeProvider,
     GeminiProvider,
     LMStudioProvider,
+    _detect_tesseract,
 )
 from pagefolio.settings import get_current_font_size
 
@@ -73,6 +72,9 @@ class LLMConfigDialog(tk.Toplevel):
         )
         # Tesseract 未インストール時の選択リセット用（D-02）
         self._last_valid_provider = current_settings.get("ocr_provider", "off")
+        # D-05/Pitfall 2: ocr_providers.py と同じ _detect_tesseract() を都度呼び、
+        # ダイアログを開く度に再評価する（再起動なしで言語パック追加を反映）。
+        self._tesseract_available, self._tesseract_langs = _detect_tesseract()
 
         # _dialog_w は _build() 内の _resize_to_fit() が参照するため、_build() より
         # 前に確定させておく（未設定だと AttributeError でダイアログが開けない）。
@@ -137,7 +139,7 @@ class LLMConfigDialog(tk.Toplevel):
         self.provider_combo.pack(side="left", padx=4)
         self.provider_combo.bind("<<ComboboxSelected>>", self._on_provider_change)
         # Tesseract 未インストール時の案内ラベル（D-02）
-        if not _TESSERACT_AVAILABLE:
+        if not self._tesseract_available:
             tk.Label(
                 provider_row,
                 text=self._L.get(
@@ -641,7 +643,7 @@ class LLMConfigDialog(tk.Toplevel):
         ).pack(anchor="w", pady=(4, 2))
 
         # 言語フォールバック案内（jpn 未インストール時のみ表示）
-        if "jpn" not in _TESSERACT_LANGS:
+        if "jpn" not in self._tesseract_langs:
             tk.Label(
                 self.tesseract_section_frame,
                 text=self._L.get(
@@ -965,7 +967,7 @@ class LLMConfigDialog(tk.Toplevel):
         provider = self.provider_var.get()
 
         # Tesseract 未インストール時: 選択を前の有効プロバイダに戻す（D-02 代替）
-        if provider == "tesseract" and not _TESSERACT_AVAILABLE:
+        if provider == "tesseract" and not self._tesseract_available:
             self.provider_var.set(self._last_valid_provider)
             self._set_lm_status(
                 self._L.get(
@@ -1359,10 +1361,12 @@ class LLMConfigDialog(tk.Toplevel):
             self.gemini_model_var.get().strip() or "gemini-2.5-flash"
         )
 
-        # Tesseract 設定（D-04: lang は _TESSERACT_LANGS 由来の固定値）
-        llm_settings["tesseract_lang"] = (
-            "jpn+eng" if "jpn" in _TESSERACT_LANGS else "eng"
-        )
+        # Tesseract 設定（D-04: lang は self._tesseract_langs 由来の固定値。
+        # D-05: ダイアログ生成時に再検出済みの値を使う。getattr フォールバックは
+        # _apply を Tk 生成なしスタブ経由で呼ぶ既存テスト経路の安全確保のため
+        # （Phase 05-03 の _session_api_keys と同型パターン）
+        _tess_langs = getattr(self, "_tesseract_langs", frozenset())
+        llm_settings["tesseract_lang"] = "jpn+eng" if "jpn" in _tess_langs else "eng"
 
         # 共通数値設定（クランプして格納）
         try:
