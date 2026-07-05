@@ -42,7 +42,9 @@
     "security_enforcement": true,
     "security_asvs_level": 1,
     "security_block_on": "high",
-    "_auto_chain_active": false
+    "_auto_chain_active": false,
+    "ui_review": true,
+    "use_worktrees": true
   },
   "ship": {
     "pr_body_sections": [
@@ -113,5 +115,11 @@
     "max_prompt_tokens_per_reviewer": {
       "lm_studio": 32000
     }
+  },
+  "intel": {
+    "enabled": false
+  },
+  "graphify": {
+    "enabled": false
   }
 }
