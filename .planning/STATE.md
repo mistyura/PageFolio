@@ -5,16 +5,16 @@ milestone_name: 現機能ブラッシュアップ + APIキー入力欄
 current_phase: 02
 current_phase_name: OCR 磨き込み（レビュー残の現行照合と二重実装解消）
 status: executing
-stopped_at: Phase 02 Wave 3 (02-03) complete
-last_updated: "2026-07-05T01:40:37.605Z"
+stopped_at: Phase 02 Wave 4 (02-04) complete — Phase 02 全プラン完了
+last_updated: "2026-07-05T02:39:22.396Z"
 last_activity: 2026-07-05
-last_activity_desc: Phase 02 Wave 3 (02-03) complete
+last_activity_desc: Phase 02 Wave 4 (02-04) complete
 progress:
   total_phases: 4
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 8
-  completed_plans: 7
-  percent: 25
+  completed_plans: 8
+  percent: 50
 ---
 
 # Project State
@@ -28,12 +28,12 @@ See: .planning/PROJECT.md (updated 2026-07-04)
 
 ## Current Position
 
-Phase: 02 (OCR 磨き込み（レビュー残の現行照合と二重実装解消）) — EXECUTING
-Plan: 02-03 complete (3/4), next is 02-04
-Status: Wave 3 (02-03) complete — URLスキーム検証統一適用・Gemini quoteエスケープ・エラーbody切り詰め・Claude list_modelsページネーション・LLMConfigDialog重複解消・offボタン同期。Wave 4 (02-04・L-1 producer-consumer一本化) へ進行
-Last activity: 2026-07-05 — Phase 02 Wave 3 (02-03) complete
+Phase: 02 (OCR 磨き込み（レビュー残の現行照合と二重実装解消）) — COMPLETE（全4プラン完了）
+Plan: 02-04 complete (4/4) — Phase 02 完了、次は Phase 03
+Status: Wave 4 (02-04) complete — producer-consumer 一本化（L-1・新設 ocr_pipeline.py）+ L-6a/L-6g/L-6h 同時解消。V171-OCR-01〜04 全充足。次は Phase 03（ページ操作磨き込み + v1.5.0 回帰テスト）
+Last activity: 2026-07-05 — Phase 02 Wave 4 (02-04) complete
 
-Progress: [██░░░░░░░░] 25%
+Progress: [█████░░░░░] 50%
 
 ## v1.7.1 Phase Map
 
@@ -88,6 +88,7 @@ Progress: [██░░░░░░░░] 25%
 | Phase 01-api-llm P04 | 15min | 2 tasks | 3 files |
 | Phase 02 P02 | 25min | 2 tasks | 9 files |
 | Phase 02 P03 | 35min | 2 tasks | 6 files |
+| Phase 02 P04 | 約55分 | 3 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -200,6 +201,9 @@ Decisions are logged in PROJECT.md Key Decisions table.
 - [Phase ?]: [Phase 02-03] ClaudeProvider.list_models は _fetch_models_page(after_id) へ切り出しhas_more/last_idカーソルをwhileループで辿る設計（1ページ完結時は後方互換）
 - [Phase ?]: [Phase 02-03] _probe_lm_provider(update_combo) 重複解消はLM Studioペアのみに限定、OllamaペアはD-11に従い対象外のまま維持（Pitfall 5回避）
 - [Phase ?]: [Phase 02-03] _update_ocr_buttons_state呼び出しはgetattr+callableチェックの防御的パターンとし、既存SimpleNamespaceスタブとの後方互換を維持
+- [Phase ?]: [Phase 02-04]: producer-consumerをpagefolio/ocr_pipeline.py（Tk/fitz非依存）へ一本化。PipelineState/consume_one/try_enqueue/send_sentinelsに集約しocr_dialog.pyを薄いラッパー化（D-01/D-02）
+- [Phase ?]: [Phase 02-04]: consume_oneがPipelineStateへのstate更新を内部完結させ、dialog側コールバックはresults/errors辞書ブックキーピングのみ担当する設計にして二重計上を防止
+- [Phase ?]: [Phase 02-04]: L-6aはrender_failed_pages集合+_done_disp()合算ヘルパーで進捗100%到達を保証。L-6gはis_fatal()分岐でfatal後のrender継続を停止
 
 ### Pending Todos
 
@@ -276,7 +280,7 @@ Decisions are logged in PROJECT.md Key Decisions table.
 
 ## Session Continuity
 
-Last session: 2026-07-05T01:38:38.707Z
+Last session: 2026-07-05T02:38:19.070Z
 Stopped at: Phase 2 context gathered
 Resume file: .planning/phases/02-ocr/02-CONTEXT.md
 
