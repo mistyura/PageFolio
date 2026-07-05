@@ -2,18 +2,18 @@
 gsd_state_version: 1.0
 milestone: v1.7.1
 milestone_name: 現機能ブラッシュアップ + APIキー入力欄
-current_phase: 4
-current_phase_name: UI/UX 磨き込み + 既知バグ棚卸し
+current_phase: 04
+current_phase_name: ui-ux
 status: executing
-stopped_at: Phase 4 context gathered
-last_updated: "2026-07-05T09:16:05.192Z"
+stopped_at: Completed 04-01-PLAN.md
+last_updated: "2026-07-05T09:46:33.579Z"
 last_activity: 2026-07-05
-last_activity_desc: Phase 03 complete, transitioned to Phase 4
+last_activity_desc: Phase 04 execution started
 progress:
   total_phases: 4
   completed_phases: 3
-  total_plans: 12
-  completed_plans: 12
+  total_plans: 16
+  completed_plans: 13
   percent: 75
 ---
 
@@ -24,14 +24,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-07-04)
 
 **Core value:** 大きな PDF でも Undo/Redo が正しく・速く動作し、コードが読みやすく保守しやすい状態にする
-**Current focus:** Phase 03 — v1-5-0
+**Current focus:** Phase 04 — ui-ux
 
 ## Current Position
 
-Phase: 4 — UI/UX 磨き込み + 既知バグ棚卸し
-Plan: Not started
+Phase: 04 (ui-ux) — EXECUTING
+Plan: 2 of 4
 Status: Ready to execute
-Last activity: 2026-07-05 — Phase 03 complete, transitioned to Phase 4
+Last activity: 2026-07-05 — Phase 04 execution started
 
 Progress: [█████░░░░░] 50%
 
@@ -95,6 +95,7 @@ Progress: [█████░░░░░] 50%
 | Phase 03-v1-5-0 P02 | 7min | 3 tasks | 4 files |
 | Phase 03-v1-5-0 P03 | 7min | 3 tasks | 5 files |
 | Phase 03-v1-5-0 P04 | 18min | 2 tasks | 6 files |
+| Phase 04 P01 | 3min | 3 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -218,6 +219,8 @@ Decisions are logged in PROJECT.md Key Decisions table.
 - [Phase ?]: [Phase 03-03]: crop_info（_format_crop_info）はderotate前のcanvas→pdf変換値をそのまま使う。画面上で見た選択サイズをmm表示するのが直感的なため（derotateは_crop_page適用時のみ必要）
 - [Phase ?]: [Phase 03-03]: _crop_by_marginのundoは新規opを作らず既存bulk_crop opを再利用（file_ops.pyの_apply_inverseが既に対称処理を実装済み）
 - [Phase ?]: [Phase 03-04]: _apply_page_edit(kind, block=None) へ改修し、self._redact_rects（蓄積）＋crop_rectから対象矩形集合を構築。_save_undoはループ外1回のみ、各矩形は_derotate_rect経由でmediabox相対化する1本道（D-05〜D-08統合）
+- [Phase ?]: [Phase 04-01]: build_keysym_from_event の修飾子連結順は Control, Alt, Shift の順に固定（RESEARCH.md Pattern 1 準拠）
+- [Phase ?]: [Phase 04-01]: _bind_shortcuts() は self._bound_keysyms で前回バインドした keysym(shift variant含む)を追跡し、再呼び出し時に全て unbind してから再バインドする
 
 ### Pending Todos
 
@@ -294,9 +297,9 @@ Decisions are logged in PROJECT.md Key Decisions table.
 
 ## Session Continuity
 
-Last session: 2026-07-05T08:23:34.448Z
-Stopped at: Phase 4 context gathered
-Resume file: .planning/phases/04-ui-ux/04-CONTEXT.md
+Last session: 2026-07-05T09:46:33.566Z
+Stopped at: Completed 04-01-PLAN.md
+Resume file: None
 
 ## Operator Next Steps
 
