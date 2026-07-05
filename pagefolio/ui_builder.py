@@ -647,9 +647,7 @@ class UIBuilderMixin:
             orient="horizontal",
         )
         self.mosaic_block_scale.pack(fill="x", expand=True, padx=8, pady=(2, 4))
-        self.mosaic_block_scale.bind(
-            "<ButtonRelease-1>", self._on_mosaic_block_release
-        )
+        self.mosaic_block_scale.bind("<ButtonRelease-1>", self._on_mosaic_block_release)
 
         btn(
             f3b,
@@ -663,6 +661,14 @@ class UIBuilderMixin:
             f3b,
             self._t("btn_apply_mosaic"),
             self._apply_mosaic,
+            needs_doc=True,
+            edit_only=True,
+        )
+        btn(
+            f3b,
+            self._t("btn_redact_clear"),
+            self._clear_redact_rects,
+            "Danger.TButton",
             needs_doc=True,
             edit_only=True,
         )

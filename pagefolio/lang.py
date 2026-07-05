@@ -121,6 +121,7 @@ LANG = {
         "mosaic_block_label": "モザイク粒度",
         "btn_apply_redact": "⬛ 選択範囲を黒塗り",
         "btn_apply_mosaic": "▦ 選択範囲をモザイク",
+        "btn_redact_clear": "🗑 矩形をクリア",
         # 挿入・結合
         "btn_insert_head": "先頭に挿入",
         "btn_insert_tail": "末尾に挿入",
@@ -719,6 +720,7 @@ LANG = {
         "mosaic_block_label": "Mosaic Granularity",
         "btn_apply_redact": "⬛ Redact Selection",
         "btn_apply_mosaic": "▦ Mosaic Selection",
+        "btn_redact_clear": "🗑 Clear Rectangles",
         # Insert/Merge
         "btn_insert_head": "Insert at Beginning",
         "btn_insert_tail": "Insert at End",

@@ -489,6 +489,23 @@ class PageOpsMixin:
         if not (self.crop_mode or self.redact_mode):
             return
         self._crop_drag_move(event)
+        if self.redact_mode and self.crop_rect:
+            # 複数矩形蓄積（D-07）: 確定矩形を self._redact_rects へ追加し、
+            # 持続オーバーレイ（実線アウトラインのみ・stipple省略）として
+            # 残す。次のドラッグに備え crop_rect はクリアする（トリミング
+            # の単一矩形挙動は crop_mode 側で不変）。
+            self._redact_rects = getattr(self, "_redact_rects", [])
+            self._redact_rect_overlay_ids = getattr(
+                self, "_redact_rect_overlay_ids", []
+            )
+            self._redact_rects.append(self.crop_rect)
+            sx, sy, ex, ey = self.crop_rect
+            oid = self.preview_canvas.create_rectangle(
+                sx, sy, ex, ey, outline=C["ACCENT"], width=2
+            )
+            self._redact_rect_overlay_ids.append(oid)
+            self.crop_rect = None
+            self._clear_crop_overlay()
 
     def _clear_crop_overlay(self):
         for oid in self.crop_overlay_ids:

@@ -40,6 +40,10 @@ class RedactOpsMixin:
             # トリミングモードとは相互排他
             if self.crop_mode:
                 self._toggle_crop_mode()
+            # 複数矩形蓄積状態を初期化（D-07・lazy init・app.py __init__
+            # は触らない）
+            self._redact_rects = []
+            self._redact_rect_overlay_ids = []
             self.redact_toggle_btn.configure(
                 text=self._t("redact_mode_on"), style="CropOn.TButton"
             )
@@ -50,6 +54,7 @@ class RedactOpsMixin:
             )
             self.preview_canvas.configure(cursor="")
             self._clear_crop_overlay()
+            self._clear_redact_rects()
 
     def _redact_mode_off(self):
         """黒塗りモードを明示的に OFF にする（適用完了・相互排他用）。"""
@@ -60,6 +65,18 @@ class RedactOpsMixin:
             )
             self.preview_canvas.configure(cursor="")
             self._clear_crop_overlay()
+            self._clear_redact_rects()
+
+    def _clear_redact_rects(self):
+        """蓄積した複数矩形（D-07）とその持続オーバーレイを全クリアする。
+
+        「クリア」ボタン、およびモードOFF時（_toggle_redact_mode/
+        _redact_mode_off）の後片付けから呼ばれる。
+        """
+        for oid in getattr(self, "_redact_rect_overlay_ids", []):
+            self.preview_canvas.delete(oid)
+        self._redact_rects = []
+        self._redact_rect_overlay_ids = []
 
     def _apply_redact(self):
         """選択矩形を黒塗り（真の墨消し）として対象ページへ適用する。"""
@@ -81,14 +98,25 @@ class RedactOpsMixin:
         ページ上の選択矩形を相対座標へ変換し、各対象ページのページサイズ
         に合わせて適用する。undo は page_edit op（適用前 bytes）。
 
-        適用後もモードは維持される（D-05・連続適用）。終了は明示トグル
-        （_toggle_redact_mode）でのみ OFF になる。相互排他ロジック
-        （_toggle_redact_mode/_toggle_crop_mode）には一切触れない
-        （RESEARCH.md Pitfall 3）。
+        D-05: 適用後もモードは維持される（_redact_mode_off は呼ばない）。
+        相互排他ロジック（_toggle_redact_mode/_toggle_crop_mode）には
+        一切触れない（RESEARCH.md Pitfall 3）。
+
+        D-07: 適用対象矩形は self._redact_rects（蓄積済みの複数矩形）＋
+        現在の crop_rect から構築する。_save_undo は対象ページ集合に
+        対しループの外側で必ず1回だけ呼ぶ（Pitfall 4・複数矩形×複数
+        ページでも1回のundoで全戻り）。
+
+        D-08: 各矩形は _canvas_rect_to_pdf → _derotate_rect（表示座標→
+        未回転座標）→ mediabox 相対化、の1本道で変換する（_crop_page と
+        同じ順序・Pitfall 2）。
         """
         if not self._check_doc():
             return
-        if not self.crop_rect:
+        rect_list = list(getattr(self, "_redact_rects", None) or [])
+        if self.crop_rect and self.crop_rect not in rect_list:
+            rect_list.append(self.crop_rect)
+        if not rect_list:
             messagebox.showinfo(self._t("info_title"), self._t("info_redact_drag"))
             return
         targets = self._get_targets()
@@ -99,30 +127,46 @@ class RedactOpsMixin:
             ):
                 return
 
-        x0_pdf, y0_pdf, x1_pdf, y1_pdf = self._canvas_rect_to_pdf(*self.crop_rect)
-        cur_mb = self.doc[self.current_page].mediabox
-        rel = (
-            x0_pdf / cur_mb.width,
-            y0_pdf / cur_mb.height,
-            x1_pdf / cur_mb.width,
-            y1_pdf / cur_mb.height,
-        )
+        base_page = self.doc[self.current_page]
+        cur_mb = base_page.mediabox
+        rel_list = []
+        for r in rect_list:
+            x0_pdf, y0_pdf, x1_pdf, y1_pdf = self._canvas_rect_to_pdf(*r)
+            # 表示（回転後）座標 → 未回転座標（D-08・mediabox 相対化の前
+            # に挟む1本道・二重補正防止）
+            x0_pdf, y0_pdf, x1_pdf, y1_pdf = self._derotate_rect(
+                base_page, x0_pdf, y0_pdf, x1_pdf, y1_pdf
+            )
+            rel_list.append(
+                (
+                    x0_pdf / cur_mb.width,
+                    y0_pdf / cur_mb.height,
+                    x1_pdf / cur_mb.width,
+                    y1_pdf / cur_mb.height,
+                )
+            )
 
+        # _save_undo はターゲットページ集合に対しループの外側で必ず1回
+        # だけ（D-07・Pitfall 4）
         self._save_undo("page_edit", targets=targets)
         applied = []
         for i in targets:
             page = self.doc[i]
-            rect = self._page_rect_from_rel(page, rel)
-            if rect is None:
-                continue
-            try:
-                if kind == "redact":
-                    self._redact_page(page, rect)
-                else:
-                    self._mosaic_page(page, rect, block=block or MOSAIC_BLOCK)
+            page_changed = False
+            for rel in rel_list:
+                rect = self._page_rect_from_rel(page, rel)
+                if rect is None:
+                    continue
+                try:
+                    if kind == "redact":
+                        self._redact_page(page, rect)
+                    else:
+                        self._mosaic_page(page, rect, block=block or MOSAIC_BLOCK)
+                    page_changed = True
+                except Exception as e:
+                    logger.error("ページ編集失敗 (kind=%s, page=%s): %s", kind, i, e)
+            if page_changed:
                 applied.append(i)
-            except Exception as e:
-                logger.error("ページ編集失敗 (kind=%s, page=%s): %s", kind, i, e)
 
         if not applied:
             # 1 ページも適用されなかった場合は直前に積んだ undo エントリを
@@ -133,8 +177,9 @@ class RedactOpsMixin:
             return
 
         # 後片付け（D-05: 連続適用のため _redact_mode_off は呼ばない。
-        # 矩形オーバーレイのみクリアしモードは維持する）
+        # 蓄積矩形・矩形オーバーレイのみクリアしモードは維持する）
         self.crop_rect = None
+        self._clear_redact_rects()
         self._clear_crop_overlay()
         self.crop_info_var.set(self._t("crop_no_sel"))
         self._invalidate_thumb_cache(applied)

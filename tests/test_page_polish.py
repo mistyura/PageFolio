@@ -336,6 +336,157 @@ class TestRedactPolish:
         assert "mosaic_block_label" in LANG["ja"]
         assert "mosaic_block_label" in LANG["en"]
 
+    def test_multi_rect_apply_single_undo_restores_all(self, sample_pdf_doc):
+        """D-07: 複数矩形を一括適用し、1回のundoで全て戻る（情報漏えい
+        防止・下地コンテンツは各矩形で個別に実削除される）。"""
+        app = _make_redact_app(sample_pdf_doc, redact_mode=True)
+        app.current_page = 0
+        # pdf(表示)座標で (0,0)-(200,100) は "Page 1" テキストを含む領域、
+        # (200,0)-(400,100) は別領域（重複なし・2矩形）
+        app._redact_rects = [
+            (10.0, 10.0, 310.0, 160.0),
+            (310.0, 10.0, 610.0, 160.0),
+        ]
+        app.crop_rect = None
+
+        assert "Page 1" in app.doc[0].get_text()
+        app._apply_page_edit("redact")
+        assert "Page 1" not in app.doc[0].get_text()
+        assert app._redact_rects == []  # 適用後は蓄積矩形もクリア
+        assert app.redact_mode is True  # D-05: モードは継続
+
+        app._undo()
+        assert "Page 1" in app.doc[0].get_text()
+
+    def test_multi_rect_apply_calls_save_undo_once(self, sample_pdf_doc, monkeypatch):
+        """D-07/Pitfall4: 複数矩形適用でも _save_undo はループ外で1回のみ
+        呼ばれる。"""
+        app = _make_redact_app(sample_pdf_doc, redact_mode=True)
+        app.current_page = 0
+        app._redact_rects = [
+            (10.0, 10.0, 310.0, 160.0),
+            (310.0, 10.0, 610.0, 160.0),
+        ]
+        app.crop_rect = None
+
+        calls = []
+        orig_save_undo = app._save_undo
+
+        def spy_save_undo(*a, **kw):
+            calls.append((a, kw))
+            return orig_save_undo(*a, **kw)
+
+        monkeypatch.setattr(app, "_save_undo", spy_save_undo)
+        app._apply_page_edit("redact")
+        assert len(calls) == 1
+
+    def test_redact_derotate_position_matches_rotated_page(
+        self, sample_pdf_doc, monkeypatch
+    ):
+        """D-08: 回転90ページで、_apply_page_edit が _derotate_rect 経由の
+        正しい未回転座標で _redact_page を呼ぶ。"""
+        app = _make_redact_app(sample_pdf_doc, redact_mode=True)
+        app.current_page = 0
+        page = app.doc[0]
+        page.set_rotation(90)
+        # canvas(10,10,310,160) -> _canvas_rect_to_pdf(zoom=1.0) -> 表示pdf
+        # 座標(0,0,200,100)
+        app.crop_rect = (10.0, 10.0, 310.0, 160.0)
+
+        captured_rects = []
+        orig_redact_page = ro.RedactOpsMixin._redact_page
+
+        def spy_redact_page(pg, rect):
+            captured_rects.append(rect)
+            return orig_redact_page(pg, rect)
+
+        monkeypatch.setattr(
+            ro.RedactOpsMixin, "_redact_page", staticmethod(spy_redact_page)
+        )
+
+        app._apply_page_edit("redact")
+
+        assert len(captured_rects) == 1
+        expected_unrot = po.PageOpsMixin._derotate_rect(page, 0, 0, 200, 100)
+        mb = page.mediabox
+        expected_rect = fitz.Rect(
+            mb.x0 + expected_unrot[0],
+            mb.y0 + expected_unrot[1],
+            mb.x0 + expected_unrot[2],
+            mb.y0 + expected_unrot[3],
+        )
+        got = captured_rects[0]
+        assert abs(got.x0 - expected_rect.x0) < 0.01
+        assert abs(got.y0 - expected_rect.y0) < 0.01
+        assert abs(got.x1 - expected_rect.x1) < 0.01
+        assert abs(got.y1 - expected_rect.y1) < 0.01
+
+    def test_clear_redact_rects_removes_accumulated_state(self, sample_pdf_doc):
+        app = _make_redact_app(sample_pdf_doc, redact_mode=True)
+        app._redact_rects = [(1.0, 2.0, 3.0, 4.0)]
+        app._redact_rect_overlay_ids = [101, 102]
+        app._clear_redact_rects()
+        assert app._redact_rects == []
+        assert app._redact_rect_overlay_ids == []
+
+    def test_btn_redact_clear_lang_parity(self):
+        assert "btn_redact_clear" in LANG["ja"]
+        assert "btn_redact_clear" in LANG["en"]
+
+    def test_crop_drag_end_accumulates_multi_rect(self, sample_pdf_doc):
+        """D-07: redactモードでのドラッグ完了ごとに _redact_rects へ矩形が
+        蓄積される（_crop_drag_end のredact分岐）。"""
+
+        class _StubCanvas:
+            def __init__(self):
+                self.deleted = []
+
+            def cget(self, _key):
+                return ""
+
+            def winfo_width(self):
+                return 400
+
+            def winfo_height(self):
+                return 500
+
+            def create_rectangle(self, *_a, **_kw):
+                return 1
+
+            def coords(self, *_a, **_kw):
+                pass
+
+            def delete(self, oid):
+                self.deleted.append(oid)
+
+            def canvasx(self, x):
+                return x
+
+            def canvasy(self, y):
+                return y
+
+            def configure(self, **_kw):
+                pass
+
+            def focus_set(self):
+                pass
+
+        class _Event:
+            def __init__(self, x, y):
+                self.x = x
+                self.y = y
+
+        app = _make_redact_app(sample_pdf_doc, redact_mode=True)
+        app.current_page = 0
+        app.preview_canvas = _StubCanvas()
+        app.crop_drag_start = None
+
+        app._crop_drag_start(_Event(10, 10))
+        app._crop_drag_end(_Event(310, 160))
+
+        assert len(app._redact_rects) == 1
+        assert app.crop_rect is None  # 次のドラッグへ備えクリア
+
 
 def _make_crop_app(doc):
     """_nudge_crop_rect のロジック検証用 FakeApp（D-09）。
