@@ -1539,3 +1539,100 @@ class TestSettingsDialogNestedApplyCascade:
         LLMConfigDialog._apply(apply_stub)
 
         assert not any("api_key" in k.lower() for k in live_settings)
+
+
+# ══════════════════════════════════════════════════════════════
+#  C2: Ollama モデル取得/接続テストの共通ヘルパー統合
+#  （_probe_ollama_provider・_probe_lm_provider 同型）
+# ══════════════════════════════════════════════════════════════
+
+
+class _OllamaComboStub:
+    """ttk.Combobox の ["values"] = ... 代入のみを記録するスタブ。"""
+
+    def __init__(self):
+        self.values = None
+
+    def __setitem__(self, key, value):
+        if key == "values":
+            self.values = value
+
+
+class TestProbeOllamaProvider:
+    """C2: _probe_ollama_provider が _probe_lm_provider と同型の共通ヘルパーとして
+    Ollama のモデル取得/接続テストを統合していることを検証する。
+    """
+
+    def _make_stub(self, url="http://localhost:11434"):
+        from pagefolio.constants import LANG
+        from pagefolio.dialogs.llm_config import LLMConfigDialog
+
+        status = {}
+        stub = types.SimpleNamespace(
+            ollama_url_var=_GetVarStub(url),
+            ollama_model_combo=_OllamaComboStub(),
+            _L=LANG["ja"],
+            _set_lm_status=lambda text, kind="info": status.update(
+                {"text": text, "kind": kind}
+            ),
+        )
+        stub._probe_ollama_provider = lambda update_combo: (
+            LLMConfigDialog._probe_ollama_provider(stub, update_combo)
+        )
+        return stub, status
+
+    def test_update_combo_true_reflects_models(self, monkeypatch):
+        """update_combo=True のとき Combobox の values にモデル一覧が反映される。"""
+        stub, status = self._make_stub()
+        monkeypatch.setattr(
+            "pagefolio.ocr_providers.OllamaProvider.list_models",
+            lambda self: ["llava", "llama3.2-vision"],
+        )
+        stub._probe_ollama_provider(update_combo=True)
+        assert stub.ollama_model_combo.values == ["llava", "llama3.2-vision"]
+        assert status["kind"] == "ok"
+
+    def test_update_combo_false_does_not_touch_combo(self, monkeypatch):
+        """update_combo=False（接続テストのみ）では Combobox の values を変更しない。"""
+        stub, status = self._make_stub()
+        monkeypatch.setattr(
+            "pagefolio.ocr_providers.OllamaProvider.list_models",
+            lambda self: ["llava"],
+        )
+        stub._probe_ollama_provider(update_combo=False)
+        assert stub.ollama_model_combo.values is None
+        assert status["kind"] == "ok"
+
+    def test_empty_url_shows_fail_status(self):
+        """URL 空欄はエラーステータス表示となり Combobox は変更されない。"""
+        stub, status = self._make_stub(url="")
+        stub._probe_ollama_provider(update_combo=True)
+        assert status["kind"] == "fail"
+        assert stub.ollama_model_combo.values is None
+
+    def test_connection_error_shows_fail_status(self, monkeypatch):
+        """list_models が ConnectionError を送出した場合は fail ステータスになる。"""
+        stub, status = self._make_stub()
+
+        def _raise(self):
+            raise ConnectionError("boom")
+
+        monkeypatch.setattr(
+            "pagefolio.ocr_providers.OllamaProvider.list_models", _raise
+        )
+        stub._probe_ollama_provider(update_combo=True)
+        assert status["kind"] == "fail"
+
+    def test_fetch_and_test_are_thin_wrappers(self):
+        """_fetch_ollama_models/_test_ollama_connection が
+        _probe_ollama_provider(update_combo=...) を呼ぶ薄いラッパーであり、
+        旧重複本体が除去されていることをソース上で確認する。
+        """
+        import pathlib
+
+        src = pathlib.Path("pagefolio/dialogs/llm_config.py").read_text(
+            encoding="utf-8"
+        )
+        assert "self._probe_ollama_provider(update_combo=True)" in src
+        assert "self._probe_ollama_provider(update_combo=False)" in src
+        assert src.count("def _test_ollama_connection") == 1
