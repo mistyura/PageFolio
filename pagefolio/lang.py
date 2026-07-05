@@ -176,7 +176,6 @@ LANG = {
             "保存先に同名ファイルが存在します:\n\n{files}\n\n上書きしますか？"
         ),
         # 縮小保存
-        "sec_compress": "🗜 縮小保存",
         "btn_save_compressed": "🗜 縮小して保存…",
         "status_compressed": "縮小保存しました: {name}",
         "compress_split_confirm_title": "分割時の縮小保存",
@@ -388,8 +387,6 @@ LANG = {
         "ocr_dialog_title": "OCR",
         "ocr_dialog_heading": "🔍 OCR テキスト抽出",
         "ocr_progress_init": "準備中…",
-        "ocr_progress": "{cur}/{total} ページ処理中… (p.{page})",
-        "ocr_progress_render": "画像変換中… ({cur}/{total})",
         "ocr_progress_ocr": "読み取り完了 ({done}/{total}) — p.{page}",
         "ocr_cancelling": "キャンセル中…",
         "ocr_cancelled": "キャンセルしました",
@@ -472,15 +469,10 @@ LANG = {
         ),
         "ocr_scale_tradeoff_hint": ("低=速い/安い・高=精度。低スペック PC は 1.5 推奨"),
         "ocr_effort_label": "推論強度 (effort):",
-        "ocr_provider_off_hint": "OCR は無効です。設定でプロバイダを選択してください。",
         "ocr_model_refresh": "モデル更新",
         # Phase 7: Tesseract Provider 文言（D-09）
         "tesseract_accuracy_warning": (
             "※ Tesseract の精度は LLM ベースのプロバイダより劣ります"
-        ),
-        "tesseract_not_installed": (
-            "Tesseract がインストールされていません"
-            "（tesseract コマンドが見つかりません）"
         ),
         "tesseract_not_installed_hint": (
             "Tesseract がインストールされていません。他のプロバイダを使用してください"
@@ -543,7 +535,6 @@ LANG = {
         "settings_runpod_url": "RunPod エンドポイントURL:",
         "settings_runpod_model": "RunPod モデル名 (任意):",
         "settings_runpod_model_hint": "（RunPod Serverless endpoint 用）",
-        "llm_fetching_ollama_models": "⏳ Ollama モデル一覧を取得中…",
         "llm_fetching_runpod_models": "⏳ RunPod モデル一覧を取得中…",
         "llm_env_key_unset_static_runpod": (
             "APIキー未設定のため推奨モデル一覧を表示中"
@@ -560,12 +551,8 @@ LANG = {
             "未処理 {n}ページ（p.{first}〜）が残っています。"
             "「⏯ 続きから再実行」で成功済みの結果を保持したまま再開できます。"
         ),
-        "ocr_fetch_models": "📥 モデル一覧取得",
         "ocr_open_llm_config": "⚙ LLM 設定…",
         "ocr_clear": "🧹 クリア",
-        "ocr_models_fetched": "{count} モデルを取得しました",
-        "ocr_models_fetch_fail": "モデル取得失敗: {error}",
-        "ocr_models_fetching": "⏳ モデル一覧を取得中… ({url})",
         "ocr_run_first": "「読み取り実行」を押すと開始します",
         "ocr_params_label": "詳細設定:",
         "ocr_scale_short": "解像度:",
@@ -621,7 +608,6 @@ LANG = {
         # 共通エラー
         "err_title": "エラー",
         "info_title": "情報",
-        "warn_title": "警告",
         "confirm_title": "確認",
         # M-10: 移植ハードコード文言
         "ocr_cost_estimate": "約 ${cost:.3f} 程度",
@@ -812,7 +798,6 @@ LANG = {
             "The following file(s) already exist:\n\n{files}\n\nOverwrite?"
         ),
         # Compress save
-        "sec_compress": "🗜 Compress & Save",
         "btn_save_compressed": "🗜 Save Compressed…",
         "status_compressed": "Saved compressed: {name}",
         "compress_split_confirm_title": "Compress Split Files?",
@@ -1014,8 +999,6 @@ LANG = {
         "ocr_dialog_title": "OCR",
         "ocr_dialog_heading": "🔍 OCR Text Extraction",
         "ocr_progress_init": "Preparing…",
-        "ocr_progress": "Processing {cur}/{total} pages… (p.{page})",
-        "ocr_progress_render": "Rendering images… ({cur}/{total})",
         "ocr_progress_ocr": "OCR done ({done}/{total}) — p.{page}",
         "ocr_cancelling": "Cancelling…",
         "ocr_cancelled": "Cancelled",
@@ -1101,13 +1084,11 @@ LANG = {
             "Low=fast/cheap, High=accuracy. 1.5 recommended for low-spec PCs."
         ),
         "ocr_effort_label": "Inference Effort:",
-        "ocr_provider_off_hint": "OCR is disabled. Select a provider in Settings.",
         "ocr_model_refresh": "Refresh Models",
         # Phase 7: Tesseract Provider messages (D-09)
         "tesseract_accuracy_warning": (
             "Note: Tesseract accuracy is lower than LLM-based providers."
         ),
-        "tesseract_not_installed": ("Tesseract is not installed (command not found)."),
         "tesseract_not_installed_hint": (
             "Tesseract is not installed. Please use another provider."
         ),
@@ -1169,7 +1150,6 @@ LANG = {
         "settings_runpod_url": "RunPod Endpoint URL:",
         "settings_runpod_model": "RunPod Model Name (Optional):",
         "settings_runpod_model_hint": "(for RunPod Serverless endpoint)",
-        "llm_fetching_ollama_models": "⏳ Fetching Ollama models…",
         "llm_fetching_runpod_models": "⏳ Fetching RunPod models…",
         "llm_env_key_unset_static_runpod": (
             "API key not set — showing recommended models "
@@ -1186,12 +1166,8 @@ LANG = {
             "{n} unprocessed page(s) remaining (from p.{first}). "
             "Use '⏯ Resume' to continue while keeping completed results."
         ),
-        "ocr_fetch_models": "📥 Fetch Models",
         "ocr_open_llm_config": "⚙ LLM Settings…",
         "ocr_clear": "🧹 Clear",
-        "ocr_models_fetched": "Fetched {count} model(s)",
-        "ocr_models_fetch_fail": "Fetch failed: {error}",
-        "ocr_models_fetching": "⏳ Fetching models… ({url})",
         "ocr_run_first": 'Press "Run OCR" to start',
         "ocr_params_label": "Advanced:",
         "ocr_scale_short": "Scale:",
@@ -1247,7 +1223,6 @@ LANG = {
         # Common error
         "err_title": "Error",
         "info_title": "Info",
-        "warn_title": "Warning",
         "confirm_title": "Confirm",
         # M-10: migrated hardcoded strings
         "ocr_cost_estimate": "~${cost:.3f}",
