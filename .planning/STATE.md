@@ -2,19 +2,19 @@
 gsd_state_version: 1.0
 milestone: v1.7.1
 milestone_name: 現機能ブラッシュアップ + APIキー入力欄
-current_phase: 2
+current_phase: 02
 current_phase_name: OCR 磨き込み（レビュー残の現行照合と二重実装解消）
-status: Phase 01 全4プラン完了（01-04 CR-01ギャップ閉塞済み）
-stopped_at: Phase 2 context gathered
-last_updated: "2026-07-04T18:00:47.883Z"
-last_activity: 2026-07-04
-last_activity_desc: Phase 01 complete, transitioned to Phase 2
+status: executing
+stopped_at: Phase 02 Wave 1 (02-01) complete
+last_updated: "2026-07-05T07:45:00.000Z"
+last_activity: 2026-07-05
+last_activity_desc: Phase 02 Wave 1 (02-01) complete — OCR provider registry 堅牢化
 progress:
   total_phases: 4
   completed_phases: 1
-  total_plans: 4
-  completed_plans: 4
-  percent: 25
+  total_plans: 8
+  completed_plans: 5
+  percent: 31
 ---
 
 # Project State
@@ -24,16 +24,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-07-04)
 
 **Core value:** 大きな PDF でも Undo/Redo が正しく・速く動作し、コードが読みやすく保守しやすい状態にする
-**Current focus:** Phase 01 — api-llm
+**Current focus:** Phase 02 — OCR 磨き込み（レビュー残の現行照合と二重実装解消）
 
 ## Current Position
 
-Phase: 2 — OCR 磨き込み（レビュー残の現行照合と二重実装解消）
-Plan: Not started
-Status: Phase 01 全4プラン完了（01-04 CR-01ギャップ閉塞済み）
-Last activity: 2026-07-04 — Phase 01 complete, transitioned to Phase 2
+Phase: 02 (OCR 磨き込み（レビュー残の現行照合と二重実装解消）) — EXECUTING
+Plan: 02-01 complete (1/4), next is 02-02
+Status: Wave 1 (02-01) complete — register_ocr_provider 堅牢化・公開アクセサ追加。Wave 2 (02-02) へ進行
+Last activity: 2026-07-05 — Phase 02 Wave 1 (02-01) complete
 
-Progress: [██▌░░░░░░░] 25%
+Progress: [███░░░░░░░] 31%
 
 ## v1.7.1 Phase Map
 
@@ -267,7 +267,7 @@ Decisions are logged in PROJECT.md Key Decisions table.
 
 ## Session Continuity
 
-Last session: 2026-07-04T18:00:47.872Z
+Last session: 2026-07-04T23:08:27.509Z
 Stopped at: Phase 2 context gathered
 Resume file: .planning/phases/02-ocr/02-CONTEXT.md
 
