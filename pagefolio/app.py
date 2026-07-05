@@ -196,8 +196,9 @@ class PDFEditorApp(
         # WM_DELETE_WINDOW
         self.root.protocol("WM_DELETE_WINDOW", self._quit)
 
-        # キーボードショートカットの動的読み込み
-        default_shortcuts = {
+        # キーボードショートカットの動的読み込み（既定 8 種・後続 04-02 の
+        # ShortcutsDialog 保存時にも self._bind_shortcuts() を再利用する・D-05）
+        self._default_shortcuts = {
             "open_file": "<Control-o>",
             "save_file": "<Control-s>",
             "undo": "<Control-z>",
@@ -208,10 +209,7 @@ class PDFEditorApp(
             "print_pdf": "<Control-p>",
         }
 
-        custom_shortcuts = self.settings.get("shortcuts", {})
-        shortcuts = merge_shortcuts(default_shortcuts, custom_shortcuts)
-
-        cmd_map = {
+        self._cmd_map = {
             "open_file": self._open_file,
             "save_file": self._save_file,
             "undo": self._undo,
@@ -225,19 +223,40 @@ class PDFEditorApp(
             "rotate_180": lambda: self._rotate_selected(180),
         }
 
+        self._bind_shortcuts()
+
+    def _bind_shortcuts(self):
+        """settings["shortcuts"] から現在のキーバインドを（再）構築する（D-05）。
+
+        再呼び出し時は前回バインドした keysym（shift variant 含む）を
+        先に unbind してから新設定で再バインドする（旧キーが残らない・Pitfall 1）。
+        """
+        for old_keysym in getattr(self, "_bound_keysyms", []):
+            try:
+                self.root.unbind(old_keysym)
+            except Exception as e:
+                logger.debug("ショートカット unbind 失敗: %s", e)
+
+        custom_shortcuts = self.settings.get("shortcuts", {})
+        shortcuts = merge_shortcuts(self._default_shortcuts, custom_shortcuts)
+
+        bound = []
         for cmd_name, keysym in shortcuts.items():
-            func = cmd_map.get(cmd_name)
+            func = self._cmd_map.get(cmd_name)
             if func and keysym:
                 try:
                     self.root.bind(keysym, lambda e, f=func: f())
+                    bound.append(keysym)
                     # 大文字小文字の対応 (Shift なし Control などのため)
                     variant = shift_variant_keysym(keysym)
                     if variant is not None:
                         self.root.bind(variant, lambda e, f=func: f())
+                        bound.append(variant)
                 except Exception as ex:
                     logger.warning(
                         f"Failed to bind shortcut {keysym} for {cmd_name}: {ex}"
                     )
+        self._bound_keysyms = bound
 
     # ══════════════════════════════════════════
     #  ユーティリティ
