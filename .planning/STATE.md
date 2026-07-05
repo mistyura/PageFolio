@@ -5,15 +5,15 @@ milestone_name: 現機能ブラッシュアップ + APIキー入力欄
 current_phase: 04
 current_phase_name: ui-ux
 status: executing
-stopped_at: Completed 04-02-PLAN.md
-last_updated: "2026-07-05T10:00:28.845Z"
+stopped_at: Completed 04-03-PLAN.md
+last_updated: "2026-07-05T10:20:28.651Z"
 last_activity: 2026-07-05
 last_activity_desc: Phase 04 execution started
 progress:
   total_phases: 4
   completed_phases: 3
   total_plans: 16
-  completed_plans: 14
+  completed_plans: 15
   percent: 75
 ---
 
@@ -29,7 +29,7 @@ See: .planning/PROJECT.md (updated 2026-07-04)
 ## Current Position
 
 Phase: 04 (ui-ux) — EXECUTING
-Plan: 3 of 4
+Plan: 4 of 4
 Status: Ready to execute
 Last activity: 2026-07-05 — Phase 04 execution started
 
@@ -97,6 +97,7 @@ Progress: [█████░░░░░] 50%
 | Phase 03-v1-5-0 P04 | 18min | 2 tasks | 6 files |
 | Phase 04 P01 | 3min | 3 tasks | 2 files |
 | Phase 04 P02 | 12min | 3 tasks | 6 files |
+| Phase 04 P03 | 20min | 3 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -224,6 +225,10 @@ Decisions are logged in PROJECT.md Key Decisions table.
 - [Phase ?]: [Phase 04-01]: _bind_shortcuts() は self._bound_keysyms で前回バインドした keysym(shift variant含む)を追跡し、再呼び出し時に全て unbind してから再バインドする
 - [Phase ?]: [Phase 04-02]: ShortcutsDialog は保存前 self._shortcuts の working copy のみ編集し、保存時に既定と異なる項目のみ settings['shortcuts'] へ完全置換してから app._bind_shortcuts→_save_settings の順で即時反映する
 - [Phase ?]: [Phase 04-02]: SettingsDialog.__init__ に後方互換の app=None を追加し、_open_settings で app=self を渡すことで ShortcutsDialog へ app 参照を配線した
+- [Phase ?]: [Phase 04-03]: 共通/固有見出しは _on_provider_change の各分岐内で before=self.scale_row により都度再配置する（既存の specific-frame/effort-temperature の挿入ロジックは無変更）
+- [Phase ?]: [Phase 04-03]: _apply_llm_settings_live は _rebuild_ui を呼ばずに self.settings.update+_save_settingsのみ行う軽量反映（nested on_apply から _rebuild_ui を呼ぶと開いているSettingsDialog自体が破棄されるため）
+- [Phase ?]: [Phase 04-03]: SettingsDialog.on_llm_apply は後方互換の任意引数とし getattr(self,'_on_llm_apply',None) で防御的に参照する
+- [Phase ?]: [Phase 04-03]: _probe_ollama_provider は _probe_lm_provider と同型のupdate_comboパラメータ化ヘルパーでOllama重複解消(C2)。lang.pyの未配線キー削除は04-04へ委譲
 
 ### Pending Todos
 
@@ -300,8 +305,8 @@ Decisions are logged in PROJECT.md Key Decisions table.
 
 ## Session Continuity
 
-Last session: 2026-07-05T10:00:28.833Z
-Stopped at: Completed 04-02-PLAN.md
+Last session: 2026-07-05T10:20:28.638Z
+Stopped at: Completed 04-03-PLAN.md
 Resume file: None
 
 ## Operator Next Steps
