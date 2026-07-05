@@ -155,6 +155,10 @@ class PluginManager:
                 self._loading_plugin_id = plugin_id
                 try:
                     instance.on_load(app)
+                except Exception as e:
+                    # WR-04: on_load 失敗も enable_plugin と同様に log-and-continue し、
+                    # is_enabled()/plugins の状態と戻り値の整合を保つ
+                    logger.exception("プラグイン on_load 失敗 (%s): %s", plugin_id, e)
                 finally:
                     self._loading_plugin_id = None
             return instance
