@@ -24,7 +24,7 @@
 
 - [x] **V171-OCR-01**: L-6 小物が現行コード照合の上で一括解消される（プログレス 100% 問題・URL スキーム検証・モデル名エスケープ・`_fetch_models`/`_test_connection` 重複解消 等）
 - [x] **V171-OCR-02**: TesseractProvider が `tesseract_lang` 設定を尊重する（利用不可時は自動フォールバック・L-4）
-- [ ] **V171-OCR-03**: プラグイン OCR registry が堅牢化される（重複名警告・unload 時登録解除・公開アクセサ・L-2/L-3）
+- [x] **V171-OCR-03**: プラグイン OCR registry が堅牢化される（重複名警告・unload 時登録解除・公開アクセサ・L-2/L-3）
 - [x] **V171-OCR-04**: producer-consumer ロジックが一本化される（`ocr.py` 未使用ヘルパーと `ocr_dialog.py` 独自実装の二重実装解消・L-1）
 
 ### ページ操作磨き込み（PAGE）
@@ -77,7 +77,7 @@
 | V171-UIUX-03 | Phase 4 | Pending |
 | V171-OCR-01 | Phase 2 | Complete |
 | V171-OCR-02 | Phase 2 | Complete |
-| V171-OCR-03 | Phase 2 | Pending |
+| V171-OCR-03 | Phase 2 | Complete |
 | V171-OCR-04 | Phase 2 | Complete |
 | V171-PAGE-01 | Phase 3 | Pending |
 | V171-PAGE-02 | Phase 3 | Pending |
