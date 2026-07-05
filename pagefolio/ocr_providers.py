@@ -1511,11 +1511,18 @@ class RunPodProvider(OCRProvider):
         try:
             with urllib.request.urlopen(req, timeout=timeout) as resp:  # noqa: S310
                 body = resp.read().decode("utf-8")
-        except Exception:
-            return [self.model] if self.model else ["runpod-model"]
+        except socket.timeout as e:
+            raise TimeoutError(f"timed out after {timeout}s") from e
+        except urllib.error.HTTPError as e:
+            raise RuntimeError(f"HTTP {e.code}: {e.reason}") from e
+        except urllib.error.URLError as e:
+            reason = getattr(e, "reason", e)
+            if isinstance(reason, socket.timeout):
+                raise TimeoutError(f"timed out after {timeout}s") from e
+            raise ConnectionError(str(reason)) from e
 
         try:
             data = json.loads(body)
-            return [m.get("id") for m in data.get("data", []) if m.get("id")]
-        except Exception:
-            return [self.model] if self.model else ["runpod-model"]
+        except json.JSONDecodeError as e:
+            raise RuntimeError(f"Unexpected response: {body[:500]}") from e
+        return [m.get("id") for m in data.get("data", []) if m.get("id")]
