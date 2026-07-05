@@ -194,7 +194,7 @@ PageFolio の既存コードベースに対する最適化プロジェクト。
 
 ## Current State
 
-**進行中: v1.7.1 現機能ブラッシュアップ + APIキー入力欄** — Phase 1（APIキー入力欄）完了（2026-07-04）。4 プラン全完了（Wave 4 は 01-VERIFICATION.md CR-01 のギャップ閉塞）。`pytest 728 件グリーン・ruff クリーン`。Phase 2（OCR 磨き込み）へ継続。
+**進行中: v1.7.1 現機能ブラッシュアップ + APIキー入力欄** — Phase 1（APIキー入力欄）完了（2026-07-04）。Phase 2（OCR 磨き込み）完了（2026-07-05）。4 プラン全完了（プラグイン registry 堅牢化・Tesseract 言語尊重・L-6 小物一括解消・producer-consumer 一本化＝新設 `ocr_pipeline.py`）。V171-OCR-01〜04 全充足。コードレビューで Critical 2 件（Python 3.8 互換性破壊・RunPod エラー抑殺）含む 6 件修正済み。`pytest 780 件グリーン・ruff クリーン`。Phase 3（ページ操作磨き込み + v1.5.0 回帰テスト）へ継続。
 
 **Shipped: v1.6.0 品質向上・AI強化・設定/UI改善 (2026-06-20)** — 4 フェーズ / 11 プラン / 23 タスク。`APP_VERSION = v1.6.0`（テスト 597 件グリーン・ruff クリーン）。
 
@@ -268,4 +268,4 @@ PageFolio の既存コードベースに対する最適化プロジェクト。
 4. 決定事項 → Key Decisions を更新
 
 ---
-*Last updated: 2026-07-05 — v1.7.1 Phase 1（APIキー入力欄）完了.*
+*Last updated: 2026-07-05 — v1.7.1 Phase 2（OCR 磨き込み）完了.*
