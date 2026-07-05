@@ -1578,6 +1578,7 @@ class TestClearResetsFatalState:
         fake._is_cloud_provider = lambda: False
         fake._render_next_page = lambda gen=None: None
         fake._start_worker_thread = lambda gen=None: None
+        fake._maybe_show_lang_fallback_notice = lambda: None
         fake.custom_prompt = ""
 
         OCRDialog._on_run(fake)
@@ -1731,6 +1732,8 @@ class TestOcrDialogOnRun:
         fake._render_next_page = lambda gen=None: None
         # _start_worker_thread を no-op に差し替え
         fake._start_worker_thread = lambda gen=None: None
+        # D-07: フォールバック注記更新を no-op に差し替え（Tk ラベル未スタブのため）
+        fake._maybe_show_lang_fallback_notice = lambda: None
         return fake
 
     def test_on_run_regenerates_lmstudio_provider_with_live_values(self, monkeypatch):

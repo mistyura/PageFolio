@@ -449,6 +449,10 @@ LANG = {
         "tesseract_lang_fallback": (
             "jpn 言語パックが見つかりません。eng のみで実行します"
         ),
+        # D-07: OCRDialog 非モーダル注記（段階的縮退フォールバック発生時・1回のみ表示）
+        "ocr_tesseract_lang_fallback_notice": (
+            "⚠ 指定言語 {requested} は利用不可のため {effective} で実行します"
+        ),
         "ocr_provider_name_tesseract": "Tesseract (ローカル)",
         # CR-01: RunPod ローカライズ表示名（WR-02）
         "ocr_provider_name_runpod": "RunPod (Serverless)",
@@ -1024,6 +1028,10 @@ LANG = {
         ),
         "tesseract_lang_fallback": (
             "jpn language pack not found. Running with eng only."
+        ),
+        # D-07: OCRDialog non-modal notice (shown once when degraded fallback occurs)
+        "ocr_tesseract_lang_fallback_notice": (
+            "⚠ Requested language {requested} is unavailable; running with {effective}"
         ),
         "ocr_provider_name_tesseract": "Tesseract (Local)",
         # CR-01: RunPod localized display name (WR-02)

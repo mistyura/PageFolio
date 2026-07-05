@@ -477,6 +477,20 @@ class OCRDialog(tk.Toplevel):
         )
         self._progress_label.pack(pady=(4, 2))
 
+        # D-07: Tesseract 言語段階的縮退のフォールバック非モーダル注記
+        # （WARNING 色・実行は止めない・OCR 結果 raw には混入させない）。
+        # フォールバック未発生時は空文字のまま非表示（pack しない）。
+        self._lang_fallback_notice_var = tk.StringVar(value="")
+        self._lang_fallback_label = tk.Label(
+            self,
+            textvariable=self._lang_fallback_notice_var,
+            bg=C["BG_DARK"],
+            fg=C["WARNING"],
+            font=self._font(-2),
+            wraplength=460,
+            justify="left",
+        )
+
         self.progress_bar = ttk.Progressbar(
             self, mode="determinate", maximum=max(1, len(self.page_indices))
         )
@@ -949,12 +963,42 @@ class OCRDialog(tk.Toplevel):
             self.concurrency = max(
                 1, min(self.provider.max_concurrency, self.concurrency)
             )
+            # D-07: Tesseract 段階的縮退フォールバックの非モーダル注記を更新
+            self._maybe_show_lang_fallback_notice()
         except Exception as e:
             logger.error("provider 再生成に失敗しました: %s", e)
             lang = self.app.settings.get("lang", "ja")
             self.progress_var.set(LANG[lang]["ocr_provider_rebuild_error"].format(e=e))
         # provider 差し替えで supports_text_prompt が変わり得るため再評価する
         self._update_summary_btn_state()
+
+    def _maybe_show_lang_fallback_notice(self):
+        """D-07: TesseractProvider の段階的縮退フォールバックを検知したら
+        非モーダル WARNING 注記を表示する（実行は止めない）。
+
+        フォールバック非発生時（他プロバイダ選択時含む）は注記を消す。
+        OCR 結果テキスト（self.text・raw コピー/保存対象）には一切書き込まない
+        （V16-D-02 のコピー/保存 raw 維持方針と整合）。provider 再生成の都度
+        呼ばれるだけで OCR 実行中（1ページごと）には呼ばれないため、
+        同一実行内で複数ページがあっても注記は実質的に1回のみ更新される。
+        """
+        provider = getattr(self, "provider", None)
+        fallback = bool(
+            provider is not None and getattr(provider, "lang_fallback", False)
+        )
+        if fallback:
+            requested = getattr(provider, "requested_lang", "") or ""
+            effective = getattr(provider, "effective_lang", "") or ""
+            msg = self._L["ocr_tesseract_lang_fallback_notice"].format(
+                requested=requested, effective=effective
+            )
+            self._lang_fallback_notice_var.set(msg)
+            if not self._lang_fallback_label.winfo_ismapped():
+                self._lang_fallback_label.pack(before=self.progress_bar, pady=(0, 4))
+        else:
+            self._lang_fallback_notice_var.set("")
+            if self._lang_fallback_label.winfo_ismapped():
+                self._lang_fallback_label.pack_forget()
 
     def _sync_param_vars_from_settings(self):
         """読み取り専用の数値パラメータ Tk 変数を app.settings の値へ同期する。
@@ -1307,6 +1351,8 @@ class OCRDialog(tk.Toplevel):
         # H-3: provider 再生成後に concurrency を max_concurrency 以下に再クランプ
         # （lmstudio→gemini 切替時など max_concurrency が変わる場合に対応）
         self.concurrency = max(1, min(self.provider.max_concurrency, self.concurrency))
+        # D-07: Tesseract 段階的縮退フォールバックの非モーダル注記を更新
+        self._maybe_show_lang_fallback_notice()
 
         # producer-consumer: バッファ初期化 → consumer 先行起動 → producer 開始
         # バッファ上限 = concurrency + 1（余裕係数 1 でワーカー飢えを防止・D-02）

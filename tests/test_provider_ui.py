@@ -682,7 +682,13 @@ class TestSyncParamVarsFromSettings:
 
 
 def _make_apply_llm_settings_stub(settings, provider=None):
-    """_apply_llm_settings を Tk 生成なしで呼ぶスタブを返す。"""
+    """_apply_llm_settings を Tk 生成なしで呼ぶスタブを返す。
+
+    D-07: _maybe_show_lang_fallback_notice が参照する属性
+    （_lang_fallback_notice_var/_lang_fallback_label/_L）も併せて用意し、
+    provider 再生成の try/except に AttributeError が黙って飲み込まれない
+    ようにする（試験対象コードパスを実際に通す）。
+    """
     stub = types.SimpleNamespace(
         app=types.SimpleNamespace(settings=dict(settings)),
         custom_prompt="旧プロンプト",
@@ -694,6 +700,18 @@ def _make_apply_llm_settings_stub(settings, provider=None):
         progress_var=_VarStub(),
         url_var=_VarStub(),
         model_var=_VarStub(),
+        _lang_fallback_notice_var=_VarStub(),
+        _lang_fallback_label=types.SimpleNamespace(
+            winfo_ismapped=lambda: False,
+            pack=lambda **kw: None,
+            pack_forget=lambda: None,
+        ),
+        progress_bar=object(),
+        _L={
+            "ocr_tesseract_lang_fallback_notice": (
+                "⚠ 指定言語 {requested} は利用不可のため {effective} で実行します"
+            )
+        },
     )
     return stub
 
@@ -1168,3 +1186,120 @@ class TestRunpodSessionKeySlot:
         assert session["claude"] == "sk-ant-DUMMY"
         assert session["gemini"] == "AIza-DUMMY"
         assert session["runpod"] == "rp-DUMMY"
+
+
+# ══════════════════════════════════════════════════════════════
+#  D-07: OCRDialog._maybe_show_lang_fallback_notice
+#  （Tesseract 段階的縮退フォールバックの非モーダル WARNING 注記）
+# ══════════════════════════════════════════════════════════════
+
+
+class _FakeStringVar:
+    """tk.StringVar の最小スタブ（Tk 生成なしでロジックのみ検証）。"""
+
+    def __init__(self, value=""):
+        self._value = value
+
+    def set(self, value):
+        self._value = value
+
+    def get(self):
+        return self._value
+
+
+class _FakeLabel:
+    """tk.Label の最小スタブ。pack/pack_forget 呼び出しと表示状態のみ記録する。"""
+
+    def __init__(self):
+        self.mapped = False
+        self.pack_calls = []
+        self.pack_forget_calls = 0
+
+    def winfo_ismapped(self):
+        return self.mapped
+
+    def pack(self, **kwargs):
+        self.mapped = True
+        self.pack_calls.append(kwargs)
+
+    def pack_forget(self):
+        self.mapped = False
+        self.pack_forget_calls += 1
+
+
+def _make_lang_fallback_fake(provider):
+    """_maybe_show_lang_fallback_notice 用の最小 fake OCRDialog を返す。
+
+    OCR 結果テキスト（raw）への混入がないことも検証できるよう、
+    self.text.insert 呼び出しを記録するスタブを併せて用意する。
+    """
+    from pagefolio.constants import LANG
+
+    text_inserts = []
+    fake = types.SimpleNamespace(
+        provider=provider,
+        _L=LANG["ja"],
+        _lang_fallback_notice_var=_FakeStringVar(),
+        _lang_fallback_label=_FakeLabel(),
+        progress_bar=object(),
+        text=types.SimpleNamespace(insert=lambda *a, **k: text_inserts.append((a, k))),
+    )
+    return fake, text_inserts
+
+
+class TestMaybeShowLangFallbackNotice:
+    """D-07: フォールバック発生時に1回だけ非モーダル注記を表示し、
+    OCR 結果 raw には混入させない。非発生時は注記を出さない。"""
+
+    def test_notice_shown_when_fallback_true(self):
+        """lang_fallback=True のプロバイダで注記が表示され要求/実効言語を含む"""
+        from pagefolio.ocr_dialog import OCRDialog
+
+        provider = types.SimpleNamespace(
+            lang_fallback=True, requested_lang="deu+fra", effective_lang="jpn+eng"
+        )
+        fake, text_inserts = _make_lang_fallback_fake(provider)
+
+        OCRDialog._maybe_show_lang_fallback_notice(fake)
+
+        msg = fake._lang_fallback_notice_var.get()
+        assert "deu+fra" in msg
+        assert "jpn+eng" in msg
+        assert fake._lang_fallback_label.mapped is True
+        assert text_inserts == [], "OCR結果テキスト(raw)に注記が混入してはいけない"
+
+    def test_notice_hidden_when_no_fallback(self):
+        """lang_fallback=False のときは注記が消え非表示になる"""
+        from pagefolio.ocr_dialog import OCRDialog
+
+        provider = types.SimpleNamespace(lang_fallback=False)
+        fake, _ = _make_lang_fallback_fake(provider)
+        fake._lang_fallback_label.mapped = True  # 前回表示状態を模擬
+
+        OCRDialog._maybe_show_lang_fallback_notice(fake)
+
+        assert fake._lang_fallback_notice_var.get() == ""
+        assert fake._lang_fallback_label.mapped is False
+
+    def test_notice_hidden_for_provider_without_lang_fallback_attr(self):
+        """lang_fallback 属性を持たないプロバイダ（claude 等）でも例外なく非表示"""
+        from pagefolio.ocr_dialog import OCRDialog
+
+        provider = types.SimpleNamespace()  # lang_fallback 属性なし
+        fake, _ = _make_lang_fallback_fake(provider)
+
+        OCRDialog._maybe_show_lang_fallback_notice(fake)
+
+        assert fake._lang_fallback_notice_var.get() == ""
+        assert fake._lang_fallback_label.mapped is False
+
+    def test_notice_hidden_when_provider_is_none(self):
+        """provider が None（未生成）でも例外なく非表示のまま"""
+        from pagefolio.ocr_dialog import OCRDialog
+
+        fake, _ = _make_lang_fallback_fake(None)
+
+        OCRDialog._maybe_show_lang_fallback_notice(fake)
+
+        assert fake._lang_fallback_notice_var.get() == ""
+        assert fake._lang_fallback_label.mapped is False
