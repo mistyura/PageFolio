@@ -57,6 +57,7 @@ PageFolio/
 │   │   ├── plugin.py          # PluginDialog
 │   │   ├── merge.py           # MergeOrderDialog / MergeResizeDialog
 │   │   ├── llm_config.py      # LLMConfigDialog（OCR プロバイダ / モデル設定）
+│   │   ├── shortcuts.py       # ShortcutsDialog（cmd_map 11コマンドの実キーキャプチャ編集・保存時重複拒否）
 │   │   ├── export_images.py   # ExportImagesDialog（ページ→画像変換 / 範囲・スケール指定）
 │   │   └── password.py        # SetPasswordDialog（パスワード付与の入力 UI）
 │   └── file_drop.py           # ファイル D&D（tkinterdnd2 連携）
