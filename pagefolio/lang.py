@@ -98,6 +98,7 @@ LANG = {
         "btn_duplicate": "📋 現在ページを複製",
         "btn_insert_blank": "📄 白紙ページを挿入",
         "btn_watermark": "🔤 透かしを追加…",
+        "btn_watermark_image": "🖼 画像透かしを追加…",
         "btn_page_number": "🔢 ページ番号を印字…",
         "status_duplicated": "p.{page} を複製して直後に挿入しました",
         # トリミング
@@ -688,6 +689,7 @@ LANG = {
         "btn_duplicate": "📋 Duplicate Current Page",
         "btn_insert_blank": "📄 Insert Blank Page",
         "btn_watermark": "🔤 Add Watermark...",
+        "btn_watermark_image": "🖼 Add Image Watermark...",
         "btn_page_number": "🔢 Add Page Numbers...",
         "status_duplicated": "Duplicated p.{page} and inserted after it",
         # Crop

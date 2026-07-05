@@ -539,6 +539,13 @@ class UIBuilderMixin:
         )
         btn(
             f2,
+            self._t("btn_watermark_image"),
+            self._add_watermark_image,
+            needs_doc=True,
+            edit_only=True,
+        )
+        btn(
+            f2,
             self._t("btn_page_number"),
             self._add_page_numbers,
             needs_doc=True,
