@@ -478,7 +478,6 @@ class LLMConfigDialog(tk.Toplevel):
             insertbackground=C["TEXT_MAIN"],
             relief="flat",
         )
-        self.runpod_api_key_entry.pack(side="left", fill="x", expand=True, padx=4)
         self._runpod_key_shown = False
 
         def _toggle_runpod_key():
@@ -498,7 +497,10 @@ class LLMConfigDialog(tk.Toplevel):
             width=4,
             command=_toggle_runpod_key,
         )
-        runpod_key_toggle_btn.pack(side="left", padx=(2, 0))
+        # H-7: 表示切替ボタンを先に右詰めでパックして必要幅を確保し、
+        # 幅が足りない場合は Entry 側（expand）が縮むようにする。
+        runpod_key_toggle_btn.pack(side="right", padx=(2, 0))
+        self.runpod_api_key_entry.pack(side="left", fill="x", expand=True, padx=4)
 
         runpod_note = self._L["llm_key_session_note"]
         if os.environ.get("RUNPOD_API_KEY"):
@@ -576,7 +578,6 @@ class LLMConfigDialog(tk.Toplevel):
             insertbackground=C["TEXT_MAIN"],
             relief="flat",
         )
-        self.claude_api_key_entry.pack(side="left", fill="x", expand=True, padx=4)
         self._claude_key_shown = False
 
         def _toggle_claude_key():
@@ -596,7 +597,10 @@ class LLMConfigDialog(tk.Toplevel):
             width=4,
             command=_toggle_claude_key,
         )
-        claude_key_toggle_btn.pack(side="left", padx=(2, 0))
+        # H-7: 表示切替ボタンを先に右詰めでパックして必要幅を確保し、
+        # 幅が足りない場合は Entry 側（expand）が縮むようにする。
+        claude_key_toggle_btn.pack(side="right", padx=(2, 0))
+        self.claude_api_key_entry.pack(side="left", fill="x", expand=True, padx=4)
 
         claude_note = self._L["llm_key_session_note"]
         if os.environ.get("ANTHROPIC_API_KEY"):
@@ -673,7 +677,6 @@ class LLMConfigDialog(tk.Toplevel):
             insertbackground=C["TEXT_MAIN"],
             relief="flat",
         )
-        self.gemini_api_key_entry.pack(side="left", fill="x", expand=True, padx=4)
         self._gemini_key_shown = False
 
         def _toggle_gemini_key():
@@ -693,7 +696,10 @@ class LLMConfigDialog(tk.Toplevel):
             width=4,
             command=_toggle_gemini_key,
         )
-        gemini_key_toggle_btn.pack(side="left", padx=(2, 0))
+        # H-7: 表示切替ボタンを先に右詰めでパックして必要幅を確保し、
+        # 幅が足りない場合は Entry 側（expand）が縮むようにする。
+        gemini_key_toggle_btn.pack(side="right", padx=(2, 0))
+        self.gemini_api_key_entry.pack(side="left", fill="x", expand=True, padx=4)
 
         gemini_note = self._L["llm_key_session_note"]
         gemini_env_var = (
