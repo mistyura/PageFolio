@@ -9,7 +9,7 @@ from pagefolio.lang import LANG  # noqa: F401
 from pagefolio.themes import THEMES, C  # noqa: F401
 
 # ===================== バージョン =====================
-APP_VERSION = "v1.7.1"
+APP_VERSION = "v1.7.2"
 
 # ===================== ファイル名定数 =====================
 SETTINGS_FILE = "pagefolio_settings.json"

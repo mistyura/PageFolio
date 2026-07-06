@@ -54,7 +54,10 @@ class LLMConfigDialog(tk.Toplevel):
         self._L = LANG[lang]
         self.title(self._L["llm_config_title"])
         self.configure(bg=C["BG_DARK"])
-        self.resizable(False, False)
+        # 環境によって画面解像度が低い/フォントが大きいと内容が画面に収まらないため、
+        # スクロール可能にしつつウィンドウのリサイズも許可する（H-6）。
+        self.resizable(True, True)
+        self.minsize(420, 320)
         self.grab_set()
 
         self.current_settings = dict(current_settings)
@@ -86,14 +89,96 @@ class LLMConfigDialog(tk.Toplevel):
 
         self._build()
         self.update_idletasks()
-        h = max(480, self.winfo_reqheight() + 20)
+        h = self._compute_dialog_height()
         px = parent.winfo_rootx() + parent.winfo_width() // 2
         py = parent.winfo_rooty() + parent.winfo_height() // 2
         self.geometry(f"{self._dialog_w}x{h}+{px - self._dialog_w // 2}+{py - h // 2}")
 
+    # ── スクロール可能領域の構築（H-6）──────────────────
+    def _build_scrollable_area(self):
+        """本文をスクロール可能な Canvas 上に構築するための土台を作る。
+
+        画面が小さい/フォントが大きい環境でも内容全体へアクセスできるよう、
+        Apply/Cancel ボタン行はスクロール領域の外（下部固定）に配置する。
+        戻り値は本文ウィジェットの親として使う Frame（self._body）。
+        """
+        outer = tk.Frame(self, bg=C["BG_DARK"])
+        outer.pack(side="top", fill="both", expand=True)
+
+        canvas = tk.Canvas(outer, bg=C["BG_DARK"], highlightthickness=0, borderwidth=0)
+        vscroll = ttk.Scrollbar(outer, orient="vertical", command=canvas.yview)
+        canvas.configure(yscrollcommand=vscroll.set)
+        canvas.pack(side="left", fill="both", expand=True)
+        vscroll.pack(side="right", fill="y")
+
+        body = tk.Frame(canvas, bg=C["BG_DARK"])
+        body_window = canvas.create_window((0, 0), window=body, anchor="nw")
+
+        def _on_body_configure(_event=None):
+            try:
+                canvas.configure(scrollregion=canvas.bbox("all"))
+            except tk.TclError:
+                pass
+
+        def _on_canvas_configure(event):
+            try:
+                canvas.itemconfig(body_window, width=event.width)
+            except tk.TclError:
+                pass
+
+        body.bind("<Configure>", _on_body_configure)
+        canvas.bind("<Configure>", _on_canvas_configure)
+
+        def _on_mousewheel(event):
+            canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
+
+        def _on_mousewheel_linux(event):
+            canvas.yview_scroll(-1 if event.num == 4 else 1, "units")
+
+        def _bind_wheel(_event=None):
+            canvas.bind_all("<MouseWheel>", _on_mousewheel)
+            canvas.bind_all("<Button-4>", _on_mousewheel_linux)
+            canvas.bind_all("<Button-5>", _on_mousewheel_linux)
+
+        def _unbind_wheel(_event=None):
+            canvas.unbind_all("<MouseWheel>")
+            canvas.unbind_all("<Button-4>")
+            canvas.unbind_all("<Button-5>")
+
+        canvas.bind("<Enter>", _bind_wheel)
+        canvas.bind("<Leave>", _unbind_wheel)
+        self.bind("<Destroy>", lambda _e: _unbind_wheel(), add="+")
+
+        self._canvas = canvas
+        return body
+
+    # ── ダイアログ高さ算出（画面サイズにクランプ・H-6）──────
+    def _compute_dialog_height(self):
+        """本文の必要高さと画面サイズから、はみ出さないウィンドウ高を求める。
+
+        内容が画面に収まる場合はそのまま表示し、収まらない場合は画面高に
+        クランプしてスクロールバー経由でアクセスできるようにする。
+        """
+        try:
+            self.update_idletasks()
+            content_h = self._body.winfo_reqheight() + self._btn_row.winfo_reqheight()
+            screen_h = self.winfo_screenheight()
+        except tk.TclError:
+            return 480
+        max_h = max(320, screen_h - 100)
+        return min(max_h, max(480, content_h + 40))
+
     def _build(self):
+        # ボタン行を先に下部固定でパックし、スクロール領域が残りを使うようにする
+        # （pack はパック順に空間を割り当てるため、この順序が重要・H-6）。
+        self._btn_row = tk.Frame(self, bg=C["BG_DARK"])
+        self._btn_row.pack(side="bottom", pady=(8, 14))
+
+        body = self._build_scrollable_area()
+        self._body = body
+
         tk.Label(
-            self,
+            body,
             text=self._L["llm_config_heading"],
             bg=C["BG_DARK"],
             fg=C["ACCENT"],
@@ -101,7 +186,7 @@ class LLMConfigDialog(tk.Toplevel):
         ).pack(pady=(14, 10))
 
         # ── プロバイダ選択（off / lmstudio / claude）──
-        provider_row = tk.Frame(self, bg=C["BG_DARK"])
+        provider_row = tk.Frame(body, bg=C["BG_DARK"])
         provider_row.pack(fill="x", padx=24, pady=2)
         tk.Label(
             provider_row,
@@ -155,7 +240,7 @@ class LLMConfigDialog(tk.Toplevel):
         # 常時表示・非トグル。以下の各プロバイダ固有セクションフレームは
         # before=self.scale_row でこの見出しの後ろへ挿入される（_on_provider_change）。
         self._provider_section_heading = tk.Label(
-            self,
+            body,
             text=self._L["llm_config_provider_section"],
             bg=C["BG_DARK"],
             fg=C["WARNING"],
@@ -164,7 +249,7 @@ class LLMConfigDialog(tk.Toplevel):
         self._provider_section_heading.pack(anchor="w", padx=24, pady=(6, 2))
 
         # ── LM Studio 固有欄（lmstudio 選択時のみ表示）──
-        self.url_section_frame = tk.Frame(self, bg=C["BG_DARK"])
+        self.url_section_frame = tk.Frame(body, bg=C["BG_DARK"])
 
         # URL
         url_row = tk.Frame(self.url_section_frame, bg=C["BG_DARK"])
@@ -237,7 +322,7 @@ class LLMConfigDialog(tk.Toplevel):
         ).pack(side="left", padx=2)
 
         # ── Ollama 固有欄（ollama 選択時のみ表示）──
-        self.ollama_section_frame = tk.Frame(self, bg=C["BG_DARK"])
+        self.ollama_section_frame = tk.Frame(body, bg=C["BG_DARK"])
 
         # URL
         ollama_url_row = tk.Frame(self.ollama_section_frame, bg=C["BG_DARK"])
@@ -310,7 +395,7 @@ class LLMConfigDialog(tk.Toplevel):
         ).pack(side="left", padx=2)
 
         # ── RunPod 固有欄（runpod 選択時のみ表示）──
-        self.runpod_section_frame = tk.Frame(self, bg=C["BG_DARK"])
+        self.runpod_section_frame = tk.Frame(body, bg=C["BG_DARK"])
 
         # URL
         runpod_url_row = tk.Frame(self.runpod_section_frame, bg=C["BG_DARK"])
@@ -440,7 +525,7 @@ class LLMConfigDialog(tk.Toplevel):
         ).pack(side="left", padx=2)
 
         # ── Claude 固有欄（claude 選択時のみ表示）──
-        self.claude_section_frame = tk.Frame(self, bg=C["BG_DARK"])
+        self.claude_section_frame = tk.Frame(body, bg=C["BG_DARK"])
 
         # claude モデル選択
         claude_model_row = tk.Frame(self.claude_section_frame, bg=C["BG_DARK"])
@@ -538,7 +623,7 @@ class LLMConfigDialog(tk.Toplevel):
         ).pack(side="left", padx=2)
 
         # ── Gemini 固有欄（gemini 選択時のみ表示）──
-        self.gemini_section_frame = tk.Frame(self, bg=C["BG_DARK"])
+        self.gemini_section_frame = tk.Frame(body, bg=C["BG_DARK"])
 
         # gemini モデル選択
         gemini_model_row = tk.Frame(self.gemini_section_frame, bg=C["BG_DARK"])
@@ -638,7 +723,7 @@ class LLMConfigDialog(tk.Toplevel):
         ).pack(side="left", padx=2)
 
         # ── Tesseract 固有欄（tesseract 選択時のみ表示）──
-        self.tesseract_section_frame = tk.Frame(self, bg=C["BG_DARK"])
+        self.tesseract_section_frame = tk.Frame(body, bg=C["BG_DARK"])
 
         # 精度劣後注記（D-03: 常設ラベル・WARNING 色）
         tk.Label(
@@ -672,7 +757,7 @@ class LLMConfigDialog(tk.Toplevel):
         # を使って毎回「固有設定エリアの直後・共通パラメータ群の先頭」へ再配置する
         # （プロバイダ固有フレームと同じ挿入先アンカーのため call 順で位置決めする）。
         self._common_section_heading = tk.Label(
-            self,
+            body,
             text=self._L["llm_config_common_section"],
             bg=C["BG_DARK"],
             fg=C["WARNING"],
@@ -680,7 +765,7 @@ class LLMConfigDialog(tk.Toplevel):
         )
 
         # ── effort 欄（claude かつ effort 対応モデル時のみ表示）──
-        self.effort_frame = tk.Frame(self, bg=C["BG_DARK"])
+        self.effort_frame = tk.Frame(body, bg=C["BG_DARK"])
         effort_row = tk.Frame(self.effort_frame, bg=C["BG_DARK"])
         effort_row.pack(fill="x", padx=0, pady=2)
         tk.Label(
@@ -705,7 +790,7 @@ class LLMConfigDialog(tk.Toplevel):
         ).pack(side="left", padx=4)
 
         # ── temperature 欄（off/lmstudio または haiku 系モデル時に表示）──
-        self.temperature_frame = tk.Frame(self, bg=C["BG_DARK"])
+        self.temperature_frame = tk.Frame(body, bg=C["BG_DARK"])
         tmp_row = tk.Frame(self.temperature_frame, bg=C["BG_DARK"])
         tmp_row.pack(fill="x", padx=0, pady=2)
         tk.Label(
@@ -743,7 +828,7 @@ class LLMConfigDialog(tk.Toplevel):
 
         # ── 解像度倍率 ──
         # H-4: self 属性として保持しプロバイダ別セクションのアンカーに使用
-        self.scale_row = tk.Frame(self, bg=C["BG_DARK"])
+        self.scale_row = tk.Frame(body, bg=C["BG_DARK"])
         self.scale_row.pack(fill="x", padx=24, pady=(6, 2))
         tk.Label(
             self.scale_row,
@@ -774,7 +859,7 @@ class LLMConfigDialog(tk.Toplevel):
 
         # ocr_scale トレードオフ常設ヒント（D-12・テーマ色 C["TEXT_SUB"] 使用）
         tk.Label(
-            self,
+            body,
             text=self._L["ocr_scale_tradeoff_hint"],
             bg=C["BG_DARK"],
             fg=C["TEXT_SUB"],
@@ -782,7 +867,7 @@ class LLMConfigDialog(tk.Toplevel):
         ).pack(anchor="w", padx=24)
 
         # ── タイムアウト ──
-        to_row = tk.Frame(self, bg=C["BG_DARK"])
+        to_row = tk.Frame(body, bg=C["BG_DARK"])
         to_row.pack(fill="x", padx=24, pady=2)
         tk.Label(
             to_row,
@@ -811,7 +896,7 @@ class LLMConfigDialog(tk.Toplevel):
         ).pack(side="left", padx=4)
 
         # ── 最大トークン ──
-        mt_row = tk.Frame(self, bg=C["BG_DARK"])
+        mt_row = tk.Frame(body, bg=C["BG_DARK"])
         mt_row.pack(fill="x", padx=24, pady=2)
         tk.Label(
             mt_row,
@@ -847,7 +932,7 @@ class LLMConfigDialog(tk.Toplevel):
         ).pack(side="left", padx=4)
 
         # ── カスタムプロンプト ──
-        prompt_row = tk.Frame(self, bg=C["BG_DARK"])
+        prompt_row = tk.Frame(body, bg=C["BG_DARK"])
         prompt_row.pack(fill="x", padx=24, pady=2)
         tk.Label(
             prompt_row,
@@ -884,7 +969,7 @@ class LLMConfigDialog(tk.Toplevel):
         ).pack(side="left", padx=4, anchor="sw")
 
         # ── サマリプロンプト（全ページ統合サマリ生成用）──
-        summary_row = tk.Frame(self, bg=C["BG_DARK"])
+        summary_row = tk.Frame(body, bg=C["BG_DARK"])
         summary_row.pack(fill="x", padx=24, pady=2)
         tk.Label(
             summary_row,
@@ -921,7 +1006,7 @@ class LLMConfigDialog(tk.Toplevel):
         ).pack(side="left", padx=4, anchor="sw")
 
         # ── 並列度（concurrency）──
-        conc_row = tk.Frame(self, bg=C["BG_DARK"])
+        conc_row = tk.Frame(body, bg=C["BG_DARK"])
         conc_row.pack(fill="x", padx=24, pady=2)
         tk.Label(
             conc_row,
@@ -959,7 +1044,7 @@ class LLMConfigDialog(tk.Toplevel):
         # ── ステータスラベル ──
         self.lm_status_var = tk.StringVar(value="")
         self.lm_status_label = tk.Label(
-            self,
+            body,
             textvariable=self.lm_status_var,
             bg=C["BG_DARK"],
             fg=C["SUCCESS"],
@@ -969,17 +1054,15 @@ class LLMConfigDialog(tk.Toplevel):
         )
         self.lm_status_label.pack(anchor="w", padx=24, pady=(2, 4))
 
-        # ── 操作ボタン ──
-        btn_row = tk.Frame(self, bg=C["BG_DARK"])
-        btn_row.pack(pady=(8, 14))
+        # ── 操作ボタン（self._btn_row は _build_scrollable_area 前に確保済み）──
         ttk.Button(
-            btn_row,
+            self._btn_row,
             text=self._L["llm_config_apply"],
             style="Accent.TButton",
             command=self._apply,
         ).pack(side="left", padx=8)
         ttk.Button(
-            btn_row, text=self._L["llm_config_cancel"], command=self.destroy
+            self._btn_row, text=self._L["llm_config_cancel"], command=self.destroy
         ).pack(side="left", padx=8)
 
         # 初期表示：選択中プロバイダに応じて欄を切替
@@ -1127,10 +1210,12 @@ class LLMConfigDialog(tk.Toplevel):
         """
         try:
             self.update_idletasks()
-            h = max(480, self.winfo_reqheight() + 20)
+            h = self._compute_dialog_height()
+            # ユーザーが手動でリサイズ済みの場合はその幅を維持する（H-6）。
+            w = max(self._dialog_w, self.winfo_width())
             x = self.winfo_x()
             y = self.winfo_y()
-            self.geometry(f"{self._dialog_w}x{h}+{x}+{y}")
+            self.geometry(f"{w}x{h}+{x}+{y}")
         except tk.TclError:
             pass
 
