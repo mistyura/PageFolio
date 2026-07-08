@@ -183,9 +183,9 @@ class OCRDialog(tk.Toplevel):
     def _center(self, parent):
         self.update_idletasks()
         fs = self._font_size()
-        # クリア/コピー/保存/再開/読み取り実行/キャンセル/閉じる の7ボタンが収まる横幅
+        # 詳細設定行 + 結果領域 + 右ペイン（縦積みボタン群）が収まる横幅
         w = max(1150, int(fs * 90))
-        # 設定行(プロンプト/サーバ/モデル/詳細) + 進行表示 + 結果領域 + ボタン行
+        # 設定行(プロンプト/サーバ/モデル/詳細) + 進行表示 + 結果領域/右ペイン
         h = max(680, int(fs * 56))
         px = parent.winfo_rootx() + parent.winfo_width() // 2
         py = parent.winfo_rooty() + parent.winfo_height() // 2
@@ -500,9 +500,18 @@ class OCRDialog(tk.Toplevel):
         )
         self.progress_bar.pack(fill="x", padx=16, pady=(0, 6))
 
-        # 結果テキスト
-        result_frame = tk.Frame(self, bg=C["BG_PANEL"])
-        result_frame.pack(fill="both", expand=True, padx=16, pady=4)
+        # 結果テキスト + 右ペイン（操作ボタン群）
+        # ボタンを下部の横一列に置くと初期ウィンドウ幅次第で右端側のボタンが
+        # クリップされて隠れるため、メイン画面と同じ「セクション見出し +
+        # 縦積みボタン」の右ペイン構成にする（幅不足で隠れる構造を排除）。
+        body = tk.Frame(self, bg=C["BG_DARK"])
+        body.pack(fill="both", expand=True, padx=16, pady=(4, 12))
+
+        side = tk.Frame(body, bg=C["BG_PANEL"])
+        side.pack(side="right", fill="y", padx=(10, 0))
+
+        result_frame = tk.Frame(body, bg=C["BG_PANEL"])
+        result_frame.pack(side="left", fill="both", expand=True)
         self.text = tk.Text(
             result_frame,
             bg=C["BG_CARD"],
@@ -529,66 +538,62 @@ class OCRDialog(tk.Toplevel):
         self.text.tag_configure("md_bold", font=self._font(-1, "bold"))
         # fmt: on
 
-        # ボタン行
-        btn_row = tk.Frame(self, bg=C["BG_DARK"])
-        btn_row.pack(fill="x", padx=16, pady=(8, 12))
+        # 右ペインのセクション/ボタン生成ヘルパー（ui_builder._build_tools と同構成）
+        def section(title):
+            f = tk.Frame(side, bg=C["BG_CARD"], bd=0)
+            f.pack(fill="x", padx=8, pady=5)
+            tk.Label(
+                f,
+                text=title,
+                bg=C["BG_CARD"],
+                fg=C["WARNING"],
+                font=self._font(-1, "bold"),
+            ).pack(anchor="w", padx=8, pady=(6, 2))
+            return f
 
-        self.copy_btn = ttk.Button(
-            btn_row, text=self._L["ocr_copy"], command=self._copy_to_clipboard
-        )
-        self.copy_btn.pack(side="left", padx=4)
-        self.copy_btn.state(["disabled"])
+        def side_btn(sec, text, cmd, style="TButton"):
+            b = ttk.Button(sec, text=text, command=cmd, style=style)
+            b.pack(fill="x", padx=8, pady=2)
+            return b
 
-        self.save_btn = ttk.Button(
-            btn_row, text=self._L["ocr_save"], command=self._save_to_file
-        )
-        self.save_btn.pack(side="left", padx=4)
-        self.save_btn.state(["disabled"])
-
-        # 全ページ統合サマリ（OCR 完了後に有効化・supports_text_prompt 必須）
-        self.summary_btn = ttk.Button(
-            btn_row, text=self._L["ocr_summary_btn"], command=self._on_summary
-        )
-        self.summary_btn.pack(side="left", padx=4)
-        self.summary_btn.state(["disabled"])
-
-        self.clear_btn = ttk.Button(
-            btn_row, text=self._L["ocr_clear"], command=self._clear_text
-        )
-        self.clear_btn.pack(side="left", padx=4)
-
+        # 閉じるは右ペイン最下部に固定（セクション外・誤操作分離）
         self.close_btn = ttk.Button(
-            btn_row,
+            side,
             text=self._L["btn_close"],
             command=self._on_close,
         )
-        self.close_btn.pack(side="right", padx=4)
+        self.close_btn.pack(side="bottom", fill="x", padx=8, pady=(4, 8))
 
-        self.cancel_btn = ttk.Button(
-            btn_row,
-            text=self._L["ocr_cancel"],
-            style="Danger.TButton",
-            command=self._on_cancel,
+        # 実行セクション（読み取り実行 / 続きから再実行 / キャンセル）
+        f_run = section(self._L["ocr_sec_run"])
+        self.run_btn = side_btn(
+            f_run, self._L["ocr_run"], self._on_run, "Accent.TButton"
         )
-        self.cancel_btn.pack(side="right", padx=4)
-        self.cancel_btn.state(["disabled"])
-
-        self.run_btn = ttk.Button(
-            btn_row,
-            text=self._L["ocr_run"],
-            style="Accent.TButton",
-            command=self._on_run,
-        )
-        self.run_btn.pack(side="right", padx=4)
-
         # 続きから再実行（エラー/未処理ページのみ・成功済み結果は保持）
-        self.resume_btn = ttk.Button(
-            btn_row,
-            text=self._L["ocr_resume"],
-            command=lambda: self._on_run(resume=True),
+        self.resume_btn = side_btn(
+            f_run, self._L["ocr_resume"], lambda: self._on_run(resume=True)
         )
-        self.resume_btn.pack(side="right", padx=4)
         self.resume_btn.state(["disabled"])
+        self.cancel_btn = side_btn(
+            f_run, self._L["ocr_cancel"], self._on_cancel, "Danger.TButton"
+        )
+        self.cancel_btn.state(["disabled"])
+        # セクション最下段ボタンの下余白（見出し〜ボタン列の枠内バランス）
+        tk.Frame(f_run, bg=C["BG_CARD"], height=6).pack(fill="x")
+
+        # 結果セクション（コピー / 保存 / サマリ / クリア）
+        f_result = section(self._L["ocr_sec_result"])
+        self.copy_btn = side_btn(f_result, self._L["ocr_copy"], self._copy_to_clipboard)
+        self.copy_btn.state(["disabled"])
+        self.save_btn = side_btn(f_result, self._L["ocr_save"], self._save_to_file)
+        self.save_btn.state(["disabled"])
+        # 全ページ統合サマリ（OCR 完了後に有効化・supports_text_prompt 必須）
+        self.summary_btn = side_btn(
+            f_result, self._L["ocr_summary_btn"], self._on_summary
+        )
+        self.summary_btn.state(["disabled"])
+        self.clear_btn = side_btn(f_result, self._L["ocr_clear"], self._clear_text)
+        tk.Frame(f_result, bg=C["BG_CARD"], height=6).pack(fill="x")
 
     def _clear_text(self):
         """結果テキストエリア・進行表示・実行状態を初期化する"""

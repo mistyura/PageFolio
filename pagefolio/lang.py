@@ -545,6 +545,8 @@ LANG = {
         # OCR ダイアログ
         "ocr_server_label": "サーバ:",
         "ocr_model_label": "モデル:",
+        "ocr_sec_run": "▶ 実行",
+        "ocr_sec_result": "📋 結果",
         "ocr_run": "▶ 読み取り実行",
         "ocr_resume": "⏯ 続きから再実行",
         "ocr_resume_hint": (
@@ -1160,6 +1162,8 @@ LANG = {
         # OCR dialog
         "ocr_server_label": "Server:",
         "ocr_model_label": "Model:",
+        "ocr_sec_run": "▶ Run",
+        "ocr_sec_result": "📋 Results",
         "ocr_run": "▶ Run OCR",
         "ocr_resume": "⏯ Resume",
         "ocr_resume_hint": (
