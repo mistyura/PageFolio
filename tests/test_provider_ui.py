@@ -16,6 +16,7 @@ from pagefolio.ocr import (
     OCR_PROMPTS,
     PROVIDER_SUMMARY_PROMPTS,
     resolve_ocr_prompt,
+    resolve_render_markdown,
     resolve_summary_prompt,
 )
 from pagefolio.ocr_providers import ClaudeProvider
@@ -1080,6 +1081,40 @@ class TestResolveSummaryPrompt:
         assert resolve_summary_prompt("unknown_xyz", "") == DEFAULT_SUMMARY_PROMPT
 
 
+class TestResolveRenderMarkdown:
+    """V174: resolve_render_markdown（Markdown 整形描画の個別指定）を検証する。
+
+    カスタムプロンプト使用時はプリセットではなく個別フラグに従い、
+    未使用時は従来どおり preset == "markdown" 判定を返す（後方互換）。
+    """
+
+    def test_no_custom_follows_preset_markdown(self):
+        """カスタム未使用: preset=="markdown" のときのみ True（後方互換）。"""
+        assert resolve_render_markdown("markdown", "", False) is True
+        assert resolve_render_markdown("text", "", False) is False
+        assert resolve_render_markdown("table", "", False) is False
+
+    def test_no_custom_ignores_flag(self):
+        """カスタム未使用時はフラグが True でも preset 判定を維持する。"""
+        assert resolve_render_markdown("text", "", True) is False
+        assert resolve_render_markdown("markdown", "", True) is True
+
+    def test_custom_with_flag_true_renders_markdown(self):
+        """カスタム使用 + フラグ ON: preset が text でも整形描画する。"""
+        assert resolve_render_markdown("text", "巨大カスタムプロンプト", True) is True
+
+    def test_custom_with_flag_false_stays_plain(self):
+        """カスタム使用 + フラグ OFF: preset が markdown でも素朴描画する。"""
+        assert (
+            resolve_render_markdown("markdown", "巨大カスタムプロンプト", False)
+            is False
+        )
+
+    def test_default_flag_is_false(self):
+        """フラグ省略時の既定は False（カスタム使用時は素朴描画）。"""
+        assert resolve_render_markdown("markdown", "カスタム") is False
+
+
 # ══════════════════════════════════════════════════════════════
 #  V171-KEY-01/04: LLMConfigDialog._apply の APIキー非流入・
 #  _session_api_keys 格納/クリア・RunPod スロット回帰テスト
@@ -1132,6 +1167,8 @@ def _make_apply_key_stub(session_api_keys, claude_key="", gemini_key="", runpod_
         ocr_max_tokens_var=_GetVarStub(-1),
         ocr_prompt_text=_GetTextStub(""),
         ocr_summary_prompt_text=_GetTextStub(""),
+        ocr_prompt_md_var=_GetVarStub(True),
+        ocr_summary_md_var=_GetVarStub(False),
         ocr_temperature_var=_GetVarStub(0.1),
         ocr_concurrency_var=_GetVarStub(2),
         claude_api_key_var=_GetVarStub(claude_key),
@@ -1176,6 +1213,36 @@ class TestApiKeyNotInSettings:
         LLMConfigDialog._apply(stub)
 
         assert not any("api_key" in k.lower() for k in captured)
+
+
+class TestApplyPromptMarkdownFlags:
+    """V174: _apply がプロンプト個別の Markdown 描画フラグを格納する。"""
+
+    def test_flags_stored_from_vars(self):
+        """チェックボックス変数の値が bool で llm_settings に入る。"""
+        from pagefolio.dialogs.llm_config import LLMConfigDialog
+
+        stub = _make_apply_key_stub({})
+        captured = {}
+        stub.on_apply = lambda s: captured.update(s)
+        LLMConfigDialog._apply(stub)
+
+        assert captured["ocr_custom_prompt_markdown"] is True
+        assert captured["ocr_summary_markdown"] is False
+
+    def test_missing_vars_fall_back_to_false(self):
+        """変数未生成のスタブ経路でも False で安全に格納される（getattr 型）。"""
+        from pagefolio.dialogs.llm_config import LLMConfigDialog
+
+        stub = _make_apply_key_stub({})
+        del stub.ocr_prompt_md_var
+        del stub.ocr_summary_md_var
+        captured = {}
+        stub.on_apply = lambda s: captured.update(s)
+        LLMConfigDialog._apply(stub)
+
+        assert captured["ocr_custom_prompt_markdown"] is False
+        assert captured["ocr_summary_markdown"] is False
 
 
 class TestSessionKeyStoreAndClear:

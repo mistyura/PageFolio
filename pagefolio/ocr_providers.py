@@ -57,6 +57,11 @@ class OCRProvider(abc.ABC):
     max_concurrency: int = 8
     # テキストのみ補完（complete_text_ex）対応フラグ。LLM 系プロバイダで True。
     supports_text_prompt: bool = False
+    # list_models（モデル一覧取得）用タイムアウト秒。OCR 本体の timeout とは
+    # 独立した値で、ローカルプロバイダ（LM Studio / Ollama）は即応するため
+    # 短い既定 10 秒のまま、クラウドはネットワーク遅延・サーバレスの
+    # コールドスタートを見込んで各サブクラスで引き上げる。
+    model_list_timeout: int = 10
 
     @abc.abstractmethod
     def ocr_image(self, b64_png, prompt, **kwargs):
@@ -394,7 +399,7 @@ class LMStudioProvider(OCRProvider):
           RuntimeError:    HTTP エラーまたはレスポンス形式不正
         """
         _require_http_scheme(self.url)
-        timeout = 10  # モデル一覧取得は短めのタイムアウト
+        timeout = self.model_list_timeout  # ローカルは即応するため短め（既定 10 秒）
         endpoint = self.url.rstrip("/") + "/v1/models"
         req = urllib.request.Request(endpoint, method="GET")  # noqa: S310
         try:
@@ -427,6 +432,8 @@ class ClaudeProvider(OCRProvider):
     default_concurrency = 2
     max_concurrency = 2
     supports_text_prompt = True
+    # クラウド API のネットワーク遅延を見込みモデル一覧取得は 30 秒（V174）
+    model_list_timeout = 30
 
     ANTHROPIC_VERSION = "2023-06-01"
     MESSAGES_ENDPOINT = "https://api.anthropic.com/v1/messages"
@@ -673,7 +680,7 @@ class ClaudeProvider(OCRProvider):
         after_id 指定時はカーソルを進めて次ページを取得する（L-6b）。
         HTTP / 接続 / タイムアウトの例外マッピングは list_models と同一規約。
         """
-        timeout = 10
+        timeout = self.model_list_timeout
         endpoint = self.MODELS_ENDPOINT
         if after_id:
             endpoint = f"{endpoint}?after_id={quote(after_id, safe='')}"
@@ -753,6 +760,8 @@ class GeminiProvider(OCRProvider):
     default_concurrency = 1  # D-07: Gemini Free Tier 10 RPM 対応
     max_concurrency = 1  # D-07: 並列度上限
     supports_text_prompt = True
+    # クラウド API のネットワーク遅延を見込みモデル一覧取得は 30 秒（V174）
+    model_list_timeout = 30
 
     GENERATE_CONTENT_ENDPOINT = (
         "https://generativelanguage.googleapis.com/v1beta/models/"
@@ -977,7 +986,7 @@ class GeminiProvider(OCRProvider):
             # キー未設定・オフライン時でも選択肢が出るよう静的リストを返す（D-08）
             return list(self.RECOMMENDED_MODELS)
 
-        timeout = 10
+        timeout = self.model_list_timeout
         req = urllib.request.Request(  # noqa: S310
             self.MODELS_ENDPOINT,
             headers={"x-goog-api-key": self.api_key},
@@ -1311,7 +1320,7 @@ class OllamaProvider(OCRProvider):
           RuntimeError:    HTTP エラーまたはレスポンス形式不正
         """
         _require_http_scheme(self.url)
-        timeout = 10  # モデル一覧取得は短めのタイムアウト
+        timeout = self.model_list_timeout  # ローカルは即応するため短め（既定 10 秒）
         endpoint = self.url.rstrip("/") + "/v1/models"
         req = urllib.request.Request(endpoint, method="GET")  # noqa: S310
         try:
@@ -1344,6 +1353,10 @@ class RunPodProvider(OCRProvider):
     default_concurrency = 2
     max_concurrency = 4
     supports_text_prompt = True
+    # Serverless の初回起動（コールドスタート）はワーカー起動＋モデル
+    # ロード待ちで 10 秒を大きく超えることがあるため 90 秒に引き上げる
+    # （V174。取得は llm_config 側でバックグラウンド実行し UI は塞がない）
+    model_list_timeout = 90
 
     def __init__(
         self, api_key, url, model, timeout=120, max_tokens=-1, temperature=0.1
@@ -1496,7 +1509,7 @@ class RunPodProvider(OCRProvider):
             return [self.model] if self.model else ["runpod-model"]
         _require_http_scheme(self.url)
 
-        timeout = 10
+        timeout = self.model_list_timeout
         endpoint = self.url.rstrip("/") + "/models"
 
         req = urllib.request.Request(  # noqa: S310

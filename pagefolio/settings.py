@@ -56,6 +56,11 @@ def _load_settings():
         "runpod_url": "",
         "runpod_model": "",
         "ocr_prompt_preset": "text",
+        # V174: カスタム/サマリプロンプト使用時の個別 Markdown 描画フラグ
+        # （プリセット選択はカスタム使用時に実プロンプトへ反映されないため、
+        # 描画形式もカスタム側で個別指定する。resolve_render_markdown 参照）
+        "ocr_custom_prompt_markdown": False,
+        "ocr_summary_markdown": False,
         "ocr_scale": 1.5,  # D-11: 新規ユーザー既定を 1.5 へ変更（低スペック PC 推奨）
         "ocr_timeout": 120,
         "ocr_max_tokens": -1,

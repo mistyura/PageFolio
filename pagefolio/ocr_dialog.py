@@ -21,6 +21,7 @@ from pagefolio.ocr import (
     has_embedded_text,
     page_to_png_b64,
     resolve_ocr_prompt,
+    resolve_render_markdown,
     resolve_summary_prompt,
 )
 from pagefolio.ocr_pipeline import (
@@ -1641,8 +1642,9 @@ class OCRDialog(tk.Toplevel):
     def _insert_markdown(self, text):
         """parse_markdown の戻り値を text へ整形挿入する薄い描画ヘルパー。
 
-        preset == "markdown" の本文のみで呼ばれる（Pitfall 2: text/table や
-        Tesseract/LMStudio 素出力には当てない構造的ガードは呼び出し側）。
+        resolve_render_markdown が True の本文のみで呼ばれる（Pitfall 2:
+        text/table や Tesseract/LMStudio 素出力には当てない構造的ガードは
+        呼び出し側。カスタムプロンプト使用時は個別フラグで判定・V174）。
         各 span を insert し inline_tag があれば tag_add、行末で行レベルタグ
         （kind）を行全体へ tag_add する（04-RESEARCH.md:137-146）。整形は表示
         専用でコピー/保存（_format_full_text）は raw 維持（Pitfall 5）。
@@ -1660,9 +1662,17 @@ class OCRDialog(tk.Toplevel):
 
     def _render_results_ordered(self):
         """results / errors をページ順に text へ流し込む（並列実行後の一括描画）"""
-        # preset == "markdown" のときのみ整形描画（Pitfall 2 構造的ガード）。
-        # text/table や Tesseract/LMStudio 素出力には Markdown パーサを当てない。
-        markdown = self.preset_var.get() == "markdown"
+        # 整形描画の判定は resolve_render_markdown に集約（Pitfall 2 構造的
+        # ガード）。カスタムプロンプト未使用時は preset == "markdown" のとき
+        # のみ整形描画し、text/table や Tesseract/LMStudio 素出力には
+        # Markdown パーサを当てない。カスタムプロンプト使用時はプリセットが
+        # 実プロンプトへ反映されないため、個別フラグ
+        # ocr_custom_prompt_markdown で指定する（V174）。
+        markdown = resolve_render_markdown(
+            self.preset_var.get(),
+            self.custom_prompt,
+            self.app.settings.get("ocr_custom_prompt_markdown", False),
+        )
         for page_idx in self.page_indices:
             sep = self._L["ocr_page_separator"].format(page=page_idx + 1)
             self.text.insert("end", f"\n{sep}\n")
@@ -2067,14 +2077,21 @@ class OCRDialog(tk.Toplevel):
     def _on_summary_done(self, text, truncated):
         """サマリ生成成功（メインスレッド）: 結果保持・末尾へ追記・UI 復帰。
 
-        表示は preset=="markdown" のときのみ整形描画（_insert_results_body と
-        同じ構造的ガード）。コピー/保存は raw 維持（_format_full_text）。
-        途切れ（truncated）は「成功＋警告」として部分サマリを保持する（D-05）。
+        表示は resolve_render_markdown が True のときのみ整形描画
+        （_insert_results_body と同じ構造的ガード）。カスタムサマリプロンプト
+        使用時は個別フラグ ocr_summary_markdown、未使用時は従来どおり
+        preset=="markdown" で判定する（V174）。コピー/保存は raw 維持
+        （_format_full_text）。途切れ（truncated）は「成功＋警告」として
+        部分サマリを保持する（D-05）。
         """
         self.summary_result = text
         self._summary_truncated = truncated
         self.text.insert("end", f"\n{self._L['ocr_summary_separator']}\n")
-        if self.preset_var.get() == "markdown":
+        if resolve_render_markdown(
+            self.preset_var.get(),
+            self.app.settings.get("ocr_summary_prompt", ""),
+            self.app.settings.get("ocr_summary_markdown", False),
+        ):
             self._insert_markdown(text)
         else:
             self.text.insert("end", text + "\n")

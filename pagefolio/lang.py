@@ -535,7 +535,9 @@ LANG = {
         "settings_runpod_url": "RunPod エンドポイントURL:",
         "settings_runpod_model": "RunPod モデル名 (任意):",
         "settings_runpod_model_hint": "（RunPod Serverless endpoint 用）",
-        "llm_fetching_runpod_models": "⏳ RunPod モデル一覧を取得中…",
+        "llm_fetching_runpod_models": (
+            "⏳ RunPod モデル一覧を取得中…（初回起動時は 1 分程度かかることがあります）"
+        ),
         "llm_env_key_unset_static_runpod": (
             "APIキー未設定のため推奨モデル一覧を表示中"
             "（RUNPOD_API_KEY 環境変数または上の入力欄にキーを入力してください）"
@@ -591,8 +593,14 @@ LANG = {
             "実行しますか？"
         ),
         "ocr_summary_cancelled": "サマリ生成をキャンセルしました",
+        "ocr_custom_prompt_label": "カスタムプロンプト:",
+        "ocr_custom_prompt_hint": "(空欄でデフォルトのプロンプトを使用)",
+        "ocr_custom_prompt_md": (
+            "OCR結果をMarkdown整形で表示（カスタムプロンプト使用時）"
+        ),
         "ocr_summary_prompt_label": "サマリプロンプト:",
         "ocr_summary_prompt_hint": "(空欄で既定のサマリ指示を使用)",
+        "ocr_summary_prompt_md": "サマリをMarkdown整形で表示（サマリプロンプト使用時）",
         "ocr_summary_ctx_exceeded": (
             "サマリ生成に失敗しました: テキストがモデルのコンテキスト長上限を"
             "超えています。OCR 対象ページ数を減らして再実行してください"
@@ -1152,7 +1160,9 @@ LANG = {
         "settings_runpod_url": "RunPod Endpoint URL:",
         "settings_runpod_model": "RunPod Model Name (Optional):",
         "settings_runpod_model_hint": "(for RunPod Serverless endpoint)",
-        "llm_fetching_runpod_models": "⏳ Fetching RunPod models…",
+        "llm_fetching_runpod_models": (
+            "⏳ Fetching RunPod models… (cold start may take about a minute)"
+        ),
         "llm_env_key_unset_static_runpod": (
             "API key not set — showing recommended models "
             "(enter a key above or set RUNPOD_API_KEY)"
@@ -1208,8 +1218,16 @@ LANG = {
             "Proceed?"
         ),
         "ocr_summary_cancelled": "Summary generation cancelled",
+        "ocr_custom_prompt_label": "Custom prompt:",
+        "ocr_custom_prompt_hint": "(blank: use the default prompt)",
+        "ocr_custom_prompt_md": (
+            "Render OCR results as Markdown (when custom prompt is set)"
+        ),
         "ocr_summary_prompt_label": "Summary prompt:",
         "ocr_summary_prompt_hint": "(blank: use the default summary instruction)",
+        "ocr_summary_prompt_md": (
+            "Render summary as Markdown (when summary prompt is set)"
+        ),
         "ocr_summary_ctx_exceeded": (
             "Summary generation failed: the text exceeds the model's "
             "context window. Reduce the number of OCR pages and try again"

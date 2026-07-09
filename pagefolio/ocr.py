@@ -150,6 +150,32 @@ def resolve_summary_prompt(provider_name, custom_prompt=""):
     return PROVIDER_SUMMARY_PROMPTS.get(provider_name, DEFAULT_SUMMARY_PROMPT)
 
 
+def resolve_render_markdown(preset, custom_prompt="", render_markdown=False):
+    """結果表示を Markdown 整形描画するかを判定する純関数（Tk 非依存）。
+
+    カスタムプロンプト使用時はプリセット選択が実プロンプトへ反映されない
+    （resolve_ocr_prompt / resolve_summary_prompt でカスタムが最優先）ため、
+    描画形式もプリセットではなくカスタム側の個別フラグに従う。巨大な
+    カスタムプロンプトが Markdown 出力を指示していても、プリセットを
+    "markdown" に切り替えずに整形描画を有効化できる。
+
+    引数:
+      preset:          プロンプトプリセット名（"text" / "table" / "markdown"）
+      custom_prompt:   使用中のカスタムプロンプト（空ならプリセット準拠）
+      render_markdown: カスタムプロンプト側の Markdown 描画フラグ
+                       （settings["ocr_custom_prompt_markdown"] /
+                        settings["ocr_summary_markdown"] 由来）
+
+    戻り値: True なら Markdown 整形描画、False なら素朴描画
+
+    後方互換: custom_prompt が空のときは従来どおり preset == "markdown" の
+    判定をそのまま返す（既存ユーザーの描画挙動は変わらない）。
+    """
+    if custom_prompt:
+        return bool(render_markdown)
+    return preset == "markdown"
+
+
 DEFAULT_LM_STUDIO_URL = "http://localhost:1234"
 DEFAULT_OCR_TIMEOUT = 120  # 秒
 DEFAULT_OCR_SCALE = 1.5  # D-11: 新規既定 1.5 に統一（WR-01）

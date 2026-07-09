@@ -2491,3 +2491,83 @@ class TestClaudeListModelsPagination:
         result = p.list_models()
         assert result == ["claude-model-a", "claude-model-b"]
         assert calls["n"] == 2
+
+
+# ===== V174: モデル一覧取得タイムアウト（model_list_timeout） =====
+
+
+class TestModelListTimeout:
+    """V174: list_models のタイムアウトがプロバイダ別クラス属性で制御される。
+
+    ローカル（LM Studio / Ollama）は即応するため既定 10 秒のまま、
+    クラウドはネットワーク遅延（Claude / Gemini: 30 秒）・Serverless の
+    コールドスタート（RunPod: 90 秒）を見込んで引き上げる。
+    """
+
+    def test_base_default_is_10(self):
+        """基底 OCRProvider の既定は 10 秒。"""
+        from pagefolio.ocr_providers import OCRProvider
+
+        assert OCRProvider.model_list_timeout == 10
+
+    def test_local_providers_keep_10(self):
+        """LM Studio / Ollama は既定 10 秒を継承する。"""
+        from pagefolio.ocr_providers import LMStudioProvider, OllamaProvider
+
+        assert LMStudioProvider.model_list_timeout == 10
+        assert OllamaProvider.model_list_timeout == 10
+
+    def test_cloud_providers_use_30(self):
+        """Claude / Gemini はクラウド API 向けに 30 秒。"""
+        from pagefolio.ocr_providers import ClaudeProvider, GeminiProvider
+
+        assert ClaudeProvider.model_list_timeout == 30
+        assert GeminiProvider.model_list_timeout == 30
+
+    def test_runpod_uses_90_for_cold_start(self):
+        """RunPod はコールドスタートを見込み 90 秒。"""
+        from pagefolio.ocr_providers import RunPodProvider
+
+        assert RunPodProvider.model_list_timeout == 90
+
+    def test_runpod_list_models_passes_timeout_to_urlopen(self, monkeypatch):
+        """RunPod の list_models が urlopen に model_list_timeout を渡す。"""
+        from pagefolio import ocr_providers
+
+        seen = {}
+
+        def fake_urlopen(req, timeout=None):
+            seen["timeout"] = timeout
+            return _FakeResponse(json.dumps({"data": [{"id": "m1"}]}))
+
+        monkeypatch.setattr(ocr_providers.urllib.request, "urlopen", fake_urlopen)
+        p = ocr_providers.RunPodProvider(
+            "api-key", "https://api.runpod.ai/v2/xyz/openai/v1", ""
+        )
+        assert p.list_models() == ["m1"]
+        assert seen["timeout"] == ocr_providers.RunPodProvider.model_list_timeout
+
+    def test_gemini_list_models_passes_timeout_to_urlopen(self, monkeypatch):
+        """Gemini の list_models が urlopen に model_list_timeout を渡す。"""
+        from pagefolio import ocr_providers
+
+        seen = {}
+
+        def fake_urlopen(req, timeout=None):
+            seen["timeout"] = timeout
+            body = json.dumps(
+                {
+                    "models": [
+                        {
+                            "name": "models/gemini-2.5-flash",
+                            "supportedGenerationMethods": ["generateContent"],
+                        }
+                    ]
+                }
+            )
+            return _FakeResponse(body)
+
+        monkeypatch.setattr(ocr_providers.urllib.request, "urlopen", fake_urlopen)
+        p = ocr_providers.GeminiProvider("my-key", "")
+        assert p.list_models() == ["gemini-2.5-flash"]
+        assert seen["timeout"] == ocr_providers.GeminiProvider.model_list_timeout

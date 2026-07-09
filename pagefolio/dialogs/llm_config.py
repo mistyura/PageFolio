@@ -5,6 +5,7 @@
 
 import logging
 import os
+import threading
 import tkinter as tk
 from tkinter import ttk
 
@@ -974,6 +975,38 @@ class LLMConfigDialog(tk.Toplevel):
             font=self._font(-2),
         ).pack(side="left", padx=4, anchor="sw")
 
+        # ── カスタムプロンプトの Markdown 描画フラグ（V174）──
+        # カスタムプロンプト使用時はプリセット選択（text/table/markdown）が
+        # 実プロンプトへ反映されないため、描画形式をここで個別指定する。
+        self.ocr_prompt_md_var = tk.BooleanVar(
+            value=bool(self.current_settings.get("ocr_custom_prompt_markdown", False))
+        )
+        prompt_md_row = tk.Frame(body, bg=C["BG_DARK"])
+        prompt_md_row.pack(fill="x", padx=24, pady=(0, 2))
+        # ラベル列（width=20）と揃えるためのスペーサー
+        tk.Label(
+            prompt_md_row,
+            text="",
+            bg=C["BG_DARK"],
+            font=self._font(-1),
+            width=20,
+            anchor="w",
+        ).pack(side="left")
+        tk.Checkbutton(
+            prompt_md_row,
+            text=self._L.get(
+                "ocr_custom_prompt_md",
+                "OCR結果をMarkdown整形で表示（カスタムプロンプト使用時）",
+            ),
+            variable=self.ocr_prompt_md_var,
+            bg=C["BG_DARK"],
+            fg=C["TEXT_SUB"],
+            selectcolor=C["BG_CARD"],
+            activebackground=C["BG_DARK"],
+            activeforeground=C["TEXT_MAIN"],
+            font=self._font(-2),
+        ).pack(side="left", padx=4)
+
         # ── サマリプロンプト（全ページ統合サマリ生成用）──
         summary_row = tk.Frame(body, bg=C["BG_DARK"])
         summary_row.pack(fill="x", padx=24, pady=2)
@@ -1010,6 +1043,35 @@ class LLMConfigDialog(tk.Toplevel):
             fg=C["TEXT_SUB"],
             font=self._font(-2),
         ).pack(side="left", padx=4, anchor="sw")
+
+        # ── サマリプロンプトの Markdown 描画フラグ（V174・上と同型）──
+        self.ocr_summary_md_var = tk.BooleanVar(
+            value=bool(self.current_settings.get("ocr_summary_markdown", False))
+        )
+        summary_md_row = tk.Frame(body, bg=C["BG_DARK"])
+        summary_md_row.pack(fill="x", padx=24, pady=(0, 2))
+        tk.Label(
+            summary_md_row,
+            text="",
+            bg=C["BG_DARK"],
+            font=self._font(-1),
+            width=20,
+            anchor="w",
+        ).pack(side="left")
+        tk.Checkbutton(
+            summary_md_row,
+            text=self._L.get(
+                "ocr_summary_prompt_md",
+                "サマリをMarkdown整形で表示（サマリプロンプト使用時）",
+            ),
+            variable=self.ocr_summary_md_var,
+            bg=C["BG_DARK"],
+            fg=C["TEXT_SUB"],
+            selectcolor=C["BG_CARD"],
+            activebackground=C["BG_DARK"],
+            activeforeground=C["TEXT_MAIN"],
+            font=self._font(-2),
+        ).pack(side="left", padx=4)
 
         # ── 並列度（concurrency）──
         conc_row = tk.Frame(body, bg=C["BG_DARK"])
@@ -1329,13 +1391,58 @@ class LLMConfigDialog(tk.Toplevel):
         """Ollama への接続をテストする。"""
         self._probe_ollama_provider(update_combo=False)
 
+    # ── クラウドモデル取得の非同期実行ヘルパー（V174）─────────
+    def _fetch_models_async(self, fetch_fn, on_success, on_error):
+        """モデル一覧取得をバックグラウンドスレッドで実行する共有ヘルパー。
+
+        クラウドプロバイダ（Claude / Gemini / RunPod）のモデル一覧取得は
+        model_list_timeout（30〜90 秒）まで待つため、メインスレッドで
+        同期実行すると UI がその間フリーズする（特に RunPod Serverless の
+        コールドスタート）。ワーカースレッドで fetch_fn() を実行し、結果は
+        after(0) でメインスレッドへ戻して on_success(models) /
+        on_error(exception) を呼ぶ。実行中の再クリックは
+        _model_fetch_running ガードで無視する（Combobox 反映と
+        ステータス更新はコールバック側の責務）。
+        """
+        if getattr(self, "_model_fetch_running", False):
+            return
+        self._model_fetch_running = True
+
+        def _deliver(callback, arg):
+            # メインスレッドへ結果を投函する。ダイアログ破棄後は静かに捨てる
+            def _run():
+                self._model_fetch_running = False
+                try:
+                    if not self.winfo_exists():
+                        return
+                except tk.TclError:
+                    return
+                callback(arg)
+
+            try:
+                self.after(0, _run)
+            except (tk.TclError, RuntimeError):
+                self._model_fetch_running = False
+
+        def _worker():
+            try:
+                models = fetch_fn()
+            except Exception as e:
+                _deliver(on_error, e)
+            else:
+                _deliver(on_success, models)
+
+        threading.Thread(target=_worker, daemon=True).start()
+
     # ── RunPod モデル更新 ───────────────────────────────
     def _refresh_runpod_models(self):
         """RunPod モデル一覧を取得して Combobox に反映する。
 
         D-10: ダイアログ入力欄のライブ値（OK 前でも）を環境変数より優先する。
+        V174: Serverless の初回起動（コールドスタート）はワーカー起動待ちで
+        10 秒を大きく超えることがあるため、model_list_timeout=90 秒の取得を
+        バックグラウンド実行し UI はブロックしない。
         """
-        self._set_lm_status(self._L["llm_fetching_runpod_models"], kind="info")
         api_key = self.runpod_api_key_var.get().strip() or os.environ.get(
             "RUNPOD_API_KEY", ""
         )
@@ -1346,11 +1453,18 @@ class LLMConfigDialog(tk.Toplevel):
                 kind="info",
             )
             return
-        try:
-            from pagefolio.ocr_providers import RunPodProvider
+        self._set_lm_status(self._L["llm_fetching_runpod_models"], kind="info")
+        from pagefolio.ocr_providers import RunPodProvider
 
-            models = RunPodProvider(api_key=api_key, url=url, model="").list_models()
-        except Exception as e:
+        provider = RunPodProvider(api_key=api_key, url=url, model="")
+
+        def _on_success(models):
+            self.runpod_model_combo["values"] = models
+            self._set_lm_status(
+                self._L["settings_lm_test_ok"].format(count=len(models)), kind="ok"
+            )
+
+        def _on_error(e):
             logger.warning(
                 self._L["llm_model_fetch_failed"].format(provider="RunPod", e=e)
             )
@@ -1358,11 +1472,8 @@ class LLMConfigDialog(tk.Toplevel):
                 str(e),
                 kind="fail",
             )
-            return
-        self.runpod_model_combo["values"] = models
-        self._set_lm_status(
-            self._L["settings_lm_test_ok"].format(count=len(models)), kind="ok"
-        )
+
+        self._fetch_models_async(provider.list_models, _on_success, _on_error)
 
     # ── Claude モデル更新 ───────────────────────────────
     def _refresh_claude_models(self):
@@ -1377,30 +1488,34 @@ class LLMConfigDialog(tk.Toplevel):
         api_key = self.claude_api_key_var.get().strip() or os.environ.get(
             "ANTHROPIC_API_KEY", ""
         )
-        try:
-            models = ClaudeProvider(api_key=api_key, model="").list_models()
-        except Exception as e:
+        provider = ClaudeProvider(api_key=api_key, model="")
+
+        def _on_success(models):
+            self.claude_model_combo["values"] = models
+            if not api_key:
+                self._set_lm_status(
+                    self._L["llm_env_key_unset_static"],
+                    kind="info",
+                )
+            else:
+                self._set_lm_status(
+                    self._L["settings_lm_test_ok"].format(count=len(models)), kind="ok"
+                )
+
+        def _on_error(e):
             # 例外時は静的推奨リストへフォールバック（D-08）
             logger.warning(
                 self._L["llm_model_fetch_failed"].format(provider="Claude", e=e)
             )
-            models = ClaudeProvider.RECOMMENDED_MODELS
-            self.claude_model_combo["values"] = models
+            self.claude_model_combo["values"] = ClaudeProvider.RECOMMENDED_MODELS
             self._set_lm_status(
                 self._L["llm_env_key_unset_static"],
                 kind="info",
             )
-            return
-        self.claude_model_combo["values"] = models
-        if not api_key:
-            self._set_lm_status(
-                self._L["llm_env_key_unset_static"],
-                kind="info",
-            )
-        else:
-            self._set_lm_status(
-                self._L["settings_lm_test_ok"].format(count=len(models)), kind="ok"
-            )
+
+        # V174: クラウド API は model_list_timeout=30 秒までかかり得るため
+        # バックグラウンド実行し UI はブロックしない
+        self._fetch_models_async(provider.list_models, _on_success, _on_error)
 
     # ── Gemini モデル更新 ───────────────────────────────
     def _refresh_gemini_models(self):
@@ -1415,30 +1530,34 @@ class LLMConfigDialog(tk.Toplevel):
         api_key = self.gemini_api_key_var.get().strip() or (
             os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY", "")
         )
-        try:
-            models = GeminiProvider(api_key=api_key, model="").list_models()
-        except Exception as e:
+        provider = GeminiProvider(api_key=api_key, model="")
+
+        def _on_success(models):
+            self.gemini_model_combo["values"] = models
+            if not api_key:
+                self._set_lm_status(
+                    self._L["llm_env_key_unset_static_gemini"],
+                    kind="info",
+                )
+            else:
+                self._set_lm_status(
+                    self._L["settings_lm_test_ok"].format(count=len(models)), kind="ok"
+                )
+
+        def _on_error(e):
             # 例外時は静的推奨リストへフォールバック（D-08）
             logger.warning(
                 self._L["llm_model_fetch_failed"].format(provider="Gemini", e=e)
             )
-            models = GeminiProvider.RECOMMENDED_MODELS
-            self.gemini_model_combo["values"] = models
+            self.gemini_model_combo["values"] = GeminiProvider.RECOMMENDED_MODELS
             self._set_lm_status(
                 self._L["llm_env_key_unset_static_gemini"],
                 kind="info",
             )
-            return
-        self.gemini_model_combo["values"] = models
-        if not api_key:
-            self._set_lm_status(
-                self._L["llm_env_key_unset_static_gemini"],
-                kind="info",
-            )
-        else:
-            self._set_lm_status(
-                self._L["settings_lm_test_ok"].format(count=len(models)), kind="ok"
-            )
+
+        # V174: クラウド API は model_list_timeout=30 秒までかかり得るため
+        # バックグラウンド実行し UI はブロックしない
+        self._fetch_models_async(provider.list_models, _on_success, _on_error)
 
     # ── 設定保存 ────────────────────────────────────────
     def _apply(self):
@@ -1513,6 +1632,17 @@ class LLMConfigDialog(tk.Toplevel):
         llm_settings["ocr_summary_prompt"] = self.ocr_summary_prompt_text.get(
             "1.0", "end"
         ).strip()
+        # V174: カスタム/サマリプロンプトの個別 Markdown 描画フラグ。
+        # getattr フォールバックは _apply を Tk 生成なしスタブ経由で呼ぶ
+        # 既存テスト経路の安全確保のため（_tesseract_langs と同型パターン）
+        _prompt_md_var = getattr(self, "ocr_prompt_md_var", None)
+        llm_settings["ocr_custom_prompt_markdown"] = bool(
+            _prompt_md_var.get() if _prompt_md_var is not None else False
+        )
+        _summary_md_var = getattr(self, "ocr_summary_md_var", None)
+        llm_settings["ocr_summary_markdown"] = bool(
+            _summary_md_var.get() if _summary_md_var is not None else False
+        )
         try:
             tmp = float(self.ocr_temperature_var.get())
             llm_settings["ocr_temperature"] = max(0.0, min(2.0, tmp))
