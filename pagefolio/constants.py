@@ -15,6 +15,12 @@ APP_VERSION = "v1.7.4"
 SETTINGS_FILE = "pagefolio_settings.json"
 PLUGINS_DIR = "plugins"
 
+# OCR プロンプトの外部ファイル（実行ファイルと同じ階層に配置・V174-2）。
+# 存在すれば LLM 設定ダイアログの入力欄より優先して読み込まれる。
+# 巨大なプロンプトを外部エディタで管理するための仕組み（読込は実行ごと）。
+CUSTOM_PROMPT_FILE = "ocr_custom_prompt.md"
+SUMMARY_PROMPT_FILE = "ocr_summary_prompt.md"
+
 # ===================== 対応拡張子（D-05）=====================
 SUPPORTED_EXTENSIONS = frozenset(
     {".pdf", ".png", ".jpg", ".jpeg", ".bmp", ".tiff", ".tif"}

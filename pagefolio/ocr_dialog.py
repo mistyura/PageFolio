@@ -10,7 +10,7 @@ import time
 import tkinter as tk
 from tkinter import filedialog, messagebox, ttk
 
-from pagefolio.constants import LANG, C
+from pagefolio.constants import CUSTOM_PROMPT_FILE, LANG, C
 from pagefolio.md_render import parse_markdown
 from pagefolio.ocr import (
     DEFAULT_OCR_CONCURRENCY,
@@ -29,6 +29,11 @@ from pagefolio.ocr_pipeline import (
     consume_one,
     send_sentinels,
     try_enqueue,
+)
+from pagefolio.settings import (
+    load_custom_prompt,
+    load_prompt_file,
+    load_summary_prompt,
 )
 
 logger = logging.getLogger(__name__)
@@ -881,8 +886,9 @@ class OCRDialog(tk.Toplevel):
         _save_settings(self.app.settings)
         # self.custom_prompt は __init__ 時点の値をキャッシュしているだけで
         # 以降の app.settings 更新が反映されないため、ここで明示的に同期する
-        # （さもないと _on_run が 1 回前のカスタムプロンプトを使い続ける）
-        self.custom_prompt = self.app.settings.get("ocr_custom_prompt", "")
+        # （さもないと _on_run が 1 回前のカスタムプロンプトを使い続ける）。
+        # V174-2: 外部 md ファイルがあれば設定欄より優先（load_custom_prompt）
+        self.custom_prompt = load_custom_prompt(self.app.settings)
         # (c)〜(g) UI 更新
         self._refresh_provider_dependent_ui()
         # 全プロバイダ共通: 読み取り専用の数値パラメータ表示を settings 値へ即時同期
@@ -1270,6 +1276,12 @@ class OCRDialog(tk.Toplevel):
         self._effective_timeout = self._ocr_timeout
         # provider 名はプロンプト解決の前に無条件取得（下流の再生成分岐と共用）。
         name = self.app.settings.get("ocr_provider", "")
+        # V174-2: 外部 md ファイル（exe と同階層）は実行のたびに読み直し、
+        # あればキャッシュ済み custom_prompt より優先する（外部エディタでの
+        # 編集を再起動なしで次回実行へ反映するため）。無ければ従来どおり。
+        _file_prompt = load_prompt_file(CUSTOM_PROMPT_FILE)
+        if _file_prompt:
+            self.custom_prompt = _file_prompt
         # プロンプト解決は resolve_ocr_prompt に集約（優先順位は純関数側で担保）。
         prompt = resolve_ocr_prompt(self.preset_var.get(), name, self.custom_prompt)
         self._ocr_prompt = prompt
@@ -1878,9 +1890,8 @@ class OCRDialog(tk.Toplevel):
         if not full_text:
             return
         name = self.app.settings.get("ocr_provider", "")
-        prompt = resolve_summary_prompt(
-            name, self.app.settings.get("ocr_summary_prompt", "")
-        )
+        # V174-2: 外部 md ファイル（exe と同階層）があれば設定欄より優先
+        prompt = resolve_summary_prompt(name, load_summary_prompt(self.app.settings))
 
         # ── クラウド実行ゲート（OCR 実行時と同方針・毎回確認）──
         if self._is_cloud_provider():
@@ -2089,7 +2100,8 @@ class OCRDialog(tk.Toplevel):
         self.text.insert("end", f"\n{self._L['ocr_summary_separator']}\n")
         if resolve_render_markdown(
             self.preset_var.get(),
-            self.app.settings.get("ocr_summary_prompt", ""),
+            # V174-2: 外部 md ファイル使用時も「カスタム使用中」として扱う
+            load_summary_prompt(self.app.settings),
             self.app.settings.get("ocr_summary_markdown", False),
         ):
             self._insert_markdown(text)

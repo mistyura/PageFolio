@@ -7,7 +7,13 @@ import json
 import logging
 import os
 
-from pagefolio.constants import SETTINGS_FILE, THEMES, C
+from pagefolio.constants import (
+    CUSTOM_PROMPT_FILE,
+    SETTINGS_FILE,
+    SUMMARY_PROMPT_FILE,
+    THEMES,
+    C,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -28,18 +34,69 @@ _SENSITIVE_KEYS = {
 }
 
 
-def _get_settings_path():
-    """設定ファイルのパスを返す（実行ファイルと同じディレクトリ）"""
+def _get_base_dir():
+    """実行ファイルと同じディレクトリ（開発時はプロジェクトルート）を返す。
+
+    設定ファイル・外部プロンプトファイルの配置基準を一元化する。
+    """
     # __main__.py やトップレベル pagefolio.py のあるディレクトリを基準にする
     import sys
 
     if getattr(sys, "frozen", False):
         # PyInstaller でビルドされた場合
-        base = os.path.dirname(sys.executable)
-    else:
-        # 通常実行: プロジェクトルート（pagefolio/ パッケージの親）
-        base = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    return os.path.join(base, SETTINGS_FILE)
+        return os.path.dirname(sys.executable)
+    # 通常実行: プロジェクトルート（pagefolio/ パッケージの親）
+    return os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+
+def _get_settings_path():
+    """設定ファイルのパスを返す（実行ファイルと同じディレクトリ）"""
+    return os.path.join(_get_base_dir(), SETTINGS_FILE)
+
+
+def load_prompt_file(filename):
+    """実行ファイルと同じ階層の外部プロンプトファイルを読み込む（V174-2）。
+
+    巨大なカスタム/サマリプロンプトを設定欄ではなく md ファイルで管理する
+    ための読込層。UTF-8（BOM 付き "utf-8-sig" も許容・Windows のエディタ対応）
+    で読み込み、前後の空白を除去して返す。ファイルが存在しない・空・
+    読込失敗のときは "" を返す（呼び出し側が設定欄の値へフォールバック）。
+
+    引数:
+      filename: CUSTOM_PROMPT_FILE / SUMMARY_PROMPT_FILE 等のファイル名
+
+    戻り値: プロンプト文字列（無効時は ""）
+    """
+    path = os.path.join(_get_base_dir(), filename)
+    try:
+        if os.path.exists(path):
+            with open(path, "r", encoding="utf-8-sig") as f:
+                return f.read().strip()
+    except Exception as e:
+        logger.warning("プロンプトファイルの読込に失敗しました (%s): %s", filename, e)
+    return ""
+
+
+def load_custom_prompt(settings):
+    """有効なカスタムプロンプトを返す（外部 md ファイル > 設定欄・V174-2）。
+
+    ocr_custom_prompt.md が実行ファイルと同じ階層にあり非空なら、その内容を
+    設定欄（settings["ocr_custom_prompt"]）より優先して返す。ファイルは
+    呼び出しのたびに読み直すため、外部エディタでの編集が次回実行に反映される。
+    """
+    return load_prompt_file(CUSTOM_PROMPT_FILE) or settings.get("ocr_custom_prompt", "")
+
+
+def load_summary_prompt(settings):
+    """有効なサマリプロンプトを返す（外部 md ファイル > 設定欄・V174-2）。
+
+    ocr_summary_prompt.md が実行ファイルと同じ階層にあり非空なら、その内容を
+    設定欄（settings["ocr_summary_prompt"]）より優先して返す（load_custom_prompt
+    と同型）。
+    """
+    return load_prompt_file(SUMMARY_PROMPT_FILE) or settings.get(
+        "ocr_summary_prompt", ""
+    )
 
 
 def _load_settings():

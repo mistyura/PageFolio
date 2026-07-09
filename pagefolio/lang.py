@@ -601,6 +601,9 @@ LANG = {
         "ocr_summary_prompt_label": "サマリプロンプト:",
         "ocr_summary_prompt_hint": "(空欄で既定のサマリ指示を使用)",
         "ocr_summary_prompt_md": "サマリをMarkdown整形で表示（サマリプロンプト使用時）",
+        "ocr_prompt_file_in_use": (
+            "📄 {file} を検出 — 入力欄よりファイル内容を優先します"
+        ),
         "ocr_summary_ctx_exceeded": (
             "サマリ生成に失敗しました: テキストがモデルのコンテキスト長上限を"
             "超えています。OCR 対象ページ数を減らして再実行してください"
@@ -1227,6 +1230,9 @@ LANG = {
         "ocr_summary_prompt_hint": "(blank: use the default summary instruction)",
         "ocr_summary_prompt_md": (
             "Render summary as Markdown (when summary prompt is set)"
+        ),
+        "ocr_prompt_file_in_use": (
+            "📄 {file} found — file content takes priority over this field"
         ),
         "ocr_summary_ctx_exceeded": (
             "Summary generation failed: the text exceeds the model's "

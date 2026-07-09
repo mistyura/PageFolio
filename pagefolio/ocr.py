@@ -592,7 +592,10 @@ class OCRMixin:
         url = self.settings.get("lm_studio_url", DEFAULT_LM_STUDIO_URL)
         model = self.settings.get("lm_studio_model", "")
         preset = self.settings.get("ocr_prompt_preset", "text")
-        custom_prompt = self.settings.get("ocr_custom_prompt", "")
+        # V174-2: 外部 md ファイル（exe と同階層）があれば設定欄より優先
+        from pagefolio.settings import load_custom_prompt
+
+        custom_prompt = load_custom_prompt(self.settings)
         scale = float(self.settings.get("ocr_scale", DEFAULT_OCR_SCALE))
         timeout = int(self.settings.get("ocr_timeout", DEFAULT_OCR_TIMEOUT))
         max_tokens = int(self.settings.get("ocr_max_tokens", DEFAULT_OCR_MAX_TOKENS))

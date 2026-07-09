@@ -9,7 +9,7 @@ import threading
 import tkinter as tk
 from tkinter import ttk
 
-from pagefolio.constants import LANG, C
+from pagefolio.constants import CUSTOM_PROMPT_FILE, LANG, SUMMARY_PROMPT_FILE, C
 from pagefolio.ocr import MAX_OCR_MAX_TOKENS
 from pagefolio.ocr_providers import (
     ClaudeProvider,
@@ -17,7 +17,7 @@ from pagefolio.ocr_providers import (
     LMStudioProvider,
     _detect_tesseract,
 )
-from pagefolio.settings import get_current_font_size
+from pagefolio.settings import get_current_font_size, load_prompt_file
 
 logger = logging.getLogger(__name__)
 
@@ -1007,6 +1007,10 @@ class LLMConfigDialog(tk.Toplevel):
             font=self._font(-2),
         ).pack(side="left", padx=4)
 
+        # V174-2: 外部 md ファイル（exe と同階層）検出時の注記。
+        # ファイルがあるあいだは上の入力欄より優先される旨をユーザーへ明示する
+        self._add_prompt_file_notice(body, CUSTOM_PROMPT_FILE)
+
         # ── サマリプロンプト（全ページ統合サマリ生成用）──
         summary_row = tk.Frame(body, bg=C["BG_DARK"])
         summary_row.pack(fill="x", padx=24, pady=2)
@@ -1072,6 +1076,9 @@ class LLMConfigDialog(tk.Toplevel):
             activeforeground=C["TEXT_MAIN"],
             font=self._font(-2),
         ).pack(side="left", padx=4)
+
+        # V174-2: 外部 md ファイル検出時の注記（カスタムプロンプト側と同型）
+        self._add_prompt_file_notice(body, SUMMARY_PROMPT_FILE)
 
         # ── 並列度（concurrency）──
         conc_row = tk.Frame(body, bg=C["BG_DARK"])
@@ -1286,6 +1293,39 @@ class LLMConfigDialog(tk.Toplevel):
             self.geometry(f"{w}x{h}+{x}+{y}")
         except tk.TclError:
             pass
+
+    # ── 外部プロンプトファイル注記（V174-2）─────────────────
+    def _add_prompt_file_notice(self, body, filename):
+        """外部プロンプト md ファイル検出時のみ注記ラベルを追加する。
+
+        実行ファイルと同じ階層に filename（ocr_custom_prompt.md /
+        ocr_summary_prompt.md）が存在し非空なら、その内容が入力欄より
+        優先される旨を WARNING 色で表示する。ファイルが無ければ何も
+        追加しない（通常ユーザーの画面は従来どおり）。
+        """
+        if not load_prompt_file(filename):
+            return
+        notice_row = tk.Frame(body, bg=C["BG_DARK"])
+        notice_row.pack(fill="x", padx=24, pady=(0, 2))
+        tk.Label(
+            notice_row,
+            text="",
+            bg=C["BG_DARK"],
+            font=self._font(-1),
+            width=20,
+            anchor="w",
+        ).pack(side="left")
+        tk.Label(
+            notice_row,
+            text=self._L.get(
+                "ocr_prompt_file_in_use",
+                "📄 {file} を検出 — 入力欄よりファイル内容を優先します",
+            ).format(file=filename),
+            bg=C["BG_DARK"],
+            fg=C["WARNING"],
+            font=self._font(-2),
+            anchor="w",
+        ).pack(side="left", padx=4)
 
     # ── ステータス表示 ──────────────────────────────────
     def _set_lm_status(self, text, kind="info"):
