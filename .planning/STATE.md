@@ -31,7 +31,7 @@ See: .planning/PROJECT.md (updated 2026-07-05)
 Phase: Milestone v1.7.1 complete
 Plan: —
 Status: Awaiting next milestone
-Last activity: 2026-07-05 — Milestone v1.7.1 completed and archived
+Last activity: 2026-07-09 - Completed quick task 260709-rel: v1.7.4 マージ・リリース
 
 ## v1.7.1 Phase Map
 
@@ -270,6 +270,7 @@ Decisions are logged in PROJECT.md Key Decisions table.
 | 260623-rel | ブランチ claude/great-maxwell-k67sbc を main へマージし v1.6.1 をリリース。pytest 613 件グリーン・ruff クリーン検証、PyInstaller リビルド（`dist/PageFolio` 更新）、PR #25 マージ、注釈付きタグ `v1.6.1` 付与、GitHub Release を Latest 公開（PageFolio-v1.6.1-win64.zip + .sha256 添付） | 2026-06-23 | fd20608 | [260623-rel-v161-merge-release](./quick/260623-rel-v161-merge-release/) |
 | 260703-svm | v1.6.5（サマリ生成の安定化・進捗UX・エラーハンドリング統一・黒塗り/モザイク）+ v1.7.0（undo デルタの UndoBlobStore ディスク退避・undo no-op 3操作/透かし rotate=45 バグ修正・120ページストレステスト自動化）を実装。pytest 707 件グリーン | 2026-07-03 | 8949f65 / 3146706 | [260703-v165-v170-stabilization-memopt](./quick/260703-v165-v170-stabilization-memopt/) |
 | 260630-rel | ブランチ feature/add-ollama-runpod（Ollama・RunPod プロバイダ追加・設定画面リプレース）を main へマージし v1.6.2 をリリース。ruff クリーン・pytest 619 件グリーン検証、PR #26 マージ、注釈付きタグ `v1.6.2-1` 付与（immutable release のタグ名再利用ブロック回避で `-1` サフィックス）、GitHub Release を Latest 公開（`PageFolio-v1.6.2-win64.zip` + `.sha256` 添付）。v1.6.1/v1.6.2 を MILESTONES.md へ遡及記録 | 2026-06-30 | ae16c22 | — |
+| 260709-rel | ブランチ claude/prompt-markdown-formatting-1loozg を main へマージし v1.7.4 をリリース。pytest 880 件グリーン・ruff クリーン検証（Windows 実機）、PR #32 マージ、PyInstaller リビルド（`dist/PageFolio` 更新・起動確認済み）、注釈付きタグ `v1.7.4` 付与、GitHub Release を Latest 公開（PageFolio-v1.7.4-win64.zip + .sha256 添付） | 2026-07-09 | 0c92af4 | [260709-rel-v174-merge-release](./quick/260709-rel-v174-merge-release/) |
 
 ## Deferred Items
 
