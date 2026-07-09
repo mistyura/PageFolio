@@ -5,19 +5,21 @@ date: 2026-07-09
 status: complete
 ---
 
-# Summary: プロンプト外部 md ファイル読込・Markdown 描画個別指定・モデル取得タイムアウト見直し（v1.7.4）
+# Summary: プロンプト外部 md ファイル読込・Markdown 表示のプリセット一本化・モデル取得タイムアウト見直し（v1.7.4）
 
 ブランチ: `claude/prompt-markdown-formatting-1loozg`
 コミット: `5e013a4`（Markdown 描画個別指定 + タイムアウト見直し）→
 `515e434`（外部 md ファイル読込方式）→ `3e1cdc7`（md ファイルと入力欄の
-双方向連動化）— いずれも push 済み
-品質確認: `ruff check` / `ruff format` クリーン / `pytest` **888 件パス**
+双方向連動化）→ `8ef30d5`（Markdown 整形表示のプリセット一本化）— いずれも push 済み
+品質確認: `ruff check` / `ruff format` クリーン / `pytest` **880 件パス**
 （実行環境に tkinter 3.11 が無く、`python3.12` で pytest を実行）
 
 [PLAN.md](./PLAN.md) の方針どおりに実装した。要望 3（外部 md ファイル方式）は
 要望 1・2 の実装後に追加で受領し、さらにユーザー提案により「ファイル優先の
 一方向読込」から「入力欄との双方向連動」へ仕様変更したため 3 コミットに
-分かれているが、いずれも未リリースの v1.7.4 に統合した。
+分かれ、最後にユーザー判断（AskUserQuestion で「プリセットに寄せる」を選択）で
+Markdown 表示指定の重複をプリセットへ一本化した。いずれも未リリースの v1.7.4 に
+統合した。
 
 ## 実施内容
 
@@ -85,15 +87,34 @@ status: complete
   へ変更（ja/en）。空ファイルでも連動対象のため判定を `prompt_file_exists`
   （存在のみ）へ変更。
 
+### コミット `8ef30d5`: Markdown 整形表示のプリセット一本化（仕様変更）
+
+ユーザー指摘「OCR ダイアログのプリセット（通常テキスト/表形式/Markdown）と
+LLM 設定のチェックボックス（Markdown形式）が重複するのでどちらかに寄せたい」を受け、
+選択肢（プリセットに寄せる / チェックボックスに寄せる）を提示し
+「プリセットに寄せる」で確定。`5e013a4` のチェックボックス機構を撤去した。
+
+- **撤去**: LLM 設定のチェックボックス 2 個・設定キー `ocr_custom_prompt_markdown` /
+  `ocr_summary_markdown`（defaults 含む）・純関数 `resolve_render_markdown`・
+  LANG キー `ocr_custom_prompt_md` / `ocr_summary_prompt_md`（同一バージョン内の
+  実装のため互換影響なし）。
+- **一本化**: 整形表示は常に `preset == "markdown"` で決定
+  （`_render_results_ordered` / `_on_summary_done`。カスタム/サマリプロンプト
+  使用時も同様）。
+- **注記**: カスタムプロンプト使用中はプリセットが実プロンプトへ反映されず
+  「表示形式の選択」としてのみ働くため、OCR ダイアログのプリセット横に
+  「（カスタムプロンプト使用中 — プリセットは表示形式にのみ適用）」を表示
+  （`_update_preset_note`・LANG キー `ocr_preset_custom_note`。`_apply_llm_settings`
+  と `_on_run` の外部 md 再読込後に callable ガード付きで再評価）。
+- テスト整理: `TestResolveRenderMarkdown`（5 件）・`TestApplyPromptMarkdownFlags`
+  （2 件）を削除し、`TestOnSummaryDone` のフラグ別描画 2 件を「カスタムサマリ
+  プロンプト使用時もプリセットで決まる」1 件へ置換。
+
 ## 検証内容
 
-- 回帰テスト 29 件を追加し `pytest` 888 件グリーン:
-  - `TestResolveRenderMarkdown`（5 件・test_provider_ui.py）: プリセット準拠の後方互換 /
-    カスタム使用時のフラグ優先 / 既定 False。
-  - `TestApplyPromptMarkdownFlags`（2 件・test_provider_ui.py）: `_apply` の新フラグ格納・
-    変数未生成スタブ経路の False フォールバック。
-  - `TestOnSummaryDone` 追加 2 件（test_ocr.py）: サマリプロンプト + フラグ ON で
-    preset=text でも整形描画 / フラグ OFF で preset=markdown でも素朴描画。
+- 回帰テスト 21 件を追加（一本化での削除・置換後の純増）し `pytest` 880 件グリーン:
+  - `TestOnSummaryDone` 追加 1 件（test_ocr.py）: カスタムサマリプロンプト使用時も
+    preset=="markdown" で整形描画される（プリセット一本化の回帰）。
   - `TestModelListTimeout`（6 件・test_ocr_providers.py）: プロバイダ別値
     （10/30/90 秒）と RunPod/Gemini の urlopen への timeout 伝播。
   - `TestPromptFileLoading`（12 件・test_utils.py）: 優先順位・フォールバック・BOM・
