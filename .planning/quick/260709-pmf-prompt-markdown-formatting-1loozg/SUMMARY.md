@@ -9,13 +9,15 @@ status: complete
 
 ブランチ: `claude/prompt-markdown-formatting-1loozg`
 コミット: `5e013a4`（Markdown 描画個別指定 + タイムアウト見直し）→
-`515e434`（外部 md ファイル読込方式）— いずれも push 済み
-品質確認: `ruff check` / `ruff format` クリーン / `pytest` **883 件パス**
+`515e434`（外部 md ファイル読込方式）→ `3e1cdc7`（md ファイルと入力欄の
+双方向連動化）— いずれも push 済み
+品質確認: `ruff check` / `ruff format` クリーン / `pytest` **888 件パス**
 （実行環境に tkinter 3.11 が無く、`python3.12` で pytest を実行）
 
 [PLAN.md](./PLAN.md) の方針どおりに実装した。要望 3（外部 md ファイル方式）は
-要望 1・2 の実装後に追加で受領したため 2 コミットに分かれているが、いずれも
-未リリースの v1.7.4 に統合した。プランからの逸脱はなし。
+要望 1・2 の実装後に追加で受領し、さらにユーザー提案により「ファイル優先の
+一方向読込」から「入力欄との双方向連動」へ仕様変更したため 3 コミットに
+分かれているが、いずれも未リリースの v1.7.4 に統合した。
 
 ## 実施内容
 
@@ -65,9 +67,27 @@ status: complete
   とも、外部ファイル使用時は「カスタム使用中」として個別フラグが適用される。
 - `APP_VERSION` を `v1.7.3` → `v1.7.4` へ更新。README バッジ・開発履歴.md に追記。
 
+### コミット `3e1cdc7`: md ファイルと入力欄の双方向連動化（仕様変更）
+
+ユーザー提案「md ファイルが存在する場合、画面のプロンプト内に反映 → プロンプトを
+更新 → md ファイルに保存にしませんか？」を受け、`515e434` の「ファイル優先・
+入力欄は無視」から「ファイル連動モード」へ変更した。
+
+- **開いたとき**: md ファイルが存在して非空なら、内容を LLM 設定の入力欄へ反映
+  （`load_prompt_file(...) or settings 値` を初期値に採用）。
+- **適用したとき**: md ファイルが存在する場合のみ、入力欄の内容をファイルへ書き戻す
+  （`settings.py` に `prompt_file_exists` / `save_prompt_file` を新設・settings にも
+  同期保存）。ファイルが無ければ書き戻さない（md を新規作成しない・従来どおり
+  settings のみで完結）。
+- **実行したとき**: `_on_run` / `_on_summary` の毎回再読込は据え置き（外部エディタ
+  での編集も反映される。適用で書き戻し済みなら file と settings は常に一致）。
+- 連動注記の文言を「📄 {file} と連動中 — 適用時にこの欄の内容をファイルへ保存します」
+  へ変更（ja/en）。空ファイルでも連動対象のため判定を `prompt_file_exists`
+  （存在のみ）へ変更。
+
 ## 検証内容
 
-- 回帰テスト 24 件を追加し `pytest` 883 件グリーン:
+- 回帰テスト 29 件を追加し `pytest` 888 件グリーン:
   - `TestResolveRenderMarkdown`（5 件・test_provider_ui.py）: プリセット準拠の後方互換 /
     カスタム使用時のフラグ優先 / 既定 False。
   - `TestApplyPromptMarkdownFlags`（2 件・test_provider_ui.py）: `_apply` の新フラグ格納・
@@ -76,8 +96,11 @@ status: complete
     preset=text でも整形描画 / フラグ OFF で preset=markdown でも素朴描画。
   - `TestModelListTimeout`（6 件・test_ocr_providers.py）: プロバイダ別値
     （10/30/90 秒）と RunPod/Gemini の urlopen への timeout 伝播。
-  - `TestPromptFileLoading`（9 件・test_utils.py）: 優先順位・フォールバック・BOM・
-    空ファイル・定数一致（`_get_base_dir` を tmp_path へ monkeypatch）。
+  - `TestPromptFileLoading`（12 件・test_utils.py）: 優先順位・フォールバック・BOM・
+    空ファイル・定数一致・書き戻し round-trip・prompt_file_exists・保存失敗時の
+    False 返却（`_get_base_dir` を tmp_path へ monkeypatch）。
+  - `TestApplyPromptFileWriteback`（2 件・test_provider_ui.py）: ファイル存在時のみ
+    `_apply` が書き戻す / 不在時は新規作成しない。
 - 既存テストへの影響: `_make_apply_key_stub` へ新変数 2 個追加・
   `TestOnSummaryDone._make_fake` へ `app.settings` 追加のみ。md ファイル不在時は
   全経路が従来挙動へフォールバックするため他のテストは無変更で通過。
@@ -90,10 +113,11 @@ status: complete
   チェックボックス/注記表示・テーマ（dark/light）での見え方は次回確認が必要。
 - RunPod のコールドスタートが 90 秒を超える環境では引き続きタイムアウトし得る
   （再クリックで再試行。`model_list_timeout` の設定 UI 化が将来の改善候補）。
-- ファイル検出注記はダイアログを開いた時点の状態を表示（開いたまま md を置いても
-  注記は更新されない。実行時の読込自体は常に最新）。
-- md ファイルが存在する間、設定欄の編集は実行に反映されない（注記で明示済み）。
-  ファイルを削除/リネームすれば設定欄へ戻る。
+- ファイル連動注記と入力欄への反映はダイアログを開いた時点の状態（開いたまま md を
+  置いても注記・入力欄は更新されない。実行時の読込自体は常に最新）。
+- 連動モード中に外部エディタと入力欄の両方を編集した場合、「適用」した側が勝つ
+  （適用時に入力欄の内容でファイルが上書きされる）。ファイルを削除/リネームすれば
+  settings のみの従来動作へ戻る。
 - モデル取得の非同期化は LLM 設定ダイアログのみ。OCR ダイアログ側の接続テスト
   （LM Studio / Ollama・ローカル 10 秒）は従来どおり同期実行。
 - main へのマージ・タグ・GitHub Release・PyInstaller リビルドは未実施（次セッション）。
