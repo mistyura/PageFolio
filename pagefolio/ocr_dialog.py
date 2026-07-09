@@ -555,9 +555,56 @@ class OCRDialog(tk.Toplevel):
         self.text.tag_configure("md_bold", font=self._font(-1, "bold"))
         # fmt: on
 
-        # 右ペインのセクション/ボタン生成ヘルパー（ui_builder._build_tools と同構成）
+        # V174-4: 右ペインを縦スクロール可能にする（ui_builder の
+        # _build_tools_scrollable と同型）。フォントサイズ大・低解像度環境で
+        # ウィンドウ高さがボタン合計高を下回ってもセクション群へ到達できる。
+        # 「✕ 閉じる」は下で side 直下に side="bottom" で pack される
+        # （スクロール領域外・常時可視）。
+        side_canvas = tk.Canvas(side, bg=C["BG_PANEL"], highlightthickness=0, bd=0)
+        side_sb = ttk.Scrollbar(side, orient="vertical", command=side_canvas.yview)
+        side_canvas.configure(yscrollcommand=side_sb.set)
+
+        side_inner = tk.Frame(side_canvas, bg=C["BG_PANEL"])
+        side_canvas.create_window(
+            (0, 0), window=side_inner, anchor="nw", tags="inner_window"
+        )
+
+        def _on_side_inner_configure(_e):
+            # スクロール範囲を内容全体へ更新しつつ、Canvas 幅を内容の要求幅に
+            # 追随させる（Canvas 経由だと内容幅が親 side へ伝搬しないため）
+            side_canvas.configure(
+                scrollregion=side_canvas.bbox("all"),
+                width=side_inner.winfo_reqwidth(),
+            )
+
+        side_inner.bind("<Configure>", _on_side_inner_configure)
+        side_canvas.bind(
+            "<Configure>",
+            lambda e: side_canvas.itemconfigure("inner_window", width=e.width),
+        )
+
+        def _on_side_wheel(e):
+            side_canvas.yview_scroll(int(-1 * (e.delta / 120)), "units")
+
+        side_canvas.bind("<MouseWheel>", _on_side_wheel)
+
+        def _bind_side_wheel_recursive(widget):
+            widget.bind("<MouseWheel>", _on_side_wheel, add="+")
+            for child in widget.winfo_children():
+                _bind_side_wheel_recursive(child)
+
+        def _after_side_build():
+            # ダイアログが即クローズされた場合に備えた TclError ガード
+            try:
+                _bind_side_wheel_recursive(side_inner)
+                side_canvas.yview_moveto(0)
+            except tk.TclError:
+                pass
+
+        # 右ペインのセクション/ボタン生成ヘルパー（ui_builder._build_tools と同構成。
+        # 親はスクロール領域内の side_inner）
         def section(title):
-            f = tk.Frame(side, bg=C["BG_CARD"], bd=0)
+            f = tk.Frame(side_inner, bg=C["BG_CARD"], bd=0)
             f.pack(fill="x", padx=8, pady=5)
             tk.Label(
                 f,
@@ -573,13 +620,19 @@ class OCRDialog(tk.Toplevel):
             b.pack(fill="x", padx=8, pady=2)
             return b
 
-        # 閉じるは右ペイン最下部に固定（セクション外・誤操作分離）
+        # 閉じるは右ペイン最下部に固定（セクション外・スクロール領域外・誤操作分離）
         self.close_btn = ttk.Button(
             side,
             text=self._L["btn_close"],
             command=self._on_close,
         )
         self.close_btn.pack(side="bottom", fill="x", padx=8, pady=(4, 8))
+
+        # V174-4: 閉じるボタンの上をスクロール領域として確保する
+        # （close_btn を先に side="bottom" で pack して下端を予約 → 残り全域を
+        # スクロールバー + Canvas が占有する）
+        side_sb.pack(side="right", fill="y")
+        side_canvas.pack(side="left", fill="both", expand=True)
 
         # 実行セクション（読み取り実行 / 続きから再実行 / キャンセル）
         f_run = section(self._L["ocr_sec_run"])
@@ -611,6 +664,10 @@ class OCRDialog(tk.Toplevel):
         self.summary_btn.state(["disabled"])
         self.clear_btn = side_btn(f_result, self._L["ocr_clear"], self._clear_text)
         tk.Frame(f_result, bg=C["BG_CARD"], height=6).pack(fill="x")
+
+        # V174-4: 全セクション構築後にホイールバインドを一括適用（ui_builder と
+        # 同じく after で遅延させ、生成直後の winfo_children を確実に拾う）
+        self.after(100, _after_side_build)
 
     def _clear_text(self):
         """結果テキストエリア・進行表示・実行状態を初期化する"""
