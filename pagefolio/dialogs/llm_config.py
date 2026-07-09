@@ -983,38 +983,6 @@ class LLMConfigDialog(tk.Toplevel):
             font=self._font(-2),
         ).pack(side="left", padx=4, anchor="sw")
 
-        # ── カスタムプロンプトの Markdown 描画フラグ（V174）──
-        # カスタムプロンプト使用時はプリセット選択（text/table/markdown）が
-        # 実プロンプトへ反映されないため、描画形式をここで個別指定する。
-        self.ocr_prompt_md_var = tk.BooleanVar(
-            value=bool(self.current_settings.get("ocr_custom_prompt_markdown", False))
-        )
-        prompt_md_row = tk.Frame(body, bg=C["BG_DARK"])
-        prompt_md_row.pack(fill="x", padx=24, pady=(0, 2))
-        # ラベル列（width=20）と揃えるためのスペーサー
-        tk.Label(
-            prompt_md_row,
-            text="",
-            bg=C["BG_DARK"],
-            font=self._font(-1),
-            width=20,
-            anchor="w",
-        ).pack(side="left")
-        tk.Checkbutton(
-            prompt_md_row,
-            text=self._L.get(
-                "ocr_custom_prompt_md",
-                "OCR結果をMarkdown整形で表示（カスタムプロンプト使用時）",
-            ),
-            variable=self.ocr_prompt_md_var,
-            bg=C["BG_DARK"],
-            fg=C["TEXT_SUB"],
-            selectcolor=C["BG_CARD"],
-            activebackground=C["BG_DARK"],
-            activeforeground=C["TEXT_MAIN"],
-            font=self._font(-2),
-        ).pack(side="left", padx=4)
-
         # V174-2: 外部 md ファイル（exe と同階層）検出時の注記。
         # ファイル連動モード（開いたとき入力欄へ反映・適用時に書き戻し）で
         # あることをユーザーへ明示する
@@ -1058,35 +1026,6 @@ class LLMConfigDialog(tk.Toplevel):
             fg=C["TEXT_SUB"],
             font=self._font(-2),
         ).pack(side="left", padx=4, anchor="sw")
-
-        # ── サマリプロンプトの Markdown 描画フラグ（V174・上と同型）──
-        self.ocr_summary_md_var = tk.BooleanVar(
-            value=bool(self.current_settings.get("ocr_summary_markdown", False))
-        )
-        summary_md_row = tk.Frame(body, bg=C["BG_DARK"])
-        summary_md_row.pack(fill="x", padx=24, pady=(0, 2))
-        tk.Label(
-            summary_md_row,
-            text="",
-            bg=C["BG_DARK"],
-            font=self._font(-1),
-            width=20,
-            anchor="w",
-        ).pack(side="left")
-        tk.Checkbutton(
-            summary_md_row,
-            text=self._L.get(
-                "ocr_summary_prompt_md",
-                "サマリをMarkdown整形で表示（サマリプロンプト使用時）",
-            ),
-            variable=self.ocr_summary_md_var,
-            bg=C["BG_DARK"],
-            fg=C["TEXT_SUB"],
-            selectcolor=C["BG_CARD"],
-            activebackground=C["BG_DARK"],
-            activeforeground=C["TEXT_MAIN"],
-            font=self._font(-2),
-        ).pack(side="left", padx=4)
 
         # V174-2: 外部 md ファイル検出時の注記（カスタムプロンプト側と同型）
         self._add_prompt_file_notice(body, SUMMARY_PROMPT_FILE)
@@ -1691,17 +1630,6 @@ class LLMConfigDialog(tk.Toplevel):
             save_prompt_file(CUSTOM_PROMPT_FILE, llm_settings["ocr_custom_prompt"])
         if prompt_file_exists(SUMMARY_PROMPT_FILE):
             save_prompt_file(SUMMARY_PROMPT_FILE, llm_settings["ocr_summary_prompt"])
-        # V174: カスタム/サマリプロンプトの個別 Markdown 描画フラグ。
-        # getattr フォールバックは _apply を Tk 生成なしスタブ経由で呼ぶ
-        # 既存テスト経路の安全確保のため（_tesseract_langs と同型パターン）
-        _prompt_md_var = getattr(self, "ocr_prompt_md_var", None)
-        llm_settings["ocr_custom_prompt_markdown"] = bool(
-            _prompt_md_var.get() if _prompt_md_var is not None else False
-        )
-        _summary_md_var = getattr(self, "ocr_summary_md_var", None)
-        llm_settings["ocr_summary_markdown"] = bool(
-            _summary_md_var.get() if _summary_md_var is not None else False
-        )
         try:
             tmp = float(self.ocr_temperature_var.get())
             llm_settings["ocr_temperature"] = max(0.0, min(2.0, tmp))

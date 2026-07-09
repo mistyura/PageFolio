@@ -595,14 +595,13 @@ LANG = {
         "ocr_summary_cancelled": "サマリ生成をキャンセルしました",
         "ocr_custom_prompt_label": "カスタムプロンプト:",
         "ocr_custom_prompt_hint": "(空欄でデフォルトのプロンプトを使用)",
-        "ocr_custom_prompt_md": (
-            "OCR結果をMarkdown整形で表示（カスタムプロンプト使用時）"
-        ),
         "ocr_summary_prompt_label": "サマリプロンプト:",
         "ocr_summary_prompt_hint": "(空欄で既定のサマリ指示を使用)",
-        "ocr_summary_prompt_md": "サマリをMarkdown整形で表示（サマリプロンプト使用時）",
         "ocr_prompt_file_in_use": (
             "📄 {file} と連動中 — 適用時にこの欄の内容をファイルへ保存します"
+        ),
+        "ocr_preset_custom_note": (
+            "（カスタムプロンプト使用中 — プリセットは表示形式にのみ適用）"
         ),
         "ocr_summary_ctx_exceeded": (
             "サマリ生成に失敗しました: テキストがモデルのコンテキスト長上限を"
@@ -1223,16 +1222,13 @@ LANG = {
         "ocr_summary_cancelled": "Summary generation cancelled",
         "ocr_custom_prompt_label": "Custom prompt:",
         "ocr_custom_prompt_hint": "(blank: use the default prompt)",
-        "ocr_custom_prompt_md": (
-            "Render OCR results as Markdown (when custom prompt is set)"
-        ),
         "ocr_summary_prompt_label": "Summary prompt:",
         "ocr_summary_prompt_hint": "(blank: use the default summary instruction)",
-        "ocr_summary_prompt_md": (
-            "Render summary as Markdown (when summary prompt is set)"
-        ),
         "ocr_prompt_file_in_use": (
             "📄 Linked with {file} — this field is saved back to the file on apply"
+        ),
+        "ocr_preset_custom_note": (
+            "(custom prompt in use — preset affects display format only)"
         ),
         "ocr_summary_ctx_exceeded": (
             "Summary generation failed: the text exceeds the model's "

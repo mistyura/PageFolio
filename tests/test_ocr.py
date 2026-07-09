@@ -2825,16 +2825,13 @@ class TestOnSummaryDone:
         # 素の insert には本文が入らない（セパレータのみ）
         assert all("# SUM" not in s for s in text_stub.inserted)
 
-    def test_done_custom_summary_prompt_with_flag_renders_markdown(self):
-        """V174: カスタムサマリプロンプト + フラグ ON は preset に関わらず整形描画。"""
+    def test_done_markdown_preset_applies_with_custom_summary_prompt(self):
+        """V174-3: カスタムサマリプロンプト使用時もプリセットが表示形式を決める。"""
         from pagefolio.ocr_dialog import OCRDialog
 
         fake, text_stub = self._make_fake(
-            preset="text",
-            settings={
-                "ocr_summary_prompt": "巨大サマリプロンプト",
-                "ocr_summary_markdown": True,
-            },
+            preset="markdown",
+            settings={"ocr_summary_prompt": "巨大サマリプロンプト"},
         )
         rendered = []
         fake._insert_markdown = lambda t: rendered.append(t)
@@ -2842,24 +2839,6 @@ class TestOnSummaryDone:
 
         assert rendered == ["| a | b |"]
         assert all("| a | b |" not in s for s in text_stub.inserted)
-
-    def test_done_custom_summary_prompt_without_flag_stays_plain(self):
-        """V174: カスタムサマリプロンプト + フラグ OFF は素朴描画を維持する。"""
-        from pagefolio.ocr_dialog import OCRDialog
-
-        fake, text_stub = self._make_fake(
-            preset="markdown",
-            settings={
-                "ocr_summary_prompt": "巨大サマリプロンプト",
-                "ocr_summary_markdown": False,
-            },
-        )
-        rendered = []
-        fake._insert_markdown = lambda t: rendered.append(t)
-        OCRDialog._on_summary_done(fake, "# SUM", False)
-
-        assert rendered == []
-        assert any("# SUM" in s for s in text_stub.inserted)
 
 
 class TestSummaryWorkerErrorKinds:

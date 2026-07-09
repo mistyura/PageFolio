@@ -21,7 +21,6 @@ from pagefolio.ocr import (
     has_embedded_text,
     page_to_png_b64,
     resolve_ocr_prompt,
-    resolve_render_markdown,
     resolve_summary_prompt,
 )
 from pagefolio.ocr_pipeline import (
@@ -274,6 +273,18 @@ class OCRDialog(tk.Toplevel):
                 activeforeground=C["TEXT_MAIN"],
                 font=self._font(-1),
             ).pack(side="left", padx=4)
+        # V174-3: カスタムプロンプト使用中はプリセットが実プロンプトへ反映されず
+        # 「表示形式（Markdown 整形の有無）の選択」としてのみ働くため、
+        # その旨をプリセット横に注記する（Markdown 指定のプリセット一本化）
+        self._preset_note_var = tk.StringVar(value="")
+        tk.Label(
+            pf,
+            textvariable=self._preset_note_var,
+            bg=C["BG_DARK"],
+            fg=C["TEXT_SUB"],
+            font=self._font(-2),
+        ).pack(side="left", padx=8)
+        self._update_preset_note()
 
         # サーバ（参照のみ・設定メニューの値を表示）
         # LM Studio 固有欄: クラウドプロバイダ時は表示しない（provider 中立化）
@@ -889,6 +900,11 @@ class OCRDialog(tk.Toplevel):
         # （さもないと _on_run が 1 回前のカスタムプロンプトを使い続ける）。
         # V174-2: 外部 md ファイルがあれば設定欄より優先（load_custom_prompt）
         self.custom_prompt = load_custom_prompt(self.app.settings)
+        # V174-3: カスタム使用状態の注記を再評価（Tk 生成なしスタブ経由で呼ぶ
+        # 既存テスト経路の安全確保のため callable ガード・L-6j と同型）
+        update_preset_note = getattr(self, "_update_preset_note", None)
+        if callable(update_preset_note):
+            update_preset_note()
         # (c)〜(g) UI 更新
         self._refresh_provider_dependent_ui()
         # 全プロバイダ共通: 読み取り専用の数値パラメータ表示を settings 値へ即時同期
@@ -1026,6 +1042,18 @@ class OCRDialog(tk.Toplevel):
             self._lang_fallback_notice_var.set("")
             if self._lang_fallback_label.winfo_ismapped():
                 self._lang_fallback_label.pack_forget()
+
+    def _update_preset_note(self):
+        """カスタムプロンプト使用状態に応じてプリセット横の注記を更新する。
+
+        V174-3: Markdown 整形表示の指定はプリセットへ一本化した。カスタム
+        プロンプト使用中はプリセットが実プロンプトへ反映されない
+        （resolve_ocr_prompt でカスタム最優先）ため、「表示形式にのみ適用」
+        である旨を表示し、未使用時は注記を消す。_build・_apply_llm_settings・
+        _on_run（外部 md 再読込後）から呼ばれる。
+        """
+        note = self._L["ocr_preset_custom_note"] if self.custom_prompt else ""
+        self._preset_note_var.set(note)
 
     def _sync_param_vars_from_settings(self):
         """読み取り専用の数値パラメータ Tk 変数を app.settings の値へ同期する。
@@ -1282,6 +1310,11 @@ class OCRDialog(tk.Toplevel):
         _file_prompt = load_prompt_file(CUSTOM_PROMPT_FILE)
         if _file_prompt:
             self.custom_prompt = _file_prompt
+            # V174-3: 外部 md 反映後にカスタム使用状態の注記を再評価
+            # （スタブ経路の安全確保のため callable ガード）
+            update_preset_note = getattr(self, "_update_preset_note", None)
+            if callable(update_preset_note):
+                update_preset_note()
         # プロンプト解決は resolve_ocr_prompt に集約（優先順位は純関数側で担保）。
         prompt = resolve_ocr_prompt(self.preset_var.get(), name, self.custom_prompt)
         self._ocr_prompt = prompt
@@ -1654,9 +1687,8 @@ class OCRDialog(tk.Toplevel):
     def _insert_markdown(self, text):
         """parse_markdown の戻り値を text へ整形挿入する薄い描画ヘルパー。
 
-        resolve_render_markdown が True の本文のみで呼ばれる（Pitfall 2:
-        text/table や Tesseract/LMStudio 素出力には当てない構造的ガードは
-        呼び出し側。カスタムプロンプト使用時は個別フラグで判定・V174）。
+        preset == "markdown" の本文のみで呼ばれる（Pitfall 2: text/table や
+        Tesseract/LMStudio 素出力には当てない構造的ガードは呼び出し側）。
         各 span を insert し inline_tag があれば tag_add、行末で行レベルタグ
         （kind）を行全体へ tag_add する（04-RESEARCH.md:137-146）。整形は表示
         専用でコピー/保存（_format_full_text）は raw 維持（Pitfall 5）。
@@ -1674,17 +1706,11 @@ class OCRDialog(tk.Toplevel):
 
     def _render_results_ordered(self):
         """results / errors をページ順に text へ流し込む（並列実行後の一括描画）"""
-        # 整形描画の判定は resolve_render_markdown に集約（Pitfall 2 構造的
-        # ガード）。カスタムプロンプト未使用時は preset == "markdown" のとき
-        # のみ整形描画し、text/table や Tesseract/LMStudio 素出力には
-        # Markdown パーサを当てない。カスタムプロンプト使用時はプリセットが
-        # 実プロンプトへ反映されないため、個別フラグ
-        # ocr_custom_prompt_markdown で指定する（V174）。
-        markdown = resolve_render_markdown(
-            self.preset_var.get(),
-            self.custom_prompt,
-            self.app.settings.get("ocr_custom_prompt_markdown", False),
-        )
+        # preset == "markdown" のときのみ整形描画（Pitfall 2 構造的ガード）。
+        # text/table や Tesseract/LMStudio 素出力には Markdown パーサを当てない。
+        # カスタムプロンプト使用時もプリセットが「表示形式の選択」として働く
+        # （V174-3: Markdown 指定はプリセットへ一本化・_update_preset_note で注記）。
+        markdown = self.preset_var.get() == "markdown"
         for page_idx in self.page_indices:
             sep = self._L["ocr_page_separator"].format(page=page_idx + 1)
             self.text.insert("end", f"\n{sep}\n")
@@ -2088,22 +2114,15 @@ class OCRDialog(tk.Toplevel):
     def _on_summary_done(self, text, truncated):
         """サマリ生成成功（メインスレッド）: 結果保持・末尾へ追記・UI 復帰。
 
-        表示は resolve_render_markdown が True のときのみ整形描画
-        （_insert_results_body と同じ構造的ガード）。カスタムサマリプロンプト
-        使用時は個別フラグ ocr_summary_markdown、未使用時は従来どおり
-        preset=="markdown" で判定する（V174）。コピー/保存は raw 維持
-        （_format_full_text）。途切れ（truncated）は「成功＋警告」として
-        部分サマリを保持する（D-05）。
+        表示は preset=="markdown" のときのみ整形描画（_insert_results_body と
+        同じ構造的ガード。V174-3: カスタムサマリプロンプト使用時もプリセットが
+        表示形式の選択として働く）。コピー/保存は raw 維持（_format_full_text）。
+        途切れ（truncated）は「成功＋警告」として部分サマリを保持する（D-05）。
         """
         self.summary_result = text
         self._summary_truncated = truncated
         self.text.insert("end", f"\n{self._L['ocr_summary_separator']}\n")
-        if resolve_render_markdown(
-            self.preset_var.get(),
-            # V174-2: 外部 md ファイル使用時も「カスタム使用中」として扱う
-            load_summary_prompt(self.app.settings),
-            self.app.settings.get("ocr_summary_markdown", False),
-        ):
+        if self.preset_var.get() == "markdown":
             self._insert_markdown(text)
         else:
             self.text.insert("end", text + "\n")
