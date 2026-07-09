@@ -48,11 +48,26 @@ python pagefolio.py
 | `ruff check .` | リントチェック |
 | `ruff format .` | コードフォーマット |
 | `ruff check . && ruff format .` | リント + フォーマットを一括実行 |
-| `pyinstaller PageFolio.spec` | Windows 向け実行ファイルをビルド（onedir 形式） |
+| `pyinstaller --onedir --noconsole --icon=pagefolio.ico --name=PageFolio pagefolio.py` | Windows 向け実行ファイルをビルド（onedir 形式） |
 
 ### PyInstaller ビルドについて
 
-`PageFolio.spec` を使用した onedir 形式のビルドを行います。生成物は `dist/PageFolio/` ディレクトリに配置されます。`PageFolio.spec` はリポジトリでは `.gitignore` 対象（`*.spec`）のため、手元で `pyinstaller` コマンドから生成する必要があります。`dist/PageFolio/` はリビルドのたびにコミットして追跡する運用です。ビルド前に `venv` が有効化されていることを確認してください。
+`PageFolio.spec` は `.gitignore` 対象（`*.spec`）のためリポジトリには基本存在しません。ビルドは以下のコマンドをそのまま実行してください（実行すると `PageFolio.spec` が自動生成されます）。
+
+```bash
+pyinstaller --onedir --noconsole --icon=pagefolio.ico --name=PageFolio pagefolio.py
+```
+
+| オプション | 意味 |
+|-----------|------|
+| `--onedir` | ディレクトリ配布形式（`dist/PageFolio/` に exe + 依存ファイル一式を出力） |
+| `--noconsole` | 起動時にコンソールウィンドウを表示しない（GUI アプリ用） |
+| `--icon=pagefolio.ico` | アプリアイコンを指定 |
+| `--name=PageFolio` | 出力名（`dist/PageFolio/PageFolio.exe`） |
+
+- 生成物は `dist/PageFolio/` ディレクトリに配置されます。`dist/PageFolio/` はリビルドのたびにコミットして追跡する運用です。
+- 2 回目以降は自動生成された `PageFolio.spec` を使って `pyinstaller PageFolio.spec` でも同じ構成でリビルドできます（spec を手元で編集した場合はこちら）。
+- ビルド前に `venv` が有効化されていることを確認してください。
 
 ---
 
