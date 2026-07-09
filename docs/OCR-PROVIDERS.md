@@ -449,6 +449,23 @@ def run_with_bounded_buffer(
 | `"table"` | 表を Markdown テーブル形式で抽出 |
 | `"markdown"` | 文書構造を保った Markdown 形式で抽出 |
 
+プリセットは結果表示の整形（Markdown 描画）も兼ねます: `"markdown"` 選択時のみ
+OCR 本文・サマリが整形表示されます（コピー / 保存は raw 維持）。
+
+### プロンプト解決の優先順位
+
+実際に送信されるプロンプトは `resolve_ocr_prompt` / `resolve_summary_prompt`
+（`pagefolio/ocr.py`・純関数）が以下の優先順位で解決します:
+
+| 種別 | 優先順位（上が最優先） |
+|------|------------------------|
+| OCR | ① カスタムプロンプト（外部 `ocr_custom_prompt.md` > 設定 `ocr_custom_prompt`）→ ② `PROVIDER_OCR_PROMPTS[provider][preset]`（claude / gemini のみ）→ ③ `OCR_PROMPTS[preset]`（既定 `text`） |
+| サマリ | ① カスタムサマリプロンプト（外部 `ocr_summary_prompt.md` > 設定 `ocr_summary_prompt`）→ ② `PROVIDER_SUMMARY_PROMPTS[provider]`（claude / gemini のみ）→ ③ `DEFAULT_SUMMARY_PROMPT` |
+
+カスタムプロンプト使用時はプリセットが実プロンプトへ反映されず「表示形式の選択」と
+してのみ働きます。外部 md ファイル連動の詳細（配置場所・書き戻し・再読込タイミング）は
+[CONFIGURATION.md](CONFIGURATION.md#カスタム--サマリプロンプトの仕様) を参照してください。
+
 ---
 
 ## リトライ制御
