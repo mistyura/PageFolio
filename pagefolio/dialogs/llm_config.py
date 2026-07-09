@@ -17,7 +17,12 @@ from pagefolio.ocr_providers import (
     LMStudioProvider,
     _detect_tesseract,
 )
-from pagefolio.settings import get_current_font_size, load_prompt_file
+from pagefolio.settings import (
+    get_current_font_size,
+    load_prompt_file,
+    prompt_file_exists,
+    save_prompt_file,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -961,8 +966,11 @@ class LLMConfigDialog(tk.Toplevel):
             wrap="word",
         )
         self.ocr_prompt_text.pack(side="left", fill="x", expand=True, padx=4)
-        # 初期値の挿入
-        default_prompt = self.current_settings.get("ocr_custom_prompt", "")
+        # 初期値の挿入。外部 md ファイル（exe と同階層）が存在すればその内容を
+        # 入力欄へ反映する（ファイル連動モード・V174-2。無ければ設定値）
+        default_prompt = load_prompt_file(CUSTOM_PROMPT_FILE) or (
+            self.current_settings.get("ocr_custom_prompt", "")
+        )
         if default_prompt:
             self.ocr_prompt_text.insert("1.0", default_prompt)
         tk.Label(
@@ -1008,7 +1016,8 @@ class LLMConfigDialog(tk.Toplevel):
         ).pack(side="left", padx=4)
 
         # V174-2: 外部 md ファイル（exe と同階層）検出時の注記。
-        # ファイルがあるあいだは上の入力欄より優先される旨をユーザーへ明示する
+        # ファイル連動モード（開いたとき入力欄へ反映・適用時に書き戻し）で
+        # あることをユーザーへ明示する
         self._add_prompt_file_notice(body, CUSTOM_PROMPT_FILE)
 
         # ── サマリプロンプト（全ページ統合サマリ生成用）──
@@ -1034,8 +1043,10 @@ class LLMConfigDialog(tk.Toplevel):
             wrap="word",
         )
         self.ocr_summary_prompt_text.pack(side="left", fill="x", expand=True, padx=4)
-        # 初期値の挿入
-        default_summary_prompt = self.current_settings.get("ocr_summary_prompt", "")
+        # 初期値の挿入（カスタムプロンプト側と同型のファイル連動・V174-2）
+        default_summary_prompt = load_prompt_file(SUMMARY_PROMPT_FILE) or (
+            self.current_settings.get("ocr_summary_prompt", "")
+        )
         if default_summary_prompt:
             self.ocr_summary_prompt_text.insert("1.0", default_summary_prompt)
         tk.Label(
@@ -1299,11 +1310,12 @@ class LLMConfigDialog(tk.Toplevel):
         """外部プロンプト md ファイル検出時のみ注記ラベルを追加する。
 
         実行ファイルと同じ階層に filename（ocr_custom_prompt.md /
-        ocr_summary_prompt.md）が存在し非空なら、その内容が入力欄より
-        優先される旨を WARNING 色で表示する。ファイルが無ければ何も
-        追加しない（通常ユーザーの画面は従来どおり）。
+        ocr_summary_prompt.md）が存在すれば「ファイル連動モード」
+        （開いたとき入力欄へ反映・適用時に書き戻し）である旨を WARNING 色で
+        表示する。空ファイルでも連動対象のため存在のみで判定する。
+        ファイルが無ければ何も追加しない（通常ユーザーの画面は従来どおり）。
         """
-        if not load_prompt_file(filename):
+        if not prompt_file_exists(filename):
             return
         notice_row = tk.Frame(body, bg=C["BG_DARK"])
         notice_row.pack(fill="x", padx=24, pady=(0, 2))
@@ -1319,7 +1331,7 @@ class LLMConfigDialog(tk.Toplevel):
             notice_row,
             text=self._L.get(
                 "ocr_prompt_file_in_use",
-                "📄 {file} を検出 — 入力欄よりファイル内容を優先します",
+                "📄 {file} と連動中 — 適用時にこの欄の内容をファイルへ保存します",
             ).format(file=filename),
             bg=C["BG_DARK"],
             fg=C["WARNING"],
@@ -1672,6 +1684,13 @@ class LLMConfigDialog(tk.Toplevel):
         llm_settings["ocr_summary_prompt"] = self.ocr_summary_prompt_text.get(
             "1.0", "end"
         ).strip()
+        # V174-2: ファイル連動モード（外部 md ファイルが既に存在する場合）は
+        # 入力欄の内容をファイルへ書き戻す（画面 ⇄ md の双方向同期）。
+        # ファイルを使わないユーザーには新規作成しない（settings のみで完結）。
+        if prompt_file_exists(CUSTOM_PROMPT_FILE):
+            save_prompt_file(CUSTOM_PROMPT_FILE, llm_settings["ocr_custom_prompt"])
+        if prompt_file_exists(SUMMARY_PROMPT_FILE):
+            save_prompt_file(SUMMARY_PROMPT_FILE, llm_settings["ocr_summary_prompt"])
         # V174: カスタム/サマリプロンプトの個別 Markdown 描画フラグ。
         # getattr フォールバックは _apply を Tk 生成なしスタブ経由で呼ぶ
         # 既存テスト経路の安全確保のため（_tesseract_langs と同型パターン）

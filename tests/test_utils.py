@@ -362,6 +362,32 @@ class TestPromptFileLoading:
         assert CUSTOM_PROMPT_FILE == "ocr_custom_prompt.md"
         assert SUMMARY_PROMPT_FILE == "ocr_summary_prompt.md"
 
+    def test_prompt_file_exists_true_even_when_empty(self, monkeypatch, tmp_path):
+        """prompt_file_exists は空ファイルでも True（連動モード判定用）"""
+        self._use_base_dir(monkeypatch, tmp_path)
+        assert _settings_mod.prompt_file_exists("ocr_custom_prompt.md") is False
+        (tmp_path / "ocr_custom_prompt.md").write_text("", encoding="utf-8")
+        assert _settings_mod.prompt_file_exists("ocr_custom_prompt.md") is True
+
+    def test_save_prompt_file_roundtrip(self, monkeypatch, tmp_path):
+        """save_prompt_file の書き込み内容を load_prompt_file で読み戻せる"""
+        self._use_base_dir(monkeypatch, tmp_path)
+        assert (
+            _settings_mod.save_prompt_file("ocr_custom_prompt.md", "書き戻し本文")
+            is True
+        )
+        assert _settings_mod.load_prompt_file("ocr_custom_prompt.md") == "書き戻し本文"
+
+    def test_save_prompt_file_failure_returns_false(self, monkeypatch, tmp_path):
+        """書き込み失敗（基準ディレクトリ不在）は例外を投げず False を返す"""
+        monkeypatch.setattr(
+            _settings_mod,
+            "_get_base_dir",
+            lambda: str(tmp_path / "no_such_dir"),
+        )
+        result = _settings_mod.save_prompt_file("ocr_custom_prompt.md", "本文")
+        assert result is False
+
 
 # ===== _save_settings 例外パス =====
 

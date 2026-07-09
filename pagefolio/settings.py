@@ -77,6 +77,38 @@ def load_prompt_file(filename):
     return ""
 
 
+def prompt_file_exists(filename):
+    """外部プロンプトファイルが実行ファイルと同じ階層に存在するか返す（V174-2）。
+
+    load_prompt_file と異なり空ファイルでも True（「ファイル連動モード」の
+    判定に使う。空でも存在すれば LLM 設定の保存時に書き戻し対象となる）。
+    """
+    return os.path.exists(os.path.join(_get_base_dir(), filename))
+
+
+def save_prompt_file(filename, content):
+    """外部プロンプトファイルへ内容を書き込む（V174-2・UTF-8）。
+
+    LLM 設定ダイアログの「適用」時、ファイル連動モード（ファイルが既に
+    存在する場合）に入力欄の内容を書き戻すために使う。ファイルを新規作成は
+    しない判断は呼び出し側（prompt_file_exists）の責務。
+
+    引数:
+      filename: CUSTOM_PROMPT_FILE / SUMMARY_PROMPT_FILE 等のファイル名
+      content:  書き込むプロンプト文字列
+
+    戻り値: 書き込み成功なら True（失敗時は warning ログのみで False）
+    """
+    path = os.path.join(_get_base_dir(), filename)
+    try:
+        with open(path, "w", encoding="utf-8") as f:
+            f.write(content)
+        return True
+    except Exception as e:
+        logger.warning("プロンプトファイルの保存に失敗しました (%s): %s", filename, e)
+        return False
+
+
 def load_custom_prompt(settings):
     """有効なカスタムプロンプトを返す（外部 md ファイル > 設定欄・V174-2）。
 

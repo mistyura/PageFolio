@@ -1245,6 +1245,52 @@ class TestApplyPromptMarkdownFlags:
         assert captured["ocr_summary_markdown"] is False
 
 
+class TestApplyPromptFileWriteback:
+    """V174-2: _apply のファイル連動モード（外部 md への書き戻し）を検証する。
+
+    ファイルが既に存在する場合のみ入力欄の内容を書き戻し、
+    存在しない場合はファイルを新規作成しない。
+    """
+
+    def test_writes_back_when_file_exists(self, monkeypatch):
+        """md ファイル存在時は入力欄の内容が save_prompt_file へ渡る。"""
+        from pagefolio.dialogs import llm_config as llm_config_mod
+
+        saved = {}
+        monkeypatch.setattr(llm_config_mod, "prompt_file_exists", lambda _f: True)
+        monkeypatch.setattr(
+            llm_config_mod,
+            "save_prompt_file",
+            lambda f, content: saved.update({f: content}) or True,
+        )
+        stub = _make_apply_key_stub({})
+        stub.ocr_prompt_text = _GetTextStub("カスタム本文")
+        stub.ocr_summary_prompt_text = _GetTextStub("サマリ本文")
+        llm_config_mod.LLMConfigDialog._apply(stub)
+
+        from pagefolio.constants import CUSTOM_PROMPT_FILE, SUMMARY_PROMPT_FILE
+
+        assert saved[CUSTOM_PROMPT_FILE] == "カスタム本文"
+        assert saved[SUMMARY_PROMPT_FILE] == "サマリ本文"
+
+    def test_no_write_when_file_missing(self, monkeypatch):
+        """md ファイルが無ければ save_prompt_file は呼ばれない（新規作成しない）。"""
+        from pagefolio.dialogs import llm_config as llm_config_mod
+
+        saved = {}
+        monkeypatch.setattr(llm_config_mod, "prompt_file_exists", lambda _f: False)
+        monkeypatch.setattr(
+            llm_config_mod,
+            "save_prompt_file",
+            lambda f, content: saved.update({f: content}) or True,
+        )
+        stub = _make_apply_key_stub({})
+        stub.ocr_prompt_text = _GetTextStub("カスタム本文")
+        llm_config_mod.LLMConfigDialog._apply(stub)
+
+        assert saved == {}
+
+
 class TestSessionKeyStoreAndClear:
     """V171-KEY-01: 非空入力は _session_api_keys へ格納・空欄はクリア（D-04/D-06）。"""
 
