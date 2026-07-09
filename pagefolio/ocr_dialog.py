@@ -10,7 +10,7 @@ import time
 import tkinter as tk
 from tkinter import filedialog, messagebox, ttk
 
-from pagefolio.constants import LANG, C
+from pagefolio.constants import CUSTOM_PROMPT_FILE, LANG, C
 from pagefolio.md_render import parse_markdown
 from pagefolio.ocr import (
     DEFAULT_OCR_CONCURRENCY,
@@ -28,6 +28,11 @@ from pagefolio.ocr_pipeline import (
     consume_one,
     send_sentinels,
     try_enqueue,
+)
+from pagefolio.settings import (
+    load_custom_prompt,
+    load_prompt_file,
+    load_summary_prompt,
 )
 
 logger = logging.getLogger(__name__)
@@ -268,6 +273,18 @@ class OCRDialog(tk.Toplevel):
                 activeforeground=C["TEXT_MAIN"],
                 font=self._font(-1),
             ).pack(side="left", padx=4)
+        # V174-3: カスタムプロンプト使用中はプリセットが実プロンプトへ反映されず
+        # 「表示形式（Markdown 整形の有無）の選択」としてのみ働くため、
+        # その旨をプリセット横に注記する（Markdown 指定のプリセット一本化）
+        self._preset_note_var = tk.StringVar(value="")
+        tk.Label(
+            pf,
+            textvariable=self._preset_note_var,
+            bg=C["BG_DARK"],
+            fg=C["TEXT_SUB"],
+            font=self._font(-2),
+        ).pack(side="left", padx=8)
+        self._update_preset_note()
 
         # サーバ（参照のみ・設定メニューの値を表示）
         # LM Studio 固有欄: クラウドプロバイダ時は表示しない（provider 中立化）
@@ -538,9 +555,56 @@ class OCRDialog(tk.Toplevel):
         self.text.tag_configure("md_bold", font=self._font(-1, "bold"))
         # fmt: on
 
-        # 右ペインのセクション/ボタン生成ヘルパー（ui_builder._build_tools と同構成）
+        # V174-4: 右ペインを縦スクロール可能にする（ui_builder の
+        # _build_tools_scrollable と同型）。フォントサイズ大・低解像度環境で
+        # ウィンドウ高さがボタン合計高を下回ってもセクション群へ到達できる。
+        # 「✕ 閉じる」は下で side 直下に side="bottom" で pack される
+        # （スクロール領域外・常時可視）。
+        side_canvas = tk.Canvas(side, bg=C["BG_PANEL"], highlightthickness=0, bd=0)
+        side_sb = ttk.Scrollbar(side, orient="vertical", command=side_canvas.yview)
+        side_canvas.configure(yscrollcommand=side_sb.set)
+
+        side_inner = tk.Frame(side_canvas, bg=C["BG_PANEL"])
+        side_canvas.create_window(
+            (0, 0), window=side_inner, anchor="nw", tags="inner_window"
+        )
+
+        def _on_side_inner_configure(_e):
+            # スクロール範囲を内容全体へ更新しつつ、Canvas 幅を内容の要求幅に
+            # 追随させる（Canvas 経由だと内容幅が親 side へ伝搬しないため）
+            side_canvas.configure(
+                scrollregion=side_canvas.bbox("all"),
+                width=side_inner.winfo_reqwidth(),
+            )
+
+        side_inner.bind("<Configure>", _on_side_inner_configure)
+        side_canvas.bind(
+            "<Configure>",
+            lambda e: side_canvas.itemconfigure("inner_window", width=e.width),
+        )
+
+        def _on_side_wheel(e):
+            side_canvas.yview_scroll(int(-1 * (e.delta / 120)), "units")
+
+        side_canvas.bind("<MouseWheel>", _on_side_wheel)
+
+        def _bind_side_wheel_recursive(widget):
+            widget.bind("<MouseWheel>", _on_side_wheel, add="+")
+            for child in widget.winfo_children():
+                _bind_side_wheel_recursive(child)
+
+        def _after_side_build():
+            # ダイアログが即クローズされた場合に備えた TclError ガード
+            try:
+                _bind_side_wheel_recursive(side_inner)
+                side_canvas.yview_moveto(0)
+            except tk.TclError:
+                pass
+
+        # 右ペインのセクション/ボタン生成ヘルパー（ui_builder._build_tools と同構成。
+        # 親はスクロール領域内の side_inner）
         def section(title):
-            f = tk.Frame(side, bg=C["BG_CARD"], bd=0)
+            f = tk.Frame(side_inner, bg=C["BG_CARD"], bd=0)
             f.pack(fill="x", padx=8, pady=5)
             tk.Label(
                 f,
@@ -556,13 +620,19 @@ class OCRDialog(tk.Toplevel):
             b.pack(fill="x", padx=8, pady=2)
             return b
 
-        # 閉じるは右ペイン最下部に固定（セクション外・誤操作分離）
+        # 閉じるは右ペイン最下部に固定（セクション外・スクロール領域外・誤操作分離）
         self.close_btn = ttk.Button(
             side,
             text=self._L["btn_close"],
             command=self._on_close,
         )
         self.close_btn.pack(side="bottom", fill="x", padx=8, pady=(4, 8))
+
+        # V174-4: 閉じるボタンの上をスクロール領域として確保する
+        # （close_btn を先に side="bottom" で pack して下端を予約 → 残り全域を
+        # スクロールバー + Canvas が占有する）
+        side_sb.pack(side="right", fill="y")
+        side_canvas.pack(side="left", fill="both", expand=True)
 
         # 実行セクション（読み取り実行 / 続きから再実行 / キャンセル）
         f_run = section(self._L["ocr_sec_run"])
@@ -594,6 +664,10 @@ class OCRDialog(tk.Toplevel):
         self.summary_btn.state(["disabled"])
         self.clear_btn = side_btn(f_result, self._L["ocr_clear"], self._clear_text)
         tk.Frame(f_result, bg=C["BG_CARD"], height=6).pack(fill="x")
+
+        # V174-4: 全セクション構築後にホイールバインドを一括適用（ui_builder と
+        # 同じく after で遅延させ、生成直後の winfo_children を確実に拾う）
+        self.after(100, _after_side_build)
 
     def _clear_text(self):
         """結果テキストエリア・進行表示・実行状態を初期化する"""
@@ -880,8 +954,14 @@ class OCRDialog(tk.Toplevel):
         _save_settings(self.app.settings)
         # self.custom_prompt は __init__ 時点の値をキャッシュしているだけで
         # 以降の app.settings 更新が反映されないため、ここで明示的に同期する
-        # （さもないと _on_run が 1 回前のカスタムプロンプトを使い続ける）
-        self.custom_prompt = self.app.settings.get("ocr_custom_prompt", "")
+        # （さもないと _on_run が 1 回前のカスタムプロンプトを使い続ける）。
+        # V174-2: 外部 md ファイルがあれば設定欄より優先（load_custom_prompt）
+        self.custom_prompt = load_custom_prompt(self.app.settings)
+        # V174-3: カスタム使用状態の注記を再評価（Tk 生成なしスタブ経由で呼ぶ
+        # 既存テスト経路の安全確保のため callable ガード・L-6j と同型）
+        update_preset_note = getattr(self, "_update_preset_note", None)
+        if callable(update_preset_note):
+            update_preset_note()
         # (c)〜(g) UI 更新
         self._refresh_provider_dependent_ui()
         # 全プロバイダ共通: 読み取り専用の数値パラメータ表示を settings 値へ即時同期
@@ -1019,6 +1099,18 @@ class OCRDialog(tk.Toplevel):
             self._lang_fallback_notice_var.set("")
             if self._lang_fallback_label.winfo_ismapped():
                 self._lang_fallback_label.pack_forget()
+
+    def _update_preset_note(self):
+        """カスタムプロンプト使用状態に応じてプリセット横の注記を更新する。
+
+        V174-3: Markdown 整形表示の指定はプリセットへ一本化した。カスタム
+        プロンプト使用中はプリセットが実プロンプトへ反映されない
+        （resolve_ocr_prompt でカスタム最優先）ため、「表示形式にのみ適用」
+        である旨を表示し、未使用時は注記を消す。_build・_apply_llm_settings・
+        _on_run（外部 md 再読込後）から呼ばれる。
+        """
+        note = self._L["ocr_preset_custom_note"] if self.custom_prompt else ""
+        self._preset_note_var.set(note)
 
     def _sync_param_vars_from_settings(self):
         """読み取り専用の数値パラメータ Tk 変数を app.settings の値へ同期する。
@@ -1269,6 +1361,17 @@ class OCRDialog(tk.Toplevel):
         self._effective_timeout = self._ocr_timeout
         # provider 名はプロンプト解決の前に無条件取得（下流の再生成分岐と共用）。
         name = self.app.settings.get("ocr_provider", "")
+        # V174-2: 外部 md ファイル（exe と同階層）は実行のたびに読み直し、
+        # あればキャッシュ済み custom_prompt より優先する（外部エディタでの
+        # 編集を再起動なしで次回実行へ反映するため）。無ければ従来どおり。
+        _file_prompt = load_prompt_file(CUSTOM_PROMPT_FILE)
+        if _file_prompt:
+            self.custom_prompt = _file_prompt
+            # V174-3: 外部 md 反映後にカスタム使用状態の注記を再評価
+            # （スタブ経路の安全確保のため callable ガード）
+            update_preset_note = getattr(self, "_update_preset_note", None)
+            if callable(update_preset_note):
+                update_preset_note()
         # プロンプト解決は resolve_ocr_prompt に集約（優先順位は純関数側で担保）。
         prompt = resolve_ocr_prompt(self.preset_var.get(), name, self.custom_prompt)
         self._ocr_prompt = prompt
@@ -1662,6 +1765,8 @@ class OCRDialog(tk.Toplevel):
         """results / errors をページ順に text へ流し込む（並列実行後の一括描画）"""
         # preset == "markdown" のときのみ整形描画（Pitfall 2 構造的ガード）。
         # text/table や Tesseract/LMStudio 素出力には Markdown パーサを当てない。
+        # カスタムプロンプト使用時もプリセットが「表示形式の選択」として働く
+        # （V174-3: Markdown 指定はプリセットへ一本化・_update_preset_note で注記）。
         markdown = self.preset_var.get() == "markdown"
         for page_idx in self.page_indices:
             sep = self._L["ocr_page_separator"].format(page=page_idx + 1)
@@ -1868,9 +1973,8 @@ class OCRDialog(tk.Toplevel):
         if not full_text:
             return
         name = self.app.settings.get("ocr_provider", "")
-        prompt = resolve_summary_prompt(
-            name, self.app.settings.get("ocr_summary_prompt", "")
-        )
+        # V174-2: 外部 md ファイル（exe と同階層）があれば設定欄より優先
+        prompt = resolve_summary_prompt(name, load_summary_prompt(self.app.settings))
 
         # ── クラウド実行ゲート（OCR 実行時と同方針・毎回確認）──
         if self._is_cloud_provider():
@@ -2068,7 +2172,8 @@ class OCRDialog(tk.Toplevel):
         """サマリ生成成功（メインスレッド）: 結果保持・末尾へ追記・UI 復帰。
 
         表示は preset=="markdown" のときのみ整形描画（_insert_results_body と
-        同じ構造的ガード）。コピー/保存は raw 維持（_format_full_text）。
+        同じ構造的ガード。V174-3: カスタムサマリプロンプト使用時もプリセットが
+        表示形式の選択として働く）。コピー/保存は raw 維持（_format_full_text）。
         途切れ（truncated）は「成功＋警告」として部分サマリを保持する（D-05）。
         """
         self.summary_result = text

@@ -5,10 +5,11 @@
 
 import logging
 import os
+import threading
 import tkinter as tk
 from tkinter import ttk
 
-from pagefolio.constants import LANG, C
+from pagefolio.constants import CUSTOM_PROMPT_FILE, LANG, SUMMARY_PROMPT_FILE, C
 from pagefolio.ocr import MAX_OCR_MAX_TOKENS
 from pagefolio.ocr_providers import (
     ClaudeProvider,
@@ -16,7 +17,12 @@ from pagefolio.ocr_providers import (
     LMStudioProvider,
     _detect_tesseract,
 )
-from pagefolio.settings import get_current_font_size
+from pagefolio.settings import (
+    get_current_font_size,
+    load_prompt_file,
+    prompt_file_exists,
+    save_prompt_file,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -960,8 +966,11 @@ class LLMConfigDialog(tk.Toplevel):
             wrap="word",
         )
         self.ocr_prompt_text.pack(side="left", fill="x", expand=True, padx=4)
-        # 初期値の挿入
-        default_prompt = self.current_settings.get("ocr_custom_prompt", "")
+        # 初期値の挿入。外部 md ファイル（exe と同階層）が存在すればその内容を
+        # 入力欄へ反映する（ファイル連動モード・V174-2。無ければ設定値）
+        default_prompt = load_prompt_file(CUSTOM_PROMPT_FILE) or (
+            self.current_settings.get("ocr_custom_prompt", "")
+        )
         if default_prompt:
             self.ocr_prompt_text.insert("1.0", default_prompt)
         tk.Label(
@@ -973,6 +982,11 @@ class LLMConfigDialog(tk.Toplevel):
             fg=C["TEXT_SUB"],
             font=self._font(-2),
         ).pack(side="left", padx=4, anchor="sw")
+
+        # V174-2: 外部 md ファイル（exe と同階層）検出時の注記。
+        # ファイル連動モード（開いたとき入力欄へ反映・適用時に書き戻し）で
+        # あることをユーザーへ明示する
+        self._add_prompt_file_notice(body, CUSTOM_PROMPT_FILE)
 
         # ── サマリプロンプト（全ページ統合サマリ生成用）──
         summary_row = tk.Frame(body, bg=C["BG_DARK"])
@@ -997,8 +1011,10 @@ class LLMConfigDialog(tk.Toplevel):
             wrap="word",
         )
         self.ocr_summary_prompt_text.pack(side="left", fill="x", expand=True, padx=4)
-        # 初期値の挿入
-        default_summary_prompt = self.current_settings.get("ocr_summary_prompt", "")
+        # 初期値の挿入（カスタムプロンプト側と同型のファイル連動・V174-2）
+        default_summary_prompt = load_prompt_file(SUMMARY_PROMPT_FILE) or (
+            self.current_settings.get("ocr_summary_prompt", "")
+        )
         if default_summary_prompt:
             self.ocr_summary_prompt_text.insert("1.0", default_summary_prompt)
         tk.Label(
@@ -1010,6 +1026,9 @@ class LLMConfigDialog(tk.Toplevel):
             fg=C["TEXT_SUB"],
             font=self._font(-2),
         ).pack(side="left", padx=4, anchor="sw")
+
+        # V174-2: 外部 md ファイル検出時の注記（カスタムプロンプト側と同型）
+        self._add_prompt_file_notice(body, SUMMARY_PROMPT_FILE)
 
         # ── 並列度（concurrency）──
         conc_row = tk.Frame(body, bg=C["BG_DARK"])
@@ -1225,6 +1244,40 @@ class LLMConfigDialog(tk.Toplevel):
         except tk.TclError:
             pass
 
+    # ── 外部プロンプトファイル注記（V174-2）─────────────────
+    def _add_prompt_file_notice(self, body, filename):
+        """外部プロンプト md ファイル検出時のみ注記ラベルを追加する。
+
+        実行ファイルと同じ階層に filename（ocr_custom_prompt.md /
+        ocr_summary_prompt.md）が存在すれば「ファイル連動モード」
+        （開いたとき入力欄へ反映・適用時に書き戻し）である旨を WARNING 色で
+        表示する。空ファイルでも連動対象のため存在のみで判定する。
+        ファイルが無ければ何も追加しない（通常ユーザーの画面は従来どおり）。
+        """
+        if not prompt_file_exists(filename):
+            return
+        notice_row = tk.Frame(body, bg=C["BG_DARK"])
+        notice_row.pack(fill="x", padx=24, pady=(0, 2))
+        tk.Label(
+            notice_row,
+            text="",
+            bg=C["BG_DARK"],
+            font=self._font(-1),
+            width=20,
+            anchor="w",
+        ).pack(side="left")
+        tk.Label(
+            notice_row,
+            text=self._L.get(
+                "ocr_prompt_file_in_use",
+                "📄 {file} と連動中 — 適用時にこの欄の内容をファイルへ保存します",
+            ).format(file=filename),
+            bg=C["BG_DARK"],
+            fg=C["WARNING"],
+            font=self._font(-2),
+            anchor="w",
+        ).pack(side="left", padx=4)
+
     # ── ステータス表示 ──────────────────────────────────
     def _set_lm_status(self, text, kind="info"):
         """LM Studio / Claude 操作の状態を表示する。kind: 'info' / 'ok' / 'fail'"""
@@ -1329,13 +1382,58 @@ class LLMConfigDialog(tk.Toplevel):
         """Ollama への接続をテストする。"""
         self._probe_ollama_provider(update_combo=False)
 
+    # ── クラウドモデル取得の非同期実行ヘルパー（V174）─────────
+    def _fetch_models_async(self, fetch_fn, on_success, on_error):
+        """モデル一覧取得をバックグラウンドスレッドで実行する共有ヘルパー。
+
+        クラウドプロバイダ（Claude / Gemini / RunPod）のモデル一覧取得は
+        model_list_timeout（30〜90 秒）まで待つため、メインスレッドで
+        同期実行すると UI がその間フリーズする（特に RunPod Serverless の
+        コールドスタート）。ワーカースレッドで fetch_fn() を実行し、結果は
+        after(0) でメインスレッドへ戻して on_success(models) /
+        on_error(exception) を呼ぶ。実行中の再クリックは
+        _model_fetch_running ガードで無視する（Combobox 反映と
+        ステータス更新はコールバック側の責務）。
+        """
+        if getattr(self, "_model_fetch_running", False):
+            return
+        self._model_fetch_running = True
+
+        def _deliver(callback, arg):
+            # メインスレッドへ結果を投函する。ダイアログ破棄後は静かに捨てる
+            def _run():
+                self._model_fetch_running = False
+                try:
+                    if not self.winfo_exists():
+                        return
+                except tk.TclError:
+                    return
+                callback(arg)
+
+            try:
+                self.after(0, _run)
+            except (tk.TclError, RuntimeError):
+                self._model_fetch_running = False
+
+        def _worker():
+            try:
+                models = fetch_fn()
+            except Exception as e:
+                _deliver(on_error, e)
+            else:
+                _deliver(on_success, models)
+
+        threading.Thread(target=_worker, daemon=True).start()
+
     # ── RunPod モデル更新 ───────────────────────────────
     def _refresh_runpod_models(self):
         """RunPod モデル一覧を取得して Combobox に反映する。
 
         D-10: ダイアログ入力欄のライブ値（OK 前でも）を環境変数より優先する。
+        V174: Serverless の初回起動（コールドスタート）はワーカー起動待ちで
+        10 秒を大きく超えることがあるため、model_list_timeout=90 秒の取得を
+        バックグラウンド実行し UI はブロックしない。
         """
-        self._set_lm_status(self._L["llm_fetching_runpod_models"], kind="info")
         api_key = self.runpod_api_key_var.get().strip() or os.environ.get(
             "RUNPOD_API_KEY", ""
         )
@@ -1346,11 +1444,18 @@ class LLMConfigDialog(tk.Toplevel):
                 kind="info",
             )
             return
-        try:
-            from pagefolio.ocr_providers import RunPodProvider
+        self._set_lm_status(self._L["llm_fetching_runpod_models"], kind="info")
+        from pagefolio.ocr_providers import RunPodProvider
 
-            models = RunPodProvider(api_key=api_key, url=url, model="").list_models()
-        except Exception as e:
+        provider = RunPodProvider(api_key=api_key, url=url, model="")
+
+        def _on_success(models):
+            self.runpod_model_combo["values"] = models
+            self._set_lm_status(
+                self._L["settings_lm_test_ok"].format(count=len(models)), kind="ok"
+            )
+
+        def _on_error(e):
             logger.warning(
                 self._L["llm_model_fetch_failed"].format(provider="RunPod", e=e)
             )
@@ -1358,11 +1463,8 @@ class LLMConfigDialog(tk.Toplevel):
                 str(e),
                 kind="fail",
             )
-            return
-        self.runpod_model_combo["values"] = models
-        self._set_lm_status(
-            self._L["settings_lm_test_ok"].format(count=len(models)), kind="ok"
-        )
+
+        self._fetch_models_async(provider.list_models, _on_success, _on_error)
 
     # ── Claude モデル更新 ───────────────────────────────
     def _refresh_claude_models(self):
@@ -1377,30 +1479,34 @@ class LLMConfigDialog(tk.Toplevel):
         api_key = self.claude_api_key_var.get().strip() or os.environ.get(
             "ANTHROPIC_API_KEY", ""
         )
-        try:
-            models = ClaudeProvider(api_key=api_key, model="").list_models()
-        except Exception as e:
+        provider = ClaudeProvider(api_key=api_key, model="")
+
+        def _on_success(models):
+            self.claude_model_combo["values"] = models
+            if not api_key:
+                self._set_lm_status(
+                    self._L["llm_env_key_unset_static"],
+                    kind="info",
+                )
+            else:
+                self._set_lm_status(
+                    self._L["settings_lm_test_ok"].format(count=len(models)), kind="ok"
+                )
+
+        def _on_error(e):
             # 例外時は静的推奨リストへフォールバック（D-08）
             logger.warning(
                 self._L["llm_model_fetch_failed"].format(provider="Claude", e=e)
             )
-            models = ClaudeProvider.RECOMMENDED_MODELS
-            self.claude_model_combo["values"] = models
+            self.claude_model_combo["values"] = ClaudeProvider.RECOMMENDED_MODELS
             self._set_lm_status(
                 self._L["llm_env_key_unset_static"],
                 kind="info",
             )
-            return
-        self.claude_model_combo["values"] = models
-        if not api_key:
-            self._set_lm_status(
-                self._L["llm_env_key_unset_static"],
-                kind="info",
-            )
-        else:
-            self._set_lm_status(
-                self._L["settings_lm_test_ok"].format(count=len(models)), kind="ok"
-            )
+
+        # V174: クラウド API は model_list_timeout=30 秒までかかり得るため
+        # バックグラウンド実行し UI はブロックしない
+        self._fetch_models_async(provider.list_models, _on_success, _on_error)
 
     # ── Gemini モデル更新 ───────────────────────────────
     def _refresh_gemini_models(self):
@@ -1415,30 +1521,34 @@ class LLMConfigDialog(tk.Toplevel):
         api_key = self.gemini_api_key_var.get().strip() or (
             os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY", "")
         )
-        try:
-            models = GeminiProvider(api_key=api_key, model="").list_models()
-        except Exception as e:
+        provider = GeminiProvider(api_key=api_key, model="")
+
+        def _on_success(models):
+            self.gemini_model_combo["values"] = models
+            if not api_key:
+                self._set_lm_status(
+                    self._L["llm_env_key_unset_static_gemini"],
+                    kind="info",
+                )
+            else:
+                self._set_lm_status(
+                    self._L["settings_lm_test_ok"].format(count=len(models)), kind="ok"
+                )
+
+        def _on_error(e):
             # 例外時は静的推奨リストへフォールバック（D-08）
             logger.warning(
                 self._L["llm_model_fetch_failed"].format(provider="Gemini", e=e)
             )
-            models = GeminiProvider.RECOMMENDED_MODELS
-            self.gemini_model_combo["values"] = models
+            self.gemini_model_combo["values"] = GeminiProvider.RECOMMENDED_MODELS
             self._set_lm_status(
                 self._L["llm_env_key_unset_static_gemini"],
                 kind="info",
             )
-            return
-        self.gemini_model_combo["values"] = models
-        if not api_key:
-            self._set_lm_status(
-                self._L["llm_env_key_unset_static_gemini"],
-                kind="info",
-            )
-        else:
-            self._set_lm_status(
-                self._L["settings_lm_test_ok"].format(count=len(models)), kind="ok"
-            )
+
+        # V174: クラウド API は model_list_timeout=30 秒までかかり得るため
+        # バックグラウンド実行し UI はブロックしない
+        self._fetch_models_async(provider.list_models, _on_success, _on_error)
 
     # ── 設定保存 ────────────────────────────────────────
     def _apply(self):
@@ -1513,6 +1623,13 @@ class LLMConfigDialog(tk.Toplevel):
         llm_settings["ocr_summary_prompt"] = self.ocr_summary_prompt_text.get(
             "1.0", "end"
         ).strip()
+        # V174-2: ファイル連動モード（外部 md ファイルが既に存在する場合）は
+        # 入力欄の内容をファイルへ書き戻す（画面 ⇄ md の双方向同期）。
+        # ファイルを使わないユーザーには新規作成しない（settings のみで完結）。
+        if prompt_file_exists(CUSTOM_PROMPT_FILE):
+            save_prompt_file(CUSTOM_PROMPT_FILE, llm_settings["ocr_custom_prompt"])
+        if prompt_file_exists(SUMMARY_PROMPT_FILE):
+            save_prompt_file(SUMMARY_PROMPT_FILE, llm_settings["ocr_summary_prompt"])
         try:
             tmp = float(self.ocr_temperature_var.get())
             llm_settings["ocr_temperature"] = max(0.0, min(2.0, tmp))

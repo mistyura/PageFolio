@@ -4,7 +4,7 @@
 **PDF ページ整理ツール** — Python + Tkinter 製の Windows 11 向け GUI アプリケーション。
 テキスト編集や注釈追加は行わず、**ページ単位の操作**（回転・削除・トリミング・結合・分割・OCR など）に特化しています。
 
-![Version](https://img.shields.io/badge/version-v1.7.3-blue)
+![Version](https://img.shields.io/badge/version-v1.7.4-blue)
 ![Stable](https://img.shields.io/badge/status-stable-green)
 ![License](https://img.shields.io/badge/license-MIT-lightgrey)
 

@@ -2766,7 +2766,7 @@ class TestSummaryWorker:
 class TestOnSummaryDone:
     """_on_summary_done の描画・状態遷移を検証する。"""
 
-    def _make_fake(self, preset="text"):
+    def _make_fake(self, preset="text", settings=None):
         import types
 
         from pagefolio.constants import LANG
@@ -2775,6 +2775,7 @@ class TestOnSummaryDone:
         fake = types.SimpleNamespace(
             _L=LANG["ja"],
             text=text_stub,
+            app=types.SimpleNamespace(settings=settings or {}),
             preset_var=types.SimpleNamespace(get=lambda: preset),
             progress_var=types.SimpleNamespace(set=lambda _v: None),
             _progress_label=types.SimpleNamespace(configure=lambda **kw: None),
@@ -2823,6 +2824,21 @@ class TestOnSummaryDone:
         assert rendered == ["# SUM"]
         # 素の insert には本文が入らない（セパレータのみ）
         assert all("# SUM" not in s for s in text_stub.inserted)
+
+    def test_done_markdown_preset_applies_with_custom_summary_prompt(self):
+        """V174-3: カスタムサマリプロンプト使用時もプリセットが表示形式を決める。"""
+        from pagefolio.ocr_dialog import OCRDialog
+
+        fake, text_stub = self._make_fake(
+            preset="markdown",
+            settings={"ocr_summary_prompt": "巨大サマリプロンプト"},
+        )
+        rendered = []
+        fake._insert_markdown = lambda t: rendered.append(t)
+        OCRDialog._on_summary_done(fake, "| a | b |", False)
+
+        assert rendered == ["| a | b |"]
+        assert all("| a | b |" not in s for s in text_stub.inserted)
 
 
 class TestSummaryWorkerErrorKinds:

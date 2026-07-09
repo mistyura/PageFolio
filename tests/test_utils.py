@@ -281,6 +281,114 @@ class TestGetSettingsPath:
         assert result == os.path.join(expected_base, _settings_mod.SETTINGS_FILE)
 
 
+# ===== 外部プロンプトファイル読込（V174-2） =====
+
+
+class TestPromptFileLoading:
+    """load_prompt_file / load_custom_prompt / load_summary_prompt のテスト。
+
+    実行ファイルと同じ階層の ocr_custom_prompt.md / ocr_summary_prompt.md を
+    設定欄より優先して読み込む（無ければ設定欄へフォールバック）。
+    """
+
+    def _use_base_dir(self, monkeypatch, tmp_path):
+        """_get_base_dir を tmp_path に差し替える（実ファイル非依存化）。"""
+        monkeypatch.setattr(_settings_mod, "_get_base_dir", lambda: str(tmp_path))
+
+    def test_load_prompt_file_missing_returns_empty(self, monkeypatch, tmp_path):
+        """ファイルが存在しないときは空文字を返す"""
+        self._use_base_dir(monkeypatch, tmp_path)
+        assert _settings_mod.load_prompt_file("ocr_custom_prompt.md") == ""
+
+    def test_load_prompt_file_reads_and_strips(self, monkeypatch, tmp_path):
+        """UTF-8 で読み込み、前後の空白・改行を除去して返す"""
+        self._use_base_dir(monkeypatch, tmp_path)
+        (tmp_path / "ocr_custom_prompt.md").write_text(
+            "\n巨大なカスタムプロンプト\n\n", encoding="utf-8"
+        )
+        result = _settings_mod.load_prompt_file("ocr_custom_prompt.md")
+        assert result == "巨大なカスタムプロンプト"
+
+    def test_load_prompt_file_tolerates_bom(self, monkeypatch, tmp_path):
+        """Windows エディタの BOM 付き UTF-8 でも BOM を除去して読む"""
+        self._use_base_dir(monkeypatch, tmp_path)
+        (tmp_path / "ocr_custom_prompt.md").write_bytes(
+            b"\xef\xbb\xbf" + "プロンプト本文".encode("utf-8")
+        )
+        result = _settings_mod.load_prompt_file("ocr_custom_prompt.md")
+        assert result == "プロンプト本文"
+
+    def test_custom_prompt_file_overrides_settings(self, monkeypatch, tmp_path):
+        """md ファイルが存在すれば設定欄の値より優先される"""
+        self._use_base_dir(monkeypatch, tmp_path)
+        (tmp_path / "ocr_custom_prompt.md").write_text(
+            "ファイル側プロンプト", encoding="utf-8"
+        )
+        settings = {"ocr_custom_prompt": "設定欄プロンプト"}
+        assert _settings_mod.load_custom_prompt(settings) == "ファイル側プロンプト"
+
+    def test_custom_prompt_falls_back_to_settings(self, monkeypatch, tmp_path):
+        """md ファイルが無ければ設定欄の値へフォールバックする"""
+        self._use_base_dir(monkeypatch, tmp_path)
+        settings = {"ocr_custom_prompt": "設定欄プロンプト"}
+        assert _settings_mod.load_custom_prompt(settings) == "設定欄プロンプト"
+
+    def test_custom_prompt_empty_file_falls_back(self, monkeypatch, tmp_path):
+        """空（空白のみ）の md ファイルはフォールバック扱いになる"""
+        self._use_base_dir(monkeypatch, tmp_path)
+        (tmp_path / "ocr_custom_prompt.md").write_text("   \n", encoding="utf-8")
+        settings = {"ocr_custom_prompt": "設定欄プロンプト"}
+        assert _settings_mod.load_custom_prompt(settings) == "設定欄プロンプト"
+
+    def test_summary_prompt_file_overrides_settings(self, monkeypatch, tmp_path):
+        """サマリ側も同型: md ファイルが設定欄より優先される"""
+        self._use_base_dir(monkeypatch, tmp_path)
+        (tmp_path / "ocr_summary_prompt.md").write_text(
+            "ファイル側サマリ指示", encoding="utf-8"
+        )
+        settings = {"ocr_summary_prompt": "設定欄サマリ指示"}
+        assert _settings_mod.load_summary_prompt(settings) == "ファイル側サマリ指示"
+
+    def test_summary_prompt_falls_back_to_settings(self, monkeypatch, tmp_path):
+        """サマリ側も md ファイルが無ければ設定欄へフォールバックする"""
+        self._use_base_dir(monkeypatch, tmp_path)
+        settings = {"ocr_summary_prompt": "設定欄サマリ指示"}
+        assert _settings_mod.load_summary_prompt(settings) == "設定欄サマリ指示"
+
+    def test_filenames_match_constants(self):
+        """読込対象ファイル名が constants の定数と一致している"""
+        from pagefolio.constants import CUSTOM_PROMPT_FILE, SUMMARY_PROMPT_FILE
+
+        assert CUSTOM_PROMPT_FILE == "ocr_custom_prompt.md"
+        assert SUMMARY_PROMPT_FILE == "ocr_summary_prompt.md"
+
+    def test_prompt_file_exists_true_even_when_empty(self, monkeypatch, tmp_path):
+        """prompt_file_exists は空ファイルでも True（連動モード判定用）"""
+        self._use_base_dir(monkeypatch, tmp_path)
+        assert _settings_mod.prompt_file_exists("ocr_custom_prompt.md") is False
+        (tmp_path / "ocr_custom_prompt.md").write_text("", encoding="utf-8")
+        assert _settings_mod.prompt_file_exists("ocr_custom_prompt.md") is True
+
+    def test_save_prompt_file_roundtrip(self, monkeypatch, tmp_path):
+        """save_prompt_file の書き込み内容を load_prompt_file で読み戻せる"""
+        self._use_base_dir(monkeypatch, tmp_path)
+        assert (
+            _settings_mod.save_prompt_file("ocr_custom_prompt.md", "書き戻し本文")
+            is True
+        )
+        assert _settings_mod.load_prompt_file("ocr_custom_prompt.md") == "書き戻し本文"
+
+    def test_save_prompt_file_failure_returns_false(self, monkeypatch, tmp_path):
+        """書き込み失敗（基準ディレクトリ不在）は例外を投げず False を返す"""
+        monkeypatch.setattr(
+            _settings_mod,
+            "_get_base_dir",
+            lambda: str(tmp_path / "no_such_dir"),
+        )
+        result = _settings_mod.save_prompt_file("ocr_custom_prompt.md", "本文")
+        assert result is False
+
+
 # ===== _save_settings 例外パス =====
 
 
