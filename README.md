@@ -58,7 +58,7 @@ python pagefolio.py
 
 ### OCR によるテキスト抽出
 
-右パネルの OCR セクションでプロバイダ（LM Studio / Claude / Gemini / Tesseract のいずれか）を選び、対象ページを指定して実行すると、`OCRDialog` に抽出結果が表示されます。結果はテキストまたは Markdown 整形表示でコピー・保存できます。詳細は [docs/OCR-PROVIDERS.md](docs/OCR-PROVIDERS.md) を参照してください。
+右パネルの OCR セクションでプロバイダ（LM Studio / Ollama / Claude / Gemini / RunPod / Tesseract のいずれか）を選び、対象ページを指定して実行すると、`OCRDialog` に抽出結果が表示されます。結果はテキストまたは Markdown 整形表示でコピー・保存できます。詳細は [docs/OCR-PROVIDERS.md](docs/OCR-PROVIDERS.md) を参照してください。カスタムプロンプト・サマリプロンプトが巨大になる場合は、実行ファイルと同じ階層に `ocr_custom_prompt.md` / `ocr_summary_prompt.md` を置くと外部エディタで管理でき、LLM 設定の入力欄と双方向連動します。
 
 ---
 
@@ -82,7 +82,7 @@ python pagefolio.py
 | 🖨 印刷 | 現在のドキュメントを既定の PDF ハンドラ経由で印刷（Ctrl+P・編集結果を反映、Windows のみ） |
 | 🔀 D&D 並び替え | サムネイルをドラッグ＆ドロップでページ順を変更（複数ページ一括移動対応） |
 | 📄 ページネーション表示 | 大量ページの PDF でサムネイル一覧をページ単位（既定 20・範囲 10〜100）で窓表示 |
-| 🔍 OCR テキスト抽出 | LM Studio / Claude / Gemini / Tesseract の複数プロバイダに対応 |
+| 🔍 OCR テキスト抽出 | LM Studio / Ollama / Claude / Gemini / RunPod / Tesseract の複数プロバイダに対応 |
 | ↩ Undo / Redo | 最大20回の取り消し・やり直し（Ctrl+Z / Ctrl+Y）。大きな PDF でもディスク退避によりメモリを最適化 |
 | 🔍 プレビュー | ズーム・スクロール対応、ページ拡大表示 |
 | 👁 閲覧/編集モード | ヘッダーボタン（F5）でモード切替。閲覧モードは編集ボタンが非活性 |
