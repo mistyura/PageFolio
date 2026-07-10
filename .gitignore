@@ -68,3 +68,8 @@ lpt[1-9]
 lpt[1-9].*
 PageFolio-*.zip.sha256
 PageFolio-*.zip
+
+# ── GSD baseline (auto-generated) ──
+.gsd-worktrees/
+.gsd-backups/
+dist/
