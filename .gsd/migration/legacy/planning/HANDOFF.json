@@ -1,0 +1,48 @@
+{
+  "version": "1.0",
+  "timestamp": "2026-06-09T19:30:00.000Z",
+  "phase": "07",
+  "phase_name": "tesseract-pluginmanager-qa",
+  "phase_dir": ".planning/phases/07-tesseract-pluginmanager-qa",
+  "plan": 1,
+  "task": 6,
+  "total_tasks": 6,
+  "status": "phase_complete",
+  "completed_tasks": [
+    {"id": 1, "name": "Task 1.1: TesseractProvider 実装（ocr_providers.py）", "status": "done", "commit": "0c5dbfd"},
+    {"id": 2, "name": "Task 1.2: PluginManager register_ocr_provider 追加（plugins.py）", "status": "done", "commit": "0c5dbfd"},
+    {"id": 3, "name": "Task 1.3: build_provider tesseract 分岐 + plugin_manager フォールバック（ocr.py）", "status": "done", "commit": "0c5dbfd"},
+    {"id": 4, "name": "Task 2.1: LLMConfigDialog UI 統合（dialogs/llm_config.py）", "status": "done", "commit": "0c5dbfd"},
+    {"id": 5, "name": "Task 3.1〜3.3: lang.py / README.md / 開発履歴.md 整備", "status": "done", "commit": "0c5dbfd"},
+    {"id": 6, "name": "Task 4.1〜4.2: テスト追加（396 tests pass）+ ruff/pytest フルパス確認", "status": "done", "commit": "0c5dbfd"}
+  ],
+  "remaining_tasks": [],
+  "blockers": [],
+  "human_actions_pending": [
+    {
+      "action": "Tesseract 実機動作確認（Tesseract インストール済み環境で実際に OCR を実行する）",
+      "context": "CI/テスト環境には Tesseract が存在しないため subprocess モックでのみ検証済み。実機での確認が未実施。",
+      "blocking": false
+    },
+    {
+      "action": "STATE.md / ROADMAP.md の Phase 07 完了・v1.4.0 完成への更新",
+      "context": "STATE.md は Phase 06 完了時点のまま。ROADMAP.md の Phase 07 が 'Not started' のまま。",
+      "blocking": false
+    },
+    {
+      "action": "v1.4.0 リリース作業（GitHub タグ付け・リリースノート公開）",
+      "context": "Phase 07 完了により v1.4.0 の全フェーズが揃った。APP_VERSION=1.4.0 設定済み。",
+      "blocking": false
+    }
+  ],
+  "decisions": [
+    {"decision": "Tesseract stdin パイプ方式（pytesseract 非依存）", "rationale": "D-04: Windows でも動作確認済み・外部依存追加なし", "phase": "07"},
+    {"decision": "_TESSERACT_AVAILABLE は起動時1回評価", "rationale": "D-01: 起動後変更を反映しない仕様として許容・ドキュメント明記", "phase": "07"},
+    {"decision": "shell=False + noqa S603/S607", "rationale": "D-04: コマンドインジェクション対策・ruff セキュリティ警告の明示抑制", "phase": "07"},
+    {"decision": "register_ocr_provider のローカル import", "rationale": "ocr_providers → plugins 循環 import 回避", "phase": "07"},
+    {"decision": "シーケンシャル実行（worktree 分離なし）", "rationale": "ローカル main が origin より 115 コミット先行。GSD worktree は origin/HEAD ベースで base mismatch HALT するため（学習済み）", "phase": "07"}
+  ],
+  "uncommitted_files": [],
+  "next_action": "STATE.md と ROADMAP.md を Phase 07 完了・v1.4.0 完成に更新する。その後 v1.4.0 リリース作業（git tag / GitHub Release）、または次マイルストーン計画へ進む。",
+  "context_notes": "Phase 07 の全タスク（Wave 1〜4）が完了。396 テスト全通過・ruff エラーなし。v1.4.0 マイルストーンの全4フェーズ（04〜07）完了。作業ツリーはクリーン。APP_VERSION=1.4.0 設定済み。"
+}

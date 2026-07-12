@@ -1,0 +1,77 @@
+{
+  "sourcePath": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning",
+  "targetRoot": "C:\\Users\\shdwf\\work\\project\\PageFolio",
+  "backupPath": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.gsd-backups\\migrate-20260712-203357",
+  "startedAt": "2026-07-12T11:34:01.931Z",
+  "completedAt": "2026-07-12T11:34:01.931Z",
+  "preview": {
+    "decisions": {
+      "total": 0
+    },
+    "migrationInputs": {
+      "milestonePhaseDirs": 3,
+      "decisions": 0,
+      "seeds": 0
+    },
+    "milestoneCount": 3,
+    "totalSlices": 12,
+    "totalTasks": 40,
+    "doneSlices": 11,
+    "doneTasks": 40,
+    "sliceCompletionPct": 92,
+    "taskCompletionPct": 100,
+    "requirements": {
+      "active": 7,
+      "validated": 52,
+      "deferred": 0,
+      "outOfScope": 0,
+      "total": 59
+    }
+  },
+  "written": {
+    "roadmaps": 3,
+    "plans": 12,
+    "taskPlans": 40,
+    "taskSummaries": 40,
+    "sliceSummaries": 11,
+    "research": 9,
+    "requirements": 1,
+    "contexts": 3,
+    "other": 7
+  },
+  "imported": {
+    "decisions": 0,
+    "requirements": 59,
+    "artifacts": 123,
+    "hierarchy": {
+      "milestones": 3,
+      "slices": 12,
+      "tasks": 40
+    }
+  },
+  "legacyArchive": {
+    "archived": true,
+    "path": "migration/legacy/planning",
+    "manifestPath": "migration/legacy/manifest.json",
+    "strategy": "full-source-copy"
+  },
+  "verification": {
+    "markdown": {
+      "milestones": 3,
+      "slices": 12,
+      "tasks": 40
+    },
+    "db": {
+      "milestones": 3,
+      "slices": 12,
+      "tasks": 40
+    },
+    "dbReadiness": {
+      "phase": "planning",
+      "registry": 3
+    },
+    "rendered": 31,
+    "skipped": 53,
+    "errors": []
+  }
+}
