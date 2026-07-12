@@ -1,7 +1,7 @@
 # Codebase Map
 
-Generated: 2026-07-12T11:43:42Z | Files: 74 | Described: 0/74
-<!-- gsd:codebase-meta {"generatedAt":"2026-07-12T11:43:42Z","fingerprint":"691564546a0a3d7a0b40424dd967f606d81507d3","fileCount":74,"truncated":false} -->
+Generated: 2026-07-12T14:55:35Z | Files: 74 | Described: 0/74
+<!-- gsd:codebase-meta {"generatedAt":"2026-07-12T14:55:35Z","fingerprint":"691564546a0a3d7a0b40424dd967f606d81507d3","fileCount":74,"truncated":false} -->
 
 ### (root)/
 - `.coverage`
