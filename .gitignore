@@ -28,7 +28,7 @@ build/
 Thumbs.db
 
 # ── GSD baseline (auto-generated) ──
-.gsd*
+.gsd-id
 *.swp
 *.swo
 *~
@@ -53,7 +53,6 @@ tmp/
 .mcp.json
 
 # ── GSD baseline (auto-generated) ──
-.gsd
 nul
 nul.*
 con
@@ -73,3 +72,12 @@ PageFolio-*.zip
 .gsd-worktrees/
 .gsd-backups/
 dist/
+
+# Allow GSD project files & database in git
+!.gsd/
+.gsd/runtime/
+.gsd/backups/
+.gsd/STATE.md
+.gsd/notifications.jsonl
+.gsd/*.db-shm
+.gsd/*.db-wal
