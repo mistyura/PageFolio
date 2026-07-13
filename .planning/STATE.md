@@ -3,10 +3,10 @@ gsd_state_version: 1.0
 milestone: v1.8.0
 milestone_name: 実用性の最大化・エコシステム洗練・堅牢性強化
 status: planning
-last_updated: "2026-07-13T13:24:51.803Z"
+last_updated: "2026-07-13T22:56:14.179Z"
 last_activity: 2026-07-13
 progress:
-  total_phases: 0
+  total_phases: 6
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -17,26 +17,28 @@ progress:
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-07-05)
+See: .planning/PROJECT.md (updated 2026-07-13)
 
 **Core value:** 大きな PDF でも Undo/Redo が正しく・速く動作し、コードが読みやすく保守しやすい状態にする
-**Current focus:** v1.7.1 milestone complete — ready for `/gsd-complete-milestone`
+**Current focus:** v1.8.0 Phase 1（基盤分割）— ready for `/gsd-plan-phase 1`
 
 ## Current Position
 
-Phase: Not started (defining requirements)
-Plan: —
-Status: Defining requirements
-Last activity: 2026-07-13 — Milestone v1.8.0 started
+Phase: 1 of 6 (基盤分割（肥大モジュールリファクタリング）)
+Plan: — (not yet planned)
+Status: Ready to plan
+Last activity: 2026-07-13 — ROADMAP.md 作成（V180-* 全26要件 → 6フェーズ・被覆26/26・孤立要件なし）
 
-## v1.7.1 Phase Map
+## v1.8.0 Phase Map
 
 | Phase | Name | Requirements | リスク/性質 |
 |-------|------|--------------|------------|
-| 1 | APIキー入力欄（LLM設定への一元化） | V171-KEY-01〜04, V171-TEST-02 | LLMConfigDialog / OCRDialog / ocr.py のキー解決に閉じたまとまり。優先順反転（入力値→環境変数）＋ 非保存ガード維持 |
-| 2 | OCR 磨き込み（レビュー残の現行照合と二重実装解消） | V171-OCR-01〜04 | **高リスク**: OCR-04（L-1 producer-consumer 一本化）は独立プランへ隔離。L 系は計画時に現行コード照合で活き残り確定 |
-| 3 | ページ操作磨き込み + v1.5.0 回帰テスト | V171-PAGE-01〜03, V171-TEST-01 | page_ops/redact_ops 面。PAGE-02/03 は「棚卸し→改善」型（具体項目は計画時確定）。TEST-01 は同面の回帰テスト |
-| 4 | UI/UX 磨き込み + 既知バグ棚卸し | V171-UIUX-01〜03, V171-TEST-03 | dialogs/lang 面。UIUX-01（ショートカット GUI）は Phase 3 の読込回帰テスト整備後。TEST-03 は最終スイープ |
+| 1 | 基盤分割（肥大モジュールリファクタリング） | V180-REFAC-01/02, V180-ROBUST-02 | ocr_providers.py/llm_config.py のパッケージ化。DEBT-01/02 前例パターンを踏襲。後続 Phase 2 の UI 追加の土台になるため先行必須 |
+| 2 | AI強化（プロンプト・テンプレート管理 + プロバイダーフォールバック） | V180-TMPL-01〜05, V180-FALL-01〜03 | 8要件を同一 LLM 設定ダイアログ UI に隣接実装。フォールバックは「明示設定型・自動送信なし」方針の迂回リスクに注意（送信先確認ダイアログ再提示を必達） |
+| 3 | OCR実行エンジン抽出 + E2Eテスト | V180-REFAC-03, V180-QA-01 | ocr_dialog.py（2154行）から OCRRunEngine 抽出。**BATCH 着手の直前**に配置（研究フェーズの落とし穴10: スレッド調整コード分離時のロック不整合に注意） |
+| 4 | バッチ複数ファイルOCR | V180-BATCH-01〜05 | **単独フェーズ隔離**（PROJECT.md 確定方針）。fitz.Document のスレッド間共有禁止のためファイル間は逐次処理限定。2階層キャンセル・ファイル横断進捗集計は新規パターンで実装詳細検証が必要 |
+| 5 | 堅牢性強化（サムネイル仮想化 + Blobリーク検出 + ShortcutsDialog修正） | V180-PERF-01〜03, V180-ROBUST-01/03 | 他フェーズと機能依存なし。selected_pages 全ページインデックス不変条件の破壊に注意（pagination.py の to_global/to_local のみ通す） |
+| 6 | 品質保証仕上げ（通知UX・UI一貫性監査・ドキュメント整合） | V180-QA-02〜04 | OCRRunEngine/batch_queue 抽出後のためテスト容易性が高い。開発履歴.md の v1.7.0 表記整合（V16-D-04 残課題）も本フェーズで解消 |
 
 ## Performance Metrics
 
@@ -101,6 +103,16 @@ Last activity: 2026-07-13 — Milestone v1.8.0 started
 
 Decisions are logged in PROJECT.md Key Decisions table.
 
+**v1.8.0 ロードマップ確定（2026-07-13）:**
+
+- V180-R-01: 全 26 要件を 6 フェーズへ割当（coarse 粒度・100% 被覆・孤立要件なし）。フェーズ採番はマイルストーンごとに Phase 1 起点へリセット（プロジェクト方針）。26要件・4本柱構成のため coarse 既定の 2-4 より多い 6 フェーズとしたが、各フェーズは REFAC-01/02→TMPL/FALL、REFAC-03→BATCH の明示依存関係と BATCH 単独隔離方針を反映した必然的な境界であり、単一要件フェーズは作らない（REFAC-03 は QA-01 と同居させ Phase 3 を構成）。
+- V180-R-02: REFAC-01（ocr_providers.py 分割）・REFAC-02（llm_config.py 分割）・ROBUST-02（`_SENSITIVE_KEYS` 中央レジストリ化）を **Phase 1** に同梱。ROBUST-02 は分割対象と同じファイル面（プロバイダ→環境変数マッピング）のため同フェーズが自然。
+- V180-R-03: TMPL-01〜05・FALL-01〜03（計8要件）を **Phase 2** に集約。研究サマリの推奨（テンプレート管理→フォールバックは同一 LLM 設定ダイアログ UI を共有するため隣接配置が効率的）を採用し、coarse 粒度で1フェーズへ統合。
+- V180-R-04: REFAC-03（OCRRunEngine 抽出）を QA-01（E2E モックテスト）と同居させ **Phase 3** とし、BATCH 着手の直前に配置。単体では1要件フェーズになる REFAC-03 を QA-01（抽出直後の方がテスト容易性が高い）と組み合わせることで自然な境界にした。
+- V180-R-05: BATCH-01〜05 を **Phase 4** として単独隔離（PROJECT.md 確定方針）。他の柱の作業を混在させない。
+- V180-R-06: PERF-01〜03・ROBUST-01・ROBUST-03（計5要件）を **Phase 5** に集約。「堅牢性強化」という機能非依存の単一テーマで結束し、BATCH（最大機能）が固まった後に回帰リスクを検証しやすい位置に配置（研究サマリの推奨に追従）。
+- V180-R-07: QA-02〜04（計3要件）を **Phase 6** の最終仕上げとして配置。OCRRunEngine/堅牢性強化が完了した後の方が UI 一貫性監査・通知UX 改善の検証がしやすい。
+
 **v1.7.1 ロードマップ確定（2026-07-04）:**
 
 - V171-R-01: 全 17 要件を 4 フェーズへ割当（coarse 粒度・100% 被覆・孤立要件なし）。フェーズ採番はマイルストーンごとに Phase 1 起点へリセット（プロジェクト方針）。
@@ -124,119 +136,17 @@ Decisions are logged in PROJECT.md Key Decisions table.
 - D-05: _restore_state の pdf_bytes 分岐を完全撤廃
 - D-06: _undo_stack/_redo_stack の両方を deque(maxlen=MAX_UNDO) 化
 
-**v1.4.0 確定済み決定事項:**
-
-- V14-D-01: 実装方針は `urllib.request` 直叩き・新規 pip 依存ゼロ（公式 SDK 不採用）
-- V14-D-02: APIキーは環境変数のみ・`_save_settings()` への流入ガードが最優先タスク（Phase 05 着手直前）
-- V14-D-03: 既定 `ocr_provider: "off"` — 外部送信・課金を望まないユーザー向けの安全なデフォルト
-- V14-D-04: `temperature` は STACK.md 優先（全モデル可）。ただし Opus 4.7/4.8 の `effort` 対応と非対応パラメータは Phase 05 実 API で検証
-- V14-D-05: fitz の `get_pixmap()` はメインスレッドのみ。ワーカースレッドには bytes のみ渡す
-- V14-D-06: 逐次レンダリング（レンダリング→送信→破棄）を Phase 06 で実装しメモリ一括保持を廃止
-- V14-D-07: テキスト埋め込み判定 (`page.get_text()`) を Phase 04 で先行実装（低コスト・高効果）
-- V14-D-08: Tesseract / PluginManager 登録フックは Phase 07（任意・最終）。スコープ調整時に切りやすい位置
-- [Phase ?]: OCRProvider 抽象基底（ocr_image/list_models 抽象メソッド + default_concurrency/max_concurrency クラス属性）を pagefolio/ocr_providers.py に新設し、後続プランのインターフェース契約を確定
-- [Phase 04-provider-abstraction]: EMBEDDED_TEXT_MIN_CHARS=3: 1〜2文字の誤検出を抑制しつつ典型的なページ番号テキスト以上を検出する（D-06）
-- [Phase 04-provider-abstraction]: build_provider で ocr_provider='off' のとき LMStudioProvider を返す（Phase 4 後方互換・D-CONTEXT）
-- [Phase 04-03]: _render_next_page を after(0) 連鎖で実装しメインスレッドレンダリング中も UI フリーズを回避（D-01）
-- [Phase 04-03]: _worker docstring に禁止ワード（fitz/get_pixmap 等）を書かないルール（automated grep 誤検知防止）
-- [Phase 04-03]: OCR-PROV-02・OCR-PERF-01 要件完了。Phase 4 全成功基準達成
-- [Phase 04-04 CR-02]: _on_run でワーカー起動前に model_var/max_tokens_var/temperature_var/url_var の live 値で LMStudioProvider を再生成（SC-1 後方互換復元）
-- [Phase 04-04 CR-01]: _start_ocr の build_provider を try/except ValueError で保護し messagebox.showerror + return でグレースフル処理（防御的堅牢化）
-- [Phase 05-01]: ClaudeProvider（messages API・effort/temperature 防御・429/5xx→OCRRetryableError 変換・並列度 Claude=2）
-- [Phase 05-02]: _SENSITIVE_KEYS を set 定数として定義し _save_settings でキー名のみ logger.error・値はログ非出力・除外コピーを json.dump（成功基準1・D-01・D-04）
-- [Phase 05-02]: claude_model="claude-sonnet-4-6" / ocr_effort="low" を DEFAULT_SETTINGS に追加（無害な設定値・OCR-UI-01 基盤）
-- [Phase 05-02]: Phase 5 文言 9 キーを ja/en 両辞書に追加（OCR-UI-01 基盤）
-- [Phase 05-03]: _resolve_api_key は os.environ.get のみ（読み取り専用）・書き込み禁止（D-05）
-- [Phase 05-03]: build_provider の claude 分岐は api_key を引数のみで受け取り settings には入れない（D-01/D-05）
-- [Phase 05-03]: run_parallel バックオフは provider 非依存の共通層として実装（Phase 6 Gemini で再利用可能・D-14）
-- [Phase 05-03]: _start_ocr の waiting on_progress は done=None で呼ぶ（完了カウントは進めない）
-- [Phase 05-03]: getattr(self, '_session_api_keys', {}) でテスト経路の安全なフォールバックを確保
-- [Phase 05-04]: provider Combobox values は静的リスト ['off','lmstudio','claude']（Phase 6: gemini を追加予定コメント付記）
-- [Phase 05-04]: _update_ocr_buttons_state は _update_doc_buttons_state から連動呼び出し（設定変更経路をカバー）
-- [Phase 05-04]: _refresh_claude_models は例外時も静的 RECOMMENDED_MODELS へフォールバック（D-08 一貫適用）
-- [Phase 05-04]: effort_frame / temperature_frame の pack 順は _on_model_change 呼び出し側が担保（フレーム同士の pack_forget が互いに独立）
-- [Phase 05-05]: on_progress の waiting status を 'waiting/{attempt}' 形式に変更しリトライ番号を伝搬（on_progress シグネチャ変更なし）
-- [Phase 05-05]: コスト確認ダイアログは messagebox.askyesno を使用（grab_set モーダルより軽量・D-11 毎回確認）
-- [Phase 05-05]: セッションキー入力欄の値は _session_api_keys に格納し settings には入れない（D-01/D-03）
-- [Phase ?]: [Phase 06-01]: GeminiProvider は ClaudeProvider と同型テンプレートで実装（D-05）
-- [Phase ?]: [Phase 06-01]: GEMINI_API_KEY 優先 GOOGLE_API_KEY フォールバック dual env var（D-06）
-- [Phase ?]: [Phase 06-01]: thinkingConfig は generationConfig 直下 thinkingBudget=0（D-09）
-- [Phase ?]: [Phase 06-01]: x-goog-api-key ヘッダー認証 URL ?key= 不使用（D-05/T-06-01）
-- [Phase 06-03]: ocr_scale 既定を 2.0 → 1.5 に変更（D-11・OCR-PERF-05）。既存保存値は setdefault で据え置き
-- [Phase 06-03]: gemini_model 既定 'gemini-2.5-flash' を settings.py に追加（D-08・無害な設定値）
-- [Phase 06-03]: _is_cloud_provider は name in ('claude','gemini') + isinstance((ClaudeProvider, GeminiProvider)) で判定（Pitfall-F）
-- [Phase 06-03]: _needs_session_key の gemini 分岐は GEMINI_API_KEY or GOOGLE_API_KEY dual env var（D-06/Pitfall-G）
-- [Phase 06-03]: gemini セッションキーは _session_api_keys['gemini'] のみに格納（T-06-11・settings 非永続化）
-- [Phase 06-02]: バッファ上限は concurrency+1（余裕係数 1: ワーカー飢えを防ぐ最小マージン・D-02）
-- [Phase 06-02]: run_with_bounded_buffer は Tk 非依存の ocr.py モジュール関数として切り出し（D-13 テスト可能化）
-- [Phase 06-02]: _worker は fitz/get_pixmap/page_to_png_b64/self.doc[ を一切使用しない（D-04 必達）
-- [Phase 06-02]: 全ページ base64 一括辞書蓄積（self._images = {}）を撤廃しパイプライン化
-- [Phase 06-02]: 統合プログレス（done+skipped/total）を主軸とし、レンダリング 2 段表示を廃止（D-03）
-- [Phase 06-04]: _workers_remaining カウンタ（Lock 配下）で最終ワーカーのみ終了処理を呼ぶ（単一終了処理の保証・CR-01）
-- [Phase 06-04]: _fatal_msg/_fatal_kind を共有属性に昇格し Lock 保護（複数ワーカーの致命的エラー報告・CR-01）
-- [Phase 06-04]: DEFAULT_OCR_SCALE = 1.5 に統一し D-11 既定と整合（WR-01）
-- [Phase 06-04]: _SENSITIVE_KEYS に google_api_key / GOOGLE_API_KEY / GEMINI_API_KEY / ANTHROPIC_API_KEY 大文字バリアントを追加（WR-03）
-- [Phase 01-01]: OCRDialog の数値 Spinbox 4 種（scale/timeout/max_tokens/temperature）を state=readonly + fg=TEXT_SUB で読み取り専用化、model_combo/取得ボタンを disabled（編集導線を LLMConfigDialog へ一元化・V16-UI-01）
-- [Phase 01-01]: 数値同期を独立メソッド _sync_param_vars_from_settings に切り出し、_apply_llm_settings の provider 分岐外（全プロバイダ共通箇所）から呼び claude/gemini でも即時反映（D-03）。値はログ非出力（T-01-01）
-- [Phase ?]: [Phase 01-02]: サムネイルスライダーを独立 zoom_frame（全幅行）へ移設しボタンとの幅競合を解消（D-07/D-08）。範囲/変数/コールバック不変（D-09）。viewer.py/settings.py 未変更
-- [Phase ?]: [Phase 01-02]: APP_VERSION を v1.6.0 へ更新し README バッジ・開発履歴.md を同期（CLAUDE.md 規約）。pyproject.toml 未編集
-- [Phase ?]: [Phase 02-01]: ページネーション純ロジックを pagefolio/pagination.py に集約（Tk/fitz 非依存・8 純関数）。clamp_page_size をフェーズ内確定名に固定（W1）し 02-02/02-03 はこの名で import
-- [Phase ?]: [Phase 02-01]: 純関数は page_size<=0 / n_pages<=0 でも例外を投げず安全側へ倒す（T-2-01）。window_label は文言裁量と疎結合にし、テストは数値包含で照合
-- [Phase ?]: selected_pages は全ページ index 不変条件を保持し、照合側を to_global で窓変換（02-02・D-07・Pitfall 1 解消）
-- [Phase 02-03]: ナビ/件数フッター（◀▶＋範囲ラベル＋件数 Spinbox state=readonly）構築・D&D local→global 換算・ja/en 同一 LANG キー・_refresh_all 正規化を reconcile_window_start へ集約
-- [Phase 02-03]: 手動窓ナビと D-11 自動追従の対立はハンドラ層で解消（_move_window で窓移動後に current_page を新窓先頭へ追従＝「current は常に窓内」不変条件）。reconcile_window_start は (B) 操作による current 押し出し専用追従へ純化（UAT 項目2 修正・debug 260618-pagination-window-nav-snapback）
-- [Phase ?]: [Phase 04-01]: parse_markdown 判定優先順位 code>md_h2>md_h1>bullet>通常段落・in_code フラグでフェンス内見出しを構造抑止。md_render.py は Tk/fitz 非依存純ロジック層で 04-03 が import
-- [Phase ?]: [Phase 04-01]: _split_inline は **bold** のみ対応・空リスト不返却で [(text,None)] フォールバック。ReDoS 回避: 非貪欲+文字クラスのみ（線形時間）
-- [Phase 04-02]: resolve_ocr_prompt 解決優先順位を custom(非空) > PROVIDER_OCR_PROMPTS[provider][preset] > OCR_PROMPTS.get(preset, OCR_PROMPTS['text']) に固定（既存 _on_run/ocr_dialog.py:1090 既定 text と一致・後方互換）
-- [Phase 04-02]: PROVIDER_OCR_PROMPTS は claude(XML タグ)/gemini(明示指示) × text/table/markdown のみ定義。lmstudio/tesseract/off は汎用 OCR_PROMPTS フォールバック（Pitfall 4: Tesseract は prompt 無視）。Tk/ネットワーク非依存純関数で 04-03 が import
-- [Phase 01-01]: V171-KEY-02: _resolve_api_key の優先順を session_keys(入力値) > 環境変数へ反転（claude/gemini/runpod全分岐・gemini dual env内部順序は不変）
-- [Phase 01-01]: 既存の env優先固定テストは新規追加でなく書き換え・リネームで対応（Pitfall 4）。RunPod版 TestResolveApiKeyRunPod を新設
-- [Phase 01-01]: llm_env_key_unset_static系ヒント文言をUI-SPEC D-11準拠へja/en同時更新（新規キー追加なし）。ocr_session_key_labelはPlan03の撤去タスクと同時削除する方針で本プランでは維持
-- [Phase ?]: [Phase 01-02]: LLMConfigDialog に session_api_keys 引数を追加し複製せず参照保持。claude/gemini/runpod 各セクションへマスク付き APIキー入力欄+トグル+セッション限定注記を追加し _apply で app._session_api_keys へ同期（llm_settings 非流入維持）
-- [Phase ?]: [Phase 01-02]: app.py._open_settings は getattr(self, '_session_api_keys', None) 経由で SettingsDialog へ渡す（既存 SimpleNamespace テストスタブとの後方互換のための防御的パターン）。SettingsDialog は session_api_keys を複製せず参照保持し LLMConfigDialog へ中継（RESEARCH.md Pitfall 5対応）
-- [Phase ?]: [Phase 01-02]: _refresh_claude_models/_refresh_gemini_models/_refresh_runpod_models をライブ入力値優先→環境変数フォールバックへ変更（D-10）。OCRDialog経由の session_api_keys配線は Plan 03の担当範囲として明示的に対象外
-- [Phase 01-03]: OCRDialogのクラウド実行ゲートを値収集なし確認専用の_check_cloud_api_keyへ一本化（RunPodのclaudeスロット誤格納バグを構造的に解消・Pitfall 1） — 撤去に伴う成功基準2の明示エラー欠落を防ぐため（Pitfall 2）
-- [Phase 01-03]: OCRDialog._open_llm_configはgetattr(self.app,'_session_api_keys',None)経由でLLMConfigDialogへ配線（Plan02のapp.py._open_settingsと同じ防御的パターン。既存の完全SimpleNamespaceスタブとの後方互換）
-- [Phase ?]: [Phase 01-04 CR-01]: _confirm_cost/_confirm_summary_cost へ elif runpod 分岐を追加し host=runpod_url・model=runpod_model から取得。未設定時は llm_runpod_host_unset プレースホルダで api.anthropic.com へのフォールスルーを防止
-- [Phase ?]: [Phase 01-04 WR-02]: _provider_display_name に runpod 分岐追加・ocr_provider_name_runpod をja/en LANGへ新設
-- [Phase ?]: [Phase 02-02]: TesseractProvider に available_langs 引数を追加し __init__ 時点で effective_lang/lang_fallback を段階的縮退(D-06)で確定。ocr_image は都度計算しない
-- [Phase ?]: [Phase 02-02]: _detect_tesseract() を import時固定からプロバイダ生成時の都度呼び出しへ変更(D-05)。ocr.py/llm_config.py が同一関数を都度呼ぶ形へ統一(Pitfall 2解消)
-- [Phase ?]: [Phase 02-02]: フォールバック注記は progress_var とは独立した専用ラベルにし provider 再生成時のみ更新することで1回のみ表示を担保(D-07)
-- [Phase ?]: [Phase 02-03] _require_http_scheme はリクエスト送信直前（_post_chat/list_models冒頭）で呼び、コンストラクタでのeager検証はしない（A2）
-- [Phase ?]: [Phase 02-03] ClaudeProvider.list_models は _fetch_models_page(after_id) へ切り出しhas_more/last_idカーソルをwhileループで辿る設計（1ページ完結時は後方互換）
-- [Phase ?]: [Phase 02-03] _probe_lm_provider(update_combo) 重複解消はLM Studioペアのみに限定、OllamaペアはD-11に従い対象外のまま維持（Pitfall 5回避）
-- [Phase ?]: [Phase 02-03] _update_ocr_buttons_state呼び出しはgetattr+callableチェックの防御的パターンとし、既存SimpleNamespaceスタブとの後方互換を維持
-- [Phase ?]: [Phase 02-04]: producer-consumerをpagefolio/ocr_pipeline.py（Tk/fitz非依存）へ一本化。PipelineState/consume_one/try_enqueue/send_sentinelsに集約しocr_dialog.pyを薄いラッパー化（D-01/D-02）
-- [Phase ?]: [Phase 02-04]: consume_oneがPipelineStateへのstate更新を内部完結させ、dialog側コールバックはresults/errors辞書ブックキーピングのみ担当する設計にして二重計上を防止
-- [Phase ?]: [Phase 02-04]: L-6aはrender_failed_pages集合+_done_disp()合算ヘルパーで進捗100%到達を保証。L-6gはis_fatal()分岐でfatal後のrender継続を停止
-- [Phase 03-01]: PNGは既存アルファ0.5乗算・JPEGはRGBA変換後に均一128をputalphaで50%透過付与（D-03）
-- [Phase 03-01]: _watermark_image_rectは幅50%縮小を既定とし縦長画像で高さがページ高さ90%超の場合は高さ基準へクランプ（Claude's Discretion）
-- [Phase 03-v1-5-0]: [Phase 03-02]: compute_dnd_dest_index / merge_shortcuts / shift_variant_keysym を純関数へ抽出（Tk依存の薄いラッパー化・D-13）
-- [Phase 03-v1-5-0]: [Phase 03-02]: v1.5.0回帰テストをtests/test_v150_regression.pyへ新規分離（D-15・test_pdf_ops.py肥大化防止）
-- [Phase ?]: [Phase 03-03]: _derotate_rectはpage.rotation==0で早期returnし恒等（正規化のみ）を返す。90/180/270のみpage.derotation_matrixを計算（無回転ページでの余計な行列計算回避）
-- [Phase ?]: [Phase 03-03]: crop_info（_format_crop_info）はderotate前のcanvas→pdf変換値をそのまま使う。画面上で見た選択サイズをmm表示するのが直感的なため（derotateは_crop_page適用時のみ必要）
-- [Phase ?]: [Phase 03-03]: _crop_by_marginのundoは新規opを作らず既存bulk_crop opを再利用（file_ops.pyの_apply_inverseが既に対称処理を実装済み）
-- [Phase ?]: [Phase 03-04]: _apply_page_edit(kind, block=None) へ改修し、self._redact_rects（蓄積）＋crop_rectから対象矩形集合を構築。_save_undoはループ外1回のみ、各矩形は_derotate_rect経由でmediabox相対化する1本道（D-05〜D-08統合）
-- [Phase ?]: [Phase 04-01]: build_keysym_from_event の修飾子連結順は Control, Alt, Shift の順に固定（RESEARCH.md Pattern 1 準拠）
-- [Phase ?]: [Phase 04-01]: _bind_shortcuts() は self._bound_keysyms で前回バインドした keysym(shift variant含む)を追跡し、再呼び出し時に全て unbind してから再バインドする
-- [Phase ?]: [Phase 04-02]: ShortcutsDialog は保存前 self._shortcuts の working copy のみ編集し、保存時に既定と異なる項目のみ settings['shortcuts'] へ完全置換してから app._bind_shortcuts→_save_settings の順で即時反映する
-- [Phase ?]: [Phase 04-02]: SettingsDialog.__init__ に後方互換の app=None を追加し、_open_settings で app=self を渡すことで ShortcutsDialog へ app 参照を配線した
-- [Phase ?]: [Phase 04-03]: 共通/固有見出しは _on_provider_change の各分岐内で before=self.scale_row により都度再配置する（既存の specific-frame/effort-temperature の挿入ロジックは無変更）
-- [Phase ?]: [Phase 04-03]: _apply_llm_settings_live は _rebuild_ui を呼ばずに self.settings.update+_save_settingsのみ行う軽量反映（nested on_apply から _rebuild_ui を呼ぶと開いているSettingsDialog自体が破棄されるため）
-- [Phase ?]: [Phase 04-03]: SettingsDialog.on_llm_apply は後方互換の任意引数とし getattr(self,'_on_llm_apply',None) で防御的に参照する
-- [Phase ?]: [Phase 04-03]: _probe_ollama_provider は _probe_lm_provider と同型のupdate_comboパラメータ化ヘルパーでOllama重複解消(C2)。lang.pyの未配線キー削除は04-04へ委譲
-- [Phase ?]: [Phase 04-04]: lang.py の未使用キー検出は引用符付き完全一致方式（pagefolio/(lang.py除く)・tests/・plugins/を走査・_ALLOWLIST機構）でD-11回帰テストを常設
-- [Phase ?]: [Phase 04-04]: D-11テスト自身が新規発見したocr_progress/ocr_progress_render（Phase2統合プログレス化で不要化）をRESEARCH確定9件と同時に削除（D-19全件解消の趣旨）
+（v1.4.0〜v1.7.1 の確定済み決定事項は本ファイル履歴に蓄積済み。詳細は git 履歴または各マイルストーンアーカイブを参照）
 
 ### Pending Todos
 
-- なし。v1.7.1 要件は [REQUIREMENTS.md](./REQUIREMENTS.md)、フェーズ割当は [ROADMAP.md](./ROADMAP.md) を参照。
+- なし。v1.8.0 要件は [REQUIREMENTS.md](./REQUIREMENTS.md)、フェーズ割当は [ROADMAP.md](./ROADMAP.md) を参照。
 
 ### Blockers/Concerns
 
 - [v1.6.0 Phase 3 継続]: V16-QUAL-03（max_tokens/429 実機検証）は実 API 前提のチェックリスト化まで完了。実機実施は未了のまま受容済み。
-- [v1.7.1 Phase 4 follow-up（非ブロッキング）]: コードレビュー(04-REVIEW.md) WR-01 ShortcutsDialog のキャプチャ対象切替時に前行の「キーを押してください」表示が残留する表示バグ、WR-02 修飾キーなしの単キーもショートカット登録できてしまい `root` 直下ウィジェット（ページサイズ Spinbox 等）の通常入力と衝突しうる。データ損失なし・次マイルストーンでの改善候補。
-- [v1.7.1 Phase 4 UAT]: 人手確認7件はユーザー判断で一旦pass（実機目視未検証・コード/自動ゲートは全通過、v1.6.0 Phase 4 と同様の運用）。次マイルストーンで実機目視が必要になった場合は 04-UAT.md 参照。
+- [v1.7.1 Phase 4 follow-up → v1.8.0 Phase 5 で解消予定]: コードレビュー(04-REVIEW.md) WR-01 ShortcutsDialog のキャプチャ対象切替時に前行の「キーを押してください」表示が残留する表示バグ、WR-02 修飾キーなしの単キーもショートカット登録できてしまい `root` 直下ウィジェット（ページサイズ Spinbox 等）の通常入力と衝突しうる。データ損失なし。V180-ROBUST-03 として本マイルストーン Phase 5 で対応する。
+- [v1.7.1 Phase 4 UAT]: 人手確認7件はユーザー判断で一旦pass（実機目視未検証・コード/自動ゲートは全通過、v1.6.0 Phase 4 と同様の運用）。human-verify/UAT 実機目視は v1.8.0 スコープ外（PROJECT.md 記載）。
 
 過去の懸念は全て解決済み:
 
@@ -279,7 +189,11 @@ Decisions are logged in PROJECT.md Key Decisions table.
 | v2 | OS キーストア連携（Windows Credential Manager）による APIキー永続化 | Out of scope | v1.4.0 |
 | v2 | OCR 結果のページ埋め込み（検索可能 PDF 化） | Out of scope | v1.4.0 |
 | v2 | プロバイダ別の詳細な実コスト計測・課金トラッキング | Out of scope | v1.4.0 |
-| Future | PERF-01: サムネイル仮想化によるパフォーマンス改善（大量ページ対応） | Future Requirements | v1.7.1 |
+| ~~Future~~ | ~~PERF-01: サムネイル仮想化によるパフォーマンス改善（大量ページ対応）~~ | **v1.8.0 Phase 5 で対応中**（V180-PERF-01〜03） | v1.7.1 |
+| v2 | バッチ OCR のバックグラウンド常駐継続（Tkinter シングルループ制約） | Out of scope（v1.8.0 Future Requirements BATCH-F01） | v1.8.0 |
+| v2 | バッチジョブの永続化（アプリ再起動を跨いだ resume） | Out of scope（v1.8.0 Future Requirements BATCH-F02） | v1.8.0 |
+| v2 | プロンプトテンプレートのバージョン履歴・差分表示 | Out of scope（v1.8.0 Future Requirements TMPL-F01） | v1.8.0 |
+| v2 | サムネイルの連続スクロール型本格仮想化（react-window 相当） | Out of scope（v1.8.0 Future Requirements PERF-F01） | v1.8.0 |
 
 ### v1.4.0 クローズ時に Acknowledge した未クローズ項目（2026-06-14）
 
@@ -318,10 +232,10 @@ Decisions are logged in PROJECT.md Key Decisions table.
 
 ## Session Continuity
 
-Last session: 2026-07-05T11:30:00.000Z
-Stopped at: Phase 4 complete — v1.7.1 milestone 100% complete (4/4 phases, 17/17 requirements), ready for /gsd-complete-milestone
+Last session: 2026-07-13T22:56:14.179Z
+Stopped at: ROADMAP.md 作成完了 — v1.8.0 全26要件を6フェーズへ割当（被覆26/26・孤立要件なし）。次は `/gsd-plan-phase 1` でPhase 1（基盤分割）の計画へ。
 Resume file: None
 
 ## Operator Next Steps
 
-- Start the next milestone with /gsd-new-milestone
+- Phase 1（基盤分割）の計画を開始するには `/gsd-plan-phase 1` を実行する

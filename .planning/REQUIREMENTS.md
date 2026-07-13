@@ -91,4 +91,29 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| （ロードマップ作成時に記入） | | |
+| V180-REFAC-01 | Phase 1 | Pending |
+| V180-REFAC-02 | Phase 1 | Pending |
+| V180-ROBUST-02 | Phase 1 | Pending |
+| V180-TMPL-01 | Phase 2 | Pending |
+| V180-TMPL-02 | Phase 2 | Pending |
+| V180-TMPL-03 | Phase 2 | Pending |
+| V180-TMPL-04 | Phase 2 | Pending |
+| V180-TMPL-05 | Phase 2 | Pending |
+| V180-FALL-01 | Phase 2 | Pending |
+| V180-FALL-02 | Phase 2 | Pending |
+| V180-FALL-03 | Phase 2 | Pending |
+| V180-REFAC-03 | Phase 3 | Pending |
+| V180-QA-01 | Phase 3 | Pending |
+| V180-BATCH-01 | Phase 4 | Pending |
+| V180-BATCH-02 | Phase 4 | Pending |
+| V180-BATCH-03 | Phase 4 | Pending |
+| V180-BATCH-04 | Phase 4 | Pending |
+| V180-BATCH-05 | Phase 4 | Pending |
+| V180-PERF-01 | Phase 5 | Pending |
+| V180-PERF-02 | Phase 5 | Pending |
+| V180-PERF-03 | Phase 5 | Pending |
+| V180-ROBUST-01 | Phase 5 | Pending |
+| V180-ROBUST-03 | Phase 5 | Pending |
+| V180-QA-02 | Phase 6 | Pending |
+| V180-QA-03 | Phase 6 | Pending |
+| V180-QA-04 | Phase 6 | Pending |
