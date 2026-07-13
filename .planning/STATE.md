@@ -2,18 +2,18 @@
 gsd_state_version: 1.0
 milestone: v1.8.0
 milestone_name: 実用性の最大化・エコシステム洗練・堅牢性強化
-current_phase: 1
-current_phase_name: 基盤分割（肥大モジュールリファクタリング）
+current_phase: 01
+current_phase_name: foundation-split
 status: executing
 stopped_at: Phase 1 context gathered
-last_updated: "2026-07-13T18:29:39.782Z"
+last_updated: "2026-07-13T20:48:01.930Z"
 last_activity: 2026-07-13
-last_activity_desc: ROADMAP.md 作成（V180-* 全26要件 → 6フェーズ・被覆26/26・孤立要件なし）
+last_activity_desc: Phase 01 execution started
 progress:
   total_phases: 6
   completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
+  total_plans: 4
+  completed_plans: 1
   percent: 0
 ---
 
@@ -24,14 +24,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-07-13)
 
 **Core value:** 大きな PDF でも Undo/Redo が正しく・速く動作し、コードが読みやすく保守しやすい状態にする
-**Current focus:** v1.8.0 Phase 1（基盤分割）— ready for `/gsd-plan-phase 1`
+**Current focus:** Phase 01 — foundation-split
 
 ## Current Position
 
-Phase: 1 of 6 (基盤分割（肥大モジュールリファクタリング）)
-Plan: — (not yet planned)
+Phase: 01 (foundation-split) — EXECUTING
+Plan: 2 of 4
 Status: Ready to execute
-Last activity: 2026-07-13 — ROADMAP.md 作成（V180-* 全26要件 → 6フェーズ・被覆26/26・孤立要件なし）
+Last activity: 2026-07-13 — Phase 01 execution started
 
 ## v1.8.0 Phase Map
 
@@ -100,6 +100,7 @@ Last activity: 2026-07-13 — ROADMAP.md 作成（V180-* 全26要件 → 6フェ
 | Phase 04 P02 | 12min | 3 tasks | 6 files |
 | Phase 04 P03 | 20min | 3 tasks | 5 files |
 | Phase 04 P04 | 9min | 3 tasks | 5 files |
+| Phase 01 P01 | 6min | 2 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -141,6 +142,8 @@ Decisions are logged in PROJECT.md Key Decisions table.
 - D-06: _undo_stack/_redo_stack の両方を deque(maxlen=MAX_UNDO) 化
 
 （v1.4.0〜v1.7.1 の確定済み決定事項は本ファイル履歴に蓄積済み。詳細は git 履歴または各マイルストーンアーカイブを参照）
+
+- [Phase ?]: 後方互換 import 安全網の先行拡張: TestOcrProvidersImports は全17シンボル（private ヘルパー含む）を個別+一括の両方で package-level import 検証。既存 TestDialogsImports の記法をそのまま複製し新規パターンを持ち込まない（Wave 2/3 分割前の回帰検知装置確立・D-11）
 
 ### Pending Todos
 
@@ -236,7 +239,7 @@ Decisions are logged in PROJECT.md Key Decisions table.
 
 ## Session Continuity
 
-Last session: 2026-07-13T14:28:19.282Z
+Last session: 2026-07-13T20:47:08.389Z
 Stopped at: Phase 1 context gathered
 Resume file: .planning/phases/01-foundation-split/01-CONTEXT.md
 

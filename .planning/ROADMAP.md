@@ -106,10 +106,10 @@ V171-* 全 17 要件 Complete（被覆 17/17・孤立要件なし）。締め前
   3. `_SENSITIVE_KEYS` がプロバイダ→環境変数マッピングから生成される中央レジストリとなり、新プロバイダ追加時に手動リストへの追加漏れが構造的に起きなくなる
   4. 分割前に拡張された `test_imports.py` の後方互換 import テストと既存 pytest 全件がグリーンのまま維持される
 
-**Plans**: 4 plans（3 waves）
+**Plans**: 1/4 plans executed
 **Wave 1**
 
-- [ ] 01-01-PLAN.md — テスト先行拡張（後方互換 import 安全網・Wave 0 必達）[Wave 1]
+- [x] 01-01-PLAN.md — テスト先行拡張（後方互換 import 安全網・Wave 0 必達）[Wave 1]
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
@@ -202,7 +202,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 
 | Phase             | Milestone | Plans Complete | Status      | Completed  |
 | ----------------- | --------- | --------------- | ----------- | ---------- |
-| 1. Undo/Redo 修正 | v1.3.0    | 3/3              | Complete    | 2026-06-03 |
+| 1. Undo/Redo 修正 | v1.3.0    | 1/4 | In Progress|  |
 | 2. プレビュー最適化とリファクタリング | v1.3.0 | 3/3 | Complete | 2026-06-03 |
 | 3. API 整理と回帰テスト | v1.3.0 | 2/2 | Complete | 2026-06-03 |
 | 4. プロバイダ抽象化 | v1.4.0 | 4/4 | Complete | 2026-06-06 |
