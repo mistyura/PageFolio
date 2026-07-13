@@ -1,148 +1,164 @@
 # Project Research Summary
 
-**Project:** PageFolio — コード最適化プロジェクト
-**Domain:** デスクトップ PDF ツール（Tkinter）への OCR プロバイダ抽象化 + クラウド Vision API 統合
-**Researched:** 2026-06-06
-**Confidence:** HIGH
+**Project:** PageFolio v1.8.0「実用性の最大化・エコシステム洗練・堅牢性強化」
+**Domain:** Tkinter デスクトップ PDF エディタ（Mixin 構成 + 純ロジック層 + producer-consumer OCR パイプライン）への機能追加
+**Researched:** 2026-07-13
+**Confidence:** HIGH（既存コードベース .planning/codebase/CONCERNS.md・.planning/PROJECT.md を一次情報源とした curated 調査が中心。外部エコシステム知見は WebSearch で MEDIUM 裏取り）
 
 ## Executive Summary
 
-PageFolio v1.4.0 は、現行の LM Studio 専用 OCR 実装を `OCRProvider` 抽象基底クラスへ置き換え、Claude / Gemini のクラウド Vision API と Tesseract をプラグイン的に差し替え可能にするマイルストーンである。主想定は GPU 非搭載 PC のため、低スペック対策（テキスト埋め込み判定による OCR スキップ・逐次レンダリング・`ocr_scale` 見直し）をコア要件に含める。
+PageFolio v1.8.0 は、既存の Mixin + 純ロジック層アーキテクチャ（pagination.py/ocr_pipeline.py/undo_store.py などの Tk/fitz 非依存層）を崩さずに、AI強化（プロンプト・テンプレートマネージャー、明示設定型プロバイダーフォールバック）・堅牢性強化（サムネイル仮想化 PERF-01、Blobライフサイクル、肥大モジュール分割）・品質保証（E2Eモックテスト、通知UX、UI一貫性監査）・バッチ複数ファイルOCR（単独フェーズ隔離）の4本柱を実装するマイルストーンである。4機能はすべて Python 3.8+ 標準ライブラリのみで実現可能であり、新規 pip 依存の追加は不要（V14-D-01「新規 pip 依存ゼロ方針」継続）。
 
-実装方針は **「`urllib.request` 直叩き・新規 pip 依存ゼロ」** で確定済み。公式 SDK（anthropic / google-genai）は PyInstaller の `.exe` 肥大化を招くため不採用。Claude / Gemini ともに HTTP + JSON で完結し、Tesseract も `subprocess` 経由の CLI 呼び出しで `pytesseract` 依存を回避する。
+推奨アプローチは「既存の枯れたプリミティブを拡張する」ことに一貫する。バッチ OCR は ocr_pipeline.py の producer-consumer をファイル単位でもう一段ラップし、プロバイダーフォールバックは PipelineState.fatal_msg 確定後のオーケストレーション層として追加し、サムネイル仮想化は pagination.py の窓表示の外層は不変のまま可視範囲計算のみを新規純関数層として内側に重ねる。テンプレートマネージャーは v1.7.4 の外部 md ファイル連動を「複数の名前付きスロット」へ拡張する形で後方互換を保つ。
 
-最大リスクは 3 点。(1) APIキーの平文漏洩 — `_save_settings()` が設定辞書を丸ごと JSON 保存するため、キーが混入すると平文で書き出される。(2) 全ページ base64 の一括メモリ保持 — 低 RAM 環境で 200〜500 MB がヒープに積まれる。(3) クラウド API のレート制限（特に Gemini Free Tier 10 RPM）— 現行の最大 8 並列は即 429 を誘発する。いずれも設計初期から防御する。
+最大のリスクは3点。(1) fitz.Document のスレッド非共有制約をバッチOCRで破ること（ファイル間逐次処理が必須、multiprocessing は導入しない）、(2) サムネイル仮想化で pagination.py の selected_pages 全ページインデックス不変条件・D&D窓またぎバグ対策を新しい座標系で再発させること、(3) プロバイダーフォールバックが「明示設定型・自動ベンダー切替なし」という確定方針を確認ダイアログ省略という近道で迂回してしまうこと。いずれも既存の原則（V14-D-05/06、V16-D-01、V14-D-03、OCR-SEC-01/UI-01）をそのまま拡張適用すれば防止できる。
 
 ## Key Findings
 
 ### Recommended Stack
 
-新規 pip 依存はゼロ。追加は Python 標準ライブラリのみで完結する。`urllib.request` で Claude / Gemini の HTTP API を直叩きし、Tesseract は `subprocess.run` で CLI を呼ぶ。APIキーは `os.environ.get()` で環境変数からのみ取得し、設定ファイルには一切書かない。詳細は [STACK.md](STACK.md) を参照。
+新機能はすべて標準ライブラリ（queue.Queue・concurrent.futures.ThreadPoolExecutor・threading.Lock・json・os）で実現し、新規 pip 依存は追加しない。サムネイル仮想化の代替候補として tksheet（依存ゼロの軽量テーブルライブラリ）を検討したが、既存の D&D グリッドUIと操作モデルが異なり全面書き換えが必要になるため不採用。dataclasses/pydantic/asyncio/multiprocessing もそれぞれ理由付きで不採用と判断されている。
 
 **Core technologies:**
-- `urllib.request`（標準ライブラリ）: Claude messages API / Gemini generateContent 呼び出し — 依存追加なし・PyInstaller 肥大化を回避
-- `subprocess.run`（標準ライブラリ）: Tesseract CLI 呼び出し — `pytesseract` 不要・オフラインフォールバック
-- `os.environ.get()`（標準ライブラリ）: APIキー取得 — 環境変数のみ・平文保存禁止の徹底
-
-**矛盾調停（最重要）:** Claude `temperature` の可否について、STACK.md（公式ドキュメント直接確認）を正とし、`temperature` は全モデルで利用可能と確定する。設計の正典は `docs/OCRプロバイダ化_見積もり仕様.md` だが、同仕様書の「Opus 4.7/4.8 は temperature 不可」という記述は誤りであり、API 細部は STACK.md のリサーチ結果で上書きする。ただし `effort` 対応モデル（`claude-haiku-4-5` を除く）の定数管理と、実 API での `temperature`/`effort` 動作確認を Claude Provider 実装フェーズの完了条件に含め、モデル別の防御的実装とする。
+- queue.Queue + ThreadPoolExecutor + threading.Lock: バッチOCRのファイル単位ジョブキュー・並列送信。既存 ocr_pipeline.py の PipelineState/consume_one パターンをそのまま一段拡張できる
+- json + dict ベース永続化: テンプレート管理・フォールバック順の設定保存。settings.py の既存 _load_settings/_save_settings パターンと同型で一貫性を保てる
+- tkinter.Canvas + 既存 pagination.py: サムネイル仮想化。窓表示（既定20・上限100件）の外層はそのまま、可視範囲のみ実体化する内層を純関数として追加する
 
 ### Expected Features
 
-詳細は [FEATURES.md](FEATURES.md) を参照。
+**Must have（v1.8.0 で確実に入れる最小ライン）:**
+- プロンプト・テンプレートマネージャー: 名前付き保存・一覧選択・削除（CRUD最小4操作）、既存外部mdファイル連動との共存必須
+- プロバイダーフォールバック: 明示順序設定 + 切替時の送信先確認再提示（既存コスト確認ダイアログ再利用）
+- サムネイル仮想化: thumb_cache の LRU eviction + 大量ページでの性能回帰テスト
+- エラー時リカバリー通知: 軽微エラー向け非モーダルトースト1種（再試行ボタン付き・自動消滅なし）
+- バッチ複数ファイルOCR: キュー一覧 + 個別/全体進捗 + 失敗分離 + D&D投入 + 逐次処理（ダイアログ内完結・バックグラウンド常駐なし）
 
-**Must have (table stakes):**
-- `OCRProvider` 抽象基底 + LM Studio を Provider 実装へリファクタ — 全機能の土台
-- 既定 `ocr_provider: "off"` — 外部送信・課金を望まないユーザー向けの安全なデフォルト
-- APIキーは環境変数のみ・`_save_settings()` への流入ガード — セキュリティ最低基準
-- テキスト埋め込み判定による OCR スキップ — コスト/速度（既にテキストがあるページに OCR をかけない）
-- プロバイダ別並列度（Gemini=1 / Claude=2 / LM Studio 最大 8）— レート制限対策
-- 逐次レンダリング化 — 低 RAM 環境対策
-- 429 / 5xx 指数バックオフリトライ — クラウド API の安定運用
+**Should have（差別化要素）:**
+- フォールバック時の送信先確認再提示（他のLLMゲートウェイ実装には見られない独自の安全設計）
+- バッチOCRの全ページ統合サマリのファイル横断拡張（v1.6.0既存資産の延長）
+- プロバイダ横断でのテンプレート共有（resolve_ocr_prompt の優先順位にテンプレート層を挟む）
 
-**Should have (competitive):**
-- Claude Provider（messages API・effort・モデル一覧 / `ANTHROPIC_API_KEY`）— 高精度クラウド OCR
-- Gemini Provider（generateContent・inline_data・モデル一覧 / `GEMINI_API_KEY`・`GOOGLE_API_KEY`）— 高精度クラウド OCR
-- OCRDialog のプロバイダ選択 UI・APIキー未設定エラー — ユーザー体験
-
-**Defer (v2+):**
-- Tesseract Provider（精度劣後注記つき）— オフラインフォールバック。スコープ調整候補
-- PluginManager へのプロバイダ登録フック — 拡張性。最終フェーズ
+**Defer（v2+）:**
+- バッチOCRのバックグラウンド継続（Tkinterシングルループ制約でUI設計コストが高い）
+- プロンプトテンプレートのバージョン履歴・差分表示
+- サムネイルの連続スクロール型本格仮想化（react-window相当への作り替え）
+- 自動ベンダー切替・コスト最適化ルーティング・確認なし連鎖リトライ（プライバシー方針違反のため明確に排除）
 
 ### Architecture Approach
 
-既存の Mixin 構成（`OCRMixin` in `pagefolio/ocr.py`）を土台に、新規 `ocr_providers.py` を設けて `OCRProvider` 抽象基底と各 Provider 実装を集約する。現行の LM Studio 固有ロジックを Provider 実装へ移動し、`run_parallel()` をプロバイダ別並列度を受け取れるよう一般化する。詳細は [ARCHITECTURE.md](ARCHITECTURE.md) を参照。
+既存の8 Mixin構成 + Tk/fitz非依存の純ロジック層（pagination.py/ocr_pipeline.py/undo_store.py）というアーキテクチャ哲学を維持し、新機能はすべて「既存プリミティブの上に薄いオーケストレーション層を追加する」形で統合する。肥大モジュール分割（ocr_providers.py→llm_config.py→ocr_dialog.pyの順）を先行させ、OCRRunEngine として producer/consumer 駆動部をダイアログUIから抽出することで、単一ファイルOCRとバッチOCRの両方がこれを再利用できる設計にする。
 
 **Major components:**
-1. `OCRProvider`（抽象基底）— `recognize(image_bytes) -> text` インターフェース・モデル一覧・並列度ポリシー
-2. `LMStudioProvider` / `ClaudeProvider` / `GeminiProvider` / `TesseractProvider` — 各実装
-3. `OCRMixin.run_parallel()`（一般化）— プロバイダ別 `DEFAULT_CONCURRENCY` で `ThreadPoolExecutor` を駆動・逐次レンダリング対応
-4. `has_embedded_text()`（新設）— ページのテキスト埋め込み判定で OCR スキップ
-5. `OCRDialog`（拡張）— プロバイダ選択 UI・APIキー未設定エラー表示
+1. batch_queue.py（新規・純ロジック層） — ファイルキューの状態遷移管理（BatchQueueState）。ファイル単位は逐次、ファイル内は既存PipelineStateを使い回す二層構造
+2. provider_fallback.py（新規・純ロジック層） — フォールバック順リストからの次候補決定（純関数）。PipelineState.fatal_msg確定後のUI層でのみ判断し、run_parallel/consume_oneには混ぜ込まない
+3. thumb_virtualizer.py（新規・純ロジック層） — スクロール位置から可視ローカルindex範囲を計算する純関数。pagination.pyのto_global/to_local契約は完全不変のまま外側に重ねる
+4. ocr_engine.py（新規・抽出） — OCRDialogから producer/consumer 駆動部（OCRRunEngine）を抽出し、バッチOCRと単一ファイルOCRで共用
+5. settings.py拡張 — 名前付きテンプレートCRUD関数群（既存load_prompt_file/save_prompt_fileの再パラメータ化）
 
 ### Critical Pitfalls
 
-トップ 5。全文は [PITFALLS.md](PITFALLS.md) を参照。
-
-1. **APIキーの平文漏洩** — `_save_settings()` は設定辞書を丸ごと JSON 保存するため、キーが混入すると平文で書き出される。プロバイダ実装フェーズ開始の **最初のタスク**で `NEVER_PERSIST_KEYS` ガード（環境変数のみ・設定にキーを書かない）を実装する。後回し厳禁。
-2. **全ページ base64 の一括メモリ保持** — 100 ページ・scale=2.0 で 200〜500 MB がヒープに積まれる。低スペック対策フェーズの逐次レンダリング化（レンダリング→送信→`del b64`）が最重要パフォーマンス対策。
-3. **Gemini Free Tier 10 RPM への過剰並列** — 現行 8 並列は即 429 を誘発。`DEFAULT_CONCURRENCY: Gemini=1, Claude=2` をクラウド Provider 導入時から設ける。
-4. **fitz スレッド非安全（既存制約）** — `ThreadPoolExecutor` ワーカーに `self.doc`（`fitz.Document`）を渡せない。抽象化フェーズのリファクタ時に `_worker` 内の fitz 操作のスレッド境界を明確化し、完了条件に含める。
-5. **Gemini `candidates` 空・Claude `content` 型混在** — 各プロバイダに専用パーサを実装し、安全フィルタによるブロック（Gemini）と `type != "text"` ブロック（Claude）を防御的に処理する。
+1. サムネイル仮想化がselected_pages全ページインデックス不変条件を破壊する — 仮想化のスクロール位置計算もpagination.pyのto_global/to_localのみを通し、新規座標変換モジュールを増やさない
+2. バッチOCRがfitz.Documentのスレッド間共有禁止を破る — ファイル間は逐次処理のみ許可し、fitz.open/get_pixmapはメインスレッドの単一キューで直列化
+3. プロバイダーフォールバックが「明示同意・コスト確認」方針を迂回する — フォールバック発火時も送信先確認ダイアログを必ず再提示
+4. テンプレートマネージャーが外部mdファイル連動（v1.7.4）と書き戻し競合を起こす — 外部mdファイルは常に「現在アクティブなテンプレートのライブ編集内容」に限定
+5. 肥大モジュール分割で後方互換importが壊れる — 分割前に必ずtest_imports.pyへ後方互換importテストを追加してから着手
 
 ## Implications for Roadmap
 
-リサーチに基づく推奨フェーズ構成（**4 フェーズ**）。phase 番号は前マイルストーン（v1.3.0）の最終 Phase 03 から継続し、**Phase 04 から開始**する。
+Based on research, suggested phase structure:
 
-### Phase 04: プロバイダ抽象化（土台）
-**Rationale:** 全機能の土台。先に抽象化しないと各 Provider を載せられない。
-**Delivers:** `ocr_providers.py` 新設・`OCRProvider` 基底・LM Studio を Provider 実装へ移動・`run_parallel()` 一般化・`has_embedded_text()` 新設。
-**Addresses:** プロバイダ抽象化・LM Studio 後方互換維持（table stakes）。
-**Avoids:** fitz スレッド非安全（Pitfall #4）— スレッド境界明確化を完了条件に。
+### Phase 1: 基盤分割（肥大モジュールリファクタリング・前半）
+**Rationale:** 新機能追加前にocr_providers.py（1424行）とllm_config.py（1204行）のパッケージ化を先行させ、以降のフェーズの作業対象を軽量化する
+**Delivers:** pagefolio/ocr_providers/パッケージ・pagefolio/dialogs/llm_config/パッケージ（re-export で後方互換維持）
+**Uses:** DEBT-01/DEBT-02前例パターン
+**Avoids:** 落とし穴9（後方互換import破壊）— test_imports.py拡張を分割の一部として必須化
 
-### Phase 05: Claude Provider + セキュリティ基盤 + プロバイダ選択 UI
-**Rationale:** クラウド導入の最初。セキュリティ基盤（キーガード）を**最優先タスク**として先に敷く。
-**Delivers:** `NEVER_PERSIST_KEYS` ガード（最優先）・`ClaudeProvider`・確認ダイアログ・429/5xx 指数バックオフリトライ・OCRDialog プロバイダ選択 UI。
-**Uses:** `urllib.request` 直叩き・`ANTHROPIC_API_KEY`（STACK.md）。
-**Implements:** APIキー環境変数化・プロバイダ別並列度（Claude=2）。
-**完了条件:** 実 API で `temperature` + `effort` の動作確認（`haiku` の `effort` 非対応・`opus` の挙動）。
+### Phase 2: プロンプト・テンプレートマネージャー
+**Rationale:** 分割後のllm_config/構造にそのまま新規UI（prompt_panel.py）を追加できる。バッチOCRより依存が少なく先行させやすい
+**Delivers:** 名前付きテンプレートCRUD（settings.py拡張）・prompt_templates/ディレクトリ・テンプレート選択UI
+**Addresses:** FEATURES.md「プロンプト・テンプレートマネージャー」Table Stakes
+**Avoids:** 落とし穴6（外部mdファイル書き戻し競合）
 
-### Phase 06: Gemini Provider + 逐次レンダリング最適化
-**Rationale:** メモリ削減（逐次化）と 429 対策を同時達成。Gemini は Free Tier のレート制限が最も厳しいため逐次化と相性が良い。
-**Delivers:** `GeminiProvider`・`_worker` 逐次レンダリング化・`ocr_scale` デフォルト見直し（1.5 化）・プロバイダ別並列度（Gemini=1）。
-**Uses:** `urllib.request`・`inline_data`・`GEMINI_API_KEY`/`GOOGLE_API_KEY`（STACK.md）。
-**Avoids:** base64 一括保持（Pitfall #2）・Gemini 過剰並列（Pitfall #3）。
+### Phase 3: 明示設定型プロバイダーフォールバック
+**Rationale:** Phase 2で整備したllm_config/のUI構造に、フォールバック順編集UIを同一セクションに隣接追加できる
+**Delivers:** provider_fallback.py（純ロジック）・ocr.pyへのprovider_override引数追加・フォールバック確認ダイアログ統合
+**Implements:** ARCHITECTURE.md (b)の設計（PipelineState.fatal_msg確定後のオーケストレーション層）
+**Avoids:** 落とし穴7（同意方針迂回）・落とし穴8（設定引き継ぎミス）
 
-### Phase 07: Tesseract + PluginManager 拡張（任意）
-**Rationale:** オフラインフォールバック。クラウド不可・キー未設定環境向け。スコープ調整の候補。
-**Delivers:** `TesseractProvider`（`subprocess` 経由・精度劣後注記）・PluginManager へのプロバイダ登録フック・多言語文言・ドキュメント更新。
-**Avoids:** Tesseract 未インストール時の graceful fallback 不備。
+### Phase 4: ocr_dialog.py分割（OCRRunEngine抽出）
+**Rationale:** バッチOCRが必要とする「単一ドキュメントOCR実行エンジン」の抽出と同一作業のため、バッチOCR着手の直前に行うのが最も手戻りが少ない
+**Delivers:** pagefolio/ocr_engine.py（OCRRunEngine）・縮小されたocr_dialog.py
+**Avoids:** 落とし穴10（スレッド調整コード分離時のロック不整合）
+
+### Phase 5: バッチ複数ファイルOCR（単独フェーズ隔離）
+**Rationale:** PROJECT.mdで「大型機能として単独フェーズへ隔離」と確定済み。最も依存が多く最大の機能のため、先行する基盤機能が固まってから着手するのが安全
+**Delivers:** batch_queue.py（純ロジック）・pagefolio/dialogs/batch_ocr.py（BatchOCRDialog）・ファイル横断サマリ
+**Addresses:** FEATURES.md「バッチ複数ファイルOCR」Table Stakes全般
+**Avoids:** 落とし穴3（fitzスレッド間共有違反）・落とし穴4（キャンセルスコープ不足）・落とし穴5（進捗集計二重矛盾）
+
+### Phase 6: サムネイル仮想化（PERF-01）
+**Rationale:** 他の4機能と機能的依存がなく独立して着手可能。既存pagination.py/viewer.pyの局所改修で完結する
+**Delivers:** thumb_virtualizer.py（純ロジック）・viewer.pyの_build_thumbnails()/_reflow_thumbnails()変更・thumb_cacheのLRU化
+**Avoids:** 落とし穴1（selected_pages不変条件破壊）・落とし穴2（thumb_cache責務混同）
+
+### Phase 7: 品質保証（E2Eモックテスト・通知UX・UI一貫性監査）
+**Rationale:** OCRRunEngine/batch_queueの抽出が完了した後の方がテスト容易性が高いため、Phase 4・5の後に厚めに配置するのが効率的
+**Delivers:** 非モーダルトースト通知・E2Eモックテストスイート・UI一貫性監査
+**Addresses:** FEATURES.md「エラー時リカバリー通知の改善」Table Stakes
 
 ### Phase Ordering Rationale
 
-- 抽象化（Phase 04）を最初に置くのは、Provider インターフェースが無いと後続のクラウド実装が載らないため。
-- セキュリティ基盤（キーガード）を Phase 05 の最初に置くのは、クラウド導入と同時にキーが設定に流入しうるため。クラウド機能より前にガードを敷く。
-- 逐次レンダリング（Phase 06）を Gemini と同フェーズにするのは、Gemini=1 並列が逐次処理と自然に整合し、メモリ削減と 429 対策を一度に検証できるため。
-- Tesseract / プラグイン登録（Phase 07）を最後にするのは任意機能であり、スコープ調整時に切りやすいため。
+- モジュール分割（Phase 1・4）を新機能追加の直前に配置するのは「新機能が触るファイルを複雑化する前に土台を整える」原則に基づく
+- テンプレートマネージャー→フォールバックの順序は、両者が同一UIコンポーネントを共有するため隣接配置で作業効率が上がる
+- バッチOCRを単独フェーズとして他機能の後半に配置するのは、PROJECT.mdの確定方針かつ最も依存が多く最大の機能であることに基づく
+- サムネイル仮想化は依存なしのため並行実施も可能だが、品質保証フェーズでのテスト厚みを考えるとPhase 5以降に置く方が回帰リスクの検証がしやすい
 
 ### Research Flags
 
-計画時に追加調査が要りそうなフェーズ:
-- **Phase 05:** 実 API での `temperature` + `effort` 動作確認が必須（`haiku` の `effort` 非対応・`opus` の `effort: "low"` 挙動）。実装中に裏取りする。
-- **Phase 06:** 逐次化後の `run_parallel()` 活用方針の確定・Gemini Free Tier の実 RPM 確認。
+Phases likely needing deeper research during planning:
+- Phase 5（バッチ複数ファイルOCR）: ファイル横断の進捗集計・2階層キャンセル・ファイル横断サマリのメモリ管理は新規パターンのため実装詳細検証が有効
+- Phase 6（サムネイル仮想化）: Tkinter Canvasでのウィジェットリサイクル方式の性能特性はWeb情報がLOW確信度のため、実装前にプロトタイプ検証が望ましい
 
-標準パターンで追加調査不要なフェーズ:
-- **Phase 04:** 既存コードのリファクタが主体。コードベースは実読済み。
+Phases with standard patterns (skip research-phase):
+- Phase 1・4（モジュール分割）: DEBT-01/DEBT-02の確立済み前例をそのまま踏襲すれば良い
+- Phase 2（テンプレートマネージャー）: 既存load_prompt_file/save_prompt_fileパターンの延長で完結
+- Phase 3（プロバイダーフォールバック）: 既存build_provider/コスト確認ダイアログの再利用のみで実装コストは低い
 
 ## Confidence Assessment
 
 | Area | Confidence | Notes |
 |------|------------|-------|
-| Stack | HIGH | 公式 API ドキュメントを直接確認。新規依存ゼロで方針が明確 |
-| Features | HIGH | 仕様書を正典とし、temperature 矛盾は STACK 優先で調停済み |
-| Architecture | HIGH | 既存 `OCRMixin` / `ocr.py` を実読のうえ統合設計を確定 |
-| Pitfalls | HIGH | コードベース直接調査 + 公式エラー仕様（429/5xx・content 型）確認 |
+| Stack | MEDIUM | 標準ライブラリ機能自体・PyMuPDFスレッド安全性は公式ドキュメント/Issue準拠でHIGHだが、Tkinter仮想化の具体実装例は一般Web情報中心でLOW寄り |
+| Features | MEDIUM | 複数ソース間で傾向が一致する部分（トーストUX・フォールバックchain・バッチキューUX）はMEDIUM、単一ソースのみの部分はLOWと個別明記 |
+| Architecture | HIGH | 実コードベース直接精査に基づく一次情報源（curated相当） |
+| Pitfalls | HIGH | .planning/codebase/CONCERNS.md・.planning/PROJECT.mdを一次情報源とするcurated調査。一般原則のみMEDIUM裏取り |
 
-**Overall confidence:** HIGH
+**Overall confidence:** HIGH（アーキテクチャ・落とし穴は自プロジェクト資産に基づく高確信度。スタック・機能面は業界一般論の部分でMEDIUM〜LOWが混在するが、実装方針への影響は限定的）
 
 ### Gaps to Address
 
-- `temperature` / `effort` の実 API 確認: Phase 05 実装中に実リクエストで検証。モデル別に防御的実装し、非対応時は当該パラメータを送らない。
-- Gemini Free Tier の実際の RPM: Phase 06 で実測。並列度 1 を起点に、429 が出なければ段階的に緩めるか判断。
-- 逐次化後の `run_parallel()` 活用方針: Phase 06 で逐次レンダリングと並列送信の境界を確定。
+- サムネイル仮想化のウィジェットリサイクル方式の性能実測: 生成方式 vs リサイクル方式のどちらが実際に速いかはWeb情報のみでは判断できないため、Phase 6着手時にプロトタイプで実測してから設計確定する
+- バッチOCRの永続化要否: 要件に「アプリ再起動をまたぐジョブ再開」が含まれるか未確定。STACK.mdはjsonスナップショット方式を代替案として用意しているが、FEATURES.mdのAnti-Featuresでは「過剰」と位置付けており、Phase 5計画時に要件を再確認する
+- PyMuPDF 1.28.0への追随要否: 現行1.27.2.2のままで問題ないと判断しているが、次回メンテナンス時の検討事項として残っている
 
 ## Sources
 
 ### Primary (HIGH confidence)
-- Anthropic 公式 messages API ドキュメント — モデルID・`temperature`/`effort` 可否・`content` ブロック型
-- Google Gemini 公式 generateContent ドキュメント — `inline_data`・`candidates` 構造・Free Tier レート制限
-- PageFolio コードベース（`pagefolio/ocr.py`・`pagefolio/ocr_dialog.py`・`pagefolio/settings.py`）— 既存 OCR 実装・`_save_settings()`・スレッド境界
+- pagefolio/ocr_pipeline.py・pagefolio/settings.py・pagefolio/pagination.py（社内一次情報・コードベース直接確認）
+- .planning/PROJECT.md・.planning/codebase/CONCERNS.md（v1.8.0マイルストーン方針・既知課題の一次情報）
+- Is PyMuPDF re-entrant / thread-safe? Issue #107 pymupdf/PyMuPDF (https://github.com/pymupdf/PyMuPDF/issues/107)
+- Clarification about threading Issue #1994 pymupdf/PyMuPDF (https://github.com/pymupdf/PyMuPDF/issues/1994)
 
 ### Secondary (MEDIUM confidence)
-- `docs/OCRプロバイダ化_見積もり仕様.md` — 設計の正典（確定スコープ・フェーズ分割・工数）。ただし API 細部の temperature 記述は STACK.md で上書き
+- Fallbacks (Provider Failover) liteLLM (https://docs.litellm.ai/docs/proxy/reliability)
+- Batch Processing Queue AI UX Playground (https://aiuxplayground.com/pattern/batch-processing-queue/)
+- Notification pattern Carbon Design System (https://carbondesignsystem.com/patterns/notification-pattern/)
+- List Virtualization patterns.dev (https://www.patterns.dev/vanilla/virtual-lists/)
 
 ### Tertiary (LOW confidence)
-- Tesseract CLI のオフライン挙動 — Phase 07 前に未インストール Windows 環境で手動確認が必要
+- Understanding Tkinter Canvas Performance Limitations ancisoft.com (https://www.ancisoft.com/blog/understanding-performance-limitations-of-the-tkinter-canvas/)
+- tksheet PyPI (https://pypi.org/project/tksheet/)
 
 ---
-*Research completed: 2026-06-06*
+*Research completed: 2026-07-13*
 *Ready for roadmap: yes*
