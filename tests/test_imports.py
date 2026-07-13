@@ -176,6 +176,171 @@ class TestDialogsImports:
 
 
 # =============================================================================
+# REFAC-01: ocr_providers パッケージ分割後の後方互換 import 検証（D-11）
+# =============================================================================
+
+
+class TestOcrProvidersImports:
+    """REFAC-01 — ocr_providers パッケージ分割後の後方互換 import 検証
+
+    D-11 完全再エクスポート契約。現行 monolith `pagefolio/ocr_providers.py`
+    に対して今すぐ全緑になり、
+    Wave 2 でパッケージ分割された後も緑を維持することが後方互換の契約そのものになる。
+    プロバイダクラスはインスタンス化せずシンボル存在のみ確認する（D-08 踏襲）。
+    """
+
+    def test_ocr_provider_base_class(self):
+        """pagefolio.ocr_providers から OCRProvider（ABC 基底）を import できる"""
+        from pagefolio.ocr_providers import OCRProvider
+
+        assert OCRProvider is not None
+
+    def test_allowed_url_schemes(self):
+        """pagefolio.ocr_providers から _ALLOWED_URL_SCHEMES を import できる"""
+        from pagefolio.ocr_providers import _ALLOWED_URL_SCHEMES
+
+        assert _ALLOWED_URL_SCHEMES is not None
+
+    def test_require_http_scheme_helper(self):
+        """pagefolio.ocr_providers から _require_http_scheme を import できる"""
+        from pagefolio.ocr_providers import _require_http_scheme
+
+        assert callable(_require_http_scheme)
+
+    def test_ocr_api_key_error(self):
+        """pagefolio.ocr_providers から OCRAPIKeyError を import できる"""
+        from pagefolio.ocr_providers import OCRAPIKeyError
+
+        assert OCRAPIKeyError is not None
+
+    def test_ocr_retryable_error(self):
+        """pagefolio.ocr_providers から OCRRetryableError を import できる"""
+        from pagefolio.ocr_providers import OCRRetryableError
+
+        assert OCRRetryableError is not None
+
+    def test_retryable_http_message_helper(self):
+        """pagefolio.ocr_providers から _retryable_http_message を import できる"""
+        from pagefolio.ocr_providers import _retryable_http_message
+
+        assert callable(_retryable_http_message)
+
+    def test_ocr_context_length_error(self):
+        """pagefolio.ocr_providers から OCRContextLengthError を import できる"""
+        from pagefolio.ocr_providers import OCRContextLengthError
+
+        assert OCRContextLengthError is not None
+
+    def test_context_error_markers(self):
+        """pagefolio.ocr_providers から _CONTEXT_ERROR_MARKERS を import できる"""
+        from pagefolio.ocr_providers import _CONTEXT_ERROR_MARKERS
+
+        assert _CONTEXT_ERROR_MARKERS is not None
+
+    def test_parse_retry_after_helper(self):
+        """pagefolio.ocr_providers から parse_retry_after を import できる（private）"""
+        from pagefolio.ocr_providers import parse_retry_after
+
+        assert callable(parse_retry_after)
+
+    def test_looks_like_context_error_helper(self):
+        """looks_like_context_error を import できる（private ヘルパー）"""
+        from pagefolio.ocr_providers import looks_like_context_error
+
+        assert callable(looks_like_context_error)
+
+    def test_raise_mapped_http_error_helper(self):
+        """_raise_mapped_http_error を import できる（private ヘルパー）"""
+        from pagefolio.ocr_providers import _raise_mapped_http_error
+
+        assert callable(_raise_mapped_http_error)
+
+    def test_lmstudio_provider(self):
+        """pagefolio.ocr_providers から LMStudioProvider を import できる"""
+        from pagefolio.ocr_providers import LMStudioProvider
+
+        assert LMStudioProvider is not None
+
+    def test_claude_provider(self):
+        """pagefolio.ocr_providers から ClaudeProvider を import できる"""
+        from pagefolio.ocr_providers import ClaudeProvider
+
+        assert ClaudeProvider is not None
+
+    def test_gemini_provider(self):
+        """pagefolio.ocr_providers から GeminiProvider を import できる"""
+        from pagefolio.ocr_providers import GeminiProvider
+
+        assert GeminiProvider is not None
+
+    def test_detect_tesseract_helper(self):
+        """_detect_tesseract を import できる（Pitfall 2 の private ヘルパー）"""
+        from pagefolio.ocr_providers import _detect_tesseract
+
+        assert callable(_detect_tesseract)
+
+    def test_tesseract_provider(self):
+        """pagefolio.ocr_providers から TesseractProvider を import できる"""
+        from pagefolio.ocr_providers import TesseractProvider
+
+        assert TesseractProvider is not None
+
+    def test_ollama_provider(self):
+        """pagefolio.ocr_providers から OllamaProvider を import できる"""
+        from pagefolio.ocr_providers import OllamaProvider
+
+        assert OllamaProvider is not None
+
+    def test_runpod_provider(self):
+        """pagefolio.ocr_providers から RunPodProvider を import できる"""
+        from pagefolio.ocr_providers import RunPodProvider
+
+        assert RunPodProvider is not None
+
+    def test_ocr_providers_backward_compat_all(self):
+        """全17シンボルを一括 import できる（漏れ検知の一括アサーション）"""
+        from pagefolio.ocr_providers import (
+            _ALLOWED_URL_SCHEMES,
+            _CONTEXT_ERROR_MARKERS,
+            ClaudeProvider,
+            GeminiProvider,
+            LMStudioProvider,
+            OCRAPIKeyError,
+            OCRContextLengthError,
+            OCRProvider,
+            OCRRetryableError,
+            OllamaProvider,
+            RunPodProvider,
+            TesseractProvider,
+            _detect_tesseract,
+            _raise_mapped_http_error,
+            _require_http_scheme,
+            _retryable_http_message,
+            looks_like_context_error,
+            parse_retry_after,
+        )
+
+        assert OCRProvider is not None
+        assert _ALLOWED_URL_SCHEMES is not None
+        assert callable(_require_http_scheme)
+        assert OCRAPIKeyError is not None
+        assert OCRRetryableError is not None
+        assert callable(_retryable_http_message)
+        assert OCRContextLengthError is not None
+        assert _CONTEXT_ERROR_MARKERS is not None
+        assert callable(parse_retry_after)
+        assert callable(looks_like_context_error)
+        assert callable(_raise_mapped_http_error)
+        assert LMStudioProvider is not None
+        assert ClaudeProvider is not None
+        assert GeminiProvider is not None
+        assert callable(_detect_tesseract)
+        assert TesseractProvider is not None
+        assert OllamaProvider is not None
+        assert RunPodProvider is not None
+
+
+# =============================================================================
 # REFAC-04: settings 公開 API の import と roundtrip 検証
 # =============================================================================
 
