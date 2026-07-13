@@ -7,9 +7,33 @@ PageFolio の既存コードベースに対する最適化プロジェクト。
 
 **Core Value:** 大きな PDF でも Undo/Redo が正しく・速く動作し、コードが読みやすく保守しやすい状態にする。
 
-## Current Milestone
+## Current Milestone: v1.8.0 実用性の最大化・エコシステム洗練・堅牢性強化
 
-_(未定 — `/gsd-new-milestone` で次のマイルストーンを確定)_
+**Goal:** 独立してきたコンポーネント（OCR・LLMプロバイダー・UI）のシナジーを高め、シームレスで高度なドキュメント処理・要約環境を構築する。
+
+**Target features:**
+
+1. **AI強化**
+   - プロンプト・テンプレートマネージャー（v1.7.4 外部 md ファイル連動の発展。複数テンプレートの命名保存・切替 UI）
+   - プロバイダーフォールバック（**明示設定型**: ユーザーが設定したフォールバック順のみ・送信先確認の再提示つき。自動的な別ベンダー送信はしない）
+2. **堅牢性（PERF-01 + 実在課題）**
+   - PERF-01: サムネイル仮想化によるパフォーマンス改善（Future Requirements から昇格）
+   - Blob ライフサイクル強化（リーク検出・Windows AV スキャン衝突テスト）
+   - 肥大モジュールの分割リファクタリング（`ocr_dialog.py` 2154行 / `ocr_providers.py` 1424行 / `llm_config.py` 1204行）
+   - ShortcutsDialog WR-01/WR-02 解消・`_SENSITIVE_KEYS` の中央レジストリ化
+3. **品質保証**
+   - OCR→サマリの E2E モックテスト拡充（`ocr_pipeline.py` 基盤活用）
+   - エラー時リカバリー通知の小粒改善（非モーダル通知の前例踏襲）
+   - UI 一貫性監査（スクロールパターン統一・フォントスケーリング）＋ 開発履歴.md v1.7.0 表記整合
+4. **バッチ複数ファイル OCR**（大型・**単独フェーズへ隔離**）
+   - 複数ファイルの一括 OCR・一括要約のキュー管理（fitz メインスレッド制約を遵守した設計）
+
+**Key context:**
+- 不採用確定: API キー/プロンプト履歴の暗号化ローカル保存（V14-D-02 セッション限定方針を維持）・Alpha/Beta/RC 段階リリース（直接リリース運用を維持）
+- 作業ブランチ: `dev/v1.8.0`（main 直コミット禁止運用）
+- 実コードベースは v1.7.4（GSD 記録の v1.7.1 より 3 ポイントリリース先行: v1.7.2 LLM設定スクロール化・v1.7.3 OCRダイアログ右ペイン再設計・v1.7.4 外部プロンプトファイル連動）を起点とする
+- プロバイダーフォールバックは外部送信の明示同意方針（既定 off・コスト確認）と整合させるため「明示設定型」に限定（自動ベンダー切替は不採用）
+- human-verify/UAT 実機目視（過去3回一旦 pass）はスコープ外・必要なら要件定義時に追加可能
 
 ## Last Milestone: v1.7.1 現機能ブラッシュアップ + APIキー入力欄 — ✅ Shipped 2026-07-05
 
@@ -176,7 +200,7 @@ _(未定 — `/gsd-new-milestone` で次のマイルストーンを確定)_
 
 ### Active
 
-- なし。v1.7.1 出荷済み（全 17 要件 Complete・被覆 17/17・孤立要件なし）。次マイルストーンの要件は `/gsd-new-milestone` で確定する（候補は「Next Milestone Goals」参照）。
+- v1.8.0 の要件は `.planning/REQUIREMENTS.md` で定義中（AI強化・堅牢性・品質保証・バッチ複数ファイル OCR の 4 本柱）。
 
 ### Out of Scope
 
@@ -276,13 +300,10 @@ _(未定 — `/gsd-new-milestone` で次のマイルストーンを確定)_
 
 </details>
 
-### Next Milestone Goals (候補・未確定)
+### Next Milestone Goals
 
-次マイルストーンの要件は `/gsd-new-milestone` で確定する。現時点の候補:
-- PERF-01: サムネイル仮想化によるパフォーマンス改善（大量ページ対応・REQUIREMENTS.md Future Requirements から継続）
-- ShortcutsDialog の非致命的 follow-up（WR-01: キャプチャ対象切替時の前行表示残留、WR-02: 修飾キーなし単キー登録が通常入力ウィジェットと衝突しうる。04-REVIEW.md 参照）
-- human-verify/UAT の実機目視の正式実施（v1.4.0 Phase04・v1.6.0 Phase04・v1.7.1 Phase04 で計3回ユーザー判断により一旦pass・コード/自動ゲートは全通過）
-- 開発履歴.md の v1.7.0 表記整合（V16-D-04 で認識済みの残課題）
+- v1.8.0 で吸収済み: PERF-01（サムネイル仮想化）・ShortcutsDialog WR-01/WR-02・開発履歴.md の v1.7.0 表記整合（V16-D-04 残課題）
+- 未吸収（将来候補）: human-verify/UAT の実機目視の正式実施（v1.4.0 Phase04・v1.6.0 Phase04・v1.7.1 Phase04 で計3回ユーザー判断により一旦pass・コード/自動ゲートは全通過）
 
 ## Evolution
 
@@ -295,4 +316,4 @@ _(未定 — `/gsd-new-milestone` で次のマイルストーンを確定)_
 4. 決定事項 → Key Decisions を更新
 
 ---
-*Last updated: 2026-07-05 — v1.7.1 milestone shipped and archived (/gsd-complete-milestone). Awaiting next milestone.*
+*Last updated: 2026-07-13 — v1.8.0 milestone started (/gsd-new-milestone). Working branch: dev/v1.8.0.*

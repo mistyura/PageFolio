@@ -1,20 +1,16 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.7.1
-milestone_name: 現機能ブラッシュアップ + APIキー入力欄
-current_phase: —
-status: milestone_complete
-stopped_at: v1.7.1 milestone archived (4/4 phases, 17/17 requirements) — awaiting /gsd-new-milestone
-last_updated: "2026-07-05T11:18:03.013Z"
-last_activity: 2026-07-05
-last_activity_desc: Milestone v1.7.1 completed and archived
+milestone: v1.8.0
+milestone_name: 実用性の最大化・エコシステム洗練・堅牢性強化
+status: planning
+last_updated: "2026-07-13T13:24:51.803Z"
+last_activity: 2026-07-13
 progress:
-  total_phases: 4
-  completed_phases: 4
-  total_plans: 16
-  completed_plans: 16
-  percent: 100
-current_phase_name: —
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
@@ -28,10 +24,10 @@ See: .planning/PROJECT.md (updated 2026-07-05)
 
 ## Current Position
 
-Phase: Milestone v1.7.1 complete
+Phase: Not started (defining requirements)
 Plan: —
-Status: Awaiting next milestone
-Last activity: 2026-07-09 - Completed quick task 260709-oyg: README/CLAUDE/開発履歴のv1.7.4同期
+Status: Defining requirements
+Last activity: 2026-07-13 — Milestone v1.8.0 started
 
 ## v1.7.1 Phase Map
 
