@@ -6,6 +6,7 @@
 import json
 import logging
 
+from pagefolio.ocr_providers.registry import sensitive_keys
 from pagefolio.settings import _SENSITIVE_KEYS, _load_settings, _save_settings
 
 
@@ -31,6 +32,34 @@ class TestSensitiveKeysConstant:
     def test_sensitive_keys_contains_api_key(self):
         """汎用 api_key が含まれる"""
         assert "api_key" in _SENSITIVE_KEYS
+
+
+class TestRegistrySensitiveKeysCoverage:
+    """registry.sensitive_keys() の網羅性テスト（V180-ROBUST-02・Pitfall 5）
+
+    _SENSITIVE_KEYS の実配線置換（settings.py 側）は Plan 03 の担当。
+    本テストは registry.py 側の生成網羅性のみを検証する。
+    """
+
+    def test_sensitive_keys_returns_set(self):
+        """sensitive_keys() が set 型を返す"""
+        assert isinstance(sensitive_keys(), set)
+
+    def test_sensitive_keys_covers_current_ten_entries(self):
+        """sensitive_keys() が現行 _SENSITIVE_KEYS の10エントリを部分集合として含む"""
+        current_ten_entries = {
+            "claude_api_key",
+            "gemini_api_key",
+            "google_api_key",
+            "anthropic_api_key",
+            "api_key",
+            "GEMINI_API_KEY",
+            "GOOGLE_API_KEY",
+            "ANTHROPIC_API_KEY",
+            "runpod_api_key",
+            "RUNPOD_API_KEY",
+        }
+        assert set(sensitive_keys()) >= current_ten_entries
 
 
 class TestSaveSettingsKeyGuard:
