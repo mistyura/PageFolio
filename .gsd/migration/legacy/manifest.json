@@ -1,6 +1,0 @@
-{
-  "sourcePath": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning",
-  "archivePath": "migration/legacy/planning",
-  "strategy": "full-source-copy",
-  "note": "Full .planning source copied so legacy content without a gsd-pi field is not lost."
-}
