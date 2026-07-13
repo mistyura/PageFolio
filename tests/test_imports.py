@@ -445,3 +445,20 @@ class TestPackageSurface:
         """REFAC-04 で追加された公開 API がトップレベルに存在する"""
         assert hasattr(pagefolio, "set_current_font_size")
         assert hasattr(pagefolio, "get_current_font_size")
+
+    def test_ocr_providers_not_exposed_at_top_level(self):
+        """ocr_providers のプロバイダクラスは pagefolio トップレベルに非公開
+
+        Pitfall 4: REFAC-01 分割後も `pagefolio` の公開面を広げないための負ガード。
+        """
+        assert not hasattr(pagefolio, "ClaudeProvider")
+        assert not hasattr(pagefolio, "GeminiProvider")
+        assert not hasattr(pagefolio, "LMStudioProvider")
+        assert not hasattr(pagefolio, "OCRProvider")
+
+    def test_llm_config_dialog_not_exposed_at_top_level(self):
+        """LLMConfigDialog は pagefolio トップレベルに非公開（Pitfall 4）
+
+        pagefolio.dialogs 経由でのみアクセス可能な設計を REFAC-02 分割後も維持する。
+        """
+        assert not hasattr(pagefolio, "LLMConfigDialog")
