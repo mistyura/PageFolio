@@ -6,7 +6,7 @@
 <domain>
 ## Phase Boundary
 
-`ocr_providers.py`（1424行）と `dialogs/llm_config.py`（1204行）を責務別パッケージへ分割し（後方互換 import 維持・`test_imports.py` 先行拡張）、`_SENSITIVE_KEYS` をプロバイダ→環境変数マッピングから生成される中央レジストリへ再編する。挙動変更・新機能追加は一切行わない**純粋リファクタリングフェーズ**。以降のフェーズ（Phase 2 のテンプレート/フォールバック UI・Phase 3 の OCRRunEngine 抽出）の土台となる。
+`ocr_providers.py`（1537行）と `dialogs/llm_config.py`（1659行）を責務別パッケージへ分割し（後方互換 import 維持・`test_imports.py` 先行拡張）、`_SENSITIVE_KEYS` をプロバイダ→環境変数マッピングから生成される中央レジストリへ再編する。挙動変更・新機能追加は一切行わない**純粋リファクタリングフェーズ**。以降のフェーズ（Phase 2 のテンプレート/フォールバック UI・Phase 3 の OCRRunEngine 抽出）の土台となる。
 
 対象要件: V180-REFAC-01（ocr_providers 分割）・V180-REFAC-02（llm_config 分割）・V180-ROBUST-02（_SENSITIVE_KEYS 中央レジストリ化）。
 

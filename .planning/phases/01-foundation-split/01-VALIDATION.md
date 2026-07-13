@@ -1,9 +1,9 @@
 ---
 phase: 1
 slug: foundation-split
-status: draft
-nyquist_compliant: false
-wave_0_complete: false
+status: approved
+nyquist_compliant: true
+wave_0_complete: true
 created: 2026-07-13
 ---
 
@@ -38,13 +38,15 @@ created: 2026-07-13
 
 | Task ID | Plan | Wave | Requirement | Threat Ref | Secure Behavior | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|------------|-----------------|-----------|-------------------|-------------|--------|
-| TBD（プランニング後に確定） | — | 0 | V180-REFAC-01 | — | N/A | unit（import 回帰） | `pytest tests/test_imports.py -k OcrProviders -x` | ❌ W0 | ⬜ pending |
-| TBD | — | — | V180-REFAC-01 | — | N/A | unit（既存回帰） | `pytest tests/test_ocr_providers.py -q` | ✅ | ⬜ pending |
-| TBD | — | — | V180-REFAC-02 | — | N/A | unit（import 回帰） | `pytest tests/test_imports.py -k LlmConfig -x` | ✅（部分的に既存） | ⬜ pending |
-| TBD | — | — | V180-REFAC-02 | — | N/A | unit（既存回帰） | `pytest tests/test_provider_ui.py -q` | ✅ | ⬜ pending |
-| TBD | — | 0 | V180-ROBUST-02 | — | API キーが設定ファイルへ保存されない | unit | `pytest tests/test_settings_keyguard.py -k SensitiveKeysConstant -x` | ❌ W0 | ⬜ pending |
-| TBD | — | — | V180-ROBUST-02 | — | keyguard 3 経路の非保存維持 | unit（既存回帰） | `pytest tests/test_settings_keyguard.py -q` | ✅ | ⬜ pending |
-| TBD | — | 最終 | 全要件 | — | N/A | full suite | `pytest -q && ruff check . && ruff format --check .` | ✅ | ⬜ pending |
+| 01-01/Task1 | 01-01 | 1（W0 安全網） | V180-REFAC-01 | — | N/A | unit（import 回帰） | `pytest tests/test_imports.py -k OcrProviders -q` | ❌ W0（本タスクで追加） | ⬜ pending |
+| 01-01/Task2 | 01-01 | 1（W0 安全網） | V180-REFAC-02 | — | N/A | unit（import 回帰） | `pytest tests/test_imports.py -k "LlmConfig or PackageSurface or llm_config" -q` | ✅（部分的に既存・補完） | ⬜ pending |
+| 01-02/Task1 | 01-02 | 2 | V180-REFAC-01 | — | N/A | unit（import + 既存回帰） | `pytest tests/test_imports.py -k OcrProviders tests/test_ocr_providers.py -q` | ✅ | ⬜ pending |
+| 01-02/Task2 | 01-02 | 2 | V180-ROBUST-02 | T-01-01 | `sensitive_keys()` が現行 10 エントリを部分集合として網羅 | unit + full suite | `pytest tests/test_settings_keyguard.py -q && pytest -q` | ❌（本タスクで追加） | ⬜ pending |
+| 01-03/Task1 | 01-03 | 3 | V180-ROBUST-02 | T-01-01 | API キーが設定ファイルへ保存されない | unit | `pytest tests/test_settings_keyguard.py -q` | ✅ | ⬜ pending |
+| 01-03/Task2 | 01-03 | 3 | V180-ROBUST-02 | — | キー解決経路の挙動不変 | unit（既存回帰） | `pytest tests/test_provider_ui.py tests/test_ocr.py tests/test_ocr_providers.py -q` | ✅ | ⬜ pending |
+| 01-04/Task1 | 01-04 | 3 | V180-REFAC-02 | — | N/A | unit（import + source-scan + MRO 構造） | `pytest tests/test_imports.py -k "LlmConfig or llm_config" tests/test_provider_ui.py -q` | ✅ | ⬜ pending |
+| 01-04/Task2 | 01-04 | 3 | V180-ROBUST-02 | — | 環境変数チェックの registry 統合（挙動不変） | unit（既存回帰） | `pytest tests/test_provider_ui.py tests/test_imports.py -q` | ✅ | ⬜ pending |
+| 最終ゲート | — | 最終 | 全要件 | — | N/A | full suite | `pytest -q && ruff check . && ruff format --check .` | ✅ | ⬜ pending |
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
 
@@ -68,11 +70,11 @@ created: 2026-07-13
 
 ## Validation Sign-Off
 
-- [ ] All tasks have `<automated>` verify or Wave 0 dependencies
-- [ ] Sampling continuity: no 3 consecutive tasks without automated verify
-- [ ] Wave 0 covers all MISSING references
-- [ ] No watch-mode flags
-- [ ] Feedback latency < 60s
-- [ ] `nyquist_compliant: true` set in frontmatter
+- [x] All tasks have `<automated>` verify or Wave 0 dependencies
+- [x] Sampling continuity: no 3 consecutive tasks without automated verify
+- [x] Wave 0 covers all MISSING references
+- [x] No watch-mode flags
+- [x] Feedback latency < 60s
+- [x] `nyquist_compliant: true` set in frontmatter
 
-**Approval:** pending
+**Approval:** approved（2026-07-14 · gsd-plan-checker VERIFICATION PASSED・全 8 タスクに automated verify を確認）

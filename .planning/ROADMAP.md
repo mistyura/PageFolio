@@ -101,14 +101,22 @@ V171-* 全 17 要件 Complete（被覆 17/17・孤立要件なし）。締め前
 **Requirements**: V180-REFAC-01, V180-REFAC-02, V180-ROBUST-02
 **Success Criteria** (what must be TRUE):
 
-  1. `ocr_providers.py`（1424行）が責務別パッケージへ分割され、既存の `from pagefolio.ocr_providers import ...` 等の import が変更なく動作する
-  2. `dialogs/llm_config.py`（1204行）が責務別パッケージへ分割され、既存の import パスが変更なく動作する
+  1. `ocr_providers.py`（1537行）が責務別パッケージへ分割され、既存の `from pagefolio.ocr_providers import ...` 等の import が変更なく動作する
+  2. `dialogs/llm_config.py`（1659行）が責務別パッケージへ分割され、既存の import パスが変更なく動作する
   3. `_SENSITIVE_KEYS` がプロバイダ→環境変数マッピングから生成される中央レジストリとなり、新プロバイダ追加時に手動リストへの追加漏れが構造的に起きなくなる
   4. 分割前に拡張された `test_imports.py` の後方互換 import テストと既存 pytest 全件がグリーンのまま維持される
 
 **Plans**: 4 plans（3 waves）
+**Wave 1**
+
 - [ ] 01-01-PLAN.md — テスト先行拡張（後方互換 import 安全網・Wave 0 必達）[Wave 1]
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
 - [ ] 01-02-PLAN.md — ocr_providers パッケージ分割 + registry.py 新設 [Wave 2]
+
+**Wave 3** *(blocked on Wave 2 completion)*
+
 - [ ] 01-03-PLAN.md — _SENSITIVE_KEYS 中央化 + D-09 参照統合（settings/ocr/ocr_dialog）[Wave 3]
 - [ ] 01-04-PLAN.md — llm_config Mixin パッケージ分割 + D-09 #4（sections env var）[Wave 3]
 
