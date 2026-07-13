@@ -1,48 +1,38 @@
 {
   "version": "1.0",
-  "timestamp": "2026-06-09T19:30:00.000Z",
-  "phase": "07",
-  "phase_name": "tesseract-pluginmanager-qa",
-  "phase_dir": ".planning/phases/07-tesseract-pluginmanager-qa",
-  "plan": 1,
-  "task": 6,
-  "total_tasks": 6,
-  "status": "phase_complete",
+  "timestamp": "2026-07-13T21:02:46.943Z",
+  "phase": "01",
+  "phase_name": "foundation-split",
+  "phase_dir": ".planning/phases/01-foundation-split",
+  "plan": 2,
+  "task": 2,
+  "total_tasks": 2,
+  "status": "paused",
   "completed_tasks": [
-    {"id": 1, "name": "Task 1.1: TesseractProvider 実装（ocr_providers.py）", "status": "done", "commit": "0c5dbfd"},
-    {"id": 2, "name": "Task 1.2: PluginManager register_ocr_provider 追加（plugins.py）", "status": "done", "commit": "0c5dbfd"},
-    {"id": 3, "name": "Task 1.3: build_provider tesseract 分岐 + plugin_manager フォールバック（ocr.py）", "status": "done", "commit": "0c5dbfd"},
-    {"id": 4, "name": "Task 2.1: LLMConfigDialog UI 統合（dialogs/llm_config.py）", "status": "done", "commit": "0c5dbfd"},
-    {"id": 5, "name": "Task 3.1〜3.3: lang.py / README.md / 開発履歴.md 整備", "status": "done", "commit": "0c5dbfd"},
-    {"id": 6, "name": "Task 4.1〜4.2: テスト追加（396 tests pass）+ ruff/pytest フルパス確認", "status": "done", "commit": "0c5dbfd"}
+    {"id": 1, "name": "01-02 Task 1: ocr_providers.py を base/errors/6プロバイダへ機械的分割し registry.py を新設、__init__.py で完全re-export", "status": "done", "commit": "723f0c8"},
+    {"id": 2, "name": "01-02 Task 2: registry.sensitive_keys() 網羅性テスト追加 + registry.py独立性制約をCLAUDE.mdへ明文化", "status": "done", "commit": "9bfc010"}
   ],
-  "remaining_tasks": [],
+  "remaining_tasks": [
+    {"id": 3, "name": "01-02 後処理: STATE.md/ROADMAP.md/REQUIREMENTS.md 更新 + まとめてコミット", "status": "not_started"},
+    {"id": 4, "name": "01-03: registry参照統合 (settings.py/ocr.py/ocr_dialog.py)", "status": "not_started"},
+    {"id": 5, "name": "01-04: llm_config.py Mixinパッケージ化 (dialog.py/sections.py/model_fetch.py)", "status": "not_started"},
+    {"id": 6, "name": "フェーズ1ゴール達成検証 (gsd-verifier)", "status": "not_started"}
+  ],
   "blockers": [],
-  "human_actions_pending": [
-    {
-      "action": "Tesseract 実機動作確認（Tesseract インストール済み環境で実際に OCR を実行する）",
-      "context": "CI/テスト環境には Tesseract が存在しないため subprocess モックでのみ検証済み。実機での確認が未実施。",
-      "blocking": false
-    },
-    {
-      "action": "STATE.md / ROADMAP.md の Phase 07 完了・v1.4.0 完成への更新",
-      "context": "STATE.md は Phase 06 完了時点のまま。ROADMAP.md の Phase 07 が 'Not started' のまま。",
-      "blocking": false
-    },
-    {
-      "action": "v1.4.0 リリース作業（GitHub タグ付け・リリースノート公開）",
-      "context": "Phase 07 完了により v1.4.0 の全フェーズが揃った。APP_VERSION=1.4.0 設定済み。",
-      "blocking": false
-    }
-  ],
+  "async_jobs": [],
+  "human_actions_pending": [],
   "decisions": [
-    {"decision": "Tesseract stdin パイプ方式（pytesseract 非依存）", "rationale": "D-04: Windows でも動作確認済み・外部依存追加なし", "phase": "07"},
-    {"decision": "_TESSERACT_AVAILABLE は起動時1回評価", "rationale": "D-01: 起動後変更を反映しない仕様として許容・ドキュメント明記", "phase": "07"},
-    {"decision": "shell=False + noqa S603/S607", "rationale": "D-04: コマンドインジェクション対策・ruff セキュリティ警告の明示抑制", "phase": "07"},
-    {"decision": "register_ocr_provider のローカル import", "rationale": "ocr_providers → plugins 循環 import 回避", "phase": "07"},
-    {"decision": "シーケンシャル実行（worktree 分離なし）", "rationale": "ローカル main が origin より 115 コミット先行。GSD worktree は origin/HEAD ベースで base mismatch HALT するため（学習済み）", "phase": "07"}
+    {"decision": "ocr_providers.py を1プロバイダ=1ファイルで機械的分割（D-01/D-02: 共通化・最適化・リネーム一切混ぜない）", "rationale": "分割前後の回帰検知装置(test_imports.py)を確実に機能させるため", "phase": "01"},
+    {"decision": "TesseractProvider._detect_tesseract呼び出しを遅延import化", "rationale": "分割前は同一モジュール内monkeypatchが効いていたが分割後は効かなくなるため(D-03凍結テスト維持)", "phase": "01"},
+    {"decision": "__init__.pyへurllib.request/subprocessをre-export", "rationale": "既存テストのocr_providers.urllib.request等の属性チェーンmonkeypatchを壊さないため(D-03)", "phase": "01"},
+    {"decision": "registry.pyはstdlib(os)のみ依存・pagefolio内部モジュール非依存の独立性制約をdocstring+CLAUDE.mdに明文化", "rationale": "将来の循環import予防(REVIEWS.md Antigravity LOW #2反映)", "phase": "01"},
+    {"decision": "worktree isolationをsequential実行へ自動degrade", "rationale": "ローカルHEADがorigin/HEADより先行しているため(#683既知パターン、gsd-tools worktree.base-checkが自動検知)", "phase": "01"}
   ],
-  "uncommitted_files": [],
-  "next_action": "STATE.md と ROADMAP.md を Phase 07 完了・v1.4.0 完成に更新する。その後 v1.4.0 リリース作業（git tag / GitHub Release）、または次マイルストーン計画へ進む。",
-  "context_notes": "Phase 07 の全タスク（Wave 1〜4）が完了。396 テスト全通過・ruff エラーなし。v1.4.0 マイルストーンの全4フェーズ（04〜07）完了。作業ツリーはクリーン。APP_VERSION=1.4.0 設定済み。"
+  "uncommitted_files": [
+    ".planning/phases/01-foundation-split/01-02-SUMMARY.md (新規・内容完成済みSelf-Check PASSED、未コミット)",
+    ".planning/STATE.md (completed_plans: 2 へ変更済みだが stopped_at/last_activity_desc は未更新、未コミット)",
+    ".claude/settings.local.json (本フェーズ作業とは無関係・既存の変更)"
+  ],
+  "next_action": "1) .planning/STATE.md の stopped_at/last_activity_desc を '01-02完了' へ更新 2) `gsd-tools query roadmap update-plan-progress 01 01-02 complete` でROADMAP.mdを更新 3) REQUIREMENTS.md のトレーサビリティ更新 4) SUMMARY.md+STATE.md+ROADMAP.md+REQUIREMENTS.mdをまとめて 'docs(01-02): complete ocr_providers分割+registry.py新設 plan' としてコミット 5) その後 Wave 3 (01-03, 01-04) を実行 — 両プランはfiles_modified重複なしのため本来は並列可能だが、worktree isolationがsequential降格中のため逐次実行する",
+  "context_notes": "Phase 01(基盤分割)実行中。Wave 1(01-01: 後方互換importテスト先行拡張)は完了・コミット済み(4e7113d)。Wave 2(01-02: ocr_providersパッケージ化+registry.py新設)はコード変更・テストとも完了しコミット済み(723f0c8, 9bfc010)、SUMMARY.mdも完成済み(Self-Check: PASSED)だが、STATE/ROADMAP/REQUIREMENTS更新+完了コミットの直前でユーザー指示により意図的に中断(バックグラウンドexecutorエージェントをTaskStopで停止)。pytest 903件全緑・ruffクリーン確認済み。ワーキングツリーは実質クリーン(未コミットはSUMMARY.md新規+STATE.md変更のみ)。次はWave 3(01-03, 01-04・共に依存: 01-02完了)を実行し、その後gsd-verifierでフェーズ1のgoal達成を検証する。"
 }
