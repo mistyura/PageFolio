@@ -655,6 +655,15 @@ LANG = {
             "アクティブなテンプレートは削除できません。"
             "先に別のテンプレートへ切り替えてください。"
         ),
+        # プロバイダーフォールバック順設定
+        # （v1.8.0 Phase 2・V180-FALL-01〜03・D-13〜D-16）
+        "fallback_section_title": "🔁 フォールバック:",
+        "fallback_enable_toggle": "フォールバックを有効化",
+        "fallback_up_btn": "↑ 上へ",
+        "fallback_down_btn": "↓ 下へ",
+        "fallback_add_btn": "＋ 追加",
+        "fallback_remove_btn": "－ 除外",
+        "fallback_hint": "未設定時はフォールバックしません（安全側既定）。",
     },
     "en": {
         # Header / status
@@ -1298,5 +1307,14 @@ LANG = {
             "The active template cannot be deleted. "
             "Please switch to another template first."
         ),
+        # Provider fallback order settings
+        # (v1.8.0 Phase 2 — V180-FALL-01..03 / D-13..D-16)
+        "fallback_section_title": "🔁 Fallback:",
+        "fallback_enable_toggle": "Enable fallback",
+        "fallback_up_btn": "↑ Up",
+        "fallback_down_btn": "↓ Down",
+        "fallback_add_btn": "＋ Add",
+        "fallback_remove_btn": "－ Remove",
+        "fallback_hint": "Fallback does not fire unless configured (safe default).",
     },
 }

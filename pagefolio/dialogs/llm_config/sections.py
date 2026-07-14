@@ -991,6 +991,137 @@ class SectionsMixin:
             font=self._font(-2),
         ).pack(side="left", padx=4)
 
+        # ── プロバイダーフォールバック（V180-FALL-01〜03・D-13〜D-16）──
+        # D-16: 既定は「フォールバックなし（空リスト・トグルOFF）」の安全側既定。
+        # トグルONで順序リスト（Listbox+上下ボタン+候補追加/除外）が現れる。
+        fallback_row = tk.Frame(body, bg=C["BG_DARK"])
+        fallback_row.pack(fill="x", padx=24, pady=(6, 2))
+        tk.Label(
+            fallback_row,
+            text=self._L["fallback_section_title"],
+            bg=C["BG_DARK"],
+            fg=C["TEXT_MAIN"],
+            font=self._font(-1),
+            width=20,
+            anchor="w",
+        ).pack(side="left")
+        self.fallback_enabled_var = tk.BooleanVar(
+            value=bool(self.current_settings.get("ocr_fallback_enabled", False)),
+        )
+        ttk.Checkbutton(
+            fallback_row,
+            text=self._L["fallback_enable_toggle"],
+            variable=self.fallback_enabled_var,
+            command=self._on_fallback_toggle,
+        ).pack(side="left", padx=4)
+
+        # D-14: 候補一覧は全実行可能プロバイダ + プラグイン登録
+        # （APIキー未設定のプロバイダも表示する）
+        self._base_fallback_providers = [
+            "lmstudio",
+            "ollama",
+            "runpod",
+            "claude",
+            "gemini",
+            "tesseract",
+        ]
+        _fallback_plugin_extras = (
+            self._plugin_manager.list_ocr_providers() if self._plugin_manager else []
+        )
+        self._fallback_known_providers = self._base_fallback_providers + list(
+            _fallback_plugin_extras
+        )
+        # ホワイトリスト検証（Input Validation・ASVS L1）: 既知プロバイダ一覧に
+        # 無い名前は読み込み時に除外する（T-02-07）
+        _raw_fallback_chain = self.current_settings.get("ocr_fallback_chain", [])
+        self._fallback_chain = [
+            name
+            for name in _raw_fallback_chain
+            if name in self._fallback_known_providers
+        ]
+
+        self.fallback_list_frame = tk.Frame(body, bg=C["BG_DARK"])
+
+        tk.Label(
+            self.fallback_list_frame,
+            text=self._L["fallback_hint"],
+            bg=C["BG_DARK"],
+            fg=C["TEXT_SUB"],
+            font=self._font(-2),
+            wraplength=460,
+            justify="left",
+        ).pack(anchor="w", pady=(0, 2))
+
+        fallback_list_row = tk.Frame(self.fallback_list_frame, bg=C["BG_PANEL"], bd=0)
+        fallback_list_row.pack(fill="x", pady=2)
+        fallback_sb = ttk.Scrollbar(fallback_list_row, orient="vertical")
+        self.fallback_listbox = tk.Listbox(
+            fallback_list_row,
+            yscrollcommand=fallback_sb.set,
+            bg=C["BG_CARD"],
+            fg=C["TEXT_MAIN"],
+            selectbackground=C["ACCENT"],
+            selectforeground="#fff",
+            font=self._font(-1),
+            activestyle="none",
+            bd=0,
+            highlightthickness=0,
+            height=4,
+        )
+        fallback_sb.configure(command=self.fallback_listbox.yview)
+        fallback_sb.pack(side="right", fill="y")
+        self.fallback_listbox.pack(side="left", fill="both", expand=True)
+
+        fallback_btn_row = tk.Frame(self.fallback_list_frame, bg=C["BG_DARK"])
+        fallback_btn_row.pack(fill="x", pady=(2, 2))
+        self.fallback_up_btn = ttk.Button(
+            fallback_btn_row,
+            text=self._L["fallback_up_btn"],
+            command=self._fallback_move_up,
+        )
+        self.fallback_up_btn.pack(side="left", padx=2)
+        self.fallback_down_btn = ttk.Button(
+            fallback_btn_row,
+            text=self._L["fallback_down_btn"],
+            command=self._fallback_move_down,
+        )
+        self.fallback_down_btn.pack(side="left", padx=2)
+
+        # 候補追加/除外（D-14）
+        fallback_add_row = tk.Frame(self.fallback_list_frame, bg=C["BG_DARK"])
+        fallback_add_row.pack(fill="x", pady=(2, 4))
+        self.fallback_candidate_var = tk.StringVar(
+            value=self._fallback_known_providers[0]
+            if self._fallback_known_providers
+            else "",
+        )
+        self.fallback_candidate_combo = ttk.Combobox(
+            fallback_add_row,
+            textvariable=self.fallback_candidate_var,
+            values=self._fallback_known_providers,
+            state="readonly",
+            font=self._font(-1),
+            width=14,
+        )
+        self.fallback_candidate_combo.pack(side="left", padx=(0, 4))
+        ttk.Button(
+            fallback_add_row,
+            text=self._L["fallback_add_btn"],
+            command=self._fallback_add,
+        ).pack(side="left", padx=2)
+        ttk.Button(
+            fallback_add_row,
+            text=self._L["fallback_remove_btn"],
+            command=self._fallback_remove,
+        ).pack(side="left", padx=2)
+
+        self._reload_fallback_list()
+        # D-16: 初期表示はトグル状態に従う（既定 OFF のため通常は非表示）。
+        # ここではまだ lm_status_label が未生成のため before= を使わず末尾へ
+        # 積むだけでよい（この時点で以降に pack されるものはまだ無い）。
+        if self.fallback_enabled_var.get():
+            self.fallback_list_frame.pack(fill="x", padx=24, pady=(0, 4))
+
         # ── ステータスラベル ──
         self.lm_status_var = tk.StringVar(value="")
         self.lm_status_label = tk.Label(
@@ -1196,3 +1327,77 @@ class SectionsMixin:
             self._active_template_name = new_name
         _save_settings(self.current_settings)
         self._reload_template_combo(new_name)
+
+    # ── フォールバック順設定ハンドラ（V180-FALL-01〜03・D-13〜D-16）───
+
+    def _on_fallback_toggle(self):
+        """トグル状態に応じて順序リスト frame を pack/pack_forget する（D-16）。
+
+        url_section_frame 等の既存プロバイダ固有欄と同型の動的表示切替
+        パターン（`_on_provider_change`）を踏襲する。
+        """
+        if self.fallback_enabled_var.get():
+            self.fallback_list_frame.pack(
+                fill="x", padx=24, pady=(0, 4), before=self.lm_status_label
+            )
+        else:
+            self.fallback_list_frame.pack_forget()
+
+    def _reload_fallback_list(self, select_index=None):
+        """self._fallback_chain の内容を Listbox へ反映する（merge.py._reload_list
+        と同型）。select_index が指定されていればその位置を選択状態にする。
+        """
+        self.fallback_listbox.delete(0, tk.END)
+        for name in self._fallback_chain:
+            self.fallback_listbox.insert(tk.END, f"  {name}")
+        if select_index is not None and self._fallback_chain:
+            self.fallback_listbox.selection_set(select_index)
+            self.fallback_listbox.see(select_index)
+
+    def _fallback_move_up(self):
+        """選択中の候補を1つ上へ移動する（merge.py._move_up の移植・D-13）。"""
+        sel = self.fallback_listbox.curselection()
+        if not sel or sel[0] == 0:
+            return
+        i = sel[0]
+        self._fallback_chain[i - 1], self._fallback_chain[i] = (
+            self._fallback_chain[i],
+            self._fallback_chain[i - 1],
+        )
+        self._reload_fallback_list(i - 1)
+
+    def _fallback_move_down(self):
+        """選択中の候補を1つ下へ移動する（merge.py._move_down の移植・D-13）。"""
+        sel = self.fallback_listbox.curselection()
+        if not sel or sel[0] >= len(self._fallback_chain) - 1:
+            return
+        i = sel[0]
+        self._fallback_chain[i], self._fallback_chain[i + 1] = (
+            self._fallback_chain[i + 1],
+            self._fallback_chain[i],
+        )
+        self._reload_fallback_list(i + 1)
+
+    def _fallback_add(self):
+        """候補一覧から選択したプロバイダをチェーンへ追加する（D-14）。
+
+        既知プロバイダ一覧に無い名前・重複追加は無視する
+        （ホワイトリスト検証・Input Validation・ASVS L1）。
+        """
+        candidate = self.fallback_candidate_var.get()
+        if not candidate or candidate not in self._fallback_known_providers:
+            return
+        if candidate in self._fallback_chain:
+            return
+        self._fallback_chain.append(candidate)
+        self._reload_fallback_list(len(self._fallback_chain) - 1)
+
+    def _fallback_remove(self):
+        """選択中の候補をチェーンから除外する。"""
+        sel = self.fallback_listbox.curselection()
+        if not sel:
+            return
+        i = sel[0]
+        self._fallback_chain.pop(i)
+        select_index = max(0, i - 1) if self._fallback_chain else None
+        self._reload_fallback_list(select_index)
