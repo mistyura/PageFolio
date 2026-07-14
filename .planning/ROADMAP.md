@@ -133,7 +133,7 @@ V171-* 全 17 要件 Complete（被覆 17/17・孤立要件なし）。締め前
   4. ユーザーはフォールバック順（プロバイダ連鎖）を明示的に設定でき、未設定時はフォールバックが発生しない（安全側既定）
   5. OCR 実行が fatal エラーで停止すると、次のフォールバック候補（並列度・APIキー解決・レート制限設定を正しく引き継いだ状態）への切替が送信先確認ダイアログの再提示つきで提案され、ユーザー承認なしに別ベンダーへ自動送信されることはない
 
-**Plans**: 4/4 plans complete
+**Plans**: 4/4 完了 + ギャップクロージャー 2 プラン（02-05/02-06・02-VERIFICATION.md gaps_found 対応）
 **UI hint**: yes
 
 **Wave 1**
@@ -151,6 +151,14 @@ V171-* 全 17 要件 Complete（被覆 17/17・孤立要件なし）。締め前
 **Wave 4** *(blocked on Wave 3)*
 
 - [x] 02-04-PLAN.md — フォールバックオーケストレーション（送信先確認再提示・provider 再構築・Pitfall 4 回避）[Wave 4]
+
+**ギャップクロージャー Wave 1** *(02-VERIFICATION.md gaps_found 対応)*
+
+- [ ] 02-05-PLAN.md — CR-02 ブロッカー修正（prompt_templates ディープコピー分離 + 即時 _save_settings 除去 → Apply 一括確定 + 削除確認）[Gap Wave 1]
+
+**ギャップクロージャー Wave 2** *(blocked on 02-05)*
+
+- [ ] 02-06-PLAN.md — behavior_unverified UI ハンドラテスト（D-03/D-04/D-05/D-07 の実 bound-method 検証）[Gap Wave 2]
 
 ### Phase 3: OCR実行エンジン抽出 + E2Eテスト
 
