@@ -215,11 +215,21 @@ class OCRRunEngine:
                     on_page_error=self._handle_page_error,
                     on_retry_wait=self._handle_retry_wait,
                 )
+                if self._on_progress is not None:
+                    self._on_progress(self.progress_count(), page_idx)
+            except Exception:
+                # WR-01: consume_one 自体はプロバイダ例外を握るが、
+                # on_success/on_page_error/on_progress コールバックが
+                # 送出する例外までは吸収しない。ここで捕捉しないと
+                # decrement_worker() に到達できず、ワーカーが完了理由
+                # コールバック（on_complete/on_cancelled/on_fatal）を
+                # 永久に発火させられなくなる。
+                logger.exception(
+                    "OCR ワーカーのコールバック処理中に予期しない例外 (p.%d)",
+                    page_idx,
+                )
             finally:
                 del b64  # 送信後即座に破棄（成功基準2・T-06-06）
-
-            if self._on_progress is not None:
-                self._on_progress(self.progress_count(), page_idx)
 
         # CR-01: 残ワーカー数を減らし、最終ワーカーのみ完了理由別コールバックを呼ぶ。
         is_last, fatal_msg, fatal_kind = self._pstate.decrement_worker()

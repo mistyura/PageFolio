@@ -279,6 +279,41 @@ class TestOCRRunEngineE2E:
         assert accounted == set(pages)
         assert len(complete_calls) == 1
 
+    def test_on_success_exception_still_reaches_on_complete(self):
+        """on_success コールバックが例外を送出しても on_complete が
+        ちょうど1回発火する（WR-01 回帰テスト・ワーカーの decrement_worker()
+        到達が callback 例外でスキップされないことの検証）。
+        """
+
+        def failing_on_success(page_idx, text, truncated):
+            raise ValueError("テスト用: on_success 内の予期しない例外")
+
+        provider = FakeProvider()
+        cancel_flag = threading.Event()
+        complete_calls = []
+        pages = [0, 1, 2]
+        engine = OCRRunEngine(
+            provider=provider,
+            prompt="prompt",
+            run_pages=pages,
+            concurrency=2,
+            cancel_flag=cancel_flag,
+            on_success=failing_on_success,
+            on_complete=lambda: complete_calls.append(1),
+        )
+        threads = engine.start()
+        producer_thread = _drive_engine(engine, pages, lambda i: f"b64-{i}")
+
+        for t in threads:
+            t.join(timeout=10.0)
+        producer_thread.join(timeout=5.0)
+        for t in threads:
+            assert not t.is_alive(), "ワーカースレッドが timeout 内に終了しなかった"
+
+        # on_success が毎回例外を投げても、全ワーカーが decrement_worker() に
+        # 到達し on_complete がちょうど1回発火する。
+        assert len(complete_calls) == 1
+
     def test_cancel_stops_processing(self):
         """cancel_flag セット後、有限時間内にキャンセルが反映され残ページの
         ocr_image 呼び出しが行われず on_cancelled 経由で終了する
