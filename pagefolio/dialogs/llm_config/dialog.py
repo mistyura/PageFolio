@@ -458,6 +458,25 @@ class DialogMixin:
         except (tk.TclError, ValueError):
             llm_settings["ocr_concurrency"] = 2
 
+        # v1.8.0 Phase 2: アクティブテンプレート名の収集（V180-TMPL-01〜05）。
+        # items は self.current_settings 由来のコピーを保持したまま active
+        # のみ現在の選択値（sections.py の _on_template_change 等が更新する
+        # self._active_template_name）で差し替える。CRUD 操作（保存/削除/
+        # リネーム）は sections.py 側で既に self.current_settings を直接
+        # 変更し _save_settings 済みのため、_apply は active の最終確定のみ
+        # を担う。既存の _apply スタブ経路（current_settings/
+        # _active_template_name 未設定）との後方互換のため getattr で
+        # フォールバックする。
+        existing_templates = getattr(self, "current_settings", {}).get(
+            "prompt_templates", {"active": "", "items": {}}
+        )
+        llm_settings["prompt_templates"] = {
+            "active": getattr(
+                self, "_active_template_name", existing_templates.get("active", "")
+            ),
+            "items": dict(existing_templates.get("items", {})),
+        }
+
         # セッション限定 APIキーの同期（D-04/D-06・V171-KEY-01/04）
         # llm_settings dict には絶対に入れない（成功基準1・T-05-12）。
         for provider_key, var in (

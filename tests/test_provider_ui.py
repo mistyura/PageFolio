@@ -1730,3 +1730,82 @@ class TestProbeOllamaProvider:
         assert "self._probe_ollama_provider(update_combo=True)" in src
         assert "self._probe_ollama_provider(update_combo=False)" in src
         assert src.count("def _test_ollama_connection") == 1
+
+
+# ══════════════════════════════════════════════════════════════
+#  V180-TMPL-01〜05: テンプレート管理セクション（02-02）
+# ══════════════════════════════════════════════════════════════
+
+
+class TestTemplateSection:
+    """テンプレートセクション（sections.py）と _apply のアクティブテンプレート
+    収集を検証する。V180-TMPL-05（全プロバイダ横断共有）は 02-01 で settings.py
+    へ実装済みの load_custom_prompt/load_summary_prompt 経由の解決を、本プランで
+    UI 側（_apply の active 収集）から接続できることを確認する。
+    """
+
+    def test_template_combo_referenced_in_sections_source(self):
+        """sections.py に template_combo/_on_template_change/save_template が
+        存在する（source-scan・ヘッドレス検証）。"""
+        src = _read_llm_config_package_source()
+        assert "template_combo" in src
+        assert "_on_template_change" in src
+        assert "save_template" in src
+
+    def test_save_template_then_load_custom_prompt_resolves(self):
+        """save_template→アクティブ設定で load_custom_prompt がテンプレート値を
+        解決する（V180-TMPL-05: 全プロバイダ共通経路の settings dict レベル検証）。
+        """
+        from pagefolio.settings import load_custom_prompt, save_template
+
+        settings = {"prompt_templates": {"active": "", "items": {}}}
+        save_template(settings, "my-template", "custom-value", "summary-value")
+        settings["prompt_templates"]["active"] = "my-template"
+        assert load_custom_prompt(settings) == "custom-value"
+
+    def test_save_template_then_load_summary_prompt_resolves(self):
+        """load_summary_prompt も同様にテンプレート値を解決する。"""
+        from pagefolio.settings import load_summary_prompt, save_template
+
+        settings = {"prompt_templates": {"active": "", "items": {}}}
+        save_template(settings, "my-template", "custom-value", "summary-value")
+        settings["prompt_templates"]["active"] = "my-template"
+        assert load_summary_prompt(settings) == "summary-value"
+
+    def test_apply_collects_active_template_preserving_items(self):
+        """_apply が prompt_templates の items を保持したまま active を
+        現在の選択値（_active_template_name）で差し替えて収集する。"""
+        from pagefolio.dialogs.llm_config import LLMConfigDialog
+
+        stub = _make_apply_key_stub({})
+        stub.current_settings = {
+            "prompt_templates": {
+                "active": "old-tpl",
+                "items": {
+                    "old-tpl": {"custom_prompt": "a", "summary_prompt": "b"},
+                    "other-tpl": {"custom_prompt": "c", "summary_prompt": "d"},
+                },
+            }
+        }
+        stub._active_template_name = "other-tpl"
+        captured = {}
+        stub.on_apply = lambda s: captured.update(s)
+        LLMConfigDialog._apply(stub)
+
+        assert captured["prompt_templates"]["active"] == "other-tpl"
+        assert captured["prompt_templates"]["items"] == {
+            "old-tpl": {"custom_prompt": "a", "summary_prompt": "b"},
+            "other-tpl": {"custom_prompt": "c", "summary_prompt": "d"},
+        }
+
+    def test_apply_without_current_settings_attr_falls_back_gracefully(self):
+        """current_settings/_active_template_name 未設定の既存スタブ経路でも
+        AttributeError を出さず、空のプレースホルダを収集する（後方互換）。"""
+        from pagefolio.dialogs.llm_config import LLMConfigDialog
+
+        stub = _make_apply_key_stub({})
+        captured = {}
+        stub.on_apply = lambda s: captured.update(s)
+        LLMConfigDialog._apply(stub)
+
+        assert captured["prompt_templates"] == {"active": "", "items": {}}
