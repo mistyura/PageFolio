@@ -2,18 +2,18 @@
 gsd_state_version: 1.0
 milestone: v1.8.0
 milestone_name: 実用性の最大化・エコシステム洗練・堅牢性強化
-current_phase: 3
-current_phase_name: OCR実行エンジン抽出 + E2Eテスト
-status: ready_to_execute
-stopped_at: Phase 3 planned (2 plans)
-last_updated: "2026-07-15T00:00:00.000Z"
-last_activity: 2026-07-15
-last_activity_desc: Phase 3 replan with cross-AI review feedback (Antigravity, 4 findings incorporated/deferred, checker passed)
+current_phase: 03
+current_phase_name: ocr-e2e
+status: executing
+stopped_at: Completed 03-01-PLAN.md
+last_updated: "2026-07-14T20:28:12.804Z"
+last_activity: 2026-07-14
+last_activity_desc: Phase 03 execution started
 progress:
   total_phases: 6
   completed_phases: 2
   total_plans: 12
-  completed_plans: 10
+  completed_plans: 11
   percent: 33
 ---
 
@@ -28,10 +28,10 @@ See: .planning/PROJECT.md (updated 2026-07-13)
 
 ## Current Position
 
-Phase: 3 — OCR実行エンジン抽出 + E2Eテスト
-Plan: 2 plans ready（03-01: OCRRunEngine 抽出 / 03-02: E2E モックテスト）
-Status: Ready to execute。クロス AI レビュー（Antigravity・リスク LOW）の4指摘をプランへ反映済み（MEDIUM: Tk メインスレッド移譲 finalizer 化 / LOW: _skip_base 系クリーンアップ明記 / LOW: 排他ロックは T-03-03 で明示 defer・Phase 4 確認事項 / 提案: FakeProvider 複製コメント）。チェッカー VERIFICATION PASSED・要件被覆 2/2・決定被覆 16/16
-Last activity: 2026-07-15 — Phase 3 planning complete (2 plans)
+Phase: 03 (ocr-e2e) — EXECUTING
+Plan: 2 of 2
+Status: 03-01（OCRRunEngine 抽出）完了。03-02（E2E モックテスト）実行待ち
+Last activity: 2026-07-15 — 03-01-PLAN.md 完了（feat 7052edc・refactor d8c9e2c）
 
 ## v1.8.0 Phase Map
 
@@ -108,6 +108,7 @@ Last activity: 2026-07-15 — Phase 3 planning complete (2 plans)
 | Phase 02-ai P03 | 約15min | 2 tasks | 4 files |
 | Phase 02-ai P05 | 約20min | 3 tasks | 4 files |
 | Phase 02-ai P06 | 約15分 | 2 tasks | 1 files |
+| Phase 03-ocr-e2e P01 | 32min | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -165,6 +166,8 @@ Decisions are logged in PROJECT.md Key Decisions table.
 - [Phase 02-ai gap closure 02-05]: CR-02（02-REVIEW.md BLOCKER・テンプレートCRUDがCancelで取り消せない）を解消。LLMConfigDialog.__init__でprompt_templates（items・各テンプレートdict含む）をcopy.deepcopyで分離しapp.settingsとの参照共有を断ち、sections.pyの3 CRUDハンドラから即時_save_settingsを除去してApply経由の一括確定へ一本化。_on_template_deleteにaskyesno削除確認も追加（02-REVIEW Fix案1+2の両方採用）
 - [Phase ?]: D-07 検証をフェイク捕捉+tmp_path実ファイル読み取りの二段構えにし、behavior_unverified_items[1] の実I/O検証要求を満たした（settings._get_base_dir のみ monkeypatch）
 - [Phase ?]: 新設スタブはText/Comboboxのみに限定し、既存の_SetGetVarStub（02-05）・_ButtonStub（OCR-UI-02）をテンプレートUIハンドラテストでも再利用した（重複定義回避）
+- [Phase 03-01]: queue.Queue/PipelineState は OCRRunEngine.start() 内で一度だけ生成し self.queue プロパティで公開。producer（OCRDialog._render_next_page）は self._engine.queue のみを参照する（落とし穴10・T-03-02 対応）
+- [Phase 03-01]: self._pstate は Engine 抽出後も vestigial 属性として維持（_clear_text/_on_run が None へリセットする既存の観測可能な挙動・既存回帰テスト TestClearResetsFatalState との後方互換のため）。実際の共有状態は self._engine（OCRRunEngine._pstate）が所有
 
 ### Pending Todos
 
@@ -260,12 +263,12 @@ Decisions are logged in PROJECT.md Key Decisions table.
 
 ## Session Continuity
 
-Last session: 2026-07-15
-Stopped at: Phase 3 planned (2 plans, ready to execute)
-Resume file: .planning/phases/03-ocr-e2e/03-01-PLAN.md
+Last session: 2026-07-14T20:28:12.791Z
+Stopped at: Completed 03-01-PLAN.md
+Resume file: 03-02-PLAN.md
 
 ## Operator Next Steps
 
-- Phase 3（ocr-e2e）のプランニングが完了した（2プラン・チェッカー通過）。`/gsd-execute-phase 3` で実行する
+- Phase 3（ocr-e2e）の 03-01-PLAN.md（OCRRunEngine 抽出）が完了した。残る 03-02-PLAN.md（E2E モックテスト）を `/gsd-execute-phase 3` で継続実行する
 - Phase 1（foundation-split）の全4プラン実行が完了した。検証には `/gsd-verify-work` を実行する
 - Phase 2（ai）の全6プラン（02-01〜02-06）実行が完了した。02-VERIFICATION.md gaps_found の原因（CR-02・behavior_unverified 4件）はいずれも解消済み。フェーズ再検証（`/gsd-verify-work` 等）を実行する
