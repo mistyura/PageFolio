@@ -225,46 +225,25 @@ def _resolve_api_key(provider_name, session_keys):
     import os
 
     from pagefolio.ocr_providers import OCRAPIKeyError
+    from pagefolio.ocr_providers.registry import env_vars_for, primary_env_var
 
-    if provider_name == "claude":
-        env_var = "ANTHROPIC_API_KEY"
-        # セッションキー(入力値)を優先（V171-KEY-02）
-        key = session_keys.get("claude", "")
-        if key:
-            return key
-        # セッションキー未設定のときのみ環境変数へフォールバック
+    env_vars = env_vars_for(provider_name)
+    if not env_vars:
+        # 未対応プロバイダ（registry 未登録）
+        raise OCRAPIKeyError(f"{provider_name.upper()}_API_KEY")
+
+    # セッションキー(入力値)を優先（V171-KEY-02）
+    key = session_keys.get(provider_name, "")
+    if key:
+        return key
+    # セッションキー未設定のときのみ環境変数へフォールバック（タプル順序を
+    # 解決優先順として厳守。Gemini は GEMINI_API_KEY → GOOGLE_API_KEY・D-06）
+    for env_var in env_vars:
         key = os.environ.get(env_var)
         if key:
             return key
-        # どちらも未設定 → 実行前に明示エラーを raise（成功基準2）
-        raise OCRAPIKeyError(env_var)
-
-    if provider_name == "gemini":
-        # セッションキー(入力値)を優先（V171-KEY-02）
-        key = session_keys.get("gemini", "")
-        if key:
-            return key
-        # dual env var の内部優先順は不変：GEMINI_API_KEY 優先・
-        # 未設定なら GOOGLE_API_KEY フォールバック（D-06）。
-        # os.environ への書き込みは行わない（読み取り専用原則）。
-        key = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
-        if key:
-            return key
-        # どちらも未設定 → 主変数名 GEMINI_API_KEY でエラー（D-06）
-        raise OCRAPIKeyError("GEMINI_API_KEY")
-
-    if provider_name == "runpod":
-        env_var = "RUNPOD_API_KEY"
-        key = session_keys.get("runpod", "")
-        if key:
-            return key
-        key = os.environ.get(env_var)
-        if key:
-            return key
-        raise OCRAPIKeyError(env_var)
-
-    # 未対応プロバイダ
-    raise OCRAPIKeyError(f"{provider_name.upper()}_API_KEY")
+    # どちらも未設定 → 主変数名で明示エラーを raise（成功基準2）
+    raise OCRAPIKeyError(primary_env_var(provider_name))
 
 
 def page_to_png_b64(page, scale=DEFAULT_OCR_SCALE):

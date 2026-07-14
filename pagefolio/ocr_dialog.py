@@ -1253,6 +1253,7 @@ class OCRDialog(tk.Toplevel):
             return True
         from pagefolio.ocr import _resolve_api_key
         from pagefolio.ocr_providers import OCRAPIKeyError
+        from pagefolio.ocr_providers.registry import primary_env_var
 
         name = self.app.settings.get("ocr_provider", "")
         session_keys = getattr(self.app, "_session_api_keys", {})
@@ -1264,11 +1265,9 @@ class OCRDialog(tk.Toplevel):
                 "gemini": "ocr_api_key_missing_gemini",
                 "runpod": "ocr_api_key_missing_runpod",
             }.get(name, "ocr_api_key_missing")
-            env_var = {
-                "claude": "ANTHROPIC_API_KEY",
-                "gemini": "GEMINI_API_KEY",
-                "runpod": "RUNPOD_API_KEY",
-            }.get(name, "")
+            # 未知プロバイダは現行 .get(name, "") と同じく空文字へフォールバック
+            # （primary_env_var は未登録プロバイダで "" を返す実装のため素通し）
+            env_var = primary_env_var(name)
             messagebox.showerror(
                 self._L["err_title"],
                 self._L[msg_key].format(env_var=env_var),
