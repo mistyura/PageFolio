@@ -755,7 +755,9 @@ class OCRDialog(tk.Toplevel):
         )
         self.summary_btn.state(["!disabled"] if ok else ["disabled"])
 
-    # ── ページ結果記録（ワーカースレッドから呼ばれる・Lock 保護） ──
+    # ── ページ結果記録（ワーカースレッドから呼ばれる。GIL + page_idx 排他により
+    #    ロック不要。共有辞書への同一キー同時書込みが発生する変更を今後加える
+    #    場合は要 Lock 追加・WR-03） ──
 
     def _record_page_success(self, page_idx, text, truncated=False):
         """ページ成功時の結果辞書ブックキーピング（consume_one の on_success 用）。
