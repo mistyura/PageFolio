@@ -814,7 +814,14 @@ class OCRDialog(tk.Toplevel):
         """
         from pagefolio.ocr_providers import ClaudeProvider, GeminiProvider
 
-        name = self.app.settings.get("ocr_provider", "")
+        # 02-REVIEW WR-01 修正: フォールバック中は self._active_ocr_settings
+        # （ダイアログローカルの切替後スナップショット）を優先する。
+        # self.app.settings のみを見ると、フォールバックで実際の送信先が
+        # 変わっても表示が旧プロバイダのまま残ってしまう
+        # （_active_provider_name() と同じ参照パターンに揃える）。
+        # getattr で未設定（テスト用の素の fake オブジェクト等）にも対応する。
+        settings = getattr(self, "_active_ocr_settings", None) or self.app.settings
+        name = settings.get("ocr_provider", "")
         if name == "claude" or isinstance(self.provider, ClaudeProvider):
             return self._L["ocr_provider_name_claude"]
         if name == "gemini" or isinstance(self.provider, GeminiProvider):
@@ -834,11 +841,15 @@ class OCRDialog(tk.Toplevel):
         tesseract はモデル概念がないため空文字を返す。
         プラグインプロバイダは provider.model 属性をフォールバックとして参照する。
         """
-        name = self.app.settings.get("ocr_provider", "")
+        # 02-REVIEW WR-01 修正: _provider_display_name と同様、フォールバック
+        # 中は self._active_ocr_settings を優先して参照する（getattr で
+        # 未設定の fake オブジェクトにも対応）。
+        settings = getattr(self, "_active_ocr_settings", None) or self.app.settings
+        name = settings.get("ocr_provider", "")
         if name == "claude":
-            return self.app.settings.get("claude_model", "claude-sonnet-4-6")
+            return settings.get("claude_model", "claude-sonnet-4-6")
         if name == "gemini":
-            return self.app.settings.get("gemini_model", "gemini-2.5-flash")
+            return settings.get("gemini_model", "gemini-2.5-flash")
         if name == "tesseract":
             return ""
         if name in ("lmstudio", "", "off"):
@@ -2401,6 +2412,12 @@ class OCRDialog(tk.Toplevel):
         )
         # V180-FALL-03/Pitfall 3: 候補プロバイダ別の max_concurrency で再クランプ
         self.concurrency = max(1, min(self.provider.max_concurrency, self.concurrency))
+
+        # 02-REVIEW WR-01 修正: プロバイダ切替後、ヘッダーのプロバイダ/モデル
+        # 表示と LM Studio 欄の可視性を再評価する。これを呼ばないとダイアログ
+        # の常設ヘッダーが旧プロバイダを表示したままになり、実際の送信先と
+        # 食い違う（_apply_llm_settings が同メソッドを呼ぶのと同じ理由）。
+        self._refresh_provider_dependent_ui()
 
         # フォールバック確認 askyesno が送信先確認を兼ねるため、再開直後の
         # コスト確認ダイアログは二重表示しない（_on_run/_on_summary 側のガード

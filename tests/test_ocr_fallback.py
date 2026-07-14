@@ -45,6 +45,12 @@ def _make_dialog(settings, provider=None, results=None):
     d._done = False
     d._summary_running = False
     d.text = None
+    # headless インスタンスのため _build() を経由せず、プロバイダ表示ラベル
+    # 等の実 Tk ウィジェットは存在しない。_switch_to_fallback_provider が
+    # 呼ぶ _refresh_provider_dependent_ui（02-REVIEW WR-01 修正で追加）は
+    # ウィジェット依存のため no-op に差し替える（メソッド自体の docstring
+    # が明示する「テストでは no-op に差し替え可能」という契約どおり）。
+    d._refresh_provider_dependent_ui = lambda: None
     return d
 
 
