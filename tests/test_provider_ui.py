@@ -2290,3 +2290,133 @@ class TestTemplateChangeFlow:
 
         assert (tmp_path / CUSTOM_PROMPT_FILE).read_text(encoding="utf-8") == "newC"
         assert (tmp_path / SUMMARY_PROMPT_FILE).read_text(encoding="utf-8") == "newS"
+
+
+class TestTemplateNameValidationUI:
+    """D-04（V180-TMPL-03・UI 経由）: _on_template_save/_on_template_rename の
+    重複名/空名 messagebox.showerror 拒否経路を実 bound method 呼び出しで
+    検証する（02-VERIFICATION.md behavior_unverified_items の3件目）。
+    """
+
+    def test_save_rejects_duplicate_name(self, monkeypatch):
+        """既存名を askstring で入力すると showerror が呼ばれ、既存テンプレート
+        内容が上書きされない。"""
+        current_settings = {
+            "prompt_templates": {
+                "active": "",
+                "items": {"dup": {"custom_prompt": "orig", "summary_prompt": "orig2"}},
+            }
+        }
+        d = _make_template_dialog(
+            current_settings, custom_text="new", summary_text="new2"
+        )
+        monkeypatch.setattr(
+            "pagefolio.dialogs.llm_config.sections.simpledialog.askstring",
+            lambda *a, **k: "dup",
+        )
+        error_calls = []
+        monkeypatch.setattr(
+            "pagefolio.dialogs.llm_config.sections.messagebox.showerror",
+            lambda *a, **k: error_calls.append((a, k)),
+        )
+
+        d._on_template_save()
+
+        assert len(error_calls) == 1
+        assert current_settings["prompt_templates"]["items"]["dup"] == {
+            "custom_prompt": "orig",
+            "summary_prompt": "orig2",
+        }
+
+    def test_save_rejects_empty_name(self, monkeypatch):
+        """空白のみの名前を askstring で入力すると showerror が呼ばれ、
+        テンプレートが追加されない。"""
+        current_settings = {"prompt_templates": {"active": "", "items": {}}}
+        d = _make_template_dialog(current_settings)
+        monkeypatch.setattr(
+            "pagefolio.dialogs.llm_config.sections.simpledialog.askstring",
+            lambda *a, **k: "   ",
+        )
+        error_calls = []
+        monkeypatch.setattr(
+            "pagefolio.dialogs.llm_config.sections.messagebox.showerror",
+            lambda *a, **k: error_calls.append((a, k)),
+        )
+
+        d._on_template_save()
+
+        assert len(error_calls) == 1
+        assert current_settings["prompt_templates"]["items"] == {}
+
+    def test_rename_rejects_duplicate_name(self, monkeypatch):
+        """別の既存名を askstring で入力すると showerror が呼ばれ、リネームが
+        行われず items のキー集合が変化しない。"""
+        current_settings = {
+            "prompt_templates": {
+                "active": "",
+                "items": {
+                    "old": {"custom_prompt": "o", "summary_prompt": "o2"},
+                    "taken": {"custom_prompt": "t", "summary_prompt": "t2"},
+                },
+            }
+        }
+        d = _make_template_dialog(current_settings, template_var_value="old")
+        monkeypatch.setattr(
+            "pagefolio.dialogs.llm_config.sections.simpledialog.askstring",
+            lambda *a, **k: "taken",
+        )
+        error_calls = []
+        monkeypatch.setattr(
+            "pagefolio.dialogs.llm_config.sections.messagebox.showerror",
+            lambda *a, **k: error_calls.append((a, k)),
+        )
+
+        d._on_template_rename()
+
+        assert len(error_calls) == 1
+        assert set(current_settings["prompt_templates"]["items"].keys()) == {
+            "old",
+            "taken",
+        }
+
+
+class TestTemplateDeleteButtonState:
+    """D-03（V180-TMPL-03・UI 経由）: _refresh_template_delete_state の削除
+    ボタン disabled/!disabled 切替を実 bound method 呼び出しで検証する
+    （02-VERIFICATION.md behavior_unverified_items の4件目）。
+    """
+
+    def test_active_selection_disables_delete_button(self):
+        """アクティブテンプレートを選択中は削除ボタンが disabled になる。"""
+        current_settings = {
+            "prompt_templates": {
+                "active": "A",
+                "items": {"A": {"custom_prompt": "a", "summary_prompt": "a2"}},
+            }
+        }
+        d = _make_template_dialog(
+            current_settings, active_template_name="A", template_var_value="A"
+        )
+
+        d._refresh_template_delete_state()
+
+        assert d.template_delete_btn.last_state == ["disabled"]
+
+    def test_inactive_selection_enables_delete_button(self):
+        """非アクティブテンプレートを選択中は削除ボタンが !disabled になる。"""
+        current_settings = {
+            "prompt_templates": {
+                "active": "A",
+                "items": {
+                    "A": {"custom_prompt": "a", "summary_prompt": "a2"},
+                    "B": {"custom_prompt": "b", "summary_prompt": "b2"},
+                },
+            }
+        }
+        d = _make_template_dialog(
+            current_settings, active_template_name="A", template_var_value="B"
+        )
+
+        d._refresh_template_delete_state()
+
+        assert d.template_delete_btn.last_state == ["!disabled"]
