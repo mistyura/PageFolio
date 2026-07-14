@@ -203,18 +203,30 @@ def _make_dialog_stub(settings, provider=None, page_indices=None):
     return stub
 
 
+def _read_llm_config_package_source():
+    """llm_config パッケージ配下の全 .py を sorted glob で連結して返す。
+
+    Phase 1（01-04）で pagefolio/dialogs/llm_config.py が
+    pagefolio/dialogs/llm_config/ パッケージへ分割されたため、単一ファイルの
+    read_text ではソーススキャンテストが FileNotFoundError になる。
+    パッケージ全体を連結することで既存の substring/count アサーションの
+    意図（該当シンボル/呼び出しが llm_config 実装のどこかに存在する）を
+    そのまま保存する。
+    """
+    import pathlib
+
+    pkg_dir = pathlib.Path("pagefolio/dialogs/llm_config")
+    return "".join(p.read_text(encoding="utf-8") for p in sorted(pkg_dir.glob("*.py")))
+
+
 class TestLLMConfigProviderValues:
     """Task 2 回帰: provider_combo に gemini が含まれることを確認。"""
 
     def test_provider_combo_includes_gemini(self):
         """provider_combo の values に 'gemini' が含まれる（OCR-API-02）。"""
-        import pathlib
-
         from pagefolio.dialogs.llm_config import LLMConfigDialog
 
-        src = pathlib.Path("pagefolio/dialogs/llm_config.py").read_text(
-            encoding="utf-8"
-        )
+        src = _read_llm_config_package_source()
         assert '"gemini"' in src, (
             "provider_combo の values に 'gemini' が含まれていない"
         )
@@ -222,15 +234,55 @@ class TestLLMConfigProviderValues:
         assert callable(fn)
 
     def test_gemini_section_frame_exists_in_source(self):
-        """llm_config.py に gemini_section_frame の定義が存在する。"""
-        import pathlib
-
-        src = pathlib.Path("pagefolio/dialogs/llm_config.py").read_text(
-            encoding="utf-8"
-        )
+        """llm_config パッケージに gemini_section_frame の定義が存在する。"""
+        src = _read_llm_config_package_source()
         assert "gemini_section_frame" in src
         assert "gemini_model_var" in src
         assert "_on_provider_change" in src
+
+
+class TestLLMConfigDialogMRO:
+    """Pitfall 3 の headless ガード: tk.Toplevel の MRO 破壊を自動検知する。
+
+    Tk をインスタンス化せず LLMConfigDialog.__mro__ を検査するのみのため、
+    ヘッドレス CI でも実行できる（実機描画目視は v1.8.0 スコープ外）。
+    """
+
+    def test_tk_toplevel_is_last_in_mro(self):
+        """tk.Toplevel が3 Mixin すべてより後ろ（MRO 末尾側）にある。"""
+        import tkinter as tk
+
+        from pagefolio.dialogs.llm_config import LLMConfigDialog
+
+        mro = LLMConfigDialog.__mro__
+        toplevel_index = mro.index(tk.Toplevel)
+        mixin_indices = [
+            mro.index(base)
+            for base in LLMConfigDialog.__bases__
+            if base is not tk.Toplevel
+        ]
+        assert toplevel_index > max(mixin_indices)
+
+    def test_init_is_consolidated_in_dialog_mixin(self):
+        """__init__ が DialogMixin に集約されている（他 Mixin は持たない）。"""
+        from pagefolio.dialogs.llm_config import LLMConfigDialog
+        from pagefolio.dialogs.llm_config.dialog import DialogMixin
+
+        assert LLMConfigDialog.__init__ is DialogMixin.__init__
+
+    def test_key_methods_exist_on_llm_config_dialog(self):
+        """_build/_apply/_on_provider_change/_fetch_models_async が存在する。"""
+        from pagefolio.dialogs.llm_config import LLMConfigDialog
+
+        for method_name in (
+            "_build",
+            "_apply",
+            "_on_provider_change",
+            "_fetch_models_async",
+        ):
+            assert hasattr(LLMConfigDialog, method_name), (
+                f"LLMConfigDialog に {method_name} が存在しない"
+            )
 
 
 class TestIsCloudProvider:
@@ -1674,11 +1726,7 @@ class TestProbeOllamaProvider:
         _probe_ollama_provider(update_combo=...) を呼ぶ薄いラッパーであり、
         旧重複本体が除去されていることをソース上で確認する。
         """
-        import pathlib
-
-        src = pathlib.Path("pagefolio/dialogs/llm_config.py").read_text(
-            encoding="utf-8"
-        )
+        src = _read_llm_config_package_source()
         assert "self._probe_ollama_provider(update_combo=True)" in src
         assert "self._probe_ollama_provider(update_combo=False)" in src
         assert src.count("def _test_ollama_connection") == 1
