@@ -53,6 +53,18 @@ class OCRRunEngine:
     差分計算（`_skip_base`/`_render_failed_base` 相当）は構造的に不要
     （D-12 を new-instance で満たす）。
 
+    WR-02: これらのうち `skipped_pages`/`render_failed_pages` は
+    `progress_count()` から読み出される真に load-bearing な状態である。
+    一方 `results`/`errors`/`truncated_pages` は現状 write-only であり、
+    `pagefolio/ocr_dialog.py`（`OCRDialog`）はこれらを一切読まず、コールバック
+    経由で同じ情報を自前の `self.results`/`self.errors`/`self._truncated_pages`
+    に複製して真実の情報源として使う。したがって本クラスの
+    `results`/`errors`/`truncated_pages` は情報提供/テスト検証用（現状
+    `tests/test_ocr_engine.py` のアサーションのみが参照する）であり、
+    アプリケーション本体が消費する真実の情報源ではない。将来 `OCRDialog` 側の
+    複製ロジックを変更する際は、本属性が自動的に追随するわけではない点に
+    注意すること。
+
     D-05/D-06/D-08: 通知はコールバック注入方式。`on_success`/`on_page_error`/
     `on_retry_wait` は `ocr_pipeline.consume_one` の既存シグネチャをそのまま
     踏襲する。完了理由（complete/cancelled/fatal）は理由別の個別コールバック
