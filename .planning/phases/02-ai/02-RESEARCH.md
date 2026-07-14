@@ -503,14 +503,14 @@ def _finish_error(self, msg, kind):
 
 **If this table is empty:** N/A（3件のログ済み仮定あり）
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. **フォールバック候補のプロバイダ一覧に `tesseract` を含めるべきか**
+1. **RESOLVED: フォールバック候補のプロバイダ一覧に `tesseract` を含めるべきか**
    - What we know: D-14 は「全プロバイダを一覧に含める」と明記。Tesseract はローカル完結・APIキー不要のため「APIキー未設定」フォールバックの意味では常に成功する候補になる
    - What's unclear: Tesseract は精度が大きく劣る（`tesseract_accuracy_warning` の既存注記あり）ため、クラウド LLM の連続失敗から Tesseract へフォールバックすることがユーザーにとって望ましいかは自明ではない
    - Recommendation: D-14 の文言どおり一覧には含めた上で、ユーザー自身がチェーンに追加するかどうかを選ぶ設計（一覧に出すが自動では選ばれない）で問題ない。UI 側で警告を出す必要はない（既存の Tesseract 精度注記が十分に機能する）
 
-2. **サマリ生成のフォールバック（D-12）で `supports_text_prompt` 非対応プロバイダ（Tesseract）が候補に含まれた場合の扱い**
+2. **RESOLVED: サマリ生成のフォールバック（D-12）で `supports_text_prompt` 非対応プロバイダ（Tesseract）が候補に含まれた場合の扱い**
    - What we know: `ocr_providers.py` の `complete_text_ex`/`supports_text_prompt` は Tesseract 非対応と明記されている（CLAUDE.md 記載）
    - What's unclear: フォールバックチェーンに Tesseract が含まれている状態でサマリ生成が失敗し、次候補が Tesseract だった場合、`_propose_fallback` はどう振る舞うべきか（スキップして次へ進むべきか、確認ダイアログすら出さないべきか）
    - Recommendation: `next_fallback_candidate` の呼び出し前に `supports_text_prompt` を満たさない候補を除外するフィルタをサマリ経路にのみ適用する（OCR 経路ではフィルタ不要）。計画時に `_on_summary_error` 専用のフォールバック候補選択ロジックとして明確化する
