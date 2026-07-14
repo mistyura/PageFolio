@@ -10,7 +10,7 @@
 ### テンプレート管理（TMPL）
 
 - [x] **V180-TMPL-01**: ユーザーは OCR カスタム/サマリプロンプトを名前付きテンプレートとして保存できる
-- [ ] **V180-TMPL-02**: ユーザーはテンプレート一覧から選択して切り替えられる（LLM 設定ダイアログ）
+- [x] **V180-TMPL-02**: ユーザーはテンプレート一覧から選択して切り替えられる（LLM 設定ダイアログ）
 - [x] **V180-TMPL-03**: ユーザーはテンプレートを削除・リネームできる
 - [x] **V180-TMPL-04**: 外部 md ファイル連動（v1.7.4 の `ocr_custom_prompt.md` / `ocr_summary_prompt.md`）は「アクティブテンプレートのライブ編集」として共存する（書き戻し競合を起こさない）
 - [x] **V180-TMPL-05**: テンプレートは全プロバイダで横断共有される（`resolve_ocr_prompt` の優先順位にテンプレート層を挿入・既存 custom > provider別 > 汎用の解決順と両立）
@@ -95,7 +95,7 @@
 | V180-REFAC-02 | Phase 1 | Complete |
 | V180-ROBUST-02 | Phase 1 | Complete |
 | V180-TMPL-01 | Phase 2 | Complete |
-| V180-TMPL-02 | Phase 2 | Pending |
+| V180-TMPL-02 | Phase 2 | Complete |
 | V180-TMPL-03 | Phase 2 | Complete |
 | V180-TMPL-04 | Phase 2 | Complete |
 | V180-TMPL-05 | Phase 2 | Complete |
