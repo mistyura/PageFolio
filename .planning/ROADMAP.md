@@ -171,7 +171,15 @@ V171-* 全 17 要件 Complete（被覆 17/17・孤立要件なし）。締め前
   2. `OCRRunEngine` は独立したモジュールとして import 可能で、次フェーズのバッチ OCR から再利用できる構造になっている
   3. OCR→サマリの一気通貫フローが `OCRRunEngine`/`ocr_pipeline.py` 経由の E2E モックテストで検証され、実 API 非依存で pytest から実行できる
 
-**Plans**: TBD
+**Plans**: 2 plans
+
+**Wave 1**
+
+- [ ] 03-01-PLAN.md — OCRRunEngine 抽出 + OCRDialog 委譲配線（producer 残留・キュー一本化）[Wave 1]
+
+**Wave 2** *(blocked on Wave 1)*
+
+- [ ] 03-02-PLAN.md — OCR→サマリ E2E モックテスト整備（6シナリオ・実 API 非依存）[Wave 2]
 
 ### Phase 4: バッチ複数ファイルOCR
 
@@ -247,7 +255,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | 4. UI/UX 磨き込み + 既知バグ棚卸し | v1.7.1 | 4/4 | Complete | 2026-07-05 |
 | 1. 基盤分割（肥大モジュールリファクタリング） | v1.8.0 | 4/4 | Complete | 2026-07-14 |
 | 2. AI強化（プロンプト・テンプレート管理 + プロバイダーフォールバック） | v1.8.0 | 6/6 | In Progress | - |
-| 3. OCR実行エンジン抽出 + E2Eテスト | v1.8.0 | TBD | Not started | - |
+| 3. OCR実行エンジン抽出 + E2Eテスト | v1.8.0 | 0/2 | Not started | - |
 | 4. バッチ複数ファイルOCR | v1.8.0 | TBD | Not started | - |
 | 5. 堅牢性強化（サムネイル仮想化 + Blobリーク検出 + ShortcutsDialog修正） | v1.8.0 | TBD | Not started | - |
 | 6. 品質保証仕上げ（通知UX・UI一貫性監査・ドキュメント整合） | v1.8.0 | TBD | Not started | - |
