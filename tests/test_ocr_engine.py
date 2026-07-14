@@ -16,7 +16,7 @@ import time  # noqa: E402
 
 from pagefolio.ocr_engine import OCRRunEngine  # noqa: E402
 from pagefolio.ocr_pipeline import send_sentinels, try_enqueue  # noqa: E402
-from pagefolio.ocr_providers import OCRProvider  # noqa: E402
+from pagefolio.ocr_providers import OCRProvider, OCRRetryableError  # noqa: E402
 
 
 def _send_all_sentinels(q, count, timeout=5.0):
@@ -41,10 +41,16 @@ def _send_all_sentinels(q, count, timeout=5.0):
 
 
 class FakeProvider(OCRProvider):
-    """OCRRunEngine テスト用の偽 Provider。ocr_image は b64 をもとにテキストを返す。"""
+    """OCRRunEngine テスト用の偽 Provider。ocr_image は b64 をもとにテキストを返す。
+
+    complete_text_ex/supports_text_prompt はサマリ生成カバレッジ（D-15）のため
+    追加したオーバーライドであり、ocr_image と同じ「意図的な複製・拡張」方針
+    （カプセル化のため他ファイルの FakeProvider とは共有しない・D-14）に基づく。
+    """
 
     default_concurrency = 2
     max_concurrency = 4
+    supports_text_prompt = True
 
     def __init__(self, side_effect=None):
         """side_effect が None なら f"text-{b64}" を返す。callable なら呼び出す。"""
@@ -57,6 +63,13 @@ class FakeProvider(OCRProvider):
 
     def list_models(self):
         return ["fake-model"]
+
+    def complete_text_ex(self, text, prompt, **kwargs):
+        """サマリ生成（テキストのみ補完）の決定的な偽実装。実 API 非依存で
+        (summary, truncated) タプルを返す（D-15・Pitfall 4/A2: サマリ生成自体は
+        OCRRunEngine へ統合せず、フローとしてのみ E2E で検証する）。
+        """
+        return (f"summary-of-{len(text)}", False)
 
 
 class TestOCRRunEngineUnit:
@@ -308,3 +321,83 @@ class TestOCRRunEngineE2E:
         # キャンセル後は残ページ分の呼び出しが行われず全ページ数未満で収まる
         assert call_count[0] < len(pages)
         assert len(cancelled_calls) == 1
+
+    def test_circuit_breaker_stops_calls(self):
+        """連続失敗が DEFAULT_CIRCUIT_BREAKER_THRESHOLD に達すると fatal が確定し、
+        残ページの ocr_image 呼び出しをスキップして on_fatal
+        （fatal_kind="circuit_breaker"）経由で終了する
+        （V180-QA-01・異常系・fatal/サーキットブレーカー）。
+        """
+        call_count = [0]
+        lock = threading.Lock()
+
+        def side_effect(b64, prompt):
+            with lock:
+                call_count[0] += 1
+            # リトライ由来の連続失敗（consume_one の record_retryable_failure 経路）
+            raise OCRRetryableError(
+                "HTTP 429: レート制限（リトライ可能・テスト用）", retry_after=0.01
+            )
+
+        provider = FakeProvider(side_effect=side_effect)
+        cancel_flag = threading.Event()
+        fatal_calls = []
+        pages = list(range(20))
+        engine = OCRRunEngine(
+            provider=provider,
+            prompt="prompt",
+            run_pages=pages,
+            concurrency=1,
+            cancel_flag=cancel_flag,
+            on_fatal=lambda msg, kind: fatal_calls.append((msg, kind)),
+        )
+        threads = engine.start()
+        producer_thread = _drive_engine(engine, pages, lambda i: f"b64-{i}")
+
+        for t in threads:
+            t.join(timeout=10.0)
+        producer_thread.join(timeout=5.0)
+        for t in threads:
+            assert not t.is_alive(), "ワーカースレッドが timeout 内に終了しなかった"
+
+        # サーキットブレーカー発動後は残ページの呼び出しがスキップされ
+        # 全ページ数より十分少ない回数で収まる
+        assert call_count[0] < len(pages)
+        assert len(fatal_calls) == 1
+        assert fatal_calls[0][1] == "circuit_breaker"
+        assert engine.is_fatal() is True
+        assert engine.fatal_kind == "circuit_breaker"
+
+    def test_ocr_then_summary_flow(self):
+        """OCR 実行（OCRRunEngine 経由）→ results をページ順に連結 →
+        provider.complete_text_ex でサマリ生成、という一気通貫フローを検証する
+        （V180-QA-01・サマリ生成は Pitfall 4/A2 に従い Engine へ統合せず、
+        フローとしてのみここで検証する）。
+        """
+        provider = FakeProvider()
+        cancel_flag = threading.Event()
+        pages = [0, 1, 2]
+        engine = OCRRunEngine(
+            provider=provider,
+            prompt="prompt",
+            run_pages=pages,
+            concurrency=2,
+            cancel_flag=cancel_flag,
+        )
+        threads = engine.start()
+        producer_thread = _drive_engine(engine, pages, lambda i: f"b64-{i}")
+
+        for t in threads:
+            t.join(timeout=10.0)
+        producer_thread.join(timeout=5.0)
+        for t in threads:
+            assert not t.is_alive(), "ワーカースレッドが timeout 内に終了しなかった"
+
+        assert set(engine.results.keys()) == set(pages)
+        full_text = "\n".join(engine.results[p] for p in sorted(engine.results))
+
+        assert provider.supports_text_prompt is True
+        summary, truncated = provider.complete_text_ex(full_text, "サマリ生成指示")
+        assert isinstance(summary, str)
+        assert summary != ""
+        assert truncated is False
