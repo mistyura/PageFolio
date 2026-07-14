@@ -638,6 +638,23 @@ LANG = {
         "llm_model_fetch_failed": (
             "{provider} モデル取得失敗（静的リストへフォールバック）: {e}"
         ),
+        # プロンプトテンプレート管理（v1.8.0 Phase 2・V180-TMPL-01〜05・D-01〜D-08）
+        "tmpl_section_title": "📄 テンプレート:",
+        "tmpl_save_btn": "💾 保存",
+        "tmpl_delete_btn": "🗑 削除",
+        "tmpl_rename_btn": "✏ リネーム",
+        "tmpl_name_prompt": "テンプレート名を入力してください:",
+        "tmpl_dup_error": (
+            "このテンプレート名は既に使用されています。別の名前を選んでください。"
+        ),
+        "tmpl_empty_error": "テンプレート名を入力してください。",
+        "tmpl_switch_discard_confirm": (
+            "未保存の変更が破棄されます。テンプレートを切り替えますか？"
+        ),
+        "tmpl_active_delete_blocked": (
+            "アクティブなテンプレートは削除できません。"
+            "先に別のテンプレートへ切り替えてください。"
+        ),
     },
     "en": {
         # Header / status
@@ -1263,6 +1280,23 @@ LANG = {
         ),
         "llm_model_fetch_failed": (
             "{provider} model fetch failed (falling back to static list): {e}"
+        ),
+        # Prompt template management (v1.8.0 Phase 2 — V180-TMPL-01..05 / D-01..D-08)
+        "tmpl_section_title": "📄 Template:",
+        "tmpl_save_btn": "💾 Save",
+        "tmpl_delete_btn": "🗑 Delete",
+        "tmpl_rename_btn": "✏ Rename",
+        "tmpl_name_prompt": "Enter a template name:",
+        "tmpl_dup_error": (
+            "This template name is already in use. Please choose another name."
+        ),
+        "tmpl_empty_error": "Please enter a template name.",
+        "tmpl_switch_discard_confirm": (
+            "Unsaved changes will be discarded. Switch templates anyway?"
+        ),
+        "tmpl_active_delete_blocked": (
+            "The active template cannot be deleted. "
+            "Please switch to another template first."
         ),
     },
 }

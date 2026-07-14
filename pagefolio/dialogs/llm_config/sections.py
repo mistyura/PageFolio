@@ -5,14 +5,25 @@
 
 import os
 import tkinter as tk
-from tkinter import ttk
+from tkinter import messagebox, simpledialog, ttk
 
 from pagefolio.constants import CUSTOM_PROMPT_FILE, SUMMARY_PROMPT_FILE, C
 from pagefolio.dialogs.llm_config.dialog import _EFFORT_VALUES
 from pagefolio.ocr import MAX_OCR_MAX_TOKENS
 from pagefolio.ocr_providers import ClaudeProvider, GeminiProvider
 from pagefolio.ocr_providers.registry import env_vars_for
-from pagefolio.settings import load_prompt_file
+from pagefolio.settings import (
+    _save_settings,
+    delete_template,
+    get_template,
+    list_template_names,
+    load_prompt_file,
+    prompt_file_exists,
+    rename_template,
+    save_prompt_file,
+    save_template,
+    template_name_exists,
+)
 
 
 def _configured_env_var(provider_name):
@@ -805,6 +816,58 @@ class SectionsMixin:
             font=self._font(-2),
         ).pack(side="left", padx=4)
 
+        # ── テンプレート管理（V180-TMPL-01〜05・D-01〜D-08）──
+        # D-01: 1テンプレート = カスタムプロンプト + サマリプロンプトのペア保存。
+        # combobox 1つで両方を同時に切り替える（provider_combo と同型パターン）。
+        template_row = tk.Frame(body, bg=C["BG_DARK"])
+        template_row.pack(fill="x", padx=24, pady=(6, 2))
+        tk.Label(
+            template_row,
+            text=self._L["tmpl_section_title"],
+            bg=C["BG_DARK"],
+            fg=C["TEXT_MAIN"],
+            font=self._font(-1),
+            width=20,
+            anchor="w",
+        ).pack(side="left")
+        self.template_var = tk.StringVar(
+            value=self.current_settings.get("prompt_templates", {}).get("active", ""),
+        )
+        # D-01/D-05〜D-07: 現在アクティブなテンプレート名（切替時の比較・復帰・
+        # 削除ボタン活性判定に使う）
+        self._active_template_name = self.template_var.get()
+        self.template_combo = ttk.Combobox(
+            template_row,
+            textvariable=self.template_var,
+            values=list_template_names(self.current_settings),
+            state="readonly",
+            font=self._font(-1),
+            width=14,
+        )
+        self.template_combo.pack(side="left", padx=4)
+        self.template_combo.bind("<<ComboboxSelected>>", self._on_template_change)
+
+        template_btn_row = tk.Frame(body, bg=C["BG_DARK"])
+        template_btn_row.pack(fill="x", padx=24, pady=(0, 4))
+        ttk.Button(
+            template_btn_row,
+            text=self._L["tmpl_save_btn"],
+            command=self._on_template_save,
+        ).pack(side="left", padx=2)
+        # D-03: アクティブテンプレートの削除ボタンは無効化する（誤操作防止）
+        self.template_delete_btn = ttk.Button(
+            template_btn_row,
+            text=self._L["tmpl_delete_btn"],
+            command=self._on_template_delete,
+        )
+        self.template_delete_btn.pack(side="left", padx=2)
+        ttk.Button(
+            template_btn_row,
+            text=self._L["tmpl_rename_btn"],
+            command=self._on_template_rename,
+        ).pack(side="left", padx=2)
+        self._refresh_template_delete_state()
+
         # ── カスタムプロンプト ──
         prompt_row = tk.Frame(body, bg=C["BG_DARK"])
         prompt_row.pack(fill="x", padx=24, pady=2)
@@ -954,3 +1017,182 @@ class SectionsMixin:
 
         # 初期表示：選択中プロバイダに応じて欄を切替
         self._on_provider_change()
+
+    # ── テンプレート管理ハンドラ（V180-TMPL-01〜05・D-01〜D-08）──────
+
+    def _has_unsaved_template_changes(self, current_custom, current_summary):
+        """外部ファイル連動モード時、入力欄内容がアクティブテンプレートの
+        保存済み内容と異なるかを判定する（D-05）。
+
+        ファイル非連動モード（ocr_custom_prompt.md/ocr_summary_prompt.md が
+        いずれも存在しない）では常に False（D-05 の対象は「外部mdファイル
+        連動モードでは」に限定されるため）。アクティブテンプレート未選択時も
+        比較対象がないため False を返す。
+        """
+        if not (
+            prompt_file_exists(CUSTOM_PROMPT_FILE)
+            or prompt_file_exists(SUMMARY_PROMPT_FILE)
+        ):
+            return False
+        if not self._active_template_name:
+            return False
+        tpl = get_template(self.current_settings, self._active_template_name)
+        if tpl is None:
+            return False
+        return current_custom != tpl.get(
+            "custom_prompt", ""
+        ) or current_summary != tpl.get("summary_prompt", "")
+
+    def _refresh_template_delete_state(self):
+        """削除ボタンの活性状態を更新する（D-03: アクティブテンプレートは無効化）。"""
+        current = self.template_var.get()
+        if current and current == self._active_template_name:
+            self.template_delete_btn.state(["disabled"])
+        else:
+            self.template_delete_btn.state(["!disabled"])
+
+    def _reload_template_combo(self, select_name=None):
+        """テンプレート一覧を combobox の values へ反映する（V180-TMPL-02）。
+
+        select_name が指定されていれば選択状態にする。削除ボタンの活性
+        状態も併せて再評価する（D-03）。
+        """
+        names = list_template_names(self.current_settings)
+        self.template_combo.configure(values=names)
+        if select_name is not None:
+            self.template_var.set(select_name)
+        self._refresh_template_delete_state()
+
+    def _on_template_change(self, _event=None):
+        """テンプレート切替ハンドラ（D-05〜D-07）。
+
+        1. 未保存差分の検知→確認（ファイル連動モードのみ・D-05）
+        2. 選択テンプレートの内容を入力欄へ反映
+        3. ファイル連動モードなら選択テンプレートの内容で外部ファイルを
+           上書きし「アクティブテンプレートのライブ編集内容」の不変条件を
+           保つ（D-07）
+        """
+        new_name = self.template_var.get()
+        current_custom = self.ocr_prompt_text.get("1.0", "end").strip()
+        current_summary = self.ocr_summary_prompt_text.get("1.0", "end").strip()
+        if self._has_unsaved_template_changes(current_custom, current_summary):
+            if not messagebox.askyesno(
+                self._L["confirm_title"],
+                self._L["tmpl_switch_discard_confirm"],
+                parent=self,
+            ):
+                # D-05: キャンセルで切替を中止し、選択を元のアクティブ
+                # テンプレートへ戻す
+                self.template_var.set(self._active_template_name)
+                return
+
+        tpl = get_template(self.current_settings, new_name) if new_name else None
+        custom_val = tpl.get("custom_prompt", "") if tpl else ""
+        summary_val = tpl.get("summary_prompt", "") if tpl else ""
+        self.ocr_prompt_text.delete("1.0", "end")
+        if custom_val:
+            self.ocr_prompt_text.insert("1.0", custom_val)
+        self.ocr_summary_prompt_text.delete("1.0", "end")
+        if summary_val:
+            self.ocr_summary_prompt_text.insert("1.0", summary_val)
+
+        # D-07: ファイル連動モードなら選択テンプレートの内容で外部ファイルを
+        # 上書きする（外部ファイル＝常にアクティブテンプレートのライブ編集内容）
+        if prompt_file_exists(CUSTOM_PROMPT_FILE):
+            save_prompt_file(CUSTOM_PROMPT_FILE, custom_val)
+        if prompt_file_exists(SUMMARY_PROMPT_FILE):
+            save_prompt_file(SUMMARY_PROMPT_FILE, summary_val)
+
+        self._active_template_name = new_name
+        self.current_settings.setdefault(
+            "prompt_templates", {"active": "", "items": {}}
+        )
+        self.current_settings["prompt_templates"]["active"] = new_name
+        self._refresh_template_delete_state()
+
+    def _on_template_save(self):
+        """現在の入力欄内容を新規テンプレートとして保存する（D-01/D-04/D-06）。
+
+        名前は askstring で入力させ、空名・重複名は ShortcutsDialog と同型の
+        「showerror→return」パターンで拒否する（D-04）。ファイル連動モードの
+        場合、開いた時点で外部ファイル内容が反映済みの入力欄内容をそのまま
+        テンプレートへコピーする（D-06）。
+        """
+        name = simpledialog.askstring(
+            self._L["tmpl_section_title"],
+            self._L["tmpl_name_prompt"],
+            parent=self,
+        )
+        if name is None:
+            return
+        name = name.strip()
+        if not name:
+            messagebox.showerror(self._L["err_title"], self._L["tmpl_empty_error"])
+            return
+        if template_name_exists(self.current_settings, name):
+            messagebox.showerror(self._L["err_title"], self._L["tmpl_dup_error"])
+            return
+
+        custom_val = self.ocr_prompt_text.get("1.0", "end").strip()
+        summary_val = self.ocr_summary_prompt_text.get("1.0", "end").strip()
+        save_template(self.current_settings, name, custom_val, summary_val)
+        self.current_settings.setdefault(
+            "prompt_templates", {"active": "", "items": {}}
+        )
+        self.current_settings["prompt_templates"]["active"] = name
+        self._active_template_name = name
+        _save_settings(self.current_settings)
+        self._reload_template_combo(name)
+
+    def _on_template_delete(self):
+        """選択中テンプレートを削除する（D-03: アクティブテンプレートは拒否）。
+
+        UI 側の削除ボタン無効化（_refresh_template_delete_state）に加え、
+        settings.delete_template の ValueError による二重防御を構成する。
+        """
+        name = self.template_var.get()
+        if not name:
+            return
+        if name == self._active_template_name:
+            messagebox.showinfo(
+                self._L["info_title"], self._L["tmpl_active_delete_blocked"]
+            )
+            return
+        try:
+            delete_template(self.current_settings, name)
+        except ValueError:
+            messagebox.showinfo(
+                self._L["info_title"], self._L["tmpl_active_delete_blocked"]
+            )
+            return
+        _save_settings(self.current_settings)
+        self._reload_template_combo(self._active_template_name)
+
+    def _on_template_rename(self):
+        """選択中テンプレートをリネームする（D-04: 空名・重複名は拒否）。"""
+        old_name = self.template_var.get()
+        if not old_name:
+            return
+        new_name = simpledialog.askstring(
+            self._L["tmpl_section_title"],
+            self._L["tmpl_name_prompt"],
+            parent=self,
+            initialvalue=old_name,
+        )
+        if new_name is None:
+            return
+        new_name = new_name.strip()
+        if not new_name:
+            messagebox.showerror(self._L["err_title"], self._L["tmpl_empty_error"])
+            return
+        try:
+            rename_template(self.current_settings, old_name, new_name)
+        except ValueError:
+            messagebox.showerror(self._L["err_title"], self._L["tmpl_dup_error"])
+            return
+        # rename_template（settings.py）が prompt_templates["active"] を
+        # 追従更新するため、ここでは self._active_template_name を同期するのみ
+        if self._active_template_name == old_name:
+            self._active_template_name = new_name
+        _save_settings(self.current_settings)
+        self._reload_template_combo(new_name)
