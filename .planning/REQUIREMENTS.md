@@ -38,7 +38,7 @@
 ### 基盤リファクタリング（REFAC）
 
 - [x] **V180-REFAC-01**: `ocr_providers.py`（1537行）がパッケージ分割される（後方互換 import 維持・`test_imports.py` 先行拡張）
-- [ ] **V180-REFAC-02**: `dialogs/llm_config.py`（1659行）がパッケージ分割される（後方互換 import 維持・`test_imports.py` 先行拡張）
+- [x] **V180-REFAC-02**: `dialogs/llm_config.py`（1659行）がパッケージ分割される（後方互換 import 維持・`test_imports.py` 先行拡張）
 - [ ] **V180-REFAC-03**: `ocr_dialog.py`（2154行）から OCR 実行エンジン（OCRRunEngine）が抽出され、単一ファイル OCR とバッチ OCR で共用される
 
 ### 堅牢性（ROBUST）
@@ -92,7 +92,7 @@
 | Requirement | Phase | Status |
 |-------------|-------|--------|
 | V180-REFAC-01 | Phase 1 | Complete |
-| V180-REFAC-02 | Phase 1 | Pending |
+| V180-REFAC-02 | Phase 1 | Complete |
 | V180-ROBUST-02 | Phase 1 | Complete |
 | V180-TMPL-01 | Phase 2 | Pending |
 | V180-TMPL-02 | Phase 2 | Pending |

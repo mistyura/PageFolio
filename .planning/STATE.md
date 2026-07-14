@@ -4,17 +4,17 @@ milestone: v1.8.0
 milestone_name: 実用性の最大化・エコシステム洗練・堅牢性強化
 current_phase: 01
 current_phase_name: foundation-split
-status: executing
-stopped_at: Phase 1 Plan 01-02 完了（ocr_providers パッケージ分割 + registry.py 新設）
-last_updated: "2026-07-14T09:11:32.112Z"
+status: verifying
+stopped_at: Phase 1 Plan 01-04 完了（llm_config Mixin パッケージ分割 + D-09 全参照面統合完了・Phase 1 4/4 plans complete）
+last_updated: "2026-07-14T09:29:27.810Z"
 last_activity: 2026-07-14
-last_activity_desc: Phase 01 Wave 3（01-03/01-04）実行開始
+last_activity_desc: Phase 01 Wave 3（01-04）完了 — Phase 1 全4プラン実行完了
 progress:
   total_phases: 6
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 4
-  completed_plans: 3
-  percent: 0
+  completed_plans: 4
+  percent: 17
 ---
 
 # Project State
@@ -30,7 +30,7 @@ See: .planning/PROJECT.md (updated 2026-07-13)
 
 Phase: 01 (foundation-split) — EXECUTING
 Plan: 4 of 4
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-07-14 — Phase 01 Wave 3（01-03/01-04）実行開始
 
 ## v1.8.0 Phase Map
@@ -102,6 +102,7 @@ Last activity: 2026-07-14 — Phase 01 Wave 3（01-03/01-04）実行開始
 | Phase 04 P04 | 9min | 3 tasks | 5 files |
 | Phase 01 P01 | 6min | 2 tasks | 1 files |
 | Phase 01-foundation-split P03 | 5min | 2 tasks | 3 files |
+| Phase 01-foundation-split P04 | 約16分 | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -146,6 +147,8 @@ Decisions are logged in PROJECT.md Key Decisions table.
 
 - [Phase ?]: 後方互換 import 安全網の先行拡張: TestOcrProvidersImports は全17シンボル（private ヘルパー含む）を個別+一括の両方で package-level import 検証。既存 TestDialogsImports の記法をそのまま複製し新規パターンを持ち込まない（Wave 2/3 分割前の回帰検知装置確立・D-11）
 - [Phase ?]: registry.primary_env_var() は未登録プロバイダで KeyError ではなく空文字を返す実装だったため ocr_dialog.py 側で try/except を追加せず直接呼び出しに置換
+- [Phase ?]: sections.py/model_fetch.py の env var 参照を registry.env_vars_for() の単一ループへ一般化（D-09 #4/#5 完了・全参照面統合達成）
+- [Phase ?]: monkeypatch 対象名前空間の断絶（Plan 02 の _detect_tesseract と同型）を _apply の遅延 import 化 + __init__.py re-export で解消
 
 ### Pending Todos
 
@@ -241,10 +244,10 @@ Decisions are logged in PROJECT.md Key Decisions table.
 
 ## Session Continuity
 
-Last session: 2026-07-14T09:10:30.109Z
-Stopped at: Phase 1 Plan 01-02 完了地点（Wave 2 完了・後処理コミット待ち）
+Last session: 2026-07-14T09:28:46.305Z
+Stopped at: Phase 1 Plan 01-04 完了地点（Phase 1 全4プラン実行完了・検証待ち）
 Resume file: .planning/phases/01-foundation-split/.continue-here.md
 
 ## Operator Next Steps
 
-- Wave 3（01-03: registry 参照統合 / 01-04: llm_config Mixin 分割）を実行するには `/gsd-execute-phase 1` を実行する
+- Phase 1（foundation-split）の全4プラン実行が完了した。検証には `/gsd-verify-work` を実行する
