@@ -1156,20 +1156,26 @@ class SectionsMixin:
     # ── テンプレート管理ハンドラ（V180-TMPL-01〜05・D-01〜D-08）──────
 
     def _has_unsaved_template_changes(self, current_custom, current_summary):
-        """外部ファイル連動モード時、入力欄内容がアクティブテンプレートの
-        保存済み内容と異なるかを判定する（D-05）。
+        """テンプレート切替で入力欄の内容が失われる未保存差分があるか判定する。
 
-        ファイル非連動モード（ocr_custom_prompt.md/ocr_summary_prompt.md が
-        いずれも存在しない）では常に False（D-05 の対象は「外部mdファイル
-        連動モードでは」に限定されるため）。アクティブテンプレート未選択時も
-        比較対象がないため False を返す。
+        02-REVIEW WR-03 修正: 従来はファイル連動モード（ocr_custom_prompt.md/
+        ocr_summary_prompt.md のいずれかが存在）かつアクティブテンプレートが
+        既に選択済みのときのみ True を返し得た。しかし、ファイル非連動・かつ
+        今セッションでまだテンプレートを選んでいない状態でも、ユーザーが
+        入力欄へ直接テキストを打ち込んでいれば、テンプレート切替はその内容を
+        無警告で破棄してしまう（データ損失パス）。
+
+        アクティブテンプレート未選択の場合は「自由入力の未保存内容があるか」
+        だけを見る（比較対象となる保存済みテンプレートが存在しないため）。
+        アクティブテンプレートが選択済みの場合は、既存どおりファイル連動
+        モード時のみ保存済み内容との差分を比較する。
         """
+        if not self._active_template_name:
+            return bool(current_custom.strip() or current_summary.strip())
         if not (
             prompt_file_exists(CUSTOM_PROMPT_FILE)
             or prompt_file_exists(SUMMARY_PROMPT_FILE)
         ):
-            return False
-        if not self._active_template_name:
             return False
         tpl = get_template(self.current_settings, self._active_template_name)
         if tpl is None:

@@ -2246,6 +2246,56 @@ class TestTemplateChangeFlow:
         assert d._active_template_name == "B"
         assert d.ocr_prompt_text.get("1.0", "end") == "newC"
 
+    def test_no_active_template_warns_on_unsaved_freeform_text(self, monkeypatch):
+        """02-REVIEW WR-03 回帰テスト: ファイル非連動・かつ今セッションで
+        まだテンプレートを選んでいない（_active_template_name==""）状態でも、
+        入力欄に自由入力テキストがあればテンプレート切替時に askyesno による
+        確認が発生し、キャンセル（False）を返せば入力内容が保持されたまま
+        切替が中止されることを検証する。
+        """
+        current_settings = {
+            "prompt_templates": {
+                "active": "",
+                "items": {
+                    "B": {"custom_prompt": "b", "summary_prompt": "b2"},
+                },
+            }
+        }
+        d = _make_template_dialog(
+            current_settings,
+            active_template_name="",
+            template_var_value="B",
+            custom_text="typed-but-unsaved",
+            summary_text="",
+        )
+        # ファイル非連動モード（外部 md ファイルは存在しない）
+        monkeypatch.setattr(
+            "pagefolio.dialogs.llm_config.sections.prompt_file_exists",
+            lambda _f: False,
+        )
+        askyesno_calls = []
+
+        def _fake_askyesno(*a, **k):
+            askyesno_calls.append((a, k))
+            return False
+
+        monkeypatch.setattr(
+            "pagefolio.dialogs.llm_config.sections.messagebox.askyesno",
+            _fake_askyesno,
+        )
+        save_calls = []
+        monkeypatch.setattr(
+            "pagefolio.dialogs.llm_config.sections.save_prompt_file",
+            lambda f, content: save_calls.append((f, content)),
+        )
+
+        d._on_template_change()
+
+        assert len(askyesno_calls) == 1
+        assert d.template_var.get() == ""
+        assert d.ocr_prompt_text.get("1.0", "end") == "typed-but-unsaved"
+        assert save_calls == []
+
     def test_change_overwrites_external_md_file(self, monkeypatch, tmp_path):
         """D-07 実ファイル検証版: settings._get_base_dir を tmp_path へ差し替え、
         save_prompt_file/prompt_file_exists/load_prompt_file は一切
