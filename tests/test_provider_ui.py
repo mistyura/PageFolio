@@ -198,7 +198,9 @@ def _make_dialog_stub(settings, provider=None, page_indices=None):
         provider=provider,
         page_indices=list(page_indices or [0, 1, 2]),
     )
-    stub._is_cloud_provider = lambda: OCRDialog._is_cloud_provider(stub)
+    stub._is_cloud_provider = lambda settings=None: OCRDialog._is_cloud_provider(
+        stub, settings
+    )
     stub._estimate_cost = lambda m, c: OCRDialog._estimate_cost(stub, m, c)
     return stub
 
@@ -413,8 +415,12 @@ class TestCheckCloudApiKey:
             provider=None,
             _L=LANG["ja"],
         )
-        stub._is_cloud_provider = lambda: OCRDialog._is_cloud_provider(stub)
-        stub._check_cloud_api_key = lambda: OCRDialog._check_cloud_api_key(stub)
+        stub._is_cloud_provider = lambda settings=None: OCRDialog._is_cloud_provider(
+            stub, settings
+        )
+        stub._check_cloud_api_key = lambda settings=None: (
+            OCRDialog._check_cloud_api_key(stub, settings)
+        )
         return stub
 
     def _clear_all_env(self, monkeypatch):

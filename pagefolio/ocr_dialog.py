@@ -168,6 +168,13 @@ class OCRDialog(tk.Toplevel):
         self._summary_base_msg = ""  # ティッカーが合成するベース文言
         self._summary_started_at = 0.0  # time.monotonic() 開始時刻
 
+        # フォールバック実行時オーケストレーション用状態（V180-FALL-02/03・02-04）。
+        # ダイアログローカル設定スナップショット（Pitfall 4: self.app.settings は
+        # 一切書き換えない）。通常実行時は _on_run/_on_summary 冒頭で確定する。
+        self._active_ocr_settings = None
+        self._fallback_tried = set()
+        self._fallback_resume = False
+
         self._build()
         self._center(parent)
         self.protocol("WM_DELETE_WINDOW", self._on_close)
@@ -873,10 +880,13 @@ class OCRDialog(tk.Toplevel):
             page=page_idx + 1, n=attempt, max=MAX_RETRIES, sec=round(delay)
         )
 
-    def _is_cloud_provider(self):
+    def _is_cloud_provider(self, settings=None):
         """現在の ocr_provider 設定がクラウド系か判定する。
 
         claude / gemini / runpod であれば True を返す（D-13・Pitfall-F）。
+        settings を明示すればそのスナップショットで判定する（フォールバック
+        経路がダイアログローカル設定で判定できるようにする一般化・Pitfall 4）。
+        省略時は従来どおり self.app.settings を参照する（後方互換）。
         """
         from pagefolio.ocr_providers import (
             ClaudeProvider,
@@ -884,7 +894,8 @@ class OCRDialog(tk.Toplevel):
             RunPodProvider,
         )
 
-        name = self.app.settings.get("ocr_provider", "")
+        s = settings if settings is not None else self.app.settings
+        name = s.get("ocr_provider", "")
         if name in ("claude", "gemini", "runpod"):
             return True
         # isinstance ガード（provider インスタンスが差し替わっていても対応）
@@ -1168,7 +1179,7 @@ class OCRDialog(tk.Toplevel):
         except tk.TclError:
             pass
 
-    def _confirm_cost(self, page_count=None):
+    def _confirm_cost(self, page_count=None, settings=None):
         """クラウド送信前のコスト確認ダイアログを表示し、ユーザーの選択を bool で返す。
 
         毎回表示する（「今後表示しない」は設けない・D-11）。
@@ -1182,20 +1193,20 @@ class OCRDialog(tk.Toplevel):
         引数:
           page_count: 今回送信するページ数（None なら全対象ページ数。
                       再開時は未処理ページ数を渡して過大見積もりを避ける）
+          settings:   判定に使う設定スナップショット（省略時は self.app.settings。
+                      フォールバック再開時はダイアログローカルの候補設定を渡す）
         """
-        name = self.app.settings.get("ocr_provider", "")
+        s = settings if settings is not None else self.app.settings
+        name = s.get("ocr_provider", "")
         if name == "gemini":
-            model = self.app.settings.get("gemini_model", "gemini-2.5-flash")
+            model = s.get("gemini_model", "gemini-2.5-flash")
             host = "generativelanguage.googleapis.com"
         elif name == "runpod":
-            model = self.app.settings.get("runpod_model", "") or "runpod"
-            host = (
-                self.app.settings.get("runpod_url", "")
-                or self._L["llm_runpod_host_unset"]
-            )
+            model = s.get("runpod_model", "") or "runpod"
+            host = s.get("runpod_url", "") or self._L["llm_runpod_host_unset"]
         else:
             # claude（デフォルト）
-            model = self.app.settings.get("claude_model", "claude-sonnet-4-6")
+            model = s.get("claude_model", "claude-sonnet-4-6")
             host = "api.anthropic.com"
         if page_count is None:
             page_count = len(self.page_indices)
@@ -1211,7 +1222,7 @@ class OCRDialog(tk.Toplevel):
             parent=self,
         )
 
-    def _confirm_summary_cost(self, char_count):
+    def _confirm_summary_cost(self, char_count, settings=None):
         """サマリ生成前のクラウド送信確認ダイアログを表示し、選択を bool で返す。
 
         _confirm_cost と同方針で毎回表示する（D-11）。画像ではなく OCR 結果
@@ -1219,15 +1230,15 @@ class OCRDialog(tk.Toplevel):
 
         引数:
           char_count: 送信する全ページ連結テキストの文字数
+          settings:   判定に使う設定スナップショット（省略時は self.app.settings。
+                      フォールバック再開時はダイアログローカルの候補設定を渡す）
         """
-        name = self.app.settings.get("ocr_provider", "")
+        s = settings if settings is not None else self.app.settings
+        name = s.get("ocr_provider", "")
         if name == "gemini":
             host = "generativelanguage.googleapis.com"
         elif name == "runpod":
-            host = (
-                self.app.settings.get("runpod_url", "")
-                or self._L["llm_runpod_host_unset"]
-            )
+            host = s.get("runpod_url", "") or self._L["llm_runpod_host_unset"]
         else:
             # claude（デフォルト・_confirm_cost と同じフォールバック）
             host = "api.anthropic.com"
@@ -1241,21 +1252,23 @@ class OCRDialog(tk.Toplevel):
             parent=self,
         )
 
-    def _check_cloud_api_key(self):
+    def _check_cloud_api_key(self, settings=None):
         """クラウド実行前に APIキーが解決可能か確認する（成功基準2・撤去後の代替）。
 
         入力 UI は LLMConfigDialog に一元化されたため、この関数は値の収集を
         一切行わず _resolve_api_key の解決可否のみを確認する（値の保持・返却は
         しない）。未解決なら3プロバイダ別の明示エラーを表示して False を返す。
-        _on_run と _on_summary の共有経路。
+        _on_run と _on_summary の共有経路（settings 省略時は self.app.settings。
+        フォールバック経路はダイアログローカルの候補設定を渡す）。
         """
-        if not self._is_cloud_provider():
+        s = settings if settings is not None else self.app.settings
+        if not self._is_cloud_provider(settings=s):
             return True
         from pagefolio.ocr import _resolve_api_key
         from pagefolio.ocr_providers import OCRAPIKeyError
         from pagefolio.ocr_providers.registry import primary_env_var
 
-        name = self.app.settings.get("ocr_provider", "")
+        name = s.get("ocr_provider", "")
         session_keys = getattr(self.app, "_session_api_keys", {})
         try:
             _resolve_api_key(name, session_keys)
@@ -1277,15 +1290,20 @@ class OCRDialog(tk.Toplevel):
         return True
 
     # ── ワーカー ──
-    def _on_run(self, resume=False):
+    def _on_run(self, resume=False, settings=None):
         """読み取り実行 / 続きから再実行: OCR を開始する。
 
         メインスレッドでレンダリング/埋め込み判定後にワーカーを起動する。
         クラウドプロバイダ時は実行前にコスト確認ゲートを挟む（成功基準5・D-13）。
 
         引数:
-          resume: True なら成功済み結果を保持し、エラー/未処理ページのみ
-                  再実行する（リスタート）。False は全ページ再実行（リラン）。
+          resume:   True なら成功済み結果を保持し、エラー/未処理ページのみ
+                    再実行する（リスタート）。False は全ページ再実行（リラン）。
+          settings: ダイアログローカルの設定スナップショット（省略時は
+                    アプリ永続設定のコピーを新規確定）。フォールバック
+                    再開時は _switch_to_fallback_provider が候補設定を渡す
+                    （レビュー HIGH 対応・Pitfall 4: アプリ永続設定自体は
+                    一切書き換えない）。
         """
         if self._started or self._summary_running:
             return
@@ -1296,16 +1314,28 @@ class OCRDialog(tk.Toplevel):
         if not run_pages:
             return
 
+        # ダイアログローカル設定スナップショットを確定する（レビュー HIGH 対応）。
+        # 以降このメソッド内の全設定参照は s（=self._active_ocr_settings）から
+        # 行い、アプリ永続設定を直接読まない（フォールバック先候補が
+        # 正しく反映されるようにするため）。
+        self._active_ocr_settings = (
+            settings if settings is not None else dict(self.app.settings)
+        )
+        s = self._active_ocr_settings
+
         # ── クラウド実行ゲート（_started を True にする前）──
-        if self._is_cloud_provider():
+        if self._is_cloud_provider(settings=s):
             # APIキー解決確認（成功基準2・T-05-19）
-            if not self._check_cloud_api_key():
+            if not self._check_cloud_api_key(settings=s):
                 return
 
             # コスト確認ダイアログ（毎回・D-11・D-12。再開時は未処理ページ数で見積）
-            if not self._confirm_cost(len(run_pages)):
-                # キャンセル → OCR を始めない（成功基準5）
-                return
+            # フォールバック再開中は確認 askyesno が送信先確認を兼ねるため
+            # 二重表示しない（D-10/D-11）
+            if not getattr(self, "_fallback_resume", False):
+                if not self._confirm_cost(len(run_pages), settings=s):
+                    # キャンセル → OCR を始めない（成功基準5）
+                    return
 
         self._started = True
         self._done = False
@@ -1359,7 +1389,9 @@ class OCRDialog(tk.Toplevel):
             self._ocr_timeout = 120
         self._effective_timeout = self._ocr_timeout
         # provider 名はプロンプト解決の前に無条件取得（下流の再生成分岐と共用）。
-        name = self.app.settings.get("ocr_provider", "")
+        # レビュー HIGH 対応: s（=self._active_ocr_settings）から取得する
+        # （アプリ永続設定の直参照はフォールバック先候補を無視してしまう）。
+        name = s.get("ocr_provider", "")
         # V174-2: 外部 md ファイル（exe と同階層）は実行のたびに読み直し、
         # あればキャッシュ済み custom_prompt より優先する（外部エディタでの
         # 編集を再起動なしで次回実行へ反映するため）。無ければ従来どおり。
@@ -1414,7 +1446,7 @@ class OCRDialog(tk.Toplevel):
             except OCRAPIKeyError:
                 api_key = ""
             self.provider = build_provider(
-                self.app.settings,
+                s,
                 api_key=api_key,
                 plugin_manager=getattr(self.app, "plugin_manager", None),
             )
@@ -1426,7 +1458,7 @@ class OCRDialog(tk.Toplevel):
             except OCRAPIKeyError:
                 api_key = ""
             self.provider = build_provider(
-                self.app.settings,
+                s,
                 api_key=api_key,
                 plugin_manager=getattr(self.app, "plugin_manager", None),
             )
@@ -1447,7 +1479,7 @@ class OCRDialog(tk.Toplevel):
             except OCRAPIKeyError:
                 api_key = ""
             self.provider = build_provider(
-                self.app.settings,
+                s,
                 api_key=api_key,
                 plugin_manager=getattr(self.app, "plugin_manager", None),
             )
@@ -1467,7 +1499,7 @@ class OCRDialog(tk.Toplevel):
             # （else で LMStudioProvider を生成すると tesseract 選択時に画像が
             #  LM Studio URL へ送信される重大な誤動作が発生する）
             self.provider = build_provider(
-                self.app.settings,
+                s,
                 plugin_manager=getattr(self.app, "plugin_manager", None),
             )
 
@@ -1944,13 +1976,19 @@ class OCRDialog(tk.Toplevel):
         return "\n".join(parts)
 
     # ── 全ページ統合サマリ ──
-    def _on_summary(self):
+    def _on_summary(self, settings=None):
         """サマリ作成: 全ページの OCR 結果テキストを LLM へ送信し統合サマリを生成。
 
         手動トリガー（クラウドコスト配慮）。OCR 完了後（results あり）のみ実行
         できる。実行はワーカースレッド 1 本 + _run_gen 世代ガード + サマリ専用
         キャンセルフラグで制御する。プロンプトは settings["ocr_summary_prompt"]
         （カスタム）> プロバイダ別 > 既定 の順で解決する（resolve_summary_prompt）。
+
+        引数:
+          settings: ダイアログローカルの設定スナップショット（省略時はアプリ
+                    永続設定を新規参照）。フォールバック再開時は
+                    _switch_to_fallback_provider が候補設定を渡す
+                    （レビュー MEDIUM 対応・D-12）。
         """
         if (self._started and not self._done) or self._summary_running:
             return
@@ -1971,16 +2009,24 @@ class OCRDialog(tk.Toplevel):
         full_text = self._format_pages_text()
         if not full_text:
             return
-        name = self.app.settings.get("ocr_provider", "")
+        # ダイアログローカル設定スナップショットを確定する（レビュー MEDIUM 対応）。
+        # 以降このメソッド内の全設定参照は s（=self._active_ocr_settings）から
+        # 行う（フォールバック先候補が正しく反映されるようにするため）。
+        s = settings if settings is not None else self.app.settings
+        self._active_ocr_settings = s
+        name = s.get("ocr_provider", "")
         # V174-2: 外部 md ファイル（exe と同階層）があれば設定欄より優先
-        prompt = resolve_summary_prompt(name, load_summary_prompt(self.app.settings))
+        prompt = resolve_summary_prompt(name, load_summary_prompt(s))
 
         # ── クラウド実行ゲート（OCR 実行時と同方針・毎回確認）──
-        if self._is_cloud_provider():
-            if not self._check_cloud_api_key():
+        if self._is_cloud_provider(settings=s):
+            if not self._check_cloud_api_key(settings=s):
                 return
-            if not self._confirm_summary_cost(len(full_text)):
-                return
+            # フォールバック再開中は確認 askyesno が送信先確認を兼ねるため
+            # 二重表示しない（D-10/D-11）
+            if not getattr(self, "_fallback_resume", False):
+                if not self._confirm_summary_cost(len(full_text), settings=s):
+                    return
 
         # ── 入力過大の事前警告（コンテキスト長超過しやすい規模・全プロバイダ）──
         if len(full_text) > SUMMARY_TOO_LONG_CHARS:

@@ -1485,7 +1485,7 @@ class TestClearResetsFatalState:
         fake.temperature_var = types.SimpleNamespace(get=lambda: "0.1")
         fake.force_ocr_var = types.SimpleNamespace(get=lambda: False)
         fake._L["ocr_progress_init"] = "init"
-        fake._is_cloud_provider = lambda: False
+        fake._is_cloud_provider = lambda settings=None: False
         fake._render_next_page = lambda gen=None: None
         fake._start_worker_thread = lambda gen=None: None
         fake._maybe_show_lang_fallback_notice = lambda: None
@@ -1638,7 +1638,7 @@ class TestOcrDialogOnRun:
             summary_btn=types.SimpleNamespace(state=lambda _s: None),
         )
         # _is_cloud_provider: lmstudio は非クラウド → False
-        fake._is_cloud_provider = lambda: False
+        fake._is_cloud_provider = lambda settings=None: False
         # _render_next_page を no-op に差し替え（スレッド起動しない）
         fake._render_next_page = lambda gen=None: None
         # _start_worker_thread を no-op に差し替え
