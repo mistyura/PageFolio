@@ -11,7 +11,26 @@ from pagefolio.constants import CUSTOM_PROMPT_FILE, SUMMARY_PROMPT_FILE, C
 from pagefolio.dialogs.llm_config.dialog import _EFFORT_VALUES
 from pagefolio.ocr import MAX_OCR_MAX_TOKENS
 from pagefolio.ocr_providers import ClaudeProvider, GeminiProvider
+from pagefolio.ocr_providers.registry import env_vars_for
 from pagefolio.settings import load_prompt_file
+
+
+def _configured_env_var(provider_name):
+    """provider_name の環境変数が既に設定済みか判定し、表示用の変数名を返す。
+
+    D-09 #4: env_vars_for() のタプル順（Gemini は GEMINI_API_KEY 優先→
+    GOOGLE_API_KEY フォールバック）をそのまま「設定済み」判定・表示名決定に
+    使う。戻り値は (設定済みか, 表示用変数名) のタプル。表示用変数名は
+    タプル順で最初に設定済みのものを返し、いずれも未設定ならタプル先頭
+    （呼び出し側は「設定済み」フラグが False のときこの値を使わない）。
+    """
+    env_vars = env_vars_for(provider_name)
+    if not env_vars:
+        return False, ""
+    for var in env_vars:
+        if os.environ.get(var):
+            return True, var
+    return False, env_vars[0]
 
 
 class SectionsMixin:
@@ -352,9 +371,10 @@ class SectionsMixin:
         self.runpod_api_key_entry.pack(side="left", fill="x", expand=True, padx=4)
 
         runpod_note = self._L["llm_key_session_note"]
-        if os.environ.get("RUNPOD_API_KEY"):
+        _runpod_env_set, _runpod_env_var = _configured_env_var("runpod")
+        if _runpod_env_set:
             runpod_note += " " + self._L["llm_key_env_set_note"].format(
-                env_var="RUNPOD_API_KEY"
+                env_var=_runpod_env_var
             )
         tk.Label(
             self.runpod_section_frame,
@@ -452,9 +472,10 @@ class SectionsMixin:
         self.claude_api_key_entry.pack(side="left", fill="x", expand=True, padx=4)
 
         claude_note = self._L["llm_key_session_note"]
-        if os.environ.get("ANTHROPIC_API_KEY"):
+        _claude_env_set, _claude_env_var = _configured_env_var("claude")
+        if _claude_env_set:
             claude_note += " " + self._L["llm_key_env_set_note"].format(
-                env_var="ANTHROPIC_API_KEY"
+                env_var=_claude_env_var
             )
         tk.Label(
             self.claude_section_frame,
@@ -551,12 +572,10 @@ class SectionsMixin:
         self.gemini_api_key_entry.pack(side="left", fill="x", expand=True, padx=4)
 
         gemini_note = self._L["llm_key_session_note"]
-        gemini_env_var = (
-            "GEMINI_API_KEY" if os.environ.get("GEMINI_API_KEY") else "GOOGLE_API_KEY"
-        )
-        if os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY"):
+        _gemini_env_set, _gemini_env_var = _configured_env_var("gemini")
+        if _gemini_env_set:
             gemini_note += " " + self._L["llm_key_env_set_note"].format(
-                env_var=gemini_env_var
+                env_var=_gemini_env_var
             )
         tk.Label(
             self.gemini_section_frame,

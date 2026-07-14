@@ -9,8 +9,27 @@ import threading
 import tkinter as tk
 
 from pagefolio.ocr_providers import ClaudeProvider, GeminiProvider, LMStudioProvider
+from pagefolio.ocr_providers.registry import env_vars_for
 
 logger = logging.getLogger(__name__)
+
+
+def _env_fallback(provider_name):
+    """provider_name の環境変数値を優先順（env_vars_for のタプル順）で解決する。
+
+    D-09 #5: 旧コードの `os.environ.get("RUNPOD_API_KEY", "")` /
+    `os.environ.get("ANTHROPIC_API_KEY", "")` /
+    `os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY", "")`
+    という3箇所のハードコード分岐を、registry.env_vars_for() 経由の単一
+    ループへ統合する。Gemini は GEMINI_API_KEY → GOOGLE_API_KEY の優先順が
+    env_vars_for のタプル順そのものなので自動的に保たれる。
+    いずれの環境変数も未設定なら空文字を返す（None にしない・現行仕様）。
+    """
+    for var in env_vars_for(provider_name):
+        val = os.environ.get(var)
+        if val:
+            return val
+    return ""
 
 
 class ModelFetchMixin:
@@ -153,9 +172,7 @@ class ModelFetchMixin:
         10 秒を大きく超えることがあるため、model_list_timeout=90 秒の取得を
         バックグラウンド実行し UI はブロックしない。
         """
-        api_key = self.runpod_api_key_var.get().strip() or os.environ.get(
-            "RUNPOD_API_KEY", ""
-        )
+        api_key = self.runpod_api_key_var.get().strip() or _env_fallback("runpod")
         url = self.runpod_url_var.get().strip()
         if not api_key:
             self._set_lm_status(
@@ -195,9 +212,7 @@ class ModelFetchMixin:
         D-10: ダイアログ入力欄のライブ値（OK 前でも）を環境変数より優先する。
         """
         self._set_lm_status(self._L["llm_fetching_claude_models"], kind="info")
-        api_key = self.claude_api_key_var.get().strip() or os.environ.get(
-            "ANTHROPIC_API_KEY", ""
-        )
+        api_key = self.claude_api_key_var.get().strip() or _env_fallback("claude")
         provider = ClaudeProvider(api_key=api_key, model="")
 
         def _on_success(models):
@@ -237,9 +252,7 @@ class ModelFetchMixin:
         D-10: ダイアログ入力欄のライブ値（OK 前でも）を環境変数より優先する。
         """
         self._set_lm_status(self._L["llm_fetching_gemini_models"], kind="info")
-        api_key = self.gemini_api_key_var.get().strip() or (
-            os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY", "")
-        )
+        api_key = self.gemini_api_key_var.get().strip() or _env_fallback("gemini")
         provider = GeminiProvider(api_key=api_key, model="")
 
         def _on_success(models):
