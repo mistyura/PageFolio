@@ -1876,3 +1876,199 @@ class TestFallbackSection:
 
         assert captured["ocr_fallback_enabled"] is False
         assert captured["ocr_fallback_chain"] == []
+
+
+# ══════════════════════════════════════════════════════════════
+#  CR-02 回帰: テンプレート Cancel/Apply 契約の回復（02-05・V180-TMPL-01/03）
+# ══════════════════════════════════════════════════════════════
+
+
+class _SetGetVarStub:
+    """tk.StringVar 等の .get()/.set() 両方を模した軽量スタブ。
+
+    既存 _GetVarStub は get のみのため、template_var のように set() でも
+    駆動するテスト向けに新設する（衝突回避のため別名にする）。
+    """
+
+    def __init__(self, value):
+        self._value = value
+
+    def get(self):
+        """設定済みの値をそのまま返す。"""
+        return self._value
+
+    def set(self, value):
+        """値を更新する。"""
+        self._value = value
+
+
+class TestTemplateCancelContract:
+    """CR-02（02-REVIEW.md）回帰: dialog.py の __init__ ディープコピー分離・
+    sections.py の即時 _save_settings 除去・_on_template_delete の askyesno
+    削除確認を、実 bound method 呼び出しと source assertion で検証する。
+    """
+
+    def test_init_deepcopy_separates_prompt_templates_from_app_settings(self):
+        """LLMConfigDialog.__init__ の分離ロジック（dict() 後に prompt_templates
+        を copy.deepcopy で分離）により、current_settings["prompt_templates"]
+        が入力 app_settings の同キーと別オブジェクトになり、内側の items・
+        各テンプレート dict も別オブジェクトである（片方の変更が他方へ
+        伝播しない）ことを確認する。
+
+        LLMConfigDialog.__init__ は実 Tk（Toplevel の親ウィジェット）を要求し
+        headless では直接呼べないため、dialog.py 実コードと同一の分離手順を
+        ここで再現し不変条件そのものをアサートする。あわせて dialog.py の
+        実ソースに copy.deepcopy が実在することを source assertion で補強する
+        （__init__ 側 + _apply 側の最低2箇所）。
+        """
+        import copy
+
+        app_settings = {
+            "prompt_templates": {
+                "active": "tpl-a",
+                "items": {
+                    "tpl-a": {"custom_prompt": "a", "summary_prompt": "a2"},
+                    "tpl-b": {"custom_prompt": "b", "summary_prompt": "b2"},
+                },
+            }
+        }
+
+        # dialog.py __init__ の分離手順を再現:
+        #   self.current_settings = dict(current_settings)
+        #   self.current_settings["prompt_templates"] = copy.deepcopy(...)
+        current_settings = dict(app_settings)
+        current_settings["prompt_templates"] = copy.deepcopy(
+            app_settings.get("prompt_templates", {"active": "", "items": {}})
+        )
+
+        assert (
+            current_settings["prompt_templates"] is not app_settings["prompt_templates"]
+        )
+        assert (
+            current_settings["prompt_templates"]["items"]
+            is not app_settings["prompt_templates"]["items"]
+        )
+        assert (
+            current_settings["prompt_templates"]["items"]["tpl-a"]
+            is not app_settings["prompt_templates"]["items"]["tpl-a"]
+        )
+
+        # 片方の変更が他方へ伝播しない
+        current_settings["prompt_templates"]["items"]["tpl-a"]["custom_prompt"] = (
+            "changed"
+        )
+        assert (
+            app_settings["prompt_templates"]["items"]["tpl-a"]["custom_prompt"] == "a"
+        )
+
+        # 実コードが copy.deepcopy を用いていることを補強確認
+        src = _read_llm_config_package_source()
+        assert "import copy" in src
+        assert src.count("copy.deepcopy(") >= 2
+
+    def test_cancel_does_not_mutate_app_settings_then_apply_commits_once(self):
+        """CRUD 相当の in-place 変更（保存/削除）を分離済み current_settings に
+        対して行った後、on_apply を呼ばなければ（＝Cancel 相当・destroy のみ）
+        呼び出し元の app_settings 参照が一切変化しないことを確認する。続けて
+        LLMConfigDialog._apply（＝Apply 相当）を呼ぶと、prompt_templates が
+        active + items 込みで一度だけ収集されることを確認する。
+        """
+        import copy
+
+        from pagefolio.dialogs.llm_config import LLMConfigDialog
+        from pagefolio.settings import delete_template, save_template
+
+        app_settings = {
+            "prompt_templates": {
+                "active": "tpl-a",
+                "items": {
+                    "tpl-a": {"custom_prompt": "a", "summary_prompt": "a2"},
+                    "tpl-b": {"custom_prompt": "b", "summary_prompt": "b2"},
+                },
+            }
+        }
+        original_snapshot = copy.deepcopy(app_settings)
+
+        stub = _make_apply_key_stub({})
+        stub.current_settings = dict(app_settings)
+        stub.current_settings["prompt_templates"] = copy.deepcopy(
+            app_settings["prompt_templates"]
+        )
+        stub._active_template_name = "tpl-a"
+
+        # CRUD 相当の in-place 変更（保存 + 削除）を分離済み current_settings
+        # に対して直接行う（sections.py のハンドラが行う操作を settings.py の
+        # 純関数呼び出しで再現）
+        save_template(stub.current_settings, "tpl-c", "c", "c2")
+        delete_template(stub.current_settings, "tpl-b")
+
+        # Cancel 相当: on_apply を呼ばない（destroy のみ）→ app_settings は不変
+        assert app_settings == original_snapshot
+
+        # Apply 相当: _apply の実 bound method 呼び出しで一括収集される
+        captured = {}
+        stub.on_apply = lambda s: captured.update(s)
+        LLMConfigDialog._apply(stub)
+
+        assert captured["prompt_templates"]["active"] == "tpl-a"
+        assert set(captured["prompt_templates"]["items"].keys()) == {
+            "tpl-a",
+            "tpl-c",
+        }
+        # _apply 自体は呼び出し元の app_settings を汚染しない
+        # （永続化は on_apply コールバック側の責務）
+        assert app_settings == original_snapshot
+
+    def test_sections_source_has_no_save_settings_reference(self):
+        """sections.py 単体ソースにテンプレート CRUD ハンドラの即時
+        _save_settings が一切残っていないことを確認する
+        （Task 2 の除去の回帰防止・CR-02）。
+        """
+        import pathlib
+
+        src = pathlib.Path("pagefolio/dialogs/llm_config/sections.py").read_text(
+            encoding="utf-8"
+        )
+        assert "_save_settings" not in src
+
+    def test_on_template_delete_askyesno_no_aborts_yes_deletes(self, monkeypatch):
+        """_on_template_delete は askyesno=False で items 残存・delete_template
+        非呼出（早期 return）、askyesno=True で items から削除されることを
+        確認する（02-REVIEW Fix 案2）。
+        """
+        from pagefolio.constants import LANG
+        from pagefolio.dialogs.llm_config import LLMConfigDialog
+
+        d = LLMConfigDialog.__new__(LLMConfigDialog)
+        d._L = LANG["ja"]
+        d._active_template_name = "tpl-active"
+        d.current_settings = {
+            "prompt_templates": {
+                "active": "tpl-active",
+                "items": {
+                    "tpl-active": {"custom_prompt": "x", "summary_prompt": "y"},
+                    "tpl-target": {"custom_prompt": "z", "summary_prompt": "w"},
+                },
+            }
+        }
+        d.template_var = _SetGetVarStub("tpl-target")
+        reload_calls = []
+        d._reload_template_combo = lambda select_name=None: reload_calls.append(
+            select_name
+        )
+
+        monkeypatch.setattr(
+            "pagefolio.dialogs.llm_config.sections.messagebox.askyesno",
+            lambda *a, **k: False,
+        )
+        d._on_template_delete()
+        assert "tpl-target" in d.current_settings["prompt_templates"]["items"]
+        assert reload_calls == []
+
+        monkeypatch.setattr(
+            "pagefolio.dialogs.llm_config.sections.messagebox.askyesno",
+            lambda *a, **k: True,
+        )
+        d._on_template_delete()
+        assert "tpl-target" not in d.current_settings["prompt_templates"]["items"]
+        assert reload_calls == ["tpl-active"]

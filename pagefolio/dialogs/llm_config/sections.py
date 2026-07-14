@@ -1271,7 +1271,7 @@ class SectionsMixin:
         )
         self.current_settings["prompt_templates"]["active"] = name
         self._active_template_name = name
-        # CR-02 修正: 即時 _save_settings を除去。self.current_settings は
+        # CR-02 修正: 即時ディスク永続化を除去。self.current_settings は
         # __init__ でディープコピー分離済みのため、この変更は「キャンセル」
         # （destroy のみ）で破棄可能。永続化は Apply（_apply）経由の一括確定
         # に一本化する。
@@ -1304,7 +1304,7 @@ class SectionsMixin:
                 self._L["info_title"], self._L["tmpl_active_delete_blocked"]
             )
             return
-        # CR-02 修正: 即時 _save_settings を除去（Apply 経由の一括確定へ一本化）。
+        # CR-02 修正: 即時ディスク永続化を除去（Apply 経由の一括確定へ一本化）。
         self._reload_template_combo(self._active_template_name)
 
     def _on_template_rename(self):
@@ -1333,7 +1333,7 @@ class SectionsMixin:
         # 追従更新するため、ここでは self._active_template_name を同期するのみ
         if self._active_template_name == old_name:
             self._active_template_name = new_name
-        # CR-02 修正: 即時 _save_settings を除去（Apply 経由の一括確定へ一本化）。
+        # CR-02 修正: 即時ディスク永続化を除去（Apply 経由の一括確定へ一本化）。
         self._reload_template_combo(new_name)
 
     # ── フォールバック順設定ハンドラ（V180-FALL-01〜03・D-13〜D-16）───
