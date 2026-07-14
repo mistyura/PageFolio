@@ -1,6 +1,6 @@
 ---
 phase: 02-ai
-reviewed: 2026-07-14T00:00:00Z
+reviewed: 2026-07-15T00:00:00Z
 depth: standard
 files_reviewed: 10
 files_reviewed_list:
@@ -16,275 +16,198 @@ files_reviewed_list:
   - tests/test_provider_ui.py
 findings:
   critical: 2
-  warning: 3
+  warning: 5
   info: 1
-  total: 6
+  total: 8
 status: issues_found
 ---
 
-# Phase 02-ai: Code Review Report
+# Phase 02 (AI): Code Review Report — Fresh Independent Pass
 
-**Reviewed:** 2026-07-14
+**Reviewed:** 2026-07-15
 **Depth:** standard
 **Files Reviewed:** 10
 **Status:** issues_found
 
 ## Summary
 
-Reviewed the v1.8.0 Phase 2 テンプレート管理 + プロバイダーフォールバック実装
-（`LLMConfigDialog` の `dialog.py`/`sections.py`、`ocr_dialog.py` のフォールバック
-オーケストレーション、`ocr_fallback.py` の純ロジック層、`settings.py` の
-テンプレート CRUD、`lang.py`）。
+This is a fresh, independent pass over the current state of the files listed above — findings are re-derived from the code as it stands today, not copied from the prior `02-REVIEW.md`. Where a prior finding still reproduces in current code it is restated here (verified independently, not assumed); where a prior finding has actually been fixed, that is confirmed explicitly.
 
-`ocr_fallback.py` の純ロジック関数（`next_fallback_candidate` /
-`next_summary_candidate`）と `settings.py` のテンプレート CRUD 関数はテストで
-よく裏付けられており正しく動作する。`lang.py` の ja/en キーは完全に一致（425/425）。
+**Confirmed fixed:** the prior CR-02 (prompt-template save/delete/rename bypassing the Apply/Cancel contract via a shallow copy of `current_settings` + immediate `_save_settings()` calls) is now correctly resolved:
+- `pagefolio/dialogs/llm_config/dialog.py:47-55` deep-copies `prompt_templates` (including nested `items`/per-template dicts) in `__init__`, isolating `self.current_settings` from the caller's live settings object.
+- `pagefolio/dialogs/llm_config/sections.py`'s `_on_template_save`/`_on_template_delete`/`_on_template_rename` no longer call `_save_settings()` (verified via source grep — zero occurrences of `_save_settings` in `sections.py`); all three only mutate the deep-copied `self.current_settings`.
+- `_on_template_delete` now gates on `messagebox.askyesno` before deleting (verified with a bound-method call: reproduced both the "No" → item survives and "Yes" → item removed paths).
+- `_apply()` (`dialog.py:470-488`) collects `prompt_templates` (`active` + deep-copied `items`) exactly once for `on_apply`, restoring single-commit-on-Apply semantics. `tests/test_provider_ui.py::TestTemplateCancelContract` exercises this with real bound-method calls (`LLMConfigDialog._apply(stub)`), and the 02-06 gap-closure classes (`TestTemplateChangeFlow`, `TestTemplateNameValidationUI`, `TestTemplateDeleteButtonState`) exercise the D-03/D-04/D-05/D-07 handler state transitions the same way.
 
-一方で、(1) LLMConfigDialog の初期化時に「無効な選択」を「直前の有効な選択」として
-記憶してしまうガード漏れ、(2) テンプレート管理の「保存/削除/リネーム」が
-`current_settings` の浅いコピーに起因して `app.settings` を直接ミューテートし
-即座にディスクへ永続化するため「キャンセル」ボタンが実質的にテンプレート操作を
-取り消せない、という2件のブロッカー相当の欠陥を発見した。加えて、フォールバック
-切替後にプロバイダ表示ラベルが更新されない等のUI整合性の欠陥を複数発見した。
+**Still open (verified by direct reproduction, not carried over blindly):** two issues from before this fresh pass still reproduce unchanged in the current code (CR-01 and WR-01 below), and this pass also surfaces two new defects (CR-02, and the settings-write robustness gap in WR-05) plus additional consistency gaps.
 
 ## Critical Issues
 
-### CR-01: Tesseract 未インストール時の初期プロバイダガードが自己参照して機能しない
+### CR-01: Tesseract-unavailable initial-provider guard is self-referential and silently disables the dialog's first paint
 
-**File:** `pagefolio/dialogs/llm_config/dialog.py:60, 159-169`
+**File:** `pagefolio/dialogs/llm_config/dialog.py:68-72`, `dialog.py:164-180` (`_on_provider_change`), `pagefolio/dialogs/llm_config/sections.py:78-80, 1148-1149`
 
-**Issue:**
-`__init__` で `self._last_valid_provider` を `current_settings.get("ocr_provider", "off")`
-から初期化している（60行目）。これは Tesseract の可用性を一切考慮していない。
-
+**Issue:** `__init__` initializes the "last known-good provider" guard directly from persisted settings, *before* Tesseract availability is known:
 ```python
-# dialog.py:60
+# dialog.py:68-72
 self._last_valid_provider = current_settings.get("ocr_provider", "off")
+...
+self._tesseract_available, self._tesseract_langs = _detect_tesseract()
 ```
-
-一方 `_on_provider_change`（159-169行目）は、選択が `"tesseract"` かつ
-`self._tesseract_available` が False のとき、選択を `self._last_valid_provider`
-に巻き戻して早期 `return` する:
-
+`sections.py` initializes `self.provider_var` from the same source (`current_settings.get("ocr_provider", "off")`), and `_build()` unconditionally calls `self._on_provider_change()` once at the end to set up initial visibility. `_on_provider_change`'s Tesseract guard is:
 ```python
-# dialog.py:159-169
+# dialog.py:169-178
 if provider == "tesseract" and not self._tesseract_available:
     self.provider_var.set(self._last_valid_provider)
     self._set_lm_status(..., kind="fail")
     return
-self._last_valid_provider = provider
 ```
+If a user previously selected Tesseract on a machine where it was installed, `pagefolio_settings.json` persists `"ocr_provider": "tesseract"`. Opening the dialog on a machine/session where Tesseract is *not* available (uninstalled, PATH changed, etc.) means both `provider_var` and `_last_valid_provider` start as `"tesseract"` — the "fallback" target is the same invalid value being rejected. The guard's `self.provider_var.set(self._last_valid_provider)` is a no-op, and the function `return`s early **before reaching any of the pack/pack_forget calls that build the rest of the dialog's initial layout** (common-settings heading, temperature/effort frames, Tesseract accuracy-warning frame, etc.).
 
-ユーザーが以前 Tesseract を選択して `pagefolio_settings.json` に
-`"ocr_provider": "tesseract"` が永続化された後、別の環境（Tesseract 未導入の
-PC・アンインストール後の再起動など）でダイアログを開くと、初期値
-`self._last_valid_provider` は **同じく無効な `"tesseract"`** になる。
-`_build()` 末尾で最初に呼ばれる `_on_provider_change()`（sections.py:1150）は
-ガードに引っかかり `provider_var.set("tesseract")`（実質無変化）をした上で
-即 `return` するため、以降の分岐（`_common_section_heading`・
-`effort_frame`/`temperature_frame`・`tesseract_section_frame` 等の pack 処理）
-が一切実行されない。結果として:
+Reproduced directly by invoking the real bound method with the exact state `__init__`/`_build` would produce in this scenario:
+```
+provider_var after call: tesseract
+status calls: [('Tesseract is not installed. Please use another provider.',), {'kind': 'fail'}]
+```
+The combobox keeps showing the invalid `"tesseract"` selection and the entire "common settings" section (including the temperature control) never gets packed on first paint. The user must manually re-select any other provider to trigger normal layout — until then the dialog opens visibly broken.
 
-- 「全プロバイダ共通の設定」見出しが表示されない
-- temperature Spinbox が表示されず、ユーザーは編集不能（値は初期値のまま固定）
-- Tesseract の精度注記フレームも表示されない（早期 return のため）
-- プロバイダ combobox は依然として無効な "tesseract" を表示し続ける
-
-ユーザーが手動で別プロバイダへ切り替えれば自己修復するが、**初回表示時点で
-ダイアログが不完全な状態になる**。テスト（`tests/test_provider_ui.py` 他）にも
-`_last_valid_provider`/`tesseract_available` にまつわる検証は無く、この
-リグレッションは未検出のまま出荷され得る。
-
-**Fix:** 初期化時に Tesseract 可用性を考慮し、無効な初期選択なら安全なフォール
-バック値（例: `"off"`）を使う。
-
+**Fix:** Resolve the initial provider against Tesseract availability *after* detection, and before either `self.provider_var` or `self._last_valid_provider` is set:
 ```python
-# dialog.py __init__ 内、_detect_tesseract() 呼び出しの後に移動して判定する
-self._tesseract_available, self._tesseract_langs = _detect_tesseract()
+# dialog.py __init__, after self._tesseract_available is known
 _initial_provider = current_settings.get("ocr_provider", "off")
 if _initial_provider == "tesseract" and not self._tesseract_available:
     _initial_provider = "off"
 self._last_valid_provider = _initial_provider
 ```
-（`self.provider_var` の初期値も同じ `_initial_provider` を使うよう
-`sections.py` 側と整合させること。あるいは `_on_provider_change` のガード側で
-「戻し先も無効ならさらに `"off"` へフォールバックする」二重防御にする。）
+and use the same `_initial_provider` value (not `current_settings.get("ocr_provider", "off")` again) when constructing `self.provider_var` in `sections.py`, so the combobox and the guard's fallback target start in agreement.
 
----
+### CR-02: `settings.py` prompt-template CRUD helpers crash with `KeyError` on a partially-shaped `prompt_templates` value
 
-### CR-02: テンプレートの保存/削除/リネームは「キャンセル」で取り消せない（データ消失リスク）
+**File:** `pagefolio/settings.py:161-237` (`list_template_names`, `get_template`, `template_name_exists`, `save_template`, `delete_template`, `rename_template`); root cause in `_load_settings` at `pagefolio/settings.py:279-289`
 
-**File:** `pagefolio/dialogs/llm_config/dialog.py:46`, `pagefolio/dialogs/llm_config/sections.py:1244-1329`, `pagefolio/settings.py:188-237`
+**Issue:** Every template helper guards against `prompt_templates` being *entirely absent* with `settings.setdefault("prompt_templates", {"active": "", "items": {}})`. `dict.setdefault` is a no-op once the top-level key exists at all — even if its value is only partially shaped, e.g. `{"active": "foo"}` with no `"items"` key, or `{}`. `_load_settings()` performs the same shallow, top-level-only `setdefault` (`for k, v in defaults.items(): data.setdefault(k, v)`) and never normalizes an existing-but-malformed `prompt_templates` value.
 
-**Issue:**
-`LLMConfigDialog.__init__`（dialog.py:46）は呼び出し元から渡された
-`current_settings`（実体は `app.settings` そのもの。`ocr_dialog.py:951-959` の
-`LLMConfigDialog(self, self.app.settings, ...)` 参照）を**浅いコピー**する:
-
-```python
-# dialog.py:46
-self.current_settings = dict(current_settings)
+Reproduced directly against the real function:
 ```
-
-`dict(x)` はトップレベルキーのみを複製し、ネストした値（`prompt_templates`
-辞書とその中の `items` 辞書）は**同一オブジェクト参照**を共有する。
-`_load_settings()`（settings.py）は常に `prompt_templates` キーへデフォルト値を
-補完しているため、実運用ではほぼ確実に
-`self.current_settings["prompt_templates"] is self.app.settings["prompt_templates"]`
-が成立する。
-
-`sections.py` のテンプレート操作ハンドラは、この共有参照経由で
-`settings.py` の CRUD 関数を呼ぶ:
-
-```python
-# sections.py:1269 (_on_template_save)
-save_template(self.current_settings, name, custom_val, summary_val)
-...
-_save_settings(self.current_settings)   # 1275行目: 即座にディスクへ永続化
-
-# sections.py:1293 (_on_template_delete)
-delete_template(self.current_settings, name)
-...
-_save_settings(self.current_settings)   # 1299行目
-
-# sections.py:1320 (_on_template_rename)
-rename_template(self.current_settings, old_name, new_name)
-...
-_save_settings(self.current_settings)   # 1328行目
+>>> from pagefolio.settings import list_template_names
+>>> list_template_names({"prompt_templates": {"active": "foo"}})
+KeyError: 'items'
 ```
+`sections.py:841` calls `list_template_names(self.current_settings)` unconditionally while building the LLM settings dialog, and `settings.load_custom_prompt`/`load_summary_prompt` call `get_template` (same failure mode) whenever `prompt_templates["active"]` is truthy — i.e. every OCR run and every dialog open once a template has ever been made active. Any settings.json with a partially-shaped `prompt_templates` (hand edit, external tooling, a future migration, or a write interrupted mid-flight — see WR-05) turns into a hard crash on the OCR/LLM-config code path, with no exception handling anywhere upstream that catches it.
 
-`save_template`/`delete_template`/`rename_template`（settings.py:188-237）は
-すべて `settings["prompt_templates"]["items"]` を**in-place** で変更する
-（例: `settings.py:216` の `tpl["items"].pop(name, None)`）。共有参照のため、
-これは `app.settings["prompt_templates"]["items"]` を直接書き換え、さらに
-即座に `_save_settings()` でディスクへ書き込む。
-
-結果として、ユーザーがダイアログ上で誤ってテンプレートを「削除」した直後に
-（他の変更を破棄するつもりで）「キャンセル」ボタン（`self.destroy` のみを
-呼び、`on_apply` は一切呼ばれない）を押しても、**削除は既に確定・永続化済み**
-で復元できない。同様に「保存」「リネーム」も Apply を経由せず即時確定する。
-「キャンセル」ボタンの一般的な UI 契約（変更を破棄する）を裏切っており、
-テンプレートの誤削除は実質的に取り消し不能なデータ消失となる。
-
-コード内コメント（dialog.py:461-469）はこの挙動を意図した設計として説明して
-いるが、"キャンセル" というラベルの下でユーザーに誤った期待を抱かせる点、
-および削除確認ダイアログ（`_on_template_delete` は削除前に確認を出さない —
-アクティブテンプレートの削除防止チェックのみ）が無い点から、データ消失
-リスクとして扱う。
-
-**Fix:** 以下のいずれかで対処する。
-1. ダイアログを開く際、呼び出し元で `current_settings` を渡す前に
-   `prompt_templates` を含めディープコピーする（`copy.deepcopy` あるいは
-   `{"active": ..., "items": dict(items)}` の明示的コピー）。これにより
-   ダイアログ内の CRUD 操作が呼び出し元の `app.settings` を汚染しなくなる。
-   ただし、この場合「即時永続化」という現行仕様自体を見直す必要がある
-   （Apply を経ずにテンプレートだけ確定させたいのか、全体を Apply 時に
-   一括確定させたいのかの設計判断が必要）。
-2. 現行の「即時確定」仕様を維持するなら、`_on_template_delete` に
-   `messagebox.askyesno` の削除確認を追加し、少なくとも誤操作を1段階
-   防止する。
-
+**Fix:** Normalize the nested shape defensively wherever `prompt_templates` is touched, e.g. a shared helper:
 ```python
-# 対処案1（推奨）: __init__ でネスト構造もコピーする
-import copy
-self.current_settings = copy.deepcopy(dict(current_settings))
+def _ensure_template_shape(settings):
+    tpl = settings.setdefault("prompt_templates", {"active": "", "items": {}})
+    tpl.setdefault("active", "")
+    tpl.setdefault("items", {})
+    return tpl
 ```
+and use `_ensure_template_shape(settings)` in place of the current `settings.setdefault("prompt_templates", ...)` + direct `["items"]`/`["active"]` indexing in `list_template_names`, `get_template`, `template_name_exists`, `save_template`, `delete_template`, and `rename_template`.
 
 ## Warnings
 
-### WR-01: フォールバック切替後、プロバイダ/モデル表示ラベルと LM Studio 欄の可視性が更新されない
+### WR-01: Fallback provider switch doesn't refresh the dialog's provider/model display or LM Studio field visibility
 
-**File:** `pagefolio/ocr_dialog.py:808-849, 305, 2367-2418`
+**File:** `pagefolio/ocr_dialog.py:808-849` (`_provider_display_name`, `_provider_model_name`), `pagefolio/ocr_dialog.py:305` (`show_lmstudio_fields`, evaluated once in `_build`), `pagefolio/ocr_dialog.py:2367-2418` (`_switch_to_fallback_provider`)
 
-**Issue:**
-`_provider_display_name()`（808-828行目）と `_provider_model_name()`
-（830-849行目）はいずれも `self.app.settings.get("ocr_provider", "")` を
-参照して表示文字列を決める。フォールバック実行中は `self._active_ocr_settings`
-（`_switch_to_fallback_provider` が構築する `fb` スナップショット）だけが
-実際の送信先プロバイダを表す設定であり、`self.app.settings` は
-Pitfall 4 の方針どおり一切書き換えられない（`_switch_to_fallback_provider`
-コメント参照）。
+**Issue:** `_provider_display_name()` and `_provider_model_name()` both read `self.app.settings.get("ocr_provider", "")` — the *persisted* provider, not `self._active_ocr_settings` (the dialog-local fallback snapshot that `_switch_to_fallback_provider` builds and that is documented elsewhere as the source of truth during a fallback run, e.g. `_active_provider_name()` at `ocr_dialog.py:2272-2275` explicitly reads `self._active_ocr_settings or self.app.settings`). `_provider_display_name`'s `isinstance(self.provider, ClaudeProvider)` fallback doesn't rescue this either, since the `name == "claude"` branch short-circuits `or` before the isinstance check is reached whenever the persisted setting still says `"claude"`.
 
-`_provider_display_name` は `isinstance(self.provider, ClaudeProvider)` 等の
-フォールバックも持つが、`or` の左辺 `name == "claude"` が
-`self.app.settings` 由来で真のままなので、実際に `self.provider` が
-`GeminiProvider` へ差し替わっていても短絡評価でクロード表示のまま残る:
+`_switch_to_fallback_provider` rebuilds `self.provider` for the candidate and re-clamps `self.concurrency`, but never calls `_refresh_provider_dependent_ui()` (the method that exists specifically to re-evaluate these two things after a provider change — see `_apply_llm_settings`, which does call it). Consequently:
+- The "OCR プロバイダ:" / "モデル:" header labels keep showing the *original* provider/model after a silent fallback switch, even though the actual outbound request now targets a different vendor.
+- If the fallback candidate is `lmstudio` (or vice versa, switching away from it), the LM Studio URL/model fields' visibility (`show_lmstudio_fields`, computed once in `_build()`) is never re-evaluated, so the fields that would let the user confirm/adjust the new destination stay hidden (or shown when they shouldn't be).
 
+The initial `_propose_fallback` confirmation dialog itself does show the correct destination, so the user's *first* consent is informed — but the dialog's persistent header becomes misleading for the remainder of the run, undermining the "always show the destination" transparency goal the fallback feature is designed around.
+
+**Fix:**
 ```python
-# ocr_dialog.py:818
-if name == "claude" or isinstance(self.provider, ClaudeProvider):
-    return self._L["ocr_provider_name_claude"]
-```
-
-さらに `_build()`（305行目）で一度だけ評価される
-`show_lmstudio_fields = not self._is_cloud_provider()` を基準に LM Studio 固有欄
-（URL/モデル）の pack 可否が決まるが、`_switch_to_fallback_provider`
-（2367-2418行目）はこれらの表示を再評価する処理（`_refresh_provider_dependent_ui`
-呼び出し）を一切行わない。そのため、クラウドプロバイダ → `lmstudio` への
-フォールバックが発生した場合、実際には LM Studio へリクエストが送られている
-にもかかわらず、URL/モデル欄がダイアログ上に一切表示されない（確認・変更手段
-がない）。
-
-フォールバック確認ダイアログ（`_propose_fallback` の `askyesno`）自体には
-正しい送信先が表示されるため初回の同意は正確だが、その後の常設表示
-（ヘッダー行の「OCR プロバイダ:」「モデル:」欄）は古いままとなり、
-継続的な透明性という設計目標（D-10〜D-12「必ず送信先を明示する」）を
-部分的に損なう。
-
-**Fix:** `_switch_to_fallback_provider` の末尾（provider 差し替え成功後）で
-表示更新を明示的に呼ぶ。
-
-```python
-# _switch_to_fallback_provider 内、self.provider 差し替え直後に追加
+# _switch_to_fallback_provider, immediately after self.provider is rebuilt
 self._refresh_provider_dependent_ui()
 ```
+and change `_provider_display_name`/`_provider_model_name` to read `self._active_ocr_settings or self.app.settings` (matching `_active_provider_name()`'s existing pattern) instead of `self.app.settings` unconditionally.
 
-また `_provider_display_name`/`_provider_model_name` は `self.app.settings`
-ではなく `self._active_ocr_settings or self.app.settings` を参照するように
-修正し、`_active_provider_name()`（2272-2275行目）と同じパターンへ統一する。
+### WR-02: `_on_summary` aliases `app.settings` directly instead of defensively copying it like `_on_run`
 
----
+**File:** `pagefolio/ocr_dialog.py:2024-2025` (contrast with `1328-1330`)
 
-### WR-02: `_on_summary` は `_active_ocr_settings` を防御的コピーせず `app.settings` を直接エイリアスする
-
-**File:** `pagefolio/ocr_dialog.py:2024-2025`（対比: `1328-1330`）
-
-**Issue:**
-`_on_run` は設定スナップショットを確定する際に明示的にコピーする:
-
+**Issue:** `_on_run` snapshots settings defensively:
 ```python
 # ocr_dialog.py:1328-1330
 self._active_ocr_settings = (
     settings if settings is not None else dict(self.app.settings)
 )
 ```
-
-一方 `_on_summary` は同じ役割の変数を代入する際にコピーしない:
-
+`_on_summary`, which is documented with the identical "Pitfall 4: `self.app.settings` は一切書き換えない" invariant, instead does:
 ```python
 # ocr_dialog.py:2024-2025
 s = settings if settings is not None else self.app.settings
 self._active_ocr_settings = s
 ```
+When `_on_summary()` is called with no explicit `settings` (the normal "📊 サマリ作成" button path), `self._active_ocr_settings` becomes the *live* `self.app.settings` object rather than a copy. Nothing currently writes through `self._active_ocr_settings` in place, so there is no observable corruption today, but the asymmetry with `_on_run` removes the defensive copy that is the documented safety net for this exact invariant — a very natural future change (any code that does `self._active_ocr_settings[...] = ...`, which several nearby helpers already treat this attribute as a safe-to-mutate local snapshot) would silently mutate and persist changes to `app.settings`.
 
-`settings=None`（通常のサマリ実行）のとき `self._active_ocr_settings` は
-`self.app.settings` そのものへのエイリアスになる。現状のコードはこの `s` を
-読み取り専用でしか使っておらず直ちに実害はないが、`_on_run` と挙動が
-非対称であり、将来 `_on_summary` 系の経路に `s[...] = ...` のような
-書き込みが追加された場合、Pitfall 4（「app.settings は一切書き換えない」）
-が静かに破られる回帰を生みやすい構造になっている。
-
-**Fix:** `_on_run` と同じ防御的コピーへ統一する。
-
+**Fix:**
 ```python
 s = settings if settings is not None else dict(self.app.settings)
 ```
 
----
+### WR-03: Template-switch "unsaved changes" confirmation is unguarded outside file-linked mode and when no template was previously active
 
-### WR-03: `_check_cloud_api_key`/表示系ヘルパーの「未知プロバイダ」フォールバック文言が `ocr_api_key_missing`（Claude 用文言）に固定される
+**File:** `pagefolio/dialogs/llm_config/sections.py:1153-1175` (`_has_unsaved_template_changes`), `1196-1241` (`_on_template_change`)
 
-**File:** `pagefolio/ocr_dialog.py:1283-1290`
+**Issue:** `_on_template_change` always overwrites the custom/summary prompt text widgets with the newly-selected template's saved content once the (conditional) confirmation passes. `_has_unsaved_template_changes` only returns `True` (triggering the "discard unsaved changes?" dialog) when **both**:
+1. at least one of `ocr_custom_prompt.md` / `ocr_summary_prompt.md` exists (file-linked mode), **and**
+2. `self._active_template_name` is non-empty (a template was already active).
+
+In the far more common scenario — no external prompt files linked, and no template selected yet in this session, but the user has typed a prompt directly into the text box — switching the template combo to load a saved template **silently discards the typed text with zero confirmation**, because condition 2 fails regardless of file-linking. This is a real, easily reachable data-loss path: type a custom prompt → decide to try a saved template from the dropdown → the typed prompt disappears with no warning. `tests/test_provider_ui.py::TestTemplateChangeFlow` (the 02-06 gap-closure tests) only exercises scenarios with a non-empty `active_template_name`, so this gap has no regression coverage.
+
+**Fix:** Broaden the check so any non-empty pending edit is protected, independent of file-linking or a pre-existing active template:
+```python
+def _has_unsaved_template_changes(self, current_custom, current_summary):
+    if not self._active_template_name:
+        # No prior active template: still warn if there is unsaved free-form text
+        return bool(current_custom.strip() or current_summary.strip())
+    if not (prompt_file_exists(CUSTOM_PROMPT_FILE) or prompt_file_exists(SUMMARY_PROMPT_FILE)):
+        return False
+    ...
+```
+(adjust to preserve the existing file-linked-mode semantics for the "active template present" branch). Add a regression test with `active_template_name=""` and non-empty `custom_text`/`summary_text` asserting `askyesno` fires and a `False` response preserves the typed text.
+
+### WR-04: Fallback confirmation dialog shows the raw internal provider key instead of a localized display name
+
+**File:** `pagefolio/ocr_dialog.py:2334-2346` (`_propose_fallback`)
+
+**Issue:** Everywhere else in the dialog, the active provider is shown via `_provider_display_name()` (e.g. `"Claude (Anthropic)"`, `"Gemini (Google AI)"`, `"RunPod (Serverless)"`). The fallback confirmation dialog instead formats `fallback_confirm_msg` with the raw internal candidate identifier:
+```python
+self._L["fallback_confirm_msg"].format(
+    reason=self._L[reason_key],
+    candidate=candidate,          # e.g. "gemini", "runpod", "tesseract" — not localized
+    host=self._fallback_candidate_host(candidate),
+)
+```
+This inconsistency is locked in rather than caught by the test suite: `tests/test_ocr_fallback.py::TestSummaryFallback::test_summary_excludes_tesseract_candidate` explicitly asserts the raw string `"gemini"` appears in the confirmation message.
+
+**Fix:** Add a small `name → display name` lookup parameterized by provider (factoring the mapping already inside `_provider_display_name()`), and use it for `candidate` when formatting `fallback_confirm_msg`; update the corresponding test assertion to match.
+
+### WR-05: `_save_settings` performs a non-atomic write, widening the crash surface described in CR-02
+
+**File:** `pagefolio/settings.py:292-311`
+
+**Issue:** `_save_settings` writes directly to the target path (`with open(path, "w", ...) as f: json.dump(...)`) with no temp-file-plus-`os.replace` pattern. A process kill, power loss, or full disk mid-write can leave `pagefolio_settings.json` truncated or otherwise structurally incomplete. Most truncations raise `JSONDecodeError`, which `_load_settings`'s broad `except Exception` already tolerates by falling back to full in-memory defaults — but a write that succeeds up to a JSON-structurally-valid-yet-semantically-incomplete point (plausible given `json.dump`'s internal buffering/flush behavior on a multi-key document) can produce exactly the "`prompt_templates` present but missing `items`" shape that CR-02 shows crashes the app.
+
+**Fix:** Write-then-rename for atomicity:
+```python
+tmp_path = path + ".tmp"
+with open(tmp_path, "w", encoding="utf-8") as f:
+    json.dump(to_save, f, ensure_ascii=False, indent=2)
+os.replace(tmp_path, path)
+```
+This guarantees the on-disk file is always either the fully-old or fully-new version, never a partial write — independent of, and complementary to, the CR-02 fix.
+
+## Info
+
+### IN-01: Unknown-cloud-provider API-key-missing message falls back to Claude-specific wording
+
+**File:** `pagefolio/ocr_dialog.py:1283-1290` (`_check_cloud_api_key`)
 
 **Issue:**
 ```python
@@ -294,41 +217,12 @@ msg_key = {
     "runpod": "ocr_api_key_missing_runpod",
 }.get(name, "ocr_api_key_missing")
 ```
-プラグイン登録プロバイダ等、`claude`/`gemini`/`runpod` 以外のクラウド系
-プロバイダ名（`_is_cloud_provider` はこの3種のみを isinstance でクラウド
-判定するため通常到達しないが、プラグインが `OCRAPIKeyError` を送出する
-実装をした場合など）でこの分岐に入ると、`env_var` はプラグイン名に応じて
-正しく解決されるにもかかわらず、メッセージ本文は Claude 固有の文言
-（`ocr_api_key_missing`。`{env_var}` プレースホルダのみ汎用）を使う。
-実害は限定的（プレースホルダで env_var 自体は正しく埋まる）だが、
-「Claude 固有の言い回し」が他プロバイダのエラーにも出てしまう点は
-軽微な文言不整合。
+For a provider name outside these three (currently unreachable through the built-in `_is_cloud_provider` isinstance checks, but reachable if a plugin raises `OCRAPIKeyError` through this path), the fallback message text is the Claude-specific wording — only the `{env_var}` placeholder is generic. Impact is low today since this branch is not reachable via the built-in providers, but it is a latent wording bug for plugin-provided cloud OCR providers.
 
-**Fix:** 汎用フォールバック文言（`ocr_api_key_missing` はプレースホルダのみ
-なら現状でも大きな実害はないため、優先度は低い。将来プラグインプロバイダが
-このエラー経路を使う場合に備え、汎用文言をコメントで明示しておくとよい）。
-
-## Info
-
-### IN-01: `_has_unsaved_template_changes` は「外部ファイル連動モード」以外では常に False を返す
-
-**File:** `pagefolio/dialogs/llm_config/sections.py:1154-1175`
-
-**Issue:**
-コメント（1158-1161行目）で明示されている意図的な設計だが、通常モード
-（外部 md ファイル未使用）でテンプレートを切り替えると、入力欄の未保存の
-編集内容は確認なしに黙って破棄される。D-05 の対象が明示的に「外部ファイル
-連動モードでは」に限定されているため意図的な仕様だが、通常モードでも
-入力欄の内容とアクティブテンプレートの保存済み内容が異なる場合に同様の
-確認を出すことは、ユーザー体験として一貫性があり検討の価値がある
-（バグではなく改善余地としての記録）。
-
-**Fix:** 対応不要（設計判断として容認可能）。将来的にテンプレート未保存
-差分の確認を全モードへ拡張する場合は `_has_unsaved_template_changes` の
-早期 return を外す。
+**Fix:** Low priority. If/when plugin-provided cloud providers are expected to hit this path, add a genuinely generic fallback message key rather than reusing `ocr_api_key_missing`.
 
 ---
 
-_Reviewed: 2026-07-14_
+_Reviewed: 2026-07-15_
 _Reviewer: Claude (gsd-code-reviewer)_
 _Depth: standard_
