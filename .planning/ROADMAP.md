@@ -246,7 +246,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | 3. ページ操作磨き込み + v1.5.0 回帰テスト | v1.7.1 | 4/4 | Complete | 2026-07-05 |
 | 4. UI/UX 磨き込み + 既知バグ棚卸し | v1.7.1 | 4/4 | Complete | 2026-07-05 |
 | 1. 基盤分割（肥大モジュールリファクタリング） | v1.8.0 | 4/4 | Complete | 2026-07-14 |
-| 2. AI強化（プロンプト・テンプレート管理 + プロバイダーフォールバック） | v1.8.0 | 5/6 | In Progress | - |
+| 2. AI強化（プロンプト・テンプレート管理 + プロバイダーフォールバック） | v1.8.0 | 6/6 | In Progress | - |
 | 3. OCR実行エンジン抽出 + E2Eテスト | v1.8.0 | TBD | Not started | - |
 | 4. バッチ複数ファイルOCR | v1.8.0 | TBD | Not started | - |
 | 5. 堅牢性強化（サムネイル仮想化 + Blobリーク検出 + ShortcutsDialog修正） | v1.8.0 | TBD | Not started | - |
