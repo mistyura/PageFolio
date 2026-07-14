@@ -126,6 +126,96 @@ def load_summary_prompt(settings):
     )
 
 
+# ═══════════════════════════════════════════════════════════════
+# プロンプトテンプレート管理（v1.8.0 Phase 2・D-01〜D-04）
+# ═══════════════════════════════════════════════════════════════
+#
+# すべて settings 辞書を第1引数に取る関数型 CRUD ヘルパー。既存の
+# save_prompt_file/load_custom_prompt と同じ責務分離を踏襲し、settings.py
+# 内では自動保存しない（_save_settings() の呼び出しは呼び出し側の責務）。
+# 各関数冒頭で settings.setdefault("prompt_templates", ...) を行うため、
+# 未初期化の settings 辞書に対しても安全に動作する。
+
+
+def list_template_names(settings):
+    """保存済みテンプレート名の一覧を sorted で返す（V180-TMPL-02）。"""
+    settings.setdefault("prompt_templates", {"active": "", "items": {}})
+    return sorted(settings["prompt_templates"]["items"].keys())
+
+
+def get_template(settings, name):
+    """テンプレート名からペア（custom_prompt/summary_prompt）を返す。
+
+    未登録名の場合は None を返す。
+    """
+    settings.setdefault("prompt_templates", {"active": "", "items": {}})
+    return settings["prompt_templates"]["items"].get(name)
+
+
+def template_name_exists(settings, name):
+    """テンプレート名が登録済みか純粋判定する（D-04）。
+
+    空文字・空白のみの名前は save_template が ValueError で拒否するため
+    登録され得ず、常に False を返す（無効な名前の弾き判定を兼ねる）。
+    """
+    if not name or not name.strip():
+        return False
+    settings.setdefault("prompt_templates", {"active": "", "items": {}})
+    return name in settings["prompt_templates"]["items"]
+
+
+def save_template(settings, name, custom_prompt, summary_prompt):
+    """テンプレートを保存する（新規作成・上書き更新は共通処理・D-01 ペア保存）。
+
+    name が空文字・空白のみの場合は ValueError を送出する（D-04）。
+    既存名を指定した場合は内容を上書きする（新規/更新の区別はしない）。
+    """
+    if not name or not name.strip():
+        raise ValueError("テンプレート名を空にすることはできません")
+    settings.setdefault("prompt_templates", {"active": "", "items": {}})
+    settings["prompt_templates"]["items"][name] = {
+        "custom_prompt": custom_prompt,
+        "summary_prompt": summary_prompt,
+    }
+
+
+def delete_template(settings, name):
+    """テンプレートを削除する。
+
+    アクティブテンプレート（prompt_templates["active"]）と一致する名前は
+    ValueError で拒否する（D-03: 誤操作でカスタムプロンプトが消える事故を
+    防止する防御的実装。UI 側の削除ボタン無効化と二重防御を構成する）。
+    """
+    settings.setdefault("prompt_templates", {"active": "", "items": {}})
+    tpl = settings["prompt_templates"]
+    if name and name == tpl["active"]:
+        raise ValueError(
+            f"アクティブなテンプレート '{name}' は削除できません（先に切替が必要です）"
+        )
+    tpl["items"].pop(name, None)
+
+
+def rename_template(settings, old_name, new_name):
+    """テンプレートをリネームする。
+
+    new_name が空文字・空白のみ、または既存の別テンプレート名と重複する場合は
+    ValueError を送出する（D-04）。old_name が未登録の場合も ValueError。
+    old_name がアクティブテンプレートだった場合、active も new_name へ追従更新
+    する。
+    """
+    if not new_name or not new_name.strip():
+        raise ValueError("テンプレート名を空にすることはできません")
+    settings.setdefault("prompt_templates", {"active": "", "items": {}})
+    tpl = settings["prompt_templates"]
+    if old_name not in tpl["items"]:
+        raise ValueError(f"テンプレート '{old_name}' は存在しません")
+    if new_name != old_name and new_name in tpl["items"]:
+        raise ValueError(f"テンプレート名 '{new_name}' は既に使用されています")
+    tpl["items"][new_name] = tpl["items"].pop(old_name)
+    if tpl["active"] == old_name:
+        tpl["active"] = new_name
+
+
 def _load_settings():
     """設定を読み込む。ファイルがなければデフォルト値を返す"""
     defaults = {
@@ -155,6 +245,15 @@ def _load_settings():
         # Phase 02: サムネイル表示件数（D-04: 既定 20・許容 10〜100）
         # 読み出しは pagination.clamp_page_size 経由で範囲外/非数値を倒す（W1）
         "thumb_page_size": 20,
+        # v1.8.0 Phase 2: プロンプトテンプレート管理（D-01/D-02・V180-TMPL-01〜05）
+        # active: 現在選択中のテンプレート名（空文字 = 未選択・従来どおり設定欄
+        # 直接編集と等価）。items: {テンプレート名: {"custom_prompt": str,
+        # "summary_prompt": str}}（D-01: ペア保存）
+        "prompt_templates": {"active": "", "items": {}},
+        # v1.8.0 Phase 2: プロバイダーフォールバック（D-16・V180-FALL-01）
+        # 既定は安全側（無効・空チェーン）。ユーザーが明示的に設定するまで発火しない。
+        "ocr_fallback_enabled": False,
+        "ocr_fallback_chain": [],
     }
     try:
         path = _get_settings_path()
