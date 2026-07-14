@@ -319,8 +319,17 @@ def _save_settings(settings):
         to_save = settings
     try:
         path = _get_settings_path()
-        with open(path, "w", encoding="utf-8") as f:
+        # 02-REVIEW WR-05 修正: write-then-rename で原子的に書き込む。
+        # path へ直接書き込むと、プロセス強制終了・電源断・ディスクフル等で
+        # 書き込み途中に中断した場合、JSON として不完全（切り詰められた/
+        # 構造的に破損した）ファイルが残る可能性がある。一時ファイルへ
+        # 書き込んでから os.replace で差し替えることで、ディスク上のファイルは
+        # 常に「完全な旧内容」か「完全な新内容」のいずれかのみになる
+        # （同一ファイルシステム内であれば os.replace は原子的）。
+        tmp_path = path + ".tmp"
+        with open(tmp_path, "w", encoding="utf-8") as f:
             json.dump(to_save, f, ensure_ascii=False, indent=2)
+        os.replace(tmp_path, path)
     except Exception as e:
         logger.debug("設定ファイル保存失敗: %s", e)
 
