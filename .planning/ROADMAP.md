@@ -106,7 +106,7 @@ V171-* 全 17 要件 Complete（被覆 17/17・孤立要件なし）。締め前
   3. `_SENSITIVE_KEYS` がプロバイダ→環境変数マッピングから生成される中央レジストリとなり、新プロバイダ追加時に手動リストへの追加漏れが構造的に起きなくなる
   4. 分割前に拡張された `test_imports.py` の後方互換 import テストと既存 pytest 全件がグリーンのまま維持される
 
-**Plans**: 2/4 plans executed
+**Plans**: 3/4 plans executed
 **Wave 1**
 
 - [x] 01-01-PLAN.md — テスト先行拡張（後方互換 import 安全網・Wave 0 必達）[Wave 1]
@@ -117,7 +117,7 @@ V171-* 全 17 要件 Complete（被覆 17/17・孤立要件なし）。締め前
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
-- [ ] 01-03-PLAN.md — _SENSITIVE_KEYS 中央化 + D-09 参照統合（settings/ocr/ocr_dialog）[Wave 3]
+- [x] 01-03-PLAN.md — _SENSITIVE_KEYS 中央化 + D-09 参照統合（settings/ocr/ocr_dialog）[Wave 3]
 - [ ] 01-04-PLAN.md — llm_config Mixin パッケージ分割 + D-09 #4（sections env var）[Wave 3]
 
 ### Phase 2: AI強化（プロンプト・テンプレート管理 + プロバイダーフォールバック）
@@ -221,7 +221,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | 2. OCR 磨き込み（レビュー残の現行照合と二重実装解消） | v1.7.1 | 4/4 | Complete | 2026-07-05 |
 | 3. ページ操作磨き込み + v1.5.0 回帰テスト | v1.7.1 | 4/4 | Complete | 2026-07-05 |
 | 4. UI/UX 磨き込み + 既知バグ棚卸し | v1.7.1 | 4/4 | Complete | 2026-07-05 |
-| 1. 基盤分割（肥大モジュールリファクタリング） | v1.8.0 | 2/4 | In Progress | - |
+| 1. 基盤分割（肥大モジュールリファクタリング） | v1.8.0 | 3/4 | In Progress | - |
 | 2. AI強化（プロンプト・テンプレート管理 + プロバイダーフォールバック） | v1.8.0 | TBD | Not started | - |
 | 3. OCR実行エンジン抽出 + E2Eテスト | v1.8.0 | TBD | Not started | - |
 | 4. バッチ複数ファイルOCR | v1.8.0 | TBD | Not started | - |
