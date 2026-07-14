@@ -8,7 +8,7 @@ status: ready_to_execute
 stopped_at: Phase 3 planned (2 plans)
 last_updated: "2026-07-15T00:00:00.000Z"
 last_activity: 2026-07-15
-last_activity_desc: Phase 3 planning complete (2 plans, checker passed with direct doc fixes)
+last_activity_desc: Phase 3 replan with cross-AI review feedback (Antigravity, 4 findings incorporated/deferred, checker passed)
 progress:
   total_phases: 6
   completed_phases: 2
@@ -30,7 +30,7 @@ See: .planning/PROJECT.md (updated 2026-07-13)
 
 Phase: 3 — OCR実行エンジン抽出 + E2Eテスト
 Plan: 2 plans ready（03-01: OCRRunEngine 抽出 / 03-02: E2E モックテスト）
-Status: Ready to execute。プランチェッカー指摘（RESEARCH.md Open Questions マーカー・VALIDATION.md 転記）は直接修正済み。要件被覆 2/2・決定被覆 16/16 でゲート通過
+Status: Ready to execute。クロス AI レビュー（Antigravity・リスク LOW）の4指摘をプランへ反映済み（MEDIUM: Tk メインスレッド移譲 finalizer 化 / LOW: _skip_base 系クリーンアップ明記 / LOW: 排他ロックは T-03-03 で明示 defer・Phase 4 確認事項 / 提案: FakeProvider 複製コメント）。チェッカー VERIFICATION PASSED・要件被覆 2/2・決定被覆 16/16
 Last activity: 2026-07-15 — Phase 3 planning complete (2 plans)
 
 ## v1.8.0 Phase Map
