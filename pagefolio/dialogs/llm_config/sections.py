@@ -13,7 +13,6 @@ from pagefolio.ocr import MAX_OCR_MAX_TOKENS
 from pagefolio.ocr_providers import ClaudeProvider, GeminiProvider
 from pagefolio.ocr_providers.registry import env_vars_for
 from pagefolio.settings import (
-    _save_settings,
     delete_template,
     get_template,
     list_template_names,
@@ -1272,7 +1271,10 @@ class SectionsMixin:
         )
         self.current_settings["prompt_templates"]["active"] = name
         self._active_template_name = name
-        _save_settings(self.current_settings)
+        # CR-02 修正: 即時 _save_settings を除去。self.current_settings は
+        # __init__ でディープコピー分離済みのため、この変更は「キャンセル」
+        # （destroy のみ）で破棄可能。永続化は Apply（_apply）経由の一括確定
+        # に一本化する。
         self._reload_template_combo(name)
 
     def _on_template_delete(self):
@@ -1280,6 +1282,8 @@ class SectionsMixin:
 
         UI 側の削除ボタン無効化（_refresh_template_delete_state）に加え、
         settings.delete_template の ValueError による二重防御を構成する。
+        削除前に messagebox.askyesno で確認を出し、No 応答なら
+        delete_template を呼ばずに中止する（誤削除防止・02-REVIEW Fix 案2）。
         """
         name = self.template_var.get()
         if not name:
@@ -1289,6 +1293,10 @@ class SectionsMixin:
                 self._L["info_title"], self._L["tmpl_active_delete_blocked"]
             )
             return
+        if not messagebox.askyesno(
+            self._L["confirm_title"], self._L["tmpl_delete_confirm"], parent=self
+        ):
+            return
         try:
             delete_template(self.current_settings, name)
         except ValueError:
@@ -1296,7 +1304,7 @@ class SectionsMixin:
                 self._L["info_title"], self._L["tmpl_active_delete_blocked"]
             )
             return
-        _save_settings(self.current_settings)
+        # CR-02 修正: 即時 _save_settings を除去（Apply 経由の一括確定へ一本化）。
         self._reload_template_combo(self._active_template_name)
 
     def _on_template_rename(self):
@@ -1325,7 +1333,7 @@ class SectionsMixin:
         # 追従更新するため、ここでは self._active_template_name を同期するのみ
         if self._active_template_name == old_name:
             self._active_template_name = new_name
-        _save_settings(self.current_settings)
+        # CR-02 修正: 即時 _save_settings を除去（Apply 経由の一括確定へ一本化）。
         self._reload_template_combo(new_name)
 
     # ── フォールバック順設定ハンドラ（V180-FALL-01〜03・D-13〜D-16）───

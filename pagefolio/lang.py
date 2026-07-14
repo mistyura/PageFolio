@@ -655,6 +655,9 @@ LANG = {
             "アクティブなテンプレートは削除できません。"
             "先に別のテンプレートへ切り替えてください。"
         ),
+        "tmpl_delete_confirm": (
+            "このテンプレートを削除しますか？この操作は元に戻せません。"
+        ),
         # プロバイダーフォールバック順設定
         # （v1.8.0 Phase 2・V180-FALL-01〜03・D-13〜D-16）
         "fallback_section_title": "🔁 フォールバック:",
@@ -1328,6 +1331,7 @@ LANG = {
             "The active template cannot be deleted. "
             "Please switch to another template first."
         ),
+        "tmpl_delete_confirm": ("Delete this template? This action cannot be undone."),
         # Provider fallback order settings
         # (v1.8.0 Phase 2 — V180-FALL-01..03 / D-13..D-16)
         "fallback_section_title": "🔁 Fallback:",
