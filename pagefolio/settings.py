@@ -154,14 +154,30 @@ def load_summary_prompt(settings):
 # すべて settings 辞書を第1引数に取る関数型 CRUD ヘルパー。既存の
 # save_prompt_file/load_custom_prompt と同じ責務分離を踏襲し、settings.py
 # 内では自動保存しない（_save_settings() の呼び出しは呼び出し側の責務）。
-# 各関数冒頭で settings.setdefault("prompt_templates", ...) を行うため、
-# 未初期化の settings 辞書に対しても安全に動作する。
+# 各関数冒頭で _ensure_template_shape(settings) を行うため、未初期化の
+# settings 辞書に対しても安全に動作する。
+
+
+def _ensure_template_shape(settings):
+    """settings["prompt_templates"] が {"active": str, "items": dict} の
+    完全な形であることを保証する（02-REVIEW CR-02 修正）。
+
+    `settings.setdefault("prompt_templates", ...)` はトップレベルキーが
+    既に存在すれば no-op になるため、`{"active": "foo"}` のように "items"
+    キーが欠けた部分形状の値が渡された場合（手編集・外部ツール・書き込み
+    途中断など）でも KeyError を出さないよう、ネストしたキーも個別に
+    setdefault する。
+    """
+    tpl = settings.setdefault("prompt_templates", {"active": "", "items": {}})
+    tpl.setdefault("active", "")
+    tpl.setdefault("items", {})
+    return tpl
 
 
 def list_template_names(settings):
     """保存済みテンプレート名の一覧を sorted で返す（V180-TMPL-02）。"""
-    settings.setdefault("prompt_templates", {"active": "", "items": {}})
-    return sorted(settings["prompt_templates"]["items"].keys())
+    tpl = _ensure_template_shape(settings)
+    return sorted(tpl["items"].keys())
 
 
 def get_template(settings, name):
@@ -169,8 +185,8 @@ def get_template(settings, name):
 
     未登録名の場合は None を返す。
     """
-    settings.setdefault("prompt_templates", {"active": "", "items": {}})
-    return settings["prompt_templates"]["items"].get(name)
+    tpl = _ensure_template_shape(settings)
+    return tpl["items"].get(name)
 
 
 def template_name_exists(settings, name):
@@ -181,8 +197,8 @@ def template_name_exists(settings, name):
     """
     if not name or not name.strip():
         return False
-    settings.setdefault("prompt_templates", {"active": "", "items": {}})
-    return name in settings["prompt_templates"]["items"]
+    tpl = _ensure_template_shape(settings)
+    return name in tpl["items"]
 
 
 def save_template(settings, name, custom_prompt, summary_prompt):
@@ -193,8 +209,8 @@ def save_template(settings, name, custom_prompt, summary_prompt):
     """
     if not name or not name.strip():
         raise ValueError("テンプレート名を空にすることはできません")
-    settings.setdefault("prompt_templates", {"active": "", "items": {}})
-    settings["prompt_templates"]["items"][name] = {
+    tpl = _ensure_template_shape(settings)
+    tpl["items"][name] = {
         "custom_prompt": custom_prompt,
         "summary_prompt": summary_prompt,
     }
@@ -207,8 +223,7 @@ def delete_template(settings, name):
     ValueError で拒否する（D-03: 誤操作でカスタムプロンプトが消える事故を
     防止する防御的実装。UI 側の削除ボタン無効化と二重防御を構成する）。
     """
-    settings.setdefault("prompt_templates", {"active": "", "items": {}})
-    tpl = settings["prompt_templates"]
+    tpl = _ensure_template_shape(settings)
     if name and name == tpl["active"]:
         raise ValueError(
             f"アクティブなテンプレート '{name}' は削除できません（先に切替が必要です）"
@@ -226,8 +241,7 @@ def rename_template(settings, old_name, new_name):
     """
     if not new_name or not new_name.strip():
         raise ValueError("テンプレート名を空にすることはできません")
-    settings.setdefault("prompt_templates", {"active": "", "items": {}})
-    tpl = settings["prompt_templates"]
+    tpl = _ensure_template_shape(settings)
     if old_name not in tpl["items"]:
         raise ValueError(f"テンプレート '{old_name}' は存在しません")
     if new_name != old_name and new_name in tpl["items"]:
