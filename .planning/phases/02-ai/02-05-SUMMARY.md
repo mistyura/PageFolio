@@ -158,3 +158,14 @@ None - no external service configuration required.
 ---
 *Phase: 02-ai*
 *Completed: 2026-07-14*
+
+## Self-Check: PASSED
+
+- FOUND: pagefolio/dialogs/llm_config/dialog.py
+- FOUND: pagefolio/dialogs/llm_config/sections.py
+- FOUND: pagefolio/lang.py
+- FOUND: tests/test_provider_ui.py
+- FOUND: 23a354f (Task 1 commit)
+- FOUND: a841a17 (Task 2 commit)
+- FOUND: aa7cf88 (Task 3 commit)
+- FOUND: 3b60235 (SUMMARY commit)
