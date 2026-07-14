@@ -146,3 +146,10 @@ None - no external service configuration required.
 ---
 *Phase: 02-ai*
 *Completed: 2026-07-14*
+
+## Self-Check: PASSED
+
+- FOUND: tests/test_provider_ui.py
+- FOUND: 4b3a368 (Task 1 commit)
+- FOUND: 7d03d41 (Task 2 commit)
+- FOUND: 0e85fd1 (SUMMARY commit)
