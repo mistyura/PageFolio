@@ -2072,3 +2072,221 @@ class TestTemplateCancelContract:
         d._on_template_delete()
         assert "tpl-target" not in d.current_settings["prompt_templates"]["items"]
         assert reload_calls == ["tpl-active"]
+
+
+# ══════════════════════════════════════════════════════════════
+#  02-06 gap closure: テンプレート UI ハンドラの behavior_unverified_items
+#  （D-03/D-04/D-05/D-07・02-VERIFICATION.md）を実 bound method 呼び出しで
+#  検証する。test_ocr_fallback.py の headless スタブ + 実 bound method 呼び出し
+#  パターンを LLMConfigDialog 側へ同型移植する。
+# ══════════════════════════════════════════════════════════════
+
+
+class _FakeTemplateText:
+    """OCR カスタム/サマリプロンプト入力欄（tk.Text）相当のスタブ。
+
+    get/delete/insert のみを実装し、tk.Text の index 引数（"1.0"/"end" 等）は
+    無視して内部バッファ文字列だけを保持する（_on_template_change が
+    delete("1.0", "end") → insert("1.0", value) の順で呼ぶ実際の呼び出し方に
+    追従する）。
+    """
+
+    def __init__(self, value=""):
+        self._value = value
+
+    def get(self, _start, _end):
+        """設定済みの内部バッファ文字列を返す（index 引数は無視）。"""
+        return self._value
+
+    def delete(self, _start, _end):
+        """内部バッファを空文字列にする（index 引数は無視）。"""
+        self._value = ""
+
+    def insert(self, _index, value):
+        """内部バッファへ value を追記する（index 引数は無視）。"""
+        self._value += value
+
+
+class _FakeCombo:
+    """ttk.Combobox 相当スタブ。configure(values=...) の呼び出しのみ記録する
+    （_reload_template_combo が呼ぶため）。
+    """
+
+    def __init__(self):
+        self.values = None
+
+    def configure(self, **kwargs):
+        """values キーワード引数が渡された場合のみ記録する。"""
+        if "values" in kwargs:
+            self.values = kwargs["values"]
+
+
+def _make_template_dialog(
+    current_settings,
+    active_template_name="",
+    template_var_value="",
+    custom_text="",
+    summary_text="",
+):
+    """LLMConfigDialog のテンプレート UI ハンドラを Tk 生成なしで駆動する
+    headless インスタンスを返す。
+
+    tests/test_ocr_fallback.py の _make_dialog と同型: LLMConfigDialog.__new__
+    で __init__/_build を一切経由せず、検証に必要な属性のみ手動で設定する。
+    LLMConfigDialog の全 mixin メソッド（_has_unsaved_template_changes 等）は
+    実インスタンス上でそのまま使えるため、_on_template_change 内の自己呼び出し
+    も実コードで動く。template_delete_btn は既存の _ButtonStub（OCR-UI-02 節で
+    定義済み・.state(flags) を記録する ttk.Button 相当スタブ）をそのまま再利用
+    する（新規重複定義を避ける）。
+    """
+    from pagefolio.constants import LANG
+    from pagefolio.dialogs.llm_config import LLMConfigDialog
+
+    d = LLMConfigDialog.__new__(LLMConfigDialog)
+    d._L = LANG["ja"]
+    d.current_settings = current_settings
+    d._active_template_name = active_template_name
+    d.template_var = _SetGetVarStub(template_var_value)
+    d.ocr_prompt_text = _FakeTemplateText(custom_text)
+    d.ocr_summary_prompt_text = _FakeTemplateText(summary_text)
+    d.template_combo = _FakeCombo()
+    d.template_delete_btn = _ButtonStub()
+    return d
+
+
+class TestTemplateChangeFlow:
+    """D-05/D-07（V180-TMPL-04）: _on_template_change の未保存差分確認による
+    切替中止（D-05）と、切替確定後の外部mdファイル上書き（D-07）を実
+    bound method 呼び出しで検証する（02-VERIFICATION.md
+    behavior_unverified_items の1件目・2件目）。
+    """
+
+    def test_cancel_discards_switch_and_keeps_edited_content(self, monkeypatch):
+        """未保存差分ありで askyesno=False（キャンセル）を返すと、切替が中止され
+        template_var がアクティブテンプレート名へ戻り、入力欄内容も変化せず、
+        save_prompt_file にも到達しない（D-05）。
+        """
+        current_settings = {
+            "prompt_templates": {
+                "active": "A",
+                "items": {
+                    "A": {"custom_prompt": "saved-A", "summary_prompt": "saved-A2"},
+                    "B": {"custom_prompt": "b", "summary_prompt": "b2"},
+                },
+            }
+        }
+        d = _make_template_dialog(
+            current_settings,
+            active_template_name="A",
+            template_var_value="B",
+            custom_text="edited",
+            summary_text="saved-A2",
+        )
+        monkeypatch.setattr(
+            "pagefolio.dialogs.llm_config.sections.prompt_file_exists",
+            lambda _f: True,
+        )
+        monkeypatch.setattr(
+            "pagefolio.dialogs.llm_config.sections.messagebox.askyesno",
+            lambda *a, **k: False,
+        )
+        save_calls = []
+        monkeypatch.setattr(
+            "pagefolio.dialogs.llm_config.sections.save_prompt_file",
+            lambda f, content: save_calls.append((f, content)),
+        )
+
+        d._on_template_change()
+
+        assert d.template_var.get() == "A"
+        assert d.ocr_prompt_text.get("1.0", "end") == "edited"
+        assert save_calls == []
+
+    def test_confirmed_switch_overwrites_external_files_fake_capture(self, monkeypatch):
+        """未保存差分なしの切替確定後、選択テンプレートの内容が入力欄へ反映され、
+        save_prompt_file が CUSTOM_PROMPT_FILE/SUMMARY_PROMPT_FILE と新テンプレート
+        内容で呼ばれる（D-07・フェイク捕捉版）。
+        """
+        from pagefolio.constants import CUSTOM_PROMPT_FILE, SUMMARY_PROMPT_FILE
+
+        current_settings = {
+            "prompt_templates": {
+                "active": "A",
+                "items": {
+                    "A": {"custom_prompt": "saved-A", "summary_prompt": "saved-A2"},
+                    "B": {"custom_prompt": "newC", "summary_prompt": "newS"},
+                },
+            }
+        }
+        d = _make_template_dialog(
+            current_settings,
+            active_template_name="A",
+            template_var_value="B",
+            custom_text="saved-A",
+            summary_text="saved-A2",
+        )
+        monkeypatch.setattr(
+            "pagefolio.dialogs.llm_config.sections.prompt_file_exists",
+            lambda _f: True,
+        )
+        monkeypatch.setattr(
+            "pagefolio.dialogs.llm_config.sections.messagebox.askyesno",
+            lambda *a, **k: True,
+        )
+        save_calls = []
+        monkeypatch.setattr(
+            "pagefolio.dialogs.llm_config.sections.save_prompt_file",
+            lambda f, content: save_calls.append((f, content)),
+        )
+
+        d._on_template_change()
+
+        assert (CUSTOM_PROMPT_FILE, "newC") in save_calls
+        assert (SUMMARY_PROMPT_FILE, "newS") in save_calls
+        assert d._active_template_name == "B"
+        assert d.ocr_prompt_text.get("1.0", "end") == "newC"
+
+    def test_change_overwrites_external_md_file(self, monkeypatch, tmp_path):
+        """D-07 実ファイル検証版: settings._get_base_dir を tmp_path へ差し替え、
+        save_prompt_file/prompt_file_exists/load_prompt_file は一切
+        monkeypatch せず実関数のまま通す。切替後に ocr_custom_prompt.md/
+        ocr_summary_prompt.md が新アクティブテンプレートの内容で実際に
+        上書きされていることをファイル読み取りで確認する
+        （02-VERIFICATION.md behavior_unverified_items[1] の test 欄と一致）。
+        """
+        from pagefolio.constants import CUSTOM_PROMPT_FILE, SUMMARY_PROMPT_FILE
+
+        monkeypatch.setattr("pagefolio.settings._get_base_dir", lambda: str(tmp_path))
+        (tmp_path / CUSTOM_PROMPT_FILE).write_text("old-custom", encoding="utf-8")
+        (tmp_path / SUMMARY_PROMPT_FILE).write_text("old-summary", encoding="utf-8")
+
+        current_settings = {
+            "prompt_templates": {
+                "active": "A",
+                "items": {
+                    "A": {
+                        "custom_prompt": "old-custom",
+                        "summary_prompt": "old-summary",
+                    },
+                    "B": {"custom_prompt": "newC", "summary_prompt": "newS"},
+                },
+            }
+        }
+        d = _make_template_dialog(
+            current_settings,
+            active_template_name="A",
+            template_var_value="B",
+            custom_text="old-custom",
+            summary_text="old-summary",
+        )
+        # 未保存差分は無い想定（入力欄内容がアクティブテンプレート保存済み内容と
+        # 一致）だが、askyesno が呼ばれても切替が継続するよう True にしておく
+        monkeypatch.setattr(
+            "pagefolio.dialogs.llm_config.sections.messagebox.askyesno",
+            lambda *a, **k: True,
+        )
+
+        d._on_template_change()
+
+        assert (tmp_path / CUSTOM_PROMPT_FILE).read_text(encoding="utf-8") == "newC"
+        assert (tmp_path / SUMMARY_PROMPT_FILE).read_text(encoding="utf-8") == "newS"
