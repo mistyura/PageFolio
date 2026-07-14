@@ -9,17 +9,17 @@
 
 ### テンプレート管理（TMPL）
 
-- [ ] **V180-TMPL-01**: ユーザーは OCR カスタム/サマリプロンプトを名前付きテンプレートとして保存できる
+- [x] **V180-TMPL-01**: ユーザーは OCR カスタム/サマリプロンプトを名前付きテンプレートとして保存できる
 - [ ] **V180-TMPL-02**: ユーザーはテンプレート一覧から選択して切り替えられる（LLM 設定ダイアログ）
-- [ ] **V180-TMPL-03**: ユーザーはテンプレートを削除・リネームできる
-- [ ] **V180-TMPL-04**: 外部 md ファイル連動（v1.7.4 の `ocr_custom_prompt.md` / `ocr_summary_prompt.md`）は「アクティブテンプレートのライブ編集」として共存する（書き戻し競合を起こさない）
-- [ ] **V180-TMPL-05**: テンプレートは全プロバイダで横断共有される（`resolve_ocr_prompt` の優先順位にテンプレート層を挿入・既存 custom > provider別 > 汎用の解決順と両立）
+- [x] **V180-TMPL-03**: ユーザーはテンプレートを削除・リネームできる
+- [x] **V180-TMPL-04**: 外部 md ファイル連動（v1.7.4 の `ocr_custom_prompt.md` / `ocr_summary_prompt.md`）は「アクティブテンプレートのライブ編集」として共存する（書き戻し競合を起こさない）
+- [x] **V180-TMPL-05**: テンプレートは全プロバイダで横断共有される（`resolve_ocr_prompt` の優先順位にテンプレート層を挿入・既存 custom > provider別 > 汎用の解決順と両立）
 
 ### プロバイダーフォールバック（FALL）
 
-- [ ] **V180-FALL-01**: ユーザーはフォールバック順（プロバイダ連鎖）を明示的に設定できる（未設定＝フォールバックしない・安全側既定）
+- [x] **V180-FALL-01**: ユーザーはフォールバック順（プロバイダ連鎖）を明示的に設定できる（未設定＝フォールバックしない・安全側既定）
 - [ ] **V180-FALL-02**: OCR 実行が fatal エラーで停止した際、次のフォールバック候補への切替が**送信先確認ダイアログの再提示つき**で提案される（自動的な別ベンダー送信はしない）
-- [ ] **V180-FALL-03**: フォールバック切替時、プロバイダ固有の並列度・APIキー解決・レート制限設定が正しく引き継がれる
+- [x] **V180-FALL-03**: フォールバック切替時、プロバイダ固有の並列度・APIキー解決・レート制限設定が正しく引き継がれる
 
 ### バッチ複数ファイル OCR（BATCH）
 
@@ -94,14 +94,14 @@
 | V180-REFAC-01 | Phase 1 | Complete |
 | V180-REFAC-02 | Phase 1 | Complete |
 | V180-ROBUST-02 | Phase 1 | Complete |
-| V180-TMPL-01 | Phase 2 | Pending |
+| V180-TMPL-01 | Phase 2 | Complete |
 | V180-TMPL-02 | Phase 2 | Pending |
-| V180-TMPL-03 | Phase 2 | Pending |
-| V180-TMPL-04 | Phase 2 | Pending |
-| V180-TMPL-05 | Phase 2 | Pending |
-| V180-FALL-01 | Phase 2 | Pending |
+| V180-TMPL-03 | Phase 2 | Complete |
+| V180-TMPL-04 | Phase 2 | Complete |
+| V180-TMPL-05 | Phase 2 | Complete |
+| V180-FALL-01 | Phase 2 | Complete |
 | V180-FALL-02 | Phase 2 | Pending |
-| V180-FALL-03 | Phase 2 | Pending |
+| V180-FALL-03 | Phase 2 | Complete |
 | V180-REFAC-03 | Phase 3 | Pending |
 | V180-QA-01 | Phase 3 | Pending |
 | V180-BATCH-01 | Phase 4 | Pending |
