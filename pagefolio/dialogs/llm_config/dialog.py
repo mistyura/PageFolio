@@ -477,6 +477,23 @@ class DialogMixin:
             "items": dict(existing_templates.get("items", {})),
         }
 
+        # v1.8.0 Phase 2: フォールバック設定の収集（V180-FALL-01/03・D-14）。
+        # fallback_enabled_var/_fallback_chain 未設定の既存 _apply スタブ経路
+        # （current_settings 同様の後方互換）では既定値（False・空リスト）を
+        # 収集する。_fallback_chain の各要素は既知プロバイダ一覧
+        # （_fallback_known_providers）でホワイトリスト検証してから格納する
+        # （Input Validation・ASVS L1・T-02-07）。
+        _fallback_enabled_var = getattr(self, "fallback_enabled_var", None)
+        llm_settings["ocr_fallback_enabled"] = bool(
+            _fallback_enabled_var.get() if _fallback_enabled_var is not None else False
+        )
+        _known_fallback_providers = getattr(self, "_fallback_known_providers", [])
+        llm_settings["ocr_fallback_chain"] = [
+            name
+            for name in getattr(self, "_fallback_chain", [])
+            if name in _known_fallback_providers
+        ]
+
         # セッション限定 APIキーの同期（D-04/D-06・V171-KEY-01/04）
         # llm_settings dict には絶対に入れない（成功基準1・T-05-12）。
         for provider_key, var in (

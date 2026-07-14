@@ -1809,3 +1809,64 @@ class TestTemplateSection:
         LLMConfigDialog._apply(stub)
 
         assert captured["prompt_templates"] == {"active": "", "items": {}}
+
+
+class TestFallbackSection:
+    """フォールバック順設定セクション（sections.py）と _apply の収集を検証する。
+
+    V180-FALL-01（安全側既定）・V180-FALL-03（設定面の永続化）・プロバイダ名
+    ホワイトリスト検証（Input Validation・ASVS L1）を確認する。
+    """
+
+    def test_fallback_widgets_referenced_in_sections_source(self):
+        """sections.py に fallback_listbox/_fallback_move_up/fallback_enabled_var
+        が存在する（source-scan・ヘッドレス検証）。"""
+        src = _read_llm_config_package_source()
+        assert "fallback_listbox" in src
+        assert "_fallback_move_up" in src
+        assert "fallback_enabled_var" in src
+
+    def test_apply_collects_fallback_enabled_and_chain(self):
+        """_apply が ocr_fallback_enabled（bool）と ocr_fallback_chain（list）を
+        収集する。"""
+        from pagefolio.dialogs.llm_config import LLMConfigDialog
+
+        stub = _make_apply_key_stub({})
+        stub.fallback_enabled_var = _GetVarStub(True)
+        stub._fallback_known_providers = ["claude", "gemini", "lmstudio"]
+        stub._fallback_chain = ["claude", "gemini"]
+        captured = {}
+        stub.on_apply = lambda s: captured.update(s)
+        LLMConfigDialog._apply(stub)
+
+        assert captured["ocr_fallback_enabled"] is True
+        assert captured["ocr_fallback_chain"] == ["claude", "gemini"]
+
+    def test_apply_filters_unknown_provider_from_chain(self):
+        """既知プロバイダ一覧に無い名前はチェーンから除外される
+        （ホワイトリスト検証・Input Validation・ASVS L1）。"""
+        from pagefolio.dialogs.llm_config import LLMConfigDialog
+
+        stub = _make_apply_key_stub({})
+        stub.fallback_enabled_var = _GetVarStub(True)
+        stub._fallback_known_providers = ["claude", "gemini"]
+        stub._fallback_chain = ["claude", "not-a-real-provider", "gemini"]
+        captured = {}
+        stub.on_apply = lambda s: captured.update(s)
+        LLMConfigDialog._apply(stub)
+
+        assert captured["ocr_fallback_chain"] == ["claude", "gemini"]
+
+    def test_apply_defaults_when_fallback_attrs_absent(self):
+        """fallback_enabled_var/_fallback_chain 未設定の既存スタブ経路でも
+        AttributeError を出さず既定値（False・空リスト）を収集する
+        （後方互換・V180-FALL-01 安全側既定）。"""
+        from pagefolio.dialogs.llm_config import LLMConfigDialog
+
+        stub = _make_apply_key_stub({})
+        captured = {}
+        stub.on_apply = lambda s: captured.update(s)
+        LLMConfigDialog._apply(stub)
+
+        assert captured["ocr_fallback_enabled"] is False
+        assert captured["ocr_fallback_chain"] == []
