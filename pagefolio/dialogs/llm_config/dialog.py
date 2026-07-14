@@ -65,11 +65,22 @@ class DialogMixin:
         self._session_api_keys = (
             session_api_keys if session_api_keys is not None else {}
         )
-        # Tesseract 未インストール時の選択リセット用（D-02）
-        self._last_valid_provider = current_settings.get("ocr_provider", "off")
         # D-05/Pitfall 2: ocr_providers.py と同じ _detect_tesseract() を都度呼び、
         # ダイアログを開く度に再評価する（再起動なしで言語パック追加を反映）。
         self._tesseract_available, self._tesseract_langs = _detect_tesseract()
+        # 02-REVIEW CR-01 修正: 初期プロバイダは Tesseract 可用性が判明した
+        # *後* に確定させる。可用性判定前に current_settings の値をそのまま
+        # self._last_valid_provider へ入れると、永続化された値が
+        # "tesseract"（かつ現在は未インストール）の場合、_on_provider_change
+        # のガードが自分自身にフォールバックする自己参照になり無効化される。
+        _initial_provider = current_settings.get("ocr_provider", "off")
+        if _initial_provider == "tesseract" and not self._tesseract_available:
+            _initial_provider = "off"
+        # 選択リセット用（D-02）・sections.py の provider_var 初期値もこれと
+        # 揃える（_initial_provider として公開し、combobox とガードのフォール
+        # バック先が最初から一致するようにする）。
+        self._initial_provider = _initial_provider
+        self._last_valid_provider = _initial_provider
 
         # _dialog_w は _build() 内の _resize_to_fit() が参照するため、_build() より
         # 前に確定させておく（未設定だと AttributeError でダイアログが開けない）。

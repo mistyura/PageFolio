@@ -75,8 +75,13 @@ class SectionsMixin:
             width=20,
             anchor="w",
         ).pack(side="left")
+        # 02-REVIEW CR-01 修正: current_settings の生値ではなく dialog.py の
+        # __init__ で Tesseract 可用性判定後に確定した self._initial_provider
+        # を使う。こうしないと combobox が無効な "tesseract" のまま表示され、
+        # _on_provider_change の自己参照フォールバックと組み合わさって初期
+        # レイアウト構築（pack）が完了しなくなる（CR-01）。
         self.provider_var = tk.StringVar(
-            value=self.current_settings.get("ocr_provider", "off"),
+            value=self._initial_provider,
         )
         # プロバイダ一覧を動的構築（D-08）: 基本 + tesseract + プラグイン登録
         _base_providers = [
