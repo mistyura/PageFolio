@@ -197,10 +197,12 @@ PageFolio の既存コードベースに対する最適化プロジェクト。
 - ✓ V171-OCR-01/02/03/04: L-6 小物一括解消・tesseract_lang 尊重・プラグイン registry 堅牢化・producer-consumer 一本化（`ocr_pipeline.py` 新設） — v1.7.1 Phase 2
 - ✓ V171-PAGE-01/02/03・V171-TEST-01: 画像透かし対応・黒塗り/モザイク使い勝手改善・回転/トリミング操作性改善（`_derotate_rect` 共通基盤）・v1.5.0 新機能の回帰テスト整備 — v1.7.1 Phase 3
 - ✓ V171-UIUX-01/02/03・V171-TEST-03: ショートカット GUI 編集（ShortcutsDialog）・エラー表示/文言一貫性監査（i18n化・messagebox統一・未使用キー削除）・SettingsDialog/LLMConfigDialog セクション再編・既知軽微バグ棚卸し解消 — v1.7.1 Phase 4
+- ✓ V180-REFAC-01/02・V180-ROBUST-02: `ocr_providers.py`/`dialogs/llm_config.py` の責務別パッケージ分割・`_SENSITIVE_KEYS` プロバイダ→環境変数中央レジストリ化（`registry.py`新設） — v1.8.0 Phase 1
+- ✓ V180-TMPL-01〜05・V180-FALL-01〜03: 名前付きプロンプトテンプレート CRUD（保存/選択/削除/リネーム・外部mdファイル連動・全プロバイダ横断共有）・明示設定型プロバイダーフォールバック（送信先確認再提示つき・自動別ベンダー送信なし） — v1.8.0 Phase 2
 
 ### Active
 
-- v1.8.0 の要件は `.planning/REQUIREMENTS.md` で定義中（AI強化・堅牢性・品質保証・バッチ複数ファイル OCR の 4 本柱）。
+- v1.8.0 の要件は `.planning/REQUIREMENTS.md` で定義中（AI強化・堅牢性・品質保証・バッチ複数ファイル OCR の 4 本柱）。Phase 1・2 完了、Phase 3〜6 継続中。
 
 ### Out of Scope
 
@@ -316,4 +318,4 @@ PageFolio の既存コードベースに対する最適化プロジェクト。
 4. 決定事項 → Key Decisions を更新
 
 ---
-*Last updated: 2026-07-13 — v1.8.0 milestone started (/gsd-new-milestone). Working branch: dev/v1.8.0.*
+*Last updated: 2026-07-14 — v1.8.0 Phase 2（AI強化）完了. Working branch: dev/v1.8.0.*
