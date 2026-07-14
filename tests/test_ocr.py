@@ -1236,16 +1236,21 @@ class TestBuildProviderGemini:
 
 
 class TestWorkerConcurrency:
-    """_start_worker_thread が self.concurrency 本のワーカーを起動し、
-    終了シグナル None が concurrency 本送られることを検証する（CR-01 後方互換）。
+    """_start_worker_thread が OCRRunEngine を生成して self.concurrency 本の
+    ワーカーを起動し、終了シグナル None が concurrency 本送られることを検証
+    する（CR-01 後方互換・03-01-PLAN.md Task 2 委譲後）。
 
     TestOcrDialogLlmConfig と同じ「SimpleNamespace fake + 未束縛メソッド呼び出し」
-    パターンを踏襲する（Tkinter ウィンドウ不使用）。
+    パターンを踏襲する（Tkinter ウィンドウ不使用）。_start_worker_thread は
+    OCRRunEngine（pagefolio/ocr_engine.py）へ委譲するため、fake には Engine
+    構築に必要な最小属性（provider/_ocr_prompt/_run_pages/_cancel_flag 等）と
+    委譲先コールバックメソッドのスタブを用意する。
     """
 
     def _make_fake_for_start(self, concurrency, monkeypatch):
         """_start_worker_thread 用 fake OCRDialog。threading.Thread をスタブ化して
-        起動スレッド数を記録する。"""
+        起動スレッド数を記録する（StubThread は target を実行しないため、fake の
+        コールバックスタブは呼ばれない＝最小のダミー実装で足りる）。"""
         import types
 
         started_threads = []
@@ -1261,11 +1266,19 @@ class TestWorkerConcurrency:
 
         fake = types.SimpleNamespace(
             concurrency=concurrency,
-            _worker_threads=[],
-            _pstate=None,
+            provider=None,
+            _ocr_prompt="prompt",
+            _run_pages=[],
+            _cancel_flag=threading.Event(),
+            _run_gen=1,
         )
-        # _worker は no-op（スタブ Thread は実際には実行しない）
-        fake._worker = lambda: None
+        fake._record_page_success = lambda p, t, truncated=False: None
+        fake._record_page_error = lambda p, m: None
+        fake._on_retry_wait_for = lambda gen: lambda *a: None
+        fake._on_engine_progress_for = lambda gen: lambda *a: None
+        fake._on_engine_complete = lambda gen: None
+        fake._on_engine_cancelled = lambda gen: None
+        fake._on_engine_fatal = lambda gen, msg, kind: None
         return fake, started_threads
 
     def test_starts_concurrency_threads(self, monkeypatch):
@@ -1276,7 +1289,7 @@ class TestWorkerConcurrency:
         OCRDialog._start_worker_thread(fake)
 
         assert len(started) == 4, f"起動スレッド数が {len(started)} 本（期待: 4 本）"
-        assert fake._pstate.workers_remaining == 4
+        assert fake._engine._pstate.workers_remaining == 4
 
     def test_single_thread_for_gemini(self, monkeypatch):
         """concurrency=1（Gemini 等）のとき 1 本のみ起動される（後方互換）。"""
@@ -1286,13 +1299,14 @@ class TestWorkerConcurrency:
         OCRDialog._start_worker_thread(fake)
 
         assert len(started) == 1, f"起動スレッド数が {len(started)} 本（期待: 1 本）"
-        assert fake._pstate.workers_remaining == 1
+        assert fake._engine._pstate.workers_remaining == 1
 
     def test_termination_signals_match_concurrency(self):
         """全ページ完了時にキューへ送られた None の数が concurrency 本（CR-01）。
 
         _render_next_page を最短経路（全ページをスキップ扱い）で駆動し、
-        完了到達後にキューから取り出した None を数える。
+        完了到達後に self._engine.queue から取り出した None を数える
+        （落とし穴10対応後: キュー参照は self._engine.queue に一本化）。
         """
         import queue as q
         import types
@@ -1302,11 +1316,13 @@ class TestWorkerConcurrency:
         fake = types.SimpleNamespace(
             concurrency=concurrency,
             _cancel_flag=threading.Event(),
-            _render_queue=q.Queue(maxsize=concurrency + 2),
+            _engine=types.SimpleNamespace(
+                queue=q.Queue(maxsize=concurrency + 2),
+                is_fatal=lambda: False,
+            ),
             page_indices=[],
             _run_pages=[],
             _render_idx=0,
-            _pstate=None,
             _run_gen=1,  # M-2 世代カウンタ
             winfo_exists=lambda: True,  # M-2 ウィジェット存在チェック
             # after を即時実行スタブ（連鎖なし・完了分岐では after を呼ばない）
@@ -1321,7 +1337,7 @@ class TestWorkerConcurrency:
         null_count = 0
         while True:
             try:
-                item = fake._render_queue.get_nowait()
+                item = fake._engine.queue.get_nowait()
             except q.Empty:
                 break
             if item is None:
@@ -1938,23 +1954,26 @@ class TestRenderNextPageQueueFullInvariant:
 
         after_calls = []
 
-        from pagefolio.ocr_pipeline import PipelineState
+        fake_engine = types.SimpleNamespace(
+            queue=FakeQueue(queue_behavior),
+            is_fatal=lambda: False,
+            note_skip=lambda page_idx: None,
+            note_render_failed=lambda page_idx: None,
+            progress_count=lambda: 0,
+        )
 
         fake = types.SimpleNamespace(
             concurrency=1,
             _cancel_flag=threading.Event(),
-            _render_queue=FakeQueue(queue_behavior),
+            _engine=fake_engine,
             page_indices=[0],
             _run_pages=[0],
             _render_idx=render_idx,
             custom_prompt="",
             results={},
             _skipped_pages=set(),
-            _skip_base=0,
             _render_failed_pages=set(),
-            _render_failed_base=0,
             errors={},
-            _pstate=PipelineState(workers=1),
             _ocr_scale=1.5,
             _ocr_prompt="test",
             _force_ocr=False,
@@ -2011,28 +2030,30 @@ class TestForceOcrOption:
         """_render_next_page 用 fake OCRDialog（1 ページ・キュー記録付き）。"""
         import types
 
-        from pagefolio.ocr_dialog import OCRDialog
-        from pagefolio.ocr_pipeline import PipelineState
-
         put_items = []
+        skip_notes = []
+        render_failed_notes = []
+
+        fake_engine = types.SimpleNamespace(
+            queue=types.SimpleNamespace(put_nowait=lambda item: put_items.append(item)),
+            is_fatal=lambda: False,
+            note_skip=lambda page_idx: skip_notes.append(page_idx),
+            note_render_failed=lambda page_idx: render_failed_notes.append(page_idx),
+            progress_count=lambda: 0,
+        )
 
         fake = types.SimpleNamespace(
             concurrency=1,
             _cancel_flag=threading.Event(),
-            _render_queue=types.SimpleNamespace(
-                put_nowait=lambda item: put_items.append(item)
-            ),
+            _engine=fake_engine,
             page_indices=[0],
             _run_pages=[0],
             _render_idx=0,
             results={},
             _skipped_pages=set(),
             _truncated_pages=set(),
-            _skip_base=0,
             _render_failed_pages=set(),
-            _render_failed_base=0,
             errors={},
-            _pstate=PipelineState(workers=1),
             _ocr_scale=1.5,
             _ocr_prompt="test",
             _force_ocr=force_ocr,
@@ -2041,8 +2062,6 @@ class TestForceOcrOption:
             # 進捗更新・連鎖 after は実行しない（分岐結果のみ検証する）
             after=lambda ms, fn=None, *a: None,
         )
-        # _done_disp は OCRDialog の実メソッドへ委譲（skip 分岐で呼ばれる）
-        fake._done_disp = lambda: OCRDialog._done_disp(fake)
         import fitz
 
         tmp_doc = fitz.open()

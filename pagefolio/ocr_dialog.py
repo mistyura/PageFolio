@@ -4,7 +4,6 @@
 """OCR ダイアログ — 進行表示・キャンセル・結果エクスポート"""
 
 import logging
-import queue
 import threading
 import time
 import tkinter as tk
@@ -23,13 +22,9 @@ from pagefolio.ocr import (
     resolve_ocr_prompt,
     resolve_summary_prompt,
 )
+from pagefolio.ocr_engine import OCRRunEngine
 from pagefolio.ocr_fallback import next_fallback_candidate, next_summary_candidate
-from pagefolio.ocr_pipeline import (
-    PipelineState,
-    consume_one,
-    send_sentinels,
-    try_enqueue,
-)
+from pagefolio.ocr_pipeline import send_sentinels, try_enqueue
 from pagefolio.settings import (
     load_custom_prompt,
     load_prompt_file,
@@ -142,21 +137,21 @@ class OCRDialog(tk.Toplevel):
         self._truncated_pages = set()
         # 今回の実行で処理するページリスト（再開時は未処理ページのみ）
         self._run_pages = list(self.page_indices)
-        # 今回の実行開始時点のスキップ済み数（再開時の進捗計算基準）
-        self._skip_base = 0
         self._cancel_flag = threading.Event()
-        self._worker_threads = []  # CR-01: 複数ワーカースレッドの保持
         self._done = False
         self._started = False
-        self._render_queue = None  # queue.Queue（_on_run で初期化・producer-consumer）
         self._ocr_page_indices = []  # スキップ除外後の Vision OCR 対象ページリスト
-        # D-01/D-02: producer-consumer 共有状態（done カウンタ・fatal 情報・
-        # サーキットブレーカーカウンタ・残ワーカー数）は ocr_pipeline.PipelineState
-        # へ一本化した（_start_worker_thread で concurrency 本分を渡して生成）。
+        # D-01〜D-16（03-CONTEXT.md）: producer-consumer の consumer 駆動部
+        # （キュー + ワーカー + PipelineState + 統合進捗計算）は
+        # pagefolio.ocr_engine.OCRRunEngine へ一本化した（D-11: 実行ごとに
+        # 新規生成・_start_worker_thread で構築）。_pstate は Engine 抽出後も
+        # _clear_text/_on_run の「前回実行の残留状態を破棄する」という既存の
+        # 観測可能な後方互換のためだけに保持する（実際の共有状態は
+        # self._engine が所有・後方互換テスト維持のための vestigial 属性）。
         self._pstate = None
+        self._engine = None  # OCRRunEngine インスタンス（_start_worker_thread で生成）
         # L-6a: レンダー失敗ページ集合（_skipped_pages と同型で進捗計上に使う）
         self._render_failed_pages = set()
-        self._render_failed_base = 0  # 今回実行開始時点のレンダー失敗済み数
         # M-2: 世代カウンタ（ダイアログ破棄後の旧ワーカー after コールバックを無効化）
         # viewer.py の _preview_gen と同じパターン（世代一致 + winfo_exists）
         self._run_gen = 0
@@ -694,7 +689,7 @@ class OCRDialog(tk.Toplevel):
         self.results.clear()
         self.errors.clear()
         self._skipped_pages.clear()
-        self._render_queue = None  # キュー参照をリセット（再実行時に再生成）
+        self._engine = None  # Engine 参照をリセット（再実行時に新規生成・D-11）
         self._ocr_page_indices.clear()
         self.progress_bar["value"] = 0
         self.progress_var.set(self._L["ocr_run_first"])
@@ -793,15 +788,12 @@ class OCRDialog(tk.Toplevel):
     def _done_disp(self):
         """今回実行分の「処理済み」件数（進捗バー/進捗文言表示用）を算出する。
 
-        Vision OCR 完了数（PipelineState.done_count）+ 今回の新規スキップ数
-        （埋め込みテキスト検出）+ 今回の新規レンダー失敗数、の合計。レンダー
-        失敗ページも「処理済み」として計上することで、進捗が全ページ数
-        （100%）に到達するようにする（L-6a）。
+        D-07/D-12: 統合進捗計算は OCRRunEngine が内部で持つため
+        `self._engine.progress_count()` へ委譲する（Vision OCR 完了数 + 今回の
+        新規スキップ数 + 今回の新規レンダー失敗数の合計。D-11 により Engine は
+        実行ごとに新規生成されるためベースライン差分計算は不要）。
         """
-        done_count = self._pstate.done_count if self._pstate is not None else 0
-        skipped = len(self._skipped_pages) - self._skip_base
-        render_failed = len(self._render_failed_pages) - self._render_failed_base
-        return done_count + skipped + render_failed
+        return self._engine.progress_count() if self._engine is not None else 0
 
     # ── クラウドプロバイダ判定・コスト確認・セッションキー ──
 
@@ -1382,8 +1374,6 @@ class OCRDialog(tk.Toplevel):
             self._truncated_pages.clear()
             self._render_failed_pages.clear()
         self._run_pages = run_pages
-        self._skip_base = len(self._skipped_pages)
-        self._render_failed_base = len(self._render_failed_pages)  # L-6a
         self.run_btn.state(["disabled"])
         self.resume_btn.state(["disabled"])
         self._llm_config_btn.state(["disabled"])
@@ -1527,15 +1517,15 @@ class OCRDialog(tk.Toplevel):
         # D-07: Tesseract 段階的縮退フォールバックの非モーダル注記を更新
         self._maybe_show_lang_fallback_notice()
 
-        # producer-consumer: バッファ初期化 → consumer 先行起動 → producer 開始
-        # バッファ上限 = concurrency + 1（余裕係数 1 でワーカー飢えを防止・D-02）
-        self._render_queue = queue.Queue(maxsize=self.concurrency + 1)
+        # producer-consumer: consumer（Engine）先行起動 → producer 開始。
+        # キュー/PipelineState は OCRRunEngine.start() が一度だけ生成する
+        # （落とし穴10・T-03-02。producer は self._engine.queue 経由で参照する）。
         self._render_idx = 0
         # M-2: 世代カウンタをインクリメントしローカルに捕捉する。
         # ワーカー起動後に旧世代の after コールバックを無効化するため。
         self._run_gen += 1
         gen = self._run_gen
-        # consumer（ワーカー）を先に起動してから producer（レンダリング）を開始する
+        # consumer（Engine）を先に起動してから producer（レンダリング）を開始する
         self._start_worker_thread(gen)
         self._render_next_page(gen)
 
@@ -1546,7 +1536,8 @@ class OCRDialog(tk.Toplevel):
         M-2: gen 不一致または winfo_exists() False なら早期 return（世代ガード）。
         全ページ完了・キャンセル・fatal 確定時に None 終了シグナルで worker を
         終わらせる（enqueue/sentinel は ocr_pipeline.try_enqueue/send_sentinels
-        経由・D-01/D-02）。
+        経由・D-01/D-02）。キュー参照は self._engine.queue に一本化する
+        （落とし穴10・T-03-02: producer/consumer が同一インスタンスを共有）。
         """
         # M-2: 世代ガード（ダイアログ破棄後 / キャンセル→再実行の旧コールバック排除）
         if gen is not None and gen != self._run_gen:
@@ -1560,22 +1551,22 @@ class OCRDialog(tk.Toplevel):
         if self._cancel_flag.is_set():
             # キャンセル: 全ワーカー分の終了シグナルを送る（CR-01 Pitfall-E）
             # WR-01: 部分送出時は残り本数のみを再試行し worker のポーリング残留を防ぐ
-            sent = send_sentinels(self._render_queue, self.concurrency)
+            sent = send_sentinels(self._engine.queue, self.concurrency)
             if sent < self.concurrency:
                 self._retry_sentinels(gen, self.concurrency - sent)
             self._finish_cancelled()
             return
 
-        if self._pstate is not None and self._pstate.is_fatal():
+        if self._engine is not None and self._engine.is_fatal():
             # L-6g: fatal 確定後は producer も残ページの render を継続しない。
             # 全ワーカー分の終了シグナルを送るのみに留め、終了処理自体は
-            # 最終ワーカー側（_worker の decrement_worker 判定）に委ねる。
+            # 最終ワーカー側（Engine の decrement_worker 判定）に委ねる。
             # ここで直接呼んでも _finish_error の冪等ガードにより二重実行しない。
             # WR-01: 部分送出時は残り本数のみを再試行し worker のポーリング残留を防ぐ
-            sent = send_sentinels(self._render_queue, self.concurrency)
+            sent = send_sentinels(self._engine.queue, self.concurrency)
             if sent < self.concurrency:
                 self._retry_sentinels(gen, self.concurrency - sent)
-            self._finish_error(self._pstate.fatal_msg, kind=self._pstate.fatal_kind)
+            self._finish_error(self._engine.fatal_msg, kind=self._engine.fatal_kind)
             return
 
         total = len(self._run_pages)
@@ -1584,7 +1575,7 @@ class OCRDialog(tk.Toplevel):
         if idx >= total:
             # 全ページ完了: 全ワーカー分の終了シグナルを送る（CR-01 Pitfall-E）
             # M-1: 非ブロッキングで送信。部分送出なら after(100) で残りを再試行。
-            sent = send_sentinels(self._render_queue, self.concurrency)
+            sent = send_sentinels(self._engine.queue, self.concurrency)
             if sent < self.concurrency:
                 g = gen
                 self.after(100, lambda _g=g: self._render_next_page(_g))
@@ -1602,8 +1593,9 @@ class OCRDialog(tk.Toplevel):
                 extracted = page.get_text()
                 self.results[page_idx] = extracted
                 self._skipped_pages.add(page_idx)
+                self._engine.note_skip(page_idx)  # D-07/D-12: Engine 側の統合進捗へ計上
                 # スキップはキューに積まず次ページへ（progress bar を after で更新）
-                done_disp = self._done_disp()
+                done_disp = self._engine.progress_count()
                 total_pages = len(self._run_pages)
                 self.after(
                     0,
@@ -1619,7 +1611,7 @@ class OCRDialog(tk.Toplevel):
                 b64 = page_to_png_b64(page, scale=self._ocr_scale)
                 # M-1: 非ブロッキングで積む。Full なら同一ページを after(100) で
                 # 再スケジュール（_render_idx を進めない）。
-                if not try_enqueue(self._render_queue, (page_idx, b64)):
+                if not try_enqueue(self._engine.queue, (page_idx, b64)):
                     g = gen
                     self.after(100, lambda _g=g: self._render_next_page(_g))
                     return
@@ -1629,7 +1621,8 @@ class OCRDialog(tk.Toplevel):
             # L-6a: レンダー失敗ページも「処理済み」として進捗計上する。
             # 計上しないと進捗バーが 100% に到達しないまま完了してしまう。
             self._render_failed_pages.add(page_idx)
-            done_disp = self._done_disp()
+            self._engine.note_render_failed(page_idx)  # D-07/D-12
+            done_disp = self._engine.progress_count()
             total_pages = len(self._run_pages)
             self.after(
                 0,
@@ -1652,6 +1645,7 @@ class OCRDialog(tk.Toplevel):
         cancel / fatal 経路専用のヘルパー。send_sentinels の契約
         （「戻り値が count 未満なら残り本数のみ再試行」）を守り、
         既に送信済みの本数を再送しない。世代ガードで旧世代の再試行は無視する。
+        キュー参照は self._engine.queue に一本化する（落とし穴10）。
         """
         if gen is not None and gen != self._run_gen:
             return
@@ -1660,44 +1654,52 @@ class OCRDialog(tk.Toplevel):
                 return
         except Exception:
             return
-        sent = send_sentinels(self._render_queue, remaining)
+        sent = send_sentinels(self._engine.queue, remaining)
         if sent < remaining:
             left = remaining - sent
             self.after(50, lambda _g=gen, n=left: self._retry_sentinels(_g, n))
 
     def _start_worker_thread(self, gen=None):
-        """consumer（ワーカー）スレッドを self.concurrency 本起動する（CR-01）。
+        """consumer（OCRRunEngine）を生成し concurrency 本のワーカーを起動する（D-04）。
 
-        producer 開始前に先行起動する。全ワーカー終了後に最終ワーカーが
-        終了処理（_render_results_ordered / _finish_complete 等）を一度だけ呼ぶ。
-        M-2: gen を各ワーカーに伝搬して世代ガードを有効化する。
-        D-01/D-02: 共有状態は ocr_pipeline.PipelineState へ一本化。
+        D-11: 実行（run/rerun/resume）ごとに OCRRunEngine を新規生成する
+        （世代ガードと同種の安全性を構造的に得る）。producer 開始前に先行
+        起動する。Engine 内部で queue.Queue/PipelineState を一度だけ生成し
+        （落とし穴10・T-03-02）、producer（_render_next_page）は
+        self._engine.queue 経由でのみ参照する。
+
+        完了理由別コールバック（on_complete/on_cancelled/on_fatal）は
+        Engine のワーカースレッドから同期的に呼ばれるため、Tkinter への
+        ディスパッチ（after(0, ...)）は _on_engine_* アダプタが担う
+        （D-05・REVIEW MEDIUM 対応: winfo_exists() はワーカースレッド側では
+        呼ばず _safe_finish_* 内でのみ呼ぶ）。
         """
-        self._worker_threads = []
-        self._pstate = PipelineState(self.concurrency)
-        for _ in range(self.concurrency):
-            t = threading.Thread(target=self._worker, args=(gen,), daemon=True)
-            t.start()
-            self._worker_threads.append(t)
+        self._engine = OCRRunEngine(
+            provider=self.provider,
+            prompt=self._ocr_prompt,
+            run_pages=self._run_pages,
+            concurrency=self.concurrency,
+            cancel_flag=self._cancel_flag,
+            on_success=lambda p, t, tr: self._record_page_success(p, t, truncated=tr),
+            on_page_error=self._record_page_error,
+            on_retry_wait=self._on_retry_wait_for(gen),
+            on_progress=self._on_engine_progress_for(gen),
+            on_complete=lambda: self._on_engine_complete(gen),
+            on_cancelled=lambda: self._on_engine_cancelled(gen),
+            on_fatal=lambda msg, kind: self._on_engine_fatal(gen, msg, kind),
+            breaker_threshold=CB_CONSECUTIVE_FAILURES,
+        )
+        self._engine.start()
 
-    def _worker(self, gen=None):
-        """バックグラウンドスレッド（消費者）: キューから取り出し ocr_pipeline へ委譲。
+    def _on_retry_wait_for(self, gen):
+        """リトライ待機開始時コールバックを生成する（D-06・旧 _worker._on_retry_wait）。
 
-        fitz/get_pixmap/page_to_png_b64/self.doc[ は一切使用しない（D-04 必達）。
-        1 アイテムの処理（リトライ/バックオフ/fatal 判定）は
-        ocr_pipeline.consume_one に委譲する薄いラッパー（D-01/D-02 一本化）。
-        キューから取り出した b64 は consume_one 呼び出し後に即座に del する
-        （成功基準2・T-06-06）。統合プログレス（処理済み done+skipped+
-        render_failed/total）で進捗を表示する（D-03・L-6a）。
-        CR-01: 複数ワーカーが共有 PipelineState 経由で done カウンタを更新する。
-               最終ワーカーのみ終了処理（_render_results_ordered / _finish_*）を呼ぶ。
-        M-2: gen 不一致時は after 投函前にガードして TclError を防ぐ。
+        Engine のワーカースレッドから呼ばれる。世代ガード後にのみ
+        after(0, ...) を投函する（winfo_exists() はここでは呼ばない・
+        REVIEW MEDIUM 対応）。
         """
-
-        total = len(self._run_pages)
 
         def _on_retry_wait(page_idx, attempt, delay, exc):
-            # リトライ待機中の進捗表示（D-15）。M-2: 世代ガード後にのみ after 投函。
             if gen is None or gen == self._run_gen:
                 wait_key = self._retry_wait_key(exc)
                 msg = self._build_retry_wait_message(wait_key, page_idx, attempt, delay)
@@ -1706,84 +1708,87 @@ class OCRDialog(tk.Toplevel):
                 except tk.TclError:
                     pass
 
-        while True:
-            try:
-                item = self._render_queue.get(timeout=1.0)
-            except queue.Empty:
-                # タイムアウト: キャンセル確認（Pitfall-E）
-                if self._cancel_flag.is_set():
-                    break
-                continue
+        return _on_retry_wait
 
-            if item is None:
-                break  # 完了シグナル
+    def _on_engine_progress_for(self, gen):
+        """統合進捗コールバックを生成する（D-07・旧 _worker の進捗更新部）。
 
-            page_idx, b64 = item
-            try:
-                consume_one(
-                    self.provider,
-                    item,
-                    self._ocr_prompt,
-                    self._pstate,
-                    cancel_check=self._cancel_flag.is_set,
-                    breaker_threshold=CB_CONSECUTIVE_FAILURES,
-                    on_success=lambda p, t, tr: self._record_page_success(
-                        p, t, truncated=tr
-                    ),
-                    on_page_error=self._record_page_error,
-                    on_retry_wait=_on_retry_wait,
-                )
-            finally:
-                del b64  # 送信後即座に破棄（成功基準2・T-06-06）
+        Engine のワーカースレッドから (done, page_idx) を受け取る。世代
+        ガード後にのみ after(0, ...) を投函する（winfo_exists() 非呼び出し）。
+        """
+        total = len(self._run_pages)
 
-            # 統合プログレス更新（処理済み = done + skip + render_failed・D-03/L-6a）
-            # M-2: 世代ガード後にのみ after を投函する
+        def _on_progress(done, page_idx):
             if gen is None or gen == self._run_gen:
-                done_disp = self._done_disp()
                 try:
                     self.after(
                         0,
-                        lambda d=done_disp, p=page_idx: self.progress_var.set(
+                        lambda d=done, p=page_idx: self.progress_var.set(
                             self._L["ocr_progress_ocr"].format(
                                 done=d, total=total, page=p + 1
                             )
                         ),
                     )
-                    self.after(0, lambda d=done_disp: self._on_progress_bar(d))
+                    self.after(0, lambda d=done: self._on_progress_bar(d))
                 except tk.TclError:
                     pass
 
-        # CR-01: 残ワーカー数を減らし、最終ワーカーのみ終了処理を実行する
-        is_last, fatal_msg, fatal_kind = self._pstate.decrement_worker()
+        return _on_progress
 
-        if not is_last:
-            return  # 最終ワーカー以外は何もしない
-
-        # M-2: 世代ガード後にのみ終了処理 after を投函する
+    def _on_engine_complete(self, gen):
+        """完了理由別アダプタ（正常完了・D-08）。Engine の最終ワーカーから
+        同期的に呼ばれる。世代ガード評価 + after(0, ...) 投函のみを行い、
+        winfo_exists() はここでは呼ばない（REVIEW MEDIUM 対応・実際の
+        ウィジェット存在チェックと描画は _safe_finish_complete が担う）。
+        """
         if gen is not None and gen != self._run_gen:
             return
-
-        # 最終ワーカーが終了処理を一度だけ実行
-        if fatal_msg is not None:
-            try:
-                self.after(
-                    0,
-                    lambda m=fatal_msg, k=fatal_kind: self._finish_error(m, kind=k),
-                )
-            except tk.TclError:
-                pass
-            return
-        if self._cancel_flag.is_set():
-            try:
-                self.after(0, self._finish_cancelled)
-            except tk.TclError:
-                pass
-            return
         try:
-            self.after(0, self._render_results_ordered)
-            self.after(0, self._finish_complete)
+            self.after(0, self._safe_finish_complete)
         except tk.TclError:
             pass
+
+    def _on_engine_cancelled(self, gen):
+        """完了理由別アダプタ（キャンセル・D-08）。_on_engine_complete と同型。"""
+        if gen is not None and gen != self._run_gen:
+            return
+        try:
+            self.after(0, self._safe_finish_cancelled)
+        except tk.TclError:
+            pass
+
+    def _on_engine_fatal(self, gen, msg, kind):
+        """完了理由別アダプタ（fatal・D-08）。_on_engine_complete と同型。"""
+        if gen is not None and gen != self._run_gen:
+            return
+        try:
+            self.after(0, lambda m=msg, k=kind: self._safe_finish_error(m, k))
+        except tk.TclError:
+            pass
+
+    def _safe_finish_complete(self):
+        """メインスレッド finalizer（正常完了・REVIEW MEDIUM 対応）。
+
+        after(0, ...) 経由でメインスレッドから呼ばれる。冒頭で
+        winfo_exists() を確認してから既存の描画/終了処理を呼ぶ（旧 _worker
+        末尾 CR-01 の呼び出し順序をそのまま再現）。
+        """
+        if not self.winfo_exists():
+            return
+        self._render_results_ordered()
+        self._finish_complete()
+
+    def _safe_finish_cancelled(self):
+        """メインスレッド finalizer（キャンセル・REVIEW MEDIUM 対応）。"""
+        if not self.winfo_exists():
+            return
+        self._finish_cancelled()
+
+    def _safe_finish_error(self, msg, kind):
+        """メインスレッド finalizer（fatal・REVIEW MEDIUM 対応）。"""
+        if not self.winfo_exists():
+            return
+        self._finish_error(msg, kind=kind)
 
     # ── UI 更新（メインスレッド） ──
     def _on_progress_bar(self, done):
