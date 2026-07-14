@@ -15,23 +15,18 @@ from pagefolio.constants import (
     C,
 )
 
+# 循環 import 回避のためサブモジュール直接指定で import する（Pitfall 6・
+# pagefolio.ocr_providers の __init__ 経由だと全プロバイダを import する
+# 重い経路になるため使わない）。
+from pagefolio.ocr_providers.registry import sensitive_keys
+
 logger = logging.getLogger(__name__)
 
-# D-01: 機密キー集合（_save_settings が JSON へ書き込まないキー名）
-# Pitfall 1: APIキー平文漏洩防止の構造的ガード（最後の砦）
-# WR-03: D-06 の dual env var（GEMINI_API_KEY / GOOGLE_API_KEY）フォールバック対応
-_SENSITIVE_KEYS = {
-    "claude_api_key",
-    "gemini_api_key",
-    "google_api_key",  # WR-03: Gemini フォールバックキー名（小文字）
-    "anthropic_api_key",
-    "api_key",
-    "GEMINI_API_KEY",  # WR-03: 大文字バリアント
-    "GOOGLE_API_KEY",  # WR-03: Gemini フォールバックキー名（大文字・D-06）
-    "ANTHROPIC_API_KEY",  # WR-03: 大文字バリアント
-    "runpod_api_key",  # RunPod APIキー（小文字）
-    "RUNPOD_API_KEY",  # RunPod APIキー（大文字）
-}
+# D-01: 機密キー集合（_save_settings が JSON へ書き込まないキー名）。
+# Pitfall 1: APIキー平文漏洩防止の構造的ガード（最後の砦）。
+# registry.sensitive_keys() から生成（V180-ROBUST-02・新プロバイダ追加時の
+# 手動追加漏れを構造的に排除）。
+_SENSITIVE_KEYS = sensitive_keys()
 
 
 def _get_base_dir():
