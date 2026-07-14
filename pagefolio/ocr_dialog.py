@@ -2288,6 +2288,30 @@ class OCRDialog(tk.Toplevel):
         settings = self._active_ocr_settings or self.app.settings
         return settings.get("ocr_provider", "")
 
+    def _provider_key_to_display_name(self, name):
+        """内部プロバイダキー（設定値・フォールバック候補名）を人間可読な
+        表示名へ変換する（02-REVIEW WR-04 修正）。
+
+        _provider_display_name() が持つ「キー→表示名」対応を、実行中の
+        self.provider に対する isinstance 判定を伴わない「文字列のみ」版
+        として切り出したもの。フォールバック確認ダイアログの候補名のように、
+        まだ build されていない（＝ self.provider が対応する型に差し替わって
+        いない）候補の表示にも使える。未知のキーはそのまま返す（フォール
+        バック・_provider_display_name と同じ挙動）。
+        """
+        mapping = {
+            "claude": "ocr_provider_name_claude",
+            "gemini": "ocr_provider_name_gemini",
+            "tesseract": "ocr_provider_name_tesseract",
+            "runpod": "ocr_provider_name_runpod",
+            "lmstudio": "ocr_provider_name_lmstudio",
+            "": "ocr_provider_name_lmstudio",
+        }
+        lang_key = mapping.get(name)
+        if lang_key is not None:
+            return self._L.get(lang_key, name)
+        return name
+
     def _fallback_candidate_host(self, candidate):
         """フォールバック確認ダイアログに表示する候補の送信先ホスト/表示名を返す。
 
@@ -2349,7 +2373,9 @@ class OCRDialog(tk.Toplevel):
             self._L["fallback_confirm_title"],
             self._L["fallback_confirm_msg"].format(
                 reason=self._L[reason_key],
-                candidate=candidate,
+                # 02-REVIEW WR-04 修正: 内部プロバイダキーの生値ではなく
+                # ローカライズされた表示名を見せる（他の表示箇所と統一）。
+                candidate=self._provider_key_to_display_name(candidate),
                 host=self._fallback_candidate_host(candidate),
             ),
             parent=self,

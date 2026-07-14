@@ -293,7 +293,9 @@ class TestSummaryFallback:
 
         monkeypatch.setattr("pagefolio.ocr_dialog.messagebox.askyesno", _fake_askyesno)
         d._propose_fallback("generic", "summary failed", summary=True)
-        assert "gemini" in captured["msg"]
+        # 02-REVIEW WR-04 修正: 確認メッセージは内部キーの生値ではなく
+        # ローカライズされた表示名（"Gemini (Google AI)"）で候補を示す。
+        assert d._L["ocr_provider_name_gemini"] in captured["msg"]
         assert "gemini" in d._fallback_tried
         assert "tesseract" not in d._fallback_tried
 
