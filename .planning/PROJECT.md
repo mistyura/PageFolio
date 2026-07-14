@@ -199,10 +199,11 @@ PageFolio の既存コードベースに対する最適化プロジェクト。
 - ✓ V171-UIUX-01/02/03・V171-TEST-03: ショートカット GUI 編集（ShortcutsDialog）・エラー表示/文言一貫性監査（i18n化・messagebox統一・未使用キー削除）・SettingsDialog/LLMConfigDialog セクション再編・既知軽微バグ棚卸し解消 — v1.7.1 Phase 4
 - ✓ V180-REFAC-01/02・V180-ROBUST-02: `ocr_providers.py`/`dialogs/llm_config.py` の責務別パッケージ分割・`_SENSITIVE_KEYS` プロバイダ→環境変数中央レジストリ化（`registry.py`新設） — v1.8.0 Phase 1
 - ✓ V180-TMPL-01〜05・V180-FALL-01〜03: 名前付きプロンプトテンプレート CRUD（保存/選択/削除/リネーム・外部mdファイル連動・全プロバイダ横断共有）・明示設定型プロバイダーフォールバック（送信先確認再提示つき・自動別ベンダー送信なし） — v1.8.0 Phase 2
+- ✓ V180-REFAC-03・V180-QA-01: `ocr_dialog.py` の producer-consumer 駆動部を `OCRRunEngine`（`pagefolio/ocr_engine.py`）へ抽出し `OCRDialog` を薄い委譲ラッパー化・OCR→サマリ E2E モックテスト整備（`tests/test_ocr_engine.py`・実スレッド/キュー駆動） — v1.8.0 Phase 3
 
 ### Active
 
-- v1.8.0 の要件は `.planning/REQUIREMENTS.md` で定義中（AI強化・堅牢性・品質保証・バッチ複数ファイル OCR の 4 本柱）。Phase 1・2 完了、Phase 3〜6 継続中。
+- v1.8.0 の要件は `.planning/REQUIREMENTS.md` で定義中（AI強化・堅牢性・品質保証・バッチ複数ファイル OCR の 4 本柱）。Phase 1〜3 完了、Phase 4〜6 継続中。
 
 ### Out of Scope
 
@@ -318,4 +319,4 @@ PageFolio の既存コードベースに対する最適化プロジェクト。
 4. 決定事項 → Key Decisions を更新
 
 ---
-*Last updated: 2026-07-14 — v1.8.0 Phase 2（AI強化）完了. Working branch: dev/v1.8.0.*
+*Last updated: 2026-07-14 — v1.8.0 Phase 3（OCR実行エンジン抽出 + E2Eテスト）完了. Working branch: dev/v1.8.0.*
