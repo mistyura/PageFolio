@@ -148,3 +148,163 @@ class TestOCRRunEngineUnit:
 
         assert len(complete_calls) == 1
         assert engine.results == {0: "text-b64-0", 1: "text-b64-1"}
+
+
+# ===== E2E モックテスト（OCRRunEngine 自体を実スレッド駆動で起動して検証・D-13）=====
+#
+# tests/test_ocr_pipeline.py の _drive_pipeline（テスト専用の producer+consumer
+# 全自作ドライバ）とは異なり、consumer 側は OCRRunEngine.start() 自身に担わせ、
+# テストコードは producer スタブ（engine.queue へ try_enqueue → send_sentinels）
+# のみを提供する（03-PATTERNS.md 明記の転用方針）。
+
+
+def _drive_engine(engine, pages, b64_for, timeout=5.0):
+    """E2E 用の薄い producer スタブ + 終端シグナル送出ヘルパー（D-13）。
+
+    engine.start() 済みの Engine に対し、テスト専用スレッドで pages を順に
+    try_enqueue し、最後に concurrency 本ぶんの終端シグナルを送り切る
+    （_send_all_sentinels・部分送出対応）。producer 側のスレッドモデルは
+    本ヘルパーが規定するのみで、consumer（ワーカー）側のコードパスは
+    OCRRunEngine 自身に検証させる（テスト専用ドライバの自作ではなく Engine の
+    コードパスを高忠実度で通す・D-13）。
+
+    戻り値: 起動した producer スレッド（呼び出し側で timeout=5.0 で join する）。
+    """
+
+    def _produce():
+        deadline = time.monotonic() + timeout
+        for page_idx in pages:
+            item = (page_idx, b64_for(page_idx))
+            while not try_enqueue(engine.queue, item):
+                if time.monotonic() > deadline:
+                    return
+                time.sleep(0.01)
+        _send_all_sentinels(engine.queue, engine.concurrency, timeout=timeout)
+
+    t = threading.Thread(target=_produce, daemon=True)
+    t.start()
+    return t
+
+
+class TestOCRRunEngineE2E:
+    """OCRRunEngine を実スレッド駆動（threading.Thread + queue.Queue）で起動する
+    E2E モックテスト群（実 API 非依存・FakeProvider のみ使用・D-13/D-14/D-15）。
+    """
+
+    def test_all_pages_success(self):
+        """複数ページ成功で全ページの on_success が呼ばれ、engine.results に
+        全件格納され engine.errors は空、on_complete がちょうど1回呼ばれる
+        （V180-QA-01・正常系）。
+        """
+        provider = FakeProvider()
+        cancel_flag = threading.Event()
+        successes = []
+        complete_calls = []
+        pages = [0, 1, 2, 3, 4]
+        engine = OCRRunEngine(
+            provider=provider,
+            prompt="prompt",
+            run_pages=pages,
+            concurrency=2,
+            cancel_flag=cancel_flag,
+            on_success=lambda p, t, tr: successes.append(p),
+            on_complete=lambda: complete_calls.append(1),
+        )
+        threads = engine.start()
+        producer_thread = _drive_engine(engine, pages, lambda i: f"b64-{i}")
+
+        for t in threads:
+            t.join(timeout=10.0)
+        producer_thread.join(timeout=5.0)
+        for t in threads:
+            assert not t.is_alive(), "ワーカースレッドが timeout 内に終了しなかった"
+
+        assert set(successes) == set(pages)
+        assert engine.errors == {}
+        assert set(engine.results.keys()) == set(pages)
+        for i in pages:
+            assert engine.results[i] == f"text-b64-{i}"
+        assert len(complete_calls) == 1
+
+    def test_partial_page_errors(self):
+        """特定ページのみ非リトライ由来のページエラーになっても取りこぼしなく
+        成功/エラーへ振り分けられ、on_complete で完了する
+        （V180-QA-01・異常系・ページエラー混在）。
+        """
+        fail_pages = {2}
+
+        def side_effect(b64, prompt):
+            if b64 == "b64-2":
+                raise RuntimeError("ページ処理失敗（テスト用）")
+            return f"text-{b64}"
+
+        provider = FakeProvider(side_effect=side_effect)
+        cancel_flag = threading.Event()
+        complete_calls = []
+        pages = list(range(5))
+        engine = OCRRunEngine(
+            provider=provider,
+            prompt="prompt",
+            run_pages=pages,
+            concurrency=2,
+            cancel_flag=cancel_flag,
+            on_complete=lambda: complete_calls.append(1),
+        )
+        threads = engine.start()
+        producer_thread = _drive_engine(engine, pages, lambda i: f"b64-{i}")
+
+        for t in threads:
+            t.join(timeout=10.0)
+        producer_thread.join(timeout=5.0)
+        for t in threads:
+            assert not t.is_alive(), "ワーカースレッドが timeout 内に終了しなかった"
+
+        assert set(engine.errors.keys()) == fail_pages
+        assert set(engine.results.keys()) == set(pages) - fail_pages
+        # 取りこぼしなし: 全ページが success か error のいずれかで説明できる
+        accounted = set(engine.results.keys()) | set(engine.errors.keys())
+        assert accounted == set(pages)
+        assert len(complete_calls) == 1
+
+    def test_cancel_stops_processing(self):
+        """cancel_flag セット後、有限時間内にキャンセルが反映され残ページの
+        ocr_image 呼び出しが行われず on_cancelled 経由で終了する
+        （V180-QA-01・キャンセル）。
+        """
+        call_count = [0]
+        lock = threading.Lock()
+        cancel_flag = threading.Event()
+        cancel_after = 3  # この呼び出し回数に達したらキャンセルを発火
+
+        def side_effect(b64, prompt):
+            with lock:
+                call_count[0] += 1
+                n = call_count[0]
+            time.sleep(0.01)
+            if n >= cancel_after:
+                cancel_flag.set()
+            return f"text-{b64}"
+
+        provider = FakeProvider(side_effect=side_effect)
+        cancelled_calls = []
+        pages = list(range(20))
+        engine = OCRRunEngine(
+            provider=provider,
+            prompt="prompt",
+            run_pages=pages,
+            concurrency=1,
+            cancel_flag=cancel_flag,
+            on_cancelled=lambda: cancelled_calls.append(1),
+        )
+        threads = engine.start()
+        producer_thread = _drive_engine(engine, pages, lambda i: f"b64-{i}")
+
+        for t in threads:
+            t.join(timeout=10.0)
+        producer_thread.join(timeout=5.0)
+        for t in threads:
+            assert not t.is_alive(), "ワーカースレッドが timeout 内に終了しなかった"
+
+        # キャンセル後は残ページ分の呼び出しが行われず全ページ数未満で収まる
+        assert call_count[0] < len(pages)
+        assert len(cancelled_calls) == 1
