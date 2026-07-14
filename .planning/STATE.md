@@ -4,17 +4,17 @@ milestone: v1.8.0
 milestone_name: 実用性の最大化・エコシステム洗練・堅牢性強化
 current_phase: 03
 current_phase_name: ocr-e2e
-status: executing
-stopped_at: Completed 03-01-PLAN.md
-last_updated: "2026-07-14T20:28:12.804Z"
-last_activity: 2026-07-14
-last_activity_desc: Phase 03 execution started
+status: ready_for_verification
+stopped_at: Completed 03-02-PLAN.md
+last_updated: "2026-07-14T20:43:44.637Z"
+last_activity: 2026-07-15
+last_activity_desc: 03-02-PLAN.md 完了（test d7f019d・test d84eee3）— Phase 3 全プラン完了
 progress:
   total_phases: 6
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 12
-  completed_plans: 11
-  percent: 33
+  completed_plans: 12
+  percent: 50
 ---
 
 # Project State
@@ -28,10 +28,10 @@ See: .planning/PROJECT.md (updated 2026-07-13)
 
 ## Current Position
 
-Phase: 03 (ocr-e2e) — EXECUTING
+Phase: 03 (ocr-e2e) — COMPLETE（検証待ち）
 Plan: 2 of 2
-Status: 03-01（OCRRunEngine 抽出）完了。03-02（E2E モックテスト）実行待ち
-Last activity: 2026-07-15 — 03-01-PLAN.md 完了（feat 7052edc・refactor d8c9e2c）
+Status: 03-01（OCRRunEngine 抽出）・03-02（E2E モックテスト）ともに完了。V180-QA-01/V180-REFAC-03 とも Complete
+Last activity: 2026-07-15 — 03-02-PLAN.md 完了（test d7f019d・test d84eee3）
 
 ## v1.8.0 Phase Map
 
@@ -109,6 +109,7 @@ Last activity: 2026-07-15 — 03-01-PLAN.md 完了（feat 7052edc・refactor d8c
 | Phase 02-ai P05 | 約20min | 3 tasks | 4 files |
 | Phase 02-ai P06 | 約15分 | 2 tasks | 1 files |
 | Phase 03-ocr-e2e P01 | 32min | 2 tasks | 4 files |
+| Phase 03-ocr-e2e P02 | 約16分 | 2 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -168,6 +169,8 @@ Decisions are logged in PROJECT.md Key Decisions table.
 - [Phase ?]: 新設スタブはText/Comboboxのみに限定し、既存の_SetGetVarStub（02-05）・_ButtonStub（OCR-UI-02）をテンプレートUIハンドラテストでも再利用した（重複定義回避）
 - [Phase 03-01]: queue.Queue/PipelineState は OCRRunEngine.start() 内で一度だけ生成し self.queue プロパティで公開。producer（OCRDialog._render_next_page）は self._engine.queue のみを参照する（落とし穴10・T-03-02 対応）
 - [Phase 03-01]: self._pstate は Engine 抽出後も vestigial 属性として維持（_clear_text/_on_run が None へリセットする既存の観測可能な挙動・既存回帰テスト TestClearResetsFatalState との後方互換のため）。実際の共有状態は self._engine（OCRRunEngine._pstate）が所有
+- [Phase 03-ocr-e2e]: [Phase 03-02] E2E producer スタブは cancel_flag を自前でチェックせず consume_one の再確認契約に委ねる設計 — consume_one が各アイテム処理開始時に is_fatal()/キャンセル判定を再確認するため、producer側での重複実装を避け既存契約への信頼を優先した
+- [Phase 03-ocr-e2e]: [Phase 03-02] サーキットブレーカーテストは OCRRetryableError(retry_after=0.01) で実待機を極小化 — MAX_RETRIES=3・DEFAULT_CIRCUIT_BREAKER_THRESHOLD=3 の構造をそのまま利用しつつテスト実行時間を短縮するため
 
 ### Pending Todos
 
@@ -263,12 +266,12 @@ Decisions are logged in PROJECT.md Key Decisions table.
 
 ## Session Continuity
 
-Last session: 2026-07-14T20:28:12.791Z
-Stopped at: Completed 03-01-PLAN.md
-Resume file: 03-02-PLAN.md
+Last session: 2026-07-14T20:43:44.624Z
+Stopped at: Completed 03-02-PLAN.md
+Resume file: None
 
 ## Operator Next Steps
 
-- Phase 3（ocr-e2e）の 03-01-PLAN.md（OCRRunEngine 抽出）が完了した。残る 03-02-PLAN.md（E2E モックテスト）を `/gsd-execute-phase 3` で継続実行する
+- Phase 3（ocr-e2e）の全2プラン（03-01: OCRRunEngine 抽出・03-02: E2E モックテスト）実行が完了した。検証には `/gsd-verify-work` を実行する
 - Phase 1（foundation-split）の全4プラン実行が完了した。検証には `/gsd-verify-work` を実行する
 - Phase 2（ai）の全6プラン（02-01〜02-06）実行が完了した。02-VERIFICATION.md gaps_found の原因（CR-02・behavior_unverified 4件）はいずれも解消済み。フェーズ再検証（`/gsd-verify-work` 等）を実行する
