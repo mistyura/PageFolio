@@ -1,8 +1,8 @@
 ---
 phase: 3
 slug: ocr-e2e
-status: draft
-nyquist_compliant: false
+status: ready
+nyquist_compliant: true
 wave_0_complete: false
 created: 2026-07-15
 ---
@@ -38,16 +38,15 @@ created: 2026-07-15
 
 | Task ID | Plan | Wave | Requirement | Threat Ref | Secure Behavior | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|------------|-----------------|-----------|-------------------|-------------|--------|
-| TBD | TBD | TBD | V180-REFAC-03 | — | N/A — `OCRRunEngine` 単独 import + `on_success` コールバック | unit | `pytest tests/test_ocr_engine.py::TestOCRRunEngineUnit -x` | ❌ W0 | ⬜ pending |
-| TBD | TBD | TBD | V180-REFAC-03 | — | N/A — `OCRDialog` 委譲後の回帰維持 | integration | `pytest tests/test_provider_ui.py tests/test_ocr_fallback.py tests/test_ocr.py -x` | ✅ | ⬜ pending |
-| TBD | TBD | TBD | V180-QA-01 | — | N/A — 複数ページ正常系の全結果返却 | e2e (mock) | `pytest tests/test_ocr_engine.py::TestOCRRunEngineE2E::test_all_pages_success -x` | ❌ W0 | ⬜ pending |
-| TBD | TBD | TBD | V180-QA-01 | — | N/A — ページエラー混在でも取りこぼしなし | e2e (mock) | `pytest tests/test_ocr_engine.py::TestOCRRunEngineE2E::test_partial_page_errors -x` | ❌ W0 | ⬜ pending |
-| TBD | TBD | TBD | V180-QA-01 | — | N/A — キャンセルの有限時間反映 | e2e (mock) | `pytest tests/test_ocr_engine.py::TestOCRRunEngineE2E::test_cancel_stops_processing -x` | ❌ W0 | ⬜ pending |
-| TBD | TBD | TBD | V180-QA-01 | — | N/A — サーキットブレーカーで残ページ API スキップ | e2e (mock) | `pytest tests/test_ocr_engine.py::TestOCRRunEngineE2E::test_circuit_breaker_stops_calls -x` | ❌ W0 | ⬜ pending |
-| TBD | TBD | TBD | V180-QA-01 | — | N/A — OCR→サマリ一気通貫成功 | e2e (mock) | `pytest tests/test_ocr_engine.py::TestOCRRunEngineE2E::test_ocr_then_summary_flow -x` | ❌ W0 | ⬜ pending |
+| 3-01-01 | 01 | 1 | V180-REFAC-03 | — | N/A — `OCRRunEngine` 単独 import + `on_success` コールバック | unit | `pytest tests/test_ocr_engine.py::TestOCRRunEngineUnit -x` | ❌ W0 | ⬜ pending |
+| 3-01-02 | 01 | 1 | V180-REFAC-03 | T-03-02 | producer/consumer が同一 `queue.Queue`/`PipelineState` インスタンスを共有（`self._engine.queue` 経由） | integration | `pytest tests/test_provider_ui.py tests/test_ocr_fallback.py tests/test_ocr.py -x` | ✅ | ⬜ pending |
+| 3-02-01 | 02 | 2 | V180-QA-01 | — | N/A — 複数ページ正常系の全結果返却 | e2e (mock) | `pytest tests/test_ocr_engine.py::TestOCRRunEngineE2E::test_all_pages_success -x` | ❌ W0 | ⬜ pending |
+| 3-02-01 | 02 | 2 | V180-QA-01 | — | N/A — ページエラー混在でも取りこぼしなし | e2e (mock) | `pytest tests/test_ocr_engine.py::TestOCRRunEngineE2E::test_partial_page_errors -x` | ❌ W0 | ⬜ pending |
+| 3-02-01 | 02 | 2 | V180-QA-01 | — | N/A — キャンセルの有限時間反映 | e2e (mock) | `pytest tests/test_ocr_engine.py::TestOCRRunEngineE2E::test_cancel_stops_processing -x` | ❌ W0 | ⬜ pending |
+| 3-02-02 | 02 | 2 | V180-QA-01 | — | N/A — サーキットブレーカーで残ページ API スキップ | e2e (mock) | `pytest tests/test_ocr_engine.py::TestOCRRunEngineE2E::test_circuit_breaker_stops_calls -x` | ❌ W0 | ⬜ pending |
+| 3-02-02 | 02 | 2 | V180-QA-01 | — | N/A — OCR→サマリ一気通貫成功 | e2e (mock) | `pytest tests/test_ocr_engine.py::TestOCRRunEngineE2E::test_ocr_then_summary_flow -x` | ❌ W0 | ⬜ pending |
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
-*Task ID / Plan / Wave はプラン確定後に PLAN.md から転記する。*
 
 ---
 
@@ -70,11 +69,11 @@ created: 2026-07-15
 
 ## Validation Sign-Off
 
-- [ ] All tasks have `<automated>` verify or Wave 0 dependencies
-- [ ] Sampling continuity: no 3 consecutive tasks without automated verify
-- [ ] Wave 0 covers all MISSING references
-- [ ] No watch-mode flags
-- [ ] Feedback latency < 40s
-- [ ] `nyquist_compliant: true` set in frontmatter
+- [x] All tasks have `<automated>` verify or Wave 0 dependencies（plan-checker Dimension 8a PASS）
+- [x] Sampling continuity: no 3 consecutive tasks without automated verify（8c PASS — 各プラン2タスク）
+- [x] Wave 0 covers all MISSING references（8d PASS）
+- [x] No watch-mode flags（8b PASS）
+- [x] Feedback latency < 40s（フルスイート実測 36.21秒）
+- [x] `nyquist_compliant: true` set in frontmatter
 
 **Approval:** pending

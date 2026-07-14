@@ -391,17 +391,19 @@ class FakeProvider(OCRProvider):
 
 **この2件は CONTEXT.md の決定事項からの論理的推論であり、直接的な決定文言はない。計画時に discuss-phase の追加確認、または plan-checker でのレビューを推奨する。**
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Engine のキュー生成責任の所在**
    - What we know: D-01（producer は Engine に内包しない）・D-02（最小限の値渡し）が決定済み
    - What's unclear: `queue.Queue` 自体を誰が生成するか（Engine 内部で生成し producer がプロパティ経由で参照する／`OCRDialog` が生成し Engine コンストラクタへ渡す）は未確定
    - Recommendation: Pitfall 1（落とし穴10）を避けるため、「Engine が起動時に一度だけキューを生成し、producer はそのプロパティを参照する」方式を計画時に第一候補として推奨する（producer/consumer 双方が同一キューインスタンスを確実に共有できるため）
+   - **RESOLVED:** 推奨どおり採用（03-01-PLAN.md Task 1）。Engine が `start()` で `queue.Queue`/`PipelineState` を一度だけ生成し `self.queue` プロパティで公開、producer（`OCRDialog._render_next_page`）は `self._engine.queue` 経由で同一インスタンスを参照する。落とし穴10（T-03-02 high）はこの一本化で mitigate。
 
 2. **サマリ生成コードの E2E テスト内での扱い**
    - What we know: D-15 でサマリ生成（`complete_text_ex` 相当の text-only 応答）が E2E カバレッジに含まれることが決定済み
    - What's unclear: サマリロジック自体を `OCRRunEngine` の一部にするか、`OCRDialog._summary_worker` 相当のロジックとして別途（E2E テストからは直接 `provider.complete_text_ex` を呼ぶ形で）検証するか
    - Recommendation: Assumptions Log A2 の解釈（サマリはEngine抽出対象外・フローとしてのみテスト対象）を計画に反映することを推奨。既存 `_summary_worker` のロジック自体は変更不要
+   - **RESOLVED:** A2 解釈を採用（03-02-PLAN.md）。サマリ生成は `OCRRunEngine` へ統合せず、E2E テストではフローとしてのみ検証（テストから `provider.complete_text_ex` を直接呼ぶ・Pitfall 4 遵守）。既存 `_summary_worker` は変更しない。
 
 ## Environment Availability
 
