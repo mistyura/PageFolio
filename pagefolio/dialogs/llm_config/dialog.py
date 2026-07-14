@@ -8,6 +8,7 @@ _model_supports_effort / _resize_to_fit / _add_prompt_file_notice /
 _set_lm_status とスクロール域構築の共通部を担う。
 """
 
+import copy
 import tkinter as tk
 from tkinter import ttk
 
@@ -44,6 +45,14 @@ class DialogMixin:
         self.grab_set()
 
         self.current_settings = dict(current_settings)
+        # CR-02 修正: prompt_templates はネスト辞書（items・各テンプレート dict）
+        # を持つため、上の dict() による浅いコピーでは app.settings["prompt_templates"]
+        # と同一参照を共有したままになる。ダイアログ内の CRUD 操作（保存/削除/
+        # リネーム）が呼び出し元の app.settings を汚染しないよう、ここで
+        # ディープコピーして完全に独立させる（V180-TMPL-01/03・02-REVIEW CR-02）。
+        self.current_settings["prompt_templates"] = copy.deepcopy(
+            current_settings.get("prompt_templates", {"active": "", "items": {}})
+        )
         self.on_apply = on_apply
         self._font = font_func or (
             lambda d=0, w=None: (
@@ -459,14 +468,15 @@ class DialogMixin:
             llm_settings["ocr_concurrency"] = 2
 
         # v1.8.0 Phase 2: アクティブテンプレート名の収集（V180-TMPL-01〜05）。
-        # items は self.current_settings 由来のコピーを保持したまま active
-        # のみ現在の選択値（sections.py の _on_template_change 等が更新する
-        # self._active_template_name）で差し替える。CRUD 操作（保存/削除/
-        # リネーム）は sections.py 側で既に self.current_settings を直接
-        # 変更し _save_settings 済みのため、_apply は active の最終確定のみ
-        # を担う。既存の _apply スタブ経路（current_settings/
-        # _active_template_name 未設定）との後方互換のため getattr で
-        # フォールバックする。
+        # CR-02 修正: CRUD 操作（保存/削除/リネーム）は sections.py 側で
+        # 分離済み（__init__ でディープコピー済み）の self.current_settings
+        # のみを in-place 変更し、もはや永続化しない。_apply が active +
+        # items を一括収集し、on_apply 経由で単一経路で確定・永続化する
+        # （Apply/Cancel 契約の回復）。items は copy.deepcopy して
+        # app.settings へ完全独立した構造を渡す（内側のテンプレート dict まで
+        # 独立させ、以後のエイリアス共有を防ぐ）。既存の _apply スタブ経路
+        # （current_settings/_active_template_name 未設定）との後方互換の
+        # ため getattr でフォールバックする。
         existing_templates = getattr(self, "current_settings", {}).get(
             "prompt_templates", {"active": "", "items": {}}
         )
@@ -474,7 +484,7 @@ class DialogMixin:
             "active": getattr(
                 self, "_active_template_name", existing_templates.get("active", "")
             ),
-            "items": dict(existing_templates.get("items", {})),
+            "items": copy.deepcopy(existing_templates.get("items", {})),
         }
 
         # v1.8.0 Phase 2: フォールバック設定の収集（V180-FALL-01/03・D-14）。
