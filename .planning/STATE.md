@@ -4,15 +4,15 @@ milestone: v1.8.0
 milestone_name: 実用性の最大化・エコシステム洗練・堅牢性強化
 current_phase: 3
 current_phase_name: OCR実行エンジン抽出 + E2Eテスト
-status: verifying
-stopped_at: Phase 3 context gathered
-last_updated: "2026-07-14T15:51:49.569Z"
-last_activity: 2026-07-14
-last_activity_desc: Phase 02 complete, transitioned to Phase 3
+status: ready_to_execute
+stopped_at: Phase 3 planned (2 plans)
+last_updated: "2026-07-15T00:00:00.000Z"
+last_activity: 2026-07-15
+last_activity_desc: Phase 3 planning complete (2 plans, checker passed with direct doc fixes)
 progress:
   total_phases: 6
   completed_phases: 2
-  total_plans: 10
+  total_plans: 12
   completed_plans: 10
   percent: 33
 ---
@@ -24,14 +24,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-07-13)
 
 **Core value:** 大きな PDF でも Undo/Redo が正しく・速く動作し、コードが読みやすく保守しやすい状態にする
-**Current focus:** Phase 02 — ai
+**Current focus:** Phase 03 — ocr-e2e
 
 ## Current Position
 
 Phase: 3 — OCR実行エンジン抽出 + E2Eテスト
-Plan: Not started
-Status: 02-06-PLAN.md（behavior_unverified_items ギャップクロージャー）完了。02-VERIFICATION.md gaps（BLOCKER 1件・behavior_unverified 3件）を全て解消。フェーズ再検証（/gsd-verify-work 等）待ち
-Last activity: 2026-07-14 — Phase 02 complete, transitioned to Phase 3
+Plan: 2 plans ready（03-01: OCRRunEngine 抽出 / 03-02: E2E モックテスト）
+Status: Ready to execute。プランチェッカー指摘（RESEARCH.md Open Questions マーカー・VALIDATION.md 転記）は直接修正済み。要件被覆 2/2・決定被覆 16/16 でゲート通過
+Last activity: 2026-07-15 — Phase 3 planning complete (2 plans)
 
 ## v1.8.0 Phase Map
 
@@ -260,11 +260,12 @@ Decisions are logged in PROJECT.md Key Decisions table.
 
 ## Session Continuity
 
-Last session: 2026-07-14T15:51:49.554Z
-Stopped at: Phase 3 context gathered
-Resume file: .planning/phases/03-ocr-e2e/03-CONTEXT.md
+Last session: 2026-07-15
+Stopped at: Phase 3 planned (2 plans, ready to execute)
+Resume file: .planning/phases/03-ocr-e2e/03-01-PLAN.md
 
 ## Operator Next Steps
 
+- Phase 3（ocr-e2e）のプランニングが完了した（2プラン・チェッカー通過）。`/gsd-execute-phase 3` で実行する
 - Phase 1（foundation-split）の全4プラン実行が完了した。検証には `/gsd-verify-work` を実行する
 - Phase 2（ai）の全6プラン（02-01〜02-06）実行が完了した。02-VERIFICATION.md gaps_found の原因（CR-02・behavior_unverified 4件）はいずれも解消済み。フェーズ再検証（`/gsd-verify-work` 等）を実行する
