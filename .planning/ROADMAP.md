@@ -133,8 +133,24 @@ V171-* 全 17 要件 Complete（被覆 17/17・孤立要件なし）。締め前
   4. ユーザーはフォールバック順（プロバイダ連鎖）を明示的に設定でき、未設定時はフォールバックが発生しない（安全側既定）
   5. OCR 実行が fatal エラーで停止すると、次のフォールバック候補（並列度・APIキー解決・レート制限設定を正しく引き継いだ状態）への切替が送信先確認ダイアログの再提示つきで提案され、ユーザー承認なしに別ベンダーへ自動送信されることはない
 
-**Plans**: TBD
+**Plans**: 4 plans
 **UI hint**: yes
+
+**Wave 1**
+
+- [ ] 02-01-PLAN.md — テンプレート/フォールバック純ロジック基盤層（settings CRUD・3段解決・ocr_fallback.py）[Wave 1]
+
+**Wave 2** *(blocked on Wave 1)*
+
+- [ ] 02-02-PLAN.md — テンプレート管理 UI（sections.py テンプレートセクション + _apply 収集）[Wave 2]
+
+**Wave 3** *(blocked on Wave 2)*
+
+- [ ] 02-03-PLAN.md — フォールバック設定 UI（🔁セクション・トグル+Listbox+上下ボタン）[Wave 3]
+
+**Wave 4** *(blocked on Wave 3)*
+
+- [ ] 02-04-PLAN.md — フォールバックオーケストレーション（送信先確認再提示・provider 再構築・Pitfall 4 回避）[Wave 4]
 
 ### Phase 3: OCR実行エンジン抽出 + E2Eテスト
 
@@ -222,7 +238,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | 3. ページ操作磨き込み + v1.5.0 回帰テスト | v1.7.1 | 4/4 | Complete | 2026-07-05 |
 | 4. UI/UX 磨き込み + 既知バグ棚卸し | v1.7.1 | 4/4 | Complete | 2026-07-05 |
 | 1. 基盤分割（肥大モジュールリファクタリング） | v1.8.0 | 4/4 | Complete | 2026-07-14 |
-| 2. AI強化（プロンプト・テンプレート管理 + プロバイダーフォールバック） | v1.8.0 | TBD | Not started | - |
+| 2. AI強化（プロンプト・テンプレート管理 + プロバイダーフォールバック） | v1.8.0 | 0/4 | Not started | - |
 | 3. OCR実行エンジン抽出 + E2Eテスト | v1.8.0 | TBD | Not started | - |
 | 4. バッチ複数ファイルOCR | v1.8.0 | TBD | Not started | - |
 | 5. 堅牢性強化（サムネイル仮想化 + Blobリーク検出 + ShortcutsDialog修正） | v1.8.0 | TBD | Not started | - |
