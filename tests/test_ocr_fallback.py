@@ -165,3 +165,227 @@ class TestSettingsIsolation:
         d._active_ocr_settings = fb
         assert d.app.settings == original
         assert d.app.settings["ocr_provider"] == "claude"
+
+
+class TestConfirmationGate:
+    """02-04 Task 2: _propose_fallback の承認ゲート再提示
+    （D-10/D-11・V180-FALL-02・Pitfall 2・レビュー HIGH）。
+    """
+
+    @staticmethod
+    def _settings(enabled=True, chain=None, provider="claude"):
+        return {
+            "ocr_provider": provider,
+            "ocr_fallback_enabled": enabled,
+            "ocr_fallback_chain": list(chain if chain is not None else ["lmstudio"]),
+        }
+
+    def test_askyesno_called_when_enabled(self, monkeypatch):
+        """フォールバック有効時、fatal で askyesno が呼ばれる（承認ゲート省略なし）。"""
+        d = _make_dialog(self._settings())
+        calls = []
+        monkeypatch.setattr(
+            "pagefolio.ocr_dialog.messagebox.askyesno",
+            lambda *a, **k: calls.append((a, k)) or False,
+        )
+        d._propose_fallback("connection", "boom")
+        assert len(calls) == 1
+
+    def test_approval_switches_and_calls_on_run_with_candidate_settings(
+        self, monkeypatch
+    ):
+        """承認時、_switch_to_fallback_provider→_on_run(resume=True, settings=fb)
+        経由で build_provider が ocr_provider==candidate の設定で呼ばれる
+        （レビュー HIGH 回帰防止）。
+        """
+        d = _make_dialog(self._settings())
+        monkeypatch.setattr(
+            "pagefolio.ocr_dialog.messagebox.askyesno", lambda *a, **k: True
+        )
+        build_calls = []
+
+        class _FakeProvider:
+            max_concurrency = 4
+            supports_text_prompt = True
+
+        def _fake_build_provider(settings, **kwargs):
+            build_calls.append(dict(settings))
+            return _FakeProvider()
+
+        monkeypatch.setattr("pagefolio.ocr.build_provider", _fake_build_provider)
+        on_run_calls = []
+        d._on_run = lambda **kwargs: on_run_calls.append(kwargs)
+
+        d._propose_fallback("connection", "boom")
+
+        assert len(build_calls) == 1
+        assert build_calls[0]["ocr_provider"] == "lmstudio"
+        assert len(on_run_calls) == 1
+        assert on_run_calls[0]["resume"] is True
+        assert on_run_calls[0]["settings"]["ocr_provider"] == "lmstudio"
+        assert d.provider is not None
+        # self.app.settings 自体は書き換えられない（Pitfall 4・T-02-11）
+        assert d.app.settings["ocr_provider"] == "claude"
+
+    def test_rejection_does_not_switch(self, monkeypatch):
+        """拒否時は _switch_to_fallback_provider（＝別ベンダー送信）が起きない。"""
+        d = _make_dialog(self._settings())
+        monkeypatch.setattr(
+            "pagefolio.ocr_dialog.messagebox.askyesno", lambda *a, **k: False
+        )
+        on_run_calls = []
+        d._on_run = lambda **kwargs: on_run_calls.append(kwargs)
+        d._propose_fallback("connection", "boom")
+        assert on_run_calls == []
+        assert d.provider is None
+        # D-10: 拒否候補も試行済み扱い（連鎖は継続するが自動送信はしない）
+        assert "lmstudio" in d._fallback_tried
+
+    def test_disabled_does_not_call_askyesno(self, monkeypatch):
+        """ocr_fallback_enabled=False では askyesno が一切呼ばれない
+        （V180-FALL-01）。
+        """
+        d = _make_dialog(self._settings(enabled=False))
+        calls = []
+        monkeypatch.setattr(
+            "pagefolio.ocr_dialog.messagebox.askyesno",
+            lambda *a, **k: calls.append(1) or True,
+        )
+        d._propose_fallback("connection", "boom")
+        assert calls == []
+
+    def test_api_key_missing_reason_in_message(self, monkeypatch):
+        """api_key_missing 理由が確認文言に明示される（D-11）。"""
+        d = _make_dialog(self._settings(chain=["claude"], provider="lmstudio"))
+        captured = {}
+
+        def _fake_askyesno(title, msg, **kwargs):
+            captured["msg"] = msg
+            return False
+
+        monkeypatch.setattr("pagefolio.ocr_dialog.messagebox.askyesno", _fake_askyesno)
+        d._propose_fallback("api_key_missing", "no key")
+        assert d._L["fallback_reason_api_key_missing"] in captured["msg"]
+
+
+class TestSummaryFallback:
+    """02-04 Task 2: サマリ経路のフォールバック（D-12・レビュー MEDIUM）。"""
+
+    def test_summary_excludes_tesseract_candidate(self, monkeypatch):
+        """next_summary_candidate 経由で tesseract が候補から除外される。"""
+        settings = {
+            "ocr_provider": "claude",
+            "ocr_fallback_enabled": True,
+            "ocr_fallback_chain": ["tesseract", "gemini"],
+        }
+        d = _make_dialog(settings)
+        captured = {}
+
+        def _fake_askyesno(title, msg, **kwargs):
+            captured["msg"] = msg
+            return False
+
+        monkeypatch.setattr("pagefolio.ocr_dialog.messagebox.askyesno", _fake_askyesno)
+        d._propose_fallback("generic", "summary failed", summary=True)
+        assert "gemini" in captured["msg"]
+        assert "gemini" in d._fallback_tried
+        assert "tesseract" not in d._fallback_tried
+
+    def test_approval_calls_on_summary_with_candidate_settings(self, monkeypatch):
+        """承認時、_switch_to_fallback_provider(summary=True)→
+        _on_summary(settings=fb) が候補設定で呼ばれる（レビュー MEDIUM）。
+        """
+        settings = {
+            "ocr_provider": "claude",
+            "ocr_fallback_enabled": True,
+            "ocr_fallback_chain": ["gemini"],
+        }
+        d = _make_dialog(settings)
+        monkeypatch.setattr(
+            "pagefolio.ocr_dialog.messagebox.askyesno", lambda *a, **k: True
+        )
+
+        class _FakeProvider:
+            max_concurrency = 1
+            supports_text_prompt = True
+
+        monkeypatch.setattr(
+            "pagefolio.ocr.build_provider", lambda settings, **kw: _FakeProvider()
+        )
+        monkeypatch.setattr(
+            "pagefolio.ocr._resolve_api_key", lambda name, session_keys: "dummy-key"
+        )
+        summary_calls = []
+        d._on_summary = lambda **kwargs: summary_calls.append(kwargs)
+
+        d._propose_fallback("generic", "summary failed", summary=True)
+
+        assert len(summary_calls) == 1
+        assert summary_calls[0]["settings"]["ocr_provider"] == "gemini"
+
+
+class TestProviderReadiness:
+    """02-04 Task 2: _validate_provider_readiness の実行不可検出
+    （レビュー LOW・D-11/D-14・T-02-14）。
+    """
+
+    def test_validate_provider_readiness_false_when_tesseract_missing(
+        self, monkeypatch
+    ):
+        """tesseract 未インストール検出時は False を返す。"""
+        monkeypatch.setattr(
+            "pagefolio.ocr_providers._detect_tesseract",
+            lambda: (False, frozenset()),
+        )
+        settings = {"ocr_provider": "tesseract"}
+        d = _make_dialog(settings)
+        assert d._validate_provider_readiness("tesseract", settings) is False
+
+    def test_switch_skips_unavailable_tesseract_and_proposes_next(self, monkeypatch):
+        """tesseract が実行不可なら静かに握りつぶさず、試行済みへ計上して
+        次候補（lmstudio）へ再帰的に進む（build_provider は tesseract では
+        呼ばれない）。
+        """
+        monkeypatch.setattr(
+            "pagefolio.ocr_providers._detect_tesseract",
+            lambda: (False, frozenset()),
+        )
+        settings = {
+            "ocr_provider": "claude",
+            "ocr_fallback_enabled": True,
+            "ocr_fallback_chain": ["tesseract", "lmstudio"],
+        }
+        d = _make_dialog(settings)
+        askyesno_calls = []
+
+        def _fake_askyesno(title, msg, **kwargs):
+            askyesno_calls.append(msg)
+            return True
+
+        monkeypatch.setattr("pagefolio.ocr_dialog.messagebox.askyesno", _fake_askyesno)
+
+        class _FakeProvider:
+            max_concurrency = 8
+            supports_text_prompt = True
+
+        build_calls = []
+
+        def _fake_build_provider(settings, **kwargs):
+            build_calls.append(dict(settings))
+            return _FakeProvider()
+
+        monkeypatch.setattr("pagefolio.ocr.build_provider", _fake_build_provider)
+        on_run_calls = []
+        d._on_run = lambda **kwargs: on_run_calls.append(kwargs)
+
+        d._propose_fallback("connection", "boom")
+
+        assert "tesseract" in d._fallback_tried
+        assert "lmstudio" in d._fallback_tried
+        assert len(askyesno_calls) == 2
+        # tesseract は readiness=False のため build_provider は呼ばれず、
+        # 次候補 lmstudio でのみ呼ばれる（静かな握りつぶし禁止）
+        assert len(build_calls) == 1
+        assert build_calls[0]["ocr_provider"] == "lmstudio"
+        assert len(on_run_calls) == 1
+        assert on_run_calls[0]["settings"]["ocr_provider"] == "lmstudio"

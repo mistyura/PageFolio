@@ -664,6 +664,27 @@ LANG = {
         "fallback_add_btn": "＋ 追加",
         "fallback_remove_btn": "－ 除外",
         "fallback_hint": "未設定時はフォールバックしません（安全側既定）。",
+        # フォールバック実行時オーケストレーション（v1.8.0 Phase 2・02-04・
+        # V180-FALL-02/03・D-10/D-11/D-12）
+        "fallback_confirm_title": "フォールバック確認",
+        "fallback_confirm_msg": (
+            "{reason}\n\n"
+            "{candidate}（{host}）へ切り替えて未処理ページを再送信しますか？\n"
+            "承認しない限り自動送信はされません。"
+        ),
+        "fallback_reason_connection": "接続エラーにより処理が停止しました。",
+        "fallback_reason_timeout": "タイムアウトにより処理が停止しました。",
+        "fallback_reason_circuit_breaker": (
+            "連続エラーによりサーキットブレーカーが作動し処理が停止しました。"
+        ),
+        "fallback_reason_api_key_missing": "APIキーが未設定のため処理が停止しました。",
+        "fallback_reason_provider_unavailable": (
+            "プロバイダが利用できません（Tesseract 未インストール等）。"
+        ),
+        "fallback_reason_generic": "エラーにより処理が停止しました。",
+        "fallback_exhausted": (
+            "フォールバック候補を使い切りました。設定を確認し再実行してください。"
+        ),
     },
     "en": {
         # Header / status
@@ -1316,5 +1337,30 @@ LANG = {
         "fallback_add_btn": "＋ Add",
         "fallback_remove_btn": "－ Remove",
         "fallback_hint": "Fallback does not fire unless configured (safe default).",
+        # Runtime fallback orchestration (v1.8.0 Phase 2 - 02-04 -
+        # V180-FALL-02/03 - D-10/D-11/D-12)
+        "fallback_confirm_title": "Fallback Confirmation",
+        "fallback_confirm_msg": (
+            "{reason}\n\n"
+            "Switch to {candidate} ({host}) and resend the unprocessed pages?\n"
+            "Nothing will be sent automatically unless you approve."
+        ),
+        "fallback_reason_connection": "Processing stopped due to a connection error.",
+        "fallback_reason_timeout": "Processing stopped due to a timeout.",
+        "fallback_reason_circuit_breaker": (
+            "Processing stopped because the circuit breaker tripped "
+            "after repeated errors."
+        ),
+        "fallback_reason_api_key_missing": (
+            "Processing stopped because the API key is not configured."
+        ),
+        "fallback_reason_provider_unavailable": (
+            "The provider is unavailable (e.g. Tesseract is not installed)."
+        ),
+        "fallback_reason_generic": "Processing stopped due to an error.",
+        "fallback_exhausted": (
+            "All fallback candidates have been exhausted. "
+            "Please check your settings and try again."
+        ),
     },
 }

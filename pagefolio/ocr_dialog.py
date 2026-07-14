@@ -23,6 +23,7 @@ from pagefolio.ocr import (
     resolve_ocr_prompt,
     resolve_summary_prompt,
 )
+from pagefolio.ocr_fallback import next_fallback_candidate, next_summary_candidate
 from pagefolio.ocr_pipeline import (
     PipelineState,
     consume_one,
@@ -60,6 +61,12 @@ _PRICE_FALLBACK = (5.0, 25.0)
 # サーキットブレーカー: リトライ上限到達がこのページ数連続したら実行を中断する
 # （サーバ側が完全に落ちている時に全ページ × リトライ待機を消化しないための保険）
 CB_CONSECUTIVE_FAILURES = 3
+
+# フォールバック（サマリ経路）: supports_text_prompt=True のプロバイダ名集合
+# （D-12・02-RESEARCH.md Open Question 2・tesseract は非対応のため除外）
+_TEXT_CAPABLE_PROVIDERS = frozenset(
+    {"claude", "gemini", "runpod", "lmstudio", "ollama"}
+)
 
 # サマリ生成専用のタイムアウト下限（秒）。全ページ連結テキストの要約は
 # OCR 1 ページより大幅に長いため、provider.timeout がこれ未満なら実行中のみ
@@ -1908,6 +1915,8 @@ class OCRDialog(tk.Toplevel):
             self.copy_btn.state(["!disabled"])
             self.save_btn.state(["!disabled"])
         self._after_run_ui_reset()
+        # V180-FALL-02: フォールバック提案フック（D-11）
+        self._propose_fallback(kind, msg)
 
     def _append_resume_hint(self):
         """部分的に成功している場合、未処理ページ数と再開案内を結果欄に追記する"""
@@ -2255,6 +2264,158 @@ class OCRDialog(tk.Toplevel):
         self.progress_var.set(display)
         self._progress_label.configure(fg=C["WARNING"])
         self._summary_ui_reset()
+        # V180-FALL-02/D-12: フォールバック提案フック（サマリ経路）
+        self._propose_fallback(kind or "generic", msg, summary=True)
+
+    # ── プロバイダーフォールバック（V180-FALL-02/03） ──
+
+    def _active_provider_name(self):
+        """現在アクティブな（フォールバック考慮後の）プロバイダ名を返す。"""
+        settings = self._active_ocr_settings or self.app.settings
+        return settings.get("ocr_provider", "")
+
+    def _fallback_candidate_host(self, candidate):
+        """フォールバック確認ダイアログに表示する候補の送信先ホスト/表示名を返す。
+
+        クラウド候補は送信先ホスト、ローカル候補は接続先 URL、Tesseract は
+        ネットワーク送信を伴わないためプロバイダ表示名を返す（D-11・送信先明示）。
+        """
+        settings = self.app.settings
+        if candidate == "claude":
+            return "api.anthropic.com"
+        if candidate == "gemini":
+            return "generativelanguage.googleapis.com"
+        if candidate == "runpod":
+            return settings.get("runpod_url", "") or self._L["llm_runpod_host_unset"]
+        if candidate == "lmstudio":
+            return settings.get("lm_studio_url", "http://localhost:1234")
+        if candidate == "ollama":
+            return settings.get("ollama_url", "http://localhost:11434")
+        if candidate == "tesseract":
+            return self._L["ocr_provider_name_tesseract"]
+        return candidate
+
+    def _propose_fallback(self, kind, msg, summary=False):
+        """_finish_error / _on_summary_error から呼ぶフォールバック提案フック
+        （D-11/D-12）。summary=True のときはサマリ経路として扱い、
+        next_summary_candidate で text 非対応候補（tesseract 等）を除外する
+        （レビュー MEDIUM）。
+
+        フォールバック連鎖の各段で必ず messagebox.askyesno による送信先確認を
+        再提示する（D-10・「今後表示しない」オプションは設けない）。
+        self.app.settings は一切書き換えない（Pitfall 4）。
+        """
+        if not self.app.settings.get("ocr_fallback_enabled", False):
+            return  # D-16: 既定 OFF（フォールバック未設定時は発火しない）
+        chain = self.app.settings.get("ocr_fallback_chain", [])
+        if not self._fallback_tried:
+            self._fallback_tried = {self._active_provider_name()}
+        if summary:
+            candidate = next_summary_candidate(
+                chain, self._fallback_tried, _TEXT_CAPABLE_PROVIDERS
+            )
+        else:
+            candidate = next_fallback_candidate(chain, self._fallback_tried)
+        if candidate is None:
+            # チェーン終端（D-10）: 現状のエラー表示に終了案内を追記するのみで、
+            # 自動送信はしない。
+            text_widget = getattr(self, "text", None)
+            if text_widget is not None:
+                text_widget.insert("end", "\n" + self._L["fallback_exhausted"] + "\n")
+                text_widget.see("end")
+            return
+        reason_key = {
+            "connection": "fallback_reason_connection",
+            "timeout": "fallback_reason_timeout",
+            "circuit_breaker": "fallback_reason_circuit_breaker",
+            "api_key_missing": "fallback_reason_api_key_missing",
+            "provider_unavailable": "fallback_reason_provider_unavailable",
+        }.get(kind, "fallback_reason_generic")
+        if not messagebox.askyesno(
+            self._L["fallback_confirm_title"],
+            self._L["fallback_confirm_msg"].format(
+                reason=self._L[reason_key],
+                candidate=candidate,
+                host=self._fallback_candidate_host(candidate),
+            ),
+            parent=self,
+        ):
+            # 拒否された候補も試行済み扱い（D-10 連鎖継続）。ユーザー承認なしに
+            # 自動送信はしない（現状のエラー表示のみに留める）。
+            self._fallback_tried.add(candidate)
+            return
+        self._fallback_tried.add(candidate)
+        self._switch_to_fallback_provider(candidate, summary=summary)
+
+    def _validate_provider_readiness(self, candidate, settings):
+        """候補プロバイダが build 前に実行可能か検証する（レビュー LOW・D-11/D-14）。
+
+        クラウド候補は APIキー解決可否を、tesseract はインストール検出を
+        確認する。それ以外のローカル/プラグインプロバイダは True を返す
+        （到達不能は既存の connection fatal 経路が拾い、そこから再度
+        _propose_fallback される）。
+        """
+        if self._is_cloud_provider(settings=settings):
+            return self._check_cloud_api_key(settings=settings)
+        if candidate == "tesseract":
+            from pagefolio.ocr_providers import _detect_tesseract
+
+            available, _langs = _detect_tesseract()
+            return available
+        return True
+
+    def _switch_to_fallback_provider(self, candidate, summary=False):
+        """フォールバック候補への実切替（V180-FALL-03・Pitfall 3/4）。
+
+        self.app.settings は書き換えず、ダイアログローカルスナップショット fb
+        （self._active_ocr_settings）上でのみプロバイダを差し替える。
+        """
+        fb = dict(self.app.settings)
+        fb["ocr_provider"] = candidate
+        self._active_ocr_settings = fb
+
+        if not self._validate_provider_readiness(candidate, fb):
+            # レビュー LOW: 実行不可プロバイダを静かに握りつぶさず次候補へ進む
+            # （D-11/D-14・build 前に検出したため未使用の候補は試行済みへ計上）
+            self._fallback_tried.add(candidate)
+            reason = (
+                "api_key_missing"
+                if self._is_cloud_provider(settings=fb)
+                else "provider_unavailable"
+            )
+            self._propose_fallback(reason, "", summary=summary)
+            return
+
+        from pagefolio.ocr import _resolve_api_key, build_provider
+        from pagefolio.ocr_providers import OCRAPIKeyError
+
+        session_keys = getattr(self.app, "_session_api_keys", {})
+        try:
+            api_key = _resolve_api_key(candidate, session_keys)
+        except OCRAPIKeyError:
+            api_key = ""
+        self.provider = build_provider(
+            fb,
+            api_key=api_key,
+            plugin_manager=getattr(self.app, "plugin_manager", None),
+        )
+        # V180-FALL-03/Pitfall 3: 候補プロバイダ別の max_concurrency で再クランプ
+        self.concurrency = max(1, min(self.provider.max_concurrency, self.concurrency))
+
+        # フォールバック確認 askyesno が送信先確認を兼ねるため、再開直後の
+        # コスト確認ダイアログは二重表示しない（_on_run/_on_summary 側のガード
+        # が参照するフラグ。ゲート通過直後に必ず finally で戻す）。
+        self._fallback_resume = True
+        try:
+            if summary:
+                self._summary_running = False
+                self._on_summary(settings=fb)
+            else:
+                self._done = False
+                self._started = False
+                self._on_run(resume=True, settings=fb)
+        finally:
+            self._fallback_resume = False
 
     def _on_summary_cancelled(self):
         """サマリ生成キャンセル（メインスレッド）。"""

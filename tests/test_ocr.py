@@ -2949,6 +2949,9 @@ class TestOnSummaryErrorKinds:
                 configure=lambda **kw: recorded.update(fg=kw.get("fg"))
             ),
             _summary_ui_reset=lambda: recorded.update(reset=True),
+            _propose_fallback=lambda kind, msg, summary=False: recorded.update(
+                fallback=(kind, summary)
+            ),
         )
         return fake, recorded
 
