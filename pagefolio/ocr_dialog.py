@@ -2032,7 +2032,10 @@ class OCRDialog(tk.Toplevel):
         # ダイアログローカル設定スナップショットを確定する（レビュー MEDIUM 対応）。
         # 以降このメソッド内の全設定参照は s（=self._active_ocr_settings）から
         # 行う（フォールバック先候補が正しく反映されるようにするため）。
-        s = settings if settings is not None else self.app.settings
+        # 02-REVIEW WR-02 修正: _on_run と同様、settings 省略時は self.app.settings
+        # を直接エイリアスせず dict() でコピーする。「self.app.settings は一切
+        # 書き換えない」不変条件（Pitfall 4）の防御的コピーを _on_run と揃える。
+        s = settings if settings is not None else dict(self.app.settings)
         self._active_ocr_settings = s
         name = s.get("ocr_provider", "")
         # V174-2: 外部 md ファイル（exe と同階層）があれば設定欄より優先
