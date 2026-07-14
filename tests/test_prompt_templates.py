@@ -12,12 +12,16 @@ settings.py のテンプレート CRUD ヘルパー（save/get/list/delete/renam
 
 import pytest
 
+from pagefolio.constants import CUSTOM_PROMPT_FILE, SUMMARY_PROMPT_FILE
 from pagefolio.settings import (
     _SENSITIVE_KEYS,
     delete_template,
     get_template,
     list_template_names,
+    load_custom_prompt,
+    load_summary_prompt,
     rename_template,
+    save_prompt_file,
     save_template,
     template_name_exists,
 )
@@ -186,10 +190,79 @@ class TestDeleteRename:
 
 
 class TestExternalFileSync:
-    """外部mdファイル > アクティブテンプレート > 設定欄の3段解決（V180-TMPL-04/05）"""
+    """外部mdファイル > アクティブテンプレート > 設定欄の3段解決（V180-TMPL-04/05）
 
-    # Task 2 で実装する。ここでは Wave 0 の雛形のみ（プレースホルダ）。
-    pass
+    load_custom_prompt/load_summary_prompt を対象に、(a) 外部ファイルあり→
+    ファイル内容優先、(b) 外部ファイルなし+active テンプレートあり→テンプレート
+    値、(c) 外部ファイルなし+active なし→ocr_custom_prompt/ocr_summary_prompt
+    設定欄値、の3系統を custom・summary 両方で検証する
+    （tests/test_utils.py::TestPromptFileLoading の _get_base_dir 差し替え
+    パターンを踏襲）。
+    """
+
+    def _use_base_dir(self, monkeypatch, tmp_path):
+        monkeypatch.setattr("pagefolio.settings._get_base_dir", lambda: str(tmp_path))
+
+    def test_external_file_priority_over_template_custom(self, monkeypatch, tmp_path):
+        """(a) 外部ファイルあり→ファイル内容が最優先（custom）"""
+        self._use_base_dir(monkeypatch, tmp_path)
+        settings = {"ocr_custom_prompt": "設定欄プロンプト"}
+        save_template(settings, "A", "テンプレプロンプト", "テンプレサマリ")
+        settings["prompt_templates"]["active"] = "A"
+        save_prompt_file(CUSTOM_PROMPT_FILE, "ファイル側プロンプト")
+        assert load_custom_prompt(settings) == "ファイル側プロンプト"
+
+    def test_external_file_priority_over_template_summary(self, monkeypatch, tmp_path):
+        """(a) 外部ファイルあり→ファイル内容が最優先（summary）"""
+        self._use_base_dir(monkeypatch, tmp_path)
+        settings = {"ocr_summary_prompt": "設定欄サマリ"}
+        save_template(settings, "A", "テンプレプロンプト", "テンプレサマリ")
+        settings["prompt_templates"]["active"] = "A"
+        save_prompt_file(SUMMARY_PROMPT_FILE, "ファイル側サマリ")
+        assert load_summary_prompt(settings) == "ファイル側サマリ"
+
+    def test_active_template_used_when_no_file_custom(self, monkeypatch, tmp_path):
+        """(b) 外部ファイルなし+active あり→テンプレート値（custom）"""
+        self._use_base_dir(monkeypatch, tmp_path)
+        settings = {"ocr_custom_prompt": "設定欄プロンプト"}
+        save_template(settings, "A", "テンプレプロンプト", "テンプレサマリ")
+        settings["prompt_templates"]["active"] = "A"
+        assert load_custom_prompt(settings) == "テンプレプロンプト"
+
+    def test_active_template_used_when_no_file_summary(self, monkeypatch, tmp_path):
+        """(b) 外部ファイルなし+active あり→テンプレート値（summary）"""
+        self._use_base_dir(monkeypatch, tmp_path)
+        settings = {"ocr_summary_prompt": "設定欄サマリ"}
+        save_template(settings, "A", "テンプレプロンプト", "テンプレサマリ")
+        settings["prompt_templates"]["active"] = "A"
+        assert load_summary_prompt(settings) == "テンプレサマリ"
+
+    def test_settings_field_used_when_no_file_and_no_active_custom(
+        self, monkeypatch, tmp_path
+    ):
+        """(c) 外部ファイルなし+active なし→設定欄値（custom）"""
+        self._use_base_dir(monkeypatch, tmp_path)
+        settings = {"ocr_custom_prompt": "設定欄プロンプト"}
+        assert load_custom_prompt(settings) == "設定欄プロンプト"
+
+    def test_settings_field_used_when_no_file_and_no_active_summary(
+        self, monkeypatch, tmp_path
+    ):
+        """(c) 外部ファイルなし+active なし→設定欄値（summary）"""
+        self._use_base_dir(monkeypatch, tmp_path)
+        settings = {"ocr_summary_prompt": "設定欄サマリ"}
+        assert load_summary_prompt(settings) == "設定欄サマリ"
+
+    def test_active_set_but_template_missing_falls_back_to_settings(
+        self, monkeypatch, tmp_path
+    ):
+        """active が設定済みでも該当テンプレートが削除済みなら設定欄へ落ちる"""
+        self._use_base_dir(monkeypatch, tmp_path)
+        settings = {
+            "ocr_custom_prompt": "設定欄プロンプト",
+            "prompt_templates": {"active": "ghost", "items": {}},
+        }
+        assert load_custom_prompt(settings) == "設定欄プロンプト"
 
 
 class TestSensitiveKeysNotPolluted:

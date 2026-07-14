@@ -105,25 +105,46 @@ def save_prompt_file(filename, content):
 
 
 def load_custom_prompt(settings):
-    """有効なカスタムプロンプトを返す（外部 md ファイル > 設定欄・V174-2）。
+    """有効なカスタムプロンプトを返す（外部 md > アクティブテンプレート > 設定欄）
 
-    ocr_custom_prompt.md が実行ファイルと同じ階層にあり非空なら、その内容を
-    設定欄（settings["ocr_custom_prompt"]）より優先して返す。ファイルは
-    呼び出しのたびに読み直すため、外部エディタでの編集が次回実行に反映される。
+    3段解決（V180-TMPL-04/05・v1.8.0 Phase 2 でテンプレート層を挿入）:
+      1. ocr_custom_prompt.md が実行ファイルと同じ階層にあり非空ならそれを返す
+         （従来どおり最優先・V174-2）
+      2. prompt_templates["active"] が非空かつ該当テンプレートに custom_prompt
+         があればその値を返す（テンプレート層・本フェーズ新設）
+      3. いずれも該当しなければ settings["ocr_custom_prompt"]（設定欄直接値）を
+         返す（従来どおり）
+
+    ファイルは呼び出しのたびに読み直すため、外部エディタでの編集が次回実行に
+    反映される。全プロバイダが本関数を経由するため、テンプレートは横断共有
+    される（V180-TMPL-05）。resolve_ocr_prompt（ocr.py）のシグネチャ・優先順位
+    ロジックは変更しない（custom_prompt の解決元だけを細分化する）。
     """
-    return load_prompt_file(CUSTOM_PROMPT_FILE) or settings.get("ocr_custom_prompt", "")
+    file_content = load_prompt_file(CUSTOM_PROMPT_FILE)
+    if file_content:
+        return file_content
+    active = settings.get("prompt_templates", {}).get("active", "")
+    if active:
+        tpl = get_template(settings, active)
+        if tpl and tpl.get("custom_prompt"):
+            return tpl["custom_prompt"]
+    return settings.get("ocr_custom_prompt", "")
 
 
 def load_summary_prompt(settings):
-    """有効なサマリプロンプトを返す（外部 md ファイル > 設定欄・V174-2）。
+    """有効なサマリプロンプトを返す（外部 md > アクティブテンプレート > 設定欄）
 
-    ocr_summary_prompt.md が実行ファイルと同じ階層にあり非空なら、その内容を
-    設定欄（settings["ocr_summary_prompt"]）より優先して返す（load_custom_prompt
-    と同型）。
+    3段解決は load_custom_prompt と同型（summary_prompt/SUMMARY_PROMPT_FILE 版）。
     """
-    return load_prompt_file(SUMMARY_PROMPT_FILE) or settings.get(
-        "ocr_summary_prompt", ""
-    )
+    file_content = load_prompt_file(SUMMARY_PROMPT_FILE)
+    if file_content:
+        return file_content
+    active = settings.get("prompt_templates", {}).get("active", "")
+    if active:
+        tpl = get_template(settings, active)
+        if tpl and tpl.get("summary_prompt"):
+            return tpl["summary_prompt"]
+    return settings.get("ocr_summary_prompt", "")
 
 
 # ═══════════════════════════════════════════════════════════════
