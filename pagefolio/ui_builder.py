@@ -93,6 +93,16 @@ class UIBuilderMixin:
         style.configure(
             "Horizontal.TScale", background=C["BG_DARK"], troughcolor=C["BG_CARD"]
         )
+        # バッチOCR（v1.8.0 Phase 4・04-03）: ttk.Treeview のテーマ整合スタイル
+        # （Pitfall 4・コードベース初導入）。C 辞書のみ参照しハードコード hex
+        # は使わない。本メソッド内への追記のため、テーマ切替時の
+        # _rebuild_ui → _build_styles() 再呼び出し経路（app.py:613）で
+        # 自動的に再適用される。
+        # fmt: off
+        style.configure("Treeview", background=C["BG_PANEL"], foreground=C["TEXT_MAIN"], fieldbackground=C["BG_PANEL"])  # noqa: E501
+        style.configure("Treeview.Heading", background=C["BG_CARD"], foreground=C["TEXT_MAIN"], font=("Segoe UI", fs - 1, "bold"))  # noqa: E501
+        style.map("Treeview", background=[("selected", C["ACCENT"])], foreground=[("selected", "#ffffff")])  # noqa: E501
+        # fmt: on
 
     def _build_ui(self):
 

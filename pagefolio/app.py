@@ -192,6 +192,7 @@ class PDFEditorApp(
 
         self._build_styles()
         self._build_ui()
+        self._build_menubar()
 
         # WM_DELETE_WINDOW
         self.root.protocol("WM_DELETE_WINDOW", self._quit)
@@ -257,6 +258,34 @@ class PDFEditorApp(
                         f"Failed to bind shortcut {keysym} for {cmd_name}: {ex}"
                     )
         self._bound_keysyms = bound
+
+    # ══════════════════════════════════════════
+    #  メニューバー（v1.8.0 Phase 4・04-03・D-01 本プロジェクト初導入）
+    # ══════════════════════════════════════════
+    def _build_menubar(self):
+        """メニューバー（tk.Menu）を構築する（D-01）。
+
+        最小構成: 「ツール」メニュー1つに「バッチOCR」項目のみを持つ
+        （Open Question 1・他機能のメニュー化は本フェーズのスコープ外）。
+        アクセラレータキーは設定しない（クリック起動のみ・Pitfall 5・
+        既存 ShortcutsDialog cmd_map 11コマンドとの衝突を構造的に回避）。
+        `_rebuild_ui` からも呼ばれ、root.winfo_children() 破棄後のテーマ
+        切替時にもメニューバーが再構築される。
+        """
+        menubar = tk.Menu(self.root)
+        tools_menu = tk.Menu(menubar, tearoff=0)
+        tools_menu.add_command(
+            label=self._t("batch_menu_item"), command=self._open_batch_ocr
+        )
+        menubar.add_cascade(label=self._t("batch_menu_tools"), menu=tools_menu)
+        self.root.config(menu=menubar)
+        self._menubar = menubar
+
+    def _open_batch_ocr(self):
+        """メニュー「バッチOCR」からダイアログを起動する（D-04: doc/filepath 非参照）"""
+        from pagefolio.dialogs import BatchOCRDialog
+
+        BatchOCRDialog(self.root, app=self, lang=self.lang, font_func=self._font)
 
     # ══════════════════════════════════════════
     #  ユーティリティ
@@ -612,6 +641,7 @@ class PDFEditorApp(
         self._mode_btn = None
         self._build_styles()
         self._build_ui()
+        self._build_menubar()
         if self.doc:
             self._refresh_all()
         else:

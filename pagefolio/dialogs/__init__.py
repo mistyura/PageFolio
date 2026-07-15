@@ -8,6 +8,7 @@
 """
 
 from pagefolio.dialogs.about import AboutDialog  # noqa: F401
+from pagefolio.dialogs.batch_ocr import BatchOCRDialog  # noqa: F401
 from pagefolio.dialogs.export_images import ExportImagesDialog  # noqa: F401
 from pagefolio.dialogs.llm_config import LLMConfigDialog  # noqa: F401
 from pagefolio.dialogs.merge import MergeOrderDialog, MergeResizeDialog  # noqa: F401

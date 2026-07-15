@@ -713,6 +713,9 @@ LANG = {
         "batch_export_btn": "📤 エクスポート",
         "batch_summary_btn": "📊 サマリ作成",
         "batch_summary_file_header": "=== {name} ===",
+        # メニューバー（v1.8.0 Phase 4・04-03・D-01）
+        "batch_menu_tools": "ツール",
+        "batch_menu_item": "バッチOCR",
     },
     "en": {
         # Header / status
@@ -1415,5 +1418,8 @@ LANG = {
         "batch_export_btn": "📤 Export",
         "batch_summary_btn": "📊 Create Summary",
         "batch_summary_file_header": "=== {name} ===",
+        # Menu bar (v1.8.0 Phase 4 - 04-03 - D-01)
+        "batch_menu_tools": "Tools",
+        "batch_menu_item": "Batch OCR",
     },
 }
