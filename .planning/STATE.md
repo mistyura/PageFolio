@@ -4,11 +4,11 @@ milestone: v1.8.0
 milestone_name: 実用性の最大化・エコシステム洗練・堅牢性強化
 current_phase: 04
 current_phase_name: ocr
-status: verifying
-stopped_at: Completed 04-03-PLAN.md
-last_updated: "2026-07-15T13:10:55.423Z"
-last_activity: 2026-07-15
-last_activity_desc: Phase 04 execution started
+status: verified
+stopped_at: Phase 04 検証完了（04-VERIFICATION.md passed 26/26）
+last_updated: "2026-07-16T00:00:00.000Z"
+last_activity: 2026-07-16
+last_activity_desc: Phase 04 verification passed
 progress:
   total_phases: 6
   completed_phases: 4
@@ -28,10 +28,10 @@ See: .planning/PROJECT.md (updated 2026-07-13)
 
 ## Current Position
 
-Phase: 04 (ocr) — EXECUTING
+Phase: 04 (ocr) — VERIFIED
 Plan: 3 of 3
-Status: Phase complete — ready for verification
-Last activity: 2026-07-15 — Phase 04 execution started
+Status: Verification passed (26/26 must-haves) — ready to plan Phase 05
+Last activity: 2026-07-16 — Phase 04 verification passed
 
 ## v1.8.0 Phase Map
 
@@ -287,6 +287,5 @@ Stopped at: Completed 04-03-PLAN.md
 
 ## Operator Next Steps
 
-- Phase 3（ocr-e2e）の全2プラン（03-01: OCRRunEngine 抽出・03-02: E2E モックテスト）実行が完了した。検証には `/gsd-verify-work` を実行する
-- Phase 1（foundation-split）の全4プラン実行が完了した。検証には `/gsd-verify-work` を実行する
-- Phase 2（ai）の全6プラン（02-01〜02-06）実行が完了した。02-VERIFICATION.md gaps_found の原因（CR-02・behavior_unverified 4件）はいずれも解消済み。フェーズ再検証（`/gsd-verify-work` 等）を実行する
+- Phase 1〜4 はすべて検証済み完了（01/02/03/04-VERIFICATION.md 全 passed）。次は Phase 5（堅牢性強化: サムネイル仮想化 + Blobリーク検出 + ShortcutsDialog修正）の計画へ進む — `/gsd-plan-phase 05`（必要に応じて事前に `/gsd-discuss-phase 05`）
+- Phase 04 の human verification 4件（実ウィンドウ D&D・Treeview 警告色の両テーマ目視・メニュー実クリック・実 API サマリ品質）は非ブロッキング。UAT を行う場合は `/gsd-verify-work`（v1.7.1 以降の運用では実機目視はユーザー判断で受容可）
