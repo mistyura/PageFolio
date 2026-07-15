@@ -194,7 +194,7 @@ V171-* 全 17 要件 Complete（被覆 17/17・孤立要件なし）。締め前
   4. ユーザーはバッチ全体、またはファイル単位で処理をキャンセルできる
   5. バッチ完了後、複数ファイル横断の統合サマリを生成でき、入力過大時は事前警告が表示される
 
-**Plans**: 1/3 plans executed
+**Plans**: 2/3 plans executed
 **UI hint**: yes
 
 **Wave 1**
@@ -203,7 +203,7 @@ V171-* 全 17 要件 Complete（被覆 17/17・孤立要件なし）。締め前
 
 **Wave 2** *(blocked on Wave 1)*
 
-- [ ] 04-02-PLAN.md — BatchOCRDialog コア（D&D/ファイル投入・3列 Treeview・二段進捗・per-file Engine ループ・2階層キャンセル・失敗自動スキップ）+ E2E テスト [Wave 2]
+- [x] 04-02-PLAN.md — BatchOCRDialog コア（D&D/ファイル投入・3列 Treeview・二段進捗・per-file Engine ループ・2階層キャンセル・失敗自動スキップ）+ E2E テスト [Wave 2]
 
 **Wave 3** *(blocked on Wave 2)*
 
