@@ -188,7 +188,9 @@ class ShortcutsDialog(tk.Toplevel):
     # ── キャプチャ（変更）──────────────────────────────────────────
     def _start_capture(self, cmd_name):
         if self._capturing_cmd is not None:
+            prev_cmd = self._capturing_cmd
             self._end_capture()
+            self._refresh_row(prev_cmd)  # WR-01: 旧行の表示を復元
         self._capturing_cmd = cmd_name
         label = self._key_labels.get(cmd_name)
         if label is not None:
