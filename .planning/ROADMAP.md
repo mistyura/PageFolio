@@ -279,5 +279,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | 2. AI強化（プロンプト・テンプレート管理 + プロバイダーフォールバック） | v1.8.0 | 6/6 | Complete | 2026-07-15 |
 | 3. OCR実行エンジン抽出 + E2Eテスト | v1.8.0 | 2/2 | Complete | 2026-07-15 |
 | 4. バッチ複数ファイルOCR | v1.8.0 | 3/3 | Complete | 2026-07-16 |
-| 5. 堅牢性強化（サムネイル仮想化 + Blobリーク検出 + ShortcutsDialog修正） | v1.8.0 | 1/4 | In Progress | - |
+| 5. 堅牢性強化（サムネイル仮想化 + Blobリーク検出 + ShortcutsDialog修正） | v1.8.0 | 2/4 | In Progress | - |
 | 6. 品質保証仕上げ（通知UX・UI一貫性監査・ドキュメント整合） | v1.8.0 | TBD | Not started | - |
