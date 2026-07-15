@@ -43,7 +43,7 @@
 
 ### 堅牢性（ROBUST）
 
-- [ ] **V180-ROBUST-01**: Blob ライフサイクルのリーク検出が強化され（`FileBlob` リーク検出ロギング等）、Windows AV スキャン衝突（`os.unlink` の `PermissionError`）の回帰テストが整備される
+- [x] **V180-ROBUST-01**: Blob ライフサイクルのリーク検出が強化され（`FileBlob` リーク検出ロギング等）、Windows AV スキャン衝突（`os.unlink` の `PermissionError`）の回帰テストが整備される
 - [x] **V180-ROBUST-02**: `_SENSITIVE_KEYS` がプロバイダ→環境変数マッピングから生成される中央レジストリへ再編される（手動リストの追加漏れリスクを構造的に排除）
 - [ ] **V180-ROBUST-03**: ShortcutsDialog の WR-01（キャプチャ対象切替時の前行表示残留）/ WR-02（修飾キーなし単キー登録が通常入力ウィジェットと衝突しうる）が解消される
 
@@ -112,7 +112,7 @@
 | V180-PERF-01 | Phase 5 | Complete |
 | V180-PERF-02 | Phase 5 | Complete |
 | V180-PERF-03 | Phase 5 | Complete |
-| V180-ROBUST-01 | Phase 5 | Pending |
+| V180-ROBUST-01 | Phase 5 | Complete |
 | V180-ROBUST-03 | Phase 5 | Pending |
 | V180-QA-02 | Phase 6 | Pending |
 | V180-QA-03 | Phase 6 | Pending |
