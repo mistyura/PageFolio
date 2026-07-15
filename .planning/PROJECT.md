@@ -200,10 +200,11 @@ PageFolio の既存コードベースに対する最適化プロジェクト。
 - ✓ V180-REFAC-01/02・V180-ROBUST-02: `ocr_providers.py`/`dialogs/llm_config.py` の責務別パッケージ分割・`_SENSITIVE_KEYS` プロバイダ→環境変数中央レジストリ化（`registry.py`新設） — v1.8.0 Phase 1
 - ✓ V180-TMPL-01〜05・V180-FALL-01〜03: 名前付きプロンプトテンプレート CRUD（保存/選択/削除/リネーム・外部mdファイル連動・全プロバイダ横断共有）・明示設定型プロバイダーフォールバック（送信先確認再提示つき・自動別ベンダー送信なし） — v1.8.0 Phase 2
 - ✓ V180-REFAC-03・V180-QA-01: `ocr_dialog.py` の producer-consumer 駆動部を `OCRRunEngine`（`pagefolio/ocr_engine.py`）へ抽出し `OCRDialog` を薄い委譲ラッパー化・OCR→サマリ E2E モックテスト整備（`tests/test_ocr_engine.py`・実スレッド/キュー駆動） — v1.8.0 Phase 3
+- ✓ V180-PERF-01/02/03・V180-ROBUST-01・V180-ROBUST-03: サムネイル窓内可視範囲仮想化（`pagination.py` 純関数 + `viewer.py` 統合・デバウンス+アイドル先読み）・`thumb_cache` LRU化（`LruCache`・`THUMB_CACHE_MAX=300`）・`selected_pages` 全ページインデックス不変条件回帰・Blob ライフサイクルのリーク検出強化（`_released`+`__del__`・AV衝突安全網の回帰テスト）・ShortcutsDialog WR-01/WR-02 解消 — v1.8.0 Phase 5
 
 ### Active
 
-- v1.8.0 の要件は `.planning/REQUIREMENTS.md` で定義中（AI強化・堅牢性・品質保証・バッチ複数ファイル OCR の 4 本柱）。Phase 1〜3 完了、Phase 4〜6 継続中。
+- v1.8.0 の要件は `.planning/REQUIREMENTS.md` で定義中（AI強化・堅牢性・品質保証・バッチ複数ファイル OCR の 4 本柱）。Phase 1〜3・5 完了、Phase 4・6 は継続中（Phase 4 はROADMAP上 Complete 済みだが本ドキュメントへの要件個別記載は未実施）。
 
 ### Out of Scope
 
@@ -319,4 +320,4 @@ PageFolio の既存コードベースに対する最適化プロジェクト。
 4. 決定事項 → Key Decisions を更新
 
 ---
-*Last updated: 2026-07-14 — v1.8.0 Phase 3（OCR実行エンジン抽出 + E2Eテスト）完了. Working branch: dev/v1.8.0.*
+*Last updated: 2026-07-16 — v1.8.0 Phase 5（堅牢性強化：サムネイル仮想化 + Blobリーク検出 + ShortcutsDialog修正）完了. Working branch: dev/v1.8.0.*
