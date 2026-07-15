@@ -2,18 +2,18 @@
 gsd_state_version: 1.0
 milestone: v1.8.0
 milestone_name: 実用性の最大化・エコシステム洗練・堅牢性強化
-current_phase: 4
-current_phase_name: バッチ複数ファイルOCR
-status: ready_to_execute
-stopped_at: Phase 4 planned (3 plans)
-last_updated: "2026-07-15T00:00:00.000Z"
+current_phase: 04
+current_phase_name: ocr
+status: executing
+stopped_at: Completed 04-01-PLAN.md
+last_updated: "2026-07-15T12:17:25.788Z"
 last_activity: 2026-07-15
-last_activity_desc: Phase 4 planning complete (3 plans, checker passed)
+last_activity_desc: Phase 04 execution started
 progress:
   total_phases: 6
   completed_phases: 3
   total_plans: 15
-  completed_plans: 12
+  completed_plans: 13
   percent: 50
 ---
 
@@ -24,14 +24,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-07-13)
 
 **Core value:** 大きな PDF でも Undo/Redo が正しく・速く動作し、コードが読みやすく保守しやすい状態にする
-**Current focus:** Phase 04 — ocr（バッチ複数ファイルOCR）
+**Current focus:** Phase 04 — ocr
 
 ## Current Position
 
-Phase: 4 — バッチ複数ファイルOCR
-Plan: 3 plans ready（04-01: バッチキュー純ロジック層 / 04-02: BatchOCRDialog コア / 04-03: 統合サマリ + 起動導線）
-Status: Ready to execute。プランチェッカー合格（ブロッカー・警告 0）。要件被覆 5/5・決定被覆 16/16 でゲート通過（D-12 は 04-02 prohibitions に明示追記して解消）
-Last activity: 2026-07-15 — Phase 4 planning complete (3 plans)
+Phase: 04 (ocr) — EXECUTING
+Plan: 2 of 3
+Status: Ready to execute
+Last activity: 2026-07-15 — Phase 04 execution started
 
 ## v1.8.0 Phase Map
 
@@ -110,6 +110,11 @@ Last activity: 2026-07-15 — Phase 4 planning complete (3 plans)
 | Phase 02-ai P06 | 約15分 | 2 tasks | 1 files |
 | Phase 03-ocr-e2e P01 | 32min | 2 tasks | 4 files |
 | Phase 03-ocr-e2e P02 | 約16分 | 2 tasks | 1 files |
+**Per-Plan Metrics:**
+
+| Plan | Duration | Tasks | Files |
+|------|----------|-------|-------|
+| Phase 04 P01 | 8min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -171,6 +176,7 @@ Decisions are logged in PROJECT.md Key Decisions table.
 - [Phase 03-01]: self._pstate は Engine 抽出後も vestigial 属性として維持（_clear_text/_on_run が None へリセットする既存の観測可能な挙動・既存回帰テスト TestClearResetsFatalState との後方互換のため）。実際の共有状態は self._engine（OCRRunEngine._pstate）が所有
 - [Phase 03-ocr-e2e]: [Phase 03-02] E2E producer スタブは cancel_flag を自前でチェックせず consume_one の再確認契約に委ねる設計 — consume_one が各アイテム処理開始時に is_fatal()/キャンセル判定を再確認するため、producer側での重複実装を避け既存契約への信頼を優先した
 - [Phase 03-ocr-e2e]: [Phase 03-02] サーキットブレーカーテストは OCRRetryableError(retry_after=0.01) で実待機を極小化 — MAX_RETRIES=3・DEFAULT_CIRCUIT_BREAKER_THRESHOLD=3 の構造をそのまま利用しつつテスト実行時間を短縮するため
+- [Phase ?]: count_pending(entries) を新設し STATUS_PENDING のみを実行対象=分母として算入。STATUS_ERROR を BatchState.total_files から除外し remaining() の完了時0収束を保証（レビュー懸念6反映）
 
 ### Pending Todos
 
@@ -266,8 +272,10 @@ Decisions are logged in PROJECT.md Key Decisions table.
 
 ## Session Continuity
 
-Last session: 2026-07-15
-Stopped at: Phase 4 planned (3 plans, ready to execute)
+**Resume file:** None
+
+Last session: 2026-07-15T12:17:25.771Z
+Stopped at: Completed 04-01-PLAN.md
 
 ## Operator Next Steps
 

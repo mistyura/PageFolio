@@ -23,8 +23,8 @@
 
 ### バッチ複数ファイル OCR（BATCH）
 
-- [ ] **V180-BATCH-01**: ユーザーは複数 PDF ファイルを一括で OCR キューに投入できる（D&D 対応）
-- [ ] **V180-BATCH-02**: キュー一覧でファイルごとの状態（待機/実行中/完了/失敗）と全体進捗を確認できる
+- [x] **V180-BATCH-01**: ユーザーは複数 PDF ファイルを一括で OCR キューに投入できる（D&D 対応）
+- [x] **V180-BATCH-02**: キュー一覧でファイルごとの状態（待機/実行中/完了/失敗）と全体進捗を確認できる
 - [ ] **V180-BATCH-03**: ファイル単位の失敗は分離され、残りのファイル処理は継続する
 - [ ] **V180-BATCH-04**: バッチ全体・ファイル単位のキャンセルができる
 - [ ] **V180-BATCH-05**: バッチ完了後、複数ファイル横断の統合サマリを生成できる（v1.6.4 サマリ基盤の延長・入力過大時の事前警告を含むメモリ/コンテキスト管理）
@@ -104,8 +104,8 @@
 | V180-FALL-03 | Phase 2 | Complete |
 | V180-REFAC-03 | Phase 3 | Complete |
 | V180-QA-01 | Phase 3 | Complete |
-| V180-BATCH-01 | Phase 4 | Pending |
-| V180-BATCH-02 | Phase 4 | Pending |
+| V180-BATCH-01 | Phase 4 | Complete |
+| V180-BATCH-02 | Phase 4 | Complete |
 | V180-BATCH-03 | Phase 4 | Pending |
 | V180-BATCH-04 | Phase 4 | Pending |
 | V180-BATCH-05 | Phase 4 | Pending |
