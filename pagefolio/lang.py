@@ -688,6 +688,23 @@ LANG = {
         "fallback_exhausted": (
             "フォールバック候補を使い切りました。設定を確認し再実行してください。"
         ),
+        # バッチOCR（v1.8.0 Phase 4・04-02・V180-BATCH-01〜04）
+        "batch_dialog_title": "バッチOCR",
+        "batch_col_file": "ファイル",
+        "batch_col_status": "状態",
+        "batch_col_progress": "進捗",
+        "batch_add_files_btn": "＋ ファイル追加",
+        "batch_remove_btn": "削除",
+        "batch_start_btn": "▶ 実行",
+        "batch_cancel_btn": "■ バッチ中止",
+        "batch_overall_progress": "ファイル {done}/{total}",
+        "batch_status_pending": "待機中",
+        "batch_status_running": "実行中",
+        "batch_status_done": "完了",
+        "batch_status_failed": "失敗",
+        "batch_status_error": "エラー",
+        "batch_scan_error": "読み込みエラー",
+        "batch_scanning_msg": "読み込み中...",
     },
     "en": {
         # Header / status
@@ -1366,5 +1383,22 @@ LANG = {
             "All fallback candidates have been exhausted. "
             "Please check your settings and try again."
         ),
+        # Batch OCR (v1.8.0 Phase 4 - 04-02 - V180-BATCH-01 through 04)
+        "batch_dialog_title": "Batch OCR",
+        "batch_col_file": "File",
+        "batch_col_status": "Status",
+        "batch_col_progress": "Progress",
+        "batch_add_files_btn": "+ Add Files",
+        "batch_remove_btn": "Remove",
+        "batch_start_btn": "▶ Start",
+        "batch_cancel_btn": "■ Cancel Batch",
+        "batch_overall_progress": "File {done}/{total}",
+        "batch_status_pending": "Pending",
+        "batch_status_running": "Running",
+        "batch_status_done": "Done",
+        "batch_status_failed": "Failed",
+        "batch_status_error": "Error",
+        "batch_scan_error": "Load error",
+        "batch_scanning_msg": "Loading...",
     },
 }
