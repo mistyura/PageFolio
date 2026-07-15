@@ -226,11 +226,13 @@ class UIBuilderMixin:
         self.thumb_canvas = tk.Canvas(
             canvas_frame, bg=C["BG_PANEL"], highlightthickness=0
         )
-        sb = ttk.Scrollbar(
+        # スクロールバーは _thumb_yscroll から直接 .set() するため self 保持が必要
+        # （D-02 デバウンス起点・yscrollcommand は _thumb_yscroll 経由）。
+        self._thumb_scrollbar = ttk.Scrollbar(
             canvas_frame, orient="vertical", command=self.thumb_canvas.yview
         )
-        self.thumb_canvas.configure(yscrollcommand=sb.set)
-        sb.pack(side="right", fill="y")
+        self.thumb_canvas.configure(yscrollcommand=self._thumb_yscroll)
+        self._thumb_scrollbar.pack(side="right", fill="y")
         self.thumb_canvas.pack(fill="both", expand=True)
 
         self.thumb_inner = tk.Frame(self.thumb_canvas, bg=C["BG_PANEL"])
@@ -241,12 +243,12 @@ class UIBuilderMixin:
                 scrollregion=self.thumb_canvas.bbox("all")
             ),
         )
-        self.thumb_canvas.bind(
-            "<MouseWheel>",
-            lambda e: self.thumb_canvas.yview_scroll(
-                int(-1 * (e.delta / 120)), "units"
-            ),
-        )
+
+        def _on_thumb_mousewheel(e):
+            self.thumb_canvas.yview_scroll(int(-1 * (e.delta / 120)), "units")
+            self._on_thumb_scroll()
+
+        self.thumb_canvas.bind("<MouseWheel>", _on_thumb_mousewheel)
 
         # ナビ/件数フッター行（◀ ▶ ＋ 範囲ラベル ＋ 件数 Spinbox）。
         # 単一窓でも行は常に表示し、ボタンのみ disabled になる（D-02/D-09）。

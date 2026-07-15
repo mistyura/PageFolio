@@ -14,6 +14,8 @@ from pagefolio.constants import C
 from pagefolio.pagination import (
     clamp_page_size,
     clamp_window_start,
+    compute_visible_range,
+    prioritized_render_order,
     reconcile_window_start,
     to_global,
     window_bounds,
@@ -277,20 +279,57 @@ class ViewerMixin:
             self.prev_btn.state(prev_st)
             self.next_btn.state(next_st)
 
+    def _visible_local_range(self):
+        """thumb_canvas の可視範囲を窓ローカル半開区間 (lo, hi) で返す。
+
+        Tk 依存の座標収集（canvasy/winfo_y/winfo_height）のみ担当し、比較ロジック
+        は pagination.compute_visible_range へ委譲する（落とし穴1回避・Pattern 2）。
+        Canvas 未レイアウト（winfo_height()<=1）やフレーム未生成時は窓全体
+        (0, len(frames)) を返し、可視範囲優先化なしの従来挙動へフォールバックする。
+        """
+        frames = self.thumb_inner.winfo_children()
+        if not frames:
+            return (0, 0)
+        height = self.thumb_canvas.winfo_height()
+        if height <= 1:
+            return (0, len(frames))
+        view_top = self.thumb_canvas.canvasy(0)
+        view_bottom = self.thumb_canvas.canvasy(height)
+        frame_bounds = [(fr.winfo_y(), fr.winfo_height()) for fr in frames]
+        return compute_visible_range(view_top, view_bottom, frame_bounds)
+
     def _build_thumbnails(self):
         self._thumb_gen += 1
         gen = self._thumb_gen
         for w in self.thumb_inner.winfo_children():
             w.destroy()
         self.thumb_images.clear()
+        self._thumb_placeholder_labels = []
         if not self.doc:
             return
         # 窓範囲 [lo, hi) のみ描画（D-10 端数最終窓クランプ）。
         # i は全ページ index のまま _add_thumb_placeholder へ渡す（D-06 src 整合）。
         lo, hi = window_bounds(self._page_window_start, self._page_size, len(self.doc))
         placeholder_labels = [self._add_thumb_placeholder(i) for i in range(lo, hi)]
+        # デバウンス描画（_render_visible_thumbs）からも参照できるよう保持する。
+        self._thumb_placeholder_labels = placeholder_labels
 
-        def render_next(i):
+        # 可視範囲優先の描画順序（V180-PERF-01・D-01〜D-03）。
+        # 可視範囲・描画順序の計算は pagination.py 純関数のみを通す
+        # （selected_pages への窓ローカル添字混入を避ける・落とし穴1）。
+        vis_lo_local, vis_hi_local = self._visible_local_range()
+        vis_lo_g = to_global(vis_lo_local, lo)
+        vis_hi_g = to_global(vis_hi_local, lo)
+        order = prioritized_render_order(lo, hi, vis_lo_g, vis_hi_g)
+        # prioritized_render_order 内部と同じクランプで可視件数を求める
+        # （visible/rest の分割境界を関数の実装と一致させる）。
+        vis_lo_c = max(lo, min(vis_lo_g, hi))
+        vis_hi_c = max(lo, min(vis_hi_g, hi))
+        visible_count = max(0, vis_hi_c - vis_lo_c)
+        visible_order = order[:visible_count]
+        rest_order = order[visible_count:]
+
+        def render_visible(idx):
             if self._thumb_gen != gen or not self.doc:
                 logger.debug(
                     "サムネイルレンダリングスキップ: gen=%s, current_gen=%s",
@@ -298,16 +337,78 @@ class ViewerMixin:
                     self._thumb_gen,
                 )
                 return
-            if i >= hi:
+            if idx >= len(visible_order):
+                # 可視範囲を描画し終えたらアイドル時間で窓内残りを先読み（D-03）。
+                self.root.after_idle(lambda: render_rest(0))
                 return
+            i = visible_order[idx]
             photo = self._get_thumb_photo(i)
             # placeholder_labels は窓ローカル添字（i - lo）で参照する
             frame, lbl = placeholder_labels[i - lo]
             lbl.configure(image=photo)
             self.thumb_images.append(photo)
-            self.root.after(0, lambda: render_next(i + 1))
+            self.root.after(0, lambda: render_visible(idx + 1))
 
-        self.root.after_idle(lambda: render_next(lo))
+        def render_rest(idx):
+            if self._thumb_gen != gen or not self.doc:
+                logger.debug(
+                    "サムネイルレンダリングスキップ: gen=%s, current_gen=%s",
+                    gen,
+                    self._thumb_gen,
+                )
+                return
+            if idx >= len(rest_order):
+                return
+            i = rest_order[idx]
+            photo = self._get_thumb_photo(i)
+            frame, lbl = placeholder_labels[i - lo]
+            lbl.configure(image=photo)
+            self.thumb_images.append(photo)
+            self.root.after_idle(lambda: render_rest(idx + 1))
+
+        self.root.after_idle(lambda: render_visible(0))
+
+    def _thumb_yscroll(self, *args):
+        """yscrollcommand ラッパー。sb 更新 + デバウンス起点（D-02）。"""
+        self._thumb_scrollbar.set(*args)
+        self._on_thumb_scroll()
+
+    def _on_thumb_scroll(self, event=None):
+        """スクロール停止後（既定150ms）に可視範囲を再描画するデバウンススケジューラ（D-02）。"""
+        if self._thumb_scroll_after is not None:
+            self.root.after_cancel(self._thumb_scroll_after)
+        self._thumb_scroll_after = self.root.after(
+            150, self._render_visible_thumbs, self._thumb_gen
+        )
+
+    def _render_visible_thumbs(self, gen):
+        """デバウンス後に可視範囲のみを再描画する（thumb_cache ヒット分は即時反映）。
+
+        gen が現在の self._thumb_gen と一致しない場合は陳腐化として破棄する
+        （_build_thumbnails の再構築後にタイマーが発火した場合の保護・T-05-05）。
+        """
+        self._thumb_scroll_after = None
+        if gen != self._thumb_gen or not self.doc:
+            logger.debug(
+                "デバウンス描画スキップ: gen=%s, current_gen=%s", gen, self._thumb_gen
+            )
+            return
+        lo, hi = window_bounds(self._page_window_start, self._page_size, len(self.doc))
+        vis_lo_local, vis_hi_local = self._visible_local_range()
+        placeholder_labels = getattr(self, "_thumb_placeholder_labels", [])
+        for local_i in range(vis_lo_local, vis_hi_local):
+            if local_i < 0 or local_i >= len(placeholder_labels):
+                continue
+            i = to_global(local_i, lo)
+            if i >= hi:
+                continue
+            if i in self.thumb_cache:
+                photo = self.thumb_cache[i]
+            else:
+                photo = self._get_thumb_photo(i)
+            frame, lbl = placeholder_labels[local_i]
+            lbl.configure(image=photo)
+            self.thumb_images.append(photo)
 
     def _add_thumb_placeholder(self, i):
         """プレースホルダー frame・lbl を作成しイベントをバインドして返す"""
