@@ -2,17 +2,17 @@
 gsd_state_version: 1.0
 milestone: v1.8.0
 milestone_name: 実用性の最大化・エコシステム洗練・堅牢性強化
-current_phase: 04
-current_phase_name: ocr
-status: verified
-stopped_at: Phase 05 context gathered
-last_updated: "2026-07-15T18:27:24.893Z"
+current_phase: 05
+current_phase_name: blob-shortcutsdialog
+status: planned
+stopped_at: Phase 05 planned (4 plans, 2 waves)
+last_updated: "2026-07-16T00:00:00.000Z"
 last_activity: 2026-07-16
-last_activity_desc: Phase 04 verification passed
+last_activity_desc: Phase 05 planned — 4 plans / 2 waves, checker passed
 progress:
   total_phases: 6
   completed_phases: 4
-  total_plans: 15
+  total_plans: 19
   completed_plans: 15
   percent: 67
 ---
@@ -24,14 +24,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-07-13)
 
 **Core value:** 大きな PDF でも Undo/Redo が正しく・速く動作し、コードが読みやすく保守しやすい状態にする
-**Current focus:** Phase 04 — ocr
+**Current focus:** Phase 05 — 堅牢性強化（サムネイル仮想化 + Blobリーク検出 + ShortcutsDialog修正）
 
 ## Current Position
 
-Phase: 04 (ocr) — VERIFIED
-Plan: 3 of 3
-Status: Verification passed (26/26 must-haves) — ready to plan Phase 05
-Last activity: 2026-07-16 — Phase 04 verification passed
+Phase: 05 (blob-shortcutsdialog) — PLANNED
+Plan: 0 of 4
+Status: Ready to execute (4 plans / 2 waves, plan checker passed)
+Last activity: 2026-07-16 — Phase 05 planned
 
 ## v1.8.0 Phase Map
 
