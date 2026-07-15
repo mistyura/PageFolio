@@ -87,6 +87,24 @@ def find_duplicate_binding(shortcuts, cmd_name, new_keysym):
     return None
 
 
+_INPUT_WIDGET_CLASSES = {"Entry", "TEntry", "Spinbox", "TSpinbox", "Text"}
+
+
+def should_suppress_for_focused_input(keysym, focused_widget_class):
+    """入力系ウィジェットフォーカス中にショートカット発火を抑止すべきか判定する。
+
+    Tk 非依存の純関数（V180-ROBUST-03・D-09/D-10）。keysym は "<Delete>" 等の
+    bind 文字列で、Control/Alt を含む組合せは常に発火を許可する（抑止しない）。
+    それ以外（修飾なし単キー / Shift のみの組合せ）は focused_widget_class が
+    入力系ウィジェットクラス（Entry/TEntry/Spinbox/TSpinbox/Text）のときのみ
+    抑止する。実際の root.focus_get() 呼び出しは _bind_shortcuts 側（Tk依存）
+    が担い、本関数は判定のみを担う。
+    """
+    if "Control" in keysym or "Alt" in keysym:
+        return False
+    return focused_widget_class in _INPUT_WIDGET_CLASSES
+
+
 def keysym_to_display(keysym):
     """Tk keysym 文字列を人間可読な表示形式へ変換する。
 
@@ -241,17 +259,27 @@ class PDFEditorApp(
         custom_shortcuts = self.settings.get("shortcuts", {})
         shortcuts = merge_shortcuts(self._default_shortcuts, custom_shortcuts)
 
+        def _make_guarded_handler(ks, f):
+            def _handler(e):
+                focused = self.root.focus_get()
+                focused_class = focused.winfo_class() if focused else ""
+                if should_suppress_for_focused_input(ks, focused_class):
+                    return None
+                return f()
+
+            return _handler
+
         bound = []
         for cmd_name, keysym in shortcuts.items():
             func = self._cmd_map.get(cmd_name)
             if func and keysym:
                 try:
-                    self.root.bind(keysym, lambda e, f=func: f())
+                    self.root.bind(keysym, _make_guarded_handler(keysym, func))
                     bound.append(keysym)
                     # 大文字小文字の対応 (Shift なし Control などのため)
                     variant = shift_variant_keysym(keysym)
                     if variant is not None:
-                        self.root.bind(variant, lambda e, f=func: f())
+                        self.root.bind(variant, _make_guarded_handler(variant, func))
                         bound.append(variant)
                 except Exception as ex:
                     logger.warning(
