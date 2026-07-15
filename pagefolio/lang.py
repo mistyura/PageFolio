@@ -708,6 +708,11 @@ LANG = {
         "batch_empty_queue_msg": (
             "実行対象のファイルがありません。ファイルを追加してください。"
         ),
+        # バッチOCR - ファイル別結果閲覧・統合サマリ（v1.8.0 Phase 4・04-03）
+        "batch_file_select_label": "結果を表示するファイル:",
+        "batch_export_btn": "📤 エクスポート",
+        "batch_summary_btn": "📊 サマリ作成",
+        "batch_summary_file_header": "=== {name} ===",
     },
     "en": {
         # Header / status
@@ -1404,5 +1409,11 @@ LANG = {
         "batch_scan_error": "Load error",
         "batch_scanning_msg": "Loading...",
         "batch_empty_queue_msg": "No files to process. Please add files first.",
+        # Batch OCR - per-file result viewer / cross-file summary
+        # (v1.8.0 Phase 4 - 04-03 - V180-BATCH-05)
+        "batch_file_select_label": "File to view result:",
+        "batch_export_btn": "📤 Export",
+        "batch_summary_btn": "📊 Create Summary",
+        "batch_summary_file_header": "=== {name} ===",
     },
 }

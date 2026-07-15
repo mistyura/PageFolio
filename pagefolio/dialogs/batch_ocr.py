@@ -34,17 +34,28 @@ from pagefolio.batch_ocr_state import (
     enqueue_files,
 )
 from pagefolio.constants import LANG, SUPPORTED_EXTENSIONS, C
+from pagefolio.md_render import parse_markdown
 from pagefolio.ocr import (
     DEFAULT_OCR_CONCURRENCY,
     DEFAULT_OCR_SCALE,
+    MAX_RETRIES,
     build_provider,
+    clamp_retry_after,
     has_embedded_text,
+    interruptible_sleep,
     page_to_png_b64,
     resolve_ocr_prompt,
+    resolve_summary_prompt,
 )
+from pagefolio.ocr_dialog import SUMMARY_TOO_LONG_CHARS
 from pagefolio.ocr_engine import OCRRunEngine
 from pagefolio.ocr_pipeline import send_sentinels, try_enqueue
-from pagefolio.settings import get_current_font_size, load_custom_prompt
+from pagefolio.ocr_providers import OCRRetryableError
+from pagefolio.settings import (
+    get_current_font_size,
+    load_custom_prompt,
+    load_summary_prompt,
+)
 
 try:
     from tkinterdnd2 import DND_FILES
@@ -140,6 +151,10 @@ class BatchOCRDialog(tk.Toplevel):
         self._current_entry = None
         self._current_engine = None
         self._current_doc = None
+
+        # ── ファイル横断統合サマリ状態（04-03・D-13/D-14）──
+        self._summary_running = False
+        self._summary_cancel_flag = threading.Event()
 
         # レビュー懸念1（HIGH）: バッチ実行中のクローズによるワーカーリーク防止。
         # 束ねるのは __init__ のここのみ。_on_close 本体は Task 2 で実装する。
@@ -255,6 +270,66 @@ class BatchOCRDialog(tk.Toplevel):
         )
         self._cancel_btn.pack(side="left", padx=4)
         self._cancel_btn.state(["disabled"])
+
+        # ── ファイル別結果閲覧・統合サマリ（D-15/D-16）──────────────
+        result_frame = tk.Frame(self, bg=C["BG_DARK"])
+        result_frame.pack(fill="both", expand=True, padx=16, pady=(0, 14))
+
+        select_row = tk.Frame(result_frame, bg=C["BG_DARK"])
+        select_row.pack(fill="x")
+        tk.Label(
+            select_row,
+            text=self._L["batch_file_select_label"],
+            bg=C["BG_DARK"],
+            fg=C["TEXT_SUB"],
+            font=self._font(-1),
+        ).pack(side="left", padx=(0, 6))
+        self.file_select_var = tk.StringVar(value="")
+        self.file_select_combo = ttk.Combobox(
+            select_row, textvariable=self.file_select_var, state="readonly"
+        )
+        self.file_select_combo.pack(side="left", fill="x", expand=True)
+        self.file_select_combo.bind("<<ComboboxSelected>>", self._on_select_file)
+        self._export_btn = ttk.Button(
+            select_row, text=self._L["batch_export_btn"], command=self._on_export_file
+        )
+        self._export_btn.pack(side="left", padx=(6, 0))
+        self._export_btn.state(["disabled"])
+
+        text_frame = tk.Frame(result_frame, bg=C["BG_PANEL"])
+        text_frame.pack(fill="both", expand=True, pady=(6, 0))
+        self.text = tk.Text(
+            text_frame,
+            bg=C["BG_CARD"],
+            fg=C["TEXT_MAIN"],
+            insertbackground=C["TEXT_MAIN"],
+            font=self._font(-1),
+            wrap="word",
+            bd=0,
+            highlightthickness=0,
+            height=8,
+        )
+        text_sb = ttk.Scrollbar(text_frame, orient="vertical", command=self.text.yview)
+        self.text.configure(yscrollcommand=text_sb.set)
+        text_sb.pack(side="right", fill="y")
+        self.text.pack(fill="both", expand=True)
+        # Markdown 整形タグ定義（OCRDialog._insert_markdown が消費するタグ名と
+        # 同一・レビュー懸念5のコピペ移植方針）。
+        # fmt: off
+        self.text.tag_configure("md_h1", font=self._font(4, "bold"), foreground=C["ACCENT"])  # noqa: E501
+        self.text.tag_configure("md_h2", font=self._font(2, "bold"), foreground=C["ACCENT"])  # noqa: E501
+        self.text.tag_configure("md_bullet", lmargin1=20, lmargin2=36)
+        self.text.tag_configure("md_code", background=C["BG_PANEL"], font=("Consolas", self._font_size))  # noqa: E501
+        self.text.tag_configure("md_bold", font=self._font(-1, "bold"))
+        # fmt: on
+
+        self._summary_btn = ttk.Button(
+            result_frame,
+            text=self._L["batch_summary_btn"],
+            style="Accent.TButton",
+            command=self._on_batch_summary,
+        )
+        self._summary_btn.pack(anchor="w", pady=(8, 0))
 
     # ── キュー投入（D-02）──────────────────────────────────
     def _on_add_files(self):
@@ -779,6 +854,7 @@ class BatchOCRDialog(tk.Toplevel):
             self._batch_state.mark_completed()
         self._refresh_queue_row(entry)
         self._update_overall_progress()
+        self._refresh_file_select_options()
         self._advance_to_next_file()
 
     def _finish_file_cancelled(self, entry):
@@ -813,14 +889,254 @@ class BatchOCRDialog(tk.Toplevel):
         self._set_running_ui(False)
 
     def _on_close(self):
-        """WM_DELETE_WINDOW ハンドラ（レビュー懸念1・HIGH）。
+        """WM_DELETE_WINDOW ハンドラ（レビュー懸念1・HIGH。04-03 でサマリ対象へ拡張）。
 
-        実行中なら2階層キャンセルフラグを set してから世代を無効化し、
-        孤児ワーカーの fitz 操作・クラウド API 送信・破棄後ウィジェットへの
-        after 更新（tk.TclError 多発）を防ぐ（`ocr_dialog.py:_on_close` の踏襲）。
+        バッチ実行中またはサマリ生成中なら3フラグ（batch/file/summary）を
+        同時に set してから世代を無効化し、孤児ワーカーの fitz 操作・
+        クラウド API 送信・破棄後ウィジェットへの after 更新（tk.TclError
+        多発）を防ぐ（`ocr_dialog.py:_on_close` 1959-1978 の踏襲。
+        `OCRDialog._on_close` が `_cancel_flag`/`_summary_cancel_flag` を
+        同時 set するのと同型）。
         """
-        if self._running:
+        if self._running or self._summary_running:
             self._batch_cancel_flag.set()
             self._file_cancel_flag.set()
+            self._summary_cancel_flag.set()
         self._run_gen += 1
         self.destroy()
+
+    # ── ファイル別結果閲覧・統合サマリ（D-15/D-16・OCRDialog コピペ移植）──
+    def _insert_markdown(self, text):
+        """`ocr_dialog.py:_insert_markdown`（1800-1819行）と同一挙動の独立実装。
+
+        `md_render.parse_markdown` の戻り値を `self.text` へ整形挿入する。
+        `OCRDialog` を継承・import 流用せず同一シグネチャ・同一挙動で
+        コピペ移植する（レビュー懸念5）。
+        """
+        for kind, spans in parse_markdown(text):
+            line_start = self.text.index("end-1c")
+            for span_text, inline_tag in spans:
+                if inline_tag:
+                    self.text.insert("end", span_text, inline_tag)
+                else:
+                    self.text.insert("end", span_text)
+            self.text.insert("end", "\n")
+            if kind:
+                self.text.tag_add(kind, line_start, "end-1c")
+
+    def _format_pages_text(self, entry):
+        """`ocr_dialog.py:_format_pages_text`（1980-1993行）と同一挙動の独立実装。
+
+        BatchOCRDialog は複数ファイルを扱うため `entry`（`BatchFileEntry`）を
+        明示引数に取る（OCRDialog は単一ファイルの self.page_indices/results
+        を暗黙参照するが、本ダイアログにファイル単位の等価な単一属性がない
+        ための必然的差分。挙動＝「セパレータ付きページ本文連結」は同一）。
+        """
+        parts = []
+        for page_idx in range(entry.page_count):
+            if page_idx not in entry.results:
+                continue
+            sep = self._L["ocr_page_separator"].format(page=page_idx + 1)
+            parts.append(sep)
+            parts.append(entry.results[page_idx])
+        return "\n".join(parts)
+
+    def _format_batch_summary_input(self):
+        """D-15: 完了済み（STATUS_DONE）ファイルのみを対象に、ファイル名見出し
+        （`batch_summary_file_header`）+ 全ページ本文を連結して1本の文字列を
+        返す。完了ファイル0件なら空文字を返す（zero-completed エッジ）。
+        """
+        parts = []
+        for entry in self._entries:
+            if entry.status != STATUS_DONE:
+                continue
+            parts.append(
+                self._L["batch_summary_file_header"].format(name=entry.display_name)
+            )
+            parts.append(self._format_pages_text(entry))
+        return "\n".join(parts)
+
+    def _confirm_summary_cost(self, char_count, settings=None):
+        """`ocr_dialog.py:_confirm_summary_cost`（1237-1265行）と同一挙動の独立実装。"""
+        s = settings if settings is not None else self.app.settings
+        name = s.get("ocr_provider", "")
+        if name == "gemini":
+            host = "generativelanguage.googleapis.com"
+        elif name == "runpod":
+            host = s.get("runpod_url", "") or self._L["llm_runpod_host_unset"]
+        else:
+            host = "api.anthropic.com"
+        msg = self._L["ocr_summary_cost_confirm_msg"].format(
+            host=host, chars=char_count
+        )
+        return messagebox.askyesno(self._L["ocr_cost_confirm_title"], msg, parent=self)
+
+    def _refresh_file_select_options(self):
+        """完了済み（STATUS_DONE）ファイルの表示名一覧でファイル選択欄を更新する。"""
+        names = [e.display_name for e in self._entries if e.status == STATUS_DONE]
+        self.file_select_combo.configure(values=names)
+
+    def _entry_by_display_name(self, name):
+        for e in self._entries:
+            if e.status == STATUS_DONE and e.display_name == name:
+                return e
+        return None
+
+    def _on_select_file(self, event=None):
+        """ファイル選択切替（D-16）: 選択ファイルの結果を `_insert_markdown` で描画。"""
+        entry = self._entry_by_display_name(self.file_select_var.get())
+        if entry is None:
+            return
+        self.text.delete("1.0", "end")
+        self._insert_markdown(self._format_pages_text(entry))
+        self.text.see("1.0")
+        self._export_btn.state(["!disabled"])
+
+    def _on_export_file(self):
+        """ファイル単位エクスポート（D-16・raw 維持・コピー/保存は整形前テキスト）。"""
+        entry = self._entry_by_display_name(self.file_select_var.get())
+        if entry is None:
+            return
+        raw_text = self._format_pages_text(entry)
+        default_name = os.path.splitext(entry.display_name)[0] + ".txt"
+        path = filedialog.asksaveasfilename(
+            parent=self,
+            initialfile=default_name,
+            defaultextension=".txt",
+            filetypes=[(self._L["filetypes_all"], "*.*")],
+        )
+        if not path:
+            return
+        try:
+            with open(path, "w", encoding="utf-8") as f:
+                f.write(raw_text)
+        except OSError as e:
+            logger.warning("バッチOCR: 結果エクスポート失敗: %s", e)
+            messagebox.showerror(self._L["err_title"], str(e), parent=self)
+
+    def _on_batch_summary(self, settings=None):
+        """「📊 サマリ作成」手動トリガー（D-13）。
+
+        `ocr_dialog.py:_on_summary`（2006-2074行）のゲート構造を踏襲する:
+        完了ファイル0件は no-op・text 非対応プロバイダはエラー表示・クラウド
+        時はコスト確認（D-14）・入力過大時は追加警告。承認後はワーカー
+        スレッド1本 + 世代ガード + `_summary_cancel_flag` で実行する。
+        バッチ完了時の自動生成はしない（D-13）。
+        """
+        if self._running or self._summary_running:
+            return
+        full_text = self._format_batch_summary_input()
+        if not full_text:
+            return
+        if not getattr(self.provider, "supports_text_prompt", False):
+            name = self.app.settings.get("ocr_provider", "")
+            messagebox.showerror(
+                self._L["err_title"],
+                self._L["ocr_summary_unsupported"].format(name=name),
+                parent=self,
+            )
+            return
+
+        s = settings if settings is not None else dict(self.app.settings)
+        name = s.get("ocr_provider", "")
+        prompt = resolve_summary_prompt(name, load_summary_prompt(s))
+
+        if self._is_cloud_provider(settings=s):
+            if not self._check_cloud_api_key(settings=s):
+                return
+            if not self._confirm_summary_cost(len(full_text), settings=s):
+                return
+
+        if len(full_text) > SUMMARY_TOO_LONG_CHARS:
+            proceed = messagebox.askyesno(
+                self._L["ocr_cost_confirm_title"],
+                self._L["ocr_summary_too_long_confirm"].format(chars=len(full_text)),
+                parent=self,
+            )
+            if not proceed:
+                return
+
+        self._summary_running = True
+        self._summary_cancel_flag.clear()
+        self._summary_btn.state(["disabled"])
+        self.status_var.set(self._L["ocr_summary_running"])
+        self._run_gen += 1
+        gen = self._run_gen
+        threading.Thread(
+            target=self._batch_summary_worker,
+            args=(gen, full_text, prompt),
+            daemon=True,
+        ).start()
+
+    def _batch_summary_worker(self, gen, full_text, prompt):
+        """バックグラウンドスレッド: `complete_text_ex` を単発呼び出しする
+        （`ocr_dialog.py:_summary_worker` と同型のリトライ規約）。
+        """
+        result = None
+        error_msg = None
+        for attempt in range(1, MAX_RETRIES + 1):
+            if self._summary_cancel_flag.is_set():
+                break
+            try:
+                result = self.provider.complete_text_ex(full_text, prompt)
+                break
+            except OCRRetryableError as e:
+                if attempt >= MAX_RETRIES:
+                    error_msg = str(e)
+                    break
+                raw_delay = (
+                    e.retry_after
+                    if e.retry_after is not None
+                    else 1.0 * (2 ** (attempt - 1))
+                )
+                delay = clamp_retry_after(raw_delay)
+                interruptible_sleep(delay, self._summary_cancel_flag)
+            except Exception as e:
+                logger.exception("バッチOCR: サマリ生成呼び出し失敗: %s", e)
+                error_msg = str(e)
+                break
+
+        if gen != self._run_gen:
+            return
+        try:
+            if self._summary_cancel_flag.is_set():
+                self.after(0, self._on_batch_summary_cancelled)
+            elif result is not None:
+                text, truncated = result
+                self.after(
+                    0, lambda t=text, tr=truncated: self._on_batch_summary_done(t, tr)
+                )
+            else:
+                self.after(0, lambda m=error_msg or "": self._on_batch_summary_error(m))
+        except tk.TclError:
+            pass
+
+    def _on_batch_summary_done(self, text, truncated):
+        if not self._widget_alive():
+            return
+        self.text.insert("end", f"\n{self._L['ocr_summary_separator']}\n")
+        self._insert_markdown(text)
+        if truncated:
+            self.text.insert("end", self._L["ocr_summary_truncated"] + "\n")
+        self.text.see("end")
+        self.status_var.set(self._L["ocr_summary_complete"])
+        self._summary_ui_reset()
+
+    def _on_batch_summary_cancelled(self):
+        if not self._widget_alive():
+            return
+        self.status_var.set(self._L["ocr_summary_cancelled"])
+        self._summary_ui_reset()
+
+    def _on_batch_summary_error(self, msg):
+        if not self._widget_alive():
+            return
+        self.status_var.set(self._L["ocr_summary_failed"].format(error=msg))
+        self._summary_ui_reset()
+
+    def _summary_ui_reset(self):
+        self._summary_running = False
+        try:
+            self._summary_btn.state(["!disabled"])
+        except tk.TclError:
+            pass
