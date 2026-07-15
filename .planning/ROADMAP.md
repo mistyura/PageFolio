@@ -222,8 +222,18 @@ V171-* 全 17 要件 Complete（被覆 17/17・孤立要件なし）。締め前
   4. Blob ライフサイクルのリーク検出ロギングが強化され、Windows AV スキャンによる `os.unlink` の `PermissionError` 発生時も回帰テストでリークなしと確認できる
   5. ShortcutsDialog でキャプチャ対象を切り替えても前行の「キーを押してください」表示が残留せず、修飾キーなしの単キー登録が通常入力ウィジェットと衝突しなくなる
 
-**Plans**: TBD
+**Plans**: 4 plans
 **UI hint**: yes
+
+**Wave 1**
+
+- [ ] 05-01-PLAN.md — サムネイル純ロジック基盤（LruCache + 可視範囲/優先描画順序純関数 + selected_pages 不変条件プロパティ風テスト）[Wave 1]
+- [ ] 05-03-PLAN.md — Blob リーク検出強化（undo_store _released/__del__ + D-14 AV衝突/double-release/tmpdir 回帰テスト）[Wave 1]
+- [ ] 05-04-PLAN.md — ShortcutsDialog WR-01/WR-02 解消（表示残留修正 + フォーカスガード純関数 + 新規回帰テスト）[Wave 1]
+
+**Wave 2** *(blocked on 05-01, 05-04 — app.py 面共有)*
+
+- [ ] 05-02-PLAN.md — viewer 遅延レンダリング統合（可視範囲優先 + デバウンス + アイドル先読み + thumb_cache LRU 差替）[Wave 2]
 
 ### Phase 6: 品質保証仕上げ（通知UX・UI一貫性監査・ドキュメント整合）
 
@@ -269,5 +279,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | 2. AI強化（プロンプト・テンプレート管理 + プロバイダーフォールバック） | v1.8.0 | 6/6 | Complete | 2026-07-15 |
 | 3. OCR実行エンジン抽出 + E2Eテスト | v1.8.0 | 2/2 | Complete | 2026-07-15 |
 | 4. バッチ複数ファイルOCR | v1.8.0 | 3/3 | Complete | 2026-07-16 |
-| 5. 堅牢性強化（サムネイル仮想化 + Blobリーク検出 + ShortcutsDialog修正） | v1.8.0 | TBD | Not started | - |
+| 5. 堅牢性強化（サムネイル仮想化 + Blobリーク検出 + ShortcutsDialog修正） | v1.8.0 | 0/4 | Planned | - |
 | 6. 品質保証仕上げ（通知UX・UI一貫性監査・ドキュメント整合） | v1.8.0 | TBD | Not started | - |
