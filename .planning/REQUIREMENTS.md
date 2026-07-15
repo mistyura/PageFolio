@@ -31,9 +31,9 @@
 
 ### サムネイル仮想化（PERF）
 
-- [ ] **V180-PERF-01**: 大量ページ PDF で窓内サムネイルが可視範囲のみ実体化され、描画が高速化される（既存 `pagination.py` 窓表示の外層契約は不変）
-- [ ] **V180-PERF-02**: `thumb_cache` に LRU eviction が導入され、メモリ使用が有界化される
-- [ ] **V180-PERF-03**: `selected_pages` 全ページインデックス不変条件・D&D・窓表示との整合が回帰テストで保証される
+- [x] **V180-PERF-01**: 大量ページ PDF で窓内サムネイルが可視範囲のみ実体化され、描画が高速化される（既存 `pagination.py` 窓表示の外層契約は不変）
+- [x] **V180-PERF-02**: `thumb_cache` に LRU eviction が導入され、メモリ使用が有界化される
+- [x] **V180-PERF-03**: `selected_pages` 全ページインデックス不変条件・D&D・窓表示との整合が回帰テストで保証される
 
 ### 基盤リファクタリング（REFAC）
 
@@ -109,9 +109,9 @@
 | V180-BATCH-03 | Phase 4 | Complete |
 | V180-BATCH-04 | Phase 4 | Complete |
 | V180-BATCH-05 | Phase 4 | Complete |
-| V180-PERF-01 | Phase 5 | Pending |
-| V180-PERF-02 | Phase 5 | Pending |
-| V180-PERF-03 | Phase 5 | Pending |
+| V180-PERF-01 | Phase 5 | Complete |
+| V180-PERF-02 | Phase 5 | Complete |
+| V180-PERF-03 | Phase 5 | Complete |
 | V180-ROBUST-01 | Phase 5 | Pending |
 | V180-ROBUST-03 | Phase 5 | Pending |
 | V180-QA-02 | Phase 6 | Pending |

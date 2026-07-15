@@ -4,16 +4,16 @@ milestone: v1.8.0
 milestone_name: 実用性の最大化・エコシステム洗練・堅牢性強化
 current_phase: 05
 current_phase_name: blob-shortcutsdialog
-status: planned
-stopped_at: Phase 05 planned (4 plans, 2 waves)
-last_updated: "2026-07-16T00:00:00.000Z"
+status: executing
+stopped_at: Completed 05-01-PLAN.md
+last_updated: "2026-07-15T20:26:08.726Z"
 last_activity: 2026-07-16
-last_activity_desc: Phase 05 planned — 4 plans / 2 waves, checker passed
+last_activity_desc: Phase 05 execution started
 progress:
   total_phases: 6
   completed_phases: 4
   total_plans: 19
-  completed_plans: 15
+  completed_plans: 16
   percent: 67
 ---
 
@@ -24,14 +24,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-07-13)
 
 **Core value:** 大きな PDF でも Undo/Redo が正しく・速く動作し、コードが読みやすく保守しやすい状態にする
-**Current focus:** Phase 05 — 堅牢性強化（サムネイル仮想化 + Blobリーク検出 + ShortcutsDialog修正）
+**Current focus:** Phase 05 — blob-shortcutsdialog
 
 ## Current Position
 
-Phase: 05 (blob-shortcutsdialog) — PLANNED
-Plan: 0 of 4
-Status: Ready to execute (4 plans / 2 waves, plan checker passed)
-Last activity: 2026-07-16 — Phase 05 planned
+Phase: 05 (blob-shortcutsdialog) — EXECUTING
+Plan: 2 of 4
+Status: Ready to execute
+Last activity: 2026-07-16 — Phase 05 execution started
 
 ## v1.8.0 Phase Map
 
@@ -117,6 +117,7 @@ Last activity: 2026-07-16 — Phase 05 planned
 | Phase 04 P01 | 8min | 2 tasks | 2 files |
 | Phase 04-ocr P02 | 27min | 3 tasks | 3 files |
 | Phase 04 P03 | 15min | 3 tasks | 6 files |
+| Phase 05 P01 | 20min | 3 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -185,6 +186,9 @@ Decisions are logged in PROJECT.md Key Decisions table.
 - [Phase ?]: _format_pages_text は entry(BatchFileEntry)を明示引数に取る形で実装（OCRDialogの同名メソッドは単一self参照だが複数ファイル管理のため必然的差分）
 - [Phase ?]: メニューバーは app.py の __init__/_rebuild_ui 双方で _build_menubar() を呼ぶ設計（テーマ切替でroot.winfo_children()が全破棄されメニューが消失するのを防ぐ・Rule2追加）
 - [Phase ?]: ui_builder.py の Treeview 用 style.configure/mapは # fmt: off/on + noqa E501 で単一物理行に保持（plan acceptanceのliteral grepパターン一致のため）
+- [Phase ?]: 05-01: LruCache は新規モジュール pagefolio/thumb_cache.py に配置（pagination.py は窓計算専用の責務を保つ）
+- [Phase ?]: 05-01: compute_visible_range/prioritized_render_order は pagination.py へ追加し新規座標系モジュールを作らない（落とし穴1回避策）
+- [Phase ?]: 05-01: D&D シミュレーションは既存 _dnd_drop の実装どおり移動後に selected_pages を clear する挙動を踏襲
 
 ### Pending Todos
 
@@ -280,10 +284,10 @@ Decisions are logged in PROJECT.md Key Decisions table.
 
 ## Session Continuity
 
-**Resume file:** .planning/phases/05-blob-shortcutsdialog/05-CONTEXT.md
+**Resume file:** None
 
-Last session: 2026-07-15T18:27:24.878Z
-Stopped at: Phase 05 context gathered
+Last session: 2026-07-15T20:26:08.710Z
+Stopped at: Completed 05-01-PLAN.md
 
 ## Operator Next Steps
 
