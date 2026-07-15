@@ -4,17 +4,17 @@ milestone: v1.8.0
 milestone_name: 実用性の最大化・エコシステム洗練・堅牢性強化
 current_phase: 05
 current_phase_name: blob-shortcutsdialog
-status: executing
-stopped_at: Completed 05-04-PLAN.md
-last_updated: "2026-07-15T20:50:45.090Z"
+status: verifying
+stopped_at: Completed 05-02-PLAN.md
+last_updated: "2026-07-15T21:04:50.714Z"
 last_activity: 2026-07-16
 last_activity_desc: Phase 05 execution started
 progress:
   total_phases: 6
-  completed_phases: 4
+  completed_phases: 5
   total_plans: 19
-  completed_plans: 18
-  percent: 67
+  completed_plans: 19
+  percent: 83
 ---
 
 # Project State
@@ -30,7 +30,7 @@ See: .planning/PROJECT.md (updated 2026-07-13)
 
 Phase: 05 (blob-shortcutsdialog) — EXECUTING
 Plan: 4 of 4
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-07-16 — Phase 05 execution started
 
 ## v1.8.0 Phase Map
@@ -120,6 +120,7 @@ Last activity: 2026-07-16 — Phase 05 execution started
 | Phase 05 P01 | 20min | 3 tasks | 5 files |
 | Phase 05 P03 | 15min | 2 tasks | 2 files |
 | Phase 05 P04 | 15min | 3 tasks | 3 files |
+| Phase 05 P02 | 20min | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -193,6 +194,8 @@ Decisions are logged in PROJECT.md Key Decisions table.
 - [Phase ?]: 05-01: D&D シミュレーションは既存 _dnd_drop の実装どおり移動後に selected_pages を clear する挙動を踏襲
 - [Phase ?]: D-14② の回帰テストは delete+undo+redo+undo（計画書許可の代替案）を採用。insert 版は file_ops.py の insert_redo restore に既存のページ重複バグを発見したため対象外とし deferred-items.md へ記録（05-03）
 - [Phase ?]: V180-ROBUST-03: WR-02はキャプチャ時の登録拒否ではなく発火側フォーカスガード(should_suppress_for_focused_input)で解消。Ctrl/Alt組合せは常に非抑止、修飾なし単キー/Shiftのみは入力系ウィジェットフォーカス中のみ抑止（D-09/D-10）
+- [Phase ?]: 05-02: THUMB_CACHE_MAX=300はPAGE_SIZE_MAXの3倍を採用しユーザー設定UIは追加しない（D-05/D-06）
+- [Phase ?]: 05-02: _build_thumbnails はprioritized_render_orderの返り値を可視件数でスライスし、可視分はafter(0)連鎖・残りはafter_idle連鎖の2チェーンに分割する実装を採用（新規座標系を作らずpagination純関数のみで完結）
 
 ### Pending Todos
 
@@ -291,8 +294,8 @@ Decisions are logged in PROJECT.md Key Decisions table.
 
 **Resume file:** None
 
-Last session: 2026-07-15T20:50:45.075Z
-Stopped at: Completed 05-04-PLAN.md
+Last session: 2026-07-15T21:04:50.698Z
+Stopped at: Completed 05-02-PLAN.md
 
 ## Operator Next Steps
 
