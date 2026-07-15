@@ -9,7 +9,7 @@ import tkinter as tk
 from collections import deque
 from tkinter import messagebox
 
-from pagefolio.constants import LANG, SUPPORTED_EXTENSIONS, C
+from pagefolio.constants import LANG, SUPPORTED_EXTENSIONS, THUMB_CACHE_MAX, C
 from pagefolio.dialogs import PluginDialog, SettingsDialog
 from pagefolio.dnd import DnDMixin
 from pagefolio.file_drop import _setup_file_drop
@@ -26,6 +26,7 @@ from pagefolio.settings import (
     _save_settings,
     set_current_font_size,
 )
+from pagefolio.thumb_cache import LruCache
 from pagefolio.ui_builder import UIBuilderMixin
 from pagefolio.viewer import ViewerMixin
 
@@ -185,7 +186,7 @@ class PDFEditorApp(
         self._page_size = clamp_page_size(self.settings.get("thumb_page_size", 20))
 
         self.thumb_images = []
-        self.thumb_cache = {}
+        self.thumb_cache = LruCache(THUMB_CACHE_MAX)
         self._dnd_src_idx = None
         self._dnd_ghost = None
         self._dnd_indicator = None
@@ -202,6 +203,7 @@ class PDFEditorApp(
         # バックグラウンドレンダリング世代カウンター
         self._preview_gen = 0  # プレビュー世代カウンター
         self._thumb_gen = 0  # サムネイル世代カウンター
+        self._thumb_scroll_after = None  # スクロールデバウンス after id（D-02）
 
         # プラグインマネージャー
         self.plugin_manager = PluginManager()
