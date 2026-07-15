@@ -122,3 +122,13 @@ None - 外部サービス設定は不要。
 ---
 *Phase: 05-blob-shortcutsdialog*
 *Completed: 2026-07-16*
+
+## Self-Check: PASSED
+
+- FOUND: pagefolio/undo_store.py
+- FOUND: tests/test_undo_stress.py
+- FOUND: .planning/phases/05-blob-shortcutsdialog/deferred-items.md
+- FOUND: .planning/phases/05-blob-shortcutsdialog/05-03-SUMMARY.md
+- FOUND commit: 2adeaf1 (feat Task 1)
+- FOUND commit: fcf6818 (test Task 2)
+- FOUND commit: 632c188 (docs SUMMARY)
