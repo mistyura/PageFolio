@@ -12,6 +12,8 @@ import types
 from pagefolio.pagination import (
     clamp_page_size,
     clamp_window_start,
+    compute_visible_range,
+    prioritized_render_order,
     reconcile_window_start,
     to_global,
     to_local,
@@ -569,3 +571,75 @@ class TestMoveWindowHandler:
         stub = self._make_stub(window_start=0, current_page=5, n=47)
         ViewerMixin._next_window(stub)
         assert stub._calls["page_change"] == 1
+
+
+class TestVisibleRange:
+    """V180-PERF-01: compute_visible_range の交差判定・空入力・端クランプ。"""
+
+    def test_middle_frames_intersect(self):
+        # viewport [50, 150) と交差するのは index 1,2（y=40..80, y=80..120）
+        frame_bounds = [(0, 40), (40, 40), (80, 40), (120, 40), (160, 40)]
+        assert compute_visible_range(50, 150, frame_bounds) == (1, 4)
+
+    def test_empty_frame_bounds_returns_zero(self):
+        assert compute_visible_range(0, 100, []) == (0, 0)
+
+    def test_no_intersection_returns_zero(self):
+        # viewport が全フレームより下（frame_bounds の最大 y+height 以下に無い）
+        frame_bounds = [(0, 40), (40, 40)]
+        assert compute_visible_range(1000, 1100, frame_bounds) == (0, 0)
+
+    def test_viewport_covers_all_frames(self):
+        frame_bounds = [(0, 40), (40, 40), (80, 40)]
+        assert compute_visible_range(0, 1000, frame_bounds) == (0, 3)
+
+    def test_upper_edge_clamp_first_frame_only(self):
+        # viewport の上端が最初のフレームだけに触れる
+        frame_bounds = [(0, 40), (40, 40), (80, 40)]
+        assert compute_visible_range(0, 10, frame_bounds) == (0, 1)
+
+    def test_lower_edge_clamp_last_frame_only(self):
+        # viewport の下端が最後のフレームだけに触れる
+        frame_bounds = [(0, 40), (40, 40), (80, 40)]
+        assert compute_visible_range(90, 200, frame_bounds) == (2, 3)
+
+    def test_touching_boundary_not_intersecting(self):
+        # frame_y + height == view_top（接するだけ）は交差しない
+        frame_bounds = [(0, 40), (40, 40)]
+        assert compute_visible_range(40, 100, frame_bounds) == (1, 2)
+
+    def test_invariant_range_within_bounds(self):
+        frame_bounds = [(i * 30, 30) for i in range(10)]
+        for view_top in range(0, 300, 15):
+            view_bottom = view_top + 60
+            vis_lo, vis_hi = compute_visible_range(view_top, view_bottom, frame_bounds)
+            assert 0 <= vis_lo <= vis_hi <= len(frame_bounds)
+
+
+class TestPrioritizedRenderOrder:
+    """V180-PERF-01: 可視先頭・残り lo→hi・全 index 1回被覆・長さ一致。"""
+
+    def test_visible_first_then_remaining_order(self):
+        assert prioritized_render_order(0, 5, 2, 4) == [2, 3, 0, 1, 4]
+
+    def test_no_visible_equals_plain_range(self):
+        assert prioritized_render_order(0, 5, 4, 4) == list(range(0, 5))
+        assert prioritized_render_order(0, 5, 10, 20) == list(range(0, 5))
+
+    def test_visible_covers_entire_window(self):
+        assert prioritized_render_order(0, 5, 0, 5) == [0, 1, 2, 3, 4]
+
+    def test_visible_clamped_to_window(self):
+        # vis_hi が hi をはみ出しても防御的に hi へクランプされる
+        assert prioritized_render_order(10, 15, 12, 20) == [12, 13, 14, 10, 11]
+
+    def test_covers_all_indices_exactly_once(self):
+        for lo, hi, vis_lo, vis_hi in (
+            (0, 20, 5, 10),
+            (20, 40, 25, 35),
+            (0, 1, 0, 1),
+            (0, 0, 0, 0),
+        ):
+            result = prioritized_render_order(lo, hi, vis_lo, vis_hi)
+            assert sorted(result) == list(range(lo, hi))
+            assert len(result) == hi - lo

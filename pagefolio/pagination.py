@@ -121,6 +121,55 @@ def window_nav_state(window_start, page_size, n_pages):
     return (lo > 0, hi < n_pages)
 
 
+def compute_visible_range(view_top, view_bottom, frame_bounds):
+    """viewport [view_top, view_bottom) と交差するフレームの半開ローカル区間を返す。
+
+    frame_bounds: [(y, height), ...]（窓ローカル順・dnd.compute_dnd_dest_index と
+    同型。Tk 依存の座標収集は呼び出し側〔viewer.py〕が担い、本関数は比較のみを
+    担う・落とし穴1回避策〔05-RESEARCH.md Pattern 2〕）。
+    フレーム i が「frame_y < view_bottom かつ frame_y + height > view_top」を
+    満たせば交差とみなす。交差する最初のローカル index を vis_lo、最後の
+    ローカル index + 1 を vis_hi として (vis_lo, vis_hi) を返す。
+    frame_bounds が空、または交差フレームが無い場合は (0, 0) を返す（堅牢性）。
+    不変条件: 0 <= vis_lo <= vis_hi <= len(frame_bounds)（V180-PERF-01）。
+    """
+    if not frame_bounds:
+        return (0, 0)
+    first_idx = None
+    last_idx = None
+    for i, (frame_y, height) in enumerate(frame_bounds):
+        if frame_y < view_bottom and frame_y + height > view_top:
+            if first_idx is None:
+                first_idx = i
+            last_idx = i
+    if first_idx is None:
+        return (0, 0)
+    return (first_idx, last_idx + 1)
+
+
+def prioritized_render_order(lo, hi, vis_lo, vis_hi):
+    """可視範囲を先頭にした [lo, hi) の描画優先順序リストを返す。
+
+    lo/hi は窓の半開区間（window_bounds 由来の全ページ index）。vis_lo/vis_hi は
+    可視 global index の半開区間で、防御的に [lo, hi) へクランプする。
+    戻り値は range(vis_lo, vis_hi) の可視 index を先頭に、続いて [lo, hi) の
+    うち可視区間に含まれない index を lo→hi 昇順で並べたリスト。
+    不変条件: 返り値は [lo, hi) の全 index をちょうど1回ずつ含み、
+    長さは hi - lo に等しい。vis_lo >= vis_hi（可視なし）の場合は
+    list(range(lo, hi)) と等価になる。
+    落とし穴2回避策: 本関数は描画スケジューリングの順序決定のみを担い、
+    thumb_cache（LRU）のキー＝ページ番号のヒット判定とは責務が異なる
+    （05-RESEARCH.md 落とし穴2）。
+    """
+    vis_lo = max(lo, min(vis_lo, hi))
+    vis_hi = max(lo, min(vis_hi, hi))
+    if vis_lo >= vis_hi:
+        return list(range(lo, hi))
+    visible = list(range(vis_lo, vis_hi))
+    rest = [i for i in range(lo, hi) if i < vis_lo or i >= vis_hi]
+    return visible + rest
+
+
 def clamp_page_size(value):
     """表示件数を [PAGE_SIZE_MIN, PAGE_SIZE_MAX] にクランプする純ロジック（W1）。
 
