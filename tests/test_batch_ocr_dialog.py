@@ -404,3 +404,93 @@ class TestBatchOCRDialogE2E:
             )
         finally:
             dialog.destroy()
+
+
+class TestBatchSummary:
+    """ファイル横断統合サマリ（D-13/D-14/D-15）・後方互換 re-export のテスト。
+
+    実 fitz/実ネットワーク非依存。バッチ実行そのものは行わず、
+    `_entries`/`entry.results`/`entry.status` を直接操作して統合サマリ
+    ロジック（`_format_batch_summary_input`/`_on_batch_summary`）のみを
+    決定的に検証する（04-RESEARCH.md Test Map・04-03-PLAN.md Task 3）。
+    """
+
+    def test_batch_summary_concat(self, tk_root, monkeypatch):
+        """`_format_batch_summary_input` が完了ファイルごとに見出し
+        （`=== name ===`）を挿入して連結する（D-15・V180-BATCH-05）。
+        """
+        provider = FakeProvider()
+        dialog = _build_dialog(
+            tk_root, monkeypatch, provider, {"/a.pdf": 1, "/b.pdf": 1}
+        )
+        try:
+            dialog._enqueue_files(["/a.pdf", "/b.pdf"])
+            entry_a = dialog._entry_by_path("/a.pdf")
+            entry_b = dialog._entry_by_path("/b.pdf")
+            entry_a.status = STATUS_DONE
+            entry_a.results[0] = "テキストA"
+            entry_b.status = STATUS_DONE
+            entry_b.results[0] = "テキストB"
+
+            combined = dialog._format_batch_summary_input()
+
+            assert "a.pdf" in combined
+            assert "b.pdf" in combined
+            assert "テキストA" in combined
+            assert "テキストB" in combined
+            # ファイル名見出しが本文より先に現れる（見出し→本文の連結順）
+            assert combined.index("a.pdf") < combined.index("テキストA")
+            assert combined.index("b.pdf") < combined.index("テキストB")
+        finally:
+            dialog.destroy()
+
+    def test_batch_summary_zero_completed_noop(self, tk_root, monkeypatch):
+        """完了ファイル0件で `_on_batch_summary` を呼んでも `complete_text_ex`
+        は呼ばれず no-op（zero-completed エッジ・D-13）。
+        """
+        calls = []
+        provider = FakeProvider()
+        provider.complete_text_ex = lambda *a, **k: calls.append(1)
+        dialog = _build_dialog(tk_root, monkeypatch, provider, {"/a.pdf": 1})
+        try:
+            dialog._enqueue_files(["/a.pdf"])  # STATUS_PENDING のまま（未完了）
+            dialog.provider = provider
+
+            dialog._on_batch_summary()
+
+            assert not calls
+            assert not dialog._summary_running
+        finally:
+            dialog.destroy()
+
+    def test_batch_summary_oversized_warns(self, tk_root, monkeypatch):
+        """連結文字数が `SUMMARY_TOO_LONG_CHARS` を超える場合、`askyesno` 警告を
+        経由し、承認しなければ `complete_text_ex` は呼ばれない（D-14）。
+        """
+        calls = []
+        provider = FakeProvider()
+        provider.complete_text_ex = lambda *a, **k: calls.append(1)
+        dialog = _build_dialog(tk_root, monkeypatch, provider, {"/a.pdf": 1})
+        try:
+            dialog._enqueue_files(["/a.pdf"])
+            entry = dialog._entry_by_path("/a.pdf")
+            entry.status = STATUS_DONE
+            entry.results[0] = "x" * (batch_ocr.SUMMARY_TOO_LONG_CHARS + 1)
+            dialog.provider = provider
+
+            monkeypatch.setattr(batch_ocr.messagebox, "askyesno", lambda *a, **k: False)
+
+            dialog._on_batch_summary()
+
+            assert not calls
+            assert not dialog._summary_running
+        finally:
+            dialog.destroy()
+
+    def test_batch_dialog_reexport(self):
+        """後方互換 re-export: `from pagefolio.dialogs import BatchOCRDialog`
+        が成功する（到達性 smoke）。
+        """
+        from pagefolio.dialogs import BatchOCRDialog
+
+        assert BatchOCRDialog is batch_ocr.BatchOCRDialog
