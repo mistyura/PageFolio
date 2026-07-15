@@ -705,6 +705,9 @@ LANG = {
         "batch_status_error": "エラー",
         "batch_scan_error": "読み込みエラー",
         "batch_scanning_msg": "読み込み中...",
+        "batch_empty_queue_msg": (
+            "実行対象のファイルがありません。ファイルを追加してください。"
+        ),
     },
     "en": {
         # Header / status
@@ -1400,5 +1403,6 @@ LANG = {
         "batch_status_error": "Error",
         "batch_scan_error": "Load error",
         "batch_scanning_msg": "Loading...",
+        "batch_empty_queue_msg": "No files to process. Please add files first.",
     },
 }

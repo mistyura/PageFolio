@@ -29,10 +29,22 @@ from pagefolio.batch_ocr_state import (
     STATUS_FAILED,
     STATUS_PENDING,
     STATUS_RUNNING,
+    BatchState,
+    count_pending,
     enqueue_files,
 )
 from pagefolio.constants import LANG, SUPPORTED_EXTENSIONS, C
-from pagefolio.settings import get_current_font_size
+from pagefolio.ocr import (
+    DEFAULT_OCR_CONCURRENCY,
+    DEFAULT_OCR_SCALE,
+    build_provider,
+    has_embedded_text,
+    page_to_png_b64,
+    resolve_ocr_prompt,
+)
+from pagefolio.ocr_engine import OCRRunEngine
+from pagefolio.ocr_pipeline import send_sentinels, try_enqueue
+from pagefolio.settings import get_current_font_size, load_custom_prompt
 
 try:
     from tkinterdnd2 import DND_FILES
@@ -61,6 +73,10 @@ OCR_PRICE_TABLE: "dict[str, tuple[float, float]]" = {
     "claude-opus": (5.0, 25.0),
 }
 _PRICE_FALLBACK = (5.0, 25.0)
+
+# サーキットブレーカー閾値。`ocr_dialog.py:CB_CONSECUTIVE_FAILURES` と同一値の
+# コピペ移植（レビュー懸念5）。
+CB_CONSECUTIVE_FAILURES = 3
 
 # キュー状態 → lang キーの写像（全 batch_status_* キーをソース内文字列
 # リテラルとして出現させ test_no_unused_lang_keys の未使用キー assertion を
@@ -477,14 +493,334 @@ class BatchOCRDialog(tk.Toplevel):
         )
         return self._confirm_cost(page_count=total_pages)
 
-    # ── ファイルループコントローラ（Task 2 で実装）────────────────
+    # ── ファイルループコントローラ ──────────────────────────
+    def _widget_alive(self):
+        try:
+            return bool(self.winfo_exists())
+        except tk.TclError:
+            return False
+
+    def _set_running_ui(self, running):
+        """レビュー懸念3: 実行中/停止でボタン活性を切り替える。
+
+        running=True で「▶ 実行」「+ ファイル追加」「削除」を disabled・
+        「バッチ中止」を enabled にする。running=False で逆へ戻す。
+        """
+        self._running = running
+        add_remove_start_state = ["disabled"] if running else ["!disabled"]
+        cancel_state = ["!disabled"] if running else ["disabled"]
+        self._start_btn.state(add_remove_start_state)
+        self._add_btn.state(add_remove_start_state)
+        self._remove_btn.state(add_remove_start_state)
+        self._cancel_btn.state(cancel_state)
+
+    def _build_provider_once(self):
+        """バッチ開始時に1回だけ provider/concurrency/prompt を構築する（A2）。
+
+        `ocr.py:_start_ocr` と同型のロジック（プロバイダ設定はファイル間で
+        不変のため使い回す）。APIキー文字列は Engine へ渡さず、構築済み
+        provider インスタンスのみを渡す（T-04-02 情報漏洩防止）。
+        """
+        s = self.app.settings
+        name = s.get("ocr_provider", "")
+        api_key = None
+        _cloud_providers = {"claude", "gemini", "runpod"}
+        if name in _cloud_providers:
+            from pagefolio.ocr import _resolve_api_key
+            from pagefolio.ocr_providers import OCRAPIKeyError
+
+            session_keys = getattr(self.app, "_session_api_keys", {})
+            try:
+                api_key = _resolve_api_key(name, session_keys)
+            except OCRAPIKeyError:
+                api_key = None
+        self.provider = build_provider(
+            s, api_key=api_key, plugin_manager=getattr(self.app, "plugin_manager", None)
+        )
+        self.concurrency = max(
+            1,
+            min(
+                self.provider.max_concurrency,
+                int(s.get("ocr_concurrency", DEFAULT_OCR_CONCURRENCY)),
+            ),
+        )
+        preset = s.get("ocr_prompt_preset", "text")
+        custom_prompt = load_custom_prompt(s)
+        self._ocr_prompt = resolve_ocr_prompt(preset, name, custom_prompt)
+        self._ocr_scale = float(s.get("ocr_scale", DEFAULT_OCR_SCALE))
+
     def _on_start_batch(self):
-        """バッチ実行開始（Task 2 でファイルループコントローラを実装する）。"""
+        """バッチ実行開始。D-03（集約コスト確認）→ BatchState 構築 → ファイル
+        ループ起動（レビュー懸念3・6）。
+        """
+        if self._running:
+            return
+        if count_pending(self._entries) == 0:
+            messagebox.showinfo(
+                self._L["info_title"], self._L["batch_empty_queue_msg"], parent=self
+            )
+            return
+        if not self._check_cloud_api_key():
+            return
+        if not self._confirm_batch_cost():
+            return
+
+        # レビュー懸念6・04-01連携: STATUS_ERROR を実行対象＝分母から除外する。
+        self._batch_state = BatchState(total_files=count_pending(self._entries))
+        self._batch_cancel_flag.clear()
+        self._file_cancel_flag.clear()
+        self._build_provider_once()
+        self._set_running_ui(True)
+        self._update_overall_progress()
+        self._advance_to_next_file()
+
+    def _next_pending_entry(self):
+        for e in self._entries:
+            if e.status == STATUS_PENDING:
+                return e
+        return None
+
+    def _advance_to_next_file(self):
+        """次ファイルへ進む前に必ずバッチ全体キャンセルを確認する（Pitfall 2）。"""
+        if self._batch_cancel_flag.is_set():
+            self._set_running_ui(False)
+            return
+        next_entry = self._next_pending_entry()
+        if next_entry is None:
+            self._set_running_ui(False)
+            return
+        self._start_file_engine(next_entry)
+
+    def _record_page_success(self, entry, page_idx, text, truncated):
+        entry.results[page_idx] = text
+
+    def _record_page_error(self, entry, page_idx, msg):
+        entry.errors[page_idx] = msg
+
+    def _on_engine_progress_for(self, entry, gen):
+        def _on_progress(done, page_idx):
+            if gen != self._run_gen:
+                return
+            try:
+                self.after(0, lambda d=done: self._update_file_progress(entry, d))
+            except tk.TclError:
+                pass
+
+        return _on_progress
+
+    def _update_file_progress(self, entry, done):
+        if not self._widget_alive():
+            return
+        self._file_progress[entry.path] = f"{done}/{entry.page_count}"
+        self._refresh_queue_row(entry)
+
+    def _start_file_engine(self, entry):
+        """ファイルごとに `OCRRunEngine` を新規生成する（D-11 外挿・使い回さない）。"""
+        entry.status = STATUS_RUNNING
+        self._file_progress[entry.path] = f"0/{entry.page_count}"
+        self._refresh_queue_row(entry)
+
+        self._file_cancel_flag.clear()
+        self._render_idx = 0
+        self._run_gen += 1
+        gen = self._run_gen
+        run_pages = list(range(entry.page_count))
+
+        engine = OCRRunEngine(
+            provider=self.provider,
+            prompt=self._ocr_prompt,
+            run_pages=run_pages,
+            concurrency=self.concurrency,
+            cancel_flag=self._file_cancel_flag,
+            on_success=lambda p, t, tr, e=entry: self._record_page_success(e, p, t, tr),
+            on_page_error=lambda p, msg, e=entry: self._record_page_error(e, p, msg),
+            on_progress=self._on_engine_progress_for(entry, gen),
+            on_complete=lambda e=entry, g=gen: self._on_file_complete(e, g),
+            on_cancelled=lambda e=entry, g=gen: self._on_file_cancelled(e, g),
+            on_fatal=lambda msg, kind, e=entry, g=gen: self._on_file_fatal(
+                e, msg, kind, g
+            ),
+            breaker_threshold=CB_CONSECUTIVE_FAILURES,
+        )
+        self._current_entry = entry
+        self._current_engine = engine
+        # fitz はファイル間もメインスレッド逐次（Pitfall 1・落とし穴3）。
+        self._current_doc = fitz.open(entry.path)
+        engine.start()
+        self._render_next_page_for(entry, gen)
+
+    def _retry_sentinels_for(self, entry, gen, remaining):
+        if gen != self._run_gen:
+            return
+        if not self._widget_alive():
+            return
+        engine = self._current_engine
+        sent = send_sentinels(engine.queue, remaining)
+        if sent < remaining:
+            left = remaining - sent
+            self.after(
+                50,
+                lambda _g=gen, n=left, _e=entry: self._retry_sentinels_for(_e, _g, n),
+            )
+
+    def _render_next_page_for(self, entry, gen):
+        """producer（メインスレッド）: 1ページ render → キューに積む（after(0) 連鎖）。
+
+        `ocr_dialog.py:_render_next_page` と同型。fitz アクセスはここのみ
+        （落とし穴3）。b64 のみをワーカーへ渡す。
+        """
+        if gen != self._run_gen:
+            return
+        if not self._widget_alive():
+            return
+
+        engine = self._current_engine
+        if self._file_cancel_flag.is_set():
+            sent = send_sentinels(engine.queue, self.concurrency)
+            if sent < self.concurrency:
+                self._retry_sentinels_for(entry, gen, self.concurrency - sent)
+            return
+
+        if engine.is_fatal():
+            sent = send_sentinels(engine.queue, self.concurrency)
+            if sent < self.concurrency:
+                self._retry_sentinels_for(entry, gen, self.concurrency - sent)
+            return
+
+        total = len(engine.run_pages)
+        idx = self._render_idx
+
+        if idx >= total:
+            sent = send_sentinels(engine.queue, self.concurrency)
+            if sent < self.concurrency:
+                self.after(
+                    100,
+                    lambda _g=gen, _e=entry: self._render_next_page_for(_e, _g),
+                )
+            return
+
+        page_idx = engine.run_pages[idx]
+        try:
+            page = self._current_doc[page_idx]
+            if has_embedded_text(page):
+                extracted = page.get_text()
+                entry.results[page_idx] = extracted
+                engine.note_skip(page_idx)
+                done_disp = engine.progress_count()
+                self.after(0, lambda d=done_disp: self._update_file_progress(entry, d))
+            else:
+                b64 = page_to_png_b64(page, scale=self._ocr_scale)
+                if not try_enqueue(engine.queue, (page_idx, b64)):
+                    self.after(
+                        100,
+                        lambda _g=gen, _e=entry: self._render_next_page_for(_e, _g),
+                    )
+                    return
+        except Exception as e:
+            logger.exception(
+                "バッチOCR: ページ処理失敗 (%s p.%d): %s",
+                entry.display_name,
+                page_idx,
+                e,
+            )
+            entry.errors[page_idx] = f"image conversion error: {e}"
+            engine.note_render_failed(page_idx)
+            done_disp = engine.progress_count()
+            self.after(0, lambda d=done_disp: self._update_file_progress(entry, d))
+
+        self._render_idx += 1
+        self.after(0, lambda _g=gen, _e=entry: self._render_next_page_for(_e, _g))
+
+    def _close_current_doc(self):
+        if self._current_doc is not None:
+            try:
+                self._current_doc.close()
+            except Exception:
+                logger.debug("バッチOCR: ドキュメントクローズ失敗（無視）")
+            self._current_doc = None
+        self._current_engine = None
+        self._current_entry = None
+
+    def _on_file_complete(self, entry, gen):
+        """完了理由別アダプタ（正常完了）。世代ガード + after(0, ...) 投函のみ。"""
+        if gen != self._run_gen:
+            return
+        try:
+            self.after(0, lambda e=entry: self._finish_file_complete(e))
+        except tk.TclError:
+            pass
+
+    def _on_file_cancelled(self, entry, gen):
+        """完了理由別アダプタ（キャンセル）。_on_file_complete と同型。"""
+        if gen != self._run_gen:
+            return
+        try:
+            self.after(0, lambda e=entry: self._finish_file_cancelled(e))
+        except tk.TclError:
+            pass
+
+    def _on_file_fatal(self, entry, msg, kind, gen):
+        """完了理由別アダプタ（fatal）。D-09: 確認を挟まず自動スキップ。"""
+        if gen != self._run_gen:
+            return
+        try:
+            self.after(
+                0, lambda e=entry, m=msg, k=kind: self._finish_file_fatal(e, m, k)
+            )
+        except tk.TclError:
+            pass
+
+    def _finish_file_complete(self, entry):
+        if not self._widget_alive():
+            return
+        self._close_current_doc()
+        entry.status = STATUS_DONE
+        if self._batch_state is not None:
+            self._batch_state.mark_completed()
+        self._refresh_queue_row(entry)
+        self._update_overall_progress()
+        self._advance_to_next_file()
+
+    def _finish_file_cancelled(self, entry):
+        if not self._widget_alive():
+            return
+        self._close_current_doc()
+        # キャンセルされたファイルは STATUS_PENDING へ戻し、後続の再実行
+        # （count_pending 経由）で処理対象として残す（バッチ中止後の完了済み
+        # ファイルは STATUS_DONE のまま保持され再送信されない・D-11）。
+        entry.status = STATUS_PENDING
+        if self._batch_state is not None:
+            self._batch_state.mark_cancelled()
+        self._refresh_queue_row(entry)
+        self._update_overall_progress()
+        self._advance_to_next_file()
+
+    def _finish_file_fatal(self, entry, msg, kind):
+        if not self._widget_alive():
+            return
+        self._close_current_doc()
+        entry.status = STATUS_FAILED
+        if self._batch_state is not None:
+            self._batch_state.mark_failed()
+        self._refresh_queue_row(entry)
+        self._update_overall_progress()
+        self._advance_to_next_file()
 
     def _on_batch_cancel(self):
-        """バッチ中止（Task 2 で2階層フラグ set を実装する）。"""
+        """D-10: 「バッチ中止」1ボタンで2階層フラグを同時に set する。"""
+        self._batch_cancel_flag.set()
+        self._file_cancel_flag.set()
+        self._set_running_ui(False)
 
     def _on_close(self):
-        """WM_DELETE_WINDOW ハンドラ（Task 2 で2階層キャンセル+世代無効化を実装）。"""
+        """WM_DELETE_WINDOW ハンドラ（レビュー懸念1・HIGH）。
+
+        実行中なら2階層キャンセルフラグを set してから世代を無効化し、
+        孤児ワーカーの fitz 操作・クラウド API 送信・破棄後ウィジェットへの
+        after 更新（tk.TclError 多発）を防ぐ（`ocr_dialog.py:_on_close` の踏襲）。
+        """
+        if self._running:
+            self._batch_cancel_flag.set()
+            self._file_cancel_flag.set()
         self._run_gen += 1
         self.destroy()
