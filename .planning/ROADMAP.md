@@ -194,8 +194,20 @@ V171-* 全 17 要件 Complete（被覆 17/17・孤立要件なし）。締め前
   4. ユーザーはバッチ全体、またはファイル単位で処理をキャンセルできる
   5. バッチ完了後、複数ファイル横断の統合サマリを生成でき、入力過大時は事前警告が表示される
 
-**Plans**: TBD
+**Plans**: 3 plans
 **UI hint**: yes
+
+**Wave 1**
+
+- [ ] 04-01-PLAN.md — バッチキュー純ロジック層（BatchFileEntry/BatchState/enqueue_files）+ 状態遷移テスト [Wave 1]
+
+**Wave 2** *(blocked on Wave 1)*
+
+- [ ] 04-02-PLAN.md — BatchOCRDialog コア（D&D/ファイル投入・3列 Treeview・二段進捗・per-file Engine ループ・2階層キャンセル・失敗自動スキップ）+ E2E テスト [Wave 2]
+
+**Wave 3** *(blocked on Wave 2)*
+
+- [ ] 04-03-PLAN.md — ファイル横断統合サマリ・ファイル別結果閲覧 + メニュー起動導線/Treeview Style/後方互換 re-export [Wave 3]
 
 ### Phase 5: 堅牢性強化（サムネイル仮想化 + Blobリーク検出 + ShortcutsDialog修正）
 
@@ -256,6 +268,6 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | 1. 基盤分割（肥大モジュールリファクタリング） | v1.8.0 | 4/4 | Complete | 2026-07-14 |
 | 2. AI強化（プロンプト・テンプレート管理 + プロバイダーフォールバック） | v1.8.0 | 6/6 | In Progress | - |
 | 3. OCR実行エンジン抽出 + E2Eテスト | v1.8.0 | 1/2 | In Progress | - |
-| 4. バッチ複数ファイルOCR | v1.8.0 | TBD | Not started | - |
+| 4. バッチ複数ファイルOCR | v1.8.0 | 0/3 | Not started | - |
 | 5. 堅牢性強化（サムネイル仮想化 + Blobリーク検出 + ShortcutsDialog修正） | v1.8.0 | TBD | Not started | - |
 | 6. 品質保証仕上げ（通知UX・UI一貫性監査・ドキュメント整合） | v1.8.0 | TBD | Not started | - |
