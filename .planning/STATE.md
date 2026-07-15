@@ -4,17 +4,17 @@ milestone: v1.8.0
 milestone_name: 実用性の最大化・エコシステム洗練・堅牢性強化
 current_phase: 04
 current_phase_name: ocr
-status: executing
-stopped_at: Completed 04-02-PLAN.md
-last_updated: "2026-07-15T12:47:44.902Z"
+status: verifying
+stopped_at: Completed 04-03-PLAN.md
+last_updated: "2026-07-15T13:10:55.423Z"
 last_activity: 2026-07-15
 last_activity_desc: Phase 04 execution started
 progress:
   total_phases: 6
-  completed_phases: 3
+  completed_phases: 4
   total_plans: 15
-  completed_plans: 14
-  percent: 50
+  completed_plans: 15
+  percent: 67
 ---
 
 # Project State
@@ -30,7 +30,7 @@ See: .planning/PROJECT.md (updated 2026-07-13)
 
 Phase: 04 (ocr) — EXECUTING
 Plan: 3 of 3
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-07-15 — Phase 04 execution started
 
 ## v1.8.0 Phase Map
@@ -116,6 +116,7 @@ Last activity: 2026-07-15 — Phase 04 execution started
 |------|----------|-------|-------|
 | Phase 04 P01 | 8min | 2 tasks | 2 files |
 | Phase 04-ocr P02 | 27min | 3 tasks | 3 files |
+| Phase 04 P03 | 15min | 3 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -181,6 +182,9 @@ Decisions are logged in PROJECT.md Key Decisions table.
 - [Phase ?]: OCRDialog のコスト確認系メソッドは継承・cross-importせず同一シグネチャ・同一挙動でコピペ移植（ocr_dialog.py無変更・レビュー懸念5）
 - [Phase ?]: バッチ中止でキャンセルされたファイルはSTATUS_PENDINGへ戻し、次回実行でcount_pending経由の再処理対象とする（完了/確定失敗とは区別）
 - [Phase ?]: E2EテストのTk駆動はPython 3.14のtkinter制約（ワーカースレッドからのafter()にmainloop内実行を要求）に対応しmainloop()/quit()方式を採用
+- [Phase ?]: _format_pages_text は entry(BatchFileEntry)を明示引数に取る形で実装（OCRDialogの同名メソッドは単一self参照だが複数ファイル管理のため必然的差分）
+- [Phase ?]: メニューバーは app.py の __init__/_rebuild_ui 双方で _build_menubar() を呼ぶ設計（テーマ切替でroot.winfo_children()が全破棄されメニューが消失するのを防ぐ・Rule2追加）
+- [Phase ?]: ui_builder.py の Treeview 用 style.configure/mapは # fmt: off/on + noqa E501 で単一物理行に保持（plan acceptanceのliteral grepパターン一致のため）
 
 ### Pending Todos
 
@@ -278,8 +282,8 @@ Decisions are logged in PROJECT.md Key Decisions table.
 
 **Resume file:** None
 
-Last session: 2026-07-15T12:47:44.885Z
-Stopped at: Completed 04-02-PLAN.md
+Last session: 2026-07-15T13:10:55.400Z
+Stopped at: Completed 04-03-PLAN.md
 
 ## Operator Next Steps
 
