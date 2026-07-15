@@ -87,7 +87,7 @@ V171-* 全 17 要件 Complete（被覆 17/17・孤立要件なし）。締め前
 - [x] **Phase 2: AI強化（プロンプト・テンプレート管理 + プロバイダーフォールバック）** - 名前付きテンプレート CRUD・全プロバイダ横断共有・明示設定型フォールバック（送信先確認再提示つき） (completed 2026-07-14)
 - [x] **Phase 3: OCR実行エンジン抽出 + E2Eテスト** - ocr_dialog.py から OCRRunEngine を抽出し単一/バッチ OCR で共用可能化・OCR→サマリ E2E モックテスト整備 (completed 2026-07-14)
 - [ ] **Phase 4: バッチ複数ファイルOCR** - 複数 PDF の D&D 一括投入・キュー進捗表示・ファイル単位失敗分離・全体/個別キャンセル・横断統合サマリ（単独フェーズ隔離）
-- [ ] **Phase 5: 堅牢性強化（サムネイル仮想化 + Blobリーク検出 + ShortcutsDialog修正）** - 窓内サムネイル仮想化・thumb_cache LRU化・Blob リーク検出強化・WR-01/WR-02 解消
+- [x] **Phase 5: 堅牢性強化（サムネイル仮想化 + Blobリーク検出 + ShortcutsDialog修正）** - 窓内サムネイル仮想化・thumb_cache LRU化・Blob リーク検出強化・WR-01/WR-02 解消 (completed 2026-07-16)
 - [ ] **Phase 6: 品質保証仕上げ（通知UX・UI一貫性監査・ドキュメント整合）** - 再試行付き非モーダルトースト・スクロール/フォントスケーリング監査・開発履歴.md v1.7.0 表記整合
 
 ## Phase Details
@@ -260,7 +260,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | 2. プレビュー最適化とリファクタリング | v1.3.0 | 6/6 | Complete    | 2026-06-03 |
 | 3. API 整理と回帰テスト | v1.3.0 | 2/2 | Complete    | 2026-06-03 |
 | 4. プロバイダ抽象化 | v1.4.0 | 4/4 | Complete | 2026-06-06 |
-| 5. Claude Provider + セキュリティ基盤 + プロバイダ選択 UI | v1.4.0 | 5/5 | Complete | 2026-06-07 |
+| 5. Claude Provider + セキュリティ基盤 + プロバイダ選択 UI | v1.4.0 | 4/4 | Complete    | 2026-06-07 |
 | 6. Gemini Provider + 逐次レンダリング最適化 | v1.4.0 | 4/4 | Complete | 2026-06-07 |
 | 7. Tesseract + PluginManager 拡張 + QA | v1.4.0 | 1/1 | Complete | 2026-06-14 |
 | 1. PDF ページ操作・編集機能の拡充 | v1.5.0 | — | Complete | 2026-06-16 |
