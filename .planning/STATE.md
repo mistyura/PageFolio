@@ -4,15 +4,15 @@ milestone: v1.8.0
 milestone_name: 実用性の最大化・エコシステム洗練・堅牢性強化
 current_phase: 4
 current_phase_name: バッチ複数ファイルOCR
-status: completed
-stopped_at: Phase 4 context gathered
-last_updated: "2026-07-15T10:35:36.866Z"
-last_activity: 2026-07-14
-last_activity_desc: Phase 03 complete, transitioned to Phase 4
+status: ready_to_execute
+stopped_at: Phase 4 planned (3 plans)
+last_updated: "2026-07-15T00:00:00.000Z"
+last_activity: 2026-07-15
+last_activity_desc: Phase 4 planning complete (3 plans, checker passed)
 progress:
   total_phases: 6
   completed_phases: 3
-  total_plans: 12
+  total_plans: 15
   completed_plans: 12
   percent: 50
 ---
@@ -24,14 +24,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-07-13)
 
 **Core value:** 大きな PDF でも Undo/Redo が正しく・速く動作し、コードが読みやすく保守しやすい状態にする
-**Current focus:** Phase 03 — ocr-e2e
+**Current focus:** Phase 04 — ocr（バッチ複数ファイルOCR）
 
 ## Current Position
 
 Phase: 4 — バッチ複数ファイルOCR
-Plan: Not started
-Status: 03-01（OCRRunEngine 抽出）・03-02（E2E モックテスト）ともに完了。V180-QA-01/V180-REFAC-03 とも Complete
-Last activity: 2026-07-14 — Phase 03 complete, transitioned to Phase 4
+Plan: 3 plans ready（04-01: バッチキュー純ロジック層 / 04-02: BatchOCRDialog コア / 04-03: 統合サマリ + 起動導線）
+Status: Ready to execute。プランチェッカー合格（ブロッカー・警告 0）。要件被覆 5/5・決定被覆 16/16 でゲート通過（D-12 は 04-02 prohibitions に明示追記して解消）
+Last activity: 2026-07-15 — Phase 4 planning complete (3 plans)
 
 ## v1.8.0 Phase Map
 
@@ -266,9 +266,8 @@ Decisions are logged in PROJECT.md Key Decisions table.
 
 ## Session Continuity
 
-Last session: 2026-07-15T10:35:36.846Z
-Stopped at: Phase 4 context gathered
-Resume file: .planning/phases/04-ocr/04-CONTEXT.md
+Last session: 2026-07-15
+Stopped at: Phase 4 planned (3 plans, ready to execute)
 
 ## Operator Next Steps
 
