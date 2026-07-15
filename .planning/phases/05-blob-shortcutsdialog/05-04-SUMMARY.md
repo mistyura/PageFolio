@@ -131,3 +131,14 @@ None - no external service configuration required.
 ---
 *Phase: 05-blob-shortcutsdialog*
 *Completed: 2026-07-16*
+
+## Self-Check: PASSED
+
+- FOUND: pagefolio/dialogs/shortcuts.py
+- FOUND: pagefolio/app.py
+- FOUND: tests/test_shortcuts_dialog.py
+- FOUND: .planning/phases/05-blob-shortcutsdialog/05-04-SUMMARY.md
+- FOUND commit: 475a06a
+- FOUND commit: bcb95a5
+- FOUND commit: 1940f87
+- FOUND commit: b35b9d9
