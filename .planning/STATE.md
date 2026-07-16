@@ -24,7 +24,7 @@ current_phase_name: ux-ui
 See: .planning/PROJECT.md (updated 2026-07-16)
 
 **Core value:** 大きな PDF でも Undo/Redo が正しく・速く動作し、コードが読みやすく保守しやすい状態にする
-**Current focus:** v1.8.0 全6フェーズ完了 — マイルストーンクローズ待ち
+**Current focus:** v1.8.0 マイルストーンクローズ完了（APP_VERSION v1.8.0） — 次マイルストーンは `/gsd-new-milestone` で確定
 
 ## Current Position
 
@@ -210,13 +210,13 @@ Decisions are logged in PROJECT.md Key Decisions table.
 
 ### Pending Todos
 
-- なし。v1.8.0 要件は [REQUIREMENTS.md](./REQUIREMENTS.md)、フェーズ割当は [ROADMAP.md](./ROADMAP.md) を参照。
+- なし。v1.8.0 は全6フェーズ完了・マイルストーンクローズ済み（要件詳細は `.planning/milestones/v1.8.0-REQUIREMENTS.md` を参照）。次マイルストーンの要件は `/gsd-new-milestone` で新規 REQUIREMENTS.md を作成する。
 
 ### Blockers/Concerns
 
 - [v1.6.0 Phase 3 継続]: V16-QUAL-03（max_tokens/429 実機検証）は実 API 前提のチェックリスト化まで完了。実機実施は未了のまま受容済み。
-- [v1.7.1 Phase 4 follow-up → v1.8.0 Phase 5 で解消予定]: コードレビュー(04-REVIEW.md) WR-01 ShortcutsDialog のキャプチャ対象切替時に前行の「キーを押してください」表示が残留する表示バグ、WR-02 修飾キーなしの単キーもショートカット登録できてしまい `root` 直下ウィジェット（ページサイズ Spinbox 等）の通常入力と衝突しうる。データ損失なし。V180-ROBUST-03 として本マイルストーン Phase 5 で対応する。
-- [v1.7.1 Phase 4 UAT]: 人手確認7件はユーザー判断で一旦pass（実機目視未検証・コード/自動ゲートは全通過、v1.6.0 Phase 4 と同様の運用）。human-verify/UAT 実機目視は v1.8.0 スコープ外（PROJECT.md 記載）。
+- [v1.7.1 Phase 4 UAT]: 人手確認7件はユーザー判断で一旦pass（実機目視未検証・コード/自動ゲートは全通過、v1.6.0 Phase 4 と同様の運用）。v1.8.0 Phase 6 では UAT 2件をユーザー実施で全合格済み。
+- [06-03 defer・レビューR6] duplicate/merge/merge_resize 等の他ページ構造変更 op に対する do→undo→redo→undo 4手往復回帰テストの水平展開は v1.8.0 で未実施。insert_redo と同型の非対称復元バグが潜在していないか未検証（次マイルストーン候補）
 
 過去の懸念は全て解決済み:
 
@@ -229,7 +229,8 @@ Decisions are logged in PROJECT.md Key Decisions table.
   - ~~v1.7.1 L-1〜L-6 現行照合~~ → 各フェーズ計画時に照合済み、活き残りは全解消
   - ~~v1.7.1 PAGE-02/03・TEST-03 棚卸し→改善~~ → Phase 3/4 で棚卸し・解消完了
   - ~~[05-03 発見] pagefolio/file_ops.py の insert→undo→redo→undo（2回目の undo）でページが重複するバグ~~ → v1.8.0 Phase 6（06-03）で解消。`_restore_state` の `insert_redo` ブロックを `delete_redo` 対称パターン（降順 `delete_page`）へ修正し、4手往復回帰テストで担保（D-17）
-- [06-03 defer・レビューR6] duplicate/merge/merge_resize 等の他ページ構造変更 op に対する do→undo→redo→undo 4手往復回帰テストの水平展開は本フェーズで未実施。insert_redo と同型の非対称復元バグが潜在していないか未検証（次マイルストーン候補）
+  - ~~v1.7.1 Phase 4 follow-up: ShortcutsDialog WR-01（表示残留）/WR-02（キー衝突）~~ → v1.8.0 Phase 5（V180-ROBUST-03）で解消
+  - ~~v1.8.0 Phase 6 コードレビュー WR-01/02/03（OCRダイアログ高さクランプ・プラグインダイアログスクロール再発・トースト retry_cb 取りこぼし）~~ → フェーズ検証前に `--fix` で即時修正・回帰テスト追加
 
 ### Quick Tasks Completed
 
