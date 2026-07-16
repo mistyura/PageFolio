@@ -231,7 +231,7 @@ PageFolio の既存コードベースに対する最適化プロジェクト。
 | V16-D-01：ページネーションの index 変換を純ロジック層 `pagination.py`（local↔global）へ集約 | viewer/dnd/選択照合の全ページインデックス整合を 1 箇所で機械保証しテスト可能化 | ✓ Good（v1.6.0 Phase 2・窓追従の不変条件で UAT snap back も解消） |
 | V16-D-02：Markdown 整形は純関数 `parse_markdown`（Tk 非依存）+ OCRDialog の薄い描画層へ配線・コピー/保存は raw 維持 | 描画ロジックを純関数化して unit テスト可能にし、エクスポートは整形非反映で情報露出経路を増やさない | ✓ Good（v1.6.0 Phase 4・表示専用タグ） |
 | V16-D-03：プロバイダ別プロンプトは `resolve_ocr_prompt`（custom > provider別 > 汎用）で純関数解決 | カスタムプロンプト両立を構造的に担保しつつ Claude=XML/Gemini=明示を分離 | ✓ Good（v1.6.0 Phase 4・後方互換） |
-| V16-D-04：出荷バージョンを v1.6.0 に確定（途中 v1.7.0 へ一時バンプ後 49e9893 で巻き戻し） | APP_VERSION/README/GSD ラベルの一致を優先。開発履歴.md の v1.7.0 エントリは v1.6.0 へ整合予定 | ⚠️ Revisit（開発履歴.md の版番整合が残課題） |
+| V16-D-04：出荷バージョンを v1.6.0 に確定（途中 v1.7.0 へ一時バンプ後 49e9893 で巻き戻し） | APP_VERSION/README/GSD ラベルの一致を優先。開発履歴.md の v1.7.0 エントリは v1.6.0 へ整合予定 | ✅ 解消済み（06-CHANGELOG-AUDIT.md 参照・v1.8.0 Phase 6 で開発履歴.md の日付/版番整合を git タグ履歴・APP_VERSION 変更履歴・MILESTONES.md と突合し確認。懸念されていた v1.7.0 バンプの痕跡は現存せず、v1.6.1 の日付誤記1件を検出・修正） |
 | V16-D-05：Phase 4 human-verify をユーザー判断でスキップしクローズ | コード・自動ゲートは全通過。実描画/実 API 出力品質のみ未検証で deferred 受容 | ⚠️ Revisit（必要時に実機目視） |
 | V171-D-14：ネスト LLMConfigDialog 適用は `app._apply_llm_settings_live`（`_rebuild_ui()` を呼ばない軽量反映）を独立トランザクション化 | nested on_apply から `_rebuild_ui()` を呼ぶと開いている SettingsDialog Toplevel ごと破棄されるため。ディスク/メモリ整合を cascade テストで担保 | ✓ Good（v1.7.1 Phase 4） |
 | V171-D-11：未使用 LANG キー検出は引用符付き完全一致（AST走査不採用） | 動的キー合成がコードベース全体でゼロ件（確認済み）のため grep 相当で十分。プレフィックス衝突（`tesseract_not_installed` 等）は完全一致で誤削除を回避 | ✓ Good（v1.7.1 Phase 4・回帰テスト常設） |
