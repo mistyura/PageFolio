@@ -170,3 +170,10 @@ None - no external service configuration required.
 ---
 *Phase: 06-ux-ui*
 *Completed: 2026-07-16*
+
+## Self-Check: PASSED
+
+全作成/改修ファイル（pagefolio/toast.py・tests/test_toast.py・pagefolio/lang.py・
+pagefolio/ui_builder.py・pagefolio/file_ops.py・pagefolio/print_ops.py・
+tests/test_print.py・本SUMMARY.md）の実在確認、および Task 1〜3・SUMMARY 各コミット
+（e998749/245d5fc/a4398c7/f641dd0）の `git log` 実在確認とも FOUND。
