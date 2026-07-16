@@ -149,3 +149,10 @@ None - no external service configuration required.
 ---
 *Phase: 06-ux-ui*
 *Completed: 2026-07-16*
+
+## Self-Check: PASSED
+
+全作成/改修ファイル（tests/test_font_hardcode_guard.py・pagefolio/dialogs/about.py・
+pagefolio/dialogs/plugin.py・pagefolio/ocr_dialog.py・
+.planning/phases/06-ux-ui/06-SCROLL-FONT-AUDIT.md・本SUMMARY.md）の実在確認、および
+Task 1〜3・SUMMARYの各コミット（697387c/6972b17/f492d6f/2f9d0db）の `git log` 実在確認とも FOUND。
