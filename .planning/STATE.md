@@ -21,10 +21,10 @@ current_phase_name: ux-ui
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-07-13)
+See: .planning/PROJECT.md (updated 2026-07-16)
 
 **Core value:** 大きな PDF でも Undo/Redo が正しく・速く動作し、コードが読みやすく保守しやすい状態にする
-**Current focus:** Phase 06 — ux-ui
+**Current focus:** v1.8.0 全6フェーズ完了 — マイルストーンクローズ待ち
 
 ## Current Position
 
@@ -306,10 +306,11 @@ Decisions are logged in PROJECT.md Key Decisions table.
 
 **Resume file:** None
 
-Last session: 2026-07-16T11:43:33.265Z
-Stopped at: Completed 06-03-PLAN.md
+Last session: 2026-07-16
+Stopped at: Phase 06 complete — v1.8.0 全6フェーズ完了、マイルストーンクローズ待ち
 
 ## Operator Next Steps
 
-- Phase 1〜4 はすべて検証済み完了（01/02/03/04-VERIFICATION.md 全 passed）。次は Phase 5（堅牢性強化: サムネイル仮想化 + Blobリーク検出 + ShortcutsDialog修正）の計画へ進む — `/gsd-plan-phase 05`（必要に応じて事前に `/gsd-discuss-phase 05`）
-- Phase 04 の human verification 4件（実ウィンドウ D&D・Treeview 警告色の両テーマ目視・メニュー実クリック・実 API サマリ品質）は非ブロッキング。UAT を行う場合は `/gsd-verify-work`（v1.7.1 以降の運用では実機目視はユーザー判断で受容可）
+- Phase 1〜6 はすべて検証済み完了（01〜06-VERIFICATION.md 全 passed・06 は UAT 2件合格・セキュリティ threats_open: 0）。v1.8.0 の全6フェーズが完了したため、次は `/gsd-complete-milestone v1.8.0` でマイルストーンクローズ（アーカイブ・APP_VERSION最終確認・ビルド/リリースは別途ユーザー判断）
+- Phase 06 コードレビューで検出した WR-01/02/03 は即時修正・回帰テスト追加済み（06-REVIEW-FIX.md）。IN-01（保存トースト再試行時の上書き確認ダイアログ再表示）は将来の磨き込み候補として非ブロッキングで記録
+- Phase 04 の human verification 4件（実ウィンドウ D&D・Treeview 警告色の両テーマ目視・メニュー実クリック・実 API サマリ品質）は非ブロッキング（v1.7.1 以降の運用では実機目視はユーザー判断で受容可）
