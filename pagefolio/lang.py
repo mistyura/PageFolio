@@ -621,6 +621,8 @@ LANG = {
         "err_title": "エラー",
         "info_title": "情報",
         "confirm_title": "確認",
+        # トースト通知（V180-QA-02）
+        "toast_retry_btn": "再試行",
         # M-10: 移植ハードコード文言
         "ocr_cost_estimate": "約 ${cost:.3f} 程度",
         "ocr_provider_rebuild_error": "プロバイダ再生成エラー: {e}",
@@ -638,6 +640,84 @@ LANG = {
         "llm_model_fetch_failed": (
             "{provider} モデル取得失敗（静的リストへフォールバック）: {e}"
         ),
+        # プロンプトテンプレート管理（v1.8.0 Phase 2・V180-TMPL-01〜05・D-01〜D-08）
+        "tmpl_section_title": "📄 テンプレート:",
+        "tmpl_save_btn": "💾 保存",
+        "tmpl_delete_btn": "🗑 削除",
+        "tmpl_rename_btn": "✏ リネーム",
+        "tmpl_name_prompt": "テンプレート名を入力してください:",
+        "tmpl_dup_error": (
+            "このテンプレート名は既に使用されています。別の名前を選んでください。"
+        ),
+        "tmpl_empty_error": "テンプレート名を入力してください。",
+        "tmpl_switch_discard_confirm": (
+            "未保存の変更が破棄されます。テンプレートを切り替えますか？"
+        ),
+        "tmpl_active_delete_blocked": (
+            "アクティブなテンプレートは削除できません。"
+            "先に別のテンプレートへ切り替えてください。"
+        ),
+        "tmpl_delete_confirm": (
+            "このテンプレートを削除しますか？この操作は元に戻せません。"
+        ),
+        # プロバイダーフォールバック順設定
+        # （v1.8.0 Phase 2・V180-FALL-01〜03・D-13〜D-16）
+        "fallback_section_title": "🔁 フォールバック:",
+        "fallback_enable_toggle": "フォールバックを有効化",
+        "fallback_up_btn": "↑ 上へ",
+        "fallback_down_btn": "↓ 下へ",
+        "fallback_add_btn": "＋ 追加",
+        "fallback_remove_btn": "－ 除外",
+        "fallback_hint": "未設定時はフォールバックしません（安全側既定）。",
+        # フォールバック実行時オーケストレーション（v1.8.0 Phase 2・02-04・
+        # V180-FALL-02/03・D-10/D-11/D-12）
+        "fallback_confirm_title": "フォールバック確認",
+        "fallback_confirm_msg": (
+            "{reason}\n\n"
+            "{candidate}（{host}）へ切り替えて未処理ページを再送信しますか？\n"
+            "承認しない限り自動送信はされません。"
+        ),
+        "fallback_reason_connection": "接続エラーにより処理が停止しました。",
+        "fallback_reason_timeout": "タイムアウトにより処理が停止しました。",
+        "fallback_reason_circuit_breaker": (
+            "連続エラーによりサーキットブレーカーが作動し処理が停止しました。"
+        ),
+        "fallback_reason_api_key_missing": "APIキーが未設定のため処理が停止しました。",
+        "fallback_reason_provider_unavailable": (
+            "プロバイダが利用できません（Tesseract 未インストール等）。"
+        ),
+        "fallback_reason_generic": "エラーにより処理が停止しました。",
+        "fallback_exhausted": (
+            "フォールバック候補を使い切りました。設定を確認し再実行してください。"
+        ),
+        # バッチOCR（v1.8.0 Phase 4・04-02・V180-BATCH-01〜04）
+        "batch_dialog_title": "バッチOCR",
+        "batch_col_file": "ファイル",
+        "batch_col_status": "状態",
+        "batch_col_progress": "進捗",
+        "batch_add_files_btn": "＋ ファイル追加",
+        "batch_remove_btn": "削除",
+        "batch_start_btn": "▶ 実行",
+        "batch_cancel_btn": "■ バッチ中止",
+        "batch_overall_progress": "ファイル {done}/{total}",
+        "batch_status_pending": "待機中",
+        "batch_status_running": "実行中",
+        "batch_status_done": "完了",
+        "batch_status_failed": "失敗",
+        "batch_status_error": "エラー",
+        "batch_scan_error": "読み込みエラー",
+        "batch_scanning_msg": "読み込み中...",
+        "batch_empty_queue_msg": (
+            "実行対象のファイルがありません。ファイルを追加してください。"
+        ),
+        # バッチOCR - ファイル別結果閲覧・統合サマリ（v1.8.0 Phase 4・04-03）
+        "batch_file_select_label": "結果を表示するファイル:",
+        "batch_export_btn": "📤 エクスポート",
+        "batch_summary_btn": "📊 サマリ作成",
+        "batch_summary_file_header": "=== {name} ===",
+        # メニューバー（v1.8.0 Phase 4・04-03・D-01）
+        "batch_menu_tools": "ツール",
+        "batch_menu_item": "バッチOCR",
     },
     "en": {
         # Header / status
@@ -1248,6 +1328,8 @@ LANG = {
         "err_title": "Error",
         "info_title": "Info",
         "confirm_title": "Confirm",
+        # Toast notifications (V180-QA-02)
+        "toast_retry_btn": "Retry",
         # M-10: migrated hardcoded strings
         "ocr_cost_estimate": "~${cost:.3f}",
         "ocr_provider_rebuild_error": "Provider rebuild error: {e}",
@@ -1264,5 +1346,84 @@ LANG = {
         "llm_model_fetch_failed": (
             "{provider} model fetch failed (falling back to static list): {e}"
         ),
+        # Prompt template management (v1.8.0 Phase 2 — V180-TMPL-01..05 / D-01..D-08)
+        "tmpl_section_title": "📄 Template:",
+        "tmpl_save_btn": "💾 Save",
+        "tmpl_delete_btn": "🗑 Delete",
+        "tmpl_rename_btn": "✏ Rename",
+        "tmpl_name_prompt": "Enter a template name:",
+        "tmpl_dup_error": (
+            "This template name is already in use. Please choose another name."
+        ),
+        "tmpl_empty_error": "Please enter a template name.",
+        "tmpl_switch_discard_confirm": (
+            "Unsaved changes will be discarded. Switch templates anyway?"
+        ),
+        "tmpl_active_delete_blocked": (
+            "The active template cannot be deleted. "
+            "Please switch to another template first."
+        ),
+        "tmpl_delete_confirm": ("Delete this template? This action cannot be undone."),
+        # Provider fallback order settings
+        # (v1.8.0 Phase 2 — V180-FALL-01..03 / D-13..D-16)
+        "fallback_section_title": "🔁 Fallback:",
+        "fallback_enable_toggle": "Enable fallback",
+        "fallback_up_btn": "↑ Up",
+        "fallback_down_btn": "↓ Down",
+        "fallback_add_btn": "＋ Add",
+        "fallback_remove_btn": "－ Remove",
+        "fallback_hint": "Fallback does not fire unless configured (safe default).",
+        # Runtime fallback orchestration (v1.8.0 Phase 2 - 02-04 -
+        # V180-FALL-02/03 - D-10/D-11/D-12)
+        "fallback_confirm_title": "Fallback Confirmation",
+        "fallback_confirm_msg": (
+            "{reason}\n\n"
+            "Switch to {candidate} ({host}) and resend the unprocessed pages?\n"
+            "Nothing will be sent automatically unless you approve."
+        ),
+        "fallback_reason_connection": "Processing stopped due to a connection error.",
+        "fallback_reason_timeout": "Processing stopped due to a timeout.",
+        "fallback_reason_circuit_breaker": (
+            "Processing stopped because the circuit breaker tripped "
+            "after repeated errors."
+        ),
+        "fallback_reason_api_key_missing": (
+            "Processing stopped because the API key is not configured."
+        ),
+        "fallback_reason_provider_unavailable": (
+            "The provider is unavailable (e.g. Tesseract is not installed)."
+        ),
+        "fallback_reason_generic": "Processing stopped due to an error.",
+        "fallback_exhausted": (
+            "All fallback candidates have been exhausted. "
+            "Please check your settings and try again."
+        ),
+        # Batch OCR (v1.8.0 Phase 4 - 04-02 - V180-BATCH-01 through 04)
+        "batch_dialog_title": "Batch OCR",
+        "batch_col_file": "File",
+        "batch_col_status": "Status",
+        "batch_col_progress": "Progress",
+        "batch_add_files_btn": "+ Add Files",
+        "batch_remove_btn": "Remove",
+        "batch_start_btn": "▶ Start",
+        "batch_cancel_btn": "■ Cancel Batch",
+        "batch_overall_progress": "File {done}/{total}",
+        "batch_status_pending": "Pending",
+        "batch_status_running": "Running",
+        "batch_status_done": "Done",
+        "batch_status_failed": "Failed",
+        "batch_status_error": "Error",
+        "batch_scan_error": "Load error",
+        "batch_scanning_msg": "Loading...",
+        "batch_empty_queue_msg": "No files to process. Please add files first.",
+        # Batch OCR - per-file result viewer / cross-file summary
+        # (v1.8.0 Phase 4 - 04-03 - V180-BATCH-05)
+        "batch_file_select_label": "File to view result:",
+        "batch_export_btn": "📤 Export",
+        "batch_summary_btn": "📊 Create Summary",
+        "batch_summary_file_header": "=== {name} ===",
+        # Menu bar (v1.8.0 Phase 4 - 04-03 - D-01)
+        "batch_menu_tools": "Tools",
+        "batch_menu_item": "Batch OCR",
     },
 }

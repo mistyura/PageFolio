@@ -399,12 +399,13 @@ class FileOpsMixin:
                 self.doc.insert_pdf(tmp, start_at=page_i)
                 tmp.close()
         elif op == "insert_redo":
-            # insert_redo: insert の再実行相当。キャプチャした bytes を昇順で再挿入する
-            # （insert→undo→redo の連鎖では「再挿入」が正しい挙動）。
-            for page_i, page_bytes in state["data"]:
-                tmp = fitz.open(stream=self._blob_bytes(page_bytes), filetype="pdf")
-                self.doc.insert_pdf(tmp, start_at=page_i)
-                tmp.close()
+            # insert_redo state の restore = 前段の insert_undo で再挿入された
+            # ページを取り除く（delete_redo と対称: 昇順インデックスを降順で
+            # 削除しインデックスずれを防止。D-17・以前は誤って再挿入していた
+            # ためページが重複するバグがあった）
+            targets = sorted([page_i for page_i, _ in state["data"]], reverse=True)
+            for page_i in targets:
+                self.doc.delete_page(page_i)
         elif op == "merge":
             old_count = state["data"]
             while len(self.doc) > old_count:
@@ -674,9 +675,14 @@ class FileOpsMixin:
                 self._t("status_saved").format(name=os.path.basename(self.filepath))
             )
             self.plugin_manager.fire_event("on_file_save", self, self.filepath)
+            if getattr(self, "_toast", None) is not None:
+                self._toast.dismiss("save_file")
         except Exception as e:
-            messagebox.showerror(
-                self._t("err_save_title"), self._t("err_save_msg").format(e=e)
+            self._show_error_or_toast(
+                "save_file",
+                self._t("err_save_title"),
+                self._t("err_save_msg").format(e=e),
+                self._save_file,
             )
 
     def _save_as(self):
@@ -695,8 +701,12 @@ class FileOpsMixin:
                 self._t("status_saved").format(name=os.path.basename(path))
             )
             self.plugin_manager.fire_event("on_file_save", self, path)
+            if getattr(self, "_toast", None) is not None:
+                self._toast.dismiss("save_as")
         except Exception as e:
-            messagebox.showerror(self._t("err_title"), str(e))
+            self._show_error_or_toast(
+                "save_as", self._t("err_title"), str(e), self._save_as
+            )
 
     def _close_file(self):
         """現在開いているファイルを閉じる（アプリは終了しない）"""
@@ -749,8 +759,12 @@ class FileOpsMixin:
             self._set_status(
                 self._t("status_compressed").format(name=os.path.basename(path))
             )
+            if getattr(self, "_toast", None) is not None:
+                self._toast.dismiss("save_compressed")
         except Exception as e:
-            messagebox.showerror(self._t("err_title"), str(e))
+            self._show_error_or_toast(
+                "save_compressed", self._t("err_title"), str(e), self._save_compressed
+            )
 
     # ══════════════════════════════════════════
     #  パスワード（暗号化）操作

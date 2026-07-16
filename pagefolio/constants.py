@@ -9,7 +9,7 @@ from pagefolio.lang import LANG  # noqa: F401
 from pagefolio.themes import THEMES, C  # noqa: F401
 
 # ===================== バージョン =====================
-APP_VERSION = "v1.7.4"
+APP_VERSION = "v1.8.0"
 
 # ===================== ファイル名定数 =====================
 SETTINGS_FILE = "pagefolio_settings.json"
@@ -43,3 +43,7 @@ PT_PER_MM = 72 / 25.4
 EXPORT_LONG_EDGE_PRESETS = (1024, 1568, 2048, 3072)
 DEFAULT_EXPORT_LONG_EDGE = 1568
 DEFAULT_EXPORT_JPG_QUALITY = 85
+
+# ===================== サムネイル仮想化（V180-PERF-01/02）=====================
+# サムネイル LRU 上限（D-05/D-06・最大窓サイズ 100 の 3 倍・ユーザー設定には公開しない）
+THUMB_CACHE_MAX = 300

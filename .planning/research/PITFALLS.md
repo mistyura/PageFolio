@@ -1,423 +1,316 @@
-# Pitfalls Research
+> 補足: 本ファイルは gsd-core PITFALLS テンプレート（`research-project/PITFALLS.md`）に準拠しつつ、v1.8.0 マイルストーン向けの既存プロジェクト固有の落とし穴調査として日本語で記述する（旧 v1.4.0 期リサーチ内容を置き換え）。
 
-**Domain:** デスクトップ PDF アプリへのマルチプロバイダ クラウド OCR 追加（Python/Tkinter/PyInstaller）
-**Researched:** 2026-06-06
-**Confidence:** HIGH（コードベース直接調査 + 公式ドキュメント確認済み）
+# 落とし穴調査（v1.8.0 新機能追加特有）
 
----
+**ドメイン:** 既存 Tkinter + PyMuPDF デスクトップアプリへの機能追加（テンプレート管理・LLM プロバイダーフォールバック・バッチ複数ファイル OCR・サムネイル仮想化・肥大モジュール分割）
+**調査日:** 2026-07-13
+**確信度:** HIGH（PageFolio 自身のコードベース資産 `.planning/codebase/CONCERNS.md`・`.planning/PROJECT.md` を一次情報源とする curated source。Tkinter スレッド安全性・仮想化リストの一般原則は WebSearch で裏取り: MEDIUM）
 
-## Critical Pitfalls
+## 前提: 既に確立している再発防止原則（本調査全体で参照する）
 
-### Pitfall 1: APIキーの平文漏洩
-
-**What goes wrong:**
-`pagefolio_settings.json` に `api_key` フィールドを保存するコードを書いてしまう。設定ダイアログの入力値を他の設定値と同様に `_save_settings(settings)` へ渡すだけで起きる。`settings.py` の `_save_settings` は辞書をそのまま JSON ダンプするため、キーが含まれていれば即座に平文ファイルへ書き込まれる。
-
-**Why it happens:**
-既存の `settings.py` パターン（`settings["lm_studio_url"]` など）を踏襲してそのまま API キーを格納しようとするため。UI ダイアログで入力を受け取り、`self.settings["anthropic_api_key"] = entry.get()` と書いた瞬間に次の保存サイクルでファイルへ流れ込む。
-
-**How to avoid:**
-- APIキーは `os.environ.get("ANTHROPIC_API_KEY")` / `os.environ.get("GEMINI_API_KEY")` のみから読む。プロセス内メモリ保持は許容だが、`_save_settings()` を呼ぶ前に辞書からキー項目を削除するガード関数を設ける。
-- `settings.py` の `_save_settings` の冒頭に `NEVER_PERSIST_KEYS = {"anthropic_api_key", "gemini_api_key"}` を定義し、`{k: v for k, v in settings.items() if k not in NEVER_PERSIST_KEYS}` をダンプするよう変更する。
-- `logger.debug("settings: %s", settings)` 等でキーが含まれた辞書をログ出力しないよう注意する。`repr(settings)` でも同様。
-- ダイアログ入力欄で受け取ったキーはメモリ変数（`_session_api_key`）に保持し、ダイアログ破棄時にはクリアする。
-
-**Warning signs:**
-- `pagefolio_settings.json` に `api_key`, `anthropic`, `gemini`, `secret`, `token` などの文字列が含まれている。
-- `git diff` や `git log -p` でキーが含まれたファイルがコミットされている。
-- ログファイルに `sk-ant-`, `AI...` 等の文字列が含まれる。
-
-**Phase to address:**
-Phase 2（Claude Provider 実装）の着手直前。`_save_settings` のガード処理と環境変数専用読み取り関数を Phase 2 の最初のタスクとして実装する。
+| ID | 原則 | 出典 |
+|----|------|------|
+| V14-D-05/06 | `fitz` の `get_pixmap()` はメインスレッドのみで呼ぶ・逐次レンダリング（render→送信→破棄、bounded buffer） | v1.4.0 Phase 06 |
+| V16-D-01 | ページネーションの index 変換は純ロジック層 `pagination.py`（local↔global）に集約。`selected_pages` は常に**全ページインデックス**で保持し、描画/D&D/選択照合の側で窓変換する | v1.6.0 Phase 2 |
+| V14-D-02/D-03 | APIキーは環境変数＋セッションメモリのみ・`_SENSITIVE_KEYS` ガード／既定 `ocr_provider: off`（安全側デフォルト） | v1.4.0 |
+| OCR-SEC-01/UI-01 | 外部送信は明示同意・コスト確認ダイアログ必須 | v1.4.0 Phase 05 |
+| Blob ライフサイクル | `_capture_page_blob()` 経由のみでキャプチャ、スタックへの直接 `append`/`clear` 禁止（リーク源） | v1.7.0 |
+| DEBT-01/DEBT-02 前例 | `dialogs/` パッケージ化・`constants.py` 分割は `__init__.py` re-export で後方互換 import を維持 | v1.3.0 Phase 2 |
+| TEST-03 | 後方互換 import 回帰テストは `tests/test_imports.py` に集約 | v1.3.0 Phase 3 |
+| `ocr_pipeline.py` | producer-consumer 実行を `PipelineState`/`consume_one`/`try_enqueue`/`send_sentinels` という Tk/fitz 非依存の純ロジック層に一本化 | v1.7.1 Phase 2 |
+| `_run_gen` 世代ガード | 陳腐化した非同期コールバックを破棄する世代カウンタパターン（`_preview_gen`/`_thumb_gen`/`OCRDialog._run_gen`） | v1.3.0〜 |
+| `clamp_retry_after`/`interruptible_sleep` | リトライ待機を 60 秒上限でクランプし 0.5 秒刻みでキャンセル確認 | v1.6.0 |
+| 外部プロンプトファイル連動 | `ocr_custom_prompt.md`/`ocr_summary_prompt.md` と入力欄の双方向バインディング（ファイルがあれば反映・適用時に書き戻し） | v1.7.4 |
 
 ---
 
-### Pitfall 2: fitz.Document をワーカースレッドに渡す
+## 重大な落とし穴
 
-**What goes wrong:**
-`_worker` メソッドが `self.doc` を直接参照して `self.doc[page_idx]` を呼び出している（現在の `ocr_dialog.py` L475: `b64 = page_to_png_b64(self.doc[page_idx], scale=scale)` ）。これは OCRDialog の `__init__` で `self.doc = doc` として保持している同一オブジェクトを、`threading.Thread` 上から操作している。PyMuPDF 公式ドキュメントは「PyMuPDF does not support running on multiple threads — doing so may cause incorrect behaviour or even crash Python itself」と明言している。現行コードがなぜ動いているかは MuPDF の実装詳細に依存しており、保証されていない。
+### 落とし穴1: サムネイル仮想化が `selected_pages` 全ページインデックス不変条件を破壊する
 
-**Why it happens:**
-既存の `_worker` は単一の `fitz.Document` を参照しながらページを逐次レンダリングしており、明示的な並列 `get_pixmap` は行っていないが、Tkinter の `after()` コールバックと `threading.Thread` が同じ `self.doc` を共有している構造になっている。プロバイダ化でレンダリングロジックを移動する際にこの前提を崩しやすい。
+**症状:**
+仮想化で「可視ウィンドウ内のみ Tk ウィジェット化」する実装にすると、選択状態やドラッグ対象の管理を「可視ウィンドウ内のローカル添字」で行ってしまい、既存の `pagination.py` の窓表示（local↔global 変換）に、仮想スクロールという**もう一段の座標系**が重なる。座標変換の呼び出し漏れが起きた箇所だけ、選択したはずのページと異なるページが操作対象になる。
 
-**How to avoid:**
-- `fitz.Document` オブジェクトはメインスレッド（またはシングルスレッドで動くレンダリング専用ループ）からのみ操作する。
-- `_worker` スレッド内では `get_pixmap` を呼ばず、**レンダリング済みの `bytes`（PNG データ）** のみを受け取る設計にする。具体的には、レンダリングをメインスレッドから `after()` で逐次実行し、完了した bytes をキューに入れ、ワーカーがキューを消費してクラウド API に送信する pipeline 構成にする。
-- あるいは、仕様書案（§4.3）の「レンダリング→送信→破棄」逐次化を採用し、`_worker` 内でレンダリングと送信を直列に実行する（並列 API 呼び出しは同時並行で行わない）。
+**発生原因:**
+仮想化の定石（表示行番号を主語にした実装）は、既存コードの「`selected_pages` は常に全ページインデックスが正」という規約と自然に衝突する。CONCERNS.md の D&D フラジャイル領域（"Window cannot change during drag"）が既に存在し、仮想化はスクロール頻度・スクロール範囲を増やすため同種バグを増幅しやすい。
 
-**Warning signs:**
-- `threading.Thread` 上から `self.doc[page_idx]` や `page.get_pixmap()` を直接呼び出しているコード。
-- 大きな PDF で断続的にクラッシュする（再現困難な Segfault）。
-- `fitz` がインポートされているモジュールを `ThreadPoolExecutor` の `submit` に渡している。
+**回避策:**
+仮想化のスクロール位置計算も `pagination.py` の `to_global`/`to_local` のみを通す。仮想スクロールの「表示開始オフセット」は新しい純関数として `pagination.py` に追加し、既存の窓計算ロジックと合成する（新規の座標変換モジュールを増やさない）。`selected_pages` へは絶対に直接ローカル添字を書き込まない。
 
-**Phase to address:**
-Phase 1（プロバイダ抽象化）のリファクタリング時に `_worker` の構造を見直し、fitz 操作の thread boundary を明確化する。
+**兆候（早期検出）:**
+D&D 中にスクロールバー/マウスホイールでウィンドウが動くケースの手動テスト、大量ページ（500+）でのランダム選択＋スクロールのプロパティテストで不整合が出る。
 
----
+**対応フェーズ:** サムネイル仮想化フェーズ（実装前に `pagination.py` の関数拡張を先行させる）
 
-### Pitfall 3: Tkinter ウィジェットをワーカースレッドから直接更新する
-
-**What goes wrong:**
-Tkinter はシングルスレッドモデルであり、メインスレッド以外からウィジェット操作を行うと「RuntimeError: main thread is not in main loop」や描画の不整合・クラッシュが発生する。`_worker` を改修する際に `self.progress_var.set(...)` や `self.text.insert(...)` をスレッド内から直接呼び出してしまう。
-
-**Why it happens:**
-現行の `_worker` は正しく `self.after(0, lambda: ...)` を使っている（`ocr_dialog.py` L468-473）が、新しい Provider 実装のコールバック（`on_progress` 等）を別モジュールに書く際、`after()` 経由であることを忘れてウィジェット操作を書いてしまう。
-
-**How to avoid:**
-- プロバイダ実装（`ocr_providers.py`）はウィジェットを一切参照しない。コールバックは純粋な Python データを返すだけにする。
-- `OCRDialog._worker` がコールバックを受け取り、必ず `self.after(0, callback)` でディスパッチするルールを守る。
-- ユニットテストでコールバック呼び出しを検証する際も、実 Tkinter を使わずモックで確認する。
-
-**Warning signs:**
-- `_worker` や `OCRProvider.ocr_image()` の実装内で `self.widget.config(...)` や `StringVar.set(...)` を直接呼んでいる。
-- macOS/Linux では動くが Windows で落ちる（Tkinter の threading 挙動が OS ごとに異なる）。
-- `after_idle` / `after()` を使わずに `update()` を直接呼んでいる。
-
-**Phase to address:**
-Phase 1 のプロバイダ抽象化で、Provider インターフェースの設計段階から「ウィジェット非参照」を明示する。
+**既存原則で防げるか:** V16-D-01（`pagination.py` 純ロジック層への集約・`selected_pages` 全ページインデックス保持）をそのまま拡張適用すれば防げる。新規座標系を増やさないことが鍵。
 
 ---
 
-### Pitfall 4: 全ページ base64 画像の一括メモリ保持
+### 落とし穴2: `thumb_cache` と仮想化ウィジェット再利用の責務混同
 
-**What goes wrong:**
-現行 `_worker` はフェーズ1で全ページを `images = {}` に蓄積してからフェーズ2の並列 API 呼び出しへ渡す（`ocr_dialog.py` L463）。100ページ・scale=2.0 の PDF では、1ページあたり平均 2〜5 MB の base64 文字列が生成されるため、200〜500 MB 以上がヒープに積まれる。低 RAM PC（4〜8 GB）でこれを行うとページング（スワップ）が発生し、処理全体が極端に遅くなる。
+**症状:**
+仮想化の「見えなくなった行の Tk ウィジェットを破棄・再利用（リサイクル）」という実装パターンを、`thumb_cache`（ページ番号キーの画像キャッシュ）とそのまま混ぜると、キャッシュのキーが「ページ番号」なのか「ウィジェットスロット番号」なのか曖昧になり、リサイクルされたウィジェットに古いページの画像が一瞬（あるいは持続的に）表示される。
 
-**Why it happens:**
-並列 API 呼び出しに「全画像が揃っている状態」を要求する設計のため。LM Studio（ローカル）では並列度と待ち時間が小さいため問題が表面化しなかった。クラウド API では 1 ページあたりの待ち時間が長くなるため、パイプライン化の恩恵が大きく、問題もより顕在化する。
+**発生原因:**
+仮想化ライブラリの定石は「ウィジェットの再利用」だが、`thumb_cache` は既にページ番号キーの画像データキャッシュとして独立に存在する（CONCERNS.md「Thumbnail Cache No Eviction」）。責務を分けずに実装すると二重キャッシュ・キー不整合が起きる。
 
-**How to avoid:**
-仕様書案（§4.3）の通り「レンダリング→送信→破棄」を逐次化する。具体的な実装パターン：
-```python
-for page_idx in self.page_indices:
-    if self._cancel_flag.is_set():
-        break
-    b64 = page_to_png_b64(self.doc[page_idx], scale=scale)  # メインスレッドで実行
-    text = provider.ocr_image(b64, prompt, ...)              # ブロッキング（スレッド内）
-    del b64  # 送信直後に破棄
-    self.results[page_idx] = text
-```
-並列度が必要な場合は「N ページのスライディングウィンドウ」で画像を保持し、完了次第破棄する。クラウドプロバイダの推奨並列度は 2〜3（後述 Pitfall 5 参照）のため、ウィンドウサイズも同値で十分。
+**回避策:**
+仮想化は「ウィジェット（Label/Canvas）の再利用」のみに責務を絞る。画像データキャッシュは引き続き `thumb_cache`（ページ番号キー、LRU 化して上限を設ける）に一元化する。ウィジェットへ bind し直す際は必ずページ番号を再設定し、`_preview_gen`/`_thumb_gen` と同様の世代カウンタで陳腐化した非同期描画結果を破棄する。
 
-**Warning signs:**
-- `images = {}` へのアペンドがループ終了まで `del` されない。
-- `psutil.Process().memory_info().rss` が OCR 中に急増する。
-- 大きな PDF で Windows のページングが頻発（タスクマネージャでコミットメモリが急増）。
+**兆候（早期検出）:**
+高速スクロール時に古いサムネイルが一瞬別ページとして表示される、キャッシュヒット率のテストで想定より低い値が出る。
 
-**Phase to address:**
-Phase 3（Gemini Provider 追加 + 逐次レンダリング化）。仕様書作業項目 #9 に対応。
+**対応フェーズ:** サムネイル仮想化フェーズ
+
+**既存原則で防げるか:** `_preview_gen`/`_thumb_gen` 世代カウンタパターンと CONCERNS.md の Thumbnail Cache No Eviction 指摘（LRU 化）を同時に実装すれば防げる。
 
 ---
 
-### Pitfall 5: クラウド API への過剰並列（429 誘発）
+### 落とし穴3: バッチ複数ファイル OCR が fitz Document のスレッド間共有禁止を破る
 
-**What goes wrong:**
-現行の `MAX_OCR_CONCURRENCY = 8` をクラウドプロバイダにそのまま適用すると、Gemini 無料枠（Free Tier: 10〜15 RPM）や Anthropic の初期枠（Tier 1 の 50 RPM）で即座に 429 エラーが発生する。特に Gemini Free Tier は **10 RPM** という非常に低い上限を持ち、8並列で大量ページ OCR を開始すると最初の数ページで全スロットが 429 になる。
+**症状:**
+バッチ処理で「複数ファイルを並列に」処理しようとして、ファイルごとに `ThreadPoolExecutor` を割り当て、各ワーカースレッド上で `fitz.open()`→`get_pixmap()` を呼んでしまう。単一ファイルの OCR は V14-D-05 によりレンダリングをメインスレッドに限定しているが、バッチ化で「ファイル並列」という新しい軸が加わると、この制約が忘れられやすい。
 
-**Why it happens:**
-LM Studio はローカルで並列度制限が実質ない。クラウドプロバイダのレート制限はアカウントティアにより大きく異なり、ハードコードした上限が適切とは限らない。
+**発生原因:**
+バッチ処理は「複数ファイルを同時に回したい」という要求を自然に生むが、PyMuPDF のスレッドセーフ制約はファイル単位ではなくプロセス全体にかかる。ファイルが違えば安全、という誤った直感を持ちやすい。
 
-**How to avoid:**
-- プロバイダごとに `DEFAULT_CONCURRENCY` と `MAX_CONCURRENCY` を分離する：
-  ```
-  LM Studio: DEFAULT=2, MAX=8
-  Claude:    DEFAULT=2, MAX=4
-  Gemini:    DEFAULT=1, MAX=3  # Free Tier では 1 が安全
-  Tesseract: DEFAULT=1, MAX=1  # CPU bound、並列化不要
-  ```
-- 429 レスポンスを受けたら指数バックオフ（初回 1s → 2s → 4s → 8s、最大 3 回）してリトライする。
-- `Retry-After` ヘッダー（Anthropic は返す場合がある）を尊重する。
-- 529（Anthropic 過負荷）は 429 とは別のエラーコードで、同様にバックオフ対象とする。
-- `on_progress` コールバックで 429 をユーザーに「レート制限中、待機中...」と表示する。
+**回避策:**
+バッチキューは「ファイル間は逐次、ファイル内ページは既存の逐次レンダリング＋並列 API 送信」のみを許可する設計にする。複数ファイルでも `fitz` の `open`/`get_pixmap` はメインスレッドの単一キューで直列化し、OCR API 呼び出し部分のみワーカープールへ渡す（既存 `ocr_pipeline.py` の producer-consumer をファイルレベルにもう一段ラップする）。
 
-**Warning signs:**
-- `HTTP 429: rate_limit_error` が OCR 開始直後に連続して発生する。
-- `HTTP 529: overloaded_error`（Anthropic 固有）が散発する。
-- Gemini の `RESOURCE_EXHAUSTED` エラーが返される。
+**兆候（早期検出）:**
+複数ファイル同時実行時のクラッシュ/native crash、PDF キャッシュ破損、原因不明のセグフォルト。
 
-**Phase to address:**
-Phase 2（Claude Provider 実装）から対応。プロバイダ基底クラスのインターフェースに `default_concurrency: int` を持たせ、バックオフロジックを `run_parallel()` に組み込む。
+**対応フェーズ:** バッチ複数ファイル OCR フェーズ（PROJECT.md で「大型・単独フェーズへ隔離」と明記済み。設計時に必ず確認）
+
+**既存原則で防げるか:** V14-D-05/06（`fitz` メインスレッドのみ・逐次レンダリング・bounded buffer）をファイル横断に拡張適用すれば防げる。
 
 ---
 
-### Pitfall 6: レスポンス解析の脆弱性とプロバイダ固有エラー形状の無視
+### 落とし穴4: バッチキューのキャンセルが「現在処理中のファイルのみ」に留まる
 
-**What goes wrong:**
-各プロバイダのレスポンス構造が異なり、単純なキーアクセスでは KeyError / IndexError が発生する。特に問題となるパターン：
+**症状:**
+既存 `OCRDialog` は `_cancel_flag` と `_run_gen`（世代カウンタ）で「単一ファイル1回の OCR 実行」のキャンセルを扱う。これをそのままバッチへ横展開すると、ユーザーが「バッチ全体を止めたい」と思っても現在のファイルが終わり次第、次のファイルが自動的に始まってしまう（フラグのスコープが1階層しかないため）。
 
-- **Gemini**: `candidates[0].content.parts[0].text` — `candidates` が空（安全フィルタによるブロック）の場合 IndexError
-- **Claude**: `content[0].text` のような決め打ちアクセス — `content` リストには `type=="thinking"` や `type=="tool_use"` のブロックが混在するため、`type=="text"` のブロックをスキャンする必要がある
-- **共通**: HTTP エラー本文が JSON でなく HTML のプロキシエラーページになっている場合の `json.JSONDecodeError`
+**発生原因:**
+既存のキャンセル機構は「1回の OCR 実行」を前提に設計されており、バッチという「複数回の実行の列」という新しい階層をそもそも想定していない。
 
-**Why it happens:**
-現行の `call_lm_studio` は `result["choices"][0]["message"]["content"]` の固定アクセスをしている（`ocr.py` L131）。この単純なパターンをクラウドプロバイダへ適用しようとすると、各プロバイダの多様なレスポンス構造に対応できない。
+**回避策:**
+キャンセルを2階層化する。（1）バッチ全体の cancel flag（キュー投入前に確認・次ファイルへ進む直前にもチェック）。（2）既存のファイル内 `_cancel_flag`/`_run_gen`。UI 上も「このファイルをスキップ」と「バッチを中止」を明確に区別する。
 
-**How to avoid:**
-各プロバイダの解析を専用メソッドに分離し、防衛的に書く：
+**兆候（早期検出）:**
+バッチ中止ボタンを押しても次ファイルの OCR が開始される、進捗バーが減らない/止まらない。
 
-```python
-# Gemini
-def _parse_gemini(body: dict) -> str:
-    candidates = body.get("candidates", [])
-    if not candidates:
-        # finishReason が SAFETY / RECITATION の場合は candidates が空になる
-        reason = body.get("promptFeedback", {}).get("blockReason", "unknown")
-        raise RuntimeError(f"Gemini blocked: {reason}")
-    parts = candidates[0].get("content", {}).get("parts", [])
-    texts = [p["text"] for p in parts if "text" in p]
-    if not texts:
-        raise RuntimeError(f"Gemini: no text in response: {body}")
-    return "\n".join(texts)
+**対応フェーズ:** バッチ複数ファイル OCR フェーズ
 
-# Claude
-def _parse_claude(body: dict) -> str:
-    for block in body.get("content", []):
-        if block.get("type") == "text":
-            return block["text"]
-    raise RuntimeError(f"Claude: no text block in content: {body}")
-```
-
-テストでは各プロバイダのエラー形状（429 本文 JSON / 安全ブロック / 空レスポンス / HTML エラーページ）をモックして解析関数の動作を検証する。
-
-**Warning signs:**
-- `KeyError: 'candidates'` や `IndexError: list index out of range` が OCR 結果エリアに表示される。
-- 特定のページのみエラーになるが、他は成功する（安全フィルタによるブロック）。
-- エラーメッセージが HTML タグを含む。
-
-**Phase to address:**
-Phase 2（Claude Provider）・Phase 3（Gemini Provider）それぞれの実装時。各 Provider のユニットテストで必ず解析関数をモックテストする（仕様書作業項目 #11）。
+**既存原則で防げるか:** `_run_gen` 世代ガード・`clamp_retry_after`/`interruptible_sleep` の 0.5 秒刻みキャンセル確認パターンを「キュー階層」に拡張すれば防げる。
 
 ---
 
-### Pitfall 7: API のドリフト（モデル ID・パラメータ非互換）
+### 落とし穴5: バッチ OCR の進捗集計がファイル単位/ページ単位で二重に矛盾する
 
-**What goes wrong:**
-公式ドキュメントで確認した現在の非互換制約：
+**症状:**
+単一ファイルの OCR では「n/合計ページ」の進捗表示で足りるが、バッチでは「ファイル x/合計ファイル数」と「現在ファイル内 n/合計ページ」の2軸が必要になる。実装時にどちらか一方の更新を忘れる、あるいは失敗ファイルをスキップした際にファイルカウンタだけ進めてページカウンタとの整合が崩れる、というバグが典型的。
 
-1. **Claude Opus 4.8 / 4.7**: `temperature` パラメータは使用できない。`output_config.effort` で制御する（`high` = デフォルト）。`temperature` を送ると 400 エラーが返る可能性がある。
-2. **Claude Opus 4.8**: 手動 `extended thinking`（`thinking: {type: "enabled", budget_tokens: N}`）は 400 エラー。OCR 用途では thinking は不要なため、`output_config` に `thinking` を含めない。
-3. **`anthropic-version` ヘッダー**: `2023-06-01` が必須。省略すると 400 エラー。
-4. **Claude モデル ID**: `claude-haiku-4-5-20251001`（Haiku の最新 dated ID）、`claude-sonnet-4-6`（dateless）、`claude-opus-4-8`（dateless）。旧来の `claude-2`, `claude-instant` 等は廃止済み。
-5. **Gemini モデル ID**: `gemini-2.5-flash`（SDK からは `gemini-2.5-flash` で参照）。旧来の `gemini-pro-vision` は廃止予定。
-6. **Gemini**: `candidates` が空の場合の `finishReason: SAFETY` / `RECITATION` は OCR（PDF 画像）では稀だが、特定のコンテンツで発生する。
+**発生原因:**
+既存の `PipelineState`（`ocr_pipeline.py`）は単一ファイルの共有カウンタ/fatal 判定/サーキットブレーカーを想定して設計されており、ファイル横断の集計責務を持たない。
 
-**Why it happens:**
-仕様書（§3）の API 差分表は現時点の情報だが、モデル名とパラメータは頻繁に変わる。特に Anthropic は Claude 4.x 系のリリースに伴い、`temperature` の挙動・`effort` パラメータの追加・`extended thinking` のインターフェース変更を短期間で行っている。
+**回避策:**
+`PipelineState` はそのまま再利用しつつ、その上位に薄い純関数層（例: `BatchState`）を新設し（Tk/fitz 非依存を踏襲）、ファイル完了/失敗イベントを `PipelineState` の外側で集計する。「1ファイルの fatal 判定（サーキットブレーカー）がバッチ全体を止めるべきか、そのファイルだけスキップすべきか」を明示的に設計時点で決める。
 
-**How to avoid:**
-- `OCRProvider.list_models()` で利用可能モデルを動的取得し、UI のコンボボックスを更新する。モデル ID をハードコードしない。
-- プロバイダ別の「非対応パラメータ」リストを持ち、payload 構築時に除外する：
-  ```python
-  CLAUDE_NO_TEMPERATURE_MODELS = {"claude-opus-4-8", "claude-opus-4-7"}
-  if model in CLAUDE_NO_TEMPERATURE_MODELS:
-      payload.pop("temperature", None)
-      payload["output_config"] = {"effort": "high"}
-  ```
-- `anthropic-version` ヘッダーは定数で管理し、定期的にドキュメントを確認して更新する。
-- モデル一覧 API のレスポンスに `capabilities` フィールドがあれば参照する（Anthropic Models API は `max_input_tokens`, `max_tokens`, `capabilities` を返す）。
+**兆候（早期検出）:**
+進捗バーが100%を超える/戻る、失敗ファイルがあると合計件数の分母がずれる。
 
-**Warning signs:**
-- `HTTP 400: invalid_request_error` で「temperature is not supported for this model」が返される。
-- `HTTP 400: invalid_request_error` で「anthropic-version header is required」が返される。
-- モデル一覧を取得すると UI に表示されているモデル ID がリストに存在しない。
+**対応フェーズ:** バッチ複数ファイル OCR フェーズ
 
-**Phase to address:**
-Phase 2（Claude Provider 実装）でペイロード構築ロジックを確立する際に対応。モデル別制約を定数で管理する仕組みを設ける。
+**既存原則で防げるか:** `ocr_pipeline.py` の「Tk/fitz 非依存な純ロジック層に集約する」という v1.7.1 Phase 2 の設計方針をそのまま一段上に適用すれば防げる。
 
 ---
 
-### Pitfall 8: プライバシー・コスト無確認での大量ページ送信
+### 落とし穴6: テンプレートマネージャーが外部 md ファイル連動（v1.7.4）と書き戻し競合を起こす
 
-**What goes wrong:**
-100 ページの PDF に対してクラウド OCR を実行ボタン一押しで開始できる。`gemini-2.5-flash` のコストは入力トークン $0.15/M（画像は画像トークンで計算）、`claude-haiku-4-5` は $1/M 入力トークン。1 ページが 1000〜4000 トークンの画像に相当すると仮定すると、100 ページで $0.015〜$0.40 程度になるが、高解像度（`ocr_scale=2.0`）・長文ページでは急増する。また、クラウド送信に対してユーザーが明示的な同意をしていない場合のプライバシー問題もある。
+**症状:**
+v1.7.4 では `ocr_custom_prompt.md`/`ocr_summary_prompt.md` という**単一の**外部ファイルとダイアログ入力欄が双方向連動する。「複数テンプレートの命名保存・切替」を追加すると、「今開いているテンプレート」と「外部ファイルの現在の内容」のどちらが正なのかが曖昧になり、テンプレート切替時に外部エディタでの編集を意図せず上書き・消失させてしまう。
 
-**Why it happens:**
-既存の LM Studio プロバイダはローカル処理のためコスト・プライバシー問題がなかった。クラウドへの切り替えを「プロバイダ変更」として実装すると、この側面を見落としやすい。
+**発生原因:**
+既存仕様は「ファイルが存在すれば入力欄に反映、適用時に入力欄→ファイルへ書き戻し」という単純な双方向バインディング。テンプレートという「複数の名前付き保存スロット」の概念を追加すると、単一ファイルとの対応関係を再定義する必要がある。
 
-**How to avoid:**
-- クラウドプロバイダを選択して実行ボタンを押した際、**実行前確認ダイアログ**を必ず表示する：
-  - 「このページの画像が外部クラウドサービス（{provider_name}）に送信されます。」
-  - 「対象ページ数: {N} ページ」
-  - 「概算コスト: 〜¥{estimate}（参考値）」
-  - 「よろしいですか？」
-- `ocr_provider == "off"` のまま OCR ボタンを押した場合は「プロバイダが設定されていません」を表示する（デフォルト安全状態の維持）。
-- コスト見積もりは簡単な近似式（ページ数 × `ocr_scale^2` × 係数）で十分。正確性より警告の存在が重要。
-- 設定で「コスト確認を毎回表示する / 初回のみ / 表示しない」を選べるようにする。
+**回避策:**
+外部 md ファイルは常に「現在アクティブなテンプレートのライブ編集内容」という役割に限定する。テンプレート保存操作は `pagefolio_settings.json` 側の名前付きテンプレート辞書へのコピーとして扱い、外部ファイルへの書き戻しは適用時のみ（既存動作を変更しない）。テンプレート切替時は「未保存の外部ファイル変更を破棄してよいか」の確認を挟む。
 
-**Warning signs:**
-- クラウドプロバイダ選択後に確認なしで実行が始まる。
-- OCR ボタンの tooltip/ラベルにプロバイダ名が表示されない。
-- API 請求が想定外に高くなった、というユーザー報告。
+**兆候（早期検出）:**
+テンプレート切替直後に外部エディタで開いていたプロンプトが消える、複数テンプレート保存後に外部ファイルの内容と選択中テンプレートの内容が食い違う。
 
-**Phase to address:**
-Phase 2（Claude Provider）実装時に確認ダイアログを同時に実装する。プロバイダ選択 UI の構築と不可分な要件として扱う。
+**対応フェーズ:** プロンプト・テンプレートマネージャーフェーズ
+
+**既存原則で防げるか:** 外部プロンプトファイル連動の既存契約（`settings.py` の `load_prompt_file`/`save_prompt_file`/`prompt_file_exists`、`_get_base_dir` 一元化）を変更せず"拡張"する方針を厳守すれば防げる。
 
 ---
 
-### Pitfall 9: PyInstaller での隠れ依存と外部バイナリ未同梱
+### 落とし穴7: プロバイダーフォールバックが「明示同意・コスト確認」方針を迂回する
 
-**What goes wrong:**
-Tesseract Provider を実装する際、`pytesseract` ライブラリを採用すると以下が問題になる：
+**症状:**
+「プロバイダA失敗→自動でプロバイダBへ切替」という体験を優先すると、フォールバック先の送信先確認（コスト確認・外部送信同意）ダイアログを初回のみ表示し、フォールバック発火時は省略する近道を取りがちである。これは PROJECT.md に明記された v1.8.0 の確定方針「明示設定型限定・自動的な別ベンダー送信はしない」、および V14-D-03（既定 off）・OCR-SEC-01/UI-01（コスト確認必須）に反する。
 
-1. **Tesseract 本体（`tesseract.exe`）の未同梱**: PyInstaller は Python パッケージのみを収集し、外部バイナリは自動収集しない。`--add-binary tesseract.exe;.` で明示追加が必要。
-2. **言語データ（`tessdata/`）の未同梱**: `jpn.traineddata` / `jpn_vert.traineddata` を `--add-data tessdata;tessdata` で追加しないと日本語 OCR が機能しない。
-3. **`pytesseract` の `pytesseract.pytesseract_cmd` パス**: フリーズ（`.exe`）実行時のバイナリパスを動的に設定する必要がある（`sys.frozen` 判定）。
+**発生原因:**
+UX 上「失敗のたびに確認ダイアログを出すと煩わしい」という誘惑があり、実装者が善意で確認を省略しがちである。
 
-公式 SDK（`anthropic` / `google-genai` パッケージ）を採用した場合も同様の問題がある（隠れ依存の `httpx`, `anyio`, `certifi`, `httpcore` 等が大量に必要で、`.exe` が 100MB 超になる）。これが `urllib` 直叩き方針の根拠であり、仕様書（§2.1）で既に採用済み。
+**回避策:**
+フォールバック順序はユーザーが事前設定した静的リストのみとし、フォールバック発火時も送信先確認ダイアログを（フォールバック先プロバイダ用に）再提示する設計を要件通り厳守する。RunPod 誤開示だった CR-01（v1.7.1）の再発防止パターン（送信先確認ダイアログのプロバイダ分岐）をそのまま再利用する。
 
-**Why it happens:**
-開発環境では `tesseract` がシステムインストールされているため動作する。PyInstaller でビルドした `.exe` を別 PC で実行すると「tesseract is not installed or it's not in your PATH」エラーになる。
+**兆候（早期検出）:**
+フォールバック発生時のログにコスト確認スキップの痕跡がある、テストでフォールバック先のコスト確認ダイアログが呼ばれていないことが分かる。
 
-**How to avoid:**
-- Tesseract Provider は `subprocess` 直叩き（`pytesseract` を使わず `tesseract` コマンドを直接実行）か、`pytesseract` を使う場合は `sys.frozen` 時のバイナリパス設定を忘れない：
-  ```python
-  import sys, os
-  if getattr(sys, "frozen", False):
-      import pytesseract
-      pytesseract.pytesseract.tesseract_cmd = os.path.join(
-          os.path.dirname(sys.executable), "tesseract", "tesseract.exe"
-      )
-  ```
-- `.spec` ファイルに以下を追加する：
-  ```python
-  binaries=[("path/to/tesseract.exe", "tesseract")],
-  datas=[("path/to/tessdata", "tessdata")],
-  ```
-- Tesseract Provider は Optional 扱い（インストール確認 → 非対応なら graceful fallback）とする。起動時に `shutil.which("tesseract")` で確認し、無ければ選択肢を無効化する。
-- クラウドプロバイダ（Claude/Gemini）は `urllib` 標準ライブラリのみで実装するため PyInstaller への追加影響はゼロ。
+**対応フェーズ:** プロバイダーフォールバックフェーズ
 
-**Warning signs:**
-- 開発環境での `pytest` は通るが、`dist/PageFolio.exe` を別 PC で実行すると Tesseract エラーが出る。
-- `.exe` のファイルサイズが前バージョンより 50MB 以上増えた（SDK 依存の流入）。
-- `import anthropic` や `import google.generativeai` がソースコードに現れる。
-
-**Phase to address:**
-Phase 4（Tesseract Provider・任意）。Phase 1〜3 は `urllib` 直叩きのため影響なし。
+**既存原則で防げるか:** V14-D-03（既定 off の安全側デフォルト）・OCR-SEC-01/UI-01（コスト確認必須）・CR-01 の送信先確認プロバイダ分岐パターンをフォールバック各段に適用すれば防げる。
 
 ---
 
-## Technical Debt Patterns
+### 落とし穴8: プロバイダーフォールバックが並列度・APIキー解決・レート制限のプロバイダ間差異を引き継いでしまう
 
-| Shortcut | Immediate Benefit | Long-term Cost | When Acceptable |
-|----------|-------------------|----------------|-----------------|
-| 全プロバイダで同一 `ocr_concurrency` 設定を使用 | 設定項目が増えない | Gemini Free Tier で即 429 | never — プロバイダ別 default を持つべき |
-| API キーを `settings` 辞書に入れてから `_save_settings` のガードで弾く | 実装が楽 | バグ一つで平文漏洩 | never — 辞書に入れないことが正解 |
-| プロバイダ別エラー解析を `try/except KeyError` 一本で行う | コード量が減る | エラー原因が不明瞭、安全ブロックを見逃す | テスト中のみ（本番前に専用パーサに置換） |
-| モデル ID をハードコード | ドキュメント不要 | モデル廃止で突然動かなくなる | never — 動的取得 + フォールバック推奨値を持つ |
-| バックオフなしで 429 を即エラー表示 | 実装が簡単 | ユーザーが手動リトライを繰り返す | MVP の初期実装のみ（Phase 2 完了前） |
-| 逐次レンダリング化を後回しにして全ページ一括レンダリング | Phase 3 まで既存動作を維持 | 低 RAM PC でメモリ逼迫、テスト前に問題発覚困難 | Phase 3 の作業項目 #9 が完了するまでのみ |
+**症状:**
+プロバイダごとに `max_concurrency`、APIキー解決順（v1.7.1 で「入力値→環境変数」に統一済みだが RunPod は環境変数のみ）、リトライ挙動（`clamp_retry_after` 60秒上限）が異なる。フォールバック実装で「元プロバイダの concurrency 設定をそのままフォールバック先に渡す」ような単純な引き継ぎを行うと、クラウドプロバイダ間で意図せず高い並列度のまま送信して 429 を誘発したり、RunPod のみ環境変数必須という制約を見落として「APIキー未設定」エラーがフォールバック中に静かに握りつぶされたりする。
 
----
+**発生原因:**
+`build_provider` ファクトリと `OCRProvider` 基底クラスはプロバイダ単体の生成を前提に設計されており、「フォールバックチェーン」という複数プロバイダの設定解決という新しい軸を想定していない。
 
-## Integration Gotchas
+**回避策:**
+フォールバックの各段で `build_provider` をプロバイダごとに独立して呼び出し、そのプロバイダ固有の `model_list_timeout`・`max_concurrency`・APIキー解決規則を個別に再評価する。APIキー未設定は「次のフォールバック候補へ」暗黙に進めるのではなく、明示エラーとして扱うかフォールバック理由として明示ログに残す。
 
-| Integration | Common Mistake | Correct Approach |
-|-------------|----------------|------------------|
-| Anthropic Messages API | `content[0].text` で決め打ちアクセス | `type=="text"` ブロックを走査して最初のものを取得 |
-| Anthropic Messages API | `temperature` を全モデルに送信 | Opus 4.7/4.8 は `output_config.effort` を使用、`temperature` を送らない |
-| Anthropic Messages API | `anthropic-version` ヘッダーを省略 | 必ず `"2023-06-01"` を送信（2026-06 時点の最新安定版） |
-| Gemini generateContent | `candidates[0].content.parts[0].text` で決め打ち | `candidates` 空チェック → `finishReason` 確認 → `parts` 走査 |
-| Gemini generateContent | 画像を `image_url` 形式（OpenAI 互換）で送信 | `inline_data: {mime_type: "image/png", data: "<base64>"}` 形式で送る |
-| Gemini generateContent | 429 エラーで処理を中断 | `RESOURCE_EXHAUSTED` エラーコードを検出してバックオフリトライ |
-| Tesseract (pytesseract) | 開発環境のシステム `tesseract` に依存 | `.exe` 同梱バイナリのパスを `sys.frozen` で切り替え |
-| Tesseract | 日本語データなしで実行 | `lang="jpn"` 指定 + `jpn.traineddata` 同梱を確認 |
-| fitz.Document | ThreadPoolExecutor に渡す | レンダリング結果（bytes）のみを渡す |
+**兆候（早期検出）:**
+フォールバック先で 429 が頻発する、RunPod へのフォールバックが無言で失敗する。
+
+**対応フェーズ:** プロバイダーフォールバックフェーズ
+
+**既存原則で防げるか:** `build_provider` ファクトリ・`model_list_timeout` クラス属性・`clamp_retry_after` のプロバイダ非依存設計、V14-D-02 のAPIキー解決規則をフォールバックの各段に個別適用すれば防げる。
 
 ---
 
-## Performance Traps
+### 落とし穴9: 肥大モジュール分割で後方互換 import が壊れる
 
-| Trap | Symptoms | Prevention | When It Breaks |
-|------|----------|------------|----------------|
-| 全ページ base64 一括保持 | メモリ使用量がページ数に比例して急増、低 RAM PC でスワップ発生 | ページ単位「レンダリング→送信→破棄」に逐次化 | ページ数が 30〜50 超・`ocr_scale=2.0`・RAM 8GB 未満 |
-| クラウドで並列度 8 | OCR 開始直後に 429 エラーが連発 | プロバイダ別 `DEFAULT_CONCURRENCY`（Gemini=1, Claude=2） | Gemini Free Tier は 10 RPM（ほぼ即座に上限到達） |
-| `ocr_scale=2.0` のままクラウド送信 | 1ページあたりのデータ量が大きくコスト増・転送遅延増 | クラウド用デフォルトを `1.5` に見直し。UI でコスト/精度のトレードオフを明示 | 低速回線 + 高解像度 + 多ページで体感速度が著しく低下 |
-| テキスト埋め込み判定なしで全ページ API 呼び出し | 不要な課金が発生 | `page.get_text().strip()` で判定して非空なら API 呼び出しをスキップ | テキスト埋め込み PDF ではほぼ毎回の無駄な課金 |
+**症状:**
+`ocr_dialog.py`（2154行）/`ocr_providers.py`（1424行）/`llm_config.py`（1204行）の分割時、DEBT-01（`dialogs/` パッケージ化）・DEBT-02（`constants.py` 分割）の前例（`__init__.py` での re-export、`themes.py`/`lang.py` 分割後も `C`/`LANG` 識別子を `constants.py` から再エクスポート）を踏襲しないと、既存の `from pagefolio.ocr_dialog import OCRDialog` のような import が壊れ、プラグイン（`plugins/page_info.py` 等サードパーティ）や既存テスト（`test_imports.py`）を破壊する。
 
----
+**発生原因:**
+「動いているものを分割するだけ」という認識で着手すると、re-export の手間を後回しにしがちで、分割後に import パスが変わってしまう。
 
-## Security Mistakes
+**回避策:**
+分割前に必ず `test_imports.py` へ分割対象の後方互換 import テストを追加してから分割を開始する（DEBT-01/02 で確立した「後方互換 import 表面を先にテストで固定する」手順を踏襲）。分割後のパッケージにも `__init__.py` で旧シンボルを re-export する。
 
-| Mistake | Risk | Prevention |
-|---------|------|------------|
-| `pagefolio_settings.json` への API キー保存 | キーのファイルシステム露出・Git コミットによる漏洩 | `_save_settings()` にブロックリスト処理を追加、キーは環境変数のみ |
-| `logger.debug("settings: %s", settings)` でキー含む辞書をログ | ログファイル・デバッグ出力へのキー混入 | 保存前のキー除外辞書のみをログ出力。`repr()` に API キーを含めない |
-| ダイアログ入力キーを `self.settings` 辞書に格納 | `_save_settings` の次回呼び出しで自動保存される | キーはセッション専用変数（`_session_key`）に保持し `settings` には入れない |
-| エラーメッセージにキー全体を含める | ログ・UI 表示でキーが露出 | エラー表示前にキーを `sk-ant-api...**` 等に伏字化する関数を経由する |
-| PyInstaller `.exe` に API キーをハードコード | バイナリを展開するとキーが見える | コンパイル時定数への組み込みは絶対禁止 |
+**兆候（早期検出）:**
+`test_imports.py` が分割 PR で失敗する、プラグイン読み込み時に `ImportError`。
+
+**対応フェーズ:** 肥大モジュール分割リファクタリングフェーズ
+
+**既存原則で防げるか:** DEBT-01/DEBT-02（`dialogs/` パッケージ化・`constants.py` 分割の後方互換 re-export 前例）・TEST-03（import 回帰テスト集約方針）をそのまま踏襲すれば防げる。
 
 ---
 
-## UX Pitfalls
+### 落とし穴10: スレッド調整コードの分離時に暗黙の排他制御（ロック/世代カウンタ共有）が壊れる
 
-| Pitfall | User Impact | Better Approach |
-|---------|-------------|-----------------|
-| 環境変数未設定時に黙ってクラッシュ | 原因不明でアプリが応答しなくなる | 「環境変数 ANTHROPIC_API_KEY が設定されていません。設定方法: ...」を明確に表示 |
-| クラウド送信前に確認なし | 意図せず個人情報を含む PDF ページを外部送信 | プロバイダがクラウド系の場合は必ず外部送信警告ダイアログを表示 |
-| 429 エラーを「接続エラー」と誤表示 | ユーザーがネットワーク設定を確認しに行く | エラーコードに応じた説明（「レート制限中。しばらく待ってから再試行してください」） |
-| `ocr_provider = "off"` で OCR ボタンが見えたまま | ボタンを押してもエラー表示になる | `off` 状態では OCR ボタンを `disabled` または非表示にする |
-| Tesseract の精度が低いことを事前に説明しない | VLM と比較して精度が著しく低い場合にユーザーが困惑 | Tesseract 選択時に「クラウド VLM より精度が劣ります。日本語は jpn.traineddata の事前インストールが必要です」と注記する |
+**症状:**
+`ocr_dialog.py` の `_worker`/`_render_queue`/`_done_lock` のような、スレッド間で暗黙に密結合したフィールドを「見た目のきれいさ」のために別クラス（例: `OCRWorkerCoordinator`）へ切り出すと、元々同一クラスのインスタンス変数として密に共有されていたロック/カウンタ/世代番号の生存期間や参照の同一性が分割後に食い違う（例: 新旧オブジェクトで別々の `_done_lock` が生成されてしまう）。
 
----
+**発生原因:**
+リファクタリングは「責務の分離」を目的にするが、スレッド安全性は「同じロックオブジェクトを全参照者が共有する」という不変条件に依存しており、クラス境界を切ると見落としやすい。
 
-## "Looks Done But Isn't" Checklist
+**回避策:**
+分割前に既存の producer-consumer 一本化（`ocr_pipeline.py`: `PipelineState`/`consume_one`/`try_enqueue`/`send_sentinels`）の設計方針をそのまま流用し、スレッド安全な状態は単一の不変条件を持つデータクラス（`PipelineState` 相当）に集約してから、UI 層だけを薄いラッパーとして分離する（v1.7.1 Phase 2 の `ocr_dialog.py` 分離前例と同じ手順）。分割後は `test_ocr_pipeline.py` 相当のロック単体テストを新設コンポーネントにも用意する。
 
-- [ ] **環境変数キー読み取り**: `os.environ.get()` で読んでいるが、`settings` 辞書経由で `_save_settings` に流れていないことを確認
-- [ ] **クラウドプロバイダ確認ダイアログ**: 「実行」ボタンを押してもクラウド系プロバイダでは確認ダイアログが表示されることを手動確認
-- [ ] **429 バックオフ**: モックサーバで 429 を返すテストでリトライ動作を確認（単発エラーで止まっていないか）
-- [ ] **fitz スレッド境界**: `threading.Thread` の target 関数内に `self.doc[page_idx]` や `get_pixmap()` の直接呼び出しがないことを grep で確認
-- [ ] **Tkinter スレッド安全**: Provider 実装クラス内に `tk.`, `ttk.`, `StringVar`, `after` 等の Tkinter シンボルがないことを確認
-- [ ] **Claude content パース**: `content[0].text` でなく `type=="text"` スキャンになっているか
-- [ ] **Gemini candidates 空チェック**: `candidates` が空の場合のハンドリングがあるか
-- [ ] **anthropic-version ヘッダー**: urllib リクエストに `"anthropic-version": "2023-06-01"` が含まれているか
-- [ ] **Opus 4.x の temperature 除外**: `claude-opus-4-7` / `claude-opus-4-8` では `temperature` をペイロードから除外しているか
-- [ ] **PyInstaller ビルドでのキー非混入**: `pagefolio_settings.json` を `dist/` ディレクトリで確認し API キーフィールドがないことを確認
+**兆候（早期検出）:**
+分割後に OCR キャンセルが効かなくなる、テスト時にデッドロック/ハングが発生する。
+
+**対応フェーズ:** 肥大モジュール分割リファクタリングフェーズ
+
+**既存原則で防げるか:** `ocr_pipeline.py` の Tk/fitz 非依存な純ロジック層への集約方針（v1.7.1 Phase 2）をそのまま踏襲すれば防げる。
 
 ---
 
-## Recovery Strategies
+## 技術的負債パターン
 
-| Pitfall | Recovery Cost | Recovery Steps |
-|---------|---------------|----------------|
-| APIキーの平文保存（コミット前に発覚） | LOW | `_save_settings` のガード追加 + 設定ファイル再生成 |
-| APIキーの平文保存（Git コミット済み） | HIGH | `git filter-repo` でコミット履歴から削除 + キー即時失効（API コンソールで失効） + `.gitignore` に設定ファイル追加 |
-| fitz スレッドクラッシュ | MEDIUM | `_worker` リファクタリングで fitz 操作をメインスレッドに移動。crash dump が取れない場合は bisect で再現箇所を特定 |
-| 意図しないクラウド課金 | MEDIUM | API コンソールで利用上限アラートを設定（予防）。発生後は請求サポートに連絡して免除申請 |
-| モデル ID 廃止で突然 400 | LOW | `list_models()` で取得したリストの先頭をフォールバックとして使用 |
-| PyInstaller で Tesseract 未同梱 | MEDIUM | `.spec` に `binaries` / `datas` 追加 + `sys.frozen` パス設定 + 再ビルド |
+| ショートカット | 短期的メリット | 長期的コスト | 許容される条件 |
+|----------------|----------------|----------------|-----------------|
+| サムネイル仮想化を最小実装（見えている分だけ描画）で入れ、`thumb_cache` の上限は据え置く | 実装が早い・体感速度がすぐ改善する | CONCERNS.md「Thumbnail Cache No Eviction」が悪化し、大量ページでのメモリ増加が続く | 許容しない（仮想化と同時に LRU 上限を入れる） |
+| プロバイダーフォールバック順を最初はハードコード（設定 UI 後回し） | 早くプロトタイプを出せる | 「明示設定型」という v1.8.0 確定要件に反する | プロトタイプ検証中のみ・本実装には持ち込まない |
+| バッチキューを最初は単純な for ループ（並列化・階層キャンセルなし）で作る | 実装が楽・早期に動くものができる | 後で並列/2階層キャンセルを後付けすると設計し直しになる | MVP フェーズ内でも `PipelineState` 拡張を見据えた構造にしておけば許容 |
+| テンプレートマネージャーを `pagefolio_settings.json` にスキーマなしでベタ書き | 早く出せる | テンプレート数増加やエクスポート機能で構造変更が必要になる | v1.8.0 スコープ内は許容、将来拡張時に要見直し |
+| モジュール分割を「機械的に行を移すだけ」で済ませ、re-export テスト追加を省略 | 一時的に速い | DEBT-01/02 前例を破ると import 回帰が本番で発覚するリスク | 許容しない（`test_imports.py` 拡張は分割の一部として必須） |
+
+## 統合の落とし穴
+
+| 統合先 | よくある間違い | 正しいアプローチ |
+|--------|----------------|-------------------|
+| 外部 md ファイル連動（v1.7.4） | テンプレート切替のたびに無条件で外部ファイルへ上書き | アクティブテンプレートのみ書き戻し、切替前に未保存変更の確認を挟む |
+| クラウド OCR プロバイダ（Claude/Gemini/RunPod）フォールバック | フォールバック先のコスト確認・送信先確認を省略 | フォールバックの各段で送信先確認ダイアログを再提示（CR-01 パターン踏襲） |
+| Tkinter イベントループ | ワーカースレッドから直接ウィジェットを更新する | `queue.Queue` + `root.after()` ポーリング（既存 `ocr_dialog.py` パターンを踏襲。WebSearch で裏取り済み: Tk は同一スレッドからのみ安全に更新可能） |
+| `fitz`（PyMuPDF）バッチ処理 | 複数ファイルを並列に `open`/`get_pixmap` する | メインスレッドの単一キューで直列化し、API 呼び出しのみワーカープールへ渡す |
+
+## パフォーマンストラップ
+
+| トラップ | 症状 | 予防策 | 破綻する規模 |
+|----------|------|--------|----------------|
+| `thumb_cache` 無制限成長 × 仮想化 | 大量ページ閲覧でメモリ使用量が増え続ける | LRU 化＋窓外エビクションを仮想化と同時導入 | 500ページ以上で顕著 |
+| バッチ全ファイルで単一の bounded queue を共有 | 1ファイルの遅延・失敗が他ファイルの処理をブロックする | ファイルごとに独立した `PipelineState`/queue を割り当てる | 10ファイル以上のバッチ |
+| テンプレート数増加で毎回全テンプレートをファイル I/O 込みで走査 | ダイアログ起動・切替のたびに遅延を感じる | メモリキャッシュ＋変更検知時のみ再読込 | テンプレート50件以上 |
+
+## セキュリティの誤り
+
+| 誤り | リスク | 予防策 |
+|------|--------|--------|
+| フォールバック発火時にコスト確認・送信先確認を省略する | 意図しない外部送信・意図しない課金が発生する | フォールバックの各段で確認ダイアログを必須にする（既存 OCR-SEC-01/UI-01 の延長） |
+| テンプレート保存機構を新設する際、機密性の高いプロンプト内容の取り扱いポリシーを未定義のまま実装する | `pagefolio_settings.json` を共有した際にテンプレート内容が意図せず流出する | プロンプト内容自体は非機密前提だが、`_SENSITIVE_KEYS` 中央レジストリ化（v1.8.0 スコープ）と合わせてテンプレートストレージの扱いも監査対象に含める |
+| バッチ OCR 化でログ出力量が増え、APIキー解決関連のログにキー文字列そのものが混入するリスクが相対的に増える | ログファイル経由のキー漏洩 | 既存の「キー名のみログ・値は非出力」規約をバッチログ経路にも明示的に適用しテストする |
+
+## UX の落とし穴
+
+| 落とし穴 | ユーザーへの影響 | より良いアプローチ |
+|----------|--------------------|----------------------|
+| フォールバック発生を無言で行う | ユーザーが気づかないまま想定外プロバイダにコストが発生した／意図しない外部送信をしたと後で気づく | フォールバック発生を都度ステータス表示し、送信先確認を再提示する |
+| バッチ進捗をファイル単位のみで表示する | どのファイルのどのページで止まっているか分からず不安になる | ファイル名＋ページ内進捗の二段表示にする |
+| 仮想化でスクロール中にサムネイルが一瞬空白/プレースホルダになる | チラつきで誤操作（別ページのつもりでクリック）が起きる | `thumb_cache` ヒット時は即時表示、ミス時のみプレースホルダにする |
+
+## 「完了に見えるが未完了」チェックリスト
+
+- [ ] **サムネイル仮想化:** 「スクロールが速くなった」だけでなく、D&D 中のスクロール・複数選択・キーボードナビゲーションでの窓境界越えも検証したか — `pagination.py` の変換関数を全経路で通しているか grep で確認
+- [ ] **プロバイダーフォールバック:** 「フォールバック順序を変更する UI」だけでなく、フォールバック発生時のログ・ステータス通知・コスト確認の3点セットが揃っているか — フォールバック経路の自動テストでコスト確認呼び出しをアサートする
+- [ ] **バッチ複数ファイル OCR:** 「キューに複数ファイルを積める」だけでなく、1ファイル失敗時の継続/中断ポリシー、キャンセル後のリソース解放（temp/Blob/ワーカースレッド終了）まで検証したか
+- [ ] **プロンプト・テンプレートマネージャー:** 「保存/切替できる」だけでなく、外部 md ファイル編集との競合時の警告、使用中テンプレート削除時のフォールバック挙動まで考慮したか
+- [ ] **肥大モジュール分割:** 「ファイルが小さくなった」だけでなく、pytest 全件・ruff・`test_imports.py` 拡張・サードパーティプラグイン読み込みまで確認したか
+
+## 復旧戦略
+
+| 落とし穴 | 復旧コスト | 復旧手順 |
+|----------|--------------|-----------|
+| `selected_pages` インデックス不整合（落とし穴1） | LOW | `pagination.py` の変換関数のみを経由するよう修正。影響範囲が D&D/選択照合の呼び出し元に限定されるため局所修正で復旧可能 |
+| フォールバック時のコスト確認省略（落とし穴7） | MEDIUM | 該当コードパスにコスト確認呼び出しを追加し回帰テストを追加。リリース前に発見できれば影響は小さい |
+| `fitz` 複数ファイル並列アクセスによるクラッシュ（落とし穴3） | HIGH | バッチキューをメインスレッド直列化に設計変更（後戻りコストが大きいため早期発見が重要） |
+| モジュール分割による import 破壊（落とし穴9） | LOW | `test_imports.py` の後方互換テストが即座に検出するため、`git revert` または `__init__.py` re-export 追加で容易に復旧できる |
+
+## 落とし穴→フェーズ対応表
+
+| 落とし穴 | 予防フェーズ | 検証方法 |
+|----------|----------------|------------|
+| 1. `selected_pages` 不変条件破壊 | サムネイル仮想化フェーズ | 500+ページのランダム選択＋スクロール＋D&D のプロパティテスト |
+| 2. `thumb_cache` × 仮想化のキー不整合 | サムネイル仮想化フェーズ | 高速スクロール時のサムネイル内容一致テスト・LRU 上限テスト |
+| 3. `fitz` スレッド間共有違反 | バッチ複数ファイル OCR フェーズ | 複数ファイル同時投入時のクラッシュ再現テスト（CI ではモック、手動では実ファイルで確認） |
+| 4. バッチキャンセルのスコープ不足 | バッチ複数ファイル OCR フェーズ | バッチ中止ボタン押下後、次ファイルが開始されないことのテスト |
+| 5. バッチ進捗集計の二重矛盾 | バッチ複数ファイル OCR フェーズ | 失敗ファイルを含むバッチでの進捗値上限/下限テスト |
+| 6. テンプレート×外部ファイル書き戻し競合 | プロンプト・テンプレートマネージャーフェーズ | テンプレート切替→外部ファイル内容の変更検知テスト |
+| 7. フォールバックの同意方針迂回 | プロバイダーフォールバックフェーズ | フォールバック発火時のコスト確認呼び出しアサーションテスト |
+| 8. フォールバックの設定引き継ぎミス | プロバイダーフォールバックフェーズ | フォールバック先の `max_concurrency`/APIキー解決が独立に評価されることのテスト |
+| 9. モジュール分割の import 破壊 | 肥大モジュール分割リファクタリングフェーズ | 分割前後で `test_imports.py` の対象拡張・全通過確認 |
+| 10. スレッド調整コード分離時のロック不整合 | 肥大モジュール分割リファクタリングフェーズ | 分割後のキャンセル/デッドロック回帰テスト（`test_ocr_pipeline.py` 相当を新設コンポーネントにも用意） |
+| 11. 設定マイグレーション（新設定キーのデフォルト欠如） | 全フェーズ横断（各実装冒頭で確認） | 旧 `pagefolio_settings.json`（新キー欠損）を読み込んでの起動テスト |
+
+## 出典
+
+- `.planning/PROJECT.md`（v1.8.0 マイルストーン方針・確定事項・Key Decisions） — curated / HIGH
+- `.planning/codebase/CONCERNS.md`（大型モジュール・Blob ライフサイクル・D&D フラジャイル領域・スレッディングボトルネック・thumb_cache 無エビクション等の既知課題） — curated / HIGH
+- [Multithreading with tkinter](https://scorython.wordpress.com/2016/06/27/multithreading-with-tkinter/) — MEDIUM（Tk は同一スレッドからのみ安全に更新可能、queue+`after()` ポーリングパターンの裏取り）
+- [Tkinter and Threading: Building Responsive Python GUI Applications](https://medium.com/tomtalkspython/tkinter-and-threading-building-responsive-python-gui-applications-02eed0e9b0a7) — MEDIUM
+- [List Virtualization (patterns.dev)](https://www.patterns.dev/vanilla/virtual-lists/) — MEDIUM（仮想化リストにおける内部状態の非保持・選択状態を外部ストアに持つべきという一般原則の裏取り）
+- [VirtualizedList · React Native](https://reactnative.dev/docs/virtualizedlist) — MEDIUM（ウィジェット再利用時の props/データ依存の明示が必要という一般原則の裏取り）
 
 ---
-
-## Pitfall-to-Phase Mapping
-
-| Pitfall | Prevention Phase | Verification |
-|---------|------------------|--------------|
-| APIキー平文漏洩 | Phase 2 開始時（最優先） | `pagefolio_settings.json` に `api_key` 系フィールドが存在しないことを pytest で確認 |
-| fitz スレッド非安全 | Phase 1（プロバイダ抽象化） | `_worker` 内の fitz 操作を grep で検出するテストを追加 |
-| Tkinter スレッド非安全 | Phase 1（Provider インターフェース設計） | Provider クラスの Tkinter 依存を import 検査で検出 |
-| 全ページ一括メモリ保持 | Phase 3（逐次レンダリング化 #9） | 大きな PDF でのメモリプロファイリングで確認 |
-| クラウド過剰並列・429 | Phase 2（Claude Provider から） | モック 429 サーバでバックオフ動作を確認 |
-| レスポンス解析脆弱性 | Phase 2・3 それぞれの実装時 | 各プロバイダのエラー形状モックテスト（#11） |
-| API ドリフト（モデル・パラメータ） | Phase 2（Claude Provider 実装） | Opus 4.8 への `temperature` 送信テスト（400 確認） |
-| プライバシー・コスト無確認 | Phase 2（Claude Provider と同時） | 手動テスト：クラウドプロバイダで実行ボタン押下時に確認ダイアログが表示されること |
-| PyInstaller 隠れ依存・Tesseract 未同梱 | Phase 4（Tesseract・任意） | `dist/PageFolio.exe` を `tesseract` 未インストールの別 PC で実行 |
-
----
-
-## Sources
-
-- [Anthropic API Errors — HTTP error codes, 529 overloaded, rate limit](https://platform.claude.com/docs/en/api/errors) — HIGH confidence（公式ドキュメント）
-- [Anthropic Models Overview — model IDs, effort parameter, temperature restrictions](https://platform.claude.com/docs/en/docs/about-claude/models/overview) — HIGH confidence（公式ドキュメント）
-- [Anthropic Effort Parameter — effort levels, temperature incompatibility on Opus 4.7/4.8](https://platform.claude.com/docs/en/build-with-claude/effort) — HIGH confidence（公式ドキュメント）
-- [Anthropic Extended Thinking — manual thinking 400 on Opus 4.8/4.7](https://platform.claude.com/docs/en/build-with-claude/extended-thinking) — HIGH confidence（公式ドキュメント）
-- [Gemini API Rate Limits — RPM/TPM/RPD per tier](https://ai.google.dev/gemini-api/docs/rate-limits) — HIGH confidence（公式ドキュメント）
-- [Gemini API Text Generation — response structure, candidates, parts](https://ai.google.dev/gemini-api/docs/text-generation) — HIGH confidence（公式ドキュメント）
-- [Gemini API Vision — inline_data format, base64 image](https://ai.google.dev/gemini-api/docs/vision) — HIGH confidence（公式ドキュメント）
-- [PyMuPDF Thread Safety — multiprocessing recipes, no multithreading support](https://pymupdf.readthedocs.io/en/latest/recipes-multiprocessing.html) — HIGH confidence（公式ドキュメント）
-- [PyInstaller Hidden Imports — add-binary, tessdata bundling](https://pyinstaller.org/en/stable/usage.html) — HIGH confidence（公式ドキュメント）
-- [PyInstaller + Tesseract issue #5601](https://github.com/pyinstaller/pyinstaller/issues/5601) — MEDIUM confidence（GitHub Issue）
-- コードベース直接調査: `pagefolio/ocr.py`, `pagefolio/ocr_dialog.py`, `pagefolio/settings.py` — HIGH confidence（実コード）
-
----
-*Pitfalls research for: マルチプロバイダ クラウド OCR 追加（Gemini/Claude/Tesseract）to PageFolio v1.4.0*
-*Researched: 2026-06-06*
+*Pitfalls research for: PageFolio v1.8.0（テンプレート管理・LLM フォールバック・バッチ OCR・サムネイル仮想化・モジュール分割）*
+*調査日: 2026-07-13*

@@ -15,23 +15,18 @@ from pagefolio.constants import (
     C,
 )
 
+# 循環 import 回避のためサブモジュール直接指定で import する（Pitfall 6・
+# pagefolio.ocr_providers の __init__ 経由だと全プロバイダを import する
+# 重い経路になるため使わない）。
+from pagefolio.ocr_providers.registry import sensitive_keys
+
 logger = logging.getLogger(__name__)
 
-# D-01: 機密キー集合（_save_settings が JSON へ書き込まないキー名）
-# Pitfall 1: APIキー平文漏洩防止の構造的ガード（最後の砦）
-# WR-03: D-06 の dual env var（GEMINI_API_KEY / GOOGLE_API_KEY）フォールバック対応
-_SENSITIVE_KEYS = {
-    "claude_api_key",
-    "gemini_api_key",
-    "google_api_key",  # WR-03: Gemini フォールバックキー名（小文字）
-    "anthropic_api_key",
-    "api_key",
-    "GEMINI_API_KEY",  # WR-03: 大文字バリアント
-    "GOOGLE_API_KEY",  # WR-03: Gemini フォールバックキー名（大文字・D-06）
-    "ANTHROPIC_API_KEY",  # WR-03: 大文字バリアント
-    "runpod_api_key",  # RunPod APIキー（小文字）
-    "RUNPOD_API_KEY",  # RunPod APIキー（大文字）
-}
+# D-01: 機密キー集合（_save_settings が JSON へ書き込まないキー名）。
+# Pitfall 1: APIキー平文漏洩防止の構造的ガード（最後の砦）。
+# registry.sensitive_keys() から生成（V180-ROBUST-02・新プロバイダ追加時の
+# 手動追加漏れを構造的に排除）。
+_SENSITIVE_KEYS = sensitive_keys()
 
 
 def _get_base_dir():
@@ -110,25 +105,150 @@ def save_prompt_file(filename, content):
 
 
 def load_custom_prompt(settings):
-    """有効なカスタムプロンプトを返す（外部 md ファイル > 設定欄・V174-2）。
+    """有効なカスタムプロンプトを返す（外部 md > アクティブテンプレート > 設定欄）
 
-    ocr_custom_prompt.md が実行ファイルと同じ階層にあり非空なら、その内容を
-    設定欄（settings["ocr_custom_prompt"]）より優先して返す。ファイルは
-    呼び出しのたびに読み直すため、外部エディタでの編集が次回実行に反映される。
+    3段解決（V180-TMPL-04/05・v1.8.0 Phase 2 でテンプレート層を挿入）:
+      1. ocr_custom_prompt.md が実行ファイルと同じ階層にあり非空ならそれを返す
+         （従来どおり最優先・V174-2）
+      2. prompt_templates["active"] が非空かつ該当テンプレートに custom_prompt
+         があればその値を返す（テンプレート層・本フェーズ新設）
+      3. いずれも該当しなければ settings["ocr_custom_prompt"]（設定欄直接値）を
+         返す（従来どおり）
+
+    ファイルは呼び出しのたびに読み直すため、外部エディタでの編集が次回実行に
+    反映される。全プロバイダが本関数を経由するため、テンプレートは横断共有
+    される（V180-TMPL-05）。resolve_ocr_prompt（ocr.py）のシグネチャ・優先順位
+    ロジックは変更しない（custom_prompt の解決元だけを細分化する）。
     """
-    return load_prompt_file(CUSTOM_PROMPT_FILE) or settings.get("ocr_custom_prompt", "")
+    file_content = load_prompt_file(CUSTOM_PROMPT_FILE)
+    if file_content:
+        return file_content
+    active = settings.get("prompt_templates", {}).get("active", "")
+    if active:
+        tpl = get_template(settings, active)
+        if tpl and tpl.get("custom_prompt"):
+            return tpl["custom_prompt"]
+    return settings.get("ocr_custom_prompt", "")
 
 
 def load_summary_prompt(settings):
-    """有効なサマリプロンプトを返す（外部 md ファイル > 設定欄・V174-2）。
+    """有効なサマリプロンプトを返す（外部 md > アクティブテンプレート > 設定欄）
 
-    ocr_summary_prompt.md が実行ファイルと同じ階層にあり非空なら、その内容を
-    設定欄（settings["ocr_summary_prompt"]）より優先して返す（load_custom_prompt
-    と同型）。
+    3段解決は load_custom_prompt と同型（summary_prompt/SUMMARY_PROMPT_FILE 版）。
     """
-    return load_prompt_file(SUMMARY_PROMPT_FILE) or settings.get(
-        "ocr_summary_prompt", ""
-    )
+    file_content = load_prompt_file(SUMMARY_PROMPT_FILE)
+    if file_content:
+        return file_content
+    active = settings.get("prompt_templates", {}).get("active", "")
+    if active:
+        tpl = get_template(settings, active)
+        if tpl and tpl.get("summary_prompt"):
+            return tpl["summary_prompt"]
+    return settings.get("ocr_summary_prompt", "")
+
+
+# ═══════════════════════════════════════════════════════════════
+# プロンプトテンプレート管理（v1.8.0 Phase 2・D-01〜D-04）
+# ═══════════════════════════════════════════════════════════════
+#
+# すべて settings 辞書を第1引数に取る関数型 CRUD ヘルパー。既存の
+# save_prompt_file/load_custom_prompt と同じ責務分離を踏襲し、settings.py
+# 内では自動保存しない（_save_settings() の呼び出しは呼び出し側の責務）。
+# 各関数冒頭で _ensure_template_shape(settings) を行うため、未初期化の
+# settings 辞書に対しても安全に動作する。
+
+
+def _ensure_template_shape(settings):
+    """settings["prompt_templates"] が {"active": str, "items": dict} の
+    完全な形であることを保証する（02-REVIEW CR-02 修正）。
+
+    `settings.setdefault("prompt_templates", ...)` はトップレベルキーが
+    既に存在すれば no-op になるため、`{"active": "foo"}` のように "items"
+    キーが欠けた部分形状の値が渡された場合（手編集・外部ツール・書き込み
+    途中断など）でも KeyError を出さないよう、ネストしたキーも個別に
+    setdefault する。
+    """
+    tpl = settings.setdefault("prompt_templates", {"active": "", "items": {}})
+    tpl.setdefault("active", "")
+    tpl.setdefault("items", {})
+    return tpl
+
+
+def list_template_names(settings):
+    """保存済みテンプレート名の一覧を sorted で返す（V180-TMPL-02）。"""
+    tpl = _ensure_template_shape(settings)
+    return sorted(tpl["items"].keys())
+
+
+def get_template(settings, name):
+    """テンプレート名からペア（custom_prompt/summary_prompt）を返す。
+
+    未登録名の場合は None を返す。
+    """
+    tpl = _ensure_template_shape(settings)
+    return tpl["items"].get(name)
+
+
+def template_name_exists(settings, name):
+    """テンプレート名が登録済みか純粋判定する（D-04）。
+
+    空文字・空白のみの名前は save_template が ValueError で拒否するため
+    登録され得ず、常に False を返す（無効な名前の弾き判定を兼ねる）。
+    """
+    if not name or not name.strip():
+        return False
+    tpl = _ensure_template_shape(settings)
+    return name in tpl["items"]
+
+
+def save_template(settings, name, custom_prompt, summary_prompt):
+    """テンプレートを保存する（新規作成・上書き更新は共通処理・D-01 ペア保存）。
+
+    name が空文字・空白のみの場合は ValueError を送出する（D-04）。
+    既存名を指定した場合は内容を上書きする（新規/更新の区別はしない）。
+    """
+    if not name or not name.strip():
+        raise ValueError("テンプレート名を空にすることはできません")
+    tpl = _ensure_template_shape(settings)
+    tpl["items"][name] = {
+        "custom_prompt": custom_prompt,
+        "summary_prompt": summary_prompt,
+    }
+
+
+def delete_template(settings, name):
+    """テンプレートを削除する。
+
+    アクティブテンプレート（prompt_templates["active"]）と一致する名前は
+    ValueError で拒否する（D-03: 誤操作でカスタムプロンプトが消える事故を
+    防止する防御的実装。UI 側の削除ボタン無効化と二重防御を構成する）。
+    """
+    tpl = _ensure_template_shape(settings)
+    if name and name == tpl["active"]:
+        raise ValueError(
+            f"アクティブなテンプレート '{name}' は削除できません（先に切替が必要です）"
+        )
+    tpl["items"].pop(name, None)
+
+
+def rename_template(settings, old_name, new_name):
+    """テンプレートをリネームする。
+
+    new_name が空文字・空白のみ、または既存の別テンプレート名と重複する場合は
+    ValueError を送出する（D-04）。old_name が未登録の場合も ValueError。
+    old_name がアクティブテンプレートだった場合、active も new_name へ追従更新
+    する。
+    """
+    if not new_name or not new_name.strip():
+        raise ValueError("テンプレート名を空にすることはできません")
+    tpl = _ensure_template_shape(settings)
+    if old_name not in tpl["items"]:
+        raise ValueError(f"テンプレート '{old_name}' は存在しません")
+    if new_name != old_name and new_name in tpl["items"]:
+        raise ValueError(f"テンプレート名 '{new_name}' は既に使用されています")
+    tpl["items"][new_name] = tpl["items"].pop(old_name)
+    if tpl["active"] == old_name:
+        tpl["active"] = new_name
 
 
 def _load_settings():
@@ -160,6 +280,15 @@ def _load_settings():
         # Phase 02: サムネイル表示件数（D-04: 既定 20・許容 10〜100）
         # 読み出しは pagination.clamp_page_size 経由で範囲外/非数値を倒す（W1）
         "thumb_page_size": 20,
+        # v1.8.0 Phase 2: プロンプトテンプレート管理（D-01/D-02・V180-TMPL-01〜05）
+        # active: 現在選択中のテンプレート名（空文字 = 未選択・従来どおり設定欄
+        # 直接編集と等価）。items: {テンプレート名: {"custom_prompt": str,
+        # "summary_prompt": str}}（D-01: ペア保存）
+        "prompt_templates": {"active": "", "items": {}},
+        # v1.8.0 Phase 2: プロバイダーフォールバック（D-16・V180-FALL-01）
+        # 既定は安全側（無効・空チェーン）。ユーザーが明示的に設定するまで発火しない。
+        "ocr_fallback_enabled": False,
+        "ocr_fallback_chain": [],
     }
     try:
         path = _get_settings_path()
@@ -190,8 +319,17 @@ def _save_settings(settings):
         to_save = settings
     try:
         path = _get_settings_path()
-        with open(path, "w", encoding="utf-8") as f:
+        # 02-REVIEW WR-05 修正: write-then-rename で原子的に書き込む。
+        # path へ直接書き込むと、プロセス強制終了・電源断・ディスクフル等で
+        # 書き込み途中に中断した場合、JSON として不完全（切り詰められた/
+        # 構造的に破損した）ファイルが残る可能性がある。一時ファイルへ
+        # 書き込んでから os.replace で差し替えることで、ディスク上のファイルは
+        # 常に「完全な旧内容」か「完全な新内容」のいずれかのみになる
+        # （同一ファイルシステム内であれば os.replace は原子的）。
+        tmp_path = path + ".tmp"
+        with open(tmp_path, "w", encoding="utf-8") as f:
             json.dump(to_save, f, ensure_ascii=False, indent=2)
+        os.replace(tmp_path, path)
     except Exception as e:
         logger.debug("設定ファイル保存失敗: %s", e)
 

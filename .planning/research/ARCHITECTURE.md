@@ -1,540 +1,347 @@
-# Architecture Patterns — OCR Provider Abstraction
+# Architecture Research — v1.8.0 新機能の既存アーキテクチャ統合
 
-**Domain:** Python/Tkinter デスクトップアプリ (PageFolio) への OCR プロバイダ抽象化統合
-**Researched:** 2026-06-06
-**Overall confidence:** HIGH（既存コードの実読 + 仕様書 `docs/OCRプロバイダ化_見積もり仕様.md` に基づく）
+**Domain:** Tkinter デスクトップ PDF エディタ（PageFolio）— Mixin 構成 + 純ロジック層 + producer-consumer OCR パイプライン
+**Researched:** 2026-07-13
+**Confidence:** HIGH（実コードベース直接精査に基づく。外部ライブラリ調査ではなく自プロジェクトのソース読解が根拠のため、情報源は最上位＝curated 相当）
+
+> 本ファイルは v1.4.0 期（2026-06-06）の旧 ARCHITECTURE.md（OCR プロバイダ抽象化統合）を置き換える。旧内容は `.planning/milestones/v1.4.0-*` にて実装済み・アーカイブ済みのため、v1.8.0 マイルストーンの統合設計に更新した。
+
+このドキュメントは v1.8.0 の新機能（① プロンプト・テンプレートマネージャー、② 明示設定型プロバイダーフォールバック、③ バッチ複数ファイル OCR キュー、④ サムネイル仮想化 PERF-01、⑤ 肥大モジュール分割）を、既存アーキテクチャ（Mixin パターン + `pagination.py`/`md_render.py`/`undo_store.py`/`ocr_pipeline.py` の Tk/fitz 非依存純ロジック層 + producer-consumer OCR パイプライン）へどう統合するかを設計する。
+
+## 現状アーキテクチャ要点（統合設計の前提）
+
+```
+PDFEditorApp（8 Mixin 合成）
+  ├─ OCRMixin (ocr.py)
+  │    build_provider(settings, api_key, plugin_manager) → OCRProvider インスタンス1つ
+  │    run_parallel(provider, images_b64, ...)            → 旧式・レガシー並列実行
+  │    resolve_ocr_prompt / resolve_summary_prompt          → 純関数（プロンプト解決）
+  │
+  ├─ ocr_pipeline.py（Tk/fitz 非依存 純ロジック層）
+  │    PipelineState（done_count / consec_err_count / fatal_msg / fatal_kind・Lock 保護）
+  │    consume_one(provider, item, prompt, state, callbacks...)  ← 1 アイテム消費（リトライ/fatal 判定）
+  │    try_enqueue / send_sentinels                              ← 非ブロッキング queue 操作
+  │
+  ├─ ocr_providers.py（1424行・6プロバイダ + ABC + 3例外）
+  │    OCRProvider(ABC) / LMStudioProvider / ClaudeProvider / GeminiProvider /
+  │    TesseractProvider / OllamaProvider / RunPodProvider
+  │
+  └─ ocr_dialog.py（2154行・OCRDialog(tk.Toplevel)）
+       producer（メインスレッド, fitz 唯一のアクセス点）:
+         _render_next_page() ── after(0) 連鎖 ── fitz.get_pixmap()→b64 → try_enqueue
+       consumer（ワーカースレッド × concurrency 本）:
+         _worker() → ocr_pipeline.consume_one() に委譲（fitz 一切触らない）
+       PipelineState は _start_worker_thread で concurrency 確定後に1個生成・
+       全ワーカー共有（decrement_worker で最終ワーカーのみ終了処理）
+
+viewer.py（ViewerMixin）
+  ├─ pagination.py（Tk/fitz 非依存）: window_bounds/to_global/to_local/
+  │    reconcile_window_start/clamp_page_size  ← 「窓（10〜100ページ）」単位の
+  │    ドキュメントレベル・ページネーション。selected_pages は常に全ページ index。
+  └─ _build_thumbnails(): 窓 [lo,hi) の**全ページ分**の Frame/Label を毎回生成し
+       pack → after(0) 連鎖で PhotoImage を順次差し込む。可視範囲に関わらず
+       窓全体（最大100）のウィジェットを即時生成するのが PERF-01 の実体。
+
+settings.py
+  外部プロンプトファイル1本立て（V174-2）: CUSTOM_PROMPT_FILE / SUMMARY_PROMPT_FILE
+  load_prompt_file/save_prompt_file/prompt_file_exists/load_custom_prompt/load_summary_prompt
+  優先順位: 外部mdファイル > settings.json の該当キー
+```
+
+**機械保証されている制約（絶対に崩さない）:**
+- fitz へのアクセス（`fitz.open`/`page.get_pixmap`/`page.get_text`）はメインスレッドのみ。ワーカースレッドには base64 のみ渡す（V14-D-05/06・D-04/D-05）。
+- `fitz.Document` はスレッド間で共有しない。
+- `selected_pages` は常に全ページ index（窓ローカルではない）。窓変換は `pagination.py` の純関数のみで行う（散在防止・D-06/D-07）。
+- 純ロジック層（`pagination.py`/`md_render.py`/`undo_store.py`/`ocr_pipeline.py`）は `tkinter`/`fitz` を import しない。新規純ロジックもこの規約に従う。
 
 ---
 
-## 推奨アーキテクチャ概要
+## (a) バッチ複数ファイル OCR ── キュー設計
 
-```text
-                 ┌──────────────────────────────────────────────────────┐
-                 │                PDFEditorApp                          │
-                 │  (OCRMixin が self.settings["ocr_provider"] を参照)  │
-                 └──────────────────┬───────────────────────────────────┘
-                                    │ _start_ocr() で provider を解決
-                                    ▼
-                 ┌──────────────────────────────────────────────────────┐
-                 │            pagefolio/ocr_providers.py                │
-                 │                                                      │
-                 │  OCRProvider (abstract base)                         │
-                 │   ├─ ocr_image(b64_png, prompt, **kwargs) -> str     │
-                 │   ├─ list_models() -> list[str]                      │
-                 │   └─ 例外規約: ConnectionError / TimeoutError /      │
-                 │                RuntimeError / OCRAPIKeyError (新設)  │
-                 │                                                      │
-                 │  LMStudioProvider(OCRProvider)   ← ocr.py から移動  │
-                 │  ClaudeProvider(OCRProvider)     ← フェーズ2 新設   │
-                 │  GeminiProvider(OCRProvider)     ← フェーズ3 新設   │
-                 │  TesseractProvider(OCRProvider)  ← フェーズ4 任意   │
-                 └──────────────────────────────────────────────────────┘
-                                    ▲
-                 ┌──────────────────┴───────────────────────────────────┐
-                 │            pagefolio/ocr.py（改修後）                │
-                 │                                                      │
-                 │  page_to_png_b64()          ← そのまま残す           │
-                 │  has_embedded_text()        ← 新設（テキスト判定）   │
-                 │  run_parallel(provider, images_b64, ...)             │
-                 │    ← call_lm_studio_parallel を provider 非依存化    │
-                 │  build_provider(settings) -> OCRProvider             │
-                 │    ← settings["ocr_provider"] からファクトリ生成     │
-                 │  OCRMixin                   ← _start_ocr のみ改修   │
-                 └──────────────────────────────────────────────────────┘
-                                    │ provider + doc を渡す
-                                    ▼
-                 ┌──────────────────────────────────────────────────────┐
-                 │           pagefolio/ocr_dialog.py（改修後）          │
-                 │                                                      │
-                 │  provider 選択UI（Radiobutton / SettingsDialog 側）  │
-                 │  APIキー未設定エラー表示（OCRAPIKeyError をキャッチ） │
-                 │  LM Studio 固有 UI（url_var / model_var）を          │
-                 │    provider == "lmstudio" 時のみ表示                 │
-                 │  _worker: フェーズ1逐次レンダ→並列送信 を維持        │
-                 │           フェーズ3でレンダ→即送信→破棄に変更        │
-                 └──────────────────────────────────────────────────────┘
+### 制約の再確認
+「fitz はメインスレッドのみ・1 doc ずつ」という milestone context の制約は、**複数の `fitz.Document` を同時に開くこと自体を禁止しているわけではない**（PyMuPDF はプロセス内で複数 Document を保持可能）。禁止されているのは「ある Document への fitz 呼び出しをワーカースレッドから行うこと」「複数スレッドが同時に同一/別 Document の fitz API を並行して叩くこと」である。したがって設計方針は：
 
-（フェーズ4 任意）
-                 ┌──────────────────────────────────────────────────────┐
-                 │      PluginManager + PDFEditorPlugin（拡張）         │
-                 │                                                      │
-                 │  PluginManager._provider_registry: dict[str, type]  │
-                 │  PluginManager.register_provider(name, cls)         │
-                 │  app.register_ocr_provider(name, cls) ヘルパー       │
-                 │                                                      │
-                 │  plugins/my_ocr.py が on_load() 内で                │
-                 │    app.register_ocr_provider("myocr", MyProvider)   │
-                 │  を呼ぶだけで OCRDialog のプロバイダ選択に反映される │
-                 └──────────────────────────────────────────────────────┘
-```
+- **N個のファイルを"順番に"1個ずつ開いて処理し、常にアクティブな `fitz.Document` は最大1個**（現行 OCRDialog が `self.doc`＝アプリの開いている1文書に対して行っていることを、ファイルキューの各要素に対して繰り返すだけ）。
+- ページ render（producer）は既存の `_render_next_page` と同じ「メインスレッド + after(0) 連鎖」パターンをそのまま流用できる。consumer（ワーカー）も `ocr_pipeline.consume_one` をそのまま再利用できる。**バッチ機能は producer/consumer の中身を変更しない。ファイルをまたぐループを一段外側に追加するだけ**で済む設計にする。
 
----
+### 新規モジュール
 
-## コンポーネント境界
-
-| コンポーネント | 責務 | ファイル | 新設 / 改修 |
-|---------------|------|---------|-------------|
-| `OCRProvider` | プロバイダ抽象基底: `ocr_image()` / `list_models()` / 例外規約 | `pagefolio/ocr_providers.py` | **新設** |
-| `LMStudioProvider` | OpenAI 互換 Vision API 実装（`build_chat_payload` + `call_lm_studio` を内包） | `pagefolio/ocr_providers.py` | **新設**（`ocr.py` から移動） |
-| `ClaudeProvider` | Anthropic messages API 実装（urllib 直叩き） | `pagefolio/ocr_providers.py` | **新設**（フェーズ2） |
-| `GeminiProvider` | Google AI Studio generateContent 実装（urllib 直叩き） | `pagefolio/ocr_providers.py` | **新設**（フェーズ3） |
-| `TesseractProvider` | tesseract-ocr ローカル実行ラッパー | `pagefolio/ocr_providers.py` | **新設**（フェーズ4・任意） |
-| `OCRAPIKeyError` | APIキー未設定を示す専用例外（`RuntimeError` の子クラス） | `pagefolio/ocr_providers.py` | **新設** |
-| `run_parallel()` | provider 非依存の並列 OCR ループ（旧 `call_lm_studio_parallel`） | `pagefolio/ocr.py` | **改修**（シグネチャ変更） |
-| `build_provider()` | `settings["ocr_provider"]` からプロバイダインスタンスを生成するファクトリ | `pagefolio/ocr.py` | **新設** |
-| `has_embedded_text()` | `fitz.Page.get_text()` でテキスト埋め込み判定 | `pagefolio/ocr.py` | **新設** |
-| `OCRMixin._start_ocr()` | `build_provider()` を呼び、`OCRDialog` に渡す（provider 中立化） | `pagefolio/ocr.py` | **改修** |
-| `OCRDialog` | プロバイダ選択UI・APIキー未設定エラー・LM Studio 条件表示 | `pagefolio/ocr_dialog.py` | **改修** |
-| `SettingsDialog` | `ocr_provider` 選択ドロップダウン（または Radiobutton）追加 | `pagefolio/dialogs/settings.py` | **改修** |
-| `settings._load_settings()` | `ocr_provider: "off"` デフォルト追加（APIキーは保存しない） | `pagefolio/settings.py` | **改修** |
-| `lang.py` | プロバイダ名・APIキー未設定・コスト警告・Tesseract 精度注記の多言語文言追加 | `pagefolio/lang.py` | **改修** |
-| `ui_builder.py` | OCR ボタン表示制御（`ocr_provider == "off"` 時は disabled / 非表示） | `pagefolio/ui_builder.py` | **改修** |
-| `PluginManager` | `_provider_registry` + `register_provider()` メソッド追加 | `pagefolio/plugins.py` | **改修**（フェーズ4） |
-| `PDFEditorApp` | `register_ocr_provider()` ヘルパー追加 | `pagefolio/app.py` | **改修**（フェーズ4） |
-
----
-
-## データフロー（改修後）
-
-### OCR 実行フロー（プロバイダ中立）
-
-```
-ユーザー「読み取り実行」ボタン
-│
-▼
-OCRMixin._start_ocr(page_indices)
-  └─ provider = build_provider(self.settings)
-       └─ settings["ocr_provider"] が "off" → エラーメッセージ表示して終了
-          "lmstudio" → LMStudioProvider(url, model, timeout, max_tokens, temperature)
-          "claude"   → ClaudeProvider(api_key=os.environ["ANTHROPIC_API_KEY"], model, timeout)
-          "gemini"   → GeminiProvider(api_key=os.environ["GEMINI_API_KEY" or "GOOGLE_API_KEY"], model, timeout)
-  └─ OCRDialog(parent, app, doc, page_indices, provider=provider, ...)
-
-OCRDialog._worker(prompt)
-│
-├─ フェーズ1（逐次レンダリング）: fitz の同一 Document 並行アクセスを避ける
-│    for page_idx in page_indices:
-│      b64 = page_to_png_b64(doc[page_idx], scale)   ← メインスレッド用 doc を使用
-│      images[page_idx] = b64                          ← メモリに一時保持
-│
-│    ※ フェーズ3（逐次レンダ→即送信→破棄）では:
-│    for page_idx in page_indices:
-│      b64 = page_to_png_b64(doc[page_idx], scale)
-│      text = provider.ocr_image(b64, prompt)          ← 送信直後に b64 破棄
-│      results[page_idx] = text
-│
-├─ フェーズ2（並列 API 送信）:
-│    results, errors, fatal_msg, fatal_kind = run_parallel(
-│        provider,     ← OCRProvider インスタンスを渡す
-│        images,
-│        page_indices,
-│        concurrency=concurrency,
-│        on_progress=...,
-│        is_cancelled=...
-│    )
-│
-└─ UI 更新 (self.after(0, ...)) → _render_results_ordered()
-```
-
-### プロバイダ選択フロー
-
-```
-SettingsDialog でユーザーが ocr_provider を選択
-  └─ settings["ocr_provider"] に保存（"off" | "lmstudio" | "claude" | "gemini" | "tesseract"）
-  └─ APIキーは settings に**書かない**（os.environ から実行時のみ参照）
-  └─ _save_settings(settings)
-
-OCRDialog 初期化時:
-  └─ provider が ClaudeProvider / GeminiProvider の場合:
-       os.environ.get("ANTHROPIC_API_KEY") が None
-         → OCRAPIKeyError を raise
-         → _finish_error() で「環境変数 ANTHROPIC_API_KEY が未設定です」を表示
-         → 実行ボタンを disabled のまま
-```
-
----
-
-## 設計パターン
-
-### パターン 1: Strategy パターン（プロバイダ差し替え）
-
-**概要:** `OCRProvider` を Strategy インターフェースとし、`run_parallel()` は Strategy を受け取る。
+**`pagefolio/batch_queue.py`（新規・Tk/fitz 非依存の純ロジック層）**
+`pagination.py`/`ocr_pipeline.py` と同格の位置づけ。
 
 ```python
-# pagefolio/ocr_providers.py
-import abc
+# 責務: ファイルキューの状態遷移を純粋に管理する（Tk/fitz を一切 import しない）
+class BatchQueueState:
+    # items: [{"path": str, "status": "pending"|"running"|"done"|"error"|"cancelled",
+    #          "error_msg": str|None}]
+    def __init__(self, paths): ...
+    def current(self): ...          # 実行中/次に実行するアイテムを返す
+    def mark_running(self, idx): ...
+    def mark_done(self, idx): ...
+    def mark_error(self, idx, msg): ...
+    def advance(self): ...          # 次の pending アイテムへ進む。無ければ None
+    def is_all_finished(self): ...
+    def summary_counts(self): ...   # {"done": n, "error": n, "pending": n} 進捗表示用
+```
+`PipelineState`（ページ単位の producer-consumer 状態）と役割が異なる＝**キュー要素はファイル、ファイル内部は既存の `PipelineState` をそのまま1個ずつ使い回す**という二層構造にする。`test_pagination.py`/`test_ocr_pipeline.py` と同型の `test_batch_queue.py` で状態遷移を単体テスト可能にする（品質保証の柱③にも直結）。
 
-class OCRProvider(abc.ABC):
-    """OCR プロバイダ抽象基底クラス。
-    
-    例外規約:
-      ocr_image(), list_models() は以下のいずれかを raise する:
-        ConnectionError  - 接続失敗（ネットワーク到達不能、サーバ未起動）
-        TimeoutError     - タイムアウト
-        OCRAPIKeyError   - APIキー未設定（クラウドプロバイダのみ）
-        RuntimeError     - APIエラー（4xx/5xx、Vision非対応モデル等）
-    """
+**`pagefolio/ocr_engine.py`（新規・(d) のリファクタと共用）**
+現行 `OCRDialog` に埋め込まれている「1ドキュメント分の OCR 実行機」（producer 起動・consumer 起動・進捗コールバック）を、ダイアログの UI から切り離して再利用可能なクラスに抽出する。単一ページ OCR（既存 OCRDialog）とバッチ OCR の両方がこれを呼ぶ。詳細は (d) 参照。
 
-    @abc.abstractmethod
-    def ocr_image(self, b64_png: str, prompt: str, **kwargs) -> str:
-        """PNG の base64 文字列を送信し、OCR テキストを返す。"""
+**`pagefolio/dialogs/batch_ocr.py`（新規・UI）**
+`BatchOCRDialog(tk.Toplevel)`。ファイル追加/削除リスト・全体進捗・現在処理中ファイル名・キャンセルボタンを持つ。実行ロジック:
 
-    @abc.abstractmethod
-    def list_models(self) -> list:
-        """利用可能なモデル ID のリストを返す。取得不能時は空リストを返す。"""
-
-
-class OCRAPIKeyError(RuntimeError):
-    """APIキー未設定を示す専用例外。環境変数名を保持する。"""
-    def __init__(self, env_var: str):
-        self.env_var = env_var
-        super().__init__(f"環境変数 {env_var} が設定されていません")
-
-
-class LMStudioProvider(OCRProvider):
-    """LM Studio OpenAI 互換 Vision API（urllib 直叩き）"""
-    def __init__(self, url, model, timeout=120, max_tokens=-1, temperature=0.1):
-        self.url = url
-        self.model = model
-        self.timeout = timeout
-        self.max_tokens = max_tokens
-        self.temperature = temperature
-
-    def ocr_image(self, b64_png, prompt, **kwargs):
-        # 旧 call_lm_studio() の実装をここに移動
-        ...
-
-    def list_models(self):
-        # 旧 fetch_lm_studio_models() の実装をここに移動
-        ...
+```
+for item in queue (順次・1個ずつ):
+    doc = fitz.open(item.path)          # メインスレッド
+    engine = OCRRunEngine(doc, page_indices=all_pages, provider, ...)
+    engine.run(on_complete=lambda results: ...)  # 既存 producer/consumer 機構を流用
+    # engine 完了を待って（after チェーンの最終コールバックで）:
+    doc.close()                          # メインスレッドで明示的に解放
+    queue.mark_done(idx) / mark_error(idx, msg)
+    advance to next file                 # 次ファイルは前ファイル完了後にのみ open
 ```
 
-### パターン 2: Factory パターン（プロバイダ生成）
+- ファイル間は**逐次**（並行 fitz.Document は作らない）。ファイル内のページ並列度（concurrency）は既存設定をそのまま使う。
+- キャンセル: 現行ファイルの `_cancel_flag`（ファイルレベル）＋キュー全体の `queue_cancel_flag`（次ファイルへ進まない）の2階層。世代カウンタ（`_run_gen` 相当）もファイルごとに張り直す。
+- 結果は「ファイルパス→{page_idx: text}」の辞書としてダイアログが保持し、既存の「一括要約」（`_on_summary`/`resolve_summary_prompt`）をファイル単位にも、任意で「サマリのサマリ（複数文書横断）」にも適用できる形にしておく。
+- **アプリの `self.doc`（メインウィンドウで開いているファイル）とは完全に独立**させる。バッチダイアログは自前で `fitz.Document` を開閉するため、Undo スタック・`current_page`・サムネイルキャッシュ等のメイン状態に一切触れない。これにより「1 doc ずつ」制約と「メインスレッドのみ」制約の両方を、既存の状態管理を汚さずに満たせる。
 
-**概要:** `build_provider(settings)` が設定値からプロバイダを生成。OCRMixin は具体クラスを知らない。
+### 統合ポイントまとめ
 
-```python
-# pagefolio/ocr.py
-import os
-from pagefolio.ocr_providers import (
-    LMStudioProvider, ClaudeProvider, GeminiProvider, OCRAPIKeyError
-)
-
-def build_provider(settings: dict, extra_registry: dict = None) -> "OCRProvider":
-    """settings["ocr_provider"] から OCRProvider インスタンスを生成する。
-    
-    extra_registry: PluginManager._provider_registry から渡されるプラグイン提供プロバイダ。
-    """
-    name = settings.get("ocr_provider", "off")
-
-    # プラグイン登録プロバイダ（フェーズ4）を先に確認
-    if extra_registry and name in extra_registry:
-        return extra_registry[name](settings)
-
-    if name == "lmstudio":
-        return LMStudioProvider(
-            url=settings.get("lm_studio_url", "http://localhost:1234"),
-            model=settings.get("lm_studio_model", ""),
-            timeout=int(settings.get("ocr_timeout", 120)),
-            max_tokens=int(settings.get("ocr_max_tokens", -1)),
-            temperature=float(settings.get("ocr_temperature", 0.1)),
-        )
-    if name == "claude":
-        key = os.environ.get("ANTHROPIC_API_KEY")
-        if not key:
-            raise OCRAPIKeyError("ANTHROPIC_API_KEY")
-        return ClaudeProvider(api_key=key, ...)
-    if name == "gemini":
-        key = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
-        if not key:
-            raise OCRAPIKeyError("GEMINI_API_KEY")
-        return GeminiProvider(api_key=key, ...)
-    raise ValueError(f"不明なプロバイダ: {name}")
-```
-
-### パターン 3: fitz スレッドセーフティ制約への対処
-
-**制約:** `fitz.Document` を `ThreadPoolExecutor` のワーカースレッドに渡してはならない。同一 Document への並行アクセスはメモリ破壊・クラッシュを引き起こす可能性がある。
-
-**現行の正しい対処（`OCRDialog._worker`）:**
-- フェーズ1（ループ）: `doc[page_idx]` へのアクセスを**直列**で行い base64 変換して `images` dict に保持。
-- フェーズ2: `images` dict（文字列のみ）を `run_parallel()` に渡す。ここで初めてスレッドが動く。
-
-**フェーズ3 逐次レンダリング化（メモリ最適化）:**
-```python
-# _worker 内（逐次レンダ→即送信→破棄）
-for i, page_idx in enumerate(self.page_indices):
-    if cancelled: break
-    # ① メインスレッドのみが doc を触る（この関数は daemon thread だが doc への
-    #    アクセスはシリアルであるため安全）
-    b64 = page_to_png_b64(doc[page_idx], scale=scale)
-    # ② 送信はプロバイダが行う（HTTP IO のみ、fitz 不使用）
-    try:
-        text = provider.ocr_image(b64, prompt)
-        results[page_idx] = text
-    except Exception as e:
-        errors[page_idx] = str(e)
-    finally:
-        del b64  # メモリ解放
-```
-
-> 注意: 逐次レンダリング化後は `run_parallel()` を使わず直列ループになる。
-> 並列度設定は「クラウド送信の同時接続数」としてのみ有効なため、
-> フェーズ3 以降では逐次レンダリング専用パスと並列送信パスを分離するか、
-> セマフォ制御で並列度を制限するアーキテクチャを検討する。
+| 新規/変更 | ファイル | 内容 |
+|---|---|---|
+| 新規（純ロジック） | `pagefolio/batch_queue.py` | ファイルキュー状態遷移（Tk/fitz 非依存） |
+| 新規（実行エンジン抽出） | `pagefolio/ocr_engine.py` | OCRDialog から producer/consumer 駆動部を抽出・再利用可能化（(d)と共用） |
+| 新規（UI） | `pagefolio/dialogs/batch_ocr.py` | BatchOCRDialog（キュー管理UI・逐次ファイル処理） |
+| 変更 | `pagefolio/ui_builder.py` | バッチOCR起動ボタン/メニュー項目の追加 |
+| 変更なし | `ocr_pipeline.py` / `ocr_providers.py` | そのまま再利用（producer/consumer の中身は不変） |
 
 ---
 
-## アンチパターン（回避すべき設計）
+## (b) 明示設定型プロバイダーフォールバック ── 挿入層の選定
 
-### アンチパターン 1: `doc` をスレッドに渡す
+### 既存3層の役割の切り分け
+- `build_provider()`（ocr.py）: settings から**1個の** OCRProvider を生成する純粋なファクトリ。複数プロバイダの概念を知らない。**ここには挟まない**（単一責務を壊さない）。
+- `run_parallel()` / `consume_one()`（ocr_pipeline.py）: 1プロバイダに対する**ページ単位のリトライ**（429/5xx の指数バックオフ、`OCRRetryableError`）を扱う層。これは「同一プロバイダ内の一時的失敗からの回復」であり、フォールバック（＝別ベンダーへの切替）とは意味が異なる。**ここにも挟まない**。
+- `OCRDialog`（`_worker`/`_finish_error`）: `PipelineState.fatal_msg`/`fatal_kind`（`connection`/`timeout`/`circuit_breaker`＝3連続失敗）を検知して**実行を打ち切る**層。フォールバックが必要になる「プロバイダが使い物にならない」という判定は、まさにこの `fatal_msg`/`fatal_kind` 確定タイミングで既に構造的に検出されている。
 
-**何が起きるか:** `ThreadPoolExecutor` のワーカーが `fitz.Document` を並列アクセスすると、PyMuPDF 内部のメモリ管理が競合しクラッシュ・データ破損が起きる。
-**代わりに:** `page_to_png_b64()` での変換（メインスレッド or シリアル）を完了させてから `run_parallel()` に文字列だけ渡す。
+→ **フォールバックは `PipelineState` の fatal 確定を受け取った後の、OCRDialog（または (a)/(d) で抽出する `OCRRunEngine`）の制御フローに、既存プリミティブを変更せずオーケストレーション層として追加するのが最も安全。**
 
-### アンチパターン 2: `ocr_dialog.py` が `LMStudioProvider` を直接 import する
+### 新規モジュール
 
-**何が起きるか:** ダイアログがプロバイダ実装に密結合し、プロバイダ追加のたびにダイアログを書き換える必要が生じる。
-**代わりに:** `OCRDialog` は `OCRProvider` インスタンスを受け取るだけ。具体クラスは `OCRMixin._start_ocr()` で解決する。
+**`pagefolio/provider_fallback.py`（新規・純ロジック層）**
+```python
+def next_fallback_provider(current_provider, fallback_order, already_tried):
+    """フォールバック順リストから、まだ試していない次のプロバイダ名を返す。
+    None ならフォールバック先なし（既存のエラー表示へフォールバック）。
+    Tk/fitz/ネットワーク非依存の純関数。"""
+```
 
-### アンチパターン 3: APIキーを `settings.json` に書く
+### 実行フロー（明示確認つき）
 
-**何が起きるか:** APIキーが平文でディスクに保存される。PyInstaller exe 配布時のセキュリティリスク。
-**代わりに:** `os.environ.get("ANTHROPIC_API_KEY")` を実行時にのみ参照。`settings.json` には `ocr_provider` 名のみ保存する。
+```
+1. build_provider(settings) で主プロバイダを生成 → 実行 → PipelineState.fatal_msg 確定
+2. fatal_kind in ("connection","timeout","circuit_breaker") かつ
+   settings["ocr_fallback_providers"] が非空 かつ
+   next_fallback_provider() が None でない場合:
+     → 既存の「送信先確認ダイアログ」（コスト確認と同じ UI 部品）を再利用し
+       「プロバイダ X が失敗しました。フォールバック先 Y を試しますか？」を明示提示
+     → 同意された場合のみ:
+         build_provider(settings, provider_override=Y) で Y を生成
+         未処理・失敗ページのみを対象に新しい _run_gen で再実行
+           （成功済みページは再送信しない＝コスト面で重要）
+     → 拒否 or フォールバック先なし の場合は既存のエラー表示へ
+```
 
-### アンチパターン 4: `PluginManager.fire_event()` でプロバイダを登録させる
+- **設定の永続化:** `settings["ocr_fallback_providers"] = []`（プロバイダ名の順序付きリスト・既定は空＝オフ。既存の "既定 off" 方針=V14-D-03 と整合）。プロバイダ名の文字列のみで API キーを含まないため `_SENSITIVE_KEYS` の対象外・そのまま JSON 永続化可。
+- **APIキー未設定のフォールバック先:** `_resolve_api_key` が `OCRAPIKeyError` を出す場合は、そのフォールバック候補を「使えない」として自動的に次候補へ進める（ユーザーへの確認ダイアログはキーが解決できるプロバイダに対してのみ出す）。
+- **禁止事項の遵守:** milestone context の「自動的な別ベンダー送信はしない」を満たすため、フォールバック候補が1個であっても確認ダイアログは必ず経由する（省略しない）。
 
-**何が起きるか:** イベント通知機構（観察者パターン）をサービス登録に流用すると、登録順・副作用・非同期性が複雑になる。
-**代わりに:** `PluginManager.register_provider(name, cls)` という専用メソッドを追加する（解釈B）。
+### 統合ポイントまとめ
+
+| 新規/変更 | ファイル | 内容 |
+|---|---|---|
+| 新規（純ロジック） | `pagefolio/provider_fallback.py` | フォールバック順の次候補決定（純関数） |
+| 変更 | `pagefolio/ocr.py` | `build_provider()` に任意引数 `provider_override` を追加（settings の `ocr_provider` を上書きして同じ設定値で別プロバイダを生成できるようにする軽微な拡張。既存呼び出しは影響なし） |
+| 変更 | `pagefolio/ocr_dialog.py`（または (d) 抽出後の `ocr_engine.py`） | `_finish_error` 相当の箇所でフォールバック確認ダイアログ呼び出し・再実行トリガーを追加 |
+| 変更 | `pagefolio/settings.py` | `_load_settings()` の defaults に `ocr_fallback_providers: []` を追加 |
+| 変更 | `pagefolio/dialogs/llm_config.py`（分割後の新パッケージ内） | フォールバック順の編集 UI（順序リスト・追加/削除/並べ替え）を新セクションとして追加 |
+| 変更なし | `ocr_pipeline.py` / `run_parallel` | 単一プロバイダの実行プリミティブは不変 |
 
 ---
 
-## 統合ポイント詳細
+## (c) サムネイル仮想化（PERF-01）と `pagination.py` の関係
 
-### `settings.py` の変更
+### 現状の2重構造の認識
+`pagination.py` の「窓（window）」は**ドキュメントレベルの粗いページネーション**であり、既に「全ページを一度に描画しない」という最適化を担っている（既定20・最大100ページ窓）。しかし `_build_thumbnails()` の実装を見ると、窓の範囲 `[lo, hi)` に含まれる**全ページ分**の Tk ウィジェット（Frame + 2 Label）を `_add_thumb_placeholder` でループ生成し `pack` している。窓を100に設定したユーザーは、スクロール可能な Canvas の可視範囲（実際は10〜15枚程度しか画面に収まらない）に関わらず、常に100個のウィジェットとサムネイル画像を生成・保持することになる。これが PERF-01 の実体的なボトルネックであり、`pagination.py` の窓ロジックだけでは解決しない**別レイヤーの問題**である。
+
+### 設計方針：窓（外層）はそのまま・可視範囲仮想化（内層）を追加
+
+`pagination.py` の `to_global`/`to_local`/`window_bounds`/`selected_pages`（常に全ページ index）は D&D・複数選択の整合性を守る不変条件として CONCERNS.md でも「散在すると窓またぎバグを生む」と明記されている、**触ってはいけない層**。したがって：
+
+- **外層（不変）:** `_page_window_start`・`_page_size`（10〜100）・`pagination.py` の窓計算はそのまま。これは「どのページ範囲が候補か」を決めるだけの層として維持する。
+- **内層（新規）:** 窓の中でも「Canvas のスクロール位置から見て実際に画面内（＋前後バッファ数行）にあるページだけ」ウィジェットを実体化する、リスト仮想化（windowed list virtualization）パターンを追加する。
+
+### 新規モジュール
+
+**`pagefolio/thumb_virtualizer.py`（新規・Tk/fitz 非依存の純ロジック層）**
+`pagination.py` と同じ設計哲学（純関数・状態非依存）で、可視範囲計算だけを担う。
 
 ```python
-# _load_settings() の defaults に追加
-"ocr_provider": "off",          # "off" | "lmstudio" | "claude" | "gemini" | "tesseract"
-"ocr_claude_model": "claude-haiku-4-5",
-"ocr_gemini_model": "gemini-2.5-flash",
-# lm_studio_url / lm_studio_model は既存のまま維持
-# ※ ANTHROPIC_API_KEY / GEMINI_API_KEY は環境変数のみ・ここに書かない
+def visible_local_range(scroll_top_px, viewport_height_px, row_height_px,
+                         total_rows, buffer_rows=3):
+    """スクロール位置と行高さから、実体化すべき窓ローカル index 範囲
+    (first_local, last_local) を返す（前後 buffer_rows 分の余裕つき）。
+    Tk/fitz 非依存の純関数。test_pagination.py と同型の単体テストが可能。"""
 ```
 
-### `lang.py` に追加すべき文言キー
+- 出力はあくまで「窓ローカル index」であり、実ページへの変換は既存の `pagination.to_global(local_pos, window_start)` にそのまま委譲する（二重変換にならないよう、仮想化層は pagination 層の**上に**乗る形にする。仮想化層が新しいグローバル変換ロジックを独自に持たない）。
 
-| キー | 日本語 | 英語 |
-|------|--------|------|
-| `ocr_provider_label` | プロバイダ: | Provider: |
-| `ocr_provider_off` | OCR無効 (off) | OCR disabled (off) |
-| `ocr_provider_lmstudio` | LM Studio (ローカル) | LM Studio (local) |
-| `ocr_provider_claude` | Claude (Anthropic) | Claude (Anthropic) |
-| `ocr_provider_gemini` | Gemini (Google AI) | Gemini (Google AI) |
-| `ocr_provider_tesseract` | Tesseract (ローカル・精度限定) | Tesseract (local, limited) |
-| `ocr_apikey_missing` | 環境変数 {env_var} が未設定です。設定してからアプリを再起動してください。 | Environment variable {env_var} is not set. Please set it and restart the app. |
-| `ocr_cost_warning` | クラウドプロバイダ: {count} ページを外部APIへ送信します（従量課金・プライバシー注意）。続けますか？ | Cloud provider: {count} page(s) will be sent to an external API (pay-per-use, privacy notice). Continue? |
-| `ocr_provider_off_btn_hint` | OCR が無効です。設定からプロバイダを選択してください。 | OCR is disabled. Select a provider in Settings. |
-| `ocr_text_skip_notice` | p.{page}: テキスト埋め込み済みのためスキップしました | p.{page}: Skipped (embedded text detected) |
+### ViewerMixin 側の変更
 
-### `ui_builder.py` の変更
+- `_build_thumbnails()`: 窓 `[lo, hi)` の**全件**に対して即時 `_add_thumb_placeholder` する現行実装をやめ、`thumb_virtualizer.visible_local_range()` が返す可視サブレンジのみ実体化する。
+- Canvas の `<Configure>`（サイズ変更）・スクロールバー移動（`yscrollcommand`/`yview` 経由のコールバック）にバインドした `_reflow_thumbnails()` を新設し、スクロールのたびに可視サブレンジを再計算 → 差分だけウィジェットを生成/破棄（またはウィジェットプールを再利用してラベルの `image=` を差し替えるリサイクル方式。生成コストがボトルネックであれば後者を推奨）。
+- `thumb_cache`（CONCERNS.md で「無制限に増える」と指摘済み）も、この変更のついでに「窓サイズの2倍程度」を上限とした LRU に縮小する。可視外まで無制限にキャッシュを持つ必要が仮想化によりなくなるため、自然に解消できる。
+- 既存の世代カウンタ（`_thumb_gen`）パターンはそのまま流用し、スクロール中に古い再スケジュールが割り込まないようにする。
+- `selected_pages`・D&D の座標処理は一切変更しない（常に `pagination.to_global`/`to_local` 経由の全ページ index を使う既存契約を維持）。仮想化はあくまで「どのウィジェットを実体化するか」の描画最適化に閉じる。
 
-```python
-# _build_tools_scrollable() 内の OCR ボタン部分
-# ocr_provider == "off" の場合は両ボタンを disabled として生成する
-# （後からプロバイダ設定変更時に enabled/disabled を切り替えるため
-#   _doc_buttons リストとは別の _ocr_buttons リストで管理することを推奨）
-is_ocr_on = self.settings.get("ocr_provider", "off") != "off"
-state = "normal" if is_ocr_on else "disabled"
-```
+### 統合ポイントまとめ
 
-### `OCRDialog` の変更ポイント
-
-1. `__init__` に `provider: OCRProvider` 引数を追加（`url`, `model` は lmstudio 専用に縮退）
-2. `_fetch_models()` を `provider.list_models()` 経由に変更
-3. `_build()` で LM Studio 固有行（サーバURL / モデルコンボ）を `isinstance(provider, LMStudioProvider)` で条件表示
-4. `_worker()` の API 呼び出し部分を `run_parallel(provider, ...)` に置き換え
-5. `_finish_error()` で `OCRAPIKeyError` を受け取り専用メッセージ表示
+| 新規/変更 | ファイル | 内容 |
+|---|---|---|
+| 新規（純ロジック） | `pagefolio/thumb_virtualizer.py` | 可視範囲計算（純関数・pagination.py と同格） |
+| 変更 | `pagefolio/viewer.py` | `_build_thumbnails()` を可視サブレンジのみ実体化する方式に変更・`_reflow_thumbnails()` 新設・Canvas スクロールイベントへのバインド追加 |
+| 変更 | `pagefolio/viewer.py` | `thumb_cache` に LRU 上限を追加（既存 CONCERNS.md 指摘の解消を兼ねる） |
+| 変更なし | `pagefolio/pagination.py` | 窓計算・`to_global`/`to_local`・`selected_pages` 契約は完全に不変 |
+| 変更なし | `pagefolio/dnd.py` | D&D の index 変換ロジックは不変（仮想化は描画層のみの変更） |
 
 ---
 
-## プラグイン登録フック（フェーズ4・解釈B）
+## プロンプト・テンプレートマネージャー（settings.py の拡張）
 
-### 新設する拡張ポイント
+既存の外部プロンプトファイル1本立て方式（`CUSTOM_PROMPT_FILE`/`SUMMARY_PROMPT_FILE`・V174-2）を、複数の**名前付きテンプレート**へ拡張する。
 
-```python
-# pagefolio/plugins.py に追加
-class PluginManager:
-    def __init__(self):
-        ...
-        self._provider_registry: dict = {}  # {name: OCRProvider subclass}
-
-    def register_provider(self, name: str, provider_cls: type) -> None:
-        """OCR プロバイダクラスを名前で登録する。
-        
-        プラグインは on_load(app) 内で app.register_ocr_provider() を通じて呼ぶ。
-        """
-        self._provider_registry[name] = provider_cls
-
-    def get_provider_registry(self) -> dict:
-        """登録済みプロバイダクラス辞書のコピーを返す。"""
-        return dict(self._provider_registry)
-```
-
-```python
-# pagefolio/app.py に追加
-class PDFEditorApp(...):
-    def register_ocr_provider(self, name: str, provider_cls: type) -> None:
-        """プラグインから OCR プロバイダを登録するヘルパー。"""
-        self.plugin_manager.register_provider(name, provider_cls)
-```
-
-```python
-# プラグイン側（plugins/my_azure_ocr.py）の使用例
-from pagefolio.plugins import PDFEditorPlugin
-from pagefolio.ocr_providers import OCRProvider
-
-class AzureOCRProvider(OCRProvider):
-    def ocr_image(self, b64_png, prompt, **kwargs): ...
-    def list_models(self): return ["azure-vision-v4"]
-
-class AzureOCRPlugin(PDFEditorPlugin):
-    name = "Azure OCR"
-    def on_load(self, app):
-        app.register_ocr_provider("azure", AzureOCRProvider)
-```
-
-`build_provider()` は `extra_registry=self.plugin_manager.get_provider_registry()` を受け取り、
-組み込みプロバイダより前にプラグイン登録プロバイダを確認する。これにより組み込みプロバイダの上書きも可能になる（意図的に「lmstudio」を別実装で置き換えるプラグインも書ける）。
+- **保存方式:** JSON 設定への巨大テキスト混入を避けるため、既存パターン（実行ファイルと同階層の外部ファイル）を踏襲し、新設ディレクトリ `prompt_templates/`（exe と同階層）配下に `<template名>.md` を1ファイル1テンプレートとして保存する。API キーではないため機密ガードは不要。
+- **`settings.py` への追加関数:** `list_prompt_templates()` / `load_prompt_template(name)` / `save_prompt_template(name, content)` / `delete_prompt_template(name)`。いずれも既存の `load_prompt_file`/`save_prompt_file`（`_get_base_dir()` 基準）を内部で再利用し、ファイル名だけをテンプレート名でパラメータ化する（重複実装を避ける）。
+- **優先順位（既存 V174-2 契約を壊さない3層に拡張）:** ①現在選択中の名前付きテンプレート（新規） > ②単一の外部 md ファイル（`ocr_custom_prompt.md`・後方互換） > ③ `settings.json` の `ocr_custom_prompt` 値。`resolve_ocr_prompt`/`load_custom_prompt` のシグネチャは維持し、呼び出し元（`ocr.py:_start_ocr`）で「選択中テンプレート名があればその内容、無ければ従来どおり `load_custom_prompt(settings)`」という薄い分岐を追加するだけで済む。
+- **UI:** (d) で分割予定の `llm_config` パッケージ内に新セクション（テンプレート選択ドロップダウン＋名前を付けて保存/削除/名前変更ボタン）として追加する。既存の `_add_prompt_file_notice`（外部ファイル連動注記）と同じ場所に隣接配置し、「外部ファイルが存在する場合はそちらが優先される」旨の注記を踏襲する。
 
 ---
 
-## ビルド順（依存関係を考慮した推奨実装順）
+## (d) 肥大モジュール分割 ── 安全な切り出し順序
 
-### フェーズ1 — プロバイダ抽象化（他フェーズの土台）
+### 結論：ocr_providers.py → llm_config.py → ocr_dialog.py の順
 
+| 順 | モジュール | 現状行数 | 理由 |
+|---|---|---|---|
+| 1 | `ocr_providers.py` | 1424行 | 結合度が最も低い（各 Provider クラスはほぼ自己完結）。`dialogs.py→dialogs/` 分割（v1.3.0 DEBT-01）と同型の前例あり＝リスク実績が最も少ない。(a)(b) の新規プロバイダ/フォールバック作業が触るファイルなので、複雑化する前に土台を整える。 |
+| 2 | `llm_config.py` | 1204行 | UI生成・検証・コスト計算が絡むがスレッド跨ぎの状態は持たない（①②のテンプレート/フォールバックUIがここに追加される前に分割し、追加作業が新旧2つの構造に分散するのを防ぐ） |
+| 3 | `ocr_dialog.py` | 2154行 | 最もリスクが高い（`_render_queue`/`_worker_threads`/`_run_gen`/`_pstate`/キャンセルフラグが密結合）。かつ (a) バッチOCRが必要とする「単一ドキュメントOCR実行エンジン」の抽出と**同一作業**なので、バッチOCR着手の直前に行うのが最も手戻りが少ない。 |
+
+### 具体的な切り出し案
+
+**1. `ocr_providers.py` → `pagefolio/ocr_providers/` パッケージ化**
 ```
-Step 1-1:  pagefolio/ocr_providers.py 新設
-           - OCRProvider 抽象基底クラス
-           - OCRAPIKeyError 例外クラス
-           - LMStudioProvider（ocr.py の call_lm_studio + fetch_lm_studio_models を移動）
-
-Step 1-2:  pagefolio/ocr.py 改修
-           - call_lm_studio / build_chat_payload / fetch_lm_studio_models を ocr_providers.py に委譲
-           - call_lm_studio_parallel → run_parallel(provider, images_b64, ...) にリネーム+シグネチャ変更
-           - build_provider(settings) ファクトリ追加（lmstudio のみ対応の時点では十分）
-           - has_embedded_text(page) 追加（fitz.Page.get_text() ベース）
-           - OCRMixin._start_ocr() で build_provider() を呼ぶよう改修
-
-Step 1-3:  pagefolio/ocr_dialog.py 改修
-           - __init__ に provider 引数追加
-           - _fetch_models() → provider.list_models() に変更
-           - _worker() → run_parallel(provider, ...) に変更
-           - テキスト埋め込み判定（has_embedded_text）をレンダリングループ前に追加
-
-Step 1-4:  tests/test_ocr_providers.py 新設
-           - LMStudioProvider.ocr_image() のペイロード構築をモックでテスト
-           - run_parallel() の正常/キャンセル/致命的エラーのテスト
-           - has_embedded_text() のテスト
+pagefolio/ocr_providers/
+├── __init__.py     # 後方互換 re-export（from pagefolio.ocr_providers import ClaudeProvider 等を維持）
+├── base.py         # OCRProvider(ABC) + OCRAPIKeyError/OCRRetryableError/OCRContextLengthError
+├── lmstudio.py      # LMStudioProvider
+├── claude.py        # ClaudeProvider
+├── gemini.py         # GeminiProvider
+├── tesseract.py      # TesseractProvider + _detect_tesseract
+├── ollama.py         # OllamaProvider
+└── runpod.py         # RunPodProvider
 ```
+`dialogs/__init__.py` が既に確立した「re-export で import パスを維持する」パターンをそのまま踏襲。`ocr.py`/`ocr_pipeline.py`/テスト群からの `from pagefolio.ocr_providers import X` は無変更で動作する。
 
-> フェーズ1 完了時点では既存の LM Studio 挙動が完全に維持される。
-
-### フェーズ2 — Claude プロバイダ追加
-
+**2. `llm_config.py` → `pagefolio/dialogs/llm_config/` パッケージ化**
 ```
-Step 2-1:  pagefolio/ocr_providers.py に ClaudeProvider 追加
-           - messages API ペイロード構築
-           - レスポンス解析（content[0].text を type=="text" で走査）
-           - モデル一覧（/v1/models）
-           - OCRAPIKeyError を os.environ 未設定時に raise
-
-Step 2-2:  pagefolio/ocr.py の build_provider() に "claude" ケース追加
-
-Step 2-3:  pagefolio/settings.py に ocr_provider / ocr_claude_model を追加
-
-Step 2-4:  pagefolio/lang.py に Claude 向け文言キーを追加
-
-Step 2-5:  pagefolio/ocr_dialog.py を改修
-           - OCRAPIKeyError を _finish_error() でハンドル
-           - LM Studio 固有 UI を条件表示
-
-Step 2-6:  pagefolio/dialogs/settings.py に ocr_provider 選択 UI 追加
-
-Step 2-7:  pagefolio/ui_builder.py の OCR ボタン enable/disable 制御追加
-
-Step 2-8:  tests/test_ocr_providers.py に ClaudeProvider テスト追加
+pagefolio/dialogs/llm_config/
+├── __init__.py            # re-export（from pagefolio.dialogs import LLMConfigDialog 維持）
+├── dialog.py               # LLMConfigDialog 本体（Toplevel・タブ/セクション構成の骨格）
+├── provider_sections.py    # プロバイダ別 UI 生成（_build_claude_section 等）
+├── validation.py            # _validate_* 群
+├── model_fetch.py            # _fetch_models_async・モデル一覧取得
+└── prompt_panel.py            # 新規: テンプレートマネージャー+フォールバック順UI（v1.8.0新規機能はここに追加。既存分割ファイルを太らせない）
 ```
 
-### フェーズ3 — Gemini プロバイダ + 逐次レンダリング最適化
-
+**3. `ocr_dialog.py` → OCRRunEngine 抽出 + ocr_dialog.py 縮小**
 ```
-Step 3-1:  pagefolio/ocr_providers.py に GeminiProvider 追加
-           - generateContent ペイロード構築（inline_data）
-           - レスポンス解析（candidates[0].content.parts[0].text）
-           - モデル一覧（/v1beta/models）
-           - GEMINI_API_KEY / GOOGLE_API_KEY フォールバック
+pagefolio/ocr_engine.py（新規）
+  OCRRunEngine: _start_worker_thread/_worker/_render_next_page/_retry_sentinels/
+                provider再生成ロジックを Dialog から独立したクラスへ移動。
+                コンストラクタ引数: doc, page_indices, provider, prompt, concurrency,
+                                    scale, force_ocr, callbacks(on_progress/on_success/
+                                    on_page_error/on_fatal/on_complete)
+                起動: engine.start(after_scheduler=self.after)  # Tk の after は呼び出し元から注入
+                      （ocr_engine.py 自体は tkinter を import しない設計にできると尚良いが、
+                       after() 連鎖の駆動には Tk ウィジェットの after が要るため、
+                       「after 関数を注入する」形にして疎結合を保つ）
 
-Step 3-2:  pagefolio/ocr.py の build_provider() に "gemini" ケース追加
-
-Step 3-3:  pagefolio/ocr_dialog.py の _worker() を逐次レンダリング化
-           - 全ページ一括変換 → 1ページずつ変換→送信→破棄
-           - メモリ節約（低スペック PC 対策）
-           ※ fitz スレッドセーフ制約: doc への全アクセスを _worker スレッド内で
-             シリアル実行する既存構造を維持（並列化しない）
-
-Step 3-4:  tests/test_ocr_providers.py に GeminiProvider テスト追加
+pagefolio/ocr_dialog.py（縮小後）
+  OCRDialog: UI構築・結果表示（Markdown整形・raw保持）・エクスポート・
+             サマリ生成UI・OCRRunEngine の生成と結果コールバック配線のみ
 ```
+この抽出により、`BatchOCRDialog`（(a)）は `OCRRunEngine` を「ファイルごとに1個ずつ生成して使い回す」だけで実装でき、producer/consumer ロジックの二重実装を避けられる。
 
-### フェーズ4（任意） — Tesseract + プラグイン登録機構
+### 分割全体のビルド順序（マイルストーンのフェーズ構成への示唆）
 
-```
-Step 4-1:  pagefolio/ocr_providers.py に TesseractProvider 追加
-           - pytesseract / subprocess 経由で tesseract 呼び出し
-           - 依存なし時の ImportError を OCRAPIKeyError 相当の専用例外で処理
-
-Step 4-2:  pagefolio/plugins.py に _provider_registry + register_provider() 追加
-
-Step 4-3:  pagefolio/app.py に register_ocr_provider() ヘルパー追加
-
-Step 4-4:  pagefolio/ocr.py の build_provider() に extra_registry 引数追加
-
-Step 4-5:  ドキュメント・テスト更新
-```
+1. **基盤分割:** `ocr_providers.py` パッケージ化 → `llm_config.py` パッケージ化（新機能追加前に土台を整理。後方互換 import テスト `test_imports.py` 拡張必須）
+2. **テンプレートマネージャー:** `settings.py` 拡張＋`llm_config/prompt_panel.py` 追加（分割後の構造にそのまま新規UIを追加できる）
+3. **プロバイダフォールバック:** `provider_fallback.py` 新設＋`ocr.py`/`ocr_dialog.py` 統合＋`llm_config/prompt_panel.py` へのUI追加
+4. **ocr_dialog.py 分割（OCRRunEngine 抽出）:** バッチOCR着手の直前に実施（③の直後・⑤の残り）
+5. **バッチ複数ファイル OCR:** `batch_queue.py` + `dialogs/batch_ocr.py`（OCRRunEngine を再利用。milestone context 通り単独フェーズに隔離）
+6. **サムネイル仮想化（PERF-01）:** `thumb_virtualizer.py` + `viewer.py` 変更。OCR系の変更と依存関係がないため、2〜5と並行して独立フェーズ化可能
+7. **E2E モックテスト拡充:** OCRRunEngine/batch_queue の抽出が完了した後の方がテスト容易性が高い（Tk 非依存の純ロジック層が増えるほどモック不要な単体テストが増やせる）ため、4・5の後に厚めに配置するのが効率的
 
 ---
 
-## スケーラビリティ考慮
+## Anti-Patterns（本統合で踏んではいけない失敗）
 
-| 考慮点 | 現時点 | プロバイダ追加後 | 注意事項 |
-|--------|--------|-----------------|---------|
-| 並列度上限 | MAX_OCR_CONCURRENCY=8 | クラウド: 2〜3 推奨（429対策） | プロバイダ別に定数を持つ |
-| メモリ使用 | 全ページ base64 を一括保持 | フェーズ3 で逐次化（1ページ分のみ） | 低RAM PC での大PDF対策 |
-| レート制限 | LM Studio はなし | Claude/Gemini は429が来うる | リトライ（指数バックオフ）検討 |
-| タイムアウト | 120秒固定 | プロバイダ別のデフォルト推奨 | クラウドはネットワーク依存 |
+### Anti-Pattern 1: フォールバック判定を `run_parallel`/`consume_one` の中に混ぜ込む
 
----
+**何をやりがちか:** ページ単位のリトライ処理（`OCRRetryableError` の指数バックオフ）と、プロバイダ丸ごと切替のフォールバックを同じ関数内で分岐させる。
+**なぜ問題か:** 「一時的な429」と「プロバイダ自体が死んでいる」は意味が異なる意思決定であり、混ぜると `consume_one` が Tk 非依存の純関数でなくなり、確認ダイアログ（Tk 依存）を呼ぶ必要が出てテスト容易性が崩れる。
+**代わりにすること:** フォールバックは `PipelineState.fatal_msg` が確定した**後**、UI層（Dialog/Engine の呼び出し元）でのみ判断する。
 
-## 信頼度評価
+### Anti-Pattern 2: サムネイル仮想化で `pagination.py` の窓ロジックを二重実装する
 
-| 領域 | 信頼度 | 根拠 |
-|------|--------|------|
-| OCRProvider 抽象設計 | HIGH | 既存コード実読 + 仕様書の確定事項 |
-| fitz スレッドセーフ制約の対処方法 | HIGH | 既存 _worker の正しい実装を確認済み |
-| LMStudio → Provider 移動の具体手順 | HIGH | call_lm_studio / fetch_lm_studio_models の実装を実読済み |
-| ClaudeProvider / GeminiProvider の API 形式 | HIGH | 仕様書 §3 の API 差分表 + 公知情報 |
-| プラグイン登録機構の設計 | MEDIUM | 仕様書の「未決定」事項。フェーズ4 実装前に要確認 |
-| Tesseract の精度・依存管理 | LOW | 仕様書に「現状あまり機能していない」とあり。実動作は未検証 |
+**何をやりがちか:** 可視範囲計算のために独自の global index 変換をもう一つ書いてしまう。
+**なぜ問題か:** CONCERNS.md が明記する「D&D の窓またぎバグ」の再発パターンそのもの（index 変換ロジックの散在）。
+**代わりにすること:** 仮想化層は「窓ローカル index の可視サブレンジ」だけを返す純関数に限定し、グローバル変換は必ず既存の `pagination.to_global`/`to_local` を呼ぶ。
+
+### Anti-Pattern 3: バッチOCRでメインウィンドウの `self.doc`/Undoスタックを共有する
+
+**何をやりがちか:** バッチ処理を「今開いているファイルのOCR」の延長として実装し、ファイルを開くたびに `self.doc` を差し替えてしまう。
+**なぜ問題か:** Undo/Redo スタック・`current_page`・サムネイルキャッシュ・世代カウンタが全てメインウィンドウの状態と衝突し、バッチ処理中にユーザーが誤操作するとメインの編集状態を破壊しうる。
+**代わりにすること:** `BatchOCRDialog` は自前の `fitz.Document` インスタンスをファイルごとに開閉し、`app.doc`/Undoスタックには一切触れない完全独立ワークフローとする。
 
 ---
 
-## ソース
+## Integration Points 総括
 
-- `pagefolio/ocr.py` — 実コード実読（call_lm_studio, call_lm_studio_parallel, OCRMixin）
-- `pagefolio/ocr_dialog.py` — 実コード実読（_worker の2フェーズ構造）
-- `pagefolio/plugins.py` — 実コード実読（PluginManager の現状）
-- `pagefolio/settings.py` — 実コード実読（デフォルト値一覧）
-- `pagefolio/lang.py` — 実コード実読（OCR 文言キー一覧）
-- `docs/OCRプロバイダ化_見積もり仕様.md` — 設計確定事項・ロードマップの一次情報源
-- `.planning/codebase/ARCHITECTURE.md` — システム構成図・データフロー
-- `.planning/PROJECT.md` — マイルストーン要件・Key Decisions
+### Internal Boundaries（新規/変更コンポーネント間の連携）
+
+| Boundary | Communication | Notes |
+|----------|---------------|-------|
+| `BatchOCRDialog` ↔ `OCRRunEngine` | 直接呼び出し（ファイルごとに1個生成） | producer/consumer 中身は不変・ファイルループのみ新規 |
+| `OCRDialog`/`OCRRunEngine` ↔ `provider_fallback.py` | fatal 確定後の同期呼び出し + 確認ダイアログ | 既存 `build_provider` は変更最小（`provider_override` 追加のみ） |
+| `viewer.py` ↔ `thumb_virtualizer.py` | Canvas スクロールイベント→純関数呼び出し | `pagination.py` の窓契約は不変のまま外側に重ねる |
+| `llm_config/prompt_panel.py` ↔ `settings.py` | テンプレート一覧/読込/保存の関数呼び出し | 既存 `load_prompt_file`/`save_prompt_file` を再利用（重複実装しない） |
+| `ocr_providers/` パッケージ ↔ 既存呼び出し元 | re-export による import パス互換 | `dialogs/__init__.py` と同型パターン（v1.3.0 実績） |
+
+### 既存原則との整合チェックリスト
+
+- [x] fitz はメインスレッドのみ（(a)のバッチも producer は常にメインスレッド after 連鎖）
+- [x] `fitz.Document` はスレッド間非共有（ワーカーには base64 のみ）
+- [x] 純ロジック層（`batch_queue.py`/`provider_fallback.py`/`thumb_virtualizer.py`）は Tk/fitz 非依存
+- [x] `selected_pages`/D&D の全ページ index 契約は不変（仮想化は描画層のみ）
+- [x] 世代カウンタパターン（`_run_gen`/`_thumb_gen`）を新規機能でも踏襲
+- [x] APIキーは settings.json へ非永続化（フォールバック順リストはプロバイダ名のみで機密情報を含まない）
+- [x] 「明示設定型・自動ベンダー切替なし」を UI 確認ダイアログで構造的に担保
+
+---
+
+*Architecture research for: PageFolio v1.8.0 新機能統合*
+*Researched: 2026-07-13*

@@ -1,5 +1,6 @@
 ---
 phase: quick-260610-qqq
+status: complete
 plan: "01"
 subsystem: ocr-backend, llm-config-dialog
 tags: [hotfix, ocr, max_tokens, provider, llm-config, resize, v1.4.1]

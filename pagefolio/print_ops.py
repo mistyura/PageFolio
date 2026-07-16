@@ -40,8 +40,11 @@ class PrintOpsMixin:
         try:
             path = write_print_tempfile(self.doc)
         except Exception as e:
-            messagebox.showerror(
-                self._t("err_print_title"), self._t("err_print_msg").format(e=e)
+            self._show_error_or_toast(
+                "print",
+                self._t("err_print_title"),
+                self._t("err_print_msg").format(e=e),
+                self._print_pdf,
             )
             return
         self._send_to_printer(path)
@@ -65,6 +68,8 @@ class PrintOpsMixin:
         try:
             startfile(path, "print")
             self._set_status(self._t("status_print_sent").format(name=name))
+            if getattr(self, "_toast", None) is not None:
+                self._toast.dismiss("print")
             return
         except OSError as e:
             # 印刷動詞が未関連付け等。既定アプリで開くフォールバックへ。
@@ -72,8 +77,13 @@ class PrintOpsMixin:
         try:
             startfile(path)
             self._set_status(self._t("status_print_opened").format(name=name))
+            if getattr(self, "_toast", None) is not None:
+                self._toast.dismiss("print")
         except OSError as e:
             logger.exception("既定アプリでのオープンにも失敗: %s", e)
-            messagebox.showerror(
-                self._t("err_print_title"), self._t("err_print_no_handler")
+            self._show_error_or_toast(
+                "print",
+                self._t("err_print_title"),
+                self._t("err_print_no_handler"),
+                self._print_pdf,
             )

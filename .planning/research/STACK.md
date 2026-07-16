@@ -1,417 +1,143 @@
 # Stack Research
 
-**Domain:** デスクトップ PDF エディタ OCR プロバイダ拡張（Python 3.8+ / Tkinter）
-**Researched:** 2026-06-06
-**Confidence:** HIGH（Claude・Gemini は公式ドキュメント直接確認。Tesseract は公式 + コミュニティ複数ソース）
+**Domain:** PageFolio v1.8.0 新機能スタック調査（Tkinter デスクトップ PDF エディタの拡張・新規 pip 依存ゼロ方針）
+**Researched:** 2026-07-13
+**Confidence:** MEDIUM（標準ライブラリの機能自体・PyMuPDF スレッド安全性は公式 GitHub Issue/ドキュメント準拠で高い確度。Tkinter 仮想化の具体実装例は一般 Web 情報中心で確度が低め）
 
----
+> 本ファイルは v1.8.0 マイルストーンで**新規に必要となるスタック追加・変更のみ**を扱う。既存スタック（Python 3.8+ / Tkinter / PyMuPDF 1.27.2.2 / Pillow 12.2.0 / tkinterdnd2 0.4.3・PyInstaller onedir 配布・OCRProvider 抽象化6プロバイダ）は v1.4.0〜v1.7.4 で検証済みのため再調査しない。v1.4.0 時点の OCR プロバイダ API 仕様調査は `.planning/milestones/` 配下のアーカイブ、または git 履歴上の旧 STACK.md を参照。
 
-## 調査スコープ
+## 結論サマリー
 
-既存スタック（Tkinter / pymupdf / Pillow / tkinterdnd2）は検証済みのため再調査しない。
-本ファイルは v1.4.0 マイルストーンで **追加が必要な技術・API 仕様のみ** を扱う。
+v1.8.0 の新機能 4 本（プロンプト・テンプレートマネージャー・明示設定型プロバイダーフォールバック・バッチ複数ファイル OCR キュー・サムネイル仮想化）は、**すべて Python 3.8+ 標準ライブラリのみで実現可能**。新規 pip 依存の追加は不要と判断する（V14-D-01「新規 pip 依存ゼロ方針」を継続維持できる）。
 
----
+唯一「どうしても足りない場合」の候補として `tksheet`（依存ゼロ・MIT・stdlib tkinter のみ）を検討したが、既存の `pagination.py` 窓表示（既定20件・上限100件）と組み合わせれば標準ライブラリのみで十分な効果が見込めるため、**新規導入は不要**と判断する（詳細は後述）。
 
-## 新規追加なし — 依存ゼロの方針確認
+## Recommended Stack
 
-**結論: 3 プロバイダ全て `urllib.request` のみで実装可能。新規 pip パッケージは不要。**
+### Core Technologies（機能別・すべて標準ライブラリ）
 
-| プロバイダ | 実装方式 | 追加 pip 依存 |
-|-----------|---------|-------------|
-| Claude (Anthropic) | `urllib.request` + JSON | なし |
-| Gemini (Google AI Studio) | `urllib.request` + JSON | なし |
-| Tesseract | `subprocess.run` (CLI 呼び出し) | `pytesseract` 不要 |
+| 技術 | バージョン | 用途 | 推奨理由 |
+|------|---------|------|----------|
+| `queue.Queue` | 3.8+ 同梱 | バッチ OCR のファイル単位ジョブキュー | `put()`/`get()`/`task_done()`/`join()` でスレッドセーフなタスク完了追跡ができる。`ocr_pipeline.py` の `PipelineState`/`send_sentinels` パターンをファイル単位に一段拡張するだけで実装できる（新規学習コストゼロ） |
+| `concurrent.futures.ThreadPoolExecutor` | 3.8+ 同梱 | バッチ OCR のページ単位ワーカー並列実行 | `ocr.py` の `run_parallel()` が既にこのパターンを採用済み。ファイル横断バッチでも同一プールを流用できる |
+| `threading.Lock` | 3.8+ 同梱 | バッチジョブ間の共有カウンタ保護 | `ocr_pipeline.py` の `PipelineState` が既に採用。バッチ全体の進捗集計にもそのまま拡張可能 |
+| `json` | 3.8+ 同梱 | 名前付きテンプレート・フォールバック順の永続化 | `settings.py` の `_load_settings`/`_save_settings` と同型の dict→JSON パターンをそのまま流用できる |
+| `os` | 3.8+ 同梱 | テンプレート md ファイルの探索・読み書き | `load_prompt_file`/`save_prompt_file`（v1.7.4）を複数ファイル対応に一般化するだけで済む |
+| 標準 `list` + `try/except` | — | 明示設定順プロバイダーフォールバックの逐次試行 | Chain of Responsibility 相当をクラス階層なしで実装可能。`ocr.py` の `build_provider` ファクトリと `resolve_ocr_prompt` 解決ロジックをそのまま再利用できる |
+| `tkinter.Canvas` + 既存 `pagination.py` | 標準 | サムネイル仮想化（窓表示 + 遅延 PhotoImage 生成） | Canvas は O(n) 描画でアイテム数に比例して劣化するため、既存の窓表示（既定20・上限100件）を「表示中ウィンドウ内でも可視領域外のサムネイル生成を遅延させる」方向にもう一段絞り込むアプローチが最小変更で効果が出る |
 
-公式 SDK（`anthropic`・`google-genai`）は PyInstaller `.exe` 肥大化・隠れ依存取り込みの問題があるため **採用しない**。
-現行 LM Studio 実装（`ocr.py`）が `urllib` 直叩きで実現しているパターンをそのまま踏襲する。
+### Supporting Libraries（新規追加なし・検討したが不採用）
 
----
+| モジュール | バージョン | 用途 | 判断 |
+|---------|---------|---------|-------------|
+| `dataclasses` | 3.8+ 同梱 | テンプレート/フォールバック設定の構造体 | **非推奨**。既存コードベースは `settings.py`/`pagination.py` 含め dict ベースで統一されており、`dataclasses` を新規導入すると型パターンが二重化する。plain dict + `.setdefault()` 方式（既存 `_load_settings` と同型）を踏襲するほうが一貫性が高い |
+| `collections.OrderedDict` | 3.8+ 同梱 | テンプレートの並び順保持 | **不要**。Python 3.7+ の `dict` は挿入順を保持するため、素の `dict`/`list[dict]` で順序管理できる |
+| `sqlite3` | 3.8+ 同梱 | バッチジョブの永続化 | **過剰**。バッチジョブ規模（数〜数十ファイル）では `json` スナップショットで十分（後述「Stack Patterns by Variant」） |
 
-## Recommended Stack（新規 API 対応部分）
+### Development Tools
 
-### Core Technologies（追加なし）
+変更なし。既存の `ruff` 0.15.7・`pytest` 9.0.2・`pytest-cov` 7.1.0 をそのまま使用する。新機能のテストも `tests/test_ocr_pipeline.py`（純ロジック層テストパターン）・`tests/test_pagination.py`（窓計算パターン）を踏襲すれば新規ツール導入は不要。
 
-既存コードベースが使用する Python 標準ライブラリのみで対応する。
+## Installation
 
-| 標準ライブラリ | 用途 | 備考 |
-|---------------|------|------|
-| `urllib.request` | HTTP POST/GET（Claude・Gemini API 呼び出し） | 既存 `ocr.py` で使用中 |
-| `urllib.error` | HTTP エラーハンドリング | 既存 `ocr.py` で使用中 |
-| `json` | リクエスト/レスポンス JSON 処理 | 既存コード全体で使用中 |
-| `base64` | PNG → base64 エンコード | 既存 `ocr.py` の `page_to_png_b64()` で使用中 |
-| `os` | 環境変数読み取り（`os.environ.get()`） | APIキー取得に使用 |
-| `subprocess` | Tesseract CLI 呼び出し | Tesseract Provider のみ |
-| `concurrent.futures` | 並列 OCR（`ThreadPoolExecutor`） | 既存 `call_lm_studio_parallel` のパターンを踏襲 |
-
----
-
-## API 仕様詳細（実装根拠）
-
-### Claude (Anthropic) API
-
-**信頼度: HIGH** — `platform.claude.com/docs` 公式ドキュメントより直接確認（2026-06-06）
-
-#### エンドポイント・認証
-
-```
-POST https://api.anthropic.com/v1/messages
+```bash
+# 新規インストール不要 — 既存 requirements.txt のまま
+# (queue / threading / concurrent.futures / json / os はすべて Python 3.8+ 標準ライブラリ)
 ```
 
-必須ヘッダー:
-```
-x-api-key: <ANTHROPIC_API_KEY>
-anthropic-version: 2023-06-01
-content-type: application/json
-```
+## 機能別インテグレーション設計
 
-環境変数: `ANTHROPIC_API_KEY`
+### 1. プロンプト・テンプレートマネージャー
 
-#### 推奨ビジョンモデル（2026-06-06 時点の現行世代）
+**採用パターン:** v1.7.4 の外部 md ファイル連動（`load_prompt_file`/`save_prompt_file`）をディレクトリ化して拡張する。
 
-| モデルエイリアス | API ID（ピン止め） | 価格（入力/出力 MTok） | コンテキスト | 用途 |
-|----------------|-----------------|----------------------|------------|------|
-| `claude-haiku-4-5` | `claude-haiku-4-5-20251001` | $1 / $5 | 200k | 高速・低コスト・大量ページ処理向け |
-| `claude-sonnet-4-6` | `claude-sonnet-4-6`（dateless pin） | $3 / $15 | 1M | バランス型・OCR メイン推奨 |
-| `claude-opus-4-8` | `claude-opus-4-8`（dateless pin） | $5 / $25 | 1M | 最高精度・複雑レイアウト |
+- 単一の `ocr_custom_prompt.md` を、`prompts/` ディレクトリ配下の複数 `.md` ファイル（テンプレートごとに1ファイル）+ `prompts_index.json`（マニフェスト: `{"templates": [{"name": str, "filename": str, "created_at": str}], "active": str | null, "schema_version": 1}`）へ発展させる。
+- 理由: (a) 既存ユーザーがすでに外部エディタでの md 編集に慣れている（v1.7.4 UX の継続）、(b) テンプレート本文を `pagefolio_settings.json` に埋め込むと DEBT-02 相当の「肥大混在」を再発させる、(c) `_get_base_dir()` の配置基準ロジックをそのまま再利用できる。
+- 命名保存・切替 UI は既存 `LLMConfigDialog`（`llm_config.py`）のセクション構成に「テンプレート選択ドロップダウン + 保存/名前変更/削除ボタン」を追加する形で完結し、新規ウィジェットライブラリは不要（`ttk.Combobox` は標準）。
+- スキーマバージョニング: `prompts_index.json` に `"schema_version": 1` フィールドを持たせ、読込時に `data.get("schema_version", 0)` で分岐する（Web 調査で確認した「version フィールドを持たせ読込時に分岐する」定石パターンに準拠）。
 
-> **注意:** Claude 4.6 世代以降はモデル ID 自体がピン止めスナップショットであり、エバーグリーンポインタではない。エイリアスを使用しても安全。
+### 2. 明示設定型プロバイダーフォールバック
 
-#### 画像送信フォーマット（base64）
+**採用パターン:** 標準 `list` の順次試行（Chain of Responsibility 相当）。新規クラス階層は不要。
 
-```json
-{
-  "model": "claude-sonnet-4-6",
-  "max_tokens": 4096,
-  "messages": [
-    {
-      "role": "user",
-      "content": [
-        {
-          "type": "image",
-          "source": {
-            "type": "base64",
-            "media_type": "image/png",
-            "data": "<base64_encoded_string>"
-          }
-        },
-        {
-          "type": "text",
-          "text": "この画像のテキストを書き出してください。"
-        }
-      ]
-    }
-  ]
-}
-```
+- `settings.py` に `"ocr_fallback_order": []`（プロバイダ ID の順序リスト、既定は空＝フォールバック無効）を追加。
+- 実行時は `ocr.py` の `build_provider()` を順序リストの各要素に対して呼び出し、失敗（fatal 判定）時に次の要素へ進む。既存の「送信先確認ダイアログ」（V171-KEY-04 で RunPod 分岐済み）を **各フォールバック遷移のたびに再提示**する設計とする（要件の「送信先確認再提示つき」を満たす）。自動的な別ベンダー送信をしないという既存方針（外部送信の明示同意）とも整合する。
+- 新規ライブラリ・新規デザインパターンの実装コストは実質ゼロ（既存 `build_provider`/`resolve_ocr_prompt` の再利用のみ）。
 
-サポートする `media_type`: `image/jpeg`・`image/png`・`image/gif`・`image/webp`
-→ PageFolio は `page_to_png_b64()` で PNG 生成済みのため `image/png` で統一する。
+### 3. バッチ複数ファイル OCR キュー管理
 
-#### レスポンス解析
+**採用パターン:** `ocr_pipeline.py` の producer-consumer 純ロジック層を「ファイル単位のジョブキュー」でラップする 1 段上の層として新設する（例: `batch_ocr_pipeline.py`）。
 
-```python
-data = json.loads(body)
-# content は type=="text" のブロックを走査する
-for block in data["content"]:
-    if block.get("type") == "text":
-        return block["text"]
-```
+- **重要な制約（PyMuPDF 公式で再確認）:** MuPDF/PyMuPDF は公式に thread-safe ではないと明言されている（GitHub Issue #107, #1994）。Python の free-threading（PEP 703）モードでも非対応。公式推奨の回避策は `multiprocessing` だが、`fitz.Document` は pickle 不可でワーカー側がファイルパスから再オープンする必要があり、かつ **PyInstaller でフリーズしたバイナリでの `multiprocessing` はブートストラップが複雑化する**（Windows spawn 方式・`freeze_support()` 必須・onedir 配布との相性検証が別途必要）。
+- したがって、バッチ複数ファイル OCR でも既存制約（V14-D-05/06: `fitz.get_pixmap()` はメインスレッドのみ）を維持し、**複数 PDF ファイルを 1 本の直列キューでメインスレッドが順番にオープン→レンダリング**し、レンダリング済み画像の **ネットワーク送信のみ** 既存 `ThreadPoolExecutor`/`ocr_pipeline.consume_one` へオフロードする設計とする。`multiprocessing` は導入しない。
+- ジョブキューの構造は `queue.Queue` にファイルパスのリストを積み、`root.after()` ポーリングでメインスレッドの `fitz` 処理と UI 進捗更新を連携する（既存 `ocr_dialog.py` の `_render_next_page` パターンと同型）。複数ファイル×複数ページの入れ子進捗は `PipelineState` を拡張し `file_index`/`file_total` を追加する形で対応できる。
+- 永続化（アプリ再起動をまたぐジョブ再開）が要件に含まれる場合は、`queue.Queue` はプロセス内限定なので、`json` でジョブ一覧をスナップショット保存し起動時に再構築する方式が必要（下記「Stack Patterns by Variant」参照）。
 
-#### `temperature` と `effort` パラメータ
+### 4. サムネイル仮想化（PERF-01）
 
-**確認結果（公式ドキュメント）:**
+**採用パターン:** 既存 `pagination.py` の窓表示ロジックをそのまま踏襲し、「窓内でも可視範囲外のサムネイル PhotoImage 生成を遅延させる」形で一段仮想化を強化する。
 
-- `temperature` は **全モデルで利用可能**（0.0–1.0、デフォルト 1.0）。Opus 4.8 も同様。
-  - 仕様書（`docs/OCRプロバイダ化_見積もり仕様.md`）の「Opus 4.7/4.8 は `temperature` 不可」という記載は **誤り**。`temperature` は全モデルで受け付ける。
-- `effort` パラメータは **`output_config` の子フィールド**として指定する（トップレベルではない）。
-
-```json
-{
-  "output_config": {
-    "effort": "low"
-  }
-}
-```
-
-  - `effort` の有効値: `low` / `medium` / `high`（デフォルト）/ `xhigh` / `max`
-  - `effort` サポートモデル: `claude-opus-4-8`・`claude-opus-4-7`・`claude-opus-4-6`・`claude-sonnet-4-6`・`claude-opus-4-5`
-  - **`claude-haiku-4-5` は `effort` 非対応**（`temperature` のみで制御）
-  - OCR 用途では `effort: "low"` でも十分（テキスト書き出しタスクは単純）。コスト・速度優先なら `low` を推奨。
-
-#### モデル一覧取得
-
-```
-GET https://api.anthropic.com/v1/models
-Headers: x-api-key, anthropic-version: 2023-06-01
-```
-
-レスポンス: `data[].id`・`data[].display_name`・`data[].capabilities.image_input.supported` で
-ビジョン対応可否を判定できる。
-
----
-
-### Gemini (Google AI Studio) API
-
-**信頼度: HIGH** — `ai.google.dev/api/generate-content`・`ai.google.dev/gemini-api/docs/models/gemini-2.5-flash` から直接確認（2026-06-06）
-
-#### エンドポイント・認証
-
-```
-POST https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent
-```
-
-認証方式は2通り（どちらでも動作）:
-
-| 方式 | 記法 | 推奨度 |
-|------|------|-------|
-| クエリパラメータ | `?key=$GEMINI_API_KEY` | urllib では URL 文字列に埋め込み可能 |
-| リクエストヘッダー | `x-goog-api-key: $GEMINI_API_KEY` | ヘッダー方式が推奨（URL ログへの漏洩を防ぐ） |
-
-**PageFolio の実装方針**: ヘッダー方式（`x-goog-api-key`）を採用し、URL にキーを含めない。
-
-環境変数: `GEMINI_API_KEY`（フォールバック `GOOGLE_API_KEY`）
-
-#### 推奨ビジョンモデル（2026-06-06 時点）
-
-| モデル ID | 入力 | 出力トークン上限 | コンテキスト | 位置づけ |
-|-----------|------|----------------|------------|---------|
-| `gemini-2.5-flash` | テキスト・画像・動画・音声 | 65,536 | 1,048,576 | コスト効率最優先・OCR メイン推奨 |
-| `gemini-2.5-pro` | テキスト・画像・動画・音声・PDF | 65,536 | 1,048,576 | 高精度・複雑レイアウト |
-
-> `gemini-2.5-flash` は stable GA 版として `gemini-2.5-flash` ID で利用可能。
-> 旧プレビュー ID `gemini-2.5-flash-preview-09-2025` は **廃止済み（2026-07-09 に完全シャットダウン予定）**。使用しないこと。
-
-#### 画像送信フォーマット（inline_data）
-
-```json
-{
-  "contents": [
-    {
-      "parts": [
-        {
-          "inline_data": {
-            "mime_type": "image/png",
-            "data": "<base64_encoded_string>"
-          }
-        },
-        {
-          "text": "この画像のテキストを書き出してください。"
-        }
-      ]
-    }
-  ],
-  "generationConfig": {
-    "temperature": 0.1,
-    "maxOutputTokens": 4096
-  }
-}
-```
-
-> **順序**: 公式ドキュメントにより「単一画像 + テキストの場合、テキストプロンプトを画像パートの後に置く」ことが推奨されている。
-
-サポート `mime_type`: `image/png`・`image/jpeg`・`image/webp`・`image/heic`・`image/heif`
-→ PageFolio は `image/png` で統一。
-
-**リクエストサイズ制限**: inline_data 使用時は合計 20MB 以内（PNG 変換後の通常 PDF ページなら問題なし）。
-
-#### `generationConfig` パラメータ
-
-| パラメータ | 型 | 説明 |
-|-----------|-----|------|
-| `temperature` | float | ランダム性制御（OCR は 0.1 程度推奨） |
-| `maxOutputTokens` | int | 出力トークン上限 |
-| `stopSequences` | array | 停止文字列 |
-| `candidateCount` | int | 候補数（通常 1） |
-
-#### レスポンス解析
-
-```python
-data = json.loads(body)
-return data["candidates"][0]["content"]["parts"][0]["text"]
-```
-
-#### モデル一覧取得
-
-```
-GET https://generativelanguage.googleapis.com/v1beta/models
-Headers: x-goog-api-key: $GEMINI_API_KEY
-```
-
-レスポンス: `models[].name`（例: `"models/gemini-2.5-flash"`）、
-`models[].supportedGenerationMethods` で `generateContent` 対応可否を確認できる。
-
----
-
-### Tesseract OCR（オプション）
-
-**信頼度: MEDIUM** — 公式リポジトリ + コミュニティ複数ソースで確認
-
-#### ランタイム依存（pip 外）
-
-Tesseract は **外部バイナリのインストールが必要**。PageFolio の `.exe` には同梱できない。
-
-| コンポーネント | 必須/任意 | 備考 |
-|-------------|---------|------|
-| Tesseract OCR バイナリ（`tesseract.exe`） | 必須 | Windows は UB Mannheim 提供インストーラを使用 |
-| `jpn.traineddata` | 横書き日本語に必須 | インストール時に「Additional language data」で追加 or 手動配置 |
-| `jpn_vert.traineddata` | 縦書き日本語に任意 | 縦書きPDFを扱う場合に必要 |
-
-#### 実装方式: `pytesseract` を使わず `subprocess.run` で直接呼び出す
-
-`pytesseract` は薄いラッパーに過ぎず、pip 追加依存になる。
-`subprocess.run` で `tesseract` CLI を直接呼び出す方式で **pip 依存ゼロ** を維持する。
-
-```python
-import subprocess
-import tempfile
-import os
-
-def call_tesseract(png_bytes: bytes, lang: str = "jpn") -> str:
-    """Tesseract CLI を subprocess 経由で呼び出す（pytesseract 不要）"""
-    with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as f:
-        f.write(png_bytes)
-        tmp_path = f.name
-    out_path = tmp_path.replace(".png", "")
-    try:
-        subprocess.run(
-            ["tesseract", tmp_path, out_path, "-l", lang, "--psm", "6"],
-            check=True,
-            capture_output=True,
-        )
-        with open(out_path + ".txt", encoding="utf-8") as f:
-            return f.read()
-    except FileNotFoundError:
-        raise RuntimeError("Tesseract が見つかりません。インストールを確認してください。")
-    finally:
-        for p in [tmp_path, out_path + ".txt"]:
-            if os.path.exists(p):
-                os.unlink(p)
-```
-
-> `stdin/stdout` パイプ方式も技術的に可能だが、`-` 引数での PNG stdin は実装が不安定なため
-> 一時ファイル方式を採用する（ページ単位で即削除するためディスク常駐しない）。
-
-#### 解像度・スケール
-
-- Tesseract は概ね 300 dpi 相当の入力を推奨。
-- PageFolio の `ocr_scale` を `3.0` 以上（300 dpi 相当）に設定すべき。
-- 既定 `ocr_scale=2.0` では精度が低下する可能性がある。Tesseract Provider 使用時は `ocr_scale` の推奨値を UI で明示する。
-
-#### 精度の制約（仕様書の内容を確認・維持）
-
-仕様書に記載の通り、Tesseract は VLM（Vision LLM）には及ばない前提でオプション扱い。
-主な劣後要因:
-
-- 複雑レイアウト（表・段組）に弱い
-- 手書き文字・装飾フォントは認識率が下がる
-- 前処理（二値化・傾き補正）なしでは顕著に精度低下
-
----
-
-## 仕様書との差分サマリー
-
-既存仕様書（`docs/OCRプロバイダ化_見積もり仕様.md`）の内容との差分を整理する。
-
-| 項目 | 仕様書の記載 | 今回調査の確認結果 | 対応 |
-|------|------------|-----------------|------|
-| Claude `temperature` 可否 | 「Opus 4.7/4.8 は `temperature` 不可」 | **誤り。全モデルで利用可能**（0.0–1.0） | 仕様修正が必要 |
-| Claude `effort` の場所 | `output_config.effort` として示唆 | **正しい**（`output_config: {effort: "low"}` がトップレベルに並ぶ形） | 確認済み |
-| Gemini 認証 | `?key=API_KEY` or `x-goog-api-key` | **両方正しい**。ヘッダー方式を推奨 | 実装時はヘッダー採用を明記 |
-| Gemini モデル推奨 | `gemini-2.5-flash` / `gemini-2.5-pro` | **正しい**（GA stable。旧 preview ID は廃止済み） | 実装で stable ID を使用 |
-| Claude モデル一覧 | `/v1/models` | **正しい**（`capabilities.image_input.supported` でビジョン可否を判定可能） | 確認済み |
-| Gemini モデル一覧 | `/v1beta/models` | **正しい**（`supportedGenerationMethods` で `generateContent` 確認） | 確認済み |
-| Tesseract 実装 | 記載なし（`OCRProvider` 実装として想定） | `subprocess.run` + 一時ファイル方式で `pytesseract` 不要 | 追加仕様として確定 |
-
----
+- Web 調査で確認した通り、Tkinter Canvas は GPU オフロードなしの O(n) 描画で、真の仮想化（可視範囲のみ描画・スクロール時のウィジェット動的生成/破棄）は組み込み機能として提供されない。
+- ただし PageFolio は既に `pagination.py`（v1.6.0 Phase 2）で「窓表示（既定20・許容10〜100件）」を実装済みであり、レンダリングされるサムネイル数は既に上限がある。PERF-01 は「大量ページ対応」が主眼なので、対応範囲は (a) 窓サイズ内でのスクロール描画コスト、(b) `thumb_cache` のエビクション戦略の 2 点に絞れる。
+- 推奨実装: `thumb_cache` にサイズ上限（例: 窓サイズの2〜3倍）を導入し、範囲外になったキャッシュエントリを破棄する。「アクセス順リスト + サイズ上限チェック」で十分実装できる（`collections.OrderedDict.move_to_end()` を使う手もあるが、既存コードが dict ベースであることを踏まえ必須ではない）。
+- `tksheet` は真の仮想スクロール（可視部分のみ Canvas 再描画）を実装した唯一の実用的な軽量代替として調査したが、**採用は推奨しない**（後述「What NOT to Use」）。
 
 ## Alternatives Considered
 
-| 採用 | 不採用の代替案 | 不採用理由 |
-|------|-------------|----------|
-| `urllib.request` 直叩き | `anthropic` SDK | PyInstaller .exe 肥大化・隠れ依存取り込み |
-| `urllib.request` 直叩き | `google-genai` SDK | 同上 |
-| `subprocess.run` (Tesseract CLI) | `pytesseract` | pip 追加依存（PyInstaller 肥大化）。pytesseract は CLI ラッパーに過ぎず不要 |
-| `subprocess.run` (Tesseract CLI) | `easyocr` | PyTorch 依存で著しく重い。.exe 組み込みは非現実的 |
-| ヘッダー認証（Gemini） | URL クエリパラメータ認証 | URL ログ・プロセスリストへの API キー漏洩リスク |
-
----
+| 推奨 | 代替 | 代替を使うべき条件 |
+|------|------|-------------------|
+| dict + `json.dump`（テンプレート/設定スキーマ） | `dataclasses` + 型ヒント | 将来的にテンプレート/フォールバック設定の構造がネストして複雑化し、型安全性の欠如がバグを頻発させる場合。現状の 2〜3 フィールドの平坦な構造では dict で十分 |
+| `queue.Queue` + `threading`（バッチキュー） | `asyncio.Queue` | プロジェクト全体を async/await ベースに刷新する場合。現状 `ocr_pipeline.py`/`ocr.py`/`ocr_dialog.py` はすべて `threading` ベースで統一されており、`asyncio` を部分導入すると 2 つの並行モデルが混在し保守性が悪化する。**非推奨** |
+| 直列メインスレッド `fitz` 処理（バッチ OCR） | `multiprocessing`（ファイル単位で並列処理） | 将来的に「1台のハイスペック PC で複数 PDF を本当に並列レンダリングしたい」という明確な性能要件が出た場合のみ。PyInstaller onedir 配布での `multiprocessing` 動作検証・`fitz.Document` の再オープンコストなど追加検証が必要なため、v1.8.0 スコープでは見送るべき |
+| `pagination.py` 窓表示 + キャッシュエビクション（サムネイル仮想化） | `tksheet`（外部ライブラリ・依存ゼロ） | 窓表示を最大件数（100件）に設定した状態でもスクロール時の体感遅延が解消しない、かつ独自実装のエビクション戦略では追いつかないと実測で判明した場合のみ検討。ただし `tksheet` はスプレッドシート/テーブル UI であり、既存のサムネイル「グリッド + D&D 並び替え」UI とは操作モデルが異なるため、採用時は D&D（`dnd.py`）の全面書き換えが必要になる点に注意 |
 
 ## What NOT to Use
 
-| 避けるもの | 理由 | 代替 |
-|-----------|------|------|
-| `anthropic` PyPI パッケージ | PyInstaller で依存ツリーが膨らみ .exe が大幅増量する | `urllib.request` 直叩き |
-| `google-genai` PyPI パッケージ | 同上。さらに `grpc` 等の C 拡張を引き込む可能性 | `urllib.request` 直叩き |
-| `pytesseract` PyPI パッケージ | CLI ラッパーに過ぎず、pip 依存を増やす価値がない | `subprocess.run(['tesseract', ...])` |
-| `easyocr` PyPI パッケージ | PyTorch 依存で数 GB 級。.exe への組み込み不可 | Tesseract（オプション）または クラウド API |
-| Gemini `gemini-2.5-flash-preview-09-2025` | 2026-07-09 廃止予定。すでに旧 stable に置き換え済み | `gemini-2.5-flash`（stable） |
+| 避けるべき技術 | 理由 | 代わりに使うもの |
+|-------|-----|-------------|
+| `dataclasses-json` / `pydantic` / `marshmallow`（サードパーティ） | 新規 pip 依存が PyInstaller onedir 配布サイズを増やす（V14-D-01 方針に反する）。テンプレート/フォールバック設定は 2〜3 フィールドの平坦な dict で十分表現できる規模 | 標準 `json` + `dict.setdefault()`（`settings.py` と同型） |
+| `asyncio` の部分導入 | 既存コードベース全体が `threading`/`queue` ベースで統一されており、`asyncio` を一部機能だけに導入すると 2 つの並行モデルが混在し、`fitz` のメインスレッド制約（V14-D-05）との相互作用も検証コストが増す | 既存 `threading.Lock`/`queue.Queue`/`ThreadPoolExecutor` パターンの拡張 |
+| `multiprocessing`（バッチ複数ファイル OCR の並列化） | PyMuPDF が公式に thread-safe でないことの回避策として文書化されているが、`fitz.Document` の pickle 不可・PyInstaller フリーズ環境での spawn ブートストラップの複雑化・ワーカーごとの再オープンコストなど、v1.8.0 の「単独フェーズへ隔離」する程度の規模には見合わないオーバーヘッド | 直列メインスレッド `fitz` 処理 + ネットワーク送信のみ `ThreadPoolExecutor` へオフロード（既存 `ocr_pipeline.py` パターンの拡張） |
+| `tksheet`（サムネイル仮想化の第一選択として） | テーブル/シート UI であり、既存のサムネイルグリッド + D&D 並び替え UI とは操作モデルが根本的に異なる。導入すると `dnd.py`/`viewer.py` の全面書き換えが必要になり、PERF-01（パフォーマンス改善）のスコープを大きく超える | `pagination.py` 窓表示 + `thumb_cache` エビクション戦略の強化 |
 
----
+## Stack Patterns by Variant
 
-## 実装パターン（urllib 直叩き共通骨格）
+**バッチ OCR ジョブの永続化（アプリ再起動をまたぐ再開）が要件に含まれる場合:**
+- `queue.Queue` はプロセス内限定のため、`json` でジョブ一覧（ファイルパス・進捗状態・完了ページ数）を定期的にスナップショット保存する
+- 理由: `sqlite3`（標準ライブラリ）も選択肢になるが、バッチジョブの規模（数〜数十ファイル）では過剰。`pagefolio_settings.json` と同じ形式の平坦 JSON で十分
 
-3 プロバイダ共通の `urllib` 呼び出しパターン（`call_lm_studio` の設計を踏襲）:
+**フォールバック順序が将来 4 プロバイダ以上に複雑化する場合:**
+- それでも標準 `list` + `try/except` の逐次試行で対応可能（プロバイダ数が増えても計算量は O(n) のまま）
+- 理由: Chain of Responsibility の本質は「順序リストの逐次試行」であり、クラス階層化しても可読性は上がらない規模
 
-```python
-import json
-import socket
-import urllib.error
-import urllib.request
+**サムネイル窓サイズがユーザー設定で 100 件に達し、なお体感遅延がある場合:**
+- まず `thumb_page_size` の上限自体を引き下げる方向（例: 上限 100→60）で対応できないか検討する
+- それでも不十分な場合のみ `tksheet` 系の真の仮想スクロールライブラリ導入を再検討する（上記「代替を使うべき条件」参照）
 
-def _post_json(endpoint: str, payload: dict, headers: dict, timeout: int) -> dict:
-    """共通 HTTP POST ユーティリティ（プロバイダ非依存）"""
-    data = json.dumps(payload).encode("utf-8")
-    req = urllib.request.Request(  # noqa: S310
-        endpoint,
-        data=data,
-        headers={"Content-Type": "application/json", **headers},
-        method="POST",
-    )
-    try:
-        with urllib.request.urlopen(req, timeout=timeout) as resp:  # noqa: S310
-            return json.loads(resp.read().decode("utf-8"))
-    except urllib.error.HTTPError as e:
-        err_body = e.read().decode("utf-8", errors="replace")
-        raise RuntimeError(f"HTTP {e.code}: {err_body or e.reason}") from e
-    except socket.timeout as e:
-        raise TimeoutError(f"timed out after {timeout}s") from e
-    except urllib.error.URLError as e:
-        reason = getattr(e, "reason", e)
-        if isinstance(reason, socket.timeout):
-            raise TimeoutError(f"timed out after {timeout}s") from e
-        raise ConnectionError(str(reason)) from e
-```
+## Version Compatibility
 
----
-
-## 環境変数規約
-
-| プロバイダ | 一次参照 | フォールバック | 未設定時の挙動 |
-|-----------|---------|-------------|-------------|
-| Claude | `ANTHROPIC_API_KEY` | なし | ダイアログで「環境変数 `ANTHROPIC_API_KEY` が未設定です」と明示エラー |
-| Gemini | `GEMINI_API_KEY` | `GOOGLE_API_KEY` | ダイアログで「環境変数 `GEMINI_API_KEY` が未設定です」と明示エラー |
-| LM Studio | なし（ローカル） | — | — |
-| Tesseract | なし（バイナリ検索） | — | `FileNotFoundError` を RuntimeError に変換してダイアログ表示 |
-
-`pagefolio_settings.json` には **キーを一切書かない**。`os.environ.get()` で実行時に読むのみ。
-
----
+| パッケージ | 互換対象 | 備考 |
+|-----------|-----------------|-------|
+| `queue` / `threading` / `concurrent.futures` / `json` / `dataclasses`（不採用） | Python 3.8+ | すべて標準ライブラリ同梱。プロジェクトの `pyproject.toml` 制約（Python 3.8+ 型ヒント互換）に影響なし |
+| PyMuPDF (fitz) 1.27.2.2（現行固定） | 最新 1.28.0（2026-06-29 リリース） | v1.8.0 のバッチ OCR 機能追加にあたり PyMuPDF のバージョンアップは**必須ではない**（1.27.2.2 → 1.28.0 間の変更履歴にバッチ処理・スレッド安全性に関わる破壊的変更は見当たらない）。中間版 1.27.2.3（2026-04-24・`scrub()`/`get_links()` 修正）への追随は次回メンテナンス時の検討事項として残す |
+| `ttk.Combobox`（テンプレート切替 UI） | Tkinter 標準（Python 3.8+ 同梱） | 新規ウィジェット導入不要。`LLMConfigDialog` の既存セクション構成パターンに追加するだけで完結 |
 
 ## Sources
 
-- `platform.claude.com/docs/en/api/messages` — Claude Messages API エンドポイント・ヘッダー・画像フォーマット（HIGH 信頼度）
-- `platform.claude.com/docs/en/docs/about-claude/models` — Claude 現行モデル ID・価格・コンテキスト・vision 対応一覧（HIGH 信頼度）
-- `platform.claude.com/docs/en/build-with-claude/effort` — `effort` パラメータ仕様・`output_config` 構造・対応モデル一覧（HIGH 信頼度）
-- `platform.claude.com/docs/en/api/models/list` — `/v1/models` レスポンス形式・`capabilities.image_input` フィールド（HIGH 信頼度）
-- `ai.google.dev/api/generate-content` — Gemini generateContent エンドポイント・inline_data フォーマット・generationConfig（HIGH 信頼度）
-- `ai.google.dev/gemini-api/docs/models/gemini-2.5-flash` — gemini-2.5-flash GA stable ID・コンテキスト 1M・multimodal 確認（HIGH 信頼度）
-- `ai.google.dev/gemini-api/docs/models/gemini-2.5-pro` — gemini-2.5-pro GA stable ID・コンテキスト 1M・multimodal 確認（HIGH 信頼度）
-- `ai.google.dev/gemini-api/docs/vision` — inline_data 構造・parts 配列・20MB 上限・mime_type 一覧（HIGH 信頼度）
-- `github.com/tesseract-ocr/tesseract` — Tesseract CLI インターフェース（HIGH 信頼度）
-- `pypi.org/project/pytesseract/` + `github.com/madmaze/pytesseract` — pytesseract が CLI ラッパーに過ぎない理由の確認（MEDIUM 信頼度）
+- [queue — A synchronized queue class (Python 公式ドキュメント)](https://docs.python.org/3/library/queue.html) — MEDIUM（公式ドキュメント + 複数の解説記事で内容一致を確認）
+- [Thread Producer-Consumer Pattern in Python – SuperFastPython](https://superfastpython.com/thread-producer-consumer-pattern-in-python/) — MEDIUM
+- [Is PyMuPDF re-entrant / thread-safe? · Issue #107 · pymupdf/PyMuPDF](https://github.com/pymupdf/PyMuPDF/issues/107) — MEDIUM（公式リポジトリのメンテナ回答）
+- [Clarification about threading · Issue #1994 · pymupdf/PyMuPDF](https://github.com/pymupdf/PyMuPDF/issues/1994) — MEDIUM（公式リポジトリのメンテナ回答、Issue #107 と内容が一致）
+- [Multiprocessing - PyMuPDF documentation](https://pymupdf.readthedocs.io/en/latest/recipes-multiprocessing.html) — MEDIUM（公式ドキュメント）
+- [Change Log - PyMuPDF documentation](https://pymupdf.readthedocs.io/en/latest/changes.html) — LOW（バージョン履歴の一般 Web 検索経由の要約、一次情報は公式だが取得は Web 検索経由）
+- [Understanding Tkinter Canvas Performance Limitations — ancisoft.com](https://www.ancisoft.com/blog/understanding-performance-limitations-of-the-tkinter-canvas/) — LOW（単一ブログ記事、一般的な Tkinter 知識と整合するが一次情報ではない）
+- [tksheet · PyPI](https://pypi.org/project/tksheet/) — LOW（PyPI ページ直接取得だが webfetch 経由のため確信度は控えめ）
+- [GitHub - ragardner/tksheet](https://github.com/ragardner/tksheet) — LOW
+- [Serializing Dataclasses | Tom's Blog](https://tomaugspurger.net/posts/serializing-dataclasses/) — LOW
+- [dataclasses-json · PyPI](https://pypi.org/project/dataclasses-json/) — LOW（不採用の根拠確認のため参照）
+- [Build a Pluggable API Fallback System — Medium](https://medium.com/@gagan.here/building-a-flexible-verification-pipeline-with-factory-strategy-chain-of-responsibility-dffe144d8d97) — LOW
+- 社内一次情報: `pagefolio/ocr_pipeline.py`（producer-consumer 純ロジック層の既存実装）・`pagefolio/settings.py`（dict + JSON 永続化パターンの既存実装）・`pagefolio/pagination.py`（窓表示純ロジック層の既存実装） — HIGH（コードベース直接確認）
 
 ---
-
-*Stack research for: PageFolio v1.4.0 OCR プロバイダ化 + クラウド API 対応*
-*Researched: 2026-06-06*
+*Stack research for: PageFolio v1.8.0 新機能（テンプレートマネージャー・プロバイダーフォールバック・バッチ OCR キュー・サムネイル仮想化）*
+*Researched: 2026-07-13*

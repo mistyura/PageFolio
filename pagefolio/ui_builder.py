@@ -4,9 +4,10 @@
 """UI構築 Mixin — スタイル定義・レイアウト構築"""
 
 import tkinter as tk
-from tkinter import ttk
+from tkinter import messagebox, ttk
 
 from pagefolio.constants import MOSAIC_BLOCK, C
+from pagefolio.toast import ToastManager
 
 
 class UIBuilderMixin:
@@ -93,6 +94,16 @@ class UIBuilderMixin:
         style.configure(
             "Horizontal.TScale", background=C["BG_DARK"], troughcolor=C["BG_CARD"]
         )
+        # バッチOCR（v1.8.0 Phase 4・04-03）: ttk.Treeview のテーマ整合スタイル
+        # （Pitfall 4・コードベース初導入）。C 辞書のみ参照しハードコード hex
+        # は使わない。本メソッド内への追記のため、テーマ切替時の
+        # _rebuild_ui → _build_styles() 再呼び出し経路（app.py:613）で
+        # 自動的に再適用される。
+        # fmt: off
+        style.configure("Treeview", background=C["BG_PANEL"], foreground=C["TEXT_MAIN"], fieldbackground=C["BG_PANEL"])  # noqa: E501
+        style.configure("Treeview.Heading", background=C["BG_CARD"], foreground=C["TEXT_MAIN"], font=("Segoe UI", fs - 1, "bold"))  # noqa: E501
+        style.map("Treeview", background=[("selected", C["ACCENT"])], foreground=[("selected", "#ffffff")])  # noqa: E501
+        # fmt: on
 
     def _build_ui(self):
 
@@ -170,6 +181,24 @@ class UIBuilderMixin:
 
         self.root.after(200, _set_sash)
 
+        # 保存/印刷失敗トースト（V180-QA-02）。_rebuild_ui() が root 直下ウィジェットを
+        # 全破棄するため、_build_menubar() と同様に _build_ui() 内で毎回再生成する
+        # 必要がある（Pitfall 2）。テーマ切替でトーストが消えても再表示は不要。
+        self._toast = ToastManager(self)
+
+    def _show_error_or_toast(self, category, title, msg, retry_cb):
+        """トースト表示 or messagebox フォールバックを一元化する（レビュー R2）。
+
+        self._toast が生成済みならトースト表示、未生成（フォールバック時）なら
+        従来どおり messagebox.showerror へフォールバックする。5失敗パス
+        （保存3操作+印刷）の getattr 重複をここへ集約する。
+        """
+        toast = getattr(self, "_toast", None)
+        if toast is not None:
+            toast.show(category, msg, retry_cb=retry_cb)
+            return
+        messagebox.showerror(title, msg)
+
     def _build_thumb_panel(self, parent):
         hdr = tk.Frame(parent, bg=C["BG_PANEL"])
         hdr.pack(fill="x", padx=10, pady=(10, 4))
@@ -216,11 +245,13 @@ class UIBuilderMixin:
         self.thumb_canvas = tk.Canvas(
             canvas_frame, bg=C["BG_PANEL"], highlightthickness=0
         )
-        sb = ttk.Scrollbar(
+        # スクロールバーは _thumb_yscroll から直接 .set() するため self 保持が必要
+        # （D-02 デバウンス起点・yscrollcommand は _thumb_yscroll 経由）。
+        self._thumb_scrollbar = ttk.Scrollbar(
             canvas_frame, orient="vertical", command=self.thumb_canvas.yview
         )
-        self.thumb_canvas.configure(yscrollcommand=sb.set)
-        sb.pack(side="right", fill="y")
+        self.thumb_canvas.configure(yscrollcommand=self._thumb_yscroll)
+        self._thumb_scrollbar.pack(side="right", fill="y")
         self.thumb_canvas.pack(fill="both", expand=True)
 
         self.thumb_inner = tk.Frame(self.thumb_canvas, bg=C["BG_PANEL"])
@@ -231,12 +262,12 @@ class UIBuilderMixin:
                 scrollregion=self.thumb_canvas.bbox("all")
             ),
         )
-        self.thumb_canvas.bind(
-            "<MouseWheel>",
-            lambda e: self.thumb_canvas.yview_scroll(
-                int(-1 * (e.delta / 120)), "units"
-            ),
-        )
+
+        def _on_thumb_mousewheel(e):
+            self.thumb_canvas.yview_scroll(int(-1 * (e.delta / 120)), "units")
+            self._on_thumb_scroll()
+
+        self.thumb_canvas.bind("<MouseWheel>", _on_thumb_mousewheel)
 
         # ナビ/件数フッター行（◀ ▶ ＋ 範囲ラベル ＋ 件数 Spinbox）。
         # 単一窓でも行は常に表示し、ボタンのみ disabled になる（D-02/D-09）。

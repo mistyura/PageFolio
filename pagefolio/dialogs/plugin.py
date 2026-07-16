@@ -85,6 +85,36 @@ class PluginDialog(tk.Toplevel):
         canvas.bind(
             "<Configure>", lambda e: canvas.itemconfigure("inner", width=e.width)
         )
+
+        # D-10: llm_config/dialog.py._build_scrollable_area と同型の
+        # Enter/Leave 動的マウスホイール束縛（複数 Canvas 共存時の横取り防止）。
+        def _on_mousewheel(event):
+            canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
+
+        def _on_mousewheel_linux(event):
+            canvas.yview_scroll(-1 if event.num == 4 else 1, "units")
+
+        def _bind_wheel(_event=None):
+            canvas.bind_all("<MouseWheel>", _on_mousewheel)
+            canvas.bind_all("<Button-4>", _on_mousewheel_linux)
+            canvas.bind_all("<Button-5>", _on_mousewheel_linux)
+
+        def _unbind_wheel(_event=None):
+            canvas.unbind_all("<MouseWheel>")
+            canvas.unbind_all("<Button-4>")
+            canvas.unbind_all("<Button-5>")
+
+        canvas.bind("<Enter>", _bind_wheel)
+        canvas.bind("<Leave>", _unbind_wheel)
+        # WR-02: <Destroy> はビンドタグ経由で子ウィジェット破棄時にも伝播するため、
+        # ダイアログ自身の破棄イベントのみに限定する（再検出時の行破棄で
+        # 誤ってグローバル解除されるのを防ぐ）。
+        self.bind(
+            "<Destroy>",
+            lambda e: _unbind_wheel() if e.widget is self else None,
+            add="+",
+        )
+
         self._list_canvas = canvas
 
         self._refresh_list()

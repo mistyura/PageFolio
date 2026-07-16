@@ -9,7 +9,7 @@ import tkinter as tk
 from collections import deque
 from tkinter import messagebox
 
-from pagefolio.constants import LANG, SUPPORTED_EXTENSIONS, C
+from pagefolio.constants import LANG, SUPPORTED_EXTENSIONS, THUMB_CACHE_MAX, C
 from pagefolio.dialogs import PluginDialog, SettingsDialog
 from pagefolio.dnd import DnDMixin
 from pagefolio.file_drop import _setup_file_drop
@@ -26,6 +26,7 @@ from pagefolio.settings import (
     _save_settings,
     set_current_font_size,
 )
+from pagefolio.thumb_cache import LruCache
 from pagefolio.ui_builder import UIBuilderMixin
 from pagefolio.viewer import ViewerMixin
 
@@ -85,6 +86,24 @@ def find_duplicate_binding(shortcuts, cmd_name, new_keysym):
         if other_cmd != cmd_name and other_keysym == new_keysym:
             return other_cmd
     return None
+
+
+_INPUT_WIDGET_CLASSES = {"Entry", "TEntry", "Spinbox", "TSpinbox", "Text"}
+
+
+def should_suppress_for_focused_input(keysym, focused_widget_class):
+    """入力系ウィジェットフォーカス中にショートカット発火を抑止すべきか判定する。
+
+    Tk 非依存の純関数（V180-ROBUST-03・D-09/D-10）。keysym は "<Delete>" 等の
+    bind 文字列で、Control/Alt を含む組合せは常に発火を許可する（抑止しない）。
+    それ以外（修飾なし単キー / Shift のみの組合せ）は focused_widget_class が
+    入力系ウィジェットクラス（Entry/TEntry/Spinbox/TSpinbox/Text）のときのみ
+    抑止する。実際の root.focus_get() 呼び出しは _bind_shortcuts 側（Tk依存）
+    が担い、本関数は判定のみを担う。
+    """
+    if "Control" in keysym or "Alt" in keysym:
+        return False
+    return focused_widget_class in _INPUT_WIDGET_CLASSES
 
 
 def keysym_to_display(keysym):
@@ -167,7 +186,7 @@ class PDFEditorApp(
         self._page_size = clamp_page_size(self.settings.get("thumb_page_size", 20))
 
         self.thumb_images = []
-        self.thumb_cache = {}
+        self.thumb_cache = LruCache(THUMB_CACHE_MAX)
         self._dnd_src_idx = None
         self._dnd_ghost = None
         self._dnd_indicator = None
@@ -184,6 +203,7 @@ class PDFEditorApp(
         # バックグラウンドレンダリング世代カウンター
         self._preview_gen = 0  # プレビュー世代カウンター
         self._thumb_gen = 0  # サムネイル世代カウンター
+        self._thumb_scroll_after = None  # スクロールデバウンス after id（D-02）
 
         # プラグインマネージャー
         self.plugin_manager = PluginManager()
@@ -192,6 +212,7 @@ class PDFEditorApp(
 
         self._build_styles()
         self._build_ui()
+        self._build_menubar()
 
         # WM_DELETE_WINDOW
         self.root.protocol("WM_DELETE_WINDOW", self._quit)
@@ -240,23 +261,61 @@ class PDFEditorApp(
         custom_shortcuts = self.settings.get("shortcuts", {})
         shortcuts = merge_shortcuts(self._default_shortcuts, custom_shortcuts)
 
+        def _make_guarded_handler(ks, f):
+            def _handler(e):
+                focused = self.root.focus_get()
+                focused_class = focused.winfo_class() if focused else ""
+                if should_suppress_for_focused_input(ks, focused_class):
+                    return None
+                return f()
+
+            return _handler
+
         bound = []
         for cmd_name, keysym in shortcuts.items():
             func = self._cmd_map.get(cmd_name)
             if func and keysym:
                 try:
-                    self.root.bind(keysym, lambda e, f=func: f())
+                    self.root.bind(keysym, _make_guarded_handler(keysym, func))
                     bound.append(keysym)
                     # 大文字小文字の対応 (Shift なし Control などのため)
                     variant = shift_variant_keysym(keysym)
                     if variant is not None:
-                        self.root.bind(variant, lambda e, f=func: f())
+                        self.root.bind(variant, _make_guarded_handler(variant, func))
                         bound.append(variant)
                 except Exception as ex:
                     logger.warning(
                         f"Failed to bind shortcut {keysym} for {cmd_name}: {ex}"
                     )
         self._bound_keysyms = bound
+
+    # ══════════════════════════════════════════
+    #  メニューバー（v1.8.0 Phase 4・04-03・D-01 本プロジェクト初導入）
+    # ══════════════════════════════════════════
+    def _build_menubar(self):
+        """メニューバー（tk.Menu）を構築する（D-01）。
+
+        最小構成: 「ツール」メニュー1つに「バッチOCR」項目のみを持つ
+        （Open Question 1・他機能のメニュー化は本フェーズのスコープ外）。
+        アクセラレータキーは設定しない（クリック起動のみ・Pitfall 5・
+        既存 ShortcutsDialog cmd_map 11コマンドとの衝突を構造的に回避）。
+        `_rebuild_ui` からも呼ばれ、root.winfo_children() 破棄後のテーマ
+        切替時にもメニューバーが再構築される。
+        """
+        menubar = tk.Menu(self.root)
+        tools_menu = tk.Menu(menubar, tearoff=0)
+        tools_menu.add_command(
+            label=self._t("batch_menu_item"), command=self._open_batch_ocr
+        )
+        menubar.add_cascade(label=self._t("batch_menu_tools"), menu=tools_menu)
+        self.root.config(menu=menubar)
+        self._menubar = menubar
+
+    def _open_batch_ocr(self):
+        """メニュー「バッチOCR」からダイアログを起動する（D-04: doc/filepath 非参照）"""
+        from pagefolio.dialogs import BatchOCRDialog
+
+        BatchOCRDialog(self.root, app=self, lang=self.lang, font_func=self._font)
 
     # ══════════════════════════════════════════
     #  ユーティリティ
@@ -612,6 +671,7 @@ class PDFEditorApp(
         self._mode_btn = None
         self._build_styles()
         self._build_ui()
+        self._build_menubar()
         if self.doc:
             self._refresh_all()
         else:

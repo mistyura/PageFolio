@@ -198,9 +198,27 @@ def _make_dialog_stub(settings, provider=None, page_indices=None):
         provider=provider,
         page_indices=list(page_indices or [0, 1, 2]),
     )
-    stub._is_cloud_provider = lambda: OCRDialog._is_cloud_provider(stub)
+    stub._is_cloud_provider = lambda settings=None: OCRDialog._is_cloud_provider(
+        stub, settings
+    )
     stub._estimate_cost = lambda m, c: OCRDialog._estimate_cost(stub, m, c)
     return stub
+
+
+def _read_llm_config_package_source():
+    """llm_config パッケージ配下の全 .py を sorted glob で連結して返す。
+
+    Phase 1（01-04）で pagefolio/dialogs/llm_config.py が
+    pagefolio/dialogs/llm_config/ パッケージへ分割されたため、単一ファイルの
+    read_text ではソーススキャンテストが FileNotFoundError になる。
+    パッケージ全体を連結することで既存の substring/count アサーションの
+    意図（該当シンボル/呼び出しが llm_config 実装のどこかに存在する）を
+    そのまま保存する。
+    """
+    import pathlib
+
+    pkg_dir = pathlib.Path("pagefolio/dialogs/llm_config")
+    return "".join(p.read_text(encoding="utf-8") for p in sorted(pkg_dir.glob("*.py")))
 
 
 class TestLLMConfigProviderValues:
@@ -208,13 +226,9 @@ class TestLLMConfigProviderValues:
 
     def test_provider_combo_includes_gemini(self):
         """provider_combo の values に 'gemini' が含まれる（OCR-API-02）。"""
-        import pathlib
-
         from pagefolio.dialogs.llm_config import LLMConfigDialog
 
-        src = pathlib.Path("pagefolio/dialogs/llm_config.py").read_text(
-            encoding="utf-8"
-        )
+        src = _read_llm_config_package_source()
         assert '"gemini"' in src, (
             "provider_combo の values に 'gemini' が含まれていない"
         )
@@ -222,15 +236,55 @@ class TestLLMConfigProviderValues:
         assert callable(fn)
 
     def test_gemini_section_frame_exists_in_source(self):
-        """llm_config.py に gemini_section_frame の定義が存在する。"""
-        import pathlib
-
-        src = pathlib.Path("pagefolio/dialogs/llm_config.py").read_text(
-            encoding="utf-8"
-        )
+        """llm_config パッケージに gemini_section_frame の定義が存在する。"""
+        src = _read_llm_config_package_source()
         assert "gemini_section_frame" in src
         assert "gemini_model_var" in src
         assert "_on_provider_change" in src
+
+
+class TestLLMConfigDialogMRO:
+    """Pitfall 3 の headless ガード: tk.Toplevel の MRO 破壊を自動検知する。
+
+    Tk をインスタンス化せず LLMConfigDialog.__mro__ を検査するのみのため、
+    ヘッドレス CI でも実行できる（実機描画目視は v1.8.0 スコープ外）。
+    """
+
+    def test_tk_toplevel_is_last_in_mro(self):
+        """tk.Toplevel が3 Mixin すべてより後ろ（MRO 末尾側）にある。"""
+        import tkinter as tk
+
+        from pagefolio.dialogs.llm_config import LLMConfigDialog
+
+        mro = LLMConfigDialog.__mro__
+        toplevel_index = mro.index(tk.Toplevel)
+        mixin_indices = [
+            mro.index(base)
+            for base in LLMConfigDialog.__bases__
+            if base is not tk.Toplevel
+        ]
+        assert toplevel_index > max(mixin_indices)
+
+    def test_init_is_consolidated_in_dialog_mixin(self):
+        """__init__ が DialogMixin に集約されている（他 Mixin は持たない）。"""
+        from pagefolio.dialogs.llm_config import LLMConfigDialog
+        from pagefolio.dialogs.llm_config.dialog import DialogMixin
+
+        assert LLMConfigDialog.__init__ is DialogMixin.__init__
+
+    def test_key_methods_exist_on_llm_config_dialog(self):
+        """_build/_apply/_on_provider_change/_fetch_models_async が存在する。"""
+        from pagefolio.dialogs.llm_config import LLMConfigDialog
+
+        for method_name in (
+            "_build",
+            "_apply",
+            "_on_provider_change",
+            "_fetch_models_async",
+        ):
+            assert hasattr(LLMConfigDialog, method_name), (
+                f"LLMConfigDialog に {method_name} が存在しない"
+            )
 
 
 class TestIsCloudProvider:
@@ -361,8 +415,12 @@ class TestCheckCloudApiKey:
             provider=None,
             _L=LANG["ja"],
         )
-        stub._is_cloud_provider = lambda: OCRDialog._is_cloud_provider(stub)
-        stub._check_cloud_api_key = lambda: OCRDialog._check_cloud_api_key(stub)
+        stub._is_cloud_provider = lambda settings=None: OCRDialog._is_cloud_provider(
+            stub, settings
+        )
+        stub._check_cloud_api_key = lambda settings=None: (
+            OCRDialog._check_cloud_api_key(stub, settings)
+        )
         return stub
 
     def _clear_all_env(self, monkeypatch):
@@ -1674,11 +1732,741 @@ class TestProbeOllamaProvider:
         _probe_ollama_provider(update_combo=...) を呼ぶ薄いラッパーであり、
         旧重複本体が除去されていることをソース上で確認する。
         """
-        import pathlib
-
-        src = pathlib.Path("pagefolio/dialogs/llm_config.py").read_text(
-            encoding="utf-8"
-        )
+        src = _read_llm_config_package_source()
         assert "self._probe_ollama_provider(update_combo=True)" in src
         assert "self._probe_ollama_provider(update_combo=False)" in src
         assert src.count("def _test_ollama_connection") == 1
+
+
+# ══════════════════════════════════════════════════════════════
+#  V180-TMPL-01〜05: テンプレート管理セクション（02-02）
+# ══════════════════════════════════════════════════════════════
+
+
+class TestTemplateSection:
+    """テンプレートセクション（sections.py）と _apply のアクティブテンプレート
+    収集を検証する。V180-TMPL-05（全プロバイダ横断共有）は 02-01 で settings.py
+    へ実装済みの load_custom_prompt/load_summary_prompt 経由の解決を、本プランで
+    UI 側（_apply の active 収集）から接続できることを確認する。
+    """
+
+    def test_template_combo_referenced_in_sections_source(self):
+        """sections.py に template_combo/_on_template_change/save_template が
+        存在する（source-scan・ヘッドレス検証）。"""
+        src = _read_llm_config_package_source()
+        assert "template_combo" in src
+        assert "_on_template_change" in src
+        assert "save_template" in src
+
+    def test_save_template_then_load_custom_prompt_resolves(self):
+        """save_template→アクティブ設定で load_custom_prompt がテンプレート値を
+        解決する（V180-TMPL-05: 全プロバイダ共通経路の settings dict レベル検証）。
+        """
+        from pagefolio.settings import load_custom_prompt, save_template
+
+        settings = {"prompt_templates": {"active": "", "items": {}}}
+        save_template(settings, "my-template", "custom-value", "summary-value")
+        settings["prompt_templates"]["active"] = "my-template"
+        assert load_custom_prompt(settings) == "custom-value"
+
+    def test_save_template_then_load_summary_prompt_resolves(self):
+        """load_summary_prompt も同様にテンプレート値を解決する。"""
+        from pagefolio.settings import load_summary_prompt, save_template
+
+        settings = {"prompt_templates": {"active": "", "items": {}}}
+        save_template(settings, "my-template", "custom-value", "summary-value")
+        settings["prompt_templates"]["active"] = "my-template"
+        assert load_summary_prompt(settings) == "summary-value"
+
+    def test_apply_collects_active_template_preserving_items(self):
+        """_apply が prompt_templates の items を保持したまま active を
+        現在の選択値（_active_template_name）で差し替えて収集する。"""
+        from pagefolio.dialogs.llm_config import LLMConfigDialog
+
+        stub = _make_apply_key_stub({})
+        stub.current_settings = {
+            "prompt_templates": {
+                "active": "old-tpl",
+                "items": {
+                    "old-tpl": {"custom_prompt": "a", "summary_prompt": "b"},
+                    "other-tpl": {"custom_prompt": "c", "summary_prompt": "d"},
+                },
+            }
+        }
+        stub._active_template_name = "other-tpl"
+        captured = {}
+        stub.on_apply = lambda s: captured.update(s)
+        LLMConfigDialog._apply(stub)
+
+        assert captured["prompt_templates"]["active"] == "other-tpl"
+        assert captured["prompt_templates"]["items"] == {
+            "old-tpl": {"custom_prompt": "a", "summary_prompt": "b"},
+            "other-tpl": {"custom_prompt": "c", "summary_prompt": "d"},
+        }
+
+    def test_apply_without_current_settings_attr_falls_back_gracefully(self):
+        """current_settings/_active_template_name 未設定の既存スタブ経路でも
+        AttributeError を出さず、空のプレースホルダを収集する（後方互換）。"""
+        from pagefolio.dialogs.llm_config import LLMConfigDialog
+
+        stub = _make_apply_key_stub({})
+        captured = {}
+        stub.on_apply = lambda s: captured.update(s)
+        LLMConfigDialog._apply(stub)
+
+        assert captured["prompt_templates"] == {"active": "", "items": {}}
+
+
+class TestFallbackSection:
+    """フォールバック順設定セクション（sections.py）と _apply の収集を検証する。
+
+    V180-FALL-01（安全側既定）・V180-FALL-03（設定面の永続化）・プロバイダ名
+    ホワイトリスト検証（Input Validation・ASVS L1）を確認する。
+    """
+
+    def test_fallback_widgets_referenced_in_sections_source(self):
+        """sections.py に fallback_listbox/_fallback_move_up/fallback_enabled_var
+        が存在する（source-scan・ヘッドレス検証）。"""
+        src = _read_llm_config_package_source()
+        assert "fallback_listbox" in src
+        assert "_fallback_move_up" in src
+        assert "fallback_enabled_var" in src
+
+    def test_apply_collects_fallback_enabled_and_chain(self):
+        """_apply が ocr_fallback_enabled（bool）と ocr_fallback_chain（list）を
+        収集する。"""
+        from pagefolio.dialogs.llm_config import LLMConfigDialog
+
+        stub = _make_apply_key_stub({})
+        stub.fallback_enabled_var = _GetVarStub(True)
+        stub._fallback_known_providers = ["claude", "gemini", "lmstudio"]
+        stub._fallback_chain = ["claude", "gemini"]
+        captured = {}
+        stub.on_apply = lambda s: captured.update(s)
+        LLMConfigDialog._apply(stub)
+
+        assert captured["ocr_fallback_enabled"] is True
+        assert captured["ocr_fallback_chain"] == ["claude", "gemini"]
+
+    def test_apply_filters_unknown_provider_from_chain(self):
+        """既知プロバイダ一覧に無い名前はチェーンから除外される
+        （ホワイトリスト検証・Input Validation・ASVS L1）。"""
+        from pagefolio.dialogs.llm_config import LLMConfigDialog
+
+        stub = _make_apply_key_stub({})
+        stub.fallback_enabled_var = _GetVarStub(True)
+        stub._fallback_known_providers = ["claude", "gemini"]
+        stub._fallback_chain = ["claude", "not-a-real-provider", "gemini"]
+        captured = {}
+        stub.on_apply = lambda s: captured.update(s)
+        LLMConfigDialog._apply(stub)
+
+        assert captured["ocr_fallback_chain"] == ["claude", "gemini"]
+
+    def test_apply_defaults_when_fallback_attrs_absent(self):
+        """fallback_enabled_var/_fallback_chain 未設定の既存スタブ経路でも
+        AttributeError を出さず既定値（False・空リスト）を収集する
+        （後方互換・V180-FALL-01 安全側既定）。"""
+        from pagefolio.dialogs.llm_config import LLMConfigDialog
+
+        stub = _make_apply_key_stub({})
+        captured = {}
+        stub.on_apply = lambda s: captured.update(s)
+        LLMConfigDialog._apply(stub)
+
+        assert captured["ocr_fallback_enabled"] is False
+        assert captured["ocr_fallback_chain"] == []
+
+
+# ══════════════════════════════════════════════════════════════
+#  CR-02 回帰: テンプレート Cancel/Apply 契約の回復（02-05・V180-TMPL-01/03）
+# ══════════════════════════════════════════════════════════════
+
+
+class _SetGetVarStub:
+    """tk.StringVar 等の .get()/.set() 両方を模した軽量スタブ。
+
+    既存 _GetVarStub は get のみのため、template_var のように set() でも
+    駆動するテスト向けに新設する（衝突回避のため別名にする）。
+    """
+
+    def __init__(self, value):
+        self._value = value
+
+    def get(self):
+        """設定済みの値をそのまま返す。"""
+        return self._value
+
+    def set(self, value):
+        """値を更新する。"""
+        self._value = value
+
+
+class TestTemplateCancelContract:
+    """CR-02（02-REVIEW.md）回帰: dialog.py の __init__ ディープコピー分離・
+    sections.py の即時 _save_settings 除去・_on_template_delete の askyesno
+    削除確認を、実 bound method 呼び出しと source assertion で検証する。
+    """
+
+    def test_init_deepcopy_separates_prompt_templates_from_app_settings(self):
+        """LLMConfigDialog.__init__ の分離ロジック（dict() 後に prompt_templates
+        を copy.deepcopy で分離）により、current_settings["prompt_templates"]
+        が入力 app_settings の同キーと別オブジェクトになり、内側の items・
+        各テンプレート dict も別オブジェクトである（片方の変更が他方へ
+        伝播しない）ことを確認する。
+
+        LLMConfigDialog.__init__ は実 Tk（Toplevel の親ウィジェット）を要求し
+        headless では直接呼べないため、dialog.py 実コードと同一の分離手順を
+        ここで再現し不変条件そのものをアサートする。あわせて dialog.py の
+        実ソースに copy.deepcopy が実在することを source assertion で補強する
+        （__init__ 側 + _apply 側の最低2箇所）。
+        """
+        import copy
+
+        app_settings = {
+            "prompt_templates": {
+                "active": "tpl-a",
+                "items": {
+                    "tpl-a": {"custom_prompt": "a", "summary_prompt": "a2"},
+                    "tpl-b": {"custom_prompt": "b", "summary_prompt": "b2"},
+                },
+            }
+        }
+
+        # dialog.py __init__ の分離手順を再現:
+        #   self.current_settings = dict(current_settings)
+        #   self.current_settings["prompt_templates"] = copy.deepcopy(...)
+        current_settings = dict(app_settings)
+        current_settings["prompt_templates"] = copy.deepcopy(
+            app_settings.get("prompt_templates", {"active": "", "items": {}})
+        )
+
+        assert (
+            current_settings["prompt_templates"] is not app_settings["prompt_templates"]
+        )
+        assert (
+            current_settings["prompt_templates"]["items"]
+            is not app_settings["prompt_templates"]["items"]
+        )
+        assert (
+            current_settings["prompt_templates"]["items"]["tpl-a"]
+            is not app_settings["prompt_templates"]["items"]["tpl-a"]
+        )
+
+        # 片方の変更が他方へ伝播しない
+        current_settings["prompt_templates"]["items"]["tpl-a"]["custom_prompt"] = (
+            "changed"
+        )
+        assert (
+            app_settings["prompt_templates"]["items"]["tpl-a"]["custom_prompt"] == "a"
+        )
+
+        # 実コードが copy.deepcopy を用いていることを補強確認
+        src = _read_llm_config_package_source()
+        assert "import copy" in src
+        assert src.count("copy.deepcopy(") >= 2
+
+    def test_cancel_does_not_mutate_app_settings_then_apply_commits_once(self):
+        """CRUD 相当の in-place 変更（保存/削除）を分離済み current_settings に
+        対して行った後、on_apply を呼ばなければ（＝Cancel 相当・destroy のみ）
+        呼び出し元の app_settings 参照が一切変化しないことを確認する。続けて
+        LLMConfigDialog._apply（＝Apply 相当）を呼ぶと、prompt_templates が
+        active + items 込みで一度だけ収集されることを確認する。
+        """
+        import copy
+
+        from pagefolio.dialogs.llm_config import LLMConfigDialog
+        from pagefolio.settings import delete_template, save_template
+
+        app_settings = {
+            "prompt_templates": {
+                "active": "tpl-a",
+                "items": {
+                    "tpl-a": {"custom_prompt": "a", "summary_prompt": "a2"},
+                    "tpl-b": {"custom_prompt": "b", "summary_prompt": "b2"},
+                },
+            }
+        }
+        original_snapshot = copy.deepcopy(app_settings)
+
+        stub = _make_apply_key_stub({})
+        stub.current_settings = dict(app_settings)
+        stub.current_settings["prompt_templates"] = copy.deepcopy(
+            app_settings["prompt_templates"]
+        )
+        stub._active_template_name = "tpl-a"
+
+        # CRUD 相当の in-place 変更（保存 + 削除）を分離済み current_settings
+        # に対して直接行う（sections.py のハンドラが行う操作を settings.py の
+        # 純関数呼び出しで再現）
+        save_template(stub.current_settings, "tpl-c", "c", "c2")
+        delete_template(stub.current_settings, "tpl-b")
+
+        # Cancel 相当: on_apply を呼ばない（destroy のみ）→ app_settings は不変
+        assert app_settings == original_snapshot
+
+        # Apply 相当: _apply の実 bound method 呼び出しで一括収集される
+        captured = {}
+        stub.on_apply = lambda s: captured.update(s)
+        LLMConfigDialog._apply(stub)
+
+        assert captured["prompt_templates"]["active"] == "tpl-a"
+        assert set(captured["prompt_templates"]["items"].keys()) == {
+            "tpl-a",
+            "tpl-c",
+        }
+        # _apply 自体は呼び出し元の app_settings を汚染しない
+        # （永続化は on_apply コールバック側の責務）
+        assert app_settings == original_snapshot
+
+    def test_sections_source_has_no_save_settings_reference(self):
+        """sections.py 単体ソースにテンプレート CRUD ハンドラの即時
+        _save_settings が一切残っていないことを確認する
+        （Task 2 の除去の回帰防止・CR-02）。
+        """
+        import pathlib
+
+        src = pathlib.Path("pagefolio/dialogs/llm_config/sections.py").read_text(
+            encoding="utf-8"
+        )
+        assert "_save_settings" not in src
+
+    def test_on_template_delete_askyesno_no_aborts_yes_deletes(self, monkeypatch):
+        """_on_template_delete は askyesno=False で items 残存・delete_template
+        非呼出（早期 return）、askyesno=True で items から削除されることを
+        確認する（02-REVIEW Fix 案2）。
+        """
+        from pagefolio.constants import LANG
+        from pagefolio.dialogs.llm_config import LLMConfigDialog
+
+        d = LLMConfigDialog.__new__(LLMConfigDialog)
+        d._L = LANG["ja"]
+        d._active_template_name = "tpl-active"
+        d.current_settings = {
+            "prompt_templates": {
+                "active": "tpl-active",
+                "items": {
+                    "tpl-active": {"custom_prompt": "x", "summary_prompt": "y"},
+                    "tpl-target": {"custom_prompt": "z", "summary_prompt": "w"},
+                },
+            }
+        }
+        d.template_var = _SetGetVarStub("tpl-target")
+        reload_calls = []
+        d._reload_template_combo = lambda select_name=None: reload_calls.append(
+            select_name
+        )
+
+        monkeypatch.setattr(
+            "pagefolio.dialogs.llm_config.sections.messagebox.askyesno",
+            lambda *a, **k: False,
+        )
+        d._on_template_delete()
+        assert "tpl-target" in d.current_settings["prompt_templates"]["items"]
+        assert reload_calls == []
+
+        monkeypatch.setattr(
+            "pagefolio.dialogs.llm_config.sections.messagebox.askyesno",
+            lambda *a, **k: True,
+        )
+        d._on_template_delete()
+        assert "tpl-target" not in d.current_settings["prompt_templates"]["items"]
+        assert reload_calls == ["tpl-active"]
+
+
+# ══════════════════════════════════════════════════════════════
+#  02-06 gap closure: テンプレート UI ハンドラの behavior_unverified_items
+#  （D-03/D-04/D-05/D-07・02-VERIFICATION.md）を実 bound method 呼び出しで
+#  検証する。test_ocr_fallback.py の headless スタブ + 実 bound method 呼び出し
+#  パターンを LLMConfigDialog 側へ同型移植する。
+# ══════════════════════════════════════════════════════════════
+
+
+class _FakeTemplateText:
+    """OCR カスタム/サマリプロンプト入力欄（tk.Text）相当のスタブ。
+
+    get/delete/insert のみを実装し、tk.Text の index 引数（"1.0"/"end" 等）は
+    無視して内部バッファ文字列だけを保持する（_on_template_change が
+    delete("1.0", "end") → insert("1.0", value) の順で呼ぶ実際の呼び出し方に
+    追従する）。
+    """
+
+    def __init__(self, value=""):
+        self._value = value
+
+    def get(self, _start, _end):
+        """設定済みの内部バッファ文字列を返す（index 引数は無視）。"""
+        return self._value
+
+    def delete(self, _start, _end):
+        """内部バッファを空文字列にする（index 引数は無視）。"""
+        self._value = ""
+
+    def insert(self, _index, value):
+        """内部バッファへ value を追記する（index 引数は無視）。"""
+        self._value += value
+
+
+class _FakeCombo:
+    """ttk.Combobox 相当スタブ。configure(values=...) の呼び出しのみ記録する
+    （_reload_template_combo が呼ぶため）。
+    """
+
+    def __init__(self):
+        self.values = None
+
+    def configure(self, **kwargs):
+        """values キーワード引数が渡された場合のみ記録する。"""
+        if "values" in kwargs:
+            self.values = kwargs["values"]
+
+
+def _make_template_dialog(
+    current_settings,
+    active_template_name="",
+    template_var_value="",
+    custom_text="",
+    summary_text="",
+):
+    """LLMConfigDialog のテンプレート UI ハンドラを Tk 生成なしで駆動する
+    headless インスタンスを返す。
+
+    tests/test_ocr_fallback.py の _make_dialog と同型: LLMConfigDialog.__new__
+    で __init__/_build を一切経由せず、検証に必要な属性のみ手動で設定する。
+    LLMConfigDialog の全 mixin メソッド（_has_unsaved_template_changes 等）は
+    実インスタンス上でそのまま使えるため、_on_template_change 内の自己呼び出し
+    も実コードで動く。template_delete_btn は既存の _ButtonStub（OCR-UI-02 節で
+    定義済み・.state(flags) を記録する ttk.Button 相当スタブ）をそのまま再利用
+    する（新規重複定義を避ける）。
+    """
+    from pagefolio.constants import LANG
+    from pagefolio.dialogs.llm_config import LLMConfigDialog
+
+    d = LLMConfigDialog.__new__(LLMConfigDialog)
+    d._L = LANG["ja"]
+    d.current_settings = current_settings
+    d._active_template_name = active_template_name
+    d.template_var = _SetGetVarStub(template_var_value)
+    d.ocr_prompt_text = _FakeTemplateText(custom_text)
+    d.ocr_summary_prompt_text = _FakeTemplateText(summary_text)
+    d.template_combo = _FakeCombo()
+    d.template_delete_btn = _ButtonStub()
+    return d
+
+
+class TestTemplateChangeFlow:
+    """D-05/D-07（V180-TMPL-04）: _on_template_change の未保存差分確認による
+    切替中止（D-05）と、切替確定後の外部mdファイル上書き（D-07）を実
+    bound method 呼び出しで検証する（02-VERIFICATION.md
+    behavior_unverified_items の1件目・2件目）。
+    """
+
+    def test_cancel_discards_switch_and_keeps_edited_content(self, monkeypatch):
+        """未保存差分ありで askyesno=False（キャンセル）を返すと、切替が中止され
+        template_var がアクティブテンプレート名へ戻り、入力欄内容も変化せず、
+        save_prompt_file にも到達しない（D-05）。
+        """
+        current_settings = {
+            "prompt_templates": {
+                "active": "A",
+                "items": {
+                    "A": {"custom_prompt": "saved-A", "summary_prompt": "saved-A2"},
+                    "B": {"custom_prompt": "b", "summary_prompt": "b2"},
+                },
+            }
+        }
+        d = _make_template_dialog(
+            current_settings,
+            active_template_name="A",
+            template_var_value="B",
+            custom_text="edited",
+            summary_text="saved-A2",
+        )
+        monkeypatch.setattr(
+            "pagefolio.dialogs.llm_config.sections.prompt_file_exists",
+            lambda _f: True,
+        )
+        monkeypatch.setattr(
+            "pagefolio.dialogs.llm_config.sections.messagebox.askyesno",
+            lambda *a, **k: False,
+        )
+        save_calls = []
+        monkeypatch.setattr(
+            "pagefolio.dialogs.llm_config.sections.save_prompt_file",
+            lambda f, content: save_calls.append((f, content)),
+        )
+
+        d._on_template_change()
+
+        assert d.template_var.get() == "A"
+        assert d.ocr_prompt_text.get("1.0", "end") == "edited"
+        assert save_calls == []
+
+    def test_confirmed_switch_overwrites_external_files_fake_capture(self, monkeypatch):
+        """未保存差分なしの切替確定後、選択テンプレートの内容が入力欄へ反映され、
+        save_prompt_file が CUSTOM_PROMPT_FILE/SUMMARY_PROMPT_FILE と新テンプレート
+        内容で呼ばれる（D-07・フェイク捕捉版）。
+        """
+        from pagefolio.constants import CUSTOM_PROMPT_FILE, SUMMARY_PROMPT_FILE
+
+        current_settings = {
+            "prompt_templates": {
+                "active": "A",
+                "items": {
+                    "A": {"custom_prompt": "saved-A", "summary_prompt": "saved-A2"},
+                    "B": {"custom_prompt": "newC", "summary_prompt": "newS"},
+                },
+            }
+        }
+        d = _make_template_dialog(
+            current_settings,
+            active_template_name="A",
+            template_var_value="B",
+            custom_text="saved-A",
+            summary_text="saved-A2",
+        )
+        monkeypatch.setattr(
+            "pagefolio.dialogs.llm_config.sections.prompt_file_exists",
+            lambda _f: True,
+        )
+        monkeypatch.setattr(
+            "pagefolio.dialogs.llm_config.sections.messagebox.askyesno",
+            lambda *a, **k: True,
+        )
+        save_calls = []
+        monkeypatch.setattr(
+            "pagefolio.dialogs.llm_config.sections.save_prompt_file",
+            lambda f, content: save_calls.append((f, content)),
+        )
+
+        d._on_template_change()
+
+        assert (CUSTOM_PROMPT_FILE, "newC") in save_calls
+        assert (SUMMARY_PROMPT_FILE, "newS") in save_calls
+        assert d._active_template_name == "B"
+        assert d.ocr_prompt_text.get("1.0", "end") == "newC"
+
+    def test_no_active_template_warns_on_unsaved_freeform_text(self, monkeypatch):
+        """02-REVIEW WR-03 回帰テスト: ファイル非連動・かつ今セッションで
+        まだテンプレートを選んでいない（_active_template_name==""）状態でも、
+        入力欄に自由入力テキストがあればテンプレート切替時に askyesno による
+        確認が発生し、キャンセル（False）を返せば入力内容が保持されたまま
+        切替が中止されることを検証する。
+        """
+        current_settings = {
+            "prompt_templates": {
+                "active": "",
+                "items": {
+                    "B": {"custom_prompt": "b", "summary_prompt": "b2"},
+                },
+            }
+        }
+        d = _make_template_dialog(
+            current_settings,
+            active_template_name="",
+            template_var_value="B",
+            custom_text="typed-but-unsaved",
+            summary_text="",
+        )
+        # ファイル非連動モード（外部 md ファイルは存在しない）
+        monkeypatch.setattr(
+            "pagefolio.dialogs.llm_config.sections.prompt_file_exists",
+            lambda _f: False,
+        )
+        askyesno_calls = []
+
+        def _fake_askyesno(*a, **k):
+            askyesno_calls.append((a, k))
+            return False
+
+        monkeypatch.setattr(
+            "pagefolio.dialogs.llm_config.sections.messagebox.askyesno",
+            _fake_askyesno,
+        )
+        save_calls = []
+        monkeypatch.setattr(
+            "pagefolio.dialogs.llm_config.sections.save_prompt_file",
+            lambda f, content: save_calls.append((f, content)),
+        )
+
+        d._on_template_change()
+
+        assert len(askyesno_calls) == 1
+        assert d.template_var.get() == ""
+        assert d.ocr_prompt_text.get("1.0", "end") == "typed-but-unsaved"
+        assert save_calls == []
+
+    def test_change_overwrites_external_md_file(self, monkeypatch, tmp_path):
+        """D-07 実ファイル検証版: settings._get_base_dir を tmp_path へ差し替え、
+        save_prompt_file/prompt_file_exists/load_prompt_file は一切
+        monkeypatch せず実関数のまま通す。切替後に ocr_custom_prompt.md/
+        ocr_summary_prompt.md が新アクティブテンプレートの内容で実際に
+        上書きされていることをファイル読み取りで確認する
+        （02-VERIFICATION.md behavior_unverified_items[1] の test 欄と一致）。
+        """
+        from pagefolio.constants import CUSTOM_PROMPT_FILE, SUMMARY_PROMPT_FILE
+
+        monkeypatch.setattr("pagefolio.settings._get_base_dir", lambda: str(tmp_path))
+        (tmp_path / CUSTOM_PROMPT_FILE).write_text("old-custom", encoding="utf-8")
+        (tmp_path / SUMMARY_PROMPT_FILE).write_text("old-summary", encoding="utf-8")
+
+        current_settings = {
+            "prompt_templates": {
+                "active": "A",
+                "items": {
+                    "A": {
+                        "custom_prompt": "old-custom",
+                        "summary_prompt": "old-summary",
+                    },
+                    "B": {"custom_prompt": "newC", "summary_prompt": "newS"},
+                },
+            }
+        }
+        d = _make_template_dialog(
+            current_settings,
+            active_template_name="A",
+            template_var_value="B",
+            custom_text="old-custom",
+            summary_text="old-summary",
+        )
+        # 未保存差分は無い想定（入力欄内容がアクティブテンプレート保存済み内容と
+        # 一致）だが、askyesno が呼ばれても切替が継続するよう True にしておく
+        monkeypatch.setattr(
+            "pagefolio.dialogs.llm_config.sections.messagebox.askyesno",
+            lambda *a, **k: True,
+        )
+
+        d._on_template_change()
+
+        assert (tmp_path / CUSTOM_PROMPT_FILE).read_text(encoding="utf-8") == "newC"
+        assert (tmp_path / SUMMARY_PROMPT_FILE).read_text(encoding="utf-8") == "newS"
+
+
+class TestTemplateNameValidationUI:
+    """D-04（V180-TMPL-03・UI 経由）: _on_template_save/_on_template_rename の
+    重複名/空名 messagebox.showerror 拒否経路を実 bound method 呼び出しで
+    検証する（02-VERIFICATION.md behavior_unverified_items の3件目）。
+    """
+
+    def test_save_rejects_duplicate_name(self, monkeypatch):
+        """既存名を askstring で入力すると showerror が呼ばれ、既存テンプレート
+        内容が上書きされない。"""
+        current_settings = {
+            "prompt_templates": {
+                "active": "",
+                "items": {"dup": {"custom_prompt": "orig", "summary_prompt": "orig2"}},
+            }
+        }
+        d = _make_template_dialog(
+            current_settings, custom_text="new", summary_text="new2"
+        )
+        monkeypatch.setattr(
+            "pagefolio.dialogs.llm_config.sections.simpledialog.askstring",
+            lambda *a, **k: "dup",
+        )
+        error_calls = []
+        monkeypatch.setattr(
+            "pagefolio.dialogs.llm_config.sections.messagebox.showerror",
+            lambda *a, **k: error_calls.append((a, k)),
+        )
+
+        d._on_template_save()
+
+        assert len(error_calls) == 1
+        assert current_settings["prompt_templates"]["items"]["dup"] == {
+            "custom_prompt": "orig",
+            "summary_prompt": "orig2",
+        }
+
+    def test_save_rejects_empty_name(self, monkeypatch):
+        """空白のみの名前を askstring で入力すると showerror が呼ばれ、
+        テンプレートが追加されない。"""
+        current_settings = {"prompt_templates": {"active": "", "items": {}}}
+        d = _make_template_dialog(current_settings)
+        monkeypatch.setattr(
+            "pagefolio.dialogs.llm_config.sections.simpledialog.askstring",
+            lambda *a, **k: "   ",
+        )
+        error_calls = []
+        monkeypatch.setattr(
+            "pagefolio.dialogs.llm_config.sections.messagebox.showerror",
+            lambda *a, **k: error_calls.append((a, k)),
+        )
+
+        d._on_template_save()
+
+        assert len(error_calls) == 1
+        assert current_settings["prompt_templates"]["items"] == {}
+
+    def test_rename_rejects_duplicate_name(self, monkeypatch):
+        """別の既存名を askstring で入力すると showerror が呼ばれ、リネームが
+        行われず items のキー集合が変化しない。"""
+        current_settings = {
+            "prompt_templates": {
+                "active": "",
+                "items": {
+                    "old": {"custom_prompt": "o", "summary_prompt": "o2"},
+                    "taken": {"custom_prompt": "t", "summary_prompt": "t2"},
+                },
+            }
+        }
+        d = _make_template_dialog(current_settings, template_var_value="old")
+        monkeypatch.setattr(
+            "pagefolio.dialogs.llm_config.sections.simpledialog.askstring",
+            lambda *a, **k: "taken",
+        )
+        error_calls = []
+        monkeypatch.setattr(
+            "pagefolio.dialogs.llm_config.sections.messagebox.showerror",
+            lambda *a, **k: error_calls.append((a, k)),
+        )
+
+        d._on_template_rename()
+
+        assert len(error_calls) == 1
+        assert set(current_settings["prompt_templates"]["items"].keys()) == {
+            "old",
+            "taken",
+        }
+
+
+class TestTemplateDeleteButtonState:
+    """D-03（V180-TMPL-03・UI 経由）: _refresh_template_delete_state の削除
+    ボタン disabled/!disabled 切替を実 bound method 呼び出しで検証する
+    （02-VERIFICATION.md behavior_unverified_items の4件目）。
+    """
+
+    def test_active_selection_disables_delete_button(self):
+        """アクティブテンプレートを選択中は削除ボタンが disabled になる。"""
+        current_settings = {
+            "prompt_templates": {
+                "active": "A",
+                "items": {"A": {"custom_prompt": "a", "summary_prompt": "a2"}},
+            }
+        }
+        d = _make_template_dialog(
+            current_settings, active_template_name="A", template_var_value="A"
+        )
+
+        d._refresh_template_delete_state()
+
+        assert d.template_delete_btn.last_state == ["disabled"]
+
+    def test_inactive_selection_enables_delete_button(self):
+        """非アクティブテンプレートを選択中は削除ボタンが !disabled になる。"""
+        current_settings = {
+            "prompt_templates": {
+                "active": "A",
+                "items": {
+                    "A": {"custom_prompt": "a", "summary_prompt": "a2"},
+                    "B": {"custom_prompt": "b", "summary_prompt": "b2"},
+                },
+            }
+        }
+        d = _make_template_dialog(
+            current_settings, active_template_name="A", template_var_value="B"
+        )
+
+        d._refresh_template_delete_state()
+
+        assert d.template_delete_btn.last_state == ["!disabled"]

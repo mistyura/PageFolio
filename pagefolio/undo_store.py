@@ -25,6 +25,7 @@ import contextlib
 import logging
 import os
 import shutil
+import sys
 import tempfile
 
 logger = logging.getLogger(__name__)
@@ -36,10 +37,11 @@ OFFLOAD_THRESHOLD = 64 * 1024
 class MemBlob:
     """閾値未満の小さいデータをメモリ保持する Blob。"""
 
-    __slots__ = ("_data",)
+    __slots__ = ("_data", "_released")
 
     def __init__(self, data):
         self._data = data
+        self._released = False
 
     @property
     def size(self):
@@ -50,18 +52,42 @@ class MemBlob:
         return self._data
 
     def release(self):
-        """参照を破棄してメモリを解放する。release 後の load は不正。"""
+        """参照を破棄してメモリを解放する。release 後の load は不正。
+
+        二重解放は警告ログを出すのみで、実処理（メモリ解放）は行わない
+        （V180-ROBUST-01・D-11）。
+        """
+        if self._released:
+            logger.warning("MemBlob 二重解放を検出")
+            return
+        self._released = True
         self._data = b""
+
+    def __del__(self):
+        """release されないまま GC されたらリーク警告を出す（V180-ROBUST-01・D-11）。
+
+        インタプリタ終了処理中は sys.is_finalizing() で早期 return し、
+        logger 等が破棄済みの状態での例外伝播を避ける（D-11・Pitfall 5）。
+        """
+        if self._released or sys.is_finalizing():
+            return
+        try:
+            logger.warning("MemBlob リーク検出（未解放のまま GC）")
+        except Exception as e:
+            # logger がインタプリタ終了処理中に破棄済みの可能性があるため
+            # 例外を握り潰す（__del__ 内で例外を伝播させない・Pitfall 5）
+            _ = e
 
 
 class FileBlob:
     """閾値以上のデータを一時ファイルへ退避する Blob。"""
 
-    __slots__ = ("path", "size")
+    __slots__ = ("path", "size", "_released")
 
     def __init__(self, path, size):
         self.path = path
         self.size = size
+        self._released = False
 
     def load(self):
         """一時ファイルから bytes を読み出して返す。"""
@@ -69,9 +95,36 @@ class FileBlob:
             return f.read()
 
     def release(self):
-        """一時ファイルを削除する。ロック等の失敗は purge/atexit に委ねる。"""
+        """一時ファイルを削除する。ロック等の失敗は purge/atexit に委ねる。
+
+        二重解放は警告ログを出すのみで、2回目の unlink は実行しない
+        （V180-ROBUST-01・D-11）。
+        """
+        if self._released:
+            logger.warning("FileBlob 二重解放を検出: %s", self.path)
+            return
+        self._released = True
         with contextlib.suppress(OSError):
             os.unlink(self.path)
+
+    def __del__(self):
+        """release されないまま GC されたらリーク警告 + ベストエフォート回収を行う
+        （V180-ROBUST-01・D-11/D-12）。
+
+        インタプリタ終了処理中は sys.is_finalizing() で早期 return する
+        （D-11・Pitfall 5）。logger/os が終了処理で破棄済みの可能性がある
+        ため、残りの処理は例外を握り潰す。
+        """
+        if self._released or sys.is_finalizing():
+            return
+        try:
+            logger.warning("FileBlob リーク検出（未解放のまま GC）: %s", self.path)
+            with contextlib.suppress(OSError):
+                os.unlink(self.path)
+        except Exception as e:
+            # logger/os が終了処理で破棄済みの可能性があるため
+            # 例外を握り潰す（__del__ 内で例外を伝播させない・Pitfall 5）
+            _ = e
 
 
 class UndoBlobStore:

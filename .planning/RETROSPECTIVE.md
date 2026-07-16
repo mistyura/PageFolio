@@ -156,6 +156,46 @@
 
 ---
 
+## Milestone: v1.8.0 — 実用性の最大化・エコシステム洗練・堅牢性強化
+
+**Shipped:** 2026-07-16
+**Phases:** 6 | **Plans:** 22 | **Tasks:** 53 | **Sessions:** 複数（2026-07-13〜07-16 実装、07-16 にマイルストーンクローズ）
+
+### What Was Built
+- **基盤分割（Phase 1）**: `ocr_providers.py`（1537行）を base/errors/registry+6プロバイダの10ファイルパッケージへ、`dialogs/llm_config.py`（1660行）を DialogMixin/SectionsMixin/ModelFetchMixin の3層 Mixin パッケージへ機械的分割。プロバイダ→環境変数マッピングの中央レジストリ `registry.py` を新設し `_SENSITIVE_KEYS` の重複定義面を統合（V180-ROBUST-02）。
+- **AI強化（Phase 2）**: プロンプトテンプレート CRUD 純関数と3段プロンプト解決（settings.py）・次候補選択の純関数（`ocr_fallback.py`）を基盤に、テンプレート管理 UI・フォールバック設定 UI・実行時オーケストレーション層（送信先確認再提示つき・app.settings 非破壊のダイアログローカルスナップショット方式）を実装。ギャップクロージャ2回（CR-02 Apply/Cancel契約違反・behavior_unverified 4件）で仕上げた。
+- **OCR実行エンジン抽出（Phase 3）**: producer-consumer 駆動部を `OCRRunEngine`（`ocr_engine.py`）へ抽出し `OCRDialog` を薄い委譲ラッパー化。実スレッド駆動の6シナリオ E2E モックテストで OCR→サマリの一気通貫フローを実 API 非依存で保証。
+- **バッチ複数ファイルOCR（Phase 4）**: Tk/fitz非依存の純ロジック層（`batch_ocr_state.py`）をTDDで先行整備し、独立 `BatchOCRDialog` に D&D投入・3列Treeview二段進捗・per-file `OCRRunEngine` 逐次生成ループ・2階層キャンセル・ファイル横断統合サマリを実装。単独フェーズ隔離方針を貫徹。
+- **堅牢性強化（Phase 5）**: サムネイル可視範囲仮想化とLRUキャッシュ（`thumb_cache.py`/`pagination.py`純関数）をviewer.pyへ統合、Blobライフサイクルの`_released`+`__del__`リーク検出（Windows AV衝突安全網）、ShortcutsDialogの表示残留/キー衝突バグ解消。
+- **品質保証仕上げ（Phase 6）**: `ToastManager`新設で保存3操作+印刷失敗を非モーダルトースト化。ダイアログ8ファイルのスクロール/フォント一貫性監査・是正。**Core Value 直撃バグ**（`insert_redo`非対称復元によるページ重複）を`delete_redo`対称パターンで修正。開発履歴.mdの版番/日付整合。
+
+### What Worked
+- **TDD（RED→GREEN）の一貫適用**: Phase 4 の`batch_ocr_state.py`・Phase 6 の`insert_redo`修正・WR-01/02/03 修正のいずれも、先に失敗する回帰テストを書いてから実装するパターンが、修正の正しさを機械的に担保した。
+- **独立プラン隔離の継続**: v1.7.1 で確立した「高リスク横断変更は独立Waveへ」パターンをバッチOCR（Phase 4 単独フェーズ）でも踏襲し、他の柱を巻き込まず完了。
+- **コードレビュー→即時修正のクローズドループ**: Phase 6 のコードレビューで検出したWR-01/02/03（いずれもTkinterの実挙動を伴う微妙な不具合）を、フェーズ検証前に`--fix`で即座に修正・回帰テスト追加してから検証に進んだことで、フェーズゴール検証が「本当に動く状態」を確認できた。
+- **クロスマイルストーン衝突バグへの警戒が機能**: `roadmap update-plan-progress`/`phase.complete`/`milestone.complete`が過去マイルストーンの同番号行（ROADMAP.md・STATE.md双方）を誤って書き換える既知バグに対し、実行の都度 `git diff` で検知し手動修正できた（Wave 1・Wave 2・milestone.complete 実行後の計3回発生・3回とも検知）。
+
+### What Was Inefficient
+- **APP_VERSION 更新漏れが4回目の再発**: v1.6.0（二重バンプ）・v1.7.1（更新漏れ）に続き、v1.8.0でも全6フェーズを通じて`pagefolio/constants.py`のAPP_VERSIONが`v1.7.4`のまま放置され、`/gsd-complete-milestone`実行時に検出・修正（→v1.8.0）。v1.7.1の教訓（「最終フェーズの成功基準に明示的に含める」）が実行に反映されなかった。
+- **クロスマイルストーン衝突バグの根本修復は未実施**: 今回も対症療法（都度 git diff 検知・手動 revert）で切り抜けたが、`roadmap`/`state` 系ツールの番号マッチロジック自体（マイルストーン列を見ない）は3マイルストーン連続で同種の問題を起こしており、そろそろツール側の修正が必要な段階に来ている。
+- **duplicate/merge/merge_resize の水平展開が未実施**: `insert_redo`と同型の非対称復元バグが他のページ構造変更 op に潜在していないか、Phase 6 では時間の都合で確認できず次マイルストーン候補として明示的にdeferred（レビューR6）。
+
+### Patterns Established
+- **codeレビュー即時修正パターン**: フェーズ内コードレビューでWarning以上が見つかった場合、フェーズ検証（gsd-verifier）前に`/gsd-code-review --fix`で即修正・回帰テスト追加してから検証に進む。
+- **クロスマイルストーン衝突の実行時ガード**: `roadmap`/`phase.complete`/`milestone.complete`実行直後は必ず`git diff`で他マイルストーン行が触られていないか確認し、触られていれば該当行のみ手動revert。
+
+### Key Lessons
+1. **APP_VERSION更新漏れは「気をつける」では直らない**: 3マイルストーン連続（v1.6.0/v1.7.1/v1.8.0）で発生している以上、次はフェーズ計画テンプレートまたは`/gsd-execute-phase`の最終フェーズ成功基準に構造的なgrepチェックとして組み込むことを検討する。
+2. コードレビューで見つかった実害のあるWarningは、フェーズ完了扱いにする前にその場で`--fix`する方が、後から拾うより安い。
+3. クロスマイルストーン衝突バグは複数のツール呼び出し（roadmap更新・phase.complete・milestone.complete）それぞれで再発しうるため、単発の確認では不十分。ツール呼び出しの都度チェックする運用を継続する必要がある。
+4. TDD（RED先行）は「非対称復元バグ」のような一見地味だがCore Value直撃の不具合修正でこそ効く。
+
+### Cost Observations
+- Model mix: model_profile balanced（sonnet中心・executor/verifier/reviewer/fixer全てsonnet）
+- Notable: 222 コミット・183 ファイル変更・約 31,300 行追加/4,150 行削除を約4日間（2026-07-13〜07-16）で完了。worktree isolation は HEAD が origin/HEAD から乖離していたため全期間シーケンシャル実行に自動降格（既知パターン#683）。
+
+---
+
 ## Cross-Milestone Trends
 
 ### Process Evolution
@@ -166,6 +206,7 @@
 | v1.4.0 | 複数 | 4 | 機能追加マイルストーン（OCR プロバイダ化）を GSD で実施。ギャップクロージャ・遡及クローズアウトを経験 |
 | v1.6.0 | 複数 | 4 | Wave1 純関数 → Wave2 配線の二段構成を定着。executor Bash 拒否のインライン代行・版番二重化・human-verify スキップを経験 |
 | v1.7.1 | 複数 | 4 | レビューバックログ（L-1〜L-6）の鮮度管理を計画時必須化。高リスク横断リファクタの独立プラン隔離を定着。APP_VERSION 更新漏れを経験 |
+| v1.8.0 | 複数 | 6 | TDD（RED→GREEN）の一貫適用が定着。コードレビュー即時修正パターンを確立。APP_VERSION 更新漏れが3回目再発・クロスマイルストーン衝突バグを3回検知・手動修正 |
 
 ### Cumulative Quality
 
@@ -175,6 +216,7 @@
 | v1.4.0 | 490 passed（v1.4.4 時点） | （未計測） | urllib 直叩きで全プロバイダを新規依存ゼロ実装 |
 | v1.6.0 | 597 passed | （未計測） | pagination.py / md_render.py を標準ライブラリのみで新設 |
 | v1.7.1 | 859 passed | （未計測） | ocr_pipeline.py を標準ライブラリのみで新設 |
+| v1.8.0 | 1101 passed | （未計測） | registry.py / ocr_fallback.py / ocr_engine.py / batch_ocr_state.py / thumb_cache.py / toast.py を標準ライブラリのみで新設 |
 
 ### Top Lessons (Verified Across Milestones)
 
@@ -182,5 +224,7 @@
 2. 後方互換の境界は機械的テストで保護する（import 回帰テスト）。
 3. 実装完了直後にフェーズ記録（SUMMARY/STATE/ROADMAP）を閉じる。記録の遅延は後続作業の不整合を生む（v1.4.0 Phase 07 の教訓）。
 4. ロジックは Tk/fitz 非依存の純関数へ先に落とし、UI 層を薄い配線に保つとテスト網羅と後方互換が安価になる（v1.6.0）。
-5. バージョン番号はマイルストーン完了時に一度だけ確定し、途中バンプ→巻き戻しを避ける（v1.6.0）。バンプ自体を忘れないよう最終フェーズの成功基準に明示的に含める（v1.7.1）。
+5. バージョン番号はマイルストーン完了時に一度だけ確定し、途中バンプ→巻き戻しを避ける（v1.6.0）。バンプ自体を忘れないよう最終フェーズの成功基準に明示的に含める（v1.7.1）——が、v1.8.0でも再発。単なる注意喚起では機能しないため、構造的なチェック（自動grep等）の導入を次マイルストーンで検討する。
 6. 高リスク・横断的なリファクタは独立 Wave として他プランから隔離すると安全に完了できる（v1.7.1）。
+7. コードレビューで見つかった実害あるWarningは、フェーズ完了扱いにする前にその場で`--fix`する方が安い（v1.8.0）。
+8. クロスマイルストーン衝突バグ（ROADMAP.md/STATE.mdの番号のみマッチ）はツール呼び出しの都度再発しうるため、実行直後の`git diff`確認を毎回徹底する（v1.8.0で3回検知）。
