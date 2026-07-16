@@ -22,170 +22,7 @@
 
 ---
 
-## ファイル構成
-
-```
-PageFolio/
-├── pagefolio.py               # エントリーポイント（python pagefolio.py で起動）
-├── pagefolio/                 # メインパッケージ
-│   ├── __init__.py            # 公開API（後方互換 import 用）
-│   ├── __main__.py            # python -m pagefolio エントリーポイント
-│   ├── constants.py           # バージョン・ファイル名・拡張子・OCR プロンプト外部ファイル名定数（APP_VERSION）+ themes/lang 再エクスポート
-│   ├── themes.py              # カラーテーマ定義（THEMES, 実行時辞書 C）
-│   ├── lang.py                # 言語辞書（LANG: ja / en）
-│   ├── settings.py            # 設定ユーティリティ関数（外部プロンプトファイル読込含む）
-│   ├── plugins.py             # プラグインシステム（PDFEditorPlugin, PluginManager）
-│   ├── app.py                 # PDFEditorApp 本体（Mixin 統合 + 状態管理）
-│   ├── ui_builder.py          # UI構築 Mixin（スタイル・レイアウト）
-│   ├── file_ops.py            # ファイル操作 Mixin（open/save/undo/redo・Blob ライフサイクル）
-│   ├── undo_store.py          # undo デルタのディスク退避ストア（MemBlob/FileBlob/UndoBlobStore・Tk/fitz 非依存）
-│   ├── page_ops.py            # ページ操作 Mixin（回転/削除/トリミング/挿入/結合/分割）
-│   ├── redact_ops.py          # ページ編集 Mixin（黒塗り redaction / モザイク・page_edit undo）
-│   ├── print_ops.py           # 印刷 Mixin（PrintOpsMixin / write_print_tempfile）
-│   ├── viewer.py              # 表示 Mixin（プレビュー/ズーム/サムネイル/ポップアップ）
-│   ├── dnd.py                 # D&D Mixin（サムネイルのドラッグ並び替え）
-│   ├── pagination.py          # サムネイル窓計算 / local↔global インデックス変換（Tk・fitz 非依存の純関数群）
-│   ├── ocr.py                 # OCR Mixin + ヘルパー（build_provider / 並列実行 / リトライ制御 / resolve_ocr_prompt）
-│   ├── ocr_pipeline.py        # OCR 実行パイプライン純ロジック層（PipelineState/consume_one/try_enqueue/send_sentinels・Tk/fitz 非依存の producer-consumer 一本化）
-│   ├── ocr_providers.py       # OCR プロバイダ（LMStudio / Claude / Gemini / Tesseract / Ollama / RunPod）
-│   ├── md_render.py           # Markdown→(行種別, インライン span) 変換の純関数（parse_markdown・Tk/fitz 非依存）
-│   ├── ocr_dialog.py          # OCRDialog（複数ページ OCR 結果ビューア / エクスポート / Markdown 整形描画）
-│   ├── dialogs/               # ダイアログパッケージ
-│   │   ├── __init__.py        # 後方互換 re-export（from pagefolio.dialogs import ...）
-│   │   ├── about.py           # AboutDialog
-│   │   ├── settings.py        # SettingsDialog
-│   │   ├── plugin.py          # PluginDialog
-│   │   ├── merge.py           # MergeOrderDialog / MergeResizeDialog
-│   │   ├── llm_config.py      # LLMConfigDialog（OCR プロバイダ / モデル設定・非同期モデル取得・外部プロンプト連動注記）
-│   │   ├── shortcuts.py       # ShortcutsDialog（cmd_map 11コマンドの実キーキャプチャ編集・保存時重複拒否）
-│   │   ├── export_images.py   # ExportImagesDialog（ページ→画像変換 / 範囲・スケール指定）
-│   │   └── password.py        # SetPasswordDialog（パスワード付与の入力 UI）
-│   └── file_drop.py           # ファイル D&D（tkinterdnd2 連携）
-├── pagefolio.ico              # アプリアイコン
-├── PageFolio.spec             # PyInstaller ビルド定義（onedir 形式）
-├── README.md                  # エンドユーザー向け使用概要
-├── CLAUDE.md                  # 本ファイル（AI 向け開発指示書）
-├── 開発履歴.md                # 機能追加・変更の履歴
-├── LICENSE                    # MITライセンス
-├── pyproject.toml             # Ruff・pytest 設定
-├── requirements.txt           # 依存パッケージ（バージョン固定）
-├── plugins/                   # プラグインディレクトリ
-│   └── page_info.py           # サンプルプラグイン（ページ情報表示）
-├── tests/                     # テストスイート（pytest）
-│   ├── conftest.py            # テスト用共通フィクスチャ
-│   ├── test_imports.py        # パッケージ import / 後方互換テスト
-│   ├── test_utils.py          # ユーティリティ関数テスト
-│   ├── test_pdf_ops.py        # PDF 操作テスト
-│   ├── test_plugins.py        # PluginManager テスト
-│   ├── test_viewer.py         # プレビュー / サムネイル描画テスト
-│   ├── test_settings_keyguard.py  # API キー非保存ガードテスト
-│   ├── test_ocr.py            # OCR ヘルパー / 並列実行テスト
-│   ├── test_ocr_pipeline.py   # OCR 実行パイプライン純ロジック層（PipelineState/consume_one/enqueue系）テスト
-│   ├── test_ocr_providers.py  # OCR プロバイダ単体テスト
-│   ├── test_provider_ui.py    # プロバイダ UI（ダイアログ連携）/ resolve_ocr_prompt テスト
-│   ├── test_pagination.py     # ページネーション純ロジック（窓計算 / local↔global / 境界値）テスト
-│   ├── test_md_render.py      # parse_markdown 純関数（行種別 / インライン span）テスト
-│   ├── test_export_images.py  # ページ→画像変換（範囲パース / スケール計算 / 出力）テスト
-│   ├── test_save_overwrite.py # 縮小して保存（上書き）ヘルパーのテスト
-│   ├── test_password.py       # PDF パスワード付与/解除・暗号化保存ヘルパーのテスト
-│   ├── test_print.py          # 印刷一時ファイル生成 / OS 分岐のテスト
-│   ├── test_undo_stress.py    # 120 ページ PDF の Undo/Redo 連続ストレス（メモリ・Blob 不変条件・eviction）
-│   ├── test_lang_parity.py    # ja/en LANG キー一致 / プレースホルダ整合の回帰テスト
-│   └── test_source_keyguard.py  # pagefolio/ ソースの実 API キーパターン不在スキャン
-└── docs/                      # スクリーンショット画像
-
-（実行時に自動生成）
-└── pagefolio_settings.json    # ユーザー設定（テーマ・フォントサイズ等）
-```
-
----
-
-## モジュール構成
-
-### `pagefolio/constants.py`
-
-バージョン（`APP_VERSION`）・ファイル名・対応拡張子の定数を定義。
-`themes.py` の `THEMES` / `C`、`lang.py` の `LANG` を再エクスポートし後方互換 import 表面を維持。
-OCR プロンプトの外部ファイル名 `CUSTOM_PROMPT_FILE`（`ocr_custom_prompt.md`）/ `SUMMARY_PROMPT_FILE`（`ocr_summary_prompt.md`）も定義する。
-
-### `pagefolio/themes.py` / `pagefolio/lang.py`
-
-`themes.py` はカラーテーマ（`THEMES`）と実行時テーマ辞書（`C`）、`lang.py` は言語辞書（`LANG`、ja / en）を定義。
-LANG の新規キーは **ja / en 両方に同一キーで追加**しキー数の左右一致を維持すること。
-
-### `pagefolio/settings.py`
-
-設定ファイルの読み書き・テーマ解決・フォント生成のユーティリティ関数群。
-API キーは `_SENSITIVE_KEYS` ガードにより `pagefolio_settings.json` へ保存されない。
-OCR のカスタム/サマリプロンプトの外部 md ファイル読込・書き戻し（`load_prompt_file` / `save_prompt_file` / `prompt_file_exists` / `load_custom_prompt` / `load_summary_prompt`）と配置基準ディレクトリの一元化（`_get_base_dir`・frozen 時は exe ディレクトリ / 開発時はプロジェクトルート）も提供する。
-
-### `pagefolio/plugins.py`
-
-`PDFEditorPlugin` 基底クラスと `PluginManager` クラス。プラグインの検出・読込・有効/無効管理。
-`register_ocr_provider` フックによる OCR プロバイダ登録に対応。
-
-### `pagefolio/app.py`
-
-`PDFEditorApp` メインクラス。8つの Mixin を統合し、`__init__`・キーバインド・ユーティリティメソッドを持つ。
-
-### Mixin モジュール群
-
-| モジュール | Mixin クラス | 責務 |
-|-----------|-------------|------|
-| `ui_builder.py` | `UIBuilderMixin` | スタイル定義・レイアウト構築 |
-| `file_ops.py` | `FileOpsMixin` | ファイル操作・Undo/Redo・パスワード付与/解除 |
-| `page_ops.py` | `PageOpsMixin` | ページ回転・削除・トリミング・挿入・結合・分割 |
-| `redact_ops.py` | `RedactOpsMixin` | ページ編集（黒塗り redaction・モザイク）。矩形選択はトリミングと共用・undo は `page_edit` op（適用前ページ bytes） |
-| `viewer.py` | `ViewerMixin` | プレビュー・ズーム・サムネイル・ポップアップ |
-| `dnd.py` | `DnDMixin` | サムネイル D&D 並び替え |
-| `ocr.py` | `OCRMixin` | OCR 起動・プロバイダ生成（`build_provider`）・ボタン状態管理 |
-| `print_ops.py` | `PrintOpsMixin` | 印刷（既定 PDF ハンドラへ送信・`write_print_tempfile`） |
-
-### OCR モジュール群
-
-| モジュール | 主要クラス / 関数 | 責務 |
-|-----------|------------------|------|
-| `ocr.py` | `OCRMixin`, `build_provider`, `run_parallel`, `clamp_retry_after`, `interruptible_sleep`, `PROVIDER_OCR_PROMPTS`, `resolve_ocr_prompt`, `PROVIDER_SUMMARY_PROMPTS`, `resolve_summary_prompt` | プロバイダ生成・並列 OCR 実行・リトライ/キャンセル制御・プロバイダ別プロンプト解決（custom>provider別>汎用）・サマリプロンプト解決 |
-| `ocr_pipeline.py` | `PipelineState`, `consume_one`, `try_enqueue`, `send_sentinels` | 複数ページ画像 OCR 実行パイプラインの producer-consumer 純ロジック層（Tk/fitz 非依存）。共有カウンタ/fatal 判定/サーキットブレーカーは `PipelineState`、1 アイテム消費（リトライ/バックオフ/fatal 判定）は `consume_one`、非ブロッキング enqueue/sentinel 送出は `try_enqueue`/`send_sentinels` に集約（D-01/D-02・L-1 一本化） |
-| `ocr_providers.py` | `OCRProvider`(ABC), `LMStudioProvider`, `ClaudeProvider`, `GeminiProvider`, `TesseractProvider`, `OllamaProvider`, `RunPodProvider` | 各バックエンドへの OCR リクエスト実装（`ocr_image_ex` で stop_reason/finishReason 途切れ検出・`complete_text_ex`/`supports_text_prompt` で text-only 補完＝全ページ統合サマリ生成。Tesseract は非対応）。`list_models` のモデル一覧取得タイムアウトはクラス属性 `model_list_timeout`（基底 10 / Claude・Gemini 30 / RunPod 90 秒＝Serverless コールドスタート対応） |
-| `md_render.py` | `parse_markdown`, `_split_inline` | OCR 結果 Markdown を (行種別, インライン span) へ変換する純関数（Tk/fitz 非依存・`ocr_dialog.py` の整形描画が消費） |
-| `ocr_dialog.py` | `OCRDialog` | 複数ページ OCR の実行 UI・進捗・結果表示/エクスポート（`_run_gen` 世代ガード）・`preset=="markdown"` 整形描画（`_insert_markdown`）・コピー/保存は raw 維持・「📊 サマリ作成」による全ページ統合サマリ生成（`_on_summary`/`_summary_worker`・サマリ専用キャンセルフラグ）。`_render_next_page`/`_worker` は `ocr_pipeline` の関数/`PipelineState` を呼ぶ薄いラッパー（D-01・fitz/Tk 依存部分のみ保持）。OCR プリセット横の注記（`_update_preset_note`: カスタムプロンプト使用中はプリセットが表示形式にのみ適用される旨）・右ペイン（「▶ 実行」「📋 結果」セクション）は Canvas+Scrollbar の縦スクロール対応で「✕ 閉じる」はスクロール領域外に常時可視 |
-
-### ページネーション
-
-`pagination.py` はサムネイル一覧の窓表示（既定 20・範囲 10〜100）の純ロジック層。窓計算・件数クランプ・ローカル位置 ↔ 全ページインデックス変換（`to_global` 等）を Tk/fitz 非依存の純関数群として集約する。`selected_pages` は全ページインデックスのまま保持し、描画・D&D・選択照合の側で窓変換する（散在による窓またぎバグを構造的に防止）。
-
-### `pagefolio/dialogs/`（パッケージ）
-
-`about.py`（`AboutDialog`）・`settings.py`（`SettingsDialog`）・`plugin.py`（`PluginDialog`）・
-`merge.py`（`MergeOrderDialog` / `MergeResizeDialog`）・`llm_config.py`（`LLMConfigDialog`。クラウドモデル取得の非同期化 `_fetch_models_async`・外部プロンプトファイル連動注記 `_add_prompt_file_notice` を担う）に分割。
-`__init__.py` が re-export するため `from pagefolio.dialogs import SettingsDialog` 等の既存 import は維持される。
-
----
-
-## カラーテーマ
-
-テーマは `pagefolio/themes.py` の `THEMES` 辞書で定義。実行時は `C` 辞書経由で参照。
-
-```python
-THEMES = {
-    "dark": {
-        "BG_DARK": "#1a1a2e",  "BG_PANEL": "#16213e",  "BG_CARD": "#0f3460",
-        "ACCENT": "#e94560",   "TEXT_MAIN": "#eaeaea",  "TEXT_SUB": "#a0a0b0",
-        "SUCCESS": "#4ecca3",  "WARNING": "#ffd460",    "PREVIEW_BG": "#111122",
-        ...
-    },
-    "light": {
-        "BG_DARK": "#f0f0f5",  "BG_PANEL": "#e0e0ea",  "BG_CARD": "#d0d0dd",
-        "ACCENT": "#d63050",   "TEXT_MAIN": "#1a1a2e",  "TEXT_SUB": "#555566",
-        "SUCCESS": "#2a9d6a",  "WARNING": "#b8860b",    "PREVIEW_BG": "#c8c8d0",
-        ...
-    },
-}
-C = dict(THEMES["dark"])  # 実行時に _apply_theme() で更新
-```
-
----
+> ファイル構成は `ls` / `git ls-files` で、モジュールごとの責務は `pagefolio/CLAUDE.md` を参照。
 
 ## コマンド
 
@@ -285,7 +122,7 @@ C = dict(THEMES["dark"])  # 実行時に _apply_theme() で更新
 - `set_cropbox` によるトリミングはメタデータ上の cropbox 変更であり、PDF の物理的なページサイズは変わらない
 - 黒塗り・モザイク（`redact_ops.py`）は **破壊的操作**: `apply_redactions()` は矩形下のテキスト・画像を実削除し、矩形に交差する注釈も削除される（PyMuPDF 仕様）。undo は `page_edit` op（適用前ページ bytes）で可能。回転表示中のページでも `page_ops.py` の共通ヘルパー `_derotate_rect`（`page.derotation_matrix` 使用）により表示座標→未回転座標へ変換されるため、トリミング・黒塗り・モザイクの3操作すべてで「見たままの位置」に適用される（v1.7.1 Phase 3・D-08 で解消）
 - 黒塗り/モザイクは連続適用（明示トグルで OFF にするまでモード維持）に対応し、複数矩形を追加してから一括適用できる。1回の Undo で全矩形がまとめて戻る（v1.7.1 Phase 3・D-05/D-07）。モザイクの粒度は右ペインのスライダーで調整でき `pagefolio_settings.json` に永続化される（D-06）
-- サムネイルは `fitz.Matrix(0.22, 0.22)` のスケールで生成（変更時はパフォーマンスに注意）
+- サムネイルは `fitz.Matrix(0.22 * z, 0.22 * z)`（`z` は `thumb_zoom_var`、既定 1.0）のスケールで生成（変更時はパフォーマンスに注意）
 - プレビューは `self.zoom * 1.5` のスケールで生成
 - 右ペインはスクロール可能な Canvas 構成（`_build_tools_scrollable` で実装）
 - クラウド OCR（Claude / Gemini / RunPod）はページ画像を base64 で外部 API へ https 送信する（Tesseract / LM Studio / Ollama はローカル完結）。RunPod の API キーは環境変数 `RUNPOD_API_KEY` のみ
@@ -293,7 +130,7 @@ C = dict(THEMES["dark"])  # 実行時に _apply_theme() で更新
 - OCR のリトライ待機は `Retry-After` を 60 秒上限にクランプし、0.5 秒刻みでキャンセルを確認する（`clamp_retry_after` / `interruptible_sleep`）
 - `fitz.Document` はスレッド間で共有しない（OCR はメインスレッドでレンダリングした base64 のみワーカーへ渡す）
 - **外部プロンプトファイル連動**: OCR のカスタム/サマリプロンプトは、実行ファイル（開発時はプロジェクトルート）と同じ階層の `ocr_custom_prompt.md` / `ocr_summary_prompt.md`（`constants.py` の `CUSTOM_PROMPT_FILE` / `SUMMARY_PROMPT_FILE`）と LLM 設定の入力欄を双方向連動できる。ファイルが存在すればダイアログを開いたとき入力欄へ反映し、適用時に入力欄の内容をファイルへ書き戻す。OCR/サマリ実行時は毎回再読込するため外部エディタでの編集が再起動なしで反映される。ファイルが無ければ従来どおり設定欄のみで完結（`settings.py`）
-- **モデル一覧取得の非同期化・タイムアウト**: クラウド LLM（Claude / Gemini / RunPod）のモデル一覧取得は LLM 設定ダイアログでバックグラウンドスレッド実行され UI をフリーズさせない（`llm_config.py` の `_fetch_models_async`）。タイムアウトはプロバイダ別クラス属性 `model_list_timeout`（ローカル 10 秒 / Claude・Gemini 30 秒 / RunPod 90 秒）
+- **モデル一覧取得の非同期化・タイムアウト**: クラウド LLM（Claude / Gemini / RunPod）のモデル一覧取得は LLM 設定ダイアログでバックグラウンドスレッド実行され UI をフリーズさせない（`pagefolio/dialogs/llm_config/model_fetch.py` の `_fetch_models_async`）。タイムアウトはプロバイダ別クラス属性 `model_list_timeout`（ローカル 10 秒 / Claude・Gemini 30 秒 / RunPod 90 秒）
 - **`pagefolio/ocr_providers/registry.py` の独立性制約**（v1.8.0 Phase 1 新設のプロバイダ→環境変数 中央レジストリ）: Python 標準ライブラリ（`os`）のみに依存し、pagefolio 内部の他モジュール（特に `settings.py`・UI 関連）を import しない。settings.py 等から参照される際の循環 import を構造的に防ぐための制約であり、将来も内部モジュールへの import 依存を追加しないこと。新プロバイダの機密キー定義追加はこの1ファイルに閉じる（V180-ROBUST-02）
 
 ---
@@ -365,159 +202,15 @@ PageFolio の既存コードベースに対する最適化プロジェクト。
 
 <!-- GSD:stack-start source:codebase/STACK.md -->
 
-## Technology Stack
-
-## Runtime & Language
-
-- Python 3.8+ — アプリケーション全体（型ヒントは 3.8 互換）
-- 仮想環境: `venv/` (Windows 向け)
-- pip（`requirements.txt` で依存管理）
-- Lockfile: `requirements.txt`（バージョン固定）
-
-## Core Frameworks & Libraries
-
-| Name | Version | Purpose | Key usage patterns |
-|------|---------|---------|-------------------|
-| Tkinter | 標準ライブラリ | GUI フレームワーク | `tk.Tk`, `ttk.Button`, `tk.Canvas` でウィジェット構築 |
-| PyMuPDF (fitz) | 1.27.2.2 | PDF 読み書き・レンダリング | `fitz.open()`, `page.get_pixmap()`, `doc.save()` |
-| Pillow (PIL) | 12.2.0 | 画像変換・表示 | `Image`, `ImageTk.PhotoImage` でプレビュー描画 |
-| tkinterdnd2 | 0.4.3 | ファイル D&D サポート | `TkinterDnD.Tk`, `DND_FILES`, `drop_target_register()` |
-
-## Build & Tooling
-
-| Tool | Version | Purpose |
-|------|---------|---------|
-| Ruff | 0.15.7 | リント・フォーマット（E/F/W/I/S/B ルール） |
-| PyInstaller | 6.19.0 | Windows 実行ファイルのビルド（`.exe` 生成） |
-
-- `line-length = 88`
-- `select = ["E", "F", "W", "I", "S", "B"]`
-- `tests/**/*.py` で `S101` (assert) を除外
-
-## Development Dependencies
-
-| Tool | Version | Purpose |
-|------|---------|---------|
-| pytest | 9.0.2 | テストランナー |
-| pytest-cov | 7.1.0 | カバレッジ計測 |
-
-## Standard Library Usage
-
-- `tkinter` / `tkinter.ttk` — GUI 全般（`pagefolio/ui_builder.py`, `pagefolio/dialogs/` など）
-- `tkinter.filedialog`, `messagebox`, `simpledialog` — ダイアログ操作
-- `json` — 設定ファイル読み書き（`pagefolio/settings.py`）
-- `os` — パス操作・ファイル検索
-- `logging` — ログ出力（全モジュール）
-- `threading` — バックグラウンド処理（`pagefolio/ocr_dialog.py`）
-- `concurrent.futures.ThreadPoolExecutor` — OCR 並列処理（`pagefolio/ocr.py`）
-- `urllib.request` — HTTP 通信（LM Studio API 呼び出し）（`pagefolio/ocr_providers.py`）
-- `base64` — OCR 画像エンコード（`pagefolio/ocr.py`）
-- `json`, `socket` — OCR リクエスト組み立て（`pagefolio/ocr_providers.py`）
-- `importlib`, `importlib.util` — プラグイン動的読み込み（`pagefolio/plugins.py`）
-
-## Infrastructure & Platform
-
-- `pagefolio.py` — `python pagefolio.py` 起動
-- `pagefolio/__main__.py` — `python -m pagefolio` 起動
-- PyInstaller で onedir 形式（ディレクトリ配布）としてビルド
-- アイコン: `pagefolio.ico`
-- `pyproject.toml` で `pythonpath = ["src"]` を指定（pytest 用）
-
 <!-- GSD:stack-end -->
 
 <!-- GSD:conventions-start source:CONVENTIONS.md -->
-
-## Conventions
-
-## Naming Conventions
-
-- Modules use `snake_case.py` (e.g., `file_ops.py`, `ui_builder.py`, `page_ops.py`)
-- Test files use `test_<module>.py` prefix (e.g., `test_pdf_ops.py`, `test_plugins.py`)
-- PascalCase (e.g., `PDFEditorApp`, `UIBuilderMixin`, `FileOpsMixin`, `AboutDialog`)
-- Mixin classes end with `Mixin` suffix (e.g., `UIBuilderMixin`, `ViewerMixin`, `DnDMixin`)
-- Dialog classes end with `Dialog` suffix (e.g., `AboutDialog`, `SettingsDialog`)
-- Test classes use `Test<FeatureName>` prefix (e.g., `TestLoadSettings`, `TestPdfOpen`)
-- `_` prefix for internal/private methods (e.g., `_build_styles`, `_refresh_all`, `_set_status`)
-- Public API methods use plain names (e.g., `discover_plugins`, `load_plugin`, `fire_event`)
-- Tkinter event handlers conventionally begin with `_on_` or `_do_` (e.g., `_do_merge`, `_do_insert`)
-- `snake_case` throughout (e.g., `current_page`, `selected_pages`, `thumb_cache`)
-- Constants: `UPPER_SNAKE_CASE` (e.g., `APP_VERSION`, `THEMES`, `LANG`, `SETTINGS_FILE`)
-- Theme colors accessed via `C["KEY"]` dict, never hardcoded hex strings
-
-## Code Style
-
-- `tests/**/*.py` exempt from S101 (assert allowed in tests)
-- No bare `except:` — always `except Exception as e:`
-- No `# type: ignore` without prior approval
-
-## Module Organization
-
-- Takes `parent`, font function, and `lang` parameter
-- Sets `self.grab_set()` for modal behavior
-- Centers itself relative to parent window
-
-## Error Handling Patterns
-
-- Bare `except:` without exception type
-- Silencing exceptions without at minimum a `logger` call
-
-## UI Patterns
-
-- `"TButton"` — standard operation
-- `"Accent.TButton"` — primary/important action
-- `"Danger.TButton"` — destructive action (delete, quit)
-- `"CropOn.TButton"` — trim mode active state
-
-## Logging & Status
 
 <!-- GSD:conventions-end -->
 
 <!-- GSD:architecture-start source:ARCHITECTURE.md -->
 
 ## Architecture
-
-## System Overview
-
-```text
-
-```
-
-## Design Patterns
-
-```python
-
-```
-
-## Core Components
-
-| Component | Responsibility | File |
-|-----------|----------------|------|
-| `PDFEditorApp` | Root app class; wires all Mixins, holds all state, sets up keybindings | `pagefolio/app.py` |
-| `UIBuilderMixin` | Builds ttk styles, PanedWindow layout, toolbar, thumbnail panel, preview canvas, right tool panel | `pagefolio/ui_builder.py` |
-| `FileOpsMixin` | Open/Save/SaveAs/Undo/Redo; delta-based undo stack (operation state dicts) | `pagefolio/file_ops.py` |
-| `PageOpsMixin` | Rotate, delete, crop (CropBox), insert, merge, split | `pagefolio/page_ops.py` |
-| `ViewerMixin` | Render preview (fitz→PIL→Tk), thumbnails with cache, zoom, popup preview | `pagefolio/viewer.py` |
-| `DnDMixin` | Thumbnail drag-and-drop reorder (single or multi-page) | `pagefolio/dnd.py` |
-| `OCRMixin` | LM Studio Vision API integration; concurrent page OCR | `pagefolio/ocr.py` |
-| `PluginManager` | Discover/load/unload/enable/disable plugins; fire lifecycle events | `pagefolio/plugins.py` |
-| `PDFEditorPlugin` | Abstract base for third-party plugins | `pagefolio/plugins.py` |
-| Constants & Theme | `THEMES`, `C` (runtime dict), `APP_VERSION`, `LANG`, `SUPPORTED_EXTENSIONS` | `pagefolio/constants.py` |
-| Settings utils | Read/write `pagefolio_settings.json`, theme application, font helpers | `pagefolio/settings.py` |
-| Dialogs | `AboutDialog`, `SettingsDialog`, `PluginDialog`, `MergeOrderDialog`, `MergeResizeDialog` | `pagefolio/dialogs/` |
-| OCR Dialog | `OCRDialog` — multi-page OCR results viewer/exporter | `pagefolio/ocr_dialog.py` |
-| File Drop | tkinterdnd2 integration for drag-and-drop file open | `pagefolio/file_drop.py` |
-
-## Data Flow
-
-### File Open
-
-### Page Render (Preview)
-
-### Thumbnail Generation
-
-### Page Operation (example: rotate)
-
-### OCR Flow
 
 ## State Management
 
@@ -558,8 +251,6 @@ PageFolio の既存コードベースに対する最適化プロジェクト。
 | `on_merge` | `(app, paths)` | PDFs merged |
 | `build_ui` | `(app, parent)` | Build custom UI in given `tk.Frame` |
 
-### Theme Extension
-
 ## Architectural Constraints
 
 - **Threading:** UI runs on the Tkinter main thread. Preview and thumbnail renders are processed on the main thread via `root.after()` chained calls; generation counters (`_preview_gen`, `_thumb_gen`) prevent stale results from overwriting newer ones. OCR uses `ThreadPoolExecutor`.
@@ -567,12 +258,6 @@ PageFolio の既存コードベースに対する最適化プロジェクト。
 - **Undo limit:** Hard-coded to `MAX_UNDO = 20` in `pagefolio/app.py`. 各エントリは操作固有のデルタ dict（rotate: 回転値リスト、crop: cropbox タプル、delete/page_edit: ページ単位 Blob 等）であり、full PDF シリアライズではない。
 - **Undo Blob ライフサイクル（v1.7.0）:** ページ単位のキャプチャは必ず `_capture_page_blob(page_i)` 経由で行う（64KiB 以上は `UndoBlobStore` が tempfile へ退避・未満は MemBlob）。復元側は `self._blob_bytes(data)` で bytes を取り出す（生 bytes 後方互換）。解放は deque 溢れ（`_push_evicting`）・redo クリア（`_clear_redo_stack`）・消費時（`_undo`/`_redo` 内の identity 比較付き dispose）・ファイルクローズ/終了時（`_clear_undo_stacks` → purge）＋ atexit。スタックへの直接 `append`/`clear` は禁止（Blob がリークする）。
 - **CropBox safety:** All crop operations must clamp the `CropBox` inside the page's `MediaBox` before calling `set_cropbox()` (`pagefolio/page_ops.py`).
-
-## Anti-Patterns
-
-### Accessing theme colors via raw strings instead of `C` dict
-
-### Hardcoding font sizes
 
 ## Error Handling
 
@@ -584,9 +269,6 @@ PageFolio の既存コードベースに対する最適化プロジェクト。
 
 <!-- GSD:skills-start source:skills/ -->
 
-## Project Skills
-
-No project skills found. Add skills to any of: `.claude/skills/`, `.agents/skills/`, `.cursor/skills/`, `.github/skills/`, or `.codex/skills/` with a `SKILL.md` index file.
 <!-- GSD:skills-end -->
 
 <!-- GSD:workflow-start source:GSD defaults -->
