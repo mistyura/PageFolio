@@ -7,38 +7,38 @@ PageFolio の既存コードベースに対する最適化プロジェクト。
 
 **Core Value:** 大きな PDF でも Undo/Redo が正しく・速く動作し、コードが読みやすく保守しやすい状態にする。
 
-## Current Milestone: v1.8.0 実用性の最大化・エコシステム洗練・堅牢性強化
+## Current Milestone
 
-**Goal:** 独立してきたコンポーネント（OCR・LLMプロバイダー・UI）のシナジーを高め、シームレスで高度なドキュメント処理・要約環境を構築する。
+_(未定 — `/gsd-new-milestone` で次のマイルストーンを確定)_
 
-**Target features:**
+## Last Milestone: v1.8.0 実用性の最大化・エコシステム洗練・堅牢性強化 — ✅ Shipped 2026-07-16
 
-1. **AI強化**
-   - プロンプト・テンプレートマネージャー（v1.7.4 外部 md ファイル連動の発展。複数テンプレートの命名保存・切替 UI）
-   - プロバイダーフォールバック（**明示設定型**: ユーザーが設定したフォールバック順のみ・送信先確認の再提示つき。自動的な別ベンダー送信はしない）
-2. **堅牢性（PERF-01 + 実在課題）**
-   - PERF-01: サムネイル仮想化によるパフォーマンス改善（Future Requirements から昇格）
-   - Blob ライフサイクル強化（リーク検出・Windows AV スキャン衝突テスト）
-   - 肥大モジュールの分割リファクタリング（`ocr_dialog.py` 2154行 / `ocr_providers.py` 1424行 / `llm_config.py` 1204行）
-   - ShortcutsDialog WR-01/WR-02 解消・`_SENSITIVE_KEYS` の中央レジストリ化
-3. **品質保証**
-   - OCR→サマリの E2E モックテスト拡充（`ocr_pipeline.py` 基盤活用）
-   - エラー時リカバリー通知の小粒改善（非モーダル通知の前例踏襲）
-   - UI 一貫性監査（スクロールパターン統一・フォントスケーリング）＋ 開発履歴.md v1.7.0 表記整合
-4. **バッチ複数ファイル OCR**（大型・**単独フェーズへ隔離**）
-   - 複数ファイルの一括 OCR・一括要約のキュー管理（fitz メインスレッド制約を遵守した設計）
+> v1.8.0 は全 6 フェーズ（Phase 1〜6・22 プラン・53 タスク）を達成して出荷済み（`APP_VERSION = v1.8.0`・テスト 1101 件グリーン・ruff クリーン）。V180-* 全 26 要件 Complete（被覆 26/26・孤立要件なし）。
+> 次マイルストーンは `/gsd-new-milestone` で確定する（候補は「Next Milestone Goals」参照）。
+
+**Goal（達成済み）:** 独立してきたコンポーネント（OCR・LLMプロバイダー・UI）のシナジーを高め、シームレスで高度なドキュメント処理・要約環境を構築した。
+
+**Target features（達成済み）:**
+
+1. **AI強化**: 名前付きプロンプトテンプレート CRUD（保存/選択/削除/リネーム・外部mdファイル連動・全プロバイダ横断共有）・明示設定型プロバイダーフォールバック（送信先確認再提示つき・自動別ベンダー送信なし）
+2. **堅牢性**: サムネイル窓内可視範囲仮想化・`thumb_cache` LRU化・Blob ライフサイクルのリーク検出強化（Windows AV スキャン衝突安全網）・`ocr_providers.py`/`llm_config.py` の責務別パッケージ分割・`_SENSITIVE_KEYS` 中央レジストリ化（`registry.py`）・ShortcutsDialog WR-01/WR-02 解消
+3. **品質保証**: `OCRRunEngine` 抽出による OCR→サマリ E2E モックテスト整備・再試行アクション付き非モーダルトースト通知・UI 一貫性監査（スクロール/フォントスケーリング是正）・開発履歴.md 版番整合（V16-D-04 解消）
+4. **バッチ複数ファイル OCR**: 独立 `BatchOCRDialog` で複数 PDF の D&D 一括投入・ファイル単位失敗分離・2階層キャンセル・ファイル横断統合サマリ（単独フェーズ隔離・fitz メインスレッド制約遵守）
 
 **Key context:**
-- 不採用確定: API キー/プロンプト履歴の暗号化ローカル保存（V14-D-02 セッション限定方針を維持）・Alpha/Beta/RC 段階リリース（直接リリース運用を維持）
-- 作業ブランチ: `dev/v1.8.0`（main 直コミット禁止運用）
-- 実コードベースは v1.7.4（GSD 記録の v1.7.1 より 3 ポイントリリース先行: v1.7.2 LLM設定スクロール化・v1.7.3 OCRダイアログ右ペイン再設計・v1.7.4 外部プロンプトファイル連動）を起点とする
-- プロバイダーフォールバックは外部送信の明示同意方針（既定 off・コスト確認）と整合させるため「明示設定型」に限定（自動ベンダー切替は不採用）
-- human-verify/UAT 実機目視（過去3回一旦 pass）はスコープ外・必要なら要件定義時に追加可能
+- Core Value 直撃バグ（`insert_redo` 非対称復元によるページ重複）を Phase 6 で発見・修正（`delete_redo` 対称パターンへ・D-17）
+- プロバイダーフォールバックは「明示設定型」限定を貫徹（自動ベンダー切替は不採用のまま）
+- コードレビュー Critical 0件（Warning 3件は Phase 6 で即時修正・回帰テスト追加。WR-01 OCRダイアログ高さクランプ・WR-02 プラグインダイアログスクロール再発・WR-03 トースト retry_cb 取りこぼし）。セキュリティ監査 threats_open: 0（脅威4件 closed）
+- 人手 UAT 2件（Phase 6・トースト視認性/マウスホイール操作感）はユーザー実施で全合格
+- APP_VERSION バンプがフェーズ実行中は行われず、マイルストーンクローズ時に検出・修正（v1.7.4 → v1.8.0）
+- マイルストーン詳細: `.planning/milestones/v1.8.0-ROADMAP.md`・`.planning/MILESTONES.md`
 
-## Last Milestone: v1.7.1 現機能ブラッシュアップ + APIキー入力欄 — ✅ Shipped 2026-07-05
+> 補足: v1.6.1〜v1.7.0（パスワード/印刷・Ollama/RunPod・バグ修正・サマリ安定化・黒塗り/モザイク・undo ディスク退避）は GSD フェーズ外のポイントリリースとして出荷済み。詳細は `.planning/MILESTONES.md` 参照。
+
+<details>
+<summary>Previous Milestone: v1.7.1 現機能ブラッシュアップ + APIキー入力欄 — ✅ Shipped 2026-07-05</summary>
 
 > v1.7.1 は全 4 フェーズ（Phase 1〜4・16 プラン・41 タスク）を達成して出荷済み（`APP_VERSION = v1.7.1`・テスト 859 件グリーン・ruff クリーン）。V171-* 全 17 要件 Complete（被覆 17/17・孤立要件なし）。
-> 次マイルストーンは `/gsd-new-milestone` で確定する（候補は「Next Milestone Goals」参照）。
 
 **Goal（達成済み）:** 既存機能（UI/UX・OCR・ページ操作）を磨き込み、テスト・安定性を底上げした。あわせて LLM 設定ダイアログにセッション限定の APIキー入力欄を追加し、キー設定導線を一元化した。
 
@@ -53,10 +53,10 @@ PageFolio の既存コードベースに対する最適化プロジェクト。
 - キー解決の優先順を「環境変数優先・未設定時のみ入力値」から「入力値 → 環境変数」へ反転（OCRDialog 側の旧仕様を置き換え）。RunPod もセッションキー機構（`_session_api_keys`）に新規対応
 - APIキーの settings.json 非永続化（`_SENSITIVE_KEYS` ガード）は維持（V14-D-02 踏襲）
 - L-1〜L-6（v1.4.0 期レビュー由来）は各フェーズ計画時に現行コード照合で「活き残り」を確定した上で解消（v1.6.0〜v1.7.0 で解消済みの項目は対象外に整理）
-- コードレビュー Critical 0件（Warning 2件は ShortcutsDialog の非致命的 UX 課題・follow-up 候補）。セキュリティ監査 threats_open: 0（脅威8件 closed）
+- コードレビュー Critical 0件（Warning 2件は ShortcutsDialog の非致命的 UX 課題・follow-up 候補。v1.8.0 Phase 5 で解消済み）。セキュリティ監査 threats_open: 0（脅威8件 closed）
 - 人手 UAT 7件はユーザー判断で一旦 pass（実機目視未検証・コード/自動ゲートは全通過、v1.6.0 Phase 4 と同様の運用）
 
-> 補足: v1.6.1〜v1.7.0（パスワード/印刷・Ollama/RunPod・バグ修正・サマリ安定化・黒塗り/モザイク・undo ディスク退避）は GSD フェーズ外のポイントリリースとして出荷済み。詳細は `.planning/MILESTONES.md` 参照。
+</details>
 
 <details>
 <summary>Previous Milestone: v1.6.0 品質向上・AI強化・設定/UI改善 — ✅ Shipped 2026-06-20</summary>
@@ -135,7 +135,7 @@ PageFolio の既存コードベースに対する最適化プロジェクト。
 | リポジトリ | `C:\Users\shdwf\work\project\PageFolio` |
 | 言語 | Python 3.8+ / Tkinter |
 | 現在バージョン | `pagefolio/constants.py` の `APP_VERSION` を参照 |
-| テスト | pytest（859 件・充実） |
+| テスト | pytest（1101 件・充実） |
 | リント | ruff |
 
 既存コードベースマップ: `.planning/codebase/`
@@ -205,7 +205,7 @@ PageFolio の既存コードベースに対する最適化プロジェクト。
 
 ### Active
 
-- v1.8.0 の要件は `.planning/REQUIREMENTS.md` で定義中（AI強化・堅牢性・品質保証・バッチ複数ファイル OCR の 4 本柱）。Phase 1〜3・5〜6 完了、Phase 4 はROADMAP上 Complete 済みだが本ドキュメントへの要件個別記載は未実施（既知の記録ギャップ）。
+- なし。v1.8.0 全 26 要件（V180-*）は上記 Validated へ移動済み。次マイルストーンの要件は `/gsd-new-milestone` で新規 REQUIREMENTS.md を作成し定義する。
 
 ### Out of Scope
 
@@ -237,8 +237,28 @@ PageFolio の既存コードベースに対する最適化プロジェクト。
 | V171-D-14：ネスト LLMConfigDialog 適用は `app._apply_llm_settings_live`（`_rebuild_ui()` を呼ばない軽量反映）を独立トランザクション化 | nested on_apply から `_rebuild_ui()` を呼ぶと開いている SettingsDialog Toplevel ごと破棄されるため。ディスク/メモリ整合を cascade テストで担保 | ✓ Good（v1.7.1 Phase 4） |
 | V171-D-11：未使用 LANG キー検出は引用符付き完全一致（AST走査不採用） | 動的キー合成がコードベース全体でゼロ件（確認済み）のため grep 相当で十分。プレフィックス衝突（`tesseract_not_installed` 等）は完全一致で誤削除を回避 | ✓ Good（v1.7.1 Phase 4・回帰テスト常設） |
 | V171-D-05：ShortcutsDialog は保存ボタン押下まで一時コピー（`self._shortcuts`）のみ編集し、実バインド/settings へは未反映（キャンセルで無効化） | 実キーキャプチャの GUI 化で誤操作時の即時反映事故を防ぐ | ✓ Good（v1.7.1 Phase 4） |
+| V180-D-01：プロバイダ→環境変数マッピングの中央レジストリ `registry.py` は Python 標準ライブラリのみに依存し pagefolio 内部モジュールを import しない | settings.py 等から参照される際の循環 import を構造的に防止。新プロバイダ追加時の機密キー定義追加を1ファイルに閉じる | ✓ Good（v1.8.0 Phase 1・V180-ROBUST-02） |
+| V180-D-02：プロンプトテンプレートは名前付き保存・全プロバイダ横断共有、フォールバックは明示設定型のみ（自動ベンダー切替は不採用） | 送信先確認ダイアログの再提示を必達とし外部送信の明示同意方針と整合させる | ✓ Good（v1.8.0 Phase 2） |
+| V180-D-03：`OCRRunEngine` を独立モジュールとして抽出し単一ファイル OCR とバッチ OCR で共用 | producer-consumer 駆動部の重複実装を避け、バッチ OCR 実装の土台を先に固める | ✓ Good（v1.8.0 Phase 3・Phase 4 が再利用） |
+| V180-D-04：バッチ OCR は単独フェーズへ隔離し、`fitz.Document` のスレッド間共有を避けてファイル間は逐次処理 | 大型機能を他の柱と混在させず、fitz のスレッドセーフ制約を構造的に遵守 | ✓ Good（v1.8.0 Phase 4） |
+| V180-D-05：サムネイル仮想化・LRUキャッシュは `pagination.py`/`thumb_cache.py` の Tk/fitz 非依存純関数層に集約 | 可視範囲計算・キャッシュ eviction を単体テスト可能にし、viewer.py への統合を薄く保つ | ✓ Good（v1.8.0 Phase 5） |
+| V180-D-17：`insert_redo` は `delete_redo` 対称パターン（降順 `delete_page`）へ修正し、修正範囲を `_restore_state` の insert_redo ブロックのみに限定 | Core Value 直撃バグ（insert→undo→redo→undo でページ重複）を最小差分で解消し他 op の対称性を壊さない | ✓ Good（v1.8.0 Phase 6・4手往復回帰テストで担保） |
 
 ## Current State
+
+**Shipped: v1.8.0 実用性の最大化・エコシステム洗練・堅牢性強化 (2026-07-16)** — 6 フェーズ / 22 プラン / 53 タスク。`APP_VERSION = v1.8.0`（テスト 1101 件グリーン・ruff クリーン）。V180-* 全26要件 Complete（被覆26/26・孤立要件なし）。
+
+- **基盤分割:** `ocr_providers.py`/`dialogs/llm_config.py` を責務別パッケージへ分割し、プロバイダ→環境変数の中央レジストリ `registry.py` を新設（`_SENSITIVE_KEYS` 中央化）。
+- **AI強化:** 名前付きプロンプトテンプレート CRUD（外部mdファイル連動・全プロバイダ横断共有）と明示設定型プロバイダーフォールバック（送信先確認再提示つき）を実装。
+- **OCR実行エンジン抽出:** `ocr_dialog.py` から `OCRRunEngine` を抽出し単一/バッチ OCR で共用可能化、実スレッド駆動の E2E モックテストを整備。
+- **バッチ複数ファイルOCR:** 独立 `BatchOCRDialog` で D&D 一括投入・3列Treeview二段進捗・2階層キャンセル・ファイル横断統合サマリを実装。
+- **堅牢性強化:** サムネイル窓内可視範囲仮想化・`thumb_cache` LRU化・Blob リーク検出強化（Windows AV 衝突安全網）・ShortcutsDialog WR-01/WR-02 解消。
+- **品質保証仕上げ:** 再試行付き非モーダルトースト通知・UI一貫性監査（スクロール/フォント是正）・Core Value 直撃バグ（`insert_redo` 非対称復元）修正・開発履歴.md 版番整合（V16-D-04 解消）。
+- コードレビュー Critical 0件（Warning 3件は Phase 6 で即時修正・回帰テスト追加）。セキュリティ監査 threats_open: 0（脅威4件 closed）。人手UAT 2件（Phase 6）は全合格。
+- マイルストーン詳細: `.planning/milestones/v1.8.0-ROADMAP.md`・`.planning/MILESTONES.md`
+
+<details>
+<summary>Shipped: v1.7.1 現機能ブラッシュアップ + APIキー入力欄 (2026-07-05)</summary>
 
 **Shipped: v1.7.1 現機能ブラッシュアップ + APIキー入力欄 (2026-07-05)** — 4 フェーズ / 16 プラン / 41 タスク。`APP_VERSION = v1.7.1`（テスト 859 件グリーン・ruff クリーン）。V171-* 全17要件 Complete（被覆17/17・孤立要件なし）。
 
@@ -246,8 +266,10 @@ PageFolio の既存コードベースに対する最適化プロジェクト。
 - **OCR 磨き込み:** プラグイン OCR registry 堅牢化（重複名ポリシー・unload 解除・公開アクセサ）・Tesseract 言語の段階的縮退フォールバック・producer-consumer 実行パイプラインを新設 `ocr_pipeline.py` へ一本化・L-6 小物一括解消。
 - **ページ操作磨き込み:** 画像（ロゴ）透かし対応・黒塗り/モザイクの連続適用+粒度スライダー・`_derotate_rect` 共通ヘルパーで回転座標を統一。
 - **UI/UX 磨き込み:** ShortcutsDialog 新設（実キーキャプチャ・重複拒否）・SettingsDialog 3セクション再編・LLMConfigDialog 共通/固有整理・i18n/エラー表示一貫性監査（未使用キー11件削除）。
-- コードレビュー Critical 0件（Warning 2件は ShortcutsDialog の非致命的 follow-up 候補）。セキュリティ監査 threats_open: 0（脅威8件 closed）。人手UAT 7件はユーザー判断で一旦pass（実機目視未検証・コード/自動ゲートは全通過）。
+- コードレビュー Critical 0件（Warning 2件は ShortcutsDialog の非致命的 follow-up 候補・v1.8.0 Phase 5 で解消済み）。セキュリティ監査 threats_open: 0（脅威8件 closed）。人手UAT 7件はユーザー判断で一旦pass（実機目視未検証・コード/自動ゲートは全通過）。
 - マイルストーン詳細: `.planning/milestones/v1.7.1-ROADMAP.md`・`.planning/MILESTONES.md`
+
+</details>
 
 <details>
 <summary>Shipped: v1.6.0 品質向上・AI強化・設定/UI改善 (2026-06-20)</summary>
@@ -308,7 +330,9 @@ PageFolio の既存コードベースに対する最適化プロジェクト。
 ### Next Milestone Goals
 
 - v1.8.0 で吸収済み: PERF-01（サムネイル仮想化）・ShortcutsDialog WR-01/WR-02・開発履歴.md の v1.7.0 表記整合（V16-D-04 残課題）
-- 未吸収（将来候補）: human-verify/UAT の実機目視の正式実施（v1.4.0 Phase04・v1.6.0 Phase04・v1.7.1 Phase04 で計3回ユーザー判断により一旦pass・コード/自動ゲートは全通過）
+- 候補（v1.8.0 Phase 6 由来）: IN-01（保存トースト再試行時の上書き確認ダイアログ再表示・軽微UX磨き）、insert_redo と同型の4手往復回帰テストの水平展開（duplicate/merge/merge_resize 等の他ページ構造変更 op・非対称復元バグ潜在の未検証リスク）
+- v2 候補（STATE.md「Deferred Items」参照）: バッチ OCR のバックグラウンド常駐継続・ジョブ永続化（BATCH-F01/F02）・プロンプトテンプレートのバージョン履歴/差分表示（TMPL-F01）・サムネイルの react-window 相当本格仮想化（PERF-F01）
+- 未吸収（将来候補）: human-verify/UAT の実機目視の正式実施（v1.4.0/v1.6.0/v1.7.1 Phase04 で計3回ユーザー判断により一旦pass。v1.8.0 Phase 6 の2件はユーザー実施で全合格）
 
 ## Evolution
 
@@ -321,4 +345,4 @@ PageFolio の既存コードベースに対する最適化プロジェクト。
 4. 決定事項 → Key Decisions を更新
 
 ---
-*Last updated: 2026-07-16 — v1.8.0 Phase 6（品質保証仕上げ：通知UX・UI一貫性監査・ドキュメント整合）完了。v1.8.0 全6フェーズ完了（マイルストーンクローズは未実施）. Working branch: dev/v1.8.0.*
+*Last updated: 2026-07-16 — v1.8.0 マイルストーンクローズ（全6フェーズ・22プラン・要件26/26 Complete。APP_VERSION を v1.8.0 へバンプ）。次マイルストーンは `/gsd-new-milestone` で確定待ち。*

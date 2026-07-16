@@ -1,5 +1,36 @@
 # Milestones
 
+## v1.8.0 実用性の最大化・エコシステム洗練・堅牢性強化 (Shipped: 2026-07-16)
+
+**Phases completed:** 6 phases, 22 plans, 53 tasks
+
+**Key accomplishments:**
+
+- ocr_providers 全17シンボル（private ヘルパー含む）の package-level import 後方互換テストと、pagefolio トップレベル非公開の負ガードを、Wave 2/3 の肥大モジュール分割に先立って現行 monolith に対し全緑で確立した
+- pagefolio/ocr_providers.py（1537行・6プロバイダ）を base/errors/registry+6プロバイダの10ファイルパッケージへ機械的分割し、プロバイダ→環境変数の中央レジストリ registry.py（V180-ROBUST-02）を新設した
+- settings.py の `_SENSITIVE_KEYS`・ocr.py の `_resolve_api_key`・ocr_dialog.py の `_check_cloud_api_key` を Plan 02 で新設した `registry.py` 参照へ置換し、プロバイダ→環境変数マッピングの重複を解消した
+- `pagefolio/dialogs/llm_config.py`（1660行・単一クラス）を DialogMixin/SectionsMixin/ModelFetchMixin の3層 Mixin パッケージへ機械的分割し、D-09（env var 参照の registry 統合）の残り2参照面（sections.py の設定済み注記 + model_fetch.py のキー解決）を registry へ寄せて V180-ROBUST-02 の全参照面統合を完了した
+- settings.py にプロンプトテンプレート CRUD 純関数（6関数）と3段プロンプト解決を追加し、新規 ocr_fallback.py に次候補選択の純関数2本を実装（Tk/fitz 非依存）
+- sections.py に📄テンプレートセクション（combobox選択＋保存/削除/リネーム）を追加し、_on_template_change でD-05〜D-07の未保存差分確認/外部mdファイル書き戻しフローを実装、_apply でactiveテンプレート名をitems保持のまま収集
+- sections.py に🔁フォールバックセクション（トグル+Listbox+上下ボタン+候補追加/除外）を追加し、_apply でocr_fallback_enabled/ocr_fallback_chainをホワイトリスト検証つきで収集
+- OCRDialog に _propose_fallback/_switch_to_fallback_provider/_validate_provider_readiness を実装し、fatal 停止時に送信先確認ダイアログ再提示つきで手動フォールバックを行う実行時オーケストレーション層を追加（self.app.settings は一切書き換えないダイアログローカルスナップショット方式）
+- LLMConfigDialog.__init__ で prompt_templates をディープコピー分離し、sections.py の3 CRUD ハンドラから即時 _save_settings を除去して Apply 経由の一括確定へ一本化。_on_template_delete に askyesno 削除確認を追加し CR-02（Apply/Cancel 契約違反・データ消失リスク）を解消
+- LLMConfigDialog.__new__ + 実bound method呼び出しによるheadlessテストで、02-VERIFICATION.mdのbehavior_unverified_items 4件（D-03削除ボタン無効化・D-04重複名拒否・D-05切替中止・D-07外部md上書き）を全て自動テストへ移行
+- producer-consumer の consumer 駆動部を新設 `pagefolio/ocr_engine.py` の `OCRRunEngine` へ抽出し、`OCRDialog` を薄い委譲ラッパー化（producer/consumer のキューは `self._engine.queue` に一本化）
+- OCRRunEngine を実スレッド駆動（threading.Thread + queue.Queue）で起動する6シナリオの E2E モックテストを tests/test_ocr_engine.py に追加し、OCR→サマリの一気通貫フローを実 API 非依存で保証
+- BatchFileEntry/BatchState/enqueue_files/count_pending を提供するTk/fitz非依存の純ロジック層 `pagefolio/batch_ocr_state.py` をTDD（RED→GREEN）で新設し、ファイル軸進捗集計とSTATUS_ERROR除外による進捗収束を6単体テストで固めた
+- 独立設計の `BatchOCRDialog`（D-04）に D&D+ファイル選択キュー投入・3列Treeview二段進捗・OCRDialogコピペ移植コスト確認・ファイル間逐次の per-file `OCRRunEngine` 新規生成ループ・2階層キャンセル・WM_DELETE_WINDOWクローズ安全化・再実行制御を実装し、E2Eモックテスト7件で固めた
+- BatchOCRDialog にファイル横断統合サマリ（見出し連結・過大警告・手動トリガー）とファイル別結果閲覧を追加し、本プロジェクト初の tk.Menu メニューバーからの起動導線・Treeview用ttk.Style・後方互換re-exportを配線してバッチOCR機能（V180-BATCH-01〜05）を完成させた
+- サムネイル仮想化と selected_pages 不変条件保証の Tk/fitz 非依存基盤層を新設: OrderedDict ベース LruCache（pagefolio/thumb_cache.py）、可視範囲/優先描画順序の純関数（pagination.py）、500ページ相当のシード固定プロパティ風テスト
+- 05-01 の純ロジック基盤（LruCache/pagination純関数）を viewer.py へ統合し、_build_thumbnails を可視範囲優先→アイドル先読みの2段レンダリングへ改修。thumb_canvas スクロールを150msデバウンス化し thumb_cache を LruCache(300) で有界化した。
+- MemBlob/FileBlob へ `_released` フラグ + `__del__` を追加しリーク・二重解放を警告ログで検出、Windows AV 衝突（PermissionError mock）・double-release連鎖・tmpdir残留の3項目を回帰テストで固定
+- ShortcutsDialogの表示残留バグ（WR-01）をキャプチャ切替時の旧行復元で修正し、入力系ウィジェットとのキー衝突（WR-02）を`should_suppress_for_focused_input`フォーカスガードで解消。ShortcutsDialog初の単体テスト12件を新設。
+- place() オーバーレイの ToastManager を新設し、保存3操作+印刷失敗を共通ヘルパー _show_error_or_toast 経由でトースト化（自動消滅なし・同時1件・成功/別経路成功で dismiss）
+- about.py見出しフォントをself._font(4,"bold")へ是正しフォントハードコード検出の回帰テストを新設。plugin.pyにllm_config基準のマウスホイール束縛、ocr_dialog.pyに画面高クランプを個別追加し、監査対象8ファイルの判定根拠を06-SCROLL-FONT-AUDIT.mdへ記録
+- delete_redo対称パターンでinsert_redoのページ重複バグを修正し4手往復回帰テストを追加。開発履歴.mdをgitタグ・APP_VERSION履歴・MILESTONES.mdと突合してv1.6.1日付誤記を検出・修正し、PROJECT.mdのV16-D-04を解消済みへ更新
+
+---
+
 ## v1.7.1 現機能ブラッシュアップ + APIキー入力欄 (Shipped: 2026-07-05)
 
 **Phases completed:** 4 phases, 16 plans, 41 tasks
