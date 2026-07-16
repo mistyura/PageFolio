@@ -149,3 +149,10 @@ None - no external service configuration required.
 ---
 *Phase: 06-ux-ui*
 *Completed: 2026-07-16*
+
+## Self-Check: PASSED
+
+全作成/改修ファイル（pagefolio/file_ops.py・tests/test_pdf_ops.py・開発履歴.md・
+.planning/PROJECT.md・.planning/phases/06-ux-ui/06-CHANGELOG-AUDIT.md・
+本SUMMARY.md）の実在確認、および Task 1（RED/GREEN）〜3・SUMMARY 各コミット
+（fc1157d/8a0ebd3/9edf06d/ed5e584/8c87609）の `git log` 実在確認とも FOUND。
