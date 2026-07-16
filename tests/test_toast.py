@@ -14,6 +14,7 @@ tk = pytest.importorskip("tkinter")
 from tkinter import ttk  # noqa: E402
 
 import pagefolio.toast as toast_mod  # noqa: E402
+import pagefolio.ui_builder as ui_builder_mod  # noqa: E402
 
 
 @pytest.fixture(scope="module")
@@ -144,3 +145,67 @@ def test_toast_retry_btn_lang_keys_present():
 
     assert "toast_retry_btn" in LANG["ja"]
     assert "toast_retry_btn" in LANG["en"]
+
+
+class TestToastRegeneratedAfterRebuild:
+    """`_rebuild_ui()` 相当（root 直下ウィジェット全破棄→再生成）の後も
+
+    self._toast が有効であることを検証する（Pitfall 2）。`_build_ui()` 全体は
+    重量級のため呼ばず、ToastManager 再生成のみを最小 FakeApp で模す
+    （CONTEXT.md Claude's Discretion・plan 記載の「または最小の FakeApp」）。
+    """
+
+    def test_toast_manager_regenerated_after_root_children_destroyed(self, tk_root):
+        app = _FakeApp(tk_root)
+        app._toast = toast_mod.ToastManager(app)
+        first = app._toast
+        first.show("save_file", "失敗", retry_cb=lambda: None)
+
+        # _rebuild_ui() 相当: root 直下ウィジェットを全破棄してから
+        # _build_ui() を再実行する
+        for w in tk_root.winfo_children():
+            w.destroy()
+        app._toast = toast_mod.ToastManager(app)  # _build_ui() 内の再生成に相当
+
+        assert app._toast is not first
+        assert isinstance(app._toast, toast_mod.ToastManager)
+        # 新しい ToastManager が有効に show/dismiss できる
+        app._toast.show("print", "印刷失敗", retry_cb=lambda: None)
+        assert app._toast._active_category == "print"
+        app._toast.dismiss("print")
+
+
+class _FakeHelperApp(ui_builder_mod.UIBuilderMixin):
+    """`_show_error_or_toast` 共通ヘルパー（R2）のみを検証する最小スタブ。"""
+
+    def __init__(self, toast=None):
+        self._toast = toast
+
+
+class TestShowErrorOrToast:
+    """`_show_error_or_toast` の toast あり/フォールバック両分岐（レビュー R2）。"""
+
+    def test_uses_toast_show_when_toast_available(self):
+        calls = []
+
+        class _FakeToast:
+            def show(self, category, message, retry_cb):
+                calls.append((category, message, retry_cb))
+
+        app = _FakeHelperApp(toast=_FakeToast())
+        retry_cb = lambda: None  # noqa: E731
+        app._show_error_or_toast("save_file", "title", "msg", retry_cb)
+
+        assert calls == [("save_file", "msg", retry_cb)]
+
+    def test_falls_back_to_messagebox_when_toast_missing(self, monkeypatch):
+        calls = []
+        monkeypatch.setattr(
+            ui_builder_mod.messagebox,
+            "showerror",
+            lambda title, msg: calls.append((title, msg)),
+        )
+        app = _FakeHelperApp(toast=None)
+        app._show_error_or_toast("save_file", "title", "msg", lambda: None)
+
+        assert calls == [("title", "msg")]

@@ -4,9 +4,10 @@
 """UI構築 Mixin — スタイル定義・レイアウト構築"""
 
 import tkinter as tk
-from tkinter import ttk
+from tkinter import messagebox, ttk
 
 from pagefolio.constants import MOSAIC_BLOCK, C
+from pagefolio.toast import ToastManager
 
 
 class UIBuilderMixin:
@@ -179,6 +180,24 @@ class UIBuilderMixin:
             self._paned.sash_place(1, right_pos, 0)
 
         self.root.after(200, _set_sash)
+
+        # 保存/印刷失敗トースト（V180-QA-02）。_rebuild_ui() が root 直下ウィジェットを
+        # 全破棄するため、_build_menubar() と同様に _build_ui() 内で毎回再生成する
+        # 必要がある（Pitfall 2）。テーマ切替でトーストが消えても再表示は不要。
+        self._toast = ToastManager(self)
+
+    def _show_error_or_toast(self, category, title, msg, retry_cb):
+        """トースト表示 or messagebox フォールバックを一元化する（レビュー R2）。
+
+        self._toast が生成済みならトースト表示、未生成（フォールバック時）なら
+        従来どおり messagebox.showerror へフォールバックする。5失敗パス
+        （保存3操作+印刷）の getattr 重複をここへ集約する。
+        """
+        toast = getattr(self, "_toast", None)
+        if toast is not None:
+            toast.show(category, msg, retry_cb=retry_cb)
+            return
+        messagebox.showerror(title, msg)
 
     def _build_thumb_panel(self, parent):
         hdr = tk.Frame(parent, bg=C["BG_PANEL"])
