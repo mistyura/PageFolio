@@ -4,17 +4,17 @@ milestone: v1.8.0
 milestone_name: 実用性の最大化・エコシステム洗練・堅牢性強化
 current_phase: 06
 current_phase_name: ux-ui
-status: executing
-stopped_at: Completed 06-02-PLAN.md
-last_updated: "2026-07-16T11:24:34.368Z"
+status: verifying
+stopped_at: Completed 06-03-PLAN.md
+last_updated: "2026-07-16T11:43:33.281Z"
 last_activity: 2026-07-16
-last_activity_desc: Plan 06-01 complete, proceeding to 06-02
+last_activity_desc: Plan 06-02 complete, proceeding to 06-03
 progress:
   total_phases: 6
-  completed_phases: 5
+  completed_phases: 6
   total_plans: 22
-  completed_plans: 21
-  percent: 83
+  completed_plans: 22
+  percent: 100
 ---
 
 # Project State
@@ -30,7 +30,7 @@ See: .planning/PROJECT.md (updated 2026-07-13)
 
 Phase: 06 (ux-ui) — EXECUTING
 Plan: 3 of 3
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-07-16 — Plan 06-02 complete, proceeding to 06-03
 
 ## v1.8.0 Phase Map
@@ -124,6 +124,7 @@ Last activity: 2026-07-16 — Plan 06-02 complete, proceeding to 06-03
 | Phase 05 P02 | 20min | 2 tasks | 5 files |
 | Phase 06-ux-ui P01 | 20min | 3 tasks | 8 files |
 | Phase 06-ux-ui P02 | 17min | 3 tasks | 5 files |
+| Phase 06 P03 | 20min | 3 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -204,6 +205,8 @@ Decisions are logged in PROJECT.md Key Decisions table.
 - [Phase ?]: 06-01: getattr(self,'_toast',None)→messageboxフォールバックをUIBuilderMixin._show_error_or_toastへ共通化（レビューR2）
 - [Phase ?]: 06-02: about.pyのdelta値は実測(font_size既定12)に基づき4を採用。RESEARCH.mdのbase=10前提は誤りだったため実装時に実測で再確定
 - [Phase ?]: 06-02: スクロール是正はplugin.py(ホイール未対応)とocr_dialog.py(高さクランプ欠如)の2箇所のみに限定。ui_builder.py等の静的bind方式は受容差分として監査記録に根拠付きで残す(D-11)
+- [Phase ?]: 06-03: insert_redo は delete_redo 対称パターン（昇順を降順で delete_page）へ修正。修正範囲は _restore_state の insert_redo ブロックのみに限定（D-17）
+- [Phase ?]: 06-03: 開発履歴.md の v1.6.1 日付誤記（2026-06-22→2026-06-23）を検出・修正。V16-D-04 が懸念した一時v1.7.0バンプの痕跡は既に解消済みと確認（D-14）
 
 ### Pending Todos
 
@@ -225,7 +228,8 @@ Decisions are logged in PROJECT.md Key Decisions table.
   - ~~v1.7.1 OCR-04 producer-consumer 一本化~~ → Phase 2 で `ocr_pipeline.py` へ一本化完了
   - ~~v1.7.1 L-1〜L-6 現行照合~~ → 各フェーズ計画時に照合済み、活き残りは全解消
   - ~~v1.7.1 PAGE-02/03・TEST-03 棚卸し→改善~~ → Phase 3/4 で棚卸し・解消完了
-- [05-03 発見・未修正] pagefolio/file_ops.py の insert→undo→redo→undo（2回目の undo）でページが重複するバグ。Blob二重解放は起きない（ROBUST-01観点では無害）が、ページ内容往復整合性のバグ。詳細は .planning/phases/05-blob-shortcutsdialog/deferred-items.md 参照。次フェーズ以降で file_ops.py の insert_redo restore ブロック修正を検討
+  - ~~[05-03 発見] pagefolio/file_ops.py の insert→undo→redo→undo（2回目の undo）でページが重複するバグ~~ → v1.8.0 Phase 6（06-03）で解消。`_restore_state` の `insert_redo` ブロックを `delete_redo` 対称パターン（降順 `delete_page`）へ修正し、4手往復回帰テストで担保（D-17）
+- [06-03 defer・レビューR6] duplicate/merge/merge_resize 等の他ページ構造変更 op に対する do→undo→redo→undo 4手往復回帰テストの水平展開は本フェーズで未実施。insert_redo と同型の非対称復元バグが潜在していないか未検証（次マイルストーン候補）
 
 ### Quick Tasks Completed
 
@@ -302,8 +306,8 @@ Decisions are logged in PROJECT.md Key Decisions table.
 
 **Resume file:** None
 
-Last session: 2026-07-16T11:24:34.351Z
-Stopped at: Completed 06-02-PLAN.md
+Last session: 2026-07-16T11:43:33.265Z
+Stopped at: Completed 06-03-PLAN.md
 
 ## Operator Next Steps
 

@@ -246,7 +246,7 @@ V171-* 全 17 要件 Complete（被覆 17/17・孤立要件なし）。締め前
   2. スクロールパターン（Canvas+Scrollbar 等）とフォントスケーリングがダイアログ間で監査され、不一致箇所が是正される
   3. 開発履歴.md の v1.7.0 表記が実際のバージョン履歴と整合する（V16-D-04 残課題の解消）
 
-**Plans**: 2/3 plans executed
+**Plans**: 3/3 plans executed
 **UI hint**: yes
 
 **Wave 1**
@@ -256,7 +256,7 @@ V171-* 全 17 要件 Complete（被覆 17/17・孤立要件なし）。締め前
 
 **Wave 2** *(blocked on 06-01 — file_ops.py 面共有)*
 
-- [ ] 06-03-PLAN.md — 開発履歴.md 整合監査 + insert_redo 往復バグ修正（QA-04・D-17）[Wave 2]
+- [x] 06-03-PLAN.md — 開発履歴.md 整合監査 + insert_redo 往復バグ修正（QA-04・D-17）[Wave 2]
 
 ## Progress
 
@@ -289,4 +289,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | 3. OCR実行エンジン抽出 + E2Eテスト | v1.8.0 | 2/2 | Complete | 2026-07-15 |
 | 4. バッチ複数ファイルOCR | v1.8.0 | 3/3 | Complete | 2026-07-16 |
 | 5. 堅牢性強化（サムネイル仮想化 + Blobリーク検出 + ShortcutsDialog修正） | v1.8.0 | 4/4 | Complete | 2026-07-16 |
-| 6. 品質保証仕上げ（通知UX・UI一貫性監査・ドキュメント整合） | v1.8.0 | 1/3 | In Progress | - |
+| 6. 品質保証仕上げ（通知UX・UI一貫性監査・ドキュメント整合） | v1.8.0 | 3/3 | In Progress | - |
