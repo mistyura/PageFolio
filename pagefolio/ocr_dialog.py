@@ -204,7 +204,10 @@ class OCRDialog(tk.Toplevel):
         # D-10: llm_config/dialog.py._compute_dialog_height と同型のクランプ。
         # 低解像度・大フォント環境で下端が画面外に出ないよう画面高でクランプする。
         try:
-            max_h = max(320, self.winfo_screenheight() - 100)
+            # WR-01: フロア値はこのダイアログ自身の minsize(960, 620) の高さと
+            # 一致させる。320 のままだと minsize が geometry() の縮小結果を
+            # 上書きしてクランプが無効化されるため 620 に引き上げる。
+            max_h = max(620, self.winfo_screenheight() - 100)
             h = min(h, max_h)
         except tk.TclError:
             pass
