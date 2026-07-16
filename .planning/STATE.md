@@ -2,18 +2,18 @@
 gsd_state_version: 1.0
 milestone: v1.8.0
 milestone_name: 実用性の最大化・エコシステム洗練・堅牢性強化
-current_phase: 6
-current_phase_name: 品質保証仕上げ（通知UX・UI一貫性監査・ドキュメント整合）
+current_phase: 06
+current_phase_name: ux-ui
 status: executing
-stopped_at: Phase 6 context gathered
-last_updated: "2026-07-16T10:11:34.892Z"
+stopped_at: Completed 06-01-PLAN.md
+last_updated: "2026-07-16T11:08:48.806Z"
 last_activity: 2026-07-16
-last_activity_desc: Phase 05 complete, transitioned to Phase 6
+last_activity_desc: Phase 06 execution started
 progress:
   total_phases: 6
   completed_phases: 5
-  total_plans: 19
-  completed_plans: 19
+  total_plans: 22
+  completed_plans: 20
   percent: 83
 ---
 
@@ -24,14 +24,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-07-13)
 
 **Core value:** 大きな PDF でも Undo/Redo が正しく・速く動作し、コードが読みやすく保守しやすい状態にする
-**Current focus:** Phase 05 — blob-shortcutsdialog
+**Current focus:** Phase 06 — ux-ui
 
 ## Current Position
 
-Phase: 6 — 品質保証仕上げ（通知UX・UI一貫性監査・ドキュメント整合）
-Plan: Not started
-Status: Ready to execute
-Last activity: 2026-07-16 — Phase 05 complete, transitioned to Phase 6
+Phase: 06 (ux-ui) — EXECUTING
+Plan: 2 of 3
+Status: Executing Phase 06
+Last activity: 2026-07-16 — Plan 06-01 complete, proceeding to 06-02
 
 ## v1.8.0 Phase Map
 
@@ -122,6 +122,7 @@ Last activity: 2026-07-16 — Phase 05 complete, transitioned to Phase 6
 | Phase 05 P03 | 15min | 2 tasks | 2 files |
 | Phase 05 P04 | 15min | 3 tasks | 3 files |
 | Phase 05 P02 | 20min | 2 tasks | 5 files |
+| Phase 06-ux-ui P01 | 20min | 3 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -197,6 +198,9 @@ Decisions are logged in PROJECT.md Key Decisions table.
 - [Phase ?]: V180-ROBUST-03: WR-02はキャプチャ時の登録拒否ではなく発火側フォーカスガード(should_suppress_for_focused_input)で解消。Ctrl/Alt組合せは常に非抑止、修飾なし単キー/Shiftのみは入力系ウィジェットフォーカス中のみ抑止（D-09/D-10）
 - [Phase ?]: 05-02: THUMB_CACHE_MAX=300はPAGE_SIZE_MAXの3倍を採用しユーザー設定UIは追加しない（D-05/D-06）
 - [Phase ?]: 05-02: _build_thumbnails はprioritized_render_orderの返り値を可視件数でスライスし、可視分はafter(0)連鎖・残りはafter_idle連鎖の2チェーンに分割する実装を採用（新規座標系を作らずpagination純関数のみで完結）
+- [Phase ?]: 06-01: トースト対象は保存3操作+印刷のみ（D-01/D-02）。約80箇所のmessageboxは網羅置換しない
+- [Phase ?]: 06-01: 印刷の一時ファイル生成失敗とOS印刷コマンド失敗は同一カテゴリprintだが異なるLANGキー（err_print_msg/err_print_no_handler）で文言区別（レビューR1）
+- [Phase ?]: 06-01: getattr(self,'_toast',None)→messageboxフォールバックをUIBuilderMixin._show_error_or_toastへ共通化（レビューR2）
 
 ### Pending Todos
 
@@ -293,10 +297,10 @@ Decisions are logged in PROJECT.md Key Decisions table.
 
 ## Session Continuity
 
-**Resume file:** .planning/phases/06-ux-ui/06-CONTEXT.md
+**Resume file:** None
 
-Last session: 2026-07-16T09:28:53.697Z
-Stopped at: Phase 6 context gathered
+Last session: 2026-07-16T11:08:48.788Z
+Stopped at: Completed 06-01-PLAN.md
 
 ## Operator Next Steps
 
