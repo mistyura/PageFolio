@@ -201,6 +201,13 @@ class OCRDialog(tk.Toplevel):
         w = max(1150, int(fs * 90))
         # 設定行(プロンプト/サーバ/モデル/詳細) + 進行表示 + 結果領域/右ペイン
         h = max(680, int(fs * 56))
+        # D-10: llm_config/dialog.py._compute_dialog_height と同型のクランプ。
+        # 低解像度・大フォント環境で下端が画面外に出ないよう画面高でクランプする。
+        try:
+            max_h = max(320, self.winfo_screenheight() - 100)
+            h = min(h, max_h)
+        except tk.TclError:
+            pass
         px = parent.winfo_rootx() + parent.winfo_width() // 2
         py = parent.winfo_rooty() + parent.winfo_height() // 2
         self.geometry(f"{w}x{h}+{px - w // 2}+{py - h // 2}")
