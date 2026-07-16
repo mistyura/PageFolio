@@ -106,7 +106,14 @@ class PluginDialog(tk.Toplevel):
 
         canvas.bind("<Enter>", _bind_wheel)
         canvas.bind("<Leave>", _unbind_wheel)
-        self.bind("<Destroy>", lambda _e: _unbind_wheel(), add="+")
+        # WR-02: <Destroy> はビンドタグ経由で子ウィジェット破棄時にも伝播するため、
+        # ダイアログ自身の破棄イベントのみに限定する（再検出時の行破棄で
+        # 誤ってグローバル解除されるのを防ぐ）。
+        self.bind(
+            "<Destroy>",
+            lambda e: _unbind_wheel() if e.widget is self else None,
+            add="+",
+        )
 
         self._list_canvas = canvas
 
