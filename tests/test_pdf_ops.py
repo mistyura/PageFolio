@@ -790,7 +790,9 @@ class TestInsertUndoRedo:
         # 2回目の Undo: ここでページが重複せず、挿入前の状態に正しく戻ること
         app._undo()
         assert len(app.doc) == original_count
-        after_second_undo_digests = [_page_digest(app.doc[i]) for i in range(len(app.doc))]
+        after_second_undo_digests = [
+            _page_digest(app.doc[i]) for i in range(len(app.doc))
+        ]
         assert before_digests == after_second_undo_digests
 
         # Undo/Redo state に pdf_bytes キーが生成されないこと（D-05）
