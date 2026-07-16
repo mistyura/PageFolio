@@ -35,16 +35,20 @@ class ToastManager:
         self._active_category = None
         self._frame = None
         self._msg_var = None
+        self._retry_btn = None
 
     def show(self, category, message, retry_cb):
         """``category`` のトーストを表示する。
 
         既存トーストが表示中なら（カテゴリを問わず）常に破棄して新規で
         置換する（D-07）。ただし現在表示中カテゴリと同一の場合は Frame を
-        再生成せず文言のみ更新する（D-04）。
+        再生成せず文言のみ更新する（D-04）。この場合も再試行ボタンの
+        コールバックは最新の ``retry_cb`` へ差し替える（WR-03）。
         """
         if self._active_category == category and self._frame is not None:
             self._msg_var.set(message)
+            if self._retry_btn is not None:
+                self._retry_btn.configure(command=retry_cb)
             return
         self._destroy_frame()
         self._active_category = category
@@ -73,12 +77,14 @@ class ToastManager:
             justify="left",
         ).pack(side="left", padx=(12, 4), pady=8)
 
-        ttk.Button(
+        retry_btn = ttk.Button(
             frame,
             text=app._t("toast_retry_btn"),
             style="Accent.TButton",
             command=retry_cb,
-        ).pack(side="left", padx=4)
+        )
+        retry_btn.pack(side="left", padx=4)
+        self._retry_btn = retry_btn
 
         ttk.Button(
             frame,
@@ -97,3 +103,4 @@ class ToastManager:
                 logger.debug("トースト Frame 破棄失敗: %s", e)
             self._frame = None
         self._msg_var = None
+        self._retry_btn = None

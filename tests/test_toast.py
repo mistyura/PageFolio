@@ -141,6 +141,25 @@ class TestToastManagerShowDismiss:
         finally:
             tm._destroy_frame()
 
+    def test_same_category_reshow_rebinds_retry_cb(self, tk_root):
+        """WR-03: 同一カテゴリ再showでも再試行ボタンのコールバックは
+        最新の retry_cb へ差し替わる（06-REVIEW.md）。
+        """
+        app = _FakeApp(tk_root)
+        tm = toast_mod.ToastManager(app)
+        calls_1 = []
+        calls_2 = []
+        tm.show("save_file", "1回目の失敗", retry_cb=lambda: calls_1.append(True))
+        tm.show("save_file", "2回目の失敗", retry_cb=lambda: calls_2.append(True))
+        try:
+            btn = _find_button(tm._frame, "再試行")
+            assert btn is not None
+            btn.invoke()
+            assert calls_2 == [True]
+            assert calls_1 == []  # 古い retry_cb は呼ばれない
+        finally:
+            tm._destroy_frame()
+
 
 def test_toast_retry_btn_lang_keys_present():
     from pagefolio.lang import LANG
