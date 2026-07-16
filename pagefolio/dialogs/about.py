@@ -39,7 +39,10 @@ class AboutDialog(tk.Toplevel):
             text="PageFolio",
             bg=C["BG_DARK"],
             fg=C["ACCENT"],
-            font=("Segoe UI", 16, "bold"),
+            # D-12/D-13: font_size 設定（既定12・8〜16）に追従させる。
+            # delta=4 は既定値12との組合せで是正前の見た目（16pt）を再現する
+            # （R3: 最大値16でも20ptに収まり360px幅ダイアログ内で横はみ出しなし）。
+            font=self._font(4, "bold"),
         ).pack(pady=(20, 2))
         tk.Label(
             self,
