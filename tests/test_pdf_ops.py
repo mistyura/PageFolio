@@ -755,6 +755,50 @@ class TestInsertUndoRedo:
         for entry in app._undo_stack:
             assert "pdf_bytes" not in entry
 
+    def test_insert_undo_redo_undo_roundtrip(self, sample_pdf_doc, multi_pdf_files):
+        """insert→undo→redo→undo（2回目）の4手往復でページ数・内容が正しく
+        往復し、挿入ページが重複しないことを検証する（D-17・insert_redo
+        非対称復元バグの回帰テスト。修正前は2回目の undo でページが重複し
+        len(doc) が元の枚数+1になっていた）。"""
+        app = self._make_fake_app(sample_pdf_doc)
+        original_count = len(app.doc)  # 3
+        insert_at = 1
+
+        # 挿入前の全ページ digest を記録
+        before_digests = [_page_digest(app.doc[i]) for i in range(len(app.doc))]
+
+        # insert: 1ページを位置1に挿入
+        app._save_undo("insert", insert_at=insert_at)
+        src = fitz.open(multi_pdf_files[0])  # 1ページ
+        inserted_digest = _page_digest(src[0])
+        app.doc.insert_pdf(src, start_at=insert_at)
+        src.close()
+        app._undo_stack[-1]["data"][1] = 1
+        assert len(app.doc) == original_count + 1
+
+        # 1回目の Undo: 挿入前の状態に戻る
+        app._undo()
+        assert len(app.doc) == original_count
+        after_undo_digests = [_page_digest(app.doc[i]) for i in range(len(app.doc))]
+        assert before_digests == after_undo_digests
+
+        # Redo: 挿入ページが内容ごと復元される
+        app._redo()
+        assert len(app.doc) == original_count + 1
+        assert _page_digest(app.doc[insert_at]) == inserted_digest
+
+        # 2回目の Undo: ここでページが重複せず、挿入前の状態に正しく戻ること
+        app._undo()
+        assert len(app.doc) == original_count
+        after_second_undo_digests = [_page_digest(app.doc[i]) for i in range(len(app.doc))]
+        assert before_digests == after_second_undo_digests
+
+        # Undo/Redo state に pdf_bytes キーが生成されないこと（D-05）
+        for entry in app._redo_stack:
+            assert "pdf_bytes" not in entry
+        for entry in app._undo_stack:
+            assert "pdf_bytes" not in entry
+
 
 # ===== 全 op 最小 do→undo→redo 往復テスト（安全網）=====
 
