@@ -21,12 +21,23 @@ class _DummyPrintApp(PrintOpsMixin):
         self.doc = doc
         self.lang = lang
         self.status = None
+        self._toast = None
 
     def _t(self, key):
         return LANG[self.lang].get(key, LANG["ja"].get(key, key))
 
     def _set_status(self, msg):
         self.status = msg
+
+    def _show_error_or_toast(self, category, title, msg, retry_cb):
+        """Tk 非依存ダミー版。UIBuilderMixin と同じフォールバック契約
+        （_toast なしなら messagebox.showerror）のみ再現する（V180-QA-02）。
+        """
+        toast = getattr(self, "_toast", None)
+        if toast is not None:
+            toast.show(category, msg, retry_cb=retry_cb)
+            return
+        print_ops.messagebox.showerror(title, msg)
 
 
 def _make_doc(pages=3):

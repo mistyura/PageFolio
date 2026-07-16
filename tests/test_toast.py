@@ -13,6 +13,8 @@ import pytest
 tk = pytest.importorskip("tkinter")
 from tkinter import ttk  # noqa: E402
 
+import pagefolio.file_ops as fo  # noqa: E402
+import pagefolio.print_ops as po  # noqa: E402
 import pagefolio.toast as toast_mod  # noqa: E402
 import pagefolio.ui_builder as ui_builder_mod  # noqa: E402
 
@@ -209,3 +211,188 @@ class TestShowErrorOrToast:
         app._show_error_or_toast("save_file", "title", "msg", lambda: None)
 
         assert calls == [("title", "msg")]
+
+
+# ══════════════════════════════════════════
+#  Task 3: 保存/印刷失敗パスの統合テスト
+# ══════════════════════════════════════════
+
+
+class _RecordingToast:
+    """show/dismiss 呼び出しを記録するスタブ `ToastManager`。"""
+
+    def __init__(self):
+        self.shown = []
+        self.dismissed = []
+
+    def show(self, category, message, retry_cb):
+        self.shown.append((category, message, retry_cb))
+
+    def dismiss(self, category):
+        self.dismissed.append(category)
+
+
+class _FakePluginManager:
+    def fire_event(self, *a, **kw):
+        pass
+
+
+class _RaisingThenOkDoc:
+    """1回目の save() は例外・2回目以降は成功する偽 doc。"""
+
+    def __init__(self):
+        self.calls = 0
+
+    def save(self, *a, **kw):
+        self.calls += 1
+        if self.calls == 1:
+            raise Exception("保存失敗（一時要因）")
+
+
+class _FakeFileOpsApp(fo.FileOpsMixin, ui_builder_mod.UIBuilderMixin):
+    """`_save_*` 系メソッドの失敗/成功パスをトースト経由で検証する FakeApp。"""
+
+    def __init__(self, doc, toast, filepath=None, overwrite_error=None):
+        self.doc = doc
+        self.filepath = filepath
+        self._toast = toast
+        self.plugin_manager = _FakePluginManager()
+        self._overwrite_error = overwrite_error
+
+    def _t(self, key):
+        return {
+            "save_confirm_title": "確認",
+            "save_confirm_msg": "{name}",
+            "err_save_title": "err_save_title",
+            "err_save_msg": "保存に失敗しました:\n{e}",
+            "err_title": "err_title",
+            "status_saved": "saved {name}",
+            "status_compressed": "compressed {name}",
+        }.get(key, key)
+
+    def _set_status(self, *a):
+        pass
+
+    def _overwrite_current_file(self, path, **kw):
+        if self._overwrite_error is not None:
+            raise self._overwrite_error
+        self.doc = fo.fitz.open(path)
+
+    def _is_current_file(self, path):
+        return False
+
+
+class TestSaveFilePathsUseSharedHelper:
+    """file_ops.py の保存3メソッドが _show_error_or_toast/dismiss を呼ぶ。
+
+    D-02/D-08 の検証。
+    """
+
+    def test_save_file_failure_shows_toast_with_retry(self, monkeypatch):
+        """上書き保存の失敗が _show_error_or_toast 経由でトースト表示される。"""
+        monkeypatch.setattr(fo.messagebox, "askyesno", lambda *a, **k: True)
+        toast = _RecordingToast()
+        app = _FakeFileOpsApp(
+            doc=_RaisingThenOkDoc(),
+            toast=toast,
+            filepath="test.pdf",
+            overwrite_error=OSError("overwrite失敗"),
+        )
+
+        app._save_file()
+
+        assert len(toast.shown) == 1
+        category, msg, retry_cb = toast.shown[0]
+        assert category == "save_file"
+        assert "保存に失敗しました" in msg
+        assert retry_cb == app._save_file
+
+    def test_save_as_failure_then_success_dismisses(self, monkeypatch, tmp_path):
+        out_path = str(tmp_path / "out.pdf")
+        monkeypatch.setattr(fo.filedialog, "asksaveasfilename", lambda **k: out_path)
+        toast = _RecordingToast()
+        doc = _RaisingThenOkDoc()
+        app = _FakeFileOpsApp(doc=doc, toast=toast)
+
+        app._save_as()  # 1回目: 失敗
+        assert toast.shown[-1][0] == "save_as"
+        assert toast.shown[-1][2] == app._save_as
+
+        app._save_as()  # 2回目: 成功 → dismiss
+        assert toast.dismissed[-1] == "save_as"
+
+    def test_save_compressed_failure_shows_toast(self, monkeypatch, tmp_path):
+        out_path = str(tmp_path / "out.pdf")
+        monkeypatch.setattr(fo.filedialog, "asksaveasfilename", lambda **k: out_path)
+        toast = _RecordingToast()
+        app = _FakeFileOpsApp(doc=_RaisingThenOkDoc(), toast=toast)
+
+        app._save_compressed()
+
+        assert toast.shown[-1][0] == "save_compressed"
+        assert toast.shown[-1][2] == app._save_compressed
+
+
+class _FakePrintApp(po.PrintOpsMixin, ui_builder_mod.UIBuilderMixin):
+    def __init__(self, toast, doc=None):
+        self._toast = toast
+        self.doc = doc if doc is not None else object()
+
+    def _check_doc(self):
+        return True
+
+    def _t(self, key):
+        return {
+            "err_print_title": "err_print_title",
+            "err_print_msg": "印刷に失敗しました:\n{e}",
+            "err_print_no_handler": "既定ハンドラが見つかりません",
+            "status_print_sent": "sent {name}",
+            "status_print_opened": "opened {name}",
+        }.get(key, key)
+
+    def _set_status(self, *a):
+        pass
+
+
+class TestPrintPathsDistinguishFailureMessages:
+    """印刷の一時ファイル失敗と OS 印刷失敗が異なる文言で区別できる（レビュー R1）。"""
+
+    def test_tempfile_failure_and_os_failure_have_distinct_messages(self, monkeypatch):
+        toast = _RecordingToast()
+        app = _FakePrintApp(toast=toast)
+
+        # 一時ファイル生成失敗（write_print_tempfile 例外）
+        def _raise_tempfile(doc):
+            raise Exception("disk full")
+
+        monkeypatch.setattr(po, "write_print_tempfile", _raise_tempfile)
+        app._print_pdf()
+
+        assert toast.shown[-1][0] == "print"
+        msg_tempfile = toast.shown[-1][1]
+        assert "disk full" in msg_tempfile
+        assert toast.shown[-1][2] == app._print_pdf
+
+        # OS 印刷コマンド失敗（既定ハンドラ不在）
+        monkeypatch.setattr(po, "write_print_tempfile", lambda doc: "x.pdf")
+        monkeypatch.setattr(
+            po.os,
+            "startfile",
+            lambda *a, **k: (_ for _ in ()).throw(OSError("no handler")),
+            raising=False,
+        )
+        app._print_pdf()
+
+        msg_os_failure = toast.shown[-1][1]
+        assert toast.shown[-1][0] == "print"
+        assert msg_os_failure != msg_tempfile
+        assert "既定ハンドラ" in msg_os_failure
+
+    def test_send_to_printer_success_dismisses_toast(self, monkeypatch, tmp_path):
+        toast = _RecordingToast()
+        app = _FakePrintApp(toast=toast)
+        monkeypatch.setattr(po.os, "startfile", lambda *a, **k: None, raising=False)
+
+        app._send_to_printer(str(tmp_path / "x.pdf"))
+
+        assert toast.dismissed[-1] == "print"

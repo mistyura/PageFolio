@@ -674,9 +674,14 @@ class FileOpsMixin:
                 self._t("status_saved").format(name=os.path.basename(self.filepath))
             )
             self.plugin_manager.fire_event("on_file_save", self, self.filepath)
+            if getattr(self, "_toast", None) is not None:
+                self._toast.dismiss("save_file")
         except Exception as e:
-            messagebox.showerror(
-                self._t("err_save_title"), self._t("err_save_msg").format(e=e)
+            self._show_error_or_toast(
+                "save_file",
+                self._t("err_save_title"),
+                self._t("err_save_msg").format(e=e),
+                self._save_file,
             )
 
     def _save_as(self):
@@ -695,8 +700,12 @@ class FileOpsMixin:
                 self._t("status_saved").format(name=os.path.basename(path))
             )
             self.plugin_manager.fire_event("on_file_save", self, path)
+            if getattr(self, "_toast", None) is not None:
+                self._toast.dismiss("save_as")
         except Exception as e:
-            messagebox.showerror(self._t("err_title"), str(e))
+            self._show_error_or_toast(
+                "save_as", self._t("err_title"), str(e), self._save_as
+            )
 
     def _close_file(self):
         """現在開いているファイルを閉じる（アプリは終了しない）"""
@@ -749,8 +758,12 @@ class FileOpsMixin:
             self._set_status(
                 self._t("status_compressed").format(name=os.path.basename(path))
             )
+            if getattr(self, "_toast", None) is not None:
+                self._toast.dismiss("save_compressed")
         except Exception as e:
-            messagebox.showerror(self._t("err_title"), str(e))
+            self._show_error_or_toast(
+                "save_compressed", self._t("err_title"), str(e), self._save_compressed
+            )
 
     # ══════════════════════════════════════════
     #  パスワード（暗号化）操作
