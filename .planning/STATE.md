@@ -217,6 +217,7 @@ Decisions are logged in PROJECT.md Key Decisions table.
 - [v1.6.0 Phase 3 継続]: V16-QUAL-03（max_tokens/429 実機検証）は実 API 前提のチェックリスト化まで完了。実機実施は未了のまま受容済み。
 - [v1.7.1 Phase 4 UAT]: 人手確認7件はユーザー判断で一旦pass（実機目視未検証・コード/自動ゲートは全通過、v1.6.0 Phase 4 と同様の運用）。v1.8.0 Phase 6 では UAT 2件をユーザー実施で全合格済み。
 - [06-03 defer・レビューR6] duplicate/merge/merge_resize 等の他ページ構造変更 op に対する do→undo→redo→undo 4手往復回帰テストの水平展開は v1.8.0 で未実施。insert_redo と同型の非対称復元バグが潜在していないか未検証（次マイルストーン候補）
+- [v1.8.0 リリース作業で発見]: requirements.txt 指定バージョン（PyMuPDF 1.28.0・Pillow 12.3.0・tkinterdnd2 0.6.2）へ venv を合わせた状態でフルテストスイート（1101件）を複数回連続実行すると、毎回異なる2件が `_tkinter.TclError`（アサーション失敗ではなく Tk インタプリタ生成失敗。例: `couldn't read file "...ttk/clamTheme.tcl"` だが実ファイルは存在）で ERROR になることがある（単体実行では常に合格）。1101件の `tk.Tk()` 生成/破棄を単一 pytest プロセスで連続実行することによる Tcl/Tk リソース消耗系のフレーキーと推定（`tests/test_batch_ocr_dialog.py` 等に既存の環境依存 TclError 制約の記述あり・新規事象ではなく顕在化）。アプリ本体の実行時動作には影響なし（ビルド exe は実起動確認済み）。次マイルストーンでの調査候補（pytest-xdist でのプロセス分離、または conftest.py でのフィクスチャ単位 Tk 破棄強化等）。
 
 過去の懸念は全て解決済み:
 
