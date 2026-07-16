@@ -621,6 +621,8 @@ LANG = {
         "err_title": "エラー",
         "info_title": "情報",
         "confirm_title": "確認",
+        # トースト通知（V180-QA-02）
+        "toast_retry_btn": "再試行",
         # M-10: 移植ハードコード文言
         "ocr_cost_estimate": "約 ${cost:.3f} 程度",
         "ocr_provider_rebuild_error": "プロバイダ再生成エラー: {e}",
@@ -1326,6 +1328,8 @@ LANG = {
         "err_title": "Error",
         "info_title": "Info",
         "confirm_title": "Confirm",
+        # Toast notifications (V180-QA-02)
+        "toast_retry_btn": "Retry",
         # M-10: migrated hardcoded strings
         "ocr_cost_estimate": "~${cost:.3f}",
         "ocr_provider_rebuild_error": "Provider rebuild error: {e}",
