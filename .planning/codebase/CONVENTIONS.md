@@ -1,241 +1,260 @@
 # Coding Conventions
 
-**Analysis Date:** 2026-07-03
+**Analysis Date:** 2026-07-16
 
 ## Naming Patterns
 
 **Files:**
-- Modules use `snake_case.py` (e.g., `file_ops.py`, `ui_builder.py`, `page_ops.py`, `ocr_providers.py`)
-- Test files use `test_<module>.py` prefix (e.g., `test_pdf_ops.py`, `test_plugins.py`, `test_ocr.py`)
-- Dialogs stored in `pagefolio/dialogs/` subpackage with individual files per dialog type (e.g., `settings.py`, `merge.py`, `llm_config.py`)
+- Module files: `snake_case` (e.g., `file_ops.py`, `ocr_pipeline.py`)
+- Mixin files: `feature_name.py` (e.g., `ui_builder.py`, `page_ops.py`, `redact_ops.py`)
+- Dialog files: `feature_name.py` placed in `pagefolio/dialogs/` directory (e.g., `merge.py`, `settings.py`)
+- Test files: `test_module_name.py` matching the module being tested (e.g., `test_ocr_engine.py`, `test_pagination.py`)
 
 **Classes:**
-- PascalCase for all classes (e.g., `PDFEditorApp`, `FileOpsMixin`, `SettingsDialog`)
-- Mixin classes end with `Mixin` suffix (e.g., `UIBuilderMixin`, `ViewerMixin`, `DnDMixin`, `OCRMixin`, `PageOpsMixin`)
-- Dialog classes end with `Dialog` suffix (e.g., `AboutDialog`, `SettingsDialog`, `PluginDialog`, `MergeOrderDialog`)
-- Custom exception classes end with `Error` suffix (e.g., `PDFPasswordError`, `OCRAPIKeyError`)
+- Mixin classes: PascalCase ending with `Mixin` (e.g., `FileOpsMixin`, `UIBuilderMixin`, `ViewerMixin`)
+- Dialog classes: PascalCase ending with `Dialog` or `Toplevel` subclass (e.g., `OCRDialog`, `SettingsDialog`, `MergeOrderDialog`)
+- Business logic classes: PascalCase (e.g., `PDFEditorApp`, `OCRRunEngine`, `PluginManager`)
+- Exception classes: PascalCase ending with `Error` or `Exception` (e.g., `PDFPasswordError`, `OCRAPIKeyError`, `OCRRetryableError`)
+- Data holder classes: PascalCase (e.g., `BatchFileEntry`, `BatchState`, `PipelineState`)
 
-**Functions & Methods:**
-- Use `snake_case` for all function/method names (e.g., `_refresh_all`, `_set_status`, `_capture_page_blob`)
-- `_` prefix for private/internal methods (e.g., `_build_styles`, `_do_merge`, `_refresh_all`)
-- Tk event handlers use `_on_` or `_do_` prefix (e.g., `_on_merge`, `_do_insert`, `_on_run`)
-- Public API methods use plain names (e.g., `discover_plugins`, `load_plugin`, `fire_event`, `ocr_image`)
+**Functions:**
+- Public functions: `snake_case` (e.g., `window_bounds()`, `to_global()`, `merge_shortcuts()`)
+- Private module-level functions: `_snake_case` prefix (e.g., `_resolve_api_key()`, `_split_inline()`, `_lookup_price()`)
+- Methods (public): `snake_case` (e.g., `ocr_image()`, `list_models()`)
+- Methods (private/internal): `_snake_case` prefix, often called by UI handlers (e.g., `_save_undo()`, `_refresh_all()`, `_open_file()`)
+- Callback/event handlers: `_on_event_name` or `_callback_name` (e.g., `_on_file_open()`, `_on_progress()`)
+- Helper properties: `@property` decorated, `_name` format (e.g., `_pending_pages`, `_font_size`)
 
-**Variables & Attributes:**
-- `snake_case` for all variable names (e.g., `current_page`, `selected_pages`, `thumb_cache`, `font_size`)
-- Boolean variables often prefixed with `is_` or `has_` but not required (e.g., `edit_mode`, `pdf_has_password`)
-- Theme colors accessed via `C["KEY"]` dict (e.g., `C["BG_DARK"]`, `C["ACCENT"]`, `C["TEXT_MAIN"]`), never hardcoded hex strings
-- Settings dict keys use `snake_case` (e.g., `font_size`, `thumb_page_size`, `window_geometry`)
+**Variables:**
+- Constants: `UPPER_CASE` (e.g., `SUPPORTED_EXTENSIONS`, `MAX_UNDO`, `THUMB_CACHE_MAX`, `PT_PER_MM`)
+- Instance attributes: `snake_case` or `_snake_case` if private (e.g., `self.doc`, `self._undo_stack`, `self.current_page`)
+- Local variables: `snake_case` (e.g., `page_i`, `selected_pages`, `window_start`)
+- Loop variables: `i`, `j`, `k` for indices; named descriptively for content (e.g., `for page in pages:`)
+- Configuration dict keys: lowercase with underscores (e.g., `"theme"`, `"font_size"`, `"edit_mode"`)
 
-**Constants:**
-- `UPPER_SNAKE_CASE` for module-level constants (e.g., `APP_VERSION`, `MAX_UNDO`, `SUPPORTED_EXTENSIONS`, `MOSAIC_BLOCK`)
-- `frozenset` for immutable extension sets (e.g., `SUPPORTED_EXTENSIONS`, `IMAGE_EXTENSIONS`)
-- Dictionary constants like `THEMES`, `LANG`, `OCR_PROMPTS` defined in dedicated modules
+**Types:**
+- Type hints use PEP 484 format (e.g., `str`, `int`, `bool`, `list[int]`, `dict[str, Any]`)
+- Union types: `Optional[Type]` or `Type | None` style when imported
 
 ## Code Style
 
 **Formatting:**
 - Line length: 88 characters (configured in `pyproject.toml`)
-- 4-space indentation (Python standard)
-- Tool: Ruff 0.15.7 for linting and auto-formatting
+- Indentation: 4 spaces
+- Enforced by: `ruff format` (automatic formatting)
 
-**Linting Rules (Ruff):**
-- Selected rule categories: `E` (errors), `F` (Pyflakes), `W` (warnings), `I` (isort imports), `S` (security), `B` (bugbear)
-- All errors/warnings must be fixed before commit
-- Exception: `S101` (assert) is allowed in `tests/**/*.py`
-- Run before commit: `ruff check . && ruff format .`
+**Linting:**
+- Tool: `ruff` (configured in `pyproject.toml`)
+- Selection: `["E", "F", "W", "I", "S", "B"]` (Error, Pyflakes, Warning, Isort, flake8-bandit, flake8-bugbear)
+- All fixable rules enabled via `fixable = ["ALL"]`
+- Exception: Tests allow `S101` (assert statement) via per-file-ignores
 
-**Imports:**
-- Use absolute imports from `pagefolio` package (e.g., `from pagefolio.constants import LANG, C`)
-- Organize imports in standard Python order: stdlib, third-party, local
-- Use `# noqa: F401` when re-exporting (e.g., in `__init__.py` and `constants.py`)
-- Use `# noqa: E402` for post-path-insert imports (e.g., in test files that modify `sys.path`)
-- Avoid circular imports by structuring modules as pure functions or classes with minimal coupling
-
-**Import Organization Example (from `pagefolio/app.py`):**
-```python
-import logging
-import os
-import tkinter as tk
-from collections import deque
-from tkinter import messagebox
-
-from pagefolio.constants import LANG, SUPPORTED_EXTENSIONS, C
-from pagefolio.dialogs import PluginDialog, SettingsDialog
-from pagefolio.dnd import DnDMixin
-from pagefolio.file_drop import _setup_file_drop
-# ... more imports
+**Code organization:**
 ```
+1. Module docstring (with description and design notes)
+2. Imports (standard library, third-party, local)
+3. Logger setup: `logger = logging.getLogger(__name__)`
+4. Constants (UPPER_CASE)
+5. Exception classes (custom exceptions)
+6. Helper functions (module-level utilities prefixed with `_`)
+7. Main classes (Mixins, Dialogs, etc.)
+8. Entry point or test code
+```
+
+**Run formatting:**
+```bash
+ruff check . && ruff format .
+```
+
+## Import Organization
+
+**Order:**
+1. Standard library imports (`os`, `sys`, `logging`, `tkinter`, etc.)
+2. Third-party imports (`fitz`, `pytest`, etc.)
+3. Local relative imports from `pagefolio` package
+
+**Path Aliases:**
+- No aliases configured; use absolute imports from package root
+- Pattern: `from pagefolio.module import Class`
+- Example: `from pagefolio.constants import LANG, C`, `from pagefolio.file_ops import FileOpsMixin`
+
+**Special imports:**
+- `from pagefolio.constants import C` for theme colors (never hardcode color values)
+- `from pagefolio.constants import LANG` for user-visible strings
+- `from pagefolio.constants import APP_VERSION` for version information
 
 ## Error Handling
 
-**Exception Handling:**
-- Never use bare `except:` — always `except Exception as e:`
-- Catch specific exceptions when possible (e.g., `except FileNotFoundError:`, `except fitz.FileNotFoundError:`)
-- Log exceptions with context using `logger.error()` or `logger.exception()`
-- User-facing errors use `messagebox.showerror()` from tkinter
+**Patterns:**
+- **Custom exceptions:** Define in the module where they're primary (e.g., `PDFPasswordError` in `file_ops.py`, `OCRAPIKeyError` in `ocr_providers/errors.py`)
+- **Specific catches:** Always catch specific exception types, never bare `except:`
+- **Format:** `except SpecificError as e:` or `except (Error1, Error2) as e:`
+- **User-visible errors:** Use `messagebox.showerror(title, msg)` for dialog display
+- **Logging errors:** Use `logger.debug()` for debugging context, `logger.exception()` for full traceback on failure
+- **Plugin failure isolation:** Plugin callbacks are wrapped individually so one plugin crash doesn't crash others (see `plugins.py`)
 
-**Exception Patterns:**
-
-*File operations:*
+**Examples:**
 ```python
-try:
-    doc = fitz.open(filepath)
-except (FileNotFoundError, fitz.FileNotFoundError) as e:
-    logger.error("Failed to open PDF: %s", e)
-    messagebox.showerror(self._t("error_title"), self._t("error_open_failed"))
-```
+# From file_ops.py
+except PDFPasswordError:
+    # Handle password authentication failure
+    ...
+except Exception as e:
+    logger.debug("operation failed: %s", e)
+    messagebox.showerror(LANG["error_title"], str(e))
 
-*Password-protected PDFs:*
-```python
-except fitz.FileError as e:
-    if "encrypted" in str(e).lower():
-        # Handle password-required case
-    else:
-        raise
-```
-
-*Custom exceptions:*
-```python
-class PDFPasswordError(Exception):
-    """パスワード付き PDF の認証がキャンセル/失敗したことを表す例外。"""
-
-class OCRAPIKeyError(RuntimeError):
-    """API キーが見つからない場合の例外。"""
-    def __init__(self, env_var):
-        self.env_var = env_var
-        super().__init__(f"API key not found: {env_var}")
+# From ocr.py
+except OCRRetryableError as e:
+    # Handle retryable API errors
+    logger.debug("retryable error: %s", e)
+except ConnectionError as e:
+    # Handle network errors
+    ...
+except Exception as e:
+    logger.exception("unexpected error: %s", e)
 ```
 
 ## Logging
 
-**Framework:** Standard library `logging` module
+**Framework:** `logging` (Python standard library)
 
-**Logger Setup:**
-- Each module creates its own logger: `logger = logging.getLogger(__name__)`
-- Root logger configured in `PDFEditorApp.__init__()` with WARNING level
-- Format: `"%(levelname)s:%(name)s:%(message)s"`
+**Setup pattern:**
+```python
+import logging
 
-**Logging Levels:**
-- `logger.debug()` — Detailed diagnostic info (e.g., geometry restoration, slow operations)
-- `logger.info()` — General informational messages (rarely used in current codebase)
-- `logger.warning()` — Warning conditions (default level set in app)
-- `logger.error()` — Error conditions with context (exceptions, failed operations)
-- `logger.exception()` — Error with full exception traceback (when catching in handlers)
+logger = logging.getLogger(__name__)
+```
 
 **Patterns:**
+- **Debug:** `logger.debug(msg, *args)` - Implementation details, arguments, variable state
+- **Info:** Not commonly used in this codebase
+- **Warning:** `logger.warning(msg, *args)` - Unusual but recoverable situations (e.g., plugin name collision)
+- **Error/Exception:** `logger.error(msg, *args)` or `logger.exception(msg, *args)` - Failures visible to user
+- Format strings use `%s` style: `logger.debug("key: %s, value: %s", key, value)`
+
+**Examples:**
 ```python
-logger.debug("ジオメトリ復元失敗: %s", e)
-logger.error("Failed to open PDF: %s", filepath)
-logger.exception("Unexpected error during OCR")
+logger.debug("incremental save failed, reopening: %s", e)
+logger.exception("OCR call failed (p.%d): %s", page_idx, e)
+logger.warning("OCR provider name collision: %s overridden", name)
 ```
 
-## Comments & Documentation
+## Comments
 
 **When to Comment:**
-- Non-obvious algorithms or design decisions
-- Complex state machines or Blob lifecycle management
-- Bug workarounds or PyMuPDF quirks
-- Section headers for logical groupings (using `# ══════════════════════`)
+- Explain **why**, not **what** (code explains what; comments explain reasoning)
+- Complex algorithms or non-obvious fixes (e.g., boundary conditions, workarounds for library bugs)
+- **Decision references:** Cite design decisions (e.g., "D-05: Single page blob capture", "V180-ROBUST-02")
+- **Invariant documentation:** State preconditions and postconditions for pure functions
+- **Edge cases:** Document why a condition is needed (e.g., "堅牢性・T-2-01" = robustness requirement)
 
-**Section Headers:**
+**Comment style:**
 ```python
+# Single-line comment for brief notes
+
+"""Multi-line docstring for modules, classes, functions"""
+
 # ══════════════════════════════════════════
-#  Undo / Redo
+# Section markers for logical groupings
 # ══════════════════════════════════════════
-def _save_undo(self, op, **kwargs):
-    ...
 ```
 
-**Module Docstrings:**
-All modules include docstrings in Japanese (e.g., `"""ファイル操作 Mixin — open/save/undo/redo"""`)
+**JSDoc/DocString style:**
+- Module docstring: Description + design notes
+- Function docstring: One-line summary, then detailed description with parameter/return info
+- Format: Google-style docstrings with newline paragraphs
 
-**Function Docstrings:**
-Complex functions include docstrings explaining parameters and behavior:
+**Example:**
 ```python
-def _capture_page_blob(self, page_i):
-    """page_i の 1 ページを単独 PDF として Blob 化して返す。
+def reconcile_window_start(window_start, current_page, page_size, n_pages):
+    """描画直前の窓正規化 + D-11 条件付き追従を 1 純関数に集約する。
 
-    delete / insert / merge / page_edit 系デルタの共有キャプチャ経路。
-    64KiB 以上はディスク退避（FileBlob）、未満はメモリ保持（MemBlob）。
+    手順:
+      1. clamp_window_start で window_start を有効窓の先頭へ寄せる
+      2. current_page が窓の外にある場合のみ追従する（D-11）
+
+    D-11 原文：「current_page が表示窓外へ出たら、その窓へ自動切替」。
     """
+    ...
 ```
 
 ## Function Design
 
-**Size & Complexity:**
-- Keep functions focused and single-responsibility
-- Long Mixin classes are acceptable (each Mixin clusters related methods by responsibility)
-- Helper functions extract common patterns (e.g., `_blob_bytes()`, `resolve_ocr_prompt()`)
+**Size:** Keep functions under 50 lines when possible; break complex logic into helper functions
 
 **Parameters:**
-- Use keyword arguments for complex functions (e.g., `_save_undo(self, op, **kwargs)`)
-- Avoid excessive positional arguments; group related params into dicts or dataclasses
-- Type hints use inline Python 3.8-compatible syntax (no `from __future__ import annotations`)
+- Positional parameters for required inputs
+- Use `**kwargs` sparingly; prefer explicit parameters for clarity
+- Avoid long parameter lists (>4-5 args); use dataclasses or dicts for related parameters
 
 **Return Values:**
-- Functions return concrete values or `None`, no sentinel values like `-1`
-- Use tuples for multiple return values (e.g., `(page_i, cropbox_tuple)`)
-- Generators used for thread-safe state updates (e.g., `_run_gen` in OCR dialog)
+- Single return value (tuple if multiple related values, e.g., `(lo, hi)` for range)
+- Use `|` for union types (Python 3.10+ style) or `Optional[]` when imported
+- Document return type in docstring
+
+**Pure functions:**
+- Functions without side effects should be stateless (no self, no global state modifications)
+- Examples: `window_bounds()`, `to_global()`, `merge_shortcuts()` in `app.py`, `pagination.py`
+- These functions are testable without mocking and can be called from any context
 
 ## Module Design
 
 **Exports:**
-- Public APIs defined at module top level (e.g., `OCRProvider` base class, `PluginManager`)
-- Private/helper functions prefixed with `_` (e.g., `_setup_file_drop()`, `_apply_theme()`)
-- Re-exports used for backward compatibility (e.g., `pagefolio/constants.py` re-exports `THEMES`, `LANG`, `C`)
+- Mixin classes implicitly exported by module name
+- Helper functions and exceptions explicitly listed for import
+- `__all__` not commonly used; rely on naming convention (`_` prefix for private)
 
 **Barrel Files:**
-- `pagefolio/__init__.py` exports public classes for simple imports: `from pagefolio import PluginManager, PDFEditorPlugin`
-- `pagefolio/dialogs/__init__.py` re-exports all dialog classes for `from pagefolio.dialogs import SettingsDialog` compatibility
-- Re-exports use `# noqa: F401` to silence unused import warnings
+- `pagefolio/dialogs/__init__.py` re-exports dialog classes for convenient imports:
+  ```python
+  from pagefolio.dialogs import SettingsDialog, PluginDialog, AboutDialog
+  ```
 
-## Theme & UI Patterns
+## State Management
 
-**Theme Color Usage:**
-- Always reference colors via `C["KEY"]` dict, never hardcoded hex strings
-- Available keys: `BG_DARK`, `BG_PANEL`, `BG_CARD`, `ACCENT`, `TEXT_MAIN`, `TEXT_SUB`, `SUCCESS`, `WARNING`, `DANGER_BG`, `DANGER_FG`, `CROP_ON_BG`
-- Theme dict `C` is updated at runtime by `_apply_theme()` in settings module
+**Theme colors:**
+- Access via `C["BG_DARK"]`, `C["FG_TEXT"]`, etc. (never hardcoded colors)
+- `C` is a module-level mutable dict updated at runtime based on theme selection
+- Defined in `pagefolio/themes.py` and re-exported via `pagefolio/constants.py`
 
-**Button Styles (ttk.Button `style` parameter):**
-- `"TButton"` — standard operations (default)
-- `"Accent.TButton"` — primary/important actions (highlights accent color)
-- `"Danger.TButton"` — destructive operations (delete, quit)
-- `"CropOn.TButton"` — trim mode active indicator
+**Font sizing:**
+- Use `self._font(delta)` helper method instead of hardcoding sizes
+- Font size persisted in settings file and read at startup
 
-**Font Handling:**
-- Never hardcode font sizes; use `self._font(delta)` helper method
-- `_font(delta, weight="")` returns `("Segoe UI", base_size + delta, weight)` tuple
-- Tkinter widgets use `font=self._font(0)` for normal size, `self._font(2, "bold")` for headings
+**PDF document reference:**
+- Always check `self.doc` before use (may be `None` when no file is open)
+- Use `self._check_doc()` in mixin methods to guard operations
 
-## State Management Conventions
+**Settings persistence:**
+- Settings stored as JSON in `pagefolio_settings.json` (user directory)
+- Load at startup: `_load_settings()`
+- Save after changes: `_save_settings()`
+- API keys never persisted (environment variable or session memory only)
 
-**Instance Attributes (in `PDFEditorApp`):**
-- `self.doc` — Current `fitz.Document` or `None` when no file open
-- `self.filepath` — String path to open file or `None`
-- `self.current_page` — 0-based page index (integer)
-- `self.selected_pages` — `set[int]` for multi-page selection
-- `self._undo_stack` / `self._redo_stack` — `deque` with operation state dicts
-- `self.thumb_cache` — `dict[int, ImageTk.PhotoImage]` for thumbnail cache
-- `self.settings` — `dict` with user preferences (loaded from JSON)
-- `self.font_size` — Integer 8–16 (base size for relative font calculations)
-- `self.edit_mode` — Boolean (persisted in settings)
+## Architectural Patterns
 
-**Never Mutate:**
-- Call `_push_evicting()` instead of directly appending to undo/redo stacks (to release Blob files)
-- Call `_clear_undo_stacks()` to clean up both stacks (not separate clears)
-- Use `_dispose_state()` to release Blob objects in states
+**Mixin composition:**
+- `PDFEditorApp` integrates 8 Mixin classes, each responsible for one functional area
+- Reduces monolithic class size while maintaining single instance cohesion
+- See `app.py` for full integration
 
-## Forbidden Patterns
+**Pure function layers:**
+- `pagination.py`: Window/index conversion (Tk/fitz-free)
+- `ocr_pipeline.py`: Producer-consumer queue logic (Tk/fitz-free)
+- `md_render.py`: Markdown to span conversion (Tk/fitz-free)
+- These enable focused unit testing without mocking UI frameworks
 
-**Prohibited:**
-- Bare `except:` clause (always specify exception type)
-- `# type: ignore` comments without approval (never use)
-- Hardcoded hex color strings (use `C` dict instead)
-- Hardcoded font sizes (use `_font()` helper)
-- Direct append to `_undo_stack` / `_redo_stack` without `_push_evicting()`
-- `pyproject.toml` edits (sacred configuration)
+**UI builder pattern:**
+- Methods prefixed with `_build_*` construct sections of the UI
+- Theme colors passed via `C` dict, fonts via `self._font()`
+- Scrollable panels use Canvas + Scrollbar (see `_build_tools_scrollable` in `ui_builder.py`)
+
+**Dialog pattern:**
+- Dialogs inherit from `tk.Toplevel`
+- Center on parent window (call `self._center(parent)`)
+- Return values via instance attributes or callback parameters
+- Example: `SettingsDialog.settings` attribute holds form state
 
 ---
 
-*Convention analysis: 2026-07-03*
+*Convention analysis: 2026-07-16*

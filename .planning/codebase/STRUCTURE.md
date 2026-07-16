@@ -1,268 +1,364 @@
 # Codebase Structure
 
-**Analysis Date:** 2026-07-03
+**Analysis Date:** 2026-07-16
 
 ## Directory Layout
 
 ```
 PageFolio/
-├── pagefolio.py                    # Entry point: python pagefolio.py
-├── pagefolio/                      # Main package
-│   ├── __init__.py                 # Public API re-exports (backward compat)
-│   ├── __main__.py                 # python -m pagefolio entry point
-│   ├── app.py                      # PDFEditorApp root class + Mixin integration
-│   ├── constants.py                # APP_VERSION, SUPPORTED_EXTENSIONS, etc. + theme/lang re-exports
-│   ├── themes.py                   # THEMES dict (dark/light) + runtime C dict
-│   ├── lang.py                     # LANG dict (ja/en) multilingual strings
-│   ├── settings.py                 # Config I/O, theme application, font helpers
-│   ├── plugins.py                  # PDFEditorPlugin base class + PluginManager
-│   ├── ui_builder.py               # UIBuilderMixin — styles, layout, widgets
-│   ├── file_ops.py                 # FileOpsMixin — open/save/undo/redo/password
-│   ├── page_ops.py                 # PageOpsMixin — rotate/delete/crop/insert/merge/split
-│   ├── redact_ops.py               # RedactOpsMixin — blackout & mosaic
-│   ├── viewer.py                   # ViewerMixin — preview, thumbnails, zoom, selection
-│   ├── dnd.py                      # DnDMixin — drag-and-drop page reordering
-│   ├── ocr.py                      # OCRMixin — OCR orchestration; provider selection
-│   ├── ocr_providers.py            # OCRProvider ABC + Claude/Gemini/LMStudio/Tesseract
-│   ├── ocr_dialog.py               # OCRDialog — multi-page OCR UI; results viewer/exporter
-│   ├── md_render.py                # parse_markdown() — Markdown→(line type, span) conversion
-│   ├── print_ops.py                # PrintOpsMixin — print via OS handler
-│   ├── undo_store.py               # UndoBlobStore, MemBlob, FileBlob — Blob lifecycle
-│   ├── pagination.py               # Pure functions for window/index calculations
-│   ├── file_drop.py                # tkinterdnd2 integration
-│   ├── dialogs/                    # Dialog package
-│   │   ├── __init__.py             # Re-exports for backward compat (from pagefolio.dialogs import ...)
+├── pagefolio/                      # Main application package
+│   ├── __init__.py                 # Package init
+│   ├── __main__.py                 # Entry point: python -m pagefolio
+│   ├── app.py                      # PDFEditorApp main class (8 Mixins)
+│   ├── constants.py                # Version, file names, extensions, re-exports
+│   ├── themes.py                   # Color theme definitions (THEMES, C dict)
+│   ├── lang.py                     # Localization (LANG dict: ja, en)
+│   ├── settings.py                 # Settings I/O, theme resolution, font helpers
+│   ├── plugins.py                  # Plugin system: PDFEditorPlugin, PluginManager
+│   │
+│   ├── ui_builder.py               # UIBuilderMixin: UI construction, styling
+│   ├── file_ops.py                 # FileOpsMixin: file I/O, undo/redo
+│   ├── page_ops.py                 # PageOpsMixin: rotate, delete, crop, merge
+│   ├── redact_ops.py               # RedactOpsMixin: blackout, mosaic
+│   ├── viewer.py                   # ViewerMixin: preview, zoom, thumbnails
+│   ├── dnd.py                      # DnDMixin: drag-and-drop reordering
+│   ├── ocr.py                      # OCRMixin: OCR orchestration, provider selection
+│   ├── print_ops.py                # PrintOpsMixin: printing via OS handler
+│   │
+│   ├── undo_store.py               # Blob storage: MemBlob, FileBlob, UndoBlobStore
+│   ├── thumb_cache.py              # LRU thumbnail cache
+│   ├── pagination.py               # Thumbnail window virtualization (pure logic)
+│   ├── md_render.py                # Markdown result parsing (pure logic)
+│   ├── toast.py                    # Toast notifications
+│   ├── file_drop.py                # D&D file drop setup (tkinterdnd2 wrapper)
+│   │
+│   ├── ocr_pipeline.py             # OCR producer-consumer pure logic (Tk/fitz-free)
+│   ├── ocr_dialog.py               # OCRDialog: OCR execution UI, result display
+│   ├── ocr_engine.py               # OCRRunEngine: low-level provider orchestration
+│   ├── ocr_fallback.py             # Fallback prompts for providers
+│   │
+│   ├── ocr_providers/              # OCR provider implementations
+│   │   ├── __init__.py
+│   │   ├── base.py                 # OCRProvider ABC
+│   │   ├── registry.py             # Provider env var registry (std lib only)
+│   │   ├── errors.py               # OCRAPIKeyError, OCRRetryableError, etc.
+│   │   ├── claude.py               # ClaudeProvider
+│   │   ├── gemini.py               # GeminiProvider
+│   │   ├── tesseract.py            # TesseractProvider
+│   │   ├── lmstudio.py             # LMStudioProvider
+│   │   ├── ollama.py               # OllamaProvider
+│   │   └── runpod.py               # RunPodProvider
+│   │
+│   ├── dialogs/                    # Secondary UI windows (Toplevel dialogs)
+│   │   ├── __init__.py             # Re-exports
 │   │   ├── about.py                # AboutDialog
-│   │   ├── settings.py             # SettingsDialog
-│   │   ├── plugin.py               # PluginDialog
+│   │   ├── settings.py             # SettingsDialog (theme, font, plugins)
+│   │   ├── plugin.py               # PluginDialog (plugin enable/disable)
+│   │   ├── password.py             # SetPasswordDialog (PDF encryption)
 │   │   ├── merge.py                # MergeOrderDialog, MergeResizeDialog
-│   │   ├── llm_config.py           # LLMConfigDialog — OCR provider/model setup
-│   │   ├── export_images.py        # ExportImagesDialog — page→image export
-│   │   └── password.py             # SetPasswordDialog — password entry UI
-│   └── pagefolio.ico               # App icon (referenced by PyInstaller)
-├── plugins/                        # Plugin directory (user/sample plugins)
-│   └── page_info.py                # Sample plugin (page info display)
-├── tests/                          # Test suite (pytest)
-│   ├── conftest.py                 # Test fixtures (fake PDF, mock settings)
-│   ├── test_imports.py             # Package import & backward compat tests
-│   ├── test_utils.py               # Utility function tests
-│   ├── test_pdf_ops.py             # PDF operation tests (rotate, crop, etc.)
-│   ├── test_plugins.py             # PluginManager tests
-│   ├── test_viewer.py              # Preview/thumbnail rendering tests
-│   ├── test_settings_keyguard.py   # API key non-persistence guard tests
-│   ├── test_ocr.py                 # OCR helper/parallel execution tests
-│   ├── test_ocr_providers.py       # OCRProvider unit tests
-│   ├── test_provider_ui.py         # Provider UI & resolve_ocr_prompt tests
-│   ├── test_pagination.py          # Window calculation & index conversion tests
-│   ├── test_md_render.py           # parse_markdown() pure function tests
-│   ├── test_export_images.py       # Page→image export range/scale tests
-│   ├── test_save_overwrite.py      # Shrink-and-save helper tests
-│   ├── test_password.py            # PDF password add/remove & encrypt/decrypt tests
-│   ├── test_print.py               # Print temp file generation tests
-│   ├── test_undo_stress.py         # 120-page undo/redo stress (memory, eviction)
-│   ├── test_lang_parity.py         # ja/en LANG key parity regression
-│   └── test_source_keyguard.py     # API key pattern not-found scan in source
-├── README.md                       # User-facing usage guide
-├── CLAUDE.md                       # AI development instructions (this project)
-├── 開発履歴.md                      # Change history (Japanese)
-├── LICENSE                         # MIT License
-├── pyproject.toml                  # pytest & Ruff config (pythonpath, line-length, rules)
-├── requirements.txt                # Fixed dependency versions
-├── PageFolio.spec                  # PyInstaller spec (onedir format)
-├── pagefolio.ico                   # Icon file
-├── .planning/                      # GSD documentation (created by orchestrator)
-│   ├── codebase/                   # Codebase maps (ARCHITECTURE.md, STRUCTURE.md, etc.)
-│   ├── phases/                     # Phase execution plans
+│   │   ├── export_images.py        # ExportImagesDialog
+│   │   ├── shortcuts.py            # ShortcutsDialog (keybind editor)
+│   │   ├── batch_ocr.py            # BatchOCRDialog (batch file OCR UI)
+│   │   └── llm_config/             # LLM provider configuration dialog
+│   │       ├── __init__.py         # LLMConfigDialog
+│   │       ├── dialog.py           # DialogMixin
+│   │       ├── sections.py         # SectionsMixin
+│   │       └── model_fetch.py      # ModelFetchMixin (async model fetching)
+│   │
+│   ├── batch_ocr_state.py          # BatchState: batch OCR file list state
+│   └── [utility modules]            # md_render.py, lang.py, etc.
+│
+├── tests/                           # Test suite
+│   ├── conftest.py                 # pytest fixtures, mock app setup
+│   ├── test_*.py                   # 34 test files (OCR, UI, PDF ops, etc.)
 │   └── ...
-├── build/                          # PyInstaller build directory (generated; not committed)
-└── dist/                           # PyInstaller dist directory (generated; committed for release)
-
-(Runtime, created on first run)
-└── pagefolio_settings.json         # User config (theme, font size, window geometry, etc.)
+│
+├── plugins/                        # Third-party plugins directory
+│   └── (user-installed plugins)
+│
+├── pagefolio.py                    # Root entry script (python pagefolio.py)
+├── pagefolio_settings.json         # Persisted user settings (gitignored)
+├── PageFolio.spec                  # PyInstaller spec (gitignored, rebuild per exe)
+├── requirements.txt                # Python dependencies
+├── pyproject.toml                  # Project metadata
+├── CLAUDE.md                       # AI development instructions (this file)
+├── README.md                       # End-user documentation
+├── 開発履歴.md                     # Development changelog (Japanese)
+├── LICENSE                         # MIT License
+└── .planning/                      # GSD workflow artifacts
+    ├── codebase/                   # Architecture/structure analysis
+    │   ├── ARCHITECTURE.md         # Architecture overview
+    │   └── STRUCTURE.md            # (This file)
+    └── milestones/                 # Phase plans for v1.x.x
 ```
 
 ## Directory Purposes
 
-**`pagefolio/` (Main Package):**
-- Purpose: Application source code (Mixins, UI, file ops, OCR, dialogs)
-- Contains: 30+ modules (1 Mixin per file + supporting utilities)
-- Key files: `app.py` (root), `ui_builder.py` (layout), `file_ops.py` (I/O), `ocr.py` (external APIs)
+**`pagefolio/`**
+- Purpose: Main application package
+- Contains: All application code, organized by concern (UI, file ops, OCR, etc.)
+- Key files: `app.py` (main class), `__main__.py` (entry), `constants.py` (version)
 
-**`pagefolio/dialogs/` (Dialog Package):**
-- Purpose: Modal dialogs for user input (settings, password, export, etc.)
-- Contains: 8 dialog classes (About, Settings, Plugin, Merge, LLMConfig, ExportImages, Password, OCR)
-- Pattern: Each dialog inherits from `tk.Toplevel`; takes `parent` (Tk), font helper, lang dict as args
+**`pagefolio/dialogs/`**
+- Purpose: Secondary Tkinter Toplevel windows for user interaction
+- Contains: Dialog classes for settings, merge, OCR, LLM config, batch operations
+- Key files: `settings.py` (SettingsDialog), `llm_config/` (LLM config UI)
 
-**`plugins/` (Plugin Directory):**
-- Purpose: User-extensible plugins loaded at startup
-- Contains: Python files implementing `PDFEditorPlugin` subclass
-- Plugin discovery: Scanned via `PluginManager.load_all()` on app init
+**`pagefolio/ocr_providers/`**
+- Purpose: Pluggable OCR backends with unified interface
+- Contains: ABC base class, 6 concrete providers, error definitions
+- Key files: `base.py` (OCRProvider ABC), `registry.py` (env var mapping)
 
-**`tests/` (Test Suite):**
-- Purpose: pytest-based unit & integration tests
-- Contains: 24 test modules covering imports, PDF ops, rendering, OCR, pagination, undo, etc.
-- Run: `pytest` (or `pytest tests/test_specific.py` for single module)
-- Coverage: Can run `pytest --cov=pagefolio` for coverage report
+**`tests/`**
+- Purpose: Automated test suite
+- Contains: 34 test files covering OCR, UI, PDF ops, settings, etc.
+- Key files: `conftest.py` (fixtures), test modules organized by feature
 
-**`build/` (PyInstaller Build Artifacts):**
-- Purpose: Temporary build directory (not committed)
-- Lifecycle: Generated by PyInstaller; cleared before rebuild
-
-**`dist/` (Distribution):**
-- Purpose: Final executable output & release assets
-- Contains: `PageFolio/` (onedir folder) + `PageFolio-<tag>-win64.zip` + `.sha256` files
-- Pattern: Committed to git for immutable releases (CLAUDE.md release rules)
-
-**`.planning/` (GSD Orchestrator Output):**
-- Purpose: Planning and codebase documentation (generated by `/gsd-map-codebase`, `/gsd-plan-phase`)
-- Contains: Markdown docs (ARCHITECTURE.md, STRUCTURE.md, CONVENTIONS.md, TESTING.md, CONCERNS.md, etc.)
+**`plugins/`**
+- Purpose: Third-party plugin installation directory
+- Contains: User-installed plugins (auto-discovered at startup)
+- Key files: None (populated by users)
 
 ## Key File Locations
 
 **Entry Points:**
-- `pagefolio.py`: Command-line entry point (delegates to `__main__.main()`)
-- `pagefolio/__main__.py`: Package entry point; sets up Tk root and PDFEditorApp
-- `pagefolio/app.py:47-174`: PDFEditorApp initialization (settings load, UI build, plugin load)
+- `pagefolio.py`: CLI script entry point (imports and calls `__main__.main()`)
+- `pagefolio/__main__.py`: Application bootstrap, Tk window creation, app instantiation
 
 **Configuration:**
-- `pagefolio/constants.py`: APP_VERSION, SUPPORTED_EXTENSIONS, defaults
-- `pagefolio/themes.py`: THEMES dict (dark/light color schemes)
-- `pagefolio/lang.py`: LANG dict (ja/en multilingual strings)
-- `pagefolio/settings.py`: Config file I/O, theme application, font helpers
-- `pyproject.toml`: Ruff & pytest configuration
-- `requirements.txt`: Pinned dependency versions
-- `pagefolio_settings.json`: Runtime user config (created on first run)
+- `pagefolio/constants.py`: Version (`APP_VERSION`), file names, supported extensions, re-exported `THEMES`, `C`, `LANG`
+- `pagefolio/themes.py`: Color theme definitions (dark/light), runtime `C` dict
+- `pagefolio/lang.py`: Localization strings (ja, en)
+- `pagefolio/settings.py`: Settings I/O (JSON), theme resolution, font generation, external prompt file loading
+- `pagefolio_settings.json`: Persisted user settings (ignored by git)
 
 **Core Logic:**
-- `pagefolio/app.py`: PDFEditorApp class + Mixin integration + state management
-- `pagefolio/file_ops.py`: File open/save/undo/redo; password encryption/decryption
-- `pagefolio/page_ops.py`: Page operations (rotate, delete, crop, insert, merge, split, export)
-- `pagefolio/viewer.py`: Preview rendering, thumbnail generation & caching, zoom, selection
-- `pagefolio/ui_builder.py`: Tkinter style definitions and layout construction
+- `pagefolio/app.py`: `PDFEditorApp` main class, 8 Mixins, initialization, shortcuts, menu bar
+- `pagefolio/ui_builder.py`: Tkinter styles, layout construction, UI methods
+- `pagefolio/file_ops.py`: Open/save, undo/redo, password handling
+- `pagefolio/page_ops.py`: Page rotate, delete, crop, merge, insert, split
+- `pagefolio/redact_ops.py`: Redaction (blackout/mosaic), rectangle selection
 
-**Advanced Features:**
-- `pagefolio/ocr.py`: OCR orchestration; provider selection; prompt resolution
-- `pagefolio/ocr_providers.py`: OCR backend implementations (Claude, Gemini, LMStudio, Tesseract)
-- `pagefolio/ocr_dialog.py`: OCRDialog UI; multi-page results viewer; summary generation
-- `pagefolio/redact_ops.py`: Blackout & mosaic page editing
-- `pagefolio/dnd.py`: Drag-and-drop thumbnail reordering
-- `pagefolio/print_ops.py`: Print to OS default PDF handler
+**Viewing & Rendering:**
+- `pagefolio/viewer.py`: Preview canvas, zoom, thumbnail rendering
+- `pagefolio/thumb_cache.py`: LRU thumbnail cache (MemoryBounded)
+- `pagefolio/pagination.py`: Thumbnail window virtualization (pure logic, Tk-free)
+
+**OCR System:**
+- `pagefolio/ocr.py`: OCRMixin, provider selection, prompt resolution
+- `pagefolio/ocr_dialog.py`: OCR UI dialog, result display/export
+- `pagefolio/ocr_pipeline.py`: Producer-consumer pure logic (Tk/fitz-free)
+- `pagefolio/ocr_engine.py`: Low-level provider orchestration
+- `pagefolio/ocr_providers/base.py`: `OCRProvider` abstract base
+- `pagefolio/ocr_providers/registry.py`: Env var mapping (std lib only)
+- `pagefolio/ocr_providers/claude.py`, `gemini.py`, `tesseract.py`, `lmstudio.py`, `ollama.py`, `runpod.py`: Concrete providers
 
 **Utilities:**
-- `pagefolio/pagination.py`: Pure functions for window/index calculations (no Tk/fitz)
-- `pagefolio/undo_store.py`: Blob abstraction (MemBlob/FileBlob); tempfile lifecycle
-- `pagefolio/md_render.py`: Markdown→(line type, span) conversion (pure function)
-- `pagefolio/plugins.py`: PluginManager; plugin lifecycle hooks
-- `pagefolio/file_drop.py`: tkinterdnd2 integration for file drag-and-drop
-- `pagefolio/dialogs/*.py`: Modal dialogs (About, Settings, Plugin, Merge, LLMConfig, Export, Password)
+- `pagefolio/plugins.py`: Plugin system, lifecycle management
+- `pagefolio/undo_store.py`: Blob storage (MemBlob, FileBlob, lifecycle)
+- `pagefolio/md_render.py`: Markdown parsing for OCR results (pure logic, Tk-free)
+- `pagefolio/toast.py`: Toast notification manager
+- `pagefolio/file_drop.py`: D&D file drop setup (tkinterdnd2 wrapper)
 
 **Testing:**
-- `tests/conftest.py`: Pytest fixtures (fake PDF, mock settings)
-- `tests/test_*.py`: 24 test modules covering all major components
-- Command: `pytest` to run all; `pytest tests/test_specific.py` for single module
+- `tests/conftest.py`: pytest fixtures, mock app factory
+- `tests/test_*.py`: 34 test files by feature
 
 ## Naming Conventions
 
 **Files:**
-- Modules: `snake_case.py` (e.g., `file_ops.py`, `ui_builder.py`, `undo_store.py`)
-- Test files: `test_<feature>.py` (e.g., `test_pdf_ops.py`, `test_ocr.py`)
+- Mixin modules: `*_ops.py` (e.g., `file_ops.py`, `page_ops.py`, `redact_ops.py`)
+- Dialog modules: `dialogs/*.py` (e.g., `settings.py`, `merge.py`)
+- OCR modules: `ocr*.py` or `ocr_providers/*.py`
+- Test modules: `test_*.py` (pytest discovery)
+- No hyphens in filenames (Python import compatibility)
 
-**Directories:**
-- Packages: `snake_case/` (e.g., `dialogs/`, `plugins/`)
-
-**Classes:**
-- Application: `PascalCase` (e.g., `PDFEditorApp`, `UIBuilderMixin`, `AboutDialog`)
-- Mixin classes: End with `Mixin` suffix (e.g., `FileOpsMixin`, `ViewerMixin`)
-- Dialog classes: End with `Dialog` suffix (e.g., `SettingsDialog`, `OCRDialog`)
-- Plugin base: `PDFEditorPlugin`
-- Blob classes: `MemBlob`, `FileBlob`
-- OCR providers: `<Name>Provider` (e.g., `ClaudeProvider`, `GeminiProvider`)
-
-**Functions/Methods:**
-- Internal/private: `_snake_case()` with `_` prefix (e.g., `_build_ui()`, `_refresh_all()`, `_save_settings()`)
-- Event handlers: `_on_<event>()` (e.g., `_on_dnd_drop()`, `_on_file_open()`)
-- Action methods: `_do_<action>()` (e.g., `_do_merge()`, `_do_insert()`)
-- Public API: Plain names (e.g., `load_all()`, `fire_event()`)
-- Pure functions: snake_case (e.g., `parse_page_ranges()`, `clamp_window_start()`)
+**Functions:**
+- Private/internal: `_name()` prefix (e.g., `_open_file()`, `_render_preview()`)
+- Public: `name()` (rare for Mixins; usually called via `self`)
+- Pure logic helpers: lowercase (e.g., `merge_shortcuts()`, `clamp_page_size()`)
 
 **Variables:**
-- Instance state: `snake_case` (e.g., `self.doc`, `self.current_page`, `self.selected_pages`)
-- Constants: `UPPER_SNAKE_CASE` (e.g., `MAX_UNDO`, `OFFLOAD_THRESHOLD`, `PAGE_SIZE_DEFAULT`)
-- Theme colors: Accessed via `C["KEY"]` dict (e.g., `C["BG_DARK"]`, `C["ACCENT"]`)
-- Language strings: Accessed via `LANG["lang"]["key"]` (e.g., `LANG["ja"]["button_open"]`)
+- Class attributes: `PascalCase` only for constants (e.g., `MAX_UNDO`)
+- Instance attributes: `snake_case`, internal ones prefixed with `_` (e.g., `self.doc`, `self._undo_stack`)
+- Persistent config: `self.settings` (dict with keys like `"theme"`, `"font_size"`)
+
+**Types:**
+- OCRProvider subclasses: `<Provider>Provider` (e.g., `ClaudeProvider`, `GeminiProvider`)
+- Dialog classes: `<Feature>Dialog` (e.g., `SettingsDialog`, `BatchOCRDialog`)
+- Mixin classes: `<Concern>Mixin` (e.g., `FileOpsMixin`, `PageOpsMixin`)
 
 ## Where to Add New Code
 
-**New Feature (PDF operation):**
-- Primary code: Create method in appropriate Mixin (or new Mixin if cross-cutting)
-  - Rotation/deletion/cropping → `pagefolio/page_ops.py` (PageOpsMixin)
-  - Rendering/zoom/thumbnails → `pagefolio/viewer.py` (ViewerMixin)
-  - File I/O → `pagefolio/file_ops.py` (FileOpsMixin)
-- Tests: `tests/test_<feature>.py` following existing test patterns
-- UI: Add button/menu item in `pagefolio/ui_builder.py` (`_build_ui()` or `_build_tools_*()` methods)
-- Plugin hook: Add new `on_<event>()` method to `PDFEditorPlugin` base class if other code needs to respond
+**New Feature (Page Operation):**
+- Primary code: Add method to appropriate Mixin in `pagefolio/*_ops.py` or create new Mixin file
+- Undo support: Create delta dict with operation type, affected pages, captured page blobs; call `self._push_evicting(delta)`
+- UI trigger: Add button/menu item in `UIBuilderMixin._build_ui()` or dialog, bind to Mixin method
+- Tests: Create `tests/test_<feature>.py` with fixture-based mocks
 
-**New Dialog:**
-- Implementation: Create class in `pagefolio/dialogs/<name>.py` inheriting `tk.Toplevel`
-- Pattern: Accept `parent`, `font` function, `lang` dict as constructor args; set `grab_set()` for modal behavior
-- Re-export: Add to `pagefolio/dialogs/__init__.py` for backward-compatible import
-- Integration: Import in `app.py` or calling Mixin; instantiate on user action (button click, menu item)
+**New Dialog/Settings:**
+- Dialog class: Create in `pagefolio/dialogs/<feature>.py` as `tk.Toplevel` subclass
+- Re-export: Add import/export in `pagefolio/dialogs/__init__.py`
+- Integration: Call from menu/button, pass `app` reference for state access
+- Tests: Create `tests/test_<feature>_dialog.py` with window-handling fixtures
 
 **New OCR Provider:**
-- Implementation: Create class in `pagefolio/ocr_providers.py` inheriting `OCRProvider` ABC
-- Methods: Implement `ocr_image_ex()` for image input; optionally `complete_text_ex()` for text-only summary
-- Registration: Call `register_ocr_provider()` hook in plugin's `on_load()` or during app init
-- UI: Add option to `LLMConfigDialog` dropdown (requires modification to dialog)
+- Provider class: Create in `pagefolio/ocr_providers/<provider_name>.py`, inherit `OCRProvider`
+- Implement: `ocr_image_ex()`, optional `supports_text_prompt()` / `complete_text_ex()`
+- Registry: Add env var entry in `pagefolio/ocr_providers/registry.py`
+- UI: Add selection option in `LLMConfigDialog` (auto-discovered from registry)
+- Tests: Create `tests/test_<provider>_provider.py` with mock API responses
 
-**New Utility Function:**
-- If Tk/fitz-independent: Add to `pagefolio/<utility>.py` or create new module (e.g., `markdown_render.py`, `pagination.py`)
-- If tied to operation: Add as static function in Mixin module or in supporting utility (e.g., `parse_page_ranges()` in `page_ops.py`)
-- Tests: Add corresponding `tests/test_<utility>.py` with pure function test cases
+**New Utility Function (Pure Logic):**
+- Location: Create new module `pagefolio/<concern>.py` if fits pattern, or add to existing utility
+- Pattern: No Tkinter / PyMuPDF imports (pure logic)
+- Example: `pagination.py` handles window arithmetic; `md_render.py` parses markdown
+- Tests: Create `tests/test_<concern>.py`, test with pure function calls
 
-**New Plugin:**
-- Location: Create `.py` file in `plugins/` directory (auto-discovered on startup)
-- Pattern: Inherit from `PDFEditorPlugin`; implement desired hook methods (minimal: `on_load()`)
-- Example: See `plugins/page_info.py` (displays page count in status bar)
+**Plugin Hook:**
+- Define hook: Add signature to `pagefolio/plugins.py:PDFEditorPlugin` docstring + `PluginManager._dispatch()`
+- Emit hook: Call `self.plugin_manager.dispatch(hook_name, **args)` from relevant Mixin
+- Example: `on_page_delete` emitted after page deletion, plugins can react via callback
+
+**Test File:**
+- Naming: `tests/test_<feature_or_module>.py`
+- Fixtures: Use `conftest.py` fixtures (`app_instance`, `mock_pdf`, etc.)
+- Parametrization: Use `@pytest.mark.parametrize` for multiple scenarios
+- Isolation: Each test should create own app instance or mock; no shared state between tests
 
 ## Special Directories
 
-**`pagefolio/dialogs/` (Dialog Package):**
-- Purpose: Centralized modal UI for user input
-- Generated: No (hand-written)
-- Committed: Yes
-- Pattern: Each dialog is a separate file; `__init__.py` re-exports for backward-compatible imports
-
-**`plugins/` (Plugin Directory):**
-- Purpose: User-extensible code loaded at runtime
-- Generated: No (manual)
-- Committed: Yes (contains sample plugins)
-- Discovery: `PluginManager.load_all()` scans directory for `.py` files; imports dynamically
-
-**`tests/` (Test Suite):**
-- Purpose: Regression prevention; quality gate
-- Generated: No (hand-written)
-- Committed: Yes
-- Run: `pytest` (config in `pyproject.toml`)
-- Coverage: Track via `pytest --cov=pagefolio`
-
-**`build/` (PyInstaller Artifacts):**
-- Purpose: Temporary build output
-- Generated: Yes (by `pyinstaller PageFolio.spec`)
-- Committed: No (in `.gitignore`)
-- Lifecycle: Cleared before rebuild
-
-**`dist/` (Distribution Artifacts):**
-- Purpose: Final executable & release assets
-- Generated: Yes (by PyInstaller + zip + sha256 scripts)
-- Committed: Yes (for immutable releases per CLAUDE.md)
-- Contents: `PageFolio/` (onedir), `PageFolio-<tag>-win64.zip`, `.sha256` checksums
-
-**`.planning/` (GSD Orchestrator Output):**
-- Purpose: Planning docs (generated by commands like `/gsd-map-codebase`, `/gsd-plan-phase`)
+**`.planning/`**
+- Purpose: GSD workflow artifacts
 - Generated: Yes (by orchestrator)
-- Committed: Yes (tracks planning decisions)
-- Contents: ARCHITECTURE.md, STRUCTURE.md, CONVENTIONS.md, TESTING.md, CONCERNS.md, phase plans, etc.
+- Committed: Yes (plans and decisions)
+- Contains: Phase plans, codebase analysis, phase execution logs
+
+**`plugins/`**
+- Purpose: User-installed third-party plugins
+- Generated: No (user-installed)
+- Committed: No (.gitignore)
+- Contains: Plugin .py files auto-discovered at startup
+
+**`.ruff_cache/` / `__pycache__/`**
+- Purpose: Build/linting cache
+- Generated: Yes (by tools)
+- Committed: No (.gitignore)
+- Contains: Compiled Python bytecode, linter cache
+
+**`dist/`**
+- Purpose: PyInstaller build output
+- Generated: Yes (by PyInstaller)
+- Committed: Partially (*.zip tracked, *.spec rebuilt per version)
+- Contains: Executable artifacts, redistributable packages
+
+**`.pytest_cache/` / `.coverage`**
+- Purpose: Test artifacts
+- Generated: Yes (by pytest)
+- Committed: No (.gitignore)
+- Contains: Test discovery cache, coverage data
+
+## Coding Patterns by Concern
+
+### File Operations (UI initiator pattern)
+```python
+# In UIBuilderMixin event handler
+def _open_file_dialog(self):
+    path = filedialog.askopenfilename(...)
+    if not path:
+        return
+    self._open_file(path)  # Delegates to FileOpsMixin
+
+# In FileOpsMixin
+def _open_file(self, path):
+    try:
+        self.doc = fitz.open(path)
+        self.filepath = path
+        self.current_page = 0
+        self._refresh_all()
+        self._set_status(f"Opened {path}")
+    except Exception as e:
+        messagebox.showerror("Error", str(e))
+```
+
+### Page Operations with Undo
+```python
+# In PageOpsMixin
+def _rotate_selected(self, degrees):
+    if not self._check_doc():
+        return
+    targets = self._get_targets()
+    
+    # Capture undo delta BEFORE modification
+    delta = {
+        "op": "rotate",
+        "pages": {p: self.doc[p].rotation for p in targets},
+    }
+    
+    # Apply operation
+    for page_i in targets:
+        self.doc[page_i].set_rotation(degrees)
+    
+    # Push to stack (auto-evicts if full)
+    self._push_evicting(delta)
+    self._clear_redo_stack()
+    self._refresh_all()
+    self._set_status(f"Rotated {len(targets)} pages")
+```
+
+### Dialog with Results Back to App
+```python
+# In dialogs/settings.py
+class SettingsDialog(tk.Toplevel):
+    def __init__(self, root, app, ...):
+        self.app = app  # Reference to main app
+        # ... build UI ...
+        self.bind("<Return>", self._on_ok)
+    
+    def _on_ok(self, event=None):
+        # Update app state
+        self.app.settings["theme"] = self.theme_var.get()
+        self.app.settings["font_size"] = self.font_size_var.get()
+        _save_settings(self.app.settings)
+        # Rebuild UI with new settings
+        self.app._rebuild_ui()
+        self.destroy()
+```
+
+### Pure Logic (No Tk/fitz)
+```python
+# In pagination.py
+def clamp_page_size(size):
+    """Clamp page size to valid range (10-100)."""
+    return max(10, min(100, int(size)))
+
+def compute_window_range(total_pages, window_start, window_size):
+    """Compute (start, end) indices for thumbnail virtualization."""
+    end = min(window_start + window_size, total_pages)
+    return (window_start, end)
+```
+
+### OCR Provider Pattern
+```python
+# In ocr_providers/claude.py
+class ClaudeProvider(OCRProvider):
+    model_list_timeout = 30  # 30s for cloud
+    
+    def ocr_image_ex(self, image_base64, prompt):
+        """Inherited signature, must return (text, stop_reason)."""
+        # Build request, call Claude API
+        response = self._api_call(...)
+        return (response.text, response.stop_reason)
+    
+    def supports_text_prompt(self):
+        return True  # Can generate summaries
+    
+    def complete_text_ex(self, texts_by_page, prompt):
+        """Multi-page summary via text-only endpoint."""
+        # Combine texts, call API
+        return summary_text
+```
 
 ---
 
-*Structure analysis: 2026-07-03*
+*Structure analysis: 2026-07-16*
