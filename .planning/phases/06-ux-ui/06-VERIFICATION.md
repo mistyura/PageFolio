@@ -1,14 +1,16 @@
 ---
 phase: 06-ux-ui
 verified: 2026-07-16T00:00:00Z
-status: human_needed
+status: passed
 score: 20/20 must-haves verified
 behavior_unverified: 0
 overrides_applied: 0
 human_verification:
+
   - test: "アプリを起動し、上書き保存/別名保存/縮小保存/印刷のいずれかを一時的失敗が起きる状況（読み取り専用パス・ロック中ファイル・印刷ハンドラ未関連付け等）で実行し、メインウィンドウ右下にトーストが表示されることを目視確認する。テーマ切替（設定画面でテーマ変更）を行った直後に再度同じ失敗を起こし、トーストが引き続き正しく表示・操作できることも確認する。"
     expected: "右下に再試行ボタン付きの非モーダルトーストが表示され、自動消滅しない。✕ボタン・再試行成功・別経路成功のいずれかで消える。テーマ切替後も同様に機能する。"
     why_human: "Tkinter の実際の描画結果（位置・重なり・視認性・テーマ追従）は自動テストでは検証できない視覚的確認項目（VALIDATION.md Manual-Only Verifications・06-01-SUMMARY.md）。"
+
   - test: "プラグイン管理ダイアログを開き、プラグイン一覧上でマウスホイールスクロールを操作する。「🔄 再検出」ボタンを押した直後にも同じ一覧上でホイールスクロールが機能し続けることを確認する。また OCR ダイアログを低解像度（または大きめのフォントサイズ設定）の環境で開き、ダイアログ下端が画面外にはみ出さないことを確認する。"
     expected: "プラグイン一覧はマウスホイールでスクロールでき、再検出後も引き続きスクロールできる。OCR ダイアログは低解像度環境でも画面内に収まる。"
     why_human: "実際のマウスホイールイベント配送はTkイベントループ・実ウィジェット階層・実機ディスプレイ解像度に依存し、pytestのTk非依存/最小生成スタブでは体感相当の確認ができない（06-02-SUMMARY.md coverage D3/D4・06-SCROLL-FONT-AUDIT.md §1.4）。回帰テスト（test_plugin_dialog_wheel.py/test_ocr_dialog_center.py）は束縛状態・geometry計算のみを検証しており、実際のスクロール体感・実機表示は別途確認が必要。"
@@ -106,9 +108,11 @@ None. Scanned all phase-modified files (`toast.py`, `ui_builder.py`, `file_ops.p
 ### Code Review Findings (06-REVIEW.md / 06-REVIEW-FIX.md)
 
 3 warnings (WR-01, WR-02, WR-03) were found by the phase's own code-review agent and independently confirmed fixed with dedicated regression tests that exercise the actual defect mechanism (not just presence checks):
+
 - WR-01 (ocr_dialog.py height clamp neutralized by minsize): fixed, `tests/test_ocr_dialog_center.py` verified.
 - WR-02 (plugin.py wheel-unbind fires on every child destroy): fixed, `tests/test_plugin_dialog_wheel.py` verified.
 - WR-03 (ToastManager drops updated retry_cb on re-show): fixed, `tests/test_toast.py::test_same_category_reshow_rebinds_retry_cb` verified.
+
 IN-01 (retry re-triggers overwrite confirmation dialog) was explicitly scoped out as future polish, not a blocker — consistent with D-03's narrow re-try scope.
 
 ### Human Verification Required
