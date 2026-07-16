@@ -246,13 +246,13 @@ V171-* 全 17 要件 Complete（被覆 17/17・孤立要件なし）。締め前
   2. スクロールパターン（Canvas+Scrollbar 等）とフォントスケーリングがダイアログ間で監査され、不一致箇所が是正される
   3. 開発履歴.md の v1.7.0 表記が実際のバージョン履歴と整合する（V16-D-04 残課題の解消）
 
-**Plans**: 1/3 plans executed
+**Plans**: 2/3 plans executed
 **UI hint**: yes
 
 **Wave 1**
 
 - [x] 06-01-PLAN.md — 再試行付き非モーダルトースト通知（保存/印刷失敗・QA-02）[Wave 1]
-- [ ] 06-02-PLAN.md — UI 一貫性監査（スクロール統一・フォントハードコード是正・QA-03）[Wave 1]
+- [x] 06-02-PLAN.md — UI 一貫性監査（スクロール統一・フォントハードコード是正・QA-03）[Wave 1]
 
 **Wave 2** *(blocked on 06-01 — file_ops.py 面共有)*
 

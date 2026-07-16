@@ -51,7 +51,7 @@
 
 - [x] **V180-QA-01**: OCR→サマリの E2E モックテストが整備される（OCRRunEngine / `ocr_pipeline.py` 経由の一気通貫・実 API 非依存）
 - [x] **V180-QA-02**: エラー時リカバリー通知が改善される（再試行アクション付き非モーダルトースト・自動消滅なし・全エラーの非モーダル化はしない）
-- [ ] **V180-QA-03**: UI 一貫性が監査・修正される（スクロールパターン統一・フォントスケーリング）
+- [x] **V180-QA-03**: UI 一貫性が監査・修正される（スクロールパターン統一・フォントスケーリング）
 - [ ] **V180-QA-04**: 開発履歴.md の v1.7.0 表記整合が完了する（V16-D-04 残課題）
 
 ## Future Requirements
@@ -115,5 +115,5 @@
 | V180-ROBUST-01 | Phase 5 | Complete |
 | V180-ROBUST-03 | Phase 5 | Complete |
 | V180-QA-02 | Phase 6 | Complete |
-| V180-QA-03 | Phase 6 | Pending |
+| V180-QA-03 | Phase 6 | Complete |
 | V180-QA-04 | Phase 6 | Pending |
