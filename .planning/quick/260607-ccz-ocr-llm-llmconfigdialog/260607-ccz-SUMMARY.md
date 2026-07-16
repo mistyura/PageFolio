@@ -1,5 +1,6 @@
 ---
 quick_id: 260607-ccz
+status: complete
 phase: quick
 plan: 260607-ccz
 subsystem: ocr-dialog
