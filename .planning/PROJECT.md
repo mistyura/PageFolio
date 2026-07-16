@@ -201,10 +201,11 @@ PageFolio の既存コードベースに対する最適化プロジェクト。
 - ✓ V180-TMPL-01〜05・V180-FALL-01〜03: 名前付きプロンプトテンプレート CRUD（保存/選択/削除/リネーム・外部mdファイル連動・全プロバイダ横断共有）・明示設定型プロバイダーフォールバック（送信先確認再提示つき・自動別ベンダー送信なし） — v1.8.0 Phase 2
 - ✓ V180-REFAC-03・V180-QA-01: `ocr_dialog.py` の producer-consumer 駆動部を `OCRRunEngine`（`pagefolio/ocr_engine.py`）へ抽出し `OCRDialog` を薄い委譲ラッパー化・OCR→サマリ E2E モックテスト整備（`tests/test_ocr_engine.py`・実スレッド/キュー駆動） — v1.8.0 Phase 3
 - ✓ V180-PERF-01/02/03・V180-ROBUST-01・V180-ROBUST-03: サムネイル窓内可視範囲仮想化（`pagination.py` 純関数 + `viewer.py` 統合・デバウンス+アイドル先読み）・`thumb_cache` LRU化（`LruCache`・`THUMB_CACHE_MAX=300`）・`selected_pages` 全ページインデックス不変条件回帰・Blob ライフサイクルのリーク検出強化（`_released`+`__del__`・AV衝突安全網の回帰テスト）・ShortcutsDialog WR-01/WR-02 解消 — v1.8.0 Phase 5
+- ✓ V180-QA-02/03/04: 再試行アクション付き非モーダルトースト通知（保存3操作+印刷・`ToastManager`新設）・UI一貫性監査（スクロール/フォントスケーリング是正・8ファイル監査）・開発履歴.md 版番整合（V16-D-04 残課題解消）。あわせて Core Value 直撃バグ（`insert_redo` 非対称復元・ページ重複）を修正（D-17） — v1.8.0 Phase 6
 
 ### Active
 
-- v1.8.0 の要件は `.planning/REQUIREMENTS.md` で定義中（AI強化・堅牢性・品質保証・バッチ複数ファイル OCR の 4 本柱）。Phase 1〜3・5 完了、Phase 4・6 は継続中（Phase 4 はROADMAP上 Complete 済みだが本ドキュメントへの要件個別記載は未実施）。
+- v1.8.0 の要件は `.planning/REQUIREMENTS.md` で定義中（AI強化・堅牢性・品質保証・バッチ複数ファイル OCR の 4 本柱）。Phase 1〜3・5〜6 完了、Phase 4 はROADMAP上 Complete 済みだが本ドキュメントへの要件個別記載は未実施（既知の記録ギャップ）。
 
 ### Out of Scope
 
@@ -320,4 +321,4 @@ PageFolio の既存コードベースに対する最適化プロジェクト。
 4. 決定事項 → Key Decisions を更新
 
 ---
-*Last updated: 2026-07-16 — v1.8.0 Phase 5（堅牢性強化：サムネイル仮想化 + Blobリーク検出 + ShortcutsDialog修正）完了. Working branch: dev/v1.8.0.*
+*Last updated: 2026-07-16 — v1.8.0 Phase 6（品質保証仕上げ：通知UX・UI一貫性監査・ドキュメント整合）完了。v1.8.0 全6フェーズ完了（マイルストーンクローズは未実施）. Working branch: dev/v1.8.0.*
