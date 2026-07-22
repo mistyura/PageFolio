@@ -1347,6 +1347,103 @@ class TestGeminiProviderThinkingConfig:
             )
 
 
+# ===== gemini-3 世代以降: サンプリングパラメータ / thinkingConfig 省略 =====
+
+
+class TestGeminiProviderNewGenerationPayload:
+    """gemini-3 世代以降で temperature / thinkingConfig を送らない回帰テスト。
+
+    gemini-3.6-flash / gemini-3.5-flash-lite 等の新世代モデルは
+    temperature / topP / topK 等のサンプリングパラメータや
+    thinkingConfig を含むリクエストを 400 INVALID_ARGUMENT で
+    拒否するため、generationConfig から省略する。
+    """
+
+    NEW_GEN_MODELS = (
+        "gemini-3.5-flash",
+        "gemini-3.5-flash-lite",
+        "gemini-3.6-flash",
+        "gemini-3.0-pro",
+    )
+
+    def test_new_gen_no_sampling_params(self):
+        """新世代モデルの generationConfig にサンプリングパラメータが無い。"""
+        from pagefolio.ocr_providers import GeminiProvider
+
+        for model in self.NEW_GEN_MODELS:
+            p = GeminiProvider(api_key="k", model=model, temperature=0.1)
+            cfg = p._build_payload("b64", "p")["generationConfig"]
+            for key in ("temperature", "topP", "topK"):
+                assert key not in cfg, (
+                    f"{model} の generationConfig に {key} が含まれた"
+                )
+
+    def test_new_gen_no_thinking_config(self):
+        """新世代モデルの generationConfig に thinkingConfig が無い。"""
+        from pagefolio.ocr_providers import GeminiProvider
+
+        for model in self.NEW_GEN_MODELS:
+            p = GeminiProvider(api_key="k", model=model)
+            cfg = p._build_payload("b64", "p")["generationConfig"]
+            assert "thinkingConfig" not in cfg, (
+                f"{model} の generationConfig に thinkingConfig が含まれた"
+            )
+
+    def test_new_gen_keeps_max_output_tokens(self):
+        """新世代モデルでも maxOutputTokens は送信される。"""
+        from pagefolio.ocr_providers import GeminiProvider
+
+        p = GeminiProvider(api_key="k", model="gemini-3.6-flash", max_tokens=4096)
+        cfg = p._build_payload("b64", "p")["generationConfig"]
+        assert cfg["maxOutputTokens"] == 4096
+
+    def test_versionless_alias_treated_as_new_gen(self):
+        """世代判定不能なエイリアスは新世代扱いでパラメータを省略する。"""
+        from pagefolio.ocr_providers import GeminiProvider
+
+        p = GeminiProvider(api_key="k", model="gemini-flash-latest")
+        cfg = p._build_payload("b64", "p")["generationConfig"]
+        assert "temperature" not in cfg
+        assert "thinkingConfig" not in cfg
+
+    def test_legacy_flash_keeps_temperature_and_thinking(self):
+        """gemini-2.5-flash は従来どおり temperature + thinkingConfig を送る。"""
+        from pagefolio.ocr_providers import GeminiProvider
+
+        p = GeminiProvider(api_key="k", model="gemini-2.5-flash", temperature=0.1)
+        cfg = p._build_payload("b64", "p")["generationConfig"]
+        assert cfg["temperature"] == 0.1
+        assert cfg["thinkingConfig"] == {"thinkingBudget": 0}
+
+    def test_gemma_keeps_temperature(self):
+        """gemma 等の非 gemini 系は従来どおり temperature を送る（H-7 挙動維持）。"""
+        from pagefolio.ocr_providers import GeminiProvider
+
+        p = GeminiProvider(api_key="k", model="gemma-3-27b-it", temperature=0.2)
+        cfg = p._build_payload("b64", "p")["generationConfig"]
+        assert cfg["temperature"] == 0.2
+        assert "thinkingConfig" not in cfg
+
+    def test_text_payload_shares_new_gen_config(self):
+        """テキストのみ payload（サマリ経路）でも新世代の省略が効く。"""
+        from pagefolio.ocr_providers import GeminiProvider
+
+        p = GeminiProvider(api_key="k", model="gemini-3.6-flash", temperature=0.1)
+        cfg = p._build_text_payload("doc text", "prompt")["generationConfig"]
+        assert "temperature" not in cfg
+        assert "thinkingConfig" not in cfg
+
+    def test_model_generation_parsing(self):
+        """_model_generation の世代番号パース（判定不能は None）。"""
+        from pagefolio.ocr_providers import GeminiProvider
+
+        assert GeminiProvider._model_generation("gemini-2.5-flash") == 2
+        assert GeminiProvider._model_generation("gemini-3.6-flash") == 3
+        assert GeminiProvider._model_generation("gemini-3.5-flash-lite") == 3
+        assert GeminiProvider._model_generation("gemini-flash-latest") is None
+        assert GeminiProvider._model_generation("gemma-3-27b-it") is None
+
+
 # ===== M-9 回帰テスト: ClaudeProvider text キー欠落で KeyError 非伝播 =====
 
 
