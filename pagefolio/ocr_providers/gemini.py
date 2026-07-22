@@ -4,6 +4,7 @@
 """Google Gemini generateContent API プロバイダ"""
 
 import json
+import re
 import socket
 import urllib.error
 import urllib.request
@@ -31,7 +32,14 @@ class GeminiProvider(OCRProvider):
         "{model}:generateContent"
     )
     MODELS_ENDPOINT = "https://generativelanguage.googleapis.com/v1beta/models"
-    RECOMMENDED_MODELS = ["gemini-2.5-flash", "gemini-2.5-pro"]  # D-08
+    # D-08。gemini-3.x 系は v1.8.1 で実機検証済み（400 解消・退行なし）
+    RECOMMENDED_MODELS = [
+        "gemini-3.6-flash",
+        "gemini-3.5-flash",
+        "gemini-3.5-flash-lite",
+        "gemini-2.5-flash",
+        "gemini-2.5-pro",
+    ]
 
     def __init__(self, api_key, model, timeout=120, max_tokens=4096, temperature=0.1):
         """初期化。
@@ -41,7 +49,9 @@ class GeminiProvider(OCRProvider):
           model:       使用するモデル ID（例: "gemini-2.5-flash"）
           timeout:     HTTP タイムアウト秒数（既定: 120）
           max_tokens:  最大出力トークン数（既定: 4096）
-          temperature: 温度パラメータ（OCR 用途は低温推奨、既定: 0.1）
+          temperature: 温度パラメータ（OCR 用途は低温推奨、既定: 0.1）。
+                       gemini-3 世代以降はサンプリングパラメータ指定が
+                       400 で拒否されるため送信されず、この値は無視される
         """
         self.api_key = api_key
         self.model = model
@@ -70,20 +80,50 @@ class GeminiProvider(OCRProvider):
         }
 
     def _build_generation_config(self):
-        """generationConfig（temperature / maxOutputTokens / thinking）を構築する。
+        """generationConfig（maxOutputTokens / temperature / thinking）を構築する。
 
         _build_payload と _build_text_payload の共有経路（M-4/H-7 の
         thinkingConfig 分岐を一元化）。
+
+        gemini-3 世代以降は temperature / topP / topK 等のサンプリング
+        パラメータと thinkingConfig（thinkingBudget）を含むリクエストが
+        400 INVALID_ARGUMENT で拒否されるため、世代を判定できた
+        gemini-2.x 以前に限って送信する（省略は全世代で合法＝安全側）。
         """
         gen_config = {
-            "temperature": self.temperature,
             "maxOutputTokens": self.max_tokens,
         }
-        # M-4/H-7: thinkingConfig は gemini の non-pro（flash 等）のみに送る
-        if self.model.startswith("gemini") and "pro" not in self.model:
+        legacy = self._is_legacy_gemini()
+        # temperature は gemini-2.x 以前と gemma 等の非 gemini 系のみに送る
+        # （gemini-3 世代以降はサンプリングパラメータ指定自体が 400 になる）
+        if legacy or not self.model.startswith("gemini"):
+            gen_config["temperature"] = self.temperature
+        # M-4/H-7: thinkingConfig は gemini-2.x 以前の non-pro（flash 等）のみに送る
+        if legacy and "pro" not in self.model:
             # flash 等: thinkingConfig は generationConfig 直下（Pitfall-C・D-09）
             gen_config["thinkingConfig"] = {"thinkingBudget": 0}
         return gen_config
+
+    @staticmethod
+    def _model_generation(model):
+        """モデル ID 先頭の世代番号を int で返す（判定不能は None）。
+
+        例: "gemini-2.5-flash" → 2、"gemini-3.6-flash" → 3、
+        "gemini-flash-latest" / "gemma-3-27b-it" → None。
+        """
+        m = re.match(r"gemini-(\d+)", model)
+        return int(m.group(1)) if m else None
+
+    def _is_legacy_gemini(self):
+        """temperature / thinkingConfig を送ってよい旧世代 gemini か判定する。
+
+        gemini-3 世代以降は外部からのサンプリング温度・thinking 制御が
+        400 INVALID_ARGUMENT で拒否されるため、世代番号を明示的に 2 以下と
+        判定できた場合のみ True。バージョンレスのエイリアス
+        （gemini-flash-latest 等）は最新世代とみなし False（安全側）。
+        """
+        gen = self._model_generation(self.model)
+        return gen is not None and gen <= 2
 
     def _build_text_payload(self, text, prompt):
         """テキストのみの generateContent リクエストボディを構築する（内部）。
