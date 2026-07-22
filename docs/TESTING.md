@@ -36,7 +36,7 @@ pythonpath = ["src"]
 pytest
 ```
 
-現在、`tests/` 配下には 33 個のテストファイルがあり、合計 1101 件のテストが収集されます
+現在、`tests/` 配下には 33 個のテストファイルがあり、合計 1109 件のテストが収集されます
 （`pytest --collect-only -q` で確認可能）。
 
 ### 詳細出力付き
@@ -86,7 +86,7 @@ pytest tests/test_pdf_ops.py::TestPageRotate::test_rotate_90
 | `tests/test_ocr_engine.py` | `pagefolio/ocr_engine.py`, `pagefolio/ocr_pipeline.py` | `OCRRunEngine`（consumer 駆動の軽量実行クラス）のユニットテスト |
 | `tests/test_ocr_pipeline.py` | `pagefolio/ocr_pipeline.py`, `pagefolio/ocr.py` | OCR パイプラインのキュー投入・センチネル送出等のユニットテスト |
 | `tests/test_ocr_fallback.py` | `pagefolio/ocr_fallback.py` | OCR フォールバック候補選択（`next_fallback_candidate` / `next_summary_candidate`） |
-| `tests/test_ocr_providers.py` | `pagefolio/ocr_providers/` | OCR プロバイダ（`OCRProvider` 基底・LMStudio/Claude/Gemini/Tesseract/Ollama/RunPod 各実装） |
+| `tests/test_ocr_providers.py` | `pagefolio/ocr_providers/` | OCR プロバイダ（`OCRProvider` 基底・LMStudio/Claude/Gemini/Tesseract/Ollama/RunPod 各実装）。`TestGeminiProviderNewGenerationPayload`（v1.8.1・回帰 8 件）で gemini-3 世代以降の `temperature`/`thinkingConfig` 省略とバージョンレスエイリアスの新世代扱いを検証 |
 | `tests/test_ocr_dialog_center.py` | `pagefolio/ocr_dialog.py` | `OCRDialog._center()` の画面高クランプ回帰テスト |
 | `tests/test_batch_ocr_dialog.py` | `pagefolio/dialogs/batch_ocr.py`, `pagefolio/batch_ocr_state.py` | `BatchOCRDialog` の E2E モックテスト（失敗分離・2階層キャンセル・エッジ） |
 | `tests/test_batch_ocr_state.py` | `pagefolio/batch_ocr_state.py` | バッチ OCR 状態管理のユニットテスト（Tk/fitz 非依存純ロジック層） |
@@ -222,10 +222,10 @@ ruff check . && ruff format .
 ## 既知の制約
 
 - **フルスイート実行時の Tcl/Tk フレーキー**: `requirements.txt` 指定バージョン（PyMuPDF 1.28.0・Pillow 12.3.0・
-  tkinterdnd2 0.6.2）の環境で 1101 件のフルテストスイートを複数回連続実行すると、毎回異なる 2 件程度が
+  tkinterdnd2 0.6.2）の環境で 1109 件のフルテストスイートを複数回連続実行すると、毎回異なる 2 件程度が
   `_tkinter.TclError`（アサーション失敗ではなく Tk インタプリタ生成失敗。例:
   `couldn't read file "...ttk/clamTheme.tcl"` だが実ファイルは存在するケース）で ERROR になることがある
-  （単体実行では常に合格）。1101 件分の `tk.Tk()` 生成/破棄を単一 pytest プロセスで連続実行することによる
+  （単体実行では常に合格）。1109 件分の `tk.Tk()` 生成/破棄を単一 pytest プロセスで連続実行することによる
   Tcl/Tk リソース消耗系のフレーキーと推定されており、アプリ本体の実行時動作には影響しない。該当テストが
   ERROR になった場合は、対象ファイル単体で再実行して合否を確認すること。
   ```bash

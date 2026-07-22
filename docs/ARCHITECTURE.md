@@ -149,6 +149,7 @@ graph TD
 | `OCRMixin` | `pagefolio/ocr.py` | プロバイダ生成（`build_provider`）・並列 OCR 実行（`run_parallel`）・プロンプト解決・ボタン状態管理を実装する |
 | `PrintOpsMixin` | `pagefolio/print_ops.py` | 印刷（既定 PDF ハンドラ送信・`write_print_tempfile`）を実装する |
 | `OCRProvider` | `pagefolio/ocr_providers/base.py` | `ocr_image(b64_png, prompt)` / `ocr_image_ex` / `list_models()` を持つ抽象基底クラス。`complete_text_ex` / `supports_text_prompt` で全ページ統合サマリを生成する。サブクラスは `claude.py` / `gemini.py` / `lmstudio.py` / `ollama.py` / `runpod.py` / `tesseract.py` に分割配置される |
+| `GeminiProvider._is_legacy_gemini` | `pagefolio/ocr_providers/gemini.py` | モデル ID 先頭の世代番号（`_model_generation`）が 2 以下と判定できた場合のみ `True` を返す世代ゲート（v1.8.1）。`_build_generation_config()` はこれを見て `temperature` / `thinkingConfig`（thinkingBudget）の送信要否を切り替える |
 | `OCRRunEngine` | `pagefolio/ocr_engine.py` | 単一ファイル/バッチ OCR 双方が再利用する consumer 側実行エンジン。キュー・ワーカースレッド・`PipelineState` を所有し、完了理由別コールバック（`on_complete`/`on_cancelled`/`on_fatal`）を提供する |
 | `PipelineState` / `consume_one` / `try_enqueue` / `send_sentinels` | `pagefolio/ocr_pipeline.py` | 複数ページ OCR 実行の producer-consumer 純ロジック層（Tk/fitz 非依存）。共有カウンタ・fatal 判定・サーキットブレーカーを担う |
 | `BatchFileEntry` / `BatchState` | `pagefolio/batch_ocr_state.py` | バッチ OCR のファイルキュー状態遷移とファイル軸進捗集計を担う純ロジック層 |
@@ -256,6 +257,7 @@ PageFolio/
 - 組み込みプロバイダは `pagefolio/ocr_providers/` パッケージ配下に 1 ファイル 1 プロバイダで実装され、`OCRProvider` 抽象基底クラス（`base.py`）を継承する
 - プラグインは `PluginManager.register_ocr_provider(name, cls)` を通じて独自の `OCRProvider` サブクラスを登録できる。登録名が組み込みプロバイダ名（claude/gemini/lmstudio/tesseract/ollama/runpod/off）と衝突する場合は拒否され、プラグイン同士の重複は後勝ちで上書きされる
 - `ocr_providers/registry.py` はプロバイダ名から API キー環境変数名（例: claude → `ANTHROPIC_API_KEY`）を解決する中央レジストリであり、標準ライブラリ `os` 以外に依存しない。新規プロバイダの機密キー定義追加はこの 1 ファイルに閉じる設計となっている
+- **Gemini 新世代モデルのパラメータ制限対応（v1.8.1）**: gemini-3 世代以降は `temperature` 等のサンプリングパラメータおよび `thinkingConfig`（thinkingBudget）の指定が 400 INVALID_ARGUMENT で拒否される。`GeminiProvider._is_legacy_gemini()` がモデル ID 先頭の世代番号（`_model_generation`、例: `gemini-2.5-flash` → 2）を判定し、2 以下の旧世代にのみこれらのパラメータを送信する。バージョンレスのエイリアス（`gemini-flash-latest` 等）は世代判定不能のため新世代扱い（省略）とし、安全側に倒す。gemma 等の非 gemini 系モデルは従来どおり `temperature` を送信する
 
 ### API キーのセキュリティ
 

@@ -63,7 +63,7 @@ PageFolio の設定は実行時に自動生成される JSON ファイル `pagef
 | `ocr_scale` | 任意 | `1.5` | OCR 用ページ画像の解像度倍率。1.0〜4.0 にクランプ。低スペック PC は 1.5 推奨 |
 | `ocr_timeout` | 任意 | `120` | OCR HTTP タイムアウト秒数。10〜900 にクランプ |
 | `ocr_max_tokens` | 任意 | `-1` | OCR 最大出力トークン数。-1〜262144 にクランプ。`-1` は「モデルの最大値に委ねる」（LM Studio / Ollama 専用。Claude / Gemini / RunPod は `-1` 指定時に内部で 4096 にクランプされる） |
-| `ocr_temperature` | 任意 | `0.1` | OCR 温度パラメータ。0.0〜2.0 にクランプ。低温（0.0〜0.2）推奨 |
+| `ocr_temperature` | 任意 | `0.1` | OCR 温度パラメータ。0.0〜2.0 にクランプ。低温（0.0〜0.2）推奨。**Gemini の gemini-3 世代以降（例: `gemini-3.6-flash`）ではこの値は送信されず無視される**（→ [Gemini プロバイダ設定](#gemini-プロバイダ設定)） |
 | `ocr_concurrency` | 任意 | `2` | OCR 並列処理数。1〜8 にクランプ（推奨: 2） |
 | `ocr_prompt_preset` | 任意 | `"text"` | OCR プロンプトプリセット。`"text"` / `"table"` / `"markdown"` |
 | `ocr_custom_prompt` | 任意 | `""` | カスタム OCR プロンプト。非空の場合はプリセットより優先される。外部 md ファイル連動あり（→ [カスタム / サマリプロンプトの仕様](#カスタム--サマリプロンプトの仕様)） |
@@ -185,6 +185,17 @@ Markdown 整形表示のオン/オフは **OCR ダイアログのプリセット
 
 > **API キーについて:** Gemini API キーは `pagefolio_settings.json` には保存されません。
 > 環境変数 `GEMINI_API_KEY`（未設定時は `GOOGLE_API_KEY` にフォールバック）または OCR ダイアログのキー入力欄（セッションのみ）から設定してください。
+
+> **新世代モデル（gemini-3.x）のパラメータ制限（v1.8.1）:** Google の gemini-3 世代以降（例:
+> `gemini-3.6-flash` / `gemini-3.5-flash-lite`）は `temperature` などのサンプリングパラメータや
+> `thinkingConfig`（thinkingBudget）を指定すると 400 INVALID_ARGUMENT で拒否される。
+> `GeminiProvider`（`pagefolio/ocr_providers/gemini.py`）はモデル ID 先頭の世代番号を判定し
+> （`_is_legacy_gemini`）、世代番号が明示的に 2 以下と判定できた旧世代モデルにのみ
+> `ocr_temperature` の値と thinkingConfig を送信する。バージョンレスのエイリアス
+> （`gemini-flash-latest` 等、世代番号を判定できないモデル ID）は安全側で新世代扱いとなり、
+> どちらも省略される（省略は全世代で合法な操作のため安全側）。`gemma` 等の非 gemini 系モデルには
+> 従来どおり `temperature` を送信する。つまり `ocr_temperature` 設定は gemini-3.x 選択時は
+> **設定しても実際の OCR 挙動には反映されない**（無視される）。
 
 ---
 

@@ -248,8 +248,11 @@ API キーは `pagefolio_settings.json` には保存されません。
 
 | モデル ID | 特徴 |
 |-----------|------|
-| `gemini-2.5-flash` | 高速・低コスト（thinking 無効化対応） |
-| `gemini-2.5-pro` | 高精度（thinkingConfig 省略） |
+| `gemini-3.6-flash` | 最新世代・高速（temperature / thinkingConfig は送信されない） |
+| `gemini-3.5-flash` | 新世代・高速（temperature / thinkingConfig は送信されない） |
+| `gemini-3.5-flash-lite` | 新世代・軽量（temperature / thinkingConfig は送信されない） |
+| `gemini-2.5-flash` | 旧世代・高速（thinking 無効化対応） |
+| `gemini-2.5-pro` | 旧世代・高精度（thinkingConfig 省略） |
 
 #### コンストラクタ
 
@@ -267,10 +270,19 @@ GeminiProvider(api_key, model, timeout=120, max_tokens=4096, temperature=0.1)
 
 #### モデル別パラメータ制御
 
-| モデル種別 | `thinkingConfig` の扱い |
-|-----------|----------------------|
-| `flash` 等（non-pro） | `thinkingBudget: 0` を送信（thinking を無効化） |
-| `pro` 系 | 省略（`pro` は thinking 無効化不可のため） |
+`gemini-N.M-...` の先頭世代番号 `N` が **2 以下と明示判定できた場合のみ**（`_is_legacy_gemini()`）
+`temperature` と `thinkingConfig` を送信する。gemini-3 世代以降はサンプリングパラメータ・
+thinking 制御の指定自体が 400 INVALID_ARGUMENT で拒否されるため省略する。
+バージョンレスのエイリアス（`gemini-flash-latest` 等）は世代番号を判定できず新世代扱い（安全側）となり、
+同様に両方とも省略される。
+
+| モデル種別 | `temperature` の扱い | `thinkingConfig` の扱い |
+|-----------|--------------------|----------------------|
+| gemini-2.x 以前・`pro` 系以外（flash 等） | 送信 | `thinkingBudget: 0` を送信（thinking を無効化） |
+| gemini-2.x 以前・`pro` 系 | 送信 | 省略（`pro` は thinking 無効化不可のため） |
+| gemini-3.x 以降（gemini-3.6-flash 等） | 省略 | 省略 |
+| バージョンレスのエイリアス（gemini-flash-latest 等） | 省略 | 省略 |
+| gemini 以外（gemma 等） | 送信 | 省略（thinkingConfig 非対応のため常に省略） |
 
 #### 並列度
 
@@ -304,7 +316,7 @@ tesseract --version
 tesseract --list-langs
 ```
 
-アプリ起動時に `_detect_tesseract()` が自動的に Tesseract の存在と利用可能言語を検出します。
+`_detect_tesseract()` は Tesseract の存在と利用可能言語を検出しますが、アプリ起動時には呼ばれません。OCR 実行時（`ocr.py` の `build_provider`）と各 OCR 関連ダイアログの構築時（`llm_config` ダイアログ・`ocr_dialog.py`）に都度呼び出され、常に最新のインストール状態を反映します。
 `jpn` が利用可能な場合は `jpn+eng` で実行し、未インストールの場合は `eng` にフォールバックします。
 
 #### コンストラクタ
