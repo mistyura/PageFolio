@@ -2,19 +2,19 @@
 gsd_state_version: 1.0
 milestone: v1.8.0
 milestone_name: 実用性の最大化・エコシステム洗練・堅牢性強化
-status: Awaiting next milestone
+status: "260722-gae shipped — PR #34（v1.8.1 Gemini 400 修正・マージ待ち）"
 stopped_at: Phase 06 complete — v1.8.0 全6フェーズ完了、マイルストーンクローズ待ち
-last_updated: "2026-07-16T12:46:15.133Z"
-last_activity: 2026-07-16
-last_activity_desc: Milestone v1.8.0 completed and archived
+last_updated: "2026-07-22T09:42:02.668Z"
+last_activity: 2026-07-22
+current_phase: 06
+current_phase_name: ux-ui
 progress:
   total_phases: 6
   completed_phases: 6
   total_plans: 22
   completed_plans: 22
   percent: 100
-current_phase: 06
-current_phase_name: ux-ui
+last_activity_desc: Milestone v1.8.0 completed and archived
 ---
 
 # Project State
@@ -30,8 +30,8 @@ See: .planning/PROJECT.md (updated 2026-07-16)
 
 Phase: Milestone v1.8.0 complete
 Plan: —
-Status: Awaiting next milestone
-Last activity: 2026-07-16 — Milestone v1.8.0 completed and archived
+Status: 260722-gae shipped — PR #34（v1.8.1 Gemini 400 修正・マージ待ち）
+Last activity: 2026-07-22
 
 ## v1.8.0 Phase Map
 
@@ -315,7 +315,9 @@ Stopped at: 260722-gae（v1.8.1 Gemini 400 修正）の GSD 精査完了（GSD-A
 - 260722-gae の PR をマージし、注釈付きタグ・GitHub Release・PyInstaller リビルド
   （`dist/PageFolio` 更新）を実施する（GSD-AUDIT-DIRECTIVE 項目 5。サンプルプロンプト
   架空化は dist 直接編集のためリビルド時の上書き有無を要確認）
+
 - 先送り課題（260722-gae 精査項目 3 ②③）: LLM 設定ダイアログへの「新世代 Gemini では
   temperature 欄が無視される」注記（UI 変更）/ 新世代 thinking 有効時の応答時間・
   トークン消費の実測（実 API 必要）— 次マイルストーン計画時に検討
+
 - Start the next milestone with /gsd-new-milestone
