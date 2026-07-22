@@ -32,7 +32,14 @@ class GeminiProvider(OCRProvider):
         "{model}:generateContent"
     )
     MODELS_ENDPOINT = "https://generativelanguage.googleapis.com/v1beta/models"
-    RECOMMENDED_MODELS = ["gemini-2.5-flash", "gemini-2.5-pro"]  # D-08
+    # D-08。gemini-3.x 系は v1.8.1 で実機検証済み（400 解消・退行なし）
+    RECOMMENDED_MODELS = [
+        "gemini-3.6-flash",
+        "gemini-3.5-flash",
+        "gemini-3.5-flash-lite",
+        "gemini-2.5-flash",
+        "gemini-2.5-pro",
+    ]
 
     def __init__(self, api_key, model, timeout=120, max_tokens=4096, temperature=0.1):
         """初期化。
