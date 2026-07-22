@@ -64,6 +64,10 @@ status: complete
 - **実機確認済み（2026-07-22・ユーザー実施）**: 手動ビルドによる実機で、実際の
   Gemini API キーを使い gemini-3.6-flash / gemini-3.5-flash-lite の OCR を確認。
   400 エラーは解消し問題なし。
+- **gemini-3.5-flash の退行なしも実機確認済み（2026-07-22・ユーザー実施）**:
+  従来から正常だった gemini-3.5-flash は世代ゲートにより temperature /
+  thinkingConfig の送信が「あり」→「なし」へ変わるが、新バージョンでの OCR
+  動作を確認し問題なし（3 モデルすべて実機グリーン）。
 
 ## 注意点・潜在リスク
 
