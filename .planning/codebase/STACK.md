@@ -1,75 +1,109 @@
 # Technology Stack
 
-**Analysis Date:** 2026-07-16
+**Analysis Date:** 2026-07-22
 
 ## Languages
 
 **Primary:**
-- Python 3.8+ - Entire application, with Python 3.9+ optimizations for `ThreadPoolExecutor.shutdown(cancel_futures=True)`
-
-**Secondary:**
-- None - Pure Python project
+- Python 3.8+ - Desktop application for Windows 11
 
 ## Runtime
 
 **Environment:**
-- Python 3.8+ (minimum 3.8, optimized for 3.9+)
-- Windows 11 (primary target OS)
+- Python 3.8+ (CPython)
 
 **Package Manager:**
-- pip
-- Lockfile: `requirements.txt` (present, pinned versions)
+- pip (requirements.txt)
+- Lockfile: present (via pip freeze compatible format)
 
 ## Frameworks
 
-**Core:**
-- Tkinter (standard library) - GUI framework for Windows 11
-- PyMuPDF 1.28.0 - PDF document manipulation (reading, rendering, editing)
-- Pillow 12.3.0 - Image processing (PIL, used for thumbnails and image conversion)
-- tkinterdnd2 0.6.2 - Drag & drop support for Tkinter widgets (fallback to standard Tk if unavailable)
+**Core UI:**
+- Tkinter (Python standard library) - GUI framework
+  - ttk (themed widgets) for modern widget styling
+  - Canvas, PanedWindow for complex layouts
+
+**PDF Processing:**
+- PyMuPDF (fitz) 1.28.0 - PDF parsing, rendering, manipulation
+  - Supports page rotation, cropping, deletion, insertion, merge
+  - Vision capabilities for OCR via image rendering
+  - Password protection (AES-256 encryption/decryption)
+
+**Image Processing:**
+- Pillow (PIL) 12.3.0 - Image format handling, base64 encoding for OCR APIs
+
+**UI Enhancements:**
+- tkinterdnd2 0.6.2 - Drag & drop support for thumbnail reordering and file drops
 
 **Testing:**
-- pytest 9.1.1 - Test runner and framework
-- pytest-cov 7.1.0 - Coverage reporting
+- pytest 9.1.1 - Unit test runner
+- pytest-cov 7.1.0 - Code coverage reporting
 
-**Build/Dev:**
-- pyinstaller 6.21.0 - CLI executable generation (--onedir format for Windows)
-- ruff 0.15.20 - Linting and code formatting (88-char line length)
+**Build/Distribution:**
+- PyInstaller 6.21.0 - Standalone Windows executable bundling
+  - Spec file: `PageFolio.spec`
+  - Output: `.exe` distribution
+
+**Development Tools:**
+- ruff 0.15.20 - Linting (E, F, W, I, S, B rules) and auto-formatting
+  - Line length: 88 characters
 
 ## Key Dependencies
 
 **Critical:**
-- PyMuPDF 1.28.0 - Single source of truth for PDF rendering, document manipulation, and page operations (rotation, cropping, deletion, redaction). Used across `page_ops.py`, `file_ops.py`, `redact_ops.py`
-- Pillow 12.3.0 - Image rendering for thumbnails (`thumb_cache`, scale 0.22x) and preview generation (scale 1.5x zoom)
-- Tkinter (stdlib) - All UI rendering in `pagefolio/` mixins and dialogs (`ui_builder.py`, dialogs package)
+- PyMuPDF 1.28.0 - All PDF operations depend on this core library
+- Pillow 12.3.0 - Required for image export and base64 encoding for OCR
+- tkinterdnd2 0.6.2 - Enables drag-and-drop UI interactions (optional at import, degrades gracefully)
 
 **Infrastructure:**
-- tkinterdnd2 0.6.2 - Optional runtime dependency; graceful fallback to standard Tk if import fails (`__main__.py`)
+- urllib (stdlib) - HTTP requests for cloud OCR APIs (Claude, Gemini, RunPod)
+- subprocess (stdlib) - Tesseract invocation for local OCR
+- json (stdlib) - Settings persistence
+- threading/concurrent.futures (stdlib) - Background OCR execution with ThreadPoolExecutor
 
 ## Configuration
 
-**Environment:**
-- API keys (ANTHROPIC_API_KEY, GEMINI_API_KEY, GOOGLE_API_KEY, RUNPOD_API_KEY) supplied via environment variables only
-- Settings file: `pagefolio_settings.json` (JSON format in exe/project directory)
-- External prompt files: `ocr_custom_prompt.md`, `ocr_summary_prompt.md` (optional, same directory as executable)
+**Runtime Settings:**
+- File: `pagefolio_settings.json` (JSON format, UTF-8)
+- Location: Same directory as executable (frozen) or project root (development)
+- Persisted settings: theme, font_size, lang, OCR provider config, UI geometry, prompt templates
+- API keys NOT persisted (environment variables only)
 
-**Build:**
-- `pyproject.toml` - Ruff linting/formatting config, pytest configuration
-- `PyFolio.spec` - PyInstaller spec for --onedir executable generation
-- Ruff settings: line-length 88, enabled rules: E/F/W/I/S/B
+**Development Configuration:**
+- `pyproject.toml` - Ruff linting rules and pytest configuration
+  - Ruff select: E (pycodestyle), F (pyflakes), W (warnings), I (isort), S (bandit), B (flake8-bugbear)
+  - Per-file ignores: S101 (assert) in tests
+  - Test path: `tests/`
+
+**External Prompt Files (Optional):**
+- `ocr_custom_prompt.md` - Custom OCR instruction (managed externally, reloaded per invocation)
+- `ocr_summary_prompt.md` - Summary generation instruction (managed externally, reloaded per invocation)
+- Both files: UTF-8, same directory as executable/project root
 
 ## Platform Requirements
 
 **Development:**
-- Python 3.8+ (3.9+ recommended for concurrent.futures optimizations)
-- Windows 11 (though code has Linux/macOS compatibility in UI framework layer, printing is Windows-only)
-- Visual C++ redistributable (bundled by PyInstaller in `_internal/`)
+- Windows 11 (primary target)
+- Python 3.8+ interpreter
+- pip for dependency installation
+- Optional: Tesseract OCR engine (for local OCR)
+- Optional: LM Studio (localhost:1234 for local LLM)
+- Optional: Ollama (localhost:11434 for local LLM)
+- Environment variables: ANTHROPIC_API_KEY, GEMINI_API_KEY, GOOGLE_API_KEY, RUNPOD_API_KEY (if using cloud OCR)
 
 **Production:**
-- Windows 11
-- No external runtime dependencies beyond included `_internal/` folder
-- Bundled with PyInstaller --onedir, distributes as `PageFolio/` folder with `PageFolio.exe` and `_internal/` subdirectory
+- Windows 11 (distributed as `.exe` via PyInstaller)
+- Standalone executable (no Python installation required by end users)
+- Optional: Tesseract, LM Studio, Ollama for local OCR (external installations)
+- Environment variables accessible to the executable process (for cloud API keys)
+
+## Architecture Notes
+
+- **UI Threading:** Single-threaded Tkinter main loop with background generation counters (`_preview_gen`, `_thumb_gen`) for debounced renders
+- **OCR Execution:** ThreadPoolExecutor for parallel API calls (concurrency varies by provider)
+- **State Persistence:** Settings via JSON, undo/redo via deque with optional blob tempfile for large page captures
+- **Plugin System:** Dynamic loading from `plugins/` directory with standardized lifecycle hooks
 
 ---
 
-*Stack analysis: 2026-07-16*
+*Stack analysis: 2026-07-22*

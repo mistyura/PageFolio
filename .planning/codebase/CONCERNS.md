@@ -1,222 +1,324 @@
 # Codebase Concerns
 
-**Analysis Date:** 2026-07-16
+**Analysis Date:** 2026-07-22
 
 ## Tech Debt
 
-**Large Monolithic Dialog Module:**
-- Issue: `pagefolio/ocr_dialog.py` is 2537 lines, combining UI state management, progress tracking, result rendering, export, and cancellation logic in a single file
+**OCR Dialog Module Size:**
+- Issue: `pagefolio/ocr_dialog.py` remains 2537 lines despite OCRRunEngine extraction (Phase 3 of v1.8.0)
 - Files: `pagefolio/ocr_dialog.py`
-- Impact: Difficult to test individual concerns; high cognitive load when debugging; changes to one feature risk affecting others
-- Fix approach: Extract UI builder (section construction), result renderer (Markdown parsing/display), and progress state into separate modules; keep OCRDialog as orchestrator
+- Impact: 
+  - High cognitive complexity for maintenance and testing
+  - Multiple responsibilities (UI rendering, progress tracking, result export, Markdown formatting)
+  - Risk of unintended side effects when modifying progress flow or result handling
+  - Test parallelization hindered by fixture setup complexity
+- Fix approach: 
+  - Consider extracting Markdown rendering (`_insert_markdown`) into separate module
+  - Extract result export/save logic (`_on_export`) into dedicated class
+  - Move preset note generation (`_update_preset_note`) to shared utility
+  - Potential follow-up: Extract OCR result formatting/rendering as standalone component (post-v1.8.0)
 
-**Module-Level Mutable Globals:**
-- Issue: `pagefolio/settings.py` maintains module-level mutable state: `C` (theme dict) and `_current_font_size` updated at runtime
-- Files: `pagefolio/settings.py` (lines 381+)
-- Impact: Runtime theme/font changes mutate global state; if accessed during concurrent operations, could cause display artifacts; testing requires careful state isolation
-- Fix approach: Consider immutable theme selection pattern or explicit state instance passing rather than global mutation
-
-**Undo/Redo Complexity:**
-- Issue: Undo/Redo system spans multiple files (`file_ops.py`, `undo_store.py`) with complex blob lifecycle: deque eviction, redo clearing, identity-based disposal, atexit purge
-- Files: `pagefolio/file_ops.py`, `pagefolio/undo_store.py` (esp. lines 130-182)
-- Impact: High risk of resource leaks if blob disposal hooks are skipped; direct `deque.append()`/`clear()` forbidden, but no runtime enforcement
-- Fix approach: Add `_push_evicting()` validation in tests; audit all stack mutations; consider wrapper class that enforces disposal invariant
-
-**OCR Registry Independence Constraint:**
-- Issue: `pagefolio/ocr_providers/registry.py` must remain independent (no pagefolio imports except `os`), but this makes it hard to extend without coordinator function duplication
-- Files: `pagefolio/ocr_providers/registry.py` (lines 1-13 document the constraint)
-- Impact: If constraint is violated, circular imports will break settings.py loading; future maintainers must remember this undocumented rule
-- Fix approach: Document constraint in CLAUDE.md (already done); add lint check or import guard test
+**Sample Prompt Files Distribution Instability:**
+- Issue: `ocr_custom_prompt_sample.md` and `ocr_summary_prompt_sample.md` are only git-managed in `dist/PageFolio/` directory
+- Files: `dist/PageFolio/ocr_custom_prompt_sample.md`, `dist/PageFolio/ocr_summary_prompt_sample.md`
+- Impact:
+  - PyInstaller `--noconfirm` rebuild wipes `dist/PageFolio` and loses both prompt files
+  - Each release requires manual save/restore workaround (260722-rel-v181-merge-release)
+  - Inconsistency: source samples not in version control, only distribution artifacts tracked
+  - Regression risk: New developers unaware of this will lose files on first build
+  - Build script is not self-documenting about this requirement
+- Fix approach:
+  - Move prompt samples to source tree (e.g., `pagefolio/samples/`)
+  - Update PyInstaller spec (`pyinstaller.spec` or build script) to `--add-data` include samples
+  - Alternatively: Add post-build script to copy from source → dist/PageFolio
+  - Document in CLAUDE.md build section the expected location and preservation approach
+  - Add git pre-commit hook or CI check to verify samples are present in dist/
 
 ## Known Bugs
 
-**Insert Undo/Redo Asymmetry (BUG-01):**
-- Symptoms: Insert followed by undo removes inserted pages correctly, but redo may restore them with duplicate content or missing pages
-- Files: `pagefolio/file_ops.py` (insert undo/redo logic), `tests/test_pdf_ops.py` (lines 529-684 regression tests)
-- Trigger: Insert pages → Undo → Redo in sequence; high-page-count PDFs more likely to exhibit
-- Status: Regression tests added in v1.2.5 and maintained through v1.8.0; currently passing
+**Tkinter Test Suite Flakiness (Environment Dependent):**
+- Symptoms: 
+  - Running full pytest suite (1101 tests) occasionally produces 2 random failures with `tk.TclError`
+  - Example error: `couldn't read file "...ttk/clamTheme.tcl"` (file exists but Tcl reader fails)
+  - Single test runs always pass; only manifests in batch mode
+  - Affects: `tests/test_batch_ocr_dialog.py`, `tests/test_ocr_dialog_center.py` and others
+- Files: `tests/conftest.py`, `tests/test_batch_ocr_dialog.py` (and similar Tk test files)
+- Cause: Tk resource exhaustion from repeated `tk.Tk()` generation/destruction in single pytest process
+  - 1100+ `root.destroy()` calls deplete Tcl/Tk interpreter resources
+  - Tcl theme file cache or similar internal state becomes corrupted
+  - Not a defect in application logic, but test infrastructure limitation
+- Workaround: Single-test execution works; developers typically verify with small test subsets
+- Mitigation: 
+  - Tests already use `pytest.fixture()` with session/module scope where possible
+  - `test_batch_ocr_dialog.py` uses module-level `tk_root` fixture to share one Tk() instance
+  - Proper `try/except tk.TclError` wrapping in teardown paths
+- Future fixes (deferred):
+  - Run pytest with `pytest-xdist` for process-level parallelization (separate Tcl/Tk per process)
+  - Strengthen `conftest.py` fixture teardown to force garbage collection between tests
+  - Investigate Tk mainloop() state cleanup between test functions
 
-**Preview Pixmap Rendering Performance (BUG-03):**
-- Symptoms: Large PDF previews could cause UI lag due to inefficient rendering
-- Files: `pagefolio/viewer.py` (lines 1-100), `tests/test_viewer.py` (TEST-02 regression)
-- Trigger: Opening 100+ page PDFs with frequent page navigation
-- Status: Fixed in v1.3.0 by removing `doc.tobytes()` call; regression test confirms `doc.tobytes()` is never invoked (line 35-48 in test_viewer.py)
-
-**Window Navigation Snap-Back (resolved v1.6.0):**
-- Symptoms: Manual thumbnail window navigation (◀ ▶ buttons) would snap back to current_page after refresh
-- Files: `pagefolio/viewer.py` (lines 188-202)
-- Trigger: Navigate window independent of current_page, then trigger `_refresh_all()`
-- Status: Resolved in v1.6.0 Phase 02-03 by ensuring `current_page` follows window movement; design document at `.planning/debug/260618-pagination-window-nav-snapback.md`
-
-**Tcl/Tk Test Flakiness (noted in development):**
-- Symptoms: pytest suite occasionally experiences spurious failures on Windows due to Tkinter event timing
-- Files: Affects all UI tests; known in MEMORY.md: "pytest フルスイートのTcl/Tkフレーキーを記録"
-- Trigger: Running full pytest suite under time pressure or on slow machines
-- Workaround: Re-run failed tests; add `pytest --tb=short` to diagnose timing issues
+**Gemini Generation Gating for 400 Error (v1.8.1, Regression Risk):**
+- Symptoms: Gemini API returns 400 INVALID_ARGUMENT when temperature / sampling parameters are sent to gemini-3.x models
+- Files: `pagefolio/ocr_providers/gemini.py` (`_is_legacy_gemini`, `_build_generation_config`, `_model_generation`)
+- Current Mitigation (v1.8.1): 
+  - Introduced `_model_generation()` regex to detect model generation from ID
+  - `_is_legacy_gemini()` gates temperature / thinkingConfig parameters to gemini-2.x and below only
+  - Pattern: `gemini-(\d+)` extracts leading digit; if not found (e.g., `gemini-flash-latest`), defaults to new generation (safe-side)
+  - RECOMMENDED_MODELS updated to include `gemini-3.6-flash`, `gemini-3.5-flash`, `gemini-3.5-flash-lite`
+- Potential Risk: 
+  - If Google introduces model IDs like `gemini-exp-*` (experimental) or date-suffixed variants, regex may misidentify generation
+  - Fallback of "unknown = new generation (parameters omitted)" is safe but loses temperature control for experimental models
+  - Temperature parameter absence is undetectable to UI; users won't know it's being ignored for new models
+- Deferred Mitigations (next milestone):
+  - Add UI warning in LLM Config dialog: "New Gemini models (3.x+) do not support temperature control"
+  - Measure actual response time / token consumption for new Gemini models with thinking mode enabled
+  - Consider explicit model-version allowlist instead of regex (more maintainable but requires updates per new model)
 
 ## Security Considerations
 
-**API Key Exposure Vectors:**
-- Risk: API keys (Claude, Gemini, RunPod) could be persisted to disk if `_SENSITIVE_KEYS` guard is bypassed or settings.json accidentally committed
-- Files: `pagefolio/settings.py` (lines 70-80, `_load_settings` and `_save_settings`), `pagefolio/ocr_providers/registry.py` (lines 56-73, `sensitive_keys()`)
-- Current mitigation: `_SENSITIVE_KEYS` whitelist prevents saving to settings.json; environment variables and session memory only; `.gitignore` includes `pagefolio_settings.json`
-- Recommendations: 
-  - Audit all `_save_settings()` calls to ensure no new key types bypass whitelist
-  - Add pre-commit hook to scan for accidental API key patterns in committed files
-  - Document API key handling in README.md security section
-
-**External LLM API Dependency:**
-- Risk: Cloud OCR (Claude, Gemini, RunPod) sends page images as base64 to external APIs; if API is compromised or misconfigured, sensitive document content could be exposed
-- Files: `pagefolio/ocr.py` (page_to_png_b64), `pagefolio/ocr_providers/claude.py`, `pagefolio/ocr_providers/gemini.py`, `pagefolio/ocr_providers/runpod.py`
-- Current mitigation: HTTPS enforced; user selects provider explicitly; warnings in UI for sensitive documents
+**API Key Storage in Session Memory:**
+- Risk: `app._session_api_keys` dictionary holds live API keys in memory (not persisted, but accessible)
+- Files: `pagefolio/dialogs/llm_config/dialog.py`, `pagefolio/ocr.py`
+- Current Mitigation: 
+  - Settings file never persists keys (registry.py / settings.py `_SENSITIVE_KEYS` guard)
+  - Keys only stored in `_session_api_keys` (in-process memory) or environment variables
+  - Environment variables read at startup, not displayed in settings UI
+  - Sensitive key names defined centrally in `pagefolio/ocr_providers/registry.py`
+- Remaining Exposure:
+  - Process memory dumping could expose keys (e.g., debugger, process dump)
+  - No encryption of in-memory storage (keys are plaintext strings)
+  - Keys logged at error level (with values redacted, but names logged)
 - Recommendations:
-  - Add document sensitivity checkbox in OCR dialog (don't OCR; warn if cloud selected)
-  - Log OCR requests with redaction for audit trails
-  - Support local-only fallback (Tesseract/LM Studio/Ollama) with no network requirement
+  - Document in CLAUDE.md that API keys should not be committed to settings files
+  - Consider OS keystore integration for future versions (currently out of scope per Deferred Items)
+  - Add warning in UI: "API keys stored in this session only; not saved to disk"
 
-**PDF Password Handling:**
-- Risk: `_authenticate_doc()` in `file_ops.py` may store password in memory; if process is dumped, password could be recovered
-- Files: `pagefolio/file_ops.py` (password handling), `pagefolio/dialogs/password.py` (password input UI)
-- Current mitigation: Passwords are requested per-session, not persisted; AES-256 encryption used for password-protected PDFs
-- Recommendations:
-  - Ensure password variable is explicitly cleared after use (add `password = b'\x00' * len(password)` if possible)
-  - Document password handling limitations in CLAUDE.md
+**Environment Variable Exposure in Process Context:**
+- Risk: Environment variables (ANTHROPIC_API_KEY, GEMINI_API_KEY, GOOGLE_API_KEY, RUNPOD_API_KEY) visible to child processes
+- Files: `pagefolio/ocr_providers/registry.py` (env var resolution), `pagefolio/ocr.py` (build_provider)
+- Impact: Child processes (e.g., print handler, subprocess calls) inherit environment
+- Mitigation: PageFolio doesn't spawn subprocesses with user-controlled arguments; print uses OS-level file print
+- Recommendation: Document that users should not source shell session with API keys when running PageFolio
+
+**Circular Import Prevention Constraints:**
+- Risk: `pagefolio/ocr_providers/registry.py` strictly limited to stdlib-only imports to prevent circular dependency
+- Files: `pagefolio/ocr_providers/registry.py` (1 file), `pagefolio/settings.py` (consumer)
+- Constraint: Future changes to registry.py cannot import pagefolio internal modules (settings, UI, etc.)
+- Impact: 
+  - New provider additions must update two files (registry.py + provider class)
+  - Architectural constraint makes some refactorings infeasible
+- Mitigation: Constraint documented in registry.py module docstring and CLAUDE.md
+- Risk: If maintainer is unaware, may accidentally break the constraint, causing import failures
 
 ## Performance Bottlenecks
 
-**OCR Dialog Markdown Rendering:**
-- Problem: `_insert_markdown()` in `ocr_dialog.py` parses and inserts markdown line-by-line into Text widget; large results (100KB+) cause UI lag
-- Files: `pagefolio/ocr_dialog.py` (lines 1500+), `pagefolio/md_render.py` (parse_markdown function)
-- Cause: No batching; each line creates separate tag/insertion calls to Tk Text widget
-- Improvement path: Batch insert operations; use `text.config(state='disabled')` around large insertions; consider offscreen rendering
+**OCR Result Text Accumulation:**
+- Problem: `ocr_dialog.py` progressively appends OCR results to a Tk Text widget (`self._result_text.insert(...)`)
+- Files: `pagefolio/ocr_dialog.py` (result display section, ~2100-2300 lines)
+- Impact:
+  - Each page result insert triggers Text widget re-rendering
+  - Very large PDFs (500+ pages) with long OCR results cause UI slowdown during OCR
+  - Text buffer can grow unbounded (though typically truncated for display)
+- Current Mitigation:
+  - Results displayed in scrollable Text widget (Tkinter native, reasonably efficient)
+  - Summary tab separated from result tab (lazy rendering)
+- Potential Improvement:
+  - Consider virtualizing result display (render only visible portion)
+  - Or pre-render markdown to simpler text format (current _insert_markdown already does this)
+  - Limit result display to last N results (bounded history)
 
-**Thumbnail Cache LRU:**
-- Problem: Thumbnail generation for large PDFs (500+ pages) on first open creates visible pause
-- Files: `pagefolio/thumb_cache.py` (LruCache), `pagefolio/viewer.py` (thumbnail rendering)
-- Cause: All visible thumbnails rendered in sequence before display; no progressive rendering for first load
-- Improvement path: Implement progressive thumbnail rendering (render visible range first, then background workers for others); add visual "loading..." indicator
+**ThreadPoolExecutor Concurrency with fitz Document Rendering:**
+- Problem: OCR parallelization via ThreadPoolExecutor passes only base64-encoded image bytes to workers (fitz Document never leaves main thread)
+- Files: `pagefolio/ocr.py` (run_parallel function), `pagefolio/ocr_dialog.py` (producer flow)
+- Impact:
+  - Main thread is single-bottleneck for all PDF rendering to PNG (even when OCR ← workers are idle)
+  - Effective parallelism limited by main thread PNG generation rate
+  - Concurrent workers often blocked waiting for next batch
+- Constraint: fitz.Document is not thread-safe, so all rendering must stay on main thread
+- Current Design: Producer (_render_next_page) runs on main thread via root.after() chaining; consumer (workers) process only bytes
+- Mitigation: This is an architectural constraint, not a bug; design choice prioritizes safety over throughput
+- Observation: For typical use (small PDFs), this is not noticeable; only very large batches or slow network would bottleneck
 
-**Undo Stack Memory with Large PDFs:**
-- Problem: Even with blob store, MAX_UNDO=20 can consume gigabytes of disk temp space with large high-res PDFs
-- Files: `pagefolio/undo_store.py`, `pagefolio/file_ops.py` (MAX_UNDO = 20 in line 25)
-- Cause: Hard-coded limit doesn't scale with file size; each operation may store full page as blob
-- Improvement path: Dynamic MAX_UNDO based on available disk space; adaptive blob threshold (increase for large PDFs)
-
-**OCR Concurrent Requests:**
-- Problem: `run_parallel()` in `ocr.py` uses ThreadPoolExecutor with DEFAULT_OCR_CONCURRENCY=5; may cause provider rate limits or memory spike
-- Files: `pagefolio/ocr.py` (lines 130-180, run_parallel function)
-- Cause: No backpressure; all threads may hit rate limiter simultaneously
-- Improvement path: Implement exponential backoff with jitter; add provider-specific rate limit detection; reduce concurrency dynamically
+**Thumbnail Virtualization Limits:**
+- Problem: Thumbnail cache holds up to 300 entries (THUMB_CACHE_MAX); large PDFs (500+ pages) require cache misses
+- Files: `pagefolio/thumb_cache.py`, `pagefolio/pagination.py` (window computation)
+- Impact:
+  - Visible pagination window scrolling may trigger thumbnail regeneration
+  - Subsequent scroll back triggers re-generation again (cache miss)
+  - For 1000+ page PDFs, frequent cache thrashing expected
+- Current Mitigation:
+  - LRU cache (keep_warm parameter) prioritizes visible range
+  - Windows computed by pagination.py pure functions (fast)
+  - Thumbnail generation spawned as background task (no UI blocking)
+- User Impact: Minimal for typical workflows; only noticeable for continuous rapid scrolling in massive PDFs
+- Future: Mentioned in Deferred Items as v2 candidate for react-window-style advanced virtualization
 
 ## Fragile Areas
 
-**OCR Error Handling and Fallback Chain:**
-- Files: `pagefolio/ocr.py` (build_provider, line ~350+), `pagefolio/ocr_dialog.py` (error handlers), `pagefolio/ocr_fallback.py`
-- Why fragile: Multiple fallback stages (provider API → timeout retry → fallback provider → error message) with limited test coverage; if one stage throws unexpected exception, user sees generic error
-- Safe modification: Add mock/spy tests for each fallback branch; verify no exceptions leak out of error handlers
-- Test coverage: `tests/test_ocr.py`, `tests/test_ocr_fallback.py` exist but gaps remain in multi-stage fallback scenarios
+**Undo/Redo Blob Lifecycle Management:**
+- Files: `pagefolio/undo_store.py`, `pagefolio/file_ops.py`
+- Why Fragile:
+  - UndoBlobStore manages tempfile lifecycle (create, load, release, purge)
+  - Incorrect dispose sequence can leak temporary files or cause memory leaks
+  - MemBlob/FileBlob release() calls must match put() calls
+  - undo/redo stack deque eviction must invoke release() before discarding
+- Current Safeguards:
+  - __del__ methods provide fallback cleanup for unreleased Blobs (logs warning)
+  - atexit handler forces purge() at interpreter shutdown
+  - sys.is_finalizing() prevents double-cleanup during shutdown
+  - Double-release detection (warning log only, no crash)
+  - Tests include leak detection fixtures
+- Risk: Future changes to undo stack manipulation (e.g., skipping _push_evicting) could bypass release logic
+- Safe Modification: 
+  - Always use FileOpsMixin methods (_push_evicting, _clear_redo_stack, etc.) for stack manipulation
+  - Never call deque.append/clear directly
+  - Never call blob.load() after release()
+  - Run tests with blob leak detection enabled (fixture checks file_count() before/after)
 
-**File Operations with State Mutations:**
-- Files: `pagefolio/file_ops.py` (esp. lines 650-720, operations that update doc and undo stack in sequence)
-- Why fragile: Operations like delete/move/insert must update both `self.doc` and undo stack atomically; if exception occurs mid-operation, doc and stack become inconsistent
-- Safe modification: Wrap operation in try/except; use dedicated "rollback" method if exception occurs; test both success and exception paths
-- Test coverage: `tests/test_pdf_ops.py` covers happy paths; missing exception recovery tests
+**Batch OCR File-by-File Sequential Constraint:**
+- Files: `pagefolio/dialogs/batch_ocr.py`, `pagefolio/batch_ocr_state.py`, `pagefolio/ocr_engine.py`
+- Why Fragile:
+  - Multiple fitz.Document instances cannot coexist across thread boundaries
+  - Batch queue processes files strictly sequentially (one file's pages entirely before next file)
+  - If parallelization is added, page-level producer and file-level producer must not overlap
+- Current Safeguards:
+  - Architecture explicitly single-file-at-a-time (no multi-file parallelization)
+  - file_ops.py open/close/reopen guards prevent Document sharing
+  - Tests enforce sequential assumption
+- Risk: Future optimization to parallelize across files (e.g., 3 files in parallel) would break fitz constraint
+- Safe Modification: Document constraint clearly in batch_ocr.py, refer to CLAUDE.md existing note
 
-**Pagination Window Calculation:**
-- Files: `pagefolio/pagination.py` (lines 70-160, window bounds calculation), `pagefolio/viewer.py` (window navigation handlers)
-- Why fragile: Window start must stay synchronized with current_page across multiple operations (page delete, move, etc.); off-by-one errors cause visible list corruption
-- Safe modification: Add invariant checks in tests (e.g., `assert window_start <= current_page < window_start + page_size`); refactor window/page separation to prevent mixing
-- Test coverage: `tests/test_pagination.py` has 100+ tests but regressions still surface during manual UAT
+**Registry Module Isolation:**
+- Files: `pagefolio/ocr_providers/registry.py`
+- Why Fragile:
+  - registry.py must remain stdlib-only to prevent circular imports
+  - Any import of pagefolio.settings or UI modules breaks the constraint
+  - Violation would cause import failure at startup (settings.py calls sensitive_keys() at module level)
+- Current Safeguards:
+  - Constraint documented in module docstring and CLAUDE.md
+  - No internal imports present
+  - Code review should catch violations
+- Risk: Maintainer may accidentally import settings.py or theme.py thinking it's safe
+- Safe Modification: 
+  - Before adding any import, verify it's stdlib-only (os, re, sys, logging, threading, queue, etc.)
+  - Never reference pagefolio.* modules
 
-**Plugin Manager Event Firing:**
-- Files: `pagefolio/plugins.py` (lines 150-230, fire_event method), `pagefolio/app.py` (plugin event calls)
-- Why fragile: Plugins are wrapped individually so one plugin exception doesn't crash others, but if plugin modifies app state (e.g., `app.doc`, `app.current_page`), subsequent plugins see corrupted state
-- Safe modification: Snapshot state before plugin callback; detect unexpected state changes; add plugin integration tests
-- Test coverage: `tests/test_plugins.py` tests basic lifecycle; missing multi-plugin interaction tests
+**OCRDialog LLM Settings Callback Consistency:**
+- Files: `pagefolio/dialogs/llm_config/sections.py`, `pagefolio/ocr_dialog.py`
+- Why Fragile:
+  - LLMConfigDialog._apply_llm_settings modifies app.settings but doesn't call app._update_ocr_buttons_state()
+  - If user opens LLMConfigDialog from within OCRDialog and changes provider, OCR button availability may not update
+  - Edge case: Happens only if settings dialog is open and provider changes from/to "off"
+- Current Safeguards:
+  - OCRDialog checks provider availability at run-time (check happens at button click, not at dialog open)
+  - Default provider "off" (LM Studio local) is always available
+  - Real-world impact: User would need to close/reopen dialog to see button state change
+- Observation: v1.4.0 Phase 04 flagged as WARNING (not BLOCKER); existing users work around via dialog close/reopen
+- Risk: Future changes to provider availability logic may create inconsistencies
+- Safe Modification: 
+  - Any settings change that affects button availability should call app._update_ocr_buttons_state()
+  - Or refactor to model state changes event-driven (publish-subscribe pattern)
 
 ## Scaling Limits
 
-**Document Size Limit:**
-- Current capacity: Successfully tested with 120-page PDFs; thumbnail window fits ~100 pages
-- Limit: 500+ page PDFs cause visible lag on thumbnail rendering; 1000+ pages may run out of memory
-- Scaling path: Implement lazy thumbnail generation (visible range only + background); add pagination auto-adjust; document recommended limits in README
+**Undo Stack Size Limit (20 operations):**
+- Limit: MAX_UNDO = 20 hard-coded in `pagefolio/app.py`
+- Files: `pagefolio/app.py` (line ~270 constant), `pagefolio/file_ops.py` (stack management)
+- Impact:
+  - Users can only undo 20 operations; older operations are discarded
+  - For large batch operations (e.g., 100 page delete), not all can be undone individually
+  - High-res image PDFs: 20 operations may consume 100+ MB RAM (mitigated by UndoBlobStore offload)
+- Rationale: Memory vs. usability tradeoff; 20 operations typically sufficient for most workflows
+- User Experience: Sufficient for typical editing sessions; power users may hit limit
+- Current Mitigations:
+  - Each undo op captures only necessary delta (not full PDF)
+  - UndoBlobStore offloads large pages to tempfile (64KB threshold)
+  - Redo stack cleared on new operation (prevents memory growth)
+- Future Consideration: Configurable limit via settings (currently out of scope)
 
-**Concurrent OCR Requests:**
-- Current capacity: DEFAULT_OCR_CONCURRENCY=5 works for typical fast APIs (Gemini); slower APIs (RunPod) may bottleneck
-- Limit: More than 5 concurrent threads risk rate limiting on cloud providers; no per-provider tuning
-- Scaling path: Per-provider concurrency limits; exponential backoff detector; dynamic adjustment based on 429 responses
+**Thumbnail Cache Limit (300 entries):**
+- Limit: THUMB_CACHE_MAX = 300 in `pagefolio/thumb_cache.py`
+- Files: `pagefolio/thumb_cache.py`, `pagefolio/app.py` (cache initialization)
+- Impact:
+  - PDFs with 300+ pages trigger cache misses as pagination scrolls
+  - Cache hit ratio degrades for rapid scrolling in large documents
+- Rationale: Memory constraint (typically ~50-100 MB for 300 entries at default zoom)
+- Current Mitigation: LRU eviction, prioritized re-rendering for visible range
+- User Impact: Smooth scrolling for up to 300 pages; minor lag for larger PDFs on slower systems
+- Observation: Not user-configurable (FrameWork design limitation noted in CLAUDE.md)
 
-**Undo Stack Memory:**
-- Current capacity: MAX_UNDO=20 stack entries; ~64MB per entry on large PDFs = 1.3GB max
-- Limit: Heavy editing sessions (20+ operations) on 500-page PDFs exhaust disk temp space
-- Scaling path: Dynamic MAX_UNDO; provide "clear undo stack" option; warn user when approaching limit
+**Test Suite Tcl/Tk Resource Exhaustion (1100+ tests):**
+- Limit: pytest running full suite (1109 tests) occasionally fails with TclError
+- Files: All `tests/test_*.py` files using tk.Tk()
+- Impact:
+  - ~2 random test failures per full run (flaky, not deterministic)
+  - Failure is infrastructure-level (Tcl theme loading), not application logic
+  - Blocks CI/CD if strict test passing required
+  - Developers forced to run subset of tests locally
+- Mitigation: 
+  - Tests structured with module-level shared tk.Tk() roots where possible
+  - Proper exception handling for tk.TclError in teardown
+  - conftest.py provides shared fixtures
+- Future Fixes: Mentioned in STATE.md; pytest-xdist process-level parallelization suggested
 
-## Dependencies at Risk
-
-**PyMuPDF (fitz) Thread Safety:**
-- Risk: fitz.Document is not thread-safe; OCR code must not share doc across threads
-- Current handling: Page rendering done on main thread; OCR receives base64 image only
-- Migration plan: If async rendering needed, wrap fitz calls in lock or use subprocess isolation
-
-**Tkinter Event Ordering:**
-- Risk: Tkinter event loop timing is platform-dependent; callbacks scheduled with `root.after()` can fire in unexpected order on slow machines
-- Current handling: Generation counters (`_preview_gen`, `_thumb_gen`) prevent stale results overwriting new ones
-- Migration plan: Consider async/await abstraction if timing issues become critical; switch to asyncio event loop if Python 3.10+ baseline reached
-
-**Environment Variable Dependency:**
-- Risk: OCR API keys must be set as env vars; missing key causes build_provider to fail silently or with unclear message
-- Current handling: `resolve_env_key()` returns None if not found; calling code shows error dialog
-- Migration plan: Add `.env` file support with validation on startup; show env var requirements in UI
+**PDF Size and Page Count Scalability:**
+- Observation: No hard limits enforced; tested up to 120 pages (stress test)
+- Performance:
+  - Preview rendering: ~1-2 seconds for typical 5 MB PDF
+  - OCR: Limited by API rate limits and network, not PageFolio itself
+  - Thumbnail generation: Linear scaling ~100 ms per page at default zoom
+  - Batch OCR: Tested with multiple PDFs; no regression observed up to 20 files × 50 pages
+- Estimated Practical Limits (unverified):
+  - Individual PDF: ~1000 pages (before UI becomes noticeably sluggish due to thumbnail cache misses)
+  - Batch queue: Tested up to 20 files; probably scales to 100+ with time (sequential, no hard limit)
+- Risk: Very large PDFs (500+ pages) or batch jobs (100+ files) not well-tested; recommend conservative use
 
 ## Missing Critical Features
 
-**Offline OCR Documentation:**
-- Problem: Users expecting cloud-only OCR; local options (Tesseract, LM Studio, Ollama) are undocumented
-- Blocks: Users cannot choose local-only workflows without trial/error
-- Solution: Add README section with local provider setup instructions; add UI guide in About dialog
+**Undo/Redo Test Coverage for Structural Operations:**
+- Feature Gap: Four-step redo cycles (undo → redo → undo → undo) not comprehensive for all operations
+- Files: `tests/test_pdf_ops.py` (page operation tests)
+- What's Tested: delete, insert (both with full 4-step cycle)
+- What's Missing: duplicate, merge, merge_resize with full cycle
+- Risk: Could hide restoration bugs similar to v1.8.0 Phase 6 insert_redo fix (D-17 in STATE.md)
+- Priority: Medium (no active issues reported, but historical precedent suggests risk)
+- Recommendation: Add 4-step cycle tests for duplicate / merge / merge_resize operations
 
-**OCR Cancellation Progress:**
-- Problem: Batch OCR cancel shows "cancelling..." but doesn't update progress; users unsure if cancel is working
-- Blocks: Can't know if app is hung or genuinely cancelling
-- Solution: Show remaining jobs count; add "force quit" button after 5s wait
+**New Gemini Model Awareness UI:**
+- Feature Gap: LLM Config dialog temperature field has no warning that new Gemini models ignore it
+- Files: `pagefolio/dialogs/llm_config/sections.py` (temperature field rendering)
+- Impact: Users selecting gemini-3.x models may expect temperature control that is silently ignored
+- Deferred in v1.8.1 (SUMMARY.md, item 3②)
+- Implementation: Add note label near temperature field: "Note: New Gemini models (3.x+) do not support temperature control"
 
-**Performance Profiling Tools:**
-- Problem: No built-in profiling; users can't diagnose slow operations
-- Blocks: Can't identify whether lag is OCR, rendering, or I/O
-- Solution: Add `--profile` CLI flag; dump timing data to JSON on exit
+**New Gemini Thinking Mode Measurements:**
+- Feature Gap: No data on actual response time / token consumption for gemini-3.x with thinking enabled
+- Files: N/A (documentation/testing gap, not code)
+- Impact: Users cannot predict cost/time impact of enabling thinking mode on new models
+- Deferred in v1.8.1 (GSD-AUDIT-DIRECTIVE item 3③, SUMMARY.md)
+- Recommendation: Manual testing with real Gemini API + documentation of findings
 
 ## Test Coverage Gaps
 
-**OCR Multi-Provider Fallback:**
-- What's not tested: Sequence where provider 1 fails, falls back to provider 2, provider 2 succeeds
-- Files: `pagefolio/ocr.py` (fallback logic), `pagefolio/ocr_fallback.py` (candidate selection)
-- Risk: Fallback may skip valid providers or silently fail; no visibility into decision chain
-- Priority: High (affects reliability)
+**OCR Provider Fallback Integration:**
+- What's not tested: Full fallback chain (OCR fails on primary → retries → tries secondary provider)
+- Files: `pagefolio/ocr_fallback.py`, `pagefolio/dialogs/ocr_dialog.py`
+- Risk: Fallback provider selection dialog / actual provider switch not E2E tested with real failures
+- Current Tests: Unit tests for `next_fallback_candidate()` logic; E2E tests stub provider failures
 
-**File Corruption Recovery:**
-- What's not tested: If PDF file is deleted/corrupted while editor has it open, operations should fail gracefully
-- Files: `pagefolio/file_ops.py` (file operations)
-- Risk: App could crash or lose unsaved changes
-- Priority: Medium (rare but catastrophic)
+**Batch OCR Multi-File Cancellation:**
+- What's not tested: User cancels during file N; queue state transitions; unprocessed files still marked runnable
+- Files: `pagefolio/dialogs/batch_ocr.py`, `pagefolio/batch_ocr_state.py`
+- Risk: Cancelled batch may leave some files in inconsistent state
+- Current Tests: Batch state unit tests, but UI cancellation flow is tested with stubs only
 
-**Plugin Exception Propagation:**
-- What's not tested: If plugin callback raises exception during state-modifying operation (e.g., on_page_delete), does app state remain consistent?
-- Files: `pagefolio/plugins.py` (fire_event), affected operations in file_ops.py
-- Risk: App state corruption without user awareness
-- Priority: High (affects data integrity)
-
-**UI Stress Test (Rapid Input):**
-- What's not tested: Rapid clicking (page nav, window nav, selection) while background operations (OCR, thumbnail render) are running
-- Files: Affects `viewer.py`, `app.py`, OCR dialog
-- Risk: Race conditions in state updates; missing event batching
-- Priority: Medium (affects user experience under heavy load)
-
-**Settings File Corruption:**
-- What's not tested: If `pagefolio_settings.json` is manually corrupted, does app recover gracefully?
-- Files: `pagefolio/settings.py` (_load_settings)
-- Risk: App refuses to start
-- Priority: Low (user error) but easy to improve with try/except default fallback
+**Plugin Lifecycle Edge Cases:**
+- What's not tested: Plugin crashes during on_page_rotate callback; UI recovery
+- Files: `pagefolio/plugins.py`, `pagefolio/app.py`
+- Risk: Buggy plugin could crash OCR thread or main UI loop
+- Current Mitigation: Each plugin callback wrapped in try/except (logs error, continues)
+- Recommendation: Add E2E test with intentionally-crashing plugin fixture
 
 ---
 
-*Concerns audit: 2026-07-16*
+*Concerns audit: 2026-07-22*

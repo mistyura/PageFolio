@@ -1,136 +1,146 @@
 # Testing Patterns
 
-**Analysis Date:** 2026-07-16
+**Analysis Date:** 2026-07-22
 
 ## Test Framework
 
 **Runner:**
-- Framework: pytest (installed, configured in `pyproject.toml`)
-- Configuration file: `pyproject.toml` with section `[tool.pytest.ini_options]`
-- Test discovery: All files matching `test_*.py` in `tests/` directory
-- Python path: `pythonpath = ["src"]` configured for imports
+- pytest (configured in `pyproject.toml`)
+- Test path: `tests/`
+- Python path: `["src"]` in pytest config
+
+**Assertion Library:**
+- Python's built-in `assert` statements
+- S101 (assert usage) disabled in `tests/**/*.py` via ruff config
 
 **Run Commands:**
 ```bash
-pytest                  # Run all tests in tests/ directory
-pytest tests/          # Explicit test directory
-pytest tests/test_ocr_engine.py  # Run specific test file
-pytest -v              # Verbose output with test names
-pytest -k keyword      # Run tests matching keyword pattern
-pytest --tb=short      # Shorter traceback format
+pytest                          # Run all 1109 tests
+pytest tests/test_ocr.py        # Run specific test file
+pytest -v                       # Verbose output
+pytest --collect-only           # List tests without running
+pytest -k "test_window"         # Run tests matching pattern
 ```
 
-**No built-in watch mode:** Pytest doesn't have native watch/re-run; manually re-run pytest on file changes
+**Coverage:**
+```bash
+# Generate coverage report
+pytest --cov=pagefolio --cov-report=html
+
+# View .coverage file created after test run
+# Coverage tracking enabled via .coverage file in repo root
+```
 
 ## Test File Organization
 
 **Location:**
-- Test files co-located in `tests/` directory parallel to `pagefolio/` package
-- Structure: `tests/test_<module_name>.py` mirrors `pagefolio/<module_name>.py`
+- Co-located in `tests/` directory (separate from `pagefolio/` source)
+- Test discovery via `tests` directory specified in `pyproject.toml`
 
-**Naming Convention:**
-- Test files: `test_module_name.py` (e.g., `test_ocr_engine.py`, `test_pagination.py`)
-- Test classes: `Test<Feature>` (e.g., `TestOCRRunEngineUnit`, `TestWindowBounds`, `TestConsumeOne`)
-- Test methods: `test_<behavior>` (e.g., `test_single_page_success_invokes_on_success()`, `test_exact_divisible_last_window()`)
+**Naming:**
+- Test files: `test_*.py` (e.g., `test_ocr.py`, `test_pagination.py`)
+- Test classes: `Test*` (e.g., `TestWindowBounds`, `TestPdfOpen`)
+- Test methods: `test_*` (e.g., `test_returns_valid_base64_png`, `test_connection_error_raises_connection_error`)
 
-**Structure by focus:**
+**File Structure:**
 ```
 tests/
-├── conftest.py                    # Shared fixtures for all tests
-├── test_pdf_ops.py               # PDF reading/writing/manipulation
-├── test_ocr_engine.py            # OCR execution engine
-├── test_ocr_pipeline.py          # Producer-consumer queue logic
-├── test_pagination.py            # Window/index conversion
-├── test_ocr.py                   # OCR provider selection and API
-├── test_plugins.py               # Plugin system
-└── ...
+├── conftest.py                  # Shared fixtures
+├── test_ocr.py
+├── test_pagination.py
+├── test_pdf_ops.py
+├── test_password.py
+├── test_plugins.py
+├── test_batch_ocr_dialog.py
+└── ... (35 test files total, 1109 tests)
 ```
 
 ## Test Structure
 
-**Suite Organization:**
+**Suite Organization (from `conftest.py`):**
 ```python
-class TestFeatureName:
-    """Short description of what this test class verifies.
-    
-    Reference: D-05, V180-ROBUST-02 (design decision or issue number)
-    """
+class TestPageToPngB64:
+    """page_to_png_b64 が有効な base64 PNG を返すか"""
 
-    def test_specific_behavior(self):
-        """One sentence describing the assertion."""
-        # Arrange
-        given = setup_test_data()
-        
-        # Act
-        result = function_under_test(given)
-        
-        # Assert
-        assert result == expected_value
+    def test_returns_valid_base64_png(self, sample_pdf_doc):
+        page = sample_pdf_doc[0]
+        b64 = ocr.page_to_png_b64(page, scale=1.0)
+        assert isinstance(b64, str)
+        raw = base64.b64decode(b64)
+        assert raw[:8] == b"\x89PNG\r\n\x1a\n"
 ```
 
 **Patterns:**
-- **Setup:** Fixtures provide common test data (`sample_pdf`, `sample_pdf_doc`, `multi_pdf_files`)
-- **Arrangement:** Use `given` or descriptive variable names for inputs
-- **Execution:** Call function once per test
-- **Assertion:** Use simple `assert` statements; pytest reports details
+- Test classes group related tests (one logical area)
+- Docstrings explain test purpose at class level
+- Fixtures injected as method parameters
+- Arrange-Act-Assert structure (implicit via test flow)
 
-**Example from test_pagination.py:**
+**Setup/Teardown:**
+- Setup via fixtures (preferring fixtures over `setup_method()`)
+- Teardown via pytest fixture `yield` pattern (e.g., `sample_pdf_doc` fixture yields then closes document)
+- Temporary files via `tmp_path` fixture (automatic cleanup)
+
+**Example with yield (cleanup):**
 ```python
-class TestWindowBounds:
-    """SC1: 件数で窓を区切り、最終窓の端数を実ページ数でクランプする（D-10）。"""
-
-    def test_fraction_last_window(self):
-        # 端数最終窓・D-10: 件数 20・全 47 → 最終窓 (40, 47)
-        assert window_bounds(40, 20, 47) == (40, 47)
-
-    def test_doc_not_open(self):
-        # doc 未オープン
-        assert window_bounds(0, 20, 0) == (0, 0)
+@pytest.fixture()
+def sample_pdf_doc():
+    """テスト用の3ページPDFをメモリ上で生成し、fitz.Document として返す。
+    テスト終了後に自動でクローズされる。
+    """
+    doc = fitz.open()
+    for i in range(3):
+        page = doc.new_page(width=595, height=842)
+        page.insert_text((72, 72), f"Page {i + 1}", fontsize=24)
+    yield doc
+    doc.close()
 ```
 
 ## Mocking
 
-**Framework:** `unittest.mock` (Python standard library)
+**Framework:** `monkeypatch` (pytest fixture)
 
 **Patterns:**
 ```python
-from unittest.mock import patch, MagicMock
-
-# Mock external dependencies
-with patch('pagefolio.module.external_func') as mock_func:
-    mock_func.return_value = expected_value
-    result = function_under_test()
-    assert mock_func.called
-
-# Mock class for test doubles
-class FakeProvider:
-    def ocr_image(self, b64_png, prompt, **kwargs):
-        return f"text-{b64_png}"
+def test_success_returns_content(self, monkeypatch):
+    import pagefolio.ocr_providers as op
     
-    def list_models(self):
-        return ["fake-model"]
+    p = LMStudioProvider(url="http://localhost:1234", model="m", timeout=5)
+    
+    def fake_urlopen(req, timeout=None):
+        captured = {}
+        captured["url"] = req.full_url
+        captured["timeout"] = timeout
+        body = json.dumps({"choices": [{"message": {"content": "hello world"}}]})
+        return _FakeResponse(body)
+    
+    monkeypatch.setattr(op.urllib.request, "urlopen", fake_urlopen)
+    text = p.ocr_image("Zg==", "p")
+    assert text == "hello world"
 ```
 
 **What to Mock:**
-- External API calls (Claude, Gemini, RunPod endpoints)
-- File I/O operations when not testing file handling itself
-- Long-running operations (use side_effect for controllable responses)
-- System-level operations (os.startfile for printing)
+- External network calls (urllib.request, API clients)
+- File system operations (when testing logic, not file I/O)
+- Time-dependent operations (via mocking time module)
+- Platform-specific behavior (e.g., Windows API calls)
 
 **What NOT to Mock:**
-- `fitz.Document` - Create real PDF objects via fixtures (cheaper than mocking)
-- Internal pagefolio functions - Test integration paths
-- Standard library modules (`logging`, `json`, `os` path operations) - Let them run
-- Pure function logic - No mocking needed, just data
+- fitz Document/Page objects (use real test PDFs from fixtures instead)
+- Tkinter widgets (tests avoid UI layer when possible; use headless fixtures)
+- Pure functions that have no side effects
+- Standard library functions (except for network/time)
 
-**Example: OCR provider testing (test_ocr_providers.py):**
+**Test Double Pattern:**
 ```python
 class FakeProvider(OCRProvider):
-    """Fake OCR provider for testing.
-    
-    Mock side_effect can be set to simulate success, failure, or retry scenarios.
-    """
+    """run_parallel テスト用の偽 Provider。ocr_image は b64 をもとにテキストを返す。"""
+
+    default_concurrency = 2
+    max_concurrency = 4
+
     def __init__(self, side_effect=None):
+        """side_effect が None なら f"text-{b64}" を返す。callable なら呼び出す。"""
         self._side_effect = side_effect
 
     def ocr_image(self, b64_png, prompt, **kwargs):
@@ -140,128 +150,171 @@ class FakeProvider(OCRProvider):
 
     def list_models(self):
         return ["fake-model"]
-
-# Usage in test
-def test_retry_on_retryable_error():
-    def side_effect(b64, prompt):
-        # Simulate API timeout
-        raise OCRRetryableError("timeout")
-    
-    provider = FakeProvider(side_effect=side_effect)
-    # Test retry logic...
 ```
 
 ## Fixtures and Factories
 
-**Test Data Fixtures (in conftest.py):**
+**Test Data (from `conftest.py`):**
 
-| Fixture | Purpose | Returns | Setup |
-|---------|---------|---------|-------|
-| `tmp_settings` | Temporary settings file | `(path, write_fn)` tuple | Creates JSON file in tmp_path |
-| `sample_pdf` | 3-page test PDF | File path (str) | Generated in-memory, saved to disk |
-| `sample_pdf_doc` | 3-page PDF in memory | `fitz.Document` | Yields doc, closes on cleanup |
-| `large_pdf_doc` | 47-page PDF for boundary tests | `fitz.Document` | Yields doc, closes on cleanup |
-| `multi_pdf_files` | Multiple PDFs for merge testing | List of 3 file paths | Each has 1–3 pages |
-
-**Fixture Usage:**
+**`sample_pdf` fixture:**
 ```python
-class TestPageRotate:
-    def test_rotate_90(self, sample_pdf_doc):
-        """Test uses fixture by parameter name."""
-        page = sample_pdf_doc[0]
-        page.set_rotation((page.rotation + 90) % 360)
-        assert page.rotation == 90
+@pytest.fixture()
+def sample_pdf(tmp_path):
+    """テスト用の3ページPDFをメモリ上で生成し、tmp_pathに保存して返す。
+    返り値は PDF ファイルパス (str)。
+    """
+    doc = fitz.open()
+    for i in range(3):
+        page = doc.new_page(width=595, height=842)  # A4
+        page.insert_text((72, 72), f"Page {i + 1}", fontsize=24)
+    pdf_path = str(tmp_path / "test_sample.pdf")
+    doc.save(pdf_path)
+    doc.close()
+    return pdf_path
 ```
 
-**Factories (custom generators):**
-- Not used extensively; prefer fixtures
-- Some tests create custom FakeProvider instances with different side_effects
+**`sample_pdf_doc` fixture:**
+```python
+@pytest.fixture()
+def sample_pdf_doc():
+    """テスト用の3ページPDFをメモリ上で生成し、fitz.Document として返す。
+    テスト終了後に自動でクローズされる。
+    """
+    doc = fitz.open()
+    for i in range(3):
+        page = doc.new_page(width=595, height=842)
+        page.insert_text((72, 72), f"Page {i + 1}", fontsize=24)
+    yield doc
+    doc.close()
+```
+
+**`large_pdf_doc` fixture (for pagination boundary tests):**
+```python
+@pytest.fixture()
+def large_pdf_doc():
+    """窓化境界値テスト用の 47 ページ PDF を fitz.Document として返す。
+    件数 20 → 最終窓 41–47（端数最終窓・D-10）の境界値検証に対応する。
+    """
+    doc = fitz.open()
+    for i in range(47):
+        page = doc.new_page(width=595, height=842)
+        page.insert_text((72, 72), f"Page {i + 1}", fontsize=24)
+    yield doc
+    doc.close()
+```
+
+**`multi_pdf_files` fixture:**
+```python
+@pytest.fixture()
+def multi_pdf_files(tmp_path):
+    """結合・挿入テスト用に複数のPDFファイルを生成する。
+    返り値は [path1, path2, path3] のリスト。
+    """
+    paths = []
+    for idx in range(3):
+        doc = fitz.open()
+        n_pages = idx + 1  # 1ページ, 2ページ, 3ページ
+        for p in range(n_pages):
+            page = doc.new_page(width=595, height=842)
+            page.insert_text((72, 72), f"File{idx + 1} Page{p + 1}", fontsize=20)
+        path = str(tmp_path / f"file_{idx + 1}.pdf")
+        doc.save(path)
+        doc.close()
+        paths.append(path)
+    return paths
+```
+
+**`tmp_settings` fixture:**
+```python
+@pytest.fixture()
+def tmp_settings(tmp_path):
+    """一時ディレクトリに設定ファイルを作成・管理するフィクスチャ。
+    返り値は (settings_path, write_fn) のタプル。
+    write_fn(data) で設定を書き込む。
+    """
+    settings_path = tmp_path / "pagefolio_settings.json"
+
+    def write_fn(data):
+        settings_path.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
+
+    return settings_path, write_fn
+```
+
+**Location:**
+- All fixtures defined in `tests/conftest.py`
+- Auto-discovered by pytest; available to all test modules
 
 ## Coverage
 
-**Requirements:** No explicit enforced target in configuration
+**Requirements:** No explicit coverage threshold enforced
 
 **View Coverage:**
-- Coverage reporting not configured in `pyproject.toml`
-- To measure: `pip install pytest-cov && pytest --cov=pagefolio tests/`
+```bash
+pytest --cov=pagefolio --cov-report=html
+# Opens htmlcov/index.html in browser
+```
 
-**Gap Analysis:**
-- Tkinter UI code (`app.py`, dialogs) has minimal unit test coverage (requires mocking Tk widgets)
-- Pure function layers (`pagination.py`, `ocr_pipeline.py`, `md_render.py`) have high coverage
-- OCR provider tests are comprehensive (mocked API responses)
-- File I/O operations use real PDF fixtures (integration-style tests)
+**Current state:** 1109 tests collected, .coverage file tracked in `.gitignore`
 
 ## Test Types
 
 **Unit Tests:**
-- Scope: Single function or method in isolation
-- Examples: `test_pagination.py` (pure functions), `test_ocr_pipeline.py` (PipelineState logic)
-- Use mocks for external dependencies and side effects
-- Fast execution (no I/O, no threading)
+- Scope: Individual functions/methods in isolation
+- Approach: Test with fixtures, mocking external dependencies
+- Examples: `test_pagination.py` (pure functions), `test_pdf_ops.py` (fitz operations)
+- Patterns:
+  ```python
+  def test_to_global_basic(self):
+      assert to_global(3, 20) == 23
+      assert to_global(0, 0) == 0
+  ```
 
 **Integration Tests:**
 - Scope: Multiple components working together
-- Examples: `test_pdf_ops.py` (PDF reading/writing), `test_ocr.py` (provider selection + fallback)
-- Use real `fitz.Document` objects and temporary files
-- Test actual file operations, not mocked equivalents
+- Approach: Use real fitz documents and settings files
+- Examples: `test_ocr_pipeline.py` (OCR flow), `test_batch_ocr_dialog.py` (batch operations)
+- Pattern: Test full workflows (open PDF → rotate → crop → save)
 
-**System/E2E Tests:**
-- Scope: Full workflow (OCR dialog, batch processing, plugin loading)
-- Examples: `test_batch_ocr_dialog.py` (dialog lifecycle + OCR pipeline)
-- Limited coverage due to Tkinter UI complexity
-- Some tests use mocking for API calls while exercising real dialog flow
-
-**Threading Tests:**
-- Scope: Concurrent operations (OCR queue consumption, sentinel signaling)
-- Examples: `test_ocr_engine.py` (thread start/join), `test_ocr_pipeline.py` (queue operations)
-- Use `threading.Event`, `time.sleep()`, and careful timing checks
-- Timeout guards to prevent test hangs: `deadline = time.monotonic() + timeout`
+**E2E Tests:**
+- Scope: Full application workflows
+- Framework: Not formalized (Tkinter UI testing is complex)
+- Approach: Primarily integration tests serve as pseudo-E2E tests
+- Note: UI interactions tested manually or via plugin system
 
 ## Common Patterns
 
-**Async Testing (with threading):**
+**Async Testing:**
+Tk applications use `root.after()` for deferred callbacks; testing doesn't explicitly use async but:
 ```python
-def test_single_page_success_invokes_on_success(self):
-    """Test callback invoked once after OCR success."""
-    provider = FakeProvider()
-    cancel_flag = threading.Event()
-    successes = []
-    engine = OCRRunEngine(
-        provider=provider,
-        prompt="prompt",
-        run_pages=[0],
-        concurrency=1,
-        cancel_flag=cancel_flag,
-        on_success=lambda p, t, tr: successes.append((p, t, tr)),
-    )
-    threads = engine.start()
-    
-    # Manually enqueue items (simulate producer)
-    assert try_enqueue(engine.queue, (0, "b64-0")) is True
-    assert send_sentinels(engine.queue, 1) == 1
-    
-    # Wait for consumer threads to finish
-    for t in threads:
-        t.join(timeout=2.0)
-    
-    # Assert side effect occurred
-    assert len(successes) == 1
-    assert successes[0] == (0, "text-b64-0", False)
+# Generation counters prevent stale results
+if self._preview_gen < generation:
+    return  # Discard if newer result came in
+
+# Tests verify logic without UI thread
 ```
 
 **Error Testing:**
 ```python
-def test_nonexistent_file_raises(self, tmp_path):
-    """Verify that opening nonexistent file raises FileNotFoundError."""
-    with pytest.raises((FileNotFoundError, fitz.FileNotFoundError)):
-        fitz.open(str(tmp_path / "nonexistent.pdf"))
+def test_connection_error_raises_connection_error(self, monkeypatch):
+    import pagefolio.ocr_providers as op
+
+    p = LMStudioProvider(url="http://x", model="m")
+
+    def fake_urlopen(req, timeout=None):
+        raise urllib.error.URLError("Connection refused")
+
+    monkeypatch.setattr(op.urllib.request, "urlopen", fake_urlopen)
+    with pytest.raises(ConnectionError):
+        p.ocr_image("Zg==", "p")
 ```
 
-**Parametrized Testing:**
+**Boundary/Property Testing:**
 ```python
-class TestIndexConvert:
+class TestWindowBounds:
+    """SC1: 件数で窓を区切り、最終窓の端数を実ページ数でクランプする（D-10）。"""
+
     def test_invariant_lo_hi_range(self):
-        """Boundary check: 0 <= lo <= hi <= n_pages, hi - lo <= page_size."""
+        # 0 <= lo <= hi <= n_pages、hi - lo <= page_size
         for n in (0, 1, 20, 40, 47, 100):
             for size in (10, 20, 50):
                 for start in (0, size, size * 2, size * 3):
@@ -270,39 +323,16 @@ class TestIndexConvert:
                     assert hi - lo <= size
 ```
 
-**Fixture with cleanup:**
+**Round-trip Testing (Invariants):**
 ```python
-@pytest.fixture()
-def sample_pdf_doc():
-    """3-page PDF: open, use in test, close automatically."""
-    doc = fitz.open()
-    for i in range(3):
-        page = doc.new_page(width=595, height=842)
-        page.insert_text((72, 72), f"Page {i + 1}", fontsize=24)
-    yield doc  # Test runs here
-    doc.close()  # Cleanup after test
+def test_round_trip_global_local_global(self):
+    # 任意 g（0..n-1）と任意 start で to_global(to_local(g, start), start) == g
+    n = 47
+    for g in range(n):
+        for start in (0, 20, 40):
+            assert to_global(to_local(g, start), start) == g
 ```
-
-## Special Test Patterns
-
-**Decision Coverage Testing:**
-- Test class names map to design decisions (e.g., `TestWindowBounds=SC1`, `TestDndIndexConvert=SC3`)
-- References to decision docs (D-05, D-10, D-11, etc.) in docstrings
-- Each test method verifies one acceptance criterion (one behavior, one assertion focus)
-- Boundary conditions tested explicitly (e.g., "window boundary at edge", "single page", "doc not open")
-
-**Pure Function Testing:**
-- No mocks, no side effects, no state mutation
-- Input → Output verification only
-- Examples: `test_pagination.py`, `test_ocr_pipeline.py` (PipelineState unit tests)
-- These tests are reliable and fast
-
-**Producer-Consumer Testing:**
-- Manual queue operations in test setup (simulate producer without threading)
-- Consumer thread(s) started via `engine.start()` or similar
-- Timeout guards to prevent hangs: `t.join(timeout=2.0)`
-- Example: `test_ocr_engine.py` helper `_send_all_sentinels(q, count, timeout=5.0)`
 
 ---
 
-*Testing analysis: 2026-07-16*
+*Testing analysis: 2026-07-22*

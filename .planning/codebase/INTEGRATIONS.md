@@ -1,150 +1,180 @@
 # External Integrations
 
-**Analysis Date:** 2026-07-16
+**Analysis Date:** 2026-07-22
 
 ## APIs & External Services
 
-**OCR/LLM Providers:**
-- Claude API (Anthropic) - Vision-based OCR and text completion
-  - SDK/Client: urllib (stdlib) + manual HTTP requests
-  - Auth: `ANTHROPIC_API_KEY` environment variable
+**OCR Providers (Cloud):**
+- **Claude (Anthropic)** - Messages API for vision-based OCR
+  - SDK/Client: urllib (standard library, direct HTTP requests)
   - Endpoint: `https://api.anthropic.com/v1/messages`
-  - Supported models: claude-haiku-4-5, claude-sonnet-4-6, claude-opus-4-8 (and variants)
-  - Features: effort parameter support (sonnet/opus), temperature control (haiku)
+  - Auth: `x-api-key` header
+  - Environment variable: `ANTHROPIC_API_KEY`
+  - Implementation: `pagefolio/ocr_providers/claude.py` (`ClaudeProvider` class)
+  - Models: claude-haiku-4-5, claude-sonnet-4-6, claude-opus-4-8 (recommended)
+  - Features: Supports effort parameter (sonnet/opus), temperature parameter (haiku), vision API, text-only completion for summaries
   - Concurrency: default 2, max 2
-  - Timeout: 120 seconds (configurable)
 
-- Google Gemini API - Vision-based OCR and text completion
-  - SDK/Client: urllib (stdlib) + manual HTTP requests
-  - Auth: `GEMINI_API_KEY` (primary) or `GOOGLE_API_KEY` (fallback) environment variables
+- **Gemini (Google)** - generateContent API for vision-based OCR
+  - SDK/Client: urllib (standard library, direct HTTP requests)
   - Endpoint: `https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent`
-  - Supported models: gemini-2.5-flash, gemini-2.5-pro
-  - Features: thinking config (non-pro models only), temperature control
-  - Concurrency: default 1, max 1 (Free Tier 10 RPM rate limit)
-  - Timeout: 120 seconds (configurable)
+  - Auth: `x-goog-api-key` header
+  - Environment variables: `GEMINI_API_KEY` (primary), `GOOGLE_API_KEY` (fallback)
+  - Implementation: `pagefolio/ocr_providers/gemini.py` (`GeminiProvider` class)
+  - Models: gemini-3.6-flash, gemini-3.5-flash, gemini-3.5-flash-lite, gemini-2.5-flash, gemini-2.5-pro (recommended)
+  - Features: Supports thinkingConfig (flash models only), vision API, text-only completion for summaries
+  - Note: gemini-3.x generation (v1.8.1+) does not support temperature/thinkingConfig parameters (safe fallback)
+  - Concurrency: default 1, max 1 (Free Tier 10 RPM limit)
 
-- RunPod Serverless - Inference endpoint for custom models
-  - SDK/Client: urllib (stdlib) + manual HTTP requests
-  - Auth: `RUNPOD_API_KEY` environment variable
-  - Endpoint: User-configured RunPod endpoint URL (must be http/https scheme)
-  - Features: Custom LM support, text-only completion capability
-  - Concurrency: default 2, max 8
-  - Model list timeout: 90 seconds (accounts for serverless cold starts)
+- **RunPod** - OpenAI-compatible Serverless Vision API
+  - SDK/Client: urllib (standard library, direct HTTP requests)
+  - Endpoint: User-configured URL (e.g., `https://api.runpod.io/...`)
+  - Auth: `authorization` header with API key
+  - Environment variable: `RUNPOD_API_KEY`
+  - Settings field: `runpod_url`, `runpod_model`
+  - Implementation: `pagefolio/ocr_providers/runpod.py` (`RunPodProvider` class)
+  - Protocol: OpenAI-compatible `/v1/chat/completions` (Chat Completions API)
+  - Features: Vision API, text-only completion, customizable endpoint
+  - Timeout: 90 seconds (includes cold start for serverless)
+  - Concurrency: default 2, max 4
 
-**Local OCR/LLM Providers (No Auth):**
-- LM Studio - Local OpenAI-compatible Vision API
-  - SDK/Client: urllib (stdlib) + manual HTTP requests
+**OCR Providers (Local):**
+- **Tesseract** - Local OCR engine (subprocess)
+  - CLI invocation: `tesseract` command-line tool
+  - No API key required (local installation)
+  - Implementation: `pagefolio/ocr_providers/tesseract.py` (`TesseractProvider` class)
+  - Configuration: Language packs (detected via `--list-langs`), PSM mode
+  - Availability detection: Subprocess-based (tried on each provider instantiation, not cached)
+  - Supported languages: Configurable via `lang` parameter (e.g., "jpn+eng")
+  - Concurrency: default 1, max 2 (CPU-bound)
+
+- **LM Studio** - Local OpenAI-compatible Vision API
+  - SDK/Client: urllib (standard library, direct HTTP requests)
   - Endpoint: User-configured URL (default: `http://localhost:1234`)
-  - Scheme validation: http/https only (security gate L-6e/D-13)
+  - No API key required (local server)
+  - Settings field: `lm_studio_url`, `lm_studio_model`
+  - Implementation: `pagefolio/ocr_providers/lmstudio.py` (`LMStudioProvider` class)
+  - Protocol: OpenAI-compatible `/v1/chat/completions` (Chat Completions API)
+  - Features: Vision API, text-only completion, customizable endpoint
   - Concurrency: default 2, max 8
-  - Timeout: 120 seconds (configurable)
 
-- Ollama - Local LLM inference
-  - SDK/Client: urllib (stdlib) + manual HTTP requests
+- **Ollama** - Local OpenAI-compatible Vision API
+  - SDK/Client: urllib (standard library, direct HTTP requests)
   - Endpoint: User-configured URL (default: `http://localhost:11434`)
-  - Scheme validation: http/https only
-  - Concurrency: default 2, max 8
-  - Timeout: 120 seconds (configurable)
-
-- Tesseract OCR - Local OCR engine
-  - SDK/Client: subprocess call to `tesseract` binary
-  - Requirements: Tesseract must be installed and in PATH
-  - Text-only output (no vision model support)
+  - No API key required (local server)
+  - Settings field: `ollama_url`, `ollama_model`
+  - Implementation: `pagefolio/ocr_providers/ollama.py` (`OllamaProvider` class)
+  - Protocol: OpenAI-compatible `/v1/chat/completions` (Chat Completions API)
+  - Features: Vision API, text-only completion, customizable endpoint
   - Concurrency: default 2, max 8
 
 ## Data Storage
 
 **Databases:**
-- None - File-based only
+- None used. Application is fully local-file based.
 
 **File Storage:**
 - Local filesystem only
-  - PDF documents: User-selected paths
-  - Settings: `pagefolio_settings.json` in exe/project directory
-  - Temporary files: System temp directory (for undo blob overflow >64KiB via `UndoBlobStore`)
-  - External prompts: `ocr_custom_prompt.md`, `ocr_summary_prompt.md` (same directory as executable)
+- Settings file: `pagefolio_settings.json` (JSON, UTF-8)
+- Undo/Redo blobs: Tempfile for entries ≥64KiB (`UndoBlobStore` in `pagefolio/undo_store.py`), in-memory for smaller entries
+- OCR results: User-exported via UI (no automatic persistence)
+- Configuration files: Optional external prompt files (`ocr_custom_prompt.md`, `ocr_summary_prompt.md`)
 
 **Caching:**
-- In-memory thumbnail LRU cache (`thumb_cache`) - 300-entry max
-- In-memory preview generation cache (no persistent caching)
-- Undo/Redo stacks - max 20 entries, large blobs overflow to tempfile
+- Thumbnail cache: In-memory LRU cache (`pagefolio/thumb_cache.py`, max 300 entries)
+- Settings: Loaded once at startup, persisted to JSON on changes
 
 ## Authentication & Identity
 
 **Auth Provider:**
-- None - Environment variable API keys only
-- No login/user management
-- All credentials supplied via environment variables: `ANTHROPIC_API_KEY`, `GEMINI_API_KEY`, `GOOGLE_API_KEY`, `RUNPOD_API_KEY`
-- API keys **never** persisted to `pagefolio_settings.json` (guarded by `_SENSITIVE_KEYS` in `pagefolio/settings.py`)
+- None (not applicable - desktop application, no user accounts)
+
+**API Key Handling:**
+- Cloud providers (Claude, Gemini, RunPod) require API keys passed via environment variables
+- Keys are **NOT** stored in `pagefolio_settings.json` (guarded by `_SENSITIVE_KEYS` in `pagefolio/settings.py`)
+- Keys are stored in session memory (`app._session_api_keys`) during runtime (cleared on exit)
+- Registry of sensitive keys: `pagefolio/ocr_providers/registry.py` (`PROVIDER_ENV_KEYS`, `sensitive_keys()`)
+- Local providers (Tesseract, LM Studio, Ollama) do not require authentication
+
+**Environment Variables (Cloud OCR):**
+```
+ANTHROPIC_API_KEY          # Claude provider
+GEMINI_API_KEY             # Gemini provider (primary)
+GOOGLE_API_KEY             # Gemini provider (fallback)
+RUNPOD_API_KEY             # RunPod provider
+```
 
 ## Monitoring & Observability
 
 **Error Tracking:**
-- None - Local error handling via `messagebox.showerror()`
+- None (no external error tracking service)
+- Logging: Python logging to console/stderr (level: WARNING by default)
 
 **Logs:**
-- Python `logging` module to stdout/stderr
-- No persistent log file
-- Per-module loggers in OCR providers and dialogs
+- Console logging via `logging` module
+- Logger instances per module (e.g., `logging.getLogger(__name__)`)
+- Format: `"%(levelname)s:%(name)s:%(message)s"`
 
 ## CI/CD & Deployment
 
 **Hosting:**
-- GitHub Releases - Distribution of `PageFolio-vX.X.X-win64.zip`
+- Windows 11 desktop application (not hosted)
+- Distributed as standalone `.exe` via PyInstaller
 
 **CI Pipeline:**
-- None defined in repository
-- Manual build via PyInstaller: `pyinstaller PageFolio.spec --onedir`
+- None configured (local development workflow)
+- Manual build: `pyinstaller PageFolio.spec`
+- Spec file: `PageFolio.spec` (PyInstaller configuration)
+
+**Build Artifacts:**
+- Executable: `dist/PageFolio/PageFolio.exe`
+- Icon: `pagefolio.ico`
 
 ## Environment Configuration
 
-**Required env vars:**
-- None (optional for OCR features):
-  - `ANTHROPIC_API_KEY` - Claude API (required for Claude OCR provider)
-  - `GEMINI_API_KEY` or `GOOGLE_API_KEY` - Gemini API (required for Gemini provider, GEMINI_API_KEY has priority)
-  - `RUNPOD_API_KEY` - RunPod endpoint (required for RunPod provider)
+**Required Environment Variables (for cloud OCR):**
+- `ANTHROPIC_API_KEY` - For Claude provider (if using)
+- `GEMINI_API_KEY` or `GOOGLE_API_KEY` - For Gemini provider (if using)
+- `RUNPOD_API_KEY` - For RunPod provider (if using)
 
-**Secrets location:**
-- Environment variables only
-- `.env` file support: Not implemented (environment variables directly)
-- Hardcoded defaults: None (all credentials required at runtime for cloud providers)
+**Optional Configuration:**
+- `lm_studio_url` - LM Studio server URL (default: `http://localhost:1234`, stored in settings)
+- `lm_studio_model` - LM Studio model name (stored in settings)
+- `ollama_url` - Ollama server URL (default: `http://localhost:11434`, stored in settings)
+- `ollama_model` - Ollama model name (stored in settings)
+- `runpod_url` - RunPod serverless endpoint URL (stored in settings)
+- `runpod_model` - RunPod model name (stored in settings)
 
-**API Key Management:**
-- Session memory (`app._session_api_keys` dict) - transient, not persisted
-- Settings file exemption: `pagefolio/ocr_providers/registry.py` defines `sensitive_keys()` which blocks: `api_key`, `{provider}_api_key`, environment variable names and their lowercase variants
+**Secrets Location:**
+- Environment variables (not in version control)
+- Loaded at runtime from OS environment
+- Never persisted to `pagefolio_settings.json`
 
 ## Webhooks & Callbacks
 
 **Incoming:**
-- None
+- None (desktop application, no server)
 
 **Outgoing:**
-- Plugin hooks: `on_load`, `on_unload`, `on_file_open`, `on_file_save`, `on_page_rotate`, `on_page_delete`, `on_page_crop`, `on_page_change`, `on_insert`, `on_merge`, `build_ui`
-- Managed via `PDFEditorPlugin` base class and `PluginManager` (`pagefolio/plugins.py`)
+- None (no external callbacks or webhooks)
 
-## External File Dependencies
+**Plugin Hooks:**
+- `on_load`, `on_unload` - Plugin lifecycle
+- `on_file_open`, `on_file_save` - File operations
+- `on_page_rotate`, `on_page_delete`, `on_page_crop` - Page modifications
+- `on_page_change` - Navigation
+- `on_insert`, `on_merge` - Multi-page operations
+- `build_ui` - Custom UI extension
+- Implementation: `pagefolio/plugins.py` (`PluginManager` class)
 
-**OCR Providers:**
-- Claude provider: `pagefolio/ocr_providers/claude.py` - Uses `ClaudeProvider` class for API calls
-- Gemini provider: `pagefolio/ocr_providers/gemini.py` - Uses `GeminiProvider` class for API calls
-- RunPod provider: `pagefolio/ocr_providers/runpod.py` - Custom LM endpoint support
-- LM Studio: `pagefolio/ocr_providers/lmstudio.py` - OpenAI-compatible endpoint
-- Ollama: `pagefolio/ocr_providers/ollama.py` - Local LLM endpoint
-- Tesseract: `pagefolio/ocr_providers/tesseract.py` - Subprocess-based local OCR
-- Registry: `pagefolio/ocr_providers/registry.py` - Central env var mapping (stdlib `os` only, no internal imports)
+## Provider Fallback Chain
 
-**OCR Pipeline:**
-- `pagefolio/ocr_pipeline.py` - Pure logic (Tk/fitz-free) for queue-based page image processing
-- `pagefolio/ocr_dialog.py` - UI for OCR execution, result display, markdown rendering
-- `pagefolio/ocr_engine.py` - `OCRRunEngine` class coordinating provider selection and execution
-- `pagefolio/md_render.py` - Markdown parsing for OCR result display
-
-**External Prompt Files:**
-- `ocr_custom_prompt.md` - Custom OCR system prompt (optional)
-- `ocr_summary_prompt.md` - Summary generation prompt (optional)
-- Loaded via `pagefolio/settings.py` functions: `load_custom_prompt()`, `load_summary_prompt()`, `load_prompt_file()`
-- Written back to disk on LLM settings dialog apply
+**Feature:** Automatic failover to backup OCR providers (v1.8.0 Phase 2)
+- Settings field: `ocr_fallback_enabled` (boolean, default False)
+- Settings field: `ocr_fallback_chain` (list of provider names, default empty)
+- Implementation: `pagefolio/ocr.py` (fallback logic in `run_parallel`)
+- Disabled by default for safety (explicit user configuration required)
 
 ---
 
-*Integration audit: 2026-07-16*
+*Integration audit: 2026-07-22*

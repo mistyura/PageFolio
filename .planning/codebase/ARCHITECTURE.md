@@ -1,303 +1,330 @@
+<!-- refreshed: 2026-07-22 -->
 # Architecture
 
-<!-- refreshed: 2026-07-16 -->
-**Analysis Date:** 2026-07-16
+**Analysis Date:** 2026-07-22
 
 ## System Overview
 
 ```text
-┌─────────────────────────────────────────────────────────────┐
-│                   PDFEditorApp (Main Class)                 │
-│  Composed of 8 Mixins: UI, File, Page, Redact, Viewer,     │
-│  DnD, OCR, Print                                            │
-├───────────────┬──────────────────┬───────────────────────┬──┤
-│  UI/Dialog    │  Page Operations │  OCR System           │  │
-│  Layer        │  & Rendering     │  (Multi-Provider)     │  │
-│               │                  │                       │  │
-└───────┬───────┴────────┬─────────┴───────┬───────────────┴──┘
-        │                │                 │
-        ▼                ▼                 ▼
-┌──────────────────────────────────┬──────────────────────────┐
-│  State Management                │  File I/O & Persistence  │
-│  - doc (fitz.Document)           │  - pagefolio_settings    │
-│  - current_page (int)            │  - Undo/Redo Blobs       │
-│  - selected_pages (set)          │  - Plugin State          │
-│  - _undo_stack / _redo_stack     │  - External Prompts     │
-│  - settings (dict)               │                          │
-└──────────────────────────────────┴──────────────────────────┘
+┌─────────────────────────────────────────────────────────────────┐
+│                    Tkinter UI Layer                              │
+│          (UIBuilderMixin, ViewerMixin, DnDMixin)                 │
+│  Dialogs: Settings, LLM Config, Batch OCR, Merge, Password       │
+└──────────────────────────┬──────────────────────────────────────┘
+                           │
+                    root.mainloop()
+                           │
+┌──────────────────────────▼──────────────────────────────────────┐
+│           PDFEditorApp (Mixin Composition Layer)                 │
+│  `pagefolio/app.py`                                              │
+│  • 8 Mixins: UIBuilder, FileOps, PageOps, Redact, Viewer,       │
+│    DnD, OCR, PrintOps                                            │
+│  • State: doc, current_page, selected_pages, crop_rect, etc.    │
+│  • Undo/Redo stacks (max 20 entries)                             │
+└──────────────────────────┬──────────────────────────────────────┘
+         │                 │                 │
+         ▼                 ▼                 ▼
+    ┌────────────┐  ┌────────────┐  ┌────────────┐
+    │  File Ops  │  │  Page Ops  │  │ OCR Mixin  │
+    │FileOpsMixin│  │PageOpsMixin│  │ OCRMixin   │
+    │ `file_ops` │  │`page_ops`  │  │  `ocr.py`  │
+    └────────────┘  └────────────┘  └────┬───────┘
+         │               │                 │
+         │ Undo/Redo     │                 │ Provider
+         │ Blob Store    │                 │ Dispatch
+         │               │                 │
+         ▼               ▼                 ▼
+    ┌────────────────────────────────────────────┐
+    │      PDF Logic Layer (Tk/fitz Independent)  │
+    │                                             │
+    │  • ocr_pipeline.py (PipelineState, etc.)    │
+    │  • ocr_fallback.py (fallback routing)       │
+    │  • pagination.py (window calculation)       │
+    │  • undo_store.py (FileBlob/MemBlob)        │
+    │  • md_render.py (Markdown parsing)          │
+    │  • page_ops.py (pure functions)             │
+    └────────────────────────────────────────────┘
          │
          ▼
-┌─────────────────────────────────────────────────────────────┐
-│  PyMuPDF (fitz) / Tkinter / PIL (PIL)                       │
-│  PDF manipulation, UI rendering, image processing           │
-└─────────────────────────────────────────────────────────────┘
+    ┌────────────────────────────────────────────┐
+    │     OCR Providers (Base + Implementations)  │
+    │      `pagefolio/ocr_providers/`             │
+    │                                             │
+    │  • base.py (OCRProvider ABC)                │
+    │  • claude.py (Claude API)                   │
+    │  • gemini.py (Gemini API)                   │
+    │  • lmstudio.py (Local LM Studio)            │
+    │  • tesseract.py (Tesseract OCR)             │
+    │  • ollama.py (Ollama Local)                 │
+    │  • runpod.py (RunPod Serverless)            │
+    │  • registry.py (Provider discovery)         │
+    └────────────────────────────────────────────┘
+         │
+         ▼
+    ┌────────────────────────────────────────────┐
+    │      PDF & LLM External Services            │
+    │                                             │
+    │  • fitz (PyMuPDF) — PDF manipulation        │
+    │  • Claude API, Gemini API — LLM OCR        │
+    │  • Local: Tesseract, Ollama, LM Studio     │
+    └────────────────────────────────────────────┘
 ```
 
 ## Component Responsibilities
 
 | Component | Responsibility | File |
 |-----------|----------------|------|
-| **PDFEditorApp** | Main application class, orchestrates all mixins | `pagefolio/app.py` |
-| **UIBuilderMixin** | Tkinter UI construction, theming, styles, layout | `pagefolio/ui_builder.py` |
-| **FileOpsMixin** | File I/O, undo/redo stack management, PDF save/load | `pagefolio/file_ops.py` |
-| **PageOpsMixin** | Page operations (rotate, delete, crop, merge, split) | `pagefolio/page_ops.py` |
-| **RedactOpsMixin** | Redaction (blackout/mosaic), rectangle selection | `pagefolio/redact_ops.py` |
-| **ViewerMixin** | Preview canvas, zoom, thumbnail rendering, caching | `pagefolio/viewer.py` |
-| **DnDMixin** | Drag-and-drop for thumbnail reordering | `pagefolio/dnd.py` |
-| **OCRMixin** | OCR orchestration, provider selection, button state | `pagefolio/ocr.py` |
-| **PrintOpsMixin** | Print dialog, OS integration (Windows printing) | `pagefolio/print_ops.py` |
-| **OCR Provider System** | Multi-backend OCR (Claude, Gemini, Tesseract, etc.) | `pagefolio/ocr_providers/` |
-| **OCR Pipeline** | Producer-consumer pure logic (Tk/fitz-independent) | `pagefolio/ocr_pipeline.py` |
-| **Undo/Redo Blob Store** | Memory/disk blob management for undo operations | `pagefolio/undo_store.py` |
-| **Plugin System** | Plugin loader, lifecycle, hook management | `pagefolio/plugins.py` |
-| **Settings Manager** | JSON persistence, theme resolution, font generation | `pagefolio/settings.py` |
-| **Pagination** | Thumbnail window virtualization pure logic | `pagefolio/pagination.py` |
-| **Markdown Render** | OCR result markdown parsing and formatting | `pagefolio/md_render.py` |
+| PDFEditorApp | Main composition root, state mgmt, event dispatch | `pagefolio/app.py` |
+| UIBuilderMixin | Tkinter theme & layout construction | `pagefolio/ui_builder.py` |
+| FileOpsMixin | Open/save/undo/redo, password handling | `pagefolio/file_ops.py` |
+| PageOpsMixin | Rotate/delete/crop/insert/merge/split pages | `pagefolio/page_ops.py` |
+| RedactOpsMixin | Redaction (black strikethrough) & mosaic | `pagefolio/redact_ops.py` |
+| ViewerMixin | Preview, thumbnails, zoom, selection | `pagefolio/viewer.py` |
+| DnDMixin | Drag-and-drop thumbnail reordering | `pagefolio/dnd.py` |
+| OCRMixin | OCR dispatch, provider mgmt, button state | `pagefolio/ocr.py` |
+| PrintOpsMixin | Print to default PDF handler | `pagefolio/print_ops.py` |
+| OCRProvider (ABC) | Abstract interface for all OCR backends | `pagefolio/ocr_providers/base.py` |
+| PluginManager | Plugin discovery, load/unload, lifecycle | `pagefolio/plugins.py` |
+| SettingsDialog | Theme, font, OCR provider config | `pagefolio/dialogs/settings.py` |
+| LLMConfigDialog | Cloud provider (Claude/Gemini) API setup | `pagefolio/dialogs/llm_config/dialog.py` |
+| BatchOCRDialog | Multi-page OCR execution UI | `pagefolio/dialogs/batch_ocr.py` |
+| PipelineState | Thread-safe producer-consumer coordination | `pagefolio/ocr_pipeline.py` |
 
 ## Pattern Overview
 
-**Overall:** Multi-Mixin composition pattern with pure logic layers
+**Overall:** Mixin composition with pure logic layers for testability.
 
 **Key Characteristics:**
-- Single large `PDFEditorApp` class composed of 8 focused Mixins
-- Pure logic layers (Tk/fitz-independent) for pagination, OCR pipeline, markdown rendering, blob store
-- Async-safe state management with generation counters for preview/thumbnail rendering
-- Undo/Redo as deque-based operation deltas (max 20 entries), not full state snapshots
-- Plugin system with hook points for lifecycle and page operations
-- Multi-threaded OCR with ThreadPoolExecutor, circuit breaker for fault tolerance
+- **Mixin Composition:** PDFEditorApp statically composes 8 mixins, each providing cohesive feature domain
+- **Pure Logic Layers:** `ocr_pipeline.py`, `pagination.py`, `undo_store.py`, `md_render.py` are Tk/fitz independent pure functions/classes for testability
+- **Plugin System:** Dynamic hook registration (on_load, on_file_open, on_page_rotate, etc.) with error isolation per plugin
+- **Single State Source:** `self.doc` (fitz.Document), `self.current_page`, `self.selected_pages` are the primary state; all views/operations derive from these
 
 ## Layers
 
-**UI Layer:**
-- Purpose: Tkinter UI construction, event handling, dialog management
-- Location: `pagefolio/ui_builder.py`, `pagefolio/dialogs/`, Mixin event handlers
-- Contains: Button/menu definitions, layout, styling, event callbacks
-- Depends on: Settings (theme/font), constants (colors), dialogs
-- Used by: Main window, PDFEditorApp initialization
+**UI Layer (Tkinter):**
+- Purpose: Render PDF preview, thumbnails, status bar, handle user input
+- Location: `pagefolio/app.py` (init → `_build_ui()`), `pagefolio/ui_builder.py` (styles), `pagefolio/viewer.py` (rendering)
+- Contains: Tkinter widgets (Canvas, Frame, Button), event handlers, widget state
+- Depends on: fitz for page rendering, settings for theme/font
+- Used by: Root tk.Tk mainloop
 
-**State Management Layer:**
-- Purpose: Centralized document and application state
-- Location: PDFEditorApp attributes (`self.doc`, `self.current_page`, `self.settings`, etc.)
-- Contains: PDF document reference, page selection, undo/redo stacks, user settings
-- Depends on: None (foundational)
-- Used by: All mixins
+**Application Layer (Mixins):**
+- Purpose: Coordinate operations across file I/O, page editing, OCR dispatch, plugin lifecycle
+- Location: `pagefolio/app.py` (composition), individual mixin files
+- Contains: Business logic, state transitions, event dispatch, error handling
+- Depends on: PDF/OCR logic layers, Tk for UI updates
+- Used by: UI event handlers
 
-**File Operations Layer:**
-- Purpose: PDF file I/O, undo/redo mechanics, password handling
-- Location: `pagefolio/file_ops.py`, `pagefolio/undo_store.py`
-- Contains: Open/save logic, Blob management (MemBlob/FileBlob), password encryption (AES-256)
-- Depends on: PyMuPDF (fitz), state management
-- Used by: All page-modifying operations
+**PDF/OCR Logic Layer (Pure Functions):**
+- Purpose: Decouple business logic from Tkinter/fitz for testability
+- Location: `pagefolio/ocr_pipeline.py`, `pagefolio/pagination.py`, `pagefolio/undo_store.py`, `pagefolio/md_render.py`, `pagefolio/page_ops.py`
+- Contains: State machines, coordinate transforms, Markdown parsing, deferred allocation
+- Depends on: Python stdlib only (or minimal external)
+- Used by: Application layer (Mixins), tests
 
-**Page Operations Layer:**
-- Purpose: PDF page manipulation (rotate, delete, crop, merge, split)
-- Location: `pagefolio/page_ops.py`
-- Contains: Rotation, deletion, cropping (CropBox), merging, insertion, splitting
-- Depends on: PyMuPDF (fitz), file operations (for undo deltas)
-- Used by: Page editing workflows
+**OCR Provider Layer (Plugin Pattern):**
+- Purpose: Abstract different OCR backends (local & cloud)
+- Location: `pagefolio/ocr_providers/` package
+- Contains: `OCRProvider` ABC, concrete providers (Claude, Gemini, Tesseract, etc.), error types
+- Depends on: External APIs (http), local CLI tools (Tesseract), Python stdlib
+- Used by: OCRMixin (dispatch → provider instance), plugin system (custom provider registration)
 
-**Redaction Layer:**
-- Purpose: Content removal (blackout/mosaic application)
-- Location: `pagefolio/redact_ops.py`
-- Contains: Rectangle selection, redaction application, undo support
-- Depends on: PyMuPDF (fitz), page operations, undo store
-- Used by: Content redaction workflows
-
-**Viewer Layer:**
-- Purpose: PDF visualization, preview rendering, zoom, thumbnail display
-- Location: `pagefolio/viewer.py`, `pagefolio/thumb_cache.py`
-- Contains: Canvas rendering, zoom controls, thumbnail generation/caching, pagination
-- Depends on: PyMuPDF (fitz), PIL/Pillow, LRU cache, pagination pure logic
-- Used by: Display, thumbnail panel
-
-**OCR System Layer:**
-- Purpose: Text extraction from PDF pages via multiple providers
-- Location: `pagefolio/ocr.py`, `pagefolio/ocr_dialog.py`, `pagefolio/ocr_pipeline.py`, `pagefolio/ocr_providers/`
-- Contains: Provider abstraction (base + 6 implementations), dialog UI, pipeline pure logic, result formatting
-- Depends on: Providers (Claude API, Google Gemini, Tesseract, LM Studio, Ollama, RunPod), threading, settings
-- Used by: OCR workflows, batch operations
-
-**Plugin System Layer:**
-- Purpose: Third-party plugin loading and lifecycle management
-- Location: `pagefolio/plugins.py`
-- Contains: Plugin base class, manager, hook dispatch, enable/disable logic
-- Depends on: Settings (disabled_plugins list)
-- Used by: Application initialization, operation hooks
-
-**Dialog Layer:**
-- Purpose: Secondary windows for user interaction (settings, merge, OCR, etc.)
-- Location: `pagefolio/dialogs/`
-- Contains: Settings, merge order, LLM config, plugin mgmt, batch OCR, shortcuts editor
-- Depends on: Settings, providers, UI helpers
-- Used by: User-initiated configuration
+**Data Storage Layer:**
+- Purpose: Serialize/deserialize PDFs, settings, cache
+- Location: fitz.Document (RAM), `pagefolio_settings.json` (disk), tempfiles (Blob cache)
+- Contains: PDF bytes, JSON config, LRU thumbnail cache
+- Depends on: PyMuPDF (fitz), filesystem
+- Used by: All layers (read/write)
 
 ## Data Flow
 
-### Primary Request Path: Open → Edit → Save
+### Primary Request Path (User Opens PDF)
 
-1. User initiates file open → `_open_file()` (`FileOpsMixin`) (`pagefolio/file_ops.py:200+`)
-2. File dialog shows → PyMuPDF opens document → `self.doc = fitz.open(path)` 
-3. Password check if protected → `_authenticate_doc()` prompts user if needed
-4. `self.current_page = 0` set, thumbnails generated
-5. `_refresh_all()` → `_render_preview()` + `_queue_thumbnails()` render current page and window
-6. User edits (rotate/crop/delete) → Operation creates undo delta, modifies `self.doc`
-7. `_refresh_all()` re-renders UI with new state
-8. User saves → `_save_file()` calls `self.doc.save()` with encryption if needed
-9. `_push_evicting()` clears redo stack on new operation
+1. **User clicks "Open"** → `_open_file()` in `FileOpsMixin`
+2. **File dialog** → User selects PDF path
+3. **Password check** (if needed) → `_authenticate_doc()` prompts for password
+4. **Load PDF** → `fitz.open(filepath)` → `self.doc`
+5. **Update state** → `self.current_page = 0`, `self.selected_pages = {}`
+6. **Clear undo/redo** → `_clear_undo_stacks()`
+7. **Refresh all** → `_refresh_all()` →
+   - `_show_preview()` (renders current page via `_render_preview_pixmap()`)
+   - `_refresh_thumbs_all()` (batch generate thumbnails on `root.after()`)
+   - `_set_status(f"Opened: {filename}")`
+8. **Update buttons** → `_update_doc_buttons_state()`
 
-### OCR Flow
+### Undo/Redo Operation (User Rotates Page)
 
-1. User selects OCR provider, clicks "▶ 実行" in OCR dialog
-2. `OCRDialog._on_run()` → `_run_gen()` initializes `PipelineState`
-3. Producer (main thread after loop): `_render_next_page()` renders page to base64
-4. `try_enqueue()` sends `(page_index, base64_image, prompt)` to queue
-5. Consumer workers (ThreadPoolExecutor): `consume_one()` calls provider `ocr_image_ex()`
-6. Retryable failures: backoff loop with circuit breaker (max 3 consecutive)
-7. Fatal errors: `send_sentinels()` breaks producer, halts pipeline
-8. Results collected: `_on_ocr_result()` callback formats result to dialog
-9. Markdown preset: `_insert_markdown()` parses and formats result with `md_render.py`
+1. **User selects pages & clicks "Rotate 90°"**
+2. **Save undo** → `_save_undo("rotate", targets=selected_pages)` records rotation angle for each page
+3. **Apply operation** → Update `self.doc[i].rotation` for each page
+4. **Clear redo** → `_clear_redo_stack()` (redo stack is invalidated by new operation)
+5. **Refresh** → `_refresh_all()` updates preview & thumbnails
+6. **Status** → Shows operation result
 
-### Undo/Redo Mechanism
+When user clicks "Undo":
+1. **Pop undo stack** → Retrieve stored rotation angles
+2. **Restore** → Set `self.doc[i].rotation` back to original
+3. **Push redo** → `_save_undo()` into redo stack with inverse operation
+4. **Refresh** → Display restored state
 
-1. Page edit operation (rotate/delete/crop) → create undo delta dict
-2. Call `_push_evicting(delta)` with operation data (op type, affected pages, page bytes)
-3. Redo stack cleared on new operation
-4. Max 20 entries (MAX_UNDO) enforced by deque maxlen
-5. Blob management: Large blobs (>64KiB) stored in tempfile, small in memory
-6. On undo: retrieve delta from `_undo_stack`, apply inverse operation, push to `_redo_stack`
-7. On quit: `_clear_undo_stacks()` → `_undo_blob_store.purge()` cleans tempfiles
+### OCR Multi-Page Flow (Batch OCR Dialog)
 
-**State Management:**
-- `self.doc` holds active PyMuPDF Document (None when closed)
-- `self.settings` dict persisted to `pagefolio_settings.json` (theme, font_size, disabled_plugins, shortcuts, etc.)
-- `self._undo_stack` / `self._redo_stack` hold operation deltas as dicts (not full snapshots)
-- `self._preview_gen` / `self._thumb_gen` generation counters prevent stale async renders overwriting newer ones
-- Generation counter pattern: increment before starting async task, discard result if counter advanced while task ran
+1. **User opens batch OCR dialog** → `BatchOCRDialog()`
+2. **Select pages & provider** → User chooses pages, sets prompt, picks OCR provider
+3. **Click Run** → Dialog spawns worker threads via `ThreadPoolExecutor`
+4. **Producer** (main thread via `root.after()`):
+   - Render page to base64 PNG
+   - Enqueue to shared `queue.Queue`
+   - Use `PipelineState.record_success()` to update progress
+5. **Consumer** (worker threads):
+   - Dequeue image from queue
+   - Call `OCRProvider.ocr_image(b64_png, prompt)` (may retry on 429/5xx)
+   - Update `PipelineState` with result or error
+   - Repeat until sentinel (None) received
+6. **Dialog waits** → Polls `PipelineState` progress, displays results incrementally
+7. **Summary** (optional) → Call `OCRProvider.complete_text_ex()` to merge all results
+
+### State Management
+
+**Primary State Sources:**
+- `self.doc` (`fitz.Document`) — Open PDF or None
+- `self.current_page` (int) — 0-based page index
+- `self.selected_pages` (set[int]) — Multi-selected page indices
+- `self.settings` (dict) — Persisted config (theme, font size, shortcuts, etc.)
+- `self.zoom` (float) — Preview zoom factor
+- `self._page_window_start` (int) — Thumbnail window start index (pagination)
+- `self._page_size` (int) — Thumbnail window size (10–100 pages)
+
+**Derived State:**
+- `self.preview_img_ref` — ImageTk.PhotoImage currently displayed
+- `self.thumb_images` — List of ImageTk.PhotoImage for visible window
+- `self.crop_rect` — Active crop selection or None
+- `self.crop_mode` — Boolean flag for crop mode active
+- `self._undo_stack`, `self._redo_stack` (deque) — Operation history
+
+**Blob Store Lifecycle:**
+- On operation (rotate/crop/delete/merge) → Capture affected pages as Blob (FileBlob ≥64KiB, MemBlob <64KiB)
+- On push to undo stack → Store Blob reference in state dict
+- On stack eviction (maxlen=20 reached) → Call `_dispose_state()` to release temp files
+- On redo clear (new operation after undo) → Release entire redo stack
+- On close/exit → `_clear_undo_stacks()` purges all Blob files
 
 ## Key Abstractions
 
+**fitz.Document:**
+- Purpose: In-memory PDF representation
+- Examples: `self.doc = fitz.open(filepath)`, `self.doc[page_i]`, `self.doc.save(path)`
+- Pattern: Mutable object-oriented API; modifications are in-place
+
 **OCRProvider (ABC):**
-- Purpose: Unified interface for text extraction backends
-- Examples: `ClaudeProvider`, `GeminiProvider`, `TesseractProvider`, `LMStudioProvider`, `OllamaProvider`, `RunPodProvider`
-- Pattern: Abstract base with `ocr_image_ex()` and optional `supports_text_prompt()`/`complete_text_ex()` for multi-page summaries
-- Provider selection: environment variables (`PAGEFOLIO_<PROVIDER>_API_KEY`) or settings dialog input
-- Timeout handling: class attribute `model_list_timeout` per provider (10s local, 30s cloud, 90s RunPod for cold starts)
+- Purpose: Abstract backend-agnostic OCR interface
+- Examples: `ClaudeProvider`, `GeminiProvider`, `TesseractProvider`
+- Pattern: Factory (`build_provider()` in `ocr.py`) → polymorphic dispatch to backend-specific `.ocr_image(b64_png, prompt)`
 
 **PipelineState:**
-- Purpose: Thread-safe shared state for OCR producer-consumer pipeline
-- Pattern: Internal `threading.Lock` protects counters (`done_count`, `consec_err_count`, `workers_remaining`)
-- Circuit breaker: consecutive failure threshold (default 3) triggers fatal error
-- Generation guard: `_run_gen` increments each OCR run, results discarded if generation advanced
+- Purpose: Thread-safe coordination for multi-threaded OCR
+- Examples: `state.record_success()`, `state.record_retryable_failure()`, `state.fatal_msg`
+- Pattern: Lock-protected counters + condition variables (imitated via property checks in caller)
 
-**LruCache (Thumbnail Cache):**
-- Purpose: Memory-bounded thumbnail image cache with LRU eviction
-- Capacity: 300 items (3× max window size of 100)
-- Keys: page index, values: `ImageTk.PhotoImage` objects
-- Used by: Pagination virtualization to avoid regenerating common thumb images
+**Blob (FileBlob / MemBlob):**
+- Purpose: Lazy-load undo page data from disk or memory
+- Examples: `FileBlob(path)` for temp file, `MemBlob(bytes_data)` for small data
+- Pattern: `data.load()` returns bytes; released via `data.release()`
 
-**Blob Storage (MemBlob/FileBlob):**
-- Purpose: Flexible storage for undo page snapshots (64KiB threshold)
-- MemBlob: Small snapshots (<64KiB) stored in memory
-- FileBlob: Large snapshots in tempfile, lazy-loaded on restore
-- Pattern: `load()` returns bytes, `release()` cleans up tempfile (lifecycle managed by deque eviction and atexit)
+**Undo Delta Dict:**
+- Purpose: Compact representation of one operation's state change
+- Examples: `{"op": "rotate", "data": [(page_i, angle), ...]}`, `{"op": "delete", "data": [(page_i, blob), ...]}`
+- Pattern: Op-specific encoding reduces memory; Blob pointers stored inline
 
 ## Entry Points
 
-**Application Entry:**
-- Location: `pagefolio.py` (CLI script)
-- Triggers: Direct execution (`python pagefolio.py`)
-- Responsibilities: Import and call `pagefolio.__main__.main()`
+**Main Entry Point (Command Line):**
+- Location: `pagefolio.py` or `python -m pagefolio`
+- Triggers: `python pagefolio.py` / `python -m pagefolio`
+- Responsibilities: Import main, call `main()`
 
-**Main Function:**
+**Application Initialization:**
 - Location: `pagefolio/__main__.py:main()`
-- Triggers: Application launch
-- Responsibilities: Create Tk root window, instantiate `PDFEditorApp`, optionally setup D&D, run event loop
+- Triggers: Script entry
+- Responsibilities: Create root Tk window, instantiate PDFEditorApp, setup file drop, enter mainloop
 
-**PDFEditorApp Constructor:**
-- Location: `pagefolio/app.py:__init__`
-- Triggers: Called by `main()`
-- Responsibilities: Initialize state, load settings/theme, build UI, build menus, bind shortcuts, load plugins
+**PDFEditorApp.__init__:**
+- Location: `pagefolio/app.py:138–290`
+- Triggers: Mixin initialization via `super().__init__()` (Python MRO)
+- Responsibilities: Load settings, apply theme, build UI, bind shortcuts, load plugins
 
-**User Events:**
-- File menu clicks → `_open_file()` / `_save_file()` / `_save_as()`
-- Page operations → `_rotate_selected()` / `_delete_selected()` / `_open_crop_mode()`
-- Undo/Redo → `_undo()` / `_redo()`
-- OCR → `_open_batch_ocr()` → `BatchOCRDialog`
-- Settings → Dialog windows (`SettingsDialog`, `LLMConfigDialog`, `ShortcutsDialog`)
-- D&D File Drop → `_on_dnd_drop()` → `MergeOrderDialog`
+**Menu/Dialog Entry Points:**
+- Shortcuts (e.g., Ctrl+O) → Bound via `_bind_shortcuts()` to `self._cmd_map` functions
+- Menu items (e.g., "Tools → Batch OCR") → `_open_batch_ocr()` → `BatchOCRDialog`
+- Dialog buttons → Direct method calls on app instance
 
 ## Architectural Constraints
 
-- **Threading:** Tkinter main thread handles all UI rendering and state updates. PDF rendering (preview/thumbnails) and OCR are off-thread but results posted back to main via `root.after()` with generation guards. OCR uses `ThreadPoolExecutor` for parallel API calls.
-- **Global state:** `C` (theme dict, `pagefolio/themes.py`) and `_current_font_size` (in `pagefolio/settings.py`) are module-level singletons updated at runtime when theme/font changes. All Mixin methods access via `self._font()` helper and `C` dict.
-- **Undo limit:** Hard-coded `MAX_UNDO = 20` in `PDFEditorApp`. Each entry is operation-specific delta dict (rotate: rotation values, crop: CropBox tuple, delete: page blobs, etc.), not full PDF serialization.
-- **Circular imports:** Settings module must not import pagefolio internals to prevent cycles on startup. OCR pipeline avoids importing UI modules; providers import only standard library + requests.
-- **CropBox safety:** All crop operations must clamp `CropBox` inside page's `MediaBox` before calling `set_cropbox()` (`pagefolio/page_ops.py` helpers ensure this).
-- **PDF not thread-safe:** `fitz.Document` never shared across threads. OCR renders pages on main thread, sends base64 bytes to workers.
-- **Generation counter pattern:** Async renders (preview, thumbnails) increment gen counter before task, discard result if counter advanced during task (prevents stale renders overwriting fresh ones).
+- **Threading:** UI runs on Tkinter main thread. Preview/thumbnail rendering queued via `root.after()` (chained callbacks); generation counters (`_preview_gen`, `_thumb_gen`) prevent stale renders overwriting newer ones. OCR uses `ThreadPoolExecutor` with workers calling into `PipelineState` (Lock-protected).
+- **Global state:** `C` (theme dict) in `pagefolio/settings.py` and `_current_font_size` are module-level mutable singletons updated at runtime via `_apply_theme()` and `set_current_font_size()`.
+- **Undo limit:** Hard-coded to `MAX_UNDO = 20` in `pagefolio/app.py`. Each entry stores operation delta dict; full PDF serialization is avoided.
+- **Blob storage:** Undo stack holds Blob references (FileBlob/MemBlob). Lifecycle: capture on operation → push to stack → pop on undo/redo or evict → release temp file. Direct `append()`/`clear()` to `_undo_stack` bypasses cleanup and leaks files.
+- **CropBox safety:** All crop operations must clamp CropBox inside page's MediaBox before calling `set_cropbox()` (see `_derotate_rect()` helper in `page_ops.py`).
+- **PDF open/close:** `fitz.Document` must be closed on app exit or file close, else temp MMaps remain open (resource leak).
+- **Pagination window:** Global `selected_pages` stays full-document indices; thumbnail window conversion happens only in view layer via `to_global()` / `window_for_page()` (pure functions).
+- **Plugin isolation:** Plugin `on_*` hooks wrapped individually so one plugin error doesn't crash others. Hook implementations must handle their own exceptions.
 
 ## Anti-Patterns
 
-### Mixin Coupling Without Inheritance
+### Direct Undo Stack Manipulation
 
-**What happens:** Mixins call other Mixin methods directly via `self`, creating implicit dependencies.
+**What happens:** Code calls `self._undo_stack.append()` or `.clear()` directly instead of `_push_evicting()` / `_clear_redo_stack()` / `_clear_undo_stacks()`.
 
-**Why it's wrong:** Large class becomes hard to reason about; unclear which methods a Mixin truly depends on; refactoring breaks hidden contracts.
+**Why it's wrong:** FileBlob temp files never released; disk space leaks.
 
-**Do this instead:** Document Mixin dependencies in module docstring (e.g., "PageOpsMixin depends on FileOpsMixin undo methods"). Accept that Mixin order in class definition matters; place higher-level Mixins after utility Mixins.
+**Do this instead:** Use wrapper methods (`_push_evicting()`, `_clear_undo_stacks()`) that call `_dispose_state()` on evicted/cleared Blobs.
 
-### State Snapshots in Undo Instead of Deltas
+### Hardcoded Colors or Font Sizes
 
-**What happens:** Early code stored full PDF bytes on every operation; `_undo_stack` contained megabytes per entry even for single-page edits.
+**What happens:** Code uses hex strings like `"#ff5733"` or `font=("Segoe UI", 12)` instead of theme dict `C` and `_font()` helper.
 
-**Why it's wrong:** Large memory footprint; slow to push/pop; defeats Undo limit (20 entries = 20 PDFs in memory).
+**Why it's wrong:** Theme switching breaks; inconsistent UX; font size changes don't propagate.
 
-**Do this instead:** (`v1.7.0+`) Store operation-specific deltas only: rotate stores angle list, delete stores affected page blobs, etc. Use `UndoBlobStore` to externalize >64KiB blobs to tempfiles.
+**Do this instead:** Reference `C["ACCENT"]` for colors, call `self._font(delta)` for fonts (base + delta pattern).
 
-### API Keys in Settings File
+### Circular Imports via Settings
 
-**What happens:** OCR provider API keys hardcoded in `pagefolio_settings.json` (insecure on shared machines).
+**What happens:** `ocr_providers/registry.py` imports from `pagefolio.settings` or UI modules.
 
-**Why it's wrong:** Secrets in plaintext JSON; visible in version control if accidentally committed; leaked in backups.
+**Why it's wrong:** Violates independent `registry.py` constraint (V180-ROBUST-02); settings.py → dialogs → registry → settings creates import cycle.
 
-**Do this instead:** (`v1.7.0+`) Load API keys from environment variables (`PAGEFOLIO_CLAUDE_API_KEY`, etc.) or session-only dict (`self._session_api_keys`). Settings file explicitly guards sensitive keys with `_SENSITIVE_KEYS` set.
+**Do this instead:** `registry.py` uses only `os` stdlib; reads env vars and class attributes only. Settings/UI logic stays in `ocr.py` (caller).
 
-### Generation Counter Omission in Async Tasks
+### Blocking Calls on Main Thread
 
-**What happens:** Preview/thumbnail rendered in background completes *after* user navigates to new page; stale image overwrites fresh one.
+**What happens:** OCR or network call runs synchronously in event handler without threading.
 
-**Why it's wrong:** UI flicker, incorrect preview shown; user confusion.
+**Why it's wrong:** Freezes UI during network I/O; user can't cancel.
 
-**Do this instead:** Increment `self._preview_gen` before rendering, pass gen ID to task callback, discard result if `self._preview_gen` advanced (true even if callback scheduled multiple times).
+**Do this instead:** Spawn `ThreadPoolExecutor`, use `root.after()` for progress polling, store worker state in `PipelineState`.
 
 ## Error Handling
 
-**Strategy:** Try-except with user-visible messagebox feedback; plugin callbacks individually wrapped so one plugin failure cannot crash others.
+**Strategy:** User-visible errors via `messagebox.showerror()` or status bar; logged to stderr.
 
 **Patterns:**
-- File not found → `messagebox.showerror()` with localized message
-- PDF corrupted → `messagebox.showerror()` + fall back to closed state
-- OCR provider error → `OCRRetryableError` (with backoff) vs. fatal error (stop pipeline, show message)
-- Plugin callback error → Logged, pipeline continues, user notified via toast if critical
-- Password prompt → `simpledialog.askstring()` with retry on failure
+- **File I/O errors:** Catch `OSError` → show messagebox with filename and error reason
+- **PDF parsing errors:** Catch `fitz.FileError` (corrupted PDFs, wrong format) → show "Invalid PDF"
+- **OCR API errors:** Map provider exceptions (ConnectionError, TimeoutError, OCRAPIKeyError, OCRRetryableError) → show user message or retry UI
+- **Plugin errors:** Individual hook try/except; error logged but doesn't stop other plugins
+- **Password errors:** Catch `PDFPasswordError` → show "Password incorrect" and re-prompt
 
 ## Cross-Cutting Concerns
 
-**Logging:** Standard `logging` module, `WARNING` level by default, file-specific loggers (`logger = logging.getLogger(__name__)`) for each module.
+**Logging:** Root logger set to WARNING in `PDFEditorApp.__init__()`. Debug logs via `logger.debug()` (e.g., in `_bind_shortcuts`).
 
-**Validation:** 
-- CropBox: Clamped to MediaBox before application
-- Page range: Validated against `self.doc.page_count` before operation
-- Undo stack: Deque maxlen enforces cap; old entries auto-evicted
+**Validation:** Input validation in pure functions (e.g., `parse_page_ranges()` in `page_ops.py`). UI field validation in dialog `ok_clicked()` handlers.
 
-**Authentication:** 
-- PDF password: Prompted via `simpledialog.askstring()` if document is encrypted
-- API keys: Resolved from env vars → settings → dialog input in order of precedence
+**Authentication:** PDF password handled in `_authenticate_doc()` (FileOpsMixin); prompts via `simpledialog.askstring()`. API keys stored in `self._session_api_keys` dict (not persisted to disk).
 
-**Localization:** `self.lang` determines ja/en; all UI strings via `self._t("key_name")` helper (lookups from `LANG` dict in `pagefolio/lang.py`).
-
-**Theming:** `C` global dict updated via `_apply_theme()` on startup or dialog change; all Tkinter colors reference `C` (e.g., `bg=C["BG_DARK"]`), no hex hardcodes.
+**Settings Persistence:** `_load_settings()` / `_save_settings()` in `settings.py`; JSON file `pagefolio_settings.json`. API keys excluded via `_SENSITIVE_KEYS` guard.
 
 ---
 
-*Architecture analysis: 2026-07-16*
+*Architecture analysis: 2026-07-22*
