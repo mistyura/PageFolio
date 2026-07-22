@@ -3,8 +3,9 @@ quick_id: 260722-gae
 slug: gemini-api-400-error-5li33o
 date: 2026-07-22
 type: directive
-status: pending
+status: complete
 priority: highest
+completed: 2026-07-22
 ---
 
 # 【最優先指示書】次回 GSD-Core 実行時: 260722-gae の GSD ワークフロー精査
@@ -72,6 +73,15 @@ priority: highest
   ユーザーが実機確認・問題なし。世代ゲートによるパラメータ省略
   （temperature / thinkingConfig あり→なし）が既存正常系を壊さないことを
   実環境で裏付け。対象 3 モデルすべて実機グリーン。
+- 2026-07-22: /gsd-ship セッション（GSD-Core）で項目 2〜4 を完了。
+  項目 2: 世代ゲート方式で確定（ユーザー承認）。項目 3: RECOMMENDED_MODELS へ
+  gemini-3.x 追加のみ実施・UI 注記/thinking 実測は先送り（ユーザー承認）。
+  項目 4: 記録整合を確認し開発履歴.md 索引の v1.8.0 行欠落（既存ギャップ）を追補。
+  独立検証: ローカル Windows で pytest 1109 件グリーン・ruff クリーン。
+  検証記録 [260722-gae-VERIFICATION.md](./260722-gae-VERIFICATION.md)・
+  セキュリティ記録 [260722-gae-SECURITY.md](./260722-gae-SECURITY.md) を作成。
+  結果は SUMMARY.md「GSD 精査結果」へ追記済み。項目 5（リリース系）は
+  /gsd-ship の PR 作成で継続。
 
 ## 完了条件
 

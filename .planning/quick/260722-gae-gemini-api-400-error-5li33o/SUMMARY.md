@@ -91,3 +91,43 @@ status: complete
 ruff check . && ruff format .
 pytest tests/test_ocr_providers.py -q
 ```
+
+## GSD 精査結果（2026-07-22・GSD-AUDIT-DIRECTIVE 項目 2〜4 完了）
+
+/gsd-ship 実行セッション（GSD-Core）で精査を完了。詳細な検証エビデンスは
+[260722-gae-VERIFICATION.md](./260722-gae-VERIFICATION.md)、セキュリティ所見は
+[260722-gae-SECURITY.md](./260722-gae-SECURITY.md) を参照。
+
+### 項目 2: 設計判断レビュー — ✅ 世代ゲート方式で確定（ユーザー承認）
+
+- 原指示「temperature の完全削除」に対し、gemini-2.x の OCR 再現性維持を優先した
+  世代ゲート方式の採用をユーザーへ提示し、**維持で確定**（3 モデル実機グリーンを根拠）。
+- 正規表現 `gemini-(\d+)` の頑健性を確認:
+  - `gemini-exp-*`・日付サフィックス・バージョンレスエイリアス → None → 新世代扱い
+    （パラメータ省略）。省略は全世代で合法のため**誤判定しても 400 は再発しない**
+    （最悪でも temperature 未指定による揺らぎのみ＝安全側不変条件）。
+  - 将来の `gemini-10` 等も int 比較で正しく新世代判定（文字列比較の罠なし）。
+  - `models/` プレフィックス付き ID は `list_models` が短縮名を返すため実運用で
+    発生しない（既存一覧テストで確認）。gemma 系は temperature 送信継続（H-7 維持）。
+
+### 項目 3: 残課題の処理判断 — ✅ ①のみ実施・②③先送り（ユーザー承認）
+
+- ① `RECOMMENDED_MODELS` へ実機検証済みの gemini-3.6-flash / 3.5-flash /
+  3.5-flash-lite を追加（本ブランチで実施・テスト 193 件グリーン確認済み）。
+- ② LLM 設定ダイアログの temperature 無視注記（UI 変更）→ **先送り**
+  （STATE.md Operator Next Steps に記録）。
+- ③ 新世代 thinking 有効時の応答時間・トークン実測（実 API 必要）→ **先送り**（同上）。
+
+### 項目 4: 記録整合性確認 — ✅ 整合（1 件の既存ギャップを追補）
+
+- `APP_VERSION` / README バッジ / CLAUDE.md 既知の制限 / 開発履歴.md
+  （最終更新 + 索引行）/ STATE.md の v1.8.1 記載は相互整合を確認。
+- 開発履歴.md のバージョン索引に **v1.8.0 行が無い既存ギャップ**（v1.8.0 クローズ時
+  から・main 由来）を発見し、本ブランチで索引行を追補。
+- 旧 PDF Editor 時代の「v1.8.1 — 設定UI改善」見出しとの重複は別系統の明記があり
+  問題なし。
+
+### 独立検証（ローカル Windows 実機）
+
+- pytest 全 1109 件グリーン（リモートの python3.12 + xvfb-run と同数・環境差なし）。
+- RECOMMENDED_MODELS 追補後も ruff クリーン・test_ocr_providers.py 193 件グリーン。
