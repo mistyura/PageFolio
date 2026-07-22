@@ -61,11 +61,14 @@ status: complete
 - 既存テストへの影響なし（`TestGeminiProviderThinkingConfig` の 2.5-pro 省略 /
   2.5-flash 送信 / gemma 省略はすべて従来どおり通過）。`pytest` 1109 件グリーン。
 - `ruff check` / `ruff format` クリーン。
+- **実機確認済み（2026-07-22・ユーザー実施）**: 手動ビルドによる実機で、実際の
+  Gemini API キーを使い gemini-3.6-flash / gemini-3.5-flash-lite の OCR を確認。
+  400 エラーは解消し問題なし。
 
 ## 注意点・潜在リスク
 
-- **実 API での動作確認は未実施**（モック検証のみ）。gemini-3.6-flash /
-  gemini-3.5-flash-lite で実際に 400 が解消するかは Windows 実機 + 実キーで要確認。
+- ~~実 API での動作確認は未実施~~ → **解消（2026-07-22）**: ユーザーが手動ビルドの
+  実機 + 実キーで gemini-3.6-flash / gemini-3.5-flash-lite の OCR を確認し問題なし。
 - ユーザー指示は「temperature の完全削除」だったが、gemini-2.5 系の OCR 再現性
   維持を優先して**世代ゲート方式**を採用した（設計判断）。完全削除へ倒す場合は
   `_build_generation_config` の 2 分岐を外すのみ。
