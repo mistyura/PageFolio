@@ -10,10 +10,6 @@
 | 項目 | 内容 |
 |------|------|
 | アプリ名 | PageFolio |
-| 言語 | Python 3.8+ |
-| UI フレームワーク | Tkinter（標準ライブラリ） |
-| PDF ライブラリ | pymupdf (fitz) |
-| 画像ライブラリ | Pillow (PIL) |
 | 対象 OS | Windows 11 |
 | 現在バージョン | `pagefolio/constants.py` の `APP_VERSION` を参照 |
 
@@ -23,13 +19,6 @@
 ---
 
 > ファイル構成は `ls` / `git ls-files` で、モジュールごとの責務は `pagefolio/CLAUDE.md` を参照。
-
-## コマンド
-
-| コマンド | 用途 |
-|---------|------|
-| `pytest` | テスト実行 |
-| `ruff check . && ruff format .` | リント・フォーマット |
 
 ---
 
@@ -48,24 +37,6 @@
 - 主要アクション → `"Accent.TButton"`
 - 破壊的操作（削除・終了） → `"Danger.TButton"`
 - トリミングモード ON → `"CropOn.TButton"`
-
-### 状態管理（`self.*` 主要属性）
-
-| 属性 | 説明 |
-|------|------|
-| `self.doc` | 現在開いている `fitz.Document`（未開時は `None`） |
-| `self.current_page` | 0 始まりのページインデックス |
-| `self.selected_pages` | `set` で複数選択を管理 |
-| `self._undo_stack` / `self._redo_stack` | Undo/Redo スタック |
-| `self.thumb_cache` | サムネイルキャッシュ辞書 |
-| `self._doc_buttons` | ファイル依存ボタンのリスト（doc 未開時に disabled） |
-| `self._pending_click` | ダブルクリック競合防止用の遅延クリックID |
-| `self.settings` | 設定辞書（テーマ、フォントサイズ、ウィンドウジオメトリ、モード） |
-| `self.font_size` | 現在のベースフォントサイズ（8〜16） |
-| `self.edit_mode` | 編集モード True / 閲覧モード False（設定に永続化） |
-| `self._paned` | メインの `tk.PanedWindow`（横分割）参照 |
-| `self._right_panel` | 右ツールパネルの `tk.Frame` |
-| `self._mode_btn` | モード切替 `ttk.Button` 参照 |
 
 ### 操作後の作法
 
@@ -102,7 +73,7 @@
 | GitHub Issue のタイトル / コメント | `トリミング後にプレビューが更新されない` |
 | コードレビューのフィードバック | `この条件分岐は不要では？` |
 | `開発履歴.md` の記載 | 既存ルール通り |
-| セッション終了時の申し送り | 後述のフォーマット |
+| セッション終了時の申し送り | `session-handoff` スキルのフォーマット |
 | ユーザーへの応答・説明 | 会話はすべて日本語 |
 
 **例外（英語のまま）**:
@@ -125,24 +96,8 @@
 - サムネイルは `fitz.Matrix(0.22 * z, 0.22 * z)`（`z` は `thumb_zoom_var`、既定 1.0）のスケールで生成（変更時はパフォーマンスに注意）
 - プレビューは `self.zoom * 1.5` のスケールで生成
 - 右ペインはスクロール可能な Canvas 構成（`_build_tools_scrollable` で実装）
-- クラウド OCR（Claude / Gemini / RunPod）はページ画像を base64 で外部 API へ https 送信する（Tesseract / LM Studio / Ollama はローカル完結）。RunPod の API キーは環境変数 `RUNPOD_API_KEY` のみ
-- API キーは設定ファイルに保存されず、環境変数またはセッションメモリ（`app._session_api_keys`）のみ
-- OCR のリトライ待機は `Retry-After` を 60 秒上限にクランプし、0.5 秒刻みでキャンセルを確認する（`clamp_retry_after` / `interruptible_sleep`）
-- `fitz.Document` はスレッド間で共有しない（OCR はメインスレッドでレンダリングした base64 のみワーカーへ渡す）
-- **外部プロンプトファイル連動**: OCR のカスタム/サマリプロンプトは、実行ファイル（開発時はプロジェクトルート）と同じ階層の `ocr_custom_prompt.md` / `ocr_summary_prompt.md`（`constants.py` の `CUSTOM_PROMPT_FILE` / `SUMMARY_PROMPT_FILE`）と LLM 設定の入力欄を双方向連動できる。ファイルが存在すればダイアログを開いたとき入力欄へ反映し、適用時に入力欄の内容をファイルへ書き戻す。OCR/サマリ実行時は毎回再読込するため外部エディタでの編集が再起動なしで反映される。ファイルが無ければ従来どおり設定欄のみで完結（`settings.py`）
-- **Gemini 新世代モデルのパラメータ制限（v1.8.1）**: gemini-3 世代以降は `temperature` 等のサンプリングパラメータ・`thinkingConfig`（thinkingBudget）の指定が 400 INVALID_ARGUMENT で拒否される。`GeminiProvider` は世代番号を 2 以下と判定できた旧世代（`_is_legacy_gemini`）のみに送信し、バージョンレスのエイリアス（gemini-flash-latest 等）は新世代扱いで省略する（省略は全世代で合法＝安全側。gemma 等の非 gemini 系は従来どおり送信）
-- **モデル一覧取得の非同期化・タイムアウト**: クラウド LLM（Claude / Gemini / RunPod）のモデル一覧取得は LLM 設定ダイアログでバックグラウンドスレッド実行され UI をフリーズさせない（`pagefolio/dialogs/llm_config/model_fetch.py` の `_fetch_models_async`）。タイムアウトはプロバイダ別クラス属性 `model_list_timeout`（ローカル 10 秒 / Claude・Gemini 30 秒 / RunPod 90 秒）
+- OCR・クラウド LLM 固有の注意事項（API キーの扱い、リトライ制御、スレッド制約、外部プロンプトファイル連動、Gemini のパラメータ制限、モデル一覧取得）は [pagefolio/CLAUDE.md](pagefolio/CLAUDE.md) の「OCR・LLM の注意事項」を参照
 - **`pagefolio/ocr_providers/registry.py` の独立性制約**（v1.8.0 Phase 1 新設のプロバイダ→環境変数 中央レジストリ）: Python 標準ライブラリ（`os`）のみに依存し、pagefolio 内部の他モジュール（特に `settings.py`・UI 関連）を import しない。settings.py 等から参照される際の循環 import を構造的に防ぐための制約であり、将来も内部モジュールへの import 依存を追加しないこと。新プロバイダの機密キー定義追加はこの1ファイルに閉じる（V180-ROBUST-02）
-
----
-
-## 今後の追加予定機能
-
-- [x] ページの回転状態をプレビューに即時反映（v1.6.0 / V16-QUAL-01）
-- [x] PDF のパスワード対応（付与/解除・AES-256）（v1.6.1）
-- [x] 印刷機能（Ctrl+P・既定 PDF ハンドラ送信）（v1.6.1）
-
-> 実装済みの機能リストは [開発履歴.md](開発履歴.md) を参照。
 
 ---
 
@@ -158,36 +113,9 @@
 
 ## セッション終了時のルール
 
-作業が完了したら、依頼されなくても必ず日本語で以下の形式で申し送りを出力すること。
+作業が完了したら、依頼されなくても必ず日本語で申し送りを出力すること。
 この出力は claude.ai に貼り付けて Notion を更新するために使用する。
-
-### 変更内容サマリー
-
-**修正対象**: （バグ番号・機能名など）
-
-| ファイル | 変更内容 |
-|----------|----------|
-| ファイルパス | 変更内容の概要 |
-
-### 修正内容の詳細
-
-（バグ修正なら症状・原因・対応内容を記載）
-
-### 次セッションへの申し送り
-
-#### 未実施（動作確認・テスト）
-
-- 確認が必要な事項を箇条書き
-
-#### 注意点・潜在リスク
-
-- 動作上の注意点や将来の改善候補
-
-#### 実行推奨コマンド（必要な場合）
-
-```
-pytest tests/ など
-```
+**書式は `session-handoff` スキル（`.claude/skills/session-handoff/SKILL.md`）を参照すること。**
 
 <!-- GSD:project-start source:PROJECT.md -->
 
@@ -211,47 +139,6 @@ PageFolio の既存コードベースに対する最適化プロジェクト。
 
 <!-- GSD:architecture-start source:ARCHITECTURE.md -->
 
-## Architecture
-
-## State Management
-
-| Attribute | Type | Description |
-|-----------|------|-------------|
-| `self.doc` | `fitz.Document \| None` | Open PDF document |
-| `self.filepath` | `str \| None` | Path of the open file |
-| `self.current_page` | `int` | 0-based current page index |
-| `self.selected_pages` | `set[int]` | Multi-selection set |
-| `self._undo_stack` | `deque[dict]` | 操作デルタ state dict（max 20） |
-| `self._redo_stack` | `deque[dict]` | 逆操作デルタ state dict（max 20） |
-| `self.thumb_cache` | `dict[int, ImageTk.PhotoImage]` | Thumbnail image cache |
-| `self._doc_buttons` | `list[ttk.Button]` | Buttons disabled when no doc |
-| `self.crop_mode` | `bool` | Whether crop selection is active |
-| `self.crop_rect` | `tuple \| None` | Current crop selection rect |
-| `self.edit_mode` | `bool` | Edit vs View mode |
-| `self.settings` | `dict` | Persisted settings from JSON |
-| `self.font_size` | `int` | Base font size (8–16) |
-| `self.plugin_manager` | `PluginManager` | Plugin lifecycle manager |
-| `self._preview_gen` | `int` | Generation counter for preview thread |
-| `self._thumb_gen` | `int` | Generation counter for thumbnail thread |
-
-## Extension Points
-
-### Plugin System
-
-| Hook | Signature | Trigger |
-|------|-----------|---------|
-| `on_load` | `(app)` | Plugin enabled/loaded |
-| `on_unload` | `(app)` | Plugin disabled/unloaded |
-| `on_file_open` | `(app, path)` | File opened |
-| `on_file_save` | `(app, path)` | File saved |
-| `on_page_rotate` | `(app, pages, degrees)` | Page rotated |
-| `on_page_delete` | `(app, pages)` | Page deleted |
-| `on_page_crop` | `(app, page_index)` | Page cropped |
-| `on_page_change` | `(app, page_index)` | Current page changed |
-| `on_insert` | `(app, paths, insert_at)` | Pages inserted |
-| `on_merge` | `(app, paths)` | PDFs merged |
-| `build_ui` | `(app, parent)` | Build custom UI in given `tk.Frame` |
-
 ## Architectural Constraints
 
 - **Threading:** UI runs on the Tkinter main thread. Preview and thumbnail renders are processed on the main thread via `root.after()` chained calls; generation counters (`_preview_gen`, `_thumb_gen`) prevent stale results from overwriting newer ones. OCR uses `ThreadPoolExecutor`.
@@ -259,12 +146,6 @@ PageFolio の既存コードベースに対する最適化プロジェクト。
 - **Undo limit:** Hard-coded to `MAX_UNDO = 20` in `pagefolio/app.py`. 各エントリは操作固有のデルタ dict（rotate: 回転値リスト、crop: cropbox タプル、delete/page_edit: ページ単位 Blob 等）であり、full PDF シリアライズではない。
 - **Undo Blob ライフサイクル（v1.7.0）:** ページ単位のキャプチャは必ず `_capture_page_blob(page_i)` 経由で行う（64KiB 以上は `UndoBlobStore` が tempfile へ退避・未満は MemBlob）。復元側は `self._blob_bytes(data)` で bytes を取り出す（生 bytes 後方互換）。解放は deque 溢れ（`_push_evicting`）・redo クリア（`_clear_redo_stack`）・消費時（`_undo`/`_redo` 内の identity 比較付き dispose）・ファイルクローズ/終了時（`_clear_undo_stacks` → purge）＋ atexit。スタックへの直接 `append`/`clear` は禁止（Blob がリークする）。
 - **CropBox safety:** All crop operations must clamp the `CropBox` inside the page's `MediaBox` before calling `set_cropbox()` (`pagefolio/page_ops.py`).
-
-## Error Handling
-
-- File operations use `messagebox.showerror()` for user-visible failures
-- Plugin callbacks are individually wrapped so one plugin failure cannot crash others
-- Preview/thumbnail `root.after()` callbacks silently discard results when generation counter has advanced
 
 <!-- GSD:architecture-end -->
 

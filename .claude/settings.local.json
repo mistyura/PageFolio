@@ -1,12 +1,7 @@
 {
   "permissions": {
-    "defaultMode": "bypassPermissions",
     "allow": [
       "Bash(mkdir -p .planning/codebase)"
     ]
-  },
-  "enabledMcpjsonServers": [
-    "gsd-workflow",
-    "gsd-browser"
-  ]
+  }
 }

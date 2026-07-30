@@ -55,6 +55,20 @@ OCR のカスタム/サマリプロンプトの外部 md ファイル読込・�
 
 `pagination.py` はサムネイル一覧の窓表示（既定 20・範囲 10〜100）の純ロジック層。窓計算・件数クランプ・ローカル位置 ↔ 全ページインデックス変換（`to_global` 等）を Tk/fitz 非依存の純関数群として集約する。`selected_pages` は全ページインデックスのまま保持し、描画・D&D・選択照合の側で窓変換する（散在による窓またぎバグを構造的に防止）。
 
+### OCR・LLM の注意事項
+
+ルートの [CLAUDE.md](../CLAUDE.md) から移設。OCR / クラウド LLM 周りを触る際に参照する。
+
+- クラウド OCR（Claude / Gemini / RunPod）はページ画像を base64 で外部 API へ https 送信する（Tesseract / LM Studio / Ollama はローカル完結）。RunPod の API キーは環境変数 `RUNPOD_API_KEY` のみ
+- API キーは設定ファイルに保存されず、環境変数またはセッションメモリ（`app._session_api_keys`）のみ
+- OCR のリトライ待機は `Retry-After` を 60 秒上限にクランプし、0.5 秒刻みでキャンセルを確認する（`clamp_retry_after` / `interruptible_sleep`）
+- `fitz.Document` はスレッド間で共有しない（OCR はメインスレッドでレンダリングした base64 のみワーカーへ渡す）
+- **外部プロンプトファイル連動**: OCR のカスタム/サマリプロンプトは、実行ファイル（開発時はプロジェクトルート）と同じ階層の `ocr_custom_prompt.md` / `ocr_summary_prompt.md`（`constants.py` の `CUSTOM_PROMPT_FILE` / `SUMMARY_PROMPT_FILE`）と LLM 設定の入力欄を双方向連動できる。ファイルが存在すればダイアログを開いたとき入力欄へ反映し、適用時に入力欄の内容をファイルへ書き戻す。OCR/サマリ実行時は毎回再読込するため外部エディタでの編集が再起動なしで反映される。ファイルが無ければ従来どおり設定欄のみで完結（`settings.py`）
+- **Gemini 新世代モデルのパラメータ制限（v1.8.1）**: gemini-3 世代以降は `temperature` 等のサンプリングパラメータ・`thinkingConfig`（thinkingBudget）の指定が 400 INVALID_ARGUMENT で拒否される。`GeminiProvider` は世代番号を 2 以下と判定できた旧世代（`_is_legacy_gemini`）のみに送信し、バージョンレスのエイリアス（gemini-flash-latest 等）は新世代扱いで省略する（省略は全世代で合法＝安全側。gemma 等の非 gemini 系は従来どおり送信）
+- **モデル一覧取得の非同期化・タイムアウト**: クラウド LLM（Claude / Gemini / RunPod）のモデル一覧取得は LLM 設定ダイアログでバックグラウンドスレッド実行され UI をフリーズさせない（`pagefolio/dialogs/llm_config/model_fetch.py` の `_fetch_models_async`）。タイムアウトはプロバイダ別クラス属性 `model_list_timeout`（ローカル 10 秒 / Claude・Gemini 30 秒 / RunPod 90 秒）
+
+> `pagefolio/ocr_providers/registry.py` の独立性制約（内部モジュールを import しない）はルートの [CLAUDE.md](../CLAUDE.md) の「禁止事項」側に残してある。
+
 ### `pagefolio/dialogs/`（パッケージ）
 
 `about.py`（`AboutDialog`）・`settings.py`（`SettingsDialog`）・`plugin.py`（`PluginDialog`）・
