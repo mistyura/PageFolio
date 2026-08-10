@@ -1170,6 +1170,163 @@ class TestAllOpsUndoRedoRoundtrip:
             assert "pdf_bytes" not in entry
 
 
+# ===== 挿入失敗ロールバック・複製 Undo タイミング（V190-SAFE-04/05・Phase01 Plan04）=====
+
+
+class TestInsertRollback:
+    """複数ファイル挿入が途中で失敗した場合のロールバック検証（V190-SAFE-04）"""
+
+    def _make_fake_app(self, doc):
+        """FileOpsMixin + PageOpsMixin を使う FakeApp を生成する"""
+        import collections
+        import types
+
+        import pagefolio.file_ops as fo
+        import pagefolio.page_ops as po
+
+        class FakeApp(fo.FileOpsMixin, po.PageOpsMixin):
+            MAX_UNDO = 20
+
+            def __init__(self, d):
+                self.doc = d
+                self.current_page = 0
+                self.selected_pages = set()
+                self._undo_stack = collections.deque(maxlen=self.MAX_UNDO)
+                self._redo_stack = collections.deque(maxlen=self.MAX_UNDO)
+                self._preview_gen = 0
+                self._thumb_gen = 0
+                self.lang = "ja"
+
+            def _check_doc(self):
+                return self.doc is not None
+
+            def _invalidate_thumb_cache(self, *a, **kw):
+                pass
+
+            def _refresh_all(self):
+                pass
+
+            def _t(self, key):
+                return key
+
+            def _set_status(self, *a):
+                pass
+
+        app = FakeApp(doc)
+        app.plugin_manager = types.SimpleNamespace(fire_event=lambda *a, **kw: None)
+        return app
+
+    def test_insert_failure_rolls_back_pages_and_undo_stack(
+        self, sample_pdf_doc, multi_pdf_files, monkeypatch
+    ):
+        """2ファイル目の insert_pdf で例外 → ページ数・Undoスタック長・全ページ
+        digest 列が操作前と一致する（既存ページを削除していないことも同時に担保）"""
+        import pagefolio.page_ops as po
+
+        app = self._make_fake_app(sample_pdf_doc)
+        original_count = len(app.doc)
+        before_digests = [_page_digest(app.doc[i]) for i in range(len(app.doc))]
+        before_undo_len = len(app._undo_stack)
+
+        errors = []
+        monkeypatch.setattr(
+            po.messagebox, "showerror", lambda t, m: errors.append((t, m))
+        )
+
+        original_insert_pdf = fitz.Document.insert_pdf
+        call_count = {"n": 0}
+
+        def flaky_insert_pdf(self_doc, src, **kwargs):
+            call_count["n"] += 1
+            if call_count["n"] == 2:
+                raise RuntimeError("2ファイル目で失敗")
+            return original_insert_pdf(self_doc, src, **kwargs)
+
+        monkeypatch.setattr(fitz.Document, "insert_pdf", flaky_insert_pdf)
+
+        app._do_insert([multi_pdf_files[1], multi_pdf_files[2]], 1)
+
+        assert len(app.doc) == original_count
+        assert len(app._undo_stack) == before_undo_len
+        after_digests = [_page_digest(app.doc[i]) for i in range(len(app.doc))]
+        assert after_digests == before_digests
+        assert len(errors) == 1
+
+
+class TestDuplicateUndoTiming:
+    """ページ複製の Undo 記録が実処理成功後に確定することの検証（V190-SAFE-05）"""
+
+    def _make_fake_app(self, doc):
+        """FileOpsMixin + PageOpsMixin を使う FakeApp を生成する"""
+        import collections
+        import types
+
+        import pagefolio.file_ops as fo
+        import pagefolio.page_ops as po
+
+        class FakeApp(fo.FileOpsMixin, po.PageOpsMixin):
+            MAX_UNDO = 20
+
+            def __init__(self, d):
+                self.doc = d
+                self.current_page = 0
+                self.selected_pages = set()
+                self._undo_stack = collections.deque(maxlen=self.MAX_UNDO)
+                self._redo_stack = collections.deque(maxlen=self.MAX_UNDO)
+                self._preview_gen = 0
+                self._thumb_gen = 0
+                self.lang = "ja"
+
+            def _check_doc(self):
+                return self.doc is not None
+
+            def _invalidate_thumb_cache(self, *a, **kw):
+                pass
+
+            def _refresh_all(self):
+                pass
+
+            def _t(self, key):
+                return key
+
+            def _set_status(self, *a):
+                pass
+
+        app = FakeApp(doc)
+        app.plugin_manager = types.SimpleNamespace(fire_event=lambda *a, **kw: None)
+        return app
+
+    def test_duplicate_failure_leaves_pages_and_undo_stack_unchanged(
+        self, sample_pdf_doc, monkeypatch
+    ):
+        """_duplicate_page の insert_pdf が例外 → ページ数・Undoスタック長・
+        digest 列が不変で、エラーダイアログが1回表示される"""
+        import pagefolio.page_ops as po
+
+        app = self._make_fake_app(sample_pdf_doc)
+        original_count = len(app.doc)
+        before_digests = [_page_digest(app.doc[i]) for i in range(len(app.doc))]
+        before_undo_len = len(app._undo_stack)
+
+        errors = []
+        monkeypatch.setattr(
+            po.messagebox, "showerror", lambda t, m: errors.append((t, m))
+        )
+
+        def failing_insert_pdf(self_doc, src, **kwargs):
+            raise RuntimeError("複製に失敗")
+
+        monkeypatch.setattr(fitz.Document, "insert_pdf", failing_insert_pdf)
+
+        app._duplicate_page()
+
+        assert len(app.doc) == original_count
+        assert len(app._undo_stack) == before_undo_len
+        after_digests = [_page_digest(app.doc[i]) for i in range(len(app.doc))]
+        assert after_digests == before_digests
+        assert len(errors) == 1
+
+
 # ===== bulk_move ロジック =====
 
 
