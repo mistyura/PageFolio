@@ -2873,6 +2873,178 @@ class TestUndoRedoRestoreFailure:
         final_digests = [_page_digest(app.doc[i]) for i in range(len(app.doc))]
         assert after_merge_digests == final_digests
 
+    def test_page_edit_insert_failure_rolls_back_and_retry_preserves_neighbors(
+        self, monkeypatch
+    ):
+        """V190-UNDO-01 回帰テスト（01-VERIFICATION.md Evidence B・CR-02・
+        option-b）: page_edit の undo が、差し替えページ挿入は成功したが
+        旧ページの delete_page が失敗した場合、挿入済みページを取り除く
+        ロールバックを試み、ロールバックが成功すれば通常の部分失敗（強い
+        警告ではない）として扱われることを検証する。障害解消後の再試行で
+        doc が完全に元へ戻り、当初 page_edit の対象でなかった隣接ページ
+        （index 2 = "Page 3"）が巻き添えで削除されないことを確認する。
+        """
+        import collections
+
+        import pagefolio.file_ops as fo
+        from pagefolio.redact_ops import RedactOpsMixin
+
+        app = self._make_full_fake_app(n_pages=4)
+        before_digests = [_page_digest(app.doc[i]) for i in range(len(app.doc))]
+
+        targets = [0, 1]
+        app._save_undo("page_edit", targets=targets)
+        rect = fitz.Rect(60, 50, 300, 110)
+        for i in targets:
+            RedactOpsMixin._redact_page(app.doc[i], rect)
+
+        errors = []
+        monkeypatch.setattr(
+            fo.messagebox, "showerror", lambda t, m: errors.append((t, m))
+        )
+
+        # release_log は Blob オブジェクト自体を保持する（id() のみを記録
+        # すると release 直後に GC・メモリ再利用されて誤って id が衝突しう
+        # るため、既存の test_undo_stress.py の release スパイと同型に、
+        # オブジェクト参照を保持したまま id() ベースで比較する）。
+        release_log = []
+        real_release_blob = fo.FileOpsMixin._release_blob
+
+        def spy_release_blob(blob):
+            release_log.append(blob)
+            return real_release_blob(blob)
+
+        monkeypatch.setattr(
+            fo.FileOpsMixin, "_release_blob", staticmethod(spy_release_blob)
+        )
+
+        real_delete_page = fitz.Document.delete_page
+        call_count = {"n": 0}
+
+        def flaky_delete_page(self_doc, *a, **kw):
+            if self_doc is app.doc:
+                call_count["n"] += 1
+                if call_count["n"] == 2:
+                    raise RuntimeError("delete_page 失敗（模擬）")
+            return real_delete_page(self_doc, *a, **kw)
+
+        monkeypatch.setattr(fitz.Document, "delete_page", flaky_delete_page)
+
+        # 1回目の undo: page 0 は成功。page 1 は差し替え挿入まで成功したが
+        # 旧ページ削除（2回目の delete_page 呼び出し）で失敗し、直後の
+        # ロールバック（3回目の delete_page 呼び出し）は成功する。
+        app._undo()
+
+        assert len(errors) == 1
+        assert errors[0][1] == "err_undo_restore_failed_partial"
+        assert len(app.doc) == 4
+
+        # 2回目の undo（障害解除後の再試行）: 残り1件が正しく復元される
+        app._undo()
+
+        assert len(app.doc) == 4
+        after_digests = [_page_digest(app.doc[i]) for i in range(len(app.doc))]
+        assert before_digests == after_digests
+        assert _page_digest(app.doc[2]) == "Page 3"
+
+        counts = collections.Counter(id(b) for b in release_log)
+        assert all(c <= 1 for c in counts.values()), (
+            f"double-release検出（_release_blob が2回以上呼ばれたBlobあり）: {counts}"
+        )
+
+        app._clear_undo_stacks()
+
+    def test_page_edit_unrecoverable_failure_warns_and_preserves_all_pages(
+        self, monkeypatch
+    ):
+        """V190-UNDO-01 回帰テスト（01-VERIFICATION.md Evidence B・CR-02・
+        option-b）: page_edit の undo でロールバックに使う delete_page 自体
+        も失敗し続ける（回復不能）場合、専用の強い警告
+        （err_undo_restore_failed_content_at_risk）が1回だけ表示される
+        ことを検証する。障害解消後の再試行で doc が完全に復旧し、その後の
+        redo→undo 往復まで内容が一致することを確認する（内容喪失なし・
+        隣接ページの巻き添えなし・ページ重複なし）。
+        """
+        import collections
+
+        import pagefolio.file_ops as fo
+        from pagefolio.redact_ops import RedactOpsMixin
+
+        app = self._make_full_fake_app(n_pages=4)
+        before_digests = [_page_digest(app.doc[i]) for i in range(len(app.doc))]
+
+        targets = [0, 1]
+        app._save_undo("page_edit", targets=targets)
+        rect = fitz.Rect(60, 50, 300, 110)
+        for i in targets:
+            RedactOpsMixin._redact_page(app.doc[i], rect)
+        after_edit_digests = [_page_digest(app.doc[i]) for i in range(len(app.doc))]
+
+        errors = []
+        monkeypatch.setattr(
+            fo.messagebox, "showerror", lambda t, m: errors.append((t, m))
+        )
+
+        # release_log は Blob オブジェクト自体を保持する（id() のみを記録
+        # すると release 直後に GC・メモリ再利用されて誤って id が衝突しう
+        # るため、既存の test_undo_stress.py の release スパイと同型に、
+        # オブジェクト参照を保持したまま id() ベースで比較する）。
+        release_log = []
+        real_release_blob = fo.FileOpsMixin._release_blob
+
+        def spy_release_blob(blob):
+            release_log.append(blob)
+            return real_release_blob(blob)
+
+        monkeypatch.setattr(
+            fo.FileOpsMixin, "_release_blob", staticmethod(spy_release_blob)
+        )
+
+        real_delete_page = fitz.Document.delete_page
+        call_count = {"n": 0}
+        disabled = {"v": False}
+
+        def flaky_delete_page(self_doc, *a, **kw):
+            if self_doc is app.doc:
+                call_count["n"] += 1
+                if call_count["n"] >= 2 and not disabled["v"]:
+                    raise RuntimeError("delete_page 失敗（模擬・回復不能）")
+            return real_delete_page(self_doc, *a, **kw)
+
+        monkeypatch.setattr(fitz.Document, "delete_page", flaky_delete_page)
+
+        # 1回目の undo: page 0 は成功。page 1 は旧ページ削除もロールバック
+        # も両方失敗し、専用の強い警告が1回だけ表示される。
+        app._undo()
+
+        assert len(errors) == 1
+        assert errors[0][1] == "err_undo_restore_failed_content_at_risk"
+
+        # 障害を解除して undo を再試行する
+        disabled["v"] = True
+        app._undo()
+
+        assert len(app.doc) == 4
+        after_undo_digests = [_page_digest(app.doc[i]) for i in range(len(app.doc))]
+        assert before_digests == after_undo_digests
+
+        # Redo: 両ページとも編集後の内容に戻る
+        app._redo()
+        after_redo_digests = [_page_digest(app.doc[i]) for i in range(len(app.doc))]
+        assert after_edit_digests == after_redo_digests
+
+        # さらに Undo: 編集前の内容へ完全に戻る
+        app._undo()
+        final_digests = [_page_digest(app.doc[i]) for i in range(len(app.doc))]
+        assert before_digests == final_digests
+
+        counts = collections.Counter(id(b) for b in release_log)
+        assert all(c <= 1 for c in counts.values()), (
+            f"double-release検出（_release_blob が2回以上呼ばれたBlobあり）: {counts}"
+        )
+
+        app._clear_undo_stacks()
+
     def test_undo_empty_stack_is_noop(self, sample_pdf_doc):
         """空スタックに対する undo はステータス表示のみで Document を
         変更しない"""

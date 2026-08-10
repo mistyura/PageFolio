@@ -249,6 +249,16 @@ LANG = {
             "います。もう一度実行すると残りのページに処理を再試行します。"
             "詳細: {e}"
         ),
+        "err_undo_restore_failed_content_at_risk": (
+            "元に戻す処理が途中で失敗し、復旧処理も失敗しました。"
+            "このページが二重化または欠落している可能性があります。"
+            "ファイルを閉じずに内容をご確認ください。詳細: {e}"
+        ),
+        "err_redo_restore_failed_content_at_risk": (
+            "やり直し処理が途中で失敗し、復旧処理も失敗しました。"
+            "このページが二重化または欠落している可能性があります。"
+            "ファイルを閉じずに内容をご確認ください。詳細: {e}"
+        ),
         "status_settings": "設定を変更しました",
         # ファイル操作
         "filetypes_pdf": "PDFファイル",
@@ -992,6 +1002,16 @@ LANG = {
         "err_redo_restore_failed_partial": (
             "Redo failed partway through. Some pages have already been changed. "
             "Running it again will retry the remaining pages. Details: {e}"
+        ),
+        "err_undo_restore_failed_content_at_risk": (
+            "Undo failed partway through, and the recovery attempt also failed. "
+            "This page may now be duplicated or missing. Please check its "
+            "content without closing the file. Details: {e}"
+        ),
+        "err_redo_restore_failed_content_at_risk": (
+            "Redo failed partway through, and the recovery attempt also failed. "
+            "This page may now be duplicated or missing. Please check its "
+            "content without closing the file. Details: {e}"
         ),
         "status_settings": "Settings updated",
         # File operations

@@ -22,17 +22,23 @@ class PartialRestoreError(Exception):
     """_restore_state の多ページ処理ループが途中で失敗したことを表す例外（CR-01）。
 
     delete / page_edit / insert_undo / insert_redo / merge_undo / merge_resize /
-    merge_resize_undo / delete_redo は 1 ページずつ doc を mutate するため、
-    途中の 1 件で例外が出ると「それより前は既に doc へ適用済み」の状態になる。
-    この例外は「実際に何件適用できたか」を反映した ``remaining_state``
+    merge_resize_undo / delete_redo / insert は 1 ページずつ doc を mutate する
+    ため、途中の 1 件で例外が出ると「それより前は既に doc へ適用済み」の状態
+    になる。この例外は「実際に何件適用できたか」を反映した ``remaining_state``
     （未適用分のみを表す state dict）を運び、呼び出し元（_undo/_redo）が
     元の（全件ぶんの）state をそのまま戻すことで再試行時に既に適用済みの
     ページへ mutation を重複適用してしまう事故（重複挿入・過剰削除）を防ぐ。
+
+    ``content_at_risk``（V190-UNDO-01・CR-02）: True は「復元ループが doc を
+    ページ内容の一意性が保証されない状態（喪失または二重化）で残した」ことを
+    表し、2 段階 mutation（page_edit）の中間失敗に対するロールバックにも
+    失敗した場合にのみ立つ。既定は False（通常の部分失敗）。
     """
 
-    def __init__(self, remaining_state, original_exception):
+    def __init__(self, remaining_state, original_exception, content_at_risk=False):
         self.remaining_state = remaining_state
         self.original_exception = original_exception
+        self.content_at_risk = content_at_risk
         super().__init__(str(original_exception))
 
 
@@ -160,7 +166,15 @@ class FileOpsMixin:
         merged.sort(key=lambda item: item[0])
         return merged
 
-    def _restore_partial_error(self, state, remaining_data, exc, pending_inverse=None):
+    def _restore_partial_error(
+        self,
+        state,
+        remaining_data,
+        exc,
+        pending_inverse=None,
+        content_at_risk=False,
+        page_edit_inserted=None,
+    ):
         """CR-01: 多ページ復元ループが途中で失敗した際、既に適用できた分を
         差し引いた state を構築して PartialRestoreError として送出する。
 
@@ -172,12 +186,25 @@ class FileOpsMixin:
         None 以外が渡された場合は ``remaining["_pending_inverse"]`` を
         その値で上書きする。None の場合は ``remaining = dict(state)``
         により前回までの蓄積がそのまま引き継がれる（既定挙動は不変）。
+
+        ``content_at_risk``（V190-UNDO-01・CR-02）: そのまま
+        ``PartialRestoreError`` へ伝播する。既定 False（通常の部分失敗）。
+
+        ``page_edit_inserted``（V190-UNDO-01・CR-02・option-b）:
+        page_edit 分岐専用の再試行制御マーカー（差し替え挿入だけが済んで
+        いる page_i の集合）。None 以外が渡された場合のみ
+        ``remaining["_page_edit_inserted"]`` を上書きする
+        （``pending_inverse`` と同型の実装）。
         """
         remaining = dict(state)
         remaining["data"] = remaining_data
         if pending_inverse is not None:
             remaining["_pending_inverse"] = pending_inverse
-        raise PartialRestoreError(remaining, exc) from exc
+        if page_edit_inserted is not None:
+            remaining["_page_edit_inserted"] = page_edit_inserted
+        raise PartialRestoreError(
+            remaining, exc, content_at_risk=content_at_risk
+        ) from exc
 
     def _push_evicting(self, stack, state):
         """deque へ push する前に、溢れて evict される最古 state を解放する。
@@ -282,11 +309,17 @@ class FileOpsMixin:
             # ため、未適用分のみを表す remaining_state に差し替えて戻す。
             self._push_evicting(self._undo_stack, e.remaining_state)
             self._handle_partial_restore()
+            # CR-02: content_at_risk が真の場合（中間 mutation のロール
+            # バックにも失敗し、ページが二重化または欠落している可能性が
+            # ある）は専用の強い警告文言に切り替える。
+            key = (
+                "err_undo_restore_failed_content_at_risk"
+                if e.content_at_risk
+                else "err_undo_restore_failed_partial"
+            )
             messagebox.showerror(
                 self._t("err_title"),
-                self._t("err_undo_restore_failed_partial").format(
-                    e=e.original_exception
-                ),
+                self._t(key).format(e=e.original_exception),
             )
             return
         except Exception as e:
@@ -319,11 +352,16 @@ class FileOpsMixin:
             # CR-01: _undo と同型の保護（未適用分のみの state を戻す）
             self._push_evicting(self._redo_stack, e.remaining_state)
             self._handle_partial_restore()
+            # CR-02: _undo と同型の切り替え（content_at_risk のときのみ
+            # 専用の強い警告文言にする）
+            key = (
+                "err_redo_restore_failed_content_at_risk"
+                if e.content_at_risk
+                else "err_redo_restore_failed_partial"
+            )
             messagebox.showerror(
                 self._t("err_title"),
-                self._t("err_redo_restore_failed_partial").format(
-                    e=e.original_exception
-                ),
+                self._t(key).format(e=e.original_exception),
             )
             return
         except Exception as e:
@@ -554,27 +592,73 @@ class FileOpsMixin:
             inverse["data"] = self._merge_pending_inverse(state, pending)
         elif op == "page_edit":
             # ページ内容の置換（黒塗り・モザイク等の破壊的編集の undo/redo）。
-            # ページ数は不変のため昇順で 1 ページずつ delete→insert しても
-            # 他ページのインデックスはずれない。差し替え元 bytes は
-            # delete_page より先にロードすることで、Blob ロード失敗が
-            # 「ページ削除後・再挿入前」という最も危険なタイミングで
-            # 起きないようにする（mutation 前に検出できる分を増やす）。
+            # CR-02（V190-UNDO-01・option-b・構造的解消）: mutation 順序を
+            # 反転し、差し替えページを insert_pdf で「先に」挿入してから
+            # 旧ページを delete_page で「後から」除去する。doc がページ
+            # 内容を失っている瞬間が構造的に存在しなくなる（最悪でも旧・
+            # 新ページが両方 doc に残る＝内容喪失ゼロ・可視かつ回復可能）。
+            #
+            # `_page_edit_inserted`（state 専用の再試行制御マーカー。
+            # merge_resize の `_merged_page_deleted` と同型の precedent）:
+            # 「差し替え挿入だけが済んでいる page_i の集合」を運ぶ。ロール
+            # バック（挿入済みページの取り消し）も失敗した場合のみ立ち、
+            # 次回の再試行が挿入を二重に行わないようにする。inverse は
+            # _apply_inverse が構築する別 dict であり、マーカーは state
+            # 側にしか存在しない（inverse へは一切漏れない）。
+            #
             # CR-01: 途中で失敗した場合は未適用分のみの state を伝搬する。
-            # V190-UNDO-01: そのページを mutate する直前（delete_page より
-            # 前）に現在（編集後）の内容を捕捉し、delete_page→insert_pdf が
-            # 両方成功したときだけ次段の逆デルタとして蓄積する。
+            inserted_marker = state.pop("_page_edit_inserted", set())
             pending = []
             applied = 0
+            content_at_risk = False
             try:
                 for page_i, page_bytes in state["data"]:
                     tmp = fitz.open(stream=self._blob_bytes(page_bytes), filetype="pdf")
-                    captured = self._capture_page_blob(page_i)
                     try:
-                        self.doc.delete_page(page_i)
-                        self.doc.insert_pdf(tmp, start_at=page_i)
-                    except Exception:
-                        self._release_blob(captured)
-                        raise
+                        if page_i in inserted_marker:
+                            # 再試行経路: 差し替えページは既に page_i にあり、
+                            # 旧ページが page_i + 1 に残っている。旧ページの
+                            # 内容を捕捉してから削除するだけでよい（tmp は
+                            # 使わないが、Blob ロード失敗の早期検出という
+                            # 現行の意図を維持するため引き続き先に開く）。
+                            captured = self._capture_page_blob(page_i + 1)
+                            try:
+                                self.doc.delete_page(page_i + 1)
+                            except Exception:
+                                self._release_blob(captured)
+                                content_at_risk = True
+                                raise
+                            inserted_marker.discard(page_i)
+                        else:
+                            # 通常経路: 差し替えページを先に挿入し、旧ページ
+                            # を後から削除する。
+                            captured = self._capture_page_blob(page_i)
+                            try:
+                                self.doc.insert_pdf(tmp, start_at=page_i)
+                            except Exception:
+                                # doc は無変更（挿入自体が失敗）なので内容
+                                # 喪失は起きていない。
+                                self._release_blob(captured)
+                                raise
+                            try:
+                                self.doc.delete_page(page_i + 1)
+                            except Exception:
+                                try:
+                                    self.doc.delete_page(page_i)
+                                except Exception:
+                                    # ロールバックも失敗: 旧ページは
+                                    # page_i + 1 に残っており内容喪失は
+                                    # 起きていないため captured は解放して
+                                    # よい。再試行が挿入を二重に行わない
+                                    # よう page_i をマーカーへ加える。
+                                    self._release_blob(captured)
+                                    inserted_marker.add(page_i)
+                                    content_at_risk = True
+                                    raise
+                                # ロールバック成功: doc は mutation 前へ
+                                # 戻ったので content_at_risk は立てない。
+                                self._release_blob(captured)
+                                raise
                     finally:
                         tmp.close()
                     pending.append((page_i, captured))
@@ -584,7 +668,12 @@ class FileOpsMixin:
                     self._release_blob(blob)
                 merged_pending = self._merge_pending_inverse(state, pending)
                 self._restore_partial_error(
-                    state, state["data"][applied:], e, pending_inverse=merged_pending
+                    state,
+                    state["data"][applied:],
+                    e,
+                    pending_inverse=merged_pending,
+                    content_at_risk=content_at_risk,
+                    page_edit_inserted=inserted_marker,
                 )
             inverse["data"] = self._merge_pending_inverse(state, pending)
         elif op == "move":
