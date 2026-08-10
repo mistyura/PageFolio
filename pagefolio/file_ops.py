@@ -701,6 +701,13 @@ class FileOpsMixin:
             # 削除は削除できたかどうかを "_merged_page_deleted" フラグで
             # state へ残し、再試行時に二重で delete_page しないようにする。
             # 元ページ再挿入は insert 系ループと同様に applied 件数を追跡する。
+            # V190-UNDO-01: _apply_inverse の identity 共有（inv["data"] is
+            # state["data"]）は _undo/_redo の dispose 判定が依存するため
+            # 維持する。元ページ再挿入が成功するたびに (idx, blob) を蓄積し、
+            # ループ後に共有 dict（d）の orig_pages を _merge_pending_inverse
+            # で完全な元ページ集合へ差し替える。あわせて _merged_page_deleted
+            # を取り除く（次段の逆デルタへ持ち越すと次回の undo が結合ページ
+            # の削除をスキップし Evidence 4 の5ページ化を再発させるため）。
             d = state["data"]
             insert_at = d["insert_at"]
             if not d.get("_merged_page_deleted"):
@@ -709,34 +716,51 @@ class FileOpsMixin:
                 except Exception as e:
                     self._restore_partial_error(state, dict(d), e)
             orig_sorted = sorted(d["orig_pages"], key=lambda x: x[0])
+            pending = []
             applied = 0
             try:
                 for idx, page_bytes in orig_sorted:
                     tmp = fitz.open(stream=self._blob_bytes(page_bytes), filetype="pdf")
                     self.doc.insert_pdf(tmp, start_at=idx)
                     tmp.close()
+                    pending.append((idx, page_bytes))
                     applied += 1
             except Exception as e:
-                for _i, blob in orig_sorted[:applied]:
-                    self._release_blob(blob)
+                # V190-UNDO-01: 成功済み分の Blob はここでは解放しない
+                # （次段の逆デルタが元ページ再挿入に必要とするため）。
+                # _pending_inverse として引き継ぎ、再試行未消費のまま state が
+                # evict/clear された場合は _dispose_state 側で解放する。
                 remaining_data = dict(d)
                 remaining_data["orig_pages"] = orig_sorted[applied:]
                 remaining_data["_merged_page_deleted"] = True
-                self._restore_partial_error(state, remaining_data, e)
+                merged_pending = self._merge_pending_inverse(state, pending)
+                self._restore_partial_error(
+                    state, remaining_data, e, pending_inverse=merged_pending
+                )
+            d["orig_pages"] = self._merge_pending_inverse(state, pending)
+            d.pop("_merged_page_deleted", None)
         elif op == "merge_resize_undo":
             # merge_resize_undo の実行: 元ページを削除し結合ページを再挿入（redo）。
             # CR-01: 元ページは削除できた分だけ d["orig_pages"] から間引いた
             # remaining を保持する（merged_bytes は未消費のまま state に残る
             # ため、削除が全件完了した後の insert 失敗も自然に「orig_pages が
             # 空の状態から insert だけ再試行」として扱える）。
+            # V190-UNDO-01: 元ページの削除が成功するたびに、その orig_pages
+            # エントリ（既存の blob をそのまま持つタプル）を蓄積する。doc
+            # からの新規捕捉は不要（内容は既に orig_pages の blob が保持）。
+            # 削除ループと結合ページ挿入の両方が成功したら共有 dict の
+            # orig_pages を完全な元ページ集合へ戻す。
             d = state["data"]
             insert_at = d["insert_at"]
-            orig_indices = sorted([idx for idx, _ in d["orig_pages"]], reverse=True)
+            orig_by_idx = dict(d["orig_pages"])
+            orig_indices = sorted(orig_by_idx.keys(), reverse=True)
             deleted = set()
+            pending = []
             try:
                 for idx in orig_indices:
                     self.doc.delete_page(idx)
                     deleted.add(idx)
+                    pending.append((idx, orig_by_idx[idx]))
                 tmp = fitz.open(
                     stream=self._blob_bytes(d["merged_bytes"]), filetype="pdf"
                 )
@@ -747,7 +771,11 @@ class FileOpsMixin:
                 remaining_data["orig_pages"] = [
                     item for item in d["orig_pages"] if item[0] not in deleted
                 ]
-                self._restore_partial_error(state, remaining_data, e)
+                merged_pending = self._merge_pending_inverse(state, pending)
+                self._restore_partial_error(
+                    state, remaining_data, e, pending_inverse=merged_pending
+                )
+            d["orig_pages"] = self._merge_pending_inverse(state, pending)
         elif op == "bulk_move":
             new_order = state["data"]
             inverse_order = [0] * len(new_order)
