@@ -218,3 +218,38 @@ class TestSavePathsKeepEncryption:
         assert reopened.authenticate("secret") > 0
         reopened.close()
         opened.close()
+
+    def test_overwrite_current_file_keeps_encryption(self, tmp_path):
+        # _overwrite_current_file を encryption 未指定で呼んでも暗号化が
+        # 維持されることを実ファイルで検証する（D-02）
+        enc = str(tmp_path / "enc.pdf")
+        d = _make_doc()
+        save_with_password(d, enc, "secret")
+        d.close()
+
+        opened = fitz.open(enc)
+        opened.authenticate("secret")
+        app = _DummyApp(doc=opened, filepath=enc)
+        app.pdf_has_password = True
+
+        app._overwrite_current_file(enc)
+
+        reopened = fitz.open(enc)
+        assert reopened.needs_pass
+        assert reopened.authenticate("secret") > 0
+        reopened.close()
+        app.doc.close()
+
+
+class TestDerivePdfHasPassword:
+    """derive_pdf_has_password の純関数テスト（D-03）。"""
+
+    def test_derive_keep_preserves_current(self):
+        assert file_ops.derive_pdf_has_password(True, fitz.PDF_ENCRYPT_KEEP) is True
+        assert file_ops.derive_pdf_has_password(False, fitz.PDF_ENCRYPT_KEEP) is False
+
+    def test_derive_aes256_true(self):
+        assert file_ops.derive_pdf_has_password(False, fitz.PDF_ENCRYPT_AES_256) is True
+
+    def test_derive_none_false(self):
+        assert file_ops.derive_pdf_has_password(True, fitz.PDF_ENCRYPT_NONE) is False
