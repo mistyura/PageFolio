@@ -1,164 +1,148 @@
 # Project Research Summary
 
-**Project:** PageFolio v1.8.0「実用性の最大化・エコシステム洗練・堅牢性強化」
-**Domain:** Tkinter デスクトップ PDF エディタ（Mixin 構成 + 純ロジック層 + producer-consumer OCR パイプライン）への機能追加
-**Researched:** 2026-07-13
-**Confidence:** HIGH（既存コードベース .planning/codebase/CONCERNS.md・.planning/PROJECT.md を一次情報源とした curated 調査が中心。外部エコシステム知見は WebSearch で MEDIUM 裏取り）
+**Project:** PageFolio v1.9.0「安全性・整合性の是正 + OpenAI プロバイダ追加」
+**Domain:** Windows デスクトップ PDF エディタ（Tkinter・PyMuPDF・PyInstaller配布）へのバグ修正・設定UI整合性是正・OCR/LLMプロバイダ追加
+**Researched:** 2026-08-10
+**Confidence:** MEDIUM〜HIGH
 
 ## Executive Summary
 
-PageFolio v1.8.0 は、既存の Mixin + 純ロジック層アーキテクチャ（pagination.py/ocr_pipeline.py/undo_store.py などの Tk/fitz 非依存層）を崩さずに、AI強化（プロンプト・テンプレートマネージャー、明示設定型プロバイダーフォールバック）・堅牢性強化（サムネイル仮想化 PERF-01、Blobライフサイクル、肥大モジュール分割）・品質保証（E2Eモックテスト、通知UX、UI一貫性監査）・バッチ複数ファイルOCR（単独フェーズ隔離）の4本柱を実装するマイルストーンである。4機能はすべて Python 3.8+ 標準ライブラリのみで実現可能であり、新規 pip 依存の追加は不要（V14-D-01「新規 pip 依存ゼロ方針」継続）。
+v1.9.0 は新機能追加が主目的ではなく、既存機能レビュー（V190-REV-01〜08）で発見された8件の安全性・整合性バグの是正と、その基盤の上に載せるOpenAI(ChatGPT) OCR プロバイダのフル実装という2階建ての構成である。4本の並行リサーチ（STACK/FEATURES/ARCHITECTURE/PITFALLS）は「安全性是正が先、OpenAI追加が後」「プロバイダメタデータ一元化（V190-REV-08）がOpenAI追加の直前必須依存」という2点で完全に一致しており、これがロードマップの背骨になる。
 
-推奨アプローチは「既存の枯れたプリミティブを拡張する」ことに一貫する。バッチ OCR は ocr_pipeline.py の producer-consumer をファイル単位でもう一段ラップし、プロバイダーフォールバックは PipelineState.fatal_msg 確定後のオーケストレーション層として追加し、サムネイル仮想化は pagination.py の窓表示の外層は不変のまま可視範囲計算のみを新規純関数層として内側に重ねる。テンプレートマネージャーは v1.7.4 の外部 md ファイル連動を「複数の名前付きスロット」へ拡張する形で後方互換を保つ。
+技術的な核心は3つ。(1) PyMuPDF の Document.save()/tobytes() は encryption= 引数を明示しない限り暗号化を静かに解除する仕様であり、これが暗号化PDF平文化事故（V190-REV-01）の直接原因——encryption=fitz.PDF_ENCRYPT_KEEP を通常保存・別名保存・インクリメンタル失敗フォールバックの3経路すべてに共通ヘルパー経由で適用することが対策。(2) OCRプロバイダのメタデータ（表示名・クラウド判定・既定モデル・送信先ホスト等）が最低7ファイル・5〜8箇所に手書きで重複しており、この状態でOpenAIを追加すると分岐の書き漏らしがほぼ確実に発生する——catalog.py を新設し一元化してから追加すべき。(3) OpenAI の Chat Completions API は既存 RunPodProvider/LMStudioProvider とほぼ同一の「OpenAI互換」形状であり、urllib直叩き（新規pip依存ゼロ方針を維持）で最小差分実装が可能。ただし /v1/models に vision対応フラグが無いという非対称性があり、モデル一覧フィルタは名前ベースの簡易ヒューリスティックで妥協する必要がある。
 
-最大のリスクは3点。(1) fitz.Document のスレッド非共有制約をバッチOCRで破ること（ファイル間逐次処理が必須、multiprocessing は導入しない）、(2) サムネイル仮想化で pagination.py の selected_pages 全ページインデックス不変条件・D&D窓またぎバグ対策を新しい座標系で再発させること、(3) プロバイダーフォールバックが「明示設定型・自動ベンダー切替なし」という確定方針を確認ダイアログ省略という近道で迂回してしまうこと。いずれも既存の原則（V14-D-05/06、V16-D-01、V14-D-03、OCR-SEC-01/UI-01）をそのまま拡張適用すれば防止できる。
+主要リスクは3つ。第一に Undo/編集系のロールバック不備——記録タイミングをずらすだけでは current_page/selected_pages スナップショットがずれる副作用を生むため、既存の _do_insert の「仮エントリ→確定」パターンを踏襲する必要がある。第二に設定ダイアログの外部ファイル副作用（V190-REV-05）——「Apply一本化」と「Cancel時復元（ライブ連動維持）」の二択で実装がまったく異なり、未決定のまま着手すると中途半端な実装になる。第三に Python 3.14 環境の Tcl/Tk 問題——STACKリサーチでは実機再現せず（別原因のPermissionErrorのみ検出）、PITFALLSリサーチは早期対応を推奨しており、この評価の食い違いを次フェーズで解消する必要がある。
 
 ## Key Findings
 
 ### Recommended Stack
 
-新機能はすべて標準ライブラリ（queue.Queue・concurrent.futures.ThreadPoolExecutor・threading.Lock・json・os）で実現し、新規 pip 依存は追加しない。サムネイル仮想化の代替候補として tksheet（依存ゼロの軽量テーブルライブラリ）を検討したが、既存の D&D グリッドUIと操作モデルが異なり全面書き換えが必要になるため不採用。dataclasses/pydantic/asyncio/multiprocessing もそれぞれ理由付きで不採用と判断されている。
+新規pip依存は追加しない（urllib.request 直叩き方針を継続、V14-D-01）。OpenAI プロバイダは Chat Completions API を採用し、Responses API は不採用とする——既存 RunPodProvider が事実上同一形状で実装済みであり統合コストが最小、かつ Chat Completions は無期限サポートが公式に明言されているため。暗号化維持保存は PyMuPDF の encryption=fitz.PDF_ENCRYPT_KEEP で解決する。
 
 **Core technologies:**
-- queue.Queue + ThreadPoolExecutor + threading.Lock: バッチOCRのファイル単位ジョブキュー・並列送信。既存 ocr_pipeline.py の PipelineState/consume_one パターンをそのまま一段拡張できる
-- json + dict ベース永続化: テンプレート管理・フォールバック順の設定保存。settings.py の既存 _load_settings/_save_settings パターンと同型で一貫性を保てる
-- tkinter.Canvas + 既存 pagination.py: サムネイル仮想化。窓表示（既定20・上限100件）の外層はそのまま、可視範囲のみ実体化する内層を純関数として追加する
+- OpenAI Chat Completions API (api.openai.com/v1/chat/completions) — OCR/サマリ送信先 — RunPodProvider/LMStudioProvider と同型の「OpenAI互換」形状のため最小差分で統合可能
+- urllib.request（標準ライブラリのみ） — OpenAI API実装手段 — PyInstaller肥大化回避・既存5プロバイダとの実装一貫性維持
+- fitz.PDF_ENCRYPT_KEEP（PyMuPDF既存API） — 暗号化維持保存 — パスワード文字列の再取得・再保持が不要
+
+**環境修復:** Python 3.14.6 + Tkinter の init.tcl 読み込み失敗はSTACKリサーチの実機検証では再現せず、TCL_LIBRARY/TK_LIBRARY の venv相対パス誤解決（CPython #125235）が有力候補。PITFALLSリサーチは「テスト環境専用のハードコード修正は配布EXEのTcl/Tk探索ロジックと衝突しうる」ため、frozen判定と開発環境判定を分離した修復を推奨。
 
 ### Expected Features
 
-**Must have（v1.8.0 で確実に入れる最小ライン）:**
-- プロンプト・テンプレートマネージャー: 名前付き保存・一覧選択・削除（CRUD最小4操作）、既存外部mdファイル連動との共存必須
-- プロバイダーフォールバック: 明示順序設定 + 切替時の送信先確認再提示（既存コスト確認ダイアログ再利用）
-- サムネイル仮想化: thumb_cache の LRU eviction + 大量ページでの性能回帰テスト
-- エラー時リカバリー通知: 軽微エラー向け非モーダルトースト1種（再試行ボタン付き・自動消滅なし）
-- バッチ複数ファイルOCR: キュー一覧 + 個別/全体進捗 + 失敗分離 + D&D投入 + 逐次処理（ダイアログ内完結・バックグラウンド常駐なし）
+**Must have (table stakes):**
+- 暗号化維持のデフォルト化（V190-REV-01）— 3保存経路すべてにPDF_ENCRYPT_KEEP適用
+- OCR OFFの全経路一貫化（V190-REV-02）— 通常OCR・バッチOCR起動時/実行開始時・プラグイン経路の4箇所で同一意味論
+- 複数ファイル挿入のall-or-nothingトランザクション化（V190-REV-03）
+- Undo記録の成功後確定（V190-REV-04）、復元失敗時のスタック保護（V190-REV-07）
+- OpenAIプロバイダのtable stakes一式: セッションAPIキー入力欄・モデル一覧動的取得+静的フォールバック・送信先確認・コスト確認・バッチOCR組み込み・フォールバック候補組み込み・429/5xxリトライ共有基盤活用
 
-**Should have（差別化要素）:**
-- フォールバック時の送信先確認再提示（他のLLMゲートウェイ実装には見られない独自の安全設計）
-- バッチOCRの全ページ統合サマリのファイル横断拡張（v1.6.0既存資産の延長）
-- プロバイダ横断でのテンプレート共有（resolve_ocr_prompt の優先順位にテンプレート層を挟む）
+**Should have (competitive/differentiator):**
+- detailレベル選択（low/high/auto）— コストダイヤル。OCR用途では既定をhigh/auto寄りにする
+- reasoning effort相当パラメータ（gpt-5系）— Claudeの EFFORT_MODELS 許可リスト方式を流用
+- organization/project ID任意入力欄 — 優先度低、詳細設定領域に格納
 
-**Defer（v2+）:**
-- バッチOCRのバックグラウンド継続（Tkinterシングルループ制約でUI設計コストが高い）
-- プロンプトテンプレートのバージョン履歴・差分表示
-- サムネイルの連続スクロール型本格仮想化（react-window相当への作り替え）
-- 自動ベンダー切替・コスト最適化ルーティング・確認なし連鎖リトライ（プライバシー方針違反のため明確に排除）
+**Defer (v2+/anti-features):**
+- OpenAI Responses APIへのフル移行、公式SDK導入、organization自動検出、detail=high常時強制、部分適用の無警告許容、外部ファイルへのライブ即時書き込み維持（Cancel復元なしの場合）
 
 ### Architecture Approach
 
-既存の8 Mixin構成 + Tk/fitz非依存の純ロジック層（pagination.py/ocr_pipeline.py/undo_store.py）というアーキテクチャ哲学を維持し、新機能はすべて「既存プリミティブの上に薄いオーケストレーション層を追加する」形で統合する。肥大モジュール分割（ocr_providers.py→llm_config.py→ocr_dialog.pyの順）を先行させ、OCRRunEngine として producer/consumer 駆動部をダイアログUIから抽出することで、単一ファイルOCRとバッチOCRの両方がこれを再利用できる設計にする。
+既存コードは「ロジックの重複は意図的（OCRDialog/BatchOCRDialogの独立性維持のため正当）」だが「データの重複は非意図的な技術的負債」という構造。pagefolio/ocr_providers/catalog.py を新設し、ProviderMeta（frozen dataclass）による非機密メタデータを一元管理する。registry.py（機密キー名解決、V180-D-01独立性制約）とは一方向import（catalog→registry）のみで循環を回避。
 
 **Major components:**
-1. batch_queue.py（新規・純ロジック層） — ファイルキューの状態遷移管理（BatchQueueState）。ファイル単位は逐次、ファイル内は既存PipelineStateを使い回す二層構造
-2. provider_fallback.py（新規・純ロジック層） — フォールバック順リストからの次候補決定（純関数）。PipelineState.fatal_msg確定後のUI層でのみ判断し、run_parallel/consume_oneには混ぜ込まない
-3. thumb_virtualizer.py（新規・純ロジック層） — スクロール位置から可視ローカルindex範囲を計算する純関数。pagination.pyのto_global/to_local契約は完全不変のまま外側に重ねる
-4. ocr_engine.py（新規・抽出） — OCRDialogから producer/consumer 駆動部（OCRRunEngine）を抽出し、バッチOCRと単一ファイルOCRで共用
-5. settings.py拡張 — 名前付きテンプレートCRUD関数群（既存load_prompt_file/save_prompt_fileの再パラメータ化）
+1. catalog.py（新設）— プロバイダメタデータの単一情報源。7参照面へ段階的移行
+2. openai_provider.py（新設）— OpenAIProvider。LMStudioProviderの payload/response処理を土台に固定エンドポイント・認証・パラメータ分岐を実装
+3. file_ops.pyの保存系ヘルパー統一 — 4呼び出しが共通経由でencryption=を得る
+4. Undo/Redoの「記録後置」パターン — _do_insertが確立している「仮エントリpush→成功時確定/失敗時pop」を横展開、_undo/_redoはpeek→正常終了後に確定popへ変更
 
 ### Critical Pitfalls
 
-1. サムネイル仮想化がselected_pages全ページインデックス不変条件を破壊する — 仮想化のスクロール位置計算もpagination.pyのto_global/to_localのみを通し、新規座標変換モジュールを増やさない
-2. バッチOCRがfitz.Documentのスレッド間共有禁止を破る — ファイル間は逐次処理のみ許可し、fitz.open/get_pixmapはメインスレッドの単一キューで直列化
-3. プロバイダーフォールバックが「明示同意・コスト確認」方針を迂回する — フォールバック発火時も送信先確認ダイアログを必ず再提示
-4. テンプレートマネージャーが外部mdファイル連動（v1.7.4）と書き戻し競合を起こす — 外部mdファイルは常に「現在アクティブなテンプレートのライブ編集内容」に限定
-5. 肥大モジュール分割で後方互換importが壊れる — 分割前に必ずtest_imports.pyへ後方互換importテストを追加してから着手
+1. doc.save(path)のencryption省略が暗号化解除になる — 3保存経路すべてにPDF_ENCRYPT_KEEPを共通ヘルパー経由で適用し、パスワード付与/解除系とはヘルパーを分離する
+2. _save_undoを実処理後へ移すとcurrent_page/selected_pagesスナップショットがずれる — _do_insertの「仮エントリ確定」パターンを流用するか、操作前値をローカル変数へ明示退避する
+3. offをプロバイダ生成不可にする変更が既存の後方互換経路を壊す — 全参照箇所を洗い出し、専用例外を全呼び出し元で捕捉させる
+4. メタデータ一元化リファクタでmonkeypatch対象の名前空間が断絶する — v1.8.0 Phase 1で実際に発生済み。リファクタ後、意図的に本番コードへバグを注入してテストが検知することを確認する
+5. 外部プロンプトファイル書き込みが二重トリガー — 「一本化」と「ライブ連動維持+Cancel復元」の二択を実装前に確定させる
 
 ## Implications for Roadmap
 
-Based on research, suggested phase structure:
+4本のリサーチが完全一致する依存構造: 安全性是正（P0/P1）→ 設定UI整合性（P1、並行可）→ Undo/Redo回帰強化 → OCRプロバイダメタデータ一元化（V190-REV-08）→ OpenAIプロバイダ追加。catalog一元化はOpenAI追加のrequires-beforeであると定量的に裏付けられている。
 
-### Phase 1: 基盤分割（肥大モジュールリファクタリング・前半）
-**Rationale:** 新機能追加前にocr_providers.py（1424行）とllm_config.py（1204行）のパッケージ化を先行させ、以降のフェーズの作業対象を軽量化する
-**Delivers:** pagefolio/ocr_providers/パッケージ・pagefolio/dialogs/llm_config/パッケージ（re-export で後方互換維持）
-**Uses:** DEBT-01/DEBT-02前例パターン
-**Avoids:** 落とし穴9（後方互換import破壊）— test_imports.py拡張を分割の一部として必須化
+### Phase 1: 保存・編集の安全性
+**Rationale:** PROJECT.mdに明記された確定方針。4件は相互にファイルが独立し並行実施可能だが、REV-04→REV-03→REV-07の順で「記録後置パターン」を確立してから複雑ケースへ展開するのが自然
+**Delivers:** V190-REV-01(暗号化維持)・REV-02(OCR OFF一貫化)・REV-03(複数ファイル挿入トランザクション化)・REV-04(複製Undo成功後確定)
+**Addresses:** 失敗時ロールバックのtable stakes
+**Avoids:** Pitfall 1(encryption省略)・6(Undoタイミング移動)・9(挿入部分残留)・10(offの二重意味)
 
-### Phase 2: プロンプト・テンプレートマネージャー
-**Rationale:** 分割後のllm_config/構造にそのまま新規UI（prompt_panel.py）を追加できる。バッチOCRより依存が少なく先行させやすい
-**Delivers:** 名前付きテンプレートCRUD（settings.py拡張）・prompt_templates/ディレクトリ・テンプレート選択UI
-**Addresses:** FEATURES.md「プロンプト・テンプレートマネージャー」Table Stakes
-**Avoids:** 落とし穴6（外部mdファイル書き戻し競合）
+### Phase 2: 設定UIの整合性
+**Rationale:** llm_config配下のみに閉じており、Phase 1と衝突しないため並行実施可能。V190-REV-05の実装方式は着手前に確定必須
+**Delivers:** REV-05(外部プロンプトApply一本化/Cancel復元)・REV-06(未保存確認のファイル連動非依存化)
+**Uses:** 既存ShortcutsDialog(V171-D-05)の前例パターン
 
-### Phase 3: 明示設定型プロバイダーフォールバック
-**Rationale:** Phase 2で整備したllm_config/のUI構造に、フォールバック順編集UIを同一セクションに隣接追加できる
-**Delivers:** provider_fallback.py（純ロジック）・ocr.pyへのprovider_override引数追加・フォールバック確認ダイアログ統合
-**Implements:** ARCHITECTURE.md (b)の設計（PipelineState.fatal_msg確定後のオーケストレーション層）
-**Avoids:** 落とし穴7（同意方針迂回）・落とし穴8（設定引き継ぎミス）
+### Phase 3: Undo/Redo回帰強化
+**Rationale:** Phase 1の「記録後置」安全網を復元側にも拡張。v1.8.0 Phase 6のD-17と同型パターン
+**Delivers:** _undo/_redoのpeek→確定popへの変更、duplicate/merge/merge_resizeの4手往復テスト
+**Avoids:** Pitfall 8(pop→restore間の例外)・7(Blob二重dispose)
 
-### Phase 4: ocr_dialog.py分割（OCRRunEngine抽出）
-**Rationale:** バッチOCRが必要とする「単一ドキュメントOCR実行エンジン」の抽出と同一作業のため、バッチOCR着手の直前に行うのが最も手戻りが少ない
-**Delivers:** pagefolio/ocr_engine.py（OCRRunEngine）・縮小されたocr_dialog.py
-**Avoids:** 落とし穴10（スレッド調整コード分離時のロック不整合）
+### Phase 4: OCRプロバイダ基盤整理（catalog.py新設）
+**Rationale:** Phase 1〜3完了後に着手。OpenAI追加の技術的前提条件
+**Delivers:** catalog.py、7参照面への段階的移行
+**Research Flag:** monkeypatch名前空間断絶リスク（Pitfall 12）に要注意
 
-### Phase 5: バッチ複数ファイルOCR（単独フェーズ隔離）
-**Rationale:** PROJECT.mdで「大型機能として単独フェーズへ隔離」と確定済み。最も依存が多く最大の機能のため、先行する基盤機能が固まってから着手するのが安全
-**Delivers:** batch_queue.py（純ロジック）・pagefolio/dialogs/batch_ocr.py（BatchOCRDialog）・ファイル横断サマリ
-**Addresses:** FEATURES.md「バッチ複数ファイルOCR」Table Stakes全般
-**Avoids:** 落とし穴3（fitzスレッド間共有違反）・落とし穴4（キャンセルスコープ不足）・落とし穴5（進捗集計二重矛盾）
+### Phase 5: OpenAIプロバイダのフル実装
+**Rationale:** catalog完成後の着手で統合コスト最小化
+**Delivers:** OpenAIProvider新設、UI統合一式
+**Research Flag:** (a)モデル一覧フィルタ方式が未決定、(b)o-series向けパラメータ分岐、(c)実装開始時に実キーでモデル一覧を確認
 
-### Phase 6: サムネイル仮想化（PERF-01）
-**Rationale:** 他の4機能と機能的依存がなく独立して着手可能。既存pagination.py/viewer.pyの局所改修で完結する
-**Delivers:** thumb_virtualizer.py（純ロジック）・viewer.pyの_build_thumbnails()/_reflow_thumbnails()変更・thumb_cacheのLRU化
-**Avoids:** 落とし穴1（selected_pages不変条件破壊）・落とし穴2（thumb_cache責務混同）
-
-### Phase 7: 品質保証（E2Eモックテスト・通知UX・UI一貫性監査）
-**Rationale:** OCRRunEngine/batch_queueの抽出が完了した後の方がテスト容易性が高いため、Phase 4・5の後に厚めに配置するのが効率的
-**Delivers:** 非モーダルトースト通知・E2Eモックテストスイート・UI一貫性監査
-**Addresses:** FEATURES.md「エラー時リカバリー通知の改善」Table Stakes
+### Phase 6: 品質保証・持ち越し（リリースゲート）
+**Rationale:** Tcl/Tk環境修復は早期着手が望ましいが、最終確認はPhase 5完了後
+**Delivers:** Tkinter環境修復、全テスト完走ゲート化、IN-01、human-verify/UAT
 
 ### Phase Ordering Rationale
-
-- モジュール分割（Phase 1・4）を新機能追加の直前に配置するのは「新機能が触るファイルを複雑化する前に土台を整える」原則に基づく
-- テンプレートマネージャー→フォールバックの順序は、両者が同一UIコンポーネントを共有するため隣接配置で作業効率が上がる
-- バッチOCRを単独フェーズとして他機能の後半に配置するのは、PROJECT.mdの確定方針かつ最も依存が多く最大の機能であることに基づく
-- サムネイル仮想化は依存なしのため並行実施も可能だが、品質保証フェーズでのテスト厚みを考えるとPhase 5以降に置く方が回帰リスクの検証がしやすい
+- Phase 1・2は完全独立で並行可。Phase 5はPhase 4に技術的に依存する
+- Phase 1の「記録後置」パターンはPhase 3の安全網にも構造的に流用できる
+- Phase 4着手前にv1.8.0 Phase 1の類似リファクタ事例を参照し同じ轍を踏まない
 
 ### Research Flags
 
-Phases likely needing deeper research during planning:
-- Phase 5（バッチ複数ファイルOCR）: ファイル横断の進捗集計・2階層キャンセル・ファイル横断サマリのメモリ管理は新規パターンのため実装詳細検証が有効
-- Phase 6（サムネイル仮想化）: Tkinter Canvasでのウィジェットリサイクル方式の性能特性はWeb情報がLOW確信度のため、実装前にプロトタイプ検証が望ましい
+Needs research: Phase 4（catalog一元化・monkeypatch断絶リスク）、Phase 5（OpenAIモデルラインナップ・フィルタ方式未決定）、Phase 6（Tcl/Tk根本原因がリサーチ間で食い違い）
 
-Phases with standard patterns (skip research-phase):
-- Phase 1・4（モジュール分割）: DEBT-01/DEBT-02の確立済み前例をそのまま踏襲すれば良い
-- Phase 2（テンプレートマネージャー）: 既存load_prompt_file/save_prompt_fileパターンの延長で完結
-- Phase 3（プロバイダーフォールバック）: 既存build_provider/コスト確認ダイアログの再利用のみで実装コストは低い
+Standard patterns: Phase 1（PDF_ENCRYPT_KEEP・仮エントリパターンとも実コードで確立済み）、Phase 2（ShortcutsDialog前例あり）、Phase 3（D-17前例あり）
 
 ## Confidence Assessment
 
 | Area | Confidence | Notes |
 |------|------------|-------|
-| Stack | MEDIUM | 標準ライブラリ機能自体・PyMuPDFスレッド安全性は公式ドキュメント/Issue準拠でHIGHだが、Tkinter仮想化の具体実装例は一般Web情報中心でLOW寄り |
-| Features | MEDIUM | 複数ソース間で傾向が一致する部分（トーストUX・フォールバックchain・バッチキューUX）はMEDIUM、単一ソースのみの部分はLOWと個別明記 |
-| Architecture | HIGH | 実コードベース直接精査に基づく一次情報源（curated相当） |
-| Pitfalls | HIGH | .planning/codebase/CONCERNS.md・.planning/PROJECT.mdを一次情報源とするcurated調査。一般原則のみMEDIUM裏取り |
+| Stack | MEDIUM | OpenAI API仕様は複数クエリでクロス照合済みだがモデル名詳細は変動速い。Tcl/Tk根本原因はLOW〜MEDIUM(実機再現せず) |
+| Features | MEDIUM | OpenAI API仕様はMEDIUM。原子的保存・OK/Apply/Cancel意味論は業界一般則としてMEDIUM |
+| Architecture | HIGH | すべて実コード読解に基づく |
+| Pitfalls | HIGH | 公式ドキュメント・既存コード・v1.8.0の実際の回帰事例で裏付け |
 
-**Overall confidence:** HIGH（アーキテクチャ・落とし穴は自プロジェクト資産に基づく高確信度。スタック・機能面は業界一般論の部分でMEDIUM〜LOWが混在するが、実装方針への影響は限定的）
+**Overall confidence:** MEDIUM〜HIGH
 
 ### Gaps to Address
 
-- サムネイル仮想化のウィジェットリサイクル方式の性能実測: 生成方式 vs リサイクル方式のどちらが実際に速いかはWeb情報のみでは判断できないため、Phase 6着手時にプロトタイプで実測してから設計確定する
-- バッチOCRの永続化要否: 要件に「アプリ再起動をまたぐジョブ再開」が含まれるか未確定。STACK.mdはjsonスナップショット方式を代替案として用意しているが、FEATURES.mdのAnti-Featuresでは「過剰」と位置付けており、Phase 5計画時に要件を再確認する
-- PyMuPDF 1.28.0への追随要否: 現行1.27.2.2のままで問題ないと判断しているが、次回メンテナンス時の検討事項として残っている
+- OpenAIモデルラインナップの陳腐化: 実装フェーズ開始時にGET /v1/modelsを実キーで確認すること
+- PyMuPDF「暗号化済み+incremental+PDF_ENCRYPT_KEEP」の可否: 情報源間で食い違い、V190-REV-01実装時に実機確認
+- Python 3.14 Tcl/Tk根本原因: STACKとPITFALLSで評価が一致しない。実行コンテキストの切り分けが必要
+- 外部プロンプトファイルのApply一本化 vs Cancel復元: 未決定、Phase 2着手前に確定させる
+- OpenAIモデル一覧のフィルタ方式: 未決定、Phase 5計画時に確定
+- Document.authenticate()後の暗号化パラメータ取得API: 公式記述見つからず、実装上は影響低
 
 ## Sources
 
 ### Primary (HIGH confidence)
-- pagefolio/ocr_pipeline.py・pagefolio/settings.py・pagefolio/pagination.py（社内一次情報・コードベース直接確認）
-- .planning/PROJECT.md・.planning/codebase/CONCERNS.md（v1.8.0マイルストーン方針・既知課題の一次情報）
-- Is PyMuPDF re-entrant / thread-safe? Issue #107 pymupdf/PyMuPDF (https://github.com/pymupdf/PyMuPDF/issues/107)
-- Clarification about threading Issue #1994 pymupdf/PyMuPDF (https://github.com/pymupdf/PyMuPDF/issues/1994)
+- PageFolio既存コードベース直接読解（file_ops.py・page_ops.py・ocr.py・ocr_providers/*・ocr_dialog.py・dialogs/*）
+- .planning/notes/2026-08-10-v1.9.0-existing-feature-review.md
+- .planning/PROJECT.md
 
 ### Secondary (MEDIUM confidence)
-- Fallbacks (Provider Failover) liteLLM (https://docs.litellm.ai/docs/proxy/reliability)
-- Batch Processing Queue AI UX Playground (https://aiuxplayground.com/pattern/batch-processing-queue/)
-- Notification pattern Carbon Design System (https://carbondesignsystem.com/patterns/notification-pattern/)
-- List Virtualization patterns.dev (https://www.patterns.dev/vanilla/virtual-lists/)
+- OpenAI公式ドキュメント（developers.openai.com） — Chat Completions・画像入力形状・/v1/models
+- Artifex公式ブログ — PDF_ENCRYPT_KEEP・incremental
+- PyMuPDF公式ドキュメント（pymupdf.readthedocs.io）
+- OpenAI Developer Community・Rate limits guide
 
 ### Tertiary (LOW confidence)
-- Understanding Tkinter Canvas Performance Limitations ancisoft.com (https://www.ancisoft.com/blog/understanding-performance-limitations-of-the-tkinter-canvas/)
-- tksheet PyPI (https://pypi.org/project/tksheet/)
+- CPython issue #125235 / python-build-standalone issue #913（Tcl/Tk根本原因候補、未再現）
+- Foxit公式ドキュメント（他社横比較、一次情報限定的）
 
 ---
-*Research completed: 2026-07-13*
+*Research completed: 2026-08-10*
 *Ready for roadmap: yes*
