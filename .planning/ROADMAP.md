@@ -122,10 +122,21 @@ V180-* 全 26 要件 Complete（被覆 26/26・孤立要件なし）。クロー
 **Plans**: 5 plans（4 waves）
 
 Plans:
+**Wave 1**
+
 - [ ] 01-01-PLAN.md — 保存3経路+縮小保存の暗号化維持と `pdf_has_password` 論理導出（tracer・V190-SAFE-01/02）
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
 - [ ] 01-02-PLAN.md — OCR OFF の全経路一貫化（`OCRDisabledError`・メニュー disabled 化・実行開始/再生成ガード・V190-SAFE-03）
 - [ ] 01-03-PLAN.md — LLM 設定の Apply/Cancel 契約整合（外部プロンプトファイル書き込みの Apply 一本化・未保存判定の単一経路化・V190-CFG-01/02）
+
+**Wave 3** *(blocked on Wave 2 completion)*
+
 - [ ] 01-04-PLAN.md — 複数ファイル挿入のロールバック・ページ複製の Undo 後置・Undo/Redo 復元失敗時の state 保全（V190-SAFE-04/05・V190-UNDO-01）
+
+**Wave 4** *(blocked on Wave 3 completion)*
+
 - [ ] 01-05-PLAN.md — `duplicate`/`merge`/`merge_resize` の4手往復回帰テストと D-12 棚卸し（V190-UNDO-02）
 
 **UI hint**: yes

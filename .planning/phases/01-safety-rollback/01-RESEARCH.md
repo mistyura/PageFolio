@@ -501,14 +501,18 @@ if prompt_file_exists(SUMMARY_PROMPT_FILE):
 
 **Assumptions Log について:** 上記2件以外の記述はすべて `[VERIFIED: <ファイルパス:行番号>]` の形で本セッション中に実ファイルを Read した内容の逐語引用、または `[VERIFIED: ローカル実行環境]` の形で本セッション中に実行したコマンド/スクリプトの出力に基づく。CONTEXT.md の D-01〜D-19 はユーザー確定済みの Locked Decision のためそのまま引用しており `[ASSUMED]` 対象ではない。
 
-## Open Questions
+## Open Questions (RESOLVED)
+
+> 両項目とも `/gsd-plan-phase 1` の計画時に解決済み。以下の Recommendation は当時の判断材料として残置する。
 
 1. **`ocr_dialog.py` 内の3箇所の重複ハードコード分岐（859/1065/1506行目）を本フェーズで解消するか、多層防御構造のまま残すか**
+   - **RESOLVED: 01-02-PLAN.md Task 2-(4) で解消**。1065/1506行目の分岐は「OCR ダイアログを開いたまま LLM 設定でプロバイダを `off` へ切り替える」実在経路で到達可能と判断し、本フェーズで修正＋ガード追加。表示専用の859行目のみコメント記載で据え置き（下記 Assumption A2 は「到達しない」としていたが、D-07 の厳密解釈により覆した）
    - What we know: 入口ガード（D-04・既存の `_update_ocr_buttons_state`）が機能する限り到達しない。`build_provider` の例外化（D-06）だけでバッチ OCR 経路（`_build_provider_once`）は自然にガードされる
    - What's unclear: D-07 の「OCR 実行経路に一切入らない」という文言を、`ocr_dialog.py` 内部の provider 再生成ロジックにまで厳密に適用すべきか
    - Recommendation: プランでは最低限、`_start_ocr`（`ocr.py:541-618`）が `build_provider` の新例外を捕捉して OCR ダイアログを開かせない実装を必須タスクとし、`ocr_dialog.py` 内の3分岐自体の解消は「到達不能であることをコメントで明記する」軽量タスクとして含めるか、スコープ外として次マイルストーンへ委ねるかをプラン作成時に判断する
 
 2. **`_do_insert` の巻き戻し失敗時（D-10）の警告メッセージの具体的な i18n キー文言**
+   - **RESOLVED: 01-01-PLAN.md / 01-04-PLAN.md で `warn_rollback_title` / `err_insert_rollback_failed` として文言確定**。残存ページ数と Ctrl+Z で戻せる旨のみを含め、失敗ファイル名は含めない方針でプラン側が確定
    - What we know: 「残存ページ数を明示」「実際の挿入数を反映した Undo state を残す」という要件は確定している
    - What's unclear: 具体的な文言・キー名は CONTEXT.md の Claude's Discretion 項目（「挿入失敗時のエラーメッセージに失敗ファイル名・成功件数をどこまで含めるか」）に委ねられている
    - Recommendation: `pagefolio/lang.py` の既存エラーメッセージパターン（例: `err_save_msg`）に倣い、`{count}` 系のフォーマットプレースホルダを使う簡潔な文言でよい。プラン作成時に確定する
