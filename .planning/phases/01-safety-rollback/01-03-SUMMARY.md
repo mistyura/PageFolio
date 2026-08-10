@@ -160,3 +160,13 @@ None - no external service configuration required.
 ---
 *Phase: 01-safety-rollback*
 *Completed: 2026-08-10*
+
+## Self-Check: PASSED
+
+- FOUND: pagefolio/dialogs/llm_config/sections.py
+- FOUND: tests/test_provider_ui.py
+- FOUND: .planning/phases/01-safety-rollback/01-03-SUMMARY.md
+- FOUND commit: 725f665
+- FOUND commit: dc9b1c0
+- FOUND commit: 56a4520
+- FOUND commit: 113bf0a
