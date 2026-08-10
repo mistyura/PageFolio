@@ -441,3 +441,118 @@ class TestBlobLeakDetection:
 
         app._clear_undo_stacks()
         doc.close()
+
+    def test_insert_partial_retry_blobs_released_on_stack_clear(
+        self, stress_pdf_bytes, monkeypatch
+    ):
+        """V190-UNDO-01・D-14（WR-05）: insert（base op）の削除ループが
+        部分失敗し ``_pending_inverse`` を持つ state がスタックに残った
+        状態から ``_clear_undo_stacks()`` を呼ぶと、蓄積済み逆デルタ用
+        Blob も含めて一時ファイル数が 0 になる（再試行されずに evict/clear
+        された場合のリーク防止）。
+        """
+        import pagefolio.file_ops as fo
+
+        doc = fitz.open(stream=stress_pdf_bytes, filetype="pdf")
+        app = _make_stress_app(doc)
+
+        monkeypatch.setattr(fo.messagebox, "showerror", lambda *a, **k: None)
+
+        insert_at = 10
+        app._save_undo("insert", insert_at=insert_at)
+        src = fitz.open(stream=stress_pdf_bytes, filetype="pdf")
+        src.select([0, 1])
+        num = len(src)
+        app.doc.insert_pdf(src, start_at=insert_at)
+        src.close()
+        app._undo_stack[-1]["data"][1] = num
+
+        real_delete_page = app.doc.delete_page
+        call_count = {"n": 0}
+
+        def flaky_delete_page(pno):
+            call_count["n"] += 1
+            if call_count["n"] == 2:
+                raise RuntimeError("delete_page 失敗（模擬）")
+            return real_delete_page(pno)
+
+        monkeypatch.setattr(app.doc, "delete_page", flaky_delete_page)
+
+        # undo: 1件目は削除成功（_pending_inverse に蓄積）・2件目で失敗
+        app._undo()
+        remaining = app._undo_stack[-1]
+        assert remaining["op"] == "insert"
+        assert "_pending_inverse" in remaining
+        assert len(remaining["_pending_inverse"]) == 1
+        assert _blob_files(app) > 0
+
+        # 再試行しないまま evict/clear された場合も蓄積分の Blob が回収される
+        app._clear_undo_stacks()
+        assert _blob_files(app) == 0
+        doc.close()
+
+    def test_page_edit_unrecoverable_failure_blobs_released_on_clear(
+        self, stress_pdf_bytes, monkeypatch
+    ):
+        """V190-UNDO-01・D-14（Task 1 の復旧不能経路・CR-02・option-b）:
+        page_edit の undo が復旧不能な失敗（delete_page が2回目以降すべて
+        失敗）を経由し ``_page_edit_inserted`` マーカーを持つ state が
+        スタックに残った状態から ``_clear_undo_stacks()`` を呼ぶと、蓄積
+        済み Blob が全解放され一時ファイル数が 0 になる。全過程で同一
+        Blob の release() 呼び出しが1回を超えない。
+        """
+        import pagefolio.file_ops as fo
+
+        doc = fitz.open(stream=stress_pdf_bytes, filetype="pdf")
+        app = _make_stress_app(doc)
+        rect = fitz.Rect(60, 50, 300, 110)
+
+        release_log = []
+        orig_file_release = undo_store.FileBlob.release
+        orig_mem_release = undo_store.MemBlob.release
+
+        def _spy_file_release(self):
+            release_log.append(self)
+            orig_file_release(self)
+
+        def _spy_mem_release(self):
+            release_log.append(self)
+            orig_mem_release(self)
+
+        monkeypatch.setattr(undo_store.FileBlob, "release", _spy_file_release)
+        monkeypatch.setattr(undo_store.MemBlob, "release", _spy_mem_release)
+        monkeypatch.setattr(fo.messagebox, "showerror", lambda *a, **k: None)
+
+        targets = [0, 1]
+        app._save_undo("page_edit", targets=targets)
+        for i in targets:
+            ro.RedactOpsMixin._redact_page(app.doc[i], rect)
+
+        real_delete_page = fitz.Document.delete_page
+        call_count = {"n": 0}
+
+        def flaky_delete_page(self_doc, *a, **kw):
+            if self_doc is app.doc:
+                call_count["n"] += 1
+                if call_count["n"] >= 2:
+                    raise RuntimeError("delete_page 失敗（模擬・回復不能）")
+            return real_delete_page(self_doc, *a, **kw)
+
+        monkeypatch.setattr(fitz.Document, "delete_page", flaky_delete_page)
+
+        # undo: page 0 は成功・page 1 は旧ページ削除もロールバックも失敗
+        # （回復不能・content_at_risk）
+        app._undo()
+        remaining = app._undo_stack[-1]
+        assert remaining["op"] == "page_edit"
+        assert remaining.get("_page_edit_inserted")
+
+        # 再試行しないまま evict/clear された場合も蓄積分の Blob が回収される
+        app._clear_undo_stacks()
+        assert _blob_files(app) == 0
+
+        counts = collections.Counter(id(b) for b in release_log)
+        assert all(c <= 1 for c in counts.values()), (
+            f"double-release検出（release()が2回以上呼ばれたBlobあり）: {counts}"
+        )
+        doc.close()

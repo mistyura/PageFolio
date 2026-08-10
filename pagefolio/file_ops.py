@@ -471,16 +471,13 @@ class FileOpsMixin:
                 for page_i, _ in state["data"]
             ]
         elif op == "insert":
-            # insert の逆: 挿入されたページを bytes でキャプチャして delete 形式に変換。
-            # "insert" 自体（本 op）は _restore_state 側にリトライ機構がない
-            # ため、この Task の変更対象（V190-UNDO-01）ではなく現行どおり
-            # mutation 前にまとめて捕捉する。
-            insert_at, num = state["data"]
+            # insert の逆: op 名の決定のみ行う（V190-UNDO-01・WR-05）。
+            # 捕捉タイミングを「そのページを実際に削除する瞬間」へ移した
+            # ため（_restore_state 側の insert 分岐が削除の直前に
+            # _capture_page_blob を呼ぶ）、mutation 前の一括捕捉は行わない。
+            # 削除ループが途中で失敗したときに一括捕捉済みの Blob が
+            # inverse ごと破棄されて解放されない潜在リークも同時に閉じる。
             inv["op"] = "insert_undo"
-            inv["data"] = [
-                (i, self._capture_page_blob(i))
-                for i in range(insert_at, insert_at + num)
-            ]
         elif op == "insert_undo":
             # insert_undo の逆は insert_redo（bytes を再挿入）。data の構築は
             # _restore_state 側の mutation ループへ移した（V190-UNDO-01。
@@ -710,9 +707,36 @@ class FileOpsMixin:
             finally:
                 tmp.close()
         elif op == "insert":
+            # insert（base op）の undo: 挿入されたページを削除する。
+            # V190-UNDO-01・WR-05: 削除の直前に _capture_page_blob で
+            # そのページの内容を捕捉し、削除が成功した分だけ次段
+            # （insert_undo）用の逆デルタとして蓄積する。部分失敗時は
+            # 残り件数のみを表す state を返し、再試行時に num 回ではなく
+            # 残り回数だけ delete_page が実行されるようにする（挿入対象
+            # 外だった既存ページの過剰削除を構造的に防ぐ）。
             insert_at, num = state["data"]
-            for _ in range(num):
-                self.doc.delete_page(insert_at)
+            # _merge_pending_inverse は pop するため、必ず pop の前に
+            # 前回までの蓄積件数を読む（再試行時の絶対インデックス復元に使う）。
+            already = len(state.get("_pending_inverse", []))
+            pending = []
+            deleted = 0
+            try:
+                for k in range(num):
+                    blob = self._capture_page_blob(insert_at)
+                    try:
+                        self.doc.delete_page(insert_at)
+                    except Exception:
+                        self._release_blob(blob)
+                        raise
+                    pending.append((insert_at + already + k, blob))
+                    deleted += 1
+            except Exception as e:
+                merged_pending = self._merge_pending_inverse(state, pending)
+                remaining_data = [insert_at, num - deleted]
+                self._restore_partial_error(
+                    state, remaining_data, e, pending_inverse=merged_pending
+                )
+            inverse["data"] = self._merge_pending_inverse(state, pending)
         elif op == "insert_undo":
             # insert_undo: キャプチャした bytes を昇順で再挿入。
             # CR-01: 途中で失敗した場合は未適用分のみの state を伝搬する。

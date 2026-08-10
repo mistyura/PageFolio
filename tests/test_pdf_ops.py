@@ -3203,6 +3203,70 @@ class TestUndoRedoRestoreFailure:
         assert opened_docs2
         assert all(d.is_closed for d in opened_docs2)
 
+    def test_insert_partial_failure_preserves_remaining_and_retry_completes(
+        self, sample_pdf_doc, multi_pdf_files, monkeypatch
+    ):
+        """V190-UNDO-01 回帰テスト（WR-05）: insert（base op）の削除ループが
+        2件目の delete_page で失敗した場合、(a) 残り件数のみを表す state が
+        スタックへ戻り、(b) 障害解除後の再試行で挿入対象外の既存ページを
+        過剰削除しないことを検証する。
+        """
+        import pagefolio.file_ops as fo
+
+        app = self._make_fake_app(sample_pdf_doc)
+        before_digests = [_page_digest(app.doc[i]) for i in range(len(app.doc))]
+
+        insert_at = 1
+        app._save_undo("insert", insert_at=insert_at)
+        src = fitz.open(multi_pdf_files[1])  # 2ページ
+        num = len(src)
+        app.doc.insert_pdf(src, start_at=insert_at)
+        src.close()
+        app._undo_stack[-1]["data"][1] = num
+        after_insert_digests = [_page_digest(app.doc[i]) for i in range(len(app.doc))]
+
+        errors = []
+        monkeypatch.setattr(
+            fo.messagebox, "showerror", lambda t, m: errors.append((t, m))
+        )
+
+        real_delete_page = fitz.Document.delete_page
+        call_count = {"n": 0}
+
+        def flaky_delete_page(self_doc, *a, **kw):
+            if self_doc is app.doc:
+                call_count["n"] += 1
+                if call_count["n"] == 2:
+                    raise RuntimeError("delete_page 失敗（模擬）")
+            return real_delete_page(self_doc, *a, **kw)
+
+        monkeypatch.setattr(fitz.Document, "delete_page", flaky_delete_page)
+
+        # 1回目の Undo: 1件目は削除成功・2件目で失敗
+        app._undo()
+        assert len(app.doc) == len(before_digests) + num - 1
+        assert len(errors) == 1
+        assert len(app._undo_stack) == 1
+        remaining_state = app._undo_stack[-1]
+        assert remaining_state["op"] == "insert"
+        assert remaining_state["data"] == [insert_at, 1]
+
+        # 2回目の Undo: 障害解消後、残り1件が正しく削除される
+        app._undo()
+        assert len(app.doc) == len(before_digests)
+        after_undo_digests = [_page_digest(app.doc[i]) for i in range(len(app.doc))]
+        assert before_digests == after_undo_digests
+
+        # Redo: 挿入後の内容に戻る
+        app._redo()
+        after_redo_digests = [_page_digest(app.doc[i]) for i in range(len(app.doc))]
+        assert after_insert_digests == after_redo_digests
+
+        # さらに Undo: 挿入前の内容に戻る
+        app._undo()
+        final_digests = [_page_digest(app.doc[i]) for i in range(len(app.doc))]
+        assert before_digests == final_digests
+
     def test_undo_empty_stack_is_noop(self, sample_pdf_doc):
         """空スタックに対する undo はステータス表示のみで Document を
         変更しない"""
