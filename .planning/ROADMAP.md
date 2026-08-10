@@ -119,7 +119,15 @@ V180-* 全 26 要件 Complete（被覆 26/26・孤立要件なし）。クロー
   4. LLM 設定 UI（LLMConfigDialog）を Cancel しても外部プロンプトファイル（`ocr_custom_prompt.md`/`ocr_summary_prompt.md`）は変更されず、選択済みテンプレートを編集した状態で別テンプレートへ切り替えると外部ファイル連動の有無にかかわらず未保存確認が表示される（V190-CFG-01/02）
   5. Undo/Redo の復元処理が失敗した場合、対象状態がスタックへ戻され履歴が失われず Document が部分変更のまま残らない。`duplicate`/`merge`/`merge_resize` の各 op で do→undo→redo→undo の4手往復回帰テストがページ構成の一致を担保する（V190-UNDO-01/02）
 
-**Plans**: TBD
+**Plans**: 5 plans（4 waves）
+
+Plans:
+- [ ] 01-01-PLAN.md — 保存3経路+縮小保存の暗号化維持と `pdf_has_password` 論理導出（tracer・V190-SAFE-01/02）
+- [ ] 01-02-PLAN.md — OCR OFF の全経路一貫化（`OCRDisabledError`・メニュー disabled 化・実行開始/再生成ガード・V190-SAFE-03）
+- [ ] 01-03-PLAN.md — LLM 設定の Apply/Cancel 契約整合（外部プロンプトファイル書き込みの Apply 一本化・未保存判定の単一経路化・V190-CFG-01/02）
+- [ ] 01-04-PLAN.md — 複数ファイル挿入のロールバック・ページ複製の Undo 後置・Undo/Redo 復元失敗時の state 保全（V190-SAFE-04/05・V190-UNDO-01）
+- [ ] 01-05-PLAN.md — `duplicate`/`merge`/`merge_resize` の4手往復回帰テストと D-12 棚卸し（V190-UNDO-02）
+
 **UI hint**: yes
 
 ### Phase 2: OCR プロバイダ基盤整理 + OpenAI(ChatGPT) プロバイダ追加
@@ -184,6 +192,6 @@ Phases execute in numeric order: 1 → 2 → 3
 | 4. バッチ複数ファイルOCR | v1.8.0 | 3/3 | Complete | 2026-07-16 |
 | 5. 堅牢性強化（サムネイル仮想化 + Blobリーク検出 + ShortcutsDialog修正） | v1.8.0 | 4/4 | Complete | 2026-07-16 |
 | 6. 品質保証仕上げ（通知UX・UI一貫性監査・ドキュメント整合） | v1.8.0 | 3/3 | Complete | 2026-07-16 |
-| 1. 保存・編集・設定の安全性是正（失敗時ロールバック担保） | v1.9.0 | - | Not started | - |
+| 1. 保存・編集・設定の安全性是正（失敗時ロールバック担保） | v1.9.0 | 0/5 | Planned | - |
 | 2. OCR プロバイダ基盤整理 + OpenAI(ChatGPT) プロバイダ追加 | v1.9.0 | - | Not started | - |
 | 3. 品質保証・リリースゲート | v1.9.0 | - | Not started | - |
