@@ -117,7 +117,16 @@ class FileOpsMixin:
         """state 内の Blob を解放する（evict・redo クリア・消費時に呼ぶ）。
 
         生 bytes（Blob でない値）は無視する（後方互換）。
+
+        ``_pending_inverse``（V190-UNDO-01）: 部分失敗を経由した state が
+        再試行されないまま evict / clear された場合、蓄積済み逆デルタ用
+        Blob も解放する。``_merge_pending_inverse`` は pop する設計のため、
+        正常に合流したエントリはここでは解放対象にならない（二重解放なし）。
         """
+        pending = state.get("_pending_inverse")
+        if pending:
+            for _i, blob in pending:
+                self._release_blob(blob)
         op = state.get("op")
         data = state.get("data")
         if data is None:
@@ -134,15 +143,40 @@ class FileOpsMixin:
             for _i, blob in data.get("orig_pages", []):
                 self._release_blob(blob)
 
-    def _restore_partial_error(self, state, remaining_data, exc):
+    def _merge_pending_inverse(self, state, applied):
+        """state から蓄積済みの逆デルタ（``_pending_inverse``）を pop し、
+        今回の呼び出しで実際に適用できた分（``applied``）と連結して
+        page_index 昇順にソートしたリストを返す（V190-UNDO-01）。
+
+        「部分失敗 → 再試行」をまたいで、当初の全ページ分の逆デルタを
+        保持し続けるための合流点。pop であることが重要で、これにより
+        蓄積エントリの Blob 所有権が state から返り値（＝これから
+        inverse["data"] になるリスト）へ移る。所有権が移った後に
+        ``_dispose_state(state)`` が呼ばれても、既に inverse が握って
+        いる Blob を解放してしまう二重解放は起きない。
+        """
+        pending = state.pop("_pending_inverse", [])
+        merged = list(pending) + list(applied)
+        merged.sort(key=lambda item: item[0])
+        return merged
+
+    def _restore_partial_error(self, state, remaining_data, exc, pending_inverse=None):
         """CR-01: 多ページ復元ループが途中で失敗した際、既に適用できた分を
         差し引いた state を構築して PartialRestoreError として送出する。
 
         呼び出し元（_undo/_redo）はこれを捕捉し、元の（全件ぶんの）state
         ではなく remaining_state をスタックへ戻す。
+
+        ``pending_inverse``（V190-UNDO-01）: 今回までに実際に適用できた
+        ページ分の逆デルタエントリ（前回までの蓄積分と合流済み）。
+        None 以外が渡された場合は ``remaining["_pending_inverse"]`` を
+        その値で上書きする。None の場合は ``remaining = dict(state)``
+        により前回までの蓄積がそのまま引き継がれる（既定挙動は不変）。
         """
         remaining = dict(state)
         remaining["data"] = remaining_data
+        if pending_inverse is not None:
+            remaining["_pending_inverse"] = pending_inverse
         raise PartialRestoreError(remaining, exc) from exc
 
     def _push_evicting(self, stack, state):
@@ -333,16 +367,19 @@ class FileOpsMixin:
             # してしまう（WR-01）。delete_redo の restore・次段の inverse は
             # どちらも page_i のみを参照し blob を使わないため、無駄な
             # キャプチャ・Blob 保持を避けるためプレースホルダ（None）にする。
+            # data の構築は _restore_state 側の mutation ループへ移した
+            # （V190-UNDO-01: 「実際に適用できたページ分の逆データ」を
+            # mutation の瞬間に蓄積する方式へ変更。ここでは op 決定のみ）。
             inv["op"] = "delete_redo"
-            inv["data"] = [(page_i, None) for page_i, _ in state["data"]]
         elif op == "delete_redo":
             # delete_redo の逆（redo 後に undo するため）:
             # _restore_state(delete_redo) は delete を実行する。
             # その逆は「削除ページを復元（insert）」= delete op として bytes を返す。
+            # data の構築は _restore_state 側の mutation ループへ移した
+            # （V190-UNDO-01。捕捉タイミングを「そのページを実際に削除する
+            # 瞬間」に統一し、再試行時のインデックスずれによる誤キャプチャ
+            # を防ぐ）。
             inv["op"] = "delete"
-            inv["data"] = [
-                (page_i, self._capture_page_blob(page_i)) for page_i, _ in state["data"]
-            ]
         elif op == "page_edit":
             # page_edit は対称 op: 逆デルタ = 適用後（現在）のページ bytes。
             # undo→redo 往復でも同じ op のまま入れ替わる
@@ -460,30 +497,56 @@ class FileOpsMixin:
             # CR-01: 途中の1件で失敗した場合、既に適用済みの分を差し引いた
             # 「未適用分のみ」の state を PartialRestoreError で伝搬する
             # （成功済み分の Blob はここで解放し、再試行時の二重適用を防ぐ）。
+            # V190-UNDO-01: insert_pdf が成功するたびに次段（delete_redo）用の
+            # 逆デルタエントリ (page_i, None) を蓄積し、_merge_pending_inverse
+            # で前回までの蓄積分（部分失敗を経由した remaining_state 由来）と
+            # 合流させてから inverse["data"] を確定する。
+            pending = []
             applied = 0
             try:
                 for page_i, page_bytes in state["data"]:
                     tmp = fitz.open(stream=self._blob_bytes(page_bytes), filetype="pdf")
                     self.doc.insert_pdf(tmp, start_at=page_i)
                     tmp.close()
+                    pending.append((page_i, None))
                     applied += 1
             except Exception as e:
                 for _i, blob in state["data"][:applied]:
                     self._release_blob(blob)
-                self._restore_partial_error(state, state["data"][applied:], e)
+                merged_pending = self._merge_pending_inverse(state, pending)
+                self._restore_partial_error(
+                    state, state["data"][applied:], e, pending_inverse=merged_pending
+                )
+            inverse["data"] = self._merge_pending_inverse(state, pending)
         elif op == "delete_redo":
             # redo: 昇順インデックスのページを逆順で削除（インデックスずれ防止）。
             # CR-01: delete_redo の data は blob を使わない（WR-01）ため、
             # 未適用分（まだ削除できていない page_i）のみを残す。
+            # V190-UNDO-01: delete_page を呼ぶ直前に _capture_page_blob で
+            # そのページの内容を捕捉し、削除が成功したときだけ次段（delete）
+            # 用の逆デルタエントリとして蓄積する。捕捉を削除の直前へ移す
+            # ことで、再試行時にインデックスがずれていても「そのとき実際に
+            # 削除するページの内容」が確実に逆デルタへ入る。
             targets = sorted([page_i for page_i, _ in state["data"]], reverse=True)
             deleted = set()
+            pending = []
             try:
                 for page_i in targets:
-                    self.doc.delete_page(page_i)
+                    blob = self._capture_page_blob(page_i)
+                    try:
+                        self.doc.delete_page(page_i)
+                    except Exception:
+                        self._release_blob(blob)
+                        raise
                     deleted.add(page_i)
+                    pending.append((page_i, blob))
             except Exception as e:
                 remaining = [item for item in state["data"] if item[0] not in deleted]
-                self._restore_partial_error(state, remaining, e)
+                merged_pending = self._merge_pending_inverse(state, pending)
+                self._restore_partial_error(
+                    state, remaining, e, pending_inverse=merged_pending
+                )
+            inverse["data"] = self._merge_pending_inverse(state, pending)
         elif op == "page_edit":
             # ページ内容の置換（黒塗り・モザイク等の破壊的編集の undo/redo）。
             # ページ数は不変のため昇順で 1 ページずつ delete→insert しても
