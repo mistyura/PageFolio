@@ -17,21 +17,21 @@
 
 ### 保存・編集の安全性（SAFE）
 
-- [x] **V190-SAFE-01**: ユーザーがパスワード保護 PDF を「保存」「名前を付けて保存」「上書き（インクリメンタル保存失敗時のフォールバック）」のいずれの経路で保存しても、保存先 PDF の暗号化が維持される（REV-01）
-- [x] **V190-SAFE-02**: 暗号化の解除は「パスワード解除」の明示操作でのみ発生し、通常の保存経路では発生しない。保存後は UI 上の `pdf_has_password` 状態が実ファイルと一致する（REV-01）
-- [x] **V190-SAFE-03**: OCR が OFF のとき、ユーザーはバッチ OCR を起動・実行開始できない。`off` はプロバイダ生成可能な値として扱われず、通常 OCR・バッチ OCR・プラグイン経路のすべてで OFF が同一の意味を持つ（REV-02）
-- [x] **V190-SAFE-04**: 複数ファイル挿入が途中のファイルで失敗した場合、ページ数と Undo スタックが操作前と一致する。挿入元 Document は例外発生時も必ずクローズされる（REV-03）
-- [x] **V190-SAFE-05**: ページ複製が失敗した場合、既存ページと Undo スタックが変化しない（Undo 状態は成功後に確定される）（REV-04）
+- [ ] **V190-SAFE-01**: ユーザーがパスワード保護 PDF を「保存」「名前を付けて保存」「上書き（インクリメンタル保存失敗時のフォールバック）」のいずれの経路で保存しても、保存先 PDF の暗号化が維持される（REV-01）
+- [ ] **V190-SAFE-02**: 暗号化の解除は「パスワード解除」の明示操作でのみ発生し、通常の保存経路では発生しない。保存後は UI 上の `pdf_has_password` 状態が実ファイルと一致する（REV-01）
+- [ ] **V190-SAFE-03**: OCR が OFF のとき、ユーザーはバッチ OCR を起動・実行開始できない。`off` はプロバイダ生成可能な値として扱われず、通常 OCR・バッチ OCR・プラグイン経路のすべてで OFF が同一の意味を持つ（REV-02）
+- [ ] **V190-SAFE-04**: 複数ファイル挿入が途中のファイルで失敗した場合、ページ数と Undo スタックが操作前と一致する。挿入元 Document は例外発生時も必ずクローズされる（REV-03）
+- [ ] **V190-SAFE-05**: ページ複製が失敗した場合、既存ページと Undo スタックが変化しない（Undo 状態は成功後に確定される）（REV-04）
 
 ### 設定 UI の整合性（CFG）
 
-- [x] **V190-CFG-01**: ユーザーが LLM 設定ダイアログを Cancel した場合、外部プロンプトファイル（`ocr_custom_prompt.md` / `ocr_summary_prompt.md`）は変更されない。外部ファイルへの書き込みは Apply 押下時のみ行われる（REV-05・**Apply 一本化方式で確定**）
-- [x] **V190-CFG-02**: 選択済みテンプレートを編集した状態で別テンプレートへ切り替えると、外部プロンプトファイル連動の有無にかかわらず未保存確認が表示される（REV-06）
+- [ ] **V190-CFG-01**: ユーザーが LLM 設定ダイアログを Cancel した場合、外部プロンプトファイル（`ocr_custom_prompt.md` / `ocr_summary_prompt.md`）は変更されない。外部ファイルへの書き込みは Apply 押下時のみ行われる（REV-05・**Apply 一本化方式で確定**）
+- [ ] **V190-CFG-02**: 選択済みテンプレートを編集した状態で別テンプレートへ切り替えると、外部プロンプトファイル連動の有無にかかわらず未保存確認が表示される（REV-06）
 
 ### Undo/Redo 堅牢性（UNDO）
 
-- [x] **V190-UNDO-01**: Undo または Redo の復元処理が失敗した場合、対象状態がスタックへ戻され履歴が失われない。Document が部分的に変更されたまま残らない（REV-07）
-- [x] **V190-UNDO-02**: `duplicate` / `merge` / `merge_resize` の各 op について do→undo→redo→undo の 4 手往復でページ構成が操作前と一致することが回帰テストで担保される（REV-07・v1.8.0 D-17 の水平展開）
+- [ ] **V190-UNDO-01**: Undo または Redo の復元処理が失敗した場合、対象状態がスタックへ戻され履歴が失われない。Document が部分的に変更されたまま残らない（REV-07）
+- [ ] **V190-UNDO-02**: `duplicate` / `merge` / `merge_resize` の各 op について do→undo→redo→undo の 4 手往復でページ構成が操作前と一致することが回帰テストで担保される（REV-07・v1.8.0 D-17 の水平展開）
 
 ### OCR プロバイダ基盤整理（CAT）
 
@@ -108,15 +108,15 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| V190-SAFE-01 | Phase 1 | Complete |
-| V190-SAFE-02 | Phase 1 | Complete |
-| V190-SAFE-03 | Phase 1 | Complete |
-| V190-SAFE-04 | Phase 1 | Complete |
-| V190-SAFE-05 | Phase 1 | Complete |
-| V190-CFG-01 | Phase 1 | Complete |
-| V190-CFG-02 | Phase 1 | Complete |
-| V190-UNDO-01 | Phase 1 | Complete |
-| V190-UNDO-02 | Phase 1 | Complete |
+| V190-SAFE-01 | Phase 1 | Gaps Found |
+| V190-SAFE-02 | Phase 1 | Gaps Found |
+| V190-SAFE-03 | Phase 1 | Gaps Found |
+| V190-SAFE-04 | Phase 1 | Gaps Found |
+| V190-SAFE-05 | Phase 1 | Gaps Found |
+| V190-CFG-01 | Phase 1 | Gaps Found |
+| V190-CFG-02 | Phase 1 | Gaps Found |
+| V190-UNDO-01 | Phase 1 | Gaps Found |
+| V190-UNDO-02 | Phase 1 | Gaps Found |
 | V190-CAT-01 | Phase 2 | Pending |
 | V190-CAT-02 | Phase 2 | Pending |
 | V190-OAI-01 | Phase 2 | Pending |
