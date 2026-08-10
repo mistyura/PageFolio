@@ -33,6 +33,22 @@ def save_without_password(doc, path):
     doc.save(path, encryption=fitz.PDF_ENCRYPT_NONE)
 
 
+def derive_pdf_has_password(current, encryption):
+    """保存 kwargs の encryption 値から pdf_has_password を論理導出する（D-03）。
+
+    PDF_ENCRYPT_NONE → False（明示的に平文化）
+    PDF_ENCRYPT_AES_256 → True（明示的に暗号化）
+    それ以外（PDF_ENCRYPT_KEEP を含む） → current をそのまま維持
+
+    実行時に保存先を開き直す I/O は行わない（Core Value の大 PDF 性能を守るため）。
+    """
+    if encryption == fitz.PDF_ENCRYPT_NONE:
+        return False
+    if encryption == fitz.PDF_ENCRYPT_AES_256:
+        return True
+    return current
+
+
 class FileOpsMixin:
     """PDFEditorApp のファイル操作・Undo/Redo メソッド群"""
 
@@ -632,7 +648,14 @@ class FileOpsMixin:
         メモリ上へシリアライズ → doc を close してハンドル解放 →
         tmp ファイル経由で os.replace → 新ファイルを開き直す。
         書き込み失敗時はメモリ上の bytes から doc を復元して例外を再送出する。
+
+        encryption 未指定時は PDF_ENCRYPT_KEEP へ既定化する（D-02）。呼び出し側の
+        明示指定（_do_set_password の AES_256 / _remove_password の NONE 等）は
+        setdefault のため上書きされない。保存成功後、self.pdf_has_password を
+        save_kwargs の encryption 値から論理導出する（D-03）。
         """
+        save_kwargs.setdefault("encryption", fitz.PDF_ENCRYPT_KEEP)
+        current_has_password = getattr(self, "pdf_has_password", False)
         data = self.doc.tobytes(**save_kwargs)
         self.doc.close()
         try:
@@ -641,6 +664,9 @@ class FileOpsMixin:
                 f.write(data)
             os.replace(tmp, path)
             self.doc = fitz.open(path)
+            self.pdf_has_password = derive_pdf_has_password(
+                current_has_password, save_kwargs["encryption"]
+            )
         except Exception:
             self.doc = fitz.open(stream=data, filetype="pdf")
             raise
@@ -748,7 +774,15 @@ class FileOpsMixin:
         path = filedialog.asksaveasfilename(**dialog_kwargs)
         if not path:
             return
-        save_kwargs = {"garbage": 4, "deflate": 1, "clean": 1}
+        # encryption=KEEP を明示することで別パス保存分岐（doc.save 直接呼び出し）
+        # でも暗号化が維持される（V190-SAFE-01 の全経路化）。上書き分岐は
+        # _overwrite_current_file の setdefault により同じ既定値になる
+        save_kwargs = {
+            "garbage": 4,
+            "deflate": 1,
+            "clean": 1,
+            "encryption": fitz.PDF_ENCRYPT_KEEP,
+        }
         try:
             if self._is_current_file(path):
                 # 元ファイルへの上書き: ハンドル解放してから置き換える
@@ -806,11 +840,12 @@ class FileOpsMixin:
         try:
             if self._is_current_file(path):
                 # 元ファイルへ上書き → 開き直し後に同じパスワードで再認証し継続利用可に
+                # pdf_has_password は _overwrite_current_file 内で
+                # derive_pdf_has_password（encryption=AES_256 → True）により導出される
                 self._overwrite_current_file(path, **kwargs)
                 self.filepath = path
                 if self.doc.needs_pass:
                     self.doc.authenticate(password)
-                self.pdf_has_password = True
             else:
                 save_with_password(self.doc, path, password)
             self._set_status(
@@ -835,9 +870,10 @@ class FileOpsMixin:
         kwargs = {"encryption": fitz.PDF_ENCRYPT_NONE}
         try:
             if self._is_current_file(path):
+                # pdf_has_password は _overwrite_current_file 内で
+                # derive_pdf_has_password（encryption=NONE → False）により導出される
                 self._overwrite_current_file(path, **kwargs)
                 self.filepath = path
-                self.pdf_has_password = False
             else:
                 save_without_password(self.doc, path)
             self._set_status(
