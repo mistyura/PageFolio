@@ -6,15 +6,15 @@ current_phase: 01
 current_phase_name: safety-rollback
 status: executing
 stopped_at: Completed 01-06-PLAN.md
-last_updated: "2026-08-10T14:40:29.484Z"
+last_updated: "2026-08-10T15:50:21.810Z"
 last_activity: 2026-08-10
 last_activity_desc: v1.9.0 ROADMAP.md 作成完了
 progress:
   total_phases: 3
   completed_phases: 1
-  total_plans: 6
+  total_plans: 7
   completed_plans: 6
-  percent: 33
+  percent: 0
 ---
 
 # Project State
