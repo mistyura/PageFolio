@@ -18,6 +18,24 @@ class PDFPasswordError(Exception):
     """パスワード付き PDF の認証がキャンセル/失敗したことを表す例外。"""
 
 
+class PartialRestoreError(Exception):
+    """_restore_state の多ページ処理ループが途中で失敗したことを表す例外（CR-01）。
+
+    delete / page_edit / insert_undo / insert_redo / merge_undo / merge_resize /
+    merge_resize_undo / delete_redo は 1 ページずつ doc を mutate するため、
+    途中の 1 件で例外が出ると「それより前は既に doc へ適用済み」の状態になる。
+    この例外は「実際に何件適用できたか」を反映した ``remaining_state``
+    （未適用分のみを表す state dict）を運び、呼び出し元（_undo/_redo）が
+    元の（全件ぶんの）state をそのまま戻すことで再試行時に既に適用済みの
+    ページへ mutation を重複適用してしまう事故（重複挿入・過剰削除）を防ぐ。
+    """
+
+    def __init__(self, remaining_state, original_exception):
+        self.remaining_state = remaining_state
+        self.original_exception = original_exception
+        super().__init__(str(original_exception))
+
+
 def save_with_password(doc, path, password):
     """doc を AES-256 で暗号化し、owner/user 両方に password を設定して保存する。"""
     doc.save(
@@ -89,31 +107,43 @@ class FileOpsMixin:
         """
         return data.load() if hasattr(data, "load") else data
 
+    @staticmethod
+    def _release_blob(blob):
+        """Blob（release() を持つ）を解放する。生 bytes/None は無視する（後方互換）。"""
+        if hasattr(blob, "release"):
+            blob.release()
+
     def _dispose_state(self, state):
         """state 内の Blob を解放する（evict・redo クリア・消費時に呼ぶ）。
 
         生 bytes（Blob でない値）は無視する（後方互換）。
         """
-
-        def _release(x):
-            if hasattr(x, "release"):
-                x.release()
-
         op = state.get("op")
         data = state.get("data")
         if data is None:
             return
         if op in ("delete", "delete_redo", "page_edit", "insert_undo", "insert_redo"):
             for _i, blob in data:
-                _release(blob)
+                self._release_blob(blob)
         elif op == "merge_undo":
             _old_count, captured = data
             for _i, blob in captured:
-                _release(blob)
+                self._release_blob(blob)
         elif op in ("merge_resize", "merge_resize_undo"):
-            _release(data.get("merged_bytes"))
+            self._release_blob(data.get("merged_bytes"))
             for _i, blob in data.get("orig_pages", []):
-                _release(blob)
+                self._release_blob(blob)
+
+    def _restore_partial_error(self, state, remaining_data, exc):
+        """CR-01: 多ページ復元ループが途中で失敗した際、既に適用できた分を
+        差し引いた state を構築して PartialRestoreError として送出する。
+
+        呼び出し元（_undo/_redo）はこれを捕捉し、元の（全件ぶんの）state
+        ではなく remaining_state をスタックへ戻す。
+        """
+        remaining = dict(state)
+        remaining["data"] = remaining_data
+        raise PartialRestoreError(remaining, exc) from exc
 
     def _push_evicting(self, stack, state):
         """deque へ push する前に、溢れて evict される最古 state を解放する。
@@ -188,6 +218,22 @@ class FileOpsMixin:
         self._push_evicting(self._undo_stack, state)
         self._clear_redo_stack()
 
+    def _handle_partial_restore(self):
+        """CR-01: PartialRestoreError 捕捉後の doc 状態整合。
+
+        _restore_state の末尾処理（current_page クランプ・selected_pages
+        更新・再描画）は例外送出により未到達のまま中断しているため、ここで
+        最低限のクランプ・無効化を行い、doc の見た目を実際の（部分適用
+        済みの）状態に追随させる。selected_pages は範囲外になった
+        インデックスのみ間引く（有効な選択は保持する）。
+        """
+        self.current_page = min(self.current_page, max(0, len(self.doc) - 1))
+        self.selected_pages = {i for i in self.selected_pages if i < len(self.doc)}
+        self._invalidate_thumb_cache()
+        self._preview_gen += 1
+        self._thumb_gen += 1
+        self._refresh_all()
+
     def _undo(self):
         if not self._undo_stack:
             self._set_status(self._t("undo_empty"))
@@ -195,6 +241,20 @@ class FileOpsMixin:
         state = self._undo_stack.pop()
         try:
             inverse = self._restore_state(state)
+        except PartialRestoreError as e:
+            # CR-01: 多ページ復元が途中まで成功してから失敗した。元の
+            # （全件ぶんの）state をそのまま戻すと、再試行時に既に適用済み
+            # のページへ mutation を再適用してしまう（重複挿入・過剰削除）
+            # ため、未適用分のみを表す remaining_state に差し替えて戻す。
+            self._push_evicting(self._undo_stack, e.remaining_state)
+            self._handle_partial_restore()
+            messagebox.showerror(
+                self._t("err_title"),
+                self._t("err_undo_restore_failed_partial").format(
+                    e=e.original_exception
+                ),
+            )
+            return
         except Exception as e:
             # D-13/D-14: 復元失敗時は pop した state を _push_evicting 経由で
             # スタックへ戻す（直接 append は Blob リーク）。_dispose_state は
@@ -221,6 +281,17 @@ class FileOpsMixin:
         state = self._redo_stack.pop()
         try:
             inverse = self._restore_state(state)
+        except PartialRestoreError as e:
+            # CR-01: _undo と同型の保護（未適用分のみの state を戻す）
+            self._push_evicting(self._redo_stack, e.remaining_state)
+            self._handle_partial_restore()
+            messagebox.showerror(
+                self._t("err_title"),
+                self._t("err_redo_restore_failed_partial").format(
+                    e=e.original_exception
+                ),
+            )
+            return
         except Exception as e:
             # D-13/D-14: _undo と同型の保護（Blob は解放せずスタックへ戻す）
             self._push_evicting(self._redo_stack, state)
@@ -383,25 +454,54 @@ class FileOpsMixin:
             page_i, (x0, y0, x1, y1) = state["data"]
             self.doc[page_i].set_cropbox(fitz.Rect(x0, y0, x1, y1))
         elif op == "delete":
-            # undo: 昇順で再挿入（インデックスずれ防止）
-            for page_i, page_bytes in state["data"]:
-                tmp = fitz.open(stream=self._blob_bytes(page_bytes), filetype="pdf")
-                self.doc.insert_pdf(tmp, start_at=page_i)
-                tmp.close()
+            # undo: 昇順で再挿入（インデックスずれ防止）。
+            # CR-01: 途中の1件で失敗した場合、既に適用済みの分を差し引いた
+            # 「未適用分のみ」の state を PartialRestoreError で伝搬する
+            # （成功済み分の Blob はここで解放し、再試行時の二重適用を防ぐ）。
+            applied = 0
+            try:
+                for page_i, page_bytes in state["data"]:
+                    tmp = fitz.open(stream=self._blob_bytes(page_bytes), filetype="pdf")
+                    self.doc.insert_pdf(tmp, start_at=page_i)
+                    tmp.close()
+                    applied += 1
+            except Exception as e:
+                for _i, blob in state["data"][:applied]:
+                    self._release_blob(blob)
+                self._restore_partial_error(state, state["data"][applied:], e)
         elif op == "delete_redo":
-            # redo: 昇順インデックスのページを逆順で削除（インデックスずれ防止）
+            # redo: 昇順インデックスのページを逆順で削除（インデックスずれ防止）。
+            # CR-01: delete_redo の data は blob を使わない（WR-01）ため、
+            # 未適用分（まだ削除できていない page_i）のみを残す。
             targets = sorted([page_i for page_i, _ in state["data"]], reverse=True)
-            for page_i in targets:
-                self.doc.delete_page(page_i)
+            deleted = set()
+            try:
+                for page_i in targets:
+                    self.doc.delete_page(page_i)
+                    deleted.add(page_i)
+            except Exception as e:
+                remaining = [item for item in state["data"] if item[0] not in deleted]
+                self._restore_partial_error(state, remaining, e)
         elif op == "page_edit":
             # ページ内容の置換（黒塗り・モザイク等の破壊的編集の undo/redo）。
             # ページ数は不変のため昇順で 1 ページずつ delete→insert しても
-            # 他ページのインデックスはずれない
-            for page_i, page_bytes in state["data"]:
-                self.doc.delete_page(page_i)
-                tmp = fitz.open(stream=self._blob_bytes(page_bytes), filetype="pdf")
-                self.doc.insert_pdf(tmp, start_at=page_i)
-                tmp.close()
+            # 他ページのインデックスはずれない。差し替え元 bytes は
+            # delete_page より先にロードすることで、Blob ロード失敗が
+            # 「ページ削除後・再挿入前」という最も危険なタイミングで
+            # 起きないようにする（mutation 前に検出できる分を増やす）。
+            # CR-01: 途中で失敗した場合は未適用分のみの state を伝搬する。
+            applied = 0
+            try:
+                for page_i, page_bytes in state["data"]:
+                    tmp = fitz.open(stream=self._blob_bytes(page_bytes), filetype="pdf")
+                    self.doc.delete_page(page_i)
+                    self.doc.insert_pdf(tmp, start_at=page_i)
+                    tmp.close()
+                    applied += 1
+            except Exception as e:
+                for _i, blob in state["data"][:applied]:
+                    self._release_blob(blob)
+                self._restore_partial_error(state, state["data"][applied:], e)
         elif op == "move":
             # undo: move_page(src, dest) の逆順列を doc.select() で元の順序に戻す。
             src, actual_dest = state["data"]
@@ -430,52 +530,114 @@ class FileOpsMixin:
             for _ in range(num):
                 self.doc.delete_page(insert_at)
         elif op == "insert_undo":
-            # insert_undo: キャプチャした bytes を昇順で再挿入
-            for page_i, page_bytes in state["data"]:
-                tmp = fitz.open(stream=self._blob_bytes(page_bytes), filetype="pdf")
-                self.doc.insert_pdf(tmp, start_at=page_i)
-                tmp.close()
+            # insert_undo: キャプチャした bytes を昇順で再挿入。
+            # CR-01: 途中で失敗した場合は未適用分のみの state を伝搬する。
+            applied = 0
+            try:
+                for page_i, page_bytes in state["data"]:
+                    tmp = fitz.open(stream=self._blob_bytes(page_bytes), filetype="pdf")
+                    self.doc.insert_pdf(tmp, start_at=page_i)
+                    tmp.close()
+                    applied += 1
+            except Exception as e:
+                for _i, blob in state["data"][:applied]:
+                    self._release_blob(blob)
+                self._restore_partial_error(state, state["data"][applied:], e)
         elif op == "insert_redo":
             # insert_redo state の restore = 前段の insert_undo で再挿入された
             # ページを取り除く（delete_redo と対称: 昇順インデックスを降順で
             # 削除しインデックスずれを防止。D-17・以前は誤って再挿入していた
-            # ためページが重複するバグがあった）
+            # ためページが重複するバグがあった）。
+            # CR-01: data の blob はこの op 自身の restore では未使用だが、
+            # 削除できた分は今後不要になるためここで解放する。未適用分
+            # （まだ削除できていない page_i とその blob）のみを残す。
             targets = sorted([page_i for page_i, _ in state["data"]], reverse=True)
-            for page_i in targets:
-                self.doc.delete_page(page_i)
+            deleted = set()
+            try:
+                for page_i in targets:
+                    self.doc.delete_page(page_i)
+                    deleted.add(page_i)
+            except Exception as e:
+                remaining = []
+                for item in state["data"]:
+                    if item[0] in deleted:
+                        self._release_blob(item[1])
+                    else:
+                        remaining.append(item)
+                self._restore_partial_error(state, remaining, e)
         elif op == "merge":
             old_count = state["data"]
             while len(self.doc) > old_count:
                 self.doc.delete_page(old_count)
         elif op == "merge_undo":
-            # merge_undo: キャプチャした bytes を昇順で再追加
+            # merge_undo: キャプチャした bytes を昇順で再追加。
+            # CR-01: 途中で失敗した場合は未適用分のみの state を伝搬する。
             old_count, captured = state["data"]
-            for page_i, page_bytes in captured:
-                tmp = fitz.open(stream=self._blob_bytes(page_bytes), filetype="pdf")
-                self.doc.insert_pdf(tmp, start_at=page_i)
-                tmp.close()
+            applied = 0
+            try:
+                for page_i, page_bytes in captured:
+                    tmp = fitz.open(stream=self._blob_bytes(page_bytes), filetype="pdf")
+                    self.doc.insert_pdf(tmp, start_at=page_i)
+                    tmp.close()
+                    applied += 1
+            except Exception as e:
+                for _i, blob in captured[:applied]:
+                    self._release_blob(blob)
+                self._restore_partial_error(state, (old_count, captured[applied:]), e)
         elif op == "merge_resize":
-            # merge_resize の undo: 結合ページを削除し元ページを復元
+            # merge_resize の undo: 結合ページを削除し元ページを復元。
+            # CR-01: 「結合ページの削除」と「元ページの再挿入ループ」の
+            # 2フェーズに分け、それぞれの失敗を個別に扱う。結合ページの
+            # 削除は削除できたかどうかを "_merged_page_deleted" フラグで
+            # state へ残し、再試行時に二重で delete_page しないようにする。
+            # 元ページ再挿入は insert 系ループと同様に applied 件数を追跡する。
             d = state["data"]
             insert_at = d["insert_at"]
-            # 結合ページを削除
-            self.doc.delete_page(insert_at)
-            # 元ページを昇順で再挿入
-            for idx, page_bytes in sorted(d["orig_pages"], key=lambda x: x[0]):
-                tmp = fitz.open(stream=self._blob_bytes(page_bytes), filetype="pdf")
-                self.doc.insert_pdf(tmp, start_at=idx)
-                tmp.close()
+            if not d.get("_merged_page_deleted"):
+                try:
+                    self.doc.delete_page(insert_at)
+                except Exception as e:
+                    self._restore_partial_error(state, dict(d), e)
+            orig_sorted = sorted(d["orig_pages"], key=lambda x: x[0])
+            applied = 0
+            try:
+                for idx, page_bytes in orig_sorted:
+                    tmp = fitz.open(stream=self._blob_bytes(page_bytes), filetype="pdf")
+                    self.doc.insert_pdf(tmp, start_at=idx)
+                    tmp.close()
+                    applied += 1
+            except Exception as e:
+                for _i, blob in orig_sorted[:applied]:
+                    self._release_blob(blob)
+                remaining_data = dict(d)
+                remaining_data["orig_pages"] = orig_sorted[applied:]
+                remaining_data["_merged_page_deleted"] = True
+                self._restore_partial_error(state, remaining_data, e)
         elif op == "merge_resize_undo":
-            # merge_resize_undo の実行: 元ページを削除し結合ページを再挿入（redo）
+            # merge_resize_undo の実行: 元ページを削除し結合ページを再挿入（redo）。
+            # CR-01: 元ページは削除できた分だけ d["orig_pages"] から間引いた
+            # remaining を保持する（merged_bytes は未消費のまま state に残る
+            # ため、削除が全件完了した後の insert 失敗も自然に「orig_pages が
+            # 空の状態から insert だけ再試行」として扱える）。
             d = state["data"]
             insert_at = d["insert_at"]
-            # 元ページ（昇順インデックス）を逆順で削除してから結合ページを挿入
             orig_indices = sorted([idx for idx, _ in d["orig_pages"]], reverse=True)
-            for idx in orig_indices:
-                self.doc.delete_page(idx)
-            tmp = fitz.open(stream=self._blob_bytes(d["merged_bytes"]), filetype="pdf")
-            self.doc.insert_pdf(tmp, start_at=insert_at)
-            tmp.close()
+            deleted = set()
+            try:
+                for idx in orig_indices:
+                    self.doc.delete_page(idx)
+                    deleted.add(idx)
+                tmp = fitz.open(
+                    stream=self._blob_bytes(d["merged_bytes"]), filetype="pdf"
+                )
+                self.doc.insert_pdf(tmp, start_at=insert_at)
+                tmp.close()
+            except Exception as e:
+                remaining_data = dict(d)
+                remaining_data["orig_pages"] = [
+                    item for item in d["orig_pages"] if item[0] not in deleted
+                ]
+                self._restore_partial_error(state, remaining_data, e)
         elif op == "bulk_move":
             new_order = state["data"]
             inverse_order = [0] * len(new_order)

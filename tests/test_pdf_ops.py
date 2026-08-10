@@ -1923,6 +1923,232 @@ class TestUndoRedoRestoreFailure:
         assert len(app._undo_stack) == 0
         assert len(app._redo_stack) == 1
 
+    def test_delete_undo_partial_failure_preserves_remaining_and_retry_completes(
+        self, sample_pdf_doc, monkeypatch
+    ):
+        """CR-01 回帰テスト: delete の undo（複数ページ再挿入ループ）が2件目で
+        失敗した場合、(a) doc が重複/欠損なく最終的に正しい状態へ復旧でき、
+        (b) undo/redo スタックが整合したまま保たれることを検証する。
+
+        再現条件は REVIEW.md 記載の想定どおり: 2件目以降の Blob 読み込みが
+        失敗するケース（ディスク退避ファイルの消失等）を模す。修正前は
+        pop した元の（2件ぶんの）state をそのまま undo スタックへ戻して
+        いたため、次の undo で1件目に対して再度 insert_pdf が行われ
+        ページが重複していた。
+        """
+        import pagefolio.file_ops as fo
+
+        app = self._make_fake_app(sample_pdf_doc)
+        original_count = len(app.doc)  # 3
+        before_digests = [_page_digest(app.doc[i]) for i in range(len(app.doc))]
+
+        targets = [0, 1]
+        app._save_undo("delete", targets=targets)
+        for i in sorted(targets, reverse=True):
+            app.doc.delete_page(i)
+        assert len(app.doc) == original_count - len(targets)
+
+        errors = []
+        monkeypatch.setattr(
+            fo.messagebox, "showerror", lambda t, m: errors.append((t, m))
+        )
+
+        real_blob_bytes = fo.FileOpsMixin._blob_bytes
+        call_count = {"n": 0}
+
+        def flaky_blob_bytes(data):
+            call_count["n"] += 1
+            if call_count["n"] == 2:
+                raise RuntimeError("blob 読み込み失敗（模擬）")
+            return real_blob_bytes(data)
+
+        monkeypatch.setattr(
+            fo.FileOpsMixin, "_blob_bytes", staticmethod(flaky_blob_bytes)
+        )
+
+        # 1回目の Undo: 1件目（page 0）は成功して doc へ再挿入され、
+        # 2件目（page 1）で失敗する
+        app._undo()
+
+        # (a) doc は「1件だけ適用された」部分状態のまま — 重複や余計な削除はない
+        assert len(app.doc) == original_count - len(targets) + 1
+        assert len(errors) == 1
+
+        # (b) undo スタックには「未適用の1件だけ」を表す state が1つだけ残る
+        #     （元の2件ぶんの state をそのまま戻していない）
+        assert len(app._undo_stack) == 1
+        remaining_state = app._undo_stack[-1]
+        assert remaining_state["op"] == "delete"
+        assert len(remaining_state["data"]) == 1
+        assert remaining_state["data"][0][0] == 1
+        # 復元は失敗しているため redo スタックは変化しない
+        assert len(app._redo_stack) == 0
+
+        # 2回目の Undo: 障害条件が解消（3回目以降の呼び出しは成功）され、
+        # 残り1件が正しく復元される
+        app._undo()
+        assert len(app.doc) == original_count
+        after_digests = [_page_digest(app.doc[i]) for i in range(len(app.doc))]
+        assert before_digests == after_digests
+        assert len(app._undo_stack) == 0
+        assert len(app._redo_stack) == 1
+
+    def test_delete_redo_partial_failure_preserves_remaining_and_retry_completes(
+        self, sample_pdf_doc, monkeypatch
+    ):
+        """CR-01 回帰テスト: delete_redo（複数ページ再削除ループ）が2件目で
+        失敗した場合も、delete と対称に (a)(b) を満たすことを検証する
+        （data に blob を使わない delete 系ループでも正しく動作することの
+        確認・WR-01 のプレースホルダ化と合わせた回帰防止）。
+        """
+        import pagefolio.file_ops as fo
+
+        app = self._make_fake_app(sample_pdf_doc)
+        original_count = len(app.doc)  # 3
+
+        targets = [0, 1]
+        app._save_undo("delete", targets=targets)
+        for i in sorted(targets, reverse=True):
+            app.doc.delete_page(i)
+        assert len(app.doc) == original_count - len(targets)
+
+        # 正常系で undo（pages 0,1 を復元）→ redo スタックに delete_redo が積まれる
+        app._undo()
+        assert len(app.doc) == original_count
+        assert len(app._redo_stack) == 1
+        assert app._redo_stack[-1]["op"] == "delete_redo"
+
+        errors = []
+        monkeypatch.setattr(
+            fo.messagebox, "showerror", lambda t, m: errors.append((t, m))
+        )
+
+        real_delete_page = app.doc.delete_page
+        call_count = {"n": 0}
+
+        def flaky_delete_page(pno):
+            call_count["n"] += 1
+            if call_count["n"] == 2:
+                raise RuntimeError("delete_page 失敗（模擬）")
+            return real_delete_page(pno)
+
+        monkeypatch.setattr(app.doc, "delete_page", flaky_delete_page)
+
+        # 1回目の Redo: delete_redo は降順(1,0)で削除するため、
+        # 1件目(page 1)は成功し2件目(page 0)で失敗する
+        app._redo()
+
+        assert len(app.doc) == original_count - 1
+        assert len(errors) == 1
+        assert len(app._redo_stack) == 1
+        remaining_state = app._redo_stack[-1]
+        assert remaining_state["op"] == "delete_redo"
+        assert len(remaining_state["data"]) == 1
+        assert remaining_state["data"][0][0] == 0
+        assert len(app._undo_stack) == 0
+
+        # 2回目の Redo: 障害条件を解除して残り1件を削除しきる（重複削除は起きない）
+        app._redo()
+        assert len(app.doc) == original_count - len(targets)
+        assert len(app._redo_stack) == 0
+        assert len(app._undo_stack) == 1
+
+    def test_merge_resize_undo_partial_failure_preserves_remaining_and_retry_completes(
+        self, monkeypatch
+    ):
+        """CR-01 回帰テスト: merge_resize の undo は「結合ページ削除」→
+        「元ページ2件再挿入」の2フェーズで構成される。2フェーズ目の途中で
+        失敗した場合、(a) 結合ページの二重削除が起きず最終的に正しい状態へ
+        復旧でき、(b) undo/redo スタックが整合したまま保たれることを検証
+        する（"_merged_page_deleted" フラグによる再試行時のスキップ制御の
+        回帰防止）。
+        """
+        import collections
+        import types
+
+        import pagefolio.file_ops as fo
+        import pagefolio.page_ops as po
+
+        class FakeApp(fo.FileOpsMixin, po.PageOpsMixin):
+            MAX_UNDO = 20
+
+            def __init__(self):
+                doc = fitz.open()
+                for i in range(4):
+                    page = doc.new_page(width=595, height=842)
+                    page.insert_text((72, 72), f"Page {i + 1}", fontsize=24)
+                self.doc = doc
+                self.current_page = 0
+                self.selected_pages = set()
+                self._undo_stack = collections.deque(maxlen=self.MAX_UNDO)
+                self._redo_stack = collections.deque(maxlen=self.MAX_UNDO)
+                self._preview_gen = 0
+                self._thumb_gen = 0
+                self.lang = "ja"
+
+            def _invalidate_thumb_cache(self, *a, **kw):
+                pass
+
+            def _refresh_all(self):
+                pass
+
+            def _t(self, key):
+                return key
+
+            def _set_status(self, *a):
+                pass
+
+        app = FakeApp()
+        app.plugin_manager = types.SimpleNamespace(fire_event=lambda *a, **kw: None)
+
+        before_digests = [_page_digest(app.doc[i]) for i in range(len(app.doc))]
+
+        targets = [0, 1]
+        app._do_merge_resize(targets, "horizontal", 1190, 842)
+        assert len(app.doc) == 3  # 4 - 2 + 1（結合ページ）
+        assert len(app._undo_stack) == 1
+        assert app._undo_stack[-1]["op"] == "merge_resize"
+
+        errors = []
+        monkeypatch.setattr(
+            fo.messagebox, "showerror", lambda t, m: errors.append((t, m))
+        )
+
+        real_insert_pdf = app.doc.insert_pdf
+        call_count = {"n": 0}
+
+        def flaky_insert_pdf(src, start_at=-1, **kw):
+            call_count["n"] += 1
+            if call_count["n"] == 2:
+                raise RuntimeError("insert_pdf 失敗（模擬）")
+            return real_insert_pdf(src, start_at=start_at, **kw)
+
+        monkeypatch.setattr(app.doc, "insert_pdf", flaky_insert_pdf)
+
+        # 1回目の Undo: 結合ページ削除（成功）→ 元ページ1件目挿入（成功）→
+        # 元ページ2件目挿入で失敗
+        app._undo()
+
+        assert len(app.doc) == 3  # 結合ページ削除+1件復元 = 2-1+1... (3-1+1)
+        assert len(errors) == 1
+        assert len(app._undo_stack) == 1
+        remaining_state = app._undo_stack[-1]
+        assert remaining_state["op"] == "merge_resize"
+        assert remaining_state["data"]["_merged_page_deleted"] is True
+        assert len(remaining_state["data"]["orig_pages"]) == 1
+        assert len(app._redo_stack) == 0
+
+        # 2回目の Undo: "_merged_page_deleted" フラグにより結合ページを
+        # 再度削除しようとしない（誤って別ページを削除しない）。
+        # 残り1件を挿入して完了する。
+        app._undo()
+
+        assert len(app.doc) == 4
+        after_digests = [_page_digest(app.doc[i]) for i in range(len(app.doc))]
+        assert before_digests == after_digests
+        assert len(app._undo_stack) == 0
+        assert len(app._redo_stack) == 1
+
     def test_undo_empty_stack_is_noop(self, sample_pdf_doc):
         """空スタックに対する undo はステータス表示のみで Document を
         変更しない"""

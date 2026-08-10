@@ -234,6 +234,16 @@ LANG = {
             "やり直し処理に失敗しました。操作前の状態は履歴に保持されています。"
             "詳細: {e}"
         ),
+        "err_undo_restore_failed_partial": (
+            "元に戻す処理が途中で失敗しました。一部のページは既に変更されて"
+            "います。もう一度実行すると残りのページに処理を再試行します。"
+            "詳細: {e}"
+        ),
+        "err_redo_restore_failed_partial": (
+            "やり直し処理が途中で失敗しました。一部のページは既に変更されて"
+            "います。もう一度実行すると残りのページに処理を再試行します。"
+            "詳細: {e}"
+        ),
         "status_settings": "設定を変更しました",
         # ファイル操作
         "filetypes_pdf": "PDFファイル",
@@ -964,6 +974,14 @@ LANG = {
         ),
         "err_redo_restore_failed": (
             "Failed to redo. The previous state is kept in history. Details: {e}"
+        ),
+        "err_undo_restore_failed_partial": (
+            "Undo failed partway through. Some pages have already been changed. "
+            "Running it again will retry the remaining pages. Details: {e}"
+        ),
+        "err_redo_restore_failed_partial": (
+            "Redo failed partway through. Some pages have already been changed. "
+            "Running it again will retry the remaining pages. Details: {e}"
         ),
         "status_settings": "Settings updated",
         # File operations
