@@ -105,11 +105,12 @@
   "review": {
     "default_reviewers": [
       "gemini",
-      "lm_studio"
+      "codex"
     ],
     "models": {
-      "gemini": "gemini-3.5-flash",
-      "lm_studio": "google/gemma-4-12b-qat"
+      "gemini": "gemini-3.6-flash",
+      "lm_studio": "google/gemma-4-12b-qat",
+      "codex": "gpt-5.6-sol"
     },
     "lm_studio_host": "http://localhost:1234",
     "max_prompt_tokens_per_reviewer": {
