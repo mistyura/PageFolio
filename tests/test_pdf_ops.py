@@ -2633,6 +2633,246 @@ class TestUndoRedoRestoreFailure:
         assert len(app._undo_stack) == 0
         assert len(app._redo_stack) == 1
 
+    def _make_full_fake_app(self, n_pages=4):
+        """FileOpsMixin + PageOpsMixin を使う FakeApp を生成する
+        （merge_resize 系の駆動用。ページ数を引数で指定できる）。
+
+        雛形: TestAllOpsUndoRedoRoundtrip._make_full_fake_app と、
+        test_merge_resize_undo_partial_failure_preserves_remaining_and_retry_completes
+        にインライン定義されている FakeApp。
+        """
+        import collections
+        import types
+
+        import pagefolio.file_ops as fo
+        import pagefolio.page_ops as po
+
+        class FakeApp(fo.FileOpsMixin, po.PageOpsMixin):
+            MAX_UNDO = 20
+
+            def __init__(self, n):
+                doc = fitz.open()
+                for i in range(n):
+                    page = doc.new_page(width=595, height=842)
+                    page.insert_text((72, 72), f"Page {i + 1}", fontsize=24)
+                self.doc = doc
+                self.current_page = 0
+                self.selected_pages = set()
+                self._undo_stack = collections.deque(maxlen=self.MAX_UNDO)
+                self._redo_stack = collections.deque(maxlen=self.MAX_UNDO)
+                self._preview_gen = 0
+                self._thumb_gen = 0
+                self.lang = "ja"
+
+            def _invalidate_thumb_cache(self, *a, **kw):
+                pass
+
+            def _refresh_all(self):
+                pass
+
+            def _t(self, key):
+                return key
+
+            def _set_status(self, *a):
+                pass
+
+        app = FakeApp(n_pages)
+        app.plugin_manager = types.SimpleNamespace(fire_event=lambda *a, **kw: None)
+        return app
+
+    def test_merge_resize_undo_partial_retry_then_redo_undo_roundtrip(
+        self, monkeypatch
+    ):
+        """V190-UNDO-01 回帰テスト（01-VERIFICATION.md Evidence 4）:
+        merge_resize の undo（結合ページ削除→元ページ再挿入）が2件目の
+        元ページ再挿入で失敗 → 再試行成功 → その後の redo で結合ページの
+        内容が結合直後と一致し（欠陥時は Page1 が重複し内容が壊れた）、
+        さらに undo で結合前の内容へ完全に戻ることを検証する。
+        """
+        import pagefolio.file_ops as fo
+
+        app = self._make_full_fake_app(n_pages=4)
+        before_digests = [_page_digest(app.doc[i]) for i in range(len(app.doc))]
+
+        targets = [0, 1]
+        app._do_merge_resize(targets, "horizontal", 1190, 842)
+        assert len(app.doc) == 3
+        after_merge_digests = [_page_digest(app.doc[i]) for i in range(len(app.doc))]
+
+        monkeypatch.setattr(fo.messagebox, "showerror", lambda *a, **k: None)
+
+        real_insert_pdf = app.doc.insert_pdf
+        call_count = {"n": 0}
+
+        def flaky_insert_pdf(src, start_at=-1, **kw):
+            call_count["n"] += 1
+            if call_count["n"] == 2:
+                raise RuntimeError("insert_pdf 失敗（模擬）")
+            return real_insert_pdf(src, start_at=start_at, **kw)
+
+        monkeypatch.setattr(app.doc, "insert_pdf", flaky_insert_pdf)
+
+        # 1回目の Undo: 結合ページ削除 → 元ページ1件目挿入（成功）→ 2件目で失敗
+        app._undo()
+
+        # 2回目の Undo: 障害解消後、残り1件も挿入される
+        app._undo()
+        assert len(app.doc) == 4
+        after_undo_digests = [_page_digest(app.doc[i]) for i in range(len(app.doc))]
+        assert before_digests == after_undo_digests
+
+        # Redo: 結合ページの内容が結合直後と一致する
+        # （欠陥時は Page1 が重複し内容が壊れていた＝Evidence 4）
+        app._redo()
+        assert len(app.doc) == 3
+        after_redo_digests = [_page_digest(app.doc[i]) for i in range(len(app.doc))]
+        assert after_merge_digests == after_redo_digests
+
+        # さらに Undo: 結合前の内容へ完全に戻る
+        app._undo()
+        assert len(app.doc) == 4
+        final_digests = [_page_digest(app.doc[i]) for i in range(len(app.doc))]
+        assert before_digests == final_digests
+
+    def test_merge_resize_redo_partial_retry_then_undo_redo_roundtrip(
+        self, monkeypatch
+    ):
+        """V190-UNDO-01 回帰テスト: merge_resize_undo の redo（元ページ削除
+        →結合ページ再挿入）が2件目の元ページ削除で失敗 → 再試行成功 →
+        その後の undo/redo でページ構成・内容が完全に往復することを検証
+        する。
+        """
+        import pagefolio.file_ops as fo
+
+        app = self._make_full_fake_app(n_pages=4)
+        before_digests = [_page_digest(app.doc[i]) for i in range(len(app.doc))]
+
+        targets = [0, 1]
+        app._do_merge_resize(targets, "horizontal", 1190, 842)
+        assert len(app.doc) == 3
+        after_merge_digests = [_page_digest(app.doc[i]) for i in range(len(app.doc))]
+
+        # 正常系で undo（4ページへ復旧）→ redo スタックに merge_resize_undo が積まれる
+        app._undo()
+        assert len(app.doc) == 4
+        assert app._redo_stack[-1]["op"] == "merge_resize_undo"
+
+        monkeypatch.setattr(fo.messagebox, "showerror", lambda *a, **k: None)
+
+        real_delete_page = app.doc.delete_page
+        call_count = {"n": 0}
+
+        def flaky_delete_page(pno):
+            call_count["n"] += 1
+            if call_count["n"] == 2:
+                raise RuntimeError("delete_page 失敗（模擬）")
+            return real_delete_page(pno)
+
+        monkeypatch.setattr(app.doc, "delete_page", flaky_delete_page)
+
+        # 1回目の Redo: 元ページ1件目は削除成功・2件目で失敗
+        app._redo()
+
+        # 2回目の Redo: 障害解消後、残り1件も削除され結合ページが再挿入される
+        app._redo()
+        assert len(app.doc) == 3
+        after_retry_digests = [_page_digest(app.doc[i]) for i in range(len(app.doc))]
+        assert after_merge_digests == after_retry_digests
+
+        # Undo: 結合前の内容へ完全に戻る（欠陥時は内容が破損した状態で確定していた）
+        app._undo()
+        assert len(app.doc) == 4
+        after_undo_digests = [_page_digest(app.doc[i]) for i in range(len(app.doc))]
+        assert before_digests == after_undo_digests
+
+        # 再度 Redo: 結合直後の内容に戻る
+        app._redo()
+        assert len(app.doc) == 3
+        final_digests = [_page_digest(app.doc[i]) for i in range(len(app.doc))]
+        assert after_merge_digests == final_digests
+
+    def test_merge_undo_partial_retry_roundtrip_inverse_unaffected(
+        self, sample_pdf_doc, monkeypatch
+    ):
+        """V190-UNDO-01 非該当ピン（merge_undo）: merge_undo の逆デルタは
+        old_count のみを運ぶスカラーであり per-page データを運ばないため、
+        他 7 op で発生する「縮小逆デルタが次段へ伝搬する」欠陥の対象外で
+        あることを、同型の部分失敗→再試行→往復テストで明示的に固定する。
+
+        merge_undo の restore（元ページの再追加ループ）が2件目で失敗しても、
+        再試行成功直後に構築される次段の逆デルタ（op="merge"）は old_count
+        というスカラーのみであり、部分失敗の影響を一切受けない。
+        """
+        import pagefolio.file_ops as fo
+
+        app = self._make_fake_app(sample_pdf_doc)
+        original_count = len(app.doc)  # 3
+        before_digests = [_page_digest(app.doc[i]) for i in range(len(app.doc))]
+
+        # do: 2ページぶんの内容を結合（末尾に追加）
+        app._save_undo("merge")
+        merged_texts = ["Merged Page A", "Merged Page B"]
+        for text in merged_texts:
+            src = fitz.open()
+            page = src.new_page(width=595, height=842)
+            page.insert_text((72, 72), text, fontsize=20)
+            app.doc.insert_pdf(src)
+            src.close()
+        assert len(app.doc) == original_count + 2
+        after_merge_digests = [_page_digest(app.doc[i]) for i in range(len(app.doc))]
+
+        # 1手目 Undo: 結合ページが除去される（merge_undo が redo_stack に積まれる）
+        app._undo()
+        assert len(app.doc) == original_count
+        assert app._redo_stack[-1]["op"] == "merge_undo"
+
+        monkeypatch.setattr(fo.messagebox, "showerror", lambda *a, **k: None)
+
+        real_blob_bytes = fo.FileOpsMixin._blob_bytes
+        call_count = {"n": 0}
+
+        def flaky_blob_bytes(data):
+            call_count["n"] += 1
+            if call_count["n"] == 2:
+                raise RuntimeError("blob 読み込み失敗（模擬）")
+            return real_blob_bytes(data)
+
+        monkeypatch.setattr(
+            fo.FileOpsMixin, "_blob_bytes", staticmethod(flaky_blob_bytes)
+        )
+
+        # 2手目 Redo: 1件目のみ再追加・2件目で失敗
+        app._redo()
+        assert len(app.doc) == original_count + 1
+
+        # 3手目 Redo: 障害解消後、残り1件も再追加される（merge_undo の再試行成功）
+        app._redo()
+        assert len(app.doc) == original_count + 2
+        after_retry_digests = [_page_digest(app.doc[i]) for i in range(len(app.doc))]
+        assert after_merge_digests == after_retry_digests
+
+        # 再試行成功直後に構築される次段の逆デルタ（merge_undo → merge）は
+        # old_count のみのスカラーであり、部分失敗の影響を受けない
+        # （merge_undo が本欠陥の非該当であることの直接証拠。redo() は
+        # 復元結果を undo_stack へ積むため、確認対象は undo_stack 側）
+        assert app._undo_stack[-1]["op"] == "merge"
+        assert isinstance(app._undo_stack[-1]["data"], int)
+        assert app._undo_stack[-1]["data"] == original_count
+
+        # 4手目 Undo: 結合前の内容に戻る
+        app._undo()
+        assert len(app.doc) == original_count
+        after_second_undo_digests = [
+            _page_digest(app.doc[i]) for i in range(len(app.doc))
+        ]
+        assert before_digests == after_second_undo_digests
+
+        # 5手目 Redo: 結合後の内容に戻る
+        app._redo()
+        assert len(app.doc) == original_count + 2
+        final_digests = [_page_digest(app.doc[i]) for i in range(len(app.doc))]
+        assert after_merge_digests == final_digests
+
     def test_undo_empty_stack_is_noop(self, sample_pdf_doc):
         """空スタックに対する undo はステータス表示のみで Document を
         変更しない"""

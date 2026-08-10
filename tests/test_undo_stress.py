@@ -332,3 +332,112 @@ class TestBlobLeakDetection:
             f"{[r.getMessage() for r in double_release_warnings]}"
         )
         doc.close()
+
+    def test_pending_inverse_blobs_released_on_stack_clear(
+        self, stress_pdf_bytes, monkeypatch
+    ):
+        """V190-UNDO-01・D-14: 部分失敗によって ``_pending_inverse`` を
+        持つ state がスタックに残った状態から ``_clear_undo_stacks()`` を
+        呼ぶと、蓄積済み逆デルタ用 Blob も含めて一時ファイル数が 0 になる
+        （再試行されずに evict/clear された場合のリーク防止）。
+        """
+        import pagefolio.file_ops as fo
+
+        doc = fitz.open(stream=stress_pdf_bytes, filetype="pdf")
+        app = _make_stress_app(doc)
+        targets = [10, 25]
+
+        monkeypatch.setattr(fo.messagebox, "showerror", lambda *a, **k: None)
+
+        app._save_undo("delete", targets=targets)
+        for i in sorted(targets, reverse=True):
+            app.doc.delete_page(i)
+
+        # 正常系で undo（delete_redo が redo_stack に積まれる）
+        app._undo()
+        assert len(app._redo_stack) == 1
+        assert app._redo_stack[-1]["op"] == "delete_redo"
+
+        real_delete_page = app.doc.delete_page
+        call_count = {"n": 0}
+
+        def flaky_delete_page(pno):
+            call_count["n"] += 1
+            if call_count["n"] == 2:
+                raise RuntimeError("delete_page 失敗（模擬）")
+            return real_delete_page(pno)
+
+        monkeypatch.setattr(app.doc, "delete_page", flaky_delete_page)
+
+        # redo: 1件目は削除成功（_pending_inverse に蓄積）・2件目で失敗
+        app._redo()
+        remaining = app._redo_stack[-1]
+        assert "_pending_inverse" in remaining
+        assert len(remaining["_pending_inverse"]) == 1
+        assert _blob_files(app) > 0
+
+        # 再試行しないまま evict/clear された場合も蓄積分の Blob が回収される
+        app._clear_undo_stacks()
+        assert _blob_files(app) == 0
+        doc.close()
+
+    def test_partial_retry_roundtrip_no_double_release(
+        self, stress_pdf_bytes, monkeypatch
+    ):
+        """V190-UNDO-01・D-14: 部分失敗を挟んだ5手往復（delete→undo失敗→
+        undo再試行→redo→undo）の全過程で、生成されたどの Blob も
+        release() の呼び出し回数が1回以下であることを検証する（二重解放
+        なし）。既存 test_double_release_chain_delete_undo_redo_undo の
+        release スパイをそのまま流用する。
+        """
+        import pagefolio.file_ops as fo
+
+        doc = fitz.open(stream=stress_pdf_bytes, filetype="pdf")
+        app = _make_stress_app(doc)
+
+        release_log = []
+        orig_file_release = undo_store.FileBlob.release
+        orig_mem_release = undo_store.MemBlob.release
+
+        def _spy_file_release(self):
+            release_log.append(self)
+            orig_file_release(self)
+
+        def _spy_mem_release(self):
+            release_log.append(self)
+            orig_mem_release(self)
+
+        monkeypatch.setattr(undo_store.FileBlob, "release", _spy_file_release)
+        monkeypatch.setattr(undo_store.MemBlob, "release", _spy_mem_release)
+        monkeypatch.setattr(fo.messagebox, "showerror", lambda *a, **k: None)
+
+        targets = [10, 25]
+        app._save_undo("delete", targets=targets)
+        for i in sorted(targets, reverse=True):
+            app.doc.delete_page(i)
+
+        real_blob_bytes = fo.FileOpsMixin._blob_bytes
+        call_count = {"n": 0}
+
+        def flaky_blob_bytes(data):
+            call_count["n"] += 1
+            if call_count["n"] == 2:
+                raise RuntimeError("blob 読み込み失敗（模擬）")
+            return real_blob_bytes(data)
+
+        monkeypatch.setattr(
+            fo.FileOpsMixin, "_blob_bytes", staticmethod(flaky_blob_bytes)
+        )
+
+        app._undo()  # 1件目成功・2件目で失敗
+        app._undo()  # 障害解消後、残り1件も復元される
+        app._redo()
+        app._undo()
+
+        counts = collections.Counter(id(b) for b in release_log)
+        assert all(c <= 1 for c in counts.values()), (
+            f"double-release検出（release()が2回以上呼ばれたBlobあり）: {counts}"
+        )
+
+        app._clear_undo_stacks()
+        doc.close()
