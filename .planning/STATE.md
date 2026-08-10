@@ -5,15 +5,15 @@ milestone_name: 安全性・整合性の是正 + OpenAI プロバイダ追加
 current_phase: 01
 current_phase_name: safety-rollback
 status: executing
-stopped_at: Completed 01-01-PLAN.md
-last_updated: "2026-08-10T08:02:48.941Z"
+stopped_at: Completed 01-02-PLAN.md
+last_updated: "2026-08-10T08:39:07.352Z"
 last_activity: 2026-08-10
 last_activity_desc: v1.9.0 ROADMAP.md 作成完了
 progress:
   total_phases: 3
   completed_phases: 0
   total_plans: 5
-  completed_plans: 1
+  completed_plans: 2
   percent: 0
 ---
 
@@ -29,11 +29,11 @@ See: .planning/PROJECT.md (updated 2026-08-10)
 ## Current Position
 
 Phase: 01 (safety-rollback) — EXECUTING
-Plan: 2 of 5
+Plan: 3 of 5
 Status: Ready to execute
 Last activity: 2026-08-10 — Phase 01 execution started
 
-Progress: [██░░░░░░░░] 20%
+Progress: [████░░░░░░] 40%
 
 ## v1.9.0 Phase Map
 
@@ -125,6 +125,7 @@ Progress: [██░░░░░░░░] 20%
 | Phase 06-ux-ui P02 | 17min | 3 tasks | 5 files |
 | Phase 06 P03 | 20min | 3 tasks | 5 files |
 | Phase 01 P01 | 71min | 3 tasks | 2 files |
+| Phase 01 P02 | 約35min | 3 tasks | 9 files |
 
 ## Accumulated Context
 
@@ -217,6 +218,9 @@ Decisions are logged in PROJECT.md Key Decisions table.
 - [Phase ?]: 06-03: 開発履歴.md の v1.6.1 日付誤記（2026-06-22→2026-06-23）を検出・修正。V16-D-04 が懸念した一時v1.7.0バンプの痕跡は既に解消済みと確認（D-14）
 - [Phase ?]: 01-01: D-01/D-02/D-03を実装。_save_asは無条件でPDF_ENCRYPT_KEEP付与、_overwrite_current_fileはsetdefaultで既定化（明示指定は破壊しない）、pdf_has_passwordはderive_pdf_has_password単一関数で保存kwargsから論理導出（実行時I/Oなし）
 - [Phase ?]: 01-01: _save_compressedの別パス保存分岐（doc.save直接呼び出し）もencryption未指定で平文化する同型バグだったため、RESEARCH.mdの対応表に明示がなくても同時是正した（V190-SAFE-01の全経路化）
+- [Phase ?]: [01-02] D-06: OCRDisabledError は pagefolio/ocr_providers/errors.py に配置（既存3例外と同じ RuntimeError 継承・同一ファイル集約の precedent に揃えた）
+- [Phase ?]: [01-02] D-04/D-05: バッチOCR メニューの活性制御は _update_ocr_buttons_state 末尾からの呼び出しに相乗りさせ新規配線を増やさなかった
+- [Phase ?]: [01-02] ocr_dialog.py の off 分岐は build_provider を経由せず provider を保持したまま中断する設計とし、旧実装の直接構築の穴（T-01-06）を解消した
 
 ### Pending Todos
 
@@ -324,8 +328,8 @@ Decisions are logged in PROJECT.md Key Decisions table.
 
 **Resume file:** None
 
-Last session: 2026-08-10T08:02:48.916Z
-Stopped at: Completed 01-01-PLAN.md
+Last session: 2026-08-10T08:39:07.327Z
+Stopped at: Completed 01-02-PLAN.md
 
 ## Operator Next Steps
 
