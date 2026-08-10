@@ -382,10 +382,12 @@ class FileOpsMixin:
             inv["op"] = "delete"
         elif op == "page_edit":
             # page_edit は対称 op: 逆デルタ = 適用後（現在）のページ bytes。
-            # undo→redo 往復でも同じ op のまま入れ替わる
-            inv["data"] = [
-                (page_i, self._capture_page_blob(page_i)) for page_i, _ in state["data"]
-            ]
+            # undo→redo 往復でも同じ op のまま入れ替わる。data の構築は
+            # _restore_state 側の mutation ループへ移した（V190-UNDO-01。
+            # 捕捉タイミングを「そのページを実際に mutate する瞬間」に
+            # 統一し、再試行時に既に復元済みのページから編集後内容を
+            # 誤って捕捉することを防ぐ）。
+            pass
         elif op == "move":
             # move の逆: move_page(src, dest) の逆順列を計算して bulk_move で逆操作。
             # move_page の順列を計算し、逆順列を doc.select() で適用する。
@@ -429,8 +431,10 @@ class FileOpsMixin:
                 for page_i, _ in state["data"]
             ]
         elif op == "insert":
-            # insert の逆: 挿入されたページを bytes でキャプチャして delete 形式に変換
-            # （Task 2 で完全実装。本タスクでは insert はページ増減系のため仮実装）
+            # insert の逆: 挿入されたページを bytes でキャプチャして delete 形式に変換。
+            # "insert" 自体（本 op）は _restore_state 側にリトライ機構がない
+            # ため、この Task の変更対象（V190-UNDO-01）ではなく現行どおり
+            # mutation 前にまとめて捕捉する。
             insert_at, num = state["data"]
             inv["op"] = "insert_undo"
             inv["data"] = [
@@ -438,17 +442,18 @@ class FileOpsMixin:
                 for i in range(insert_at, insert_at + num)
             ]
         elif op == "insert_undo":
-            # insert_undo の逆は insert（bytes を再挿入）
+            # insert_undo の逆は insert_redo（bytes を再挿入）。data の構築は
+            # _restore_state 側の mutation ループへ移した（V190-UNDO-01。
+            # 従来の `inv["data"] = state["data"]` は同一 dict を共有する
+            # ため、再試行を経由すると縮小データがそのまま伝搬してしまう
+            # per-page op で唯一残っていた identity 共有の特例だった）。
             inv["op"] = "insert_redo"
-            inv["data"] = state["data"]
         elif op == "insert_redo":
-            insert_at = state["data"][0][0] if state["data"] else 0
-            num = len(state["data"])
+            # insert_redo の逆は insert_undo。data の構築は _restore_state
+            # 側の mutation ループへ移した（V190-UNDO-01。捕捉タイミングを
+            # 「そのページを実際に削除する瞬間」に統一し、再試行時の
+            # インデックスずれによる誤キャプチャを防ぐ）。
             inv["op"] = "insert_undo"
-            inv["data"] = [
-                (i, self._capture_page_blob(i))
-                for i in range(insert_at, insert_at + num)
-            ]
         elif op == "merge":
             # merge の逆: 追加されたページを bytes でキャプチャ（Task 2 で完全実装）
             old_count = state["data"]
@@ -555,18 +560,33 @@ class FileOpsMixin:
             # 「ページ削除後・再挿入前」という最も危険なタイミングで
             # 起きないようにする（mutation 前に検出できる分を増やす）。
             # CR-01: 途中で失敗した場合は未適用分のみの state を伝搬する。
+            # V190-UNDO-01: そのページを mutate する直前（delete_page より
+            # 前）に現在（編集後）の内容を捕捉し、delete_page→insert_pdf が
+            # 両方成功したときだけ次段の逆デルタとして蓄積する。
+            pending = []
             applied = 0
             try:
                 for page_i, page_bytes in state["data"]:
                     tmp = fitz.open(stream=self._blob_bytes(page_bytes), filetype="pdf")
-                    self.doc.delete_page(page_i)
-                    self.doc.insert_pdf(tmp, start_at=page_i)
-                    tmp.close()
+                    captured = self._capture_page_blob(page_i)
+                    try:
+                        self.doc.delete_page(page_i)
+                        self.doc.insert_pdf(tmp, start_at=page_i)
+                    except Exception:
+                        self._release_blob(captured)
+                        raise
+                    finally:
+                        tmp.close()
+                    pending.append((page_i, captured))
                     applied += 1
             except Exception as e:
                 for _i, blob in state["data"][:applied]:
                     self._release_blob(blob)
-                self._restore_partial_error(state, state["data"][applied:], e)
+                merged_pending = self._merge_pending_inverse(state, pending)
+                self._restore_partial_error(
+                    state, state["data"][applied:], e, pending_inverse=merged_pending
+                )
+            inverse["data"] = self._merge_pending_inverse(state, pending)
         elif op == "move":
             # undo: move_page(src, dest) の逆順列を doc.select() で元の順序に戻す。
             src, actual_dest = state["data"]
@@ -597,17 +617,28 @@ class FileOpsMixin:
         elif op == "insert_undo":
             # insert_undo: キャプチャした bytes を昇順で再挿入。
             # CR-01: 途中で失敗した場合は未適用分のみの state を伝搬する。
+            # V190-UNDO-01: insert_pdf が成功するたびに次段（insert_redo）用
+            # の逆デルタエントリ (page_i, None) を蓄積する。insert_redo の
+            # restore・次段の inverse はどちらも page_i しか参照しないため
+            # WR-01 と同じ判断でプレースホルダのままでよい（delete/delete_redo
+            # と同型の展開）。
+            pending = []
             applied = 0
             try:
                 for page_i, page_bytes in state["data"]:
                     tmp = fitz.open(stream=self._blob_bytes(page_bytes), filetype="pdf")
                     self.doc.insert_pdf(tmp, start_at=page_i)
                     tmp.close()
+                    pending.append((page_i, None))
                     applied += 1
             except Exception as e:
                 for _i, blob in state["data"][:applied]:
                     self._release_blob(blob)
-                self._restore_partial_error(state, state["data"][applied:], e)
+                merged_pending = self._merge_pending_inverse(state, pending)
+                self._restore_partial_error(
+                    state, state["data"][applied:], e, pending_inverse=merged_pending
+                )
+            inverse["data"] = self._merge_pending_inverse(state, pending)
         elif op == "insert_redo":
             # insert_redo state の restore = 前段の insert_undo で再挿入された
             # ページを取り除く（delete_redo と対称: 昇順インデックスを降順で
@@ -616,12 +647,22 @@ class FileOpsMixin:
             # CR-01: data の blob はこの op 自身の restore では未使用だが、
             # 削除できた分は今後不要になるためここで解放する。未適用分
             # （まだ削除できていない page_i とその blob）のみを残す。
+            # V190-UNDO-01: delete_page を呼ぶ直前に _capture_page_blob で
+            # そのページの内容を捕捉し、削除が成功したときだけ次段
+            # （insert_undo）用の逆デルタエントリとして蓄積する。
             targets = sorted([page_i for page_i, _ in state["data"]], reverse=True)
             deleted = set()
+            pending = []
             try:
                 for page_i in targets:
-                    self.doc.delete_page(page_i)
+                    blob = self._capture_page_blob(page_i)
+                    try:
+                        self.doc.delete_page(page_i)
+                    except Exception:
+                        self._release_blob(blob)
+                        raise
                     deleted.add(page_i)
+                    pending.append((page_i, blob))
             except Exception as e:
                 remaining = []
                 for item in state["data"]:
@@ -629,7 +670,11 @@ class FileOpsMixin:
                         self._release_blob(item[1])
                     else:
                         remaining.append(item)
-                self._restore_partial_error(state, remaining, e)
+                merged_pending = self._merge_pending_inverse(state, pending)
+                self._restore_partial_error(
+                    state, remaining, e, pending_inverse=merged_pending
+                )
+            inverse["data"] = self._merge_pending_inverse(state, pending)
         elif op == "merge":
             old_count = state["data"]
             while len(self.doc) > old_count:
