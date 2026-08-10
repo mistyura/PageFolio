@@ -32,6 +32,7 @@ from pagefolio.ocr_providers.errors import (  # noqa: F401
     _CONTEXT_ERROR_MARKERS,
     OCRAPIKeyError,
     OCRContextLengthError,
+    OCRDisabledError,
     OCRRetryableError,
     _raise_mapped_http_error,
     _retryable_http_message,

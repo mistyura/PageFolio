@@ -12,6 +12,22 @@ class OCRAPIKeyError(RuntimeError):
         super().__init__(f"環境変数 {env_var} が設定されていません")
 
 
+class OCRDisabledError(RuntimeError):
+    """ocr_provider が明示的に "off" のとき、OCR 実行経路への進入を拒否する専用例外。
+
+    build_provider() は "off" のみをこの例外で拒否する（V190-SAFE-03・D-06）。
+    空文字 "" は後方互換のため LM Studio 扱いのまま維持し、本例外の対象外
+    （ocr_provider キーを持たない旧 pagefolio_settings.json との互換性維持）。
+    全呼び出し元（通常 OCR・バッチ OCR・OCR ダイアログ内 provider 再生成）は
+    本例外を捕捉して OCR 実行経路への進入を中断する契約とする。
+    """
+
+    def __init__(self, message=None):
+        super().__init__(
+            message or "OCR プロバイダが無効化されています（ocr_provider=off）"
+        )
+
+
 class OCRRetryableError(RuntimeError):
     """429/5xx リトライ可能エラー。retry_after（秒）と HTTP ステータスを保持する。
 

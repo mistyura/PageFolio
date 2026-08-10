@@ -423,15 +423,24 @@ def build_provider(settings, api_key=None, plugin_manager=None):
 
     戻り値: OCRProvider インスタンス
 
+    例外:
+      OCRDisabledError — ocr_provider が明示的に "off" のとき（V190-SAFE-03・D-06）。
+      空文字 "" は後方互換のため対象外で、従来どおり LMStudioProvider を返す。
+
     注意: api_key は settings へ書き込まない（D-01・D-05）。
     """
     # 関数内 import で循環 import を回避（_start_ocr の前例と同様）
-    from pagefolio.ocr_providers import LMStudioProvider
+    from pagefolio.ocr_providers import LMStudioProvider, OCRDisabledError
 
     name = settings.get("ocr_provider", "lmstudio")
 
-    if name in ("lmstudio", "", "off"):
-        # "off" は Phase 5 で UI 化。Phase 4 では LM Studio として動作させ後方互換を維持
+    if name == "off":
+        # V190-SAFE-03・D-06: "off" のみを専用例外で拒否する（プロバイダ生成
+        # そのものを構造的に不可能にする）。空文字は後方互換のため対象外
+        # （下段の ("lmstudio", "") 分岐で従来どおり LMStudioProvider を返す）。
+        raise OCRDisabledError()
+
+    if name in ("lmstudio", ""):
         return LMStudioProvider(
             url=settings.get("lm_studio_url", DEFAULT_LM_STUDIO_URL),
             model=settings.get("lm_studio_model", ""),

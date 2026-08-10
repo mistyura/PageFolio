@@ -429,6 +429,10 @@ LANG = {
             "未対応の OCR プロバイダが設定されています: {name}\n"
             "設定を確認してください。"
         ),
+        "ocr_disabled_msg": (
+            "OCR プロバイダが OFF のため実行できません。"
+            "LLM 設定で OCR プロバイダを選択してください。"
+        ),
         # Phase 5: Claude Provider / セキュリティ UI 文言（D-06/D-07/D-12/D-15/D-17）
         "ocr_api_key_missing": (
             "APIキーが設定されていません（{env_var}）。"
@@ -718,6 +722,8 @@ LANG = {
         # メニューバー（v1.8.0 Phase 4・04-03・D-01）
         "batch_menu_tools": "ツール",
         "batch_menu_item": "バッチOCR",
+        # OCR OFF ガード（v1.9.0 Phase 1・V190-SAFE-03・D-04/D-05）
+        "batch_menu_item_off": "バッチOCR（OCR OFF）",
     },
     "en": {
         # Header / status
@@ -1134,6 +1140,9 @@ LANG = {
         "ocr_provider_unsupported": (
             "Unsupported OCR provider configured: {name}\nPlease check your settings."
         ),
+        "ocr_disabled_msg": (
+            "OCR is turned off. Select an OCR provider in LLM settings to run OCR."
+        ),
         # Phase 5: Claude Provider / security UI messages (D-06/D-07/D-12/D-15/D-17)
         "ocr_api_key_missing": (
             "API key is not configured ({env_var}). "
@@ -1425,5 +1434,7 @@ LANG = {
         # Menu bar (v1.8.0 Phase 4 - 04-03 - D-01)
         "batch_menu_tools": "Tools",
         "batch_menu_item": "Batch OCR",
+        # OCR OFF guard (v1.9.0 Phase 1 - V190-SAFE-03 - D-04/D-05)
+        "batch_menu_item_off": "Batch OCR (OCR off)",
     },
 }
