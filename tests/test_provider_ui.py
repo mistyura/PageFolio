@@ -7,6 +7,7 @@
 ロジック層のみを検証するユニットテスト群。
 """
 
+import ast
 import types
 
 import pytest
@@ -2654,6 +2655,90 @@ class TestUnsavedTemplateChangesSinglePath:
 
         assert d.template_var.get() == "A"
         assert d.ocr_prompt_text.get("1.0", "end") == "edited-not-saved"
+
+
+class TestUnsavedTemplateChangesSourceGuard:
+    """V190-CFG-02（D-18）: `SectionsMixin._has_unsaved_template_changes` の
+    構造的不変条件をソース解析で恒久的に固定する（01-03-PLAN.md Task 1）。
+
+    01-03-SUMMARY.md の D-18 決定は「アクティブテンプレート選択済みの場合、
+    外部プロンプトファイルの有無で判定経路を分岐させない（常に保存済み値と
+    比較する）」というもの。この不変条件は挙動テスト（
+    TestUnsavedTemplateChangesSinglePath）だけでは検出できない回帰がある
+    ――既存の3テストは外部ファイルが存在しないケースのみを踏むため、もし
+    `prompt_file_exists(...)` による早期 False 分岐が再導入されても
+    外部ファイル非存在ケースでは挙動が変わらず、3テストとも green のまま
+    通ってしまう。そのため tests/test_pdf_ops.py::TestTempDocumentCloseGuard
+    と同型の AST 走査ガードを設け、判定経路が単一であることをソースレベルで
+    固定する。
+    """
+
+    def _get_method_ast(self):
+        """`SectionsMixin._has_unsaved_template_changes` の関数定義ノードを
+        AST 上で取得して返す。"""
+        import inspect
+        import textwrap
+
+        from pagefolio.dialogs.llm_config.sections import SectionsMixin
+
+        source = inspect.getsource(SectionsMixin._has_unsaved_template_changes)
+        tree = ast.parse(textwrap.dedent(source))
+        (func_def,) = [
+            node for node in ast.walk(tree) if isinstance(node, ast.FunctionDef)
+        ]
+        return func_def
+
+    def test_method_body_never_references_prompt_file_exists(self):
+        """D-18: メソッド本体のどの Name/Call/属性参照にも
+        `prompt_file_exists` という識別子が現れないことを AST で検証する
+        （ファイル存在有無での早期分岐が再導入されていないことのピン留め）。
+        """
+        func_def = self._get_method_ast()
+
+        offending = [
+            node
+            for node in ast.walk(func_def)
+            if isinstance(node, ast.Name) and node.id == "prompt_file_exists"
+        ]
+
+        assert not offending, (
+            "_has_unsaved_template_changes が prompt_file_exists を参照している"
+            "（D-18 の単一経路の不変条件に違反）"
+        )
+
+    def test_method_source_substring_never_contains_prompt_file_exists(self):
+        """AST 走査を補強する副次的な文字列アサーション（inspect.getsource
+        の生ソースに 'prompt_file_exists' という文字列が一切現れないこと）。
+        """
+        import inspect
+
+        from pagefolio.dialogs.llm_config.sections import SectionsMixin
+
+        src = inspect.getsource(SectionsMixin._has_unsaved_template_changes)
+
+        assert "prompt_file_exists" not in src
+
+    def test_unselected_template_guard_branch_still_present(self):
+        """Pitfall 5: 未選択時分岐（`if not self._active_template_name:`）が
+        D-18 の最小差分適用後も1つだけ残っていることを AST で検証する
+        （この分岐を誤って削除すると自由入力の未保存検知が壊れる）。
+        """
+        func_def = self._get_method_ast()
+
+        guard_ifs = [
+            node
+            for node in ast.walk(func_def)
+            if isinstance(node, ast.If)
+            and isinstance(node.test, ast.UnaryOp)
+            and isinstance(node.test.op, ast.Not)
+            and isinstance(node.test.operand, ast.Attribute)
+            and node.test.operand.attr == "_active_template_name"
+        ]
+
+        assert len(guard_ifs) == 1, (
+            "未選択時分岐 `if not self._active_template_name:` の数が想定と"
+            f"異なる（検出数: {len(guard_ifs)}）"
+        )
 
 
 class TestTemplateNameValidationUI:
