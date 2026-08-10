@@ -119,7 +119,7 @@ V180-* 全 26 要件 Complete（被覆 26/26・孤立要件なし）。クロー
   4. LLM 設定 UI（LLMConfigDialog）を Cancel しても外部プロンプトファイル（`ocr_custom_prompt.md`/`ocr_summary_prompt.md`）は変更されず、選択済みテンプレートを編集した状態で別テンプレートへ切り替えると外部ファイル連動の有無にかかわらず未保存確認が表示される（V190-CFG-01/02）
   5. Undo/Redo の復元処理が失敗した場合、対象状態がスタックへ戻され履歴が失われず Document が部分変更のまま残らない。`duplicate`/`merge`/`merge_resize` の各 op で do→undo→redo→undo の4手往復回帰テストがページ構成の一致を担保する（V190-UNDO-01/02）
 
-**Plans**: 7 plans（6 waves・01-06 / 01-07 は検証ギャップ是正プラン。6/7 executed）
+**Plans**: 7/7 plans executed（6 waves・01-06 / 01-07 は検証ギャップ是正プラン。6/7 executed）
 
 Plans:
 **Wave 1**
@@ -145,7 +145,7 @@ Plans:
 
 **Wave 6** *(blocked on Wave 5 completion・gap closure)*
 
-- [ ] 01-07-PLAN.md — page_edit の 2 段階 mutation 中間失敗によるページ内容喪失と隣接ページ巻き添えの是正（CR-02 ロールバック＋専用警告・WR-04 一時 Document の finally 保護・WR-05 insert base op の部分適用保護・V190-UNDO-01 / 01-VERIFICATION.md gap）
+- [x] 01-07-PLAN.md — page_edit の 2 段階 mutation 中間失敗によるページ内容喪失と隣接ページ巻き添えの是正（CR-02 ロールバック＋専用警告・WR-04 一時 Document の finally 保護・WR-05 insert base op の部分適用保護・V190-UNDO-01 / 01-VERIFICATION.md gap）
 
 **UI hint**: yes
 
@@ -186,7 +186,7 @@ Phases execute in numeric order: 1 → 2 → 3
 
 | Phase             | Milestone | Plans Complete | Status      | Completed  |
 | ----------------- | --------- | --------------- | ----------- | ---------- |
-| 1. Undo/Redo 修正 | v1.3.0    | 6/6 | In Progress|  |
+| 1. Undo/Redo 修正 | v1.3.0    | 7/7 | In Progress|  |
 | 2. プレビュー最適化とリファクタリング | v1.3.0 | 3/3 | Complete | 2026-06-03 |
 | 3. API 整理と回帰テスト | v1.3.0 | 2/2 | Complete | 2026-06-03 |
 | 4. プロバイダ抽象化 | v1.4.0 | 4/4 | Complete | 2026-06-06 |

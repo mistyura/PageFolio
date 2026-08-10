@@ -30,7 +30,7 @@
 
 ### Undo/Redo 堅牢性（UNDO）
 
-- [ ] **V190-UNDO-01**: Undo または Redo の復元処理が失敗した場合、対象状態がスタックへ戻され履歴が失われない。Document が部分的に変更されたまま残らない（REV-07）
+- [x] **V190-UNDO-01**: Undo または Redo の復元処理が失敗した場合、対象状態がスタックへ戻され履歴が失われない。Document が部分的に変更されたまま残らない（REV-07）
 - [ ] **V190-UNDO-02**: `duplicate` / `merge` / `merge_resize` の各 op について do→undo→redo→undo の 4 手往復でページ構成が操作前と一致することが回帰テストで担保される（REV-07・v1.8.0 D-17 の水平展開）
 
 ### OCR プロバイダ基盤整理（CAT）
@@ -115,7 +115,7 @@
 | V190-SAFE-05 | Phase 1 | Gaps Found |
 | V190-CFG-01 | Phase 1 | Gaps Found |
 | V190-CFG-02 | Phase 1 | Gaps Found |
-| V190-UNDO-01 | Phase 1 | Gaps Found |
+| V190-UNDO-01 | Phase 1 | Complete |
 | V190-UNDO-02 | Phase 1 | Gaps Found |
 | V190-CAT-01 | Phase 2 | Pending |
 | V190-CAT-02 | Phase 2 | Pending |

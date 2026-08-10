@@ -5,16 +5,16 @@ milestone_name: 安全性・整合性の是正 + OpenAI プロバイダ追加
 current_phase: 01
 current_phase_name: safety-rollback
 status: executing
-stopped_at: Completed 01-06-PLAN.md
-last_updated: "2026-08-10T15:50:21.810Z"
-last_activity: 2026-08-10
-last_activity_desc: v1.9.0 ROADMAP.md 作成完了
+stopped_at: Completed 01-07-PLAN.md
+last_updated: "2026-08-10T16:33:10.986Z"
+last_activity: 2026-08-11
+last_activity_desc: Phase 01 execution started
 progress:
   total_phases: 3
   completed_phases: 1
   total_plans: 7
-  completed_plans: 6
-  percent: 0
+  completed_plans: 7
+  percent: 33
 ---
 
 # Project State
@@ -29,9 +29,9 @@ See: .planning/PROJECT.md (updated 2026-08-10)
 ## Current Position
 
 Phase: 01 (safety-rollback) — EXECUTING
-Plan: 2 of 6
+Plan: 2 of 7
 Status: Ready to execute
-Last activity: 2026-08-10 — Phase 01 execution started
+Last activity: 2026-08-11 — Phase 01 execution started
 
 Progress: [██████████] 100%
 
@@ -130,6 +130,7 @@ Progress: [██████████] 100%
 | Phase 01 P04 | 約20min | 3 tasks | 4 files |
 | Phase 01 P05 | 約20min | 3 tasks | 2 files |
 | Phase 01 P06 | 約45min | 3 tasks | 3 files |
+| Phase 01 P07 | 約70分 | 3 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -234,6 +235,10 @@ Decisions are logged in PROJECT.md Key Decisions table.
 - [Phase ?]: [01-05]: D-12棚卸しをgrep実測（page_ops.py 13/dnd.py 2/redact_ops.py 1=計16件）で確定。PLAN.md記載の「12件」は実測と不一致のため実測値を正として記録。先置きのまま残る10 opは次マイルストーン候補として明示、本フェーズではコード変更ゼロ
 - [Phase ?]: [01-05]: 開発履歴.md/APP_VERSION更新はPhase 3（V190-QA-03リリースゲート）へ委譲。既存エントリはリリース単位の書式のためマイルストーン途中での追記は書式を崩す
 - [Phase ?]: [01-06]: Task 0 checkpoint:decision は方式 A（mutation ループ内で実際に適用できたページ分の逆データを蓄積し部分失敗時は _pending_inverse として remaining_state へ引き継ぐ）を採用。7 op（delete/delete_redo/page_edit/insert_undo/insert_redo/merge_resize/merge_resize_undo）へ展開し、merge_undo は old_count スカラーのみのため非該当であることをピン留めした
+- [Phase ?]: [01-07]: Task 0 checkpoint:decision は option-b（mutation順序反転による構造的解消）をユーザー選択済みとして実行。page_edit の delete_page→insert_pdf 順を insert_pdf→delete_page へ反転し、doc がページ内容を失っている瞬間を構造的に排除。option-a（Blob保持方式）は未実装
+- [Phase ?]: [01-07]: option-b選択に伴い警告文言は「内容が失われた可能性」ではなく「二重化または欠落している可能性」とした（err_undo/redo_restore_failed_content_at_risk）。option-bの構造上、ロールバック失敗時も旧ページはpage_i+1に必ず残存し内容喪失は起こり得ないため
+- [Phase ?]: [01-07]: APP_VERSION・開発履歴.md・READMEバッジは本プランで更新せず、Phase 3（V190-QA-03リリースゲート）へ委譲（01-05/01-06と同じ既定方針の継続）
+- [Phase ?]: [01-07]: merge（base op）の削除ループがinsertと同型の未保護構造（一括捕捉＋保護なし削除ループ）を持つことを棚卸しで確認。D-12方針に従いコード変更せず次マイルストーン候補として記録
 
 ### Pending Todos
 
@@ -341,8 +346,8 @@ Decisions are logged in PROJECT.md Key Decisions table.
 
 **Resume file:** None
 
-Last session: 2026-08-10T14:40:29.462Z
-Stopped at: Completed 01-06-PLAN.md
+Last session: 2026-08-10T16:33:10.960Z
+Stopped at: Completed 01-07-PLAN.md
 
 ## Operator Next Steps
 
