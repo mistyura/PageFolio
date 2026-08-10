@@ -4,16 +4,16 @@ milestone: v1.9.0
 milestone_name: 安全性・整合性の是正 + OpenAI プロバイダ追加
 current_phase: 01
 current_phase_name: safety-rollback
-status: verifying
-stopped_at: Completed 01-05-PLAN.md
-last_updated: "2026-08-10T09:51:59.162Z"
+status: executing
+stopped_at: Completed 01-06-PLAN.md
+last_updated: "2026-08-10T14:40:29.484Z"
 last_activity: 2026-08-10
 last_activity_desc: v1.9.0 ROADMAP.md 作成完了
 progress:
   total_phases: 3
   completed_phases: 1
-  total_plans: 5
-  completed_plans: 5
+  total_plans: 6
+  completed_plans: 6
   percent: 33
 ---
 
@@ -29,8 +29,8 @@ See: .planning/PROJECT.md (updated 2026-08-10)
 ## Current Position
 
 Phase: 01 (safety-rollback) — EXECUTING
-Plan: 5 of 5
-Status: Phase complete — ready for verification
+Plan: 2 of 6
+Status: Ready to execute
 Last activity: 2026-08-10 — Phase 01 execution started
 
 Progress: [██████████] 100%
@@ -129,6 +129,7 @@ Progress: [██████████] 100%
 | Phase 01 P03 | 約20min | 3 tasks | 2 files |
 | Phase 01 P04 | 約20min | 3 tasks | 4 files |
 | Phase 01 P05 | 約20min | 3 tasks | 2 files |
+| Phase 01 P06 | 約45min | 3 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -232,6 +233,7 @@ Decisions are logged in PROJECT.md Key Decisions table.
 - [Phase ?]: [01-05]: duplicate/merge/merge_resizeの4手往復回帰テスト（3件）+ 境界・隣接・順序・精度エッジ（5件）をTestAllOpsUndoRedoRoundtripへ追加（V190-UNDO-02）。既存3手往復テストは無変更。全て一発でgreen（duplicate/mergeの逆デルタはinsertと異なりインデックス再計算方式のためinsert_redoと同型の非対称復元バグは発見されず）
 - [Phase ?]: [01-05]: D-12棚卸しをgrep実測（page_ops.py 13/dnd.py 2/redact_ops.py 1=計16件）で確定。PLAN.md記載の「12件」は実測と不一致のため実測値を正として記録。先置きのまま残る10 opは次マイルストーン候補として明示、本フェーズではコード変更ゼロ
 - [Phase ?]: [01-05]: 開発履歴.md/APP_VERSION更新はPhase 3（V190-QA-03リリースゲート）へ委譲。既存エントリはリリース単位の書式のためマイルストーン途中での追記は書式を崩す
+- [Phase ?]: [01-06]: Task 0 checkpoint:decision は方式 A（mutation ループ内で実際に適用できたページ分の逆データを蓄積し部分失敗時は _pending_inverse として remaining_state へ引き継ぐ）を採用。7 op（delete/delete_redo/page_edit/insert_undo/insert_redo/merge_resize/merge_resize_undo）へ展開し、merge_undo は old_count スカラーのみのため非該当であることをピン留めした
 
 ### Pending Todos
 
@@ -339,8 +341,8 @@ Decisions are logged in PROJECT.md Key Decisions table.
 
 **Resume file:** None
 
-Last session: 2026-08-10T09:51:59.144Z
-Stopped at: Completed 01-05-PLAN.md
+Last session: 2026-08-10T14:40:29.462Z
+Stopped at: Completed 01-06-PLAN.md
 
 ## Operator Next Steps
 
