@@ -4,6 +4,7 @@
 **Core Value:** 大きな PDF でも Undo/Redo が正しく・速く動作し、コードが読みやすく保守しやすい状態にする。
 
 **出典:**
+
 - `.planning/notes/2026-08-10-v1.9.0-existing-feature-review.md`（既存機能レビュー・課題 8 件 V190-REV-01〜08）
 - `.planning/research/SUMMARY.md`（v1.9.0 プロジェクトリサーチ・4 次元統合）
 
@@ -16,8 +17,8 @@
 
 ### 保存・編集の安全性（SAFE）
 
-- [ ] **V190-SAFE-01**: ユーザーがパスワード保護 PDF を「保存」「名前を付けて保存」「上書き（インクリメンタル保存失敗時のフォールバック）」のいずれの経路で保存しても、保存先 PDF の暗号化が維持される（REV-01）
-- [ ] **V190-SAFE-02**: 暗号化の解除は「パスワード解除」の明示操作でのみ発生し、通常の保存経路では発生しない。保存後は UI 上の `pdf_has_password` 状態が実ファイルと一致する（REV-01）
+- [x] **V190-SAFE-01**: ユーザーがパスワード保護 PDF を「保存」「名前を付けて保存」「上書き（インクリメンタル保存失敗時のフォールバック）」のいずれの経路で保存しても、保存先 PDF の暗号化が維持される（REV-01）
+- [x] **V190-SAFE-02**: 暗号化の解除は「パスワード解除」の明示操作でのみ発生し、通常の保存経路では発生しない。保存後は UI 上の `pdf_has_password` 状態が実ファイルと一致する（REV-01）
 - [ ] **V190-SAFE-03**: OCR が OFF のとき、ユーザーはバッチ OCR を起動・実行開始できない。`off` はプロバイダ生成可能な値として扱われず、通常 OCR・バッチ OCR・プラグイン経路のすべてで OFF が同一の意味を持つ（REV-02）
 - [ ] **V190-SAFE-04**: 複数ファイル挿入が途中のファイルで失敗した場合、ページ数と Undo スタックが操作前と一致する。挿入元 Document は例外発生時も必ずクローズされる（REV-03）
 - [ ] **V190-SAFE-05**: ページ複製が失敗した場合、既存ページと Undo スタックが変化しない（Undo 状態は成功後に確定される）（REV-04）
@@ -107,8 +108,8 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| V190-SAFE-01 | Phase 1 | Pending |
-| V190-SAFE-02 | Phase 1 | Pending |
+| V190-SAFE-01 | Phase 1 | Complete |
+| V190-SAFE-02 | Phase 1 | Complete |
 | V190-SAFE-03 | Phase 1 | Pending |
 | V190-SAFE-04 | Phase 1 | Pending |
 | V190-SAFE-05 | Phase 1 | Pending |
@@ -136,6 +137,7 @@
 | V190-QA-03 | Phase 3 | Pending |
 
 **Coverage:**
+
 - v1 requirements: 27 total
 - Mapped to phases: 27
 - Unmapped: 0 ✓

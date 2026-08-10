@@ -119,12 +119,12 @@ V180-* 全 26 要件 Complete（被覆 26/26・孤立要件なし）。クロー
   4. LLM 設定 UI（LLMConfigDialog）を Cancel しても外部プロンプトファイル（`ocr_custom_prompt.md`/`ocr_summary_prompt.md`）は変更されず、選択済みテンプレートを編集した状態で別テンプレートへ切り替えると外部ファイル連動の有無にかかわらず未保存確認が表示される（V190-CFG-01/02）
   5. Undo/Redo の復元処理が失敗した場合、対象状態がスタックへ戻され履歴が失われず Document が部分変更のまま残らない。`duplicate`/`merge`/`merge_resize` の各 op で do→undo→redo→undo の4手往復回帰テストがページ構成の一致を担保する（V190-UNDO-01/02）
 
-**Plans**: 5 plans（4 waves）
+**Plans**: 1/5 plans executed（4 waves）
 
 Plans:
 **Wave 1**
 
-- [ ] 01-01-PLAN.md — 保存3経路+縮小保存の暗号化維持と `pdf_has_password` 論理導出（tracer・V190-SAFE-01/02）
+- [x] 01-01-PLAN.md — 保存3経路+縮小保存の暗号化維持と `pdf_has_password` 論理導出（tracer・V190-SAFE-01/02）
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
@@ -178,7 +178,7 @@ Phases execute in numeric order: 1 → 2 → 3
 
 | Phase             | Milestone | Plans Complete | Status      | Completed  |
 | ----------------- | --------- | --------------- | ----------- | ---------- |
-| 1. Undo/Redo 修正 | v1.3.0    | 3/3              | Complete    | 2026-06-03 |
+| 1. Undo/Redo 修正 | v1.3.0    | 1/5 | In Progress|  |
 | 2. プレビュー最適化とリファクタリング | v1.3.0 | 3/3 | Complete | 2026-06-03 |
 | 3. API 整理と回帰テスト | v1.3.0 | 2/2 | Complete | 2026-06-03 |
 | 4. プロバイダ抽象化 | v1.4.0 | 4/4 | Complete | 2026-06-06 |
