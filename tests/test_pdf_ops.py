@@ -2363,6 +2363,180 @@ class TestUndoRedoRestoreFailure:
         app._redo()
         assert len(app.doc) == original_count - len(targets)
 
+    def test_page_edit_partial_retry_then_redo_undo_roundtrip(
+        self, sample_pdf_doc, monkeypatch
+    ):
+        """V190-UNDO-01 回帰テスト: page_edit の undo が2件目で失敗 →
+        再試行成功 → その後の redo で両ページとも編集後の内容に戻り、
+        さらに undo で編集前の内容に戻ることを検証する。
+        """
+        import pagefolio.file_ops as fo
+        from pagefolio.redact_ops import RedactOpsMixin
+
+        app = self._make_fake_app(sample_pdf_doc)
+        before_digests = [_page_digest(app.doc[i]) for i in range(len(app.doc))]
+
+        targets = [0, 1]
+        app._save_undo("page_edit", targets=targets)
+        rect = fitz.Rect(60, 50, 300, 110)
+        for i in targets:
+            RedactOpsMixin._redact_page(app.doc[i], rect)
+        after_edit_digests = [_page_digest(app.doc[i]) for i in range(len(app.doc))]
+
+        monkeypatch.setattr(fo.messagebox, "showerror", lambda *a, **k: None)
+
+        real_blob_bytes = fo.FileOpsMixin._blob_bytes
+        call_count = {"n": 0}
+
+        def flaky_blob_bytes(data):
+            call_count["n"] += 1
+            if call_count["n"] == 2:
+                raise RuntimeError("blob 読み込み失敗（模擬）")
+            return real_blob_bytes(data)
+
+        monkeypatch.setattr(
+            fo.FileOpsMixin, "_blob_bytes", staticmethod(flaky_blob_bytes)
+        )
+
+        # 1回目の Undo: page 0 のみ復元・page 1 で失敗
+        app._undo()
+
+        # 2回目の Undo: 障害解消後、残り1件も復元される
+        app._undo()
+        after_undo_digests = [_page_digest(app.doc[i]) for i in range(len(app.doc))]
+        assert before_digests == after_undo_digests
+
+        # Redo: 両ページとも編集後の内容に戻る（欠陥時は1件しか反映されなかった）
+        app._redo()
+        after_redo_digests = [_page_digest(app.doc[i]) for i in range(len(app.doc))]
+        assert after_edit_digests == after_redo_digests
+
+        # さらに Undo: 編集前の内容へ完全に戻る
+        app._undo()
+        final_digests = [_page_digest(app.doc[i]) for i in range(len(app.doc))]
+        assert before_digests == final_digests
+
+    def test_insert_undo_partial_retry_then_redo_undo_roundtrip(
+        self, sample_pdf_doc, multi_pdf_files, monkeypatch
+    ):
+        """V190-UNDO-01 回帰テスト: insert_undo の redo（再挿入）が2件目で
+        失敗 → 再試行成功 → その後の undo で挿入分がすべて消え、再度 redo
+        すると挿入後の内容に戻ることを検証する。
+        """
+        import pagefolio.file_ops as fo
+
+        app = self._make_fake_app(sample_pdf_doc)
+        before_digests = [_page_digest(app.doc[i]) for i in range(len(app.doc))]
+
+        insert_at = 1
+        app._save_undo("insert", insert_at=insert_at)
+        src = fitz.open(multi_pdf_files[1])  # 2ページ
+        num = len(src)
+        app.doc.insert_pdf(src, start_at=insert_at)
+        src.close()
+        app._undo_stack[-1]["data"][1] = num
+
+        after_insert_digests = [_page_digest(app.doc[i]) for i in range(len(app.doc))]
+
+        # Undo: 挿入分が消える（insert_undo が redo_stack に積まれる）
+        app._undo()
+        assert len(app.doc) == len(before_digests)
+        assert app._redo_stack[-1]["op"] == "insert_undo"
+
+        monkeypatch.setattr(fo.messagebox, "showerror", lambda *a, **k: None)
+
+        real_blob_bytes = fo.FileOpsMixin._blob_bytes
+        call_count = {"n": 0}
+
+        def flaky_blob_bytes(data):
+            call_count["n"] += 1
+            if call_count["n"] == 2:
+                raise RuntimeError("blob 読み込み失敗（模擬）")
+            return real_blob_bytes(data)
+
+        monkeypatch.setattr(
+            fo.FileOpsMixin, "_blob_bytes", staticmethod(flaky_blob_bytes)
+        )
+
+        # 1回目の Redo: 1件目のみ再挿入・2件目で失敗
+        app._redo()
+
+        # 2回目の Redo: 障害解消後、残り1件も再挿入される
+        app._redo()
+        after_redo_digests = [_page_digest(app.doc[i]) for i in range(len(app.doc))]
+        assert after_insert_digests == after_redo_digests
+
+        # さらに Undo: 挿入分がすべて消える（欠陥時は1件しか消えなかった）
+        app._undo()
+        final_undo_digests = [_page_digest(app.doc[i]) for i in range(len(app.doc))]
+        assert before_digests == final_undo_digests
+
+        # 再度 Redo: 挿入後の内容に戻る
+        app._redo()
+        final_redo_digests = [_page_digest(app.doc[i]) for i in range(len(app.doc))]
+        assert after_insert_digests == final_redo_digests
+
+    def test_insert_redo_partial_retry_then_undo_redo_roundtrip(
+        self, sample_pdf_doc, multi_pdf_files, monkeypatch
+    ):
+        """V190-UNDO-01 回帰テスト: insert_redo の undo（再挿入分の削除）
+        が2件目で失敗 → 再試行成功 → その後の redo で挿入分がすべて戻り、
+        再度 undo すると挿入前の内容に戻ることを検証する。
+        """
+        import pagefolio.file_ops as fo
+
+        app = self._make_fake_app(sample_pdf_doc)
+        before_digests = [_page_digest(app.doc[i]) for i in range(len(app.doc))]
+
+        insert_at = 1
+        app._save_undo("insert", insert_at=insert_at)
+        src = fitz.open(multi_pdf_files[1])  # 2ページ
+        num = len(src)
+        app.doc.insert_pdf(src, start_at=insert_at)
+        src.close()
+        app._undo_stack[-1]["data"][1] = num
+
+        after_insert_digests = [_page_digest(app.doc[i]) for i in range(len(app.doc))]
+
+        app._undo()  # insert_undo が redo_stack に積まれる
+        assert len(app.doc) == len(before_digests)
+
+        app._redo()  # insert_redo（成功）が undo_stack に積まれる
+        assert app._undo_stack[-1]["op"] == "insert_redo"
+        after_redo_digests = [_page_digest(app.doc[i]) for i in range(len(app.doc))]
+        assert after_insert_digests == after_redo_digests
+
+        monkeypatch.setattr(fo.messagebox, "showerror", lambda *a, **k: None)
+
+        real_delete_page = app.doc.delete_page
+        call_count = {"n": 0}
+
+        def flaky_delete_page(pno):
+            call_count["n"] += 1
+            if call_count["n"] == 2:
+                raise RuntimeError("delete_page 失敗（模擬）")
+            return real_delete_page(pno)
+
+        monkeypatch.setattr(app.doc, "delete_page", flaky_delete_page)
+
+        # 1回目の Undo: 1件目は削除成功・2件目で失敗
+        app._undo()
+
+        # 2回目の Undo: 障害解消後、残り1件も削除される
+        app._undo()
+        final_undo_digests = [_page_digest(app.doc[i]) for i in range(len(app.doc))]
+        assert before_digests == final_undo_digests
+
+        # Redo: 挿入分がすべて戻る（欠陥時は1件しか戻らなかった）
+        app._redo()
+        final_redo_digests = [_page_digest(app.doc[i]) for i in range(len(app.doc))]
+        assert after_insert_digests == final_redo_digests
+
+        # さらに Undo: 挿入前の内容に戻る
+        app._undo()
+        last_digests = [_page_digest(app.doc[i]) for i in range(len(app.doc))]
+        assert before_digests == last_digests
+
     def test_merge_resize_undo_partial_failure_preserves_remaining_and_retry_completes(
         self, monkeypatch
     ):
