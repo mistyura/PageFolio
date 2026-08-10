@@ -2182,10 +2182,15 @@ def _make_template_dialog(
 
 
 class TestTemplateChangeFlow:
-    """D-05/D-07（V180-TMPL-04）: _on_template_change の未保存差分確認による
-    切替中止（D-05）と、切替確定後の外部mdファイル上書き（D-07）を実
-    bound method 呼び出しで検証する（02-VERIFICATION.md
-    behavior_unverified_items の1件目・2件目）。
+    """D-05（V180-TMPL-04）: _on_template_change の未保存差分確認による
+    切替中止（D-05）を実 bound method 呼び出しで検証する
+    （02-VERIFICATION.md behavior_unverified_items の1件目・2件目）。
+
+    旧 D-07 は「切替の都度、選択テンプレートの内容で外部ファイルを上書き
+    する」ことを検証していたが、v1.9.0 D-15（外部ファイルへの書き込みは
+    Apply 押下時の1経路へ一本化）により挙動が反転した。本クラスの
+    「上書き」系テストは「切替経路からは一切書き込みが発生しないことの
+    検証」へ置き換わっている。
     """
 
     def test_cancel_discards_switch_and_keeps_edited_content(self, monkeypatch):
@@ -2210,16 +2215,12 @@ class TestTemplateChangeFlow:
             summary_text="saved-A2",
         )
         monkeypatch.setattr(
-            "pagefolio.dialogs.llm_config.sections.prompt_file_exists",
-            lambda _f: True,
-        )
-        monkeypatch.setattr(
             "pagefolio.dialogs.llm_config.sections.messagebox.askyesno",
             lambda *a, **k: False,
         )
         save_calls = []
         monkeypatch.setattr(
-            "pagefolio.dialogs.llm_config.sections.save_prompt_file",
+            "pagefolio.settings.save_prompt_file",
             lambda f, content: save_calls.append((f, content)),
         )
 
@@ -2229,13 +2230,11 @@ class TestTemplateChangeFlow:
         assert d.ocr_prompt_text.get("1.0", "end") == "edited"
         assert save_calls == []
 
-    def test_confirmed_switch_overwrites_external_files_fake_capture(self, monkeypatch):
-        """未保存差分なしの切替確定後、選択テンプレートの内容が入力欄へ反映され、
-        save_prompt_file が CUSTOM_PROMPT_FILE/SUMMARY_PROMPT_FILE と新テンプレート
-        内容で呼ばれる（D-07・フェイク捕捉版）。
+    def test_confirmed_switch_does_not_touch_external_files(self, monkeypatch):
+        """未保存差分なしの切替確定後、選択テンプレートの内容は入力欄へ反映
+        されるが、外部ファイルへの書き込みは発生しない（v1.9.0 D-15・書き込み
+        は Apply のみ）。
         """
-        from pagefolio.constants import CUSTOM_PROMPT_FILE, SUMMARY_PROMPT_FILE
-
         current_settings = {
             "prompt_templates": {
                 "active": "A",
@@ -2253,23 +2252,18 @@ class TestTemplateChangeFlow:
             summary_text="saved-A2",
         )
         monkeypatch.setattr(
-            "pagefolio.dialogs.llm_config.sections.prompt_file_exists",
-            lambda _f: True,
-        )
-        monkeypatch.setattr(
             "pagefolio.dialogs.llm_config.sections.messagebox.askyesno",
             lambda *a, **k: True,
         )
         save_calls = []
         monkeypatch.setattr(
-            "pagefolio.dialogs.llm_config.sections.save_prompt_file",
+            "pagefolio.settings.save_prompt_file",
             lambda f, content: save_calls.append((f, content)),
         )
 
         d._on_template_change()
 
-        assert (CUSTOM_PROMPT_FILE, "newC") in save_calls
-        assert (SUMMARY_PROMPT_FILE, "newS") in save_calls
+        assert save_calls == []
         assert d._active_template_name == "B"
         assert d.ocr_prompt_text.get("1.0", "end") == "newC"
 
@@ -2295,11 +2289,6 @@ class TestTemplateChangeFlow:
             custom_text="typed-but-unsaved",
             summary_text="",
         )
-        # ファイル非連動モード（外部 md ファイルは存在しない）
-        monkeypatch.setattr(
-            "pagefolio.dialogs.llm_config.sections.prompt_file_exists",
-            lambda _f: False,
-        )
         askyesno_calls = []
 
         def _fake_askyesno(*a, **k):
@@ -2312,7 +2301,7 @@ class TestTemplateChangeFlow:
         )
         save_calls = []
         monkeypatch.setattr(
-            "pagefolio.dialogs.llm_config.sections.save_prompt_file",
+            "pagefolio.settings.save_prompt_file",
             lambda f, content: save_calls.append((f, content)),
         )
 
@@ -2323,13 +2312,14 @@ class TestTemplateChangeFlow:
         assert d.ocr_prompt_text.get("1.0", "end") == "typed-but-unsaved"
         assert save_calls == []
 
-    def test_change_overwrites_external_md_file(self, monkeypatch, tmp_path):
-        """D-07 実ファイル検証版: settings._get_base_dir を tmp_path へ差し替え、
-        save_prompt_file/prompt_file_exists/load_prompt_file は一切
-        monkeypatch せず実関数のまま通す。切替後に ocr_custom_prompt.md/
-        ocr_summary_prompt.md が新アクティブテンプレートの内容で実際に
-        上書きされていることをファイル読み取りで確認する
-        （02-VERIFICATION.md behavior_unverified_items[1] の test 欄と一致）。
+    def test_change_leaves_external_md_file_untouched(self, monkeypatch, tmp_path):
+        """v1.9.0 D-15 実ファイル検証版: settings._get_base_dir を tmp_path へ
+        差し替え、save_prompt_file/prompt_file_exists/load_prompt_file は一切
+        monkeypatch せず実関数のまま通す。テンプレート切替後も
+        ocr_custom_prompt.md/ocr_summary_prompt.md の内容が作成時のままで
+        あることをファイル読み取りで確認する（外部ファイルへの書き込みは
+        Apply 押下時のみに一本化された・02-VERIFICATION.md
+        behavior_unverified_items[1] の test 欄と対応）。
         """
         from pagefolio.constants import CUSTOM_PROMPT_FILE, SUMMARY_PROMPT_FILE
 
@@ -2365,8 +2355,10 @@ class TestTemplateChangeFlow:
 
         d._on_template_change()
 
-        assert (tmp_path / CUSTOM_PROMPT_FILE).read_text(encoding="utf-8") == "newC"
-        assert (tmp_path / SUMMARY_PROMPT_FILE).read_text(encoding="utf-8") == "newS"
+        custom_content = (tmp_path / CUSTOM_PROMPT_FILE).read_text(encoding="utf-8")
+        summary_content = (tmp_path / SUMMARY_PROMPT_FILE).read_text(encoding="utf-8")
+        assert custom_content == "old-custom"
+        assert summary_content == "old-summary"
 
 
 class TestTemplateNameValidationUI:
