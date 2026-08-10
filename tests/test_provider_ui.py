@@ -2361,6 +2361,267 @@ class TestTemplateChangeFlow:
         assert summary_content == "old-summary"
 
 
+# ══════════════════════════════════════════════════════════════
+#  V190-CFG-01/02（01-03）: Apply 一本化契約と未保存確認の単一経路化を
+#  実ファイル検証を含めて固定する回帰テスト群。
+# ══════════════════════════════════════════════════════════════
+
+
+class TestApplyOnlyPromptFileWrite:
+    """V190-CFG-01: 外部プロンプトファイルへの書き込みが Apply 押下時
+    （`dialog.py:_apply`）のみで発生し、テンプレート切替・Cancel からは
+    一切副作用が及ばないことを検証する。
+    """
+
+    def test_template_change_does_not_write_prompt_files(self, monkeypatch, tmp_path):
+        """テンプレート切替を複数回行っても外部 md ファイルは変化しない。"""
+        from pagefolio.constants import CUSTOM_PROMPT_FILE, SUMMARY_PROMPT_FILE
+
+        monkeypatch.setattr("pagefolio.settings._get_base_dir", lambda: str(tmp_path))
+        (tmp_path / CUSTOM_PROMPT_FILE).write_text("base-custom", encoding="utf-8")
+        (tmp_path / SUMMARY_PROMPT_FILE).write_text("base-summary", encoding="utf-8")
+
+        current_settings = {
+            "prompt_templates": {
+                "active": "A",
+                "items": {
+                    "A": {"custom_prompt": "a-custom", "summary_prompt": "a-summary"},
+                    "B": {"custom_prompt": "b-custom", "summary_prompt": "b-summary"},
+                },
+            }
+        }
+        d = _make_template_dialog(
+            current_settings,
+            active_template_name="A",
+            template_var_value="A",
+            custom_text="a-custom",
+            summary_text="a-summary",
+        )
+        monkeypatch.setattr(
+            "pagefolio.dialogs.llm_config.sections.messagebox.askyesno",
+            lambda *a, **k: True,
+        )
+
+        d.template_var.set("B")
+        d._on_template_change()
+        d.template_var.set("A")
+        d._on_template_change()
+        d.template_var.set("B")
+        d._on_template_change()
+
+        custom_content = (tmp_path / CUSTOM_PROMPT_FILE).read_text(encoding="utf-8")
+        summary_content = (tmp_path / SUMMARY_PROMPT_FILE).read_text(encoding="utf-8")
+        assert custom_content == "base-custom"
+        assert summary_content == "base-summary"
+
+    def test_cancel_leaves_prompt_files_unchanged(self, tmp_path, monkeypatch):
+        """入力欄を編集しても Apply を呼ばなければ（＝Cancel）外部ファイルは
+        変化しない。Apply を呼ばないことが Cancel の定義であることを明示する。
+        """
+        from pagefolio.constants import CUSTOM_PROMPT_FILE, SUMMARY_PROMPT_FILE
+
+        monkeypatch.setattr("pagefolio.settings._get_base_dir", lambda: str(tmp_path))
+        (tmp_path / CUSTOM_PROMPT_FILE).write_text("stable-custom", encoding="utf-8")
+        (tmp_path / SUMMARY_PROMPT_FILE).write_text("stable-summary", encoding="utf-8")
+
+        # 入力欄を編集する（_apply は一切呼ばない＝Cancel 経路の模擬）
+        stub = _make_apply_key_stub({})
+        stub.ocr_prompt_text = _GetTextStub("edited-but-not-applied")
+        stub.ocr_summary_prompt_text = _GetTextStub("edited-summary-not-applied")
+        stub.destroy()
+
+        custom_content = (tmp_path / CUSTOM_PROMPT_FILE).read_text(encoding="utf-8")
+        summary_content = (tmp_path / SUMMARY_PROMPT_FILE).read_text(encoding="utf-8")
+        assert custom_content == "stable-custom"
+        assert summary_content == "stable-summary"
+
+    def test_apply_writes_input_field_content_not_active_template(
+        self, monkeypatch, tmp_path
+    ):
+        """D-16: Apply が書き込む内容は入力欄の現在値であり、アクティブ
+        テンプレートの保存済み値ではない。
+        """
+        from pagefolio.constants import CUSTOM_PROMPT_FILE
+        from pagefolio.dialogs.llm_config import LLMConfigDialog
+
+        monkeypatch.setattr("pagefolio.settings._get_base_dir", lambda: str(tmp_path))
+        (tmp_path / CUSTOM_PROMPT_FILE).write_text(
+            "X-saved-template-value", encoding="utf-8"
+        )
+
+        stub = _make_apply_key_stub({})
+        stub.ocr_prompt_text = _GetTextStub("Y-current-input-field-value")
+
+        LLMConfigDialog._apply(stub)
+
+        written = (tmp_path / CUSTOM_PROMPT_FILE).read_text(encoding="utf-8")
+        assert written == "Y-current-input-field-value"
+
+    def test_apply_does_not_create_missing_prompt_files(self, monkeypatch, tmp_path):
+        """D-17: 外部 md ファイルが存在しない場合、Apply しても新規作成しない。"""
+        from pagefolio.dialogs.llm_config import LLMConfigDialog
+
+        monkeypatch.setattr("pagefolio.settings._get_base_dir", lambda: str(tmp_path))
+
+        stub = _make_apply_key_stub({})
+        stub.ocr_prompt_text = _GetTextStub("some content")
+        stub.ocr_summary_prompt_text = _GetTextStub("some summary")
+
+        LLMConfigDialog._apply(stub)
+
+        assert list(tmp_path.glob("*.md")) == []
+
+    def test_apply_overwrites_externally_edited_file_with_input_content(
+        self, monkeypatch, tmp_path
+    ):
+        """probe: CFG-01 / concurrency — ダイアログ表示中に外部エディタで
+        ファイルが直接編集されても、Apply は入力欄の現在値でファイルを
+        上書きする（D-16 の WYSIWYG 契約により Apply が最後の書き手になる）。
+        """
+        from pagefolio.constants import CUSTOM_PROMPT_FILE
+        from pagefolio.dialogs.llm_config import LLMConfigDialog
+
+        monkeypatch.setattr("pagefolio.settings._get_base_dir", lambda: str(tmp_path))
+        (tmp_path / CUSTOM_PROMPT_FILE).write_text("original", encoding="utf-8")
+
+        stub = _make_apply_key_stub({})
+        stub.ocr_prompt_text = _GetTextStub("input-field-current-value")
+
+        # ダイアログ表示中に外部エディタでファイルが直接編集された状況を再現
+        (tmp_path / CUSTOM_PROMPT_FILE).write_text(
+            "externally-edited", encoding="utf-8"
+        )
+
+        LLMConfigDialog._apply(stub)
+
+        written = (tmp_path / CUSTOM_PROMPT_FILE).read_text(encoding="utf-8")
+        assert written == "input-field-current-value"
+
+    def test_open_cancel_twice_leaves_files_unchanged(self, tmp_path, monkeypatch):
+        """probe: CFG-01 / idempotency — 「開く→編集→Cancel」を2回繰り返しても
+        外部ファイルの内容は1度も変化しない。
+        """
+        from pagefolio.constants import CUSTOM_PROMPT_FILE, SUMMARY_PROMPT_FILE
+
+        monkeypatch.setattr("pagefolio.settings._get_base_dir", lambda: str(tmp_path))
+        (tmp_path / CUSTOM_PROMPT_FILE).write_text("stable-custom", encoding="utf-8")
+        (tmp_path / SUMMARY_PROMPT_FILE).write_text("stable-summary", encoding="utf-8")
+
+        for _ in range(2):
+            # 開く→編集（Apply は呼ばない）→ Cancel（destroy）
+            stub = _make_apply_key_stub({})
+            stub.ocr_prompt_text = _GetTextStub("edited-but-cancelled")
+            stub.ocr_summary_prompt_text = _GetTextStub("edited-summary-cancelled")
+            stub.destroy()
+
+        custom_content = (tmp_path / CUSTOM_PROMPT_FILE).read_text(encoding="utf-8")
+        summary_content = (tmp_path / SUMMARY_PROMPT_FILE).read_text(encoding="utf-8")
+        assert custom_content == "stable-custom"
+        assert summary_content == "stable-summary"
+
+
+class TestUnsavedTemplateChangesSinglePath:
+    """V190-CFG-02（D-18）: `_has_unsaved_template_changes` の判定経路が
+    外部ファイルの有無に依存しない単一経路になっていることを検証する。
+    """
+
+    def test_selected_template_edit_warns_without_prompt_files(self, monkeypatch):
+        """アクティブテンプレート選択済み・入力欄が保存済み値から編集済み・
+        外部 md ファイルは存在しない状態でも、別テンプレートへ切り替えると
+        askyesno が1回呼ばれる（D-18 の直接の回帰テスト）。
+        """
+        current_settings = {
+            "prompt_templates": {
+                "active": "A",
+                "items": {
+                    "A": {"custom_prompt": "saved-A", "summary_prompt": "saved-A2"},
+                    "B": {"custom_prompt": "b", "summary_prompt": "b2"},
+                },
+            }
+        }
+        d = _make_template_dialog(
+            current_settings,
+            active_template_name="A",
+            template_var_value="B",
+            custom_text="edited-not-saved",
+            summary_text="saved-A2",
+        )
+        askyesno_calls = []
+
+        def _fake_askyesno(*a, **k):
+            askyesno_calls.append((a, k))
+            return True
+
+        monkeypatch.setattr(
+            "pagefolio.dialogs.llm_config.sections.messagebox.askyesno",
+            _fake_askyesno,
+        )
+
+        d._on_template_change()
+
+        assert len(askyesno_calls) == 1
+
+    def test_selected_template_unedited_does_not_warn(self, monkeypatch):
+        """入力欄がアクティブテンプレートの保存済み値と一致していれば
+        askyesno は呼ばれない（過検知の防止）。
+        """
+        current_settings = {
+            "prompt_templates": {
+                "active": "A",
+                "items": {
+                    "A": {"custom_prompt": "saved-A", "summary_prompt": "saved-A2"},
+                    "B": {"custom_prompt": "b", "summary_prompt": "b2"},
+                },
+            }
+        }
+        d = _make_template_dialog(
+            current_settings,
+            active_template_name="A",
+            template_var_value="B",
+            custom_text="saved-A",
+            summary_text="saved-A2",
+        )
+        askyesno_calls = []
+        monkeypatch.setattr(
+            "pagefolio.dialogs.llm_config.sections.messagebox.askyesno",
+            lambda *a, **k: askyesno_calls.append(1) or True,
+        )
+
+        d._on_template_change()
+
+        assert askyesno_calls == []
+
+    def test_switch_cancel_restores_active_template_selection(self, monkeypatch):
+        """probe: CFG-02 / concurrency — 未保存確認で「いいえ」を選ぶと、
+        選択が元のアクティブテンプレートへ戻り、入力欄の内容も保持される。
+        """
+        current_settings = {
+            "prompt_templates": {
+                "active": "A",
+                "items": {
+                    "A": {"custom_prompt": "saved-A", "summary_prompt": "saved-A2"},
+                    "B": {"custom_prompt": "b", "summary_prompt": "b2"},
+                },
+            }
+        }
+        d = _make_template_dialog(
+            current_settings,
+            active_template_name="A",
+            template_var_value="B",
+            custom_text="edited-not-saved",
+            summary_text="saved-A2",
+        )
+        monkeypatch.setattr(
+            "pagefolio.dialogs.llm_config.sections.messagebox.askyesno",
+            lambda *a, **k: False,
+        )
+
+        d._on_template_change()
+
+        assert d.template_var.get() == "A"
+        assert d.ocr_prompt_text.get("1.0", "end") == "edited-not-saved"
+
+
 class TestTemplateNameValidationUI:
     """D-04（V180-TMPL-03・UI 経由）: _on_template_save/_on_template_rename の
     重複名/空名 messagebox.showerror 拒否経路を実 bound method 呼び出しで
