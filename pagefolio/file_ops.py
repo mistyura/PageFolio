@@ -100,9 +100,11 @@ class FileOpsMixin:
         64KiB 以上はディスク退避（FileBlob）、未満はメモリ保持（MemBlob）。
         """
         tmp = fitz.open()
-        tmp.insert_pdf(self.doc, from_page=page_i, to_page=page_i)
-        data = tmp.tobytes()
-        tmp.close()
+        try:
+            tmp.insert_pdf(self.doc, from_page=page_i, to_page=page_i)
+            data = tmp.tobytes()
+        finally:
+            tmp.close()
         return self._get_undo_store().put(data)
 
     @staticmethod
@@ -544,13 +546,17 @@ class FileOpsMixin:
             # 逆デルタエントリ (page_i, None) を蓄積し、_merge_pending_inverse
             # で前回までの蓄積分（部分失敗を経由した remaining_state 由来）と
             # 合流させてから inverse["data"] を確定する。
+            # WR-04: tmp（一時 fitz.Document）は insert_pdf が例外を送出して
+            # も finally で確実に閉じる。
             pending = []
             applied = 0
             try:
                 for page_i, page_bytes in state["data"]:
                     tmp = fitz.open(stream=self._blob_bytes(page_bytes), filetype="pdf")
-                    self.doc.insert_pdf(tmp, start_at=page_i)
-                    tmp.close()
+                    try:
+                        self.doc.insert_pdf(tmp, start_at=page_i)
+                    finally:
+                        tmp.close()
                     pending.append((page_i, None))
                     applied += 1
             except Exception as e:
@@ -694,11 +700,15 @@ class FileOpsMixin:
             self.doc.delete_page(state["data"] + 1)
         elif op == "duplicate_undo":
             # duplicate_undo: インデックスを再複製
+            # WR-04: tmp（一時 fitz.Document）は insert_pdf が例外を送出して
+            # も finally で確実に閉じる。
             pno = state["data"] - 1
             tmp = fitz.open()
-            tmp.insert_pdf(self.doc, from_page=pno, to_page=pno)
-            self.doc.insert_pdf(tmp, start_at=pno + 1)
-            tmp.close()
+            try:
+                tmp.insert_pdf(self.doc, from_page=pno, to_page=pno)
+                self.doc.insert_pdf(tmp, start_at=pno + 1)
+            finally:
+                tmp.close()
         elif op == "insert":
             insert_at, num = state["data"]
             for _ in range(num):
@@ -711,13 +721,17 @@ class FileOpsMixin:
             # restore・次段の inverse はどちらも page_i しか参照しないため
             # WR-01 と同じ判断でプレースホルダのままでよい（delete/delete_redo
             # と同型の展開）。
+            # WR-04: tmp（一時 fitz.Document）は insert_pdf が例外を送出して
+            # も finally で確実に閉じる。
             pending = []
             applied = 0
             try:
                 for page_i, page_bytes in state["data"]:
                     tmp = fitz.open(stream=self._blob_bytes(page_bytes), filetype="pdf")
-                    self.doc.insert_pdf(tmp, start_at=page_i)
-                    tmp.close()
+                    try:
+                        self.doc.insert_pdf(tmp, start_at=page_i)
+                    finally:
+                        tmp.close()
                     pending.append((page_i, None))
                     applied += 1
             except Exception as e:
@@ -771,13 +785,17 @@ class FileOpsMixin:
         elif op == "merge_undo":
             # merge_undo: キャプチャした bytes を昇順で再追加。
             # CR-01: 途中で失敗した場合は未適用分のみの state を伝搬する。
+            # WR-04: tmp（一時 fitz.Document）は insert_pdf が例外を送出して
+            # も finally で確実に閉じる。
             old_count, captured = state["data"]
             applied = 0
             try:
                 for page_i, page_bytes in captured:
                     tmp = fitz.open(stream=self._blob_bytes(page_bytes), filetype="pdf")
-                    self.doc.insert_pdf(tmp, start_at=page_i)
-                    tmp.close()
+                    try:
+                        self.doc.insert_pdf(tmp, start_at=page_i)
+                    finally:
+                        tmp.close()
                     applied += 1
             except Exception as e:
                 for _i, blob in captured[:applied]:
@@ -804,14 +822,18 @@ class FileOpsMixin:
                     self.doc.delete_page(insert_at)
                 except Exception as e:
                     self._restore_partial_error(state, dict(d), e)
+            # WR-04: tmp（一時 fitz.Document）は insert_pdf が例外を送出して
+            # も finally で確実に閉じる。
             orig_sorted = sorted(d["orig_pages"], key=lambda x: x[0])
             pending = []
             applied = 0
             try:
                 for idx, page_bytes in orig_sorted:
                     tmp = fitz.open(stream=self._blob_bytes(page_bytes), filetype="pdf")
-                    self.doc.insert_pdf(tmp, start_at=idx)
-                    tmp.close()
+                    try:
+                        self.doc.insert_pdf(tmp, start_at=idx)
+                    finally:
+                        tmp.close()
                     pending.append((idx, page_bytes))
                     applied += 1
             except Exception as e:
@@ -850,11 +872,15 @@ class FileOpsMixin:
                     self.doc.delete_page(idx)
                     deleted.add(idx)
                     pending.append((idx, orig_by_idx[idx]))
+                # WR-04: tmp（一時 fitz.Document）は insert_pdf が例外を送出
+                # しても finally で確実に閉じる（外側の except は現行のまま）。
                 tmp = fitz.open(
                     stream=self._blob_bytes(d["merged_bytes"]), filetype="pdf"
                 )
-                self.doc.insert_pdf(tmp, start_at=insert_at)
-                tmp.close()
+                try:
+                    self.doc.insert_pdf(tmp, start_at=insert_at)
+                finally:
+                    tmp.close()
             except Exception as e:
                 remaining_data = dict(d)
                 remaining_data["orig_pages"] = [

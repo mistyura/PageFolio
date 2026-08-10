@@ -3,7 +3,9 @@ pagefolio.py のPDF操作ロジックは Tkinter に強く結合しているた�
 fitz API を直接使ってアプリと同等の操作が正しく動くことを検証する。
 """
 
+import ast
 import os
+import pathlib
 from unittest.mock import patch
 
 import fitz
@@ -1953,6 +1955,84 @@ class TestDuplicateUndoTiming:
         assert len(app.doc) == original_count
 
 
+# ファイル相対で pagefolio/file_ops.py を解決（CWD 非依存・WR-04）
+_FILE_OPS_PATH = (
+    pathlib.Path(__file__).resolve().parent.parent / "pagefolio" / "file_ops.py"
+)
+
+
+def _is_fitz_open_call(node):
+    """node が `fitz.open(...)` 呼び出しかどうかを判定する（WR-04）。"""
+    return (
+        isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Attribute)
+        and node.func.attr == "open"
+        and isinstance(node.func.value, ast.Name)
+        and node.func.value.id == "fitz"
+    )
+
+
+def _try_closes_tmp_in_finally(node):
+    """node が `finally:` の中で `tmp.close()` を呼ぶ `ast.Try` かどうかを
+    判定する（WR-04）。"""
+    if not isinstance(node, ast.Try):
+        return False
+    for stmt in node.finalbody:
+        for sub in ast.walk(stmt):
+            if (
+                isinstance(sub, ast.Call)
+                and isinstance(sub.func, ast.Attribute)
+                and sub.func.attr == "close"
+                and isinstance(sub.func.value, ast.Name)
+                and sub.func.value.id == "tmp"
+            ):
+                return True
+    return False
+
+
+def _iter_statement_lists(tree):
+    """AST 内の `body`/`orelse`/`finalbody` を持つ全ノードの文リストを
+    順に返す（WR-04）。"""
+    for node in ast.walk(tree):
+        for field in ("body", "orelse", "finalbody"):
+            stmts = getattr(node, field, None)
+            if isinstance(stmts, list):
+                yield stmts
+
+
+class TestTempDocumentCloseGuard:
+    """pagefolio/file_ops.py の一時 fitz.Document（`tmp`）が、mutation が
+    例外を送出しても必ず close されることを AST 解析で恒久的に固定する
+    （WR-04）。tests/test_font_hardcode_guard.py のソース走査ガードと同型。
+    """
+
+    def test_temp_documents_are_finally_closed_guard(self):
+        """`tmp = fitz.open(...)` の代入がある文リストには、それ以降に
+        `finally: tmp.close()` を持つ `ast.Try` が必ず存在することを検証
+        する。違反時は該当行番号を添えて失敗させる。"""
+        source = _FILE_OPS_PATH.read_text(encoding="utf-8")
+        tree = ast.parse(source)
+        violations = []
+        for stmts in _iter_statement_lists(tree):
+            for i, stmt in enumerate(stmts):
+                is_tmp_assign = (
+                    isinstance(stmt, ast.Assign)
+                    and any(
+                        isinstance(t, ast.Name) and t.id == "tmp" for t in stmt.targets
+                    )
+                    and _is_fitz_open_call(stmt.value)
+                )
+                if not is_tmp_assign:
+                    continue
+                rest = stmts[i + 1 :]
+                if not any(_try_closes_tmp_in_finally(s) for s in rest):
+                    violations.append(stmt.lineno)
+        assert not violations, (
+            f"tmp = fitz.open(...) が finally: tmp.close() で保護されていない"
+            f"行（pagefolio/file_ops.py）: {violations}"
+        )
+
+
 class TestUndoRedoRestoreFailure:
     """_undo / _redo の復元失敗時に state を保全しブロッキング通知する検証
     （V190-UNDO-01・D-13/D-14）"""
@@ -3044,6 +3124,84 @@ class TestUndoRedoRestoreFailure:
         )
 
         app._clear_undo_stacks()
+
+    def test_restore_failure_closes_temp_document(self, sample_pdf_doc, monkeypatch):
+        """WR-04: delete の undo と merge_resize_undo の redo で insert_pdf
+        が失敗しても、pagefolio.file_ops 名前空間の fitz.open が返した全
+        Document が確実に close されることを検証する（AST ガードの実行時
+        裏取り）。"""
+        import pagefolio.file_ops as fo
+
+        monkeypatch.setattr(fo.messagebox, "showerror", lambda *a, **k: None)
+
+        # --- ケース1: delete の undo ---
+        app = self._make_fake_app(sample_pdf_doc)
+        targets = [0, 1]
+        app._save_undo("delete", targets=targets)
+        for i in sorted(targets, reverse=True):
+            app.doc.delete_page(i)
+
+        opened_docs = []
+        real_fitz_open = fo.fitz.open
+
+        def spy_open(*a, **kw):
+            d = real_fitz_open(*a, **kw)
+            opened_docs.append(d)
+            return d
+
+        with monkeypatch.context() as m:
+            m.setattr(fo.fitz, "open", spy_open)
+
+            real_insert_pdf = fitz.Document.insert_pdf
+            call_count = {"n": 0}
+
+            def flaky_insert_pdf(self_doc, *a, **kw):
+                if self_doc is app.doc:
+                    call_count["n"] += 1
+                    if call_count["n"] == 1:
+                        raise RuntimeError("insert_pdf 失敗（模擬）")
+                return real_insert_pdf(self_doc, *a, **kw)
+
+            m.setattr(fitz.Document, "insert_pdf", flaky_insert_pdf)
+
+            app._undo()
+
+        assert opened_docs
+        assert all(d.is_closed for d in opened_docs)
+
+        # --- ケース2: merge_resize_undo の redo ---
+        app2 = self._make_full_fake_app(n_pages=4)
+        app2._do_merge_resize([0, 1], "horizontal", 1190, 842)
+        app2._undo()  # merge_resize_undo が redo_stack に積まれる
+        assert app2._redo_stack[-1]["op"] == "merge_resize_undo"
+
+        opened_docs2 = []
+        real_fitz_open2 = fo.fitz.open
+
+        def spy_open2(*a, **kw):
+            d = real_fitz_open2(*a, **kw)
+            opened_docs2.append(d)
+            return d
+
+        with monkeypatch.context() as m:
+            m.setattr(fo.fitz, "open", spy_open2)
+
+            real_insert_pdf2 = fitz.Document.insert_pdf
+            call_count2 = {"n": 0}
+
+            def flaky_insert_pdf2(self_doc, *a, **kw):
+                if self_doc is app2.doc:
+                    call_count2["n"] += 1
+                    if call_count2["n"] == 1:
+                        raise RuntimeError("insert_pdf 失敗（模擬）")
+                return real_insert_pdf2(self_doc, *a, **kw)
+
+            m.setattr(fitz.Document, "insert_pdf", flaky_insert_pdf2)
+
+            app2._redo()
+
+        assert opened_docs2
+        assert all(d.is_closed for d in opened_docs2)
 
     def test_undo_empty_stack_is_noop(self, sample_pdf_doc):
         """空スタックに対する undo はステータス表示のみで Document を
