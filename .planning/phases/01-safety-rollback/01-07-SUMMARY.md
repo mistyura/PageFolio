@@ -92,11 +92,17 @@ coverage:
         status: pass
     human_judgment: false
   - id: D6
-    description: "既存の部分適用保護・逆デルタ蓄積方式・4手往復回帰テスト・Blobライフサイクル不変条件が退行していない。ruff check / ruff format --check / pytest -q（フルスイート）の3ゲートがすべてgreen"
+    description: "既存の部分適用保護・逆デルタ蓄積方式・4手往復回帰テスト・Blobライフサイクル不変条件が退行していない。ruff check / ruff format --check は green。pytest -q（フルスイート単一プロセス）は本プランのテスト追加が引き金となる test_ocr_pipeline.py のネイティブクラッシュにより不安定（分割実行では1184全件green）"
     verification:
       - kind: other
-        ref: "ruff check . && ruff format --check . && pytest -q（既知フレーキー1件を除き1184 passed。フレーキー除外時1167 passed + 単体再実行17 passed = 1184）"
+        ref: "ruff check . && ruff format --check .（ともにexit 0）"
         status: pass
+      - kind: other
+        ref: "pytest -q --ignore=tests/test_ocr_pipeline.py（1167 passed）+ pytest -q tests/test_ocr_pipeline.py（17 passed）= 1184 全件green"
+        status: pass
+      - kind: other
+        ref: "pytest -q（フルスイート単一プロセス）— 6回中2回のみ1184 passed、4回は tests/test_ocr_pipeline.py::TestPipelineHardening::test_cancel_finite_time_no_deadlock で Windows fatal exception 0x80000003 によりプロセス終了。オーケストレーターのA/B検証で本プランのテスト追加が引き金と確定（詳細は後述「Issues Encountered」）"
+        status: fail
     human_judgment: false
 
 duration: 約70分
@@ -169,8 +175,16 @@ frontmatterの`key-decisions`を参照。要約: (1) Task 0は option-b 採用�
 
 ## Issues Encountered
 
-- フルテストスイート（`pytest -q`）を単一プロセスで実行すると、`tests/test_ocr_pipeline.py`のスレッド/キュー駆動テスト（`test_cancel_finite_time_no_deadlock`等）が非決定的に`Windows fatal exception: code 0x80000003`でプロセスごとクラッシュすることがある（本プランの変更対象外ファイル・OCRパイプラインのスレッディングロジックで、`file_ops.py`のUndo/Redoロジックとは無関係）。STATE.md記載の既知のTcl/Tkフレーキー（v1.9.0 Phase 3・V190-QA-01が引き取り予定）と同種の「単一pytestプロセスでの大量テスト連続実行によるリソース消耗系フレーキー」と判断した。`tests/test_ocr_pipeline.py`単体では3回連続で17 passed・0 failedとなり、また`--ignore=tests/test_ocr_pipeline.py`で残り1167件が1回のフルラン内で全green（他のフルラン試行では`test_ocr_pipeline.py`込みで1184 passed・0 failedとなるケースも確認済み）。1167（除外時） + 17（単体） = 1184（本プラン新規7件を含む合計）で全件greenを確認し、本プランの回帰でないことを機械的に裏取りした
-- 上記以外は`ruff check .`・`ruff format --check .`ともに一発でgreen。Task 1〜3とも自己検証で一発green、追加修正は発生しなかった
+- **【訂正・重要】フルスイート `pytest -q`（単一プロセス）が不安定になった。executor は当初これを「STATE.md 記載の既知フレーキーと同種であり本プランの回帰ではない」と分類したが、オーケストレーターの独立 A/B 検証によりこの分類は誤りと判明した。** 事実は「**製品コードは無実だが、本プランが追加したテストコードが引き金となって、無関係な OCR テストの潜在クラッシュを顕在化させた**」である
+  - **クラッシュ箇所:** `tests/test_ocr_pipeline.py::TestPipelineHardening::test_cancel_finite_time_no_deadlock` の**実行中**（`-v` で特定）。症状は `Windows fatal exception: code 0x80000003`（STATUS_BREAKPOINT）+ `<freed thread state>` によるプロセス即死。STATE.md 記載の既知フレーキー（Tcl/Tk の `TclError` によるセットアップ ERROR）とは**別症状**であり、PLAN Task 3 (6) の免責条項の文言には該当しない
+  - **A/B 実測（同一環境・メインワーキングツリー）:** 製品コード=基準 + テスト=基準 → 4/4 green（1177）／製品コード=**HEAD** + テスト=基準 → **4/4 green**（1177）／製品コード=基準 + テスト=**HEAD** → **4/4 クラッシュ**／HEAD（両方）→ 6 回中 2 回のみ 1184 passed。累計で基準内容 19 回中 0 クラッシュ、HEAD 内容約 10 回中 7 クラッシュ
+  - **したがって `pagefolio/file_ops.py` / `pagefolio/lang.py` の変更は無実**（製品コード HEAD + 基準テストで 4/4 green）。引き金は `tests/test_pdf_ops.py`（HEAD）の存在
+  - **トリガーは import 時点で成立する:** 新テスト 2 ファイルを `--ignore`（import しない）→ 3/3 green、`--deselect`（**import するが 1 件も実行しない**）→ 3/3 クラッシュ。さらに `test_pdf_ops.py` のみ HEAD で再現し、`test_undo_stress.py` のみ HEAD では再現しない
+  - **絞り込めなかった点（未解明）:** 基準版に同等量の実コードを追加（サイズ模倣）→ 3/3 green、`import ast` / `pathlib` / `Path.resolve()` のみ追加 → 3/3 green。つまり**モジュールサイズでも import 文でもない**残りの要因（pytest の assertion rewriting 後のメモリレイアウト等、CPython のスレッド状態に関わるネイティブ層）が残っている。先頭 14 ファイルのみの実行では再現せず、フル収集が必要
+  - **試行して失敗した修正（revert 済み）:** `_drive_pipeline` の孤児 daemon スレッド仮説に基づき、join タイムアウト後のキュードレイン＋再 join＋生存スレッド assert を実装したが、フルスイート 6 回中 5 回クラッシュのまま。追加した assert は全実行で成立したため孤児スレッド仮説は棄却。効果のないスコープ外変更のため revert した
+  - **引き取り先:** v1.9.0 Phase 3（V190-QA-01 テスト安定化）。既知フレーキーと同じ「単一 pytest プロセスでの大量テスト連続実行」クラスの問題だが、本件は**再現率が高く A/B で切り分け済み**という点で調査が進んでいる。当面の運用は分割実行（`pytest -q --ignore=tests/test_ocr_pipeline.py` + `pytest -q tests/test_ocr_pipeline.py`）で 1184 全件 green を確認すること
+- 本プランの成果物自体は全 green: `TestUndoRedoRestoreFailure` / `TestTempDocumentCloseGuard` / `tests/test_undo_stress.py` / `tests/test_lang_parity.py` を合わせて 34 passed。ソースゲート（`content_at_risk` 17・`finally:` 8・`_merge_pending_inverse(` 17・`def test_` 104）もすべて基準クリア
+- `ruff check .`・`ruff format --check .` はともに一発で green。Task 1〜3 とも自己検証で一発 green、追加修正は発生しなかった
 
 ## User Setup Required
 
