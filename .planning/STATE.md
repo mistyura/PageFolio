@@ -5,15 +5,15 @@ milestone_name: 安全性・整合性の是正 + OpenAI プロバイダ追加
 current_phase: 01
 current_phase_name: safety-rollback
 status: executing
-stopped_at: Completed 01-02-PLAN.md
-last_updated: "2026-08-10T08:39:07.352Z"
+stopped_at: Completed 01-03-PLAN.md
+last_updated: "2026-08-10T09:00:59.010Z"
 last_activity: 2026-08-10
 last_activity_desc: v1.9.0 ROADMAP.md 作成完了
 progress:
   total_phases: 3
   completed_phases: 0
   total_plans: 5
-  completed_plans: 2
+  completed_plans: 3
   percent: 0
 ---
 
@@ -29,11 +29,11 @@ See: .planning/PROJECT.md (updated 2026-08-10)
 ## Current Position
 
 Phase: 01 (safety-rollback) — EXECUTING
-Plan: 3 of 5
+Plan: 4 of 5
 Status: Ready to execute
 Last activity: 2026-08-10 — Phase 01 execution started
 
-Progress: [████░░░░░░] 40%
+Progress: [██████░░░░] 60%
 
 ## v1.9.0 Phase Map
 
@@ -126,6 +126,7 @@ Progress: [████░░░░░░] 40%
 | Phase 06 P03 | 20min | 3 tasks | 5 files |
 | Phase 01 P01 | 71min | 3 tasks | 2 files |
 | Phase 01 P02 | 約35min | 3 tasks | 9 files |
+| Phase 01 P03 | 約20min | 3 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -221,6 +222,9 @@ Decisions are logged in PROJECT.md Key Decisions table.
 - [Phase ?]: [01-02] D-06: OCRDisabledError は pagefolio/ocr_providers/errors.py に配置（既存3例外と同じ RuntimeError 継承・同一ファイル集約の precedent に揃えた）
 - [Phase ?]: [01-02] D-04/D-05: バッチOCR メニューの活性制御は _update_ocr_buttons_state 末尾からの呼び出しに相乗りさせ新規配線を増やさなかった
 - [Phase ?]: [01-02] ocr_dialog.py の off 分岐は build_provider を経由せず provider を保持したまま中断する設計とし、旧実装の直接構築の穴（T-01-06）を解消した
+- [Phase ?]: [01-03] D-15: sections.py:_on_template_change の save_prompt_file 即時呼び出し2箇所を削除し、外部プロンプトファイルへの書き込みを dialog.py:_apply の1経路へ一本化した（dialog.py は無改造）
+- [Phase ?]: [01-03] D-18: _has_unsaved_template_changes から prompt_file_exists による早期False分岐のみを削除し、未選択時ロジックには触れない最小差分にした（Pitfall 5 回避）
+- [Phase ?]: [01-03] テストの書き込み監視は撤去済みシンボルではなく pagefolio.settings.save_prompt_file を横断的にモニタするスタブへ統一した
 
 ### Pending Todos
 
@@ -328,8 +332,8 @@ Decisions are logged in PROJECT.md Key Decisions table.
 
 **Resume file:** None
 
-Last session: 2026-08-10T08:39:07.327Z
-Stopped at: Completed 01-02-PLAN.md
+Last session: 2026-08-10T09:00:58.990Z
+Stopped at: Completed 01-03-PLAN.md
 
 ## Operator Next Steps
 

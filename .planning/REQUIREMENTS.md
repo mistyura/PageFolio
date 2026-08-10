@@ -25,8 +25,8 @@
 
 ### 設定 UI の整合性（CFG）
 
-- [ ] **V190-CFG-01**: ユーザーが LLM 設定ダイアログを Cancel した場合、外部プロンプトファイル（`ocr_custom_prompt.md` / `ocr_summary_prompt.md`）は変更されない。外部ファイルへの書き込みは Apply 押下時のみ行われる（REV-05・**Apply 一本化方式で確定**）
-- [ ] **V190-CFG-02**: 選択済みテンプレートを編集した状態で別テンプレートへ切り替えると、外部プロンプトファイル連動の有無にかかわらず未保存確認が表示される（REV-06）
+- [x] **V190-CFG-01**: ユーザーが LLM 設定ダイアログを Cancel した場合、外部プロンプトファイル（`ocr_custom_prompt.md` / `ocr_summary_prompt.md`）は変更されない。外部ファイルへの書き込みは Apply 押下時のみ行われる（REV-05・**Apply 一本化方式で確定**）
+- [x] **V190-CFG-02**: 選択済みテンプレートを編集した状態で別テンプレートへ切り替えると、外部プロンプトファイル連動の有無にかかわらず未保存確認が表示される（REV-06）
 
 ### Undo/Redo 堅牢性（UNDO）
 
@@ -113,8 +113,8 @@
 | V190-SAFE-03 | Phase 1 | Complete |
 | V190-SAFE-04 | Phase 1 | Pending |
 | V190-SAFE-05 | Phase 1 | Pending |
-| V190-CFG-01 | Phase 1 | Pending |
-| V190-CFG-02 | Phase 1 | Pending |
+| V190-CFG-01 | Phase 1 | Complete |
+| V190-CFG-02 | Phase 1 | Complete |
 | V190-UNDO-01 | Phase 1 | Pending |
 | V190-UNDO-02 | Phase 1 | Pending |
 | V190-CAT-01 | Phase 2 | Pending |
