@@ -4,8 +4,8 @@ milestone: v1.8.0
 milestone_name: 実用性の最大化・エコシステム洗練・堅牢性強化
 status: v1.8.1 released — タグ・GitHub Release（Latest）・ビルド完了。次マイルストーン待ち
 stopped_at: Phase 06 complete — v1.8.0 全6フェーズ完了、マイルストーンクローズ待ち
-last_updated: "2026-07-22T09:54:02.533Z"
-last_activity: 2026-07-22
+last_updated: "2026-08-10T01:50:12.370Z"
+last_activity: 2026-08-10
 current_phase: 06
 current_phase_name: ux-ui
 progress:
@@ -14,7 +14,7 @@ progress:
   total_plans: 22
   completed_plans: 22
   percent: 100
-last_activity_desc: Milestone v1.8.0 completed and archived
+last_activity_desc: v1.9.0向け既存機能レビュー結果を.planning/notesへ文書化
 ---
 
 # Project State
@@ -31,7 +31,7 @@ See: .planning/PROJECT.md (updated 2026-07-16)
 Phase: Milestone v1.8.0 complete
 Plan: —
 Status: v1.8.1 released — タグ・GitHub Release（Latest）・ビルド完了。次マイルストーン待ち
-Last activity: 2026-07-22
+Last activity: 2026-08-10 - Completed quick task 260810-f1u: v1.9.0向け既存機能レビュー結果を.planning/notesへ文書化
 
 ## v1.8.0 Phase Map
 
@@ -254,6 +254,7 @@ Decisions are logged in PROJECT.md Key Decisions table.
 | 260709-oyg | README.md・CLAUDE.md・開発履歴.md を v1.7.4 の実コード状態へ同期。CLAUDE.md のモジュール構成・OCR モジュール群表・既知の制限に外部プロンプトファイル読込/非同期モデル取得/プロバイダ別タイムアウト/右ペインスクロールを反映、README.md の OCR プロバイダ列挙を6プロバイダへ更新。開発履歴.md は既に同期済みと確認（変更なし） | 2026-07-09 | 67bf570 | [260709-oyg-readme-md-claude-md-md-v1-7-4](./quick/260709-oyg-readme-md-claude-md-md-v1-7-4/) |
 | 260722-gae | v1.8.1: Gemini 新世代モデル（gemini-3.6-flash / gemini-3.5-flash-lite）の OCR 400 エラー修正。`_build_generation_config` を世代ゲート化し temperature / thinkingConfig を gemini-2.x 以前のみに送信（`_model_generation` / `_is_legacy_gemini` 新設・回帰テスト 8 件・1109 件グリーン）。dist サンプルプロンプトの実在決済サービス名を架空化。リモート環境実装のため遡及 GSD 精査を 2026-07-22 に完了（[GSD-AUDIT-DIRECTIVE.md](./quick/260722-gae-gemini-api-400-error-5li33o/GSD-AUDIT-DIRECTIVE.md) status: complete・世代ゲート方式確定・RECOMMENDED_MODELS へ gemini-3.x 追加・検証/セキュリティ記録作成） | 2026-07-22 | 58c0de2 | [260722-gae-gemini-api-400-error-5li33o](./quick/260722-gae-gemini-api-400-error-5li33o/) |
 | 260722-rel | PR #34（v1.8.1）マージ後のリリース作業。main ツリーとブランチ先端の diff ゼロ確認（pytest 1109 件・ruff の検証流用）、PyInstaller リビルド（`dist/PageFolio` 更新・exe 起動確認済み・サンプルプロンプト 2 ファイルは退避→復元で保全）、注釈付きタグ `v1.8.1` 付与、GitHub Release を Latest 公開（PageFolio-v1.8.1-win64.zip + .sha256 添付） | 2026-07-22 | d7aa217 | [260722-rel-v181-merge-release](./quick/260722-rel-v181-merge-release/) |
+| 260810-f1u | v1.9.0向け既存機能レビュー結果を.planning/notesへ文書化 | 2026-08-10 | a553df7 | [260810-f1u-v1-9-0-planning-notes](./quick/260810-f1u-v1-9-0-planning-notes/) |
 
 ## Deferred Items
 
