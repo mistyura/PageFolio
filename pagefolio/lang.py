@@ -185,6 +185,11 @@ LANG = {
             "「はい」を選ぶとファイルサイズが小さくなりますが\n"
             "処理時間が増加する場合があります。"
         ),
+        "split_password_warn_title": "パスワード保護が解除されます",
+        "split_password_warn_msg": (
+            "このPDFはパスワードで保護されていますが、分割後の各ファイルは"
+            "パスワード保護されません。\n続行しますか？"
+        ),
         # 画像エクスポート
         "sec_export": "🖼 画像変換",
         "btn_export_images": "🖼 ページを画像に変換…",
@@ -927,6 +932,11 @@ LANG = {
             "(Runs garbage collection + compression)\n\n"
             "Choosing 'Yes' reduces file size but may\n"
             "increase processing time."
+        ),
+        "split_password_warn_title": "Password protection will be removed",
+        "split_password_warn_msg": (
+            "This PDF is password-protected, but the split files will not be "
+            "password-protected.\nContinue?"
         ),
         # Image export
         "sec_export": "🖼 Image Export",

@@ -312,6 +312,142 @@ class TestPdfSplit:
         assert calls["showerror"] == [("err_title", "err_split_no_range")]
         assert calls["showinfo"] == []
 
+    def _make_split_fake_app(self, doc, pdf_has_password):
+        """_split_by_range/_split_each_page テスト用 FakeApp を生成する。"""
+        import collections
+        import types
+
+        import pagefolio.file_ops as fo
+        import pagefolio.page_ops as po
+
+        class FakeApp(fo.FileOpsMixin, po.PageOpsMixin):
+            MAX_UNDO = 20
+
+            def __init__(self, d):
+                self.doc = d
+                self.current_page = 0
+                self.selected_pages = set()
+                self._undo_stack = collections.deque(maxlen=self.MAX_UNDO)
+                self._redo_stack = collections.deque(maxlen=self.MAX_UNDO)
+                self._preview_gen = 0
+                self._thumb_gen = 0
+                self.root = None
+                self.pdf_has_password = pdf_has_password
+
+            def _check_doc(self):
+                return self.doc is not None
+
+            def _t(self, key):
+                return key
+
+            def _set_status(self, *a):
+                pass
+
+        app = FakeApp(doc)
+        app.plugin_manager = types.SimpleNamespace(fire_event=lambda *a, **kw: None)
+        return app
+
+    def test_split_by_range_password_protected_declines_writes_no_files(
+        self, sample_pdf_doc, monkeypatch, tmp_path
+    ):
+        """01-REVIEW.md WR-03 回帰テスト: pdf_has_password=True の場合、分割前に
+        パスワード保護解除の警告確認が表示され、ユーザーが拒否すると分割は
+        実行されない（ファイルが1つも生成されない）ことを検証する。
+        """
+        import pagefolio.page_ops as po
+
+        app = self._make_split_fake_app(sample_pdf_doc, pdf_has_password=True)
+
+        monkeypatch.setattr(po.simpledialog, "askstring", lambda *a, **kw: "1-2")
+        monkeypatch.setattr(
+            po.filedialog, "askdirectory", lambda *a, **kw: str(tmp_path)
+        )
+
+        askyesno_calls = []
+
+        def fake_askyesno(title, msg):
+            askyesno_calls.append((title, msg))
+            return False  # パスワード警告を拒否
+
+        monkeypatch.setattr(po.messagebox, "askyesno", fake_askyesno)
+
+        app._split_by_range()
+
+        # パスワード警告ダイアログが1回だけ表示され、拒否されたため
+        # 圧縮確認まで到達せず、分割も実行されない
+        assert askyesno_calls == [
+            ("split_password_warn_title", "split_password_warn_msg")
+        ]
+        assert list(tmp_path.iterdir()) == []
+
+    def test_split_by_range_password_protected_accepts_proceeds(
+        self, sample_pdf_doc, monkeypatch, tmp_path
+    ):
+        """パスワード警告を承諾すれば、これまでどおり分割が実行される
+        （警告追加が既存の分割動作を壊していないことの担保）。"""
+        import pagefolio.page_ops as po
+
+        app = self._make_split_fake_app(sample_pdf_doc, pdf_has_password=True)
+
+        monkeypatch.setattr(po.simpledialog, "askstring", lambda *a, **kw: "1-2")
+        monkeypatch.setattr(
+            po.filedialog, "askdirectory", lambda *a, **kw: str(tmp_path)
+        )
+        monkeypatch.setattr(po.messagebox, "askyesno", lambda *a, **kw: True)
+
+        app._split_by_range()
+
+        files = sorted(p.name for p in tmp_path.iterdir())
+        assert files == ["split_p1-2.pdf"]
+
+    def test_split_each_page_password_protected_declines_writes_no_files(
+        self, sample_pdf_doc, monkeypatch, tmp_path
+    ):
+        """_split_each_page 側でも同様にパスワード警告が機能することを検証する。"""
+        import pagefolio.page_ops as po
+
+        app = self._make_split_fake_app(sample_pdf_doc, pdf_has_password=True)
+
+        monkeypatch.setattr(
+            po.filedialog, "askdirectory", lambda *a, **kw: str(tmp_path)
+        )
+        monkeypatch.setattr(po.messagebox, "askyesno", lambda *a, **kw: False)
+
+        app._split_each_page()
+
+        assert list(tmp_path.iterdir()) == []
+
+    def test_split_by_range_without_password_skips_warning(
+        self, sample_pdf_doc, monkeypatch, tmp_path
+    ):
+        """pdf_has_password=False（通常PDF）ではパスワード警告が出ず、
+        圧縮確認ダイアログのみが表示されることを検証する（既存動作の保持）。
+        """
+        import pagefolio.page_ops as po
+
+        app = self._make_split_fake_app(sample_pdf_doc, pdf_has_password=False)
+
+        monkeypatch.setattr(po.simpledialog, "askstring", lambda *a, **kw: "1-2")
+        monkeypatch.setattr(
+            po.filedialog, "askdirectory", lambda *a, **kw: str(tmp_path)
+        )
+
+        askyesno_calls = []
+
+        def fake_askyesno(title, msg):
+            askyesno_calls.append((title, msg))
+            return False  # 圧縮確認を拒否（非圧縮で保存継続）
+
+        monkeypatch.setattr(po.messagebox, "askyesno", fake_askyesno)
+
+        app._split_by_range()
+
+        assert askyesno_calls == [
+            ("compress_split_confirm_title", "compress_split_confirm_msg")
+        ]
+        files = sorted(p.name for p in tmp_path.iterdir())
+        assert files == ["split_p1-2.pdf"]
+
 
 # ===== トリミング (CropBox) =====
 

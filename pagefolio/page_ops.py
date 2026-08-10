@@ -1014,6 +1014,16 @@ class PageOpsMixin:
                     filenames.append(f"{base}_p{s}-{e}.pdf")
             if not self._check_split_overwrite(folder, filenames):
                 return
+            # 01-REVIEW.md WR-03: 分割は新規ドキュメントへの insert_pdf のため
+            # PDF_ENCRYPT_KEEP が効かず、元PDFがパスワード保護されていても
+            # 分割後のファイルは無条件で平文になる（パスワードは self に
+            # 保持しないため再暗号化はできない）。静かに保護が失われることを
+            # 防ぐため、続行前にユーザーへ明示して確認を取る。
+            if getattr(self, "pdf_has_password", False) and not messagebox.askyesno(
+                self._t("split_password_warn_title"),
+                self._t("split_password_warn_msg"),
+            ):
+                return
             compress = messagebox.askyesno(
                 self._t("compress_split_confirm_title"),
                 self._t("compress_split_confirm_msg"),
@@ -1057,6 +1067,13 @@ class PageOpsMixin:
         try:
             filenames = [f"{base}_p{str(i + 1).zfill(digits)}.pdf" for i in range(n)]
             if not self._check_split_overwrite(folder, filenames):
+                return
+            # 01-REVIEW.md WR-03: _split_by_range と同じ理由で分割後ファイルは
+            # 無条件で平文になるため、続行前にユーザーへ明示して確認を取る。
+            if getattr(self, "pdf_has_password", False) and not messagebox.askyesno(
+                self._t("split_password_warn_title"),
+                self._t("split_password_warn_msg"),
+            ):
                 return
             compress = messagebox.askyesno(
                 self._t("compress_split_confirm_title"),
