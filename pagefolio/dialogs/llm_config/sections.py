@@ -17,9 +17,7 @@ from pagefolio.settings import (
     get_template,
     list_template_names,
     load_prompt_file,
-    prompt_file_exists,
     rename_template,
-    save_prompt_file,
     save_template,
     template_name_exists,
 )
@@ -1167,16 +1165,11 @@ class SectionsMixin:
 
         アクティブテンプレート未選択の場合は「自由入力の未保存内容があるか」
         だけを見る（比較対象となる保存済みテンプレートが存在しないため）。
-        アクティブテンプレートが選択済みの場合は、既存どおりファイル連動
-        モード時のみ保存済み内容との差分を比較する。
+        アクティブテンプレートが選択済みの場合は常に保存済み内容と比較する
+        （v1.9.0 D-18・外部ファイルの有無による分岐を廃止し判定経路を1本にする）。
         """
         if not self._active_template_name:
             return bool(current_custom.strip() or current_summary.strip())
-        if not (
-            prompt_file_exists(CUSTOM_PROMPT_FILE)
-            or prompt_file_exists(SUMMARY_PROMPT_FILE)
-        ):
-            return False
         tpl = get_template(self.current_settings, self._active_template_name)
         if tpl is None:
             return False
@@ -1207,11 +1200,13 @@ class SectionsMixin:
     def _on_template_change(self, _event=None):
         """テンプレート切替ハンドラ（D-05〜D-07）。
 
-        1. 未保存差分の検知→確認（ファイル連動モードのみ・D-05）
+        1. 未保存差分の検知→確認（D-18: 選択済みなら常に確認）
         2. 選択テンプレートの内容を入力欄へ反映
-        3. ファイル連動モードなら選択テンプレートの内容で外部ファイルを
-           上書きし「アクティブテンプレートのライブ編集内容」の不変条件を
-           保つ（D-07）
+
+        外部プロンプトファイルへの書き込みは Apply 押下時に
+        `dialog.py:_apply` が入力欄の現在値で行う唯一の経路であり、
+        テンプレート切替はファイルに一切副作用を持たない
+        （v1.9.0 D-15 / D-16）。
         """
         new_name = self.template_var.get()
         current_custom = self.ocr_prompt_text.get("1.0", "end").strip()
@@ -1236,13 +1231,6 @@ class SectionsMixin:
         self.ocr_summary_prompt_text.delete("1.0", "end")
         if summary_val:
             self.ocr_summary_prompt_text.insert("1.0", summary_val)
-
-        # D-07: ファイル連動モードなら選択テンプレートの内容で外部ファイルを
-        # 上書きする（外部ファイル＝常にアクティブテンプレートのライブ編集内容）
-        if prompt_file_exists(CUSTOM_PROMPT_FILE):
-            save_prompt_file(CUSTOM_PROMPT_FILE, custom_val)
-        if prompt_file_exists(SUMMARY_PROMPT_FILE):
-            save_prompt_file(SUMMARY_PROMPT_FILE, summary_val)
 
         self._active_template_name = new_name
         self.current_settings.setdefault(
