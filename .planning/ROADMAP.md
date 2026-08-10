@@ -8,6 +8,7 @@
 - ✅ **v1.6.0 品質向上・AI強化・設定/UI改善** — Phases 1-4 (shipped 2026-06-20) — [archive](milestones/v1.6.0-ROADMAP.md)
 - ✅ **v1.7.1 現機能ブラッシュアップ + APIキー入力欄** — Phases 1-4 (shipped 2026-07-05) — [archive](milestones/v1.7.1-ROADMAP.md)
 - ✅ **v1.8.0 実用性の最大化・エコシステム洗練・堅牢性強化** — Phases 1-6 (shipped 2026-07-16) — [archive](milestones/v1.8.0-ROADMAP.md)
+- 🚧 **v1.9.0 安全性・整合性の是正 + OpenAI プロバイダ追加** — Phases 1-3 (active, started 2026-08-10)
 
 > **Note:** v1.6.1〜v1.7.0（パスワード/印刷・Ollama/RunPod・バグ修正・サマリ安定化・黒塗り/モザイク・undo ディスク退避）は GSD フェーズ外のポイントリリースとして出荷済み。詳細は [MILESTONES.md](MILESTONES.md) を参照。
 
@@ -91,7 +92,70 @@ V180-* 全 26 要件 Complete（被覆 26/26・孤立要件なし）。クロー
 
 </details>
 
+### 🚧 v1.9.0 安全性・整合性の是正 + OpenAI プロバイダ追加 (Active)
+
+> **Goal:** 保存・編集・Undo の失敗時に「操作前の状態へ確実に戻る」安全性を確立し、設定 UI の Apply/Cancel 契約を整合させたうえで、OCR プロバイダ基盤を整理して OpenAI(ChatGPT) を既存プロバイダと同等に追加する。
+> **要件出典:** [REQUIREMENTS.md](REQUIREMENTS.md)（V190-* 全 27 件）
+> **フェーズ採番:** マイルストーンごとに Phase 1 起点へリセット（プロジェクト方針）。
+
+- [ ] **Phase 1: 保存・編集・設定の安全性是正（失敗時ロールバック担保）** - 保存3経路の暗号化維持・OCR OFF全経路一貫化・複数ファイル挿入/ページ複製・設定UIのApply/Cancel契約・Undo/Redo復元失敗時のスタック保護で「失敗時は操作前状態へ戻る」を確立
+- [ ] **Phase 2: OCR プロバイダ基盤整理 + OpenAI(ChatGPT) プロバイダ追加** - プロバイダメタデータを単一情報源（catalog）へ一元化し、その上に OpenAI(ChatGPT) を既存5プロバイダと同等の安全境界でOCR/バッチOCR/フォールバックへ追加
+- [ ] **Phase 3: 品質保証・リリースゲート** - Tkinter 実行環境を修復してGUIテスト含む全テストを完走させ、保存トースト再試行時の上書き確認再表示とhuman-verify/UATを正式実施してリリース判定を固める
+
+## Phase Details
+
+> 以下は **アクティブな v1.9.0** のフェーズ詳細。過去マイルストーンの詳細は各アーカイブ（`milestones/*-ROADMAP.md`）を参照。
+
+### Phase 1: 保存・編集・設定の安全性是正（失敗時ロールバック担保）
+
+**Goal**: 保存・複数ファイル挿入・ページ複製・設定 UI 操作・Undo/Redo のいずれかが失敗しても、Document・Undo 履歴・外部ファイルが確実に操作前の状態へ戻り、OCR OFF が通常 OCR・バッチ OCR・プラグイン経路すべてで一貫した意味を持つ。
+**Depends on**: Nothing (first phase of milestone)
+**Requirements**: V190-SAFE-01, V190-SAFE-02, V190-SAFE-03, V190-SAFE-04, V190-SAFE-05, V190-CFG-01, V190-CFG-02, V190-UNDO-01, V190-UNDO-02
+**Success Criteria** (what must be TRUE):
+
+  1. パスワード保護 PDF を「保存」「名前を付けて保存」「上書き（インクリメンタル保存失敗時のフォールバック）」のいずれで実行しても暗号化が維持され、保存後の `pdf_has_password` 表示が実ファイルと一致する（V190-SAFE-01/02）
+  2. OCR が OFF のとき、通常 OCR・バッチ OCR・プラグイン経由のいずれからも `off` はプロバイダ生成可能な値として扱われず、バッチ OCR の起動・実行開始ができない（V190-SAFE-03）
+  3. 複数ファイル挿入が途中のファイルで失敗しても、ページ数と Undo スタックが操作前と一致し、挿入元 Document は例外発生時も必ずクローズされる。ページ複製が失敗した場合も既存ページと Undo スタックが変化しない（V190-SAFE-04/05）
+  4. LLM 設定 UI（LLMConfigDialog）を Cancel しても外部プロンプトファイル（`ocr_custom_prompt.md`/`ocr_summary_prompt.md`）は変更されず、選択済みテンプレートを編集した状態で別テンプレートへ切り替えると外部ファイル連動の有無にかかわらず未保存確認が表示される（V190-CFG-01/02）
+  5. Undo/Redo の復元処理が失敗した場合、対象状態がスタックへ戻され履歴が失われず Document が部分変更のまま残らない。`duplicate`/`merge`/`merge_resize` の各 op で do→undo→redo→undo の4手往復回帰テストがページ構成の一致を担保する（V190-UNDO-01/02）
+
+**Plans**: TBD
+**UI hint**: yes
+
+### Phase 2: OCR プロバイダ基盤整理 + OpenAI(ChatGPT) プロバイダ追加
+
+**Goal**: プロバイダメタデータ（キー・表示名・クラウド種別・環境変数・既定モデル・送信先・フォールバック可否）が単一の情報源（catalog）から解決される基盤の上で、ユーザーは OpenAI(ChatGPT) を既存5プロバイダと同等の安全境界（セッション限定キー・送信先確認・コスト確認・明示設定型フォールバック）で OCR・バッチ OCR に利用できる。
+**Depends on**: Phase 1（V190-SAFE-03 で `off` がプロバイダ生成不可化されてから着手。失敗時ロールバックの安全網が固まっている前提で新プロバイダを追加する）
+**Requirements**: V190-CAT-01, V190-CAT-02, V190-OAI-01, V190-OAI-02, V190-OAI-03, V190-OAI-04, V190-OAI-05, V190-OAI-06, V190-OAI-07, V190-OAI-08, V190-OAI-09, V190-OAI-10, V190-OAI-11, V190-OAI-12, V190-OAI-13
+**Success Criteria** (what must be TRUE):
+
+  1. プロバイダのキー・表示名・クラウド種別・環境変数・既定モデル・送信先ホスト・フォールバック可否が単一の情報源から解決され、新プロバイダ追加時の変更面が1箇所に閉じる。`pagefolio/ocr_providers/registry.py` の独立性制約（Python 標準ライブラリのみに依存し pagefolio 内部モジュールを import しない）は維持され循環 import が発生しない（V190-CAT-01/02）
+  2. ユーザーは OCR プロバイダとして OpenAI(ChatGPT) を選択し、LLM 設定 UI でセッション限定 API キーを入力できる（`pagefolio_settings.json` に非永続・`_SENSITIVE_KEYS` ガード）。モデル一覧を API から取得でき、取得失敗時は静的フォールバック一覧から選択できる（V190-OAI-01/02/03）
+  3. OpenAI で OCR・バッチ OCR を実行する前に、送信先ホストを明示した確認ダイアログとコスト確認ダイアログが表示される（クラウド判定・送信先表示を含む）（V190-OAI-04/05/06）
+  4. ユーザーは OpenAI をフォールバック候補として設定でき、発動時に送信先確認が再提示される。画像 detail レベル（low/high/auto）・reasoning effort 相当パラメータ（対応モデル選択時のみ有効化）・organization/project ID（指定時のみヘッダ付与）を設定でき、永続化される（V190-OAI-07/08/09/10）
+  5. OpenAI プロバイダは `urllib.request` 直叩きで実装され新規 pip 依存を追加しない。モデル別のパラメータ非互換（`max_completion_tokens` を要するモデル・`temperature` を拒否する o-series）が正しく分岐しエラーにならず、429/5xx 応答に既存の指数バックオフ・`Retry-After` 尊重リトライ基盤（`ocr_providers/errors.py`）が適用される（V190-OAI-11/12/13）
+
+**Plans**: TBD
+**UI hint**: yes
+
+### Phase 3: 品質保証・リリースゲート
+
+**Goal**: Python 3.14.6 環境の Tkinter 実行問題が解消されて GUI テストを含む全テストが完走し、保存トースト再試行時の上書き確認が再表示され、実機目視による human-verify/UAT が正式に実施・記録されてリリース判定ができる。
+**Depends on**: Phase 2（新設 OpenAI プロバイダ・catalog リファクタを含めた全コード変更が完了してから全テスト完走ゲートと human-verify を実施する）
+**Requirements**: V190-QA-01, V190-QA-02, V190-QA-03
+**Success Criteria** (what must be TRUE):
+
+  1. Python 3.14.6 での GUI テストのセットアップエラー（Tkinter 実行環境問題）が切り分け・修復され、GUI テストを含む全テストスイートが完走する。これがリリースの前提条件（ゲート）として扱われる（V190-QA-01）
+  2. 保存トーストの再試行を実行すると、上書き確認ダイアログが再表示される（V190-QA-02）
+  3. 実機目視による human-verify/UAT が正式に実施され、結果が記録される（v1.4.0/v1.6.0/v1.7.1 で一旦 pass とした項目の正式消化を含む）（V190-QA-03）
+
+**Plans**: TBD
+**UI hint**: yes
+
 ## Progress
+
+**Execution Order (v1.9.0):**
+Phases execute in numeric order: 1 → 2 → 3
 
 | Phase             | Milestone | Plans Complete | Status      | Completed  |
 | ----------------- | --------- | --------------- | ----------- | ---------- |
@@ -120,5 +184,6 @@ V180-* 全 26 要件 Complete（被覆 26/26・孤立要件なし）。クロー
 | 4. バッチ複数ファイルOCR | v1.8.0 | 3/3 | Complete | 2026-07-16 |
 | 5. 堅牢性強化（サムネイル仮想化 + Blobリーク検出 + ShortcutsDialog修正） | v1.8.0 | 4/4 | Complete | 2026-07-16 |
 | 6. 品質保証仕上げ（通知UX・UI一貫性監査・ドキュメント整合） | v1.8.0 | 3/3 | Complete | 2026-07-16 |
-
-次マイルストーンのフェーズは `/gsd-new-milestone` 確定後にここへ追記される。
+| 1. 保存・編集・設定の安全性是正（失敗時ロールバック担保） | v1.9.0 | - | Not started | - |
+| 2. OCR プロバイダ基盤整理 + OpenAI(ChatGPT) プロバイダ追加 | v1.9.0 | - | Not started | - |
+| 3. 品質保証・リリースゲート | v1.9.0 | - | Not started | - |

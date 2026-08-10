@@ -3,10 +3,10 @@ gsd_state_version: 1.0
 milestone: v1.9.0
 milestone_name: 安全性・整合性の是正 + OpenAI プロバイダ追加
 status: planning
-last_updated: "2026-08-10T02:11:27.965Z"
+last_updated: "2026-08-10T05:00:00.000Z"
 last_activity: 2026-08-10
 progress:
-  total_phases: 0
+  total_phases: 3
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -17,28 +17,27 @@ progress:
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-07-16)
+See: .planning/PROJECT.md (updated 2026-08-10)
 
 **Core value:** 大きな PDF でも Undo/Redo が正しく・速く動作し、コードが読みやすく保守しやすい状態にする
-**Current focus:** v1.8.0 マイルストーンクローズ完了（APP_VERSION v1.8.0） — 次マイルストーンは `/gsd-new-milestone` で確定
+**Current focus:** v1.9.0 Phase 1（保存・編集・設定の安全性是正）— ROADMAP.md 確定済み・`/gsd-plan-phase 1` 待ち
 
 ## Current Position
 
-Phase: Not started (defining requirements)
-Plan: —
-Status: Defining requirements
-Last activity: 2026-08-10 — Milestone v1.9.0 started
+Phase: Phase 1 of 3（保存・編集・設定の安全性是正（失敗時ロールバック担保）） — 未着手
+Plan: — （未計画）
+Status: ROADMAP.md 確定済み（3フェーズ・27/27要件被覆・孤立要件なし）。次は `/gsd-plan-phase 1`
+Last activity: 2026-08-10 — v1.9.0 ROADMAP.md 作成完了
 
-## v1.8.0 Phase Map
+Progress: [░░░░░░░░░░] 0%
+
+## v1.9.0 Phase Map
 
 | Phase | Name | Requirements | リスク/性質 |
 |-------|------|--------------|------------|
-| 1 | 基盤分割（肥大モジュールリファクタリング） | V180-REFAC-01/02, V180-ROBUST-02 | ocr_providers.py/llm_config.py のパッケージ化。DEBT-01/02 前例パターンを踏襲。後続 Phase 2 の UI 追加の土台になるため先行必須 |
-| 2 | AI強化（プロンプト・テンプレート管理 + プロバイダーフォールバック） | V180-TMPL-01〜05, V180-FALL-01〜03 | 8要件を同一 LLM 設定ダイアログ UI に隣接実装。フォールバックは「明示設定型・自動送信なし」方針の迂回リスクに注意（送信先確認ダイアログ再提示を必達） |
-| 3 | OCR実行エンジン抽出 + E2Eテスト | V180-REFAC-03, V180-QA-01 | ocr_dialog.py（2154行）から OCRRunEngine 抽出。**BATCH 着手の直前**に配置（研究フェーズの落とし穴10: スレッド調整コード分離時のロック不整合に注意） |
-| 4 | バッチ複数ファイルOCR | V180-BATCH-01〜05 | **単独フェーズ隔離**（PROJECT.md 確定方針）。fitz.Document のスレッド間共有禁止のためファイル間は逐次処理限定。2階層キャンセル・ファイル横断進捗集計は新規パターンで実装詳細検証が必要 |
-| 5 | 堅牢性強化（サムネイル仮想化 + Blobリーク検出 + ShortcutsDialog修正） | V180-PERF-01〜03, V180-ROBUST-01/03 | 他フェーズと機能依存なし。selected_pages 全ページインデックス不変条件の破壊に注意（pagination.py の to_global/to_local のみ通す） |
-| 6 | 品質保証仕上げ（通知UX・UI一貫性監査・ドキュメント整合） | V180-QA-02〜04 | OCRRunEngine/batch_queue 抽出後のためテスト容易性が高い。開発履歴.md の v1.7.0 表記整合（V16-D-04 残課題）も本フェーズで解消 |
+| 1 | 保存・編集・設定の安全性是正（失敗時ロールバック担保） | V190-SAFE-01〜05, V190-CFG-01/02, V190-UNDO-01/02 | 既存機能レビュー課題 REV-01〜07 の是正。「記録後置」パターンを確立し UNDO-01/02 の安全網に構造的に流用する。P0/P1 かつ Phase 2 の前提（SAFE-03 の `off` 生成不可化） |
+| 2 | OCR プロバイダ基盤整理 + OpenAI(ChatGPT) プロバイダ追加 | V190-CAT-01/02, V190-OAI-01〜13 | catalog 一元化（REV-08）が OpenAI 追加の requires-before。Phase 1 の SAFE-03 完了が前提。モデルラインナップ/一覧フィルタ方式は実装開始時に実キーで確認（研究 Gap） |
+| 3 | 品質保証・リリースゲート | V190-QA-01〜03 | Tcl/Tk 環境修復の根本原因評価がリサーチ間で食い違い（STACK: 実機再現せず／PITFALLS: 早期対応推奨）。Phase 1/2 完了後の全テスト完走・human-verify を最終ゲートとする |
 
 ## Performance Metrics
 
@@ -128,6 +127,14 @@ Last activity: 2026-08-10 — Milestone v1.9.0 started
 
 Decisions are logged in PROJECT.md Key Decisions table.
 
+**v1.9.0 ロードマップ確定（2026-08-10）:**
+
+- V190-R-01: 全 27 要件を 3 フェーズへ割当（coarse 粒度・100% 被覆・孤立要件なし）。フェーズ採番はマイルストーンごとに Phase 1 起点へリセット（プロジェクト方針）。
+- V190-R-02: SAFE-01〜05・CFG-01/02・UNDO-01/02（計9要件・既存機能レビュー REV-01〜07）を **Phase 1** に統合。マイルストーン共通の受け入れ条件「失敗時は操作前の状態へ戻る」を体現する単一テーマで結束し、CFG は Phase 1 と並行実施可能・UNDO は Phase 1 の「記録後置」パターンを安全網として流用するというリサーチの依存構造を、個別フェーズに分割せず1フェーズ内の複数プランへ反映する。
+- V190-R-03: CAT-01/02（catalog 一元化・REV-08）を単独フェーズ化せず **Phase 2** 内の先行プランとして OAI-01〜13 と同居させた。CAT は OpenAI 追加の requires-before だが単独では観測可能なユーザー挙動に乏しい内部構造要件のため、隣接する OpenAI 追加フェーズへ統合する方が自然（coarse 粒度の圧縮方針にも合致）。
+- V190-R-04: QA-01〜03 を **Phase 3** の最終リリースゲートとして独立配置。Phase 1/2 の全コード変更が完了した後でなければ全テスト完走ゲート・human-verify の実施根拠が固まらないため。
+- V190-R-05: Phase 2 は Phase 1 の V190-SAFE-03（`off` のプロバイダ生成不可化）完了を前提とする（リサーチ指摘: SAFE-03 未了のまま OpenAI を追加すると `off` 誤爆パターンが再現する構造）。
+
 **v1.8.0 ロードマップ確定（2026-07-13）:**
 
 - V180-R-01: 全 26 要件を 6 フェーズへ割当（coarse 粒度・100% 被覆・孤立要件なし）。フェーズ採番はマイルストーンごとに Phase 1 起点へリセット（プロジェクト方針）。26要件・4本柱構成のため coarse 既定の 2-4 より多い 6 フェーズとしたが、各フェーズは REFAC-01/02→TMPL/FALL、REFAC-03→BATCH の明示依存関係と BATCH 単独隔離方針を反映した必然的な境界であり、単一要件フェーズは作らない（REFAC-03 は QA-01 と同居させ Phase 3 を構成）。
@@ -161,7 +168,7 @@ Decisions are logged in PROJECT.md Key Decisions table.
 - D-05: _restore_state の pdf_bytes 分岐を完全撤廃
 - D-06: _undo_stack/_redo_stack の両方を deque(maxlen=MAX_UNDO) 化
 
-（v1.4.0〜v1.7.1 の確定済み決定事項は本ファイル履歴に蓄積済み。詳細は git 履歴または各マイルストーンアーカイブを参照）
+（v1.4.0〜v1.8.0 の確定済み決定事項は本ファイル履歴に蓄積済み。詳細は git 履歴または各マイルストーンアーカイブを参照）
 
 - [Phase ?]: 後方互換 import 安全網の先行拡張: TestOcrProvidersImports は全17シンボル（private ヘルパー含む）を個別+一括の両方で package-level import 検証。既存 TestDialogsImports の記法をそのまま複製し新規パターンを持ち込まない（Wave 2/3 分割前の回帰検知装置確立・D-11）
 - [Phase ?]: registry.primary_env_var() は未登録プロバイダで KeyError ではなく空文字を返す実装だったため ocr_dialog.py 側で try/except を追加せず直接呼び出しに置換
@@ -206,14 +213,14 @@ Decisions are logged in PROJECT.md Key Decisions table.
 
 ### Pending Todos
 
-- なし。v1.8.0 は全6フェーズ完了・マイルストーンクローズ済み（要件詳細は `.planning/milestones/v1.8.0-REQUIREMENTS.md` を参照）。次マイルストーンの要件は `/gsd-new-milestone` で新規 REQUIREMENTS.md を作成する。
+- なし。v1.9.0 は ROADMAP.md 確定済み（3フェーズ・27/27要件被覆・孤立要件なし）。次は `/gsd-plan-phase 1` でフェーズ1（保存・編集・設定の安全性是正）の詳細計画へ。
 
 ### Blockers/Concerns
 
 - [v1.6.0 Phase 3 継続]: V16-QUAL-03（max_tokens/429 実機検証）は実 API 前提のチェックリスト化まで完了。実機実施は未了のまま受容済み。
 - [v1.7.1 Phase 4 UAT]: 人手確認7件はユーザー判断で一旦pass（実機目視未検証・コード/自動ゲートは全通過、v1.6.0 Phase 4 と同様の運用）。v1.8.0 Phase 6 では UAT 2件をユーザー実施で全合格済み。
-- [06-03 defer・レビューR6] duplicate/merge/merge_resize 等の他ページ構造変更 op に対する do→undo→redo→undo 4手往復回帰テストの水平展開は v1.8.0 で未実施。insert_redo と同型の非対称復元バグが潜在していないか未検証（次マイルストーン候補）
-- [v1.8.0 リリース作業で発見]: requirements.txt 指定バージョン（PyMuPDF 1.28.0・Pillow 12.3.0・tkinterdnd2 0.6.2）へ venv を合わせた状態でフルテストスイート（1101件）を複数回連続実行すると、毎回異なる2件が `_tkinter.TclError`（アサーション失敗ではなく Tk インタプリタ生成失敗。例: `couldn't read file "...ttk/clamTheme.tcl"` だが実ファイルは存在）で ERROR になることがある（単体実行では常に合格）。1101件の `tk.Tk()` 生成/破棄を単一 pytest プロセスで連続実行することによる Tcl/Tk リソース消耗系のフレーキーと推定（`tests/test_batch_ocr_dialog.py` 等に既存の環境依存 TclError 制約の記述あり・新規事象ではなく顕在化）。アプリ本体の実行時動作には影響なし（ビルド exe は実起動確認済み）。次マイルストーンでの調査候補（pytest-xdist でのプロセス分離、または conftest.py でのフィクスチャ単位 Tk 破棄強化等）。
+- [06-03 defer・レビューR6] duplicate/merge/merge_resize 等の他ページ構造変更 op に対する do→undo→redo→undo 4手往復回帰テストの水平展開は v1.8.0 で未実施 → **v1.9.0 Phase 1（V190-UNDO-02）で対応予定**
+- [v1.8.0 リリース作業で発見]: requirements.txt 指定バージョン（PyMuPDF 1.28.0・Pillow 12.3.0・tkinterdnd2 0.6.2）へ venv を合わせた状態でフルテストスイート（1101件）を複数回連続実行すると、毎回異なる2件が `_tkinter.TclError`（アサーション失敗ではなく Tk インタプリタ生成失敗。例: `couldn't read file "...ttk/clamTheme.tcl"` だが実ファイルは存在）で ERROR になることがある（単体実行では常に合格）。1101件の `tk.Tk()` 生成/破棄を単一 pytest プロセスで連続実行することによる Tcl/Tk リソース消耗系のフレーキーと推定 → **v1.9.0 Phase 3（V190-QA-01）で切り分け・修復予定**（リサーチでは実機再現せず、TCL_LIBRARY/TK_LIBRARY の venv相対パス誤解決 CPython #125235 が有力候補。frozen判定と開発環境判定の分離修復を推奨）。
 
 過去の懸念は全て解決済み:
 
@@ -262,11 +269,14 @@ Decisions are logged in PROJECT.md Key Decisions table.
 | v2 | OS キーストア連携（Windows Credential Manager）による APIキー永続化 | Out of scope | v1.4.0 |
 | v2 | OCR 結果のページ埋め込み（検索可能 PDF 化） | Out of scope | v1.4.0 |
 | v2 | プロバイダ別の詳細な実コスト計測・課金トラッキング | Out of scope | v1.4.0 |
-| ~~Future~~ | ~~PERF-01: サムネイル仮想化によるパフォーマンス改善（大量ページ対応）~~ | **v1.8.0 Phase 5 で対応中**（V180-PERF-01〜03） | v1.7.1 |
-| v2 | バッチ OCR のバックグラウンド常駐継続（Tkinter シングルループ制約） | Out of scope（v1.8.0 Future Requirements BATCH-F01） | v1.8.0 |
+| ~~Future~~ | ~~PERF-01: サムネイル仮想化によるパフォーマンス改善（大量ページ対応）~~ | **Shipped v1.8.0 Phase 5**（V180-PERF-01〜03） | v1.7.1 |
+| v2 | バッチ OCR のバックグラウンド常駐継続（Tkinter シングルループ制約） | Out of scope（v1.8.0 Future Requirements BATCH-F01・v1.9.0 でも v2 継続 V190-F-05） | v1.8.0 |
 | v2 | バッチジョブの永続化（アプリ再起動を跨いだ resume） | Out of scope（v1.8.0 Future Requirements BATCH-F02） | v1.8.0 |
-| v2 | プロンプトテンプレートのバージョン履歴・差分表示 | Out of scope（v1.8.0 Future Requirements TMPL-F01） | v1.8.0 |
-| v2 | サムネイルの連続スクロール型本格仮想化（react-window 相当） | Out of scope（v1.8.0 Future Requirements PERF-F01） | v1.8.0 |
+| v2 | プロンプトテンプレートのバージョン履歴・差分表示 | Out of scope（v1.8.0 Future Requirements TMPL-F01・v1.9.0 でも v2 継続 V190-F-04） | v1.8.0 |
+| v2 | サムネイルの連続スクロール型本格仮想化（react-window 相当） | Out of scope（v1.8.0 Future Requirements PERF-F01・v1.9.0 でも v2 継続 V190-F-06） | v1.8.0 |
+| v2 | OpenAI Responses API への移行（ステートフルな会話継続・agentic 機能が必要になった場合） | Out of scope（V190-F-01） | v1.9.0 |
+| v2 | organization / project ID の自動検出 | Out of scope（V190-F-02） | v1.9.0 |
+| v2 | セッション API キー同期ループの完全動的化（ウィジェット変数のカタログ駆動化） | Out of scope（V190-F-03） | v1.9.0 |
 
 ### v1.4.0 クローズ時に Acknowledge した未クローズ項目（2026-06-14）
 
@@ -305,17 +315,17 @@ Decisions are logged in PROJECT.md Key Decisions table.
 
 ## Session Continuity
 
-Last session: 2026-07-22
-Stopped at: 260722-gae（v1.8.1 Gemini 400 修正）の GSD 精査完了（GSD-AUDIT-DIRECTIVE 項目 2〜4・status: complete）— /gsd-ship で PR 作成へ
+Last session: 2026-08-10
+Stopped at: v1.9.0 ROADMAP.md 確定（3フェーズ・27/27要件被覆・孤立要件なし・ROADMAP.md/STATE.md/REQUIREMENTS.md Traceability 更新済み）— 次は `/gsd-plan-phase 1`
 
 ## Operator Next Steps
 
+- 次アクション: `/gsd-plan-phase 1` で Phase 1（保存・編集・設定の安全性是正）の詳細計画へ進む。
 - サンプルプロンプト 2 ファイル（dist/PageFolio 直下のみ git 管理）が PyInstaller
   `--noconfirm` ビルドで毎回消える恒久課題 — ソースツリー側へ原本移設 + ビルド後
-  コピーのスクリプト化を次マイルストーン候補に（260722-rel SUMMARY 参照）
+  コピーのスクリプト化を検討課題として保留中（260722-rel SUMMARY 参照）
 
 - 先送り課題（260722-gae 精査項目 3 ②③）: LLM 設定ダイアログへの「新世代 Gemini では
   temperature 欄が無視される」注記（UI 変更）/ 新世代 thinking 有効時の応答時間・
-  トークン消費の実測（実 API 必要）— 次マイルストーン計画時に検討
-
-- Start the next milestone with /gsd-new-milestone
+  トークン消費の実測（実 API 必要）— v1.9.0 Phase 2（OpenAI 追加）計画時に類似パターン
+  （o-series の temperature 拒否・注記表示）として合流可能か検討

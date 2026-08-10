@@ -107,39 +107,39 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| V190-SAFE-01 | TBD | Pending |
-| V190-SAFE-02 | TBD | Pending |
-| V190-SAFE-03 | TBD | Pending |
-| V190-SAFE-04 | TBD | Pending |
-| V190-SAFE-05 | TBD | Pending |
-| V190-CFG-01 | TBD | Pending |
-| V190-CFG-02 | TBD | Pending |
-| V190-UNDO-01 | TBD | Pending |
-| V190-UNDO-02 | TBD | Pending |
-| V190-CAT-01 | TBD | Pending |
-| V190-CAT-02 | TBD | Pending |
-| V190-OAI-01 | TBD | Pending |
-| V190-OAI-02 | TBD | Pending |
-| V190-OAI-03 | TBD | Pending |
-| V190-OAI-04 | TBD | Pending |
-| V190-OAI-05 | TBD | Pending |
-| V190-OAI-06 | TBD | Pending |
-| V190-OAI-07 | TBD | Pending |
-| V190-OAI-08 | TBD | Pending |
-| V190-OAI-09 | TBD | Pending |
-| V190-OAI-10 | TBD | Pending |
-| V190-OAI-11 | TBD | Pending |
-| V190-OAI-12 | TBD | Pending |
-| V190-OAI-13 | TBD | Pending |
-| V190-QA-01 | TBD | Pending |
-| V190-QA-02 | TBD | Pending |
-| V190-QA-03 | TBD | Pending |
+| V190-SAFE-01 | Phase 1 | Pending |
+| V190-SAFE-02 | Phase 1 | Pending |
+| V190-SAFE-03 | Phase 1 | Pending |
+| V190-SAFE-04 | Phase 1 | Pending |
+| V190-SAFE-05 | Phase 1 | Pending |
+| V190-CFG-01 | Phase 1 | Pending |
+| V190-CFG-02 | Phase 1 | Pending |
+| V190-UNDO-01 | Phase 1 | Pending |
+| V190-UNDO-02 | Phase 1 | Pending |
+| V190-CAT-01 | Phase 2 | Pending |
+| V190-CAT-02 | Phase 2 | Pending |
+| V190-OAI-01 | Phase 2 | Pending |
+| V190-OAI-02 | Phase 2 | Pending |
+| V190-OAI-03 | Phase 2 | Pending |
+| V190-OAI-04 | Phase 2 | Pending |
+| V190-OAI-05 | Phase 2 | Pending |
+| V190-OAI-06 | Phase 2 | Pending |
+| V190-OAI-07 | Phase 2 | Pending |
+| V190-OAI-08 | Phase 2 | Pending |
+| V190-OAI-09 | Phase 2 | Pending |
+| V190-OAI-10 | Phase 2 | Pending |
+| V190-OAI-11 | Phase 2 | Pending |
+| V190-OAI-12 | Phase 2 | Pending |
+| V190-OAI-13 | Phase 2 | Pending |
+| V190-QA-01 | Phase 3 | Pending |
+| V190-QA-02 | Phase 3 | Pending |
+| V190-QA-03 | Phase 3 | Pending |
 
 **Coverage:**
 - v1 requirements: 27 total
-- Mapped to phases: 0
-- Unmapped: 27 ⚠️（ロードマップ作成時に解消）
+- Mapped to phases: 27
+- Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-08-10*
-*Last updated: 2026-08-10 after initial definition*
+*Last updated: 2026-08-10 after ROADMAP.md creation (3 phases, 27/27 requirements mapped, no orphans)*
