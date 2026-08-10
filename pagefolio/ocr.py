@@ -589,12 +589,23 @@ class OCRMixin:
                 api_key = None
 
         # build_provider で settings から Provider を生成（CR-01: ValueError を捕捉）
+        from pagefolio.ocr_providers import OCRDisabledError
+
         try:
             provider = build_provider(
                 self.settings,
                 api_key=api_key,
                 plugin_manager=getattr(self, "plugin_manager", None),
             )
+        except OCRDisabledError:
+            # V190-SAFE-03・D-06/D-07: ocr_provider="off" は入口（メニュー/ボタン
+            # disabled 化）をすり抜けた場合の構造的安全網。OCRDialog は生成しない。
+            messagebox.showinfo(
+                self._t("info_title"),
+                self._t("ocr_disabled_msg"),
+                parent=self.root,
+            )
+            return
         except ValueError as e:
             logger.error("未対応の OCR プロバイダ '%s' が設定されています: %s", name, e)
             messagebox.showerror(

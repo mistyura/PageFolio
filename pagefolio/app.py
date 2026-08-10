@@ -310,6 +310,10 @@ class PDFEditorApp(
         menubar.add_cascade(label=self._t("batch_menu_tools"), menu=tools_menu)
         self.root.config(menu=menubar)
         self._menubar = menubar
+        self._tools_menu = tools_menu
+        self._batch_menu_index = tools_menu.index("end")
+        # D-04/D-05: 構築直後に現在の ocr_provider へ活性状態を合わせる
+        self._update_batch_menu_state()
 
     def _open_batch_ocr(self):
         """メニュー「バッチOCR」からダイアログを起動する（D-04: doc/filepath 非参照）"""
@@ -344,6 +348,34 @@ class PDFEditorApp(
                 b.state(state)
             except Exception as e:
                 logger.debug("OCR ボタン状態変更失敗: %s", e)
+        # バッチOCR メニュー項目も同一タイミングで再評価する（D-04・裁量項目）
+        self._update_batch_menu_state()
+
+    def _update_batch_menu_state(self):
+        """OCR プロバイダ設定に応じてツールメニュー「バッチOCR」項目の活性/ラベルを
+        切り替える（D-04・D-05）。
+
+        ocr_provider が "off" のとき disabled 化し、ラベルへ「（OCR OFF）」を
+        併記する。バッチOCR起動そのものを入口で止める主防御線（V190-SAFE-03）。
+        メニューバー未構築のタイミング（`_build_ui` からの初回呼び出し等）でも
+        例外を出さないよう getattr で防御する（_update_ocr_buttons_state と同型）。
+        """
+        tools_menu = getattr(self, "_tools_menu", None)
+        index = getattr(self, "_batch_menu_index", None)
+        if tools_menu is None or index is None:
+            return
+        is_ocr_on = self.settings.get("ocr_provider", "off") != "off"
+        try:
+            if is_ocr_on:
+                tools_menu.entryconfig(
+                    index, state="normal", label=self._t("batch_menu_item")
+                )
+            else:
+                tools_menu.entryconfig(
+                    index, state="disabled", label=self._t("batch_menu_item_off")
+                )
+        except Exception as e:
+            logger.debug("バッチOCR メニュー状態変更失敗: %s", e)
 
     def _check_doc(self):
         if not self.doc:
@@ -640,6 +672,11 @@ class PDFEditorApp(
         """
         self.settings.update(llm_settings)
         _save_settings(self.settings)
+        # CONCERNS.md「OCRDialog LLM Settings Callback Consistency」是正:
+        # ネスト Apply 直後に OCR ボタン群とバッチOCR メニューの活性状態を
+        # 再評価する（_update_ocr_buttons_state が末尾で _update_batch_menu_state
+        # を呼ぶため両方が連動する）。
+        self._update_ocr_buttons_state()
 
     def _apply_settings(self, new_settings):
         """設定変更を適用してUIを再構築"""

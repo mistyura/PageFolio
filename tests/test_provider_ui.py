@@ -89,10 +89,31 @@ class _ButtonStub:
         self.last_state = flags
 
 
+def _bind_ocr_button_state_methods(stub):
+    """`_update_ocr_buttons_state`/`_update_batch_menu_state` を SimpleNamespace
+    スタブへバインドする（V190-SAFE-03・D-04 裁量項目の配線が両メソッドを
+    直接呼ぶため、未バインドだと AttributeError になる）。
+    """
+    from pagefolio.app import PDFEditorApp
+
+    if not hasattr(stub, "doc"):
+        stub.doc = None
+    stub._update_batch_menu_state = lambda: PDFEditorApp._update_batch_menu_state(stub)
+    stub._update_ocr_buttons_state = lambda: PDFEditorApp._update_ocr_buttons_state(
+        stub
+    )
+    return stub
+
+
 def _call_update_ocr_buttons_state(settings, doc, ocr_buttons=None):
     """PDFEditorApp._update_ocr_buttons_state を最小スタブで呼び出す。
 
     Tk を生成せず settings/doc/_ocr_buttons だけを持つ名前空間で呼ぶ。
+    _update_ocr_buttons_state は末尾で _update_batch_menu_state() を直接
+    呼ぶため（V190-SAFE-03・D-04・裁量項目の配線）、SimpleNamespace でも
+    解決できるよう明示的にバインドする（未バインドだと AttributeError）。
+    _tools_menu/_batch_menu_index を持たないスタブでは getattr ガードにより
+    no-op で早期 return する（実装側の防御的パターン）。
     """
     from pagefolio.app import PDFEditorApp
 
@@ -102,6 +123,7 @@ def _call_update_ocr_buttons_state(settings, doc, ocr_buttons=None):
     )
     if ocr_buttons is not None:
         stub._ocr_buttons = ocr_buttons
+    _bind_ocr_button_state_methods(stub)
     PDFEditorApp._update_ocr_buttons_state(stub)
     return stub
 
@@ -167,6 +189,7 @@ class TestUpdateOcrButtonsState:
         )
         from pagefolio.app import PDFEditorApp
 
+        _bind_ocr_button_state_methods(stub)
         PDFEditorApp._update_ocr_buttons_state(stub)
 
     def test_multiple_buttons_all_get_same_state(self):
@@ -1498,6 +1521,7 @@ class TestApplyLlmSettingsLive:
             settings={"theme": "dark", "font_size": 10},
             _rebuild_ui=lambda: rebuild_calls.__setitem__("n", rebuild_calls["n"] + 1),
         )
+        _bind_ocr_button_state_methods(stub)
         PDFEditorApp._apply_llm_settings_live(stub, {"ocr_provider": "claude"})
 
         assert stub.settings["ocr_provider"] == "claude"
@@ -1511,6 +1535,7 @@ class TestApplyLlmSettingsLive:
         saved = {}
         monkeypatch.setattr("pagefolio.app._save_settings", lambda s: saved.update(s))
         stub = types.SimpleNamespace(settings={"theme": "dark"})
+        _bind_ocr_button_state_methods(stub)
         PDFEditorApp._apply_llm_settings_live(
             stub, {"claude_model": "claude-sonnet-4-6"}
         )
@@ -1525,6 +1550,7 @@ class TestApplyLlmSettingsLive:
 
         monkeypatch.setattr("pagefolio.app._save_settings", lambda s: None)
         stub = types.SimpleNamespace(settings={})
+        _bind_ocr_button_state_methods(stub)
         PDFEditorApp._apply_llm_settings_live(stub, {"ocr_provider": "claude"})
         assert not any("api_key" in k.lower() for k in stub.settings)
 
@@ -1584,6 +1610,7 @@ class TestSettingsDialogNestedApplyCascade:
         app_stub = types.SimpleNamespace(
             settings={"theme": "dark", "ocr_provider": "lmstudio"}
         )
+        _bind_ocr_button_state_methods(app_stub)
         settings_dialog_stub = types.SimpleNamespace(
             current_settings={"ocr_provider": "lmstudio"},
             _font=lambda delta=0, weight=None: ("Segoe UI", 10),

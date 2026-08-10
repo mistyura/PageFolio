@@ -644,7 +644,17 @@ class BatchOCRDialog(tk.Toplevel):
         self._batch_state = BatchState(total_files=count_pending(self._entries))
         self._batch_cancel_flag.clear()
         self._file_cancel_flag.clear()
-        self._build_provider_once()
+        # D-07: 実行開始時の二重ガード。入口（メニュー disabled 化）をすり抜けた
+        # 場合の構造的安全網（build_provider の OCRDisabledError を捕捉）。
+        from pagefolio.ocr_providers import OCRDisabledError
+
+        try:
+            self._build_provider_once()
+        except OCRDisabledError:
+            messagebox.showinfo(
+                self._L["info_title"], self._L["ocr_disabled_msg"], parent=self
+            )
+            return
         self._set_running_ui(True)
         self._update_overall_progress()
         self._advance_to_next_file()

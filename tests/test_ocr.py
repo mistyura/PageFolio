@@ -15,7 +15,10 @@ import pytest
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from pagefolio import ocr  # noqa: E402
+from pagefolio.lang import LANG  # noqa: E402
 from pagefolio.ocr_providers import LMStudioProvider, OCRProvider  # noqa: E402
+
+LANG_JA = LANG["ja"]
 
 # ===== テスト用ダブル =====
 
@@ -1833,10 +1836,264 @@ class TestOCRDisabledGuard:
             ocr.build_provider(settings)
 
     def test_build_provider_empty_string_still_lmstudio(self):
-        """ocr_provider='' は後方互換のため従来どおり LMStudioProvider を返す（D-06）。"""
+        """ocr_provider='' は後方互換のため従来どおり LMStudioProvider を返す（D-06）"""
         settings = {"ocr_provider": ""}
         provider = ocr.build_provider(settings)
         assert isinstance(provider, LMStudioProvider)
+
+    # ── Task 2-(2): 通常 OCR の入口ガード（_start_ocr）─────────────────
+
+    def test_start_ocr_off_does_not_open_dialog(self, monkeypatch):
+        """ocr_provider='off' のとき _start_ocr は OCRDialog を生成せず
+        ocr_disabled_msg を showinfo で表示して return する（D-07）。"""
+        import types
+
+        import pagefolio.ocr_dialog as ocr_dialog
+        from pagefolio.ocr import OCRMixin
+
+        opened = {"dialog": False}
+        info_calls = []
+
+        monkeypatch.setattr(
+            ocr_dialog, "OCRDialog", lambda *a, **k: opened.__setitem__("dialog", True)
+        )
+        monkeypatch.setattr(
+            ocr.messagebox,
+            "showinfo",
+            lambda *a, **k: info_calls.append((a, k)),
+        )
+
+        fake = types.SimpleNamespace(
+            settings={"ocr_provider": "off"},
+            _session_api_keys={},
+            root=None,
+            doc=object(),
+            lang="ja",
+            _t=lambda key: LANG_JA.get(key, key),
+            _font=lambda *a, **k: None,
+        )
+        OCRMixin._start_ocr(fake, [0])
+
+        assert opened["dialog"] is False, "OCRDialog が生成されてはならない"
+        assert info_calls, "ocr_disabled_msg の showinfo が呼ばれていない"
+        assert info_calls[0][0][1] == LANG_JA["ocr_disabled_msg"]
+
+    # ── Task 2-(3): バッチ OCR 実行開始時の二重ガード（_on_start_batch）──
+
+    def test_on_start_batch_off_aborts_before_running(self, monkeypatch):
+        """ocr_provider='off' のとき _on_start_batch は _build_provider_once の
+        OCRDisabledError を捕捉し、_running を False のまま中断する（D-07）。"""
+        import threading
+        import types
+
+        from pagefolio.batch_ocr_state import BatchFileEntry
+        from pagefolio.dialogs.batch_ocr import BatchOCRDialog
+
+        info_calls = []
+        import pagefolio.dialogs.batch_ocr as batch_ocr_mod
+
+        monkeypatch.setattr(
+            batch_ocr_mod.messagebox,
+            "showinfo",
+            lambda *a, **k: info_calls.append((a, k)),
+        )
+
+        app = types.SimpleNamespace(
+            settings={"ocr_provider": "off", "ocr_concurrency": 1},
+            _session_api_keys={},
+            plugin_manager=None,
+        )
+        entry = BatchFileEntry("/fileA.pdf", page_count=1)
+        fake = types.SimpleNamespace(
+            app=app,
+            provider=None,
+            _entries=[entry],
+            _running=False,
+            _batch_cancel_flag=threading.Event(),
+            _file_cancel_flag=threading.Event(),
+            _L=LANG_JA,
+        )
+        fake._is_cloud_provider = lambda settings=None: (
+            BatchOCRDialog._is_cloud_provider(fake, settings=settings)
+        )
+        fake._check_cloud_api_key = lambda settings=None: (
+            BatchOCRDialog._check_cloud_api_key(fake, settings=settings)
+        )
+        fake._confirm_batch_cost = lambda: BatchOCRDialog._confirm_batch_cost(fake)
+        fake._build_provider_once = lambda: BatchOCRDialog._build_provider_once(fake)
+
+        BatchOCRDialog._on_start_batch(fake)
+
+        assert fake._running is False, "_running が True のまま（中断されていない）"
+        assert info_calls, "ocr_disabled_msg の showinfo が呼ばれていない"
+
+    # ── Task 2-(1): メニュー入口の disabled 化（_update_batch_menu_state）──
+
+    class _MenuStub:
+        """`tools_menu.entryconfig` 呼び出しを記録する軽量スタブ。"""
+
+        def __init__(self):
+            self.calls = []
+
+        def entryconfig(self, index, **kwargs):
+            self.calls.append((index, kwargs))
+
+    def _make_fake_app_for_menu(self, ocr_provider):
+        import types
+
+        from pagefolio.app import PDFEditorApp
+
+        menu = self._MenuStub()
+        fake = types.SimpleNamespace(
+            settings={"ocr_provider": ocr_provider},
+            _tools_menu=menu,
+            _batch_menu_index=0,
+            _ocr_buttons=[],
+            doc=None,
+            _t=lambda key: LANG_JA.get(key, key),
+        )
+        fake._update_batch_menu_state = lambda: PDFEditorApp._update_batch_menu_state(
+            fake
+        )
+        return fake, menu
+
+    def test_batch_menu_disabled_when_ocr_off(self):
+        """ocr_provider='off' で _update_ocr_buttons_state を呼ぶと、
+        バッチOCR メニュー項目が disabled・OFF 併記ラベルへ切り替わる（D-04・D-05）。"""
+        from pagefolio.app import PDFEditorApp
+
+        fake, menu = self._make_fake_app_for_menu("off")
+        PDFEditorApp._update_ocr_buttons_state(fake)
+
+        assert menu.calls, "entryconfig が呼ばれていない"
+        index, kwargs = menu.calls[-1]
+        assert index == 0
+        assert kwargs["state"] == "disabled"
+        assert kwargs["label"] == LANG_JA["batch_menu_item_off"]
+
+    def test_batch_menu_enabled_when_provider_selected(self):
+        """ocr_provider='lmstudio' で _update_ocr_buttons_state を呼ぶと、
+        バッチOCR メニュー項目が normal・通常ラベルへ戻る（D-04・D-05）。"""
+        from pagefolio.app import PDFEditorApp
+
+        fake, menu = self._make_fake_app_for_menu("lmstudio")
+        PDFEditorApp._update_ocr_buttons_state(fake)
+
+        assert menu.calls, "entryconfig が呼ばれていない"
+        index, kwargs = menu.calls[-1]
+        assert index == 0
+        assert kwargs["state"] == "normal"
+        assert kwargs["label"] == LANG_JA["batch_menu_item"]
+
+    # ── Task 2-(4): OCR ダイアログ内 provider 再生成ガード ───────────────
+
+    def _make_fake_ocr_dialog(self, extra_settings=None):
+        import types
+
+        settings = {
+            "ocr_provider": "lmstudio",
+            "lm_studio_url": "http://localhost:1234",
+            "lm_studio_model": "",
+            "ocr_timeout": 120,
+            "ocr_max_tokens": -1,
+            "ocr_temperature": 0.1,
+        }
+        if extra_settings:
+            settings.update(extra_settings)
+
+        app = types.SimpleNamespace(settings=settings, _session_api_keys={})
+        # off 分岐でも provider を保持したまま H-3 の再クランプ処理
+        # (self.provider.max_concurrency) を通過できるよう、実 Provider 相当の
+        # 最小属性（max_concurrency・lang_fallback=False）を持たせる。
+        sentinel_provider = types.SimpleNamespace(
+            max_concurrency=4, lang_fallback=False
+        )
+        fake = types.SimpleNamespace(
+            app=app,
+            provider=sentinel_provider,
+            progress_var=types.SimpleNamespace(set=lambda _v: None),
+            _started=False,
+            _done=False,
+            concurrency=1,
+        )
+        fake.url_var = types.SimpleNamespace(set=lambda v: None)
+        fake.model_var = types.SimpleNamespace(set=lambda v: None)
+        fake.scale_var = types.SimpleNamespace(set=lambda v: None)
+        fake.timeout_var = types.SimpleNamespace(set=lambda v: None)
+        fake.max_tokens_var = types.SimpleNamespace(set=lambda v: None)
+        fake.temperature_var = types.SimpleNamespace(set=lambda v: None)
+        fake._refresh_provider_dependent_ui = lambda: None
+        from pagefolio.ocr_dialog import OCRDialog
+
+        fake._sync_param_vars_from_settings = lambda: (
+            OCRDialog._sync_param_vars_from_settings(fake)
+        )
+        fake._update_summary_btn_state = lambda: None
+        fake._maybe_show_lang_fallback_notice = lambda: None
+        return fake, sentinel_provider
+
+    def test_ocr_dialog_apply_llm_settings_off_aborts(self, monkeypatch):
+        """_apply_llm_settings に ocr_provider='off' を渡すと、provider は
+        差し替えられず現在の provider を保持したまま progress_var に
+        ocr_disabled_msg が設定される（D-07・T-01-06）。"""
+        import types
+
+        import pagefolio.settings as settings_mod
+
+        monkeypatch.setattr(settings_mod, "_save_settings", lambda _: None)
+
+        fake, sentinel_provider = self._make_fake_ocr_dialog()
+        progress_values = []
+        fake.progress_var = types.SimpleNamespace(
+            set=lambda v: progress_values.append(v)
+        )
+
+        from pagefolio.ocr_dialog import OCRDialog
+
+        OCRDialog._apply_llm_settings(fake, {"ocr_provider": "off"})
+
+        assert fake.provider is sentinel_provider, (
+            "provider が差し替えられている（off では保持されるべき）"
+        )
+        assert progress_values, "progress_var へメッセージが設定されていない"
+        assert progress_values[-1] == LANG_JA["ocr_disabled_msg"]
+
+    def test_ocr_dialog_on_run_off_aborts(self, monkeypatch):
+        """_on_run に ocr_provider='off' の設定スナップショットを渡すと、
+        _started を True にする前に showinfo を表示して return する（D-07）。"""
+        import threading
+        import types
+
+        info_calls = []
+        import pagefolio.ocr_dialog as ocr_dialog_mod
+
+        monkeypatch.setattr(
+            ocr_dialog_mod.messagebox,
+            "showinfo",
+            lambda *a, **k: info_calls.append((a, k)),
+        )
+
+        app = types.SimpleNamespace(
+            settings={"ocr_provider": "off"}, _session_api_keys={}
+        )
+        fake = types.SimpleNamespace(
+            app=app,
+            provider=None,
+            _started=False,
+            _done=False,
+            _summary_running=False,
+            page_indices=[0],
+            _cancel_flag=threading.Event(),
+            _L=LANG_JA,
+        )
+        fake._can_resume = lambda: False
+
+        from pagefolio.ocr_dialog import OCRDialog
+
+        OCRDialog._on_run(fake)
+
+        assert fake._started is False, "_started が True になっている（実行が始まった）"
+        assert info_calls, "ocr_disabled_msg の showinfo が呼ばれていない"
 
 
 # ===== H-2 回帰テスト: _on_run / _apply_llm_settings のプロバイダ置換防止 =====

@@ -856,6 +856,9 @@ class OCRDialog(tk.Toplevel):
             return settings.get("gemini_model", "gemini-2.5-flash")
         if name == "tesseract":
             return ""
+        # 表示専用（プロバイダを生成しない）ため、"off" もここでは変更しない
+        # （V190-SAFE-03 の対象は provider を生成/差し替える経路のみ・RESEARCH.md
+        # Pitfall 2）。model_var のライブ値をそのまま表示する。
         if name in ("lmstudio", "", "off"):
             try:
                 return self.model_var.get().strip()
@@ -1062,7 +1065,7 @@ class OCRDialog(tk.Toplevel):
                 )
                 self.url_var.set(self.app.settings.get("runpod_url", ""))
                 self.model_var.set(self.app.settings.get("runpod_model", ""))
-            elif name in ("lmstudio", "", "off"):
+            elif name in ("lmstudio", ""):
                 from pagefolio.ocr_providers import LMStudioProvider
 
                 self.provider = LMStudioProvider(
@@ -1077,6 +1080,13 @@ class OCRDialog(tk.Toplevel):
                     self.app.settings.get("lm_studio_url", "http://localhost:1234")
                 )
                 self.model_var.set(self.app.settings.get("lm_studio_model", ""))
+            elif name == "off":
+                # V190-SAFE-03・D-06/D-07・T-01-06: OCR ダイアログを開いたまま
+                # LLM 設定で off へ切替えた実在経路。provider は差し替えず
+                # 現在の provider を保持したまま OCR 無効メッセージを表示する
+                # （build_provider を経由しない直接構築だった旧実装の穴を塞ぐ）。
+                lang = self.app.settings.get("lang", "ja")
+                self.progress_var.set(LANG[lang]["ocr_disabled_msg"])
             else:
                 # H-2: tesseract / プラグイン登録プロバイダは build_provider で再生成
                 from pagefolio.ocr import build_provider
@@ -1344,6 +1354,15 @@ class OCRDialog(tk.Toplevel):
             settings if settings is not None else dict(self.app.settings)
         )
         s = self._active_ocr_settings
+
+        # V190-SAFE-03・D-06/D-07: off なら実行を開始せず中断する（_started を
+        # True にする前・UI 状態を一切変更する前の早期 return。入口ガード
+        # （メニュー/ボタン disabled 化）をすり抜けた場合の構造的安全網）。
+        if s.get("ocr_provider", "") == "off":
+            messagebox.showinfo(
+                self._L["info_title"], self._L["ocr_disabled_msg"], parent=self
+            )
+            return
 
         # ── クラウド実行ゲート（_started を True にする前）──
         if self._is_cloud_provider(settings=s):
