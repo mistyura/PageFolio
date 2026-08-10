@@ -293,6 +293,11 @@ LANG = {
         "status_insert_tail": "末尾",
         "status_insert_pos": "{pos}ページ目の後ろ",
         "status_inserted": "{count}ファイル（計{total}ページ）を{where}に挿入しました",
+        "warn_rollback_title": "巻き戻し失敗",
+        "err_insert_rollback_failed": (
+            "挿入の巻き戻しに失敗しました。{count} ページが挿入されたまま"
+            "残っています。Ctrl+Z で取り消せます。"
+        ),
         "dlg_merge_title": "結合するPDFを選択（複数可・選択順に結合）",
         "status_merged": "{count}ファイル（計{total}ページ）を末尾に結合しました",
         # 終了
@@ -1008,6 +1013,11 @@ LANG = {
         "status_insert_tail": "end",
         "status_insert_pos": "after page {pos}",
         "status_inserted": "Inserted {count} file(s) ({total} pages) at {where}",
+        "warn_rollback_title": "Rollback failed",
+        "err_insert_rollback_failed": (
+            "Failed to roll back the insertion. {count} page(s) remain "
+            "inserted. You can undo with Ctrl+Z."
+        ),
         "dlg_merge_title": "Select PDF(s) to Merge",
         "status_merged": "Merged {count} file(s) ({total} pages) to end",
         # Quit

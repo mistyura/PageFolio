@@ -4,6 +4,7 @@
 """ページ操作 Mixin — 回転・削除・トリミング・挿入・結合・分割"""
 
 import io
+import logging
 import os
 from tkinter import filedialog, messagebox, simpledialog
 
@@ -17,6 +18,8 @@ from pagefolio.constants import (
     SUPPORTED_EXTENSIONS,
     C,
 )
+
+logger = logging.getLogger(__name__)
 
 
 def parse_page_ranges(text, max_page):
@@ -175,16 +178,21 @@ class PageOpsMixin:
         self.plugin_manager.fire_event("on_page_delete", self, targets)
 
     def _duplicate_page(self):
-        """アクティブページを直後に複製して挿入する"""
+        """アクティブページを直後に複製して挿入する
+
+        Undo 記録（_save_undo）は例外を送出しうる実処理（insert_pdf 2回）が
+        すべて成功した後にのみ確定する（D-11）。複製前に例外が出た場合に
+        「複製されていないのに duplicate の Undo エントリが残る」誤操作を防ぐ。
+        """
         if not self._check_doc():
             return
         pno = self.current_page
-        self._save_undo("duplicate", pno=pno)
         try:
             tmp = fitz.open()
             tmp.insert_pdf(self.doc, from_page=pno, to_page=pno)
             self.doc.insert_pdf(tmp, start_at=pno + 1)
             tmp.close()
+            self._save_undo("duplicate", pno=pno)
             self._invalidate_thumb_cache()
             self.current_page = pno + 1
             self._refresh_all()
@@ -754,17 +762,29 @@ class PageOpsMixin:
             self._do_insert(list(paths), insert_at)
 
     def _do_insert(self, ordered_paths, insert_at):
-        """結合順確定後に実際の挿入を行う"""
+        """結合順確定後に実際の挿入を行う
+
+        D-08/D-09/D-10/D-14: 挿入済みページ数（total）を追跡し、途中のファイルで
+        例外が出た場合は同一インデックス insert_at への delete_page を
+        （実際に取り除けた分だけ）繰り返して挿入分を巻き戻す。挿入元 Document は
+        try/finally で例外時も必ず close する。巻き戻し自体が失敗し残存ページが
+        出た場合は警告ダイアログで残存ページ数を明示し、実際の残存数を反映した
+        Undo state を残す（無警告の部分適用を作らない）。Undo スタックへの
+        直接 append/pop は行わず _dispose_state 経由で解放する。
+        """
         self._save_undo("insert", insert_at=insert_at)
+        total = 0
+        pos = insert_at
         try:
-            total = 0
-            pos = insert_at
             for path in ordered_paths:
                 src = self._open_path_as_pdf(path)
-                self.doc.insert_pdf(src, start_at=pos)
-                pos += len(src)
-                total += len(src)
-                src.close()
+                try:
+                    self.doc.insert_pdf(src, start_at=pos)
+                    n = len(src)
+                    pos += n
+                    total += n
+                finally:
+                    src.close()
             self._undo_stack[-1]["data"][1] = total
             self._invalidate_thumb_cache()
             self._refresh_all()
@@ -781,10 +801,30 @@ class PageOpsMixin:
             )
             self.plugin_manager.fire_event("on_insert", self, ordered_paths, insert_at)
         except Exception as e:
-            # 例外時は num=0 のままの不完全な insert state を破棄する。
-            # 残すと undo が range(0) で 1 ページも削除せず、部分挿入が取り残される。
-            if self._undo_stack and self._undo_stack[-1].get("op") == "insert":
-                self._undo_stack.pop()
+            removed = 0
+            if total > 0:
+                try:
+                    for _ in range(total):
+                        self.doc.delete_page(insert_at)
+                        removed += 1
+                except Exception as rollback_e:
+                    logger.debug("挿入巻き戻し失敗: %s", rollback_e)
+            residual = total - removed
+            if residual == 0:
+                # 巻き戻し成功（total=0 の即時失敗も含む）:
+                # insert エントリは Blob を持たないが、規約に沿って
+                # _dispose_state 経由で解放してから取り除く（D-14）
+                if self._undo_stack and self._undo_stack[-1].get("op") == "insert":
+                    self._dispose_state(self._undo_stack.pop())
+            else:
+                # 巻き戻し不能な残存ページがある: 実際の残存数を Undo state へ
+                # 反映して残し（Ctrl+Z で復旧可能にする）、警告で明示する（D-10）
+                if self._undo_stack and self._undo_stack[-1].get("op") == "insert":
+                    self._undo_stack[-1]["data"][1] = residual
+                messagebox.showwarning(
+                    self._t("warn_rollback_title"),
+                    self._t("err_insert_rollback_failed").format(count=residual),
+                )
             self._invalidate_thumb_cache()
             self._refresh_all()
             messagebox.showerror(self._t("err_title"), str(e))

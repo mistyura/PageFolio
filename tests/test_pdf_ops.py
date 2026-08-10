@@ -1170,7 +1170,7 @@ class TestAllOpsUndoRedoRoundtrip:
             assert "pdf_bytes" not in entry
 
 
-# ===== 挿入失敗ロールバック・複製 Undo タイミング（V190-SAFE-04/05・Phase01 Plan04）=====
+# ===== 挿入失敗ロールバック・複製Undoタイミング（V190-SAFE-04/05・Phase01 Plan04）=====
 
 
 class TestInsertRollback:
