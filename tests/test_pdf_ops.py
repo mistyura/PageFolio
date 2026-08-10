@@ -2229,6 +2229,140 @@ class TestUndoRedoRestoreFailure:
         assert len(app._redo_stack) == 0
         assert len(app._undo_stack) == 1
 
+    def test_delete_undo_partial_retry_then_redo_undo_roundtrip(
+        self, sample_pdf_doc, monkeypatch
+    ):
+        """V190-UNDO-01 回帰テスト（01-VERIFICATION.md Evidence 3）: delete の
+        undo が2件目で失敗 → 再試行成功 → その後の redo で「当初 delete
+        対象だった全ページ」が削除されることを検証する。cb5344e（CR-01）は
+        『再試行成功直後の doc/スタック状態』までしか検証しておらず、この
+        後続の redo でページ構成が破損する新欠陥（バグの移し替え）を
+        検出できていなかった。修正前は再試行成功直後の redo_stack が
+        『再試行時に実際に処理した残存分のみ』に縮小されており、redo
+        しても1ページしか削除されなかった。
+        """
+        import pagefolio.file_ops as fo
+
+        app = self._make_fake_app(sample_pdf_doc)
+        original_count = len(app.doc)  # 3
+        before_digests = [_page_digest(app.doc[i]) for i in range(len(app.doc))]
+
+        targets = [0, 1]
+        app._save_undo("delete", targets=targets)
+        for i in sorted(targets, reverse=True):
+            app.doc.delete_page(i)
+        assert len(app.doc) == original_count - len(targets)
+
+        monkeypatch.setattr(fo.messagebox, "showerror", lambda *a, **k: None)
+
+        real_blob_bytes = fo.FileOpsMixin._blob_bytes
+        call_count = {"n": 0}
+
+        def flaky_blob_bytes(data):
+            call_count["n"] += 1
+            if call_count["n"] == 2:
+                raise RuntimeError("blob 読み込み失敗（模擬）")
+            return real_blob_bytes(data)
+
+        monkeypatch.setattr(
+            fo.FileOpsMixin, "_blob_bytes", staticmethod(flaky_blob_bytes)
+        )
+
+        # 1回目の Undo: page 0 のみ復元・page 1 で失敗
+        app._undo()
+        assert len(app.doc) == original_count - len(targets) + 1
+
+        # 2回目の Undo: 障害解消後、残り1件が正しく復元される
+        app._undo()
+        assert len(app.doc) == original_count
+        after_digests = [_page_digest(app.doc[i]) for i in range(len(app.doc))]
+        assert before_digests == after_digests
+
+        # 再試行成功直後の redo_stack は「当初の delete 対象2件ぶん」を表す
+        assert len(app._redo_stack) == 1
+        redo_state = app._redo_stack[-1]
+        assert redo_state["op"] == "delete_redo"
+        assert len(redo_state["data"]) == 2
+        assert {page_i for page_i, _ in redo_state["data"]} == {0, 1}
+
+        # Redo: 両ページとも削除される（欠陥時は1ページしか削除されなかった）
+        app._redo()
+        assert len(app.doc) == original_count - len(targets)
+
+        # さらに Undo: 元の内容へ完全に戻る
+        app._undo()
+        assert len(app.doc) == original_count
+        final_digests = [_page_digest(app.doc[i]) for i in range(len(app.doc))]
+        assert before_digests == final_digests
+
+    def test_delete_redo_partial_retry_then_undo_redo_roundtrip(
+        self, sample_pdf_doc, monkeypatch
+    ):
+        """V190-UNDO-01 回帰テスト: delete_redo の redo が2件目で失敗 →
+        再試行成功 → その後の undo→redo でページ構成・内容が完全に元へ
+        戻ることを検証する（delete 側と対称の往復・Evidence 3 の
+        delete_redo 版）。
+        """
+        import pagefolio.file_ops as fo
+
+        app = self._make_fake_app(sample_pdf_doc)
+        original_count = len(app.doc)  # 3
+        before_digests = [_page_digest(app.doc[i]) for i in range(len(app.doc))]
+
+        targets = [0, 1]
+        app._save_undo("delete", targets=targets)
+        for i in sorted(targets, reverse=True):
+            app.doc.delete_page(i)
+        assert len(app.doc) == original_count - len(targets)
+
+        # 正常系で undo（pages 0,1 を復元）→ redo スタックに delete_redo が積まれる
+        app._undo()
+        assert len(app.doc) == original_count
+        assert len(app._redo_stack) == 1
+        assert app._redo_stack[-1]["op"] == "delete_redo"
+
+        monkeypatch.setattr(fo.messagebox, "showerror", lambda *a, **k: None)
+
+        real_delete_page = app.doc.delete_page
+        call_count = {"n": 0}
+
+        def flaky_delete_page(pno):
+            call_count["n"] += 1
+            if call_count["n"] == 2:
+                raise RuntimeError("delete_page 失敗（模擬）")
+            return real_delete_page(pno)
+
+        monkeypatch.setattr(app.doc, "delete_page", flaky_delete_page)
+
+        # 1回目の Redo: delete_redo は降順(1,0)で削除するため、
+        # 1件目(page 1)は成功し2件目(page 0)で失敗する
+        app._redo()
+        assert len(app.doc) == original_count - 1
+
+        # 2回目の Redo: 障害解消後、残り1件も削除しきる（重複削除は起きない）
+        app._redo()
+        assert len(app.doc) == original_count - len(targets)
+
+        # 再試行成功直後の undo_stack は「当初の全2件ぶんの実データ」を表す
+        # （欠陥時は再試行時に処理した1件のみに縮小されていた）
+        assert len(app._undo_stack) == 1
+        undo_state = app._undo_stack[-1]
+        assert undo_state["op"] == "delete"
+        assert len(undo_state["data"]) == 2
+        assert {page_i for page_i, _ in undo_state["data"]} == {0, 1}
+        for _page_i, blob in undo_state["data"]:
+            assert blob is not None
+
+        # Undo: 両ページとも復元される（欠陥時は1件しか復元されなかった）
+        app._undo()
+        assert len(app.doc) == original_count
+        after_digests = [_page_digest(app.doc[i]) for i in range(len(app.doc))]
+        assert before_digests == after_digests
+
+        # さらに Redo: 元のシーケンスと一致する（両ページ削除）
+        app._redo()
+        assert len(app.doc) == original_count - len(targets)
+
     def test_merge_resize_undo_partial_failure_preserves_remaining_and_retry_completes(
         self, monkeypatch
     ):
