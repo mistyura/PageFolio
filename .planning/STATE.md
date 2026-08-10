@@ -5,15 +5,15 @@ milestone_name: 安全性・整合性の是正 + OpenAI プロバイダ追加
 current_phase: 01
 current_phase_name: safety-rollback
 status: executing
-stopped_at: Completed 01-03-PLAN.md
-last_updated: "2026-08-10T09:00:59.010Z"
+stopped_at: Completed 01-04-PLAN.md
+last_updated: "2026-08-10T09:33:16.604Z"
 last_activity: 2026-08-10
 last_activity_desc: v1.9.0 ROADMAP.md 作成完了
 progress:
   total_phases: 3
   completed_phases: 0
   total_plans: 5
-  completed_plans: 3
+  completed_plans: 4
   percent: 0
 ---
 
@@ -29,11 +29,11 @@ See: .planning/PROJECT.md (updated 2026-08-10)
 ## Current Position
 
 Phase: 01 (safety-rollback) — EXECUTING
-Plan: 4 of 5
+Plan: 5 of 5
 Status: Ready to execute
 Last activity: 2026-08-10 — Phase 01 execution started
 
-Progress: [██████░░░░] 60%
+Progress: [████████░░] 80%
 
 ## v1.9.0 Phase Map
 
@@ -127,6 +127,7 @@ Progress: [██████░░░░] 60%
 | Phase 01 P01 | 71min | 3 tasks | 2 files |
 | Phase 01 P02 | 約35min | 3 tasks | 9 files |
 | Phase 01 P03 | 約20min | 3 tasks | 2 files |
+| Phase 01 P04 | 約20min | 3 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -225,6 +226,8 @@ Decisions are logged in PROJECT.md Key Decisions table.
 - [Phase ?]: [01-03] D-15: sections.py:_on_template_change の save_prompt_file 即時呼び出し2箇所を削除し、外部プロンプトファイルへの書き込みを dialog.py:_apply の1経路へ一本化した（dialog.py は無改造）
 - [Phase ?]: [01-03] D-18: _has_unsaved_template_changes から prompt_file_exists による早期False分岐のみを削除し、未選択時ロジックには触れない最小差分にした（Pitfall 5 回避）
 - [Phase ?]: [01-03] テストの書き込み監視は撤去済みシンボルではなく pagefolio.settings.save_prompt_file を横断的にモニタするスタブへ統一した
+- [Phase ?]: [01-04]: D-08〜D-10/D-14 の通りに _do_insert を実装。プラン原文の『total を直書き』ではなく、delete_page が巻き戻しループ途中で失敗する部分成功ケースにも対応できるよう removed（実際に削除できた件数）を差し引いた residual を Undo state の件数フィールドへ反映する版を採用（Rule 1: 既存ページ誤削除の潜在バグ防止）。典型的な失敗系テストでは removed=0 のため計画の想定挙動と結果は同一
+- [Phase ?]: [01-04]: D-11 の通り _duplicate_page の _save_undo("duplicate") を try ブロック内・実処理成功後へ移動。D-13/D-14 の通り _undo/_redo の _restore_state 失敗時は _push_evicting でスタックへ戻し _dispose_state は呼ばない（Pitfall 4 回避・履歴喪失とBlob二重解放を同時に防止）
 
 ### Pending Todos
 
@@ -332,8 +335,8 @@ Decisions are logged in PROJECT.md Key Decisions table.
 
 **Resume file:** None
 
-Last session: 2026-08-10T09:00:58.990Z
-Stopped at: Completed 01-03-PLAN.md
+Last session: 2026-08-10T09:33:16.583Z
+Stopped at: Completed 01-04-PLAN.md
 
 ## Operator Next Steps
 
