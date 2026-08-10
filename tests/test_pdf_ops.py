@@ -1169,6 +1169,112 @@ class TestAllOpsUndoRedoRoundtrip:
         for entry in list(app._undo_stack) + list(app._redo_stack):
             assert "pdf_bytes" not in entry
 
+    def test_duplicate_undo_redo_undo_roundtrip(self, sample_pdf_doc):
+        """duplicate: do→undo→redo→undo（2回目）の4手往復でページ数・
+        digest列が操作前と一致することを検証する（V190-UNDO-02・D-17
+        insert_redo 非対称復元バグ回帰テストの水平展開）。"""
+        app = self._make_fake_app(sample_pdf_doc)
+        original_count = len(app.doc)  # 3
+        pno = 1
+        before_digests = [_page_digest(app.doc[i]) for i in range(len(app.doc))]
+
+        # do: ページ1を複製
+        app._save_undo("duplicate", pno=pno)
+        tmp = fitz.open()
+        tmp.insert_pdf(app.doc, from_page=pno, to_page=pno)
+        app.doc.insert_pdf(tmp, start_at=pno + 1)
+        tmp.close()
+        assert len(app.doc) == original_count + 1
+
+        # 1回目の Undo: 複製前の状態に戻る
+        app._undo()
+        assert len(app.doc) == original_count
+        after_undo_digests = [_page_digest(app.doc[i]) for i in range(len(app.doc))]
+        assert before_digests == after_undo_digests
+
+        # Redo: 複製ページが復元される
+        app._redo()
+        assert len(app.doc) == original_count + 1
+
+        # 2回目の Undo: ここでページが重複せず、複製前の状態に正しく戻ること
+        app._undo()
+        assert len(app.doc) == original_count
+        after_second_undo_digests = [
+            _page_digest(app.doc[i]) for i in range(len(app.doc))
+        ]
+        assert before_digests == after_second_undo_digests
+
+        for entry in list(app._undo_stack) + list(app._redo_stack):
+            assert "pdf_bytes" not in entry
+
+    def test_merge_undo_redo_undo_roundtrip(self, sample_pdf_doc, multi_pdf_files):
+        """merge: do→undo→redo→undo（2回目）の4手往復でページ数・digest列が
+        操作前と一致することを検証する（V190-UNDO-02）。"""
+        app = self._make_fake_app(sample_pdf_doc)
+        original_count = len(app.doc)  # 3
+        before_digests = [_page_digest(app.doc[i]) for i in range(len(app.doc))]
+
+        # do: 1ページ PDF を結合（末尾に追加）
+        app._save_undo("merge")
+        src = fitz.open(multi_pdf_files[0])  # 1ページ: "File1 Page1"
+        app.doc.insert_pdf(src)
+        src.close()
+        assert len(app.doc) == original_count + 1
+
+        # 1回目の Undo: 結合前の状態に戻る
+        app._undo()
+        assert len(app.doc) == original_count
+        after_undo_digests = [_page_digest(app.doc[i]) for i in range(len(app.doc))]
+        assert before_digests == after_undo_digests
+
+        # Redo: 結合ページが復元される
+        app._redo()
+        assert len(app.doc) == original_count + 1
+
+        # 2回目の Undo: 結合前の状態に正しく戻ること
+        app._undo()
+        assert len(app.doc) == original_count
+        after_second_undo_digests = [
+            _page_digest(app.doc[i]) for i in range(len(app.doc))
+        ]
+        assert before_digests == after_second_undo_digests
+
+        for entry in list(app._undo_stack) + list(app._redo_stack):
+            assert "pdf_bytes" not in entry
+
+    def test_merge_resize_undo_redo_undo_roundtrip(self, sample_pdf_doc):
+        """merge_resize: do→undo→redo→undo（2回目）の4手往復でページ数・
+        digest列が操作前と一致することを検証する（V190-UNDO-02）。"""
+        app = self._make_full_fake_app(sample_pdf_doc)
+        original_count = len(app.doc)  # 3
+        original_digests = [_page_digest(app.doc[i]) for i in range(original_count)]
+
+        # do: ページ0,1を横並びで結合（A3 サイズ）
+        targets = [0, 1]
+        app._do_merge_resize(targets, "horizontal", 1190, 842)
+        assert len(app.doc) == original_count - 1
+
+        # 1回目の Undo: 元のページ構成に戻る
+        app._undo()
+        assert len(app.doc) == original_count
+        after_undo_digests = [_page_digest(app.doc[i]) for i in range(len(app.doc))]
+        assert original_digests == after_undo_digests
+
+        # Redo: 結合後の状態に戻る
+        app._redo()
+        assert len(app.doc) == original_count - 1
+
+        # 2回目の Undo: ここでページが壊れず元のページ構成に正しく戻ること
+        app._undo()
+        assert len(app.doc) == original_count
+        after_second_undo_digests = [
+            _page_digest(app.doc[i]) for i in range(len(app.doc))
+        ]
+        assert original_digests == after_second_undo_digests
+
+        for entry in list(app._undo_stack) + list(app._redo_stack):
+            assert "pdf_bytes" not in entry
+
 
 # ===== 挿入失敗ロールバック・複製Undoタイミング（V190-SAFE-04/05・Phase01 Plan04）=====
 
