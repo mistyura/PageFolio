@@ -926,6 +926,46 @@ class TestAllOpsUndoRedoRoundtrip:
         for entry in list(app._undo_stack) + list(app._redo_stack):
             assert "pdf_bytes" not in entry
 
+    def test_delete_undo_apply_inverse_does_not_capture_blob(
+        self, sample_pdf_doc, monkeypatch
+    ):
+        """WR-01 回帰テスト: delete の undo（_apply_inverse の "delete"→
+        "delete_redo" 変換）で _capture_page_blob が呼ばれないことを検証する。
+
+        修正前は mutation（ページ再挿入）より前のタイミングで
+        _capture_page_blob(page_i) を呼んでおり、まだ挿入されていない
+        ページ位置の無関係な内容を誤ってキャプチャした上、無駄な Blob
+        確保（後で解放されるまでリソースを握る）が発生していた。
+        delete_redo の data は page_i のみ使用し blob は参照しないため、
+        修正後はプレースホルダ（None）になる。
+        """
+        import pagefolio.file_ops as fo
+
+        app = self._make_fake_app(sample_pdf_doc)
+        targets = sorted([0, 1], reverse=True)
+        app._save_undo("delete", targets=targets)
+        for i in targets:
+            app.doc.delete_page(i)
+
+        capture_calls = []
+        original_capture = fo.FileOpsMixin._capture_page_blob
+
+        def tracking_capture(self_app, page_i):
+            capture_calls.append(page_i)
+            return original_capture(self_app, page_i)
+
+        monkeypatch.setattr(fo.FileOpsMixin, "_capture_page_blob", tracking_capture)
+
+        app._undo()
+
+        # delete → delete_redo 変換で _capture_page_blob が呼ばれていないこと
+        assert capture_calls == []
+        # redo スタックの data は page_i のみを保持し blob は None（プレースホルダ）
+        inverse = app._redo_stack[-1]
+        assert inverse["op"] == "delete_redo"
+        for _page_i, blob in inverse["data"]:
+            assert blob is None
+
     @pytest.mark.parametrize("src,dest", [(0, 2), (0, 3), (2, 0), (1, 3)])
     def test_move_roundtrip(self, sample_pdf_doc, src, dest):
         """move: 実 dnd 規約（actual_dest=最終位置, 末尾ドロップ dest>=n 含む）で

@@ -326,13 +326,15 @@ class FileOpsMixin:
             inv["data"] = (page_i, (cb.x0, cb.y0, cb.x1, cb.y1))
         elif op == "delete":
             # delete の逆（undo 後に redo するための逆デルタ）:
-            # _restore_state(delete) は insert を実行（undo = 削除ページを復元）。
-            # redo 用には「復元されたページを再削除」する情報が必要。
-            # op="delete_redo": 現在（挿入済み）のページ bytes をキャプチャして保存。
+            # _restore_state(delete) はこの後 insert を実行する（undo = 削除
+            # ページを復元）。_apply_inverse はその mutation より前に呼ばれる
+            # ため、この時点では対象ページはまだ未挿入で、_capture_page_blob
+            # (page_i) を呼んでも無関係な別ページの内容を誤ってキャプチャ
+            # してしまう（WR-01）。delete_redo の restore・次段の inverse は
+            # どちらも page_i のみを参照し blob を使わないため、無駄な
+            # キャプチャ・Blob 保持を避けるためプレースホルダ（None）にする。
             inv["op"] = "delete_redo"
-            inv["data"] = [
-                (page_i, self._capture_page_blob(page_i)) for page_i, _ in state["data"]
-            ]
+            inv["data"] = [(page_i, None) for page_i, _ in state["data"]]
         elif op == "delete_redo":
             # delete_redo の逆（redo 後に undo するため）:
             # _restore_state(delete_redo) は delete を実行する。
