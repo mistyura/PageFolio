@@ -1,8 +1,8 @@
 ---
 phase: 01-safety-rollback
-reviewed: 2026-08-10T10:04:43Z
+reviewed: 2026-08-10T12:00:00Z
 depth: standard
-files_reviewed: 14
+files_reviewed: 15
 files_reviewed_list:
   - pagefolio/app.py
   - pagefolio/dialogs/batch_ocr.py
@@ -18,270 +18,307 @@ files_reviewed_list:
   - tests/test_password.py
   - tests/test_pdf_ops.py
   - tests/test_provider_ui.py
+  - tests/test_undo_stress.py
 findings:
   critical: 1
-  warning: 3
+  warning: 2
   info: 0
-  total: 4
+  total: 3
 status: issues_found
 ---
 
-# Phase 01: Code Review Report
+# Phase 01: Code Review Report（再レビュー・iteration 2）
 
-**Reviewed:** 2026-08-10T10:04:43Z
+**Reviewed:** 2026-08-10T12:00:00Z
 **Depth:** standard
-**Files Reviewed:** 14
+**Files Reviewed:** 15
 **Status:** issues_found
 
 ## Summary
 
-対象は `01-safety-rollback`（v1.9.0）の5プラン: (01-01) 保存経路の暗号化維持、
-(01-02) OCR OFF ガードの全経路配線、(01-03) LLM設定ダイアログの外部プロンプト
-ファイル書き込みの一本化、(01-04) 挿入ロールバック・複製Undo後置化・
-Undo/Redo復元失敗時のstate保全、(01-05) duplicate/merge/merge_resize の
-4手往復回帰テスト。
+前回レビュー（`01-REVIEW.md` iteration 1、`cb5344e`/`747ef9c`/`4e5dbc9`/`2768af7`
+で fix 済み）の CR-01・WR-01・WR-02・WR-03 は、いずれも現在のソースで
+再確認したところ **回帰なく正しく維持されている**：
 
-`git diff 5e33fb9..HEAD` で実差分を確認し、変更箇所を中心にレビューした。
+- CR-01（多ページ復元の部分適用未対応）: `PartialRestoreError` /
+  `_restore_partial_error` / `_handle_partial_restore` による保護が
+  `delete`/`delete_redo`/`page_edit`/`insert_undo`/`insert_redo`/
+  `merge_undo`/`merge_resize`/`merge_resize_undo` の全ループへ実装済み。
+- WR-01（delete→delete_redo の無意味な Blob キャプチャ）: プレースホルダ
+  （`None`）化済みで `_capture_page_blob` が呼ばれないことを確認。
+- WR-02（OCR OFF ガードの既定値不一致）: `DEFAULT_OCR_PROVIDER` へ一元化
+  済みで `app.py`/`ocr.py` 双方が同一定数を参照。
+- WR-03（分割保存のパスワード保護喪失）: 警告確認ダイアログが実装済み。
 
-- **暗号化維持（01-01）**: `_save_as` / `_save_file`（incremental・フォール
-  バック双方）/ `_save_compressed`（上書き・別名保存双方）/ `_overwrite_current_file`
-  の全経路で `encryption=fitz.PDF_ENCRYPT_KEEP` が既定化されており、
-  `derive_pdf_has_password` による論理導出も明示指定（AES_256/NONE）を
-  壊さない実装になっている。回帰テスト（`tests/test_password.py`）も
-  実ファイルの `needs_pass`/`authenticate` を検証しており妥当。この点は
-  クリーン。
-- **OCR OFF ガード（01-02）**: `build_provider` の `"off"` 拒否・プラグイン
-  フォールバックより前段でのブロック・`_start_ocr`/バッチOCR/OCRDialog内
-  再生成/実行開始/メニュー入口の全経路にガードが配線されており、実行時
-  スナップショット（`s = dict(self.app.settings)` 等）から都度 `ocr_provider`
-  を読むため stale な `self.provider` に依存しない設計になっている。この点も
-  クリーン。
-- **プロンプトファイル書き込み一本化（01-03）**: `sections.py` からの書き込みが
-  撤去され `dialog.py:_apply` へ一本化されている。テストも新契約へ追随済み。
-- **ロールバック・Undo後置化（01-04）**: `_do_insert` の巻き戻し・
-  `_duplicate_page` の Undo 後置確定は概ね正しく実装されているが、
-  `_undo`/`_redo` の復元失敗保護（新設）に、複数ページにまたがる復元処理が
-  **途中まで成功してから失敗した場合**の部分適用を考慮しない欠陥がある
-  （CR-01・下記）。
-- **4手往復テスト（01-05）**: `_page_digest`（テキスト内容ハッシュ相当）で
-  ページ数だけでなく内容一致・順序一致まで検証しており、D-17 のような
-  非対称復元バグを捕捉できるテスト品質になっている。
+今回のフォーカスである plan 01-06（`f9973ce`..`e41b7e3`、`_pending_inverse`
+による逆デルタの部分失敗またぎ蓄積方式）を `pagefolio/file_ops.py` 全体に
+わたって精査した。`_merge_pending_inverse` の pop による所有権移譲、
+`merge_resize`/`merge_resize_undo` の identity 共有維持（`inv["data"] is
+state["data"]`）、`_merged_page_deleted` フラグの hygiene（成功時に必ず
+pop され次段へ漏れない）、`_restore_partial_error` への `pending_inverse`
+引き渡し（全呼び出し箇所でマージ済みリストが渡っている）は、いずれも
+設計どおり正しく機能していることを確認した。テスト（`TestUndoRedoRestoreFailure`
+の一連の回帰テスト）も digest 一致・スタック内容の実データ検証を伴っており、
+ページ数だけを見る vacuous なテストにはなっていない。
+
+一方で、この精査の過程で **`page_edit` op の復元ループに新規の重大な
+データ破損バグ（CR-02・今回新規発見）** を発見した。`delete_page` が
+成功した直後に `insert_pdf` が失敗するという、このフェーズ自身が
+前提としている「fitz 呼び出しは途中で失敗しうる」という脅威モデルの
+中で、既存の partial-failure テストがカバーしていない具体的な１本の
+分岐で、doc からは既に失われたページ内容を保持する Blob を誤って
+解放してしまい、かつ再試行時に隣接ページを巻き添えで喪失しうる。
+またその副産物として、複数の op の mutation ループで一時 `fitz.Document`
+（`tmp`）が例外発生時に close されず残る小規模なリソースリーク
+（WR-04）と、`insert`（base op）の delete ループが CR-01 と同型の
+部分適用保護から意図的に除外されたまま残っている点（WR-05）を
+警告として記録する。
 
 ## Critical Issues
 
-### CR-01: Undo/Redo 復元失敗保護が「多ページ復元の部分適用」を考慮していない
+### CR-02: `page_edit` の復元で `delete_page` 成功後に `insert_pdf` が失敗すると、直前にキャプチャした Blob が解放されページ内容が永久に失われる（さらに再試行で隣接ページも巻き添えで消える）
 
-**File:** `pagefolio/file_ops.py:191-234`（`_undo`/`_redo` の新設 try/except）
-および `pagefolio/file_ops.py:385-478`（`_restore_state` の複数ページ
-ループ: `delete` / `page_edit` / `insert_undo` / `insert_redo` /
-`merge_undo` / `merge_resize` / `merge_resize_undo` / `delete_redo`）
+**File:** `pagefolio/file_ops.py:555-589`（`_restore_state` の
+`op == "page_edit"` 分岐）
 
 **Issue:**
-今回新設された `_undo`/`_redo` の保護は次の前提に立っている:
-
-> 「復元失敗時は pop した state を `_push_evicting` 経由でスタックへ戻す。
-> `_dispose_state` は呼ばない — state はまだ消費されていないものとして
-> 温存し、次回の undo で再試行できるようにする」（file_ops.py:199-204 の
-> コメント）
-
-しかしこの前提は **`_restore_state` の適用が atomic（全成功 or 無変更）で
-あることを暗黙に要求している**のに対し、複数ページを順次処理するop
-（`delete`/`page_edit`/`insert_undo`/`insert_redo`/`merge_undo`/
-`merge_resize`/`merge_resize_undo`/`delete_redo`）の実装はforループで
-1ページずつ `self.doc.insert_pdf(...)` / `self.doc.delete_page(...)` を
-呼んでおり、途中の1件（例: 2ページ目のBlobが破損していて
-`fitz.open(stream=...)` が例外）で失敗した場合、**それより前のページは
-既にdocへ適用済み**のまま例外が送出される。
-
-この時 `_undo`/`_redo` の except節は「doc は無変更だった」という前提で
-同一 `state`（元のN件ぶんのデータ）をそのままスタックへ戻し、
-ユーザーには「次回 Ctrl+Z で再試行できます」という趣旨のブロッキング
-エラーのみを表示する。しかし実際には doc は既に一部ページが
-挿入/削除された状態であり、`current_page`/`selected_pages`の更新も
-行われないまま（`_restore_state` 末尾の更新処理に到達しない）中断する。
-
-ユーザーがエラーダイアログの案内通りに再度 Undo を実行すると、
-`_restore_state` は同じ `state["data"]`（N件フル分）を再度先頭から
-適用しようとし、**既に成功していたページに対して再度 insert/delete が
-行われ、ページの重複挿入や意図しない追加削除**が発生し得る
-（`_do_insert` の巻き戻し処理が `removed`/`residual` を追跡して
-部分適用に対応しているのとは対照的に、`_restore_state` 側にはこの
-追跡がない）。
-
-`page_ops.py` の `_do_insert`（本フェーズの01-04で改修）は同種の問題を
-正しく扱っている（挿入済み件数を`total`で追跡し、巻き戻しが部分的にしか
-成功しなかった場合は実際の残存数を state へ反映する）。同じ設計思想が
-`_restore_state` の多ページループには適用されていない。
-
-**再現条件の例（delete の undo）**: `_capture_page_blob` で取得した
-Blob のうち2件目以降がディスク上のtempfile退避（`FileBlob`、64KiB以上）
-であり、外部要因（アンチウイルスの隔離・一時ディレクトリのクリーンアップ・
-ディスク容量枯渇）で該当tempfileが読めなくなった場合、
-`self._blob_bytes(data)`→`data.load()` が例外を送出し、既に1ページ目は
-`insert_pdf` 済みの状態でループが中断する。
-
-**Fix:**
-`_restore_state` の複数ページ処理を、`_do_insert` と同様に「実際に何件
-適用できたか」を追跡し、部分適用が発生した場合は元の `state` をそのまま
-戻すのではなく、**未適用分のみを表す state** を作り直してスタックへ
-戻すこと。最低限、以下のいずれかの対応が必要:
 
 ```python
-# 例: delete の undo（insert 系）を部分適用対応にする場合のイメージ
-elif op == "delete":
-    applied = []
+elif op == "page_edit":
+    pending = []
+    applied = 0
     try:
         for page_i, page_bytes in state["data"]:
             tmp = fitz.open(stream=self._blob_bytes(page_bytes), filetype="pdf")
-            self.doc.insert_pdf(tmp, start_at=page_i)
-            tmp.close()
-            applied.append((page_i, page_bytes))
-    except Exception:
-        remaining = [item for item in state["data"] if item not in applied]
-        # 呼び出し元（_undo）が state["data"] を remaining に差し替えて
-        # push_evicting できるよう、専用の例外や戻り値で伝える
-        raise PartialRestoreError(remaining) from None
+            captured = self._capture_page_blob(page_i)
+            try:
+                self.doc.delete_page(page_i)
+                self.doc.insert_pdf(tmp, start_at=page_i)
+            except Exception:
+                self._release_blob(captured)
+                raise
+            finally:
+                tmp.close()
+            pending.append((page_i, captured))
+            applied += 1
+    except Exception as e:
+        ...
 ```
 
-もしくは、複数ページ処理の前に「全Blobをまずロードしきってから
-（`_blob_bytes` を先に全件呼んでバリデーションしてから）doc への
-適用ループに入る」ことで、少なくとも「Blobロード失敗」由来の例外は
-mutation前に確実に検出できるようにし、mutation自体（`insert_pdf`/
-`delete_page`）は極力アトミックな塊として扱う設計にする。
+`page_edit` は唯一「1ページを `delete_page` してから `insert_pdf` で
+差し替える」という **2段階 mutation** を行う op である（`delete`/
+`delete_redo`/`insert_undo`/`insert_redo` はいずれも単発の
+`insert_pdf` または `delete_page` のみで、この種の複合失敗は起こり
+得ない）。
 
-いずれの対応も難しい場合は、最低限「復元処理の途中で例外が発生した
-場合、doc が部分的に変更されている可能性がある」旨をエラーダイアログ
-文言に含め、Undo/Redoスタックをその時点でクリアして安全側に倒す
-（黙って再試行を促さない）フォールバックも検討に値する。
+`captured = self._capture_page_blob(page_i)` は、まさにこれから
+`delete_page` で消される **現在の（削除直前の）ページ内容**を捕捉する
+もので、この内容は次段の逆デルタ（redo 方向）に使われる、doc から
+消える瞬間の唯一のコピーである。
+
+ここで `self.doc.delete_page(page_i)` が成功し、直後の
+`self.doc.insert_pdf(tmp, start_at=page_i)` が失敗した場合を考える
+（`tmp` は既に正常にオープンできているため、失敗要因は `self.doc` 側
+のメモリ不足・内部破損・オブジェクトストリーム非互換等、CR-01 が
+既に「起こりうる」と明示している fitz 呼び出し失敗の同じカテゴリ）。
+このとき:
+
+1. `self.doc` は既に `page_i` の元内容を失っている（`delete_page` 成功）。
+2. 差し替え先の内容（`page_bytes`）も未挿入のまま（`insert_pdf` 失敗）。
+3. `except Exception: self._release_blob(captured); raise` が、doc から
+   消えた内容の唯一のコピーである `captured` を **解放（破棄）** する。
+
+この時点で、そのページの内容（削除前の "現在" の状態）は doc にも
+Blob にも存在しない、**恒久的に失われた状態**になる。
+
+さらに悪いことに、この失敗は `except Exception as e:`（外側）で捕捉され
+`_restore_partial_error(state, state["data"][applied:], e, ...)` により
+「未適用分」として `page_i` を含む remaining state がスタックへ戻される
+（`applied` はこの反復で加算される前に例外が出るため、このページは
+「未適用」＝再試行対象のまま）。ユーザーが案内どおり再度 Undo/Redo を
+実行すると:
+
+- `tmp = fitz.open(page_bytes)` は変わらず成功する。
+- しかし `captured2 = self._capture_page_blob(page_i)` は、**doc が既に
+  シフトした状態**（`page_i` の位置には元々 `page_i+1` にあった別ページ
+  の内容が来ている）に対して呼ばれるため、**無関係な隣接ページの内容を
+  誤ってこの page_edit エントリの一部として捕捉**してしまう。
+- 再試行の `delete_page(page_i)`/`insert_pdf(tmp)` が成功すると、doc の
+  見た目上のページ数・`page_bytes` の内容自体は最終的に正しい位置へ
+  収まるように見えるが、**実際には隣接していた別ページ（例: 元 P6）が
+  丸ごと削除され消失している**。加えて `captured2`（誤って隣接ページの
+  内容を保持した Blob）が次段の逆デルタ（redo 方向）に組み込まれるため、
+  以降の Redo でこの巻き添えページの内容が誤った位置へ復元されるという
+  二次被害も発生する。
+
+これは CR-01 で確立された「fitz 呼び出しは外的要因で途中失敗しうる」
+という脅威モデルの範囲内で発生しうる、**ドキュメントの内容が静かに
+永久欠損する**（かつ隣接ページまで巻き添えにする）シナリオであり、
+Critical（データ損失リスク）に分類する。
+
+既存の回帰テスト `test_page_edit_partial_retry_then_redo_undo_roundtrip`
+（`tests/test_pdf_ops.py:2366`）は `_blob_bytes` の失敗（`tmp = fitz.open(...)`
+より前・`delete_page` 呼び出しより前のタイミング）のみを模しており、
+`delete_page` 成功後に `insert_pdf` が失敗するこのシナリオはカバーして
+いない（`captured` が解放される分岐そのものに到達しない）。
+
+**Fix:**
+
+`delete_page` が成功した後に `insert_pdf` が失敗した場合、`captured`
+は「doc から失われた内容の最後のコピー」であり解放してはならない。
+最低限、以下のいずれかの対応が必要:
+
+1. **ロールバックを試みる**: `insert_pdf(tmp, ...)` が失敗した場合、
+   `captured` を使って `insert_pdf(fitz.open(stream=self._blob_bytes(captured)),
+   start_at=page_i)` で即座に元の内容を復元しようと試みる。ロールバック
+   自体が成功すれば doc は mutation 前の状態に戻るため `captured` を
+   通常どおり解放してよい。ロールバックも失敗した場合は `captured` を
+   **解放せず**、`remaining_state` の一部として保持し、ユーザーへ
+   「このページの内容が失われた可能性がある」ことを明示するエラー文言
+   を出す。
+
+   ```python
+   try:
+       self.doc.delete_page(page_i)
+       try:
+           self.doc.insert_pdf(tmp, start_at=page_i)
+       except Exception:
+           # 差し替え失敗: 削除前の内容を captured から復元しロールバック
+           rb = fitz.open(stream=self._blob_bytes(captured), filetype="pdf")
+           try:
+               self.doc.insert_pdf(rb, start_at=page_i)
+           finally:
+               rb.close()
+           raise
+   except Exception:
+       self._release_blob(captured)  # ロールバック成功時のみ安全に解放可能
+       raise
+   ```
+
+2. 最低限の対応として、`delete_page` 成功後の `insert_pdf` 失敗だけは
+   `captured` を解放せず、専用のエラー経路（例えば「このページの内容が
+   失われた可能性があります。ファイルを閉じずに手動で確認してください」
+   という強い警告）へ分岐させる。
+
+いずれの対応でも、page_edit の partial-failure テストに
+「`insert_pdf` 側（`delete_page` 成功後）が失敗するケース」を追加し、
+(a) 内容が失われないこと、(b) 隣接ページが巻き添えにならないことを
+digest 一致で検証すること。
 
 ## Warnings
 
-### WR-01: `_apply_inverse` の `delete`→`delete_redo` 変換が意味のない（誤った内容の）Blob をキャプチャしている
+### WR-04: `page_edit` 以外の複数ページ復元ループで、mutation 失敗時に一時 `fitz.Document`（`tmp`）が `close()` されず残る
 
-**File:** `pagefolio/file_ops.py:256-264`（`_apply_inverse`、`op == "delete"` 分岐）
-
-**Issue:**
-`_restore_state` は `inverse = self._apply_inverse(state)` を **doc への
-mutation より前**に呼ぶ。`op == "delete"` の場合、`_apply_inverse` は
-
-```python
-inv["op"] = "delete_redo"
-inv["data"] = [
-    (page_i, self._capture_page_blob(page_i)) for page_i, _ in state["data"]
-]
-```
-
-を実行するが、この時点では `page_i` の位置にはまだ削除されたページが
-再挿入されておらず（mutationはこの後の `elif op == "delete":` ブロックで
-行われる）、`_capture_page_blob(page_i)` は **無関係な別ページの内容**を
-キャプチャしてしまう。コメントには「現在（挿入済み）のページ bytes を
-キャプチャして保存」とあるが、実際には未挿入の時点で呼ばれており事実と
-異なる。
-
-実害としては、この誤ったBlobは `delete_redo` state の `data` フィールドに
-格納されるが、消費側（`_restore_state` の `op == "delete_redo"` 分岐、
-および次段の `_apply_inverse` の `op == "delete_redo"` 分岐）は
-いずれも `for page_i, _ in state["data"]` という形で **Blobを常に
-アンダースコアで捨てて `page_i` のみ使用**しているため、誤ったBlobが
-実際にPDFへ書き戻されることはない（次に redo → undo と辿った時点で
-`_apply_inverse` が改めて正しいタイミングで再キャプチャする）。
-
-現状は無害だが、以下の理由でコード品質上の問題として指摘する:
-- 不要な `_capture_page_blob` 呼び出し（`UndoBlobStore` へのメモリ/
-  一時ファイル確保を伴う）が毎回発生し、後で `_dispose_state` により
-  解放されるまでリソースを無駄に握る。
-- コメントが実態と矛盾しており、将来このフィールドを「意味のある内容」
-  として消費するコードが追加された場合、静かにデータ破損する地雷になる。
-
-**Fix:** `delete`→`delete_redo` の変換では、`page_i` のリストだけを
-保持し、`_capture_page_blob` を呼ばない（本来 `delete_redo` の
-restore・further-inverse どちらも `page_i` しか使っていないため、
-`data` を `[(page_i, None) for page_i, _ in state["data"]]` のように
-プレースホルダ化するか、専用の軽量フィールドに置き換える）。
-
-```python
-elif op == "delete":
-    inv["op"] = "delete_redo"
-    # delete_redo の restore/次段 inverse はどちらも page_i のみを使い
-    # blob は参照しない。挿入前のこの時点では正しい内容を捕捉できない
-    # ため、無駄な _capture_page_blob 呼び出しをしない。
-    inv["data"] = [(page_i, None) for page_i, _ in state["data"]]
-```
-
-（`_dispose_state` 側の `delete_redo` 分岐も `blob` が `None` の場合を
-許容するよう `_release` のガードで対応可能）
-
-### WR-02: OCR OFF ガードの既定値が `build_provider` と UI 側で不一致
-
-**File:** `pagefolio/app.py:344-378`（`_update_ocr_buttons_state` /
-`_update_batch_menu_state`、後者は本フェーズ新設）と
-`pagefolio/ocr.py:435`（`build_provider`）
+**File:** `pagefolio/file_ops.py:500-525`（`delete`）、`617-641`
+（`insert_undo`）、`682-696`（`merge_undo`）、`697-741`（`merge_resize`）、
+`742-778`（`merge_resize_undo`）
 
 **Issue:**
-`_update_batch_menu_state`（本フェーズ新設）・`_update_ocr_buttons_state`
-（既存）はいずれも
+`page_edit` の分岐（`file_ops.py:568-579`）は `tmp = fitz.open(...)` を
+`try/finally: tmp.close()` で保護しており、`insert_pdf` が失敗しても
+`tmp` は確実に close される。しかし他の op（`delete`/`insert_undo`/
+`merge_undo`/`merge_resize` フェーズ2/`merge_resize_undo`）は同じ
+パターンで `tmp = fitz.open(...)` → `self.doc.insert_pdf(tmp, ...)` →
+`tmp.close()` を実行しているが、`finally` で保護されていないため、
+`insert_pdf` が例外を送出すると `tmp.close()` に到達せず、その
+`fitz.Document` オブジェクトが未クローズのまま例外ハンドラへ抜ける
+（例: `file_ops.py:512-517`）。
 
 ```python
-is_ocr_on = self.settings.get("ocr_provider", "off") != "off"
+for page_i, page_bytes in state["data"]:
+    tmp = fitz.open(stream=self._blob_bytes(page_bytes), filetype="pdf")
+    self.doc.insert_pdf(tmp, start_at=page_i)
+    tmp.close()
+    pending.append((page_i, None))
+    applied += 1
 ```
 
-のように `"ocr_provider"` キー欠落時のデフォルトを `"off"` としている。
-一方 `build_provider` は
+これは `UndoBlobStore` が管理する Blob（tempfile/メモリ）のリークでは
+なく、あくまで一時的な `fitz.Document` ラッパーオブジェクト（ストリーム
+バッキング）の未解放であり、CR-01/CR-02 のような即座のデータ破損には
+つながらない。ただし、この種の例外パスは PartialRestoreError の設計上
+「異常系だが十分に起こりうる」前提であるため、繰り返し失敗が続く環境
+（例: 継続的な Blob ロード障害下でユーザーが Undo/Redo を連打する）では
+未クローズの `fitz.Document` が積み重なる可能性がある。
+
+**Fix:** `page_edit` と同様に `finally: tmp.close()` で保護する。例:
 
 ```python
-name = settings.get("ocr_provider", "lmstudio")
+for page_i, page_bytes in state["data"]:
+    tmp = fitz.open(stream=self._blob_bytes(page_bytes), filetype="pdf")
+    try:
+        self.doc.insert_pdf(tmp, start_at=page_i)
+    finally:
+        tmp.close()
+    pending.append((page_i, None))
+    applied += 1
 ```
+同型の修正を `insert_undo`・`merge_undo`・`merge_resize`（元ページ再挿入
+ループ）・`merge_resize_undo`（`merged_bytes` 挿入）の各箇所へ適用する。
 
-とデフォルトを `"lmstudio"` にしている。通常経路では `_load_settings()`
-が常に `"ocr_provider": "off"` を補完するため実運用では顕在化しないが、
-本フェーズが「OCR OFF を構造的に拒否する」ことを目的にしている以上、
-UI側とプロバイダ生成側でデフォルト値の解釈が食い違っているのは
-安全設計として脆い。設定辞書が何らかの理由（プラグイン供給の設定・
-テスト・将来の設定移行処理のバグ）で `ocr_provider` キーを欠いた場合、
-メニュー/ボタンは disabled 表示になる一方で `build_provider` は
-LM Studio プロバイダを普通に生成してしまい、「見た目はOFFなのに
-実行経路は動く」という食い違いが起こり得る。
+### WR-05: `insert`（base op）の削除ループは CR-01 の部分適用保護から意図的に除外されたままであり、`page_edit` と同型の巻き添え喪失リスクが残る
 
-**Fix:** 既定値を一箇所（例えば `DEFAULT_OCR_PROVIDER = "off"` のような
-定数）に集約し、UI側・`build_provider`側の双方で同じ既定値を参照する
-ようにする。
-
-### WR-03: 分割保存（`_split_by_range`/`_split_each_page`）がパスワード保護を引き継がない
-
-**File:** `pagefolio/page_ops.py:1008-1043`（`_split_by_range`）、
-`pagefolio/page_ops.py:1067-1082`（`_split_each_page`）※いずれも
-本フェーズの差分外（未変更コード）
+**File:** `pagefolio/file_ops.py:613-616`（`_restore_state` の
+`op == "insert"` 分岐）
 
 **Issue:**
-01-01 は「上書き保存・別名保存・縮小保存・上書きフォールバック」の
-4経路について `encryption=fitz.PDF_ENCRYPT_KEEP` を徹底し、パスワード
-保護PDFが平文で書き戻されないことを保証した。一方、`_split_by_range`/
-`_split_each_page` は新規に `fitz.open()` した空ドキュメントへ
-`insert_pdf` でページを複製し、
+`_apply_inverse`/`_restore_state` のコメント（`file_ops.py:436-437`、
+`613`）が明示しているとおり、`insert` op（ユーザーが複数ページを挿入した
+操作そのものの undo 方向 = 挿入ページの削除）は今回の V190-UNDO-01 の
+対象から意図的に除外されている:
 
 ```python
-out.save(out_path, **save_kwargs)  # save_kwargs に encryption 指定なし
+elif op == "insert":
+    insert_at, num = state["data"]
+    for _ in range(num):
+        self.doc.delete_page(insert_at)
 ```
 
-として保存している。`out` は新規に開いた（暗号化情報を持たない）
-ドキュメントであり、`encryption` 未指定時の既定 `PDF_ENCRYPT_KEEP` は
-「`out` 自身の（＝無暗号の）状態を維持する」ことを意味するため、元の
-PDFがパスワード保護されていても、分割後の個別PDFは**無条件で平文**に
-なる。ユーザーがパスワードを入力して開いた機密文書を分割保存すると、
-保護なしのファイルが静かに生成される。
+`num` が複数（例えば複数ページの PDF をまとめて挿入した場合）のとき、
+このループが `k` 回目（`k < num`）の `delete_page` で失敗すると、例外は
+`_undo`/`_redo` の **通常の**（`PartialRestoreError` ではない）
+`except Exception as e:` 節で捕捉される。この節は「doc は無変更だった」
+という前提で **元の（`num` 件ぶんの）state をそのまま**スタックへ
+戻す（`file_ops.py:299`/`331` の `self._push_evicting(..., state)`）。
 
-本フェーズの差分には含まれないため BLOCKER ではなく WARNING とするが、
-「保存経路の暗号化維持」という本フェーズのテーマに直接関係する残存
-ギャップであり、後続フェーズでの対応候補として明記しておく。
+しかし実際には doc は既に `k` ページ分削除済みであり、`insert_at` の
+位置には別の（本来削除対象ではない）コンテンツが来ている。ユーザーが
+案内どおり再度 Undo/Redo を実行すると、`for _ in range(num): delete_page(insert_at)`
+が **`num` 回**（`k` 回ではなく）再実行され、既に一部が削除済みの位置
+から追加で `num - k` 回削除が続き、**本来挿入されていなかった既存
+ページまで削除してしまう**（過剰削除・データ損失）。
 
-**Fix:** `self.pdf_has_password` が真の場合、分割前に元ドキュメントの
-パスワードを再入力させるか、`_suggest_save_name` と同様の確認ダイアログ
-を出した上で `save_kwargs["encryption"] = fitz.PDF_ENCRYPT_AES_256` +
-`owner_pw`/`user_pw` を設定して保存する（もしくは少なくとも「分割後の
-ファイルはパスワード保護されません」という警告を明示する）。
+これは CR-01 が「delete/page_edit/insert_undo/insert_redo/merge_undo/
+merge_resize/merge_resize_undo/delete_redo」の8 op について対処した
+のと同じクラスのバグが、`insert`（base op）にはコメントで明示的に
+「対象外」とされたまま残存していることを示す。トリガー条件はやや稀
+（`delete_page` が単体で mid-loop 失敗する必要があり、ここでは
+`_blob_bytes` 経由のロード失敗のような外部起因の失敗パターンが
+適用できない）だが、CR-01/CR-02 と同一の脅威モデル（fitz 呼び出しの
+mid-loop 失敗）の下では発生しうる。
+
+**Fix:** `insert` の削除ループも他の8 op と同型で「実際に削除できた
+件数」を追跡し、失敗時は `PartialRestoreError` で「残り `num - k` 件」
+を表す remaining state を返すようにする。この場合 Blob は関与しない
+ため、追跡自体は単純（`deleted_count` のみでよい）。
+
+```python
+elif op == "insert":
+    insert_at, num = state["data"]
+    deleted = 0
+    try:
+        for _ in range(num):
+            self.doc.delete_page(insert_at)
+            deleted += 1
+    except Exception as e:
+        remaining = [insert_at, num - deleted]
+        self._restore_partial_error(state, remaining, e)
+```
+（`insert` の `inverse`＝`insert_undo` は挿入ページの再構築のため
+`_apply_inverse` 側の扱いも合わせて確認すること。）
 
 ---
 
-_Reviewed: 2026-08-10T10:04:43Z_
+_Reviewed: 2026-08-10T12:00:00Z_
 _Reviewer: Claude (gsd-code-reviewer)_
 _Depth: standard_
