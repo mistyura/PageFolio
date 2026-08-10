@@ -14,7 +14,7 @@ from pagefolio.dialogs import PluginDialog, SettingsDialog
 from pagefolio.dnd import DnDMixin
 from pagefolio.file_drop import _setup_file_drop
 from pagefolio.file_ops import FileOpsMixin
-from pagefolio.ocr import OCRMixin
+from pagefolio.ocr import DEFAULT_OCR_PROVIDER, OCRMixin
 from pagefolio.page_ops import PageOpsMixin
 from pagefolio.pagination import clamp_page_size
 from pagefolio.plugins import PluginManager
@@ -341,7 +341,9 @@ class PDFEditorApp(
         ocr_provider が "off" のとき、またはドキュメントが開かれていないとき
         disabled 化する。外部送信・課金をゼロにする安全策（成功基準6・D-09）。
         """
-        is_ocr_on = self.settings.get("ocr_provider", "off") != "off"
+        # 01-REVIEW.md WR-02: キー欠落時の既定値は build_provider と同じ
+        # DEFAULT_OCR_PROVIDER を参照する（既定値の食い違いを一箇所へ集約）。
+        is_ocr_on = self.settings.get("ocr_provider", DEFAULT_OCR_PROVIDER) != "off"
         state = ["!disabled"] if (is_ocr_on and self.doc) else ["disabled"]
         for b in getattr(self, "_ocr_buttons", []):
             try:
@@ -364,7 +366,9 @@ class PDFEditorApp(
         index = getattr(self, "_batch_menu_index", None)
         if tools_menu is None or index is None:
             return
-        is_ocr_on = self.settings.get("ocr_provider", "off") != "off"
+        # 01-REVIEW.md WR-02: キー欠落時の既定値は build_provider と同じ
+        # DEFAULT_OCR_PROVIDER を参照する（既定値の食い違いを一箇所へ集約）。
+        is_ocr_on = self.settings.get("ocr_provider", DEFAULT_OCR_PROVIDER) != "off"
         try:
             if is_ocr_on:
                 tools_menu.entryconfig(

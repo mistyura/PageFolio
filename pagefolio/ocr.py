@@ -158,6 +158,21 @@ DEFAULT_OCR_MAX_TOKENS = -1  # -1: モデル側の最大値（context window）�
 # LM Studio は max_tokens=-1 でモデル最大値を使うため、通常は -1 で十分
 MAX_OCR_MAX_TOKENS = 262144
 DEFAULT_OCR_TEMPERATURE = 0.1  # OCR 用途は低温推奨（ハルシネーション抑制）
+# 01-REVIEW.md WR-02: settings["ocr_provider"] キー欠落時の既定値を一箇所に
+# 集約する。build_provider・app.py の UI 側活性判定（_update_ocr_buttons_state /
+# _update_batch_menu_state）の双方がこの定数を参照することで、「見た目は
+# OFF/ON なのに実行経路の判定は違う」という食い違いを防ぐ。
+#
+# 値は歴史的経緯により "lmstudio"（build_provider の既存後方互換契約 —
+# tests/test_ocr.py::test_no_ocr_provider_key_returns_lmstudio_provider が
+# 「ocr_provider キーなし設定でも LMStudioProvider を返す」ことを明示的に
+# 固定している）に合わせる。"off" 側へ統一すると、この既存の後方互換契約
+# を破壊しつつ LMStudioProvider（ローカル完結・外部送信なし）を拒否する
+# ことになり、得られる安全性向上より既存契約の破壊コストの方が大きい。
+# 通常経路では _load_settings() が常に "ocr_provider" を補完するため
+# 実運用では顕在化しないが、キー欠落時も UI 側と build_provider 側の
+# 判定が一致するよう単一の情報源に統一する。
+DEFAULT_OCR_PROVIDER = "lmstudio"
 DEFAULT_OCR_CONCURRENCY = 2  # API 呼び出しの並列度（1〜MAX_OCR_CONCURRENCY）
 MAX_OCR_CONCURRENCY = 8
 
@@ -432,7 +447,9 @@ def build_provider(settings, api_key=None, plugin_manager=None):
     # 関数内 import で循環 import を回避（_start_ocr の前例と同様）
     from pagefolio.ocr_providers import LMStudioProvider, OCRDisabledError
 
-    name = settings.get("ocr_provider", "lmstudio")
+    # 01-REVIEW.md WR-02: 既定値は DEFAULT_OCR_PROVIDER に集約（app.py の UI
+    # 側活性判定と同じ値を参照する）
+    name = settings.get("ocr_provider", DEFAULT_OCR_PROVIDER)
 
     if name == "off":
         # V190-SAFE-03・D-06: "off" のみを専用例外で拒否する（プロバイダ生成

@@ -203,6 +203,40 @@ class TestUpdateOcrButtonsState:
         for b in btns:
             assert b.last_state == ["disabled"]
 
+    def test_missing_ocr_provider_key_matches_build_provider_default(self):
+        """01-REVIEW.md WR-02 回帰テスト: settings に "ocr_provider" キーが
+        存在しない場合、UI 側（_update_ocr_buttons_state）の活性判定と
+        build_provider の実際の挙動が一致することを検証する。
+
+        修正前は UI 側の既定値が "off"（disabled 表示）、build_provider
+        側の既定値が "lmstudio"（プロバイダ生成に成功）と食い違っており、
+        「見た目は OFF なのに実行経路は動く」という危険な不一致があった。
+        通常経路では _load_settings() が常にキーを補完するため顕在化しない
+        が、DEFAULT_OCR_PROVIDER への一元化により両者が構造的に一致する
+        ことを担保する。
+        """
+        from pagefolio import ocr as ocr_module
+
+        btn = _ButtonStub()
+        settings_without_key = {}  # "ocr_provider" キーなし
+        _call_update_ocr_buttons_state(
+            settings=settings_without_key,
+            doc=object(),
+            ocr_buttons=[btn],
+        )
+        # UI 側: キー欠落時も enable される（build_provider が実際に
+        # プロバイダを生成できることと一致させる）
+        assert btn.last_state == ["!disabled"]
+
+        # build_provider 側: 同じ「キーなし」設定で例外を出さず生成できる
+        # （後方互換契約 test_no_ocr_provider_key_returns_lmstudio_provider
+        # と同じ前提）
+        provider = ocr_module.build_provider(dict(settings_without_key))
+        assert provider is not None
+
+        # 両者の既定値が同一の情報源（DEFAULT_OCR_PROVIDER）であること
+        assert ocr_module.DEFAULT_OCR_PROVIDER != "off"
+
 
 # ══════════════════════════════════════════════════════════════
 #  OCR-UI-03: OCRDialog クラウド/コスト/セッションキー/確認ロジック
