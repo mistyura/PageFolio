@@ -695,7 +695,7 @@ class FileOpsMixin:
         if not path:
             return
         try:
-            self.doc.save(path)
+            self.doc.save(path, encryption=fitz.PDF_ENCRYPT_KEEP)
             self.filepath = path
             self._set_status(
                 self._t("status_saved").format(name=os.path.basename(path))

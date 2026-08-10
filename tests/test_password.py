@@ -8,6 +8,8 @@ _open_path_as_pdf の認証フラグ・_do_set_password / _remove_password を
 Tk 非依存のダミーアプリで検証する。
 """
 
+import types
+
 import fitz
 import pytest
 
@@ -31,6 +33,7 @@ class _DummyApp(FileOpsMixin):
         self.pdf_has_password = False
         self._opened_needed_password = False
         self.status = None
+        self.plugin_manager = types.SimpleNamespace(fire_event=lambda *a, **kw: None)
 
     def _t(self, key):
         return LANG[self.lang].get(key, LANG["ja"].get(key, key))
@@ -186,3 +189,32 @@ class TestSetRemovePassword:
         assert called["info"] is True
         assert called["dialog"] is False
         app.doc.close()
+
+
+class TestSavePathsKeepEncryption:
+    """通常の保存経路（Save As・上書き・縮小保存）が暗号化を維持することの
+    実ファイル回帰テスト（V190-SAFE-01・D-01〜D-03）。"""
+
+    def test_save_as_keeps_encryption(self, tmp_path, monkeypatch):
+        # (1) 暗号化 PDF を tmp_path へ作成
+        enc = str(tmp_path / "enc.pdf")
+        d = _make_doc()
+        save_with_password(d, enc, "secret")
+        d.close()
+
+        # (2) 開き直して認証した Document を _DummyApp に載せる
+        opened = fitz.open(enc)
+        opened.authenticate("secret")
+        app = _DummyApp(doc=opened, filepath=enc)
+
+        # (3) 保存先を monkeypatch で固定して _save_as() を呼ぶ
+        out = str(tmp_path / "saved_as.pdf")
+        monkeypatch.setattr(file_ops.filedialog, "asksaveasfilename", lambda **kw: out)
+        app._save_as()
+
+        # (4) 保存先を開き直して needs_pass / authenticate を実測する
+        reopened = fitz.open(out)
+        assert reopened.needs_pass
+        assert reopened.authenticate("secret") > 0
+        reopened.close()
+        opened.close()
