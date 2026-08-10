@@ -1,20 +1,16 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.8.0
-milestone_name: 実用性の最大化・エコシステム洗練・堅牢性強化
-status: v1.8.1 released — タグ・GitHub Release（Latest）・ビルド完了。次マイルストーン待ち
-stopped_at: Phase 06 complete — v1.8.0 全6フェーズ完了、マイルストーンクローズ待ち
-last_updated: "2026-08-10T01:50:12.370Z"
+milestone: v1.9.0
+milestone_name: 安全性・整合性の是正 + OpenAI プロバイダ追加
+status: planning
+last_updated: "2026-08-10T02:11:27.965Z"
 last_activity: 2026-08-10
-current_phase: 06
-current_phase_name: ux-ui
 progress:
-  total_phases: 6
-  completed_phases: 6
-  total_plans: 22
-  completed_plans: 22
-  percent: 100
-last_activity_desc: v1.9.0向け既存機能レビュー結果を.planning/notesへ文書化
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
@@ -28,10 +24,10 @@ See: .planning/PROJECT.md (updated 2026-07-16)
 
 ## Current Position
 
-Phase: Milestone v1.8.0 complete
+Phase: Not started (defining requirements)
 Plan: —
-Status: v1.8.1 released — タグ・GitHub Release（Latest）・ビルド完了。次マイルストーン待ち
-Last activity: 2026-08-10 - Completed quick task 260810-f1u: v1.9.0向け既存機能レビュー結果を.planning/notesへ文書化
+Status: Defining requirements
+Last activity: 2026-08-10 — Milestone v1.9.0 started
 
 ## v1.8.0 Phase Map
 

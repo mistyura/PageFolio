@@ -7,9 +7,26 @@ PageFolio の既存コードベースに対する最適化プロジェクト。
 
 **Core Value:** 大きな PDF でも Undo/Redo が正しく・速く動作し、コードが読みやすく保守しやすい状態にする。
 
-## Current Milestone
+## Current Milestone: v1.9.0 安全性・整合性の是正 + OpenAI プロバイダ追加
 
-_(未定 — `/gsd-new-milestone` で次のマイルストーンを確定)_
+**Goal:** 保存・編集・Undo の失敗時に「操作前の状態へ確実に戻る」安全性を確立し、設定 UI の Apply/Cancel 契約を整合させたうえで、OCR プロバイダ基盤を整理して OpenAI(ChatGPT) を既存プロバイダと同等に追加する。
+
+**Target features:**
+
+1. **保存・編集の安全性（P0/P1）**: パスワード保護PDFの暗号化維持（通常保存/Save As/上書きフォールバック統一・V190-REV-01）・OCR OFF の全経路一貫化（バッチOCR の OFF ガード・`off` をプロバイダ生成不可に・V190-REV-02）・複数ファイル挿入のトランザクション化＋挿入元 Document の `finally` クローズ（V190-REV-03）・ページ複製の Undo 記録を成功後確定（V190-REV-04）
+2. **設定 UI の整合性**: 外部プロンプトファイル書き込みを Apply 時へ一本化 or Cancel 時復元（V190-REV-05）・テンプレート切替時の未保存編集確認をファイル連動有無によらず有効化（V190-REV-06）
+3. **Undo/Redo 回帰強化**: 復元失敗時のスタック復帰保護と `duplicate`/`merge`/`merge_resize` への 4手往復テスト水平展開（V190-REV-07）
+4. **OCR プロバイダ基盤整理 → OpenAI 追加**: プロバイダメタデータ（キー・表示名・クラウド種別・環境変数・既定モデル・送信先・フォールバック可否）の一元定義（V190-REV-08）と、OpenAI(ChatGPT) プロバイダのフル実装（設定UI・セッションAPIキー欄・モデル一覧・送信先確認・コスト確認・バッチOCR対応・フォールバック候補組み込み）
+5. **品質保証・持ち越し**: Tkinter 実行環境（Python 3.14.6 / init.tcl）修復と GUI 含む全テスト完走のリリースゲート化・IN-01（保存トースト再試行時の上書き確認再表示）・human-verify / UAT の実機目視を正式実施
+
+**Key context:**
+- 出典は `.planning/notes/2026-08-10-v1.9.0-existing-feature-review.md`（既存機能レビュー・課題8件と推奨反映順）
+- 受け入れ条件に「失敗時に Document・Undo履歴・外部ファイルが操作前の状態へ戻る」ことを明記する
+- OCR OFF は通常OCR・バッチOCR・プラグイン経路の全実行経路で同じ意味にする
+- OpenAI 追加でも既存の安全境界を維持: APIキーを settings.json に含めない（`_SENSITIVE_KEYS` ガード・V14-D-02）・送信先を明示・フォールバック時に再確認（V180-D-02）
+- P0/P1（V190-REV-01〜05）は OpenAI 追加より前に完了させる
+- 実装方針は `urllib` 直叩き・新規 pip 依存ゼロ（V14-D-01 踏襲）
+- `registry.py` の「Python 標準ライブラリのみ・pagefolio 内部モジュールを import しない」独立性制約（V180-D-01）は維持し、非機密メタデータは別モジュールへ分離する
 
 ## Last Milestone: v1.8.0 実用性の最大化・エコシステム洗練・堅牢性強化 — ✅ Shipped 2026-07-16
 
@@ -205,7 +222,8 @@ _(未定 — `/gsd-new-milestone` で次のマイルストーンを確定)_
 
 ### Active
 
-- なし。v1.8.0 全 26 要件（V180-*）は上記 Validated へ移動済み。次マイルストーンの要件は `/gsd-new-milestone` で新規 REQUIREMENTS.md を作成し定義する。
+- v1.9.0 の要件（V190-*）を `.planning/REQUIREMENTS.md` に定義中。スコープは上記「Current Milestone」の Target features を参照（既存機能レビュー 8 件 + OpenAI プロバイダ追加 + 品質保証・持ち越し）。
+- v1.8.0 全 26 要件（V180-*）は上記 Validated へ移動済み。
 
 ### Out of Scope
 
@@ -345,4 +363,4 @@ _(未定 — `/gsd-new-milestone` で次のマイルストーンを確定)_
 4. 決定事項 → Key Decisions を更新
 
 ---
-*Last updated: 2026-07-16 — v1.8.0 マイルストーンクローズ（全6フェーズ・22プラン・要件26/26 Complete。APP_VERSION を v1.8.0 へバンプ）。次マイルストーンは `/gsd-new-milestone` で確定待ち。*
+*Last updated: 2026-08-10 — v1.9.0「安全性・整合性の是正 + OpenAI プロバイダ追加」を開始（既存機能レビュー 8 件 + OpenAI(ChatGPT) フル実装 + 品質保証・持ち越し）。前回更新: 2026-07-16 v1.8.0 マイルストーンクローズ。*
