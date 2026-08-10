@@ -240,6 +240,194 @@ class TestSavePathsKeepEncryption:
         reopened.close()
         app.doc.close()
 
+    def test_save_file_fallback_keeps_encryption(self, tmp_path, monkeypatch):
+        # インクリメンタル保存を失敗させ _overwrite_current_file フォールバック
+        # へ落としても暗号化が維持されることを検証する（D-02）
+        enc = str(tmp_path / "enc.pdf")
+        d = _make_doc()
+        save_with_password(d, enc, "secret")
+        d.close()
+
+        opened = fitz.open(enc)
+        opened.authenticate("secret")
+        app = _DummyApp(doc=opened, filepath=enc)
+        app.pdf_has_password = True
+
+        monkeypatch.setattr(file_ops.messagebox, "askyesno", lambda *a, **k: True)
+
+        original_save = fitz.Document.save
+
+        def _fake_save(self_doc, *args, **kwargs):
+            if kwargs.get("incremental"):
+                raise RuntimeError("simulated incremental save failure")
+            return original_save(self_doc, *args, **kwargs)
+
+        monkeypatch.setattr(fitz.Document, "save", _fake_save)
+
+        app._save_file()
+
+        reopened = fitz.open(enc)
+        assert reopened.needs_pass
+        assert reopened.authenticate("secret") > 0
+        reopened.close()
+        app.doc.close()
+
+    def test_save_compressed_overwrite_keeps_encryption(self, tmp_path, monkeypatch):
+        enc = str(tmp_path / "enc.pdf")
+        d = _make_doc()
+        save_with_password(d, enc, "secret")
+        d.close()
+
+        opened = fitz.open(enc)
+        opened.authenticate("secret")
+        app = _DummyApp(doc=opened, filepath=enc)
+        app.pdf_has_password = True
+
+        monkeypatch.setattr(file_ops.filedialog, "asksaveasfilename", lambda **kw: enc)
+        app._save_compressed()
+
+        reopened = fitz.open(enc)
+        assert reopened.needs_pass
+        assert reopened.authenticate("secret") > 0
+        reopened.close()
+        app.doc.close()
+
+    def test_save_compressed_new_path_keeps_encryption(self, tmp_path, monkeypatch):
+        enc = str(tmp_path / "enc.pdf")
+        d = _make_doc()
+        save_with_password(d, enc, "secret")
+        d.close()
+
+        opened = fitz.open(enc)
+        opened.authenticate("secret")
+        app = _DummyApp(doc=opened, filepath=enc)
+        app.pdf_has_password = True
+
+        out = str(tmp_path / "compressed.pdf")
+        monkeypatch.setattr(file_ops.filedialog, "asksaveasfilename", lambda **kw: out)
+        app._save_compressed()
+
+        reopened = fitz.open(out)
+        assert reopened.needs_pass
+        assert reopened.authenticate("secret") > 0
+        reopened.close()
+        app.doc.close()
+
+    def test_set_password_kwargs_not_overridden(self, tmp_path, monkeypatch):
+        # _do_set_password の同一ファイル上書き経路で AES-256 の明示指定が
+        # _overwrite_current_file の KEEP 既定化に上書きされないことを検証する
+        path = str(tmp_path / "target.pdf")
+        d = _make_doc()
+        d.save(path)
+        d.close()
+
+        doc = fitz.open(path)
+        app = _DummyApp(doc=doc, filepath=path)
+        monkeypatch.setattr(file_ops.filedialog, "asksaveasfilename", lambda **kw: path)
+        app._do_set_password("newsecret")
+
+        assert app.pdf_has_password is True
+        reopened = fitz.open(path)
+        assert reopened.needs_pass
+        assert reopened.authenticate("newsecret") > 0
+        reopened.close()
+        app.doc.close()
+
+    def test_remove_password_kwargs_not_overridden(self, tmp_path, monkeypatch):
+        # _remove_password の同一ファイル上書き経路で needs_pass が 0 になり
+        # pdf_has_password が False になることを検証する
+        path = str(tmp_path / "target.pdf")
+        d = _make_doc()
+        save_with_password(d, path, "secret")
+        d.close()
+
+        doc = fitz.open(path)
+        doc.authenticate("secret")
+        app = _DummyApp(doc=doc, filepath=path)
+        app.pdf_has_password = True
+        monkeypatch.setattr(file_ops.filedialog, "asksaveasfilename", lambda **kw: path)
+        app._remove_password()
+
+        assert app.pdf_has_password is False
+        reopened = fitz.open(path)
+        assert not reopened.needs_pass
+        reopened.close()
+        app.doc.close()
+
+    def test_save_as_twice_keeps_encryption(self, tmp_path, monkeypatch):
+        # probe: idempotency — 同一の暗号化 Document に対し _save_as() を
+        # 2 回連続で実行しても 2 回目の保存先も暗号化を維持する
+        enc = str(tmp_path / "enc.pdf")
+        d = _make_doc()
+        save_with_password(d, enc, "secret")
+        d.close()
+
+        opened = fitz.open(enc)
+        opened.authenticate("secret")
+        app = _DummyApp(doc=opened, filepath=enc)
+
+        out = str(tmp_path / "saved_as.pdf")
+        monkeypatch.setattr(file_ops.filedialog, "asksaveasfilename", lambda **kw: out)
+        app._save_as()
+        app._save_as()
+
+        reopened = fitz.open(out)
+        assert reopened.needs_pass
+        assert reopened.authenticate("secret") > 0
+        reopened.close()
+        app.doc.close()
+
+    def test_remove_then_save_file_stays_plain(self, tmp_path, monkeypatch):
+        # probe: idempotency — パスワード解除後に上書き保存しても再暗号化されない
+        enc = str(tmp_path / "enc.pdf")
+        d = _make_doc()
+        save_with_password(d, enc, "secret")
+        d.close()
+
+        doc = fitz.open(enc)
+        doc.authenticate("secret")
+        app = _DummyApp(doc=doc, filepath=enc)
+        app.pdf_has_password = True
+
+        monkeypatch.setattr(file_ops.filedialog, "asksaveasfilename", lambda **kw: enc)
+        app._remove_password()
+        assert app.pdf_has_password is False
+
+        monkeypatch.setattr(file_ops.messagebox, "askyesno", lambda *a, **k: True)
+        app._save_file()
+
+        assert app.pdf_has_password is False
+        reopened = fitz.open(enc)
+        assert not reopened.needs_pass
+        reopened.close()
+        app.doc.close()
+
+    def test_overwrite_failure_keeps_password_state(self, tmp_path, monkeypatch):
+        # probe: concurrency — os.replace が例外を送出した場合、
+        # pdf_has_password は呼び出し前の値のまま変化せず、doc は
+        # bytes から復元されて使用可能なままである
+        enc = str(tmp_path / "enc.pdf")
+        d = _make_doc()
+        save_with_password(d, enc, "secret")
+        d.close()
+
+        doc = fitz.open(enc)
+        doc.authenticate("secret")
+        app = _DummyApp(doc=doc, filepath=enc)
+        app.pdf_has_password = True
+
+        def _fail_replace(*a, **kw):
+            raise OSError("simulated os.replace failure")
+
+        monkeypatch.setattr(file_ops.os, "replace", _fail_replace)
+
+        with pytest.raises(OSError):
+            app._overwrite_current_file(enc)
+
+        assert app.pdf_has_password is True
+        assert len(app.doc) == 3
+        app.doc.close()
+
 
 class TestDerivePdfHasPassword:
     """derive_pdf_has_password の純関数テスト（D-03）。"""
