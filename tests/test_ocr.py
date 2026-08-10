@@ -1811,6 +1811,34 @@ class TestBuildProviderMaxTokensClamp:
         )
 
 
+# ===== V190-SAFE-03: OCR OFF ガード全経路の回帰テスト（01-02 Task 1〜3）=====
+
+
+class TestOCRDisabledGuard:
+    """OCR プロバイダ off の構造的拒否と、全実行経路でのガードを検証する。
+
+    build_provider の off 分離（Task 1）に加え、通常 OCR・バッチ OCR・
+    OCR ダイアログ内 provider 再生成・メニュー入口の各ガード（Task 2）を
+    同一クラスへ集約する（V190-SAFE-03）。
+    """
+
+    # ── Task 1: build_provider の off 分離（D-06）──────────────────────
+
+    def test_build_provider_off_raises_ocr_disabled(self):
+        """ocr_provider='off' のとき OCRDisabledError を送出する（D-06）。"""
+        from pagefolio.ocr_providers import OCRDisabledError
+
+        settings = {"ocr_provider": "off"}
+        with pytest.raises(OCRDisabledError):
+            ocr.build_provider(settings)
+
+    def test_build_provider_empty_string_still_lmstudio(self):
+        """ocr_provider='' は後方互換のため従来どおり LMStudioProvider を返す（D-06）。"""
+        settings = {"ocr_provider": ""}
+        provider = ocr.build_provider(settings)
+        assert isinstance(provider, LMStudioProvider)
+
+
 # ===== H-2 回帰テスト: _on_run / _apply_llm_settings のプロバイダ置換防止 =====
 
 
