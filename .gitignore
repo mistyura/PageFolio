@@ -99,3 +99,7 @@ dist/
 .gsd/DISCUSSION-MANIFEST.json
 .gsd/milestones/**/*-CONTINUE.md
 .gsd/milestones/**/continue.md
+
+# ── GSD ランタイム生成物（手動管理・上の auto-generated ブロックのパターン漏れ分）──
+# ディスパッチ時の一時センチネル（isolation/phase/タイムスタンプのみ・再生成される）
+.gsd/dispatch-isolation-sentinel.json
