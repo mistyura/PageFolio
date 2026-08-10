@@ -1327,6 +1327,81 @@ class TestDuplicateUndoTiming:
         assert len(errors) == 1
 
 
+class TestUndoRedoRestoreFailure:
+    """_undo / _redo の復元失敗時に state を保全しブロッキング通知する検証
+    （V190-UNDO-01・D-13/D-14）"""
+
+    def _make_fake_app(self, doc):
+        """FileOpsMixin を使う FakeApp を生成する"""
+        import collections
+
+        import pagefolio.file_ops as fo
+
+        class FakeApp(fo.FileOpsMixin):
+            MAX_UNDO = 20
+
+            def __init__(self, d):
+                self.doc = d
+                self.current_page = 0
+                self.selected_pages = set()
+                self._undo_stack = collections.deque(maxlen=self.MAX_UNDO)
+                self._redo_stack = collections.deque(maxlen=self.MAX_UNDO)
+                self._preview_gen = 0
+                self._thumb_gen = 0
+
+            def _invalidate_thumb_cache(self, *a, **kw):
+                pass
+
+            def _refresh_all(self):
+                pass
+
+            def _t(self, key):
+                return key
+
+            def _set_status(self, *a):
+                pass
+
+        return FakeApp(doc)
+
+    def test_undo_restore_failure_returns_state_to_stack(
+        self, sample_pdf_doc, monkeypatch
+    ):
+        """_restore_state が例外を送出 → pop した state が _push_evicting 経由で
+        undo スタックへ戻り、showerror が1回呼ばれ、_dispose_state は呼ばれない"""
+        import pagefolio.file_ops as fo
+
+        app = self._make_fake_app(sample_pdf_doc)
+        app._save_undo("rotate", targets=[0])
+        app.doc[0].set_rotation(90)
+
+        before_undo_len = len(app._undo_stack)
+        before_redo_len = len(app._redo_stack)
+
+        dispose_calls = []
+        monkeypatch.setattr(
+            fo.FileOpsMixin,
+            "_dispose_state",
+            lambda self_app, state: dispose_calls.append(state),
+        )
+
+        errors = []
+        monkeypatch.setattr(
+            fo.messagebox, "showerror", lambda t, m: errors.append((t, m))
+        )
+
+        def failing_restore_state(self_app, state):
+            raise RuntimeError("復元失敗")
+
+        monkeypatch.setattr(fo.FileOpsMixin, "_restore_state", failing_restore_state)
+
+        app._undo()
+
+        assert len(app._undo_stack) == before_undo_len
+        assert len(app._redo_stack) == before_redo_len
+        assert len(errors) == 1
+        assert dispose_calls == []
+
+
 # ===== bulk_move ロジック =====
 
 
