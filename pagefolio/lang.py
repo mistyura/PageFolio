@@ -226,6 +226,14 @@ LANG = {
         "redo_empty": "やり直す履歴がありません",
         "undo_done": "元に戻しました",
         "redo_done": "やり直しました",
+        "err_undo_restore_failed": (
+            "元に戻す処理に失敗しました。操作前の状態は履歴に保持されています。"
+            "詳細: {e}"
+        ),
+        "err_redo_restore_failed": (
+            "やり直し処理に失敗しました。操作前の状態は履歴に保持されています。"
+            "詳細: {e}"
+        ),
         "status_settings": "設定を変更しました",
         # ファイル操作
         "filetypes_pdf": "PDFファイル",
@@ -951,6 +959,12 @@ LANG = {
         "redo_empty": "Nothing to redo",
         "undo_done": "Undone",
         "redo_done": "Redone",
+        "err_undo_restore_failed": (
+            "Failed to undo. The previous state is kept in history. Details: {e}"
+        ),
+        "err_redo_restore_failed": (
+            "Failed to redo. The previous state is kept in history. Details: {e}"
+        ),
         "status_settings": "Settings updated",
         # File operations
         "filetypes_pdf": "PDF files",

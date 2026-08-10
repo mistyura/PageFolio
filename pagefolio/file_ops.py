@@ -193,7 +193,20 @@ class FileOpsMixin:
             self._set_status(self._t("undo_empty"))
             return
         state = self._undo_stack.pop()
-        inverse = self._restore_state(state)
+        try:
+            inverse = self._restore_state(state)
+        except Exception as e:
+            # D-13/D-14: 復元失敗時は pop した state を _push_evicting 経由で
+            # スタックへ戻す（直接 append は Blob リーク）。_dispose_state は
+            # 呼ばない — state はまだ消費されていないものとして温存し、
+            # 次回の undo で再試行できるようにする（Pitfall 4 回避）。
+            # 通知はブロッキング（showerror）にする（トースト・ステータス
+            # バーは不採用。見落とされると壊れた前提のまま編集が続くため）。
+            self._push_evicting(self._undo_stack, state)
+            messagebox.showerror(
+                self._t("err_title"), self._t("err_undo_restore_failed").format(e=e)
+            )
+            return
         # 消費済み state の Blob を解放する。ただし逆デルタが同一 data を
         # 共有する op（insert_undo→insert_redo / merge_resize 系）は解放しない
         if inverse.get("data") is not state.get("data"):
@@ -206,7 +219,15 @@ class FileOpsMixin:
             self._set_status(self._t("redo_empty"))
             return
         state = self._redo_stack.pop()
-        inverse = self._restore_state(state)
+        try:
+            inverse = self._restore_state(state)
+        except Exception as e:
+            # D-13/D-14: _undo と同型の保護（Blob は解放せずスタックへ戻す）
+            self._push_evicting(self._redo_stack, state)
+            messagebox.showerror(
+                self._t("err_title"), self._t("err_redo_restore_failed").format(e=e)
+            )
+            return
         if inverse.get("data") is not state.get("data"):
             self._dispose_state(state)
         self._push_evicting(self._undo_stack, inverse)
