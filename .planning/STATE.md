@@ -31,7 +31,7 @@ See: .planning/PROJECT.md (updated 2026-08-10)
 Phase: 2 — OCR プロバイダ基盤整理 + OpenAI(ChatGPT) プロバイダ追加
 Plan: Not started
 Status: Ready to plan
-Last activity: 2026-08-11 — Phase 01 complete, transitioned to Phase 2
+Last activity: 2026-08-11 - Completed quick task 260811-asq: Codex 向け指示書の壊れた参照修正と .gsd センチネルの gitignore 追加
 
 Progress: [██████████] 100%
 
@@ -288,6 +288,7 @@ Decisions are logged in PROJECT.md Key Decisions table.
 | 260722-gae | v1.8.1: Gemini 新世代モデル（gemini-3.6-flash / gemini-3.5-flash-lite）の OCR 400 エラー修正。`_build_generation_config` を世代ゲート化し temperature / thinkingConfig を gemini-2.x 以前のみに送信（`_model_generation` / `_is_legacy_gemini` 新設・回帰テスト 8 件・1109 件グリーン）。dist サンプルプロンプトの実在決済サービス名を架空化。リモート環境実装のため遡及 GSD 精査を 2026-07-22 に完了（[GSD-AUDIT-DIRECTIVE.md](./quick/260722-gae-gemini-api-400-error-5li33o/GSD-AUDIT-DIRECTIVE.md) status: complete・世代ゲート方式確定・RECOMMENDED_MODELS へ gemini-3.x 追加・検証/セキュリティ記録作成） | 2026-07-22 | 58c0de2 | [260722-gae-gemini-api-400-error-5li33o](./quick/260722-gae-gemini-api-400-error-5li33o/) |
 | 260722-rel | PR #34（v1.8.1）マージ後のリリース作業。main ツリーとブランチ先端の diff ゼロ確認（pytest 1109 件・ruff の検証流用）、PyInstaller リビルド（`dist/PageFolio` 更新・exe 起動確認済み・サンプルプロンプト 2 ファイルは退避→復元で保全）、注釈付きタグ `v1.8.1` 付与、GitHub Release を Latest 公開（PageFolio-v1.8.1-win64.zip + .sha256 添付） | 2026-07-22 | d7aa217 | [260722-rel-v181-merge-release](./quick/260722-rel-v181-merge-release/) |
 | 260810-f1u | v1.9.0向け既存機能レビュー結果を.planning/notesへ文書化 | 2026-08-10 | a553df7 | [260810-f1u-v1-9-0-planning-notes](./quick/260810-f1u-v1-9-0-planning-notes/) |
+| 260811-asq | Codex 向け指示書 `AGENTS.md`・`.agents/skills/session-handoff/SKILL.md` の壊れた参照5箇所を修正（`Claude`→`Codex` 一括置換がディレクトリ名・スキル名・ドメイン名を巻き込んだ結果の未存在パス）。両ファイルを追跡対象化し、`.gsd/dispatch-isolation-sentinel.json` を `.gitignore` へ追加 | 2026-08-11 | 3f83067 | [260811-asq-agents-md-agents-skills-session-handoff-](./quick/260811-asq-agents-md-agents-skills-session-handoff-/) |
 
 ## Deferred Items
 
