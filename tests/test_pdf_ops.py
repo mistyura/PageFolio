@@ -1275,6 +1275,210 @@ class TestAllOpsUndoRedoRoundtrip:
         for entry in list(app._undo_stack) + list(app._redo_stack):
             assert "pdf_bytes" not in entry
 
+    def test_duplicate_single_page_doc_roundtrip(self):
+        """duplicate: 1ページのみの Document でも4手往復でページ構成が
+        一致する（probe: V190-UNDO-02 / boundary）。"""
+        doc = fitz.open()
+        page = doc.new_page(width=595, height=842)
+        page.insert_text((72, 72), "Only Page", fontsize=24)
+        try:
+            app = self._make_fake_app(doc)
+            original_count = len(app.doc)  # 1
+            pno = 0
+            before_digests = [_page_digest(app.doc[i]) for i in range(len(app.doc))]
+
+            # do: 唯一のページを複製
+            app._save_undo("duplicate", pno=pno)
+            tmp = fitz.open()
+            tmp.insert_pdf(app.doc, from_page=pno, to_page=pno)
+            app.doc.insert_pdf(tmp, start_at=pno + 1)
+            tmp.close()
+            assert len(app.doc) == original_count + 1
+
+            app._undo()
+            assert len(app.doc) == original_count
+            after_undo_digests = [_page_digest(app.doc[i]) for i in range(len(app.doc))]
+            assert before_digests == after_undo_digests
+
+            app._redo()
+            assert len(app.doc) == original_count + 1
+
+            app._undo()
+            assert len(app.doc) == original_count
+            after_second_undo_digests = [
+                _page_digest(app.doc[i]) for i in range(len(app.doc))
+            ]
+            assert before_digests == after_second_undo_digests
+        finally:
+            doc.close()
+
+    def test_merge_head_and_tail_adjacent_roundtrip(self, multi_pdf_files):
+        """merge: 先頭（index 0隣接）・末尾（index len-1隣接）どちらの位置への
+        結合でも、4手往復後のページ順序（digest列）が操作前と完全に一致する
+        ことを検証する（probe: V190-UNDO-02 / adjacency）。ページ数だけでなく
+        順序を見ることが本テストの主眼である。"""
+        # --- 先頭隣接: 元 Document が1ページのみのため、結合ページは
+        #     唯一の元ページ（index 0）の直後に入る
+        head_doc = fitz.open(multi_pdf_files[0])  # 1ページ
+        try:
+            app = self._make_fake_app(head_doc)
+            original_count = len(app.doc)
+            before_digests = [_page_digest(app.doc[i]) for i in range(len(app.doc))]
+
+            app._save_undo("merge")
+            src = fitz.open(multi_pdf_files[1])  # 2ページ
+            app.doc.insert_pdf(src)
+            src.close()
+            assert len(app.doc) == original_count + 2
+
+            app._undo()
+            assert len(app.doc) == original_count
+            assert before_digests == [
+                _page_digest(app.doc[i]) for i in range(len(app.doc))
+            ]
+
+            app._redo()
+            assert len(app.doc) == original_count + 2
+
+            app._undo()
+            assert len(app.doc) == original_count
+            assert before_digests == [
+                _page_digest(app.doc[i]) for i in range(len(app.doc))
+            ]
+        finally:
+            head_doc.close()
+
+        # --- 末尾隣接: 複数ページ Document の末尾へ結合
+        tail_doc = fitz.open()
+        for i in range(3):
+            p = tail_doc.new_page(width=595, height=842)
+            p.insert_text((72, 72), f"Page {i + 1}", fontsize=24)
+        try:
+            app = self._make_fake_app(tail_doc)
+            original_count = len(app.doc)
+            before_digests = [_page_digest(app.doc[i]) for i in range(len(app.doc))]
+
+            app._save_undo("merge")
+            src = fitz.open(multi_pdf_files[0])  # 1ページ
+            app.doc.insert_pdf(src)
+            src.close()
+            assert len(app.doc) == original_count + 1
+
+            app._undo()
+            assert len(app.doc) == original_count
+            assert before_digests == [
+                _page_digest(app.doc[i]) for i in range(len(app.doc))
+            ]
+
+            app._redo()
+            assert len(app.doc) == original_count + 1
+
+            app._undo()
+            assert len(app.doc) == original_count
+            assert before_digests == [
+                _page_digest(app.doc[i]) for i in range(len(app.doc))
+            ]
+        finally:
+            tail_doc.close()
+
+    def test_merge_resize_preserves_original_page_order(self):
+        """merge_resize: 4手往復後、元から存在していたページの digest列が
+        操作前と同順で一致することを検証する（probe: V190-UNDO-02 /
+        ordering）。集合として一致するだけでは不十分であり、リストとしての
+        順序比較を行う。"""
+        doc = fitz.open()
+        for i in range(4):
+            p = doc.new_page(width=595, height=842)
+            p.insert_text((72, 72), f"Page {i + 1}", fontsize=24)
+        try:
+            app = self._make_full_fake_app(doc)
+            original_count = len(app.doc)  # 4
+            original_digests = [_page_digest(app.doc[i]) for i in range(original_count)]
+
+            # target 以外のページ（index 0, 3）が結合ページを挟んで
+            # 前後に残る構成
+            targets = [1, 2]
+            app._do_merge_resize(targets, "horizontal", 1190, 842)
+            assert len(app.doc) == original_count - 1  # 3
+
+            app._undo()
+            assert len(app.doc) == original_count
+            after_undo_digests = [_page_digest(app.doc[i]) for i in range(len(app.doc))]
+            assert original_digests == after_undo_digests
+
+            app._redo()
+            assert len(app.doc) == original_count - 1
+
+            app._undo()
+            assert len(app.doc) == original_count
+            after_second_undo_digests = [
+                _page_digest(app.doc[i]) for i in range(len(app.doc))
+            ]
+            assert original_digests == after_second_undo_digests
+        finally:
+            doc.close()
+
+    def test_merge_resize_preserves_original_page_dimensions(self):
+        """merge_resize: 4手往復後、元から存在していたページの MediaBox
+        幅・高さが操作前と一致することを検証する（probe: V190-UNDO-02 /
+        precision）。リサイズ処理の丸め誤差が既存ページへ波及しないことを
+        pytest.approx で確認する。"""
+        doc = fitz.open()
+        for i in range(4):
+            p = doc.new_page(width=595, height=842)
+            p.insert_text((72, 72), f"Page {i + 1}", fontsize=24)
+        try:
+            app = self._make_full_fake_app(doc)
+            original_count = len(app.doc)  # 4
+            untouched = [0, 3]
+            original_dims = {
+                i: (app.doc[i].mediabox.width, app.doc[i].mediabox.height)
+                for i in untouched
+            }
+
+            targets = [1, 2]
+            app._do_merge_resize(targets, "horizontal", 1190, 842)
+
+            app._undo()
+            app._redo()
+            app._undo()
+            assert len(app.doc) == original_count
+
+            for i in untouched:
+                w, h = original_dims[i]
+                assert app.doc[i].mediabox.width == pytest.approx(w)
+                assert app.doc[i].mediabox.height == pytest.approx(h)
+        finally:
+            doc.close()
+
+    def test_roundtrip_with_single_merge_source_file(
+        self, sample_pdf_doc, multi_pdf_files
+    ):
+        """merge: マージ対象ファイルが1件だけの最小入力でも4手往復が成立する
+        ことを検証する（probe: V190-UNDO-02 / empty）。"""
+        app = self._make_fake_app(sample_pdf_doc)
+        original_count = len(app.doc)
+        before_digests = [_page_digest(app.doc[i]) for i in range(len(app.doc))]
+
+        ordered_paths = [multi_pdf_files[0]]  # 1件のみ・1ページ
+        app._save_undo("merge")
+        for path in ordered_paths:
+            src = fitz.open(path)
+            app.doc.insert_pdf(src)
+            src.close()
+        assert len(app.doc) == original_count + 1
+
+        app._undo()
+        assert len(app.doc) == original_count
+        assert before_digests == [_page_digest(app.doc[i]) for i in range(len(app.doc))]
+
+        app._redo()
+        assert len(app.doc) == original_count + 1
+
+        app._undo()
+        assert len(app.doc) == original_count
+        assert before_digests == [_page_digest(app.doc[i]) for i in range(len(app.doc))]
+
 
 # ===== 挿入失敗ロールバック・複製Undoタイミング（V190-SAFE-04/05・Phase01 Plan04）=====
 
