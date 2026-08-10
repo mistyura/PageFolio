@@ -205,3 +205,11 @@ None - no external service configuration required.
 ---
 *Phase: 01-safety-rollback*
 *Completed: 2026-08-10*
+
+## Self-Check: PASSED
+
+- FOUND: tests/test_pdf_ops.py
+- FOUND: .planning/phases/01-safety-rollback/01-05-SUMMARY.md
+- FOUND commit: 5c52977
+- FOUND commit: a0db5b9
+- FOUND commit: 4dfbc41
