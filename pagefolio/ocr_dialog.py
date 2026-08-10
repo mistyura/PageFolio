@@ -1085,6 +1085,8 @@ class OCRDialog(tk.Toplevel):
                 # LLM 設定で off へ切替えた実在経路。provider は差し替えず
                 # 現在の provider を保持したまま OCR 無効メッセージを表示する
                 # （build_provider を経由しない直接構築だった旧実装の穴を塞ぐ）。
+                # この分岐は build_provider を呼ばないため OCRDisabledError を
+                # 捕捉する必要はない（off はここで文字列比較のみで中断する）。
                 lang = self.app.settings.get("lang", "ja")
                 self.progress_var.set(LANG[lang]["ocr_disabled_msg"])
             else:
