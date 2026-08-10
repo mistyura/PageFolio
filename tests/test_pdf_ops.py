@@ -1252,6 +1252,129 @@ class TestInsertRollback:
         assert after_digests == before_digests
         assert len(errors) == 1
 
+    def test_insert_failure_closes_source_documents(
+        self, sample_pdf_doc, multi_pdf_files, monkeypatch
+    ):
+        """挿入ループ途中の例外後も、開かれた挿入元 Document はすべて close
+        されている（probe: concurrency・D-09）"""
+        import pagefolio.file_ops as fo
+        import pagefolio.page_ops as po
+
+        app = self._make_fake_app(sample_pdf_doc)
+        monkeypatch.setattr(po.messagebox, "showerror", lambda *a, **k: None)
+
+        opened_docs = []
+        original_open_path_as_pdf = fo.FileOpsMixin._open_path_as_pdf
+
+        def tracking_open_path_as_pdf(self_app, path):
+            doc = original_open_path_as_pdf(self_app, path)
+            opened_docs.append(doc)
+            return doc
+
+        monkeypatch.setattr(
+            fo.FileOpsMixin, "_open_path_as_pdf", tracking_open_path_as_pdf
+        )
+
+        original_insert_pdf = fitz.Document.insert_pdf
+        call_count = {"n": 0}
+
+        def flaky_insert_pdf(self_doc, src, **kwargs):
+            call_count["n"] += 1
+            if call_count["n"] == 2:
+                raise RuntimeError("2ファイル目で失敗")
+            return original_insert_pdf(self_doc, src, **kwargs)
+
+        monkeypatch.setattr(fitz.Document, "insert_pdf", flaky_insert_pdf)
+
+        app._do_insert([multi_pdf_files[1], multi_pdf_files[2]], 1)
+
+        assert len(opened_docs) == 2
+        assert all(d.is_closed for d in opened_docs)
+
+    def test_insert_failure_single_file_boundary(
+        self, sample_pdf_doc, multi_pdf_files, monkeypatch
+    ):
+        """1ファイル目で即例外 → ページ数・Undoスタック長が操作前と同じ
+        （probe: boundary）"""
+        import pagefolio.page_ops as po
+
+        app = self._make_fake_app(sample_pdf_doc)
+        original_count = len(app.doc)
+        before_undo_len = len(app._undo_stack)
+        monkeypatch.setattr(po.messagebox, "showerror", lambda *a, **k: None)
+
+        def failing_insert_pdf(self_doc, src, **kwargs):
+            raise RuntimeError("1ファイル目で失敗")
+
+        monkeypatch.setattr(fitz.Document, "insert_pdf", failing_insert_pdf)
+
+        app._do_insert([multi_pdf_files[0]], 1)
+
+        assert len(app.doc) == original_count
+        assert len(app._undo_stack) == before_undo_len
+
+    def test_insert_empty_path_list_boundary(self, sample_pdf_doc):
+        """ordered_paths が空 → ページ数不変・例外なし・件数0の insert state が
+        1件積まれる通常の成功扱い（probe: boundary）"""
+        app = self._make_fake_app(sample_pdf_doc)
+        original_count = len(app.doc)
+        before_undo_len = len(app._undo_stack)
+
+        app._do_insert([], 1)
+
+        assert len(app.doc) == original_count
+        assert len(app._undo_stack) == before_undo_len + 1
+        assert app._undo_stack[-1]["op"] == "insert"
+        assert app._undo_stack[-1]["data"][1] == 0
+
+    def test_rollback_failure_warns_and_keeps_undo_state(
+        self, sample_pdf_doc, multi_pdf_files, monkeypatch
+    ):
+        """挿入失敗の巻き戻し（delete_page）自体も失敗 → 警告ダイアログが1回
+        表示され、Undoスタック最上位の insert state の件数が実際の挿入数に
+        なっている。その state を使った undo で残存ページを正しく取り除ける
+        （D-10）"""
+        import pagefolio.page_ops as po
+
+        app = self._make_fake_app(sample_pdf_doc)
+        original_count = len(app.doc)
+        monkeypatch.setattr(po.messagebox, "showerror", lambda *a, **k: None)
+        warnings = []
+        monkeypatch.setattr(
+            po.messagebox, "showwarning", lambda t, m: warnings.append((t, m))
+        )
+
+        original_insert_pdf = fitz.Document.insert_pdf
+        call_count = {"n": 0}
+
+        def flaky_insert_pdf(self_doc, src, **kwargs):
+            call_count["n"] += 1
+            if call_count["n"] == 2:
+                raise RuntimeError("2ファイル目で失敗")
+            return original_insert_pdf(self_doc, src, **kwargs)
+
+        monkeypatch.setattr(fitz.Document, "insert_pdf", flaky_insert_pdf)
+
+        original_delete_page = fitz.Document.delete_page
+
+        def failing_delete_page(self_doc, *a, **kw):
+            raise RuntimeError("巻き戻し失敗")
+
+        monkeypatch.setattr(fitz.Document, "delete_page", failing_delete_page)
+
+        app._do_insert([multi_pdf_files[1], multi_pdf_files[2]], 1)
+
+        assert len(warnings) == 1
+        assert len(app._undo_stack) == 1
+        assert app._undo_stack[-1]["op"] == "insert"
+        assert app._undo_stack[-1]["data"][1] == 2  # 実際の挿入数
+
+        # delete_page を復元し、残された state で undo すると残存ページを
+        # 正しく取り除けることを確認する
+        monkeypatch.setattr(fitz.Document, "delete_page", original_delete_page)
+        app._undo()
+        assert len(app.doc) == original_count
+
 
 class TestDuplicateUndoTiming:
     """ページ複製の Undo 記録が実処理成功後に確定することの検証（V190-SAFE-05）"""
@@ -1325,6 +1448,23 @@ class TestDuplicateUndoTiming:
         after_digests = [_page_digest(app.doc[i]) for i in range(len(app.doc))]
         assert after_digests == before_digests
         assert len(errors) == 1
+
+    def test_duplicate_success_records_undo_after_work(self, sample_pdf_doc):
+        """正常系: duplicate state が1件積まれ、current_page が pno+1 になり、
+        undo でページ数が元に戻る（後置化が成功パスを壊していないことの担保）"""
+        app = self._make_fake_app(sample_pdf_doc)
+        original_count = len(app.doc)
+        pno = app.current_page
+
+        app._duplicate_page()
+
+        assert len(app.doc) == original_count + 1
+        assert len(app._undo_stack) == 1
+        assert app._undo_stack[-1]["op"] == "duplicate"
+        assert app.current_page == pno + 1
+
+        app._undo()
+        assert len(app.doc) == original_count
 
 
 class TestUndoRedoRestoreFailure:
@@ -1400,6 +1540,91 @@ class TestUndoRedoRestoreFailure:
         assert len(app._redo_stack) == before_redo_len
         assert len(errors) == 1
         assert dispose_calls == []
+
+    def test_redo_restore_failure_returns_state_to_stack(
+        self, sample_pdf_doc, monkeypatch
+    ):
+        """_redo 側でも _undo と同型の保護がかかる（pop した state が
+        _push_evicting 経由で redo スタックへ戻る）"""
+        import pagefolio.file_ops as fo
+
+        app = self._make_fake_app(sample_pdf_doc)
+        app._save_undo("rotate", targets=[0])
+        app.doc[0].set_rotation(90)
+        app._undo()  # 正常系で redo スタックへ積む（rotation は 0 に戻る）
+
+        before_undo_len = len(app._undo_stack)
+        before_redo_len = len(app._redo_stack)
+
+        dispose_calls = []
+        monkeypatch.setattr(
+            fo.FileOpsMixin,
+            "_dispose_state",
+            lambda self_app, state: dispose_calls.append(state),
+        )
+        errors = []
+        monkeypatch.setattr(
+            fo.messagebox, "showerror", lambda t, m: errors.append((t, m))
+        )
+
+        def failing_restore_state(self_app, state):
+            raise RuntimeError("redo 復元失敗")
+
+        monkeypatch.setattr(fo.FileOpsMixin, "_restore_state", failing_restore_state)
+
+        app._redo()
+
+        assert len(app._redo_stack) == before_redo_len
+        assert len(app._undo_stack) == before_undo_len
+        assert len(errors) == 1
+        assert dispose_calls == []
+
+    def test_undo_retry_after_failure_uses_same_state(
+        self, sample_pdf_doc, monkeypatch
+    ):
+        """1回目の undo 失敗後、_restore_state を正常化して2回目の undo を
+        呼ぶと同じ state で復元が成功する（履歴が失われていない＝Blobが
+        解放されていないことの担保）"""
+        import pagefolio.file_ops as fo
+
+        app = self._make_fake_app(sample_pdf_doc)
+        app._save_undo("rotate", targets=[0])
+        app.doc[0].set_rotation(90)
+
+        monkeypatch.setattr(fo.messagebox, "showerror", lambda *a, **k: None)
+
+        original_restore_state = fo.FileOpsMixin._restore_state
+        call_count = {"n": 0}
+
+        def flaky_restore_state(self_app, state):
+            call_count["n"] += 1
+            if call_count["n"] == 1:
+                raise RuntimeError("1回目は失敗")
+            return original_restore_state(self_app, state)
+
+        monkeypatch.setattr(fo.FileOpsMixin, "_restore_state", flaky_restore_state)
+
+        app._undo()  # 1回目: 失敗
+        assert app.doc[0].rotation == 90  # 復元されていない
+        assert len(app._undo_stack) == 1
+
+        app._undo()  # 2回目: 同じ state で成功
+        assert app.doc[0].rotation == 0
+        assert len(app._undo_stack) == 0
+        assert len(app._redo_stack) == 1
+
+    def test_undo_empty_stack_is_noop(self, sample_pdf_doc):
+        """空スタックに対する undo はステータス表示のみで Document を
+        変更しない"""
+        app = self._make_fake_app(sample_pdf_doc)
+        original_rotation = app.doc[0].rotation
+        statuses = []
+        app._set_status = lambda msg: statuses.append(msg)
+
+        app._undo()
+
+        assert app.doc[0].rotation == original_rotation
+        assert statuses == ["undo_empty"]
 
 
 # ===== bulk_move ロジック =====
