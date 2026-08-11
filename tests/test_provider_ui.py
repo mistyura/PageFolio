@@ -1120,6 +1120,116 @@ class TestConfirmDenialStopsSend:
         assert build_calls == [], "拒否後に build_provider が呼ばれた"
 
 
+class TestOnRunOpenAiApiKeyWiringRegression:
+    """継続タスク（02-04 Task 3B 実機不具合）の回帰固定。
+
+    根本原因: `_on_run` の provider 再生成分岐は claude/gemini/runpod には
+    専用 `elif` があるが openai には無く、tesseract/プラグイン専用の
+    汎用 `else` 分岐へ落ちて `build_provider(s, plugin_manager=...)` が
+    api_key 引数なしで（=None のまま）呼ばれていた。`_check_cloud_api_key`
+    の readiness 判定はセッションキーを正しく解決できるため通過するが、
+    実際の provider 構築ではキーが渡らず `OpenAIProvider.api_key` が
+    空文字になり、実機で `HTTP 401: You didn't provide an API key` として
+    顕在化した（readiness と build の食い違い）。
+    """
+
+    def _make_on_run_fake(self, session_api_keys):
+        import threading
+
+        app = types.SimpleNamespace(
+            settings={"ocr_provider": "openai", "openai_model": "gpt-5-test"},
+            _session_api_keys=session_api_keys,
+            plugin_manager=None,
+        )
+
+        class _StubProgressBar(dict):
+            """dict ベースの Progressbar スタブ（configure / 添字代入の両対応）"""
+
+            def configure(self, **kw):
+                self.update(kw)
+
+        fake = types.SimpleNamespace(
+            app=app,
+            provider=None,
+            _started=False,
+            _done=False,
+            progress_var=types.SimpleNamespace(set=lambda _v: None),
+            progress_bar=_StubProgressBar(),
+            _progress_label=types.SimpleNamespace(configure=lambda **kw: None),
+            cancel_btn=types.SimpleNamespace(state=lambda _s: None),
+            run_btn=types.SimpleNamespace(state=lambda _s: None),
+            resume_btn=types.SimpleNamespace(state=lambda _s: None),
+            _llm_config_btn=types.SimpleNamespace(state=lambda _s: None),
+            _cancel_flag=threading.Event(),
+            page_indices=[0],
+            results={},
+            errors={},
+            _skipped_pages=set(),
+            _truncated_pages=set(),
+            _render_failed_pages=set(),
+            concurrency=1,
+            _render_idx=0,
+            _pstate=None,
+            _run_gen=0,
+            text=types.SimpleNamespace(delete=lambda *a: None),
+            scale_var=types.SimpleNamespace(get=lambda: "1.5"),
+            timeout_var=types.SimpleNamespace(get=lambda: "120"),
+            preset_var=types.SimpleNamespace(get=lambda: "text"),
+            url_var=types.SimpleNamespace(get=lambda: ""),
+            model_var=types.SimpleNamespace(get=lambda: "gpt-5-test"),
+            max_tokens_var=types.SimpleNamespace(get=lambda: "4096"),
+            temperature_var=types.SimpleNamespace(get=lambda: "0.1"),
+            force_ocr_var=types.SimpleNamespace(get=lambda: False),
+            custom_prompt="",
+            _L={"ocr_progress_init": "init"},
+            summary_result=None,
+            _summary_truncated=False,
+            _summary_running=False,
+            _summary_cancel_flag=threading.Event(),
+            summary_btn=types.SimpleNamespace(state=lambda _s: None),
+        )
+        # クラウド確認ゲート（キー解決確認・コスト確認）は本テストの対象外
+        # なので常に通過させ、provider 再生成の分岐のみを検証する。
+        fake._is_cloud_provider = lambda settings=None: True
+        fake._check_cloud_api_key = lambda settings=None: True
+        fake._confirm_cost = lambda page_count, settings=None: True
+        fake._render_next_page = lambda gen=None: None
+        fake._start_worker_thread = lambda gen=None: None
+        fake._maybe_show_lang_fallback_notice = lambda: None
+        return fake
+
+    def test_on_run_passes_resolved_session_key_to_build_provider(self, monkeypatch):
+        """_on_run が openai 実行時、build_provider へセッションキーを渡す。
+
+        修正前は空/None のまま build_provider が呼ばれ、
+        OpenAIProvider.api_key が空文字になっていた。
+        """
+        from pagefolio.ocr_dialog import OCRDialog
+
+        build_calls = []
+
+        class _FakeProvider:
+            max_concurrency = 2
+            supports_text_prompt = True
+
+        def _fake_build_provider(settings, api_key=None, plugin_manager=None):
+            build_calls.append(api_key)
+            return _FakeProvider()
+
+        # _on_run はモジュール先頭で import 済みの build_provider を直接呼ぶ
+        # （claude/gemini/runpod と同型）ため、pagefolio.ocr_dialog 側の
+        # 束縛をパッチする（TestConfirmDenialStopsSend と同じ対象）。
+        monkeypatch.setattr("pagefolio.ocr_dialog.build_provider", _fake_build_provider)
+
+        fake = self._make_on_run_fake(session_api_keys={"openai": "sk-test-dummy"})
+        OCRDialog._on_run(fake)
+
+        assert build_calls == ["sk-test-dummy"], (
+            f"build_provider に渡された api_key: {build_calls!r}"
+            "（空/None は Authorization ヘッダ欠落=HTTP 401 の再現）"
+        )
+
+
 class TestTextCapableProvidersParity:
     """レビュー MEDIUM-9: _TEXT_CAPABLE_PROVIDERS が catalog 登録プロバイダの
     うち Provider クラスの supports_text_prompt が真であるプロバイダ名の
@@ -1432,6 +1542,45 @@ class TestApplyLlmSettingsOffToggleButtons:
         stub = _make_apply_llm_settings_stub(settings={"ocr_provider": "off"})
         # AttributeError 等を出さず正常終了すること
         OCRDialog._apply_llm_settings(stub, {"ocr_provider": "off"})
+
+
+class TestApplyLlmSettingsOpenAiApiKeyWiringRegression:
+    """継続タスク（02-04 Task 3B 実機不具合）の回帰固定（_apply_llm_settings 側）。
+
+    `_apply_llm_settings` の provider 再生成分岐にも openai 専用 `elif` が
+    無く、`_on_run` と同根の食い違いで build_provider が api_key 引数なしで
+    呼ばれていた。OCRDialog 内から「⚙ LLM 設定…」を開いて API キーを
+    設定・適用する経路（Task 3B の典型操作）を固定する。
+    """
+
+    def test_apply_llm_settings_passes_resolved_session_key_to_build_provider(
+        self, monkeypatch
+    ):
+        from pagefolio.ocr_dialog import OCRDialog
+
+        monkeypatch.setattr("pagefolio.settings._save_settings", lambda settings: None)
+
+        build_calls = []
+
+        class _FakeProvider:
+            max_concurrency = 2
+            supports_text_prompt = True
+
+        def _fake_build_provider(settings, api_key=None, plugin_manager=None):
+            build_calls.append(api_key)
+            return _FakeProvider()
+
+        monkeypatch.setattr("pagefolio.ocr.build_provider", _fake_build_provider)
+
+        stub = _make_apply_llm_settings_stub(
+            settings={"ocr_provider": "openai"},
+            app_extra={"_session_api_keys": {"openai": "sk-test-dummy"}},
+        )
+        OCRDialog._apply_llm_settings(stub, {"ocr_provider": "openai"})
+
+        assert build_calls == ["sk-test-dummy"], (
+            f"build_provider に渡された api_key: {build_calls!r}"
+        )
 
 
 class _FakeToplevel:

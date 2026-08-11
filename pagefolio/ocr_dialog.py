@@ -1087,6 +1087,25 @@ class OCRDialog(tk.Toplevel):
                     api_key=api_key,
                     plugin_manager=getattr(self.app, "plugin_manager", None),
                 )
+            elif name == "openai":
+                # openai: build_provider 経由でキー注入（D-01/D-05・claude/gemini と
+                # 同型。継続タスク回帰修正: 以前は専用 elif が無く末尾の
+                # tesseract/プラグイン専用 else 分岐へ落ち、build_provider が
+                # api_key 引数なしで呼ばれて OpenAIProvider.api_key が空文字に
+                # なっていた（実機で HTTP 401 として顕在化）。
+                from pagefolio.ocr import _resolve_api_key, build_provider
+                from pagefolio.ocr_providers import OCRAPIKeyError
+
+                session_keys = getattr(self.app, "_session_api_keys", {})
+                try:
+                    api_key = _resolve_api_key("openai", session_keys)
+                except OCRAPIKeyError:
+                    api_key = ""
+                self.provider = build_provider(
+                    self.app.settings,
+                    api_key=api_key,
+                    plugin_manager=getattr(self.app, "plugin_manager", None),
+                )
             elif name == "ollama":
                 from pagefolio.ocr_providers import OllamaProvider
 
@@ -1542,6 +1561,24 @@ class OCRDialog(tk.Toplevel):
             session_keys = getattr(self.app, "_session_api_keys", {})
             try:
                 api_key = _resolve_api_key("gemini", session_keys)
+            except OCRAPIKeyError:
+                api_key = ""
+            self.provider = build_provider(
+                s,
+                api_key=api_key,
+                plugin_manager=getattr(self.app, "plugin_manager", None),
+            )
+        elif name == "openai":
+            # openai: build_provider 経由でキー注入（D-01/D-05・claude/gemini と
+            # 同型）。継続タスク回帰修正: 以前は専用 elif が無く末尾の
+            # tesseract/プラグイン専用 else 分岐へ落ち、build_provider が
+            # api_key 引数なしで呼ばれて OpenAIProvider.api_key が空文字に
+            # なっていた（実機で HTTP 401: "You didn't provide an API key" として
+            # 顕在化。readiness チェック（_check_cloud_api_key）は通るのに
+            # 実行時にキーが空になる食い違いだった）。
+            session_keys = getattr(self.app, "_session_api_keys", {})
+            try:
+                api_key = _resolve_api_key("openai", session_keys)
             except OCRAPIKeyError:
                 api_key = ""
             self.provider = build_provider(
