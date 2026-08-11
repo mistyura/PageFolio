@@ -1140,9 +1140,12 @@ class FileOpsMixin:
         （V190-QA-02 / D-09〜D-11）。``path`` だけでなく確認時点の
         ``self.doc`` も ``bound_doc`` として束縛しており、再試行が実行される
         時点で ``self.doc`` が別ドキュメントへ差し替わっている（あるいは
-        `None` になっている）場合は書き込みを一切行わない（CR-01: 03-REVIEW.md）。
+        `None` になっている）場合は書き込みを一切行わず、表示中のトースト
+        があれば dismiss する（CR-01/WR-02: 03-REVIEW.md）。
         """
         if not self.doc or self.doc is not bound_doc:
+            if getattr(self, "_toast", None) is not None:
+                self._toast.dismiss("save_file")
             self._set_status(self._t("info_open_first"))
             return
         try:
@@ -1192,10 +1195,12 @@ class FileOpsMixin:
         呼ぶため、再試行のたびに保存先ピッカーを再表示しない。``path`` だけ
         でなく確認時点の ``self.doc`` も ``bound_doc`` として束縛しており、
         再試行時点で ``self.doc`` が別ドキュメントへ差し替わっている
-        （あるいは `None` になっている）場合は書き込みを一切行わない
-        （CR-01: 03-REVIEW.md）。
+        （あるいは `None` になっている）場合は書き込みを一切行わず、表示中の
+        トーストがあれば dismiss する（CR-01/WR-02: 03-REVIEW.md）。
         """
         if not self.doc or self.doc is not bound_doc:
+            if getattr(self, "_toast", None) is not None:
+                self._toast.dismiss("save_as")
             self._set_status(self._t("info_open_first"))
             return
         try:
@@ -1260,10 +1265,12 @@ class FileOpsMixin:
         して、束縛時の dict がそのまま再利用されることを型として明らかに
         する。確認時点の ``self.doc`` も ``bound_doc`` として束縛しており、
         再試行時点で ``self.doc`` が別ドキュメントへ差し替わっている
-        （あるいは `None` になっている）場合は書き込みを一切行わない
-        （CR-01: 03-REVIEW.md）。
+        （あるいは `None` になっている）場合は書き込みを一切行わず、表示中の
+        トーストがあれば dismiss する（CR-01/WR-02: 03-REVIEW.md）。
         """
         if not self.doc or self.doc is not bound_doc:
+            if getattr(self, "_toast", None) is not None:
+                self._toast.dismiss("save_compressed")
             self._set_status(self._t("info_open_first"))
             return
         try:

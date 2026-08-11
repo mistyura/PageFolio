@@ -540,6 +540,27 @@ class TestSaveFilePathsUseSharedHelper:
         assert "a.pdf" not in doc_b.save_paths
         assert doc_b.save_paths == []
 
+    def test_save_file_retry_dismisses_toast_after_doc_closed(self, monkeypatch):
+        """WR-02: ドキュメントを閉じた後に古いトーストの再試行が発火しても、
+        トーストが残留せず dismiss される。
+        """
+        monkeypatch.setattr(fo.messagebox, "askyesno", lambda *a, **k: True)
+        toast = _RecordingToast()
+        doc = _RaisingThenOkDoc()
+        app = _FakeFileOpsApp(
+            doc=doc,
+            toast=toast,
+            filepath="test.pdf",
+            overwrite_error=OSError("overwrite失敗（一時要因）"),
+        )
+        app._save_file()
+        _, _, retry_cb = toast.shown[0]
+
+        app.doc = None  # ファイルを閉じた状態を模す
+        retry_cb()
+
+        assert toast.dismissed[-1] == "save_file"
+
     def test_save_as_failure_then_success_dismisses(self, monkeypatch, tmp_path):
         """既存の失敗→成功→dismiss 経路（オブジェクト等価性は使わない）。"""
         out_path = str(tmp_path / "out.pdf")
@@ -614,6 +635,26 @@ class TestSaveFilePathsUseSharedHelper:
         retry_cb()
 
         assert doc_b.save_paths == []
+
+    def test_save_as_retry_dismisses_toast_after_doc_closed(
+        self, monkeypatch, tmp_path
+    ):
+        """WR-02: `_save_as` 経路でもドキュメントを閉じた後の再試行で
+        トーストが残留せず dismiss される。
+        """
+        out_path = str(tmp_path / "a.pdf")
+        monkeypatch.setattr(fo.filedialog, "asksaveasfilename", lambda **k: out_path)
+        toast = _RecordingToast()
+        doc = _RaisingThenOkDoc()
+        app = _FakeFileOpsApp(doc=doc, toast=toast)
+
+        app._save_as()
+        _, _, retry_cb = toast.shown[0]
+
+        app.doc = None  # ファイルを閉じた状態を模す
+        retry_cb()
+
+        assert toast.dismissed[-1] == "save_as"
 
     def test_save_compressed_failure_shows_toast(self, monkeypatch, tmp_path):
         """既存の失敗トースト表示検証（オブジェクト等価性は使わない）。"""
@@ -719,6 +760,26 @@ class TestSaveFilePathsUseSharedHelper:
         retry_cb()
 
         assert doc_b.save_paths == []
+
+    def test_save_compressed_retry_dismisses_toast_after_doc_closed(
+        self, monkeypatch, tmp_path
+    ):
+        """WR-02: `_save_compressed` 経路でもドキュメントを閉じた後の再試行で
+        トーストが残留せず dismiss される。
+        """
+        out_path = str(tmp_path / "compressed.pdf")
+        monkeypatch.setattr(fo.filedialog, "asksaveasfilename", lambda **k: out_path)
+        toast = _RecordingToast()
+        doc = _RaisingThenOkDoc()
+        app = _FakeFileOpsApp(doc=doc, toast=toast)
+
+        app._save_compressed()
+        _, _, retry_cb = toast.shown[0]
+
+        app.doc = None  # ファイルを閉じた状態を模す
+        retry_cb()
+
+        assert toast.dismissed[-1] == "save_compressed"
 
 
 class _FakePrintApp(po.PrintOpsMixin, ui_builder_mod.UIBuilderMixin):
