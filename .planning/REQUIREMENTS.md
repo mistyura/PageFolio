@@ -43,9 +43,9 @@
 - [ ] **V190-OAI-01**: ユーザーは OCR プロバイダとして OpenAI(ChatGPT) を選択できる
 - [x] **V190-OAI-02**: ユーザーは LLM 設定ダイアログで OpenAI のセッション限定 API キーを入力でき、そのキーは `pagefolio_settings.json` に永続化されない（`_SENSITIVE_KEYS` ガード・V14-D-02）
 - [ ] **V190-OAI-03**: ユーザーは OpenAI のモデル一覧を API から取得して選択でき、取得に失敗した場合は静的フォールバック一覧から選択できる
-- [ ] **V190-OAI-04**: OpenAI で OCR を実行する前に、送信先ホストを明示した確認ダイアログが表示される
-- [ ] **V190-OAI-05**: OpenAI で OCR を実行する前に、コスト確認ダイアログが表示される
-- [ ] **V190-OAI-06**: ユーザーはバッチ OCR で OpenAI を選択・実行できる（クラウド判定・コスト確認・送信先表示を含む）
+- [x] **V190-OAI-04**: OpenAI で OCR を実行する前に、送信先ホストを明示した確認ダイアログが表示される
+- [x] **V190-OAI-05**: OpenAI で OCR を実行する前に、コスト確認ダイアログが表示される
+- [x] **V190-OAI-06**: ユーザーはバッチ OCR で OpenAI を選択・実行できる（クラウド判定・コスト確認・送信先表示を含む）
 - [ ] **V190-OAI-07**: ユーザーは OpenAI をフォールバック候補として設定でき、フォールバック発動時に送信先確認が再提示される（V180-D-02 の明示設定型方針を維持）
 - [ ] **V190-OAI-08**: ユーザーは OpenAI 実行時の画像 detail レベル（low / high / auto）を選択でき、設定が永続化される
 - [ ] **V190-OAI-09**: ユーザーは reasoning effort 相当のパラメータを設定でき、対応モデル選択時のみ有効化される（Claude の `EFFORT_MODELS` 許可リスト方式を踏襲）
@@ -122,9 +122,9 @@
 | V190-OAI-01 | Phase 2 | Pending |
 | V190-OAI-02 | Phase 2 | Complete |
 | V190-OAI-03 | Phase 2 | Pending |
-| V190-OAI-04 | Phase 2 | Pending |
-| V190-OAI-05 | Phase 2 | Pending |
-| V190-OAI-06 | Phase 2 | Pending |
+| V190-OAI-04 | Phase 2 | Complete |
+| V190-OAI-05 | Phase 2 | Complete |
+| V190-OAI-06 | Phase 2 | Complete |
 | V190-OAI-07 | Phase 2 | Pending |
 | V190-OAI-08 | Phase 2 | Pending |
 | V190-OAI-09 | Phase 2 | Pending |

@@ -162,7 +162,7 @@ Plans:
   4. ユーザーは OpenAI をフォールバック候補として設定でき、発動時に送信先確認が再提示される。画像 detail レベル（low/high/auto）・reasoning effort 相当パラメータ（対応モデル選択時のみ有効化）・organization/project ID（指定時のみヘッダ付与）を設定でき、永続化される（V190-OAI-07/08/09/10）
   5. OpenAI プロバイダは `urllib.request` 直叩きで実装され新規 pip 依存を追加しない。モデル別のパラメータ非互換（`max_completion_tokens` を要するモデル・`temperature` を拒否する o-series）が正しく分岐しエラーにならず、429/5xx 応答に既存の指数バックオフ・`Retry-After` 尊重リトライ基盤（`ocr_providers/errors.py`）が適用される（V190-OAI-11/12/13）
 
-**Plans**: 1/4 plans executed（4 waves・全 wave 直列。02-01 は D-09 + 能力マトリクス確定の checkpoint:decision、02-04 は 3 分割した実機 human-verify を含む。02-REVIEWS.md 反映済み）
+**Plans**: 2/4 plans executed（4 waves・全 wave 直列。02-01 は D-09 + 能力マトリクス確定の checkpoint:decision、02-04 は 3 分割した実機 human-verify を含む。02-REVIEWS.md 反映済み）
 
 Plans:
 **Wave 1**
@@ -171,7 +171,7 @@ Plans:
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 02-02-PLAN.md — OCR / バッチ OCR ダイアログの catalog 移行と OpenAI 安全境界（送信先確認・コスト確認・単価プロヴェナンス・APIキー欠落・V190-CAT-01・V190-OAI-04/05/06）
+- [x] 02-02-PLAN.md — OCR / バッチ OCR ダイアログの catalog 移行と OpenAI 安全境界（送信先確認・コスト確認・単価プロヴェナンス・APIキー欠落・V190-CAT-01・V190-OAI-04/05/06）
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
@@ -214,7 +214,7 @@ Phases execute in numeric order: 1 → 2 → 3
 | Phase             | Milestone | Plans Complete | Status      | Completed  |
 | ----------------- | --------- | --------------- | ----------- | ---------- |
 | 1. Undo/Redo 修正 | v1.3.0    | 7/7 | Complete    | 2026-08-11 |
-| 2. プレビュー最適化とリファクタリング | v1.3.0 | 1/4 | In Progress|  |
+| 2. プレビュー最適化とリファクタリング | v1.3.0 | 2/4 | In Progress|  |
 | 3. API 整理と回帰テスト | v1.3.0 | 2/2 | Complete | 2026-06-03 |
 | 4. プロバイダ抽象化 | v1.4.0 | 4/4 | Complete | 2026-06-06 |
 | 5. Claude Provider + セキュリティ基盤 + プロバイダ選択 UI | v1.4.0 | 5/5 | Complete | 2026-06-07 |

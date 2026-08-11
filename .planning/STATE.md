@@ -5,15 +5,15 @@ milestone_name: 安全性・整合性の是正 + OpenAI プロバイダ追加
 current_phase: 02
 current_phase_name: ocr-openai-chatgpt
 status: executing
-stopped_at: Completed 02-01-PLAN.md
-last_updated: "2026-08-11T02:39:47.582Z"
+stopped_at: Completed 02-02-PLAN.md
+last_updated: "2026-08-11T03:27:09.138Z"
 last_activity: 2026-08-11
 last_activity_desc: Phase 01 execution started
 progress:
   total_phases: 3
   completed_phases: 1
   total_plans: 11
-  completed_plans: 8
+  completed_plans: 9
   percent: 33
 ---
 
@@ -29,11 +29,11 @@ See: .planning/PROJECT.md (updated 2026-08-10)
 ## Current Position
 
 Phase: 02 (ocr-openai-chatgpt) — EXECUTING
-Plan: 2 of 4
+Plan: 3 of 4
 Status: Ready to execute
 Last activity: 2026-08-11 — Phase 02 execution started
 
-Progress: [███████░░░] 73%
+Progress: [████████░░] 82%
 
 ## v1.9.0 Phase Map
 
@@ -132,6 +132,7 @@ Progress: [███████░░░] 73%
 | Phase 01 P06 | 約45min | 3 tasks | 3 files |
 | Phase 01 P07 | 約70分 | 3 tasks | 4 files |
 | Phase 02 P01 | 38min | 3 tasks | 9 files |
+| Phase 02 P02 | 16min | 3 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -241,6 +242,8 @@ Decisions are logged in PROJECT.md Key Decisions table.
 - [Phase ?]: [01-07]: APP_VERSION・開発履歴.md・READMEバッジは本プランで更新せず、Phase 3（V190-QA-03リリースゲート）へ委譲（01-05/01-06と同じ既定方針の継続）
 - [Phase ?]: [01-07]: merge（base op）の削除ループがinsertと同型の未保護構造（一括捕捉＋保護なし削除ループ）を持つことを棚卸しで確認。D-12方針に従いコード変更せず次マイルストーン候補として記録
 - [Phase ?]: 02-01: catalog.py新設+OpenAIProvider縦スライス。is_reasoning_modelはo-series OR gpt-5ファミリ(除chat-latest)のOR判定に再設計（実データでgpt-5.1がo系以外の推論モデル真ケースと判明・レビューHIGH02-01-2対応）。default_model=gpt-5.1
+- [Phase ?]: 02-02: _resolved_host_text をモジュールレベル関数として実装（既存フローズンテストスタブとの両立を優先）
+- [Phase ?]: 02-02: ミューテーション検証で env_var 埋め込みだけでは msg_key 誤フォールバックを検知できないと判明し、openai専用文言の直接アサーションへ強化
 
 ### Pending Todos
 
@@ -350,8 +353,8 @@ Decisions are logged in PROJECT.md Key Decisions table.
 
 **Resume file:** None
 
-Last session: 2026-08-11T02:39:47.560Z
-Stopped at: Completed 02-01-PLAN.md
+Last session: 2026-08-11T03:26:59.962Z
+Stopped at: Completed 02-02-PLAN.md
 
 ## Operator Next Steps
 
