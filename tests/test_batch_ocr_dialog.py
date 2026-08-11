@@ -497,6 +497,102 @@ class TestBatchSummary:
         assert BatchOCRDialog is batch_ocr.BatchOCRDialog
 
 
+class TestBatchSummaryRetrySleepRegression:
+    """CR-01 回帰: サマリのリトライ待機が `TypeError` で死なない。
+
+    `_batch_summary_worker` は `OCRRetryableError`（429/5xx）を受けると
+    `interruptible_sleep(delay, <キャンセル判定関数>)` で待機する。ここへ
+    `threading.Event` インスタンスそのものを渡すと `interruptible_sleep` が
+    `is_cancelled()` として呼ぶため `TypeError: 'Event' object is not callable`
+    になる。この `TypeError` はリトライ用 `except OCRRetryableError` 節の
+    **内部**で送出されるため同じ try の `except Exception` には捕まらず、
+    ワーカースレッドごと落ちて `_summary_ui_reset` が呼ばれず、サマリボタンが
+    永久に disabled のままハングしていた（`ocr_dialog.py:_summary_worker` /
+    `ocr.py` / `ocr_pipeline.py` の同型箇所は正しく `.is_set` を渡している）。
+
+    Tk ウィジェットに依存させず `_batch_summary_worker` を未バインド呼び出し
+    する（本ファイル後半の `TestBatchIsCloudProviderOpenAI` 等と同型）。
+    """
+
+    def _make_stub(self, complete_text_ex):
+        """`_batch_summary_worker` が触る属性だけを持つ最小スタブを返す。"""
+        after_calls = []
+        stub = types.SimpleNamespace(
+            provider=types.SimpleNamespace(complete_text_ex=complete_text_ex),
+            _summary_cancel_flag=threading.Event(),
+            _run_gen=1,
+            after=lambda delay, fn=None: after_calls.append(fn),
+            # 終端で `self.after(0, self.<callback>)` として参照されるだけで
+            # 呼び出しはされない（after がスタブのため）。存在だけ用意する。
+            _on_batch_summary_cancelled=lambda: None,
+            _on_batch_summary_done=lambda text, truncated: None,
+            _on_batch_summary_error=lambda msg: None,
+        )
+        return stub, after_calls
+
+    def test_retryable_error_sleep_does_not_raise_typeerror(self, monkeypatch):
+        """429 相当を1回受けてリトライ待機に入っても `TypeError` にならず、
+        2回目の呼び出しで成功して完了コールバックが `after` へ積まれる。
+        """
+        # 待機で実時間を消費しないよう即時 return させ、渡された第2引数が
+        # 「呼び出せる」ことを実際に呼んで確認する（Event を渡す退行の検出点）。
+        passed = []
+
+        def _fake_sleep(total, is_cancelled, step=0.5):
+            passed.append(is_cancelled)
+            is_cancelled()  # Event インスタンスならここで TypeError
+
+        monkeypatch.setattr(batch_ocr, "interruptible_sleep", _fake_sleep)
+        monkeypatch.setattr(batch_ocr, "clamp_retry_after", lambda d: 0.0)
+
+        attempts = []
+
+        def _complete_text_ex(full_text, prompt):
+            attempts.append(1)
+            if len(attempts) == 1:
+                raise OCRRetryableError("429 Too Many Requests")
+            return ("要約テキスト", False)
+
+        stub, after_calls = self._make_stub(_complete_text_ex)
+
+        # TypeError が漏れるとここで落ちる（修正前の失敗モード）
+        batch_ocr.BatchOCRDialog._batch_summary_worker(stub, 1, "本文", "プロンプト")
+
+        assert len(attempts) == 2, "リトライ後に再試行されていない"
+        assert passed, "リトライ待機に入っていない"
+        assert callable(passed[0]), (
+            f"interruptible_sleep へ呼び出し不可能な値が渡された: {passed[0]!r}"
+        )
+        # 完了コールバックが積まれている = ワーカーが最後まで到達している
+        assert len(after_calls) == 1
+
+    def test_cancel_flag_is_observed_during_retry_sleep(self, monkeypatch):
+        """待機中にキャンセルされたことを渡された判定関数が観測できる
+        （`.is_set` を渡しているので Event の状態変化が見える）。
+        """
+        observed = []
+
+        def _fake_sleep(total, is_cancelled, step=0.5):
+            observed.append(is_cancelled())  # 待機開始時点: 未キャンセル
+            stub_ref["stub"]._summary_cancel_flag.set()
+            observed.append(is_cancelled())  # セット後: キャンセル済みが見える
+
+        monkeypatch.setattr(batch_ocr, "interruptible_sleep", _fake_sleep)
+        monkeypatch.setattr(batch_ocr, "clamp_retry_after", lambda d: 0.0)
+
+        def _complete_text_ex(full_text, prompt):
+            raise OCRRetryableError("503 Service Unavailable")
+
+        stub, after_calls = self._make_stub(_complete_text_ex)
+        stub_ref = {"stub": stub}
+
+        batch_ocr.BatchOCRDialog._batch_summary_worker(stub, 1, "本文", "プロンプト")
+
+        assert observed == [False, True], (
+            f"キャンセルフラグの状態変化が観測できていない: {observed!r}"
+        )
+
+
 # ══════════════════════════════════════════════════════════════
 #  02-02 Task 3(C): openai の catalog 移行回帰（Tk ウィジェット非依存・
 #  ocr_dialog.py の TestIsCloudProvider 等と同型の未バインド呼び出しパターン）

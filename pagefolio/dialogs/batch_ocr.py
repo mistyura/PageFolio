@@ -1151,7 +1151,15 @@ class BatchOCRDialog(tk.Toplevel):
                     else 1.0 * (2 ** (attempt - 1))
                 )
                 delay = clamp_retry_after(raw_delay)
-                interruptible_sleep(delay, self._summary_cancel_flag)
+                # interruptible_sleep の第2引数は「呼び出せる判定関数」であり
+                # Event インスタンスそのものではない（`is_cancelled()` として
+                # 呼ばれるため Event を渡すと TypeError になる）。CR-01: この
+                # TypeError は同じ try の except Exception では捕まらず
+                # （リトライ用 except 節の内部で送出されるため）ワーカースレッド
+                # ごと落ち、_summary_ui_reset が呼ばれずサマリボタンが
+                # disabled のままハングしていた。ocr_dialog.py:_summary_worker /
+                # ocr.py / ocr_pipeline.py の同型箇所と同じく .is_set を渡す。
+                interruptible_sleep(delay, self._summary_cancel_flag.is_set)
             except Exception as e:
                 logger.exception("バッチOCR: サマリ生成呼び出し失敗: %s", e)
                 error_msg = str(e)
