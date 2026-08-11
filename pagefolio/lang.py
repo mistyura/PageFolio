@@ -702,6 +702,26 @@ LANG = {
             "モデル一覧には画像入力への対応が未確認のモデルが含まれる場合が"
             "あります。推奨モデル（一覧の上部）以外を選ぶ場合はご注意ください。"
         ),
+        # OpenAI 固有設定欄（detail / reasoning effort / organization・project・
+        # V190-OAI-08〜10・02-04）
+        "llm_openai_detail_label": "画像 detail:",
+        "llm_openai_detail_hint": (
+            "high は読み取り精度優先・low はコスト優先です（既定: high）"
+        ),
+        "llm_openai_effort_label": "Reasoning effort:",
+        "llm_openai_effort_unavailable_hint": (
+            "このモデルでは reasoning effort の値域が未確認のため送信しません"
+        ),
+        "llm_openai_org_label": "Organization ID:",
+        "llm_openai_project_label": "Project ID:",
+        "llm_openai_org_project_hint": (
+            "空欄の場合は該当ヘッダを送信しません（OpenAI-Organization / "
+            "OpenAI-Project）"
+        ),
+        "llm_openai_id_invalid": (
+            "{field} の形式が不正です。制御文字・空白を含まない印字可能な"
+            "半角文字を128文字以内で入力してください。"
+        ),
         # プロンプトテンプレート管理（v1.8.0 Phase 2・V180-TMPL-01〜05・D-01〜D-08）
         "tmpl_section_title": "📄 テンプレート:",
         "tmpl_save_btn": "💾 保存",
@@ -1467,6 +1487,27 @@ LANG = {
             "The model list may include models whose image-input support is "
             "unverified. Please be cautious when choosing a model other than "
             "the recommended ones (listed first)."
+        ),
+        # OpenAI-specific settings (detail / reasoning effort /
+        # organization & project — V190-OAI-08..10 / 02-04)
+        "llm_openai_detail_label": "Image detail:",
+        "llm_openai_detail_hint": (
+            "high favors read accuracy, low favors cost (default: high)"
+        ),
+        "llm_openai_effort_label": "Reasoning effort:",
+        "llm_openai_effort_unavailable_hint": (
+            "The value range for reasoning effort is unverified for this "
+            "model, so it will not be sent"
+        ),
+        "llm_openai_org_label": "Organization ID:",
+        "llm_openai_project_label": "Project ID:",
+        "llm_openai_org_project_hint": (
+            "When empty, the corresponding header is not sent "
+            "(OpenAI-Organization / OpenAI-Project)"
+        ),
+        "llm_openai_id_invalid": (
+            "{field} is invalid. Enter up to 128 printable characters with "
+            "no control characters or spaces."
         ),
         # Prompt template management (v1.8.0 Phase 2 — V180-TMPL-01..05 / D-01..D-08)
         "tmpl_section_title": "📄 Template:",

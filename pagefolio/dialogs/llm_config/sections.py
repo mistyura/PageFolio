@@ -8,7 +8,7 @@ import tkinter as tk
 from tkinter import messagebox, simpledialog, ttk
 
 from pagefolio.constants import CUSTOM_PROMPT_FILE, SUMMARY_PROMPT_FILE, C
-from pagefolio.dialogs.llm_config.dialog import _EFFORT_VALUES
+from pagefolio.dialogs.llm_config.dialog import _EFFORT_VALUES, _OPENAI_DETAIL_VALUES
 from pagefolio.ocr import MAX_OCR_MAX_TOKENS
 from pagefolio.ocr_providers import (
     ClaudeProvider,
@@ -712,6 +712,143 @@ class SectionsMixin:
         tk.Label(
             self.openai_section_frame,
             text=openai_note,
+            bg=C["BG_DARK"],
+            fg=C["TEXT_SUB"],
+            font=self._font(-2),
+            wraplength=460,
+            justify="left",
+        ).pack(anchor="w", pady=(0, 2))
+
+        # OpenAI 画像 detail レベル（V190-OAI-08・D-16。既定 high）
+        openai_detail_row = tk.Frame(self.openai_section_frame, bg=C["BG_DARK"])
+        openai_detail_row.pack(fill="x", padx=0, pady=2)
+        tk.Label(
+            openai_detail_row,
+            text=self._L["llm_openai_detail_label"],
+            bg=C["BG_DARK"],
+            fg=C["TEXT_MAIN"],
+            font=self._font(-1),
+            width=20,
+            anchor="w",
+        ).pack(side="left")
+        self.openai_detail_var = tk.StringVar(
+            value=self.current_settings.get("openai_detail", "high"),
+        )
+        self.openai_detail_combo = ttk.Combobox(
+            openai_detail_row,
+            textvariable=self.openai_detail_var,
+            values=_OPENAI_DETAIL_VALUES,
+            state="readonly",
+            font=self._font(-1),
+            width=10,
+        )
+        self.openai_detail_combo.pack(side="left", padx=4)
+        tk.Label(
+            self.openai_section_frame,
+            text=self._L["llm_openai_detail_hint"],
+            bg=C["BG_DARK"],
+            fg=C["TEXT_SUB"],
+            font=self._font(-2),
+            wraplength=460,
+            justify="left",
+        ).pack(anchor="w", pady=(0, 2))
+
+        # OpenAI reasoning effort 欄（V190-OAI-09・D-15・レビュー HIGH 02-04-1）。
+        # readonly Combobox・自由入力にしない。候補値は選択中モデルに応じて
+        # _on_openai_model_change（D-13・is_reasoning_model 単一判定源）が
+        # 動的に差し替える。ここでは pack しない（表示制御は同関数に一任）。
+        # Claude 専用の effort 用フレーム・変数・許可リスト定数は
+        # 一切流用しない（D-15）。
+        self.openai_effort_frame = tk.Frame(self.openai_section_frame, bg=C["BG_DARK"])
+        openai_effort_row = tk.Frame(self.openai_effort_frame, bg=C["BG_DARK"])
+        openai_effort_row.pack(fill="x", padx=0, pady=2)
+        tk.Label(
+            openai_effort_row,
+            text=self._L["llm_openai_effort_label"],
+            bg=C["BG_DARK"],
+            fg=C["TEXT_MAIN"],
+            font=self._font(-1),
+            width=20,
+            anchor="w",
+        ).pack(side="left")
+        self.openai_effort_var = tk.StringVar(
+            value=self.current_settings.get("openai_reasoning_effort", ""),
+        )
+        self.openai_effort_combo = ttk.Combobox(
+            openai_effort_row,
+            textvariable=self.openai_effort_var,
+            values=(),
+            state="readonly",
+            font=self._font(-1),
+            width=12,
+        )
+        self.openai_effort_combo.pack(side="left", padx=4)
+        # 候補が空のときだけ _on_openai_model_change が pack する不可ヒント。
+        self.openai_effort_unavailable_label = tk.Label(
+            self.openai_effort_frame,
+            text=self._L["llm_openai_effort_unavailable_hint"],
+            bg=C["BG_DARK"],
+            fg=C["TEXT_SUB"],
+            font=self._font(-2),
+            wraplength=460,
+            justify="left",
+        )
+
+        # OpenAI organization / project ID（V190-OAI-10・D-17）。
+        # 折りたたみ UI は導入せず既存プロバイダと同型の通常項目として置く。
+        openai_org_row = tk.Frame(self.openai_section_frame, bg=C["BG_DARK"])
+        openai_org_row.pack(fill="x", padx=0, pady=2)
+        tk.Label(
+            openai_org_row,
+            text=self._L["llm_openai_org_label"],
+            bg=C["BG_DARK"],
+            fg=C["TEXT_MAIN"],
+            font=self._font(-1),
+            width=20,
+            anchor="w",
+        ).pack(side="left")
+        self.openai_org_var = tk.StringVar(
+            value=self.current_settings.get("openai_organization", ""),
+        )
+        self.openai_org_entry = tk.Entry(
+            openai_org_row,
+            textvariable=self.openai_org_var,
+            font=self._font(-1),
+            bg=C["BG_CARD"],
+            fg=C["TEXT_MAIN"],
+            insertbackground=C["TEXT_MAIN"],
+            relief="flat",
+        )
+        self.openai_org_entry.pack(side="left", fill="x", expand=True, padx=4)
+
+        openai_project_row = tk.Frame(self.openai_section_frame, bg=C["BG_DARK"])
+        openai_project_row.pack(fill="x", padx=0, pady=2)
+        tk.Label(
+            openai_project_row,
+            text=self._L["llm_openai_project_label"],
+            bg=C["BG_DARK"],
+            fg=C["TEXT_MAIN"],
+            font=self._font(-1),
+            width=20,
+            anchor="w",
+        ).pack(side="left")
+        self.openai_project_var = tk.StringVar(
+            value=self.current_settings.get("openai_project", ""),
+        )
+        self.openai_project_entry = tk.Entry(
+            openai_project_row,
+            textvariable=self.openai_project_var,
+            font=self._font(-1),
+            bg=C["BG_CARD"],
+            fg=C["TEXT_MAIN"],
+            insertbackground=C["TEXT_MAIN"],
+            relief="flat",
+        )
+        self.openai_project_entry.pack(side="left", fill="x", expand=True, padx=4)
+
+        tk.Label(
+            self.openai_section_frame,
+            text=self._L["llm_openai_org_project_hint"],
             bg=C["BG_DARK"],
             fg=C["TEXT_SUB"],
             font=self._font(-2),

@@ -44,6 +44,7 @@ from pagefolio.ocr_providers.lmstudio import LMStudioProvider  # noqa: F401
 from pagefolio.ocr_providers.ollama import OllamaProvider  # noqa: F401
 from pagefolio.ocr_providers.openai_provider import (  # noqa: F401
     OpenAIProvider,
+    effort_values_for_model,
     is_reasoning_model,
 )
 from pagefolio.ocr_providers.runpod import RunPodProvider  # noqa: F401

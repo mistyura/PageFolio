@@ -9,8 +9,9 @@ _set_lm_status とスクロール域構築の共通部を担う。
 """
 
 import copy
+import re
 import tkinter as tk
-from tkinter import ttk
+from tkinter import messagebox, ttk
 
 from pagefolio.constants import CUSTOM_PROMPT_FILE, LANG, SUMMARY_PROMPT_FILE, C
 from pagefolio.ocr import MAX_OCR_MAX_TOKENS
@@ -19,6 +20,42 @@ from pagefolio.settings import get_current_font_size, prompt_file_exists
 
 # effort 値の許可リスト（D-17）
 _EFFORT_VALUES = ("low", "medium", "high", "xhigh", "max")
+
+# OpenAI 画像 detail レベルの許容値（V190-OAI-08・D-16）
+_OPENAI_DETAIL_VALUES = ("low", "high", "auto")
+
+# organization / project ID の長さ上限（レビュー MEDIUM 02-04-4）。
+# HTTP field-value として安全な印字可能 ASCII（\x21〜\x7E）・長さ 1〜128 のみ
+# 許可する。英数字限定のような恣意的に狭い制限は課さない。
+_OPENAI_ID_MAX_LEN = 128
+_OPENAI_ID_ALLOWED_RE = re.compile(r"^[\x21-\x7e]+$")
+
+
+def _validate_openai_id(value):
+    """organization / project ID を検証する（レビュー MEDIUM-12・02-04-4）。
+
+    前後空白を除去した結果が空文字なら (True, "") を返す（未入力は正常）。
+    長さが `_OPENAI_ID_MAX_LEN` 以下、かつ全文字が印字可能 ASCII
+    （`\\x21`〜`\\x7E`・HTTP ヘッダ値として安全な範囲）なら (True, cleaned)。
+    それ以外は (False, "") を返す。
+
+    不正入力を黙って空文字へ倒す旧仕様は採らない — 呼び出し側（`_apply`）は
+    `ok is False` のとき明示エラーを出して中断し、ユーザーの入力を保持する
+    こと（レビュー MEDIUM-12）。
+
+    引数:
+      value: 検証対象の値（文字列以外も str() で変換して扱う）
+
+    戻り値: (ok, cleaned) のタプル（tuple[bool, str]）
+    """
+    cleaned = str(value).strip()
+    if not cleaned:
+        return True, ""
+    if len(cleaned) > _OPENAI_ID_MAX_LEN:
+        return False, ""
+    if not _OPENAI_ID_ALLOWED_RE.match(cleaned):
+        return False, ""
+    return True, cleaned
 
 
 class DialogMixin:
@@ -223,6 +260,7 @@ class DialogMixin:
             self.gemini_section_frame.pack_forget()
             self.tesseract_section_frame.pack_forget()
             self.openai_section_frame.pack_forget()
+            self.openai_effort_frame.pack_forget()
             # D-15: 固有設定の直後・共通パラメータ群の先頭に見出しを再配置
             self._common_section_heading.pack(
                 anchor="w", padx=24, pady=(6, 2), before=self.scale_row
@@ -237,6 +275,7 @@ class DialogMixin:
             self.claude_section_frame.pack_forget()
             self.tesseract_section_frame.pack_forget()
             self.openai_section_frame.pack_forget()
+            self.openai_effort_frame.pack_forget()
             self.effort_frame.pack_forget()
             self._common_section_heading.pack(
                 anchor="w", padx=24, pady=(6, 2), before=self.scale_row
@@ -266,6 +305,7 @@ class DialogMixin:
             self.claude_section_frame.pack_forget()
             self.gemini_section_frame.pack_forget()
             self.openai_section_frame.pack_forget()
+            self.openai_effort_frame.pack_forget()
             self.effort_frame.pack_forget()
             self.temperature_frame.pack_forget()
             self._common_section_heading.pack(
@@ -277,6 +317,7 @@ class DialogMixin:
             self.gemini_section_frame.pack_forget()
             self.tesseract_section_frame.pack_forget()
             self.openai_section_frame.pack_forget()
+            self.openai_effort_frame.pack_forget()
             # lmstudio / off では temperature 欄を表示し effort 欄を隠す（従来挙動）
             self.effort_frame.pack_forget()
             self._common_section_heading.pack(
@@ -289,20 +330,43 @@ class DialogMixin:
 
     # ── OpenAI モデル変更ハンドラ（effort/temperature 切替・D-13）──
     def _on_openai_model_change(self, _event=None):
-        """openai モデル変更時に temperature/effort 欄を切替。
+        """openai モデル変更時に temperature/reasoning effort 欄を切替。
 
         判定は is_reasoning_model（D-13・単一判定源）のみを情報源とし、
         dialog.py 側に独自のモデル名判定を書かない。effort_frame は
-        Claude 専用欄のため openai では常に隠す（OpenAI 専用の reasoning
-        effort 欄は 02-04 でこの同じ関数に追加する）。
+        Claude 専用欄のため openai では常に隠す（D-15: OpenAI 専用の
+        reasoning effort 欄は openai_effort_frame として別に持つ）。
+
+        推論系モデルのとき: openai_effort_combo の候補値を
+        effort_values_for_model（能力マトリクス由来）で更新し、現在値が
+        候補外なら安全側（空文字）へ倒す。候補が空のモデルでは Combobox を
+        disabled にし不可ヒントを表示する（レビュー HIGH 02-04-1）。
+        非推論系モデルのとき: openai_effort_frame を隠し temperature_frame
+        を表示する。
         H-5: 末尾で _resize_to_fit を呼びダイアログ高さを追従させる。
         """
-        from pagefolio.ocr_providers import is_reasoning_model
+        from pagefolio.ocr_providers.openai_provider import (
+            effort_values_for_model,
+            is_reasoning_model,
+        )
 
         model = self.openai_model_var.get()
         if is_reasoning_model(model):
+            vals = effort_values_for_model(model)
+            combo_values = ("",) + vals
+            self.openai_effort_combo["values"] = combo_values
+            if self.openai_effort_var.get() not in combo_values:
+                self.openai_effort_var.set("")
+            if vals:
+                self.openai_effort_combo.configure(state="readonly")
+                self.openai_effort_unavailable_label.pack_forget()
+            else:
+                self.openai_effort_combo.configure(state="disabled")
+                self.openai_effort_unavailable_label.pack(anchor="w", pady=(0, 2))
+            self.openai_effort_frame.pack(fill="x", padx=0, pady=2)
             self.temperature_frame.pack_forget()
         else:
+            self.openai_effort_frame.pack_forget()
             self.temperature_frame.pack(
                 fill="x", padx=24, pady=2, before=self.scale_row
             )
@@ -459,6 +523,52 @@ class DialogMixin:
         # build_provider が catalog.default_model_for("openai") へ解決するため、
         # モデル ID 文字列を dialog.py に重複させない）
         llm_settings["openai_model"] = self.openai_model_var.get().strip()
+
+        # OpenAI detail レベル（V190-OAI-08・D-16。値域外は既定 high へ倒す）
+        raw_openai_detail = self.openai_detail_var.get()
+        llm_settings["openai_detail"] = (
+            raw_openai_detail if raw_openai_detail in _OPENAI_DETAIL_VALUES else "high"
+        )
+        # OpenAI reasoning effort（V190-OAI-09・レビュー HIGH 02-04-1）。
+        # readonly Combobox 由来の値だが、モデル切替直後の残留値対策として
+        # 選択中モデルの許容値へ改めて突き合わせ、含まれなければ空文字へ倒す。
+        from pagefolio.ocr_providers.openai_provider import effort_values_for_model
+
+        raw_openai_effort = self.openai_effort_var.get()
+        _allowed_openai_effort = ("",) + effort_values_for_model(
+            self.openai_model_var.get().strip()
+        )
+        llm_settings["openai_reasoning_effort"] = (
+            raw_openai_effort if raw_openai_effort in _allowed_openai_effort else ""
+        )
+        # OpenAI organization / project ID（V190-OAI-10・レビュー MEDIUM-12）。
+        # 不正入力は黙って空文字へ倒さず、明示エラーで Apply を中断する
+        # （ユーザーの入力欄の値はそのまま残るので修正できる）。
+        _org_ok, _org_cleaned = _validate_openai_id(self.openai_org_var.get())
+        if not _org_ok:
+            messagebox.showerror(
+                self._L["err_title"],
+                self._L["llm_openai_id_invalid"].format(
+                    field=self._L["llm_openai_org_label"].rstrip(":：")
+                ),
+                parent=self,
+            )
+            return
+        llm_settings["openai_organization"] = _org_cleaned
+
+        _project_ok, _project_cleaned = _validate_openai_id(
+            self.openai_project_var.get()
+        )
+        if not _project_ok:
+            messagebox.showerror(
+                self._L["err_title"],
+                self._L["llm_openai_id_invalid"].format(
+                    field=self._L["llm_openai_project_label"].rstrip(":：")
+                ),
+                parent=self,
+            )
+            return
+        llm_settings["openai_project"] = _project_cleaned
 
         # Tesseract 設定（D-04: lang は self._tesseract_langs 由来の固定値。
         # D-05: ダイアログ生成時に再検出済みの値を使う。getattr フォールバックは

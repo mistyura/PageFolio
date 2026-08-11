@@ -2873,6 +2873,58 @@ class TestOpenAIProviderBuildPayload:
         assert image_part["image_url"]["detail"] == "low"
 
 
+class TestOpenAIEffortValueGuard:
+    """レビュー HIGH 02-04-1: _apply_gen_params の多層防御を検証する。
+
+    pagefolio_settings.json は手編集可能なため、UI 側の readonly Combobox
+    制約だけでは許容集合外の reasoning_effort 送信を防げない。プロバイダ
+    側（_apply_gen_params）が最終ガードとして機能することを固定する。
+    """
+
+    def test_allowed_value_is_sent(self):
+        from pagefolio.ocr_providers import OpenAIProvider
+
+        p = OpenAIProvider(api_key="k", model="gpt-5.1", reasoning_effort="high")
+        payload = p._build_payload("Zg==", "prompt")
+        assert payload["reasoning_effort"] == "high"
+
+    def test_value_outside_allowed_set_is_dropped(self):
+        from pagefolio.ocr_providers import OpenAIProvider
+
+        # gpt-5.1 の許容値は none/low/medium/high のみ（xhigh は非対応）
+        p = OpenAIProvider(api_key="k", model="gpt-5.1", reasoning_effort="xhigh")
+        payload = p._build_payload("Zg==", "prompt")
+        assert "reasoning_effort" not in payload
+
+    def test_model_with_no_recorded_values_never_sends(self):
+        from pagefolio.ocr_providers import OpenAIProvider
+
+        p = OpenAIProvider(
+            api_key="k", model="gpt-5-unknown-future", reasoning_effort="medium"
+        )
+        payload = p._build_payload("Zg==", "prompt")
+        assert "reasoning_effort" not in payload
+
+    def test_non_reasoning_model_never_sends_even_with_value(self):
+        from pagefolio.ocr_providers import OpenAIProvider
+
+        p = OpenAIProvider(api_key="k", model="gpt-4o", reasoning_effort="medium")
+        payload = p._build_payload("Zg==", "prompt")
+        assert "reasoning_effort" not in payload
+
+    def test_hand_edited_settings_value_outside_domain_is_dropped(self):
+        """手編集された pagefolio_settings.json 由来の未知値でも送信されない
+        （UI の readonly Combobox を経由しない値の多層防御）。
+        """
+        from pagefolio.ocr_providers import OpenAIProvider
+
+        p = OpenAIProvider(
+            api_key="k", model="o3", reasoning_effort="super-duper-effort"
+        )
+        payload = p._build_payload("Zg==", "prompt")
+        assert "reasoning_effort" not in payload
+
+
 class TestOpenAIProviderHeaders:
     """organization / project ヘッダの空値非付与を確認する（D-17・V190-OAI-10）"""
 

@@ -1754,6 +1754,10 @@ def _make_apply_key_stub(
         effort_var=_GetVarStub("low"),
         gemini_model_var=_GetVarStub("gemini-2.5-flash"),
         openai_model_var=_GetVarStub("gpt-5.1"),
+        openai_detail_var=_GetVarStub("high"),
+        openai_effort_var=_GetVarStub(""),
+        openai_org_var=_GetVarStub(""),
+        openai_project_var=_GetVarStub(""),
         ocr_scale_var=_GetVarStub(1.5),
         ocr_timeout_var=_GetVarStub(120),
         ocr_max_tokens_var=_GetVarStub(-1),
@@ -3480,6 +3484,29 @@ class _FrameStub:
         self.pack_forget_calls += 1
 
 
+class _ComboStub:
+    """ttk.Combobox の values 代入・configure(state=...) を記録する最小スタブ
+    （V190-OAI-09・openai_effort_combo のテスト用）。
+    """
+
+    def __init__(self, values=()):
+        self.values = tuple(values)
+        self.state = "readonly"
+
+    def __setitem__(self, key, value):
+        if key == "values":
+            self.values = tuple(value)
+
+    def __getitem__(self, key):
+        if key == "values":
+            return self.values
+        raise KeyError(key)
+
+    def configure(self, **kwargs):
+        if "state" in kwargs:
+            self.state = kwargs["state"]
+
+
 def _make_provider_change_stub(tesseract_available=True):
     """LLMConfigDialog._on_provider_change を Tk 生成なしで呼ぶための
     最小スタブを返す（各プロバイダ固有フレームの pack/pack_forget 状態を
@@ -3500,6 +3527,10 @@ def _make_provider_change_stub(tesseract_available=True):
         gemini_section_frame=_FrameStub(),
         tesseract_section_frame=_FrameStub(),
         openai_section_frame=_FrameStub(),
+        openai_effort_frame=_FrameStub(),
+        openai_effort_combo=_ComboStub(),
+        openai_effort_var=_FakeStringVar(""),
+        openai_effort_unavailable_label=_FrameStub(),
         _common_section_heading=_FrameStub(),
         effort_frame=_FrameStub(),
         temperature_frame=_FrameStub(),
@@ -3809,3 +3840,364 @@ class TestRefreshOpenaiModels:
         )
         names = {n.id for n in ast.walk(fn) if isinstance(n, ast.Name)}
         assert "threading" not in names
+
+
+# ══════════════════════════════════════════════════════════════
+#  02-04 Task 1: OpenAI 固有パラメータ 4 欄の UI・入力検証・永続化
+#  （detail / reasoning effort / organization・project — V190-OAI-08〜10）
+# ══════════════════════════════════════════════════════════════
+
+
+def _make_openai_settings_apply_stub(
+    session_api_keys=None,
+    openai_detail="high",
+    openai_effort="",
+    openai_model="gpt-5.1",
+    openai_org="",
+    openai_project="",
+):
+    """_apply を Tk 生成なしで呼ぶための最小スタブ（_make_apply_key_stub を
+    OpenAI 固有欄で拡張したもの）。on_apply/destroy の呼び出しを記録する。
+    """
+    from pagefolio.constants import LANG
+
+    stub = _make_apply_key_stub(
+        session_api_keys if session_api_keys is not None else {}
+    )
+    stub._L = LANG["ja"]
+    stub.openai_model_var = _GetVarStub(openai_model)
+    stub.openai_detail_var = _GetVarStub(openai_detail)
+    stub.openai_effort_var = _GetVarStub(openai_effort)
+    stub.openai_org_var = _GetVarStub(openai_org)
+    stub.openai_project_var = _GetVarStub(openai_project)
+    calls = {"on_apply": [], "destroy": 0}
+    stub.on_apply = lambda s: calls["on_apply"].append(s)
+    stub.destroy = lambda: calls.__setitem__("destroy", calls["destroy"] + 1)
+    return stub, calls
+
+
+class TestOpenAiDetailPersistence:
+    """V190-OAI-08・D-16: _apply が openai_detail を収集し、
+    値域外は既定 high へ倒す。
+    """
+
+    def test_valid_detail_is_collected_as_is(self):
+        from pagefolio.dialogs.llm_config import LLMConfigDialog
+
+        stub, calls = _make_openai_settings_apply_stub(openai_detail="low")
+        LLMConfigDialog._apply(stub)
+        assert calls["on_apply"][0]["openai_detail"] == "low"
+
+    def test_auto_detail_is_collected_as_is(self):
+        from pagefolio.dialogs.llm_config import LLMConfigDialog
+
+        stub, calls = _make_openai_settings_apply_stub(openai_detail="auto")
+        LLMConfigDialog._apply(stub)
+        assert calls["on_apply"][0]["openai_detail"] == "auto"
+
+    def test_invalid_detail_falls_back_to_high(self):
+        from pagefolio.dialogs.llm_config import LLMConfigDialog
+
+        stub, calls = _make_openai_settings_apply_stub(openai_detail="ultra")
+        LLMConfigDialog._apply(stub)
+        assert calls["on_apply"][0]["openai_detail"] == "high"
+
+    def test_default_stub_detail_high_round_trips(self):
+        from pagefolio.dialogs.llm_config import LLMConfigDialog
+
+        stub, calls = _make_openai_settings_apply_stub()
+        LLMConfigDialog._apply(stub)
+        assert calls["on_apply"][0]["openai_detail"] == "high"
+
+
+class TestOpenAiReasoningEffortWidget:
+    """V190-OAI-09・レビュー HIGH 02-04-1: reasoning effort 欄は推論系
+    モデル選択時のみ表示され、候補値は能力マトリクス由来の許容値のみで
+    readonly。値域が未記録のモデルでは無効化される。
+    """
+
+    def test_reasoning_model_shows_effort_frame_hides_temperature(self):
+        stub = _make_provider_change_stub()
+        stub.openai_model_var.set("gpt-5.1")
+        stub._on_openai_model_change()
+        assert stub.openai_effort_frame.mapped is True
+        assert stub.temperature_frame.mapped is False
+
+    def test_non_reasoning_model_hides_effort_frame_shows_temperature(self):
+        stub = _make_provider_change_stub()
+        stub.openai_model_var.set("gpt-4o")
+        stub._on_openai_model_change()
+        assert stub.openai_effort_frame.mapped is False
+        assert stub.temperature_frame.mapped is True
+
+    def test_effort_combo_stays_readonly_for_reasoning_model(self):
+        from pagefolio.ocr_providers.openai_provider import effort_values_for_model
+
+        stub = _make_provider_change_stub()
+        stub.openai_model_var.set("gpt-5.1")
+        stub._on_openai_model_change()
+        assert stub.openai_effort_combo.state == "readonly"
+        assert stub.openai_effort_combo.values == (
+            "",
+            *effort_values_for_model("gpt-5.1"),
+        )
+
+    def test_effort_combo_disabled_for_model_with_no_recorded_values(self):
+        stub = _make_provider_change_stub()
+        # "gpt-5"（gpt-5.1 等とは別ID）は推論系（^gpt-5 一致）だが
+        # EFFORT_VALUES_BY_MODEL に完全一致/接頭辞一致とも該当しない。
+        stub.openai_model_var.set("gpt-5")
+        stub._on_openai_model_change()
+        assert stub.openai_effort_combo.values == ("",)
+        assert stub.openai_effort_combo.state == "disabled"
+        assert stub.openai_effort_unavailable_label.mapped is True
+
+    def test_effort_combo_hint_hidden_when_values_available(self):
+        stub = _make_provider_change_stub()
+        stub.openai_model_var.set("gpt-5.1")
+        stub._on_openai_model_change()
+        assert stub.openai_effort_unavailable_label.mapped is False
+
+    def test_current_effort_value_reset_when_not_in_new_candidates(self):
+        stub = _make_provider_change_stub()
+        stub.openai_effort_var.set("xhigh")
+        # gpt-5.1 の許容値は none/low/medium/high のみ（xhigh 非対応）
+        stub.openai_model_var.set("gpt-5.1")
+        stub._on_openai_model_change()
+        assert stub.openai_effort_var.get() == ""
+
+    def test_current_effort_value_kept_when_still_valid(self):
+        stub = _make_provider_change_stub()
+        stub.openai_effort_var.set("medium")
+        stub.openai_model_var.set("gpt-5.1")
+        stub._on_openai_model_change()
+        assert stub.openai_effort_var.get() == "medium"
+
+
+class TestOpenAiReasoningEffortIsNotClaudeEffort:
+    """D-15: OpenAI の reasoning effort は Claude の ocr_effort /
+    effort_frame / _EFFORT_VALUES と独立した専用実装である。
+    """
+
+    def test_settings_keys_are_independent_in_apply(self):
+        from pagefolio.dialogs.llm_config import LLMConfigDialog
+
+        stub, calls = _make_openai_settings_apply_stub(openai_effort="high")
+        stub.effort_var = _GetVarStub("low")
+        LLMConfigDialog._apply(stub)
+        settings = calls["on_apply"][0]
+        assert settings["openai_reasoning_effort"] == "high"
+        assert settings["ocr_effort"] == "low"
+
+    def test_openai_effort_change_does_not_overwrite_claude_effort(self):
+        from pagefolio.dialogs.llm_config import LLMConfigDialog
+
+        stub, calls = _make_openai_settings_apply_stub(openai_effort="medium")
+        stub.effort_var = _GetVarStub("xhigh")
+        LLMConfigDialog._apply(stub)
+        settings = calls["on_apply"][0]
+        assert settings["ocr_effort"] == "xhigh"
+        assert settings["openai_reasoning_effort"] == "medium"
+
+    def test_sections_openai_area_does_not_reference_claude_effort_symbols(self):
+        """sections.py の openai_section_frame ブロックが self.effort_var /
+        _EFFORT_VALUES を参照しないことをソース検査で固定する（D-15）。
+        """
+        source = (
+            REPO_ROOT / "pagefolio" / "dialogs" / "llm_config" / "sections.py"
+        ).read_text(encoding="utf-8")
+        start = source.index("openai_section_frame")
+        end = source.index("tesseract_section_frame")
+        segment = source[start:end]
+        assert "_EFFORT_VALUES" not in segment
+        assert "self.effort_var" not in segment
+
+
+class TestOpenAiIdValidation:
+    """レビュー MEDIUM-12・02-04-4: _validate_openai_id の境界値検証。"""
+
+    def test_strips_surrounding_whitespace(self):
+        from pagefolio.dialogs.llm_config.dialog import _validate_openai_id
+
+        assert _validate_openai_id("  org-abc_1  ") == (True, "org-abc_1")
+
+    def test_empty_input_is_valid_and_empty(self):
+        from pagefolio.dialogs.llm_config.dialog import _validate_openai_id
+
+        assert _validate_openai_id("") == (True, "")
+        assert _validate_openai_id("   ") == (True, "")
+
+    def test_printable_ascii_with_symbols_is_valid(self):
+        from pagefolio.dialogs.llm_config.dialog import _validate_openai_id
+
+        ok, cleaned = _validate_openai_id("proj.x:y")
+        assert ok is True
+        assert cleaned == "proj.x:y"
+
+    def test_newline_and_tab_are_rejected(self):
+        from pagefolio.dialogs.llm_config.dialog import _validate_openai_id
+
+        assert _validate_openai_id("bad\r\nX-Injected: 1") == (False, "")
+        assert _validate_openai_id("a\tb") == (False, "")
+
+    def test_embedded_space_is_rejected(self):
+        from pagefolio.dialogs.llm_config.dialog import _validate_openai_id
+
+        assert _validate_openai_id("a b") == (False, "")
+
+    def test_length_over_128_is_rejected(self):
+        from pagefolio.dialogs.llm_config.dialog import _validate_openai_id
+
+        assert _validate_openai_id("x" * 129) == (False, "")
+
+    def test_length_exactly_128_is_accepted(self):
+        from pagefolio.dialogs.llm_config.dialog import _validate_openai_id
+
+        value = "x" * 128
+        assert _validate_openai_id(value) == (True, value)
+
+    def test_non_ascii_is_rejected(self):
+        from pagefolio.dialogs.llm_config.dialog import _validate_openai_id
+
+        assert _validate_openai_id("組織") == (False, "")
+
+
+class TestOpenAiApplyAbortsOnInvalidId:
+    """レビュー MEDIUM-12: 不正な org/project で _apply が明示エラーを出して
+    中断し、入力欄の値・on_apply/destroy 呼び出しに影響しないこと。
+    """
+
+    def test_invalid_organization_shows_error_and_aborts(self, monkeypatch):
+        from pagefolio.dialogs.llm_config import LLMConfigDialog
+        from pagefolio.dialogs.llm_config import dialog as dialog_mod
+
+        error_calls = []
+        monkeypatch.setattr(
+            dialog_mod.messagebox,
+            "showerror",
+            lambda *a, **k: error_calls.append((a, k)),
+        )
+        stub, calls = _make_openai_settings_apply_stub(openai_org="a b")
+        LLMConfigDialog._apply(stub)
+
+        assert len(error_calls) == 1
+        assert calls["on_apply"] == []
+        assert calls["destroy"] == 0
+
+    def test_invalid_project_shows_error_and_aborts(self, monkeypatch):
+        from pagefolio.dialogs.llm_config import LLMConfigDialog
+        from pagefolio.dialogs.llm_config import dialog as dialog_mod
+
+        error_calls = []
+        monkeypatch.setattr(
+            dialog_mod.messagebox,
+            "showerror",
+            lambda *a, **k: error_calls.append((a, k)),
+        )
+        stub, calls = _make_openai_settings_apply_stub(
+            openai_org="org-ok", openai_project="bad\r\ninjected"
+        )
+        LLMConfigDialog._apply(stub)
+
+        assert len(error_calls) == 1
+        assert calls["on_apply"] == []
+        assert calls["destroy"] == 0
+
+    def test_input_field_value_not_cleared_on_abort(self, monkeypatch):
+        """不正入力時、_apply が openai_org_var.set() を一切呼ばない
+        （入力欄の値を書き換えない）ことを記録付きスタブで確認する。
+        """
+        from pagefolio.dialogs.llm_config import LLMConfigDialog
+        from pagefolio.dialogs.llm_config import dialog as dialog_mod
+
+        monkeypatch.setattr(dialog_mod.messagebox, "showerror", lambda *a, **k: None)
+        stub, calls = _make_openai_settings_apply_stub(openai_org="a b")
+
+        set_calls = []
+
+        class _RecordingVar:
+            def __init__(self, value):
+                self._value = value
+
+            def get(self):
+                return self._value
+
+            def set(self, value):
+                set_calls.append(value)
+                self._value = value
+
+        stub.openai_org_var = _RecordingVar("a b")
+        LLMConfigDialog._apply(stub)
+
+        assert set_calls == []
+        assert stub.openai_org_var.get() == "a b"
+        assert calls["on_apply"] == []
+
+    def test_valid_org_and_project_do_not_call_showerror(self, monkeypatch):
+        from pagefolio.dialogs.llm_config import LLMConfigDialog
+        from pagefolio.dialogs.llm_config import dialog as dialog_mod
+
+        error_calls = []
+        monkeypatch.setattr(
+            dialog_mod.messagebox,
+            "showerror",
+            lambda *a, **k: error_calls.append((a, k)),
+        )
+        stub, calls = _make_openai_settings_apply_stub(
+            openai_org="org-abc", openai_project="proj-def"
+        )
+        LLMConfigDialog._apply(stub)
+
+        assert error_calls == []
+        assert len(calls["on_apply"]) == 1
+        assert calls["on_apply"][0]["openai_organization"] == "org-abc"
+        assert calls["on_apply"][0]["openai_project"] == "proj-def"
+        assert calls["destroy"] == 1
+
+
+class TestOpenAiHeadersOmittedWhenEmpty:
+    """T-02-05: build_provider 経由で組み立てた OpenAIProvider の
+    _headers() が空/制御文字入り organization・project でヘッダを付与
+    しないこと（settings 経由の配線を確認する多層防御テスト）。
+    """
+
+    def test_empty_settings_omit_both_headers(self):
+        from pagefolio.ocr import build_provider
+
+        settings = {"ocr_provider": "openai"}
+        provider = build_provider(settings, api_key="k")
+        headers = provider._headers()
+        assert "OpenAI-Organization" not in headers
+        assert "OpenAI-Project" not in headers
+
+    def test_settings_values_are_wired_into_headers(self):
+        from pagefolio.ocr import build_provider
+
+        settings = {
+            "ocr_provider": "openai",
+            "openai_organization": "org-abc",
+            "openai_project": "proj-def",
+        }
+        provider = build_provider(settings, api_key="k")
+        headers = provider._headers()
+        assert headers["OpenAI-Organization"] == "org-abc"
+        assert headers["OpenAI-Project"] == "proj-def"
+
+    def test_hand_edited_control_char_value_never_reaches_header(self):
+        """手編集された settings（UI 検証を経由しない）由来の制御文字入り
+        値でも _headers() に制御文字が現れない（T-02-05 の多層防御）。
+        """
+        from pagefolio.ocr import build_provider
+
+        settings = {
+            "ocr_provider": "openai",
+            "openai_organization": "org\r\nX-Injected: 1",
+            "openai_project": "proj\tabc",
+        }
+        provider = build_provider(settings, api_key="k")
+        headers = provider._headers()
+        assert "OpenAI-Organization" not in headers
+        assert "OpenAI-Project" not in headers
+        assert all(
+            "\r" not in v and "\n" not in v and "\t" not in v for v in headers.values()
+        )

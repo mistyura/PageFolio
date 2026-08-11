@@ -55,6 +55,73 @@ _EXCLUDED_MODEL_MARKERS = (
     "search",
 )
 
+# 02-CAPABILITY-MATRIX.md モデル一覧テーブルの allowed_effort_values 列の
+# 転記（D-09・reasoning_effort=yes と確認された行のみ）。キーはモデル ID の
+# 完全一致、または（将来の拡張用の）ファミリ接頭辞。reasoning_effort が
+# no/unknown のモデル（gpt-4o・gpt-5-chat-latest 等）はエントリを持たない
+# （D-10 の安全側省略・02-04 Task 1）。
+EFFORT_VALUES_BY_MODEL = {
+    "gpt-5-nano": ("none", "minimal", "low", "medium", "high", "xhigh", "max"),
+    "gpt-5-mini": ("none", "minimal", "low", "medium", "high", "xhigh", "max"),
+    "gpt-5.1": ("none", "low", "medium", "high"),
+    "gpt-5.2": ("none", "low", "medium", "high", "xhigh"),
+    "gpt-5.6-terra": ("none", "minimal", "low", "medium", "high", "xhigh", "max"),
+    "gpt-5.6-sol": ("none", "minimal", "low", "medium", "high", "xhigh", "max"),
+    "o3": ("none", "minimal", "low", "medium", "high", "xhigh", "max"),
+}
+
+# 画像 detail レベルの許容値（V190-OAI-08・D-16）。UI 側は readonly
+# Combobox でこの値域のみを選ばせるが、pagefolio_settings.json は手編集
+# 可能なため、送信直前（_build_payload）でも同じ値域で多層防御する。
+_VALID_DETAIL_VALUES = frozenset({"low", "high", "auto"})
+
+# ヘッダ値として不正な ASCII 制御文字（\r/\n/\t を含む \x00-\x1f と \x7f）。
+_CONTROL_CHAR_RE = re.compile(r"[\x00-\x1f\x7f]")
+
+
+def effort_values_for_model(model):
+    """モデル ID の reasoning_effort 許容値タプルを返す（D-13 系の純関数）。
+
+    値域の一次情報は 02-CAPABILITY-MATRIX.md の allowed_effort_values 列
+    （`EFFORT_VALUES_BY_MODEL` へ転記済み）。完全一致 →
+    `EFFORT_VALUES_BY_MODEL` の宣言順での接頭辞一致、の順に引く。該当が
+    無ければ空タプルを返し、呼び出し側（UI の readonly Combobox・
+    `_apply_gen_params` の両方）は reasoning_effort を送らない
+    （D-10 の安全側省略・レビュー HIGH 02-04-1）。
+
+    引数:
+      model: モデル ID 文字列（None・空文字も許容）
+
+    戻り値: 許容値タプル（tuple[str, ...]）。未記録なら空タプル。
+    """
+    if not model:
+        return ()
+    if model in EFFORT_VALUES_BY_MODEL:
+        return EFFORT_VALUES_BY_MODEL[model]
+    for prefix, values in EFFORT_VALUES_BY_MODEL.items():
+        if prefix != model and model.startswith(prefix):
+            return values
+    return ()
+
+
+def _sanitize_header_value(value):
+    """ヘッダ組み立て直前の多層防御（D-17・T-02-05）。
+
+    `str(value).strip()` した結果に ASCII 制御文字が1つでも含まれる場合は
+    空文字を返す。UI 側の入力検証（`_validate_openai_id`）を経由しない
+    手編集された `pagefolio_settings.json` 由来の値でも、`_headers()` が
+    返すヘッダ値に改行・復帰・その他制御文字が現れないようにする。
+
+    引数:
+      value: 検証対象の値（文字列以外も str() で変換して扱う）
+
+    戻り値: 安全な文字列。制御文字を含む場合は空文字。
+    """
+    cleaned = str(value).strip()
+    if _CONTROL_CHAR_RE.search(cleaned):
+        return ""
+    return cleaned
+
 
 def filter_selectable_models(model_ids):
     """モデル ID 一覧から OCR/チャット用途でない ID を除外する（D-07・純関数）。
@@ -207,17 +274,20 @@ class OpenAIProvider(OCRProvider):
     def _headers(self):
         """リクエストヘッダを組み立てる（内部・D-17）。
 
-        organization / project は真値のときのみヘッダを追加する
-        （空文字を誤って送信しない）。
+        organization / project は `_sanitize_header_value` を通した後の
+        真値のときのみヘッダを追加する（空文字・制御文字入り値は送らない・
+        T-02-05 の多層防御）。
         """
         headers = {
             "Content-Type": "application/json",
             "Authorization": f"Bearer {self.api_key}",
         }
-        if self.organization:
-            headers["OpenAI-Organization"] = self.organization
-        if self.project:
-            headers["OpenAI-Project"] = self.project
+        organization = _sanitize_header_value(self.organization)
+        if organization:
+            headers["OpenAI-Organization"] = organization
+        project = _sanitize_header_value(self.project)
+        if project:
+            headers["OpenAI-Project"] = project
         return headers
 
     def _apply_gen_params(self, payload):
@@ -227,19 +297,31 @@ class OpenAIProvider(OCRProvider):
         - トークン上限キーは常に max_completion_tokens（max_tokens は
           非推奨のため使わない・D-10）。
         - 推論系モデル（is_reasoning_model 真）には temperature を送らず、
-          reasoning_effort が真値のときのみ reasoning_effort を送る。
+          reasoning_effort が真値 **かつ** effort_values_for_model の
+          許容集合に含まれるときのみ reasoning_effort を送る（レビュー
+          HIGH 02-04-1・多層防御。pagefolio_settings.json は手編集可能
+          なため UI 側の readonly 制約だけでは未知値の送信を防げない）。
         - 非推論系モデルには temperature のみ送る。
         _build_payload と _build_text_payload の共有経路。
         """
         payload["max_completion_tokens"] = self.max_tokens
         if not is_reasoning_model(self.model):
             payload["temperature"] = self.temperature
-        elif self.reasoning_effort:
+        elif self.reasoning_effort and self.reasoning_effort in (
+            effort_values_for_model(self.model)
+        ):
             payload["reasoning_effort"] = self.reasoning_effort
         return payload
 
     def _build_payload(self, b64_png, prompt):
-        """OpenAI Chat Completions リクエストボディを構築する（内部メソッド）。"""
+        """OpenAI Chat Completions リクエストボディを構築する（内部メソッド）。
+
+        detail は `_VALID_DETAIL_VALUES`（D-16）に含まれない値なら送信
+        直前に "high" へ倒す（edge: V190-OAI-08 invalid-input・多層防御。
+        UI 側の readonly Combobox を経由しない手編集された
+        pagefolio_settings.json 由来の値でも OCR がエラーにならない）。
+        """
+        detail = self.detail if self.detail in _VALID_DETAIL_VALUES else "high"
         payload = {
             "model": self.model,
             "messages": [
@@ -250,7 +332,7 @@ class OpenAIProvider(OCRProvider):
                             "type": "image_url",
                             "image_url": {
                                 "url": f"data:image/png;base64,{b64_png}",
-                                "detail": self.detail,
+                                "detail": detail,
                             },
                         },
                         {"type": "text", "text": prompt},
