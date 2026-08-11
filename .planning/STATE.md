@@ -3,10 +3,10 @@ gsd_state_version: 1.0
 milestone: v1.9.0
 milestone_name: 安全性・整合性の是正 + OpenAI プロバイダ追加
 status: Awaiting next milestone
-stopped_at: Phase 3 complete（UAT 19/19 pass・issue 0）、v1.9.0 全 3 フェーズ完了。次は `/gsd-complete-milestone v1.9.0`
+stopped_at: v1.9.0 マイルストーンをクローズ・アーカイブ済み。次は `/gsd-new-milestone` で次マイルストーンを定義する
 last_updated: "2026-08-11T12:38:32.438Z"
 last_activity: 2026-08-11
-last_activity_desc: Phase 03 UAT complete (19/19 pass, 0 issues)
+last_activity_desc: Milestone v1.9.0 shipped and archived (verified_closeout)
 progress:
   total_phases: 3
   completed_phases: 3
@@ -24,7 +24,23 @@ current_phase_name: qa-release-gate
 See: .planning/PROJECT.md (updated 2026-08-11)
 
 **Core value:** 大きな PDF でも Undo/Redo が正しく・速く動作し、コードが読みやすく保守しやすい状態にする
-**Current focus:** v1.9.0 マイルストーンクローズ（全 3 フェーズ完了・UAT 合格済み）
+**Current focus:** 次マイルストーンの定義待ち（`/gsd-new-milestone`）。候補は PROJECT.md「Next Milestone Goals」を参照
+
+## Shipped Milestone: v1.9.0（2026-08-11・verified_closeout）
+
+3 フェーズ / 15 プラン / 48 タスク。V190-* 全 27 要件 Complete（被覆 27/27）。
+検証 3/3 passed・Nyquist COMPLIANT・セキュリティ threats_open 0・UAT 19/19 pass（issue 0）。
+`APP_VERSION = v1.9.0`・テスト 1404 件グリーン・ruff クリーン。
+
+アーカイブ: `milestones/v1.9.0-ROADMAP.md` / `milestones/v1.9.0-REQUIREMENTS.md` /
+`milestones/v1.9.0-MILESTONE-AUDIT.md` / `milestones/v1.9.0-phases/`
+
+> クローズ時の判断: 事前監査（audit-open）が検出した Phase 03 `03-UAT-RESULTS.md` [unknown]
+> は誤検出（同ファイルは Plan 03-03 の成果物であり GSD の UAT セッションファイルではない。
+> 実体である `03-UAT.md` は `status: complete`・19/19 pass・pending 0）。
+> `v1.9.0-MILESTONE-AUDIT.md`（status: gaps_found）は Phase 2 完了時点（2026-08-11 17:03）の
+> 監査であり、その 40 分後に開始した Phase 3 が指摘ギャップ（V190-QA-01/02/03）を全て解消済み。
+> 以上より verified_closeout として確定した。
 
 ## Current Position
 
@@ -268,17 +284,22 @@ Decisions are logged in PROJECT.md Key Decisions table.
 
 ### Pending Todos
 
-- なし。v1.9.0 は ROADMAP.md 確定済み（3フェーズ・27/27要件被覆・孤立要件なし）。次は `/gsd-plan-phase 1` でフェーズ1（保存・編集・設定の安全性是正）の詳細計画へ。
+- なし。v1.9.0 はクローズ済み（3フェーズ / 15プラン / 27要件すべて Complete）。次は `/gsd-new-milestone` で次マイルストーンの questioning → research → requirements → roadmap を実行する。
 
 ### Blockers/Concerns
 
-- [v1.6.0 Phase 3 継続 → v1.9.0 Phase 3 で再確認]: V16-QUAL-03（max_tokens/429 実機検証）は実 API 課金・レート制限誘発が必要なため今回も「未実施（理由付き）」で維持。`03-UAT-RESULTS.md`「## 未実施（理由付き・D-14）」に消化条件を記録済み。あわせて ⑤-Claude（Claude 実 API 出力品質・`ANTHROPIC_API_KEY` 未設定）も同様に未実施 → **次マイルストーンで実 API キーが用意でき次第消化**
+v1.9.0 クローズ時点で次マイルストーンへ引き継ぐ未解決項目（いずれも非ブロッキング）:
+
+- [v1.6.0 Phase 3 継続 → v1.9.0 Phase 3 で維持]: V16-QUAL-03（max_tokens/429 実機検証）は実 API 課金・レート制限誘発が必要なため「未実施（理由付き）」で維持。あわせて ⑤-Claude（Claude 実 API 出力品質・`ANTHROPIC_API_KEY` 未設定）も同様に未実施 → **次マイルストーンで実 API キーが用意でき次第消化**。消化条件は `milestones/v1.9.0-phases/03-qa-release-gate/03-UAT-RESULTS.md`「## 未実施（理由付き・D-14）」に記録済み
+- [v1.9.0 コードレビュー由来・技術的負債 10 件]: Phase 1 の WR-01〜WR-06・AR-03、Phase 2 の WR-01/02・IN-01（Warning 4 / Info 6）。`page_ops.py` 側の WR-03〜WR-06 は `file_ops.py` 側で 01-07 が解消済みのパターンの水平展開であり一括で閉じやすい → **v1.10.0 候補（PROJECT.md「Next Milestone Goals」参照）**
 - [v1.9.0 Phase 3 検証で Info 記録]: リポジトリルートの追跡外一時ディレクトリ `UsersshdwfAppDataLocalTemppfb/`（過去セッションの pytest basetemp 誤設定による残骸・161 ファイル）が `ruff check .`（無限定）を 31 件のエラーで汚染し、CLAUDE.md チェックリスト文言どおりの実行が失敗する。`pagefolio`/`tests` 限定なら常にクリーン → **`.gitignore` 追加または削除が望ましい**
-- [v1.9.0 Phase 3・未検証のまま保存]: D-03 の2仮説（pytest assertion rewriting 後のメモリレイアウト／`tests/test_pdf_ops.py` の二分探索）は症状が再現しなかったため検証していない。再発時の調査入口として `03-TEST-ENV-INVESTIGATION.md`「## 検証しなかった仮説と理由」に保存済み
-- [v1.7.1 Phase 4 UAT]: 人手確認7件はユーザー判断で一旦pass（実機目視未検証・コード/自動ゲートは全通過、v1.6.0 Phase 4 と同様の運用）。v1.8.0 Phase 6 では UAT 2件をユーザー実施で全合格済み。
-- [06-03 defer・レビューR6] duplicate/merge/merge_resize 等の他ページ構造変更 op に対する do→undo→redo→undo 4手往復回帰テストの水平展開は v1.8.0 で未実施 → **v1.9.0 Phase 1（V190-UNDO-02）で対応予定**
+- [v1.9.0 Phase 3・未検証のまま保存]: D-03 の2仮説（pytest assertion rewriting 後のメモリレイアウト／`tests/test_pdf_ops.py` の二分探索）は症状が再現しなかったため検証していない。再発時の調査入口として `milestones/v1.9.0-phases/03-qa-release-gate/03-TEST-ENV-INVESTIGATION.md`「## 検証しなかった仮説と理由」に保存済み
 
 過去の懸念は全て解決済み:
+
+  - ~~[v1.7.1 Phase 4 UAT] 人手確認7件はユーザー判断で一旦pass（実機目視未検証）~~ → v1.9.0 Phase 3（V190-QA-03）で ⑥〜⑫ として現行コード照合のうえ実機目視により正式消化。v1.4.0/v1.6.0 由来分と合わせ実施13項目すべて pass
+  - ~~[06-03 defer・レビューR6] duplicate/merge/merge_resize 等の他ページ構造変更 op に対する do→undo→redo→undo 4手往復回帰テストの水平展開~~ → v1.9.0 Phase 1（01-05・V190-UNDO-02）で完了。境界・隣接・順序・精度の5エッジテストも追加
+  - ~~[v1.8.0 Phase 6 由来] IN-01 保存トースト再試行時の上書き確認ダイアログ再表示~~ → v1.9.0 Phase 3（03-01・V190-QA-02）で解消。確認/パス選択層と実保存層 `_do_save_*` の分離＋`bound_doc` による doc 同一性ガード
 
   - ~~[v1.8.0 リリース作業で発見] フルスイート連続実行で毎回異なる2件が `_tkinter.TclError`（Tk インタプリタ生成失敗）で ERROR になる~~ → v1.9.0 Phase 3（V190-QA-01）で現行 HEAD に対し10回連続実行し 0/10 で非再現を確認。`TCL_LIBRARY`/`TK_LIBRARY` のハードコードは入れずコード変更ゼロでクローズ（`03-TEST-ENV-INVESTIGATION.md` 症状①）
   - ~~[01-07 で特定] フルスイート単一プロセス実行が `test_cancel_finite_time_no_deadlock` 実行中に `Windows fatal exception: 0x80000003`（STATUS_BREAKPOINT）でプロセスごとクラッシュ（約10回中7回）~~ → v1.9.0 Phase 3（V190-QA-01）で同じ10回連続実行にてクラッシュ 0 回。リサーチセッションの7回と合算し累計17回連続グリーン。当面の運用だった分割実行は不要になり、リリースゲートは単一プロセス `pytest -q` 完走に確定（`CLAUDE.md`「## リリースゲート」節・`03-TEST-ENV-INVESTIGATION.md` 症状②）
@@ -377,9 +398,17 @@ Decisions are logged in PROJECT.md Key Decisions table.
 
 **Resume file:** None
 
-Last session: 2026-08-11T12:28:11Z
-Stopped at: Phase 3 complete（UAT 19/19 pass・issue 0）、v1.9.0 全 3 フェーズ完了。次は `/gsd-complete-milestone v1.9.0`
+Last session: 2026-08-11
+Stopped at: v1.9.0 マイルストーンをクローズ・アーカイブ済み（verified_closeout・タグ `v1.9.0` 付与）。次は `/gsd-new-milestone`
 
 ## Operator Next Steps
 
-- Start the next milestone with /gsd-new-milestone
+- **次アクション:** `/clear` してから `/gsd-new-milestone` で次マイルストーンを定義する（questioning → research → requirements → roadmap）。候補は PROJECT.md「Next Milestone Goals」を参照
+- **タグの push は未実施** — ユーザー選択によりローカルにのみ `v1.9.0` タグを作成した。リリース作業時に `git push origin v1.9.0` を実行する
+- **現在ブランチは `feature/v1.9.0`** — `main` へのマージは未実施（`branching_strategy: none` のため本ワークフローでは扱わない）。リリース時に PR / マージを判断する
+- サンプルプロンプト 2 ファイル（dist/PageFolio 直下のみ git 管理）が PyInstaller
+  `--noconfirm` ビルドで毎回消える恒久課題 — ソースツリー側へ原本移設 + ビルド後
+  コピーのスクリプト化を検討課題として保留中（260722-rel SUMMARY 参照）
+- 先送り課題（260722-gae 精査項目 3 ②③）: LLM 設定ダイアログへの「新世代 Gemini では
+  temperature 欄が無視される」注記（UI 変更）/ 新世代 thinking 有効時の応答時間・
+  トークン消費の実測（実 API 必要）— v1.9.0 Phase 2 では合流できず次マイルストーンへ継続
