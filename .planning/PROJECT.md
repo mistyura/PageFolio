@@ -219,10 +219,13 @@ PageFolio の既存コードベースに対する最適化プロジェクト。
 - ✓ V180-REFAC-03・V180-QA-01: `ocr_dialog.py` の producer-consumer 駆動部を `OCRRunEngine`（`pagefolio/ocr_engine.py`）へ抽出し `OCRDialog` を薄い委譲ラッパー化・OCR→サマリ E2E モックテスト整備（`tests/test_ocr_engine.py`・実スレッド/キュー駆動） — v1.8.0 Phase 3
 - ✓ V180-PERF-01/02/03・V180-ROBUST-01・V180-ROBUST-03: サムネイル窓内可視範囲仮想化（`pagination.py` 純関数 + `viewer.py` 統合・デバウンス+アイドル先読み）・`thumb_cache` LRU化（`LruCache`・`THUMB_CACHE_MAX=300`）・`selected_pages` 全ページインデックス不変条件回帰・Blob ライフサイクルのリーク検出強化（`_released`+`__del__`・AV衝突安全網の回帰テスト）・ShortcutsDialog WR-01/WR-02 解消 — v1.8.0 Phase 5
 - ✓ V180-QA-02/03/04: 再試行アクション付き非モーダルトースト通知（保存3操作+印刷・`ToastManager`新設）・UI一貫性監査（スクロール/フォントスケーリング是正・8ファイル監査）・開発履歴.md 版番整合（V16-D-04 残課題解消）。あわせて Core Value 直撃バグ（`insert_redo` 非対称復元・ページ重複）を修正（D-17） — v1.8.0 Phase 6
+- ✓ V190-CAT-01/02・V190-OAI-01〜13: プロバイダメタデータの単一情報源化（`ocr_providers/catalog.py` 新設・`registry.py` の標準ライブラリのみ依存の独立性制約は維持）と OpenAI(ChatGPT) プロバイダのフル実装（`urllib` 直叩き・新規 pip 依存ゼロ・セッション限定 API キー・モデル一覧取得と静的フォールバック・送信先/コスト確認・バッチ OCR 対応・フォールバック候補組み込み・detail / reasoning effort / organization / project の設定と永続化） — v1.9.0 Phase 2（検証 5/5 must-haves・15/15 要件・実機 human-verify 3 件合格）
 
 ### Active
 
-- v1.9.0 の要件（V190-*）を `.planning/REQUIREMENTS.md` に定義中。スコープは上記「Current Milestone」の Target features を参照（既存機能レビュー 8 件 + OpenAI プロバイダ追加 + 品質保証・持ち越し）。
+- v1.9.0 の要件（V190-*）は `.planning/REQUIREMENTS.md` に定義済み。スコープは上記「Current Milestone」の Target features を参照（既存機能レビュー 8 件 + OpenAI プロバイダ追加 + 品質保証・持ち越し）。
+- **残: Phase 3「品質保証・リリースゲート」**（V190-QA-*）。`APP_VERSION`・`開発履歴.md`・README バッジのバージョン更新は Phase 1/2 では意図的に行わず、Phase 3 のリリースゲート（V190-QA-03）へ委譲している。
+- Phase 2（V190-CAT-*/V190-OAI-*・全 15 要件）は Validated へ移動済み。
 - v1.8.0 全 26 要件（V180-*）は上記 Validated へ移動済み。
 
 ### Out of Scope
@@ -363,4 +366,4 @@ PageFolio の既存コードベースに対する最適化プロジェクト。
 4. 決定事項 → Key Decisions を更新
 
 ---
-*Last updated: 2026-08-10 — v1.9.0「安全性・整合性の是正 + OpenAI プロバイダ追加」を開始（既存機能レビュー 8 件 + OpenAI(ChatGPT) フル実装 + 品質保証・持ち越し）。前回更新: 2026-07-16 v1.8.0 マイルストーンクローズ。*
+*Last updated: 2026-08-11 — v1.9.0 Phase 2「OCR プロバイダ基盤整理 + OpenAI(ChatGPT) プロバイダ追加」完了（4/4 プラン・検証 5/5 must-haves・15/15 要件・実機 human-verify 3 件合格。実バグ 2 件を発見し回帰テスト付きで修正）。次は Phase 3「品質保証・リリースゲート」。前回更新: 2026-08-10 v1.9.0 開始。*
