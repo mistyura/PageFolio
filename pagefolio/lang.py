@@ -681,6 +681,7 @@ LANG = {
         "ocr_provider_rebuild_error": "プロバイダ再生成エラー: {e}",
         "llm_fetching_claude_models": "⏳ Claude モデル一覧を取得中…",
         "llm_fetching_gemini_models": "⏳ Gemini モデル一覧を取得中…",
+        "llm_fetching_openai_models": "⏳ OpenAI モデル一覧を取得中…",
         "llm_env_key_unset_static": (
             "APIキー未設定のため推奨モデル一覧を表示中"
             "（ANTHROPIC_API_KEY 環境変数または上の入力欄にキーを入力してください）"
@@ -689,6 +690,10 @@ LANG = {
             "APIキー未設定のため推奨モデル一覧を表示中"
             "（GEMINI_API_KEY/GOOGLE_API_KEY 環境変数または"
             "上の入力欄にキーを入力してください）"
+        ),
+        "llm_env_key_unset_static_openai": (
+            "APIキー未設定のため推奨モデル一覧を表示中"
+            "（OPENAI_API_KEY 環境変数または上の入力欄にキーを入力してください）"
         ),
         "llm_model_fetch_failed": (
             "{provider} モデル取得失敗（静的リストへフォールバック）: {e}"
@@ -1442,6 +1447,7 @@ LANG = {
         "ocr_provider_rebuild_error": "Provider rebuild error: {e}",
         "llm_fetching_claude_models": "⏳ Fetching Claude model list…",
         "llm_fetching_gemini_models": "⏳ Fetching Gemini model list…",
+        "llm_fetching_openai_models": "⏳ Fetching OpenAI model list…",
         "llm_env_key_unset_static": (
             "API key not set — showing recommended models "
             "(enter a key above or set ANTHROPIC_API_KEY)"
@@ -1449,6 +1455,10 @@ LANG = {
         "llm_env_key_unset_static_gemini": (
             "API key not set — showing recommended models "
             "(enter a key above or set GEMINI_API_KEY/GOOGLE_API_KEY)"
+        ),
+        "llm_env_key_unset_static_openai": (
+            "API key not set — showing recommended models "
+            "(enter a key above or set OPENAI_API_KEY)"
         ),
         "llm_model_fetch_failed": (
             "{provider} model fetch failed (falling back to static list): {e}"

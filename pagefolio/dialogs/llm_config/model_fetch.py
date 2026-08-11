@@ -8,7 +8,13 @@ import os
 import threading
 import tkinter as tk
 
-from pagefolio.ocr_providers import ClaudeProvider, GeminiProvider, LMStudioProvider
+from pagefolio.ocr_providers import (
+    ClaudeProvider,
+    GeminiProvider,
+    LMStudioProvider,
+    OpenAIProvider,
+)
+from pagefolio.ocr_providers.openai_provider import order_models_for_display
 from pagefolio.ocr_providers.registry import env_vars_for
 
 logger = logging.getLogger(__name__)
@@ -235,6 +241,60 @@ class ModelFetchMixin:
             self.claude_model_combo["values"] = ClaudeProvider.RECOMMENDED_MODELS
             self._set_lm_status(
                 self._L["llm_env_key_unset_static"],
+                kind="info",
+            )
+
+        # V174: クラウド API は model_list_timeout=30 秒までかかり得るため
+        # バックグラウンド実行し UI はブロックしない
+        self._fetch_models_async(provider.list_models, _on_success, _on_error)
+
+    # ── OpenAI モデル更新 ───────────────────────────────
+    def _refresh_openai_models(self):
+        """OpenAI モデル一覧を取得して Combobox に反映する。
+
+        OPENAI_API_KEY が未設定でも OpenAIProvider.list_models が
+        RECOMMENDED_MODELS を返すので静的リストが常に表示される（D-08）。
+        api_key は settings に書かない（D-01/D-05）。
+        D-10: ダイアログ入力欄のライブ値（OK 前でも）を環境変数より優先する。
+
+        D-08 の観測同一性（レビュー MEDIUM-11）: _on_error が入れる values は
+        list_models が 0 件合流で返す値（RECOMMENDED_MODELS を並び替えたもの）
+        と完全に同一でなければならず、_set_lm_status に渡す LANG キーも同一
+        でなければならない。両者が一致していることは
+        tests/test_provider_ui.py::TestRefreshOpenaiModels(d) で固定する。
+
+        _on_success / _on_error のいずれも self.openai_model_var を書き換え
+        ない（_fetch_models_async は _model_fetch_running で取得を直列化して
+        おり、コールバックが combo["values"] にしか触れないことで遅延到達
+        した結果がユーザーの新しい選択を上書きする経路が構造的に存在しない・
+        レビュー S5）。独自の threading.Thread は起動しない。
+        """
+        self._set_lm_status(self._L["llm_fetching_openai_models"], kind="info")
+        api_key = self.openai_api_key_var.get().strip() or _env_fallback("openai")
+        provider = OpenAIProvider(api_key=api_key, model="")
+
+        def _on_success(models):
+            self.openai_model_combo["values"] = models
+            if not api_key:
+                self._set_lm_status(
+                    self._L["llm_env_key_unset_static_openai"],
+                    kind="info",
+                )
+            else:
+                self._set_lm_status(
+                    self._L["settings_lm_test_ok"].format(count=len(models)), kind="ok"
+                )
+
+        def _on_error(e):
+            # 例外時は静的推奨リストへフォールバック（D-08）
+            logger.warning(
+                self._L["llm_model_fetch_failed"].format(provider="OpenAI", e=e)
+            )
+            self.openai_model_combo["values"] = order_models_for_display(
+                OpenAIProvider.RECOMMENDED_MODELS
+            )
+            self._set_lm_status(
+                self._L["llm_env_key_unset_static_openai"],
                 kind="info",
             )
 

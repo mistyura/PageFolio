@@ -8,6 +8,7 @@
 """
 
 import ast
+import pathlib
 import types
 
 import pytest
@@ -20,6 +21,8 @@ from pagefolio.ocr import (
     resolve_summary_prompt,
 )
 from pagefolio.ocr_providers import ClaudeProvider
+
+REPO_ROOT = pathlib.Path(__file__).resolve().parent.parent
 
 # ══════════════════════════════════════════════════════════════
 #  OCR-UI-01: _model_supports_effort（effort/temperature 切替判定）
@@ -1725,7 +1728,13 @@ class _GetTextStub:
         return self._value
 
 
-def _make_apply_key_stub(session_api_keys, claude_key="", gemini_key="", runpod_key=""):
+def _make_apply_key_stub(
+    session_api_keys,
+    claude_key="",
+    gemini_key="",
+    runpod_key="",
+    openai_key="",
+):
     """LLMConfigDialog._apply を Tk 生成なしで呼ぶための最小スタブを返す。
 
     _apply が参照する全属性（プロバイダ別設定行・数値設定・カスタムプロンプト）
@@ -1744,6 +1753,7 @@ def _make_apply_key_stub(session_api_keys, claude_key="", gemini_key="", runpod_
         claude_model_var=_GetVarStub("claude-sonnet-4-6"),
         effort_var=_GetVarStub("low"),
         gemini_model_var=_GetVarStub("gemini-2.5-flash"),
+        openai_model_var=_GetVarStub("gpt-5.1"),
         ocr_scale_var=_GetVarStub(1.5),
         ocr_timeout_var=_GetVarStub(120),
         ocr_max_tokens_var=_GetVarStub(-1),
@@ -1754,6 +1764,7 @@ def _make_apply_key_stub(session_api_keys, claude_key="", gemini_key="", runpod_
         claude_api_key_var=_GetVarStub(claude_key),
         gemini_api_key_var=_GetVarStub(gemini_key),
         runpod_api_key_var=_GetVarStub(runpod_key),
+        openai_api_key_var=_GetVarStub(openai_key),
         on_apply=None,
         destroy=lambda: None,
     )
@@ -1792,6 +1803,22 @@ class TestApiKeyNotInSettings:
         stub.on_apply = lambda s: captured.update(s)
         LLMConfigDialog._apply(stub)
 
+        assert not any("api_key" in k.lower() for k in captured)
+
+    def test_openai_key_not_in_llm_settings(self):
+        """V190-OAI-02: openai 欄にダミーキーを入れても llm_settings に
+        openai_api_key / OPENAI_API_KEY が含まれない。
+        """
+        from pagefolio.dialogs.llm_config import LLMConfigDialog
+
+        session = {}
+        stub = _make_apply_key_stub(session, openai_key="sk-DUMMY-TEST-KEY")
+        captured = {}
+        stub.on_apply = lambda s: captured.update(s)
+        LLMConfigDialog._apply(stub)
+
+        assert "openai_api_key" not in captured
+        assert "OPENAI_API_KEY" not in captured
         assert not any("api_key" in k.lower() for k in captured)
 
 
@@ -1916,6 +1943,62 @@ class TestRunpodSessionKeySlot:
         assert session["claude"] == "sk-ant-DUMMY"
         assert session["gemini"] == "AIza-DUMMY"
         assert session["runpod"] == "rp-DUMMY"
+
+
+class TestOpenAiSessionKeySlot:
+    """V190-OAI-02: OpenAI 欄の値が _session_api_keys["openai"] に格納され、
+    他プロバイダのスロットを汚染しない（TestRunpodSessionKeySlot と同型）。
+    """
+
+    def test_openai_key_goes_to_openai_slot(self):
+        """openai 欄のダミーキーが _session_api_keys["openai"] に入る。"""
+        from pagefolio.dialogs.llm_config import LLMConfigDialog
+
+        session = {}
+        stub = _make_apply_key_stub(session, openai_key="sk-DUMMY-TEST-KEY")
+        LLMConfigDialog._apply(stub)
+
+        assert session.get("openai") == "sk-DUMMY-TEST-KEY"
+
+    def test_openai_key_does_not_pollute_claude_slot(self):
+        """openai 欄にのみ値を入れても "claude" スロットは汚染されない。"""
+        from pagefolio.dialogs.llm_config import LLMConfigDialog
+
+        session = {}
+        stub = _make_apply_key_stub(session, openai_key="sk-DUMMY-TEST-KEY")
+        LLMConfigDialog._apply(stub)
+
+        assert "claude" not in session
+
+    def test_empty_openai_key_clears_existing_session_entry(self):
+        """空欄で _apply すると既存の openai エントリが除去される（D-06）。"""
+        from pagefolio.dialogs.llm_config import LLMConfigDialog
+
+        session = {"openai": "old-dummy-key"}
+        stub = _make_apply_key_stub(session, openai_key="")
+        LLMConfigDialog._apply(stub)
+
+        assert "openai" not in session
+
+    def test_all_four_slots_independent(self):
+        """claude/gemini/runpod/openai の4欄を入力すると各自のスロットへ
+        独立格納される。"""
+        from pagefolio.dialogs.llm_config import LLMConfigDialog
+
+        session = {}
+        stub = _make_apply_key_stub(
+            session,
+            claude_key="sk-ant-DUMMY",
+            gemini_key="AIza-DUMMY",
+            runpod_key="rp-DUMMY",
+            openai_key="sk-DUMMY",
+        )
+        LLMConfigDialog._apply(stub)
+
+        assert session["claude"] == "sk-ant-DUMMY"
+        assert session["gemini"] == "AIza-DUMMY"
+        assert session["runpod"] == "rp-DUMMY"
+        assert session["openai"] == "sk-DUMMY"
 
 
 # ══════════════════════════════════════════════════════════════
@@ -3370,3 +3453,359 @@ class TestTemplateDeleteButtonState:
         d._refresh_template_delete_state()
 
         assert d.template_delete_btn.last_state == ["!disabled"]
+
+
+# ══════════════════════════════════════════════════════════════
+#  Phase 2 Plan 03 Task 3: dialog.py の openai 分岐・往復テスト・
+#  model_fetch.py の _refresh_openai_models 配線
+# ══════════════════════════════════════════════════════════════
+
+
+class _FrameStub:
+    """tk.Frame の pack/pack_forget を記録する最小スタブ（_FakeLabel と同型）。"""
+
+    def __init__(self):
+        self.mapped = False
+        self.pack_calls = []
+        self.pack_forget_calls = 0
+
+    def pack(self, **kwargs):
+        """pack 呼び出しを記録し、表示状態を True にする。"""
+        self.mapped = True
+        self.pack_calls.append(kwargs)
+
+    def pack_forget(self):
+        """pack_forget 呼び出しを記録し、表示状態を False にする。"""
+        self.mapped = False
+        self.pack_forget_calls += 1
+
+
+def _make_provider_change_stub(tesseract_available=True):
+    """LLMConfigDialog._on_provider_change を Tk 生成なしで呼ぶための
+    最小スタブを返す（各プロバイダ固有フレームの pack/pack_forget 状態を
+    _FrameStub で記録する）。_on_model_change/_on_openai_model_change/
+    _model_supports_effort は実装（DialogMixin の本物のロジック）を
+    stub へバインドし、effort/temperature 切替の実挙動を検証できるようにする。
+    """
+    from pagefolio.dialogs.llm_config import LLMConfigDialog
+
+    stub = types.SimpleNamespace(
+        provider_var=_FakeStringVar("off"),
+        _tesseract_available=tesseract_available,
+        _last_valid_provider="off",
+        url_section_frame=_FrameStub(),
+        ollama_section_frame=_FrameStub(),
+        runpod_section_frame=_FrameStub(),
+        claude_section_frame=_FrameStub(),
+        gemini_section_frame=_FrameStub(),
+        tesseract_section_frame=_FrameStub(),
+        openai_section_frame=_FrameStub(),
+        _common_section_heading=_FrameStub(),
+        effort_frame=_FrameStub(),
+        temperature_frame=_FrameStub(),
+        scale_row=object(),
+        claude_model_var=_FakeStringVar("claude-sonnet-4-6"),
+        openai_model_var=_FakeStringVar("gpt-5.1"),
+    )
+    status_calls = []
+    stub._set_lm_status = lambda text, kind="info": status_calls.append((text, kind))
+    stub._resize_to_fit = lambda: None
+    stub._on_model_change = lambda _event=None: LLMConfigDialog._on_model_change(
+        stub, _event
+    )
+    stub._on_openai_model_change = lambda _event=None: (
+        LLMConfigDialog._on_openai_model_change(stub, _event)
+    )
+    stub._model_supports_effort = lambda model: LLMConfigDialog._model_supports_effort(
+        stub, model
+    )
+    stub._on_provider_change = lambda _event=None: LLMConfigDialog._on_provider_change(
+        stub, _event
+    )
+    stub._status_calls = status_calls
+    return stub
+
+
+class TestOnProviderChangeOpenai:
+    """openai 選択時に openai_section_frame が pack され、claude/gemini/
+    tesseract が pack_forget されることを確認する（V190-OAI-01）。
+    """
+
+    def test_openai_shows_openai_section_and_hides_others(self):
+        """openai 選択で openai_section_frame が表示され他が隠れる。"""
+        stub = _make_provider_change_stub()
+        stub.provider_var.set("openai")
+        stub._on_provider_change()
+
+        assert stub.openai_section_frame.mapped is True
+        assert stub.claude_section_frame.mapped is False
+        assert stub.gemini_section_frame.mapped is False
+        assert stub.tesseract_section_frame.mapped is False
+
+    def test_claude_after_openai_hides_openai_section(self):
+        """逆に claude を選んだとき openai_section_frame が pack_forget される。"""
+        stub = _make_provider_change_stub()
+        stub.provider_var.set("openai")
+        stub._on_provider_change()
+        stub.provider_var.set("claude")
+        stub._on_provider_change()
+
+        assert stub.openai_section_frame.mapped is False
+        assert stub.claude_section_frame.mapped is True
+
+
+class TestProviderRoundTripFrameState:
+    """レビュー MEDIUM-13: openai → claude → gemini → openai の順に
+    _on_provider_change を呼び、各段で temperature_frame/effort_frame/
+    openai_section_frame の pack/pack_forget 状態が期待どおりになること。
+    最後の openai で 1 回目の openai と同じ状態に戻ることをアサートする
+    （分岐の追加漏れ検出装置）。
+    """
+
+    def test_round_trip_restores_initial_openai_state(self):
+        stub = _make_provider_change_stub()
+
+        # 1 回目: openai（既定モデル gpt-5.1 は推論系 → temperature 省略）
+        stub.provider_var.set("openai")
+        stub._on_provider_change()
+        assert stub.openai_section_frame.mapped is True
+        assert stub.temperature_frame.mapped is False
+        assert stub.effort_frame.mapped is False
+        first_state = (
+            stub.openai_section_frame.mapped,
+            stub.temperature_frame.mapped,
+            stub.effort_frame.mapped,
+        )
+
+        # claude（claude-sonnet-4-6 は EFFORT_MODELS 対象 → effort 有効）
+        stub.provider_var.set("claude")
+        stub._on_provider_change()
+        assert stub.openai_section_frame.mapped is False
+        assert stub.claude_section_frame.mapped is True
+        assert stub.effort_frame.mapped is True
+        assert stub.temperature_frame.mapped is False
+
+        # gemini（effort 非対応 → temperature のみ）
+        stub.provider_var.set("gemini")
+        stub._on_provider_change()
+        assert stub.openai_section_frame.mapped is False
+        assert stub.claude_section_frame.mapped is False
+        assert stub.gemini_section_frame.mapped is True
+        assert stub.temperature_frame.mapped is True
+        assert stub.effort_frame.mapped is False
+
+        # 2 回目の openai: 1 回目と同じ状態に戻る
+        stub.provider_var.set("openai")
+        stub._on_provider_change()
+        second_state = (
+            stub.openai_section_frame.mapped,
+            stub.temperature_frame.mapped,
+            stub.effort_frame.mapped,
+        )
+        assert second_state == first_state
+        assert stub.gemini_section_frame.mapped is False
+        assert stub.claude_section_frame.mapped is False
+
+
+class TestOnOpenaiModelChange:
+    """推論系モデル ID で temperature_frame が pack_forget され、非推論系で
+    pack されることを確認する（D-13・単一判定源）。
+    """
+
+    def test_reasoning_gpt5_family_hides_temperature_frame(self):
+        """gpt-5.1（o 系以外の推論系実例）で temperature_frame が隠れる。"""
+        stub = _make_provider_change_stub()
+        stub.openai_model_var.set("gpt-5.1")
+        stub._on_openai_model_change()
+        assert stub.temperature_frame.mapped is False
+        assert stub.effort_frame.mapped is False
+
+    def test_reasoning_o_series_hides_temperature_frame(self):
+        """o3（o-series の推論系実例）で temperature_frame が隠れる。"""
+        stub = _make_provider_change_stub()
+        stub.openai_model_var.set("o3")
+        stub._on_openai_model_change()
+        assert stub.temperature_frame.mapped is False
+
+    def test_non_reasoning_model_shows_temperature_frame(self):
+        """gpt-4o（非推論系実例）で temperature_frame が表示される。"""
+        stub = _make_provider_change_stub()
+        stub.openai_model_var.set("gpt-4o")
+        stub._on_openai_model_change()
+        assert stub.temperature_frame.mapped is True
+        assert stub.effort_frame.mapped is False
+
+    def test_chat_latest_suffix_treated_as_non_reasoning(self):
+        """gpt-5-chat-latest（-chat-latest サフィックス）は非推論扱い。"""
+        stub = _make_provider_change_stub()
+        stub.openai_model_var.set("gpt-5-chat-latest")
+        stub._on_openai_model_change()
+        assert stub.temperature_frame.mapped is True
+
+
+class TestOnOpenaiModelChangeStructure:
+    """AST ベースの構造アサーション（D-13）。dialog.py の
+    _on_openai_model_change 関数ノードに正規表現呼び出し・集合リテラル・
+    文字列 prefix 比較が現れず、is_reasoning_model の呼び出しが存在する
+    ことを固定する。
+    """
+
+    @staticmethod
+    def _func():
+        source = (
+            REPO_ROOT / "pagefolio" / "dialogs" / "llm_config" / "dialog.py"
+        ).read_text(encoding="utf-8")
+        tree = ast.parse(source)
+        for node in ast.walk(tree):
+            if (
+                isinstance(node, ast.FunctionDef)
+                and node.name == "_on_openai_model_change"
+            ):
+                return node
+        raise AssertionError("_on_openai_model_change が見つからない")
+
+    def test_calls_is_reasoning_model(self):
+        fn = self._func()
+        call_names = [
+            n.func.id
+            for n in ast.walk(fn)
+            if isinstance(n, ast.Call) and isinstance(n.func, ast.Name)
+        ]
+        assert "is_reasoning_model" in call_names
+
+    def test_no_regex_reference(self):
+        fn = self._func()
+        names = {n.id for n in ast.walk(fn) if isinstance(n, ast.Name)}
+        attrs = {n.attr for n in ast.walk(fn) if isinstance(n, ast.Attribute)}
+        assert "re" not in names
+        assert not any(a in ("match", "search", "fullmatch") for a in attrs)
+
+    def test_no_set_literal(self):
+        fn = self._func()
+        assert not any(isinstance(n, (ast.Set, ast.SetComp)) for n in ast.walk(fn))
+
+    def test_no_string_prefix_comparison(self):
+        fn = self._func()
+        attrs = {n.attr for n in ast.walk(fn) if isinstance(n, ast.Attribute)}
+        assert "startswith" not in attrs
+
+
+class TestRefreshOpenaiModels:
+    """_refresh_openai_models の配線・D-08 観測同一性・S5 回帰を検証する。"""
+
+    @staticmethod
+    def _make_stub(api_key=""):
+        from pagefolio.constants import LANG
+
+        status_calls = []
+        async_calls = []
+
+        stub = types.SimpleNamespace(
+            openai_api_key_var=_FakeStringVar(api_key),
+            openai_model_var=_FakeStringVar("gpt-5.1"),
+            openai_model_combo={"values": []},
+            _L=LANG["ja"],
+        )
+        stub._set_lm_status = lambda text, kind="info": status_calls.append(
+            (text, kind)
+        )
+
+        def _fake_fetch_models_async(fetch_fn, on_success, on_error):
+            async_calls.append(
+                {
+                    "fetch_fn": fetch_fn,
+                    "on_success": on_success,
+                    "on_error": on_error,
+                }
+            )
+
+        stub._fetch_models_async = _fake_fetch_models_async
+        return stub, status_calls, async_calls
+
+    def test_fetch_models_async_called_once_with_openai_list_models(self, monkeypatch):
+        """(a)(b): _fetch_models_async を 1 回だけ呼び、渡す callable は
+        OpenAIProvider.list_models である。
+        """
+        from pagefolio.dialogs.llm_config import model_fetch as model_fetch_mod
+
+        monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+        stub, _status, async_calls = self._make_stub(api_key="sk-test")
+        model_fetch_mod.ModelFetchMixin._refresh_openai_models(stub)
+
+        assert len(async_calls) == 1
+        fetch_fn = async_calls[0]["fetch_fn"]
+        assert fetch_fn.__self__.__class__.__name__ == "OpenAIProvider"
+        assert fetch_fn.__func__.__name__ == "list_models"
+
+    def test_env_fallback_used_when_input_empty(self, monkeypatch):
+        """(c): 入力欄が空のとき _env_fallback("openai") 経由で
+        OPENAI_API_KEY が使われる。
+        """
+        from pagefolio.dialogs.llm_config import model_fetch as model_fetch_mod
+
+        monkeypatch.setenv("OPENAI_API_KEY", "sk-env-fallback")
+        stub, _status, async_calls = self._make_stub(api_key="")
+        model_fetch_mod.ModelFetchMixin._refresh_openai_models(stub)
+
+        fetch_fn = async_calls[0]["fetch_fn"]
+        assert fetch_fn.__self__.api_key == "sk-env-fallback"
+
+    def test_on_error_matches_zero_result_fallback_of_list_models(self, monkeypatch):
+        """(d): _on_error 実行後の combobox values と、list_models の 0 件
+        合流が返す値が完全一致し、_set_lm_status に渡された LANG キーも一致
+        すること（D-08 の観測同一性・レビュー MEDIUM-11）。
+        """
+        from pagefolio.dialogs.llm_config import model_fetch as model_fetch_mod
+        from pagefolio.ocr_providers import OpenAIProvider
+
+        monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+        stub, status_calls, async_calls = self._make_stub(api_key="sk-test")
+        model_fetch_mod.ModelFetchMixin._refresh_openai_models(stub)
+
+        on_error = async_calls[0]["on_error"]
+        on_error(RuntimeError("boom"))
+
+        # list_models() が api_key 無し（または 0 件合流）のとき返す値と一致
+        zero_result_fallback = list(OpenAIProvider.RECOMMENDED_MODELS)
+        assert stub.openai_model_combo["values"] == zero_result_fallback
+
+        error_status_text = status_calls[-1][0]
+        assert error_status_text == stub._L["llm_env_key_unset_static_openai"]
+
+    def test_on_success_and_on_error_never_touch_openai_model_var(self, monkeypatch):
+        """(e): _on_success / _on_error のどちらも openai_model_var.set を
+        呼ばない（遅延到達した結果が新しい選択を上書きしない・レビュー S5）。
+        """
+        from pagefolio.dialogs.llm_config import model_fetch as model_fetch_mod
+
+        monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+        stub, _status, async_calls = self._make_stub(api_key="sk-test")
+        model_fetch_mod.ModelFetchMixin._refresh_openai_models(stub)
+
+        set_calls = []
+        original_set = stub.openai_model_var.set
+        stub.openai_model_var.set = lambda v: (set_calls.append(v), original_set(v))
+
+        on_success = async_calls[0]["on_success"]
+        on_error = async_calls[0]["on_error"]
+        on_success(["gpt-5.1", "gpt-4o"])
+        on_error(RuntimeError("boom"))
+
+        assert set_calls == []
+
+    def test_no_threading_reference_in_refresh_openai_models(self):
+        """(f): AST ベースで _refresh_openai_models 関数ノードに threading
+        を参照する ast.Attribute/ast.Name が無いことを確認する。
+        """
+        tree = ast.parse(
+            (
+                REPO_ROOT / "pagefolio" / "dialogs" / "llm_config" / "model_fetch.py"
+            ).read_text(encoding="utf-8")
+        )
+        fn = next(
+            n
+            for n in ast.walk(tree)
+            if isinstance(n, ast.FunctionDef) and n.name == "_refresh_openai_models"
+        )
+        names = {n.id for n in ast.walk(fn) if isinstance(n, ast.Name)}
+        assert "threading" not in names

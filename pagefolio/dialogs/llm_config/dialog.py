@@ -222,6 +222,7 @@ class DialogMixin:
             )
             self.gemini_section_frame.pack_forget()
             self.tesseract_section_frame.pack_forget()
+            self.openai_section_frame.pack_forget()
             # D-15: 固有設定の直後・共通パラメータ群の先頭に見出しを再配置
             self._common_section_heading.pack(
                 anchor="w", padx=24, pady=(6, 2), before=self.scale_row
@@ -235,6 +236,7 @@ class DialogMixin:
             )
             self.claude_section_frame.pack_forget()
             self.tesseract_section_frame.pack_forget()
+            self.openai_section_frame.pack_forget()
             self.effort_frame.pack_forget()
             self._common_section_heading.pack(
                 anchor="w", padx=24, pady=(6, 2), before=self.scale_row
@@ -243,6 +245,19 @@ class DialogMixin:
                 fill="x", padx=24, pady=2, before=self.scale_row
             )
             self._resize_to_fit()
+        elif provider == "openai":
+            # OpenAI: モデル欄を表示。effort/temperature 切替は
+            # is_reasoning_model 単一判定源（D-13）に委ねる（_on_openai_model_change）
+            self.openai_section_frame.pack(
+                fill="x", padx=24, pady=(4, 2), before=self.scale_row
+            )
+            self.claude_section_frame.pack_forget()
+            self.gemini_section_frame.pack_forget()
+            self.tesseract_section_frame.pack_forget()
+            self._common_section_heading.pack(
+                anchor="w", padx=24, pady=(6, 2), before=self.scale_row
+            )
+            self._on_openai_model_change()
         elif provider == "tesseract":
             # Tesseract: 精度注記フレームを表示。API 設定・temperature は不要（D-03）
             self.tesseract_section_frame.pack(
@@ -250,6 +265,7 @@ class DialogMixin:
             )
             self.claude_section_frame.pack_forget()
             self.gemini_section_frame.pack_forget()
+            self.openai_section_frame.pack_forget()
             self.effort_frame.pack_forget()
             self.temperature_frame.pack_forget()
             self._common_section_heading.pack(
@@ -260,6 +276,7 @@ class DialogMixin:
             self.claude_section_frame.pack_forget()
             self.gemini_section_frame.pack_forget()
             self.tesseract_section_frame.pack_forget()
+            self.openai_section_frame.pack_forget()
             # lmstudio / off では temperature 欄を表示し effort 欄を隠す（従来挙動）
             self.effort_frame.pack_forget()
             self._common_section_heading.pack(
@@ -269,6 +286,28 @@ class DialogMixin:
                 fill="x", padx=24, pady=2, before=self.scale_row
             )
             self._resize_to_fit()
+
+    # ── OpenAI モデル変更ハンドラ（effort/temperature 切替・D-13）──
+    def _on_openai_model_change(self, _event=None):
+        """openai モデル変更時に temperature/effort 欄を切替。
+
+        判定は is_reasoning_model（D-13・単一判定源）のみを情報源とし、
+        dialog.py 側に独自のモデル名判定を書かない。effort_frame は
+        Claude 専用欄のため openai では常に隠す（OpenAI 専用の reasoning
+        effort 欄は 02-04 でこの同じ関数に追加する）。
+        H-5: 末尾で _resize_to_fit を呼びダイアログ高さを追従させる。
+        """
+        from pagefolio.ocr_providers import is_reasoning_model
+
+        model = self.openai_model_var.get()
+        if is_reasoning_model(model):
+            self.temperature_frame.pack_forget()
+        else:
+            self.temperature_frame.pack(
+                fill="x", padx=24, pady=2, before=self.scale_row
+            )
+        self.effort_frame.pack_forget()
+        self._resize_to_fit()
 
     # ── モデル変更ハンドラ（effort/temperature 切替）──────
     def _on_model_change(self, _event=None):
@@ -416,6 +455,10 @@ class DialogMixin:
         llm_settings["gemini_model"] = (
             self.gemini_model_var.get().strip() or "gemini-2.5-flash"
         )
+        # OpenAI 設定（openai_model は無害な設定値。空文字を許容する。空のときは
+        # build_provider が catalog.default_model_for("openai") へ解決するため、
+        # モデル ID 文字列を dialog.py に重複させない）
+        llm_settings["openai_model"] = self.openai_model_var.get().strip()
 
         # Tesseract 設定（D-04: lang は self._tesseract_langs 由来の固定値。
         # D-05: ダイアログ生成時に再検出済みの値を使う。getattr フォールバックは
@@ -521,6 +564,7 @@ class DialogMixin:
             ("claude", self.claude_api_key_var),
             ("gemini", self.gemini_api_key_var),
             ("runpod", self.runpod_api_key_var),
+            ("openai", self.openai_api_key_var),
         ):
             key = var.get().strip()
             if key:
