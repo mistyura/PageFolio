@@ -45,22 +45,24 @@ ruff check . && ruff format .
 
 ## プルリクエストのガイドライン
 
+ブランチ運用・コミット規約の詳細は [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) の「ブランチ運用」「PR プロセス」節を単一の情報源としています。以下はその要約です。
+
 ### ブランチ命名
 
-メインブランチは `main` です。`main` から派生してブランチを作成してください。
+統合ブランチは `main` です。**`main` へ直接コミットせず**、`main` から機能ブランチを作成して作業してください。
 
-- バグ修正: `fix/短い説明`（例: `fix/thumbnail-dnd-drop`）
-- 機能追加: `feat/短い説明`（例: `feat/password-unlock`）
-- ドキュメント: `docs/短い説明`（例: `docs/update-architecture`）
-- リファクタリング: `refactor/短い説明`
+- 機能ブランチはバージョン単位で `feature/v<バージョン>`（例: `feature/v1.9.0`、`feature/v1.10.0`）
+- マイルストーンに紐づかない単発作業は `feat/<短い説明>`（例: `feat/password-unlock`）でも構いません
+- PR は `main` を対象に作成し、タイトル・説明文は日本語で記述してください
 
 ### コミットメッセージ
 
-日本語でわかりやすく記述してください。
+Conventional Commits 準拠の**日本語**で記述してください。形式は `type(scope): 日本語の説明`（`scope` は省略可）で、`type` は `feat` / `fix` / `docs` / `test` / `refactor` / `chore` / `build` を使います。
 
 ```
-ページ回転後にサムネイルが更新されないバグを修正
-OCR ダイアログに進捗キャンセルボタンを追加
+feat(ocr): OCR ダイアログに進捗キャンセルボタンを追加
+fix(viewer): ページ回転後にサムネイルが更新されないバグを修正
+docs: CONTRIBUTING.md のブランチ命名規則を更新
 ```
 
 ### PR 提出前のチェックリスト
@@ -73,8 +75,8 @@ OCR ダイアログに進捗キャンセルボタンを追加
 
 ### レビュープロセス
 
-1. `main` からブランチを切り、変更をコミットする
-2. GitHub で PR を作成し、変更の目的と動作確認方法を説明する
+1. `main` から機能ブランチ（例: `feature/v1.10.0`）を切り、変更をコミットする
+2. GitHub で `main` を対象に PR を作成し、変更の目的と動作確認方法を日本語で説明する
 3. ローカルで `ruff check . && ruff format .` がパスすることを確認する
 4. `pytest` の結果を PR にコメントまたはログで共有する
 5. レビュワーのフィードバックに対応してから `main` へマージする

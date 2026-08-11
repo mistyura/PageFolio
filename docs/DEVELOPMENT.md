@@ -148,45 +148,49 @@ pytest
 
 ## ブランチ運用
 
-このリポジトリに `.github/PULL_REQUEST_TEMPLATE.md` および CI ワークフロー（`.github/workflows/`）は現時点で存在しません。詳細な貢献ガイドラインは [../CONTRIBUTING.md](../CONTRIBUTING.md) を参照してください。以下はそのブランチ命名規則です。
+姉妹プロジェクト（loto / numbers）と同一の運用規約を採用します。
 
-- メインブランチ: `main`
-- バグ修正: `fix/短い説明`（例: `fix/thumbnail-dnd-drop`）
-- 機能追加: `feat/短い説明`（例: `feat/password-unlock`）
-- ドキュメント: `docs/短い説明`（例: `docs/update-architecture`）
-- リファクタリング: `refactor/短い説明`
-- コミットメッセージは**日本語**で記述する（例: `ページ回転機能のバグを修正`）
+- **デフォルト（統合）ブランチは `main`**。開発は機能ブランチ上で行い、**`main` へ直接コミットしない**
+- **機能ブランチはバージョン単位で `feature/v<バージョン>` と命名する**（例: `feature/v1.9.0`、`feature/v1.10.0`）。マイルストーンに紐づかない単発作業は `feat/<短い説明>` を使ってもよい（例: `feat/password-unlock`）
+- **PR は `main` を対象に作成する**。PR タイトル・説明文も**日本語**で記述する
+- **コミットメッセージは Conventional Commits 準拠の日本語**。形式は `type(scope): 日本語の説明`（`scope` は省略可）。`type` は `feat` / `fix` / `docs` / `test` / `refactor` / `chore` / `build` を使う
 - 1 タスクずつ完了させてから次のタスクへ進む
 
 ### コミットメッセージ例
 
 ```
-fix: トリミング後にプレビューが更新されないバグを修正
-feat: PDF パスワード解除機能を追加
-refactor: OCR プロバイダの抽象インターフェースを整理
-docs: DEVELOPMENT.md を追加
+feat(ocr): OpenAI プロバイダを追加
+fix(page_ops): トリミング後にプレビューが更新されないバグを修正
+refactor(ocr_providers): 抽象インターフェースを整理
+docs(quick-260812-9ev): ブランチ運用ルールを loto/numbers と統一
+build: v1.9.0 の PyInstaller ビルドを反映
 ```
+
+明文化された命名規則はこれ以上ありません。既存の git 履歴のパターンに合わせてください。
+
+<!-- VERIFY: PageFolio には CI ワークフロー（.github/workflows/）・branch protection 設定・PR テンプレート・Issue テンプレートがいずれも存在しない。numbers の .github/branch-protection.yaml に相当する宣言的設定は、必須ステータスチェック（CI）が前提のため PageFolio では未整備。CI 構築後に追加を検討する -->
 
 ---
 
 ## PR プロセス
 
-CI ワークフローは未構成のため、PR 提出前にローカルで以下を確認してください。
+loto / numbers は CI（GitHub Actions）の green をマージ条件にしていますが、**PageFolio には CI ワークフローが存在しない**ため、その項目はローカルのリリースゲートに読み替えて運用します。
+
+1. `main` から機能ブランチを作成する（例: `feature/v1.10.0`）
+2. 変更を実装し、**ローカルで `ruff check . && ruff format .` と `pytest` を通す**
+3. コミットメッセージは**日本語**で、Conventional Commits 形式を用いる
+4. `main` を対象に PR を作成する。PR タイトル・説明文も**日本語**で記述する
+5. `pytest` の結果を PR にコメントまたはログで共有する（CI がないため、ローカル実行結果がレビューの根拠になる）
+6. レビュワーのフィードバックに対応してから `main` へマージする
+
+### PR 提出前チェックリスト
 
 - [ ] `ruff check . && ruff format .` でリント・フォーマットが通ること
 - [ ] `python -c "import ast; ast.parse(open('pagefolio.py', encoding='utf-8').read())"` で構文確認
-- [ ] `pytest` でテストがすべて通ること
+- [ ] `pytest` でテストがすべて通ること（合格条件の詳細は [../CLAUDE.md](../CLAUDE.md) の「リリースゲート」節を参照）
 - [ ] 新機能・バグ修正に対応するテストを追加または更新したこと
 - [ ] `開発履歴.md` に変更内容を追記したこと
 - [ ] バージョン変更が必要な場合は `pagefolio/constants.py` の `APP_VERSION`・`開発履歴.md`・`README.md` のバッジを同期したこと
-
-### レビュープロセス
-
-1. `main` からブランチを切り、変更をコミットする
-2. GitHub で PR を作成し、変更の目的と動作確認方法を説明する
-3. ローカルで `ruff check . && ruff format .` がパスすることを確認する
-4. `pytest` の結果をコメントまたはログで共有する
-5. レビュワーのフィードバックに対応してから `main` へマージする
 
 ---
 
