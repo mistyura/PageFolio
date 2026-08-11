@@ -25,7 +25,7 @@
 | ④ | OCRDialog の markdown 整形表示（md_h1/md_h2/md_bullet/md_code/md_bold）の見え方と読みやすさ | v1.6.0 Phase 4（`human_needed` 項目1） | `pagefolio/ocr_dialog.py`（md_* 5 タグ定義・`_insert_markdown`）/ `pagefolio/md_render.py`（`parse_markdown` 純関数） | 実施対象 | v1.8.0 Phase 1/3 のモジュール分割の影響を受けない独立した描画ロジックで、現行コードにそのまま存在する。実描画の見え方のみ未検証 |
 | ⑤-Claude | プロバイダ別プロンプトで実 API の OCR 出力品質が引き出される（Claude 分） | v1.6.0 Phase 4（`human_needed` 項目2） | `pagefolio/ocr.py` `PROVIDER_OCR_PROMPTS`（claude=`<task>/<rules>` の XML 構造テンプレート） | 未実施（理由: `ANTHROPIC_API_KEY` 未設定。実行時に環境変数の存在チェックを実施し確認済み） | D-14。03-RESEARCH.md Environment Availability でも同様の観測（未設定） |
 | ⑤-Gemini | プロバイダ別プロンプトで実 API の OCR 出力品質が引き出される（Gemini 分） | v1.6.0 Phase 4（`human_needed` 項目2） | 同上（gemini=明示指示テンプレート） | 実施対象 | `GEMINI_API_KEY` 設定済み。実行時に環境変数の存在チェックを実施し確認済み |
-| ⑥ | ShortcutsDialog の実キーキャプチャ（修飾キー単体では確定せず待機継続） | v1.7.1 Phase 4（04-UAT.md 項目1・「一旦パス」） | `pagefolio/dialogs/shortcuts.py`（`_MODIFIER_KEYSYMS` 定義・実キーバインド処理） | 実施対象 | v1.8.0 Phase 5（V180-ROBUST-03）でキー衝突・表示残留の不具合は解消済みだが、実機目視自体はスキップされたまま。ダイアログは現行コードに存在し続けている |
+| ⑥ | ShortcutsDialog の実キーキャプチャ（修飾キー単体では確定せず待機継続） | v1.7.1 Phase 4（04-UAT.md 項目1・当時はユーザー判断で実機未検証のまま合格記録） | `pagefolio/dialogs/shortcuts.py`（`_MODIFIER_KEYSYMS` 定義・実キーバインド処理） | 実施対象 | v1.8.0 Phase 5（V180-ROBUST-03）でキー衝突・表示残留の不具合は解消済みだが、実機目視自体はスキップされたまま。ダイアログは現行コードに存在し続けている |
 | ⑦ | 同一キー重複割り当て時のエラーダイアログと保存拒否 | v1.7.1 Phase 4（04-UAT.md 項目2） | `pagefolio/dialogs/shortcuts.py`（重複検出・`messagebox.showerror`） | 実施対象 | 同上 |
 | ⑧ | 保存直後の即時反映 | v1.7.1 Phase 4（04-UAT.md 項目3） | `pagefolio/dialogs/shortcuts.py`（保存ボタン→ `app._bind_shortcuts()` 呼び出し） | 実施対象 | 同上 |
 | ⑨ | SettingsDialog の 3 セクション表示（外観 / 操作 / AI・OCR・⚙ アイコン） | v1.7.1 Phase 4（04-UAT.md 項目4） | `pagefolio/dialogs/settings.py:75`（外観セクション）/`:155`（操作セクション）/`:172`（AI・OCR セクション、見出し文言 `settings_lm_studio_section` = 「⚙ AI・OCR 設定」） | 実施対象 | v1.8.0/v1.9.0 のいずれのフェーズでも `settings.py` のセクション構成は変更されておらず、現行コードにそのまま存在する |
@@ -40,7 +40,9 @@
 
 ## 実施結果
 
-`結果` に使う値は `pass` / `fail` / `未実施` の3種のみ（「一旦 pass」は使わない）。
+`結果` に使う値は `pass` / `fail` / `未実施` の3種のみとする。過去マイルストーン（v1.4.0/
+v1.6.0/v1.7.1）で使われていた「実機未検証のまま合格扱いとする」運用は、本フェーズの判定
+としては用いない。
 グループ1（⑥⑦⑧⑬・Task 2）・グループ2（⑨⑩⑪⑫⑭・Task 3）・グループ3の実施対象4項目
 （④⑤-Gemini①②・Task 4）はすべて承認済みで、いずれもユーザーによる実機目視で全項目 pass。
 Task 1 で「未実施」と確定した ③・⑤-Claude はこの表には含まれず、
@@ -85,3 +87,27 @@ Task 2〜4 の `checkpoint:human-verify` と、対象確定表の項番の対応
 
 以上で候補14項目（⑤分割込み15行）+ Phase 2 対象外 1 行 = 対象確定表 16 行の仕分けが完了した。
 実施対象は 13 項目（実施結果表）、未実施は 2 項目（③・⑤-Claude）、対象外は 1 項目（Phase 2 分）。
+
+---
+
+## サマリ
+
+対象確定表（`## 対象確定（現行照合）`）のデータ行数は16行（候補14項目・うち⑤をClaude分/Gemini分の
+2行に分割した15行 + Phase 2 対象外1行）。判定内訳は以下のとおりで、合計は対象確定表の行数と一致する
+（黙って消えた項目が無いことの検算）。
+
+| 判定 | 件数 | 内訳 |
+|------|------|------|
+| pass | 13 | ①②④⑤-Gemini⑥⑦⑧⑨⑩⑪⑫⑬⑭（全て human-verify チェックポイントでユーザーによる実機目視により確認済み。Task 2〜4 で承認・不具合報告なし） |
+| fail | 0 | 該当なし |
+| 未実施 | 2 | ③（max_tokensクランプ/429リトライ・V16-QUAL-03。実API課金/レート制限誘発が必要）・⑤-Claude（Claude実API出力品質。ANTHROPIC_API_KEY未設定） |
+| 対象外（除外） | 1 | Phase 2（v1.9.0）のOpenAI関連UAT。02-04で実機確認3分割により実施済みのため重複計上しない |
+| **合計** | **16** | 対象確定表のデータ行数（16行）と一致 |
+
+**未実施2項目の申し送り（次マイルストーン候補）:** `## 未実施（理由付き・D-14）` 節に理由と
+次に消化できる条件を記録済み。いずれも実 API キー・課金が用意できた次の機会に実施する
+（D-14: 実 API・課金が必要な項目は未実施のまま記録し、リリース判定をブロックしない）。
+
+**リリース判定への影響:** fail 0件・未実施2件（理由付き・D-14によりブロッカー扱いしない）。
+実機目視を要する遡及UAT・v1.9.0分のうち即時実施可能な13項目は全てユーザーの実機確認によって
+pass しており、V190-QA-03（human-verify/UATの正式実施）は本記録をもって充足したと判断する。
