@@ -381,22 +381,28 @@ D-11 は `retry_cb` に渡す**呼び出し可能オブジェクトの中身**�
 | A3 | v1.4.0 Phase 04 の human-verify 項目（LM Studio モデル切替反映・タイムアウト表示一致）は、v1.8.0 Phase 3 の OCRRunEngine 抽出後も同等の検証観点（UI 変更→実際の HTTP リクエストへの反映）が `ocr_engine.py`/`ocr_dialog.py` のどこかに存在し続けている | Pitfall 5 | 誤りの場合: 該当ロジックが既に別の形（例: 常時再生成方式）に変わっており、この UAT 項目自体が意味を失っている可能性がある。プラン/実行時に `ocr_engine.py` を直接読解し、対象コードの現在地を再確認してから `03-UAT-RESULTS.md` の項目文言を確定させること |
 | A4 | D-11 の実保存層の推奨命名（`_do_save_file(path)`/`_do_save_as(path)`/`_do_save_compressed(path, save_kwargs)`）は Claude's Discretion 範囲内の提案であり、既存コードの命名規則（`_overwrite_current_file` 等）と衝突しない | Architecture Patterns Pattern 1 | 誤りの場合でも実害は小さい（命名の選び直しのみ）。CONTEXT.md が明示的に「関数名・シグネチャ・配置は Claude's Discretion」としているため、プランナーが別名を選んでもよい |
 
-## Open Questions
+## Open Questions (RESOLVED)
+
+> 3 件すべてプランニング時に採用方針を確定済み。採用内容は下記の各 `RESOLVED:` 行のとおりで、
+> いずれも 03-02 / 03-03 の該当タスクへ反映済み（プランが唯一の実行契約）。
 
 1. **Task 0 の再現試行で実際にクラッシュ/ERROR が観測された場合、D-02 の「タイムボックス」はどう運用するか**
    - What we know: D-02 は「仮説2本を検証したら打ち切り」を契約としている
    - What's unclear: 1仮説あたりの試行回数・時間の上限が CONTEXT.md に明記されていない（Claude's Discretion 相当だが discretion 一覧にも明記なし）
    - Recommendation: プラン作成時に「各仮説の検証は1コマンド実行+結果確認で完結する（D-03 の設計どおり1コマンドで白黒がつく）」ため、時間ではなく「コマンド実行→結果記録」の1サイクルを1仮説の単位として定義すればタイムボックス化が自然に成立する
+   - **RESOLVED:** Recommendation を採用。タイムボックスの単位は時間ではなく「コマンド実行 → 結果記録」の 1 サイクル＝1 仮説とし、2 本消化した時点で結果にかかわらず打ち切る。反映先は `03-02-PLAN.md` Task 2 の action（分岐 B 冒頭「1 仮説 = 『コマンド実行 → 結果記録』の 1 サイクルをタイムボックスの単位とし、2 本を消化したら結果にかかわらず追求を打ち切る（D-02）」）。
 
 2. **本セッションで判明した「1370+17=1387」という更新済み分割数を CLAUDE.md のどこに反映するか**
    - What we know: D-07 は「日常の実行手順は CLAUDE.md の『変更時のチェックリスト』へ」と定めている
    - What's unclear: 分割コマンドの具体的な追記位置・書式（Claude's Discretion 記載のとおり）
    - Recommendation: 「変更時のチェックリスト」の `pytest` 確認項目の直下に、Task 0 の再現試行結果に応じて「単一プロセスで足りる」か「分割コマンド（件数付き）」のどちらかを明記する
+   - **RESOLVED:** Recommendation を採用しつつ位置を確定。「## 変更時のチェックリスト」自体は 5 項目のまま増やさず、その**直下に独立セクション `## リリースゲート（全テスト完走条件）` を新設**して合格条件・`--basetemp` の位置づけ・禁止事項・根拠リンクを書く（チェックリストの `pytest` 項目からはこの節を指す）。**件数は本リサーチの 1370 / 17 / 1387 を書き写さず、実行セッションで実測した値のみを使う**（Phase 3 の 03-01 でテストが増えるため）。反映先は `03-02-PLAN.md` Task 3 の action と acceptance_criteria。
 
 3. **遡及 UAT のうち Claude 実 API が必要な項目（v1.6.0 Phase 4 の項目7）の扱い**
    - What we know: 本セッションの環境変数チェックで `GEMINI_API_KEY`/`RUNPOD_API_KEY` は設定済み、`ANTHROPIC_API_KEY`/`OPENAI_API_KEY`/`GOOGLE_API_KEY` は未設定 [VERIFIED: 本セッションで環境変数存在チェック実行]
    - What's unclear: プラン実行時（別セッション/別ユーザー環境）でも同じ鍵の有無が維持されるか
    - Recommendation: D-14 の通り「手元にキーがあるプロバイダの分だけ実施」する。Gemini 分は実施可能、Claude/OpenAI 分は理由付きで Deferred へ記録する運用が、本セッションの環境と一致する
+   - **RESOLVED:** Recommendation を採用。ただし鍵の有無を本リサーチ時点の観測で固定せず、**実行時に環境変数の有無を確認してから仕分ける**（Claude 分と Gemini 分は別行に分ける）。キーが無い分は pass へ丸めず「未実施（キー未設定）」として記録し、リリース判定はブロックしない（D-14）。反映先は `03-03-PLAN.md` Task 1 の action（項目 ③⑤ の仕分け規則）と Task 4 の how-to-verify 項目 2 / 3。
 
 ## Environment Availability
 
