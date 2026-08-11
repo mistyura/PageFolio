@@ -82,8 +82,25 @@ OCR_PRICE_TABLE: "dict[str, tuple[float, float]]" = {
     "claude-sonnet": (3.0, 15.0),
     "claude-3-opus": (5.0, 25.0),
     "claude-opus": (5.0, 25.0),
+    # OpenAI（`ocr_dialog.py:OCR_PRICE_TABLE` と同一内容・同一宣言順のコピペ
+    # 移植。02-CAPABILITY-MATRIX.md 導出結果・レビュー HIGH-2/MEDIUM-16）。
+    "gpt-5-nano": (0.05, 0.40),
+    "gpt-5-mini": (0.25, 2.00),
+    "gpt-5.1": (1.25, 10.00),
+    "gpt-5.2": (1.75, 14.00),
+    "gpt-4o": (2.50, 10.00),
 }
 _PRICE_FALLBACK = (5.0, 25.0)
+
+# OpenAI 単価の一次情報。`ocr_dialog.py:OPENAI_PRICE_SOURCE` と同一内容の
+# コピペ移植（レビュー HIGH-2）。変更時は両ファイルと 02-CAPABILITY-MATRIX.md
+# を同時に更新する。
+OPENAI_PRICE_SOURCE: "dict[str, str]" = {
+    "url": "https://developers.openai.com/api/docs/models/all",
+    "retrieved": "2026-08-11",
+    "unit": "per 1M tokens",
+    "currency": "USD",
+}
 
 # サーキットブレーカー閾値。`ocr_dialog.py:CB_CONSECUTIVE_FAILURES` と同一値の
 # コピペ移植（レビュー懸念5）。
@@ -110,6 +127,29 @@ def _lookup_price(model):
         if key in model:
             return prices
     return _PRICE_FALLBACK
+
+
+def _resolved_host_text(name, settings, lang_dict):
+    """送信先ホストを確認ダイアログ本文へ埋め込める文字列として解決する。
+
+    `ocr_dialog.py:_resolved_host_text` と同一挙動の独立実装（レビュー
+    MEDIUM-8）。解決順: catalog.host_for が真値ならそれを返す。runpod で
+    ホストが空ならユーザー設定 URL 未設定の注記を返す。それ以外で空
+    （catalog 未登録のクラウド継承プラグイン等）なら、プロバイダ表示名
+    だけを出すのではなく「送信先を特定できない」ことを明示する
+    ocr_host_unknown を返す（T-02-17）。
+    """
+    from pagefolio.ocr_providers import catalog
+
+    host = catalog.host_for(name, settings)
+    if host:
+        return host
+    if name == "runpod":
+        return lang_dict["llm_runpod_host_unset"]
+    lookup_name = "lmstudio" if name == "" else name
+    provider_key = catalog.display_name_key_for(lookup_name)
+    provider_label = lang_dict.get(provider_key, name) if provider_key else name
+    return lang_dict["ocr_host_unknown"].format(provider=provider_label)
 
 
 class BatchOCRDialog(tk.Toplevel):
@@ -484,18 +524,29 @@ class BatchOCRDialog(tk.Toplevel):
 
     # ── コスト確認（OCRDialog からのコピペ移植・レビュー懸念5）────────
     def _is_cloud_provider(self, settings=None):
-        """`ocr_dialog.py:_is_cloud_provider` と同一挙動の独立実装。"""
+        """`ocr_dialog.py:_is_cloud_provider` と同一挙動の独立実装。
+
+        catalog.is_cloud_provider（V190-CAT-01）を名前ベース判定の単一情報源
+        とする。catalog 未登録のプロバイダは False（D-04）。isinstance ガード
+        は既知クラウドクラスを継承したプラグイン向けの安全側フォールバック
+        として維持する。
+        """
         from pagefolio.ocr_providers import (
             ClaudeProvider,
             GeminiProvider,
+            OpenAIProvider,
             RunPodProvider,
+            catalog,
         )
 
         s = settings if settings is not None else self.app.settings
         name = s.get("ocr_provider", "")
-        if name in ("claude", "gemini", "runpod"):
+        if catalog.is_cloud_provider(name):
             return True
-        if isinstance(self.provider, (ClaudeProvider, GeminiProvider, RunPodProvider)):
+        if isinstance(
+            self.provider,
+            (ClaudeProvider, GeminiProvider, RunPodProvider, OpenAIProvider),
+        ):
             return True
         return False
 
@@ -509,18 +560,21 @@ class BatchOCRDialog(tk.Toplevel):
         return LANG[lang]["ocr_cost_estimate"].format(cost=cost)
 
     def _confirm_cost(self, page_count=None, settings=None):
-        """`ocr_dialog.py:_confirm_cost` と同一挙動の独立実装。"""
+        """`ocr_dialog.py:_confirm_cost` と同一挙動の独立実装。
+
+        送信先を解決できないクラウドプロバイダでは _resolved_host_text が
+        送信先不明である旨を明示する（レビュー MEDIUM-8）。選択中モデルが
+        vision 確認済み集合外の openai モデルのときは画像入力未確認の注記を
+        末尾へ追加する（レビュー HIGH 02-02-2）。
+        """
+        from pagefolio.ocr_providers import OpenAIProvider, catalog
+
         s = settings if settings is not None else self.app.settings
         name = s.get("ocr_provider", "")
-        if name == "gemini":
-            model = s.get("gemini_model", "gemini-2.5-flash")
-            host = "generativelanguage.googleapis.com"
-        elif name == "runpod":
-            model = s.get("runpod_model", "") or "runpod"
-            host = s.get("runpod_url", "") or self._L["llm_runpod_host_unset"]
-        else:
-            model = s.get("claude_model", "claude-sonnet-4-6")
-            host = "api.anthropic.com"
+        model_key = catalog.model_setting_key_for(name)
+        raw_model = s.get(model_key, "") if model_key else ""
+        model = raw_model or catalog.default_model_for(name)
+        host = _resolved_host_text(name, s, self._L)
         if page_count is None:
             page_count = sum(
                 e.page_count for e in self._entries if e.status != STATUS_ERROR
@@ -529,6 +583,9 @@ class BatchOCRDialog(tk.Toplevel):
         msg = self._L["ocr_cost_confirm_msg"].format(
             host=host, count=page_count, cost=cost
         )
+        if name == "openai" and model not in OpenAIProvider.VERIFIED_VISION_MODELS:
+            note = self._L["ocr_model_vision_unverified"].format(model=model)
+            msg = msg + "\n" + note
         return messagebox.askyesno(self._L["ocr_cost_confirm_title"], msg, parent=self)
 
     def _check_cloud_api_key(self, settings=None):
@@ -537,7 +594,7 @@ class BatchOCRDialog(tk.Toplevel):
         if not self._is_cloud_provider(settings=s):
             return True
         from pagefolio.ocr import _resolve_api_key
-        from pagefolio.ocr_providers import OCRAPIKeyError
+        from pagefolio.ocr_providers import OCRAPIKeyError, catalog
         from pagefolio.ocr_providers.registry import primary_env_var
 
         name = s.get("ocr_provider", "")
@@ -545,11 +602,9 @@ class BatchOCRDialog(tk.Toplevel):
         try:
             _resolve_api_key(name, session_keys)
         except OCRAPIKeyError:
-            msg_key = {
-                "claude": "ocr_api_key_missing",
-                "gemini": "ocr_api_key_missing_gemini",
-                "runpod": "ocr_api_key_missing_runpod",
-            }.get(name, "ocr_api_key_missing")
+            msg_key = (
+                catalog.api_key_missing_lang_key_for(name) or "ocr_api_key_missing"
+            )
             env_var = primary_env_var(name)
             messagebox.showerror(
                 self._L["err_title"],
@@ -596,11 +651,12 @@ class BatchOCRDialog(tk.Toplevel):
         不変のため使い回す）。APIキー文字列は Engine へ渡さず、構築済み
         provider インスタンスのみを渡す（T-04-02 情報漏洩防止）。
         """
+        from pagefolio.ocr_providers import catalog
+
         s = self.app.settings
         name = s.get("ocr_provider", "")
         api_key = None
-        _cloud_providers = {"claude", "gemini", "runpod"}
-        if name in _cloud_providers:
+        if catalog.is_cloud_provider(name):
             from pagefolio.ocr import _resolve_api_key
             from pagefolio.ocr_providers import OCRAPIKeyError
 
@@ -967,15 +1023,10 @@ class BatchOCRDialog(tk.Toplevel):
         return "\n".join(parts)
 
     def _confirm_summary_cost(self, char_count, settings=None):
-        """`ocr_dialog.py:_confirm_summary_cost`（1237-1265行）と同一挙動の独立実装。"""
+        """`ocr_dialog.py:_confirm_summary_cost` と同一挙動の独立実装。"""
         s = settings if settings is not None else self.app.settings
         name = s.get("ocr_provider", "")
-        if name == "gemini":
-            host = "generativelanguage.googleapis.com"
-        elif name == "runpod":
-            host = s.get("runpod_url", "") or self._L["llm_runpod_host_unset"]
-        else:
-            host = "api.anthropic.com"
+        host = _resolved_host_text(name, s, self._L)
         msg = self._L["ocr_summary_cost_confirm_msg"].format(
             host=host, chars=char_count
         )
