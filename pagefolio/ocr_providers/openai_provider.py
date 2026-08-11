@@ -27,6 +27,94 @@ _REASONING_O_SERIES_RE = re.compile(r"^o\d")
 _REASONING_GPT5_RE = re.compile(r"^gpt-5")
 _CHAT_LATEST_SUFFIX = "-chat-latest"
 
+# 02-CAPABILITY-MATRIX.md 導出結果(4)で確認した非チャット/非vision系 ID の
+# カテゴリを部分文字列で表す除外マーカー（D-07）。単独の "image" は含めない
+# （将来 ID に "image" を含む vision 対応チャットモデルが出た場合の過剰除外を
+# 避けるため・レビュー MEDIUM 02-03-3）。画像生成モデルは "gpt-image" という
+# より限定的なマーカーで落とす。
+#   - "embedding": text-embedding-3-large / -small / ada-002
+#   - "tts":       tts-1 / tts-1-hd
+#   - "whisper":   whisper-1
+#   - "audio":     gpt-4o-mini-tts・gpt-4o-audio-preview 等の音声系
+#   - "dall-e":    dall-e-3 等
+#   - "gpt-image": gpt-image-1 / -1.5 / -mini / -2 / -latest
+#   - "moderation": omni-moderation-latest
+#   - "realtime":  gpt-realtime / gpt-4o-realtime-preview 等
+#   - "transcribe": gpt-4o-transcribe / gpt-4o-mini-transcribe
+#   - "search":    チャット/vision 用途ではない検索系エンドポイント向け ID
+_EXCLUDED_MODEL_MARKERS = (
+    "embedding",
+    "tts",
+    "whisper",
+    "audio",
+    "dall-e",
+    "gpt-image",
+    "moderation",
+    "realtime",
+    "transcribe",
+    "search",
+)
+
+
+def filter_selectable_models(model_ids):
+    """モデル ID 一覧から OCR/チャット用途でない ID を除外する（D-07・純関数）。
+
+    Tk / HTTP / インスタンス状態には一切触れない。入力順を保ったまま、
+    小文字化した ID に `_EXCLUDED_MODEL_MARKERS` のいずれかを含むものを
+    除外する。空・None 要素は落とす。
+
+    本関数は**選択肢として提示してよいか**を判定するだけで、**画像入力に
+    対応するかは保証しない**。OpenAI の `GET /v1/models` には Anthropic の
+    `capabilities.image_input` に相当するフィールドが存在しないため
+    （RESEARCH.md Pitfall 2）、能力の確認は 02-CAPABILITY-MATRIX.md と
+    `VERIFIED_VISION_MODELS` が担う。
+
+    引数:
+      model_ids: モデル ID 文字列のイテラブル（None・空文字混在可）
+
+    戻り値: 除外後のモデル ID リスト（入力順維持・list[str]）
+    """
+    result = []
+    for model_id in model_ids or ():
+        if not model_id:
+            continue
+        lowered = model_id.lower()
+        if any(marker in lowered for marker in _EXCLUDED_MODEL_MARKERS):
+            continue
+        result.append(model_id)
+    return result
+
+
+def order_models_for_display(model_ids):
+    """VERIFIED_VISION_MODELS を先頭に据えてモデル ID を並び替える（純関数）。
+
+    `OpenAIProvider.VERIFIED_VISION_MODELS` に含まれる ID をその宣言順で
+    先頭へ、残りを入力順のまま後ろへ並べる。重複は先勝ちで 1 回だけ出す。
+    Tk / HTTP / インスタンス状態には一切触れない（レビュー HIGH 02-03-1）。
+
+    これにより Combobox の先頭（＝ユーザーが最初に目にする候補と、値未設定
+    時に選ばれる候補）が常に画像入力確認済みのモデルになる。
+
+    引数:
+      model_ids: モデル ID 文字列のイテラブル
+
+    戻り値: 並び替え後のモデル ID リスト（list[str]）
+    """
+    ids = list(model_ids or ())
+    verified_set = set(OpenAIProvider.VERIFIED_VISION_MODELS)
+    seen = set()
+    ordered = []
+    for verified_id in OpenAIProvider.VERIFIED_VISION_MODELS:
+        if verified_id in ids and verified_id not in seen:
+            ordered.append(verified_id)
+            seen.add(verified_id)
+    for model_id in ids:
+        if model_id in verified_set or model_id in seen:
+            continue
+        ordered.append(model_id)
+        seen.add(model_id)
+    return ordered
+
 
 def is_reasoning_model(model):
     """モデル ID が推論系（reasoning_effort 対応）かを判定する（D-13・単一判定源）。
@@ -281,14 +369,66 @@ class OpenAIProvider(OCRProvider):
         return (out, truncated)
 
     def list_models(self):
-        """OpenAI が推奨する OCR 向けモデル ID リストを返す。
+        """OpenAI /v1/models からチャット/vision 向けモデル ID を取得する。
 
-        D-08 の静的フォールバック一覧をそのまま返す実装にとどめる
-        （このタスクでは HTTP を叩かない）。`GET /v1/models` からの取得と
-        ヒューリスティックフィルタ（D-07）は 02-03 Task 1 が追加する。
-        これは誤った結果を返す暫定実装ではなく、D-08 の最終挙動
-        （フィルタ 0 件時・取得失敗時の合流先）の部分集合である。
+        api_key が偽（空文字/None）のときは API を呼ばず RECOMMENDED_MODELS
+        を返す（D-08・claude.py:list_models と同型）。キーがあれば GET
+        /v1/models を叩き、filter_selectable_models（D-07）→
+        order_models_for_display（レビュー HIGH 02-03-1）の順に通す。
+        フィルタ後の結果が空リストになった場合も RECOMMENDED_MODELS へ
+        合流する（D-08）。
+
+        D-08 の「同一経路」の解釈（レビュー MEDIUM-11）: 本メソッドは HTTP
+        失敗を例外化し、0 件のみ静的一覧へ合流させる。既存 Claude / Gemini
+        と同じ構造であり、UI 側（model_fetch.py の _on_error）が例外を
+        受けて同じ静的一覧と同じステータスへ合流させる。D-08 が求める
+        「失敗時パスの 1 本化」は**観測可能な結末の同一性**（Combobox に
+        入る一覧とステータス表示が完全に一致する）として満たす。この同一性
+        は tests/test_provider_ui.py の回帰テストで固定されている。
+
+        V190-OAI-13 の適用範囲（レビュー MEDIUM-10）: 429/5xx の指数
+        バックオフと Retry-After 尊重は OCR 実行ループ
+        （ocr_pipeline.consume_one）の責務であり、モデル一覧取得はその
+        ループを通らないため適用対象外。既存 4 プロバイダの list_models も
+        同様で、ここだけ非対称にはしない。
 
         戻り値: モデル ID 文字列のリスト（list[str]）
+
+        例外:
+          ConnectionError: 接続失敗
+          TimeoutError:    タイムアウト
+          RuntimeError:    HTTP エラーまたはレスポンス形式不正
         """
-        return list(self.RECOMMENDED_MODELS)
+        if not self.api_key:
+            return list(self.RECOMMENDED_MODELS)
+
+        req = urllib.request.Request(  # noqa: S310
+            self.MODELS_ENDPOINT,
+            headers=self._headers(),
+            method="GET",
+        )
+        try:
+            with urllib.request.urlopen(  # noqa: S310
+                req, timeout=self.model_list_timeout
+            ) as resp:
+                body = resp.read().decode("utf-8")
+        except socket.timeout as e:
+            raise TimeoutError(f"timed out after {self.model_list_timeout}s") from e
+        except urllib.error.HTTPError as e:
+            raise RuntimeError(f"HTTP {e.code}: {e.reason}") from e
+        except urllib.error.URLError as e:
+            reason = getattr(e, "reason", e)
+            if isinstance(reason, socket.timeout):
+                raise TimeoutError(f"timed out after {self.model_list_timeout}s") from e
+            raise ConnectionError(str(reason)) from e
+
+        try:
+            data = json.loads(body)
+        except json.JSONDecodeError as e:
+            raise RuntimeError(f"Unexpected response: {body[:500]}") from e
+
+        model_ids = [m.get("id") for m in data.get("data", []) if m.get("id")]
+        selectable = order_models_for_display(filter_selectable_models(model_ids))
+        if not selectable:
+            return list(self.RECOMMENDED_MODELS)
+        return selectable

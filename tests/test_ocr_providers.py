@@ -3046,3 +3046,300 @@ class TestOpenAIProviderIdempotentPayload:
         p._build_payload("Zg==", "prompt")
         after = dict(vars(p))
         assert before == after
+
+
+# ===== Phase 2 Plan 03 Task 1: モデル一覧取得・除外フィルタ・並び替え =====
+
+
+class TestOpenAIFilterSelectableModels:
+    """filter_selectable_models() の純関数テスト（D-07）"""
+
+    def test_excludes_known_non_chat_models(self):
+        from pagefolio.ocr_providers.openai_provider import (
+            filter_selectable_models as f,
+        )
+
+        result = f(
+            [
+                "gpt-x",
+                "text-embedding-3-large",
+                "tts-1",
+                "whisper-1",
+                "dall-e-3",
+                "omni-moderation-latest",
+                "gpt-image-1",
+            ]
+        )
+        assert result == ["gpt-x"]
+
+    def test_keeps_chat_and_vision_ids_in_input_order(self):
+        from pagefolio.ocr_providers.openai_provider import (
+            filter_selectable_models as f,
+        )
+
+        ids = ["gpt-4o", "gpt-5.1", "o3", "gpt-5-nano"]
+        assert f(ids) == ids
+
+    def test_empty_input_returns_empty_list(self):
+        from pagefolio.ocr_providers.openai_provider import (
+            filter_selectable_models as f,
+        )
+
+        assert f([]) == []
+
+    def test_all_excluded_returns_empty_list(self):
+        from pagefolio.ocr_providers.openai_provider import (
+            filter_selectable_models as f,
+        )
+
+        assert f(["tts-1", "whisper-1", "dall-e-3"]) == []
+
+    def test_none_and_empty_elements_dropped(self):
+        from pagefolio.ocr_providers.openai_provider import (
+            filter_selectable_models as f,
+        )
+
+        assert f(["gpt-4o", None, "", "gpt-5.1"]) == ["gpt-4o", "gpt-5.1"]
+
+    def test_image_substring_not_excluded_only_gpt_image_marker_is(self):
+        """レビュー MEDIUM 02-03-3: 単独 "image" は除外マーカーに含めない。
+
+        画像生成モデルは "gpt-image" というより限定的なマーカーで落とす。
+        """
+        from pagefolio.ocr_providers.openai_provider import (
+            filter_selectable_models as f,
+        )
+
+        assert f(["gpt-5-image-reasoning"]) == ["gpt-5-image-reasoning"]
+        assert f(["gpt-image-1"]) == []
+
+
+class TestOpenAIOrderModelsForDisplay:
+    """order_models_for_display() の純関数テスト（レビュー HIGH 02-03-1）"""
+
+    def test_verified_models_come_first_in_declared_order(self):
+        from pagefolio.ocr_providers import OpenAIProvider
+        from pagefolio.ocr_providers.openai_provider import (
+            order_models_for_display as o,
+        )
+
+        verified = list(OpenAIProvider.VERIFIED_VISION_MODELS)
+        shuffled_verified = list(reversed(verified))
+        result = o(shuffled_verified + ["unverified-id"])
+        assert result[: len(verified)] == verified
+        assert result[-1] == "unverified-id"
+
+    def test_unverified_ids_come_after_in_input_order(self):
+        from pagefolio.ocr_providers.openai_provider import (
+            order_models_for_display as o,
+        )
+
+        result = o(["z-unverified", "a-unverified"])
+        assert result == ["z-unverified", "a-unverified"]
+
+    def test_duplicates_appear_once(self):
+        from pagefolio.ocr_providers import OpenAIProvider
+        from pagefolio.ocr_providers.openai_provider import (
+            order_models_for_display as o,
+        )
+
+        verified_id = OpenAIProvider.VERIFIED_VISION_MODELS[0]
+        result = o([verified_id, verified_id, "x", "x"])
+        assert result.count(verified_id) == 1
+        assert result.count("x") == 1
+
+    def test_empty_input_returns_empty_list(self):
+        from pagefolio.ocr_providers.openai_provider import (
+            order_models_for_display as o,
+        )
+
+        assert o([]) == []
+
+
+class TestOpenAIProviderListModels:
+    """OpenAIProvider.list_models() の全経路テスト"""
+
+    def test_no_api_key_returns_recommended_models_without_http(self, monkeypatch):
+        from pagefolio import ocr_providers
+        from pagefolio.ocr_providers import OpenAIProvider
+
+        def fail_urlopen(req, timeout=None):
+            raise AssertionError("HTTP を呼んではいけない")
+
+        monkeypatch.setattr(ocr_providers.urllib.request, "urlopen", fail_urlopen)
+        p = OpenAIProvider(api_key="", model="")
+        assert p.list_models() == list(OpenAIProvider.RECOMMENDED_MODELS)
+
+    def test_with_api_key_filters_and_orders_verified_first(self, monkeypatch):
+        from pagefolio import ocr_providers
+        from pagefolio.ocr_providers import OpenAIProvider
+
+        verified_id = OpenAIProvider.VERIFIED_VISION_MODELS[0]
+        body = json.dumps(
+            {
+                "data": [
+                    {"id": "whisper-1"},
+                    {"id": "zzz-unverified-chat-model"},
+                    {"id": verified_id},
+                ]
+            }
+        )
+
+        def fake_urlopen(req, timeout=None):
+            assert "/v1/models" in req.full_url
+            return _FakeResponse(body)
+
+        monkeypatch.setattr(ocr_providers.urllib.request, "urlopen", fake_urlopen)
+        p = OpenAIProvider(api_key="my-key", model="")
+        result = p.list_models()
+        assert result[0] == verified_id
+        assert "zzz-unverified-chat-model" in result
+        assert "whisper-1" not in result
+
+    def test_filter_zero_results_falls_back_to_recommended(self, monkeypatch):
+        from pagefolio import ocr_providers
+        from pagefolio.ocr_providers import OpenAIProvider
+
+        body = json.dumps({"data": [{"id": "whisper-1"}, {"id": "tts-1"}]})
+
+        def fake_urlopen(req, timeout=None):
+            return _FakeResponse(body)
+
+        monkeypatch.setattr(ocr_providers.urllib.request, "urlopen", fake_urlopen)
+        p = OpenAIProvider(api_key="my-key", model="")
+        assert p.list_models() == list(OpenAIProvider.RECOMMENDED_MODELS)
+
+    def test_http_error_raises_runtime_error(self, monkeypatch):
+        from pagefolio import ocr_providers
+        from pagefolio.ocr_providers import OpenAIProvider
+
+        def fake_urlopen(req, timeout=None):
+            raise _FakeHTTPError(500, "Server Error", b"oops")
+
+        monkeypatch.setattr(ocr_providers.urllib.request, "urlopen", fake_urlopen)
+        p = OpenAIProvider(api_key="my-key", model="")
+        with pytest.raises(RuntimeError):
+            p.list_models()
+
+    def test_url_error_raises_connection_error(self, monkeypatch):
+        from pagefolio import ocr_providers
+        from pagefolio.ocr_providers import OpenAIProvider
+
+        def fake_urlopen(req, timeout=None):
+            raise urllib.error.URLError("refused")
+
+        monkeypatch.setattr(ocr_providers.urllib.request, "urlopen", fake_urlopen)
+        p = OpenAIProvider(api_key="my-key", model="")
+        with pytest.raises(ConnectionError):
+            p.list_models()
+
+    def test_socket_timeout_raises_timeout_error(self, monkeypatch):
+        from pagefolio import ocr_providers
+        from pagefolio.ocr_providers import OpenAIProvider
+
+        def fake_urlopen(req, timeout=None):
+            raise socket.timeout("timed out")
+
+        monkeypatch.setattr(ocr_providers.urllib.request, "urlopen", fake_urlopen)
+        p = OpenAIProvider(api_key="my-key", model="")
+        with pytest.raises(TimeoutError):
+            p.list_models()
+
+    def test_authorization_bearer_header_sent_on_get(self, monkeypatch):
+        from pagefolio import ocr_providers
+        from pagefolio.ocr_providers import OpenAIProvider
+
+        captured = {}
+
+        def fake_urlopen(req, timeout=None):
+            captured["headers"] = req.headers
+            captured["method"] = req.get_method()
+            return _FakeResponse(json.dumps({"data": []}))
+
+        monkeypatch.setattr(ocr_providers.urllib.request, "urlopen", fake_urlopen)
+        p = OpenAIProvider(api_key="sk-test", model="")
+        p.list_models()
+        assert captured["headers"]["Authorization"] == "Bearer sk-test"
+        assert captured["method"] == "GET"
+
+    def test_urlopen_timeout_is_model_list_timeout(self, monkeypatch):
+        from pagefolio import ocr_providers
+        from pagefolio.ocr_providers import OpenAIProvider
+
+        seen = {}
+
+        def fake_urlopen(req, timeout=None):
+            seen["timeout"] = timeout
+            return _FakeResponse(json.dumps({"data": []}))
+
+        monkeypatch.setattr(ocr_providers.urllib.request, "urlopen", fake_urlopen)
+        p = OpenAIProvider(api_key="sk-test", model="")
+        p.list_models()
+        assert seen["timeout"] == OpenAIProvider.model_list_timeout
+        assert OpenAIProvider.model_list_timeout == 30
+
+
+class TestOpenAIFilterIsPure:
+    """AST ベースの純度アサーション（レビュー LOW-17 の方式変更）。
+
+    filter_selectable_models / order_models_for_display が Tk・ネットワーク
+    非依存の純関数であることを、部分文字列検査ではなく ast.parse による
+    構文木検査で確認する。
+    """
+
+    @staticmethod
+    def _tree():
+        source = (
+            REPO_ROOT / "pagefolio" / "ocr_providers" / "openai_provider.py"
+        ).read_text(encoding="utf-8")
+        return ast.parse(source)
+
+    @staticmethod
+    def _func(tree, name):
+        for node in ast.walk(tree):
+            if isinstance(node, ast.FunctionDef) and node.name == name:
+                return node
+        raise AssertionError(f"{name} が見つからない")
+
+    def test_filter_selectable_models_has_no_self_argument(self):
+        tree = self._tree()
+        fn = self._func(tree, "filter_selectable_models")
+        args = [a.arg for a in fn.args.args]
+        assert "self" not in args
+
+    def test_order_models_for_display_has_no_self_argument(self):
+        tree = self._tree()
+        fn = self._func(tree, "order_models_for_display")
+        args = [a.arg for a in fn.args.args]
+        assert "self" not in args
+
+    def test_filter_selectable_models_does_not_reference_urllib_or_tkinter(self):
+        tree = self._tree()
+        fn = self._func(tree, "filter_selectable_models")
+        names = {n.id for n in ast.walk(fn) if isinstance(n, ast.Name)}
+        attrs = {n.attr for n in ast.walk(fn) if isinstance(n, ast.Attribute)}
+        assert "urllib" not in names
+        assert "tkinter" not in names
+        assert not any(a in ("urlopen", "Request") for a in attrs)
+
+    def test_order_models_for_display_does_not_reference_urllib_or_tkinter(self):
+        tree = self._tree()
+        fn = self._func(tree, "order_models_for_display")
+        names = {n.id for n in ast.walk(fn) if isinstance(n, ast.Name)}
+        attrs = {n.attr for n in ast.walk(fn) if isinstance(n, ast.Attribute)}
+        assert "urllib" not in names
+        assert "tkinter" not in names
+        assert not any(a in ("urlopen", "Request") for a in attrs)
+
+    def test_no_io_calls_in_either_pure_function(self):
+        tree = self._tree()
+        io_call_names = {"urlopen", "Request", "open"}
+        for func_name in ("filter_selectable_models", "order_models_for_display"):
+            fn = self._func(tree, func_name)
+            for node in ast.walk(fn):
+                if isinstance(node, ast.Call):
+                    callee = node.func
+                    if isinstance(callee, ast.Name):
+                        assert callee.id not in io_call_names
+                    elif isinstance(callee, ast.Attribute):
+                        assert callee.attr not in io_call_names
