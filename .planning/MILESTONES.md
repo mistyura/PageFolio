@@ -1,5 +1,29 @@
 # Milestones
 
+## v1.9.0 安全性・整合性の是正 + OpenAI プロバイダ追加 (Shipped: 2026-08-11)
+
+**Phases completed:** 3 phases, 15 plans, 48 tasks
+
+**Key accomplishments:**
+
+- PyMuPDF の保存3経路（名前を付けて保存・上書き/フォールバック・縮小保存の2分岐）に `encryption=PDF_ENCRYPT_KEEP` を構造的に既定化し、`derive_pdf_has_password` 純関数で `pdf_has_password` の導出地点を1箇所へ統一
+- `build_provider` の `off` 分岐を専用例外 `OCRDisabledError` で構造的に拒否し、通常OCR・バッチOCR・OCRダイアログ内provider再生成・メニュー入口の4経路すべてで OCR OFF を同一の意味に統一した
+- 外部プロンプトファイルへの書き込みを Apply 押下時の1経路へ一本化し、テンプレート切替の未保存確認をファイル連動有無に依存しない単一判定経路へ統一した
+- 複数ファイル挿入の失敗を delete_page 巻き戻し + try/finally close で無警告残留させず、ページ複製の Undo 記録を実処理成功後へ後置化し、_undo/_redo の復元失敗を _push_evicting 経由で state 保全しつつ messagebox でブロッキング通知するよう実装
+- v1.8.0 で insert のみに実施していた do→undo→redo→undo（4手往復・2回目のundoで非対称復元を検出する）回帰テストを duplicate/merge/merge_resize へ水平展開し、境界・隣接・順序・精度の5エッジテストを追加。Undo 記録が実処理より先に置かれたままの全16 op を棚卸しして次マイルストーン候補として記録し、Phase 1 の全ゲート（lint/フルテスト）を green で確定
+- delete/delete_redo/page_edit/insert_undo/insert_redo/merge_resize/merge_resize_undo の7 opで、部分失敗→再試行成功後に次段の逆デルタが「再試行分のみに縮小」して確定するサイレントなデータ破損（01-VERIFICATION.md Evidence 3・4）を、mutation ループ内で実際に適用できたページ分の逆データを蓄積する方式（_pending_inverse・_merge_pending_inverse）で解消し、merge_undoの非該当性をピン留めした
+- page_edit の2段階mutation（delete_page→insert_pdf）が中間失敗してもページ内容を恒久喪失させない構造的解消（mutation順序反転・option-b）、復元ループの一時fitz.Document7箇所へのfinally保護とAST走査ガード、insert（base op）削除ループへの部分適用保護展開により、01-VERIFICATION.mdのmissing[]4項目すべてを解消しV190-UNDO-01を真に充足させた
+- catalog.py（ProviderMeta中央カタログ）新設とOpenAIProvider（urllib直叩き・reasoning_effort対応）の縦スライスを1経路通し、公式ドキュメント実データからis_reasoning_model判定を再設計した
+- 単発OCR・バッチOCR両ダイアログのプロバイダメタデータ参照を catalog 経由へ統合し、OpenAI を送信先確認・コスト確認・vision未確認注記・APIキー欠落エラーの完全な安全境界の下で既存5プロバイダと同等に組み込んだ
+- OpenAIProvider.list_models() を実API取得+ヒューリスティックフィルタ+確認済み優先並び替えの本実装にし、LLM設定ダイアログへ openai を選択可能なプロバイダとして完全統合した（catalog移行6/6完走）
+- OpenAI の detail/reasoning effort/organization/project の4欄と読み取り専用フォールバック配線を実装し、実機確認で発見したAPIキー未送信バグ（`ocr_dialog.py`のプロバイダ再生成分岐の欠落）を修正して V190-OAI-07〜10 を完了させた
+- 保存トーストの「再試行」が上書き確認・保存先選択を再表示せず前回確定した対象へ黙って再保存するよう、保存3経路（_save_file/_save_as/_save_compressed）を確認・パス選択層と path 引数を取る実保存層へ分離した（V190-QA-02・D-09〜D-12）
+- 現行HEAD（1398件収集）に対しフルテストスイートを10回連続実行した結果、TclError/STATUS_BREAKPOINTの両症状とも非再現（累計17回連続グリーン）と確認し、コード変更ゼロで「解消済み」記録を確定。リリースゲートの合格条件（単一プロセス完走）をCLAUDE.mdへ記録した（V190-QA-01）
+- v1.4.0/v1.6.0/v1.7.1で3マイルストーン続いた「実機未検証のまま合格扱い」運用を、現行コード照合で活き残り13項目を確定したうえでユーザーの実機目視により正式に消化し、`03-UAT-RESULTS.md`へ記録した（未実施2項目は理由付きで維持・リリース判定はブロックしない）
+- `pagefolio/constants.py` の `APP_VERSION` を v1.9.0 へバンプし、README バッジと `開発履歴.md` の最新エントリ・バージョン索引をそれに同期した（D-16）。`開発履歴.md` のマイルストーンエントリはユーザー指示によりv1.9.0全体（Phase 1〜3）の実際の成果を対象として記述
+
+---
+
 ## v1.8.0 実用性の最大化・エコシステム洗練・堅牢性強化 (Shipped: 2026-07-16)
 
 **Phases completed:** 6 phases, 22 plans, 53 tasks

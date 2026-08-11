@@ -2,10 +2,9 @@
 gsd_state_version: 1.0
 milestone: v1.9.0
 milestone_name: 安全性・整合性の是正 + OpenAI プロバイダ追加
-current_phase: 03
-status: completed
-stopped_at: Phase 03 complete (UAT 19/19 pass) — ready to close milestone v1.9.0
-last_updated: "2026-08-11T12:28:11.933Z"
+status: Awaiting next milestone
+stopped_at: Phase 3 complete（UAT 19/19 pass・issue 0）、v1.9.0 全 3 フェーズ完了。次は `/gsd-complete-milestone v1.9.0`
+last_updated: "2026-08-11T12:38:32.438Z"
 last_activity: 2026-08-11
 last_activity_desc: Phase 03 UAT complete (19/19 pass, 0 issues)
 progress:
@@ -14,6 +13,7 @@ progress:
   total_plans: 15
   completed_plans: 15
   percent: 100
+current_phase: 03
 current_phase_name: qa-release-gate
 ---
 
@@ -28,12 +28,10 @@ See: .planning/PROJECT.md (updated 2026-08-11)
 
 ## Current Position
 
-Phase: 03
-Plan: Not started
-Status: All phases complete
-Last activity: 2026-08-11 — Phase 03 complete
-
-Progress: [████████████████████] 15/15 plans (100%)
+Phase: Milestone v1.9.0 complete
+Plan: —
+Status: Awaiting next milestone
+Last activity: 2026-08-11 — Milestone v1.9.0 completed and archived
 
 ## v1.9.0 Phase Map
 
@@ -384,12 +382,4 @@ Stopped at: Phase 3 complete（UAT 19/19 pass・issue 0）、v1.9.0 全 3 フェ
 
 ## Operator Next Steps
 
-- 次アクション: `/gsd-plan-phase 1` で Phase 1（保存・編集・設定の安全性是正）の詳細計画へ進む。
-- サンプルプロンプト 2 ファイル（dist/PageFolio 直下のみ git 管理）が PyInstaller
-  `--noconfirm` ビルドで毎回消える恒久課題 — ソースツリー側へ原本移設 + ビルド後
-  コピーのスクリプト化を検討課題として保留中（260722-rel SUMMARY 参照）
-
-- 先送り課題（260722-gae 精査項目 3 ②③）: LLM 設定ダイアログへの「新世代 Gemini では
-  temperature 欄が無視される」注記（UI 変更）/ 新世代 thinking 有効時の応答時間・
-  トークン消費の実測（実 API 必要）— v1.9.0 Phase 2（OpenAI 追加）計画時に類似パターン
-  （o-series の temperature 拒否・注記表示）として合流可能か検討
+- Start the next milestone with /gsd-new-milestone

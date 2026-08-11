@@ -119,7 +119,7 @@
 .\.venv\Scripts\python.exe -m pytest -q --basetemp="$env:LOCALAPPDATA\Temp\pf_pytest_tmp"
 ```
 
-単一プロセスでのフルスイート実行（現在 1398 件収集）が合格条件。分割実行は不要。
+単一プロセスでのフルスイート実行（現在 1404 件収集）が合格条件。分割実行は不要。
 過去に観測されていた `TclError` によるセットアップ ERROR・`STATUS_BREAKPOINT` プロセス
 クラッシュの2症状は、v1.9.0 Phase 3 の切り分け調査（10回連続実行）で現行環境では
 再現しないことを確認済み（リサーチセッションの7回と合算し累計17回連続グリーン）。
@@ -131,7 +131,7 @@
 除外でゲートを通すこと。除外を伴う運用を採る場合は対象と件数と根拠を必ず明示し、合計が
 全件と一致することを示すこと。
 
-**根拠:** [.planning/phases/03-qa-release-gate/03-TEST-ENV-INVESTIGATION.md](.planning/phases/03-qa-release-gate/03-TEST-ENV-INVESTIGATION.md)
+**根拠:** [.planning/milestones/v1.9.0-phases/03-qa-release-gate/03-TEST-ENV-INVESTIGATION.md](.planning/milestones/v1.9.0-phases/03-qa-release-gate/03-TEST-ENV-INVESTIGATION.md)
 
 ---
 

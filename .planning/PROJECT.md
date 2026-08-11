@@ -7,11 +7,19 @@ PageFolio の既存コードベースに対する最適化プロジェクト。
 
 **Core Value:** 大きな PDF でも Undo/Redo が正しく・速く動作し、コードが読みやすく保守しやすい状態にする。
 
-## Current Milestone: v1.9.0 安全性・整合性の是正 + OpenAI プロバイダ追加
+## Current Milestone: 未確定（`/gsd-new-milestone` で次マイルストーンを定義する）
 
-**Goal:** 保存・編集・Undo の失敗時に「操作前の状態へ確実に戻る」安全性を確立し、設定 UI の Apply/Cancel 契約を整合させたうえで、OCR プロバイダ基盤を整理して OpenAI(ChatGPT) を既存プロバイダと同等に追加する。
+v1.9.0 のクローズにより、現在アクティブなマイルストーンはありません。
+次の候補は「Next Milestone Goals」を参照してください。
 
-**Target features:**
+## Last Milestone: v1.9.0 安全性・整合性の是正 + OpenAI プロバイダ追加 — ✅ Shipped 2026-08-11
+
+> v1.9.0 は全 3 フェーズ（Phase 1〜3・15 プラン）を達成して出荷済み（`APP_VERSION = v1.9.0`・テスト 1404 件グリーン・ruff クリーン）。V190-* 全 27 要件 Complete（被覆 27/27・孤立要件なし）。
+> 次マイルストーンは `/gsd-new-milestone` で確定する。
+
+**Goal（達成済み）:** 保存・編集・Undo の失敗時に「操作前の状態へ確実に戻る」安全性を確立し、設定 UI の Apply/Cancel 契約を整合させたうえで、OCR プロバイダ基盤を整理して OpenAI(ChatGPT) を既存プロバイダと同等に追加した。
+
+**Target features（達成済み）:**
 
 1. **保存・編集の安全性（P0/P1）**: パスワード保護PDFの暗号化維持（通常保存/Save As/上書きフォールバック統一・V190-REV-01）・OCR OFF の全経路一貫化（バッチOCR の OFF ガード・`off` をプロバイダ生成不可に・V190-REV-02）・複数ファイル挿入のトランザクション化＋挿入元 Document の `finally` クローズ（V190-REV-03）・ページ複製の Undo 記録を成功後確定（V190-REV-04）
 2. **設定 UI の整合性**: 外部プロンプトファイル書き込みを Apply 時へ一本化 or Cancel 時復元（V190-REV-05）・テンプレート切替時の未保存編集確認をファイル連動有無によらず有効化（V190-REV-06）
@@ -28,12 +36,16 @@ PageFolio の既存コードベースに対する最適化プロジェクト。
 - 実装方針は `urllib` 直叩き・新規 pip 依存ゼロ（V14-D-01 踏襲）
 - `registry.py` の「Python 標準ライブラリのみ・pagefolio 内部モジュールを import しない」独立性制約（V180-D-01）は維持し、非機密メタデータは別モジュールへ分離する
 
-**進捗:** Phase 1〜3 すべて完了（2026-08-11）。V190-* 全27要件 Complete（被覆27/27）。`APP_VERSION = v1.9.0`・テスト 1404 件グリーン。Phase 3 の UAT も完了（19/19 pass・issue 0）。マイルストーンクローズ（`/gsd-complete-milestone`）待ち。
+**実績:**
 - Phase 1「保存・編集・設定の安全性是正」— 7/7 プラン・検証 5/5 must-haves（01-06 / 01-07 の 2 回のギャップ是正を経て passed）
 - Phase 2「OCR プロバイダ基盤整理 + OpenAI(ChatGPT) 追加」— 4/4 プラン・検証 5/5 must-haves・15/15 要件
-- Phase 3「品質保証・リリースゲート」— 4/4 プラン・検証 12/12 must-haves。コードレビューで BLOCKER（トースト再試行が別 Document の内容を確定パスへ無確認上書きするデータ損失）を検出し、`bound_doc` による doc 同一性束縛で構造的に解消・回帰テスト 6 件追加。遡及 UAT は実施対象 13 項目 pass / 未実施 2 項目（実 API 課金・`ANTHROPIC_API_KEY` 未設定）
+- Phase 3「品質保証・リリースゲート」— 4/4 プラン・検証 12/12 must-haves・UAT 19/19 pass（issue 0）。コードレビューで BLOCKER（トースト再試行が別 Document の内容を確定パスへ無確認上書きするデータ損失）を検出し、`bound_doc` による doc 同一性束縛で構造的に解消・回帰テスト 6 件追加。遡及 UAT は実施対象 13 項目 pass / 未実施 2 項目（実 API 課金・`ANTHROPIC_API_KEY` 未設定）
+- コードレビュー Critical 0件。セキュリティ監査 threats_open: 0（Phase 1/2 とも verified・ASVS L1）。Nyquist COMPLIANT（3/3 フェーズ validated）
+- 技術的負債 10 件（Warning 4 / Info 6）は非ブロッキングとして v1.10.0 へ繰り越し（「Next Milestone Goals」参照）
+- マイルストーン詳細: `.planning/milestones/v1.9.0-ROADMAP.md`・`.planning/MILESTONES.md`
 
-## Last Milestone: v1.8.0 実用性の最大化・エコシステム洗練・堅牢性強化 — ✅ Shipped 2026-07-16
+<details>
+<summary>Previous Milestone: v1.8.0 実用性の最大化・エコシステム洗練・堅牢性強化 — ✅ Shipped 2026-07-16</summary>
 
 > v1.8.0 は全 6 フェーズ（Phase 1〜6・22 プラン・53 タスク）を達成して出荷済み（`APP_VERSION = v1.8.0`・テスト 1101 件グリーン・ruff クリーン）。V180-* 全 26 要件 Complete（被覆 26/26・孤立要件なし）。
 > 次マイルストーンは `/gsd-new-milestone` で確定する（候補は「Next Milestone Goals」参照）。
@@ -54,6 +66,8 @@ PageFolio の既存コードベースに対する最適化プロジェクト。
 - 人手 UAT 2件（Phase 6・トースト視認性/マウスホイール操作感）はユーザー実施で全合格
 - APP_VERSION バンプがフェーズ実行中は行われず、マイルストーンクローズ時に検出・修正（v1.7.4 → v1.8.0）
 - マイルストーン詳細: `.planning/milestones/v1.8.0-ROADMAP.md`・`.planning/MILESTONES.md`
+
+</details>
 
 > 補足: v1.6.1〜v1.7.0（パスワード/印刷・Ollama/RunPod・バグ修正・サマリ安定化・黒塗り/モザイク・undo ディスク退避）は GSD フェーズ外のポイントリリースとして出荷済み。詳細は `.planning/MILESTONES.md` 参照。
 
@@ -157,8 +171,9 @@ PageFolio の既存コードベースに対する最適化プロジェクト。
 | リポジトリ | `C:\Users\shdwf\work\project\PageFolio` |
 | 言語 | Python 3.8+ / Tkinter |
 | 現在バージョン | `pagefolio/constants.py` の `APP_VERSION` を参照 |
-| テスト | pytest（1101 件・充実） |
+| テスト | pytest（1404 件・充実） |
 | リント | ruff |
+| リリースゲート | 単一プロセス `pytest -q` 完走（失敗0・ERROR0・クラッシュなし）。詳細は `CLAUDE.md`「## リリースゲート」節 |
 
 既存コードベースマップ: `.planning/codebase/`
 
@@ -229,10 +244,17 @@ PageFolio の既存コードベースに対する最適化プロジェクト。
 
 ### Active
 
-- **なし（v1.9.0 は全 27 要件が Validated へ移動済み）。** Phase 1〜3 完了・`APP_VERSION = v1.9.0`・README バッジ・開発履歴.md の 3 点同期済み。残作業はマイルストーンクローズ（`/gsd-complete-milestone v1.9.0`）のみ。
-- 次マイルストーンへの申し送り: 遡及 UAT の未実施 2 項目（③ max_tokens クランプ・429 リトライの実 API 検証〔V16-QUAL-03 由来〕／⑤-Claude の実 API 出力品質〔`ANTHROPIC_API_KEY` 未設定〕）は実 API キー・課金が用意できた時点で消化する。詳細は `03-UAT-RESULTS.md`「## 未実施（理由付き・D-14）」。
-- 追跡外一時ディレクトリ `UsersshdwfAppDataLocalTemppfb/`（過去セッションの pytest basetemp 誤設定の残骸・161 ファイル）が `ruff check .`（無限定）を 31 件のエラーで汚染している。`.gitignore` 追加または削除が望ましい（Phase 3 検証で Info として記録）。
-- v1.8.0 全 26 要件（V180-*）は上記 Validated へ移動済み。
+**なし** — v1.9.0 クローズにより全 27 要件（V190-*）が Validated へ移動済み。次マイルストーンの要件は `/gsd-new-milestone` で定義する。
+
+以下は次マイルストーンの要件候補として引き継ぐ申し送り（要件化はまだされていない）:
+
+- **遡及 UAT の未実施 2 項目** — ③ max_tokens クランプ・429 リトライの実 API 検証（V16-QUAL-03 由来）／⑤-Claude の実 API 出力品質（`ANTHROPIC_API_KEY` 未設定）。実 API キー・課金が用意できた時点で消化する。詳細は `milestones/v1.9.0-phases/03-qa-release-gate/03-UAT-RESULTS.md`「## 未実施（理由付き・D-14）」
+- **技術的負債 10 件（v1.9.0 コードレビュー由来・Warning 4 / Info 6）** — `page_ops.py` 側の WR-03〜WR-06（一時 Document の finally 保護・insert base op の無意味な Undo エントリ・watermark/page-number ループの例外保護）は `file_ops.py` 側で既に解消済みのパターンの水平展開であり一括で閉じやすい。`file_ops.py` の WR-01（`content_at_risk` が立たない経路）／WR-02（`os.replace` 失敗時の `.tmp` 残置）、Phase 2 の WR-01/02（バッチ OCR コピペ移植の divergence リスク・エラー種別区別の粗さ）・IN-01（`OCR_PRICE_TABLE` の宣言順依存）も同様に非ブロッキング
+- **追跡外一時ディレクトリ `UsersshdwfAppDataLocalTemppfb/`** — 過去セッションの pytest basetemp 誤設定の残骸（161 ファイル）が `ruff check .`（無限定）を 31 件のエラーで汚染する。`.gitignore` 追加または削除が望ましい（Phase 3 検証で Info として記録）
+- **PyInstaller `--noconfirm` ビルドでサンプルプロンプト 2 ファイルが毎回消える恒久課題** — ソースツリー側へ原本移設 + ビルド後コピーのスクリプト化（260722-rel SUMMARY 由来）
+- **新世代 Gemini の temperature 無視に関する UI 注記** — v1.9.0 Phase 2 で OpenAI o-series の temperature 拒否を同型パターンとして扱えるか検討したが未着手（260722-gae 精査項目 3 ②③）
+
+v1.8.0 全 26 要件（V180-*）・v1.9.0 全 27 要件（V190-*）はいずれも上記 Validated へ移動済み。
 
 ### Out of Scope
 
@@ -276,6 +298,22 @@ PageFolio の既存コードベースに対する最適化プロジェクト。
 
 ## Current State
 
+**Shipped: v1.9.0 安全性・整合性の是正 + OpenAI プロバイダ追加 (2026-08-11)** — 3 フェーズ / 15 プラン。`APP_VERSION = v1.9.0`（テスト 1404 件グリーン・ruff クリーン）。V190-* 全27要件 Complete（被覆27/27・孤立要件なし）。
+
+- **保存・編集の安全性:** 保存3経路＋縮小保存に `encryption=PDF_ENCRYPT_KEEP` を構造的に既定化しパスワード保護 PDF の平文化を全経路で排除。`pdf_has_password` を `derive_pdf_has_password` 純関数で単一導出化。
+- **OCR OFF の全経路一貫化:** `build_provider` の `off` 分岐を専用例外 `OCRDisabledError` で拒否し、通常 OCR・バッチ OCR・ダイアログ内 provider 再生成・メニュー入口の 4 経路を同一の意味へ統一。
+- **失敗時ロールバックの構造化:** 複数ファイル挿入の巻き戻し＋`finally` クローズ・ページ複製の Undo 記録後置化・`_undo`/`_redo` 復元失敗時の `_push_evicting` による state 保全とブロッキング通知。部分失敗→再試行後に逆デルタが縮小するサイレントなページ破損を 7 op で解消（`_pending_inverse` 方式）。`page_edit` の 2 段階 mutation を順序反転（`insert_pdf`→`delete_page`）してページ内容の恒久喪失を構造的に排除。
+- **設定 UI の Apply/Cancel 契約:** 外部プロンプトファイルへの書き込みを Apply 押下時の 1 経路へ一本化し、テンプレート切替の未保存確認をファイル連動有無に依存しない単一判定へ統一。
+- **OCR プロバイダ基盤整理:** `ocr_providers/catalog.py` を新設しプロバイダメタデータ（キー・表示名・クラウド種別・環境変数・既定モデル・送信先ホスト・フォールバック可否）を単一情報源化（6/6 参照面移行完走）。`registry.py` の標準ライブラリのみ依存の独立性制約は維持。
+- **OpenAI(ChatGPT) プロバイダ:** `urllib` 直叩き・新規 pip 依存ゼロで実装。セッション限定 API キー・モデル一覧の実 API 取得＋静的フォールバック・送信先/コスト確認・バッチ OCR 対応・明示設定型フォールバック候補・detail / reasoning effort / organization / project の設定と永続化。実機確認で API キー未送信の実バグを発見・修正。
+- **品質保証・リリースゲート:** テスト環境の 2 症状（`TclError` セットアップ ERROR・`STATUS_BREAKPOINT` クラッシュ）を 10 回連続実行で非再現と一次データで反証しコード変更ゼロでクローズ（累計 17 回連続グリーン）。リリースゲートを単一プロセス `pytest -q` 完走に確定。保存トースト再試行の確認再表示を確認層/実保存層の分離で解消し、コードレビュー BLOCKER（別 Document の無確認上書き）を `bound_doc` の同一性ガードで構造的に排除。遡及 human-verify/UAT を正式実施（実施 13 / 未実施 2 / 対象外 1）。
+- コードレビュー Critical 0件。セキュリティ監査 threats_open: 0（Phase 1/2 とも verified・ASVS L1）。Nyquist COMPLIANT（3/3 validated）。UAT 19/19 pass・issue 0。
+- 技術的負債 10 件（Warning 4 / Info 6）は非ブロッキングとして v1.10.0 へ繰り越し。
+- マイルストーン詳細: `.planning/milestones/v1.9.0-ROADMAP.md`・`.planning/MILESTONES.md`
+
+<details>
+<summary>Shipped: v1.8.0 実用性の最大化・エコシステム洗練・堅牢性強化 (2026-07-16)</summary>
+
 **Shipped: v1.8.0 実用性の最大化・エコシステム洗練・堅牢性強化 (2026-07-16)** — 6 フェーズ / 22 プラン / 53 タスク。`APP_VERSION = v1.8.0`（テスト 1101 件グリーン・ruff クリーン）。V180-* 全26要件 Complete（被覆26/26・孤立要件なし）。
 
 - **基盤分割:** `ocr_providers.py`/`dialogs/llm_config.py` を責務別パッケージへ分割し、プロバイダ→環境変数の中央レジストリ `registry.py` を新設（`_SENSITIVE_KEYS` 中央化）。
@@ -286,6 +324,8 @@ PageFolio の既存コードベースに対する最適化プロジェクト。
 - **品質保証仕上げ:** 再試行付き非モーダルトースト通知・UI一貫性監査（スクロール/フォント是正）・Core Value 直撃バグ（`insert_redo` 非対称復元）修正・開発履歴.md 版番整合（V16-D-04 解消）。
 - コードレビュー Critical 0件（Warning 3件は Phase 6 で即時修正・回帰テスト追加）。セキュリティ監査 threats_open: 0（脅威4件 closed）。人手UAT 2件（Phase 6）は全合格。
 - マイルストーン詳細: `.planning/milestones/v1.8.0-ROADMAP.md`・`.planning/MILESTONES.md`
+
+</details>
 
 <details>
 <summary>Shipped: v1.7.1 現機能ブラッシュアップ + APIキー入力欄 (2026-07-05)</summary>
@@ -359,10 +399,16 @@ PageFolio の既存コードベースに対する最適化プロジェクト。
 
 ### Next Milestone Goals
 
-- v1.8.0 で吸収済み: PERF-01（サムネイル仮想化）・ShortcutsDialog WR-01/WR-02・開発履歴.md の v1.7.0 表記整合（V16-D-04 残課題）
-- 候補（v1.8.0 Phase 6 由来）: IN-01（保存トースト再試行時の上書き確認ダイアログ再表示・軽微UX磨き）、insert_redo と同型の4手往復回帰テストの水平展開（duplicate/merge/merge_resize 等の他ページ構造変更 op・非対称復元バグ潜在の未検証リスク）
-- v2 候補（STATE.md「Deferred Items」参照）: バッチ OCR のバックグラウンド常駐継続・ジョブ永続化（BATCH-F01/F02）・プロンプトテンプレートのバージョン履歴/差分表示（TMPL-F01）・サムネイルの react-window 相当本格仮想化（PERF-F01）
-- 未吸収（将来候補）: human-verify/UAT の実機目視の正式実施（v1.4.0/v1.6.0/v1.7.1 Phase04 で計3回ユーザー判断により一旦pass。v1.8.0 Phase 6 の2件はユーザー実施で全合格）
+**v1.9.0 で吸収済み:** IN-01（保存トースト再試行の確認再表示・V190-QA-02）、4手往復回帰テストの `duplicate`/`merge`/`merge_resize` への水平展開（V190-UNDO-02）、human-verify/UAT の実機目視の正式実施（V190-QA-03・v1.4.0/v1.6.0/v1.7.1 で 3 回続いた「一旦 pass」運用の解消）、Tkinter 実行環境問題のクローズ（V190-QA-01）。
+
+**v1.10.0 候補（v1.9.0 由来・優先度順）:**
+
+1. **技術的負債 10 件の解消** — `page_ops.py` 側 WR-03〜WR-06 は `file_ops.py` 側で解消済みパターンの水平展開で一括処理しやすい。`file_ops.py` WR-01/02、Phase 2 の WR-01/02・IN-01 も同枠
+2. **未実施 UAT 2 項目の消化** — max_tokens クランプ・429 リトライの実 API 検証（V16-QUAL-03 由来・v1.6.0 から 3 マイルストーン持ち越し）／⑤-Claude 実 API 出力品質。実 API キー・課金の用意が前提
+3. **バッチ OCR の divergence 構造の解消** — `dialogs/batch_ocr.py` のコピペ移植（v1.8.0 Phase 4 の意図的判断）が単発版とのズレを構造的に許容している。共通化の是非を判断する
+4. **リポジトリ衛生** — 追跡外 `UsersshdwfAppDataLocalTemppfb/` の削除 or `.gitignore` 追加、PyInstaller ビルドでサンプルプロンプトが消える恒久課題のスクリプト化
+
+**v2 候補（STATE.md「Deferred Items」参照）:** バッチ OCR のバックグラウンド常駐継続・ジョブ永続化（BATCH-F01/F02）、プロンプトテンプレートのバージョン履歴/差分表示（TMPL-F01）、サムネイルの react-window 相当本格仮想化（PERF-F01）、OpenAI Responses API 移行（V190-F-01）、organization/project ID 自動検出（V190-F-02）、セッション API キー同期ループの完全動的化（V190-F-03）、OS キーストア連携による API キー永続化。
 
 ## Evolution
 
@@ -375,4 +421,4 @@ PageFolio の既存コードベースに対する最適化プロジェクト。
 4. 決定事項 → Key Decisions を更新
 
 ---
-*Last updated: 2026-08-11 — v1.9.0 Phase 3「品質保証・リリースゲート」の UAT 完了（19/19 pass・issue 0・gap 0）。V190-QA-01/02/03 を Validated へ移動し、Phase 3 由来の決定 3 件（V190-D-QA01/02/03）を Key Decisions へ記録。Active は空（v1.9.0 全27要件 Validated）。次はマイルストーンクローズ（`/gsd-complete-milestone v1.9.0`）。前回更新: 2026-08-11 Phase 3 実行完了。*
+*Last updated: 2026-08-11 after v1.9.0 milestone — マイルストーンクローズに伴う全項目の進化レビュー実施。v1.9.0 を Current State へ昇格し v1.8.0 以前を `<details>` へ格納、Context のテスト件数を実測 1404 件へ同期しリリースゲート行を追加、Active を空にして次マイルストーン候補（技術的負債 10 件・未実施 UAT 2 項目ほか）を Next Milestone Goals へ整理。Core Value・Out of Scope は再確認のうえ変更なし。前回更新: 2026-08-11 Phase 3 UAT 完了。*
