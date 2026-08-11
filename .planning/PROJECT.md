@@ -313,6 +313,24 @@ PageFolio は `branching_strategy: "none"` / `quick_branch_template: null` の�
 
 マイルストーン進行中に `main` へ直接入れたい緊急修正が出たときは、**`main` から分岐して `main` へ PR で入れたうえで、直ちに `feature/v{version}` へ `main` を取り込む**こと。取り込みを後回しにすると二重実装リスクが戻る。
 
+## フェーズ完了 DoD
+
+**DoD 本文:** フェーズを完了扱いにする前に `/gsd-validate-phase <番号>` を実走し、対応する `NN-VALIDATION.md` の frontmatter を `status: validated` にすること。
+
+**強制点:** `tests/test_gsd_dod.py::test_completed_phases_are_validated` が `pytest` で自動収集され、適用範囲のフェーズと `NN-VALIDATION.md` の status の乖離を機械的に検知する。「ドキュメントに書いてあるだけでは実行されない」ため、機械ゲートを正本とする（姉妹プロジェクト loto は v0.17.0 で 6 フェーズ全てに validate-phase が走らないまま milestone close まで進み、audit の段階で初めて発覚した。その教訓の横展開）。
+
+**許容条件:** 本ゲートが要求するのは `status: validated` のみで、`nyquist_compliant: false`（validate は走ったがギャップが残る PARTIAL 状態）は許容する。強制するのは「検証を走らせたこと」であり、ギャップをゼロにするコストを常にフェーズ内に抱え込ませない。
+
+**適用範囲: v1.9.0 以降。** ライブの `.planning/phases/*/` と、`.planning/milestones/v{X.Y.Z}-phases/*/` のうちバージョンが v1.9.0 以上のもの。出荷済みフェーズも close 後に検証され続けるため、「アーカイブすればゲートを回避できる」抜け穴はない。`.planning/milestones/` 直下（`v*-phases/` の階層を挟まない配置）は対象外。
+
+**v1.9.0 未満を除外している理由:** v1.4.0 / v1.6.0 / v1.7.1 / v1.8.0 の `*-VALIDATION.md` は `/gsd-validate-phase` の出力ではなく別種のドキュメントで、status 語彙が `approved` / `ready` / `draft` / `planned` / `complete` と揃っておらず、欠落しているフェーズもある。遡及的な生成・修正は行わない（loto の「v0.17.0 以前への遡及生成は見送り確定」と同じ判断）。ただし「除外すれば通る」抜け穴にしないため、除外対象の集合そのものを `test_legacy_exclusions_match_repository` が実ディレクトリと突き合わせて機械固定しており、**除外を増やすにはテスト内の定数を明示的に書き換える必要がある**。
+
+**loto 実装との設計差分:** loto は `ROADMAP.md` の `## Progress` 進捗表から `Status == Complete` の行を拾ってフェーズ番号でディレクトリを解決するが、PageFolio では 3 つの前提が成立しないため走査の入口をディレクトリ列挙へ差し替えている。(1) PageFolio の `## Progress` はマイルストーン単位の表で `Phase` 列を持たない、(2) フェーズ番号をマイルストーンごとに 1 起点へリセットするため番号から一意に解決できない、(3) PyYAML が未インストールのため frontmatter の最小パーサを自前で持つ（新規依存を増やさない）。
+
+**red になったときの対処:** 該当フェーズに対して `/gsd-validate-phase <番号>` を実走する。ギャップ提示では「Skip — mark manual-only」を選べば `nyquist_compliant: false` の PARTIAL のまま `status: validated` にできる。
+
+参照: [../tests/test_gsd_dod.py](../tests/test_gsd_dod.py) / [quick/260812-and-dod/260812-and-SUMMARY.md](quick/260812-and-dod/260812-and-SUMMARY.md)
+
 ## Key Decisions
 
 | 決定事項 | 根拠 | 状態 |
@@ -471,4 +489,4 @@ PageFolio は `branching_strategy: "none"` / `quick_branch_template: null` の�
 4. 決定事項 → Key Decisions を更新
 
 ---
-*Last updated: 2026-08-12 quick 260812-a8u — `## Constraints` 節を `## Context` の直後に新設（9 項目・正本は CLAUDE.md でその要約）。260812-9tv で暫定的に `## Context` 表へ置いていたブランチ運用ポインタを Constraints 末尾へ移設し、loto/numbers と同型（末尾がブランチ運用ポインタ）にした。CLAUDE.md・`pagefolio/` ソースは無変更。前回更新: 2026-08-12 quick 260812-9tv — ブランチ運用を姉妹プロジェクト（numbers `feature/v0.18.0` が原典・loto `main` が踏襲）と統一。`.planning/config.json` の `git` セクション 3 キー（`branching_strategy` = `milestone` / `milestone_branch_template` = `feature/{milestone}` / `quick_branch_template` = `quick/{num}-{slug}`）を 3 プロジェクト同値へ更新し、`## ブランチ運用` 節（5 部構成）を `## Key Decisions` の直前に新設、`## Context` 表へ入口 1 行を追加。発効は v1.10.0 以降。`git` 以外の config セクション・`pagefolio/` ソースは無変更。前回更新: 2026-08-11 after v1.9.0 milestone — マイルストーンクローズに伴う全項目の進化レビュー実施。v1.9.0 を Current State へ昇格し v1.8.0 以前を `<details>` へ格納、Context のテスト件数を実測 1404 件へ同期しリリースゲート行を追加、Active を空にして次マイルストーン候補（技術的負債 10 件・未実施 UAT 2 項目ほか）を Next Milestone Goals へ整理。Core Value・Out of Scope は再確認のうえ変更なし。前回更新: 2026-08-11 Phase 3 UAT 完了。*
+*Last updated: 2026-08-12 quick 260812-and — `## フェーズ完了 DoD` 節を `## ブランチ運用` の直後に新設し、機械ゲート `tests/test_gsd_dod.py`（6 テスト）を追加。適用範囲は v1.9.0 以降で、v1.9.0 未満の除外集合はテストが実ディレクトリと突き合わせて固定する。loto 実装は前提（ROADMAP の Phase 列 / フェーズ番号の連番性 / PyYAML）が PageFolio で成立しないため走査の入口をディレクトリ列挙へ差し替えた。3 プロジェクト比較の差分 #1〜#5 がこれで全て完了。前回更新: 2026-08-12 quick 260812-a8u — `## Constraints` 節を `## Context` の直後に新設（9 項目・正本は CLAUDE.md でその要約）。260812-9tv で暫定的に `## Context` 表へ置いていたブランチ運用ポインタを Constraints 末尾へ移設し、loto/numbers と同型（末尾がブランチ運用ポインタ）にした。CLAUDE.md・`pagefolio/` ソースは無変更。前回更新: 2026-08-12 quick 260812-9tv — ブランチ運用を姉妹プロジェクト（numbers `feature/v0.18.0` が原典・loto `main` が踏襲）と統一。`.planning/config.json` の `git` セクション 3 キー（`branching_strategy` = `milestone` / `milestone_branch_template` = `feature/{milestone}` / `quick_branch_template` = `quick/{num}-{slug}`）を 3 プロジェクト同値へ更新し、`## ブランチ運用` 節（5 部構成）を `## Key Decisions` の直前に新設、`## Context` 表へ入口 1 行を追加。発効は v1.10.0 以降。`git` 以外の config セクション・`pagefolio/` ソースは無変更。前回更新: 2026-08-11 after v1.9.0 milestone — マイルストーンクローズに伴う全項目の進化レビュー実施。v1.9.0 を Current State へ昇格し v1.8.0 以前を `<details>` へ格納、Context のテスト件数を実測 1404 件へ同期しリリースゲート行を追加、Active を空にして次マイルストーン候補（技術的負債 10 件・未実施 UAT 2 項目ほか）を Next Milestone Goals へ整理。Core Value・Out of Scope は再確認のうえ変更なし。前回更新: 2026-08-11 Phase 3 UAT 完了。*
