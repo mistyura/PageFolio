@@ -46,10 +46,10 @@
 - [x] **V190-OAI-04**: OpenAI で OCR を実行する前に、送信先ホストを明示した確認ダイアログが表示される
 - [x] **V190-OAI-05**: OpenAI で OCR を実行する前に、コスト確認ダイアログが表示される
 - [x] **V190-OAI-06**: ユーザーはバッチ OCR で OpenAI を選択・実行できる（クラウド判定・コスト確認・送信先表示を含む）
-- [ ] **V190-OAI-07**: ユーザーは OpenAI をフォールバック候補として設定でき、フォールバック発動時に送信先確認が再提示される（V180-D-02 の明示設定型方針を維持）
-- [ ] **V190-OAI-08**: ユーザーは OpenAI 実行時の画像 detail レベル（low / high / auto）を選択でき、設定が永続化される
-- [ ] **V190-OAI-09**: ユーザーは reasoning effort 相当のパラメータを設定でき、対応モデル選択時のみ有効化される（Claude の `EFFORT_MODELS` 許可リスト方式を踏襲）
-- [ ] **V190-OAI-10**: ユーザーは organization / project ID を任意入力でき、指定した場合のみリクエストヘッダへ付与される
+- [x] **V190-OAI-07**: ユーザーは OpenAI をフォールバック候補として設定でき、フォールバック発動時に送信先確認が再提示される（V180-D-02 の明示設定型方針を維持）
+- [x] **V190-OAI-08**: ユーザーは OpenAI 実行時の画像 detail レベル（low / high / auto）を選択でき、設定が永続化される
+- [x] **V190-OAI-09**: ユーザーは reasoning effort 相当のパラメータを設定でき、対応モデル選択時のみ有効化される（Claude の `EFFORT_MODELS` 許可リスト方式を踏襲）
+- [x] **V190-OAI-10**: ユーザーは organization / project ID を任意入力でき、指定した場合のみリクエストヘッダへ付与される
 - [x] **V190-OAI-11**: OpenAI プロバイダは `urllib.request` 直叩きで実装され、新規 pip 依存を追加しない（V14-D-01 踏襲）
 - [x] **V190-OAI-12**: モデル別のパラメータ非互換（`max_tokens` 非対応で `max_completion_tokens` を要するモデル、`temperature` を拒否する o-series）が正しく分岐処理され、エラーにならない
 - [x] **V190-OAI-13**: OpenAI の 429 / 5xx 応答に対し既存の指数バックオフ・`Retry-After` 尊重のリトライ基盤（`ocr_providers/errors.py`）が適用される
@@ -125,10 +125,10 @@
 | V190-OAI-04 | Phase 2 | Complete |
 | V190-OAI-05 | Phase 2 | Complete |
 | V190-OAI-06 | Phase 2 | Complete |
-| V190-OAI-07 | Phase 2 | Pending |
-| V190-OAI-08 | Phase 2 | Pending |
-| V190-OAI-09 | Phase 2 | Pending |
-| V190-OAI-10 | Phase 2 | Pending |
+| V190-OAI-07 | Phase 2 | Complete |
+| V190-OAI-08 | Phase 2 | Complete |
+| V190-OAI-09 | Phase 2 | Complete |
+| V190-OAI-10 | Phase 2 | Complete |
 | V190-OAI-11 | Phase 2 | Complete |
 | V190-OAI-12 | Phase 2 | Complete |
 | V190-OAI-13 | Phase 2 | Complete |

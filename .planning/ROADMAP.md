@@ -99,7 +99,7 @@ V180-* 全 26 要件 Complete（被覆 26/26・孤立要件なし）。クロー
 > **フェーズ採番:** マイルストーンごとに Phase 1 起点へリセット（プロジェクト方針）。
 
 - [x] **Phase 1: 保存・編集・設定の安全性是正（失敗時ロールバック担保）** - 保存3経路の暗号化維持・OCR OFF全経路一貫化・複数ファイル挿入/ページ複製・設定UIのApply/Cancel契約・Undo/Redo復元失敗時のスタック保護で「失敗時は操作前状態へ戻る」を確立 (completed 2026-08-11)
-- [ ] **Phase 2: OCR プロバイダ基盤整理 + OpenAI(ChatGPT) プロバイダ追加** - プロバイダメタデータを単一情報源（catalog）へ一元化し、その上に OpenAI(ChatGPT) を既存5プロバイダと同等の安全境界でOCR/バッチOCR/フォールバックへ追加
+- [x] **Phase 2: OCR プロバイダ基盤整理 + OpenAI(ChatGPT) プロバイダ追加** - プロバイダメタデータを単一情報源（catalog）へ一元化し、その上に OpenAI(ChatGPT) を既存5プロバイダと同等の安全境界でOCR/バッチOCR/フォールバックへ追加 (completed 2026-08-11)
 - [ ] **Phase 3: 品質保証・リリースゲート** - Tkinter 実行環境を修復してGUIテスト含む全テストを完走させ、保存トースト再試行時の上書き確認再表示とhuman-verify/UATを正式実施してリリース判定を固める
 
 ## Phase Details
@@ -162,7 +162,7 @@ Plans:
   4. ユーザーは OpenAI をフォールバック候補として設定でき、発動時に送信先確認が再提示される。画像 detail レベル（low/high/auto）・reasoning effort 相当パラメータ（対応モデル選択時のみ有効化）・organization/project ID（指定時のみヘッダ付与）を設定でき、永続化される（V190-OAI-07/08/09/10）
   5. OpenAI プロバイダは `urllib.request` 直叩きで実装され新規 pip 依存を追加しない。モデル別のパラメータ非互換（`max_completion_tokens` を要するモデル・`temperature` を拒否する o-series）が正しく分岐しエラーにならず、429/5xx 応答に既存の指数バックオフ・`Retry-After` 尊重リトライ基盤（`ocr_providers/errors.py`）が適用される（V190-OAI-11/12/13）
 
-**Plans**: 3/4 plans executed（4 waves・全 wave 直列。02-01 は D-09 + 能力マトリクス確定の checkpoint:decision、02-04 は 3 分割した実機 human-verify を含む。02-REVIEWS.md 反映済み）
+**Plans**: 4/4 plans executed（4 waves・全 wave 直列。02-01 は D-09 + 能力マトリクス確定の checkpoint:decision、02-04 は 3 分割した実機 human-verify を含む。02-REVIEWS.md 反映済み）
 
 Plans:
 **Wave 1**
@@ -179,7 +179,7 @@ Plans:
 
 **Wave 4** *(blocked on Wave 2/3 completion)*
 
-- [ ] 02-04-PLAN.md — OpenAI 固有パラメータ UI（detail / effort 許可リスト / org / project）・フォールバック候補・ドキュメント・実機確認 3 分割（V190-OAI-07/08/09/10）
+- [x] 02-04-PLAN.md — OpenAI 固有パラメータ UI（detail / effort 許可リスト / org / project）・フォールバック候補・ドキュメント・実機確認 3 分割（V190-OAI-07/08/09/10）
 
 **Cross-cutting constraints:**
 
@@ -239,5 +239,5 @@ Phases execute in numeric order: 1 → 2 → 3
 | 5. 堅牢性強化（サムネイル仮想化 + Blobリーク検出 + ShortcutsDialog修正） | v1.8.0 | 4/4 | Complete | 2026-07-16 |
 | 6. 品質保証仕上げ（通知UX・UI一貫性監査・ドキュメント整合） | v1.8.0 | 3/3 | Complete | 2026-07-16 |
 | 1. 保存・編集・設定の安全性是正（失敗時ロールバック担保） | v1.9.0 | 5/6 | Gap closure planned | - |
-| 2. OCR プロバイダ基盤整理 + OpenAI(ChatGPT) プロバイダ追加 | v1.9.0 | - | Not started | - |
+| 2. OCR プロバイダ基盤整理 + OpenAI(ChatGPT) プロバイダ追加 | v1.9.0 | 4/4 | Complete | 2026-08-11 |
 | 3. 品質保証・リリースゲート | v1.9.0 | - | Not started | - |

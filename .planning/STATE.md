@@ -5,16 +5,16 @@ milestone_name: 安全性・整合性の是正 + OpenAI プロバイダ追加
 current_phase: 02
 current_phase_name: ocr-openai-chatgpt
 status: executing
-stopped_at: Completed 02-03-PLAN.md
-last_updated: "2026-08-11T03:55:05.534Z"
+stopped_at: Completed 02-04-PLAN.md
+last_updated: "2026-08-11T06:44:57.592Z"
 last_activity: 2026-08-11
 last_activity_desc: Phase 01 execution started
 progress:
   total_phases: 3
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 11
-  completed_plans: 10
-  percent: 33
+  completed_plans: 11
+  percent: 67
 ---
 
 # Project State
@@ -24,16 +24,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-08-10)
 
 **Core value:** 大きな PDF でも Undo/Redo が正しく・速く動作し、コードが読みやすく保守しやすい状態にする
-**Current focus:** Phase 02 — ocr-openai-chatgpt
+**Current focus:** Phase 03 — 品質保証・リリースゲート（未着手）
 
 ## Current Position
 
-Phase: 02 (ocr-openai-chatgpt) — EXECUTING
+Phase: 02 (ocr-openai-chatgpt) — COMPLETE (4/4 plans)
 Plan: 4 of 4
-Status: Ready to execute
-Last activity: 2026-08-11 — Phase 02 execution started
+Status: Phase 02 complete. Phase 03（品質保証・リリースゲート）は未着手
+Last activity: 2026-08-11 — 02-04-PLAN.md 完了（V190-OAI-07〜10・Phase 2 全15要件 Complete）
 
-Progress: [█████████░] 91%
+Progress: [██████████] 100%
 
 ## v1.9.0 Phase Map
 
@@ -134,6 +134,7 @@ Progress: [█████████░] 91%
 | Phase 02 P01 | 38min | 3 tasks | 9 files |
 | Phase 02 P02 | 16min | 3 tasks | 5 files |
 | Phase 02 P03 | 19min | 3 tasks | 7 files |
+| Phase 02 P04 | 68min | 5 tasks | 11 files |
 
 ## Accumulated Context
 
@@ -248,6 +249,11 @@ Decisions are logged in PROJECT.md Key Decisions table.
 - [Phase ?]: 02-03: _EXCLUDED_MODEL_MARKERSから単独imageを除外し画像生成モデルはgpt-imageという限定的マーカーで除外（レビューMEDIUM 02-03-3）。order_models_for_displayはVERIFIED_VISION_MODELSを宣言順で先頭に据える（レビューHIGH 02-03-1）
 - [Phase ?]: 02-03: D-08の観測同一性をtest_on_error_matches_zero_result_fallback_of_list_modelsで固定。_on_errorのフォールバック値とlist_models()の0件合流値が完全一致することを保証（レビューMEDIUM-11）
 - [Phase ?]: 02-03: sections.pyのプロバイダ一覧2箇所をcatalog.provider_names()/fallback_candidate_names()へ置換しD-03の6参照面移行が完走（V190-CAT-01完了）
+- [Phase ?]: 02-04: Task1着手時に作業ツリー先行実装済みだったEFFORT_VALUES_BY_MODEL/effort_values_for_model/_sanitize_header_valueを能力マトリクスと突き合わせ検証のうえ引き継いだ
+- [Phase ?]: 02-04: organization/projectの許可文字は英数字限定ではなくHTTPヘッダ値として安全な印字可能ASCII(\x21-\x7E)・長さ1-128とし、不正時は_validate_openai_idが明示エラーでApplyを中断する（黙って空文字化しない）
+- [Phase ?]: 02-04: reasoning effortはClaudeのeffort_frame/ocr_effort/_EFFORT_VALUESを流用せずOpenAI専用ウィジェットとopenai_reasoning_effortキーで実装（D-15）
+- [Phase ?]: 02-04: フォールバック実機手順はHTTP401がRuntimeErrorになりfatalにならないと実コード照合で判明したため、到達不能URLによるConnectionError誘発へ変更（レビューHIGH02-04-2）
+- [Phase ?]: 02-04: Task3B実機確認でOpenAIのAPIキーがOCR実行時に送信されない実バグを発見。ocr_dialog.pyの_apply_llm_settings/_on_runにopenai専用elifが無く汎用else（APIキー不要前提）へ落ちていたことが原因。claude/geminiと同型elifを追加し36e7cc2で修正・回帰テスト2件追加
 
 ### Pending Todos
 
@@ -357,8 +363,8 @@ Decisions are logged in PROJECT.md Key Decisions table.
 
 **Resume file:** None
 
-Last session: 2026-08-11T03:55:05.511Z
-Stopped at: Completed 02-03-PLAN.md
+Last session: 2026-08-11T06:44:57.555Z
+Stopped at: Completed 02-04-PLAN.md
 
 ## Operator Next Steps
 
