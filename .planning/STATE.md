@@ -4,10 +4,10 @@ milestone: v1.9.0
 milestone_name: 安全性・整合性の是正 + OpenAI プロバイダ追加
 current_phase: 03
 status: completed
-stopped_at: Completed 03-04-PLAN.md
-last_updated: "2026-08-11T12:16:13.734Z"
+stopped_at: Phase 03 complete (UAT 19/19 pass) — ready to close milestone v1.9.0
+last_updated: "2026-08-11T12:28:11.933Z"
 last_activity: 2026-08-11
-last_activity_desc: Phase 01 execution started
+last_activity_desc: Phase 03 UAT complete (19/19 pass, 0 issues)
 progress:
   total_phases: 3
   completed_phases: 3
@@ -21,10 +21,10 @@ current_phase_name: qa-release-gate
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-08-10)
+See: .planning/PROJECT.md (updated 2026-08-11)
 
 **Core value:** 大きな PDF でも Undo/Redo が正しく・速く動作し、コードが読みやすく保守しやすい状態にする
-**Current focus:** Phase 03 — qa-release-gate
+**Current focus:** v1.9.0 マイルストーンクローズ（全 3 フェーズ完了・UAT 合格済み）
 
 ## Current Position
 
@@ -274,13 +274,16 @@ Decisions are logged in PROJECT.md Key Decisions table.
 
 ### Blockers/Concerns
 
-- [v1.6.0 Phase 3 継続]: V16-QUAL-03（max_tokens/429 実機検証）は実 API 前提のチェックリスト化まで完了。実機実施は未了のまま受容済み。
+- [v1.6.0 Phase 3 継続 → v1.9.0 Phase 3 で再確認]: V16-QUAL-03（max_tokens/429 実機検証）は実 API 課金・レート制限誘発が必要なため今回も「未実施（理由付き）」で維持。`03-UAT-RESULTS.md`「## 未実施（理由付き・D-14）」に消化条件を記録済み。あわせて ⑤-Claude（Claude 実 API 出力品質・`ANTHROPIC_API_KEY` 未設定）も同様に未実施 → **次マイルストーンで実 API キーが用意でき次第消化**
+- [v1.9.0 Phase 3 検証で Info 記録]: リポジトリルートの追跡外一時ディレクトリ `UsersshdwfAppDataLocalTemppfb/`（過去セッションの pytest basetemp 誤設定による残骸・161 ファイル）が `ruff check .`（無限定）を 31 件のエラーで汚染し、CLAUDE.md チェックリスト文言どおりの実行が失敗する。`pagefolio`/`tests` 限定なら常にクリーン → **`.gitignore` 追加または削除が望ましい**
+- [v1.9.0 Phase 3・未検証のまま保存]: D-03 の2仮説（pytest assertion rewriting 後のメモリレイアウト／`tests/test_pdf_ops.py` の二分探索）は症状が再現しなかったため検証していない。再発時の調査入口として `03-TEST-ENV-INVESTIGATION.md`「## 検証しなかった仮説と理由」に保存済み
 - [v1.7.1 Phase 4 UAT]: 人手確認7件はユーザー判断で一旦pass（実機目視未検証・コード/自動ゲートは全通過、v1.6.0 Phase 4 と同様の運用）。v1.8.0 Phase 6 では UAT 2件をユーザー実施で全合格済み。
 - [06-03 defer・レビューR6] duplicate/merge/merge_resize 等の他ページ構造変更 op に対する do→undo→redo→undo 4手往復回帰テストの水平展開は v1.8.0 で未実施 → **v1.9.0 Phase 1（V190-UNDO-02）で対応予定**
-- [v1.8.0 リリース作業で発見]: requirements.txt 指定バージョン（PyMuPDF 1.28.0・Pillow 12.3.0・tkinterdnd2 0.6.2）へ venv を合わせた状態でフルテストスイート（1101件）を複数回連続実行すると、毎回異なる2件が `_tkinter.TclError`（アサーション失敗ではなく Tk インタプリタ生成失敗。例: `couldn't read file "...ttk/clamTheme.tcl"` だが実ファイルは存在）で ERROR になることがある（単体実行では常に合格）。1101件の `tk.Tk()` 生成/破棄を単一 pytest プロセスで連続実行することによる Tcl/Tk リソース消耗系のフレーキーと推定 → **v1.9.0 Phase 3（V190-QA-01）で切り分け・修復予定**（リサーチでは実機再現せず、TCL_LIBRARY/TK_LIBRARY の venv相対パス誤解決 CPython #125235 が有力候補。frozen判定と開発環境判定の分離修復を推奨）。
-- [01-07 実行時にオーケストレーターが A/B 検証で特定]: フルスイート `pytest -q`（単一プロセス）が `tests/test_ocr_pipeline.py::TestPipelineHardening::test_cancel_finite_time_no_deadlock` の実行中に `Windows fatal exception: code 0x80000003`（STATUS_BREAKPOINT）+ `<freed thread state>` でプロセスごとクラッシュする（HEAD 内容で約10回中7回・再現率が高い）。上記 Tcl/Tk フレーキー（`TclError` によるセットアップ ERROR）とは**別症状**。**製品コードは無実**（`file_ops.py`/`lang.py` を HEAD にしテストのみ 01-07 前へ戻すと 4/4 green・基準内容は累計19回中0クラッシュ）。引き金は `tests/test_pdf_ops.py`（01-07 版）の**存在そのもの**で、`--deselect`（import するが1件も実行しない）でも再現し `--ignore`（import しない）では再現しない＝**import 時点で成立**。ただしモジュールサイズ模倣・`import ast`/`pathlib` のみの追加では再現せず、残る要因（pytest assertion rewriting 後のメモリレイアウト等のネイティブ層）は未解明。`_drive_pipeline` の孤児 daemon スレッド仮説に基づく修正は効果なしで棄却・revert 済み → **v1.9.0 Phase 3（V190-QA-01）で引き取り**。当面の運用は分割実行（`pytest -q --ignore=tests/test_ocr_pipeline.py` で1167 + `pytest -q tests/test_ocr_pipeline.py` で17 = 1184 全件 green）。
 
 過去の懸念は全て解決済み:
+
+  - ~~[v1.8.0 リリース作業で発見] フルスイート連続実行で毎回異なる2件が `_tkinter.TclError`（Tk インタプリタ生成失敗）で ERROR になる~~ → v1.9.0 Phase 3（V190-QA-01）で現行 HEAD に対し10回連続実行し 0/10 で非再現を確認。`TCL_LIBRARY`/`TK_LIBRARY` のハードコードは入れずコード変更ゼロでクローズ（`03-TEST-ENV-INVESTIGATION.md` 症状①）
+  - ~~[01-07 で特定] フルスイート単一プロセス実行が `test_cancel_finite_time_no_deadlock` 実行中に `Windows fatal exception: 0x80000003`（STATUS_BREAKPOINT）でプロセスごとクラッシュ（約10回中7回）~~ → v1.9.0 Phase 3（V190-QA-01）で同じ10回連続実行にてクラッシュ 0 回。リサーチセッションの7回と合算し累計17回連続グリーン。当面の運用だった分割実行は不要になり、リリースゲートは単一プロセス `pytest -q` 完走に確定（`CLAUDE.md`「## リリースゲート」節・`03-TEST-ENV-INVESTIGATION.md` 症状②）
 
   - ~~fitz のスレッドセーフ制約~~ → Phase 04 でスレッド境界を明確化（ワーカーには bytes のみ渡す）
   - ~~Gemini Free Tier 10 RPM~~ → Phase 06 で並列度 1 を既定化
@@ -376,8 +379,8 @@ Decisions are logged in PROJECT.md Key Decisions table.
 
 **Resume file:** None
 
-Last session: 2026-08-11T11:28:39.035Z
-Stopped at: Completed 03-04-PLAN.md
+Last session: 2026-08-11T12:28:11Z
+Stopped at: Phase 3 complete（UAT 19/19 pass・issue 0）、v1.9.0 全 3 フェーズ完了。次は `/gsd-complete-milestone v1.9.0`
 
 ## Operator Next Steps
 

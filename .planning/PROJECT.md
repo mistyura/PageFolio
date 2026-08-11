@@ -28,7 +28,7 @@ PageFolio の既存コードベースに対する最適化プロジェクト。
 - 実装方針は `urllib` 直叩き・新規 pip 依存ゼロ（V14-D-01 踏襲）
 - `registry.py` の「Python 標準ライブラリのみ・pagefolio 内部モジュールを import しない」独立性制約（V180-D-01）は維持し、非機密メタデータは別モジュールへ分離する
 
-**進捗:** Phase 1〜3 すべて完了（2026-08-11）。V190-* 全27要件 Complete（被覆27/27）。`APP_VERSION = v1.9.0`・テスト 1404 件グリーン。マイルストーンクローズ（`/gsd-complete-milestone`）待ち。
+**進捗:** Phase 1〜3 すべて完了（2026-08-11）。V190-* 全27要件 Complete（被覆27/27）。`APP_VERSION = v1.9.0`・テスト 1404 件グリーン。Phase 3 の UAT も完了（19/19 pass・issue 0）。マイルストーンクローズ（`/gsd-complete-milestone`）待ち。
 - Phase 1「保存・編集・設定の安全性是正」— 7/7 プラン・検証 5/5 must-haves（01-06 / 01-07 の 2 回のギャップ是正を経て passed）
 - Phase 2「OCR プロバイダ基盤整理 + OpenAI(ChatGPT) 追加」— 4/4 プラン・検証 5/5 must-haves・15/15 要件
 - Phase 3「品質保証・リリースゲート」— 4/4 プラン・検証 12/12 must-haves。コードレビューで BLOCKER（トースト再試行が別 Document の内容を確定パスへ無確認上書きするデータ損失）を検出し、`bound_doc` による doc 同一性束縛で構造的に解消・回帰テスト 6 件追加。遡及 UAT は実施対象 13 項目 pass / 未実施 2 項目（実 API 課金・`ANTHROPIC_API_KEY` 未設定）
@@ -224,13 +224,14 @@ PageFolio の既存コードベースに対する最適化プロジェクト。
 - ✓ V180-REFAC-03・V180-QA-01: `ocr_dialog.py` の producer-consumer 駆動部を `OCRRunEngine`（`pagefolio/ocr_engine.py`）へ抽出し `OCRDialog` を薄い委譲ラッパー化・OCR→サマリ E2E モックテスト整備（`tests/test_ocr_engine.py`・実スレッド/キュー駆動） — v1.8.0 Phase 3
 - ✓ V180-PERF-01/02/03・V180-ROBUST-01・V180-ROBUST-03: サムネイル窓内可視範囲仮想化（`pagination.py` 純関数 + `viewer.py` 統合・デバウンス+アイドル先読み）・`thumb_cache` LRU化（`LruCache`・`THUMB_CACHE_MAX=300`）・`selected_pages` 全ページインデックス不変条件回帰・Blob ライフサイクルのリーク検出強化（`_released`+`__del__`・AV衝突安全網の回帰テスト）・ShortcutsDialog WR-01/WR-02 解消 — v1.8.0 Phase 5
 - ✓ V180-QA-02/03/04: 再試行アクション付き非モーダルトースト通知（保存3操作+印刷・`ToastManager`新設）・UI一貫性監査（スクロール/フォントスケーリング是正・8ファイル監査）・開発履歴.md 版番整合（V16-D-04 残課題解消）。あわせて Core Value 直撃バグ（`insert_redo` 非対称復元・ページ重複）を修正（D-17） — v1.8.0 Phase 6
+- ✓ V190-QA-01/02/03: Tkinter 実行環境の切り分け（現行 HEAD で `TclError` セットアップ ERROR・`STATUS_BREAKPOINT` クラッシュとも非再現・累計17回連続グリーンを一次データで反証しコード変更ゼロでクローズ）とリリースゲートの合格条件確定（`CLAUDE.md`「## リリースゲート」節・単一プロセス `pytest -q` 完走）・保存トースト再試行の確認再表示解消（確認/パス選択層と実保存層 `_do_save_*` の分離・`functools.partial` によるパス束縛と `bound_doc` による doc 同一性ガード）・遡及 human-verify/UAT の正式実施（実施13 / 未実施2〔実 API 課金・`ANTHROPIC_API_KEY` 未設定〕/ 対象外1 = 計16） — v1.9.0 Phase 3（検証 12/12 must-haves・UAT 19/19 pass・issue 0）
 - ✓ V190-CAT-01/02・V190-OAI-01〜13: プロバイダメタデータの単一情報源化（`ocr_providers/catalog.py` 新設・`registry.py` の標準ライブラリのみ依存の独立性制約は維持）と OpenAI(ChatGPT) プロバイダのフル実装（`urllib` 直叩き・新規 pip 依存ゼロ・セッション限定 API キー・モデル一覧取得と静的フォールバック・送信先/コスト確認・バッチ OCR 対応・フォールバック候補組み込み・detail / reasoning effort / organization / project の設定と永続化） — v1.9.0 Phase 2（検証 5/5 must-haves・15/15 要件・実機 human-verify 3 件合格）
 
 ### Active
 
-- v1.9.0 の要件（V190-*）は `.planning/REQUIREMENTS.md` に定義済み。スコープは上記「Current Milestone」の Target features を参照（既存機能レビュー 8 件 + OpenAI プロバイダ追加 + 品質保証・持ち越し）。
-- **残: Phase 3「品質保証・リリースゲート」**（V190-QA-*）。`APP_VERSION`・`開発履歴.md`・README バッジのバージョン更新は Phase 1/2 では意図的に行わず、Phase 3 のリリースゲート（V190-QA-03）へ委譲している。
-- Phase 2（V190-CAT-*/V190-OAI-*・全 15 要件）は Validated へ移動済み。
+- **なし（v1.9.0 は全 27 要件が Validated へ移動済み）。** Phase 1〜3 完了・`APP_VERSION = v1.9.0`・README バッジ・開発履歴.md の 3 点同期済み。残作業はマイルストーンクローズ（`/gsd-complete-milestone v1.9.0`）のみ。
+- 次マイルストーンへの申し送り: 遡及 UAT の未実施 2 項目（③ max_tokens クランプ・429 リトライの実 API 検証〔V16-QUAL-03 由来〕／⑤-Claude の実 API 出力品質〔`ANTHROPIC_API_KEY` 未設定〕）は実 API キー・課金が用意できた時点で消化する。詳細は `03-UAT-RESULTS.md`「## 未実施（理由付き・D-14）」。
+- 追跡外一時ディレクトリ `UsersshdwfAppDataLocalTemppfb/`（過去セッションの pytest basetemp 誤設定の残骸・161 ファイル）が `ruff check .`（無限定）を 31 件のエラーで汚染している。`.gitignore` 追加または削除が望ましい（Phase 3 検証で Info として記録）。
 - v1.8.0 全 26 要件（V180-*）は上記 Validated へ移動済み。
 
 ### Out of Scope
@@ -269,6 +270,9 @@ PageFolio の既存コードベースに対する最適化プロジェクト。
 | V180-D-04：バッチ OCR は単独フェーズへ隔離し、`fitz.Document` のスレッド間共有を避けてファイル間は逐次処理 | 大型機能を他の柱と混在させず、fitz のスレッドセーフ制約を構造的に遵守 | ✓ Good（v1.8.0 Phase 4） |
 | V180-D-05：サムネイル仮想化・LRUキャッシュは `pagination.py`/`thumb_cache.py` の Tk/fitz 非依存純関数層に集約 | 可視範囲計算・キャッシュ eviction を単体テスト可能にし、viewer.py への統合を薄く保つ | ✓ Good（v1.8.0 Phase 5） |
 | V180-D-17：`insert_redo` は `delete_redo` 対称パターン（降順 `delete_page`）へ修正し、修正範囲を `_restore_state` の insert_redo ブロックのみに限定 | Core Value 直撃バグ（insert→undo→redo→undo でページ重複）を最小差分で解消し他 op の対称性を壊さない | ✓ Good（v1.8.0 Phase 6・4手往復回帰テストで担保） |
+| V190-D-QA01：テスト環境の2症状（`TclError` / `STATUS_BREAKPOINT`）は「調べる前に直さない」— 現行 HEAD で 10 回連続再現試行を行い、非再現ならコード変更ゼロで反証データ付きに閉じる | 予防的な `TCL_LIBRARY`/`TK_LIBRARY` ハードコード（PITFALLS Pitfall 13 が警告）を入れずに済み、次マイルストーンが同じ地面を掛け直さない一次データが残る | ✓ Good（v1.9.0 Phase 3・累計17回連続グリーン・`03-TEST-ENV-INVESTIGATION.md`） |
+| V190-D-QA02：リリースゲートは単一プロセス `pytest -q` 完走を合格条件とし、テストの削除・skip・`-k`/`--ignore` による静かな除外を禁止事項として明記 | 分割実行という回避策に逃げずゲートを1コマンドに固定できる統計的根拠が得られた。除外による「見かけの合格」を構造的に封じる | ✓ Good（v1.9.0 Phase 3・`CLAUDE.md`「## リリースゲート」節） |
+| V190-D-QA03：保存トーストの再試行は確認/パス選択層と実保存層（`_do_save_*`）を分離し、`functools.partial` で確定パスを、`bound_doc` で Document 同一性を束縛する | パスのみ束縛して `self.doc` を都度参照すると、トースト表示中に別ファイルを開いた場合に無関係な Document を確定パスへ無確認上書きする（コードレビュー CR-01・データ損失 BLOCKER）。doc 同一性ガードで構造的に排除 | ✓ Good（v1.9.0 Phase 3・回帰テスト6件で担保） |
 
 ## Current State
 
@@ -371,4 +375,4 @@ PageFolio の既存コードベースに対する最適化プロジェクト。
 4. 決定事項 → Key Decisions を更新
 
 ---
-*Last updated: 2026-08-11 — v1.9.0 Phase 3「品質保証・リリースゲート」完了（4/4 プラン・検証 12/12 must-haves・V190-QA-01/02/03 Complete。コードレビュー BLOCKER 1 件を検出し回帰テスト 6 件付きで解消。遡及 UAT 13 項目 pass / 2 項目未実施）。これで v1.9.0 全 3 フェーズ完了・V190-* 全27要件 Complete。次はマイルストーンクローズ。前回更新: 2026-08-11 Phase 2 完了。*
+*Last updated: 2026-08-11 — v1.9.0 Phase 3「品質保証・リリースゲート」の UAT 完了（19/19 pass・issue 0・gap 0）。V190-QA-01/02/03 を Validated へ移動し、Phase 3 由来の決定 3 件（V190-D-QA01/02/03）を Key Decisions へ記録。Active は空（v1.9.0 全27要件 Validated）。次はマイルストーンクローズ（`/gsd-complete-milestone v1.9.0`）。前回更新: 2026-08-11 Phase 3 実行完了。*

@@ -93,7 +93,17 @@ overrides_applied: 0
 
 Gap なし。Phase 3 の3つの Success Criteria（V190-QA-01/02/03）はいずれも、独立した再実行・ソースコード読解・git コミット実在確認により裏付けられた。コードレビューで検出された CR-01（データ損失の可能性がある BLOCKER）は `bound_doc` 束縛の実装により構造的に解消されており、その安全性を検証する回帰テストが存在し green である。唯一の non-gap 所見は、フェーズのスコープ外である追跡外一時ディレクトリが `ruff check .`（無限定）を汚染している点で、これは Info として記録した。
 
+## Acknowledged Gaps
+
+`/gsd-verify-work 3`（UAT・2026-08-11）の締め前スキャン（`audit-open`）で検出された下記1件を、
+ユーザー判断（`y`）により受容してフェーズをクローズした。
+
+| Category | Item | Status | 受容理由 |
+|----------|------|--------|----------|
+| uat_gap | `03-UAT-RESULTS.md` | unknown（open_scenario_count: 0） | frontmatter に `status:` フィールドを持たない形式のため機械判定が `unknown` になっているだけで、実体はクローズ済み。内訳は pass 13 / fail 0 / 未実施 2 / 対象外 1 = 計16 で対象確定表の行数と一致（検算済み）。未実施2件（③ max_tokens クランプ・429 リトライの実 API 検証／⑤-Claude の実 API 出力品質）はいずれも実 API キー・課金が前提で、`## 未実施（理由付き・D-14）` 節に理由と消化条件を記録のうえ次マイルストーン候補として申し送り済み。オープンな不具合ではなくリリース判定をブロックしない |
+
 ---
 
 _Verified: 2026-08-11_
 _Verifier: Claude (gsd-verifier)_
+_UAT acknowledged: 2026-08-11（`/gsd-verify-work 3` — 19/19 pass・issue 0）_
