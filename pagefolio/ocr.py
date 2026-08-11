@@ -497,6 +497,26 @@ def build_provider(settings, api_key=None, plugin_manager=None):
             max_tokens=mt,
             temperature=float(settings.get("ocr_temperature", DEFAULT_OCR_TEMPERATURE)),
         )
+    elif name == "openai":
+        # api_key は settings から読まず引数のみ・settings へ書き込まない（D-01/D-05）
+        from pagefolio.ocr_providers import OpenAIProvider, catalog
+
+        # H-1 と同型: -1 は LM Studio 専用の「モデル最大値委譲」値。
+        # OpenAI API も正の整数必須のため mt <= 0 のとき 4096 にクランプする。
+        mt = int(settings.get("ocr_max_tokens", DEFAULT_OCR_MAX_TOKENS))
+        mt = 4096 if mt <= 0 else mt
+        return OpenAIProvider(
+            api_key=api_key or "",
+            model=settings.get("openai_model", "")
+            or catalog.default_model_for("openai"),
+            timeout=int(settings.get("ocr_timeout", DEFAULT_OCR_TIMEOUT)),
+            max_tokens=mt,
+            temperature=float(settings.get("ocr_temperature", DEFAULT_OCR_TEMPERATURE)),
+            detail=settings.get("openai_detail", "high"),
+            reasoning_effort=settings.get("openai_reasoning_effort") or None,
+            organization=settings.get("openai_organization", ""),
+            project=settings.get("openai_project", ""),
+        )
     elif name == "ollama":
         from pagefolio.ocr_providers import OllamaProvider
 
@@ -589,12 +609,9 @@ class OCRMixin:
         # 中止する（成功基準2 は OCRDialog._on_run が担保）。
         name = self.settings.get("ocr_provider", "")
         api_key = None
-        _cloud_providers = {
-            "claude",
-            "gemini",
-            "runpod",
-        }  # Phase 6: gemini 追加, runpod 追加
-        if name in _cloud_providers:
+        from pagefolio.ocr_providers import catalog
+
+        if catalog.is_cloud_provider(name):
             from pagefolio.ocr_providers import OCRAPIKeyError
 
             # self._session_api_keys が無い経路（テスト等）に備え getattr で安全に参照

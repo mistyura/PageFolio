@@ -277,6 +277,14 @@ def _load_settings():
         "ocr_effort": "low",  # effort 対応モデル時の既定値（D-17）
         # Phase 6: Gemini Provider 設定（APIキーではない無害な設定値・D-08）
         "gemini_model": "gemini-2.5-flash",  # D-08: 推奨モデル既定値
+        # Phase 02 (v1.9.0): OpenAI Provider 設定（APIキーではない無害な
+        # 設定値。openai_model の既定は "" で、空のとき
+        # catalog.default_model_for("openai") へ解決する・V190-OAI-08〜10）
+        "openai_model": "",
+        "openai_detail": "high",  # D-16: 画像 detail レベル既定値
+        "openai_reasoning_effort": "",
+        "openai_organization": "",
+        "openai_project": "",
         # Phase 02: サムネイル表示件数（D-04: 既定 20・許容 10〜100）
         # 読み出しは pagination.clamp_page_size 経由で範囲外/非数値を倒す（W1）
         "thumb_page_size": 20,

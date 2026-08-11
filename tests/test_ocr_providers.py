@@ -2668,3 +2668,51 @@ class TestModelListTimeout:
         p = ocr_providers.GeminiProvider("my-key", "")
         assert p.list_models() == ["gemini-2.5-flash"]
         assert seen["timeout"] == ocr_providers.GeminiProvider.model_list_timeout
+
+
+# ===== Phase 2 Plan 01: OpenAIProvider 縦スライス（Task 2(7)） =====
+
+
+class TestBuildProviderOpenAIEndToEnd:
+    """build_provider({"ocr_provider": "openai", ...}) の縦スライスを
+    通しで検証する（設定 -> build_provider -> OpenAIProvider -> (モック)
+    api.openai.com -> OCR テキスト）。
+    """
+
+    def test_openai_ocr_image_end_to_end(self, monkeypatch):
+        from pagefolio.ocr import build_provider
+        from pagefolio.ocr_providers import openai_provider
+
+        captured = {}
+
+        def fake_urlopen(req, timeout=None):
+            captured["url"] = req.full_url
+            captured["headers"] = req.headers
+            captured["data"] = json.loads(req.data.decode("utf-8"))
+            body = json.dumps(
+                {"choices": [{"message": {"content": "OpenAI OCR result"}}]}
+            )
+            return _FakeResponse(body)
+
+        monkeypatch.setattr(openai_provider.urllib.request, "urlopen", fake_urlopen)
+
+        settings = {
+            "ocr_provider": "openai",
+            "openai_model": "gpt-5.1",
+        }
+        provider = build_provider(settings, api_key="sk-test-e2e")
+        assert isinstance(provider, openai_provider.OpenAIProvider)
+
+        result = provider.ocr_image("Zg==", "OCR してください")
+
+        # (a) CHAT_ENDPOINT へ POST
+        assert captured["url"] == openai_provider.OpenAIProvider.CHAT_ENDPOINT
+        # (b) Authorization ヘッダが Bearer sk-test-e2e
+        assert captured["headers"]["Authorization"] == "Bearer sk-test-e2e"
+        # (c) organization/project 未指定時はヘッダが付かない
+        assert "Openai-organization" not in captured["headers"]
+        assert "Openai-project" not in captured["headers"]
+        # (d) body に max_completion_tokens がある
+        assert "max_completion_tokens" in captured["data"]
+        # (e) choices[0].message.content の文字列を返す
+        assert result == "OpenAI OCR result"

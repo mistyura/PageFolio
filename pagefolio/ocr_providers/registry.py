@@ -20,6 +20,7 @@ PROVIDER_ENV_KEYS = {
     "claude": ("ANTHROPIC_API_KEY",),
     "gemini": ("GEMINI_API_KEY", "GOOGLE_API_KEY"),
     "runpod": ("RUNPOD_API_KEY",),
+    "openai": ("OPENAI_API_KEY",),
 }
 
 

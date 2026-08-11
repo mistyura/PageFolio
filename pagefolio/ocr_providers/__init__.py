@@ -42,6 +42,10 @@ from pagefolio.ocr_providers.errors import (  # noqa: F401
 from pagefolio.ocr_providers.gemini import GeminiProvider  # noqa: F401
 from pagefolio.ocr_providers.lmstudio import LMStudioProvider  # noqa: F401
 from pagefolio.ocr_providers.ollama import OllamaProvider  # noqa: F401
+from pagefolio.ocr_providers.openai_provider import (  # noqa: F401
+    OpenAIProvider,
+    is_reasoning_model,
+)
 from pagefolio.ocr_providers.runpod import RunPodProvider  # noqa: F401
 from pagefolio.ocr_providers.tesseract import (  # noqa: F401
     TesseractProvider,
