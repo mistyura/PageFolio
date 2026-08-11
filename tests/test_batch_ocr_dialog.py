@@ -22,6 +22,7 @@ import sys
 import threading
 import time
 import tkinter as tk
+import types
 
 import pytest
 
@@ -494,3 +495,278 @@ class TestBatchSummary:
         from pagefolio.dialogs import BatchOCRDialog
 
         assert BatchOCRDialog is batch_ocr.BatchOCRDialog
+
+
+# ══════════════════════════════════════════════════════════════
+#  02-02 Task 3(C): openai の catalog 移行回帰（Tk ウィジェット非依存・
+#  ocr_dialog.py の TestIsCloudProvider 等と同型の未バインド呼び出しパターン）
+# ══════════════════════════════════════════════════════════════
+
+
+class TestBatchIsCloudProviderOpenAI:
+    """V190-CAT-01/V190-OAI-06: openai がバッチ側でもクラウド判定される。"""
+
+    def test_openai_settings_returns_true(self):
+        stub = types.SimpleNamespace(
+            app=types.SimpleNamespace(settings={"ocr_provider": "openai"}),
+            provider=None,
+        )
+        stub._is_cloud_provider = lambda settings=None: (
+            batch_ocr.BatchOCRDialog._is_cloud_provider(stub, settings)
+        )
+        assert stub._is_cloud_provider() is True
+
+    def test_unregistered_plugin_name_returns_false(self):
+        """D-04: catalog 未登録のプラグイン名は False を返す。"""
+        stub = types.SimpleNamespace(
+            app=types.SimpleNamespace(settings={"ocr_provider": "my-custom-plugin"}),
+            provider=None,
+        )
+        stub._is_cloud_provider = lambda settings=None: (
+            batch_ocr.BatchOCRDialog._is_cloud_provider(stub, settings)
+        )
+        assert stub._is_cloud_provider() is False
+
+
+class TestBatchConfirmCostOpenAI:
+    """V190-OAI-04/05/06: バッチ側 _confirm_cost の openai ケース
+    （`ocr_dialog.py:TestConfirmCost`/`TestVisionUnverifiedNotice` と対称）。
+    """
+
+    def _stub(self, openai_model=None):
+        from pagefolio.constants import LANG
+
+        settings = {"ocr_provider": "openai"}
+        if openai_model is not None:
+            settings["openai_model"] = openai_model
+        stub = types.SimpleNamespace(
+            app=types.SimpleNamespace(settings=settings),
+            _entries=[],
+            _L=LANG["ja"],
+        )
+        stub._estimate_cost = lambda m, c: batch_ocr.BatchOCRDialog._estimate_cost(
+            stub, m, c
+        )
+        stub._confirm_cost = lambda page_count=None, settings=None: (
+            batch_ocr.BatchOCRDialog._confirm_cost(stub, page_count, settings)
+        )
+        return stub
+
+    def test_confirm_cost_openai_shows_openai_host(self, monkeypatch):
+        stub = self._stub()
+        captured = {}
+        monkeypatch.setattr(
+            batch_ocr.messagebox,
+            "askyesno",
+            lambda title, msg, parent=None: captured.update({"msg": msg}) or True,
+        )
+        stub._confirm_cost(page_count=3)
+        assert "api.openai.com" in captured["msg"]
+
+    def test_confirm_cost_openai_vision_unverified_note(self, monkeypatch):
+        stub = self._stub(openai_model="gpt-9-hypothetical")
+        captured = {}
+        monkeypatch.setattr(
+            batch_ocr.messagebox,
+            "askyesno",
+            lambda title, msg, parent=None: captured.update({"msg": msg}) or True,
+        )
+        stub._confirm_cost(page_count=1)
+        from pagefolio.constants import LANG
+
+        note = LANG["ja"]["ocr_model_vision_unverified"].format(
+            model="gpt-9-hypothetical"
+        )
+        assert note in captured["msg"]
+
+    def test_confirm_cost_openai_verified_model_no_note(self, monkeypatch):
+        from pagefolio.constants import LANG
+        from pagefolio.ocr_providers import OpenAIProvider
+
+        stub = self._stub(openai_model=OpenAIProvider.RECOMMENDED_MODELS[0])
+        captured = {}
+        monkeypatch.setattr(
+            batch_ocr.messagebox,
+            "askyesno",
+            lambda title, msg, parent=None: captured.update({"msg": msg}) or True,
+        )
+        stub._confirm_cost(page_count=1)
+        marker = LANG["ja"]["ocr_model_vision_unverified"].split("{")[0]
+        assert marker not in captured["msg"]
+
+
+class TestBatchConfirmSummaryCostOpenAI:
+    """V190-OAI-06: バッチ側 _confirm_summary_cost の openai ケース。"""
+
+    def test_confirm_summary_cost_openai_shows_host(self, monkeypatch):
+        from pagefolio.constants import LANG
+
+        stub = types.SimpleNamespace(
+            app=types.SimpleNamespace(settings={"ocr_provider": "openai"}),
+            _L=LANG["ja"],
+        )
+        stub._confirm_summary_cost = lambda cc, settings=None: (
+            batch_ocr.BatchOCRDialog._confirm_summary_cost(stub, cc, settings)
+        )
+        captured = {}
+        monkeypatch.setattr(
+            batch_ocr.messagebox,
+            "askyesno",
+            lambda title, msg, parent=None: captured.update({"msg": msg}) or True,
+        )
+        stub._confirm_summary_cost(500)
+        assert "api.openai.com" in captured["msg"]
+
+
+class TestBatchCheckCloudApiKeyOpenAI:
+    """V190-OAI-06: バッチ側 _check_cloud_api_key の openai ケース。"""
+
+    def _stub(self, session_keys=None):
+        from pagefolio.constants import LANG
+
+        stub = types.SimpleNamespace(
+            app=types.SimpleNamespace(
+                settings={"ocr_provider": "openai"},
+                _session_api_keys=dict(session_keys or {}),
+            ),
+            provider=None,
+            _L=LANG["ja"],
+        )
+        stub._is_cloud_provider = lambda settings=None: (
+            batch_ocr.BatchOCRDialog._is_cloud_provider(stub, settings)
+        )
+        stub._check_cloud_api_key = lambda settings=None: (
+            batch_ocr.BatchOCRDialog._check_cloud_api_key(stub, settings)
+        )
+        return stub
+
+    def test_missing_key_shows_error(self, monkeypatch):
+        monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+        stub = self._stub()
+        captured = {}
+
+        def mock_showerror(title, msg, parent=None):
+            captured["msg"] = msg
+
+        monkeypatch.setattr(batch_ocr.messagebox, "showerror", mock_showerror)
+        assert stub._check_cloud_api_key() is False
+        assert "OPENAI_API_KEY" in captured["msg"]
+
+    def test_session_key_resolves(self, monkeypatch):
+        monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+        stub = self._stub(session_keys={"openai": "dummy-test-key"})
+        called = []
+        monkeypatch.setattr(
+            batch_ocr.messagebox,
+            "showerror",
+            lambda *a, **kw: called.append((a, kw)),
+        )
+        assert stub._check_cloud_api_key() is True
+        assert called == []
+
+
+class TestSingleVsBatchHostParity:
+    """単発 OCR とバッチ OCR で同一 settings に対する _confirm_cost の
+    送信先ホスト行が一致することを固定する（独立実装の挙動一致・レビュー
+    LOW-10 対応）。
+    """
+
+    def test_openai_host_matches_between_dialogs(self, monkeypatch):
+        from pagefolio.constants import LANG
+        from pagefolio.ocr_dialog import OCRDialog
+
+        settings = {"ocr_provider": "openai"}
+
+        single_stub = types.SimpleNamespace(
+            app=types.SimpleNamespace(settings=settings),
+            page_indices=[0],
+            _L=LANG["ja"],
+        )
+        single_stub._estimate_cost = lambda m, c: OCRDialog._estimate_cost(
+            single_stub, m, c
+        )
+        single_stub._confirm_cost = lambda: OCRDialog._confirm_cost(single_stub)
+
+        batch_stub = types.SimpleNamespace(
+            app=types.SimpleNamespace(settings=settings),
+            _entries=[],
+            _L=LANG["ja"],
+        )
+        batch_stub._estimate_cost = lambda m, c: (
+            batch_ocr.BatchOCRDialog._estimate_cost(batch_stub, m, c)
+        )
+        batch_stub._confirm_cost = lambda page_count=None, settings=None: (
+            batch_ocr.BatchOCRDialog._confirm_cost(batch_stub, page_count, settings)
+        )
+
+        captured = {}
+
+        def _capture_single(title, msg, parent=None):
+            captured["single"] = msg
+            return True
+
+        def _capture_batch(title, msg, parent=None):
+            captured["batch"] = msg
+            return True
+
+        monkeypatch.setattr("pagefolio.ocr_dialog.messagebox.askyesno", _capture_single)
+        single_stub._confirm_cost()
+
+        monkeypatch.setattr(batch_ocr.messagebox, "askyesno", _capture_batch)
+        batch_stub._confirm_cost(page_count=1)
+
+        single_host_line = captured["single"].splitlines()[0]
+        batch_host_line = captured["batch"].splitlines()[0]
+        assert single_host_line == batch_host_line == "送信先: api.openai.com"
+
+
+class TestBatchConfirmDenialStopsSend:
+    """レビュー 02-02 Suggestion 3（バッチ版）: 集約コスト確認で「いいえ」を
+    選んだとき _build_provider_once に到達しないことを固定する。
+    """
+
+    def test_openai_denial_never_reaches_build_provider_once(self, monkeypatch):
+        from pagefolio.batch_ocr_state import STATUS_PENDING
+        from pagefolio.constants import LANG
+
+        class _Entry:
+            def __init__(self):
+                self.status = STATUS_PENDING
+                self.page_count = 2
+
+        monkeypatch.setattr(batch_ocr.messagebox, "askyesno", lambda *a, **kw: False)
+
+        build_calls = []
+        fake = types.SimpleNamespace(
+            app=types.SimpleNamespace(
+                settings={"ocr_provider": "openai"}, _session_api_keys={}
+            ),
+            provider=None,
+            _running=False,
+            _entries=[_Entry()],
+            _batch_state=None,
+            _batch_cancel_flag=None,
+            _file_cancel_flag=None,
+            _L=LANG["ja"],
+        )
+        fake._check_cloud_api_key = lambda: True
+        fake._is_cloud_provider = lambda settings=None: (
+            batch_ocr.BatchOCRDialog._is_cloud_provider(fake, settings)
+        )
+        fake._estimate_cost = lambda m, c: batch_ocr.BatchOCRDialog._estimate_cost(
+            fake, m, c
+        )
+        fake._confirm_cost = lambda page_count=None, settings=None: (
+            batch_ocr.BatchOCRDialog._confirm_cost(fake, page_count, settings)
+        )
+        fake._confirm_batch_cost = lambda: batch_ocr.BatchOCRDialog._confirm_batch_cost(
+            fake
+        )
+        fake._build_provider_once = lambda: build_calls.append(True)
+        fake._set_running_ui = lambda running: None
+        fake._update_overall_progress = lambda: None
+        fake._advance_to_next_file = lambda: None
+
+        batch_ocr.BatchOCRDialog._on_start_batch(fake)
+
+        assert build_calls == [], "拒否後に _build_provider_once が呼ばれた"

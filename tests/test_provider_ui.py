@@ -388,6 +388,28 @@ class TestIsCloudProvider:
         )
         assert stub._is_cloud_provider() is True
 
+    def test_openai_settings_returns_true(self):
+        """V190-CAT-01: settings.ocr_provider == 'openai' のとき True を返す。"""
+        stub = _make_dialog_stub(settings={"ocr_provider": "openai"})
+        assert stub._is_cloud_provider() is True
+
+    def test_openai_provider_instance_returns_true(self):
+        """provider が OpenAIProvider インスタンスのとき設定に関わらず True。"""
+        from pagefolio.ocr_providers import OpenAIProvider
+
+        provider = OpenAIProvider(api_key="x", model="gpt-5.1")
+        stub = _make_dialog_stub(
+            settings={"ocr_provider": "lmstudio"},
+            provider=provider,
+        )
+        assert stub._is_cloud_provider() is True
+
+    def test_unregistered_plugin_name_returns_false(self):
+        """D-04: catalog 未登録のプラグイン名（isinstance ガードにも一致しない）は
+        False を返す。"""
+        stub = _make_dialog_stub(settings={"ocr_provider": "my-custom-plugin"})
+        assert stub._is_cloud_provider() is False
+
 
 class TestEstimateCost:
     """OCR-UI-03: _estimate_cost の動作検証。"""
@@ -565,6 +587,55 @@ class TestCheckCloudApiKey:
         assert stub._check_cloud_api_key() is False
         assert called
 
+    def test_openai_unresolved_shows_error_and_returns_false(self, monkeypatch):
+        """V190-CAT-01: openai 未解決なら ocr_api_key_missing_openai 由来の
+        エラーが表示され False を返す。"""
+        self._clear_all_env(monkeypatch)
+        monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+        stub = self._make_stub("openai")
+        captured = {}
+
+        def mock_showerror(title, msg, parent=None):
+            captured["title"] = title
+            captured["msg"] = msg
+            captured["parent"] = parent
+
+        monkeypatch.setattr("pagefolio.ocr_dialog.messagebox.showerror", mock_showerror)
+        assert stub._check_cloud_api_key() is False
+        assert captured
+        assert "OPENAI_API_KEY" in captured["msg"]
+        # env_var 埋め込みだけでは汎用テンプレートとの誤 fallback を検知
+        # できない（両テンプレートとも env_var を含むため）。openai 専用
+        # 文言（"OpenAI APIキー"）で catalog.api_key_missing_lang_key_for
+        # が実際に openai 固有キーへ解決していることを固定する。
+        assert "OpenAI APIキー" in captured["msg"]
+
+    def test_openai_session_key_resolves_without_messagebox(self, monkeypatch):
+        """openai セッションキーが設定済みなら True・messagebox 非呼び出し。"""
+        self._clear_all_env(monkeypatch)
+        monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+        stub = self._make_stub("openai", session_keys={"openai": "dummy-test-key"})
+        called = []
+        monkeypatch.setattr(
+            "pagefolio.ocr_dialog.messagebox.showerror",
+            lambda *a, **kw: called.append((a, kw)),
+        )
+        assert stub._check_cloud_api_key() is True
+        assert called == []
+
+    def test_openai_env_var_resolves_without_messagebox(self, monkeypatch):
+        """OPENAI_API_KEY 環境変数のみでも True・messagebox 非呼び出し。"""
+        self._clear_all_env(monkeypatch)
+        monkeypatch.setenv("OPENAI_API_KEY", "dummy-env-key")
+        stub = self._make_stub("openai")
+        called = []
+        monkeypatch.setattr(
+            "pagefolio.ocr_dialog.messagebox.showerror",
+            lambda *a, **kw: called.append((a, kw)),
+        )
+        assert stub._check_cloud_api_key() is True
+        assert called == []
+
 
 class TestConfirmCost:
     """OCR-UI-03: _confirm_cost の動作検証（messagebox モック）。"""
@@ -716,6 +787,409 @@ class TestConfirmCost:
         stub._confirm_cost()
         assert LANG["ja"]["llm_runpod_host_unset"] in captured["msg"]
         assert "api.anthropic.com" not in captured["msg"]
+
+    def test_confirm_cost_openai_shows_openai_host(self, monkeypatch):
+        """V190-OAI-04: openai 選択時、_confirm_cost のメッセージに
+        api.openai.com が含まれる。
+        """
+        stub = self._make_confirm_stub(page_indices=[0, 1], provider="openai")
+        captured = {}
+        monkeypatch.setattr(
+            "pagefolio.ocr_dialog.messagebox.askyesno",
+            lambda title, msg, parent=None: captured.update({"msg": msg}) or True,
+        )
+        stub._confirm_cost()
+        assert "api.openai.com" in captured["msg"]
+
+    def test_confirm_cost_openai_default_model_used_when_unset(self, monkeypatch):
+        """openai_model 未設定時、catalog 既定モデル(gpt-5.1)が
+        _estimate_cost へ渡される（レビュー 02-02 の catalog.default_model_for
+        経路の機械保証）。
+        """
+        stub = self._make_confirm_stub(page_indices=[0], provider="openai")
+        captured = {}
+        original_estimate = stub._estimate_cost
+
+        def _spy(model, count):
+            captured["model"] = model
+            return original_estimate(model, count)
+
+        stub._estimate_cost = _spy
+        monkeypatch.setattr(
+            "pagefolio.ocr_dialog.messagebox.askyesno", lambda *a, **kw: True
+        )
+        stub._confirm_cost()
+        assert captured["model"] == "gpt-5.1"
+
+
+class TestProviderDisplayNameCatalog:
+    """V190-CAT-01: 表示名解決2実装（_provider_display_name /
+    _provider_key_to_display_name）が catalog を単一情報源として一致する
+    ことの機械保証（レビュー 02-02 対応）。
+    """
+
+    ALL_PROVIDERS = [
+        "off",
+        "lmstudio",
+        "ollama",
+        "runpod",
+        "claude",
+        "gemini",
+        "tesseract",
+        "openai",
+    ]
+
+    def _stub(self, ocr_provider):
+        from pagefolio.constants import LANG
+        from pagefolio.ocr_dialog import OCRDialog
+
+        stub = types.SimpleNamespace(
+            app=types.SimpleNamespace(settings={"ocr_provider": ocr_provider}),
+            provider=None,
+            _L=LANG["ja"],
+        )
+        stub._provider_display_name = lambda: OCRDialog._provider_display_name(stub)
+        stub._provider_key_to_display_name = lambda name: (
+            OCRDialog._provider_key_to_display_name(stub, name)
+        )
+        return stub
+
+    @pytest.mark.parametrize("name", ALL_PROVIDERS)
+    def test_both_implementations_agree(self, name):
+        """8 プロバイダすべてで _provider_display_name と
+        _provider_key_to_display_name が同じ表示名を返す。"""
+        stub = self._stub(name)
+        assert stub._provider_display_name() == stub._provider_key_to_display_name(name)
+
+    def test_empty_string_resolves_as_lmstudio(self):
+        """空文字は lmstudio として解決される（既存挙動維持）。"""
+        from pagefolio.constants import LANG
+
+        stub = self._stub("")
+        expected = LANG["ja"]["ocr_provider_name_lmstudio"]
+        assert stub._provider_display_name() == expected
+        assert stub._provider_key_to_display_name("") == expected
+
+    def test_unregistered_name_passthrough(self):
+        """catalog 未登録の名前はそのまま返る（フォールバック挙動維持）。"""
+        stub = self._stub("mystery-plugin")
+        assert stub._provider_display_name() == "mystery-plugin"
+        assert stub._provider_key_to_display_name("mystery-plugin") == "mystery-plugin"
+
+    def test_openai_display_name(self):
+        """openai の表示名が lang.py の ocr_provider_name_openai と一致する。"""
+        from pagefolio.constants import LANG
+
+        stub = self._stub("openai")
+        assert stub._provider_display_name() == LANG["ja"]["ocr_provider_name_openai"]
+
+
+class TestFallbackCandidateHostCatalog:
+    """V190-CAT-01: _fallback_candidate_host が catalog 経由でも移行前と
+    同じ文字列を返すことを固定する（fallback_eligible な各プロバイダ）。
+    """
+
+    def _stub(self, settings):
+        from pagefolio.constants import LANG
+        from pagefolio.ocr_dialog import OCRDialog
+
+        stub = types.SimpleNamespace(
+            app=types.SimpleNamespace(settings=settings),
+            _L=LANG["ja"],
+        )
+        stub._fallback_candidate_host = lambda candidate: (
+            OCRDialog._fallback_candidate_host(stub, candidate)
+        )
+        return stub
+
+    def test_claude_returns_fixed_host(self):
+        stub = self._stub({})
+        assert stub._fallback_candidate_host("claude") == "api.anthropic.com"
+
+    def test_gemini_returns_fixed_host(self):
+        stub = self._stub({})
+        assert (
+            stub._fallback_candidate_host("gemini")
+            == "generativelanguage.googleapis.com"
+        )
+
+    def test_openai_returns_fixed_host(self):
+        stub = self._stub({})
+        assert stub._fallback_candidate_host("openai") == "api.openai.com"
+
+    def test_runpod_uses_settings_url(self):
+        stub = self._stub({"runpod_url": "http://runpod.example/x"})
+        assert stub._fallback_candidate_host("runpod") == "http://runpod.example/x"
+
+    def test_runpod_unset_shows_placeholder(self):
+        from pagefolio.constants import LANG
+
+        stub = self._stub({})
+        assert (
+            stub._fallback_candidate_host("runpod")
+            == LANG["ja"]["llm_runpod_host_unset"]
+        )
+
+    def test_lmstudio_uses_settings_url(self):
+        stub = self._stub({"lm_studio_url": "http://example:9999"})
+        assert stub._fallback_candidate_host("lmstudio") == "http://example:9999"
+
+    def test_lmstudio_default_url(self):
+        stub = self._stub({})
+        assert stub._fallback_candidate_host("lmstudio") == "http://localhost:1234"
+
+    def test_ollama_uses_settings_url(self):
+        stub = self._stub({"ollama_url": "http://example:7777"})
+        assert stub._fallback_candidate_host("ollama") == "http://example:7777"
+
+    def test_tesseract_returns_display_name(self):
+        from pagefolio.constants import LANG
+
+        stub = self._stub({})
+        assert (
+            stub._fallback_candidate_host("tesseract")
+            == LANG["ja"]["ocr_provider_name_tesseract"]
+        )
+
+
+class TestResolvedHostTextUnknown:
+    """レビュー MEDIUM-8: catalog 未登録のクラウド継承プラグインで
+    _confirm_cost が送信先不明を明示すること（プロバイダ表示名だけで
+    済ませていないこと）を固定する。
+    """
+
+    def test_unregistered_cloud_plugin_shows_host_unknown(self, monkeypatch):
+        from pagefolio.constants import LANG
+        from pagefolio.ocr_dialog import OCRDialog
+        from pagefolio.ocr_providers import ClaudeProvider
+
+        class _DummyCloudPlugin(ClaudeProvider):
+            """ClaudeProvider を継承した catalog 未登録のダミープラグイン。"""
+
+        settings = {"ocr_provider": "dummy-cloud-plugin"}
+        stub = types.SimpleNamespace(
+            app=types.SimpleNamespace(settings=settings),
+            page_indices=[0],
+            provider=_DummyCloudPlugin(api_key="x", model="dummy-model"),
+            _L=LANG["ja"],
+        )
+        stub._estimate_cost = lambda m, c: OCRDialog._estimate_cost(stub, m, c)
+        stub._confirm_cost = lambda: OCRDialog._confirm_cost(stub)
+
+        captured = {}
+        monkeypatch.setattr(
+            "pagefolio.ocr_dialog.messagebox.askyesno",
+            lambda title, msg, parent=None: captured.update({"msg": msg}) or True,
+        )
+        stub._confirm_cost()
+        expected_host_text = LANG["ja"]["ocr_host_unknown"].format(
+            provider="dummy-cloud-plugin"
+        )
+        assert expected_host_text in captured["msg"]
+
+
+class TestVisionUnverifiedNotice:
+    """レビュー HIGH 02-02-2: vision 確認済み集合外の openai モデル選択時に
+    画像入力未確認の注記が追加されることを固定する。
+    """
+
+    def _make_stub(self, openai_model):
+        from pagefolio.constants import LANG
+        from pagefolio.ocr_dialog import OCRDialog
+
+        settings = {"ocr_provider": "openai", "openai_model": openai_model}
+        stub = types.SimpleNamespace(
+            app=types.SimpleNamespace(settings=settings),
+            page_indices=[0],
+            _L=LANG["ja"],
+        )
+        stub._estimate_cost = lambda m, c: OCRDialog._estimate_cost(stub, m, c)
+        stub._confirm_cost = lambda: OCRDialog._confirm_cost(stub)
+        return stub
+
+    def test_unverified_model_adds_note(self, monkeypatch):
+        stub = self._make_stub("gpt-9-hypothetical")
+        captured = {}
+        monkeypatch.setattr(
+            "pagefolio.ocr_dialog.messagebox.askyesno",
+            lambda title, msg, parent=None: captured.update({"msg": msg}) or True,
+        )
+        stub._confirm_cost()
+        from pagefolio.constants import LANG
+
+        note = LANG["ja"]["ocr_model_vision_unverified"].format(
+            model="gpt-9-hypothetical"
+        )
+        assert note in captured["msg"]
+
+    def test_verified_model_no_note(self, monkeypatch):
+        from pagefolio.constants import LANG
+        from pagefolio.ocr_providers import OpenAIProvider
+
+        stub = self._make_stub(OpenAIProvider.RECOMMENDED_MODELS[0])
+        captured = {}
+        monkeypatch.setattr(
+            "pagefolio.ocr_dialog.messagebox.askyesno",
+            lambda title, msg, parent=None: captured.update({"msg": msg}) or True,
+        )
+        stub._confirm_cost()
+        marker = LANG["ja"]["ocr_model_vision_unverified"].split("{")[0]
+        assert marker not in captured["msg"]
+
+
+class TestConfirmDenialStopsSend:
+    """レビュー 02-02 Suggestion 3: 確認ダイアログで「いいえ」を選んだとき
+    build_provider にも HTTP 送信にも到達しないことを固定する。
+    """
+
+    def test_openai_denial_never_reaches_build_provider_or_http(self, monkeypatch):
+        import threading
+
+        from pagefolio.constants import LANG
+        from pagefolio.ocr_dialog import OCRDialog
+
+        build_calls = []
+        monkeypatch.setattr(
+            "pagefolio.ocr_dialog.build_provider",
+            lambda *a, **kw: build_calls.append((a, kw)),
+        )
+
+        def _raise_if_called(*a, **kw):
+            raise AssertionError("urlopen が呼ばれた（HTTP 送信に到達した）")
+
+        monkeypatch.setattr("urllib.request.urlopen", _raise_if_called)
+        monkeypatch.setattr(
+            "pagefolio.ocr_dialog.messagebox.askyesno", lambda *a, **kw: False
+        )
+
+        app = types.SimpleNamespace(
+            settings={"ocr_provider": "openai"}, _session_api_keys={}
+        )
+        fake = types.SimpleNamespace(
+            app=app,
+            provider=None,
+            _started=False,
+            _done=False,
+            _summary_running=False,
+            page_indices=[0],
+            _cancel_flag=threading.Event(),
+            _L=LANG["ja"],
+        )
+        fake._is_cloud_provider = lambda settings=None: OCRDialog._is_cloud_provider(
+            fake, settings
+        )
+        fake._check_cloud_api_key = lambda settings=None: True
+        fake._estimate_cost = lambda m, c: OCRDialog._estimate_cost(fake, m, c)
+        fake._confirm_cost = lambda page_count, settings=None: OCRDialog._confirm_cost(
+            fake, page_count, settings
+        )
+
+        OCRDialog._on_run(fake)
+
+        assert fake._started is False, "拒否後に OCR 実行が開始されている"
+        assert build_calls == [], "拒否後に build_provider が呼ばれた"
+
+
+class TestTextCapableProvidersParity:
+    """レビュー MEDIUM-9: _TEXT_CAPABLE_PROVIDERS が catalog 登録プロバイダの
+    うち Provider クラスの supports_text_prompt が真であるプロバイダ名の
+    集合と一致することを固定する（追記漏れ検知装置）。
+    """
+
+    def test_matches_supports_text_prompt_projection(self):
+        from pagefolio.ocr_dialog import _TEXT_CAPABLE_PROVIDERS
+        from pagefolio.ocr_providers import (
+            ClaudeProvider,
+            GeminiProvider,
+            LMStudioProvider,
+            OllamaProvider,
+            OpenAIProvider,
+            RunPodProvider,
+            TesseractProvider,
+            catalog,
+        )
+
+        # 名前 → クラスの対応表はテスト側に置く（catalog は Provider を
+        # import しない・D-05）。
+        name_to_class = {
+            "lmstudio": LMStudioProvider,
+            "ollama": OllamaProvider,
+            "runpod": RunPodProvider,
+            "claude": ClaudeProvider,
+            "gemini": GeminiProvider,
+            "tesseract": TesseractProvider,
+            "openai": OpenAIProvider,
+        }
+        expected = {
+            name
+            for name in catalog.PROVIDERS
+            if name in name_to_class
+            and getattr(name_to_class[name], "supports_text_prompt", False)
+        }
+        assert _TEXT_CAPABLE_PROVIDERS == frozenset(expected)
+
+
+class TestOpenAIPriceProvenance:
+    """レビュー HIGH-2/MEDIUM-16: OpenAI 単価プロヴェナンスの4層検証。
+
+    実際の金額の正しさ自体は 02-CAPABILITY-MATRIX.md の出典 URL・参照日と
+    02-04 Task 3B の human-verify（公式価格ページとの突き合わせ）が担保する。
+    本テストは (1)両ファイル一致 (2)プロヴェナンス形式妥当性 (3)推奨/既定
+    モデル全解決 (4)入出力単価の実世界不変条件、の4層を機械的に固定する
+    （辞書同士の一致だけでは「同じ誤値」を防げないため）。
+    """
+
+    def test_layer1_price_table_and_source_match_across_files(self):
+        from pagefolio.dialogs.batch_ocr import (
+            OCR_PRICE_TABLE as batch_table,
+        )
+        from pagefolio.dialogs.batch_ocr import (
+            OPENAI_PRICE_SOURCE as batch_source,
+        )
+        from pagefolio.ocr_dialog import (
+            OCR_PRICE_TABLE as dialog_table,
+        )
+        from pagefolio.ocr_dialog import (
+            OPENAI_PRICE_SOURCE as dialog_source,
+        )
+
+        assert dialog_table == batch_table
+        assert list(dialog_table) == list(batch_table)
+        assert dialog_source == batch_source
+
+    def test_layer2_source_provenance_format(self):
+        import re
+
+        from pagefolio.ocr_dialog import OPENAI_PRICE_SOURCE
+
+        assert set(OPENAI_PRICE_SOURCE) == {"url", "retrieved", "unit", "currency"}
+        assert OPENAI_PRICE_SOURCE["url"].startswith("https://")
+        assert re.fullmatch(r"20\d\d-\d\d-\d\d", OPENAI_PRICE_SOURCE["retrieved"])
+        assert OPENAI_PRICE_SOURCE["unit"]
+        assert OPENAI_PRICE_SOURCE["currency"]
+
+    def test_layer3_all_recommended_and_default_models_resolve(self):
+        from pagefolio.dialogs.batch_ocr import _PRICE_FALLBACK as batch_fallback
+        from pagefolio.dialogs.batch_ocr import _lookup_price as batch_lookup
+        from pagefolio.ocr_dialog import _PRICE_FALLBACK as dialog_fallback
+        from pagefolio.ocr_dialog import _lookup_price as dialog_lookup
+        from pagefolio.ocr_providers import OpenAIProvider, catalog
+
+        models = set(OpenAIProvider.RECOMMENDED_MODELS)
+        models.add(catalog.default_model_for("openai"))
+        for model in models:
+            assert dialog_lookup(model) != dialog_fallback, model
+            assert batch_lookup(model) != batch_fallback, model
+
+    def test_layer4_price_invariants(self):
+        from pagefolio.ocr_dialog import OCR_PRICE_TABLE
+
+        openai_keys = ["gpt-5-nano", "gpt-5-mini", "gpt-5.1", "gpt-5.2", "gpt-4o"]
+        for key in openai_keys:
+            input_price, output_price = OCR_PRICE_TABLE[key]
+            assert input_price > 0, key
+            assert output_price > 0, key
+            assert input_price < output_price, key
 
 
 # ══════════════════════════════════════════════════════════════
