@@ -1183,14 +1183,14 @@ class FileOpsMixin:
             return
         self._do_save_file(self.filepath)
 
-    def _save_as(self):
+    def _do_save_as(self, path):
+        """名前を付けて保存の実保存層（保存先ピッカーを含まない・path 引数を取る）。
+
+        D-11: retry_cb はこの関数を確定パスで束縛して直接呼ぶため、再試行の
+        たびに保存先ピッカーを再表示しない。
+        """
         if not self.doc:
-            return
-        path = filedialog.asksaveasfilename(
-            defaultextension=".pdf",
-            filetypes=[(self._t("filetypes_pdf"), "*.pdf")],
-        )
-        if not path:
+            self._set_status(self._t("info_open_first"))
             return
         try:
             self.doc.save(path, encryption=fitz.PDF_ENCRYPT_KEEP)
@@ -1203,8 +1203,23 @@ class FileOpsMixin:
                 self._toast.dismiss("save_as")
         except Exception as e:
             self._show_error_or_toast(
-                "save_as", self._t("err_title"), str(e), self._save_as
+                "save_as",
+                self._t("err_title"),
+                str(e),
+                functools.partial(self._do_save_as, path),
             )
+
+    def _save_as(self):
+        """名前を付けて保存 — 確認・パス選択層。パス確定後は実保存層へ委譲する。"""
+        if not self.doc:
+            return
+        path = filedialog.asksaveasfilename(
+            defaultextension=".pdf",
+            filetypes=[(self._t("filetypes_pdf"), "*.pdf")],
+        )
+        if not path:
+            return
+        self._do_save_as(path)
 
     def _close_file(self):
         """現在開いているファイルを閉じる（アプリは終了しない）"""
@@ -1230,9 +1245,41 @@ class FileOpsMixin:
         self._set_status(self._t("status_closed"))
         self.plugin_manager.fire_event("on_file_close", self)
 
+    def _do_save_compressed(self, path, save_kwargs):
+        """縮小保存の実保存層（保存先ピッカーを含まない・path/save_kwargs 引数を取る）。
+
+        D-11: retry_cb はこの関数を確定パス・確定 save_kwargs で束縛して直接
+        呼ぶため、再試行のたびに保存先ピッカーを再表示しない。``save_kwargs``
+        は明示引数（``**kwargs`` にしない）にして、束縛時の dict がそのまま
+        再利用されることを型として明らかにする。
+        """
+        if not self.doc:
+            self._set_status(self._t("info_open_first"))
+            return
+        try:
+            if self._is_current_file(path):
+                # 元ファイルへの上書き: ハンドル解放してから置き換える
+                self._overwrite_current_file(path, **save_kwargs)
+                self.filepath = path
+            else:
+                self.doc.save(path, **save_kwargs)
+            self._set_status(
+                self._t("status_compressed").format(name=os.path.basename(path))
+            )
+            if getattr(self, "_toast", None) is not None:
+                self._toast.dismiss("save_compressed")
+        except Exception as e:
+            self._show_error_or_toast(
+                "save_compressed",
+                self._t("err_title"),
+                str(e),
+                functools.partial(self._do_save_compressed, path, save_kwargs),
+            )
+
     def _save_compressed(self):
         """縮小最適化して名前を付けて保存（garbage=4, deflate=1, clean=1）。
-        現在開いているファイル自身を指定した場合は上書き保存する。"""
+        現在開いているファイル自身を指定した場合は上書き保存する。
+        確認・パス選択層。パス確定後は実保存層へ委譲する。"""
         if not self.doc:
             messagebox.showinfo(self._t("info_title"), self._t("info_open_first"))
             return
@@ -1255,22 +1302,7 @@ class FileOpsMixin:
             "clean": 1,
             "encryption": fitz.PDF_ENCRYPT_KEEP,
         }
-        try:
-            if self._is_current_file(path):
-                # 元ファイルへの上書き: ハンドル解放してから置き換える
-                self._overwrite_current_file(path, **save_kwargs)
-                self.filepath = path
-            else:
-                self.doc.save(path, **save_kwargs)
-            self._set_status(
-                self._t("status_compressed").format(name=os.path.basename(path))
-            )
-            if getattr(self, "_toast", None) is not None:
-                self._toast.dismiss("save_compressed")
-        except Exception as e:
-            self._show_error_or_toast(
-                "save_compressed", self._t("err_title"), str(e), self._save_compressed
-            )
+        self._do_save_compressed(path, save_kwargs)
 
     # ══════════════════════════════════════════
     #  パスワード（暗号化）操作

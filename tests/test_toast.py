@@ -268,11 +268,13 @@ class _RaisingThenOkDoc:
         self.calls = 0
         self.fail_times = fail_times
         self.save_paths = []
+        self.save_kwargs_history = []
 
     def save(self, *a, **kw):
         self.calls += 1
         if a:
             self.save_paths.append(a[0])
+        self.save_kwargs_history.append(kw)
         if self.calls <= self.fail_times:
             raise Exception("保存失敗（一時要因）")
 
@@ -506,6 +508,7 @@ class TestSaveFilePathsUseSharedHelper:
         assert "different.pdf" not in doc.save_paths
 
     def test_save_as_failure_then_success_dismisses(self, monkeypatch, tmp_path):
+        """既存の失敗→成功→dismiss 経路（オブジェクト等価性は使わない）。"""
         out_path = str(tmp_path / "out.pdf")
         monkeypatch.setattr(fo.filedialog, "asksaveasfilename", lambda **k: out_path)
         toast = _RecordingToast()
@@ -514,12 +517,51 @@ class TestSaveFilePathsUseSharedHelper:
 
         app._save_as()  # 1回目: 失敗
         assert toast.shown[-1][0] == "save_as"
-        assert toast.shown[-1][2] == app._save_as
+        assert callable(toast.shown[-1][2])
 
         app._save_as()  # 2回目: 成功 → dismiss
         assert toast.dismissed[-1] == "save_as"
 
+    def test_save_as_retry_skips_picker(self, monkeypatch, tmp_path):
+        """retry_skips: `_save_as` 失敗後の retry_cb を呼ぶと
+        `asksaveasfilename` が呼ばれずに保存が再実行される（Behavior Test 1）。
+        """
+        out_path = str(tmp_path / "out.pdf")
+        picker_calls = []
+        monkeypatch.setattr(
+            fo.filedialog,
+            "asksaveasfilename",
+            lambda **k: picker_calls.append(1) or out_path,
+        )
+        toast = _RecordingToast()
+        doc = _RaisingThenOkDoc()
+        app = _FakeFileOpsApp(doc=doc, toast=toast)
+
+        app._save_as()  # 初回: 失敗 → トースト
+        assert len(picker_calls) == 1
+        _, _, retry_cb = toast.shown[-1]
+
+        retry_cb()  # retry: ピッカーを経由せず再実行され成功する
+
+        assert len(picker_calls) == 1
+        assert toast.dismissed[-1] == "save_as"
+
+    def test_save_as_initial_save_shows_picker_cancel_skips_save(self, monkeypatch):
+        """初回の `_save_as()` では `asksaveasfilename` が呼ばれ、キャンセル
+        （空文字返却）時は保存が実行されない（Behavior Test 4）。
+        """
+        monkeypatch.setattr(fo.filedialog, "asksaveasfilename", lambda **k: "")
+        toast = _RecordingToast()
+        doc = _RaisingThenOkDoc()
+        app = _FakeFileOpsApp(doc=doc, toast=toast)
+
+        app._save_as()
+
+        assert doc.calls == 0
+        assert toast.shown == []
+
     def test_save_compressed_failure_shows_toast(self, monkeypatch, tmp_path):
+        """既存の失敗トースト表示検証（オブジェクト等価性は使わない）。"""
         out_path = str(tmp_path / "out.pdf")
         monkeypatch.setattr(fo.filedialog, "asksaveasfilename", lambda **k: out_path)
         toast = _RecordingToast()
@@ -528,7 +570,78 @@ class TestSaveFilePathsUseSharedHelper:
         app._save_compressed()
 
         assert toast.shown[-1][0] == "save_compressed"
-        assert toast.shown[-1][2] == app._save_compressed
+        assert callable(toast.shown[-1][2])
+
+    def test_save_compressed_retry_skips_picker(self, monkeypatch, tmp_path):
+        """retry_skips: retry_cb を呼ぶと保存先ピッカーを経由せず、
+        garbage/deflate/clean/encryption を含む同一の save_kwargs で
+        保存が再実行される（Behavior Test 2）。
+        """
+        out_path = str(tmp_path / "compressed.pdf")
+        picker_calls = []
+        monkeypatch.setattr(
+            fo.filedialog,
+            "asksaveasfilename",
+            lambda **k: picker_calls.append(1) or out_path,
+        )
+        toast = _RecordingToast()
+        doc = _RaisingThenOkDoc()
+        app = _FakeFileOpsApp(doc=doc, toast=toast)
+
+        app._save_compressed()  # 初回: 失敗 → トースト
+        assert len(picker_calls) == 1
+        _, _, retry_cb = toast.shown[-1]
+
+        retry_cb()  # retry: ピッカーを経由せず再実行される
+
+        assert len(picker_calls) == 1
+        assert toast.dismissed[-1] == "save_compressed"
+        kwargs = doc.save_kwargs_history[-1]
+        assert kwargs["garbage"] == 4
+        assert kwargs["deflate"] == 1
+        assert kwargs["clean"] == 1
+        assert kwargs["encryption"] == fo.fitz.PDF_ENCRYPT_KEEP
+
+    def test_save_compressed_retry_skips_picker_twice(self, monkeypatch, tmp_path):
+        """retry_skips: retry_cb を2回連続で呼んでもピッカーは呼ばれず、
+        保存先は毎回同一の確定パスである（Behavior Test 3）。
+        """
+        out_path = str(tmp_path / "compressed.pdf")
+        picker_calls = []
+        monkeypatch.setattr(
+            fo.filedialog,
+            "asksaveasfilename",
+            lambda **k: picker_calls.append(1) or out_path,
+        )
+        toast = _RecordingToast()
+        doc = _RaisingThenOkDoc()
+        app = _FakeFileOpsApp(doc=doc, toast=toast)
+
+        app._save_compressed()
+        assert len(picker_calls) == 1
+        _, _, retry_cb = toast.shown[-1]
+
+        retry_cb()  # 1回目の retry: 成功
+        retry_cb()  # 2回目の retry: ピッカーを経由せず同一パスへ再び走る
+
+        assert len(picker_calls) == 1
+        assert doc.save_paths == [out_path, out_path, out_path]
+
+    def test_save_compressed_initial_save_shows_picker_cancel_skips_save(
+        self, monkeypatch
+    ):
+        """初回の `_save_compressed()` では `asksaveasfilename` が呼ばれ、
+        キャンセル（空文字返却）時は保存が実行されない（Behavior Test 4）。
+        """
+        monkeypatch.setattr(fo.filedialog, "asksaveasfilename", lambda **k: "")
+        toast = _RecordingToast()
+        doc = _RaisingThenOkDoc()
+        app = _FakeFileOpsApp(doc=doc, toast=toast)
+
+        app._save_compressed()
+
+        assert doc.calls == 0
+        assert toast.shown == []
 
 
 class _FakePrintApp(po.PrintOpsMixin, ui_builder_mod.UIBuilderMixin):
