@@ -5,8 +5,8 @@ milestone_name: 安全性・整合性の是正 + OpenAI プロバイダ追加
 status: Awaiting next milestone
 stopped_at: v1.9.0 マイルストーンをクローズ・アーカイブ済み。次は `/gsd-new-milestone` で次マイルストーンを定義する
 last_updated: "2026-08-11T12:38:32.438Z"
-last_activity: 2026-08-11
-last_activity_desc: Milestone v1.9.0 shipped and archived (verified_closeout)
+last_activity: 2026-08-12
+last_activity_desc: Completed quick task 260812-9ev (branch policy aligned with loto/numbers)
 progress:
   total_phases: 3
   completed_phases: 3
@@ -47,7 +47,7 @@ See: .planning/PROJECT.md (updated 2026-08-11)
 Phase: Milestone v1.9.0 complete
 Plan: —
 Status: Awaiting next milestone
-Last activity: 2026-08-11 — Milestone v1.9.0 completed and archived
+Last activity: 2026-08-12 — Completed quick task 260812-9ev: ブランチ運用ルールを loto/numbers に合わせる
 
 ## v1.9.0 Phase Map
 
@@ -339,6 +339,7 @@ v1.9.0 クローズ時点で次マイルストーンへ引き継ぐ未解決項�
 | 260722-rel | PR #34（v1.8.1）マージ後のリリース作業。main ツリーとブランチ先端の diff ゼロ確認（pytest 1109 件・ruff の検証流用）、PyInstaller リビルド（`dist/PageFolio` 更新・exe 起動確認済み・サンプルプロンプト 2 ファイルは退避→復元で保全）、注釈付きタグ `v1.8.1` 付与、GitHub Release を Latest 公開（PageFolio-v1.8.1-win64.zip + .sha256 添付） | 2026-07-22 | d7aa217 | [260722-rel-v181-merge-release](./quick/260722-rel-v181-merge-release/) |
 | 260810-f1u | v1.9.0向け既存機能レビュー結果を.planning/notesへ文書化 | 2026-08-10 | a553df7 | [260810-f1u-v1-9-0-planning-notes](./quick/260810-f1u-v1-9-0-planning-notes/) |
 | 260811-asq | Codex 向け指示書 `AGENTS.md`・`.agents/skills/session-handoff/SKILL.md` の壊れた参照5箇所を修正（`Claude`→`Codex` 一括置換がディレクトリ名・スキル名・ドメイン名を巻き込んだ結果の未存在パス）。両ファイルを追跡対象化し、`.gsd/dispatch-isolation-sentinel.json` を `.gitignore` へ追加 | 2026-08-11 | 3f83067 | [260811-asq-agents-md-agents-skills-session-handoff-](./quick/260811-asq-agents-md-agents-skills-session-handoff-/) |
+| 260812-9ev | ブランチ運用ルールを姉妹プロジェクト loto/numbers と統一。`docs/DEVELOPMENT.md`「ブランチ運用」「PR プロセス」節と `CONTRIBUTING.md`「プルリクエストのガイドライン」節を刷新（main への直接コミット禁止・機能ブランチ `feature/v<バージョン>`・PR は main 対象で日本語・Conventional Commits 準拠の日本語コミットメッセージ）。CI 未構成のため loto/numbers の「CI green」条件はローカルゲート（ruff + pytest 1404 件）へ読み替え、branch protection 未整備を VERIFY コメントで明記 | 2026-08-12 | 467b092 | [260812-9ev-loto-numbers](./quick/260812-9ev-loto-numbers/) |
 
 ## Deferred Items
 
