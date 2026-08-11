@@ -3,6 +3,7 @@
 # Released under the MIT License
 """ファイル操作 Mixin — open/save/undo/redo"""
 
+import functools
 import logging
 import os
 from tkinter import filedialog, messagebox, simpledialog
@@ -1131,8 +1132,39 @@ class FileOpsMixin:
             self.doc = fitz.open(stream=data, filetype="pdf")
             raise
 
+    def _do_save_file(self, path):
+        """上書き保存の実保存層（確認ダイアログを含まない・path 引数を取る）。
+
+        トーストの再試行はこの関数を確定パスで束縛して直接呼ぶため、
+        再試行のたびに確認ダイアログを再表示しない（V190-QA-02 / D-09〜D-11）。
+        トースト表示中に別ファイルを開く・ファイルを閉じるなどアプリ状態が
+        変化しても、確定時に束縛された ``path`` へのみ書き込む（D-11）。
+        """
+        if not self.doc:
+            self._set_status(self._t("info_open_first"))
+            return
+        try:
+            try:
+                self.doc.save(path, incremental=True, encryption=fitz.PDF_ENCRYPT_KEEP)
+            except Exception as e:
+                logger.debug("incremental save 失敗、開き直して保存: %s", e)
+                self._overwrite_current_file(path)
+            self._set_status(
+                self._t("status_saved").format(name=os.path.basename(path))
+            )
+            self.plugin_manager.fire_event("on_file_save", self, path)
+            if getattr(self, "_toast", None) is not None:
+                self._toast.dismiss("save_file")
+        except Exception as e:
+            self._show_error_or_toast(
+                "save_file",
+                self._t("err_save_title"),
+                self._t("err_save_msg").format(e=e),
+                functools.partial(self._do_save_file, path),
+            )
+
     def _save_file(self):
-        """上書き保存 — 確認ダイアログ付き"""
+        """上書き保存 — 確認・パス選択層。確認が通ったら実保存層へ委譲する。"""
         if not self.doc:
             messagebox.showinfo(self._t("info_title"), self._t("info_open_first"))
             return
@@ -1149,27 +1181,7 @@ class FileOpsMixin:
             self._t("save_confirm_msg").format(name=os.path.basename(self.filepath)),
         ):
             return
-        try:
-            try:
-                self.doc.save(
-                    self.filepath, incremental=True, encryption=fitz.PDF_ENCRYPT_KEEP
-                )
-            except Exception as e:
-                logger.debug("incremental save 失敗、開き直して保存: %s", e)
-                self._overwrite_current_file(self.filepath)
-            self._set_status(
-                self._t("status_saved").format(name=os.path.basename(self.filepath))
-            )
-            self.plugin_manager.fire_event("on_file_save", self, self.filepath)
-            if getattr(self, "_toast", None) is not None:
-                self._toast.dismiss("save_file")
-        except Exception as e:
-            self._show_error_or_toast(
-                "save_file",
-                self._t("err_save_title"),
-                self._t("err_save_msg").format(e=e),
-                self._save_file,
-            )
+        self._do_save_file(self.filepath)
 
     def _save_as(self):
         if not self.doc:

@@ -257,19 +257,33 @@ class _FakePluginManager:
 
 
 class _RaisingThenOkDoc:
-    """1回目の save() は例外・2回目以降は成功する偽 doc。"""
+    """save() が既定で1回だけ失敗し、以降は成功する偽 doc。
 
-    def __init__(self):
+    ``fail_times`` で失敗させる回数を変更できる（既定 1・既存呼び出しは無変更）。
+    ``save_paths`` は各 save() 呼び出しに渡された path 引数を記録する
+    （retry_cb が束縛時のパスへ書き込むことを検証するため・T-03-01-02）。
+    """
+
+    def __init__(self, fail_times=1):
         self.calls = 0
+        self.fail_times = fail_times
+        self.save_paths = []
 
     def save(self, *a, **kw):
         self.calls += 1
-        if self.calls == 1:
+        if a:
+            self.save_paths.append(a[0])
+        if self.calls <= self.fail_times:
             raise Exception("保存失敗（一時要因）")
 
 
 class _FakeFileOpsApp(fo.FileOpsMixin, ui_builder_mod.UIBuilderMixin):
-    """`_save_*` 系メソッドの失敗/成功パスをトースト経由で検証する FakeApp。"""
+    """`_save_*` 系メソッドの失敗/成功パスをトースト経由で検証する FakeApp。
+
+    ``overwrite_paths``/``status_calls`` は retry_cb が束縛パスへのみ書き込み、
+    アプリ状態変化（ファイルを閉じる等）に追従しないことの検証に使う
+    （T-03-01-02）。
+    """
 
     def __init__(self, doc, toast, filepath=None, overwrite_error=None):
         self.doc = doc
@@ -277,6 +291,8 @@ class _FakeFileOpsApp(fo.FileOpsMixin, ui_builder_mod.UIBuilderMixin):
         self._toast = toast
         self.plugin_manager = _FakePluginManager()
         self._overwrite_error = overwrite_error
+        self.overwrite_paths = []
+        self.status_calls = []
 
     def _t(self, key):
         return {
@@ -290,9 +306,10 @@ class _FakeFileOpsApp(fo.FileOpsMixin, ui_builder_mod.UIBuilderMixin):
         }.get(key, key)
 
     def _set_status(self, *a):
-        pass
+        self.status_calls.append(a[0] if a else None)
 
     def _overwrite_current_file(self, path, **kw):
+        self.overwrite_paths.append(path)
         if self._overwrite_error is not None:
             raise self._overwrite_error
         self.doc = fo.fitz.open(path)
@@ -308,7 +325,10 @@ class TestSaveFilePathsUseSharedHelper:
     """
 
     def test_save_file_failure_shows_toast_with_retry(self, monkeypatch):
-        """上書き保存の失敗が _show_error_or_toast 経由でトースト表示される。"""
+        """上書き保存の失敗が _show_error_or_toast 経由でトースト表示され、
+        retry_cb は callable な実保存層の束縛呼び出しである（オブジェクト
+        等価性ではなく振る舞いで検証・D-11）。
+        """
         monkeypatch.setattr(fo.messagebox, "askyesno", lambda *a, **k: True)
         toast = _RecordingToast()
         app = _FakeFileOpsApp(
@@ -324,7 +344,166 @@ class TestSaveFilePathsUseSharedHelper:
         category, msg, retry_cb = toast.shown[0]
         assert category == "save_file"
         assert "保存に失敗しました" in msg
-        assert retry_cb == app._save_file
+        assert callable(retry_cb)
+        assert retry_cb is not app._save_file
+
+    def test_save_file_retry_skips_confirm_dialog(self, monkeypatch):
+        """retry_skips: retry_cb を呼ぶと askyesno を経由せず保存が再実行され、
+        トーストが dismiss される（Behavior Test 1・4）。
+        """
+        askyesno_calls = []
+
+        def _spy_askyesno(*a, **k):
+            askyesno_calls.append((a, k))
+            return True
+
+        monkeypatch.setattr(fo.messagebox, "askyesno", _spy_askyesno)
+        toast = _RecordingToast()
+        doc = _RaisingThenOkDoc()
+        app = _FakeFileOpsApp(
+            doc=doc,
+            toast=toast,
+            filepath="test.pdf",
+            overwrite_error=OSError("overwrite失敗（一時要因）"),
+        )
+
+        app._save_file()  # 初回: save 失敗 → overwrite も失敗 → トースト
+        assert len(askyesno_calls) == 1
+        _, _, retry_cb = toast.shown[0]
+
+        # overwrite フォールバックのエラー要因を解除してから retry_cb を呼ぶ
+        app._overwrite_error = None
+        retry_cb()
+
+        assert len(askyesno_calls) == 1  # retry では askyesno が呼ばれない
+        assert app.doc is not None
+        assert toast.dismissed[-1] == "save_file"
+
+    def test_save_file_initial_save_still_shows_confirm_dialog(self, monkeypatch):
+        """初回の _save_file() では askyesno が呼ばれ、False を返すと保存が
+        実行されない（Behavior Test 2・確認スキップは再試行経路にのみ適用）。
+        """
+        monkeypatch.setattr(fo.messagebox, "askyesno", lambda *a, **k: False)
+        toast = _RecordingToast()
+        doc = _RaisingThenOkDoc()
+        app = _FakeFileOpsApp(doc=doc, toast=toast, filepath="test.pdf")
+
+        app._save_file()
+
+        assert doc.calls == 0
+        assert toast.shown == []
+
+    def test_save_file_retry_skips_confirm_dialog_twice(self, monkeypatch):
+        """retry_skips: retry_cb を2回連続で呼んでも askyesno は呼ばれず、
+        保存先は毎回同一の確定パスである（Behavior Test 3）。
+        """
+        askyesno_calls = []
+        monkeypatch.setattr(
+            fo.messagebox,
+            "askyesno",
+            lambda *a, **k: askyesno_calls.append(1) or True,
+        )
+        toast = _RecordingToast()
+        doc = _RaisingThenOkDoc()  # 既定: 1回目の save() のみ失敗
+        app = _FakeFileOpsApp(
+            doc=doc,
+            toast=toast,
+            filepath="test.pdf",
+            overwrite_error=OSError("overwrite失敗（一時要因）"),
+        )
+
+        app._save_file()  # 初回: save 失敗 → overwrite も失敗 → トースト
+        assert len(askyesno_calls) == 1
+        _, _, retry_cb = toast.shown[0]
+
+        retry_cb()  # 1回目の retry: save が成功する（2回目の save 呼び出し）
+        retry_cb()  # 2回目の retry: 確認を経由せず同一パスへ再び走る
+
+        assert len(askyesno_calls) == 1
+        assert doc.save_paths == ["test.pdf", "test.pdf", "test.pdf"]
+
+    def test_save_file_retry_survives_repeated_failures_then_succeeds(
+        self, monkeypatch
+    ):
+        """1回目の retry_cb が失敗しても app.doc は None にならず、2回目の
+        retry_cb で成功して dismiss される（Behavior Test 4）。
+        """
+        monkeypatch.setattr(fo.messagebox, "askyesno", lambda *a, **k: True)
+        toast = _RecordingToast()
+        doc = _RaisingThenOkDoc(fail_times=2)  # 最初の2回の save() を失敗させる
+        app = _FakeFileOpsApp(
+            doc=doc,
+            toast=toast,
+            filepath="test.pdf",
+            overwrite_error=OSError("overwrite失敗（一時要因）"),
+        )
+
+        app._save_file()  # 初回: call1 失敗 → overwrite も失敗 → トースト
+        _, _, retry_cb = toast.shown[0]
+
+        retry_cb()  # 1回目の retry: call2 も失敗（fail_times=2）→ トースト再表示
+        assert app.doc is not None
+        assert toast.dismissed == []
+
+        retry_cb()  # 2回目の retry: call3 は成功（fail_times を超えた）→ dismiss
+        assert toast.dismissed[-1] == "save_file"
+
+    def test_save_file_retry_noop_after_doc_closed(self, monkeypatch):
+        """app.doc を None にしてから retry_cb を呼ぶと、doc.save も
+        _overwrite_current_file も呼ばれず、例外も送出されない
+        （Behavior Test 5・T-03-01-02）。
+        """
+        monkeypatch.setattr(fo.messagebox, "askyesno", lambda *a, **k: True)
+        toast = _RecordingToast()
+        doc = _RaisingThenOkDoc()
+        app = _FakeFileOpsApp(
+            doc=doc,
+            toast=toast,
+            filepath="test.pdf",
+            overwrite_error=OSError("overwrite失敗（一時要因）"),
+        )
+
+        app._save_file()  # トースト表示・retry_cb を取得
+        _, _, retry_cb = toast.shown[0]
+
+        app.doc = None  # ファイルを閉じた状態を模す
+        calls_before = doc.calls
+        overwrite_before = len(app.overwrite_paths)
+
+        retry_cb()  # 例外を送出せず、書き込みも行わない
+
+        assert doc.calls == calls_before
+        assert len(app.overwrite_paths) == overwrite_before
+        assert app.status_calls[-1] == "info_open_first"
+
+    def test_save_file_retry_writes_to_bound_path_not_current_filepath(
+        self, monkeypatch
+    ):
+        """retry_cb を受け取った後に app.filepath を差し替えても、retry_cb が
+        実際に書き込むパスは束縛時の値のまま変わらない（Behavior Test 6・
+        並行性エッジ・T-03-01-02）。
+        """
+        monkeypatch.setattr(fo.messagebox, "askyesno", lambda *a, **k: True)
+        toast = _RecordingToast()
+        doc = _RaisingThenOkDoc()
+        app = _FakeFileOpsApp(
+            doc=doc,
+            toast=toast,
+            filepath="original.pdf",
+            overwrite_error=OSError("overwrite失敗（一時要因）"),
+        )
+
+        app._save_file()  # 確認・束縛は "original.pdf" で行われる
+        _, _, retry_cb = toast.shown[0]
+
+        # トースト表示中に別ファイルを開く操作を模して filepath を差し替える
+        app.filepath = "different.pdf"
+        app._overwrite_error = None
+
+        retry_cb()
+
+        assert doc.save_paths[-1] == "original.pdf"
+        assert "different.pdf" not in doc.save_paths
 
     def test_save_as_failure_then_success_dismisses(self, monkeypatch, tmp_path):
         out_path = str(tmp_path / "out.pdf")
