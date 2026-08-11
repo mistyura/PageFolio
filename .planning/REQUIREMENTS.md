@@ -40,9 +40,9 @@
 
 ### OpenAI(ChatGPT) プロバイダ（OAI）
 
-- [ ] **V190-OAI-01**: ユーザーは OCR プロバイダとして OpenAI(ChatGPT) を選択できる
+- [x] **V190-OAI-01**: ユーザーは OCR プロバイダとして OpenAI(ChatGPT) を選択できる
 - [x] **V190-OAI-02**: ユーザーは LLM 設定ダイアログで OpenAI のセッション限定 API キーを入力でき、そのキーは `pagefolio_settings.json` に永続化されない（`_SENSITIVE_KEYS` ガード・V14-D-02）
-- [ ] **V190-OAI-03**: ユーザーは OpenAI のモデル一覧を API から取得して選択でき、取得に失敗した場合は静的フォールバック一覧から選択できる
+- [x] **V190-OAI-03**: ユーザーは OpenAI のモデル一覧を API から取得して選択でき、取得に失敗した場合は静的フォールバック一覧から選択できる
 - [x] **V190-OAI-04**: OpenAI で OCR を実行する前に、送信先ホストを明示した確認ダイアログが表示される
 - [x] **V190-OAI-05**: OpenAI で OCR を実行する前に、コスト確認ダイアログが表示される
 - [x] **V190-OAI-06**: ユーザーはバッチ OCR で OpenAI を選択・実行できる（クラウド判定・コスト確認・送信先表示を含む）
@@ -119,9 +119,9 @@
 | V190-UNDO-02 | Phase 1 | Complete |
 | V190-CAT-01 | Phase 2 | Complete |
 | V190-CAT-02 | Phase 2 | Complete |
-| V190-OAI-01 | Phase 2 | Pending |
+| V190-OAI-01 | Phase 2 | Complete |
 | V190-OAI-02 | Phase 2 | Complete |
-| V190-OAI-03 | Phase 2 | Pending |
+| V190-OAI-03 | Phase 2 | Complete |
 | V190-OAI-04 | Phase 2 | Complete |
 | V190-OAI-05 | Phase 2 | Complete |
 | V190-OAI-06 | Phase 2 | Complete |

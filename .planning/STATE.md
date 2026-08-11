@@ -5,15 +5,15 @@ milestone_name: 安全性・整合性の是正 + OpenAI プロバイダ追加
 current_phase: 02
 current_phase_name: ocr-openai-chatgpt
 status: executing
-stopped_at: Completed 02-02-PLAN.md
-last_updated: "2026-08-11T03:27:09.138Z"
+stopped_at: Completed 02-03-PLAN.md
+last_updated: "2026-08-11T03:55:05.534Z"
 last_activity: 2026-08-11
 last_activity_desc: Phase 01 execution started
 progress:
   total_phases: 3
   completed_phases: 1
   total_plans: 11
-  completed_plans: 9
+  completed_plans: 10
   percent: 33
 ---
 
@@ -29,11 +29,11 @@ See: .planning/PROJECT.md (updated 2026-08-10)
 ## Current Position
 
 Phase: 02 (ocr-openai-chatgpt) — EXECUTING
-Plan: 3 of 4
+Plan: 4 of 4
 Status: Ready to execute
 Last activity: 2026-08-11 — Phase 02 execution started
 
-Progress: [████████░░] 82%
+Progress: [█████████░] 91%
 
 ## v1.9.0 Phase Map
 
@@ -133,6 +133,7 @@ Progress: [████████░░] 82%
 | Phase 01 P07 | 約70分 | 3 tasks | 4 files |
 | Phase 02 P01 | 38min | 3 tasks | 9 files |
 | Phase 02 P02 | 16min | 3 tasks | 5 files |
+| Phase 02 P03 | 19min | 3 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -244,6 +245,9 @@ Decisions are logged in PROJECT.md Key Decisions table.
 - [Phase ?]: 02-01: catalog.py新設+OpenAIProvider縦スライス。is_reasoning_modelはo-series OR gpt-5ファミリ(除chat-latest)のOR判定に再設計（実データでgpt-5.1がo系以外の推論モデル真ケースと判明・レビューHIGH02-01-2対応）。default_model=gpt-5.1
 - [Phase ?]: 02-02: _resolved_host_text をモジュールレベル関数として実装（既存フローズンテストスタブとの両立を優先）
 - [Phase ?]: 02-02: ミューテーション検証で env_var 埋め込みだけでは msg_key 誤フォールバックを検知できないと判明し、openai専用文言の直接アサーションへ強化
+- [Phase ?]: 02-03: _EXCLUDED_MODEL_MARKERSから単独imageを除外し画像生成モデルはgpt-imageという限定的マーカーで除外（レビューMEDIUM 02-03-3）。order_models_for_displayはVERIFIED_VISION_MODELSを宣言順で先頭に据える（レビューHIGH 02-03-1）
+- [Phase ?]: 02-03: D-08の観測同一性をtest_on_error_matches_zero_result_fallback_of_list_modelsで固定。_on_errorのフォールバック値とlist_models()の0件合流値が完全一致することを保証（レビューMEDIUM-11）
+- [Phase ?]: 02-03: sections.pyのプロバイダ一覧2箇所をcatalog.provider_names()/fallback_candidate_names()へ置換しD-03の6参照面移行が完走（V190-CAT-01完了）
 
 ### Pending Todos
 
@@ -353,8 +357,8 @@ Decisions are logged in PROJECT.md Key Decisions table.
 
 **Resume file:** None
 
-Last session: 2026-08-11T03:26:59.962Z
-Stopped at: Completed 02-02-PLAN.md
+Last session: 2026-08-11T03:55:05.511Z
+Stopped at: Completed 02-03-PLAN.md
 
 ## Operator Next Steps
 
