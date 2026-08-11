@@ -507,6 +507,39 @@ class TestSaveFilePathsUseSharedHelper:
         assert doc.save_paths[-1] == "original.pdf"
         assert "different.pdf" not in doc.save_paths
 
+    def test_save_file_retry_does_not_write_unrelated_doc_after_doc_swapped(
+        self, monkeypatch
+    ):
+        """CR-01/WR-01: retry_cb 取得後に app.doc が別ドキュメントへ差し替わった
+        場合、retry_cb は無関係なドキュメントを束縛パスへ書き込んではならない
+        （03-REVIEW.md CR-01 の再現テスト。app.filepath だけを差し替える既存の
+        test_save_file_retry_writes_to_bound_path_not_current_filepath は
+        app.doc の差し替えを検証しておらず、この欠陥を検出できなかった）。
+        """
+        monkeypatch.setattr(fo.messagebox, "askyesno", lambda *a, **k: True)
+        toast = _RecordingToast()
+        doc_a = _RaisingThenOkDoc()
+        app = _FakeFileOpsApp(
+            doc=doc_a,
+            toast=toast,
+            filepath="a.pdf",
+            overwrite_error=OSError("overwrite失敗（一時要因）"),
+        )
+        app._save_file()  # a.pdf の保存失敗 → トースト
+        _, _, retry_cb = toast.shown[0]
+
+        # 「別ファイルを開く」操作を模す: doc も filepath も差し替わる
+        doc_b = _RaisingThenOkDoc()
+        app.doc = doc_b
+        app.filepath = "b.pdf"
+        app._overwrite_error = None
+
+        retry_cb()
+
+        # doc_b の内容が a.pdf へ書き込まれてはならない
+        assert "a.pdf" not in doc_b.save_paths
+        assert doc_b.save_paths == []
+
     def test_save_as_failure_then_success_dismisses(self, monkeypatch, tmp_path):
         """既存の失敗→成功→dismiss 経路（オブジェクト等価性は使わない）。"""
         out_path = str(tmp_path / "out.pdf")
@@ -559,6 +592,28 @@ class TestSaveFilePathsUseSharedHelper:
 
         assert doc.calls == 0
         assert toast.shown == []
+
+    def test_save_as_retry_does_not_write_unrelated_doc_after_doc_swapped(
+        self, monkeypatch, tmp_path
+    ):
+        """CR-01/WR-01: `_save_as` 経路でも、retry_cb 取得後に app.doc が
+        別ドキュメントへ差し替わった場合は書き込みを行ってはならない。
+        """
+        out_path = str(tmp_path / "a.pdf")
+        monkeypatch.setattr(fo.filedialog, "asksaveasfilename", lambda **k: out_path)
+        toast = _RecordingToast()
+        doc_a = _RaisingThenOkDoc()
+        app = _FakeFileOpsApp(doc=doc_a, toast=toast)
+
+        app._save_as()  # a.pdf への保存失敗 → トースト
+        _, _, retry_cb = toast.shown[0]
+
+        doc_b = _RaisingThenOkDoc()
+        app.doc = doc_b
+
+        retry_cb()
+
+        assert doc_b.save_paths == []
 
     def test_save_compressed_failure_shows_toast(self, monkeypatch, tmp_path):
         """既存の失敗トースト表示検証（オブジェクト等価性は使わない）。"""
@@ -642,6 +697,28 @@ class TestSaveFilePathsUseSharedHelper:
 
         assert doc.calls == 0
         assert toast.shown == []
+
+    def test_save_compressed_retry_does_not_write_unrelated_doc_after_doc_swapped(
+        self, monkeypatch, tmp_path
+    ):
+        """CR-01/WR-01: `_save_compressed` 経路でも、retry_cb 取得後に
+        app.doc が別ドキュメントへ差し替わった場合は書き込みを行ってはならない。
+        """
+        out_path = str(tmp_path / "compressed.pdf")
+        monkeypatch.setattr(fo.filedialog, "asksaveasfilename", lambda **k: out_path)
+        toast = _RecordingToast()
+        doc_a = _RaisingThenOkDoc()
+        app = _FakeFileOpsApp(doc=doc_a, toast=toast)
+
+        app._save_compressed()  # 保存失敗 → トースト
+        _, _, retry_cb = toast.shown[0]
+
+        doc_b = _RaisingThenOkDoc()
+        app.doc = doc_b
+
+        retry_cb()
+
+        assert doc_b.save_paths == []
 
 
 class _FakePrintApp(po.PrintOpsMixin, ui_builder_mod.UIBuilderMixin):
