@@ -49,9 +49,25 @@ OCR_PRICE_TABLE: "dict[str, tuple[float, float]]" = {
     "claude-sonnet": (3.0, 15.0),
     "claude-3-opus": (5.0, 25.0),
     "claude-opus": (5.0, 25.0),
+    # OpenAI（02-CAPABILITY-MATRIX.md 導出結果。単位/通貨/出典 URL/参照日は
+    # OPENAI_PRICE_SOURCE 参照・レビュー HIGH-2/MEDIUM-16）。
+    "gpt-5-nano": (0.05, 0.40),
+    "gpt-5-mini": (0.25, 2.00),
+    "gpt-5.1": (1.25, 10.00),
+    "gpt-5.2": (1.75, 14.00),
+    "gpt-4o": (2.50, 10.00),
 }
 # フォールバック単価（不明モデル）
 _PRICE_FALLBACK = (5.0, 25.0)
+
+# OpenAI 単価の一次情報（レビュー HIGH-2）。変更時は 02-CAPABILITY-MATRIX.md と
+# dialogs/batch_ocr.py の同名定数も同時に更新する。
+OPENAI_PRICE_SOURCE: "dict[str, str]" = {
+    "url": "https://developers.openai.com/api/docs/models/all",
+    "retrieved": "2026-08-11",
+    "unit": "per 1M tokens",
+    "currency": "USD",
+}
 
 # サーキットブレーカー: リトライ上限到達がこのページ数連続したら実行を中断する
 # （サーバ側が完全に落ちている時に全ページ × リトライ待機を消化しないための保険）
@@ -59,8 +75,12 @@ CB_CONSECUTIVE_FAILURES = 3
 
 # フォールバック（サマリ経路）: supports_text_prompt=True のプロバイダ名集合
 # （D-12・02-RESEARCH.md Open Question 2・tesseract は非対応のため除外）
+# レビュー MEDIUM-9: この集合はプロバイダ非機密メタデータ（catalog の8フィールド・
+# D-01）ではなく Provider クラスの supports_text_prompt クラス属性の射影であり、
+# 粒度が異なるため catalog には含めない。追記漏れは
+# tests/test_provider_ui.py::TestTextCapableProvidersParity が機械的に検出する。
 _TEXT_CAPABLE_PROVIDERS = frozenset(
-    {"claude", "gemini", "runpod", "lmstudio", "ollama"}
+    {"claude", "gemini", "runpod", "lmstudio", "ollama", "openai"}
 )
 
 # サマリ生成専用のタイムアウト下限（秒）。全ページ連結テキストの要約は
@@ -80,6 +100,31 @@ def _lookup_price(model: str) -> tuple[float, float]:
         if key in model:
             return prices
     return _PRICE_FALLBACK
+
+
+def _resolved_host_text(name, settings, lang_dict):
+    """送信先ホストを確認ダイアログ本文へ埋め込める文字列として解決する
+    （モジュールレベル関数・レビュー MEDIUM-8）。
+
+    解決順: catalog.host_for が真値ならそれを返す。runpod でホストが空なら
+    ユーザー設定 URL 未設定の注記を返す。それ以外で空（catalog 未登録の
+    クラウド継承プラグイン等）なら、プロバイダ表示名だけを出すのではなく
+    「送信先を特定できない」ことを明示する ocr_host_unknown を返す
+    （T-02-17）。self に依存しないモジュール関数のため、Tk 非依存のスタブ
+    テスト（`OCRDialog._confirm_cost(stub)` のような未バインド呼び出し）
+    からも self への追加バインド無しで到達できる。
+    """
+    from pagefolio.ocr_providers import catalog
+
+    host = catalog.host_for(name, settings)
+    if host:
+        return host
+    if name == "runpod":
+        return lang_dict["llm_runpod_host_unset"]
+    lookup_name = "lmstudio" if name == "" else name
+    provider_key = catalog.display_name_key_for(lookup_name)
+    provider_label = lang_dict.get(provider_key, name) if provider_key else name
+    return lang_dict["ocr_host_unknown"].format(provider=provider_label)
 
 
 class OCRDialog(tk.Toplevel):
@@ -812,11 +857,14 @@ class OCRDialog(tk.Toplevel):
     def _provider_display_name(self):
         """現在の ocr_provider 設定を人間可読なプロバイダ表示名に変換する。
 
-        claude → "Claude (Anthropic)"・gemini → "Gemini (Google AI)"
-        runpod → "RunPod (Serverless)"・lmstudio/"" → "LM Studio"。
-        未知の名前はそのまま返す（フォールバック）。
+        名前による表示名解決は catalog.display_name_key_for（V190-CAT-01・
+        D-03）を単一情報源とする。claude/gemini の isinstance 判定は D-04 の
+        安全側フォールバックとして維持する（provider インスタンスが settings
+        と食い違っていても対応）。display_name_key が None のプロバイダ
+        （off/ollama/未登録プラグイン）は名前をそのまま返す。空文字は
+        lmstudio として解決する（既存挙動維持）。
         """
-        from pagefolio.ocr_providers import ClaudeProvider, GeminiProvider
+        from pagefolio.ocr_providers import ClaudeProvider, GeminiProvider, catalog
 
         # 02-REVIEW WR-01 修正: フォールバック中は self._active_ocr_settings
         # （ダイアログローカルの切替後スナップショット）を優先する。
@@ -826,17 +874,13 @@ class OCRDialog(tk.Toplevel):
         # getattr で未設定（テスト用の素の fake オブジェクト等）にも対応する。
         settings = getattr(self, "_active_ocr_settings", None) or self.app.settings
         name = settings.get("ocr_provider", "")
-        if name == "claude" or isinstance(self.provider, ClaudeProvider):
+        if isinstance(self.provider, ClaudeProvider):
             return self._L["ocr_provider_name_claude"]
-        if name == "gemini" or isinstance(self.provider, GeminiProvider):
+        if isinstance(self.provider, GeminiProvider):
             return self._L["ocr_provider_name_gemini"]
-        if name == "tesseract":
-            return self._L["ocr_provider_name_tesseract"]
-        if name == "runpod":
-            return self._L["ocr_provider_name_runpod"]
-        if name in ("lmstudio", ""):
-            return self._L["ocr_provider_name_lmstudio"]
-        return name
+        lookup_name = "lmstudio" if name == "" else name
+        key = catalog.display_name_key_for(lookup_name)
+        return self._L[key] if key is not None else name
 
     def _provider_model_name(self):
         """現在のプロバイダで使用されるモデル名を返す（表示用）。
@@ -908,23 +952,31 @@ class OCRDialog(tk.Toplevel):
     def _is_cloud_provider(self, settings=None):
         """現在の ocr_provider 設定がクラウド系か判定する。
 
-        claude / gemini / runpod であれば True を返す（D-13・Pitfall-F）。
-        settings を明示すればそのスナップショットで判定する（フォールバック
-        経路がダイアログローカル設定で判定できるようにする一般化・Pitfall 4）。
-        省略時は従来どおり self.app.settings を参照する（後方互換）。
+        catalog.is_cloud_provider（V190-CAT-01）が名前ベース判定の単一情報源。
+        catalog 未登録のプロバイダは False を返す（D-04）。settings を明示
+        すればそのスナップショットで判定する（フォールバック経路がダイアログ
+        ローカル設定で判定できるようにする一般化・Pitfall 4）。省略時は
+        従来どおり self.app.settings を参照する（後方互換）。
         """
         from pagefolio.ocr_providers import (
             ClaudeProvider,
             GeminiProvider,
+            OpenAIProvider,
             RunPodProvider,
+            catalog,
         )
 
         s = settings if settings is not None else self.app.settings
         name = s.get("ocr_provider", "")
-        if name in ("claude", "gemini", "runpod"):
+        if catalog.is_cloud_provider(name):
             return True
-        # isinstance ガード（provider インスタンスが差し替わっていても対応）
-        if isinstance(self.provider, (ClaudeProvider, GeminiProvider, RunPodProvider)):
+        # isinstance ガード（provider インスタンスが差し替わっていても対応・
+        # catalog 未登録プラグインが既知クラウドクラスを継承した場合の安全側
+        # フォールバック・D-04）。
+        if isinstance(
+            self.provider,
+            (ClaudeProvider, GeminiProvider, RunPodProvider, OpenAIProvider),
+        ):
             return True
         return False
 
@@ -1218,10 +1270,12 @@ class OCRDialog(tk.Toplevel):
 
         毎回表示する（「今後表示しない」は設けない・D-11）。
         ダイアログ内容（D-12 の3点）:
-          1. 送信先ホスト（プロバイダ別: claude→api.anthropic.com/gemini→googleapis
-             /runpod→ユーザー設定の runpod_url）
+          1. 送信先ホスト（catalog が保持する送信先。解決できない場合は
+             送信先不明である旨・レビュー MEDIUM-8）
           2. 対象ページ数と概算コスト
           3. 「ページ画像が外部 API に送信されます」「従量課金が発生します」
+        選択中モデルが vision 確認済み集合に無い openai モデルのときは、
+        画像入力が未確認である旨の注記を末尾へ追加する（レビュー HIGH 02-02-2）。
         OK で True・キャンセルで False を返す（成功基準5）。
 
         引数:
@@ -1230,18 +1284,14 @@ class OCRDialog(tk.Toplevel):
           settings:   判定に使う設定スナップショット（省略時は self.app.settings。
                       フォールバック再開時はダイアログローカルの候補設定を渡す）
         """
+        from pagefolio.ocr_providers import OpenAIProvider, catalog
+
         s = settings if settings is not None else self.app.settings
         name = s.get("ocr_provider", "")
-        if name == "gemini":
-            model = s.get("gemini_model", "gemini-2.5-flash")
-            host = "generativelanguage.googleapis.com"
-        elif name == "runpod":
-            model = s.get("runpod_model", "") or "runpod"
-            host = s.get("runpod_url", "") or self._L["llm_runpod_host_unset"]
-        else:
-            # claude（デフォルト）
-            model = s.get("claude_model", "claude-sonnet-4-6")
-            host = "api.anthropic.com"
+        model_key = catalog.model_setting_key_for(name)
+        raw_model = s.get(model_key, "") if model_key else ""
+        model = raw_model or catalog.default_model_for(name)
+        host = _resolved_host_text(name, s, self._L)
         if page_count is None:
             page_count = len(self.page_indices)
         cost = self._estimate_cost(model, page_count)
@@ -1250,6 +1300,9 @@ class OCRDialog(tk.Toplevel):
             count=page_count,
             cost=cost,
         )
+        if name == "openai" and model not in OpenAIProvider.VERIFIED_VISION_MODELS:
+            note = self._L["ocr_model_vision_unverified"].format(model=model)
+            msg = msg + "\n" + note
         return messagebox.askyesno(
             self._L["ocr_cost_confirm_title"],
             msg,
@@ -1269,13 +1322,7 @@ class OCRDialog(tk.Toplevel):
         """
         s = settings if settings is not None else self.app.settings
         name = s.get("ocr_provider", "")
-        if name == "gemini":
-            host = "generativelanguage.googleapis.com"
-        elif name == "runpod":
-            host = s.get("runpod_url", "") or self._L["llm_runpod_host_unset"]
-        else:
-            # claude（デフォルト・_confirm_cost と同じフォールバック）
-            host = "api.anthropic.com"
+        host = _resolved_host_text(name, s, self._L)
         msg = self._L["ocr_summary_cost_confirm_msg"].format(
             host=host,
             chars=char_count,
@@ -1291,7 +1338,8 @@ class OCRDialog(tk.Toplevel):
 
         入力 UI は LLMConfigDialog に一元化されたため、この関数は値の収集を
         一切行わず _resolve_api_key の解決可否のみを確認する（値の保持・返却は
-        しない）。未解決なら3プロバイダ別の明示エラーを表示して False を返す。
+        しない）。未解決なら catalog.api_key_missing_lang_key_for（V190-CAT-01）
+        が解決するプロバイダ別の明示エラーを表示して False を返す。
         _on_run と _on_summary の共有経路（settings 省略時は self.app.settings。
         フォールバック経路はダイアログローカルの候補設定を渡す）。
         """
@@ -1299,7 +1347,7 @@ class OCRDialog(tk.Toplevel):
         if not self._is_cloud_provider(settings=s):
             return True
         from pagefolio.ocr import _resolve_api_key
-        from pagefolio.ocr_providers import OCRAPIKeyError
+        from pagefolio.ocr_providers import OCRAPIKeyError, catalog
         from pagefolio.ocr_providers.registry import primary_env_var
 
         name = s.get("ocr_provider", "")
@@ -1307,11 +1355,9 @@ class OCRDialog(tk.Toplevel):
         try:
             _resolve_api_key(name, session_keys)
         except OCRAPIKeyError:
-            msg_key = {
-                "claude": "ocr_api_key_missing",
-                "gemini": "ocr_api_key_missing_gemini",
-                "runpod": "ocr_api_key_missing_runpod",
-            }.get(name, "ocr_api_key_missing")
+            msg_key = (
+                catalog.api_key_missing_lang_key_for(name) or "ocr_api_key_missing"
+            )
             # 未知プロバイダは現行 .get(name, "") と同じく空文字へフォールバック
             # （primary_env_var は未登録プロバイダで "" を返す実装のため素通し）
             env_var = primary_env_var(name)
@@ -2334,18 +2380,15 @@ class OCRDialog(tk.Toplevel):
         self.provider に対する isinstance 判定を伴わない「文字列のみ」版
         として切り出したもの。フォールバック確認ダイアログの候補名のように、
         まだ build されていない（＝ self.provider が対応する型に差し替わって
-        いない）候補の表示にも使える。未知のキーはそのまま返す（フォール
-        バック・_provider_display_name と同じ挙動）。
+        いない）候補の表示にも使える。catalog.display_name_key_for
+        （V190-CAT-01）を単一情報源とする。未知のキーはそのまま返す（フォール
+        バック・_provider_display_name と同じ挙動）。空文字は lmstudio として
+        解決する。
         """
-        mapping = {
-            "claude": "ocr_provider_name_claude",
-            "gemini": "ocr_provider_name_gemini",
-            "tesseract": "ocr_provider_name_tesseract",
-            "runpod": "ocr_provider_name_runpod",
-            "lmstudio": "ocr_provider_name_lmstudio",
-            "": "ocr_provider_name_lmstudio",
-        }
-        lang_key = mapping.get(name)
+        from pagefolio.ocr_providers import catalog
+
+        lookup_name = "lmstudio" if name == "" else name
+        lang_key = catalog.display_name_key_for(lookup_name)
         if lang_key is not None:
             return self._L.get(lang_key, name)
         return name
@@ -2353,23 +2396,18 @@ class OCRDialog(tk.Toplevel):
     def _fallback_candidate_host(self, candidate):
         """フォールバック確認ダイアログに表示する候補の送信先ホスト/表示名を返す。
 
-        クラウド候補は送信先ホスト、ローカル候補は接続先 URL、Tesseract は
-        ネットワーク送信を伴わないためプロバイダ表示名を返す（D-11・送信先明示）。
+        クラウド候補は catalog.host_for（V190-CAT-01）が解決する送信先ホスト、
+        ローカル候補（lmstudio/ollama）は接続先 URL、Tesseract はネットワーク
+        送信を伴わないためプロバイダ表示名を返す（D-11・送信先明示）。
         """
         settings = self.app.settings
-        if candidate == "claude":
-            return "api.anthropic.com"
-        if candidate == "gemini":
-            return "generativelanguage.googleapis.com"
-        if candidate == "runpod":
-            return settings.get("runpod_url", "") or self._L["llm_runpod_host_unset"]
         if candidate == "lmstudio":
             return settings.get("lm_studio_url", "http://localhost:1234")
         if candidate == "ollama":
             return settings.get("ollama_url", "http://localhost:11434")
         if candidate == "tesseract":
             return self._L["ocr_provider_name_tesseract"]
-        return candidate
+        return _resolved_host_text(candidate, settings, self._L)
 
     def _propose_fallback(self, kind, msg, summary=False):
         """_finish_error / _on_summary_error から呼ぶフォールバック提案フック

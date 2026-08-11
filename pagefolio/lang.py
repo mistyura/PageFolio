@@ -529,6 +529,17 @@ LANG = {
         "ocr_provider_name_tesseract": "Tesseract (ローカル)",
         # CR-01: RunPod ローカライズ表示名（WR-02）
         "ocr_provider_name_runpod": "RunPod (Serverless)",
+        # 02-02: OpenAI プロバイダ文言（V190-CAT-01・V190-OAI-04/05）
+        "ocr_provider_name_openai": "OpenAI (ChatGPT)",
+        "ocr_api_key_missing_openai": (
+            "OpenAI APIキーが設定されていません。"
+            "LLM設定ダイアログで APIキーを入力するか、"
+            "環境変数 OPENAI_API_KEY を設定してください。"
+        ),
+        "ocr_host_unknown": "送信先ホストを特定できません（{provider}）。",
+        "ocr_model_vision_unverified": (
+            "※ モデル {model} の画像入力対応は未確認です。"
+        ),
         # 設定ダイアログ セクション見出し（D-16・3セクション構成）
         "settings_section_appearance": "外観",
         "settings_section_operation": "操作",
@@ -1275,6 +1286,17 @@ LANG = {
         "ocr_provider_name_tesseract": "Tesseract (Local)",
         # CR-01: RunPod localized display name (WR-02)
         "ocr_provider_name_runpod": "RunPod (Serverless)",
+        # 02-02: OpenAI provider messages (V190-CAT-01 / V190-OAI-04/05)
+        "ocr_provider_name_openai": "OpenAI (ChatGPT)",
+        "ocr_api_key_missing_openai": (
+            "OpenAI API key is not configured. "
+            "Enter it in the LLM settings dialog, or set the "
+            "OPENAI_API_KEY environment variable."
+        ),
+        "ocr_host_unknown": "Cannot determine the destination host ({provider}).",
+        "ocr_model_vision_unverified": (
+            "Note: image input support for model {model} is unverified."
+        ),
         # Settings dialog section headings (D-16 — 3-section layout)
         "settings_section_appearance": "Appearance",
         "settings_section_operation": "Operation",
