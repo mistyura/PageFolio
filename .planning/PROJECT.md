@@ -174,9 +174,22 @@ v1.9.0 のクローズにより、現在アクティブなマイルストーン�
 | テスト | pytest（1404 件・充実） |
 | リント | ruff |
 | リリースゲート | 単一プロセス `pytest -q` 完走（失敗0・ERROR0・クラッシュなし）。詳細は `CLAUDE.md`「## リリースゲート」節 |
-| ブランチ運用（v1.10.0 以降） | `main` へ直接コミット・直接 push しない。詳細は下記 `## ブランチ運用` を参照 |
 
 既存コードベースマップ: `.planning/codebase/`
+
+## Constraints
+
+正本は [../CLAUDE.md](../CLAUDE.md)。以下はプランニング時に踏まえるべき要約。
+
+- **Tech stack**: Python 3.8+ / Tkinter（Windows 11 対象）。PyMuPDF 1.28.0（`fitz`）/ Pillow 12.3.0 / tkinterdnd2 0.6.2、配布は PyInstaller 6.21.0 の onedir。`pyproject.toml` の編集は禁止
+- **互換性**: 既存の PDF 操作・OCR プロバイダのインターフェースを壊さない。Undo は操作固有のデルタ dict（full PDF シリアライズではない）で `MAX_UNDO = 20`。ページ単位キャプチャは必ず `_capture_page_blob()` / 復元は `self._blob_bytes()` を経由し、スタックへの直接 `append`/`clear` は禁止（Blob がリークする）
+- **スレッド制約**: UI は Tkinter メインスレッド。プレビュー・サムネイル描画は `root.after()` チェーンでメインスレッド処理し、世代カウンタ（`_preview_gen` / `_thumb_gen`）で stale 結果の上書きを防ぐ。OCR は `ThreadPoolExecutor`、fitz のスレッド制約によりバッチ OCR のファイル間は逐次処理
+- **CropBox 安全処理**: トリミングは必ず CropBox を MediaBox 内へクランプしてから `set_cropbox()` を呼ぶ（`pagefolio/page_ops.py`）。回転表示中は `_derotate_rect` で表示座標→未回転座標へ変換する
+- **品質ゲート**: py ファイル編集後に `ruff check . && ruff format .`、コミット前に `pytest`。リリース判定は `CLAUDE.md`「## リリースゲート」節（単一プロセス完走・失敗0・ERROR0・クラッシュなし）
+- **言語**: コミット/PR/コメント/ユーザー応答は日本語、変数名・関数名・クラス名は英語（CLAUDE.md 準拠）
+- **禁止**: `pyproject.toml` 編集、裸の `except:`、無断の `# type: ignore`、テーマ色のハードコード（`C["KEY"]` を使う）、フォントサイズのハードコード（`self._font(delta)` を使う・`tests/test_font_hardcode_guard.py` がソーススキャンで検出）
+- **Security**: API キーは `pagefolio_settings.json` に保存しない（`_SENSITIVE_KEYS` ガードで除外・セッション限定）。`pagefolio/ocr_providers/registry.py` は Python 標準ライブラリ（`os`）のみに依存し、pagefolio 内部の他モジュールを import しない（循環 import の構造的防止・V180-ROBUST-02）
+- **ブランチ運用（v1.10.0 以降）**: `main` へ直接コミット・直接 push しない。詳細は下記 `## ブランチ運用` を参照
 
 ## Problem Statement
 
@@ -458,4 +471,4 @@ PageFolio は `branching_strategy: "none"` / `quick_branch_template: null` の�
 4. 決定事項 → Key Decisions を更新
 
 ---
-*Last updated: 2026-08-12 quick 260812-9tv — ブランチ運用を姉妹プロジェクト（numbers `feature/v0.18.0` が原典・loto `main` が踏襲）と統一。`.planning/config.json` の `git` セクション 3 キー（`branching_strategy` = `milestone` / `milestone_branch_template` = `feature/{milestone}` / `quick_branch_template` = `quick/{num}-{slug}`）を 3 プロジェクト同値へ更新し、`## ブランチ運用` 節（5 部構成）を `## Key Decisions` の直前に新設、`## Context` 表へ入口 1 行を追加。発効は v1.10.0 以降。`git` 以外の config セクション・`pagefolio/` ソースは無変更。前回更新: 2026-08-11 after v1.9.0 milestone — マイルストーンクローズに伴う全項目の進化レビュー実施。v1.9.0 を Current State へ昇格し v1.8.0 以前を `<details>` へ格納、Context のテスト件数を実測 1404 件へ同期しリリースゲート行を追加、Active を空にして次マイルストーン候補（技術的負債 10 件・未実施 UAT 2 項目ほか）を Next Milestone Goals へ整理。Core Value・Out of Scope は再確認のうえ変更なし。前回更新: 2026-08-11 Phase 3 UAT 完了。*
+*Last updated: 2026-08-12 quick 260812-a8u — `## Constraints` 節を `## Context` の直後に新設（9 項目・正本は CLAUDE.md でその要約）。260812-9tv で暫定的に `## Context` 表へ置いていたブランチ運用ポインタを Constraints 末尾へ移設し、loto/numbers と同型（末尾がブランチ運用ポインタ）にした。CLAUDE.md・`pagefolio/` ソースは無変更。前回更新: 2026-08-12 quick 260812-9tv — ブランチ運用を姉妹プロジェクト（numbers `feature/v0.18.0` が原典・loto `main` が踏襲）と統一。`.planning/config.json` の `git` セクション 3 キー（`branching_strategy` = `milestone` / `milestone_branch_template` = `feature/{milestone}` / `quick_branch_template` = `quick/{num}-{slug}`）を 3 プロジェクト同値へ更新し、`## ブランチ運用` 節（5 部構成）を `## Key Decisions` の直前に新設、`## Context` 表へ入口 1 行を追加。発効は v1.10.0 以降。`git` 以外の config セクション・`pagefolio/` ソースは無変更。前回更新: 2026-08-11 after v1.9.0 milestone — マイルストーンクローズに伴う全項目の進化レビュー実施。v1.9.0 を Current State へ昇格し v1.8.0 以前を `<details>` へ格納、Context のテスト件数を実測 1404 件へ同期しリリースゲート行を追加、Active を空にして次マイルストーン候補（技術的負債 10 件・未実施 UAT 2 項目ほか）を Next Milestone Goals へ整理。Core Value・Out of Scope は再確認のうえ変更なし。前回更新: 2026-08-11 Phase 3 UAT 完了。*

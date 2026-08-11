@@ -6,7 +6,7 @@ status: Awaiting next milestone
 stopped_at: v1.9.0 マイルストーンをクローズ・アーカイブ済み。次は `/gsd-new-milestone` で次マイルストーンを定義する
 last_updated: "2026-08-11T12:38:32.438Z"
 last_activity: 2026-08-12
-last_activity_desc: Completed quick task 260812-a43 (release gate doc updated after TclError symptom recurred)
+last_activity_desc: Completed quick task 260812-a8u (PROJECT.md Constraints section added, aligned with loto/numbers)
 progress:
   total_phases: 3
   completed_phases: 3
@@ -47,7 +47,7 @@ See: .planning/PROJECT.md (updated 2026-08-11)
 Phase: Milestone v1.9.0 complete
 Plan: —
 Status: Awaiting next milestone
-Last activity: 2026-08-12 — Completed quick task 260812-a43: CLAUDE.md のリリースゲート記載を実測に合わせて更新
+Last activity: 2026-08-12 — Completed quick task 260812-a8u: PROJECT.md に Constraints 節を追加
 
 ## v1.9.0 Phase Map
 
@@ -342,6 +342,7 @@ v1.9.0 クローズ時点で次マイルストーンへ引き継ぐ未解決項�
 | 260812-9ev | ブランチ運用ルールを姉妹プロジェクト loto/numbers と統一。`docs/DEVELOPMENT.md`「ブランチ運用」「PR プロセス」節と `CONTRIBUTING.md`「プルリクエストのガイドライン」節を刷新（main への直接コミット禁止・機能ブランチ `feature/v<バージョン>`・PR は main 対象で日本語・Conventional Commits 準拠の日本語コミットメッセージ）。CI 未構成のため loto/numbers の「CI green」条件はローカルゲート（ruff + pytest 1404 件）へ読み替え、branch protection 未整備を VERIFY コメントで明記 | 2026-08-12 | 467b092 | [260812-9ev-loto-numbers](./quick/260812-9ev-loto-numbers/) |
 | 260812-9tv | ブランチ運用の**設定と GSD 規範**を numbers/loto と統一（260812-9ev のドキュメント整備に続く第2弾）。`.planning/config.json` の `git` セクション 3 キーを 3 プロジェクト同値へ（`branching_strategy`=`milestone` / `milestone_branch_template`=`feature/{milestone}` / `quick_branch_template`=`quick/{num}-{slug}`）、`.planning/PROJECT.md` に `## ブランチ運用` 節（numbers 原典の5部構成）を新設し `## Context` へ入口1行を追加。発効は v1.10.0 以降。これにより quick task が `main` へ直接コミットされる経路を設定レベルで遮断 | 2026-08-12 | 55681ed | [260812-9tv-config-json-git-project-md-loto](./quick/260812-9tv-config-json-git-project-md-loto/) |
 | 260812-a43 | `CLAUDE.md`「リリースゲート」節の記載を実測へ更新。2026-08-12 に症状①（`TclError` によるセットアップ ERROR）が再現したため（`tests/test_toast.py` 8 件・1396 passed/8 errors、単体 33 passed、フルスイート再実行 1404 passed）、「2 症状とも非再現・累計 17 回連続グリーン」の断定を症状別の現況表へ置換し、ERROR 発生時の切り分け手順を追加。合格条件（失敗0・ERROR0・クラッシュなしで完走）と「静かな除外の禁止」は据え置き。アーカイブ済み調査ログは無変更。**新ブランチ運用の初回適用**（`quick/260812-a43-claude-md` で作業し `main` へ --no-ff マージ） | 2026-08-12 | 74988d6 | [260812-a43-claude-md](./quick/260812-a43-claude-md/) |
+| 260812-a8u | `.planning/PROJECT.md` に `## Constraints` 節を新設（9 項目・Tech stack / 互換性 / スレッド制約 / CropBox 安全処理 / 品質ゲート / 言語 / 禁止 / Security / ブランチ運用。正本は CLAUDE.md でその要約）。260812-9tv で暫定的に `## Context` 表へ置いたブランチ運用ポインタを Constraints 末尾へ移設し、loto/numbers と同型化。3プロジェクト比較の差分 #3 を解消 | 2026-08-12 | 19772f4 | [260812-a8u-project-md-constraints](./quick/260812-a8u-project-md-constraints/) |
 
 ## Deferred Items
 
