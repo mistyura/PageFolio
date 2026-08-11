@@ -59,7 +59,7 @@ PageFolio の設定は実行時に自動生成される JSON ファイル `pagef
 
 | キー | 必須 | 既定値 | 説明 |
 |------|------|--------|------|
-| `ocr_provider` | 任意 | `"off"` | OCR プロバイダ。`"off"` / `"lmstudio"` / `"ollama"` / `"runpod"` / `"claude"` / `"gemini"` / `"tesseract"`（＋プラグイン登録プロバイダ） |
+| `ocr_provider` | 任意 | `"off"` | OCR プロバイダ。`"off"` / `"lmstudio"` / `"ollama"` / `"runpod"` / `"claude"` / `"gemini"` / `"openai"` / `"tesseract"`（＋プラグイン登録プロバイダ） |
 | `ocr_scale` | 任意 | `1.5` | OCR 用ページ画像の解像度倍率。1.0〜4.0 にクランプ。低スペック PC は 1.5 推奨 |
 | `ocr_timeout` | 任意 | `120` | OCR HTTP タイムアウト秒数。10〜900 にクランプ |
 | `ocr_max_tokens` | 任意 | `-1` | OCR 最大出力トークン数。-1〜262144 にクランプ。`-1` は「モデルの最大値に委ねる」（LM Studio / Ollama 専用。Claude / Gemini / RunPod は `-1` 指定時に内部で 4096 にクランプされる） |
@@ -80,6 +80,7 @@ PageFolio の設定は実行時に自動生成される JSON ファイル `pagef
 | `"runpod"` | RunPod Serverless（OpenAI 互換 Vision API） |
 | `"claude"` | Claude API（Anthropic） |
 | `"gemini"` | Gemini API（Google AI） |
+| `"openai"` | OpenAI Chat Completions API（ChatGPT） |
 | `"tesseract"` | Tesseract OCR（ローカル、要インストール） |
 
 ---
@@ -199,6 +200,24 @@ Markdown 整形表示のオン/オフは **OCR ダイアログのプリセット
 
 ---
 
+### OpenAI プロバイダ設定
+
+| キー | 必須 | 既定値 | 説明 |
+|------|------|--------|------|
+| `openai_model` | 任意 | `""` | 使用する OpenAI モデル ID。空欄の場合は `catalog.default_model_for("openai")`（`gpt-5.1`）へ解決される |
+| `openai_detail` | 任意 | `"high"` | 画像 detail レベル。`"low"` / `"high"` / `"auto"`。`high` は読み取り精度優先・`low` はコスト優先。値域外の値は保存時に `"high"` へフォールバックする |
+| `openai_reasoning_effort` | 任意 | `""` | reasoning effort レベル。推論系モデル（`gpt-5` ファミリ・o-series 等）を選択し、かつ選択中モデルの許容値域内のときのみ送信される。値域は `02-CAPABILITY-MATRIX.md` の `allowed_effort_values` 列に基づく（例: `gpt-5.1` は `none`/`low`/`medium`/`high`）。値域が未確認のモデルでは空欄のまま無効化され送信されない |
+| `openai_organization` | 任意 | `""` | `OpenAI-Organization` ヘッダに送る組織 ID。空欄なら該当ヘッダを送信しない |
+| `openai_project` | 任意 | `""` | `OpenAI-Project` ヘッダに送るプロジェクト ID。空欄なら該当ヘッダを送信しない |
+
+> **API キーについて:** OpenAI API キーは `pagefolio_settings.json` には保存されません。
+> 環境変数 `OPENAI_API_KEY` または LLM 設定ダイアログのキー入力欄（セッションのみ）から設定してください。
+
+> **organization / project ID の入力検証:** 印字可能な ASCII 文字（制御文字・空白を除く）かつ 128 文字以内のみ許可されます。
+> 不正な値を入力して「適用」を押すと明示的なエラーダイアログが表示され、Apply は中断されます（入力値は破棄されず、そのまま修正できます）。
+
+---
+
 ### Tesseract プロバイダ設定
 
 | キー | 必須 | 既定値 | 説明 |
@@ -215,19 +234,22 @@ Markdown 整形表示のオン/オフは **OCR ダイアログのプリセット
 | キー | 必須 | 既定値 | 説明 |
 |------|------|--------|------|
 | `ocr_fallback_enabled` | 任意 | `false` | プロバイダフォールバック機能の有効/無効。既定は無効（安全側） |
-| `ocr_fallback_chain` | 任意 | `[]` | フォールバック先プロバイダ名のリスト（実行順）。`ocr_fallback_enabled` が `true` かつ非空の場合のみ機能する |
+| `ocr_fallback_chain` | 任意 | `[]` | フォールバック先プロバイダ名のリスト（実行順）。`ocr_fallback_enabled` が `true` かつ非空の場合のみ機能する。候補一覧は `catalog.fallback_candidate_names()`（`lmstudio` / `ollama` / `runpod` / `claude` / `gemini` / `openai` の 6 種 ＋ プラグイン登録プロバイダ）から選択でき、`openai` も候補として設定できる |
+
+フォールバック発動時は、候補プロバイダの表示名と送信先ホスト（`openai` の場合は `api.openai.com`）を明示した確認ダイアログが必ず再提示されます（各段で同意が必要・自動送信はしない）。
 
 ---
 
 ## 機密情報の取り扱い（セキュリティ）
 
-以下のキーは `_SENSITIVE_KEYS` ガードにより `pagefolio_settings.json` への書き込みが**構造的に禁止**されています（`pagefolio/ocr_providers/registry.py` の `sensitive_keys()` が生成する集合、現行 10 エントリ）。
+以下のキーは `_SENSITIVE_KEYS` ガードにより `pagefolio_settings.json` への書き込みが**構造的に禁止**されています（`pagefolio/ocr_providers/registry.py` の `sensitive_keys()` が生成する集合、現行 12 エントリ）。
 
 | キー名 | 説明 |
 |--------|------|
 | `claude_api_key` / `anthropic_api_key` / `ANTHROPIC_API_KEY` | Anthropic API キー |
 | `gemini_api_key` / `google_api_key` / `GEMINI_API_KEY` / `GOOGLE_API_KEY` | Google API キー |
 | `runpod_api_key` / `RUNPOD_API_KEY` | RunPod API キー |
+| `openai_api_key` / `OPENAI_API_KEY` | OpenAI API キー |
 | `api_key` | 汎用 API キー |
 
 `_save_settings()` はこれらのキーが混入していないかを保存の都度チェックし、混入していればログへ警告（キー名のみ、値は出力しない）した上で除外して保存します。
@@ -244,6 +266,7 @@ API キーは `pagefolio/ocr.py` の `_resolve_api_key()` により以下の優�
 $env:ANTHROPIC_API_KEY = "sk-ant-..."
 $env:GEMINI_API_KEY    = "AIza..."
 $env:RUNPOD_API_KEY    = "rpa_..."
+$env:OPENAI_API_KEY    = "sk-..."
 ```
 
 LM Studio / Ollama はローカルサーバへの接続のみで API キーを必要としません。
@@ -271,7 +294,12 @@ LM Studio / Ollama はローカルサーバへの接続のみで API キーを�
   "ocr_prompt_preset": "text",
   "claude_model": "claude-sonnet-4-6",
   "ocr_effort": "low",
-  "gemini_model": "gemini-2.5-flash"
+  "gemini_model": "gemini-2.5-flash",
+  "openai_model": "",
+  "openai_detail": "high",
+  "openai_reasoning_effort": "",
+  "openai_organization": "",
+  "openai_project": ""
 }
 ```
 
@@ -289,6 +317,7 @@ PageFolio のすべての設定キーは任意項目であり、欠損しても�
 | `ocr_provider` が `"claude"` で `ANTHROPIC_API_KEY` 未設定 | OCR ダイアログで `OCRAPIKeyError` | 環境変数を設定、またはダイアログでキーを入力 |
 | `ocr_provider` が `"gemini"` で `GEMINI_API_KEY` / `GOOGLE_API_KEY` 未設定 | OCR ダイアログで `OCRAPIKeyError` | 環境変数を設定、またはダイアログでキーを入力 |
 | `ocr_provider` が `"runpod"` で `RUNPOD_API_KEY` 未設定 | OCR ダイアログで `OCRAPIKeyError` | 環境変数を設定、またはダイアログでキーを入力 |
+| `ocr_provider` が `"openai"` で `OPENAI_API_KEY` 未設定 | OCR ダイアログで `OCRAPIKeyError` | 環境変数を設定、またはダイアログでキーを入力 |
 | `ocr_provider` が `"tesseract"` で Tesseract 未インストール | OCR ダイアログで `RuntimeError` | Tesseract をインストールしてパスを通す |
 | `lm_studio_url` / `ollama_url` / `runpod_url` のサーバが未起動・未設定 | OCR 実行時に `ConnectionError` または `RuntimeError` | サーバを起動する、またはエンドポイント URL を設定する |
 

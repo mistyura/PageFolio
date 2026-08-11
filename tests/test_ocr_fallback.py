@@ -70,6 +70,16 @@ class TestNextCandidate:
     def test_returns_first_when_none_tried(self):
         assert next_fallback_candidate(["claude", "gemini"], set()) == "claude"
 
+    def test_returns_openai_when_first_in_chain(self):
+        """02-04 Task 2: openai もプロバイダ名の一つとして扱われる
+        （next_fallback_candidate はプロバイダ名非依存の純関数のまま）。
+        """
+        assert next_fallback_candidate(["openai", "claude"], set()) == "openai"
+
+    def test_skips_tried_openai_candidate(self):
+        chain = ["openai", "claude"]
+        assert next_fallback_candidate(chain, {"openai"}) == "claude"
+
     def test_skips_tried_candidates(self):
         assert next_fallback_candidate(["claude", "gemini"], {"claude"}) == "gemini"
 
@@ -117,6 +127,15 @@ class TestSummaryCandidateFilter:
         chain = ["tesseract", "claude", "gemini"]
         text_capable = {"claude", "gemini"}
         assert next_summary_candidate(chain, {"claude"}, text_capable) == "gemini"
+
+    def test_skips_tesseract_and_returns_openai(self):
+        """02-04 Task 2: openai は supports_text_prompt=True のため、
+        tesseract をスキップして openai が候補として返る
+        （_TEXT_CAPABLE_PROVIDERS の反映・02-02 で確立済みの契約）。
+        """
+        chain = ["tesseract", "openai"]
+        text_capable = {"claude", "gemini", "openai"}
+        assert next_summary_candidate(chain, set(), text_capable) == "openai"
 
     def test_does_not_mutate_args(self):
         chain = ["tesseract", "claude"]

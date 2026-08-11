@@ -4201,3 +4201,292 @@ class TestOpenAiHeadersOmittedWhenEmpty:
         assert all(
             "\r" not in v and "\n" not in v and "\t" not in v for v in headers.values()
         )
+
+
+# ══════════════════════════════════════════════════════════════
+#  02-04 Task 2: OpenAI をフォールバック候補として使えることの実配線確認
+#  （V190-OAI-07・V180-D-02・レビュー HIGH 02-04-2）
+# ══════════════════════════════════════════════════════════════
+
+
+def _make_fallback_dialog_stub(settings, provider=None, results=None):
+    """OCRDialog のフォールバックオーケストレーションメソッドだけを検証する
+    headless インスタンスを返す（tests/test_ocr_fallback.py::_make_dialog と
+    同型のスタイル）。Tk ウィジェット生成を一切経由しない。
+    """
+    from pagefolio.constants import LANG
+    from pagefolio.ocr_dialog import OCRDialog
+
+    d = OCRDialog.__new__(OCRDialog)
+    d.app = types.SimpleNamespace(
+        settings=dict(settings),
+        _session_api_keys={},
+        plugin_manager=None,
+    )
+    d._L = LANG["ja"]
+    d.provider = provider
+    d.page_indices = [0, 1, 2]
+    d.results = dict(results if results is not None else {0: "x", 1: "y", 2: "z"})
+    d.errors = {}
+    d._active_ocr_settings = None
+    d._fallback_tried = set()
+    d._fallback_resume = False
+    d.concurrency = 1
+    d._started = False
+    d._done = False
+    d._summary_running = False
+    d.text = None
+    d._refresh_provider_dependent_ui = lambda: None
+    return d
+
+
+class TestFallbackToOpenai:
+    """V190-OAI-07・V180-D-02: openai をフォールバック候補として設定でき、
+    発動時に送信先ホスト（api.openai.com）と表示名を明示した確認ダイアログが
+    再提示される。
+    """
+
+    def test_confirm_message_includes_openai_host_and_display_name(self, monkeypatch):
+        """確認ダイアログ本文に api.openai.com と表示名の両方が含まれる。"""
+        from pagefolio.constants import LANG
+
+        d = _make_fallback_dialog_stub(
+            {
+                "ocr_provider": "claude",
+                "ocr_fallback_enabled": True,
+                "ocr_fallback_chain": ["openai"],
+            }
+        )
+        captured = {}
+
+        def _fake_askyesno(title, msg, **kwargs):
+            captured["msg"] = msg
+            return False
+
+        monkeypatch.setattr("pagefolio.ocr_dialog.messagebox.askyesno", _fake_askyesno)
+        d._propose_fallback("connection", "boom")
+
+        assert "api.openai.com" in captured["msg"]
+        assert LANG["ja"]["ocr_provider_name_openai"] in captured["msg"]
+
+    def test_rejection_does_not_switch_and_marks_tried(self, monkeypatch):
+        """「いいえ」で _switch_to_fallback_provider が呼ばれず、
+        候補は試行済みへ計上される（D-10 の連鎖継続・自動送信禁止）。
+        """
+        d = _make_fallback_dialog_stub(
+            {
+                "ocr_provider": "claude",
+                "ocr_fallback_enabled": True,
+                "ocr_fallback_chain": ["openai"],
+            }
+        )
+        monkeypatch.setattr(
+            "pagefolio.ocr_dialog.messagebox.askyesno", lambda *a, **k: False
+        )
+        on_run_calls = []
+        d._on_run = lambda **kwargs: on_run_calls.append(kwargs)
+        d._propose_fallback("connection", "boom")
+
+        assert on_run_calls == []
+        assert d.provider is None
+        assert "openai" in d._fallback_tried
+
+    def test_approval_switches_to_openai_and_runs(self, monkeypatch):
+        """「はい」で build_provider が ocr_provider=="openai" の設定で呼ばれ、
+        _on_run(resume=True, settings=fb) 経由で完走する。
+        """
+        d = _make_fallback_dialog_stub(
+            {
+                "ocr_provider": "claude",
+                "ocr_fallback_enabled": True,
+                "ocr_fallback_chain": ["openai"],
+            }
+        )
+        monkeypatch.setattr(
+            "pagefolio.ocr_dialog.messagebox.askyesno", lambda *a, **k: True
+        )
+        monkeypatch.setattr(
+            "pagefolio.ocr._resolve_api_key", lambda name, session_keys: "dummy"
+        )
+
+        class _FakeProvider:
+            max_concurrency = 2
+            supports_text_prompt = True
+
+        build_calls = []
+
+        def _fake_build_provider(settings, **kwargs):
+            build_calls.append(dict(settings))
+            return _FakeProvider()
+
+        monkeypatch.setattr("pagefolio.ocr.build_provider", _fake_build_provider)
+        on_run_calls = []
+        d._on_run = lambda **kwargs: on_run_calls.append(kwargs)
+
+        d._propose_fallback("connection", "boom")
+
+        assert len(build_calls) == 1
+        assert build_calls[0]["ocr_provider"] == "openai"
+        assert len(on_run_calls) == 1
+        assert on_run_calls[0]["settings"]["ocr_provider"] == "openai"
+        # self.app.settings 自体は書き換えられない（Pitfall 4・T-02-11）
+        assert d.app.settings["ocr_provider"] == "claude"
+
+    def test_validate_provider_readiness_false_when_api_key_missing(self, monkeypatch):
+        """API キー未解決時は _validate_provider_readiness が False を返し、
+        次候補へ進む（openai がクラウド判定対象になっていることの帰結）。
+        """
+        monkeypatch.setattr(
+            "pagefolio.ocr_dialog.messagebox.showerror", lambda *a, **k: None
+        )
+        d = _make_fallback_dialog_stub({"ocr_provider": "openai"})
+        settings = {"ocr_provider": "openai"}
+        assert d._validate_provider_readiness("openai", settings) is False
+
+    def test_no_suppress_forever_option_in_propose_fallback_signature(self):
+        """must_haves.prohibitions の機械的裏づけ: _propose_fallback に
+        「今後表示しない」に相当する抑止パラメータが存在しない
+        （引数名・本文いずれにも suppress/dont_ask/never_ask 系が無い）。
+        """
+        import inspect
+
+        from pagefolio.ocr_dialog import OCRDialog
+
+        sig = inspect.signature(OCRDialog._propose_fallback)
+        param_names = {p.lower() for p in sig.parameters}
+        forbidden_substrings = ("suppress", "dont_ask", "never_ask", "dont_show")
+        for name in param_names:
+            assert not any(f in name for f in forbidden_substrings), name
+
+    def test_openai_in_fallback_known_providers_and_persists_via_apply(self):
+        """_fallback_known_providers に openai が含まれ、_apply で
+        ocr_fallback_chain に openai を入れるとホワイトリスト検証を通過して
+        永続化される。
+        """
+        from pagefolio.dialogs.llm_config import LLMConfigDialog
+        from pagefolio.ocr_providers import catalog
+
+        assert "openai" in catalog.fallback_candidate_names()
+
+        stub, calls = _make_openai_settings_apply_stub()
+        stub.fallback_enabled_var = _GetVarStub(True)
+        stub._fallback_known_providers = list(catalog.fallback_candidate_names())
+        stub._fallback_chain = ["openai"]
+        LLMConfigDialog._apply(stub)
+
+        settings = calls["on_apply"][0]
+        assert settings["ocr_fallback_chain"] == ["openai"]
+
+
+class TestFallbackTriggerKinds:
+    """レビュー HIGH 02-04-2 の回帰固定: どの例外種別が実際に
+    フォールバックを発火させるか（Task 3C の実機手順が依拠する前提）。
+    """
+
+    def test_finish_error_connection_reaches_propose_fallback(self, monkeypatch):
+        """kind="connection" で _finish_error → _propose_fallback へ到達する。"""
+        d = _make_fallback_dialog_stub(
+            {
+                "ocr_provider": "claude",
+                "ocr_fallback_enabled": True,
+                "ocr_fallback_chain": ["openai"],
+            }
+        )
+        propose_calls = []
+        d._propose_fallback = lambda kind, msg, summary=False: propose_calls.append(
+            (kind, msg)
+        )
+        _stub_finish_error_ui(d)
+        from pagefolio.ocr_dialog import OCRDialog
+
+        OCRDialog._finish_error(d, "conn boom", kind="connection")
+        assert propose_calls == [("connection", "conn boom")]
+
+    def test_finish_error_timeout_reaches_propose_fallback(self, monkeypatch):
+        """kind="timeout" で _finish_error → _propose_fallback へ到達する。"""
+        d = _make_fallback_dialog_stub(
+            {
+                "ocr_provider": "claude",
+                "ocr_fallback_enabled": True,
+                "ocr_fallback_chain": ["openai"],
+            }
+        )
+        propose_calls = []
+        d._propose_fallback = lambda kind, msg, summary=False: propose_calls.append(
+            (kind, msg)
+        )
+        _stub_finish_error_ui(d)
+        from pagefolio.ocr_dialog import OCRDialog
+
+        OCRDialog._finish_error(d, "timeout boom", kind="timeout")
+        assert propose_calls == [("timeout", "timeout boom")]
+
+    def test_finish_error_circuit_breaker_reaches_propose_fallback(self, monkeypatch):
+        """kind="circuit_breaker" で _finish_error → _propose_fallback へ
+        到達する。
+        """
+        d = _make_fallback_dialog_stub(
+            {
+                "ocr_provider": "claude",
+                "ocr_fallback_enabled": True,
+                "ocr_fallback_chain": ["openai"],
+            }
+        )
+        propose_calls = []
+        d._propose_fallback = lambda kind, msg, summary=False: propose_calls.append(
+            (kind, msg)
+        )
+        _stub_finish_error_ui(d)
+        from pagefolio.ocr_dialog import OCRDialog
+
+        OCRDialog._finish_error(d, "cb boom", kind="circuit_breaker")
+        assert propose_calls == [("circuit_breaker", "cb boom")]
+
+    def test_runtime_error_401_does_not_reach_finish_error(self):
+        """consume_one が RuntimeError（HTTP 401 相当）を受けたケースでは
+        record_page_error に落ちて fatal にならず、on_fatal（_finish_error
+        経路）は呼ばれない（レビュー HIGH 02-04-2 の前提の機械固定）。
+        """
+        from pagefolio.ocr_pipeline import PipelineState, consume_one
+
+        state = PipelineState(workers=1)
+        fatal_calls = []
+        page_error_calls = []
+
+        class _FakeProvider:
+            def ocr_image_ex(self, b64, prompt):
+                raise RuntimeError("HTTP 401: Unauthorized")
+
+        consume_one(
+            provider=_FakeProvider(),
+            item=(0, "Zg=="),
+            prompt="p",
+            state=state,
+            cancel_check=lambda: False,
+            on_success=None,
+            on_page_error=lambda idx, msg: page_error_calls.append((idx, msg)),
+            on_fatal=lambda idx, msg, kind: fatal_calls.append((idx, msg, kind)),
+            on_retry_wait=None,
+        )
+
+        assert fatal_calls == []
+        assert len(page_error_calls) == 1
+        assert state.fatal_kind is None
+
+
+def _stub_finish_error_ui(d):
+    """_finish_error が触れる Tk ウィジェット依存部を no-op スタブに差し替える
+    （headless dialog スタブへの追加属性）。
+    """
+    d.progress_var = _FakeStringVar()
+    d._progress_label = types.SimpleNamespace(configure=lambda **k: None)
+    d.text = types.SimpleNamespace(insert=lambda *a, **k: None, see=lambda *a: None)
+    d.cancel_btn = types.SimpleNamespace(state=lambda *a: None)
+    d.copy_btn = types.SimpleNamespace(state=lambda *a: None)
+    d.save_btn = types.SimpleNamespace(state=lambda *a: None)
+    d.url_var = _FakeStringVar("http://localhost:1234")
+    d.timeout_var = _FakeStringVar(120)
+    d._after_run_ui_reset = lambda: None
+    d._append_resume_hint = lambda: None
+    d._render_results_ordered = lambda: None
+    d._can_resume = lambda: False

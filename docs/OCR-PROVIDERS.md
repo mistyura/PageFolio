@@ -2,7 +2,7 @@
 # OCR プロバイダガイド
 
 PageFolio の OCR 機能は、`pagefolio/ocr_providers/`（パッケージ）で定義された抽象基底クラス `OCRProvider` を中心に構成されています。
-6 つの組み込みプロバイダと、プラグインによるカスタムプロバイダ追加の仕組みを提供します。
+7 つの組み込みプロバイダと、プラグインによるカスタムプロバイダ追加の仕組みを提供します。
 
 ---
 
@@ -15,6 +15,7 @@ PageFolio の OCR 機能は、`pagefolio/ocr_providers/`（パッケージ）で
    - [LMStudioProvider](#lmstudioprovider)
    - [ClaudeProvider](#claudeprovider)
    - [GeminiProvider](#geminiprovider)
+   - [OpenAIProvider](#openaiprovider)
    - [TesseractProvider](#tesseractprovider)
 5. [build_provider ファクトリ](#build_provider-ファクトリ)
 6. [並列実行](#並列実行)
@@ -32,6 +33,7 @@ PageFolio の OCR 機能は、`pagefolio/ocr_providers/`（パッケージ）で
 | Gemini | `gemini` | `GEMINI_API_KEY` | クラウド（HTTPS） | 1 |
 | Ollama | `ollama` | 不要 | ローカル | 2 |
 | RunPod | `runpod` | `RUNPOD_API_KEY` | クラウド（HTTPS） | 2 |
+| OpenAI (ChatGPT) | `openai` | `OPENAI_API_KEY` | クラウド（HTTPS） | 2 |
 | Tesseract | `tesseract` | 不要 | ローカル（オフライン） | 1 |
 
 ---
@@ -293,6 +295,101 @@ thinking 制御の指定自体が 400 INVALID_ARGUMENT で拒否されるため�
 
 ---
 
+### OpenAIProvider
+
+OpenAI の Chat Completions API（`/v1/chat/completions`）を `urllib` で直接呼び出します。
+ページ画像を base64 で HTTPS 送信するため、インターネット接続が必要です。
+`LMStudioProvider` と同じ OpenAI 互換 Vision API 形式（`image_url` + base64 data URI）を使用します。
+
+**設定値:** `ocr_provider = "openai"`
+
+#### 必要な設定
+
+**環境変数（推奨）:**
+
+```
+OPENAI_API_KEY=sk-...
+```
+
+環境変数が未設定の場合、セッションメモリ（`app._session_api_keys["openai"]`）の値を使用します。
+API キーは `pagefolio_settings.json` には保存されません。
+
+**設定キー:**
+
+| 設定キー | 既定値 | 説明 |
+|---------|--------|------|
+| `openai_model` | `""`（空のとき `catalog.default_model_for("openai")` へ解決） | 使用するモデル ID |
+| `openai_detail` | `high` | 画像 detail レベル（`low` / `high` / `auto`） |
+| `openai_reasoning_effort` | `""` | reasoning effort レベル（推論系モデルかつ許容値域内のときのみ送信） |
+| `openai_organization` | `""` | `OpenAI-Organization` ヘッダ値（空なら非送信） |
+| `openai_project` | `""` | `OpenAI-Project` ヘッダ値（空なら非送信） |
+
+#### 推奨モデル
+
+`OpenAIProvider.RECOMMENDED_MODELS`（`02-CAPABILITY-MATRIX.md` で画像入力を確認済みの集合。全件 `evidence=official-doc`）:
+
+| モデル ID | 特徴 |
+|-----------|------|
+| `gpt-5-nano` | 低コスト・高速（推論系・reasoning effort 対応） |
+| `gpt-5-mini` | 低〜中コスト（推論系・reasoning effort 対応） |
+| `gpt-5.1` | 既定モデル。バランス型（推論系・reasoning effort 対応） |
+| `gpt-5.2` | 高精度（推論系・reasoning effort 対応） |
+| `gpt-4o` | 非推論系（`temperature` を使用） |
+
+#### コンストラクタ
+
+```python
+OpenAIProvider(
+    api_key, model, timeout=120, max_tokens=4096, temperature=0.1,
+    detail="high", reasoning_effort=None, organization="", project="",
+)
+```
+
+| 引数 | 説明 |
+|------|------|
+| `api_key` | OpenAI API キー（環境変数由来） |
+| `model` | 使用するモデル ID |
+| `timeout` | HTTP タイムアウト秒数（既定: 120） |
+| `max_tokens` | `max_completion_tokens` として送信する最大トークン数（既定: 4096） |
+| `temperature` | 温度パラメータ（非推論系モデルのみ使用・既定: 0.1） |
+| `detail` | 画像 detail レベル（`low` / `high` / `auto`・既定: `"high"`） |
+| `reasoning_effort` | reasoning effort レベル（推論系モデルかつ許容値域内のときのみ送信） |
+| `organization` | `OpenAI-Organization` ヘッダ値（空文字なら非送信） |
+| `project` | `OpenAI-Project` ヘッダ値（空文字なら非送信） |
+
+#### モデル別パラメータ制御
+
+- トークン上限は常に新形式キー `max_completion_tokens` を送信します（`max_tokens` は非推奨のため使用しません）。
+- 推論系モデル（`is_reasoning_model()` が真）には `temperature` を送らず、条件を満たすときのみ `reasoning_effort` を送信します。非推論系モデルには `temperature` のみ送信します。
+- 判定は 2 つの純関数に集約されています: `is_reasoning_model(model)`（o-series プレフィックス OR `gpt-5` ファミリ〈`-chat-latest` サフィックス除く〉の OR 判定）と `effort_values_for_model(model)`（`02-CAPABILITY-MATRIX.md` の `allowed_effort_values` 列に基づく許容値タプルを返す純関数）。
+- `reasoning_effort` は「`is_reasoning_model` が真 **かつ** 値が真値 **かつ** `effort_values_for_model()` の許容集合に含まれる」ときのみ送信されます。`pagefolio_settings.json` は手編集可能なため、UI 側の readonly Combobox 制約に加えプロバイダ側でも許容集合外の値を送らない多層防御を実装しています。
+- 画像 detail は `_VALID_DETAIL_VALUES`（`low`/`high`/`auto`）に含まれない値が settings 経由で渡された場合、送信直前に `"high"` へフォールバックします（手編集された設定ファイルでも OCR がエラーにならない安全側設計）。
+
+| モデル種別 | `temperature` | `reasoning_effort` |
+|-----------|--------------|---------------------|
+| 推論系（`is_reasoning_model` 真）かつ許容値域内の値あり | 省略 | 送信 |
+| 推論系だが値なし/許容値域外 | 省略 | 省略 |
+| 非推論系 | 送信 | 省略 |
+
+#### 並列度
+
+| 属性 | 値 | 備考 |
+|------|-----|------|
+| `default_concurrency` | 2 | Claude 相当 |
+| `max_concurrency` | 2 | tier 依存のレート制限を考慮した保守的な上限 |
+
+#### モデル一覧取得
+
+`list_models()` は `GET /v1/models` を実取得し、以下の順で処理します:
+
+1. `filter_selectable_models()`（純関数）で embedding / tts / whisper / dall-e / gpt-image / moderation / realtime / transcribe 等の非チャット・非 vision 系 ID を除外
+2. `order_models_for_display()`（純関数）で `VERIFIED_VISION_MODELS`（画像入力確認済みモデル集合）を宣言順で先頭に並べ替え
+3. フィルタ後の結果が 0 件、または API キー未設定、または取得失敗時は `RECOMMENDED_MODELS` へ合流（静的フォールバック）
+
+一覧には画像入力対応が未確認のモデルが含まれ得ます。LLM 設定ダイアログの OpenAI セクションはこの旨を常時注記として表示します。
+
+---
+
 ### TesseractProvider
 
 `tesseract` コマンドを stdin パイプ方式で呼び出します。
@@ -368,6 +465,7 @@ def build_provider(settings, api_key=None, plugin_manager=None) -> OCRProvider:
 | `"gemini"` | `GeminiProvider` |
 | `"ollama"` | `OllamaProvider` |
 | `"runpod"` | `RunPodProvider` |
+| `"openai"` | `OpenAIProvider` |
 | `"tesseract"` | `TesseractProvider` |
 | 上記以外 | プラグインレジストリを検索 → 未登録なら `ValueError` |
 
