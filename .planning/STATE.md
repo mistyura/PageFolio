@@ -33,7 +33,7 @@ Plan: Not started
 Status: All phases complete
 Last activity: 2026-08-11 — Phase 03 complete
 
-Progress: [██████████] 100%
+Progress: [████████████████████] 15/15 plans (100%)
 
 ## v1.9.0 Phase Map
 
