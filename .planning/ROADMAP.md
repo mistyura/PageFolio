@@ -221,9 +221,9 @@ Phases execute in numeric order: 1 → 2 → 3
 
 | Phase             | Milestone | Plans Complete | Status      | Completed  |
 | ----------------- | --------- | --------------- | ----------- | ---------- |
-| 1. Undo/Redo 修正 | v1.3.0    | 7/7 | Complete    | 2026-08-11 |
-| 2. プレビュー最適化とリファクタリング | v1.3.0 | 4/4 | Complete    | 2026-08-11 |
-| 3. API 整理と回帰テスト | v1.3.0 | 3/4 | In Progress|  |
+| 1. Undo/Redo 修正 | v1.3.0    | 3/3 | Complete    | 2026-06-03 |
+| 2. プレビュー最適化とリファクタリング | v1.3.0 | 3/3 | Complete    | 2026-06-03 |
+| 3. API 整理と回帰テスト | v1.3.0 | 2/2 | Complete | 2026-06-03 |
 | 4. プロバイダ抽象化 | v1.4.0 | 4/4 | Complete | 2026-06-06 |
 | 5. Claude Provider + セキュリティ基盤 + プロバイダ選択 UI | v1.4.0 | 5/5 | Complete | 2026-06-07 |
 | 6. Gemini Provider + 逐次レンダリング最適化 | v1.4.0 | 4/4 | Complete | 2026-06-07 |
@@ -246,6 +246,6 @@ Phases execute in numeric order: 1 → 2 → 3
 | 4. バッチ複数ファイルOCR | v1.8.0 | 3/3 | Complete | 2026-07-16 |
 | 5. 堅牢性強化（サムネイル仮想化 + Blobリーク検出 + ShortcutsDialog修正） | v1.8.0 | 4/4 | Complete | 2026-07-16 |
 | 6. 品質保証仕上げ（通知UX・UI一貫性監査・ドキュメント整合） | v1.8.0 | 3/3 | Complete | 2026-07-16 |
-| 1. 保存・編集・設定の安全性是正（失敗時ロールバック担保） | v1.9.0 | 5/6 | Gap closure planned | - |
+| 1. 保存・編集・設定の安全性是正（失敗時ロールバック担保） | v1.9.0 | 7/7 | Complete | 2026-08-11 |
 | 2. OCR プロバイダ基盤整理 + OpenAI(ChatGPT) プロバイダ追加 | v1.9.0 | 4/4 | Complete | 2026-08-11 |
 | 3. 品質保証・リリースゲート | v1.9.0 | 4/4 | Complete | 2026-08-11 |
