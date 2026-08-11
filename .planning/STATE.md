@@ -2,18 +2,18 @@
 gsd_state_version: 1.0
 milestone: v1.9.0
 milestone_name: 安全性・整合性の是正 + OpenAI プロバイダ追加
-current_phase: 3
-current_phase_name: 品質保証・リリースゲート
-status: planning
-stopped_at: Phase 3 context gathered
-last_updated: "2026-08-11T08:43:47.607Z"
+current_phase: 03
+current_phase_name: qa-release-gate
+status: executing
+stopped_at: Completed 03-01-PLAN.md
+last_updated: "2026-08-11T10:24:38.003Z"
 last_activity: 2026-08-11
 last_activity_desc: Phase 01 execution started
 progress:
   total_phases: 3
   completed_phases: 2
-  total_plans: 11
-  completed_plans: 11
+  total_plans: 15
+  completed_plans: 12
   percent: 67
 ---
 
@@ -24,16 +24,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-08-10)
 
 **Core value:** 大きな PDF でも Undo/Redo が正しく・速く動作し、コードが読みやすく保守しやすい状態にする
-**Current focus:** Phase 03 — 品質保証・リリースゲート（未着手）
+**Current focus:** Phase 03 — qa-release-gate
 
 ## Current Position
 
-Phase: 3 — 品質保証・リリースゲート
-Plan: Not started
-Status: Ready to plan
-Last activity: 2026-08-11 — Phase 02 complete, transitioned to Phase 3
+Phase: 03 (qa-release-gate) — EXECUTING
+Plan: 2 of 4
+Status: Ready to execute
+Last activity: 2026-08-11 — Phase 03 execution started
 
-Progress: [██████████] 100%
+Progress: [████████░░] 80%
 
 ## v1.9.0 Phase Map
 
@@ -135,6 +135,7 @@ Progress: [██████████] 100%
 | Phase 02 P02 | 16min | 3 tasks | 5 files |
 | Phase 02 P03 | 19min | 3 tasks | 7 files |
 | Phase 02 P04 | 68min | 5 tasks | 11 files |
+| Phase 03 P01 | 約20分 | 3 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -254,6 +255,9 @@ Decisions are logged in PROJECT.md Key Decisions table.
 - [Phase ?]: 02-04: reasoning effortはClaudeのeffort_frame/ocr_effort/_EFFORT_VALUESを流用せずOpenAI専用ウィジェットとopenai_reasoning_effortキーで実装（D-15）
 - [Phase ?]: 02-04: フォールバック実機手順はHTTP401がRuntimeErrorになりfatalにならないと実コード照合で判明したため、到達不能URLによるConnectionError誘発へ変更（レビューHIGH02-04-2）
 - [Phase ?]: 02-04: Task3B実機確認でOpenAIのAPIキーがOCR実行時に送信されない実バグを発見。ocr_dialog.pyの_apply_llm_settings/_on_runにopenai専用elifが無く汎用else（APIキー不要前提）へ落ちていたことが原因。claude/geminiと同型elifを追加し36e7cc2で修正・回帰テスト2件追加
+- [Phase ?]: 03-01: _save_file/_save_as/_save_compressedを確認・パス選択層とpath引数を取る実保存層(_do_save_*)へ分離。retry_cbはfunctools.partialで確定パスを束縛し再試行時は確認・保存先ピッカーを再表示しない（V190-QA-02/D-09〜D-11）
+- [Phase ?]: 03-01: Task1(tracer)のverify完全自動通過後、mode:yolo（02-01前例と同一）を根拠に対話モードのtracerゲートを人手待ちにせずTask2へ自動続行
+- [Phase ?]: 03-01: REQUIREMENTS.mdのV190-QA-02文言をD-12訂正後表現へ更新。ROADMAP.mdは計画時点で既に訂正済みのため内容確認のみ（二重書き換え回避）
 
 ### Pending Todos
 
@@ -361,10 +365,10 @@ Decisions are logged in PROJECT.md Key Decisions table.
 
 ## Session Continuity
 
-**Resume file:** .planning/phases/03-qa-release-gate/03-CONTEXT.md
+**Resume file:** None
 
-Last session: 2026-08-11T08:43:47.580Z
-Stopped at: Phase 3 context gathered
+Last session: 2026-08-11T10:24:37.977Z
+Stopped at: Completed 03-01-PLAN.md
 
 ## Operator Next Steps
 
