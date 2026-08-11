@@ -105,9 +105,33 @@
 
 - [ ] `ruff check . && ruff format .` でリント・フォーマット確認
 - [ ] `python -c "import ast; ast.parse(open('pagefolio.py', encoding='utf-8').read())"` で構文確認
-- [ ] `pytest` でテスト確認
+- [ ] `pytest` でテスト確認（合格条件の詳細は下記「リリースゲート」節を参照）
 - [ ] `開発履歴.md` に変更内容を追記
 - [ ] バージョン番号を更新（`pagefolio/constants.py` の `APP_VERSION`、開発履歴.md、README.md のバッジ）
+
+---
+
+## リリースゲート（全テスト完走条件）
+
+**合格条件:** 以下のコマンドが失敗 0 件・ERROR 0 件・プロセスクラッシュなしで完走すること。
+
+```powershell
+.\.venv\Scripts\python.exe -m pytest -q --basetemp="$env:LOCALAPPDATA\Temp\pf_pytest_tmp"
+```
+
+単一プロセスでのフルスイート実行（現在 1398 件収集）が合格条件。分割実行は不要。
+過去に観測されていた `TclError` によるセットアップ ERROR・`STATUS_BREAKPOINT` プロセス
+クラッシュの2症状は、v1.9.0 Phase 3 の切り分け調査（10回連続実行）で現行環境では
+再現しないことを確認済み（リサーチセッションの7回と合算し累計17回連続グリーン）。
+
+**`--basetemp` について:** `%TEMP%\pytest-of-shdwf` のロック競合回避専用であり、テストを
+1 件も除外しない。実行環境でロック競合が起きないなら省略してよい。
+
+**やってはいけないこと:** テストの削除・skip マーク付与・`-k` / `--ignore` による静かな
+除外でゲートを通すこと。除外を伴う運用を採る場合は対象と件数と根拠を必ず明示し、合計が
+全件と一致することを示すこと。
+
+**根拠:** [.planning/phases/03-qa-release-gate/03-TEST-ENV-INVESTIGATION.md](.planning/phases/03-qa-release-gate/03-TEST-ENV-INVESTIGATION.md)
 
 ---
 
