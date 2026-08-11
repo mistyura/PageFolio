@@ -2,18 +2,18 @@
 gsd_state_version: 1.0
 milestone: v1.9.0
 milestone_name: 安全性・整合性の是正 + OpenAI プロバイダ追加
-current_phase: 2
-current_phase_name: OCR プロバイダ基盤整理 + OpenAI(ChatGPT) プロバイダ追加
+current_phase: 02
+current_phase_name: ocr-openai-chatgpt
 status: executing
-stopped_at: Phase 2 context gathered
-last_updated: "2026-08-11T01:56:37.780Z"
+stopped_at: Completed 02-01-PLAN.md
+last_updated: "2026-08-11T02:39:47.582Z"
 last_activity: 2026-08-11
 last_activity_desc: Phase 01 execution started
 progress:
   total_phases: 3
   completed_phases: 1
   total_plans: 11
-  completed_plans: 7
+  completed_plans: 8
   percent: 33
 ---
 
@@ -24,16 +24,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-08-10)
 
 **Core value:** 大きな PDF でも Undo/Redo が正しく・速く動作し、コードが読みやすく保守しやすい状態にする
-**Current focus:** Phase 01 — safety-rollback
+**Current focus:** Phase 02 — ocr-openai-chatgpt
 
 ## Current Position
 
-Phase: 2 — OCR プロバイダ基盤整理 + OpenAI(ChatGPT) プロバイダ追加
-Plan: Not started
+Phase: 02 (ocr-openai-chatgpt) — EXECUTING
+Plan: 2 of 4
 Status: Ready to execute
-Last activity: 2026-08-11 - Completed quick task 260811-asq: Codex 向け指示書の壊れた参照修正と .gsd センチネルの gitignore 追加
+Last activity: 2026-08-11 — Phase 02 execution started
 
-Progress: [██████████] 100%
+Progress: [███████░░░] 73%
 
 ## v1.9.0 Phase Map
 
@@ -131,6 +131,7 @@ Progress: [██████████] 100%
 | Phase 01 P05 | 約20min | 3 tasks | 2 files |
 | Phase 01 P06 | 約45min | 3 tasks | 3 files |
 | Phase 01 P07 | 約70分 | 3 tasks | 4 files |
+| Phase 02 P01 | 38min | 3 tasks | 9 files |
 
 ## Accumulated Context
 
@@ -239,6 +240,7 @@ Decisions are logged in PROJECT.md Key Decisions table.
 - [Phase ?]: [01-07]: option-b選択に伴い警告文言は「内容が失われた可能性」ではなく「二重化または欠落している可能性」とした（err_undo/redo_restore_failed_content_at_risk）。option-bの構造上、ロールバック失敗時も旧ページはpage_i+1に必ず残存し内容喪失は起こり得ないため
 - [Phase ?]: [01-07]: APP_VERSION・開発履歴.md・READMEバッジは本プランで更新せず、Phase 3（V190-QA-03リリースゲート）へ委譲（01-05/01-06と同じ既定方針の継続）
 - [Phase ?]: [01-07]: merge（base op）の削除ループがinsertと同型の未保護構造（一括捕捉＋保護なし削除ループ）を持つことを棚卸しで確認。D-12方針に従いコード変更せず次マイルストーン候補として記録
+- [Phase ?]: 02-01: catalog.py新設+OpenAIProvider縦スライス。is_reasoning_modelはo-series OR gpt-5ファミリ(除chat-latest)のOR判定に再設計（実データでgpt-5.1がo系以外の推論モデル真ケースと判明・レビューHIGH02-01-2対応）。default_model=gpt-5.1
 
 ### Pending Todos
 
@@ -346,10 +348,10 @@ Decisions are logged in PROJECT.md Key Decisions table.
 
 ## Session Continuity
 
-**Resume file:** .planning/phases/02-ocr-openai-chatgpt/02-CONTEXT.md
+**Resume file:** None
 
-Last session: 2026-08-10T22:38:28.673Z
-Stopped at: Phase 2 context gathered
+Last session: 2026-08-11T02:39:47.560Z
+Stopped at: Completed 02-01-PLAN.md
 
 ## Operator Next Steps
 

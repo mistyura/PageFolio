@@ -35,13 +35,13 @@
 
 ### OCR プロバイダ基盤整理（CAT）
 
-- [ ] **V190-CAT-01**: プロバイダのキー・表示名・クラウド種別・環境変数・既定モデル・送信先ホスト・フォールバック可否が単一の情報源から解決され、新プロバイダ追加時の変更面が 1 箇所に閉じる（REV-08）
-- [ ] **V190-CAT-02**: 一元化後も `pagefolio/ocr_providers/registry.py` の独立性制約（Python 標準ライブラリのみに依存し pagefolio 内部モジュールを import しない・V180-D-01）が維持され、循環 import が発生しない（REV-08）
+- [x] **V190-CAT-01**: プロバイダのキー・表示名・クラウド種別・環境変数・既定モデル・送信先ホスト・フォールバック可否が単一の情報源から解決され、新プロバイダ追加時の変更面が 1 箇所に閉じる（REV-08）
+- [x] **V190-CAT-02**: 一元化後も `pagefolio/ocr_providers/registry.py` の独立性制約（Python 標準ライブラリのみに依存し pagefolio 内部モジュールを import しない・V180-D-01）が維持され、循環 import が発生しない（REV-08）
 
 ### OpenAI(ChatGPT) プロバイダ（OAI）
 
 - [ ] **V190-OAI-01**: ユーザーは OCR プロバイダとして OpenAI(ChatGPT) を選択できる
-- [ ] **V190-OAI-02**: ユーザーは LLM 設定ダイアログで OpenAI のセッション限定 API キーを入力でき、そのキーは `pagefolio_settings.json` に永続化されない（`_SENSITIVE_KEYS` ガード・V14-D-02）
+- [x] **V190-OAI-02**: ユーザーは LLM 設定ダイアログで OpenAI のセッション限定 API キーを入力でき、そのキーは `pagefolio_settings.json` に永続化されない（`_SENSITIVE_KEYS` ガード・V14-D-02）
 - [ ] **V190-OAI-03**: ユーザーは OpenAI のモデル一覧を API から取得して選択でき、取得に失敗した場合は静的フォールバック一覧から選択できる
 - [ ] **V190-OAI-04**: OpenAI で OCR を実行する前に、送信先ホストを明示した確認ダイアログが表示される
 - [ ] **V190-OAI-05**: OpenAI で OCR を実行する前に、コスト確認ダイアログが表示される
@@ -50,9 +50,9 @@
 - [ ] **V190-OAI-08**: ユーザーは OpenAI 実行時の画像 detail レベル（low / high / auto）を選択でき、設定が永続化される
 - [ ] **V190-OAI-09**: ユーザーは reasoning effort 相当のパラメータを設定でき、対応モデル選択時のみ有効化される（Claude の `EFFORT_MODELS` 許可リスト方式を踏襲）
 - [ ] **V190-OAI-10**: ユーザーは organization / project ID を任意入力でき、指定した場合のみリクエストヘッダへ付与される
-- [ ] **V190-OAI-11**: OpenAI プロバイダは `urllib.request` 直叩きで実装され、新規 pip 依存を追加しない（V14-D-01 踏襲）
-- [ ] **V190-OAI-12**: モデル別のパラメータ非互換（`max_tokens` 非対応で `max_completion_tokens` を要するモデル、`temperature` を拒否する o-series）が正しく分岐処理され、エラーにならない
-- [ ] **V190-OAI-13**: OpenAI の 429 / 5xx 応答に対し既存の指数バックオフ・`Retry-After` 尊重のリトライ基盤（`ocr_providers/errors.py`）が適用される
+- [x] **V190-OAI-11**: OpenAI プロバイダは `urllib.request` 直叩きで実装され、新規 pip 依存を追加しない（V14-D-01 踏襲）
+- [x] **V190-OAI-12**: モデル別のパラメータ非互換（`max_tokens` 非対応で `max_completion_tokens` を要するモデル、`temperature` を拒否する o-series）が正しく分岐処理され、エラーにならない
+- [x] **V190-OAI-13**: OpenAI の 429 / 5xx 応答に対し既存の指数バックオフ・`Retry-After` 尊重のリトライ基盤（`ocr_providers/errors.py`）が適用される
 
 ### 品質保証・リリースゲート（QA）
 
@@ -117,10 +117,10 @@
 | V190-CFG-02 | Phase 1 | Complete |
 | V190-UNDO-01 | Phase 1 | Complete |
 | V190-UNDO-02 | Phase 1 | Complete |
-| V190-CAT-01 | Phase 2 | Pending |
-| V190-CAT-02 | Phase 2 | Pending |
+| V190-CAT-01 | Phase 2 | Complete |
+| V190-CAT-02 | Phase 2 | Complete |
 | V190-OAI-01 | Phase 2 | Pending |
-| V190-OAI-02 | Phase 2 | Pending |
+| V190-OAI-02 | Phase 2 | Complete |
 | V190-OAI-03 | Phase 2 | Pending |
 | V190-OAI-04 | Phase 2 | Pending |
 | V190-OAI-05 | Phase 2 | Pending |
@@ -129,9 +129,9 @@
 | V190-OAI-08 | Phase 2 | Pending |
 | V190-OAI-09 | Phase 2 | Pending |
 | V190-OAI-10 | Phase 2 | Pending |
-| V190-OAI-11 | Phase 2 | Pending |
-| V190-OAI-12 | Phase 2 | Pending |
-| V190-OAI-13 | Phase 2 | Pending |
+| V190-OAI-11 | Phase 2 | Complete |
+| V190-OAI-12 | Phase 2 | Complete |
+| V190-OAI-13 | Phase 2 | Complete |
 | V190-QA-01 | Phase 3 | Pending |
 | V190-QA-02 | Phase 3 | Pending |
 | V190-QA-03 | Phase 3 | Pending |
