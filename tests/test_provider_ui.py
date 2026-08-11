@@ -1331,6 +1331,38 @@ class TestOpenAIPriceProvenance:
             assert output_price > 0, key
             assert input_price < output_price, key
 
+    def test_layer5_key_ordering_is_substring_safe(self):
+        """IN-01: `_lookup_price` は `if key in model` の宣言順ループで
+        部分文字列一致するため、あるキー A が別のキー B の部分文字列で
+        あるとき、より具体的な（＝長い・被包含される側の）キー B が
+        宣言順で A より先に来ていなければ、B に対応するモデルの単価が
+        A の単価にサイレントに誤解決される。
+
+        この不変条件を `OCR_PRICE_TABLE` の現在の宣言順に対して固定する
+        （単発 `ocr_dialog.py` とバッチ `dialogs/batch_ocr.py` の両方）。
+        実装（宣言順ループ）自体は変更しない — 現在の順序が安全であることを
+        機械的に検証するのみ。
+        """
+        from pagefolio.dialogs.batch_ocr import OCR_PRICE_TABLE as batch_table
+        from pagefolio.ocr_dialog import OCR_PRICE_TABLE as dialog_table
+
+        for table in (dialog_table, batch_table):
+            keys = list(table)
+            violations = []
+            for a in keys:
+                for b in keys:
+                    if a == b:
+                        continue
+                    # a が b の部分文字列（かつ b の方が具体的＝長い）なら、
+                    # b が a より先に宣言されていなければならない。
+                    if a in b and len(b) > len(a):
+                        if keys.index(b) > keys.index(a):
+                            violations.append((a, b))
+            assert not violations, (
+                "より汎用的なキーがより具体的なキーより先に宣言されている "
+                f"（誤単価がサイレントに解決される）: {violations!r}"
+            )
+
 
 # ══════════════════════════════════════════════════════════════
 #  V16-UI-01: _sync_param_vars_from_settings（数値パラメータの全プロバイダ共通同期）

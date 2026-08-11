@@ -28,8 +28,10 @@ import pytest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+from pagefolio import ocr_dialog  # noqa: E402
 from pagefolio.batch_ocr_state import STATUS_DONE, STATUS_FAILED  # noqa: E402
 from pagefolio.dialogs import batch_ocr  # noqa: E402
+from pagefolio.lang import LANG  # noqa: E402
 from pagefolio.ocr_providers import OCRProvider, OCRRetryableError  # noqa: E402
 
 
@@ -587,6 +589,100 @@ class TestBatchSummaryRetrySleepRegression:
         stub_ref = {"stub": stub}
 
         batch_ocr.BatchOCRDialog._batch_summary_worker(stub, 1, "本文", "プロンプト")
+
+        assert observed == [False, True], (
+            f"キャンセルフラグの状態変化が観測できていない: {observed!r}"
+        )
+
+
+class TestSingleShotSummaryRetrySleepParity:
+    """WR-01 パリティ拡張: `ocr_dialog.py::OCRDialog._summary_worker` の
+    リトライ待機経路にも `TestBatchSummaryRetrySleepRegression` と同型の
+    不変条件を課す。
+
+    `_summary_worker` は関数内で `from pagefolio.ocr import
+    clamp_retry_after, interruptible_sleep` とローカル import するため、
+    `pagefolio.ocr` モジュールの属性を monkeypatch する（`batch_ocr` 側は
+    モジュール冒頭 import のため `batch_ocr.interruptible_sleep` を
+    monkeypatch するのに対し、単発側はこの一点だけ手当てが異なる）。
+    """
+
+    def _make_stub(self, complete_text_ex):
+        """`_summary_worker` が触る属性だけを持つ最小スタブを返す。"""
+        after_calls = []
+        stub = types.SimpleNamespace(
+            provider=types.SimpleNamespace(complete_text_ex=complete_text_ex),
+            _summary_cancel_flag=threading.Event(),
+            _run_gen=1,
+            _L=LANG["ja"],
+            after=lambda delay, fn=None: after_calls.append(fn),
+            _set_summary_base_msg=lambda m: None,
+            _on_summary_cancelled=lambda: None,
+            _on_summary_done=lambda text, truncated: None,
+            _on_summary_error=lambda msg, kind=None: None,
+        )
+        return stub, after_calls
+
+    def test_retryable_error_sleep_does_not_raise_typeerror(self, monkeypatch):
+        """単発側でも 429 相当のリトライ待機で `TypeError` にならず、
+        2回目の呼び出しで成功して完了コールバックが `after` へ積まれる。
+        """
+        passed = []
+
+        def _fake_sleep(total, is_cancelled, step=0.5):
+            passed.append(is_cancelled)
+            is_cancelled()  # Event インスタンスならここで TypeError
+
+        import pagefolio.ocr as ocr_module
+
+        monkeypatch.setattr(ocr_module, "interruptible_sleep", _fake_sleep)
+        monkeypatch.setattr(ocr_module, "clamp_retry_after", lambda d: 0.0)
+
+        attempts = []
+
+        def _complete_text_ex(full_text, prompt):
+            attempts.append(1)
+            if len(attempts) == 1:
+                raise OCRRetryableError("429 Too Many Requests")
+            return ("要約テキスト", False)
+
+        stub, after_calls = self._make_stub(_complete_text_ex)
+
+        # TypeError が漏れるとここで落ちる
+        ocr_dialog.OCRDialog._summary_worker(stub, 1, "本文", "プロンプト")
+
+        assert len(attempts) == 2, "リトライ後に再試行されていない"
+        assert passed, "リトライ待機に入っていない"
+        assert callable(passed[0]), (
+            f"interruptible_sleep へ呼び出し不可能な値が渡された: {passed[0]!r}"
+        )
+        # 単発側はリトライ中の進捗メッセージ更新（_set_summary_base_msg）でも
+        # after を1回積むため、バッチ側（完了時の1回のみ）とは異なり2回になる。
+        assert len(after_calls) == 2
+
+    def test_cancel_flag_is_observed_during_retry_sleep(self, monkeypatch):
+        """待機中にキャンセルされたことを渡された判定関数が観測できる
+        （単発側も `.is_set` を渡しているので Event の状態変化が見える）。
+        """
+        observed = []
+
+        def _fake_sleep(total, is_cancelled, step=0.5):
+            observed.append(is_cancelled())  # 待機開始時点: 未キャンセル
+            stub_ref["stub"]._summary_cancel_flag.set()
+            observed.append(is_cancelled())  # セット後: キャンセル済みが見える
+
+        import pagefolio.ocr as ocr_module
+
+        monkeypatch.setattr(ocr_module, "interruptible_sleep", _fake_sleep)
+        monkeypatch.setattr(ocr_module, "clamp_retry_after", lambda d: 0.0)
+
+        def _complete_text_ex(full_text, prompt):
+            raise OCRRetryableError("503 Service Unavailable")
+
+        stub, after_calls = self._make_stub(_complete_text_ex)
+        stub_ref = {"stub": stub}
+
+        ocr_dialog.OCRDialog._summary_worker(stub, 1, "本文", "プロンプト")
 
         assert observed == [False, True], (
             f"キャンセルフラグの状態変化が観測できていない: {observed!r}"
