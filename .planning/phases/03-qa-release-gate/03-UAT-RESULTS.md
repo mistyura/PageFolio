@@ -1,0 +1,85 @@
+# Phase 3 Plan 3: 遡及 UAT + v1.9.0 UAT 実施記録
+
+**対象要件:** V190-QA-03（D-13〜D-15）
+**作成日:** 2026-08-11
+
+## 並び順の規則
+
+本ドキュメントの表（`## 対象確定（現行照合）` / `## 実施結果`）は、いずれも
+**出典マイルストーン昇順（v1.4.0 → v1.6.0 → v1.7.1 → v1.9.0）→ 同一マイルストーン内は
+元の項番（① ② ③ …）昇順**で並べる。実施順序（Task 2 → 3 → 4 の human-verify 実施順）が
+変わっても、この表の行順は変えない。
+
+---
+
+## 対象確定（現行照合）
+
+候補 14 項目（うち ⑤ は Claude 分 / Gemini 分の 2 行に分割）と、対象外とした v1.9.0 Phase 2
+（OpenAI 関連 UAT）の計 16 行を、現行コードとの照合結果とともに記録する（D-13）。
+
+| # | 候補 | 出典 | 現行コードでの現在地 | 判定 | 理由 |
+|---|------|------|----------------------|------|------|
+| ① | LM Studio でダイアログのモデル変更が実際に送信される `model` フィールドへ反映される | v1.4.0 Phase 04（`human_needed` 項目1） | `pagefolio/ocr_dialog.py:1392` `_on_run`。v1.8.0 Phase 3 の `OCRRunEngine` 抽出後も、UI live 値の読み取り→ provider 再生成という配線自体は `_on_run` 内（1525〜1620行付近で `url_var`/`model_var` を読み取り `LMStudioProvider` を再生成）に残っている。旧参照 `ocr_dialog.py:_on_run`（v1.4.0 検証当時の行番号）は無効だが、同名メソッド内に検証対象のロジックが現存する | 実施対象 | v1.8.0 Phase 3 でモジュール配置（`OCRRunEngine` 抽出）は変わったが、検証観点（UI 変更→実際の HTTP リクエストへの反映）自体は `_on_run` に現存する（03-RESEARCH.md Assumptions Log A3 で裏付け済み） |
+| ② | LM Studio でタイムアウト変更が表示メッセージの秒数と実際の待機時間に一致する | v1.4.0 Phase 04（`human_needed` 項目2） | `pagefolio/ocr_dialog.py:1392` `_on_run`（1493行 `timeout_var` を 10〜900 秒にクランプして `self._effective_timeout` へ格納） | 実施対象 | ①と同一メソッド内の隣接ロジック。配置は変わったが検証観点は現存 |
+| ③ | max_tokens クランプと 429 リトライの実 API 検証 | v1.6.0 Phase 3（V16-QUAL-03） | `pagefolio/ocr.py`（`clamp_retry_after` 192行・429/5xx 指数バックオフ 348-378行・各プロバイダ生成時の max_tokens クランプ 465-540行）。コード自体は現存し無改造 | 未実施（理由: 実 API 課金、またはレート制限を意図的に誘発する必要がある。03-CONTEXT.md `Deferred Ideas` に「実 API・課金が必要な UAT 項目」として明示済み） | D-14「実 API・課金が必要な項目は未実施・理由付きで記録し、リリース判定をブロックしない」を適用。意図的にレート制限を踏む行為はプロバイダの ToS 上望ましくなく、コストも発生するため今回は見送る |
+| ④ | OCRDialog の markdown 整形表示（md_h1/md_h2/md_bullet/md_code/md_bold）の見え方と読みやすさ | v1.6.0 Phase 4（`human_needed` 項目1） | `pagefolio/ocr_dialog.py`（md_* 5 タグ定義・`_insert_markdown`）/ `pagefolio/md_render.py`（`parse_markdown` 純関数） | 実施対象 | v1.8.0 Phase 1/3 のモジュール分割の影響を受けない独立した描画ロジックで、現行コードにそのまま存在する。実描画の見え方のみ未検証 |
+| ⑤-Claude | プロバイダ別プロンプトで実 API の OCR 出力品質が引き出される（Claude 分） | v1.6.0 Phase 4（`human_needed` 項目2） | `pagefolio/ocr.py` `PROVIDER_OCR_PROMPTS`（claude=`<task>/<rules>` の XML 構造テンプレート） | 未実施（理由: `ANTHROPIC_API_KEY` 未設定。実行時に環境変数の存在チェックを実施し確認済み） | D-14。03-RESEARCH.md Environment Availability でも同様の観測（未設定） |
+| ⑤-Gemini | プロバイダ別プロンプトで実 API の OCR 出力品質が引き出される（Gemini 分） | v1.6.0 Phase 4（`human_needed` 項目2） | 同上（gemini=明示指示テンプレート） | 実施対象 | `GEMINI_API_KEY` 設定済み。実行時に環境変数の存在チェックを実施し確認済み |
+| ⑥ | ShortcutsDialog の実キーキャプチャ（修飾キー単体では確定せず待機継続） | v1.7.1 Phase 4（04-UAT.md 項目1・「一旦パス」） | `pagefolio/dialogs/shortcuts.py`（`_MODIFIER_KEYSYMS` 定義・実キーバインド処理） | 実施対象 | v1.8.0 Phase 5（V180-ROBUST-03）でキー衝突・表示残留の不具合は解消済みだが、実機目視自体はスキップされたまま。ダイアログは現行コードに存在し続けている |
+| ⑦ | 同一キー重複割り当て時のエラーダイアログと保存拒否 | v1.7.1 Phase 4（04-UAT.md 項目2） | `pagefolio/dialogs/shortcuts.py`（重複検出・`messagebox.showerror`） | 実施対象 | 同上 |
+| ⑧ | 保存直後の即時反映 | v1.7.1 Phase 4（04-UAT.md 項目3） | `pagefolio/dialogs/shortcuts.py`（保存ボタン→ `app._bind_shortcuts()` 呼び出し） | 実施対象 | 同上 |
+| ⑨ | SettingsDialog の 3 セクション表示（外観 / 操作 / AI・OCR・⚙ アイコン） | v1.7.1 Phase 4（04-UAT.md 項目4） | `pagefolio/dialogs/settings.py:75`（外観セクション）/`:155`（操作セクション）/`:172`（AI・OCR セクション、見出し文言 `settings_lm_studio_section` = 「⚙ AI・OCR 設定」） | 実施対象 | v1.8.0/v1.9.0 のいずれのフェーズでも `settings.py` のセクション構成は変更されておらず、現行コードにそのまま存在する |
+| ⑩ | LLMConfigDialog の「選択中プロバイダ固有の設定」/「全プロバイダ共通の設定」見出し順序とプロバイダ切替 | v1.7.1 Phase 4（04-UAT.md 項目5） | `pagefolio/dialogs/llm_config/sections.py:120`（固有見出し）/`:898`（共通見出し）/`:93`（`catalog.provider_names()` で combobox 選択肢を生成） | 実施対象 | v1.9.0 Phase 2 で OpenAI プロバイダが追加され、確認対象は v1.7.1 UAT 当時の 7 種（LM Studio/Ollama/RunPod/Claude/Gemini/Tesseract/off）から **8 種**（+OpenAI）に増えている。項目の意図（見出し順序・切替の正しさ）自体は変わっていないため書き換えではなく対象拡張として扱う |
+| ⑪ | 外側 SettingsDialog を Cancel しても LLM 設定の変更が保持される | v1.7.1 Phase 4（04-UAT.md 項目6） | `pagefolio/dialogs/settings.py:224-241`（`_open_llm_config` 内の `on_apply` が `_save_settings` で即時永続化 + `on_llm_apply` 経由で `app.settings` へも即時反映） | 実施対象 | v1.9.0 Phase 1（D-14/D-15 系ではなく既存の V171-D-14 パターン）でも無改造。現行コードにそのまま存在する |
+| ⑫ | 拡大ポップアップの `lang='en'` 表示（Page N / M・Zoom Out・Zoom In・Close） | v1.7.1 Phase 4（04-UAT.md 項目7） | `pagefolio/viewer.py:489-606` `_show_page_popup`（`self._t` 経由で `popup_page_title`/`popup_zoom_out`/`popup_zoom_in`/`popup_close` を参照。`pagefolio/lang.py` の en 辞書に該当4キー全て存在確認済み） | 実施対象 | i18n 監査（v1.7.1 Phase 4）以降も無改造。現行コードにそのまま存在する |
+| ⑬ | 保存トーストの再試行が上書き確認・保存先ピッカーを再表示しない | v1.9.0 Phase 3・03-01（V190-QA-02） | `pagefolio/file_ops.py`（`_do_save_file`/`_do_save_as`/`_do_save_compressed`。03-01-SUMMARY.md 参照） | 実施対象 | 自動テスト（`tests/test_toast.py` の `retry_skips` 系10件）は通っているが、実際のトースト UI 上で再試行ボタンを押したときの挙動は未確認 |
+| ⑭ | Undo/Redo の復元に失敗したときに messagebox でブロック通知される | v1.9.0 Phase 1・01-CONTEXT.md D-13 | `pagefolio/lang.py:252-259`（`err_undo_restore_failed_content_at_risk`/`err_redo_restore_failed_content_at_risk`＝「二重化または欠落している可能性」）/ `pagefolio/file_ops.py`（`_undo`/`_redo` の復元失敗ハンドリング） | 実施対象（実機で意図的に再現するのが難しい場合は「再現できず」を許容・結果を推測で pass にしない） | 自動テストは通っているが、実際にダイアログが出る様子は未確認 |
+| （対象外） | Phase 2（v1.9.0）の OpenAI 関連 UAT（V190-CAT-01/02・V190-OAI-01〜13） | v1.9.0 Phase 2 | `.planning/phases/02-ocr-openai-chatgpt/02-04-SUMMARY.md` ほか（Phase 2 の実機確認 3 分割） | 対象外 | STATE.md に「v1.9.0 Phase 2 完了（4/4 プラン・検証 5/5 must-haves・15/15 要件・実機 human-verify 3 件合格）」と記録済み。本プランで重複計上しない旨をここに明示する（黙って落とさない） |
+
+---
+
+## 実施結果
+
+Task 2〜4 の checkpoint 承認後、Task 5 で `実施日` `結果` `根拠` を埋めて確定する。
+現時点（Task 1 完了時点）ではすべて `—` のプレースホルダとする。`結果` に使う値は
+`pass` / `fail` / `未実施` の3種のみ（「一旦 pass」は使わない）。
+
+| # | 項目 | 出典 | 手順 | 実施日 | 結果 | 根拠 |
+|---|------|------|------|--------|------|------|
+| ① | LM Studio のモデル切替が送信 `model` フィールドへ反映される | v1.4.0 Phase 04 | LM Studio をローカル起動しモデル2つ以上ロード。LLM 設定でモデルを変更し「読み取り実行」を押下。LM Studio 側のログで実際に送信された `model` フィールドを確認（Task 4 グループ3-4） | — | — | — |
+| ② | LM Studio のタイムアウト表示と実待機時間の一致 | v1.4.0 Phase 04 | タイムアウトを短い値（例: 15秒）に変更し、接続を切った LM Studio に対して OCR を実行。表示秒数と実待機時間を比較（Task 4 グループ3-5） | — | — | — |
+| ④ | OCRDialog の markdown 整形表示の見え方 | v1.6.0 Phase 4 | プリセット `Markdown` で OCR 実行し、見出し/箇条書き/コード/太字が視覚的に区別されプレーンテキストより読みやすいことを目視（Task 4 グループ3-1） | — | — | — |
+| ⑤-Gemini | プロバイダ別プロンプトの実 API 出力品質（Gemini 分） | v1.6.0 Phase 4 | プロバイダを Gemini にし同一ページを Markdown プリセットで OCR。構造化された Markdown が返るか確認（Task 4 グループ3-2） | — | — | — |
+| ⑥ | ShortcutsDialog の実キーキャプチャ | v1.7.1 Phase 4 | 任意行の「変更」を押し実キーを押下。人間可読表記へ更新・修飾キー単体では待機継続を確認（Task 2 グループ1-1） | — | — | — |
+| ⑦ | キー衝突の拒否 | v1.7.1 Phase 4 | 既割当キーを別コマンドへ割当て「保存」。衝突コマンド名を含むエラーダイアログ・保存拒否を確認（Task 2 グループ1-2） | — | — | — |
+| ⑧ | 保存直後の即時反映 | v1.7.1 Phase 4 | 保存直後（ダイアログを閉じる前）に新キーでコマンドが起動することを確認（Task 2 グループ1-3） | — | — | — |
+| ⑨ | SettingsDialog の3セクション表示 | v1.7.1 Phase 4 | 設定ダイアログを開き「外観」「操作」「AI・OCR」の3セクションと⚙アイコンを確認（Task 3 グループ2-1） | — | — | — |
+| ⑩ | LLMConfigDialog の見出し順序とプロバイダ切替（8種） | v1.7.1 Phase 4 | 「⚙ LLM 設定…」を開き見出し順序を確認。プロバイダ combobox を LM Studio/Ollama/RunPod/Claude/Gemini/OpenAI/Tesseract/off の全8種へ順に切替（Task 3 グループ2-2） | — | — | — |
+| ⑪ | 外側 Cancel での LLM 設定保持 | v1.7.1 Phase 4 | LLM 設定で値変更→適用→外側を Cancel で閉じる→再度開いて変更が保持されているか確認（Task 3 グループ2-3） | — | — | — |
+| ⑫ | 拡大ポップアップの英語表示 | v1.7.1 Phase 4 | `lang=en` に設定し拡大ポップアップを開き、Page N/M・Zoom Out・Zoom In・Close が全て英語表示されることを確認（Task 3 グループ2-4） | — | — | — |
+| ⑬ | 保存トースト再試行の確認スキップ | v1.9.0 Phase 3・03-01 | 保存を意図的に失敗させ、トースト「再試行」を押下。上書き確認・保存先ピッカーが再表示されないこと、初回操作では従来どおり確認が出ることを確認（Task 2 グループ1-4） | — | — | — |
+| ⑭ | Undo/Redo 復元失敗時のブロック通知 | v1.9.0 Phase 1 D-13 | 復元失敗を実機で意図的に起こし、messagebox のブロック通知・「二重化または欠落している可能性」文言を確認（再現できなければ「再現できず」と返信可・Task 3 グループ2-5） | — | — | — |
+
+---
+
+## 未実施（理由付き・D-14）
+
+| # | 項目 | 理由 | 次に消化できる条件 |
+|---|------|------|---------------------|
+| ③ | max_tokens クランプと 429 リトライの実 API 検証（V16-QUAL-03） | 実 API での課金、またはレート制限を意図的に誘発する必要があり、本セッションではキー保有プロバイダに対してもコスト/ToS 上のリスクを冒してまで実施する判断を取らない（03-CONTEXT.md Deferred Ideas に明記済み・v1.6.0 から継続の既知未実施項目） | 次回、レート制限誘発を許容できる検証環境（テスト用課金枠・専用サンドボックスAPIキー等）が用意できたタイミングで実施する |
+| ⑤-Claude | プロバイダ別プロンプトの実 API 出力品質（Claude 分） | `ANTHROPIC_API_KEY` が未設定（実行時の環境変数チェックで確認済み） | `ANTHROPIC_API_KEY` を設定できる次の機会に、Gemini 分と同一手順（Markdown プリセットで OCR→構造化 Markdown の確認）で実施する |
+
+---
+
+## グループ分け
+
+Task 2〜4 の `checkpoint:human-verify` と、対象確定表の項番の対応。
+
+| Task（Checkpoint） | グループ名 | 対象項目 |
+|---------------------|-----------|----------|
+| Task 2 | グループ1（ショートカット設定・保存トースト再試行） | ⑥ ⑦ ⑧ ⑬ |
+| Task 3 | グループ2（設定/LLM設定ダイアログの表示・保持・Undo復元失敗通知） | ⑨ ⑩ ⑪ ⑫ ⑭ |
+| Task 4 | グループ3（OCR/AI系：markdown整形表示・実API出力品質・LM Studio反映） | ④ ⑤-Gemini ⑤-Claude（未実施） ① ② ③（未実施） |
+
+以上で候補14項目（⑤分割込み15行）+ Phase 2 対象外 1 行 = 対象確定表 16 行の仕分けが完了した。
+実施対象は 13 項目（実施結果表）、未実施は 2 項目（③・⑤-Claude）、対象外は 1 項目（Phase 2 分）。
