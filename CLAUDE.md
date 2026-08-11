@@ -166,31 +166,33 @@
 
 ## Project
 
-**PageFolio — コード最適化プロジェクト**
+プロジェクト概要・コアバリュー・制約 (Tech stack / 互換性 / スレッド制約 / CropBox 安全処理 / 品質ゲート / 言語 / 禁止 / Security / ブランチ運用) の正本は [.planning/PROJECT.md](.planning/PROJECT.md) を参照。
 
-PageFolio の既存コードベースに対する最適化プロジェクト。
-バグ修正・リファクタリング・テスト充実の 3 軸で品質を底上げする。
-
-**Core Value:** 大きな PDF でも Undo/Redo が正しく・速く動作し、コードが読みやすく保守しやすい状態にする。
 <!-- GSD:project-end -->
 
 <!-- GSD:stack-start source:codebase/STACK.md -->
+
+## Technology Stack
+
+言語・ランタイム・依存ライブラリ・配布形態（PyInstaller onedir）・プラットフォーム要件の詳細は [.planning/codebase/STACK.md](.planning/codebase/STACK.md) を参照。
 
 <!-- GSD:stack-end -->
 
 <!-- GSD:conventions-start source:CONVENTIONS.md -->
 
+## Conventions
+
+命名規約・コードスタイル・import 構成・テスト規約・禁止パターンの詳細は [.planning/codebase/CONVENTIONS.md](.planning/codebase/CONVENTIONS.md) を参照。
+
 <!-- GSD:conventions-end -->
 
 <!-- GSD:architecture-start source:ARCHITECTURE.md -->
 
-## Architectural Constraints
+## Architecture
 
-- **Threading:** UI runs on the Tkinter main thread. Preview and thumbnail renders are processed on the main thread via `root.after()` chained calls; generation counters (`_preview_gen`, `_thumb_gen`) prevent stale results from overwriting newer ones. OCR uses `ThreadPoolExecutor`.
-- **Global state:** `C` (theme dict) and `_current_font_size` in `pagefolio/settings.py` are module-level mutable singletons updated at runtime.
-- **Undo limit:** Hard-coded to `MAX_UNDO = 20` in `pagefolio/app.py`. 各エントリは操作固有のデルタ dict（rotate: 回転値リスト、crop: cropbox タプル、delete/page_edit: ページ単位 Blob 等）であり、full PDF シリアライズではない。
-- **Undo Blob ライフサイクル（v1.7.0）:** ページ単位のキャプチャは必ず `_capture_page_blob(page_i)` 経由で行う（64KiB 以上は `UndoBlobStore` が tempfile へ退避・未満は MemBlob）。復元側は `self._blob_bytes(data)` で bytes を取り出す（生 bytes 後方互換）。解放は deque 溢れ（`_push_evicting`）・redo クリア（`_clear_redo_stack`）・消費時（`_undo`/`_redo` 内の identity 比較付き dispose）・ファイルクローズ/終了時（`_clear_undo_stacks` → purge）＋ atexit。スタックへの直接 `append`/`clear` は禁止（Blob がリークする）。
-- **CropBox safety:** All crop operations must clamp the `CropBox` inside the page's `MediaBox` before calling `set_cropbox()` (`pagefolio/page_ops.py`).
+Mixin 構成・コンポーネント責務・データフロー・主要抽象・エントリポイント・アーキテクチャ制約（Threading / Global state / Undo 上限と Blob ライフサイクル / CropBox safety / PDF open-close / Pagination window）の詳細は [.planning/codebase/ARCHITECTURE.md](.planning/codebase/ARCHITECTURE.md) を参照。
+
+補足ドキュメント: [STRUCTURE.md](.planning/codebase/STRUCTURE.md) (ディレクトリ詳細) / [CONCERNS.md](.planning/codebase/CONCERNS.md) (技術的負債) / [INTEGRATIONS.md](.planning/codebase/INTEGRATIONS.md) (外部連携) / [TESTING.md](.planning/codebase/TESTING.md) (テスト戦略)。
 
 <!-- GSD:architecture-end -->
 
