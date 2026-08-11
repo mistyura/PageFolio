@@ -300,6 +300,33 @@ class TestLLMConfigProviderValues:
         assert "gemini_model_var" in src
         assert "_on_provider_change" in src
 
+    def test_provider_combo_values_include_openai_via_catalog(self):
+        """provider_combo の values は catalog.provider_names() 由来であり
+        'openai' を含む（V190-OAI-01・02-03 Task 2）。既存 7 プロバイダの
+        並び順（off/lmstudio/ollama/runpod/claude/gemini/tesseract）は不変
+        のまま openai が末尾に追加される。
+        """
+        from pagefolio.ocr_providers import catalog
+
+        names = catalog.provider_names()
+        assert names == [
+            "off",
+            "lmstudio",
+            "ollama",
+            "runpod",
+            "claude",
+            "gemini",
+            "tesseract",
+            "openai",
+        ]
+
+    def test_openai_section_frame_exists_in_source(self):
+        """llm_config パッケージに openai_section_frame の定義が存在する。"""
+        src = _read_llm_config_package_source()
+        assert "openai_section_frame" in src
+        assert "openai_model_var" in src
+        assert "openai_api_key_var" in src
+
 
 class TestLLMConfigDialogMRO:
     """Pitfall 3 の headless ガード: tk.Toplevel の MRO 破壊を自動検知する。

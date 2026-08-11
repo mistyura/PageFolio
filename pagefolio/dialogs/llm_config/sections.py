@@ -10,7 +10,13 @@ from tkinter import messagebox, simpledialog, ttk
 from pagefolio.constants import CUSTOM_PROMPT_FILE, SUMMARY_PROMPT_FILE, C
 from pagefolio.dialogs.llm_config.dialog import _EFFORT_VALUES
 from pagefolio.ocr import MAX_OCR_MAX_TOKENS
-from pagefolio.ocr_providers import ClaudeProvider, GeminiProvider
+from pagefolio.ocr_providers import (
+    ClaudeProvider,
+    GeminiProvider,
+    OpenAIProvider,
+    catalog,
+)
+from pagefolio.ocr_providers.openai_provider import order_models_for_display
 from pagefolio.ocr_providers.registry import env_vars_for
 from pagefolio.settings import (
     delete_template,
@@ -81,16 +87,10 @@ class SectionsMixin:
         self.provider_var = tk.StringVar(
             value=self._initial_provider,
         )
-        # プロバイダ一覧を動的構築（D-08）: 基本 + tesseract + プラグイン登録
-        _base_providers = [
-            "off",
-            "lmstudio",
-            "ollama",
-            "runpod",
-            "claude",
-            "gemini",
-            "tesseract",
-        ]
+        # プロバイダ一覧を動的構築（D-08）: catalog 由来 + プラグイン登録
+        # （D-03 移行対象・V190-CAT-01。catalog.PROVIDERS の宣言順がそのまま
+        # combobox の表示順になる）
+        _base_providers = catalog.provider_names()
         _plugin_extras = (
             self._plugin_manager.list_ocr_providers() if self._plugin_manager else []
         )
@@ -609,6 +609,125 @@ class SectionsMixin:
             command=self._refresh_gemini_models,
         ).pack(side="left", padx=2)
 
+        # ── OpenAI 固有欄（openai 選択時のみ表示・V190-OAI-01〜03）──
+        # UI 設計契約: 02-PATTERNS.md が Claude セクションとの一致度を
+        # 「exact」と判定したため既存アナログをそのまま複製する
+        # （PLAN.md「UI 設計契約について」参照）。
+        self.openai_section_frame = tk.Frame(body, bg=C["BG_DARK"])
+
+        # openai モデル選択（確認済み優先の並び・レビュー HIGH 02-03-1）
+        openai_model_row = tk.Frame(self.openai_section_frame, bg=C["BG_DARK"])
+        openai_model_row.pack(fill="x", padx=0, pady=2)
+        tk.Label(
+            openai_model_row,
+            text=self._L["settings_lm_model"],
+            bg=C["BG_DARK"],
+            fg=C["TEXT_MAIN"],
+            font=self._font(-1),
+            width=20,
+            anchor="w",
+        ).pack(side="left")
+        self.openai_model_var = tk.StringVar(
+            value=self.current_settings.get("openai_model", "")
+            or catalog.default_model_for("openai"),
+        )
+        self.openai_model_combo = ttk.Combobox(
+            openai_model_row,
+            textvariable=self.openai_model_var,
+            font=self._font(-1),
+            values=order_models_for_display(OpenAIProvider.RECOMMENDED_MODELS),
+        )
+        self.openai_model_combo.pack(side="left", fill="x", expand=True, padx=4)
+        self.openai_model_combo.bind(
+            "<<ComboboxSelected>>", self._on_openai_model_change
+        )
+
+        # モデル注記ラベル（新規・レビュー HIGH 02-03-1）: 一覧の後半に
+        # 画像入力未確認のモデルが含まれ得ることを常時明示する
+        tk.Label(
+            self.openai_section_frame,
+            text=self._L["llm_openai_model_unverified_note"],
+            bg=C["BG_DARK"],
+            fg=C["TEXT_SUB"],
+            font=self._font(-2),
+            wraplength=460,
+            justify="left",
+        ).pack(anchor="w", pady=(0, 2))
+
+        # OpenAI APIキー入力欄（D-01/D-02/D-03・D-18・V190-OAI-02）
+        openai_key_row = tk.Frame(self.openai_section_frame, bg=C["BG_DARK"])
+        openai_key_row.pack(fill="x", padx=0, pady=2)
+        tk.Label(
+            openai_key_row,
+            text=self._L["llm_api_key_label"],
+            bg=C["BG_DARK"],
+            fg=C["TEXT_MAIN"],
+            font=self._font(-1),
+            width=20,
+            anchor="w",
+        ).pack(side="left")
+        self.openai_api_key_var = tk.StringVar(
+            value=self._session_api_keys.get("openai", ""),
+        )
+        self.openai_api_key_entry = tk.Entry(
+            openai_key_row,
+            show="*",
+            textvariable=self.openai_api_key_var,
+            font=self._font(-1),
+            bg=C["BG_CARD"],
+            fg=C["TEXT_MAIN"],
+            insertbackground=C["TEXT_MAIN"],
+            relief="flat",
+        )
+        self._openai_key_shown = False
+
+        def _toggle_openai_key():
+            self._openai_key_shown = not self._openai_key_shown
+            self.openai_api_key_entry.configure(
+                show="" if self._openai_key_shown else "*"
+            )
+            openai_key_toggle_btn.configure(
+                text=self._L["llm_key_toggle_hide"]
+                if self._openai_key_shown
+                else self._L["llm_key_toggle_show"]
+            )
+
+        openai_key_toggle_btn = ttk.Button(
+            openai_key_row,
+            text=self._L["llm_key_toggle_show"],
+            width=4,
+            command=_toggle_openai_key,
+        )
+        # H-7: 表示切替ボタンを先に右詰めでパックして必要幅を確保し、
+        # 幅が足りない場合は Entry 側（expand）が縮むようにする。
+        openai_key_toggle_btn.pack(side="right", padx=(2, 0))
+        self.openai_api_key_entry.pack(side="left", fill="x", expand=True, padx=4)
+
+        openai_note = self._L["llm_key_session_note"]
+        _openai_env_set, _openai_env_var = _configured_env_var("openai")
+        if _openai_env_set:
+            openai_note += " " + self._L["llm_key_env_set_note"].format(
+                env_var=_openai_env_var
+            )
+        tk.Label(
+            self.openai_section_frame,
+            text=openai_note,
+            bg=C["BG_DARK"],
+            fg=C["TEXT_SUB"],
+            font=self._font(-2),
+            wraplength=460,
+            justify="left",
+        ).pack(anchor="w", pady=(0, 2))
+
+        # openai モデル更新ボタン
+        openai_btn_row = tk.Frame(self.openai_section_frame, bg=C["BG_DARK"])
+        openai_btn_row.pack(fill="x", padx=0, pady=(4, 2))
+        ttk.Button(
+            openai_btn_row,
+            text=self._L["ocr_model_refresh"],
+            command=self._refresh_openai_models,
+        ).pack(side="left", padx=2)
+
         # ── Tesseract 固有欄（tesseract 選択時のみ表示）──
         self.tesseract_section_frame = tk.Frame(body, bg=C["BG_DARK"])
 
@@ -1018,15 +1137,10 @@ class SectionsMixin:
         ).pack(side="left", padx=4)
 
         # D-14: 候補一覧は全実行可能プロバイダ + プラグイン登録
-        # （APIキー未設定のプロバイダも表示する）
-        self._base_fallback_providers = [
-            "lmstudio",
-            "ollama",
-            "runpod",
-            "claude",
-            "gemini",
-            "tesseract",
-        ]
+        # （APIキー未設定のプロバイダも表示する）。catalog 由来
+        # （D-03 移行対象・V190-CAT-01。openai は fallback_eligible=True の
+        # ため自動的にここへ現れる）
+        self._base_fallback_providers = catalog.fallback_candidate_names()
         _fallback_plugin_extras = (
             self._plugin_manager.list_ocr_providers() if self._plugin_manager else []
         )

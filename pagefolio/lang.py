@@ -693,6 +693,10 @@ LANG = {
         "llm_model_fetch_failed": (
             "{provider} モデル取得失敗（静的リストへフォールバック）: {e}"
         ),
+        "llm_openai_model_unverified_note": (
+            "モデル一覧には画像入力への対応が未確認のモデルが含まれる場合が"
+            "あります。推奨モデル（一覧の上部）以外を選ぶ場合はご注意ください。"
+        ),
         # プロンプトテンプレート管理（v1.8.0 Phase 2・V180-TMPL-01〜05・D-01〜D-08）
         "tmpl_section_title": "📄 テンプレート:",
         "tmpl_save_btn": "💾 保存",
@@ -1448,6 +1452,11 @@ LANG = {
         ),
         "llm_model_fetch_failed": (
             "{provider} model fetch failed (falling back to static list): {e}"
+        ),
+        "llm_openai_model_unverified_note": (
+            "The model list may include models whose image-input support is "
+            "unverified. Please be cautious when choosing a model other than "
+            "the recommended ones (listed first)."
         ),
         # Prompt template management (v1.8.0 Phase 2 — V180-TMPL-01..05 / D-01..D-08)
         "tmpl_section_title": "📄 Template:",
