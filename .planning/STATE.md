@@ -6,7 +6,7 @@ status: Awaiting next milestone
 stopped_at: v1.9.0 マイルストーンをクローズ・アーカイブ済み。次は `/gsd-new-milestone` で次マイルストーンを定義する
 last_updated: "2026-08-11T12:38:32.438Z"
 last_activity: 2026-08-12
-last_activity_desc: Completed quick task 260812-adk (claude_md_assembly added, CLAUDE.md blocks converted to links)
+last_activity_desc: Completed quick task 260812-and (phase-completion DoD machine gate added; all 5 cross-project diffs closed)
 progress:
   total_phases: 3
   completed_phases: 3
@@ -47,7 +47,7 @@ See: .planning/PROJECT.md (updated 2026-08-11)
 Phase: Milestone v1.9.0 complete
 Plan: —
 Status: Awaiting next milestone
-Last activity: 2026-08-12 — Completed quick task 260812-adk: claude_md_assembly を追加し CLAUDE.md のブロックを link 化
+Last activity: 2026-08-12 — Completed quick task 260812-and: フェーズ完了 DoD の機械ゲートを追加
 
 ## v1.9.0 Phase Map
 
@@ -344,6 +344,7 @@ v1.9.0 クローズ時点で次マイルストーンへ引き継ぐ未解決項�
 | 260812-a43 | `CLAUDE.md`「リリースゲート」節の記載を実測へ更新。2026-08-12 に症状①（`TclError` によるセットアップ ERROR）が再現したため（`tests/test_toast.py` 8 件・1396 passed/8 errors、単体 33 passed、フルスイート再実行 1404 passed）、「2 症状とも非再現・累計 17 回連続グリーン」の断定を症状別の現況表へ置換し、ERROR 発生時の切り分け手順を追加。合格条件（失敗0・ERROR0・クラッシュなしで完走）と「静かな除外の禁止」は据え置き。アーカイブ済み調査ログは無変更。**新ブランチ運用の初回適用**（`quick/260812-a43-claude-md` で作業し `main` へ --no-ff マージ） | 2026-08-12 | 74988d6 | [260812-a43-claude-md](./quick/260812-a43-claude-md/) |
 | 260812-a8u | `.planning/PROJECT.md` に `## Constraints` 節を新設（9 項目・Tech stack / 互換性 / スレッド制約 / CropBox 安全処理 / 品質ゲート / 言語 / 禁止 / Security / ブランチ運用。正本は CLAUDE.md でその要約）。260812-9tv で暫定的に `## Context` 表へ置いたブランチ運用ポインタを Constraints 末尾へ移設し、loto/numbers と同型化。3プロジェクト比較の差分 #3 を解消 | 2026-08-12 | 19772f4 | [260812-a8u-project-md-constraints](./quick/260812-a8u-project-md-constraints/) |
 | 260812-adk | `.planning/config.json` に `claude_md_assembly`（numbers/loto と同値・`mode: embed` + blocks 4つ `link`）を追加し、設定と実体の乖離を作らないよう `CLAUDE.md` の project / stack / conventions / architecture ブロックを `.planning/` 配下への参照文へ同時に差し替え（空だった stack / conventions も解消）。link 化で唯一失われるヘルパー名を `codebase/ARCHITECTURE.md` へ補記し情報損失ゼロを担保。3プロジェクト比較の差分 #5 を解消し #1〜#3・#5 が完了（残りは #4 のみ） | 2026-08-12 | 138968e | [260812-adk-config-json-claude-md-assembly-claude-md](./quick/260812-adk-config-json-claude-md-assembly-claude-md/) |
+| 260812-and | フェーズ完了 DoD の機械ゲート `tests/test_gsd_dod.py`（6 テスト）を新設し、`PROJECT.md` に `## フェーズ完了 DoD` 節を追加。loto 実装は3前提（ROADMAP の Phase 列 / フェーズ番号の連番性 / PyYAML）が PageFolio で成立しないため走査の入口をディレクトリ列挙へ再設計。適用範囲は v1.9.0 以降で、v1.9.0 未満の除外集合は 実ディレクトリとの一致を assert して抜け穴を封じる。テスト 1404 → 1410 件。3プロジェクト比較の差分 #1〜#5 が全て完了 | 2026-08-12 | a1f5ad7 | [260812-and-dod](./quick/260812-and-dod/) |
 
 ## Deferred Items
 

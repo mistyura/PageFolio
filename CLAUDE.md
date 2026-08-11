@@ -119,7 +119,7 @@
 .\.venv\Scripts\python.exe -m pytest -q --basetemp="$env:LOCALAPPDATA\Temp\pf_pytest_tmp"
 ```
 
-単一プロセスでのフルスイート実行（現在 1404 件収集）が合格条件。分割実行は不要。
+単一プロセスでのフルスイート実行（現在 1410 件収集）が合格条件。分割実行は不要。
 
 ### 既知の環境症状（2 症状・現況は別々）
 
