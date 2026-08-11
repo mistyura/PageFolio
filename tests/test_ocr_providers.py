@@ -1,12 +1,17 @@
 """OCRProvider 抽象基底クラス・OCRAPIKeyError・LMStudioProvider のユニットテスト"""
 
 import abc
+import ast
 import io
 import json
+import pathlib
 import socket
 import urllib.error
+import urllib.parse
 
 import pytest  # noqa: F401 (used for pytest.raises)
+
+REPO_ROOT = pathlib.Path(__file__).resolve().parent.parent
 
 # ===== Task 1: OCRProvider 抽象基底クラス + OCRAPIKeyError =====
 
@@ -1747,6 +1752,24 @@ class TestProviderKeyNotLogged:
             "Gemini API キー値がログに出力された（D-11 違反）"
         )
 
+    def test_openai_key_value_not_logged(self, monkeypatch, caplog):
+        import logging
+
+        from pagefolio import ocr_providers
+
+        body = json.dumps({"choices": [{"message": {"content": "ok"}}]})
+
+        def fake_urlopen(req, timeout=None):
+            return _FakeResponse(body)
+
+        monkeypatch.setattr(ocr_providers.urllib.request, "urlopen", fake_urlopen)
+        p = ocr_providers.OpenAIProvider(api_key="sk-LEAK-OPENAI-KEY", model="gpt-5.1")
+        with caplog.at_level(logging.DEBUG):
+            p.ocr_image("Zg==", "describe")
+        assert "sk-LEAK-OPENAI-KEY" not in caplog.text, (
+            "OpenAI API キー値がログに出力された（T-02-02 違反）"
+        )
+
 
 # ===== OllamaProvider & RunPodProvider =====
 class TestOllamaProvider:
@@ -2716,3 +2739,310 @@ class TestBuildProviderOpenAIEndToEnd:
         assert "max_completion_tokens" in captured["data"]
         # (e) choices[0].message.content の文字列を返す
         assert result == "OpenAI OCR result"
+
+
+# ===== Phase 2 Plan 01 Task 3: catalog契約 + OpenAI構造アサーション =====
+
+
+class TestOpenAIIsReasoningModel:
+    """is_reasoning_model() の判定源テスト（D-13）。
+
+    02-CAPABILITY-MATRIX.md 導出結果(3)の真ケース実例（o3・gpt-5.1）と
+    偽ケース実例（gpt-4o・gpt-5-chat-latest）を使う。gpt-5.1 は o 系以外で
+    reasoning_effort=yes と確認された実例のため必ず真ケースに含める
+    （レビュー HIGH 02-01-2）。
+    """
+
+    def test_o_series_true_case(self):
+        from pagefolio.ocr_providers import is_reasoning_model
+
+        assert is_reasoning_model("o3") is True
+
+    def test_gpt5_family_non_o_series_true_case(self):
+        """gpt-5.1 は o 系以外の reasoning_effort=yes 確認済みモデル（HIGH 02-01-2）"""
+        from pagefolio.ocr_providers import is_reasoning_model
+
+        assert is_reasoning_model("gpt-5.1") is True
+
+    def test_gpt4o_false_case(self):
+        from pagefolio.ocr_providers import is_reasoning_model
+
+        assert is_reasoning_model("gpt-4o") is False
+
+    def test_gpt5_chat_latest_false_case(self):
+        """gpt-5 ファミリだが -chat-latest サフィックス付きは非推論扱い"""
+        from pagefolio.ocr_providers import is_reasoning_model
+
+        assert is_reasoning_model("gpt-5-chat-latest") is False
+
+    def test_empty_string_returns_false(self):
+        from pagefolio.ocr_providers import is_reasoning_model
+
+        assert is_reasoning_model("") is False
+
+    def test_none_returns_false(self):
+        from pagefolio.ocr_providers import is_reasoning_model
+
+        assert is_reasoning_model(None) is False
+
+
+class TestConfirmedHostMatchesProviderEndpoint:
+    """T-02-04: 確認ダイアログの表示ホストと実送信先ホストの一致を固定する
+    （レビュー 02-01 Suggestion 4 により 02-02 から前倒し）。"""
+
+    def test_openai_host_matches_chat_endpoint(self):
+        from pagefolio.ocr_providers import OpenAIProvider, catalog
+
+        expected = urllib.parse.urlsplit(OpenAIProvider.CHAT_ENDPOINT).hostname
+        assert catalog.host_for("openai", {}) == expected
+
+    def test_claude_host_matches_messages_endpoint(self):
+        from pagefolio.ocr_providers import ClaudeProvider, catalog
+
+        expected = urllib.parse.urlsplit(ClaudeProvider.MESSAGES_ENDPOINT).hostname
+        assert catalog.host_for("claude", {}) == expected
+
+    def test_gemini_host_matches_generate_content_endpoint(self):
+        from pagefolio.ocr_providers import GeminiProvider, catalog
+
+        expected = urllib.parse.urlsplit(
+            GeminiProvider.GENERATE_CONTENT_ENDPOINT
+        ).hostname
+        assert catalog.host_for("gemini", {}) == expected
+
+
+class TestOpenAIProviderBuildPayload:
+    """_build_payload のトークン上限キー・推論系分岐・detail を確認する"""
+
+    def test_payload_uses_max_completion_tokens_not_max_tokens(self):
+        from pagefolio.ocr_providers import OpenAIProvider
+
+        p = OpenAIProvider(api_key="k", model="gpt-4o", max_tokens=2048)
+        payload = p._build_payload("Zg==", "prompt")
+        assert payload["max_completion_tokens"] == 2048
+        assert "max_tokens" not in payload
+
+    def test_non_reasoning_model_has_temperature_no_reasoning_effort(self):
+        from pagefolio.ocr_providers import OpenAIProvider
+
+        p = OpenAIProvider(api_key="k", model="gpt-4o", temperature=0.3)
+        payload = p._build_payload("Zg==", "prompt")
+        assert payload["temperature"] == 0.3
+        assert "reasoning_effort" not in payload
+
+    def test_reasoning_model_omits_temperature(self):
+        from pagefolio.ocr_providers import OpenAIProvider
+
+        p = OpenAIProvider(api_key="k", model="gpt-5.1")
+        payload = p._build_payload("Zg==", "prompt")
+        assert "temperature" not in payload
+
+    def test_reasoning_model_with_effort_sets_reasoning_effort(self):
+        from pagefolio.ocr_providers import OpenAIProvider
+
+        p = OpenAIProvider(api_key="k", model="gpt-5.1", reasoning_effort="medium")
+        payload = p._build_payload("Zg==", "prompt")
+        assert payload["reasoning_effort"] == "medium"
+        assert "temperature" not in payload
+
+    def test_reasoning_model_without_effort_omits_reasoning_effort(self):
+        from pagefolio.ocr_providers import OpenAIProvider
+
+        p = OpenAIProvider(api_key="k", model="o3", reasoning_effort=None)
+        payload = p._build_payload("Zg==", "prompt")
+        assert "reasoning_effort" not in payload
+
+    def test_image_url_detail_defaults_to_high(self):
+        from pagefolio.ocr_providers import OpenAIProvider
+
+        p = OpenAIProvider(api_key="k", model="gpt-4o")
+        payload = p._build_payload("Zg==", "prompt")
+        image_part = next(
+            c for c in payload["messages"][0]["content"] if c["type"] == "image_url"
+        )
+        assert image_part["image_url"]["detail"] == "high"
+
+    def test_image_url_detail_respects_override(self):
+        from pagefolio.ocr_providers import OpenAIProvider
+
+        p = OpenAIProvider(api_key="k", model="gpt-4o", detail="low")
+        payload = p._build_payload("Zg==", "prompt")
+        image_part = next(
+            c for c in payload["messages"][0]["content"] if c["type"] == "image_url"
+        )
+        assert image_part["image_url"]["detail"] == "low"
+
+
+class TestOpenAIProviderHeaders:
+    """organization / project ヘッダの空値非付与を確認する（D-17・V190-OAI-10）"""
+
+    def test_empty_organization_and_project_omit_headers(self):
+        from pagefolio.ocr_providers import OpenAIProvider
+
+        p = OpenAIProvider(api_key="k", model="gpt-4o")
+        headers = p._headers()
+        assert "OpenAI-Organization" not in headers
+        assert "OpenAI-Project" not in headers
+
+    def test_organization_present_adds_header(self):
+        from pagefolio.ocr_providers import OpenAIProvider
+
+        p = OpenAIProvider(api_key="k", model="gpt-4o", organization="org-123")
+        headers = p._headers()
+        assert headers["OpenAI-Organization"] == "org-123"
+        assert "OpenAI-Project" not in headers
+
+    def test_project_present_adds_header(self):
+        from pagefolio.ocr_providers import OpenAIProvider
+
+        p = OpenAIProvider(api_key="k", model="gpt-4o", project="proj-456")
+        headers = p._headers()
+        assert headers["OpenAI-Project"] == "proj-456"
+        assert "OpenAI-Organization" not in headers
+
+    def test_authorization_header_bearer_format(self):
+        from pagefolio.ocr_providers import OpenAIProvider
+
+        p = OpenAIProvider(api_key="sk-abc", model="gpt-4o")
+        headers = p._headers()
+        assert headers["Authorization"] == "Bearer sk-abc"
+
+
+class TestOpenAIRetrySymmetry:
+    """OpenAI の 429/5xx リトライ対称化検証（既存 TestLMStudioRetrySymmetry と同型）"""
+
+    def test_429_raises_retryable_with_retry_after(self, monkeypatch):
+        from pagefolio import ocr_providers
+        from pagefolio.ocr_providers import OCRRetryableError
+
+        def fake_urlopen(req, timeout=None):
+            raise _FakeHTTPError(
+                429, "Too Many Requests", b"rate limit", headers={"Retry-After": "15"}
+            )
+
+        monkeypatch.setattr(ocr_providers.urllib.request, "urlopen", fake_urlopen)
+        p = ocr_providers.OpenAIProvider(api_key="k", model="gpt-4o")
+        with pytest.raises(OCRRetryableError) as ei:
+            p.ocr_image("Zg==", "p")
+        assert ei.value.retry_after == 15.0
+        assert ei.value.code == 429
+
+    def test_503_raises_retryable(self, monkeypatch):
+        from pagefolio import ocr_providers
+        from pagefolio.ocr_providers import OCRRetryableError
+
+        def fake_urlopen(req, timeout=None):
+            raise _FakeHTTPError(503, "Service Unavailable", b"oops")
+
+        monkeypatch.setattr(ocr_providers.urllib.request, "urlopen", fake_urlopen)
+        p = ocr_providers.OpenAIProvider(api_key="k", model="gpt-4o")
+        with pytest.raises(OCRRetryableError):
+            p.ocr_image("Zg==", "p")
+
+    def test_400_raises_plain_runtime_error(self, monkeypatch):
+        from pagefolio import ocr_providers
+        from pagefolio.ocr_providers import OCRRetryableError
+
+        def fake_urlopen(req, timeout=None):
+            raise _FakeHTTPError(400, "Bad Request", b"invalid request")
+
+        monkeypatch.setattr(ocr_providers.urllib.request, "urlopen", fake_urlopen)
+        p = ocr_providers.OpenAIProvider(api_key="k", model="gpt-4o")
+        with pytest.raises(RuntimeError) as ei:
+            p.ocr_image("Zg==", "p")
+        assert not isinstance(ei.value, OCRRetryableError)
+
+    def test_400_context_length_exceeded_raises_context_error(self, monkeypatch):
+        from pagefolio import ocr_providers
+        from pagefolio.ocr_providers import OCRContextLengthError
+
+        def fake_urlopen(req, timeout=None):
+            raise _FakeHTTPError(
+                400, "Bad Request", b'{"error": "context_length_exceeded"}'
+            )
+
+        monkeypatch.setattr(ocr_providers.urllib.request, "urlopen", fake_urlopen)
+        p = ocr_providers.OpenAIProvider(api_key="k", model="gpt-4o")
+        with pytest.raises(OCRContextLengthError):
+            p.complete_text_ex("doc", "sum")
+
+
+class TestOpenAIProviderNoLocalRetryOrInsecureTLS:
+    """AST ベースの構造アサーション（レビュー LOW-17）。
+
+    inspect.getsource の部分文字列検査ではなく ast.parse による構文木検査で
+    「〜が存在しないこと」を確認する（コメント・docstring・リファクタで
+    壊れない）。
+    """
+
+    @staticmethod
+    def _tree():
+        source = (
+            REPO_ROOT / "pagefolio" / "ocr_providers" / "openai_provider.py"
+        ).read_text(encoding="utf-8")
+        return ast.parse(source)
+
+    def test_no_ssl_import(self):
+        tree = self._tree()
+        mods = [
+            a.name for n in ast.walk(tree) if isinstance(n, ast.Import) for a in n.names
+        ]
+        mods += [
+            n.module
+            for n in ast.walk(tree)
+            if isinstance(n, ast.ImportFrom) and n.module
+        ]
+        assert not any(m.split(".")[0] == "ssl" for m in mods)
+
+    def test_no_context_keyword_argument(self):
+        tree = self._tree()
+        has_context_kw = any(
+            isinstance(n, ast.Call) and any(k.arg == "context" for k in n.keywords)
+            for n in ast.walk(tree)
+        )
+        assert not has_context_kw
+
+    def test_no_sleep_attribute_call(self):
+        tree = self._tree()
+        has_sleep_call = any(
+            isinstance(n, ast.Attribute) and n.attr == "sleep" for n in ast.walk(tree)
+        )
+        assert not has_sleep_call
+
+    def test_no_while_loop_in_post_chat(self):
+        tree = self._tree()
+        post_chat_funcs = [
+            n
+            for n in ast.walk(tree)
+            if isinstance(n, ast.FunctionDef) and n.name == "_post_chat"
+        ]
+        assert post_chat_funcs, "_post_chat が見つからない"
+        for func in post_chat_funcs:
+            has_while = any(isinstance(n, ast.While) for n in ast.walk(func))
+            assert not has_while, "_post_chat 内に while ループによる再送構造がある"
+
+
+class TestOpenAIProviderIdempotentPayload:
+    """並列実行時の安全性検証（edge probe V190-OAI-11/13）。
+
+    同一入力で _build_payload を複数回呼んでも結果が等しく、インスタンス
+    状態が変異しないことを確認する。
+    """
+
+    def test_repeated_build_payload_produces_equal_result(self):
+        from pagefolio.ocr_providers import OpenAIProvider
+
+        p = OpenAIProvider(api_key="k", model="gpt-5.1", reasoning_effort="low")
+        first = p._build_payload("Zg==", "prompt")
+        second = p._build_payload("Zg==", "prompt")
+        assert first == second
+
+    def test_build_payload_does_not_mutate_instance_state(self):
+        from pagefolio.ocr_providers import OpenAIProvider
+
+        p = OpenAIProvider(api_key="k", model="gpt-4o", temperature=0.2)
+        before = dict(vars(p))
+        p._build_payload("Zg==", "prompt")
+        p._build_payload("Zg==", "prompt")
+        after = dict(vars(p))
+        assert before == after
