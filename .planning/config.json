@@ -80,6 +80,15 @@
   "phase_naming": "sequential",
   "agent_skills": {},
   "claude_md_path": "./CLAUDE.md",
+  "claude_md_assembly": {
+    "mode": "embed",
+    "blocks": {
+      "project": "link",
+      "stack": "link",
+      "conventions": "link",
+      "architecture": "link"
+    }
+  },
   "plan_review": {
     "source_grounding": true,
     "source_grounding_authority": "grep"
