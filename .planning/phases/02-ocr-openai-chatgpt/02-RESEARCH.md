@@ -620,17 +620,23 @@ PROVIDER_ENV_KEYS = {
 | A3 | `Authorization: Bearer`ヘッダーのみで認証が完結し、追加のクエリパラメータや別ヘッダーは不要 | Pattern 2 | STACK.md（2026-08-10リサーチ・developers.openai.com複数クエリでクロス確認）が根拠だが、本セッションでは公式ドキュメントへの再アクセスは行っていない。認証方式が変わっていた場合、実装時のHTTP 401で早期発覚するため実害は限定的 |
 | A4 | OpenAIの429応答は`Retry-After`ヘッダーを返す | Don't Hand-Roll節 | STACK.md記載の既存リサーチに基づく（WebSearchクロス確認・MEDIUM confidence）。返さない場合でも既存の指数バックオフ（Retry-After無しの場合の分岐）が代替として機能するため実害は限定的 |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. **OpenAIの正確なモデルラインナップ・vision対応モデルID**
+> 2026-08-11 更新: 両問とも Phase 2 の計画側で決着済み（cross-AI レビュー 02-REVIEWS.md 反映時）。
+> 以下の Recommendation は**当時のもの**であり、Q2 については後述のとおりプラン側が上書きしている。
+> 実行時に従うべき契約は PLAN.md 側であり、この節ではない。
+
+1. **OpenAIの正確なモデルラインナップ・vision対応モデルID** — **RESOLVED（運用面）**
    - What we know: `gpt-4o`系が確実にvision対応、本セッションのWebSearchでは`gpt-5.x`系が現行の主力という言及あり
    - What's unclear: `/v1/models`から実際に返るモデルIDの正確な命名規則・どのモデルがvision対応か
-   - Recommendation: D-09のとおり実装時に実APIキーで`GET /v1/models`を1回呼び出し、結果を見てから`RECOMMENDED_MODELS`とヒューリスティックフィルタの正規表現を確定する。プランにこの確認を明示タスクとして含める
+   - Recommendation（当時）: D-09のとおり実装時に実APIキーで`GET /v1/models`を1回呼び出し、結果を見てから`RECOMMENDED_MODELS`とヒューリスティックフィルタの正規表現を確定する。プランにこの確認を明示タスクとして含める
+   - **Resolution:** 02-01 Task 1 の `checkpoint:decision`（D-09）で確定する。ただしレビュー HIGH-1 の指摘どおり **`GET /v1/models` はモデル ID の存在しか返さず能力確認にはならない**ため、Task 1 は Stage A（ID 実在確認）と Stage B（vision / `max_completion_tokens` / `temperature` / `reasoning_effort` 値域 / 単価を公式ドキュメントまたは最小実リクエストで確認）に分割された。成果物は新設の `02-CAPABILITY-MATRIX.md`（`evidence` 列で根拠種別を記録し、`inferred` 行は既定値に採用しない）で、02-02 / 02-03 / 02-04 がこれを単一情報源として消費する。
 
-2. **`reasoning_effort`の値域はモデル世代ごとに異なる可能性**
+2. **`reasoning_effort`の値域はモデル世代ごとに異なる可能性** — **RESOLVED（プランが本節の Recommendation を上書き）**
    - What we know: 本セッションのWebSearchでは`none`/`minimal`/`low`/`medium`/`high`/`xhigh`/`max`という値域言及があった
    - What's unclear: 全ての推論系モデルが全ての値をサポートするか、モデル世代で値域が変わるか
-   - Recommendation: D-10と同じ「常に新形式を送り、非対応パラメータは省略する」安全側方針に従い、UIでは許可リストではなく自由入力または広めのcombobox選択肢を提供し、値の妥当性検証はAPI側のエラー応答に委ねる（未知の値を送っても400になるだけで、既存のエラーマッピングで捕捉可能）
+   - Recommendation（当時・**採用されなかった**）: D-10と同じ「常に新形式を送り、非対応パラメータは省略する」安全側方針に従い、UIでは許可リストではなく自由入力または広めのcombobox選択肢を提供し、値の妥当性検証はAPI側のエラー応答に委ねる（未知の値を送っても400になるだけで、既存のエラーマッピングで捕捉可能）
+   - **Resolution:** レビュー HIGH-4 が「未知値を API の 400 に委ねる設計は『パラメータ非互換でエラーにならない』という Phase 成功条件（V190-OAI-12）と矛盾する」と指摘したため、**自由入力は撤回**。02-04 は readonly Combobox + `effort_values_for_model()`（`02-CAPABILITY-MATRIX.md` 由来）で、選択中モデルに対して記録された値のみを提示する。値域未記録のモデルでは欄を無効化し `reasoning_effort` を送信しない。プロバイダ側 `_apply_gen_params` にも許容集合ガードを置く多層防御とする。
 
 ## Environment Availability
 

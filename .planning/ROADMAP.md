@@ -181,6 +181,15 @@ Plans:
 
 - [ ] 02-04-PLAN.md — OpenAI 固有パラメータ UI（detail / effort 許可リスト / org / project）・フォールバック候補・ドキュメント・実機確認 3 分割（V190-OAI-07/08/09/10）
 
+**Cross-cutting constraints:**
+
+- **全 4 プラン** — フルテストスイート（`tests/test_ocr_pipeline.py` を含む全件）が失敗 0 件で完走する。`--ignore` 例外・相対件数ゲートは使わない（レビュー HIGH-6。実測ベースライン 1187 passed / 0 failed、`pytest -q --basetemp=<短パス>` 指定時）
+- **02-01 / 02-02 / 02-03** — プロバイダの非機密メタデータ（表示名 LANG キー・クラウド種別・送信先ホスト・API キー欠落 LANG キー）は `catalog.py` を単一情報源として解決し、リテラルの分散定義を残さない（V190-CAT-01・D-03 の段階移行）
+- **02-01 / 02-02 / 02-04** — 送信先ホスト表示は `catalog.host_for()` を経由し、`OpenAIProvider` が実際にリクエストするホストとの一致がテストで固定される（T-02-04）
+- **02-01 / 02-03 / 02-04** — 推論系モデル判定は公開関数 `is_reasoning_model(model)` のみが行い、プロバイダ側と UI が別関数を持たない（D-13）
+- **02-01 / 02-03** — OpenAI の API キーはセッションメモリ（`app._session_api_keys`）のみに保持し、`pagefolio_settings.json` へ書き出されない（V190-OAI-02・`_SENSITIVE_KEYS` ガード）
+- **02-01 → 02-02 / 02-03 / 02-04** — `02-CAPABILITY-MATRIX.md`（vision 対応 / `max_completion_tokens` / `temperature` / `reasoning_effort` 値域 / 単価出典）が下流 3 プランの単一情報源。`inferred` 行は既定値に採用しない
+
 **UI hint**: yes
 
 ### Phase 3: 品質保証・リリースゲート
