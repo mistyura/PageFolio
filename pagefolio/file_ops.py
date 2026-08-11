@@ -1132,15 +1132,17 @@ class FileOpsMixin:
             self.doc = fitz.open(stream=data, filetype="pdf")
             raise
 
-    def _do_save_file(self, path):
-        """上書き保存の実保存層（確認ダイアログを含まない・path 引数を取る）。
+    def _do_save_file(self, path, bound_doc):
+        """上書き保存の実保存層（確認ダイアログを含まない・path/bound_doc 引数を取る）。
 
-        トーストの再試行はこの関数を確定パスで束縛して直接呼ぶため、
-        再試行のたびに確認ダイアログを再表示しない（V190-QA-02 / D-09〜D-11）。
-        トースト表示中に別ファイルを開く・ファイルを閉じるなどアプリ状態が
-        変化しても、確定時に束縛された ``path`` へのみ書き込む（D-11）。
+        トーストの再試行はこの関数を確定パス・確定ドキュメントで束縛して
+        直接呼ぶため、再試行のたびに確認ダイアログを再表示しない
+        （V190-QA-02 / D-09〜D-11）。``path`` だけでなく確認時点の
+        ``self.doc`` も ``bound_doc`` として束縛しており、再試行が実行される
+        時点で ``self.doc`` が別ドキュメントへ差し替わっている（あるいは
+        `None` になっている）場合は書き込みを一切行わない（CR-01: 03-REVIEW.md）。
         """
-        if not self.doc:
+        if not self.doc or self.doc is not bound_doc:
             self._set_status(self._t("info_open_first"))
             return
         try:
@@ -1160,7 +1162,7 @@ class FileOpsMixin:
                 "save_file",
                 self._t("err_save_title"),
                 self._t("err_save_msg").format(e=e),
-                functools.partial(self._do_save_file, path),
+                functools.partial(self._do_save_file, path, bound_doc),
             )
 
     def _save_file(self):
@@ -1181,15 +1183,19 @@ class FileOpsMixin:
             self._t("save_confirm_msg").format(name=os.path.basename(self.filepath)),
         ):
             return
-        self._do_save_file(self.filepath)
+        self._do_save_file(self.filepath, self.doc)
 
-    def _do_save_as(self, path):
-        """名前を付けて保存の実保存層（保存先ピッカーを含まない・path 引数を取る）。
+    def _do_save_as(self, path, bound_doc):
+        """名前を付けて保存の実保存層（保存先ピッカーを含まない）。
 
-        D-11: retry_cb はこの関数を確定パスで束縛して直接呼ぶため、再試行の
-        たびに保存先ピッカーを再表示しない。
+        D-11: retry_cb はこの関数を確定パス・確定ドキュメントで束縛して直接
+        呼ぶため、再試行のたびに保存先ピッカーを再表示しない。``path`` だけ
+        でなく確認時点の ``self.doc`` も ``bound_doc`` として束縛しており、
+        再試行時点で ``self.doc`` が別ドキュメントへ差し替わっている
+        （あるいは `None` になっている）場合は書き込みを一切行わない
+        （CR-01: 03-REVIEW.md）。
         """
-        if not self.doc:
+        if not self.doc or self.doc is not bound_doc:
             self._set_status(self._t("info_open_first"))
             return
         try:
@@ -1206,7 +1212,7 @@ class FileOpsMixin:
                 "save_as",
                 self._t("err_title"),
                 str(e),
-                functools.partial(self._do_save_as, path),
+                functools.partial(self._do_save_as, path, bound_doc),
             )
 
     def _save_as(self):
@@ -1219,7 +1225,7 @@ class FileOpsMixin:
         )
         if not path:
             return
-        self._do_save_as(path)
+        self._do_save_as(path, self.doc)
 
     def _close_file(self):
         """現在開いているファイルを閉じる（アプリは終了しない）"""
@@ -1245,15 +1251,19 @@ class FileOpsMixin:
         self._set_status(self._t("status_closed"))
         self.plugin_manager.fire_event("on_file_close", self)
 
-    def _do_save_compressed(self, path, save_kwargs):
-        """縮小保存の実保存層（保存先ピッカーを含まない・path/save_kwargs 引数を取る）。
+    def _do_save_compressed(self, path, save_kwargs, bound_doc):
+        """縮小保存の実保存層（保存先ピッカーを含まない）。
 
-        D-11: retry_cb はこの関数を確定パス・確定 save_kwargs で束縛して直接
-        呼ぶため、再試行のたびに保存先ピッカーを再表示しない。``save_kwargs``
-        は明示引数（``**kwargs`` にしない）にして、束縛時の dict がそのまま
-        再利用されることを型として明らかにする。
+        D-11: retry_cb はこの関数を確定パス・確定 save_kwargs・確定
+        ドキュメントで束縛して直接呼ぶため、再試行のたびに保存先ピッカーを
+        再表示しない。``save_kwargs`` は明示引数（``**kwargs`` にしない）に
+        して、束縛時の dict がそのまま再利用されることを型として明らかに
+        する。確認時点の ``self.doc`` も ``bound_doc`` として束縛しており、
+        再試行時点で ``self.doc`` が別ドキュメントへ差し替わっている
+        （あるいは `None` になっている）場合は書き込みを一切行わない
+        （CR-01: 03-REVIEW.md）。
         """
-        if not self.doc:
+        if not self.doc or self.doc is not bound_doc:
             self._set_status(self._t("info_open_first"))
             return
         try:
@@ -1273,7 +1283,9 @@ class FileOpsMixin:
                 "save_compressed",
                 self._t("err_title"),
                 str(e),
-                functools.partial(self._do_save_compressed, path, save_kwargs),
+                functools.partial(
+                    self._do_save_compressed, path, save_kwargs, bound_doc
+                ),
             )
 
     def _save_compressed(self):
@@ -1302,7 +1314,7 @@ class FileOpsMixin:
             "clean": 1,
             "encryption": fitz.PDF_ENCRYPT_KEEP,
         }
-        self._do_save_compressed(path, save_kwargs)
+        self._do_save_compressed(path, save_kwargs, self.doc)
 
     # ══════════════════════════════════════════
     #  パスワード（暗号化）操作
