@@ -7,11 +7,11 @@
   "firecrawl": null,
   "exa_search": null,
   "git": {
-    "branching_strategy": "none",
+    "branching_strategy": "milestone",
     "create_tag": true,
     "phase_branch_template": "gsd/phase-{phase}-{slug}",
-    "milestone_branch_template": "gsd/{milestone}-{slug}",
-    "quick_branch_template": null
+    "milestone_branch_template": "feature/{milestone}",
+    "quick_branch_template": "quick/{num}-{slug}"
   },
   "workflow": {
     "research": true,

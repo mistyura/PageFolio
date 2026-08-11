@@ -174,6 +174,7 @@ v1.9.0 のクローズにより、現在アクティブなマイルストーン�
 | テスト | pytest（1404 件・充実） |
 | リント | ruff |
 | リリースゲート | 単一プロセス `pytest -q` 完走（失敗0・ERROR0・クラッシュなし）。詳細は `CLAUDE.md`「## リリースゲート」節 |
+| ブランチ運用（v1.10.0 以降） | `main` へ直接コミット・直接 push しない。詳細は下記 `## ブランチ運用` を参照 |
 
 既存コードベースマップ: `.planning/codebase/`
 
@@ -262,6 +263,42 @@ v1.8.0 全 26 要件（V180-*）・v1.9.0 全 27 要件（V190-*）はいずれ�
 - OAuth 接続 — 正規 API が非対応・配布バイナリに client secret を埋め込めないため確定除外
 - OCR 結果のページ埋め込み（検索可能 PDF 化） — v1.4.0 から継続除外
 - プラグイン API バージョン管理 — 今後の別タスク
+
+## ブランチ運用
+
+v1.10.0 以降に適用。2026-08-12 に確立。**`main` へ直接コミット・直接 push しない。** PageFolio は v1.9.0 を 2026-08-11 に出荷済みで次マイルストーンが未定のため、本ルールの実運用開始は次マイルストーン（v1.10.0 以降）からとなる。
+
+姉妹プロジェクト **numbers**（`feature/v0.18.0`・2026-08-12 確立）を原典とし、**loto**（`main`・2026-08-12 確立）が踏襲した構成に合わせたもの。3 プロジェクトで `.planning/config.json` の `git` セクションは同値。
+
+### 設定（`.planning/config.json` の `git` セクション）
+
+| キー | 値 | 効果 |
+|---|---|---|
+| `branching_strategy` | `milestone` | マイルストーン最初の `/gsd-execute-phase` でブランチを作成・切替し、そのマイルストーンの全フェーズが同一ブランチへコミットする |
+| `milestone_branch_template` | `feature/{milestone}` | PageFolio がこれまで手作業で使ってきた命名（v1.5.0 = `feature/v1.5.0-improvements` → PR #18）を config 化したもの。v1.7.x / v1.8.0 で使われた `dev/v{version}` 系の揺れをこれに一本化する |
+| `quick_branch_template` | `quick/{num}-{slug}` | `/gsd-quick` `/gsd-fast` が quick 用ブランチを作る。`{num}` は `.planning/quick/` の採番と同じ quick ID（例 `quick/260812-abc-<slug>`） |
+
+`phase_branch_template` は `branching_strategy: milestone` では使われないが、将来 `phase` へ切り替える場合に備えて既定値のまま残している。
+
+人間向けの開発ガイドとしての同じ規約は [../docs/DEVELOPMENT.md](../docs/DEVELOPMENT.md)「ブランチ運用」「PR プロセス」節と [../CONTRIBUTING.md](../CONTRIBUTING.md) にある（quick `260812-9ev` で整備）。本節は GSD ワークフローが従う正本。
+
+### 分岐元とマージ先
+
+- **フェーズ作業** — `feature/v{version}` 上で行う。`main` へは `/gsd-complete-milestone` のタイミングで PR 経由で一度だけ統合する
+- **quick task** — **現行マイルストーンブランチから分岐し、同じブランチへ戻す**。`main` を base にしない
+- config が決めるのは**ブランチ名だけ**であり、分岐元は `/gsd-quick` を実行した時点の HEAD で決まる。**quick task を始める前に現在のブランチを確認すること**
+
+### なぜ quick task を `main` へ入れないか
+
+PageFolio は `branching_strategy: "none"` / `quick_branch_template: null` のまま feature ブランチ運用を手作業で行っていたため、config と実運用が乖離していた。v1.8.1 までは PR で統合していた（v1.7.x = PR #30 / merge commit `f2ead82` / 2026-07-05、v1.8.0 = PR #33 / merge commit `8b8b423` / 2026-07-16、v1.8.1 = PR #34 / merge commit `8741bad` / 2026-07-22）が、**v1.9.0 マイルストーンは分岐せず `main` 上で全工程が進行した** — `8741bad` 以降マージコミットは存在せず、2026-07-22〜2026-08-12 の **163 コミット**が `main` の first-parent 上にある。quick task も同様に `main` へ直接入っていた（`260810-f1u` = `a553df7`、`260811-asq` = `3f83067`、`260812-9ev` = `467b092` / `293bb53`）。ブランチ命名も `dev/v1.7.x` / `dev/v1.8.0` / `feature/v1.5.0-improvements`（PR #18）/ `feature/add-ollama-runpod`（PR #26）と揺れていた。
+
+姉妹プロジェクト **numbers** で実際に発生した事故（PageFolio では発生していない、横展開の教訓）: `feature/v0.17.0` が 2026-07-04 に分岐し、2026-07-21 に `main` へ入った quick 3 件（`260721-8hr` = `--mode=scenario` の独立実装 / `260721-9ht` = `make scenario` / `260721-bfc` = `make optimize`、うち `260721-bfc` の `b44b665` を `main` 上で確認）を取り込まないまま進んだ結果、Phase 18（2026-07-26）が **5 日前に `main` で実装済みの機能を作り直していた**。マージ（`cf3bec0` / 2026-08-02）時に一方の実装を破棄する判断が必要になり、さらにクローズ監査の W-1（「実在しない `make optimize` の文書化」）が**誤検出**として発生し revert された（`309fca6` / 2026-08-02。監査が `feature/v0.17.0` の Makefile しか見ておらず、`main` には当該ターゲットが実在していた）。PageFolio の v1.9.0 は `main` 単線で進んだため二重実装には至っていない — あくまで同じ非対称構造から事故が起きうることの実例として参照する。
+
+分岐元をマイルストーンブランチへ揃えれば、この二重実装と監査の誤検出はいずれも原理的に起きない。
+
+### 例外を要する場合
+
+マイルストーン進行中に `main` へ直接入れたい緊急修正が出たときは、**`main` から分岐して `main` へ PR で入れたうえで、直ちに `feature/v{version}` へ `main` を取り込む**こと。取り込みを後回しにすると二重実装リスクが戻る。
 
 ## Key Decisions
 
@@ -421,4 +458,4 @@ v1.8.0 全 26 要件（V180-*）・v1.9.0 全 27 要件（V190-*）はいずれ�
 4. 決定事項 → Key Decisions を更新
 
 ---
-*Last updated: 2026-08-11 after v1.9.0 milestone — マイルストーンクローズに伴う全項目の進化レビュー実施。v1.9.0 を Current State へ昇格し v1.8.0 以前を `<details>` へ格納、Context のテスト件数を実測 1404 件へ同期しリリースゲート行を追加、Active を空にして次マイルストーン候補（技術的負債 10 件・未実施 UAT 2 項目ほか）を Next Milestone Goals へ整理。Core Value・Out of Scope は再確認のうえ変更なし。前回更新: 2026-08-11 Phase 3 UAT 完了。*
+*Last updated: 2026-08-12 quick 260812-9tv — ブランチ運用を姉妹プロジェクト（numbers `feature/v0.18.0` が原典・loto `main` が踏襲）と統一。`.planning/config.json` の `git` セクション 3 キー（`branching_strategy` = `milestone` / `milestone_branch_template` = `feature/{milestone}` / `quick_branch_template` = `quick/{num}-{slug}`）を 3 プロジェクト同値へ更新し、`## ブランチ運用` 節（5 部構成）を `## Key Decisions` の直前に新設、`## Context` 表へ入口 1 行を追加。発効は v1.10.0 以降。`git` 以外の config セクション・`pagefolio/` ソースは無変更。前回更新: 2026-08-11 after v1.9.0 milestone — マイルストーンクローズに伴う全項目の進化レビュー実施。v1.9.0 を Current State へ昇格し v1.8.0 以前を `<details>` へ格納、Context のテスト件数を実測 1404 件へ同期しリリースゲート行を追加、Active を空にして次マイルストーン候補（技術的負債 10 件・未実施 UAT 2 項目ほか）を Next Milestone Goals へ整理。Core Value・Out of Scope は再確認のうえ変更なし。前回更新: 2026-08-11 Phase 3 UAT 完了。*
