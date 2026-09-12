@@ -100,30 +100,22 @@
   "model_policy": {
     "provider": "anthropic-fable",
     "budget": "custom",
-    "high": "claude-fable-5",
+    "high": "claude-fable-5-1",
     "medium": "claude-sonnet-5",
     "low": "claude-sonnet-5"
   },
   "model_profile_overrides": {
     "claude": {
       "haiku": "claude-sonnet-5",
-      "opus": "claude-fable-5",
+      "opus": "claude-fable-5-1",
       "sonnet": "claude-sonnet-5"
     }
   },
   "review": {
-    "default_reviewers": [
-      "gemini",
-      "codex"
-    ],
     "models": {
-      "gemini": "gemini-3.6-flash",
-      "lm_studio": "google/gemma-4-12b-qat",
-      "codex": "gpt-5.6-sol"
-    },
-    "lm_studio_host": "http://localhost:1234",
-    "max_prompt_tokens_per_reviewer": {
-      "lm_studio": 32000
+      "gemini": "gemini-3.8-flash",
+      "codex": "gpt-6-astra",
+      "grok": "grok-4.6"
     }
   },
   "intel": {
