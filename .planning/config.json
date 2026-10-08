@@ -98,15 +98,22 @@
   "response_language": "Japanese",
   "context_window": 1000000,
   "model_policy": {
-    "provider": "custom",
+    "provider": "anthropic",
     "high": "claude-opus-5-5",
-    "medium": "claude-sonnet-5",
-    "low": "claude-sonnet-5"
+    "medium": "claude-sonnet-5-5",
+    "low": "claude-haiku-5-5",
+    "budget": "medium"
   },
   "model_profile_overrides": {
     "claude": {
-      "haiku": "claude-sonnet-5",
-      "opus": "claude-opus-5-5"
+      "haiku": "claude-haiku-5-5",
+      "opus": "claude-opus-5-5",
+      "sonnet": "claude-sonnet-5-5"
+    },
+    "codex": {
+      "opus": "gpt-6-astra",
+      "sonnet": "gpt-6-sol",
+      "haiku": "gpt-6-luna"
     }
   },
   "review": {
@@ -121,5 +128,6 @@
   },
   "graphify": {
     "enabled": false
-  }
+  },
+  "runtime": "claude"
 }
