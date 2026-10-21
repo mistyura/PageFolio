@@ -3,10 +3,12 @@
   "finding": "CR-01",
   "baseline_commit": "ff8b9355b8bbdbf5fb92b056bdba47b6adfb9bdf",
   "task_1_commit": "216304e07c621abad2811bdaddda61613ba193cd",
+  "task_2_commit": "cc45bd7de98451ef50879620abc4e8cca527d843",
+  "coding_rule_correction_commit": "cf5f354",
   "tested_file_sha256": {
-    "pagefolio/__main__.py": "D4C789A7E39539D282862CAD950A56B39D00FEB56F3F9ED046FEC02D5DC3EDED",
-    "pagefolio/startup_win32.py": "F9F6EB2A0E71A7154A1DE1463C554452503524E014E972A8DD4F2071CD252068",
-    "pagefolio/startup_notice.py": "3CC14748A2179B7ED051D5CC9D404345402427D77D9125342D3304EFA6693C0A",
+    "pagefolio/__main__.py": "D0BA162FD6C3BB89BF0047F4AB8A7694679930F1593FAA9D86D633736596BA56",
+    "pagefolio/startup_win32.py": "1A6694535AA716CC584175F4A1B375877B0A7FC626A21505E7314A4EB066CA70",
+    "pagefolio/startup_notice.py": "473C8EA1723A350CC445BCEF8649C75BD228EC3E37BEA12D81CA5A166A4C0C40",
     "tests/test_startup_notice.py": "A4C2E6F93482B160AC5265A225F83074B4B8EA9F926233E31D0E35F80E461B5F",
     "tests/test_startup_windows.py": "24B73630E643C00AB5D2AB19B332910A71777D3A791154EB1FD378E2F6D0031F"
   },
@@ -102,6 +104,17 @@
       "failed": 0,
       "skipped": 0,
       "warning_count": 1
+    },
+    {
+      "case_id": "CR-01-AGENTS-RULE-CORRECTION",
+      "command": ".venv/Scripts/python.exe -m pytest -q",
+      "exit_code": 0,
+      "passed": 1629,
+      "failed": 0,
+      "skipped": 0,
+      "warning_count": 1,
+      "duration_seconds_reported_by_pytest": 217.71,
+      "scope": "except Exception as e形式へ統一した後の単一全件再実行"
     }
   ],
   "quality_gates": {
