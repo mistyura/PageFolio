@@ -1,0 +1,28 @@
+{
+  "contract": "1.0.0",
+  "flavor": "core",
+  "milestone": "v1.10.0 — 多重起動防止・起動操作の改善",
+  "phases": [
+    {
+      "number": "4",
+      "name": "起動制御と既存画面への復帰",
+      "status": "pending"
+    },
+    {
+      "number": "5",
+      "name": "設定読込・保存失敗の通知",
+      "status": "pending"
+    },
+    {
+      "number": "6",
+      "name": "サンプル配布とリリース検証",
+      "status": "pending"
+    }
+  ],
+  "next": {
+    "command": "/gsd-progress --next",
+    "label": "Advance to the next step (plan phase 4)",
+    "reason": "Phase 1 of 3 — needs a plan"
+  },
+  "updated_at": "2026-10-21T09:48:29.375Z"
+}

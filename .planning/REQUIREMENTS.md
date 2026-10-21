@@ -1,7 +1,7 @@
 # Requirements: PageFolio v1.10.0 多重起動防止・起動操作の改善
 
 **Defined:** 2026-10-21
-**Status:** Approved — 2026-10-21 にユーザーが15要件と保証範囲を承認。ロードマップ作成・承認後にフェーズ計画へ進む。
+**Status:** Approved — 2026-10-21 にユーザーが15要件・保証範囲・Phase 4〜6 のロードマップを承認。フェーズ計画へ進める。
 **Core Value:** 大きな PDF でも Undo/Redo が正しく・速く動作し、コードが読みやすく保守しやすい状態にする。
 
 ## Scope and Confirmation
@@ -93,30 +93,31 @@
 
 ## Traceability
 
-ロードマップ作成時に、各要件をちょうど1フェーズへ割り当てる。
+承認済みの各要件を、ユーザー承認済みの v1.10.0 ロードマップの Phase 4〜6 のうちちょうど1フェーズへ割り当てる。
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| V110-START-01 | 未割当 | Pending |
-| V110-START-02 | 未割当 | Pending |
-| V110-START-03 | 未割当 | Pending |
-| V110-FOCUS-01 | 未割当 | Pending |
-| V110-FOCUS-02 | 未割当 | Pending |
-| V110-CFG-01 | 未割当 | Pending |
-| V110-CFG-02 | 未割当 | Pending |
-| V110-CFG-03 | 未割当 | Pending |
-| V110-CFG-04 | 未割当 | Pending |
-| V110-DIST-01 | 未割当 | Pending |
-| V110-DIST-02 | 未割当 | Pending |
-| V110-DIST-03 | 未割当 | Pending |
-| V110-QA-01 | 未割当 | Pending |
-| V110-QA-02 | 未割当 | Pending |
-| V110-QA-03 | 未割当 | Pending |
+| V110-START-01 | Phase 4 | Pending |
+| V110-START-02 | Phase 4 | Pending |
+| V110-START-03 | Phase 4 | Pending |
+| V110-FOCUS-01 | Phase 4 | Pending |
+| V110-FOCUS-02 | Phase 4 | Pending |
+| V110-CFG-01 | Phase 5 | Pending |
+| V110-CFG-02 | Phase 5 | Pending |
+| V110-CFG-03 | Phase 5 | Pending |
+| V110-CFG-04 | Phase 5 | Pending |
+| V110-DIST-01 | Phase 6 | Pending |
+| V110-DIST-02 | Phase 6 | Pending |
+| V110-DIST-03 | Phase 6 | Pending |
+| V110-QA-01 | Phase 6 | Pending |
+| V110-QA-02 | Phase 6 | Pending |
+| V110-QA-03 | Phase 6 | Pending |
 
 **Coverage:**
 - v1.10.0 requirements: 15 total
-- Mapped to phases: 0
-- Unmapped: 15（ロードマップ作成待ち）
+- Mapped to phases: 15/15
+- Unmapped: 0
+- Duplicated: 0
 
 ## Sources
 
@@ -128,4 +129,4 @@
 
 ---
 *Requirements defined: 2026-10-21*
-*Last updated: 2026-10-21 — 15要件と保証範囲をユーザー承認。フェーズ割当はロードマップ作成待ち。*
+*Last updated: 2026-10-21 — 15要件を Phase 4〜6 に各1回割当（15/15・未割当0・重複0）。ロードマップ構成もユーザー承認済み。*

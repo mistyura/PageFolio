@@ -2,11 +2,16 @@
 gsd_state_version: "1.0"
 milestone: v1.10.0
 milestone_name: 多重起動防止・起動操作の改善
+current_phase: 4
+current_phase_name: 起動制御と既存画面への復帰
 status: planning
-last_updated: "2026-10-21T09:07:33.916Z"
+stopped_at: v1.10.0 のマイルストーン初期化完了。ロードマップ（Phase 4〜6・15/15要件割当）をユーザー承認済み。次は `/gsd-discuss-phase 4`、または `/gsd-plan-phase 4`。実装・フェーズ計画は未着手。
+last_updated: "2026-10-21T09:47:13.954Z"
 last_activity: 2026-10-21
+last_activity_desc: v1.10.0 のロードマップをユーザー承認、15要件を Phase 4〜6 に重複なく割当
+state_head: 5091d4072a87ce881ab2ff72956bed3296c298e3
 progress:
-  total_phases: 0
+  total_phases: 3
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -20,7 +25,7 @@ progress:
 See: .planning/PROJECT.md (updated 2026-10-21)
 
 **Core value:** 大きな PDF でも Undo/Redo が正しく・速く動作し、コードが読みやすく保守しやすい状態にする
-**Current focus:** v1.10.0 のロードマップ作成。調査完了（`673ab9b`）・15要件と保証範囲をユーザー承認済み。Phase 4 から採番し、各要件の担当フェーズと完了条件を定義する。
+**Current focus:** v1.10.0 の15要件・保証範囲・Phase 4〜6 のロードマップをユーザー承認済み。マイルストーン初期化完了。次は Phase 4「起動制御と既存画面への復帰」の議論・計画。
 
 ## Shipped Milestone: v1.9.0（2026-08-11・verified_closeout）
 
@@ -40,10 +45,22 @@ See: .planning/PROJECT.md (updated 2026-10-21)
 
 ## Current Position
 
-Phase: Not started (creating roadmap)
-Plan: —
-Status: Creating roadmap
-Last activity: 2026-10-21 — v1.10.0 の15要件と保証範囲をユーザー承認
+Phase: 4 of 6 (起動制御と既存画面への復帰)
+Plan: — (未計画・総プラン0)
+Status: Ready to plan
+Last activity: 2026-10-21 — v1.10.0 のロードマップをユーザー承認、15要件を Phase 4〜6 に重複なく割当
+
+Progress: [░░░░░░░░░░] 0%（v1.10.0: 0/3 フェーズ、0/0 確定プラン）
+
+## v1.10.0 Phase Map（構成承認済み・計画前）
+
+| Phase | Name | Requirements | 状態 |
+|-------|------|--------------|------|
+| 4 | 起動制御と既存画面への復帰 | V110-START-01〜03, V110-FOCUS-01/02 | 未着手・計画前 |
+| 5 | 設定読込・保存失敗の通知 | V110-CFG-01〜04 | 未着手・計画前 |
+| 6 | サンプル配布とリリース検証 | V110-DIST-01〜03, V110-QA-01〜03 | 未着手・計画前 |
+
+Phase 4/5 はそれぞれの機能テストと必要な実機確認をフェーズ内で行う。Phase 6 は PyInstaller の実ビルド・再ビルドと実 EXE の UAT を含む最終検証。各フェーズ完了時は `/gsd-validate-phase` を実行する。
 
 ## v1.9.0 Phase Map
 
@@ -402,11 +419,11 @@ v1.9.0 クローズ時点で次マイルストーンへ引き継ぐ未解決項�
 **Resume file:** None
 
 Last session: 2026-10-21
-Stopped at: v1.10.0 の15要件と保証範囲をユーザー承認済み。Step 10 のロードマップ作成・構成確認へ進む。調査後の全件テストは1410 passed / 警告1件（PyMuPDF）。
+Stopped at: v1.10.0 のマイルストーン初期化完了。ロードマップ（Phase 4〜6・15/15要件割当）をユーザー承認済み。次は `/gsd-discuss-phase 4`、または `/gsd-plan-phase 4`。実装・フェーズ計画は未着手。
 
 ## Operator Next Steps
 
-- **次アクション:** `/gsd-new-milestone v1.10.0` の Step 10（ロードマップ作成）から継続する。採用範囲・調査・要件は承認済み。ロードマップ作成後、フェーズ構成をユーザー確認する
+- **次アクション:** `/gsd-discuss-phase 4` で起動制御・画面復帰の方式と受入を具体化する。直接計画する場合は `/gsd-plan-phase 4`。`/gsd-new-milestone v1.10.0` は完了済み
 - **タグの push は未実施** — ユーザー選択によりローカルにのみ `v1.9.0` タグを作成した。リリース作業時に `git push origin v1.9.0` を実行する
 - **現在ブランチは `feature/v1.10.0`** — 引継ぎ文書を含む `quick/261021-os9-gsd` の HEAD（`ff6c5d3`）から作成。`main` への統合は PR 経由で行う
 - サンプルプロンプト 2 ファイルの再ビルド時消失対策は v1.10.0 へ採用。原本保持と同梱の検証を要件化する（260722-rel SUMMARY 参照）
