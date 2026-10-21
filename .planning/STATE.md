@@ -20,7 +20,7 @@ progress:
 See: .planning/PROJECT.md (updated 2026-10-21)
 
 **Core value:** 大きな PDF でも Undo/Redo が正しく・速く動作し、コードが読みやすく保守しやすい状態にする
-**Current focus:** v1.10.0「多重起動防止・起動操作の改善」の要件・ロードマップ定義。多重起動防止、既存画面復元、設定失敗通知、配布ビルド改善の4項目を採用済み。次は調査方針の選択。
+**Current focus:** v1.10.0 のロードマップ作成。調査完了（`673ab9b`）・15要件と保証範囲をユーザー承認済み。Phase 4 から採番し、各要件の担当フェーズと完了条件を定義する。
 
 ## Shipped Milestone: v1.9.0（2026-08-11・verified_closeout）
 
@@ -40,10 +40,10 @@ See: .planning/PROJECT.md (updated 2026-10-21)
 
 ## Current Position
 
-Phase: Not started (defining requirements)
+Phase: Not started (creating roadmap)
 Plan: —
-Status: Defining requirements
-Last activity: 2026-10-21 — Milestone v1.10.0 started
+Status: Creating roadmap
+Last activity: 2026-10-21 — v1.10.0 の15要件と保証範囲をユーザー承認
 
 ## v1.9.0 Phase Map
 
@@ -402,11 +402,11 @@ v1.9.0 クローズ時点で次マイルストーンへ引き継ぐ未解決項�
 **Resume file:** None
 
 Last session: 2026-10-21
-Stopped at: v1.10.0 の採用範囲を PROJECT.md へ反映。調査方針の選択後に要件・ロードマップを作成する。Phase 4 から継続採番。
+Stopped at: v1.10.0 の15要件と保証範囲をユーザー承認済み。Step 10 のロードマップ作成・構成確認へ進む。調査後の全件テストは1410 passed / 警告1件（PyMuPDF）。
 
 ## Operator Next Steps
 
-- **次アクション:** `/gsd-new-milestone v1.10.0` の Step 8（調査方針の選択）から継続する。採用範囲は確認済み。要件一覧・ロードマップは作成後にユーザー確認を行う
+- **次アクション:** `/gsd-new-milestone v1.10.0` の Step 10（ロードマップ作成）から継続する。採用範囲・調査・要件は承認済み。ロードマップ作成後、フェーズ構成をユーザー確認する
 - **タグの push は未実施** — ユーザー選択によりローカルにのみ `v1.9.0` タグを作成した。リリース作業時に `git push origin v1.9.0` を実行する
 - **現在ブランチは `feature/v1.10.0`** — 引継ぎ文書を含む `quick/261021-os9-gsd` の HEAD（`ff6c5d3`）から作成。`main` への統合は PR 経由で行う
 - サンプルプロンプト 2 ファイルの再ビルド時消失対策は v1.10.0 へ採用。原本保持と同梱の検証を要件化する（260722-rel SUMMARY 参照）
