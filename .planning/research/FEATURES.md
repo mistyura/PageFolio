@@ -1,201 +1,107 @@
-# Feature Research — v1.9.0 新規能力（安全性是正 + OpenAI プロバイダ追加）
+# 機能調査 — PageFolio v1.10.0
 
-**Domain:** Windows デスクトップ PDF エディタ + OCR/LLM 連携（PageFolio）
-**Researched:** 2026-08-10
-**Confidence:** MEDIUM（OpenAI API 仕様は公式ドキュメント系ページを複数クエリでクロスチェック済み＝MEDIUM。他社 PDF ツールの保存挙動の一次情報は限定的で LOW。デスクトップアプリの原子的保存・設定ダイアログ契約は業界一般則としては十分裏付けあり＝MEDIUM）
+**対象:** Windows 11 向けデスクトップ PDF エディタの起動・設定失敗通知・配布物
+**調査日:** 2026-10-21
+**総合確度:** MEDIUM（採用範囲は `.planning/PROJECT.md` に確定済み。Windows の画面制御と通知、PyInstaller のデータ同梱は公式資料で確認。受入条件は実装前の提案であり、実機検証前）
 
-このファイルは v1.9.0 の「新規追加分」（既存機能レビュー由来の 8 課題 + OpenAI(ChatGPT) プロバイダのフル実装）に対象を絞った機能ランドスケープである。既存の PDF ページ操作・6 プロバイダ OCR 基盤は再調査していない（`.planning/research/` の過去マイルストーン分析を参照）。
+この資料は利用者から見える振る舞いを定義する。比較製品の機能網羅や実装方式の選定は今回の判断材料にしない。次の4項目はユーザーが採用済みであり、差別化候補を理由に除外・延期しない。
 
----
+## Table Stakes（v1.10.0 の最低条件）
 
-## Feature Landscape
+| 項目 | 利用者の期待・必要性 | 複雑度 | 最低限の振る舞い |
+|---|---|---|---|
+| 同一 Windows ログインセッションで編集画面は1つ | 二重起動で別々の未保存編集が生じない | HIGH | 連続・同時起動でも既存画面を増やさない。別版・別配置・Python/EXE の組合せにも同じ制限を適用する。別ログインセッションまで制限しない |
+| 正常終了・強制終了後の再起動 | 起動抑止の残骸で利用不能にならない | MEDIUM | 終了後の次回起動で通常の編集画面を開ける。判定自体が失敗した場合は「起動済み」と誤認せず、失敗を知らせる |
+| 起動済み画面への復帰 | 2回目の起動操作で今の作業を見つけられる | HIGH | 最小化時は復元し、通常時も既存画面を見つけやすくする。Windows が前面化を拒否した場合はタスクバー等の視覚的手掛かり、または明確な通知を示す。前面化の無条件成功は要件にしない [S1][S2] |
+| 作業中の状態保護 | 2回目の起動で未保存編集や OCR 処理を失わない | MEDIUM | 文書、未保存状態、Undo/Redo、OCR の進行を維持する。モーダルダイアログ表示中はその操作を妨げず、新しい編集画面や重複ダイアログを生成しない |
+| 設定読込失敗の認知 | 起動後に設定が反映されていない理由を理解できる | MEDIUM | 破損・読取不能など実際の失敗を、起動中に利用者へ伝える。初回で設定ファイルが存在しない状態は通常状態として扱い、エラー通知しない。起動前に通知する場合も、読める文面と終了・続行の結果を示す [S3] |
+| 設定保存失敗の認知 | 設定変更が次回起動に残らないことを把握できる | MEDIUM | 保存不能を利用者に知らせ、今回の操作への影響と次にできることを簡潔に示す。ログ記録だけで済ませない。同じ失敗を繰り返す場合は通知を連打しない [S3][S4] |
+| 再ビルド可能なサンプルプロンプト同梱 | 配布版を作り直してもサンプルを使える | MEDIUM | 原本から同じ配布内容を再生成でき、配布物にサンプルが存在し、実行したアプリから参照できる。利用者が編集した作業用プロンプトを起動・再ビルド・更新時に上書きしない [S5][S6] |
 
-### Table Stakes（既存プロバイダと揃えるべき最低限）
+複雑度は相対評価。実装工数の確定値ではない。
 
-#### A. OpenAI(ChatGPT) OCR プロバイダの table stakes
+## Differentiators（追加案・採用外）
 
-Claude/Gemini プロバイダ（`pagefolio/ocr_providers/claude.py`・`gemini.py`）が既に確立しているパターンに、OpenAI も完全に揃えるべき項目。
+| 候補 | 価値 | 複雑度 | 今回の扱い |
+|---|---|---|---|
+| 起動時 PDF 引数を既存画面へ渡す | Explorer から選んだ PDF を既存作業へ取り込める | HIGH | 保留。未保存編集やパスワード付き PDF の扱いを別途設計する |
+| 最近使ったファイル・閲覧位置の復元 | 作業再開の手数を減らす | MEDIUM | 保留。今回の「起動済み画面の復元」は現在開いている画面を対象とする |
+| 異常終了後の編集復旧 | クラッシュ後の損失を抑える | HIGH | 保留。今回保証するのは再起動可であり、編集内容の復旧ではない |
 
-| Feature | Why Expected | Complexity | Notes |
-|---------|--------------|------------|-------|
-| セッション限定 APIキー入力欄（マスク・`OPENAI_API_KEY` フォールバック） | Claude/Gemini/RunPod と同じ導線がないと「片手落ちのプロバイダ」に見える | LOW | `registry.py` の `PROVIDER_ENV_KEYS` に `"openai": ("OPENAI_API_KEY",)` を追加するだけで `_SENSITIVE_KEYS` 波及も自動化される（V180-ROBUST-02 の一元化ポイント） |
-| モデル一覧の動的取得＋未キー時の静的 `RECOMMENDED_MODELS` フォールバック | Claude/Gemini は API 未接続でも選べる（D-08 方針） | MEDIUM | OpenAI `GET /v1/models` は `id`/`object`/`created`/`owned_by` のみを返し、Claude の `capabilities.image_input.supported` のような vision 対応フラグが**ない**。ID の静的プレフィックス判定（例: `gpt-4o`/`gpt-5*`/`o3`/`o4-mini` 系）か固定 `RECOMMENDED_MODELS` に頼る設計が必須（Claude/Gemini より一段複雑） |
-| 送信先確認ダイアログ（`api.openai.com` を明示） | 既存の「外部送信を明示する」安全境界（V180-D-02）を維持する必要 | LOW | 既存の送信先確認パターン（`ocr_dialog.py` 側）を踏襲 |
-| コスト確認ダイアログ（クラウド送信前に毎回表示） | Claude/Gemini/RunPod と同じく課金発生を警告する必要（D-10/D-11） | MEDIUM | 既存 `_estimate_cost()`（`ocr_dialog.py:928`）はページ数 × 固定 1600 vision トークンという粗い近似（D-10「精度より警告の存在が重要」）。OpenAI は `detail` レベルでトークン数が大きく変動する（low=固定85トークン、high=タイル数依存で1024×1024相当は約765トークン）ため、既存の粗い近似をそのまま流用するか、detail を織り込んだ概算にするかの設計判断が要る |
-| バッチOCR（`BatchOCRDialog`）でのクラウド判定・進捗・失敗分離への組み込み | 既存3クラウド系（Claude/Gemini/RunPod）と同格の実行経路が期待される | MEDIUM | `_is_cloud_provider()`（`ocr_dialog.py:905`）が `("claude", "gemini", "runpod")` を**ハードコード**している。OpenAI 追加時にこの判定漏れが起きやすい＝V190-REV-08（プロバイダメタデータ一元化）に強く依存 |
-| フォールバック候補への組み込み（明示設定型のみ・自動切替なし） | V180-D-02 の「自動ベンダー切替は不採用」方針を維持 | LOW | 一覧 UI（`llm_config/sections.py`）にプロバイダ名を追加するだけ。ロジック変更は不要 |
-| `urllib` 直叩き実装（新規 pip 依存ゼロ） | V14-D-01 方針。全プロバイダ urllib 統一 | LOW-MEDIUM | 実装方式（Chat Completions 相当のステートレス呼び出し）を選べば Claude/Gemini とほぼ同型。後述のとおり Responses API のフル機能は不要 |
-| 途切れ検出（`ocr_image_ex` の truncated フラグ） | Claude(`stop_reason`)/Gemini(`finishReason`) と同じ「途切れても部分テキストは破棄しない」方針（D-05） | LOW | OpenAI 相当は `finish_reason == "length"`。同じ判定パターンを踏襲可能 |
-| サマリ生成用テキストのみ送信（`complete_text_ex`/`supports_text_prompt`） | 既存プロバイダ全て対応（Tesseract除く） | LOW | Claude/Gemini の `_build_text_payload` と同型の実装で足りる |
-| 429/5xx リトライとバックオフ | 既存 `clamp_retry_after`/`interruptible_sleep`（Retry-After 60秒上限クランプ）を共有 | LOW | OpenAI も `Retry-After` ヘッダーを返す設計のため、既存の共有リトライ層（`_raise_mapped_http_error`）にそのまま載せられる |
-| APIキーを settings.json に含めない・送信先明示・フォールバック時再確認 | v1.9.0 の明示的な安全境界維持要件（PROJECT.md Key context） | LOW | 既存パターンの横展開のみ |
+これらは優先候補の記録であり、v1.10.0 の必須要件ではない。OCR 共通化、一般的な技術的負債の一括解消、実 API UAT も今回の対象外とする。
 
-#### B. 失敗時ロールバックの table stakes（デスクトップ PDF エディタ一般）
+## Anti-Features（避ける振る舞い）
 
-| Feature | Why Expected | Complexity | Notes |
-|---------|--------------|------------|-------|
-| 原子的保存（一時ファイルへ書き込み→成功時のみ rename で置換） | クラッシュ・ディスクフル・AV スキャン競合で原本を破壊しないことは編集ツールの最低条件。一般的な実装は「同一ディレクトリに一時ファイルを作り `os.replace`/rename で差し替え、失敗時は原本が無傷で残る」パターン | MEDIUM | PageFolio の `_save_as()`/`_overwrite_current_file()` は現状 `doc.save(path)`/`doc.tobytes()` の直接書き込みに近く、原子性が保証されていない。fitz のファイルロック挙動（開いたまま保存）を検証しつつ導入する必要あり |
-| 暗号化維持がデフォルト（V190-REV-01） | 保護PDFを編集して保存する操作で暗号化が意図せず外れることは、一般的な PDF ツールでは起きてはならない事故（データ漏洩相当）として扱われる。「維持がデフォルト・解除は明示操作のみ」が業界慣行 | LOW | PyMuPDF は `save()`/`tobytes()` に `encryption=fitz.PDF_ENCRYPT_KEEP` を明示指定しないと暗号化が失われる。フラグ追加のみで解決するが、`_save_as()`・`_overwrite_current_file()`・上書きフォールバックの**3箇所すべて**で統一する必要（V190-REV-01 該当） |
-| 複数ファイル取り込みの all-or-nothing（V190-REV-03） | 「3ファイル挿入中2件目で失敗」のとき、1件目だけ挿入されて中途半端な文書になるのはユーザーの直感に反する。一般的な期待は「全部成功 or 全部無かったことになる」 | MEDIUM | 一時 `Document` に全入力を構築してから本体へ一括反映する方式、または挿入済みページ数を追跡して例外時に自動デリートする方式。挿入元 `Document` の `finally` クローズも同時に必要 |
-| Undo 記録は操作成功後に確定（V190-REV-04） | 「実行前にログだけ残る」設計は失敗時に不正な Undo エントリを生み、Undo が別のページを消すという重大な誤操作につながる。成功後確定は正しい操作の基本則 | LOW | `_save_undo()` の呼び出し位置を実処理の後ろへ移すだけ（他 op への影響範囲を限定できる） |
-| Undo/Redo 復元失敗時のスタック保護（V190-REV-07） | 「元に戻す」操作自体が失敗して履歴を失うのは、Undo 機能の存在意義を壊す。一般的な期待は「復元に失敗したら履歴は失われず、可能なら操作前の状態に留まる」 | MEDIUM | `pop()` してから例外なしで `_restore_state()` する現状設計を、失敗時にスタックへ戻す try/except に変更。部分適用が起き得る op はロールバック可能単位への分割も検討 |
-| 明確なエラーメッセージ（何が元に戻ったか） | 失敗時のトースト/ダイアログで「保存できませんでした（変更前の状態を維持）」等の具体性がないと、ユーザーは実データの状態を推測するしかない | LOW | 既存 `ToastManager`（再試行アクション付き非モーダル通知・v1.8.0 Phase 6）を活用すれば新規UI基盤は不要 |
-| 部分適用は原則許容しない（許容する場合は明示） | 「一部だけ成功しました」を無警告で許すのは信頼を損なう。許容するなら結果を明示的に列挙する必要がある | LOW（方針決定のみ） | v1.9.0 は基本方針として all-or-nothing を採用（PROJECT.md の受け入れ条件と整合） |
+| 避ける振る舞い | 問題 | 代わりに必要なこと |
+|---|---|---|
+| 2回目の起動で新しい編集窓を開く、または既存窓を終了して作り直す | 未保存編集や OCR 実行状態を失う | 既存窓を維持して復帰要求を伝える |
+| 他アプリ操作中でも必ず入力フォーカスを奪う | Windows の前面化制限に反し、利用者の操作を妨げる | 許可される場合に前面化し、拒否時にはタスクバー等で知らせる [S1] |
+| 起動判定が失敗したら無条件で別インスタンスを許す | 1インスタンス保証を破る | 起動失敗を「既に起動中」と区別して通知する |
+| 設定ファイルがない初回起動をエラー扱いする | 正常な初回体験に誤警告を出す | 既定設定で開始する |
+| 失敗のたびにモーダル通知を積み重ねる | 作業と既存ダイアログを妨げる | 同一原因をまとめ、重要度に応じた通知を使う [S3][S4] |
+| サンプル原本や利用者の編集済みファイルをビルド成果物で上書きする | 編集内容を失い、再ビルドの再現性も崩れる | 原本と利用者の作業用コピーを区別し、両方を検証する |
 
-#### C. 設定ダイアログ Apply/Cancel 契約の table stakes
+## 依存関係と順序
 
-| Feature | Why Expected | Complexity | Notes |
-|---------|--------------|------------|-------|
-| Cancel は「変更を一切保存せず閉じる」 | OK/Apply/Cancel の一般的な意味論（OK=保存して閉じる、Apply=保存して開いたまま、Cancel=保存せず閉じる）は Windows/GUI の標準的な期待値 | LOW（方針） | PageFolio の `ShortcutsDialog`（V171-D-05）は既にこの契約を「一時コピー編集→保存ボタンまで実バインド非反映」で正しく満たしている。LLM設定側もこの前例に倣うべき |
-| 外部ファイル副作用は Apply/OK 時のみ発生させる（V190-REV-05） | 設定ダイアログを開いている最中（値変更のたび）に外部ファイルへ即書き込みし、Cancel で戻さないのはアンチパターンそのもの。一般的に推奨されるのは「Apply/OK 時にのみ書き込む」か「開始時スナップショットを保持し Cancel で復元する」のいずれか | LOW〜MEDIUM | 「Apply時一本化」は書き込みタイミングを移すだけで LOW。「ライブ連動を維持しつつ Cancel 復元」を選ぶ場合はスナップショット保持・復元ロジックが要り MEDIUM。既存コードは `ocr_custom_prompt.md`/`ocr_summary_prompt.md` に即時書き込みしている現状の問題（`llm_config/sections.py:1142-1247`） |
-| 未保存編集の切替確認は「ファイル連動の有無」に依存しない（V190-REV-06） | テンプレート切替時の「未保存です、破棄しますか」確認は、外部ファイルが存在するかどうかで挙動が変わってはならない。ユーザーから見れば「入力欄の中身が消えるかどうか」だけが関心事 | LOW | `_has_unsaved_template_changes()` の判定をファイル連動の有無で分岐させず、入力値とアクティブテンプレート値の比較に一本化する |
-
----
-
-### Differentiators（OpenAI 固有・追加検討の価値がある要素）
-
-| Feature | Value Proposition | Complexity | Notes |
-|---------|-------------------|------------|-------|
-| `detail` レベル選択（low/high/auto） | Claude/Gemini にはない「画像トークンコストを明示的にダイヤルできる」機能。OCR用途は精細さが必要なため既定は `high`/`auto` 寄りが妥当だが、低スペックPC・大量ページ処理でコストを抑えたいユーザーには `low` を選ばせる価値がある | MEDIUM | OpenRouter 等の実測では、low detail は逆に推論モデルが「思考を増やして補償」しコスト増になるケースが報告されている。**OCR という高精度要求タスクでは detail=low を既定にしない**のが妥当な設計判断（コスト確認ダイアログに detail 起因のコスト差を表示できると尚良い） |
-| reasoning effort 相当パラメータ（gpt-5系: minimal/low/medium/high/xhigh） | Claude の `effort`（EFFORT_MODELS 限定許可リスト方式）と同型の概念。OCR は基本的に低 effort で十分なため、既定を低めに固定しつつ上級者向けに調整余地を残す差別化になり得る | MEDIUM | Claude と同じ「モデル対応判定の許可リスト」パターン（`EFFORT_MODELS` 相当）を新設すれば実装コストを抑えられる。対応値はモデル世代で異なる（gpt-5 は minimal〜high、gpt-5.6系はnone〜max相当）ため、Claude の「未知モデルはパラメータ省略で前方互換」方針（D-16）をそのまま流用するのが安全 |
-| organization/project ID 指定（`OpenAI-Organization`/`OpenAI-Project` ヘッダー） | 複数組織に所属する法人ユーザー・レガシーな user API key を使うユーザーにのみ必要 | LOW（実装自体は単純なヘッダー追加） | **優先度は低い**。大半の個人ユーザー・単一組織ユーザーには不要な設定であり、UIに常時露出させると「何を入れればいいかわからない設定項目」を増やすだけになる。実装するなら「任意入力欄（空なら送信しない）」に限定し、LLM設定の「詳細設定」相当の折りたたみ領域に置くべき |
-| コスト表示の粒度向上（detail・タイル数を考慮した概算） | 既存の「ページ数×固定1600トークン」という粗い近似より正確な見積もりを出せる | MEDIUM | ただし D-10 の設計方針（「精度より課金警告の存在が重要」）と価値が競合する。既存プロバイダとの見積もり一貫性を優先し、初期実装では既存の粗い近似方式を踏襲し、detail 別の差だけ簡易的に反映する程度が費用対効果が良い |
-
----
-
-### Anti-Features（やらないほうがよいこと）
-
-| Feature | Why Requested | Why Problematic | Alternative |
-|---------|---------------|------------------|-------------|
-| OpenAI Responses API へのフル移行（`store: true` によるステートフルな会話管理・agentic機能） | 「OpenAI公式の推奨は新規プロジェクトなら Responses API」という一般論に引きずられがち | PageFolio の OCR/サマリ呼び出しは 1 リクエスト完結（ページ毎に独立、会話継続なし）。ステート保持・agentic primitives は PageFolio の利用パターンと無関係で、実装複雑度と攻撃面（サーバー側に会話状態を残す `store:true` のプライバシー含意）だけが増える | Chat Completions 相当のステートレスな単発呼び出し（画像+プロンプトを1リクエストで送り、レスポンスを都度破棄）。Claude/Gemini と同型の構造を維持できる |
-| OpenAI 公式 SDK（`openai` パッケージ）の導入 | 「公式SDKの方がメンテナンスが楽」という直感 | V14-D-01（urllib直叩き・新規pip依存ゼロ）に反する。PyInstaller 配布バイナリの肥大化、依存追跡コストの増加を招く。SDK は自動リトライや Retry-After ハンドリングを内包するが、それは urllib でも再現済み（既存 `_raise_mapped_http_error`/`clamp_retry_after`） | urllib 直叩き実装を Claude/Gemini と同パターンで踏襲 |
-| organization/project の自動検出・複数組織切替UI | 「せっかくならフル対応したい」という完成度志向 | 明示設定型フォールバック方針（V180-D-02）・ミニマル実装方針と衝突する過剰実装。単一組織ユーザーが大多数の中でUIの複雑さだけが増す | 任意の空欄可・省略可能フィールドとして最小実装に留める（前述 Differentiator 参照） |
-| detail=high を常時強制（ユーザー選択なし） | 「精度重視なら常に high の方が安全」という思い込み | 1024×1024画像で約765トークン（low比で約9倍）のコスト増。大量ページのバッチOCRでは無視できない課金差になる | detail を選択可能にしつつ、既定値は精度優先（high/auto）とし、コスト確認ダイアログで概算を明示する |
-| 保存の度に毎回パスワード再入力を要求する（暗号化PDF編集時） | 「セキュリティを高めたい」という善意の過剰実装 | PageFolio は既に「開くときのみ `_authenticate_doc` で認証・保存時は暗号化情報を維持するだけ」という設計（暗号化解除は別名保存の🔒セクションのみ）。保存の度に再認証を求めるのは UX コストが高く、既存の明示的解除操作という安全設計の意義を薄める | 現行の「開封時認証・保存時は `PDF_ENCRYPT_KEEP` で維持・解除は明示操作のみ」方針を維持する（V190-REV-01の推奨対応と一致） |
-| 部分適用の無警告許容（「n件中m件成功しました」を既定挙動にする） | 「全部失敗よりは一部でも成功した方が親切」という直感 | 複数ファイル挿入やUndo復元のような複合操作で部分適用を許すと、Document・Undo履歴・外部ファイルの状態が相互に矛盾し、後続操作（Undo等）が誤動作する。V190-REV-03/04/07 が扱う根本原因と同種 | all-or-nothingを既定にし、部分適用が構造的に不可避な場合のみ明示的な結果サマリ（成功/失敗の内訳）を表示する |
-| 設定ダイアログにライブプレビュー目的の外部ファイル即時書き込みを残す | 「外部エディタで見ているファイルにすぐ反映したい」という利便性重視の要望 | Cancel時に元へ戻らない現状の実装（V190-REV-05）そのもの。副作用が Cancel の意味論を破壊する | Apply/OK 時にのみ書き込むか、開始時スナップショットを保持して Cancel 時に復元する。ライブ連動の利便性が必要なら後者を選ぶ |
-| 未保存確認をファイル連動の有無で分岐させる特殊処理 | 「ファイルが無ければ設定値だけの話だから確認は軽くていい」という誤った単純化 | ユーザー体験としては「入力欄の中身が消えるかどうか」だけが重要で、裏側にファイルがあるかどうかは無関係。分岐が残ると V190-REV-06 のような抜け穴を生む | 判定ロジックを「入力値 vs アクティブテンプレート値」の比較一本にする |
-
----
-
-## Feature Dependencies
-
-```
-[V190-REV-08: OCRプロバイダメタデータ一元化]
-    └──requires-before──> [OpenAI(ChatGPT) プロバイダのフル実装]
-                              （_is_cloud_provider・build_provider・フォールバック一覧・
-                               表示名/モデル/送信先/APIキーエラー文言が現状複数箇所に
-                               ハードコードされているため、先に一元化しないと実装漏れが
-                               ほぼ確実に発生する＝V190-REV-08の課題そのもの）
-
-[V190-REV-01〜04: 保存・編集の安全性]
-    └──priority-before──> [OpenAI プロバイダ追加]
-                              （PROJECT.md 明記の方針。機能追加より安全性修正を先行）
-
-[V190-REV-05: 外部プロンプトファイル書き込みのApply一本化]
-    └──shares-root-cause──> [V190-REV-06: テンプレート切替未保存確認]
-                              （どちらも「ダイアログの値変更が即座に外部/内部状態へ
-                               反映される」という同じ設計上の穴が原因。同一フェーズで
-                               まとめて対応すると手戻りが少ない）
-
-[V190-REV-04: 複製Undo記録の成功後確定]
-    └──same-pattern-as──> [V190-REV-07: Undo/Redo復元失敗時のスタック保護]
-                              （どちらも「Undoスタックの整合性は操作の成否と
-                               同期していなければならない」という同一原則。
-                               V190-REV-07のduplicate/merge/merge_resize水平展開は
-                               v1.8.0 Phase6のinsert_redo対称化(D-17)と同型パターン）
-
-[OpenAI: detail レベル選択] ──enhances──> [コスト確認ダイアログの表示粒度]
-[OpenAI: reasoning effort] ──requires──> [Claude effortと同型の許可リスト方式（EFFORT_MODELS相当）]
-[OpenAI: モデル一覧取得] ──conflicts-with-simplicity──> [/v1/modelsにvision対応フラグがない制約]
-    （Claudeの`capabilities.image_input.supported`のような機械判定ができないため、
-     静的プレフィックス判定 or 固定RECOMMENDED_MODELSのどちらかへ設計を倒す必要）
+```text
+起動済み画面への復帰
+  └─ 同一セッションの起動判定と既存画面への連絡を前提とする
+同時起動・強制終了後の確認
+  └─ 起動判定のライフサイクルが定まってから検証する
+設定失敗通知
+  └─ 読込・保存結果と初回不存在を区別できることを前提とする
+サンプル同梱の検証
+  └─ 原本、配布用データ、利用者編集ファイルの役割を区別してから確認する
 ```
 
-### Dependency Notes
+設定通知とサンプル同梱は起動判定の実装には依存しない。ただし、起動直後の設定通知と2回目起動の通知が重なった場合の見え方は統合確認が必要。
 
-- **V190-REV-08 が OpenAI 追加を requires-before する:** `_is_cloud_provider()`（`ocr_dialog.py:905`）が `("claude", "gemini", "runpod")` を直接ハードコードしているなど、プロバイダ名の分岐が `ocr.py`・`ocr_dialog.py`・`llm_config/sections.py`・`llm_config/dialog.py`・`batch_ocr.py`・`lang.py` の少なくとも6箇所に分散している（既存レビューノート該当）。この状態で OpenAI を追加すると、いずれかの分岐に追加漏れが起きて「バッチOCRだけクラウド判定されない」等の再発リスクがある。ロードマップ上は V190-REV-08 を独立フェーズとして OpenAI 追加の直前に置くべき。
-- **安全性是正（V190-REV-01〜04）が OpenAI 追加より優先される:** PROJECT.md に明記された確定方針。新機能より既存の安全性欠陥（暗号化解除事故・OCR OFF迂回・非トランザクション挿入・不正Undo履歴）を先に塞ぐ。
-- **V190-REV-05/06 は同一フェーズにまとめる価値がある:** 根本原因（値変更が即座に外部/UI状態へ波及する設計）が共通のため、個別修正より一括修正の方が手戻りが少ない。
-- **V190-REV-07 の水平展開は v1.8.0 Phase 6 の前例（D-17）を踏襲できる:** `insert_redo`/`delete_redo` の対称化パターンと同じ思想（4手往復 do→undo→redo→undo テスト）を `duplicate`/`merge`/`merge_resize` へ広げる作業であり、新規パターンの発明ではない。
+## 測定可能な受入条件案
 
----
+以下は要件化時に確定する検証案。記載した結果を実装済みとみなさない。
 
-## MVP Definition（v1.9.0 スコープ内の優先順）
+| ID | 試験条件 | 合格と判断できる観測結果 |
+|---|---|---|
+| F-01 | 同一ログインセッションで同じ EXE を連続起動し、続いてほぼ同時に2回起動する | どちらも編集画面・アプリ本体プロセスが1組に収束し、2回目以降から新規文書は作られない |
+| F-02 | 別配置・別版・Python と EXE の各組合せで起動する | 同じログインセッションで編集画面は1つ。先に起動した版・配置の作業内容を保持する |
+| F-03 | 通常終了後、および強制終了後に再起動する | いずれも次の起動で編集画面を開ける。前回プロセスの残骸だけを理由に拒否されない |
+| F-04 | 既存画面を最小化して再度起動し、他アプリが前面の状態でも試す | 最小化した窓が復元される。前面化が許可される環境では前面に出る。拒否された環境ではタスクバーの強調または明確な通知で既存画面へ戻れる。OS 制約を回避して入力を奪わない |
+| F-05 | 未保存編集、OCR 実行、確認ダイアログ表示の各状態で再度起動する | 編集データと進捗が維持され、新しい編集窓も重複した確認ダイアログも現れない。開いていたダイアログから操作を続けられる |
+| F-06 | 設定ファイルを削除した初回起動、破損 JSON、読取不能を分けて試す | 初回不存在は警告なしで起動する。実際の読込失敗は何が読み込めず今回どう扱われたかを利用者が確認でき、ログにも残る |
+| F-07 | 設定保存先を一時的に書込不能にして保存し、同じ失敗を繰り返す | 保存できなかったことと次回起動へ残らない可能性を利用者が確認できる。同一条件の通知が操作ごとに積み重ならず、既存作業は続けられる |
+| F-08 | 配布物を空の出力先へ2回ビルドし、各回で起動する | 両方の配布物に所定のサンプル原本があり、アプリから参照できる。原本内容が変化せず、利用者が編集した作業用ファイルも上書きされない |
 
-### Launch With（v1.9.0 P0/P1 — 必須）
+F-01 の「ほぼ同時」は自動テストでは同期開始で再現し、F-02/F-04/F-05/F-08 は Windows 11 実機または同等の GUI 環境で確認する。通知方式やタイムアウト値などの実装詳細はフェーズ計画で定める。
 
-- [ ] 暗号化維持の統一（V190-REV-01）— PDF_ENCRYPT_KEEP を通常保存/Save As/上書きフォールバックの3経路すべてに適用。機密PDFの平文化事故を防ぐ最優先項目
-- [ ] OCR OFF の全経路一貫化（V190-REV-02）— `off` をプロバイダ生成不可にし、バッチOCR起動時・開始時にガードを追加
-- [ ] 複数ファイル挿入のトランザクション化（V190-REV-03）— all-or-nothing、挿入元Documentの`finally`クローズ
-- [ ] ページ複製のUndo記録を成功後確定（V190-REV-04）— 不正Undoによる誤削除を防止
+## 優先順位
 
-### Add After Validation（v1.9.0 P2 — 基盤整備後に追加）
+| 項目 | 利用者価値 | 相対コスト | v1.10.0 |
+|---|---|---|---|
+| 1インスタンス制限・再起動可 | HIGH | HIGH | 必須 |
+| 既存画面復元と前面化の代替通知 | HIGH | HIGH | 必須 |
+| 設定読込・保存失敗通知 | HIGH | MEDIUM | 必須 |
+| サンプルプロンプトの再ビルド同梱 | MEDIUM | MEDIUM | 必須 |
 
-- [ ] 設定ダイアログのApply時書き込み一本化 or Cancel時復元（V190-REV-05）
-- [ ] テンプレート切替の未保存確認をファイル連動有無によらず有効化（V190-REV-06）
-- [ ] Undo/Redo復元失敗時のスタック保護＋duplicate/merge/merge_resizeへの4手往復テスト水平展開（V190-REV-07）
-- [ ] OCRプロバイダメタデータの一元定義（V190-REV-08）— OpenAI追加の前提条件
+## 根拠と確度
 
-### Future Consideration（OpenAI プロバイダ本体・基盤整備後に着手）
+- **採用範囲（HIGH）:** [PROJECT.md](../PROJECT.md) の Current Milestone。引継ぎ文書は採用前の記録なので、採用判断は PROJECT.md を優先した。
+- **窓の復元・前面化（MEDIUM）:** [S1] は前面化が拒否され得ること、拒否時はタスクバーボタンが点滅し得ることを記載。[S2] は最小化窓の復元を説明する。実際の PageFolio 窓・ダイアログでの振る舞いは未検証。
+- **通知 UX（MEDIUM）:** [S3] はエラー文に事象・結果・対処を含める指針。[S4] は通知の過多を避ける指針。通知頻度の具体値は製品判断。
+- **同梱（MEDIUM）:** [S5][S6] は onedir とデータファイル配置・実行時参照を説明。PageFolio の再ビルド検証は未実施。利用者編集ファイル非上書きはプロジェクト要件から導いた受入条件。
 
-- [ ] OpenAI(ChatGPT) プロバイダのコア実装（urllib直叩き・ステートレス単発呼び出し・APIキー/モデル一覧/送信先確認/コスト確認/バッチOCR/フォールバック）— table stakes 部分
-- [ ] detail レベル選択（コスト確認ダイアログへの反映込み）— differentiator、コア実装後の拡張として妥当
-- [ ] reasoning effort 相当パラメータ（Claude effort と同型の許可リスト方式）— differentiator、コア実装後
-- [ ] organization/project ID の任意入力欄（詳細設定領域への格納）— 優先度低。個人・単一組織ユーザーには不要なため v1.9.0 内でも最後尾、v1.9.x/v2 へ先送りしても支障はない
+## 出典（2026-10-21 確認）
 
----
+- [S1] Microsoft Learn, [SetForegroundWindow function](https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-setforegroundwindow) — 前面化の許可条件と拒否時の動作。
+- [S2] Microsoft Learn, [ShowWindow function](https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-showwindow) — `SW_RESTORE` による最小化窓の復元。
+- [S3] Microsoft Learn, [Error Message Guidelines](https://learn.microsoft.com/en-us/windows/win32/debug/error-message-guidelines) — エラーの内容・影響・対処の伝え方。
+- [S4] Microsoft Learn, [Notifications design basics](https://learn.microsoft.com/en-us/windows/apps/design/shell/tiles-and-notifications/toast-ux-guidance) および [Dialogs and flyouts](https://learn.microsoft.com/en-us/windows/apps/develop/ui/controls/dialogs-and-flyouts/) — 通知頻度とモーダル表示の使い分け。Windows App SDK の UI 実装を採用するという意味ではない。
+- [S5] PyInstaller, [Using PyInstaller](https://www.pyinstaller.org/en/stable/usage.html) — onedir とデータ同梱。閲覧時の公開版は 6.22.3、プロジェクトで使用する 6.21.0 との差分は配布フェーズで確認する。
+- [S6] PyInstaller, [Run-time Information](https://www.pyinstaller.org/en/stable/runtime-information.html) — 配布物内のデータ参照位置。
 
-## Feature Prioritization Matrix
+## 未決事項
 
-| Feature | User Value | Implementation Cost | Priority |
-|---------|------------|----------------------|----------|
-| 暗号化維持の統一（V190-REV-01） | HIGH（データ漏洩防止） | LOW | P1 |
-| OCR OFF全経路一貫化（V190-REV-02） | HIGH（意図しない外部送信防止） | LOW | P1 |
-| 複数ファイル挿入トランザクション化（V190-REV-03） | HIGH（データ整合性） | MEDIUM | P1 |
-| 複製Undo記録の成功後確定（V190-REV-04） | HIGH（誤削除防止） | LOW | P1 |
-| 設定ダイアログApply/Cancel契約整合（V190-REV-05/06） | MEDIUM（意図しない動作変化の防止） | LOW-MEDIUM | P1 |
-| Undo/Redo復元失敗保護＋水平展開（V190-REV-07） | MEDIUM（復旧不能事故の防止） | MEDIUM | P2 |
-| OCRプロバイダメタデータ一元化（V190-REV-08） | MEDIUM（保守性・OpenAI追加の前提） | MEDIUM | P1（OpenAI追加の直前必須） |
-| OpenAI プロバイダ table stakes 一式 | HIGH（機能拡張の主目的） | MEDIUM-HIGH | P2 |
-| detail レベル選択 | MEDIUM（コスト最適化） | MEDIUM | P3 |
-| reasoning effort 相当 | LOW-MEDIUM（OCR用途では効果限定的） | MEDIUM | P3 |
-| organization/project ID | LOW（大半のユーザーに無関係） | LOW | P3 |
-
-**Priority key:**
-- P1: v1.9.0 で必須（安全性是正・OpenAI追加の前提条件）
-- P2: v1.9.0 のメイン機能（OpenAIプロバイダ本体）
-- P3: 拡張余地。v1.9.0内で手が回れば実装、回らなければv1.9.x/v2へ
-
----
-
-## Competitor / Reference Analysis
-
-| 観点 | Claude/Gemini（既存実装） | OpenAI（新規追加） | PageFolioの方針 |
-|------|---------------------------|----------------------|-------------------|
-| モデル一覧取得 | vision対応フラグをAPIが返す（Claude）/ generateContent対応で判定（Gemini） | `/v1/models` は vision対応フラグを返さない | 静的プレフィックス判定 or 固定RECOMMENDED_MODELSで代替（既存のD-08「未キー時は静的リスト」方針を未キー時に限らず併用） |
-| effort/reasoning制御 | Claude: `EFFORT_MODELS` 完全一致リストで安全側判定 | gpt-5系で対応値がモデル世代により異なる | Claudeと同型の許可リスト方式を新設し、未知モデルはパラメータ省略（前方互換優先） |
-| 画像コスト | Claude/Geminiとも「ページ数×概算固定トークン」の粗い近似 | detail依存で大きく変動（low=85 vs high=約765トークン/1024px） | 既存の粗い近似方式を踏襲しつつ、detail選択時のみ簡易的に係数を反映（過剰な精緻化はしない） |
-| 認証ヘッダー | Claude: `x-api-key`、Gemini: `x-goog-api-key`（?key=クエリ不使用） | `Authorization: Bearer` + 任意 `OpenAI-Organization`/`OpenAI-Project` | 既存の「ヘッダー認証・クエリ不使用」方針を踏襲。organization/projectは任意省略可能な詳細設定に留める |
-| 暗号化PDF保存 | （PDFツール一般の慣行）維持がデフォルト、解除は明示操作のみ | 該当なし（OCR機能とは無関係の論点） | V190-REV-01でPyMuPDFの`PDF_ENCRYPT_KEEP`を通常保存/Save As/上書きフォールバックの3経路に統一適用 |
-| 設定ダイアログ契約 | ShortcutsDialog（V171-D-05）は一時コピー編集→保存ボタンまで非反映、という正しいCancel契約を既に実現 | 該当なし | LLM設定側もShortcutsDialogの前例パターンに倣い、Apply/OK時のみ外部ファイルへ反映する設計に統一 |
-
----
-
-## Sources
-
-- OpenAI Images and vision guide（`developers.openai.com/api/docs/guides/images-vision`）— detail パラメータ・OCR推奨設定（WebSearch経由、MEDIUM confidence・複数クエリでクロスチェック）
-- OpenAI Migrate to the Responses API（`developers.openai.com/api/docs/guides/migrate-to-responses`）— Responses API vs Chat Completions の使い分け指針（MEDIUM confidence）
-- OpenAI Reasoning models guide（`developers.openai.com/api/docs/guides/reasoning`）— reasoning_effort パラメータの値域（MEDIUM confidence）
-- OpenAI Rate limits guide（`developers.openai.com/api/docs/guides/rate-limits`）— 429/Retry-After挙動（MEDIUM confidence）
-- OpenAI API Reference / models endpoint（`platform.openai.com/docs/api-reference`）— `/v1/models` レスポンス形式（MEDIUM confidence）
-- OpenAI Developer Community スレッド（organization/projectヘッダーの要否）（MEDIUM confidence・複数スレッドで一致した記述）
-- OpenRouter Blog「Choosing the Optimal Image Input Detail Level in LLMs」— detail=lowが必ずしも安上がりでない実測（MEDIUM confidence）
-- Foxit公式ドキュメント（保護PDFの取り扱い一般論）— Acrobat/PDF-XChangeとの横比較は一次情報が限定的で確度LOW。PageFolio既存実装（`_authenticate_doc`・パスワード解除は別名保存の専用セクションのみ）との整合を優先根拠とした
-- デスクトップアプリの原子的保存パターン（一時ファイル+rename、`.bak`フォールバック）に関する複数の技術記事（MEDIUM confidence・一般的なUNIX/Windows双方で確立されたパターン）
-- ダイアログボタン意味論（OK/Apply/Cancel）に関する一般的なUI設計解説（NN/g関連含む）（MEDIUM confidence）
-- PageFolio既存コード調査: `pagefolio/ocr_providers/claude.py`・`gemini.py`・`registry.py`、`pagefolio/ocr_dialog.py`（`_estimate_cost`・`_is_cloud_provider`）、`.planning/notes/2026-08-10-v1.9.0-existing-feature-review.md`（HIGH confidence・一次情報＝自プロジェクトコード）
-
----
-*Feature research for: PageFolio v1.9.0（安全性・整合性の是正 + OpenAI プロバイダ追加）*
-*Researched: 2026-08-10*
+- 旧版 EXE が同じ起動判定へ参加しない場合、旧版を後から起動する経路まで制限できるか。採用要件「別版共通」は維持し、旧版の実行物を含めた実機検証で成立範囲を確定する。
+- 既存窓への連絡が一時的に届かない場合の具体的な通知文面・待機上限。2つ目の編集窓を許可しない条件を維持して決める。
+- 最小化以外の画面状態とモーダルダイアログ表示中に、どの窓を視覚的に案内するか。
+- 設定失敗が続いた場合の通知間隔、記録・再表示のタイミング。
+- サンプル原本と利用者編集ファイルの保存場所・移行方針。利用者編集内容を保持する受入条件に合わせて設計する。
