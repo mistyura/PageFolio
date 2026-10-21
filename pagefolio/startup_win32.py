@@ -1,0 +1,979 @@
+"""起動制御の型付き Win32 境界。import 時には DLL をロードしない。"""
+
+import ctypes as ct
+import hashlib
+import json
+import logging
+import os
+import struct
+import threading
+import time
+from ctypes import wintypes as wt
+from uuid import uuid4
+
+INVALID_HANDLE_VALUE = ct.c_void_p(-1).value
+SYNCHRONIZE = 0x100000
+READ_CONTROL = 0x20000
+OWNER_ACCESS = SYNCHRONIZE | READ_CONTROL | 1
+WAIT_TIMEOUT = 258
+ERROR_IO_PENDING = 997
+ERROR_IO_INCOMPLETE = 996
+ERROR_OPERATION_ABORTED = 995
+_pending_io_quarantine = []
+_quarantine_lock = threading.Lock()
+_io_slots = threading.BoundedSemaphore(32)
+_notice_lifetime_quarantine = []
+
+
+class SECURITY_ATTRIBUTES(ct.Structure):
+    _fields_ = [
+        ("nLength", wt.DWORD),
+        ("lpSecurityDescriptor", wt.LPVOID),
+        ("bInheritHandle", wt.BOOL),
+    ]
+
+
+class OVERLAPPED(ct.Structure):
+    _fields_ = [
+        ("Internal", ct.c_size_t),
+        ("InternalHigh", ct.c_size_t),
+        ("Offset", wt.DWORD),
+        ("OffsetHigh", wt.DWORD),
+        ("hEvent", wt.HANDLE),
+    ]
+
+
+class SID_AND_ATTRIBUTES(ct.Structure):
+    _fields_ = [("Sid", wt.LPVOID), ("Attributes", wt.DWORD)]
+
+
+def _bind(dll, name, result, *args):
+    function = getattr(dll, name)
+    function.restype = result
+    function.argtypes = list(args)
+    return function
+
+
+class _API:
+    def __init__(self):
+        self.k = ct.WinDLL("kernel32", use_last_error=True)
+        self.a = ct.WinDLL("advapi32", use_last_error=True)
+        self.u = ct.WinDLL("user32", use_last_error=True)
+        h, d, p, b = wt.HANDLE, wt.DWORD, wt.LPVOID, wt.BOOL
+        pd = ct.POINTER(d)
+        sa = ct.POINTER(SECURITY_ATTRIBUTES)
+        ov = ct.POINTER(OVERLAPPED)
+        for name, result, args in [
+            ("CloseHandle", b, [h]),
+            ("LocalFree", p, [p]),
+            ("CreateMutexExW", h, [sa, wt.LPCWSTR, d, d]),
+            ("WaitForSingleObject", d, [h, d]),
+            ("ReleaseMutex", b, [h]),
+            ("CreateEventW", h, [sa, b, b, wt.LPCWSTR]),
+            ("CreateFileMappingW", h, [h, sa, d, d, d, wt.LPCWSTR]),
+            ("OpenFileMappingW", h, [d, b, wt.LPCWSTR]),
+            ("MapViewOfFile", p, [h, d, d, d, ct.c_size_t]),
+            ("UnmapViewOfFile", b, [p]),
+            ("GetTickCount64", ct.c_ulonglong, []),
+            ("OpenProcess", h, [d, b, d]),
+            ("GetCurrentProcess", h, []),
+            ("GetProcessTimes", b, [h, p, p, p, p]),
+            ("ProcessIdToSessionId", b, [d, pd]),
+            ("CreateNamedPipeW", h, [wt.LPCWSTR, d, d, d, d, d, d, sa]),
+            ("CreateFileW", h, [wt.LPCWSTR, d, d, sa, d, d, h]),
+            ("ConnectNamedPipe", b, [h, ov]),
+            ("DisconnectNamedPipe", b, [h]),
+            ("ReadFile", b, [h, p, d, pd, ov]),
+            ("WriteFile", b, [h, p, d, pd, ov]),
+            ("CancelIoEx", b, [h, ov]),
+            ("GetOverlappedResult", b, [h, ov, pd, b]),
+            ("GetNamedPipeClientProcessId", b, [h, pd]),
+            ("GetNamedPipeServerProcessId", b, [h, pd]),
+        ]:
+            setattr(self, name, _bind(self.k, name, result, *args))
+        for name, result, args in [
+            ("OpenProcessToken", b, [h, d, ct.POINTER(h)]),
+            ("GetTokenInformation", b, [h, ct.c_int, p, d, pd]),
+            ("ConvertSidToStringSidW", b, [p, ct.POINTER(wt.LPWSTR)]),
+            (
+                "ConvertStringSecurityDescriptorToSecurityDescriptorW",
+                b,
+                [wt.LPCWSTR, d, ct.POINTER(p), pd],
+            ),
+            ("GetSecurityInfo", d, [h, ct.c_int, d, p, p, p, p, ct.POINTER(p)]),
+            (
+                "ConvertSecurityDescriptorToStringSecurityDescriptorW",
+                b,
+                [p, d, d, ct.POINTER(wt.LPWSTR), pd],
+            ),
+        ]:
+            setattr(self, name, _bind(self.a, name, result, *args))
+        self.AllowSetForegroundWindow = _bind(self.u, "AllowSetForegroundWindow", b, d)
+        self.SetForegroundWindow = _bind(self.u, "SetForegroundWindow", b, wt.HWND)
+        self.GetAncestor = _bind(self.u, "GetAncestor", wt.HWND, wt.HWND, wt.UINT)
+
+
+def _check(value):
+    if value is None or value == 0 or value == INVALID_HANDLE_VALUE:
+        raise ct.WinError(ct.get_last_error())
+    return value
+
+
+class OwnedHandle:
+    def __init__(self, api, value):
+        self.api = api
+        self.value = _check(value)
+
+    def close(self):
+        if self.value is not None:
+            with _quarantine_lock:
+                if any(p.pipe is self for p in _pending_io_quarantine):
+                    return
+            _check(self.api.CloseHandle(self.value))
+            self.value = None
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args):
+        self.close()
+
+
+def _token(api, process):
+    token = wt.HANDLE()
+    _check(api.OpenProcessToken(process, 8, ct.byref(token)))
+    with OwnedHandle(api, token.value) as handle:
+        size = wt.DWORD()
+        api.GetTokenInformation(handle.value, 2, None, 0, ct.byref(size))
+        groups = ct.create_string_buffer(size.value)
+        _check(api.GetTokenInformation(handle.value, 2, groups, size, ct.byref(size)))
+        count = ct.cast(groups, ct.POINTER(wt.DWORD)).contents.value
+        offset = ct.sizeof(wt.DWORD) + ct.alignment(SID_AND_ATTRIBUTES) - 1
+        offset -= offset % ct.alignment(SID_AND_ATTRIBUTES)
+        entries = (SID_AND_ATTRIBUTES * count).from_buffer(groups, offset)
+        sid = None
+        for entry in entries:
+            if entry.Attributes & 0xC0000000 == 0xC0000000:
+                text = wt.LPWSTR()
+                _check(api.ConvertSidToStringSidW(entry.Sid, ct.byref(text)))
+                try:
+                    sid = text.value
+                finally:
+                    api.LocalFree(text)
+        if sid is None:
+            raise OSError("logon SID を確認できない")
+        api.GetTokenInformation(handle.value, 10, None, 0, ct.byref(size))
+        stats = ct.create_string_buffer(size.value)
+        _check(api.GetTokenInformation(handle.value, 10, stats, size, ct.byref(size)))
+        authentication_luid = struct.unpack_from("<Q", stats.raw, 8)[0]
+        return sid, authentication_luid
+
+
+class _Security:
+    def __init__(self, api, sid, rights):
+        self.api = api
+        self.descriptor = wt.LPVOID()
+        self.sddl = f"D:P(A;;0x{rights:x};;;{sid})(A;;0x{rights:x};;;SY)S:(ML;;NW;;;ME)"
+        _check(
+            api.ConvertStringSecurityDescriptorToSecurityDescriptorW(
+                self.sddl, 1, ct.byref(self.descriptor), None
+            )
+        )
+        self.attributes = SECURITY_ATTRIBUTES(
+            ct.sizeof(SECURITY_ATTRIBUTES), self.descriptor, False
+        )
+
+    def close(self):
+        if self.descriptor:
+            self.api.LocalFree(self.descriptor)
+            self.descriptor = wt.LPVOID()
+
+
+def _security_descriptor(api, sid, rights):
+    return _Security(api, sid, rights)
+
+
+def _validate_acl(api, handle, expected, object_type=6):
+    """既存オブジェクトの DACL を正規化した SDDL で厳密比較する。"""
+    descriptor = wt.LPVOID()
+    error = api.GetSecurityInfo(
+        handle, object_type, 4 | 0x10, None, None, None, None, ct.byref(descriptor)
+    )
+    if error:
+        raise ct.WinError(error)
+    text = wt.LPWSTR()
+    try:
+        _check(
+            api.ConvertSecurityDescriptorToStringSecurityDescriptorW(
+                descriptor, 1, 4 | 0x10, ct.byref(text), None
+            )
+        )
+        wanted = expected.sddl.split("S:", 1)[0]
+        # Win32 は数値権限を別名（RC/SY等）に正規化するため両方を同APIへ渡す。
+        normalized = wt.LPWSTR()
+        _check(
+            api.ConvertSecurityDescriptorToStringSecurityDescriptorW(
+                expected.descriptor, 1, 4 | 0x10, ct.byref(normalized), None
+            )
+        )
+        try:
+            if text.value.replace("S:AI(", "S:(") != normalized.value:
+                raise PermissionError(f"想定外のDACL: {wanted.split('(')[0]}")
+        finally:
+            api.LocalFree(normalized)
+    finally:
+        if text:
+            api.LocalFree(text)
+        api.LocalFree(descriptor)
+
+
+def _tick_ms(api=None):
+    return (api or _API()).GetTickCount64()
+
+
+class PendingIO:
+    """overlapped、event、buffer、pipe を完了まで一体で保持する。"""
+
+    def __init__(self, api, pipe, buffer=None):
+        if not _io_slots.acquire(blocking=False):
+            raise OSError("未完了I/O上限のため受付停止")
+        self.api = api
+        self.pipe = pipe
+        self.buffer = buffer
+        try:
+            self.event = OwnedHandle(api, api.CreateEventW(None, True, False, None))
+        except Exception as e:
+            _io_slots.release()
+            raise e
+        self.overlapped = OVERLAPPED()
+        self.overlapped.hEvent = self.event.value
+        self.completed = False
+
+    def complete(self):
+        if not self.completed:
+            self.completed = True
+            self.event.close()
+            _io_slots.release()
+
+    def finish(self, deadline):
+        remaining = max(0, deadline - _tick_ms(self.api))
+        wait = self.api.WaitForSingleObject(self.event.value, remaining)
+        if wait == WAIT_TIMEOUT:
+            self.cancel()
+            raise TimeoutError("起動通信の期限切れ")
+        if wait != 0:
+            self.cancel()
+            raise ct.WinError(ct.get_last_error())
+        count = wt.DWORD()
+        success = self.api.GetOverlappedResult(
+            self.pipe.value, ct.byref(self.overlapped), ct.byref(count), False
+        )
+        error = ct.get_last_error()
+        if success or error == ERROR_OPERATION_ABORTED:
+            self.complete()
+        if not success:
+            raise ct.WinError(error)
+        return count.value
+
+    def cancel(self):
+        if self.completed:
+            return
+        self.api.CancelIoEx(self.pipe.value, ct.byref(self.overlapped))
+        deadline = _tick_ms(self.api) + 500
+        while True:
+            count = wt.DWORD()
+            success = self.api.GetOverlappedResult(
+                self.pipe.value, ct.byref(self.overlapped), ct.byref(count), False
+            )
+            error = ct.get_last_error()
+            if success or error == ERROR_OPERATION_ABORTED:
+                self.complete()
+                return
+            if _tick_ms(self.api) >= deadline:
+                with _quarantine_lock:
+                    _pending_io_quarantine.append(self)
+                _start_reaper()
+                return
+            time.sleep(0.005)
+
+
+_reaper = None
+
+
+def _start_reaper():
+    global _reaper
+    with _quarantine_lock:
+        if _reaper is not None and _reaper.is_alive():
+            return
+        _reaper = threading.Thread(target=_reap, daemon=True, name="startup-io-reaper")
+        _reaper.start()
+
+
+def _reap():
+    global _reaper
+    while True:
+        with _quarantine_lock:
+            items = tuple(_pending_io_quarantine)
+            if not items:
+                _reaper = None
+                return
+        for pending in items:
+            count = wt.DWORD()
+            success = pending.api.GetOverlappedResult(
+                pending.pipe.value, ct.byref(pending.overlapped), ct.byref(count), False
+            )
+            if success or ct.get_last_error() == ERROR_OPERATION_ABORTED:
+                pending.complete()
+                with _quarantine_lock:
+                    _pending_io_quarantine.remove(pending)
+                pending.pipe.close()
+        time.sleep(0.05)
+
+
+def _io(api, pipe, operation, deadline, data=None, size=0):
+    buffer = (
+        ct.create_string_buffer(data)
+        if data is not None
+        else ct.create_string_buffer(size)
+    )
+    pending = PendingIO(api, pipe, buffer)
+    count = wt.DWORD()
+    function = api.WriteFile if operation == "write" else api.ReadFile
+    success = function(
+        pipe.value,
+        buffer,
+        len(data) if data is not None else size,
+        ct.byref(count),
+        ct.byref(pending.overlapped),
+    )
+    if not success and ct.get_last_error() != ERROR_IO_PENDING:
+        error = ct.get_last_error()
+        pending.complete()
+        raise ct.WinError(error)
+    length = pending.finish(deadline)
+    return length if operation == "write" else buffer.raw[:length]
+
+
+def _read_exact(api, pipe, size, deadline):
+    chunks = bytearray()
+    while len(chunks) < size:
+        data = _io(api, pipe, "read", deadline, size=size - len(chunks))
+        if not data:
+            raise EOFError("pipe が閉じた")
+        chunks.extend(data)
+    return bytes(chunks)
+
+
+def _read_frame(api, pipe, deadline):
+    size = struct.unpack("<I", _read_exact(api, pipe, 4, deadline))[0]
+    if not 0 < size <= 1024:
+        raise ValueError("起動要求サイズが不正")
+    result = json.loads(_read_exact(api, pipe, size, deadline).decode("utf-8"))
+    if not isinstance(result, dict):
+        raise ValueError("起動要求の形式が不正")
+    return result
+
+
+def _write_frame(api, pipe, data, deadline):
+    payload = json.dumps(data, separators=(",", ":")).encode("utf-8")
+    if not 0 < len(payload) <= 1024:
+        raise ValueError("起動要求サイズが不正")
+    wire = struct.pack("<I", len(payload)) + payload
+    offset = 0
+    while offset < len(wire):
+        length = _io(api, pipe, "write", deadline, data=wire[offset:])
+        if not length:
+            raise EOFError("pipe が閉じた")
+        offset += length
+
+
+class Win32Backend:
+    def __init__(self, namespace=None):
+        self.api = _API()
+        self.logger = logging.getLogger(__name__)
+        self.owner_thread = threading.get_ident()
+        self.sid, self.authentication_luid = _token(
+            self.api, self.api.GetCurrentProcess()
+        )
+        self.pid = os.getpid()
+        self.session_id = self._session(self.pid)
+        self.prefix = "PageFolio.Startup" + (f".Test.{namespace}" if namespace else "")
+        self.owner_name = "Local\\" + self.prefix + ".Owner"
+        self.state_name = "Local\\" + self.prefix + ".State"
+        self.owner = None
+        self.mapping = None
+        self.view = None
+        self.owns_mutex = False
+        self.generation = None
+        self.sequence = 0
+        self.stop = threading.Event()
+        self.workers = []
+        self.pipes = []
+        self.peer_handles = []
+        self.owner_security = _security_descriptor(self.api, self.sid, OWNER_ACCESS)
+        self.mapping_security = _security_descriptor(
+            self.api, self.sid, READ_CONTROL | 6
+        )
+        self.pipe_security = _security_descriptor(self.api, self.sid, 0x12019F)
+
+    def tick_ms(self):
+        return _tick_ms(self.api)
+
+    def _session(self, pid):
+        session = wt.DWORD()
+        _check(self.api.ProcessIdToSessionId(pid, ct.byref(session)))
+        return session.value
+
+    def _created(self, process):
+        times = [ct.c_ulonglong() for _ in range(4)]
+        _check(self.api.GetProcessTimes(process, *(ct.byref(t) for t in times)))
+        return times[0].value
+
+    def _validate_peer(self, pid, created=None):
+        process = OwnedHandle(
+            self.api, self.api.OpenProcess(SYNCHRONIZE | 0x1000, False, pid)
+        )
+        try:
+            if (
+                self._session(pid) != self.session_id
+                or _token(self.api, process.value)[0] != self.sid
+                or (created is not None and self._created(process.value) != created)
+                or self.api.WaitForSingleObject(process.value, 0) != WAIT_TIMEOUT
+            ):
+                raise PermissionError("起動相手の識別に失敗")
+            return process
+        except Exception as e:
+            process.close()
+            raise e
+
+    def claim(self, generation):
+        self._assert_thread()
+        self.owner = OwnedHandle(
+            self.api,
+            self.api.CreateMutexExW(
+                ct.byref(self.owner_security.attributes),
+                self.owner_name,
+                0,
+                OWNER_ACCESS,
+            ),
+        )
+        _validate_acl(self.api, self.owner.value, self.owner_security)
+        result = self.api.WaitForSingleObject(self.owner.value, 0)
+        if result == WAIT_TIMEOUT:
+            return "existing"
+        if result == 0x80:
+            self.api.ReleaseMutex(self.owner.value)
+            return "abandoned"
+        if result != 0:
+            raise ct.WinError(ct.get_last_error())
+        self.owns_mutex = True
+        self.generation = generation
+        self.mapping = OwnedHandle(
+            self.api,
+            self.api.CreateFileMappingW(
+                INVALID_HANDLE_VALUE,
+                ct.byref(self.mapping_security.attributes),
+                4,
+                0,
+                4096,
+                self.state_name,
+            ),
+        )
+        _validate_acl(self.api, self.mapping.value, self.mapping_security)
+        self.view = _check(self.api.MapViewOfFile(self.mapping.value, 6, 0, 0, 4096))
+        self._publish_owner("initializing", False)
+        return "acquired"
+
+    def _assert_thread(self):
+        if threading.get_ident() != self.owner_thread:
+            raise RuntimeError("mutex所有・解放は起動スレッドのみ")
+
+    def _publish_owner(self, state, ready):
+        self._assert_thread()
+        identity = {
+            "protocol": 1,
+            "generation": self.generation,
+            "pid": self.pid,
+            "process_created": self._created(self.api.GetCurrentProcess()),
+            "session_id": self.session_id,
+        }
+        if self.sequence == 0:
+            data = json.dumps(identity).encode("utf-8")
+            ct.memset(self.view, 0, 4096)
+            ct.memmove(
+                self.view + 8, struct.pack("<I", len(data)) + data, 4 + len(data)
+            )
+        self.sequence += 1
+        ct.c_ulonglong.from_address(self.view).value = self.sequence
+        mutable = json.dumps({"state": state, "ready": ready}).encode("utf-8")
+        ct.memmove(
+            self.view + 2048,
+            struct.pack("<I", len(mutable)) + mutable,
+            4 + len(mutable),
+        )
+        self.sequence += 1
+        ct.c_ulonglong.from_address(self.view).value = self.sequence
+
+    def publish_state(self, state, ready):
+        self._publish_owner(state, ready)
+
+    def _read_owner(self):
+        with OwnedHandle(
+            self.api,
+            self.api.OpenFileMappingW(READ_CONTROL | 4, False, self.state_name),
+        ) as mapping:
+            _validate_acl(self.api, mapping.value, self.mapping_security)
+            view = _check(self.api.MapViewOfFile(mapping.value, 4, 0, 0, 4096))
+            try:
+                a = ct.string_at(view, 4096)
+                b = ct.string_at(view, 4096)
+                sequence = struct.unpack_from("<Q", a)[0]
+                if not sequence or sequence % 2 or a != b:
+                    raise ValueError("所有者情報の公開途中")
+                size = struct.unpack_from("<I", a, 8)[0]
+                state_size = struct.unpack_from("<I", a, 2048)[0]
+                if not 0 < size < 2000 or not 0 < state_size < 2000:
+                    raise ValueError("所有者情報の形式が不正")
+                data = json.loads(a[12 : 12 + size])
+                data.update(json.loads(a[2052 : 2052 + state_size]))
+                if data.get("protocol") != 1:
+                    raise ValueError("未対応起動protocol")
+                if (
+                    not isinstance(data.get("generation"), str)
+                    or len(data["generation"]) != 32
+                    or any(c not in "0123456789abcdef" for c in data["generation"])
+                    or type(data.get("pid")) is not int
+                    or type(data.get("process_created")) is not int
+                    or data.get("session_id") != self.session_id
+                    or type(data.get("ready")) is not bool
+                ):
+                    raise ValueError("所有者identityが不正")
+                return data
+            finally:
+                self.api.UnmapViewOfFile(view)
+
+    def _pipe_name(self, generation):
+        sid = hashlib.sha256(self.sid.encode()).hexdigest()[:24]
+        return rf"\\.\pipe\{self.prefix}.{self.session_id}.{sid}.{generation}"
+
+    def listen(self, callback):
+        self._assert_thread()
+        for index in range(8):
+            pipe = OwnedHandle(
+                self.api,
+                self.api.CreateNamedPipeW(
+                    self._pipe_name(self.generation),
+                    3 | 0x40000000 | (0x80000 if index == 0 else 0),
+                    8,
+                    8,
+                    2048,
+                    2048,
+                    0,
+                    ct.byref(self.pipe_security.attributes),
+                ),
+            )
+            self.pipes.append(pipe)
+        for pipe in self.pipes:
+            worker = threading.Thread(
+                target=self._serve, args=(pipe, callback), daemon=True
+            )
+            self.workers.append(worker)
+            worker.start()
+
+    def _serve(self, pipe, callback):
+        try:
+            while not self.stop.is_set():
+                with _quarantine_lock:
+                    if len(_pending_io_quarantine) >= 32:
+                        return
+                pending = PendingIO(self.api, pipe)
+                success = self.api.ConnectNamedPipe(
+                    pipe.value, ct.byref(pending.overlapped)
+                )
+                error = ct.get_last_error()
+                if not success and error == 535:
+                    pending.complete()
+                elif success or error == ERROR_IO_PENDING:
+                    # listenerの待機は要求の5秒時計とは別。周期ごとの取消しは
+                    # ちょうど接続したclientを切断する競合を生むため行わない。
+                    while not self.stop.is_set():
+                        wait = self.api.WaitForSingleObject(pending.event.value, 50)
+                        if wait == 0:
+                            break
+                        if wait != WAIT_TIMEOUT:
+                            pending.cancel()
+                            raise ct.WinError(ct.get_last_error())
+                    if self.stop.is_set():
+                        pending.cancel()
+                        return
+                    pending.finish(self.tick_ms() + 100)
+                else:
+                    pending.complete()
+                    raise ct.WinError(error)
+                deadline = self.tick_ms() + 5000
+                try:
+                    pid = wt.DWORD()
+                    _check(
+                        self.api.GetNamedPipeClientProcessId(pipe.value, ct.byref(pid))
+                    )
+                    with self._validate_peer(pid.value):
+                        request = _read_frame(self.api, pipe, deadline)
+                        deadline = min(deadline, request.get("deadline_tick", deadline))
+                        reply = callback(request)
+                        if self.tick_ms() < deadline:
+                            _write_frame(self.api, pipe, reply, deadline)
+                            # DisconnectNamedPipeは未読データを破棄する。
+                            # terminalを読んだ相手の確認を同じ期限内で待つ。
+                            _read_frame(self.api, pipe, deadline)
+                except Exception as e:
+                    self.logger.debug("起動受信失敗: %s", e)
+                finally:
+                    self.api.DisconnectNamedPipe(pipe.value)
+        except Exception as e:
+            self.logger.debug("起動listener停止: %s", e)
+        finally:
+            with _quarantine_lock:
+                quarantined = any(p.pipe is pipe for p in _pending_io_quarantine)
+            if not quarantined:
+                pipe.close()
+
+    def request_activation(self, started_tick):
+        deadline = started_tick + 5000
+        while self.tick_ms() < deadline:
+            try:
+                owner = self._read_owner()
+                with self._validate_peer(
+                    owner["pid"], owner["process_created"]
+                ) as process:
+                    if not owner["ready"]:
+                        time.sleep(0.025)
+                        continue
+                    handle = self.api.CreateFileW(
+                        self._pipe_name(owner["generation"]),
+                        0xC0000000 | READ_CONTROL,
+                        0,
+                        None,
+                        3,
+                        0x40000000,
+                        None,
+                    )
+                    if handle == INVALID_HANDLE_VALUE:
+                        if ct.get_last_error() in {2, 231}:
+                            time.sleep(0.01)
+                            continue
+                        raise ct.WinError(ct.get_last_error())
+                    with OwnedHandle(self.api, handle) as pipe:
+                        pid = wt.DWORD()
+                        _check(
+                            self.api.GetNamedPipeServerProcessId(
+                                pipe.value, ct.byref(pid)
+                            )
+                        )
+                        if pid.value != owner["pid"]:
+                            raise PermissionError("pipe所有者が不一致")
+                        _validate_acl(self.api, pipe.value, self.pipe_security, 1)
+                        current = self._read_owner()
+                        if (
+                            current["generation"] != owner["generation"]
+                            or self.tick_ms() >= deadline
+                            or self.api.WaitForSingleObject(process.value, 0)
+                            != WAIT_TIMEOUT
+                        ):
+                            return "expired"
+                        delegated, error = self._allow_foreground(owner["pid"])
+                        self.logger.debug("前面化許可委譲: %s / %s", delegated, error)
+                        request_id = uuid4().hex
+                        _write_frame(
+                            self.api,
+                            pipe,
+                            {
+                                "request_id": request_id,
+                                "issued_tick": started_tick,
+                                "deadline_tick": deadline,
+                                "generation": owner["generation"],
+                                "op": "activate",
+                            },
+                            deadline,
+                        )
+                        reply = _read_frame(self.api, pipe, deadline)
+                        if reply.get("request_id") != request_id:
+                            return "connection_failed"
+                        _write_frame(self.api, pipe, {"received": request_id}, deadline)
+                        if self.tick_ms() >= deadline:
+                            return "expired"
+                        return reply.get("result", "connection_failed")
+            except (FileNotFoundError, ValueError):
+                time.sleep(0.025)
+            except TimeoutError:
+                return "expired"
+            except Exception as e:
+                self.logger.debug("起動連絡失敗: %s", e)
+                return "connection_failed"
+        return "expired"
+
+    def restore_window(self, hwnd):
+        self._assert_thread()
+        hwnd = self.api.GetAncestor(hwnd, 2) or hwnd
+        if self.api.SetForegroundWindow(hwnd):
+            return "completed"
+        _flash_window(self.api, hwnd)
+        return "foreground_denied"
+
+    def _allow_foreground(self, pid):
+        return bool(self.api.AllowSetForegroundWindow(pid)), ct.get_last_error()
+
+    def show_notice(self, reason):
+        with NoticeLease(self, reason) as lease:
+            if lease.acquired:
+                _show_notice_window(self, reason)
+
+    def close(self):
+        self._assert_thread()
+        self.stop.set()
+        for pipe in self.pipes:
+            if pipe.value is not None:
+                self.api.CancelIoEx(pipe.value, None)
+        deadline = time.monotonic() + 0.5
+        for worker in self.workers:
+            worker.join(max(0, deadline - time.monotonic()))
+        for index, pipe in enumerate(self.pipes):
+            if index >= len(self.workers) or not self.workers[index].is_alive():
+                pipe.close()
+        if self.view:
+            self.api.UnmapViewOfFile(self.view)
+            self.view = None
+        if self.mapping:
+            self.mapping.close()
+        if self.owner:
+            if self.owns_mutex:
+                _check(self.api.ReleaseMutex(self.owner.value))
+                self.owns_mutex = False
+            self.owner.close()
+        for security in (
+            self.owner_security,
+            self.mapping_security,
+            self.pipe_security,
+        ):
+            security.close()
+
+
+def _restore_window(backend, hwnd):
+    return backend.restore_window(hwnd)
+
+
+def _flash_window(api, hwnd):
+    class FLASHWINFO(ct.Structure):
+        _fields_ = [
+            ("cbSize", wt.UINT),
+            ("hwnd", wt.HWND),
+            ("dwFlags", wt.DWORD),
+            ("uCount", wt.UINT),
+            ("dwTimeout", wt.DWORD),
+        ]
+
+    flash = _bind(api.u, "FlashWindowEx", wt.BOOL, ct.POINTER(FLASHWINFO))
+    flash(ct.byref(FLASHWINFO(ct.sizeof(FLASHWINFO), hwnd, 2, 3, 250)))
+
+
+class NoticeLease:
+    def __init__(self, backend, reason):
+        self.backend = backend
+        self.reason = reason
+        self.handle = None
+        self.acquired = False
+
+    def __enter__(self):
+        b = self.backend
+        reason = hashlib.sha256(self.reason.encode()).hexdigest()[:16]
+        self.handle = OwnedHandle(
+            b.api,
+            b.api.CreateMutexExW(
+                ct.byref(b.owner_security.attributes),
+                "Local\\" + b.prefix + ".Notice." + reason,
+                0,
+                OWNER_ACCESS,
+            ),
+        )
+        _validate_acl(b.api, self.handle.value, b.owner_security)
+        result = b.api.WaitForSingleObject(self.handle.value, 0)
+        self.acquired = result in {0, 0x80}
+        if result not in {0, 0x80, WAIT_TIMEOUT}:
+            raise ct.WinError(ct.get_last_error())
+        return self
+
+    def __exit__(self, *args):
+        if self.acquired:
+            _check(self.backend.api.ReleaseMutex(self.handle.value))
+        self.handle.close()
+
+
+class NativeNoticeLifetime:
+    """WndProc を WM_NCDESTROY とクラス解除まで強保持する。"""
+
+    def __init__(self, backend, reason):
+        self.backend = backend
+        self.reason = reason
+        self.callback = None
+        self.hwnd = None
+        self.error = None
+
+    def show(self, *, lifetime_ms=10000, on_show=None):
+        api = self.backend.api
+        callback_type = ct.WINFUNCTYPE(
+            ct.c_ssize_t, wt.HWND, wt.UINT, wt.WPARAM, wt.LPARAM
+        )
+
+        class WNDCLASS(ct.Structure):
+            _fields_ = [
+                ("style", wt.UINT),
+                ("lpfnWndProc", callback_type),
+                ("cbClsExtra", ct.c_int),
+                ("cbWndExtra", ct.c_int),
+                ("hInstance", wt.HINSTANCE),
+                ("hIcon", wt.HICON),
+                ("hCursor", wt.HANDLE),
+                ("hbrBackground", wt.HBRUSH),
+                ("lpszMenuName", wt.LPCWSTR),
+                ("lpszClassName", wt.LPCWSTR),
+            ]
+
+        default = _bind(
+            api.u,
+            "DefWindowProcW",
+            ct.c_ssize_t,
+            wt.HWND,
+            wt.UINT,
+            wt.WPARAM,
+            wt.LPARAM,
+        )
+        destroy = _bind(api.u, "DestroyWindow", wt.BOOL, wt.HWND)
+        post_quit = _bind(api.u, "PostQuitMessage", None, ct.c_int)
+
+        def procedure(hwnd, message, wparam, lparam):
+            try:
+                if message == 0x21:
+                    return 3
+                close_click = message == 0x111 and wparam & 0xFFFF == 101
+                if message in {0x113, 0x10} or close_click:
+                    destroy(hwnd)
+                    return 0
+                if message == 0x82:
+                    self.hwnd = None
+                    post_quit(0)
+                return default(hwnd, message, wparam, lparam)
+            except Exception as e:
+                self.error = e
+                post_quit(1)
+                return 0
+
+        self.callback = callback_type(procedure)
+        name = "PageFolioNotice" + uuid4().hex
+        register = _bind(api.u, "RegisterClassW", wt.ATOM, ct.POINTER(WNDCLASS))
+        unregister = _bind(api.u, "UnregisterClassW", wt.BOOL, wt.LPCWSTR, wt.HINSTANCE)
+        create = _bind(
+            api.u,
+            "CreateWindowExW",
+            wt.HWND,
+            wt.DWORD,
+            wt.LPCWSTR,
+            wt.LPCWSTR,
+            wt.DWORD,
+            ct.c_int,
+            ct.c_int,
+            ct.c_int,
+            ct.c_int,
+            wt.HWND,
+            wt.HMENU,
+            wt.HINSTANCE,
+            wt.LPVOID,
+        )
+        show = _bind(api.u, "ShowWindow", wt.BOOL, wt.HWND, ct.c_int)
+        timer = _bind(
+            api.u, "SetTimer", ct.c_size_t, wt.HWND, ct.c_size_t, wt.UINT, wt.LPVOID
+        )
+        get_message = _bind(
+            api.u, "GetMessageW", wt.BOOL, ct.POINTER(wt.MSG), wt.HWND, wt.UINT, wt.UINT
+        )
+        translate = _bind(api.u, "TranslateMessage", wt.BOOL, ct.POINTER(wt.MSG))
+        dispatch = _bind(api.u, "DispatchMessageW", ct.c_ssize_t, ct.POINTER(wt.MSG))
+        window_class = WNDCLASS()
+        window_class.lpfnWndProc = self.callback
+        window_class.lpszClassName = name
+        window_class.hbrBackground = 6
+        _check(register(ct.byref(window_class)))
+        try:
+            text = "画面への連絡を確認できませんでした。タスクバーを確認してください。"
+            self.hwnd = _check(
+                create(
+                    0x08000080,
+                    name,
+                    "PageFolio",
+                    0x80000000,
+                    40,
+                    40,
+                    560,
+                    100,
+                    None,
+                    None,
+                    None,
+                    None,
+                )
+            )
+            _check(
+                create(
+                    0,
+                    "STATIC",
+                    text,
+                    0x50000000,
+                    12,
+                    20,
+                    440,
+                    60,
+                    self.hwnd,
+                    None,
+                    None,
+                    None,
+                )
+            )
+            _check(
+                create(
+                    0,
+                    "STATIC",
+                    "[閉じる]",
+                    0x50000100,
+                    470,
+                    20,
+                    80,
+                    60,
+                    self.hwnd,
+                    101,
+                    None,
+                    None,
+                )
+            )
+            _check(timer(self.hwnd, 1, lifetime_ms, None))
+            show(self.hwnd, 4)
+            if on_show:
+                on_show(self.hwnd)
+            message = wt.MSG()
+            while True:
+                result = get_message(ct.byref(message), None, 0, 0)
+                if result <= 0:
+                    if result == -1:
+                        raise ct.WinError(ct.get_last_error())
+                    break
+                translate(ct.byref(message))
+                dispatch(ct.byref(message))
+        finally:
+            if self.hwnd:
+                destroy(self.hwnd)
+            if not unregister(name, None):
+                # OSがクラスを保持している間はWndProcの解放を禁止する。
+                _notice_lifetime_quarantine.append(self)
+                raise ct.WinError(ct.get_last_error())
+        if self.error is not None:
+            raise self.error
+
+
+def _show_notice_window(backend, reason):
+    NativeNoticeLifetime(backend, reason).show()

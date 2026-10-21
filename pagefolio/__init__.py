@@ -1,44 +1,52 @@
 # PageFolio - PDF Page Organizer
 # Copyright (c) 2026 mistyura
 # Released under the MIT License
-"""PageFolio パッケージ — 後方互換の公開API"""
+"""後方互換の公開 API。起動排他前には GUI/OCR をロードしない。"""
 
-# 定数
-# アプリケーション
-from pagefolio.app import PDFEditorApp  # noqa: F401
-from pagefolio.constants import APP_VERSION, LANG, THEMES, C  # noqa: F401
+from importlib import import_module
 
-# ダイアログ
-from pagefolio.dialogs import (  # noqa: F401
-    AboutDialog,
-    MergeOrderDialog,
-    MergeResizeDialog,
-    PluginDialog,
-    SettingsDialog,
-)
+_EXPORTS = {
+    "app": ("PDFEditorApp",),
+    "constants": ("APP_VERSION", "LANG", "THEMES", "C"),
+    "dialogs": (
+        "AboutDialog",
+        "MergeOrderDialog",
+        "MergeResizeDialog",
+        "PluginDialog",
+        "SettingsDialog",
+    ),
+    "ocr": (
+        "OCR_PROMPTS",
+        "OCRMixin",
+        "build_provider",
+        "has_embedded_text",
+        "page_to_png_b64",
+        "run_parallel",
+    ),
+    "plugins": ("PDFEditorPlugin", "PluginManager"),
+    "settings": (
+        "_apply_theme",
+        "_detect_system_theme",
+        "_get_settings_path",
+        "_load_settings",
+        "_make_font",
+        "_resolve_theme",
+        "_save_settings",
+        "get_current_font_size",
+        "set_current_font_size",
+    ),
+}
+__all__ = [name for names in _EXPORTS.values() for name in names]
 
-# OCR
-from pagefolio.ocr import (  # noqa: F401
-    OCR_PROMPTS,
-    OCRMixin,
-    build_provider,
-    has_embedded_text,
-    page_to_png_b64,
-    run_parallel,
-)
 
-# プラグインシステム
-from pagefolio.plugins import PDFEditorPlugin, PluginManager  # noqa: F401
+def __getattr__(name):
+    for module, names in _EXPORTS.items():
+        if name in names:
+            value = getattr(import_module(f"pagefolio.{module}"), name)
+            globals()[name] = value
+            return value
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
-# 設定ユーティリティ
-from pagefolio.settings import (  # noqa: F401
-    _apply_theme,
-    _detect_system_theme,
-    _get_settings_path,
-    _load_settings,
-    _make_font,
-    _resolve_theme,
-    _save_settings,
-    get_current_font_size,
-    set_current_font_size,
-)
+
+def __dir__():
+    return sorted(set(globals()) | set(__all__))
