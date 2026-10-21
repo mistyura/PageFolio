@@ -152,6 +152,223 @@ def test_initialization_notice_factory_failure_is_finite(monkeypatch, caplog):
     assert marker not in caplog.text
 
 
+@pytest.mark.skipif(sys.platform != "win32", reason="実Win32初期化の資源解放")
+def test_backend_constructor_partial_cleanup(monkeypatch):
+    from pagefolio import startup_win32 as win
+
+    released = []
+
+    class Security:
+        def __init__(self, name):
+            self.name = name
+
+        def close(self):
+            released.append(self.name)
+            if self.name == "pipe":
+                raise OSError(5, "private-path-SID-secret")
+
+    def security(api, sid, rights):
+        name = {win.OWNER_ACCESS: "owner", win.READ_CONTROL | 6: "mapping"}.get(
+            rights, "pipe"
+        )
+        return Security(name)
+
+    monkeypatch.setattr(win, "_security_descriptor", security)
+    backend = win.Win32Backend()
+    with pytest.raises(OSError):
+        backend.close()
+    assert released == ["pipe", "mapping", "owner"]
+
+
+@pytest.mark.skipif(sys.platform != "win32", reason="実Win32初期化の故障点")
+@pytest.mark.parametrize(
+    "stage,expected_release",
+    [
+        ("api", []),
+        ("token", []),
+        ("session", []),
+        ("owner", []),
+        ("mapping", ["owner"]),
+        ("pipe", ["mapping", "owner"]),
+    ],
+)
+def test_backend_constructor_stage_failure_releases_acquired(
+    monkeypatch, stage, expected_release
+):
+    from pagefolio import startup_win32 as win
+
+    released = []
+
+    class Security:
+        def __init__(self, name):
+            self.name = name
+
+        def close(self):
+            released.append(self.name)
+
+    if stage == "api":
+        monkeypatch.setattr(
+            win, "_API", lambda: (_ for _ in ()).throw(OSError(5, "private"))
+        )
+    elif stage == "token":
+        monkeypatch.setattr(
+            win, "_token", lambda *args: (_ for _ in ()).throw(OSError(5, "private"))
+        )
+    elif stage == "session":
+        monkeypatch.setattr(
+            win.Win32NoticeBackend,
+            "_session",
+            lambda *args: (_ for _ in ()).throw(OSError(5, "private")),
+        )
+
+    def security(api, sid, rights):
+        name = {win.OWNER_ACCESS: "owner", win.READ_CONTROL | 6: "mapping"}.get(
+            rights, "pipe"
+        )
+        if name == stage:
+            raise OSError(5, "private")
+        return Security(name)
+
+    monkeypatch.setattr(win, "_security_descriptor", security)
+    with pytest.raises(OSError):
+        win.Win32Backend()
+    assert released == expected_release
+
+
+@pytest.mark.parametrize(
+    "stage",
+    ["factory", "lease", "lease_release", "language", "display", "close", "logger"],
+)
+def test_initialization_notice_failure_matrix(stage, caplog):
+    from pagefolio.startup_notice import show_startup_initialization_failure
+
+    class BrokenNotice(NoticeBackend):
+        def __init__(self):
+            super().__init__()
+            self.observed_owner = None
+            self.closed = 0
+            if stage == "logger":
+                self.logger = SimpleNamespace(
+                    warning=lambda *args: (_ for _ in ()).throw(RuntimeError("private"))
+                )
+
+        @contextmanager
+        def _create_notice_lease(self, reason):
+            if stage == "lease":
+                raise OSError(5, "private")
+            with super()._create_notice_lease(reason) as lease:
+                yield lease
+            if stage == "lease_release":
+                raise OSError(5, "private")
+
+        def notice_language(self):
+            if stage == "language":
+                raise OSError(5, "private")
+            return super().notice_language()
+
+        def display_notice(self, reason, text, lease):
+            if stage in {"display", "logger"}:
+                raise OSError(5, "private")
+            return super().display_notice(reason, text, lease)
+
+        def close(self):
+            self.closed += 1
+            if stage == "close":
+                raise OSError(5, "private")
+
+    instances = []
+
+    def factory():
+        if stage == "factory":
+            raise OSError(5, "private")
+        instance = BrokenNotice()
+        instances.append(instance)
+        return instance
+
+    with caplog.at_level(logging.WARNING):
+        result = show_startup_initialization_failure(backend_factory=factory)
+    assert result.result == "notification_unavailable"
+    assert result.os_error == 5
+    assert "private" not in caplog.text
+    if instances:
+        assert instances[0].closed == 1
+
+
+def test_initialization_cleanup_continues_after_error(monkeypatch):
+    from pagefolio import startup_win32 as win
+
+    released = []
+
+    class Security:
+        def __init__(self, name):
+            self.name = name
+
+        def close(self):
+            released.append(self.name)
+            if self.name == "mapping":
+                raise OSError(5, "private")
+
+    def security(api, sid, rights):
+        name = "owner" if rights == win.OWNER_ACCESS else "mapping"
+        return Security(name)
+
+    monkeypatch.setattr(win, "_security_descriptor", security)
+    backend = win.Win32NoticeBackend()
+    with pytest.raises(OSError):
+        backend.close()
+    backend.close()
+    assert released == ["mapping", "owner"]
+
+
+def test_security_descriptor_is_freed_after_partial_conversion():
+    import ctypes as ct
+    from ctypes import wintypes as wt
+
+    from pagefolio.startup_win32 import _Security
+
+    released = []
+
+    def convert(sddl, revision, out, size):
+        ct.cast(out, ct.POINTER(wt.LPVOID))[0] = wt.LPVOID(1234)
+        return False
+
+    api = SimpleNamespace(
+        ConvertStringSecurityDescriptorToSecurityDescriptorW=convert,
+        LocalFree=lambda descriptor: released.append(descriptor.value),
+    )
+    with pytest.raises(OSError):
+        _Security(api, "S-1-5-1", 1)
+    assert released == [1234]
+
+
+@pytest.mark.skipif(sys.platform != "win32", reason="Windows token handle")
+def test_token_information_failure_closes_acquired_handle():
+    import ctypes as ct
+    from ctypes import wintypes as wt
+
+    from pagefolio.startup_win32 import _token
+
+    released = []
+
+    def open_token(process, rights, output):
+        ct.cast(output, ct.POINTER(wt.HANDLE))[0] = wt.HANDLE(1234)
+        return True
+
+    def get_token(handle, information_class, output, size, required):
+        ct.cast(required, ct.POINTER(wt.DWORD))[0] = wt.DWORD(64)
+        ct.set_last_error(5)
+        return False
+
+    api = SimpleNamespace(
+        OpenProcessToken=open_token,
+        GetTokenInformation=get_token,
+        CloseHandle=lambda handle: released.append(handle) or True,
+    )
+    with pytest.raises(OSError):
+        _token(api, 1)
+    assert released == [1234]
+
+
 @pytest.mark.parametrize("result", ["completed", "foreground_denied", "primary"])
 def test_success_and_foreground_denial_never_enter_notice_boundary(result):
     from pagefolio.startup_notice import show_startup_failure

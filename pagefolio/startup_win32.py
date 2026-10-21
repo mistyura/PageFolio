@@ -218,7 +218,8 @@ class _Security:
 
     def close(self):
         if self.descriptor:
-            self.api.LocalFree(self.descriptor)
+            if self.api.LocalFree(self.descriptor):
+                raise ct.WinError(ct.get_last_error())
             self.descriptor = wt.LPVOID()
 
 
@@ -449,7 +450,10 @@ class Win32NoticeBackend:
             self._notice_resources.append(self.mapping_security)
         except Exception:
             # subclass の未完成 close へ動的 dispatch しない。
-            self._close_notice_resources()
+            try:
+                self._close_notice_resources()
+            except Exception as cleanup_error:
+                self._cleanup_error = cleanup_error
             raise
 
     def _close_notice_resources(self):
@@ -552,7 +556,10 @@ class Win32Backend(Win32NoticeBackend):
         try:
             self.pipe_security = _security_descriptor(self.api, self.sid, 0x12019F)
         except Exception:
-            self._close_notice_resources()
+            try:
+                self._close_notice_resources()
+            except Exception as cleanup_error:
+                self._cleanup_error = cleanup_error
             raise
 
     def claim(self, generation):
@@ -1166,13 +1173,23 @@ class Win32Backend(Win32NoticeBackend):
         self._assert_thread()
         if self._closed:
             return
-        self.stop_accepting()
+        first_error = None
+
+        def cleanup(call, *args, **kwargs):
+            nonlocal first_error
+            try:
+                call(*args, **kwargs)
+            except Exception as e:
+                if first_error is None:
+                    first_error = e
+
+        cleanup(self.stop_accepting)
         deadline = time.monotonic() + 0.5
         for worker in self.workers:
-            worker.join(max(0, deadline - time.monotonic()))
+            cleanup(worker.join, max(0, deadline - time.monotonic()))
         for index, pipe in enumerate(self.pipes):
             if index >= len(self.workers) or not self.workers[index].is_alive():
-                pipe.close()
+                cleanup(pipe.close)
         if self.owns_mutex and not root_absent:
             # root破棄を証明できない異常終了はclosingの所有をprocess終了まで
             # 保持する。二次を新GUIへ進ませるために排他を解放しない。
@@ -1189,16 +1206,18 @@ class Win32Backend(Win32NoticeBackend):
                 self._publish_owner("released", False)
             except Exception as e:
                 self.logger.debug("release公開失敗: %s", e)
-        self._drop_mapping()
+        cleanup(self._drop_mapping)
         if self.observed_process is not None:
-            self.observed_process.close()
+            cleanup(self.observed_process.close)
             self.observed_process = None
         if self.owner:
-            self._yield_mutex()
-            self.owner.close()
-        self.pipe_security.close()
-        self._close_notice_resources()
+            cleanup(self._yield_mutex)
+            cleanup(self.owner.close)
+        cleanup(self.pipe_security.close)
+        cleanup(self._close_notice_resources)
         self._closed = True
+        if first_error is not None:
+            raise first_error
 
 
 def _restore_window(backend, hwnd):

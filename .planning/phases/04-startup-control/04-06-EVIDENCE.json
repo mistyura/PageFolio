@@ -1,0 +1,117 @@
+{
+  "plan": "04-06",
+  "finding": "CR-01",
+  "baseline_commit": "ff8b9355b8bbdbf5fb92b056bdba47b6adfb9bdf",
+  "task_1_commit": "216304e07c621abad2811bdaddda61613ba193cd",
+  "tested_file_sha256": {
+    "pagefolio/__main__.py": "D4C789A7E39539D282862CAD950A56B39D00FEB56F3F9ED046FEC02D5DC3EDED",
+    "pagefolio/startup_win32.py": "F9F6EB2A0E71A7154A1DE1463C554452503524E014E972A8DD4F2071CD252068",
+    "pagefolio/startup_notice.py": "3CC14748A2179B7ED051D5CC9D404345402427D77D9125342D3304EFA6693C0A",
+    "tests/test_startup_notice.py": "A4C2E6F93482B160AC5265A225F83074B4B8EA9F926233E31D0E35F80E461B5F",
+    "tests/test_startup_windows.py": "24B73630E643C00AB5D2AB19B332910A71777D3A791154EB1FD378E2F6D0031F"
+  },
+  "red": [
+    {
+      "case_id": "CR-01-RED-01",
+      "command": ".venv/Scripts/python.exe -m pytest -q tests/test_startup_notice.py -k \"backend_constructor_failure_uses_independent_notice or initialization_notice_factory_failure_is_finite\"",
+      "exit_code": 1,
+      "collected": 2,
+      "failed": 2,
+      "expected": "check_failed または notification_unavailable の結果 assertion",
+      "actual": "両方 unhandled_exception で結果 assertion が失敗",
+      "semantic_assessment": "対象試験が実行され、既存 main の構築 OSError 未捕捉という意図した振る舞い差分で失敗。初回実行の引数 TypeError は RED 根拠に採用せず、試験を修正して再実行した。",
+      "classifier": "not_run"
+    },
+    {
+      "case_id": "CR-01-RED-02",
+      "command": ".venv/Scripts/python.exe -m pytest -q tests/test_startup_notice.py::test_backend_constructor_partial_cleanup",
+      "exit_code": 1,
+      "collected": 1,
+      "failed": 1,
+      "expected": "pipe の close 失敗後も mapping と owner を逆順で解放",
+      "actual": "released は ['pipe'] のみで assertion が失敗",
+      "semantic_assessment": "対象試験が意図した解放継続 assertion で失敗。",
+      "classifier": "not_run"
+    }
+  ],
+  "green": [
+    {
+      "case_id": "CR-01-MAIN-NATIVE",
+      "command": ".venv/Scripts/python.exe -m pytest -q tests/test_startup_windows.py::test_constructor_failure_real_main_nonactivate_notice",
+      "exit_code": 0,
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "observed_by_assertion": {
+        "result": "check_failed",
+        "editor_instances": 0,
+        "native_notice_windows": 1,
+        "foreground_hwnd_unchanged_at_show_and_close": true,
+        "injected_native_lifetime_ms": 150
+      }
+    },
+    {
+      "case_id": "CR-01-CONSTRUCTOR-AND-DEDUP",
+      "command": ".venv/Scripts/python.exe -m pytest -q tests/test_startup_windows.py -k \"constructor_failure or notice_dedup or notice_timeout or notice_nonactivate\"",
+      "exit_code": 0,
+      "passed": 15,
+      "failed": 0,
+      "skipped": 0,
+      "deselected": 51,
+      "observed_by_assertion": {
+        "same_reason_processes_per_mixed_route": 8,
+        "mixed_route_orderings": 2,
+        "native_notice_windows_per_ordering": 1,
+        "original_deadline_unchanged": true,
+        "entry_exit_on_notice_unavailable": 1,
+        "child_process_timeout": 0,
+        "restart_claim_after_failure": "acquired"
+      }
+    },
+    {
+      "case_id": "CR-01-FAULT-MATRIX",
+      "command": ".venv/Scripts/python.exe -m pytest -q tests/test_startup_notice.py",
+      "exit_code": 0,
+      "passed": 61,
+      "failed": 0,
+      "skipped": 0,
+      "observed_by_assertion": {
+        "constructor_stages": ["api", "token", "session", "owner", "mapping", "pipe"],
+        "notification_failures": ["factory", "lease", "lease_release", "language", "display", "close", "logger"],
+        "partial_descriptor_and_token_handle_released": true,
+        "cleanup_continued_in_reverse_order": true
+      }
+    },
+    {
+      "case_id": "CR-01-RELATED",
+      "command": ".venv/Scripts/python.exe -m pytest -q tests/test_startup_control.py tests/test_startup_focus.py tests/test_startup_notice.py tests/test_gsd_dod.py tests/test_lang_parity.py tests/test_font_hardcode_guard.py",
+      "exit_code": 0,
+      "passed": 164,
+      "failed": 0,
+      "skipped": 0,
+      "warning_count": 1
+    },
+    {
+      "case_id": "CR-01-FULL-SUITE",
+      "command": ".venv/Scripts/python.exe -m pytest -q",
+      "start_observed_utc": "2026-10-21T21:50:27Z",
+      "end_observed_no_later_than_utc": "2026-10-21T21:54:37Z",
+      "duration_seconds_reported_by_pytest": 227.59,
+      "exit_code": 0,
+      "passed": 1629,
+      "failed": 0,
+      "skipped": 0,
+      "warning_count": 1
+    }
+  ],
+  "quality_gates": {
+    ".venv/Scripts/ruff.exe check .": {"exit_code": 0, "result": "All checks passed!"},
+    ".venv/Scripts/ruff.exe format .": {"exit_code": 0, "result": "100 files left unchanged"},
+    ".venv/Scripts/python.exe -c \"import ast; ast.parse(open('pagefolio.py', encoding='utf-8').read()); print('AST OK')\"": {"exit_code": 0, "result": "AST OK"}
+  },
+  "scope_limits": [
+    "製品既定の通知期限は10000ms。9999/10000ms境界は既存fake clock試験で確認し、通常pytestのnative窓は150ms（8process先頭は1800ms）へ短縮した。",
+    "W01〜W12の人手部分と実EXE、別session、DPI/UACはPhase 6でnot-runのまま。",
+    "既存WR-01の15609msと15140msは変更せず、任意負荷時15.5秒保証へ外挿しない。"
+  ]
+}

@@ -291,6 +291,23 @@ def test_constructor_failure_real_main_nonactivate_notice(tmp_path):
     assert result["snapshot"]["deadline_tick"] - result["snapshot"]["shown_tick"] == 150
 
 
+def test_constructor_failure_descriptor_stage_reaches_native_notice(tmp_path):
+    child, _ = _spawn(tmp_path, uuid4().hex, "constructor-failure-descriptor")
+    result = _finish(child)
+    assert result["result"] == "check_failed"
+    assert result["notice_calls"] == 1
+    assert result["constructed"] == 0
+
+
+def test_constructor_failure_manual_close_keeps_foreground(tmp_path):
+    child, _ = _spawn(tmp_path, uuid4().hex, "constructor-failure-manual")
+    result = _finish(child)
+    assert result["result"] == "check_failed"
+    assert result["notice_calls"] == 1
+    assert result["foreground_before_show"] == result["foreground_after_show"]
+    assert result["foreground_before_close"] == result["foreground_after_close"]
+
+
 def test_constructor_failure_entry_exit(tmp_path):
     for role, expected in (
         ("constructor-failure-module", "check_failed"),
@@ -305,15 +322,24 @@ def test_constructor_failure_entry_exit(tmp_path):
         assert result["constructed"] == 0
 
 
-def test_constructor_failure_notice_dedup(tmp_path):
+@pytest.mark.parametrize("legacy_owner", [False, True])
+def test_constructor_failure_notice_dedup(tmp_path, legacy_owner):
     namespace = uuid4().hex
-    owner, fixture = _spawn(tmp_path, namespace, "constructor-failure-owner")
+    owner_role = (
+        "constructor-failure-legacy-owner"
+        if legacy_owner
+        else "constructor-failure-owner"
+    )
+    owner, fixture = _spawn(tmp_path, namespace, owner_role)
     children = [owner]
     try:
         _wait_file(owner, fixture / "ready")
         first = json.loads((fixture / "ready").read_text(encoding="utf-8"))
         for index in range(7):
-            child, _ = _spawn(tmp_path, namespace, f"constructor-failure-join-{index}")
+            join_type = "legacy-join" if index % 2 else "join"
+            child, _ = _spawn(
+                tmp_path, namespace, f"constructor-failure-{join_type}-{index}"
+            )
             children.append(child)
         joined = [_finish(child) for child in children[1:]]
         assert all(item["result"] == "check_failed" for item in joined)
@@ -1534,6 +1560,41 @@ def _run_scenario(fixture, namespace, role):
         audit = {"constructed": 0, "notice_calls": 0}
         unavailable = "unavailable" in role
 
+        if "legacy-" in role:
+            from pagefolio.startup_control import StartupOutcome
+            from pagefolio.startup_notice import show_startup_failure
+
+            backend = win.Win32Backend(backend_namespace)
+            try:
+                if role == "constructor-failure-legacy-owner":
+                    with win.NoticeLease(backend, "check_failed") as lease:
+                        assert lease.acquired
+                        notice = win.NativeNoticeLifetime(
+                            backend, "check_failed", lease=lease
+                        )
+
+                        def visible(hwnd):
+                            audit["notice_calls"] = 1
+                            audit["snapshot"] = lease.snapshot.copy()
+                            (fixture / "ready").write_text(
+                                json.dumps(audit), encoding="utf-8"
+                            )
+
+                        notice.show(lifetime_ms=1800, on_show=visible)
+                else:
+                    result = show_startup_failure(
+                        StartupOutcome("check_failed"), backend
+                    )
+                    assert result.result == "coalesced"
+                    with win.NoticeLease(backend, "check_failed") as lease:
+                        assert not lease.acquired
+                        audit["snapshot"] = lease.snapshot
+                audit["result"] = "check_failed"
+            finally:
+                backend.close()
+            print(json.dumps(audit))
+            return
+
         def fail_startup():
             raise OSError(5, "private-path-SID-secret")
 
@@ -1570,6 +1631,23 @@ def _run_scenario(fixture, namespace, role):
                         (fixture / "ready").write_text(
                             json.dumps(audit), encoding="utf-8"
                         )
+                    if role == "constructor-failure-manual":
+                        post = win._bind(
+                            self.api.u,
+                            "PostMessageW",
+                            wt.BOOL,
+                            wt.HWND,
+                            wt.UINT,
+                            wt.WPARAM,
+                            wt.LPARAM,
+                        )
+                        rect = notice.close_rect
+                        assert post(
+                            hwnd,
+                            0x202,
+                            0,
+                            ((rect.top + 1) << 16) | (rect.left + 1),
+                        )
 
                 notice.show(
                     lifetime_ms=1800 if role == "constructor-failure-owner" else 150,
@@ -1583,7 +1661,17 @@ def _run_scenario(fixture, namespace, role):
                     foreground_after_close=notice.foreground_after_close,
                 )
 
-        win.Win32Backend = fail_startup
+        if role == "constructor-failure-descriptor":
+            original_security = win._security_descriptor
+
+            def fail_pipe_security(api, sid, rights):
+                if rights == 0x12019F:
+                    raise OSError(5, "private-path-SID-secret")
+                return original_security(api, sid, rights)
+
+            win._security_descriptor = fail_pipe_security
+        else:
+            win.Win32Backend = fail_startup
         win.Win32NoticeBackend = NoticeOnly
         entry = role.removeprefix("constructor-failure-")
         if entry in {"module", "script", "unavailable-module", "unavailable-script"}:
