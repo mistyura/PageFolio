@@ -143,6 +143,81 @@ def _collect_phase_dirs(repo_root: Path) -> list[Path]:
     return sorted(dirs)
 
 
+def _read_live_phase_completion(
+    repo_root: Path, phase_dir: Path
+) -> tuple[bool, str | None]:
+    """現行のPhase行・詳細・進捗を照合する。履歴detailsとPlan行は対象外。"""
+    roadmap = repo_root / ".planning" / "ROADMAP.md"
+    if not roadmap.is_file():
+        return False, "判定不能: ROADMAP.md が存在しない"
+    text = re.sub(
+        r"<details\b[^>]*>.*?</details>",
+        "",
+        roadmap.read_text(encoding="utf-8"),
+        flags=re.DOTALL | re.IGNORECASE,
+    )
+    number = str(int(phase_dir.name.split("-", 1)[0]))
+    sections = {}
+    section = ""
+    for line in text.splitlines():
+        if line.startswith("## "):
+            section = line[3:].strip()
+        sections.setdefault(section, []).append(line)
+    phase_re = re.compile(r"^- \[([ xX])\]\s+(?:\*\*)?Phase\s+(\d+):\s*(.*)")
+    phases = [
+        m
+        for line in sections.get("Phases", [])
+        if (m := phase_re.match(line)) and str(int(m[2])) == number
+    ]
+    details = [
+        line
+        for line in sections.get("Phase Details", [])
+        if re.match(rf"^### Phase 0*{number}:\s", line)
+    ]
+    if len(phases) != 1 or len(details) != 1:
+        return False, "判定不能: 現行Phase行またはPhase Detailsが欠落・重複"
+    phase_title = phases[0][3].split("**", 1)[0].strip()
+    detail_title = details[0].split(":", 1)[1].strip()
+    if phase_title != detail_title:
+        return False, "判定不能: Phase行とPhase Detailsの名称が不一致"
+    rows = []
+    in_table = False
+    for line in sections.get("Progress", []):
+        cells = [c.strip() for c in line.strip().strip("|").split("|")]
+        if not line.startswith("|"):
+            in_table = False
+            continue
+        if cells == ["Phase", "Plans Complete", "Status", "Completed"]:
+            in_table = True
+            continue
+        if in_table and len(cells) == 4 and re.match(rf"^0*{number}\.\s", cells[0]):
+            rows.append(cells)
+    if len(rows) != 1:
+        return False, "判定不能: Phase進捗が欠落・重複"
+    _, count, status, date = rows[0]
+    status = status.removeprefix("✅ ")
+    if status not in {"Planned", "Not started", "In Progress", "Complete"}:
+        return False, "判定不能: 未解釈の進捗状態"
+    checked = phases[0][1].lower() == "x"
+    if status == "Complete":
+        plans = sorted(phase_dir.glob("*-PLAN.md"))
+        summaries = sorted(phase_dir.glob("*-SUMMARY.md"))
+        expected = {p.name.replace("-PLAN.md", "-SUMMARY.md") for p in plans}
+        if (
+            not plans
+            or {p.name for p in summaries} != expected
+            or count != f"{len(plans)}/{len(plans)}"
+            or not re.fullmatch(r"\d{4}-\d{2}-\d{2}", date)
+        ):
+            return False, "判定不能: CompleteのSUMMARY・件数・完了日が不整合"
+        return checked, None
+    if checked:
+        return False, "判定不能: 完了Phase行と未完了Progressが矛盾"
+    if not re.fullmatch(r"\d+/(?:\d+|TBD)", count) or date != "—":
+        return False, "判定不能: 未完了Progressの件数・完了日が不整合"
+    return False, None
+
+
 def _collect_dod_violations(repo_root: Path) -> list[tuple[str, str]]:
     """適用範囲の各フェーズを走査し、違反を `(識別子, 理由)` のリストで返す.
 
@@ -155,6 +230,13 @@ def _collect_dod_violations(repo_root: Path) -> list[tuple[str, str]]:
     violations: list[tuple[str, str]] = []
     for phase_dir in _collect_phase_dirs(repo_root):
         label = f"{phase_dir.parent.name}/{phase_dir.name}"
+        if phase_dir.parent.name == "phases":
+            complete, error = _read_live_phase_completion(repo_root, phase_dir)
+            if error:
+                violations.append((label, error))
+                continue
+            if not complete:
+                continue
         validation_files = sorted(phase_dir.glob("*-VALIDATION.md"))
 
         if len(validation_files) != 1:
@@ -293,7 +375,9 @@ def test_dod_gate_detects_unvalidated_phase(tmp_path: Path) -> None:
     repo = _build_synthetic_repo(
         tmp_path / "live", {"phases/01-alpha/01-VALIDATION.md": _DRAFT}
     )
-    assert [v[0] for v in _collect_dod_violations(repo)] == ["phases/01-alpha"]
+    violations = _collect_dod_violations(repo)
+    assert [v[0] for v in violations] == ["phases/01-alpha"]
+    assert "判定不能" in violations[0][1]
 
     # milestones/ 直下 (v*-phases/ を挟まない配置) は走査対象外
     repo = _build_synthetic_repo(
@@ -391,6 +475,82 @@ def test_status_parser_handles_quotes_and_nesting() -> None:
     assert _read_status("coverage:\n  status: validated\n") is None
     # トップレベルが先に現れれば、後続のネストに影響されない
     assert _read_status("status: draft\ncoverage:\n  status: validated\n") == "draft"
+
+
+def _live_roadmap(
+    checked: bool, status: str, count: str = "0/1", date: str = "—"
+) -> str:
+    return (
+        "## Phases\n<details>\n- [x] Phase 1: 過去\n</details>\n"
+        f"- [{'x' if checked else ' '}] **Phase 1: 現行** - 説明\n"
+        "- [x] 01-01-PLAN.md\n## Phase Details\n### Phase 1: 現行\n"
+        "## Progress\n| Milestone | Status |\n|---|---|\n| v1 | Complete |\n"
+        "| Phase | Plans Complete | Status | Completed |\n|---|---|---|---|\n"
+        f"| 1. 現行 | {count} | {status} | {date} |\n"
+    )
+
+
+@pytest.mark.parametrize("validation", [_DRAFT, None])
+def test_live_incomplete_does_not_require_validation(
+    tmp_path: Path, validation
+) -> None:
+    files = {
+        "ROADMAP.md": _live_roadmap(False, "Planned"),
+        "phases/01-alpha/01-01-PLAN.md": "# plan\n",
+    }
+    if validation is not None:
+        files["phases/01-alpha/01-VALIDATION.md"] = validation
+    assert _collect_dod_violations(_build_synthetic_repo(tmp_path, files)) == []
+
+
+@pytest.mark.parametrize(
+    ("checked", "status", "count", "date", "summary", "requires_validation"),
+    [
+        (True, "Complete", "1/1", "2026-10-21", True, True),
+        (False, "Complete", "1/1", "2026-10-21", True, False),
+        (False, "Complete", "1/1", "2026-10-21", False, True),
+        (False, "Complete", "0/1", "2026-10-21", True, True),
+        (False, "Complete", "1/1", "—", True, True),
+        (True, "Planned", "0/1", "—", False, True),
+    ],
+)
+def test_live_completion_requires_consistent_evidence(
+    tmp_path, checked, status, count, date, summary, requires_validation
+) -> None:
+    files = {
+        "ROADMAP.md": _live_roadmap(checked, status, count, date),
+        "phases/01-alpha/01-01-PLAN.md": "# plan\n",
+        "phases/01-alpha/01-VALIDATION.md": _DRAFT,
+    }
+    if summary:
+        files["phases/01-alpha/01-01-SUMMARY.md"] = "# summary\n"
+    violations = _collect_dod_violations(_build_synthetic_repo(tmp_path, files))
+    assert bool(violations) is requires_validation
+
+
+@pytest.mark.parametrize(
+    "mutate", ["duplicate_phase", "duplicate_progress", "missing", "unknown"]
+)
+def test_live_roadmap_ambiguity_fails_closed(tmp_path, mutate) -> None:
+    roadmap = _live_roadmap(False, "Planned")
+    if mutate == "duplicate_phase":
+        roadmap = roadmap.replace(
+            "## Phase Details", "- [ ] Phase 1: 重複\n## Phase Details"
+        )
+    elif mutate == "duplicate_progress":
+        roadmap += "| 1. 現行 | 0/1 | Planned | — |\n"
+    elif mutate == "missing":
+        roadmap = roadmap.replace("- [ ] **Phase 1: 現行** - 説明", "")
+    else:
+        roadmap = roadmap.replace("Planned", "Unknown")
+    repo = _build_synthetic_repo(
+        tmp_path,
+        {
+            "ROADMAP.md": roadmap,
+            "phases/01-alpha/01-VALIDATION.md": _VALIDATED,
+        },
+    )
+    assert _collect_dod_violations(repo)
 
 
 def test_milestone_version_parsing() -> None:

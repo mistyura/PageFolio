@@ -335,7 +335,7 @@ PageFolio は `branching_strategy: "none"` / `quick_branch_template: null` の�
 
 **許容条件:** 本ゲートが要求するのは `status: validated` のみで、`nyquist_compliant: false`（validate は走ったがギャップが残る PARTIAL 状態）は許容する。強制するのは「検証を走らせたこと」であり、ギャップをゼロにするコストを常にフェーズ内に抱え込ませない。
 
-**適用範囲: v1.9.0 以降。** ライブの `.planning/phases/*/` と、`.planning/milestones/v{X.Y.Z}-phases/*/` のうちバージョンが v1.9.0 以上のもの。出荷済みフェーズも close 後に検証され続けるため、「アーカイブすればゲートを回避できる」抜け穴はない。`.planning/milestones/` 直下（`v*-phases/` の階層を挟まない配置）は対象外。
+**適用範囲: v1.9.0 以降。** ライブの `.planning/phases/*/` は現行 ROADMAP の Phase 行で正式完了 `[x]` とされたフェーズに validated を要求する。未完了フェーズでは draft・VALIDATION 未生成を許容する。判定は履歴 `<details>` を除外し、Phase Details と Phase 進捗表を一意に照合する。Progress が Complete で Phase 行が `[ ]` の中間状態は、全 PLAN に対応する SUMMARY が存在し件数と完了日が一致する場合のみ「実装完了・検証待ち」として許容する。SUMMARY 不足、重複、未記載、矛盾、未解釈状態は違反にする。実行順序は全 SUMMARY → Progress 更新 → validate-phase → Phase 行の正式完了である。アーカイブ `.planning/milestones/v{X.Y.Z}-phases/*/` は v1.9.0 以上の全件で従来どおり validated 必須。出荷済みフェーズも close 後に検証され続けるため、「アーカイブすればゲートを回避できる」抜け穴はない。`.planning/milestones/` 直下（`v*-phases/` の階層を挟まない配置）は対象外。
 
 **v1.9.0 未満を除外している理由:** v1.4.0 / v1.6.0 / v1.7.1 / v1.8.0 の `*-VALIDATION.md` は `/gsd-validate-phase` の出力ではなく別種のドキュメントで、status 語彙が `approved` / `ready` / `draft` / `planned` / `complete` と揃っておらず、欠落しているフェーズもある。遡及的な生成・修正は行わない（loto の「v0.17.0 以前への遡及生成は見送り確定」と同じ判断）。ただし「除外すれば通る」抜け穴にしないため、除外対象の集合そのものを `test_legacy_exclusions_match_repository` が実ディレクトリと突き合わせて機械固定しており、**除外を増やすにはテスト内の定数を明示的に書き換える必要がある**。
 
