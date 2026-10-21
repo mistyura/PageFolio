@@ -176,7 +176,7 @@ def _read_live_phase_completion(
     ]
     if len(phases) != 1 or len(details) != 1:
         return False, "判定不能: 現行Phase行またはPhase Detailsが欠落・重複"
-    phase_title = phases[0][3].split("**", 1)[0].strip()
+    phase_title = re.split(r"\*\*|\s+-\s+", phases[0][3], maxsplit=1)[0].strip()
     detail_title = details[0].split(":", 1)[1].strip()
     if phase_title != detail_title:
         return False, "判定不能: Phase行とPhase Detailsの名称が不一致"
@@ -215,6 +215,16 @@ def _read_live_phase_completion(
         return False, "判定不能: 完了Phase行と未完了Progressが矛盾"
     if not re.fullmatch(r"\d+/(?:\d+|TBD)", count) or date != "—":
         return False, "判定不能: 未完了Progressの件数・完了日が不整合"
+    completed_count, total = count.split("/")
+    plans = {p.name for p in phase_dir.glob("*-PLAN.md")}
+    summaries = {p.name for p in phase_dir.glob("*-SUMMARY.md")}
+    expected_summaries = {p.replace("-PLAN.md", "-SUMMARY.md") for p in plans}
+    if (
+        int(completed_count) != len(summaries)
+        or not summaries <= expected_summaries
+        or (total != "TBD" and int(total) != len(plans))
+    ):
+        return False, "判定不能: 未完了ProgressとPLAN/SUMMARY件数が不整合"
     return False, None
 
 
@@ -551,6 +561,35 @@ def test_live_roadmap_ambiguity_fails_closed(tmp_path, mutate) -> None:
         },
     )
     assert _collect_dod_violations(repo)
+
+
+def test_live_progress_tracks_each_summary_before_validation(tmp_path):
+    files = {
+        "ROADMAP.md": _live_roadmap(False, "Planned"),
+        "phases/01-alpha/01-01-PLAN.md": "# plan\n",
+        "phases/01-alpha/01-VALIDATION.md": _DRAFT,
+    }
+    repo = _build_synthetic_repo(tmp_path, files)
+    assert _collect_dod_violations(repo) == []
+    roadmap = repo / ".planning/ROADMAP.md"
+    roadmap.write_text(_live_roadmap(False, "In Progress", "1/1"), encoding="utf-8")
+    assert "件数" in _collect_dod_violations(repo)[0][1]
+    (repo / ".planning/phases/01-alpha/01-01-SUMMARY.md").write_text(
+        "# summary\n", encoding="utf-8"
+    )
+    assert _collect_dod_violations(repo) == []
+    roadmap.write_text(
+        _live_roadmap(False, "Complete", "1/1", "2026-10-21"), encoding="utf-8"
+    )
+    assert _collect_dod_violations(repo) == []
+    # 太字なしの現行Phase行でも正式完了のvalidated義務は変わらない。
+    roadmap.write_text(
+        _live_roadmap(True, "Complete", "1/1", "2026-10-21").replace(
+            "**Phase 1: 現行**", "Phase 1: 現行"
+        ),
+        encoding="utf-8",
+    )
+    assert "'draft'" in _collect_dod_violations(repo)[0][1]
 
 
 def test_milestone_version_parsing() -> None:
