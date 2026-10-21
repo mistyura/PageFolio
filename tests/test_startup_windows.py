@@ -371,6 +371,153 @@ def test_tracer_notice_lease_process_dedup(tmp_path):
             holder.communicate()
 
 
+def test_notice_dedup_eight_processes_keep_original_deadline(tmp_path):
+    namespace = uuid4().hex
+    owner, path = _spawn(tmp_path, namespace, "notice-case-owner")
+    children = [owner]
+    try:
+        _wait_file(owner, path / "ready")
+        initial = json.loads((path / "ready").read_text())
+        peers = [
+            _spawn(tmp_path, namespace, f"notice-case-peer-{i}")[0] for i in range(8)
+        ]
+        children.extend(peers)
+        results = [_finish(child) for child in peers]
+        assert all(not result["acquired"] for result in results)
+        assert all(result["snapshot"] == initial["snapshot"] for result in results)
+        final = _finish(owner)
+        assert final["foreground_before"] == final["foreground_after"]
+        assert 1700 <= final["elapsed"] < 3000
+        assert final["deadline_tick"] == initial["snapshot"]["deadline_tick"]
+    finally:
+        _reclaim(children)
+
+
+def test_notice_dedup_different_reasons_and_manual_close_allow_new_owner(tmp_path):
+    namespace = uuid4().hex
+    owner, path = _spawn(tmp_path, namespace, "notice-case-owner")
+    children = [owner]
+    try:
+        _wait_file(owner, path / "ready")
+        other, _ = _spawn(tmp_path, namespace, "notice-case-other-reason")
+        children.append(other)
+        assert _finish(other)["acquired"]
+        audit = json.loads((path / "ready").read_text())
+        from pagefolio.startup_win32 import Win32Backend, _bind
+
+        backend = Win32Backend(namespace)
+        try:
+            post = _bind(
+                backend.api.u,
+                "PostMessageW",
+                wt.BOOL,
+                wt.HWND,
+                wt.UINT,
+                wt.WPARAM,
+                wt.LPARAM,
+            )
+            assert post(audit["snapshot"]["hwnd"], 0x10, 0, 0)
+        finally:
+            backend.close()
+        assert _finish(owner)["acquired"]
+        renewed, _ = _spawn(tmp_path, namespace, "notice-case-renewed")
+        children.append(renewed)
+        assert _finish(renewed)["acquired"]
+    finally:
+        _reclaim(children)
+
+
+def test_notice_dedup_owner_crash_with_retained_handles_can_redisplay(tmp_path):
+    from pagefolio.startup_win32 import (
+        READ_CONTROL,
+        SYNCHRONIZE,
+        NoticeLease,
+        OwnedHandle,
+        Win32Backend,
+        _bind,
+    )
+
+    namespace = uuid4().hex
+    owner, path = _spawn(tmp_path, namespace, "notice-case-owner")
+    children = [owner]
+    backend = Win32Backend(namespace)
+    kept = []
+    try:
+        _wait_file(owner, path / "ready")
+        lease = NoticeLease(backend, "contact_failed")
+        open_mutex = _bind(
+            backend.api.k, "OpenMutexW", wt.HANDLE, wt.DWORD, wt.BOOL, wt.LPCWSTR
+        )
+        kept.append(
+            OwnedHandle(
+                backend.api, open_mutex(SYNCHRONIZE | READ_CONTROL, False, lease.name)
+            )
+        )
+        kept.append(
+            OwnedHandle(
+                backend.api,
+                backend.api.OpenFileMappingW(READ_CONTROL | 4, False, lease.state_name),
+            )
+        )
+        owner.kill()
+        owner.communicate()
+        renewed, _ = _spawn(tmp_path, namespace, "notice-case-renewed")
+        children.append(renewed)
+        assert _finish(renewed)["acquired"]
+    finally:
+        for handle in kept:
+            handle.close()
+        backend.close()
+        _reclaim(children)
+
+
+@pytest.mark.parametrize("existing", [True, False])
+def test_notice_dedup_access_denial_checks_same_name_once(
+    tmp_path, monkeypatch, existing
+):
+    from pagefolio import startup_win32 as win
+    from pagefolio.startup_control import StartupOutcome
+    from pagefolio.startup_notice import show_startup_failure
+
+    namespace = uuid4().hex
+    children = []
+    if existing:
+        owner, path = _spawn(tmp_path, namespace, "notice-case-owner")
+        children.append(owner)
+        _wait_file(owner, path / "ready")
+    backend = win.Win32Backend(namespace)
+    backend.observed_owner = {"pid": 1}  # 接続相手は別に確認済みという故障注入。
+    checks = []
+    original = win._bind
+
+    def bind(dll, name, result, *args):
+        native = original(dll, name, result, *args)
+        if name == "OpenMutexW":
+
+            def open_same(access, inherit, object_name):
+                checks.append(object_name)
+                return native(access, inherit, object_name)
+
+            return open_same
+        return native
+
+    def deny(*args):
+        ct.set_last_error(5)
+        return 0
+
+    monkeypatch.setattr(win, "_bind", bind)
+    backend.api.CreateMutexExW = deny
+    try:
+        result = show_startup_failure(StartupOutcome("connection_failed"), backend)
+        assert result.result == (
+            "coalesced" if existing else "notification_unavailable"
+        )
+        assert checks == [win.NoticeLease(backend, "contact_failed").name]
+    finally:
+        backend.close()
+        _reclaim(children)
+
+
 def _reclaim(children):
     """この試験が生成したPIDだけをfinallyで回収する。"""
     for child in children:
@@ -1077,20 +1224,64 @@ def _run_scenario(fixture, namespace, role):
         finally:
             backend.close()
         return
+    if role.startswith("notice-case-"):
+        from pagefolio.startup_win32 import NativeNoticeLifetime, NoticeLease, _bind
+
+        backend = Win32Backend(backend_namespace)
+        foreground = _bind(backend.api.u, "GetForegroundWindow", wt.HWND)
+        started = backend.tick_ms()
+        audit = {"foreground_before": foreground()}
+        reason = "timeout" if role == "notice-case-other-reason" else "contact_failed"
+        lifetime = 1800 if role == "notice-case-owner" else 150
+        if role == "notice-case-production-owner":
+            lifetime = 10000
+        try:
+            with NoticeLease(backend, reason) as lease:
+                audit.update(acquired=lease.acquired, snapshot=lease.snapshot)
+                if lease.acquired:
+                    notice = NativeNoticeLifetime(backend, reason, lease=lease)
+
+                    def published(hwnd):
+                        audit.update(
+                            snapshot=lease.snapshot,
+                            deadline_tick=notice.deadline_tick,
+                            dpi=notice.dpi,
+                            close_rect=[
+                                notice.close_rect.left,
+                                notice.close_rect.top,
+                                notice.close_rect.right,
+                                notice.close_rect.bottom,
+                            ],
+                        )
+                        (fixture / "ready").write_text(
+                            json.dumps(audit), encoding="utf-8"
+                        )
+
+                    notice.show(lifetime_ms=lifetime, on_show=published)
+            audit.update(
+                elapsed=backend.tick_ms() - started, foreground_after=foreground()
+            )
+            (fixture / "result.json").write_text(json.dumps(audit), encoding="utf-8")
+            print(json.dumps(audit))
+        finally:
+            backend.close()
+        return
     if role.startswith("lease-"):
-        from pagefolio.startup_win32 import NoticeLease
+        from pagefolio.startup_win32 import NativeNoticeLifetime, NoticeLease
 
         backend = Win32Backend(backend_namespace)
         try:
             with NoticeLease(backend, "connection_failed") as lease:
                 if role == "lease-owner":
                     assert lease.acquired
-                    (fixture / "ready").touch()
-                    deadline = time.monotonic() + 8
-                    while (
-                        not (fixture / "stop").exists() and time.monotonic() < deadline
-                    ):
-                        time.sleep(0.02)
+                    notice = NativeNoticeLifetime(
+                        backend, "connection_failed", lease=lease
+                    )
+
+                    def publish(hwnd):
+                        (fixture / "ready").touch()
+
+                    notice.show(lifetime_ms=1800, on_show=publish)
                 print(json.dumps({"acquired": lease.acquired}))
         finally:
             backend.close()
@@ -1119,15 +1310,24 @@ def _run_scenario(fixture, namespace, role):
                     hwnd=hwnd,
                     shown_tick=backend.tick_ms(),
                     foreground_shown=foreground(),
+                    snapshot=lease.snapshot,
+                    dpi=notice.dpi,
+                    close_rect=[
+                        notice.close_rect.left,
+                        notice.close_rect.top,
+                        notice.close_rect.right,
+                        notice.close_rect.bottom,
+                    ],
                 )
                 (fixture / "ready").write_text(json.dumps(audit), encoding="utf-8")
 
             with NoticeLease(backend, "connection_failed") as lease:
                 audit["lease_acquired"] = lease.acquired
                 if lease.acquired:
-                    NativeNoticeLifetime(backend, "connection_failed").show(
-                        on_show=visible
+                    notice = NativeNoticeLifetime(
+                        backend, "connection_failed", lease=lease
                     )
+                    notice.show(on_show=visible)
             audit.update(closed_tick=backend.tick_ms(), foreground_after=foreground())
             (fixture / "result.json").write_text(json.dumps(audit), encoding="utf-8")
             print(json.dumps(audit))
@@ -1239,13 +1439,23 @@ def _run_scenario(fixture, namespace, role):
                     return None
 
                 self.api.CreateMutexExW = deny
-            if role == "notice-via-main":
+            if role in {"notice-via-main", "notice-production-contact"}:
 
                 def deny_pipe(*args):
                     ct.set_last_error(5)
                     return ct.c_void_p(-1).value
 
                 self.api.CreateFileW = deny_pipe
+            if role == "notice-production-check":
+                original_mutex = self.api.CreateMutexExW
+
+                def deny_owner(attributes, name, flags, access):
+                    if name == self.owner_name:
+                        ct.set_last_error(5)
+                        return None
+                    return original_mutex(attributes, name, flags, access)
+
+                self.api.CreateMutexExW = deny_owner
 
         def _publish_owner(self, state, ready):
             if role == "prepublish-failure":
@@ -1328,7 +1538,9 @@ def _run_scenario(fixture, namespace, role):
             return super()._foreground_window(hwnd, is_current)
 
         def show_notice(self, reason):
-            if role in {"notice-via-main", "api-denied"}:
+            if role in {"notice-via-main", "api-denied"} or role.startswith(
+                "notice-production-"
+            ):
                 return super().show_notice(reason)
             if role == "request-timeout":
                 assert reason == "expired"
@@ -1336,9 +1548,35 @@ def _run_scenario(fixture, namespace, role):
             raise AssertionError(f"正常tracerで失敗案内: {reason}")
 
         def display_notice(self, reason, text, lease):
-            from pagefolio.startup_win32 import NativeNoticeLifetime
+            from pagefolio.startup_win32 import NativeNoticeLifetime, _bind
 
-            NativeNoticeLifetime(self, reason, text=text).show(lifetime_ms=150)
+            notice = NativeNoticeLifetime(self, reason, text=text, lease=lease)
+            if role.startswith("notice-production-"):
+                foreground = _bind(self.api.u, "GetForegroundWindow", wt.HWND)
+                self.audit["foreground_before"] = foreground()
+
+                def visible(hwnd):
+                    self.audit.update(
+                        snapshot=lease.snapshot,
+                        dpi=notice.dpi,
+                        foreground_shown=foreground(),
+                    )
+                    (fixture / "ready").write_text(
+                        json.dumps(self.audit), encoding="utf-8"
+                    )
+
+                notice.show(on_show=visible)
+                self.audit.update(
+                    closed_tick=self.tick_ms(), foreground_after=foreground()
+                )
+                self.audit.update(
+                    foreground_before_show=notice.foreground_before_show,
+                    foreground_after_show=notice.foreground_after_show,
+                    foreground_before_close=notice.foreground_before_close,
+                    foreground_after_close=notice.foreground_after_close,
+                )
+            else:
+                notice.show(lifetime_ms=150)
 
     started = _tick_ms()
     try:

@@ -134,6 +134,7 @@ class _API:
             ("IsIconic", b, [wt.HWND]),
             ("ShowWindow", b, [wt.HWND, ct.c_int]),
             ("GetWindowThreadProcessId", d, [wt.HWND, pd]),
+            ("GetClassNameW", ct.c_int, [wt.HWND, wt.LPWSTR, ct.c_int]),
             ("GetWindow", wt.HWND, [wt.HWND, wt.UINT]),
             ("GetLastActivePopup", wt.HWND, [wt.HWND]),
             ("GetGUIThreadInfo", b, [d, ct.POINTER(GUITHREADINFO)]),
@@ -1098,7 +1099,8 @@ class Win32Backend:
         return _bind(self.api.k, "GetUserDefaultUILanguage", wt.WORD)()
 
     def display_notice(self, reason, text, lease):
-        NativeNoticeLifetime(self, reason, text=text).show()
+        notice = NativeNoticeLifetime(self, reason, text=text, lease=lease)
+        notice.show()
 
     def _cancel_pending_io(self):
         for pipe in self.pipes:
@@ -1177,35 +1179,259 @@ def _flash_window(api, hwnd, *, stop=False):
 
 
 class NoticeLease:
+    """原因別mutexと表示identityを照合し、表示スレッドだけが所有・公開する。"""
+
     def __init__(self, backend, reason):
         self.backend = backend
-        self.reason = reason
+        self.reason = str(reason)
+        suffix = hashlib.sha256(self.reason.encode()).hexdigest()[:16]
+        self.name = "Local\\" + backend.prefix + ".Notice." + suffix
+        self.state_name = self.name + ".State"
         self.handle = None
+        self.mapping = None
+        self.view = None
         self.acquired = False
+        self.owns_mutex = False
+        self.snapshot = None
+
+    def _open_mapping(self, create):
+        b = self.backend
+        access = READ_CONTROL | (6 if create else 4)
+        value = b.api.OpenFileMappingW(access, False, self.state_name)
+        existed = bool(value)
+        if not value:
+            if not create or ct.get_last_error() != 2:
+                raise ct.WinError(ct.get_last_error())
+            value = b.api.CreateFileMappingW(
+                INVALID_HANDLE_VALUE,
+                ct.byref(b.mapping_security.attributes),
+                4,
+                0,
+                4096,
+                self.state_name,
+            )
+            existed = ct.get_last_error() == 183
+        self.mapping = OwnedHandle(b.api, value)
+        _validate_acl(b.api, self.mapping.value, b.mapping_security)
+        self.view = _check(
+            b.api.MapViewOfFile(self.mapping.value, 6 if create else 4, 0, 0, 4096)
+        )
+        return existed
+
+    def _read_snapshot(self):
+        # mutex所有者が公開中でも有界に失敗し、全ゼロを旧owner不存在とみなさない。
+        for _ in range(3):
+            before = ct.c_ulonglong.from_address(self.view).value
+            if before == 0 or before % 2:
+                continue
+            size = ct.c_uint32.from_address(self.view + 8).value
+            if not 0 < size <= 2048:
+                raise ValueError("通知snapshotの長さが不正")
+            raw = ct.string_at(self.view + 12, size)
+            if ct.c_ulonglong.from_address(self.view).value == before:
+                data = json.loads(raw)
+                required = {
+                    "protocol",
+                    "reason",
+                    "pid",
+                    "process_created",
+                    "session_id",
+                    "generation",
+                    "state",
+                    "hwnd",
+                    "shown_tick",
+                    "deadline_tick",
+                }
+                if not isinstance(data, dict) or set(data) != required:
+                    raise ValueError("通知snapshotが不正")
+                if any(
+                    type(data[key]) is not int
+                    for key in (
+                        "protocol",
+                        "pid",
+                        "process_created",
+                        "session_id",
+                        "hwnd",
+                        "shown_tick",
+                        "deadline_tick",
+                    )
+                ):
+                    raise ValueError("通知snapshotの型が不正")
+                if (
+                    data["protocol"] != 1
+                    or data["reason"] != self.reason
+                    or data["session_id"] != self.backend.session_id
+                    or data["pid"] <= 0
+                    or data["process_created"] <= 0
+                    or not isinstance(data["generation"], str)
+                    or len(data["generation"]) != 32
+                    or data["state"] not in {"preparing", "shown", "closed"}
+                ):
+                    raise ValueError("通知identityが不正")
+                if data["state"] == "shown" and (
+                    data["hwnd"] <= 0
+                    or not 0 < data["deadline_tick"] - data["shown_tick"] <= 10000
+                    or data["shown_tick"] > self.backend.tick_ms()
+                ):
+                    raise ValueError("通知表示状態が不正")
+                return data
+        raise ValueError("通知snapshotは未公開または公開途中")
+
+    def _publish(self, state, *, hwnd=0, shown_tick=0, deadline_tick=0):
+        self.backend._assert_thread()
+        if not self.owns_mutex or not self.acquired:
+            raise RuntimeError("通知所有者だけが公開できる")
+        data = {
+            "protocol": 1,
+            "reason": self.reason,
+            "pid": self.backend.pid,
+            "process_created": self.backend._created(
+                self.backend.api.GetCurrentProcess()
+            ),
+            "session_id": self.backend.session_id,
+            "generation": self.snapshot["generation"] if self.snapshot else uuid4().hex,
+            "state": state,
+            "hwnd": hwnd,
+            "shown_tick": shown_tick,
+            "deadline_tick": deadline_tick,
+        }
+        before = ct.c_ulonglong.from_address(self.view).value
+        before += before % 2
+        ct.c_ulonglong.from_address(self.view).value = before + 1
+        raw = json.dumps(data).encode("utf-8")
+        ct.memmove(self.view + 8, struct.pack("<I", len(raw)) + raw, 4 + len(raw))
+        ct.c_ulonglong.from_address(self.view).value = before + 2
+        self.snapshot = data
+
+    def mark_shown(self, hwnd, shown_tick, deadline_tick):
+        if self.snapshot["state"] != "preparing":
+            if all(
+                self.snapshot[key] == value
+                for key, value in (
+                    ("hwnd", hwnd),
+                    ("shown_tick", shown_tick),
+                    ("deadline_tick", deadline_tick),
+                )
+            ):
+                return
+            raise ValueError("初回通知の表示期限は更新できない")
+        self._publish(
+            "shown", hwnd=hwnd, shown_tick=shown_tick, deadline_tick=deadline_tick
+        )
+
+    def _owner_status(self, snapshot):
+        b = self.backend
+        try:
+            with b._validate_peer(
+                snapshot["pid"], snapshot["process_created"], allow_exited=True
+            ) as process:
+                if b._process_has_exited(process):
+                    return "dead"
+        except OSError as e:
+            if getattr(e, "winerror", None) == 87:  # PID自体の不存在をOSが確認。
+                return "dead"
+            raise
+        if snapshot["state"] == "closed":
+            return "closed"
+        if snapshot["state"] != "shown":
+            return "unknown"
+        hwnd = snapshot["hwnd"]
+        pid = wt.DWORD()
+        class_name = ct.create_unicode_buffer(256)
+        thread = b.api.GetWindowThreadProcessId(hwnd, ct.byref(pid))
+        if (
+            thread
+            and pid.value == snapshot["pid"]
+            and b.api.GetClassNameW(hwnd, class_name, len(class_name))
+            and class_name.value == "PageFolioNotice" + snapshot["generation"]
+            and b.api.IsWindow(hwnd)
+            and b.api.IsWindowVisible(hwnd)
+            and b.tick_ms() < snapshot["deadline_tick"]
+        ):
+            return "visible"
+        return "unknown"
+
+    def _verified_join(self):
+        self._open_mapping(False)
+        self.snapshot = self._read_snapshot()
+        if self._owner_status(self.snapshot) != "visible":
+            raise OSError("表示中の通知を確認できない")
 
     def __enter__(self):
         b = self.backend
-        reason = hashlib.sha256(self.reason.encode()).hexdigest()[:16]
-        self.handle = OwnedHandle(
-            b.api,
-            b.api.CreateMutexExW(
+        b._assert_thread()
+        try:
+            value = b.api.CreateMutexExW(
                 ct.byref(b.owner_security.attributes),
-                "Local\\" + b.prefix + ".Notice." + reason,
+                self.name,
                 0,
                 OWNER_ACCESS,
-            ),
-        )
-        _validate_acl(b.api, self.handle.value, b.owner_security)
-        result = b.api.WaitForSingleObject(self.handle.value, 0)
-        self.acquired = result in {0, 0x80}
-        if result not in {0, 0x80, WAIT_TIMEOUT}:
-            raise ct.WinError(ct.get_last_error())
-        return self
+            )
+            if not value and ct.get_last_error() == 5:
+                # 別名/fail-openは使わず、同じ正規名への最小権限確認を一度だけ行う。
+                open_mutex = _bind(
+                    b.api.k, "OpenMutexW", wt.HANDLE, wt.DWORD, wt.BOOL, wt.LPCWSTR
+                )
+                self.handle = OwnedHandle(
+                    b.api, open_mutex(SYNCHRONIZE | READ_CONTROL, False, self.name)
+                )
+                _validate_acl(b.api, self.handle.value, b.owner_security)
+                self._verified_join()
+                return self
+            self.handle = OwnedHandle(b.api, value)
+            _validate_acl(b.api, self.handle.value, b.owner_security)
+            result = b.api.WaitForSingleObject(self.handle.value, 0)
+            if result == WAIT_TIMEOUT:
+                self._verified_join()
+                return self
+            if result not in {0, 0x80}:
+                raise ct.WinError(ct.get_last_error())
+            self.owns_mutex = True
+            if self._open_mapping(True):
+                previous = self._read_snapshot()
+                status = self._owner_status(previous)
+                if status == "visible":
+                    # owner-threadだけが終了しても、生存窓の多重表示を許さない。
+                    self.snapshot = previous
+                    return self
+                if status not in {"dead", "closed"}:
+                    raise OSError("旧通知ownerの終了を確認できない")
+            elif result == 0x80:
+                # abandonedだけではprocess終了を証明しない。
+                raise OSError("放棄通知のidentityがない")
+            self.acquired = True
+            self._publish("preparing")
+            return self
+        except Exception as e:
+            self._dispose()
+            raise e
+
+    def _dispose(self):
+        b = self.backend
+        try:
+            if self.view:
+                _check(b.api.UnmapViewOfFile(self.view))
+                self.view = None
+        finally:
+            try:
+                if self.mapping:
+                    self.mapping.close()
+            finally:
+                try:
+                    if self.owns_mutex:
+                        _check(b.api.ReleaseMutex(self.handle.value))
+                        self.owns_mutex = False
+                finally:
+                    if self.handle:
+                        self.handle.close()
 
     def __exit__(self, *args):
-        if self.acquired:
-            _check(self.backend.api.ReleaseMutex(self.handle.value))
-        self.handle.close()
+        self.backend._assert_thread()
+        try:
+            if self.acquired:
+                self._publish("closed")
+        finally:
+            self._dispose()
 
 
 class LOGFONT(ct.Structure):
@@ -1272,9 +1498,10 @@ class PAINTSTRUCT(ct.Structure):
 class NativeNoticeLifetime:
     """生成スレッドで全資源を解放し、クラス解除まで WndProc を強保持する。"""
 
-    def __init__(self, backend, reason, *, text=None):
+    def __init__(self, backend, reason, *, text=None, lease=None):
         from pagefolio.startup_control import StartupOutcome
         from pagefolio.startup_notice import (
+            StartupFailureReason,
             _failure_reason,
             _notice_language,
             _notice_text,
@@ -1282,7 +1509,13 @@ class NativeNoticeLifetime:
 
         self.backend = backend
         self.reason = reason
-        classified = _failure_reason(StartupOutcome(reason), True)
+        self.lease = lease
+        self.window_generation = lease.snapshot["generation"] if lease else uuid4().hex
+        classified = (
+            StartupFailureReason(reason)
+            if reason in StartupFailureReason
+            else _failure_reason(StartupOutcome(reason), True)
+        )
         self.text = text or _notice_text(
             classified, _notice_language(backend.notice_language())
         )
@@ -1293,6 +1526,10 @@ class NativeNoticeLifetime:
         self.close_rect = wt.RECT()
         self.message_rect = wt.RECT()
         self.dpi = None
+        self.foreground_before_show = None
+        self.foreground_after_show = None
+        self.foreground_before_close = None
+        self.foreground_after_close = None
 
     def show(self, *, lifetime_ms=10000, on_show=None):
         from pagefolio.startup_notice import notice_deadline_tick, notice_remaining_ms
@@ -1327,7 +1564,15 @@ class NativeNoticeLifetime:
             wt.WPARAM,
             wt.LPARAM,
         )
-        destroy = _bind(api.u, "DestroyWindow", wt.BOOL, wt.HWND)
+        destroy_window = _bind(api.u, "DestroyWindow", wt.BOOL, wt.HWND)
+        foreground = _bind(api.u, "GetForegroundWindow", wt.HWND)
+
+        def destroy(hwnd):
+            self.foreground_before_close = foreground()
+            result = destroy_window(hwnd)
+            self.foreground_after_close = foreground()
+            return result
+
         timer = _bind(
             api.u, "SetTimer", ct.c_size_t, wt.HWND, ct.c_size_t, wt.UINT, wt.LPVOID
         )
@@ -1422,7 +1667,7 @@ class NativeNoticeLifetime:
                 return 0
 
         self.callback = callback_type(procedure)
-        name = "PageFolioNotice" + uuid4().hex
+        name = "PageFolioNotice" + self.window_generation
         register = _bind(api.u, "RegisterClassW", wt.ATOM, ct.POINTER(WNDCLASS))
         unregister = _bind(api.u, "UnregisterClassW", wt.BOOL, wt.LPCWSTR, wt.HINSTANCE)
         create = _bind(
@@ -1585,7 +1830,13 @@ class NativeNoticeLifetime:
                 self.backend.tick_ms(), lifetime_ms
             )
             _check(timer(self.hwnd, 1, max(1, lifetime_ms), None))
+            self.foreground_before_show = foreground()
             show(self.hwnd, 4)  # SW_SHOWNOACTIVATE
+            self.foreground_after_show = foreground()
+            if self.lease:
+                self.lease.mark_shown(
+                    self.hwnd, self.deadline_tick - lifetime_ms, self.deadline_tick
+                )
             if on_show:
                 on_show(self.hwnd)
             message = wt.MSG()

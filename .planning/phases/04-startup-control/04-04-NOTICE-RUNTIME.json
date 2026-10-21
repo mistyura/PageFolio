@@ -1,0 +1,47 @@
+{
+  "result": {
+    "constructed": 0,
+    "restored": 0,
+    "status_preserved": true,
+    "result": "expired",
+    "elapsed": 15015
+  },
+  "audit": {
+    "sid": "S-1-5-5-0-204810",
+    "authentication_luid": 209750,
+    "session_id": 1,
+    "pid": 19740,
+    "owner_result": "existing",
+    "terminal_result": "expired",
+    "elapsed": 5000,
+    "foreground_before": 135134,
+    "snapshot": {
+      "protocol": 1,
+      "reason": "timeout",
+      "pid": 19740,
+      "process_created": 134370693345157236,
+      "session_id": 1,
+      "generation": "1863def45e0e46bd87148af63be75938",
+      "state": "shown",
+      "hwnd": 2165616,
+      "shown_tick": 63951015,
+      "deadline_tick": 63961015
+    },
+    "dpi": 96,
+    "foreground_shown": 135134,
+    "closed_tick": 63961015,
+    "foreground_after": 135134,
+    "foreground_before_show": 135134,
+    "foreground_after_show": 135134,
+    "foreground_before_close": 135134,
+    "foreground_after_close": 135134
+  },
+  "fixture": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\notice-production-4f5d0867e6884c1db68d4b57265dc980",
+  "post_close_observation_seconds": 15.007233100004669,
+  "post_close_foreground_hwnds": [
+    135134
+  ],
+  "remaining_children": 0,
+  "originals_unchanged": true,
+  "stderr": ""
+}
