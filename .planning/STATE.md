@@ -2,30 +2,31 @@
 gsd_state_version: "1.0"
 milestone: v1.10.0
 milestone_name: 多重起動防止・起動操作の改善
-current_phase: 04
-current_phase_name: 起動制御と既存画面への復帰
-status: executing
-stopped_at: 04-05-02 autoの証拠照合から再開。未実施人手W項目はPhase 6へ移管済み。Task1再実装不要。
-last_updated: "2026-10-22"
+current_phase: 5
+current_phase_name: 設定読込・保存失敗の通知
+current_plan: Not started
+status: planning
+stopped_at: Phase 4完了、Phase 5計画前
+last_updated: "2026-10-21T22:18:28.216Z"
 last_activity: 2026-10-22
-last_activity_desc: 受入再計画を反映。04-01〜04と04-05 Task1完了。人手停止を解除し証拠照合/validate-phase待ち。
-state_head: 1c65309dc481e9d0485c47b8a58076a65270468a
+last_activity_desc: Phase 4完了、Phase 5へ移行
+state_head: 15fde05162b8a4ba247a03b7db75e12a1d61b631
 progress:
   total_phases: 3
-  completed_phases: 0
-  total_plans: 5
-  completed_plans: 4
-  percent: 0
+  completed_phases: 1
+  total_plans: 6
+  completed_plans: 6
+  percent: 33
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-10-21)
+See: .planning/PROJECT.md (updated 2026-10-22)
 
 **Core value:** 大きな PDF でも Undo/Redo が正しく・速く動作し、コードが読みやすく保守しやすい状態にする
-**Current focus:** Phase 04 — 起動制御と既存画面への復帰
+**Current focus:** Phase 5 — 設定読込・保存失敗の通知
 
 ## Shipped Milestone: v1.9.0（2026-08-11・verified_closeout）
 
@@ -45,18 +46,20 @@ See: .planning/PROJECT.md (updated 2026-10-21)
 
 ## Current Position
 
-Phase: 04 (起動制御と既存画面への復帰) — EXECUTING
-Plan: 5 of 5
-Status: executing（受入再計画済み）
-Last activity: 2026-10-22 — 受入再計画を反映、04-05-02の証拠照合から再開可能
+Phase: 5 — 設定読込・保存失敗の通知
+Current Plan: Not started
+Total Plans in Phase: 未計画
+Plan: Not started（Phase 4は6/6完了）
+Status: Ready to plan
+Last activity: 2026-10-22 — Phase 4完了、Phase 5へ移行
 
-Progress: [░░░░░░░░░░] 0%（v1.10.0: 0/3 フェーズ、4/5 確定プラン完了、04-05 Task 1完了）
+Progress: [███░░░░░░░] 33%（v1.10.0: 1/3 フェーズ完了、Phase 4は6/6実行済み）
 
 ## v1.10.0 Phase Map（構成承認済み）
 
 | Phase | Name | Requirements | 状態 |
 |-------|------|--------------|------|
-| 4 | 起動制御と既存画面への復帰 | V110-START-01〜03, V110-FOCUS-01/02 | 4/5完了、04-05証拠照合・検証待ち |
+| 4 | 起動制御と既存画面への復帰 | V110-START-01〜03, V110-FOCUS-01/02 | Complete（6/6、検証21/21 passed） |
 | 5 | 設定読込・保存失敗の通知 | V110-CFG-01〜04 | 未着手・計画前 |
 | 6 | サンプル配布とリリース検証 | V110-DIST-01〜03, V110-QA-01〜03 | 未着手・計画前 |
 
@@ -74,7 +77,7 @@ Phase 4は自動受入/A1〜A5と証拠照合を行い、未実施人手W項目�
 
 **Velocity (v1.3.0 実績):**
 
-- Total plans completed: 36
+- Total plans completed: 38
 - Average duration: 約 22.5 分
 - Total execution time: 約 45 分
 
@@ -90,7 +93,7 @@ Phase 4は自動受入/A1〜A5と証拠照合を行い、未実施人手W項目�
 | 01 | 7 | - | - |
 | 02 | 4 | - | - |
 | 03 | 4 | - | - |
-| 04 | 4 | - | - |
+| 4 | 6 | - | - |
 | 05 | 4 | - | - |
 
 *v1.4.0 フェーズ完了後に追記*
@@ -166,6 +169,7 @@ Phase 4は自動受入/A1〜A5と証拠照合を行い、未実施人手W項目�
 | Phase 03 P02 | 約20分 | 3 tasks | 2 files |
 | Phase 03-qa-release-gate P03 | 約35分 | 5 tasks | 1 files |
 | Phase 03 P04 | 約5分 | 2 tasks | 3 files |
+| Phase 04 P06 | 未計測 | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -294,6 +298,8 @@ Decisions are logged in PROJECT.md Key Decisions table.
 - [Phase ?]: 遡及UAT候補14項目を現行コード照合で活き残り13項目/未実施2項目(③max_tokens・429リトライ実API検証、⑤-Claude実API出力品質)に確定し、実機目視で13項目全てpass記録（03-03・V190-QA-03充足）
 - [Phase ?]: [03-04]: 開発履歴.mdのv1.9.0エントリはユーザー指示によりPhase 1〜3全体を対象として記述（03-04単体の作業内容ではない）。事実源はPhase 1/2のVERIFICATION.md・Phase 3の03-01/02/03-SUMMARY.md
 - [Phase ?]: [03-04]: 開発履歴.mdの詳細節は新設せずv1.8.0/v1.8.1と同型の1段落形式を踏襲。テスト件数は本セッション実測の1398件のみを出典とした
+- [Phase 04]: 起動backend未完成時は独立した通知専用Win32 backendで確認済みcheck_failedだけを案内する
+- [Phase 04]: 通知同期・表示・解放が確認できなければnotification_unavailableとして両入口を非zero終了させる
 
 ### Pending Todos
 
@@ -417,21 +423,20 @@ v1.9.0 クローズ時点で次マイルストーンへ引き継ぐ未解決項�
 
 ## Session Continuity
 
-**Resume file:** .planning/phases/04-startup-control/04-05-CHECKPOINT.md
+**Resume file:** None
 
-Last session: 2026-10-22
-Stopped at: 04-05-02 autoの証拠照合から再開。2026-10-22承認により未実施人手W項目をPhase 6へ移管し、blocking-humanを解除。Task1 7ea8fb4は再実装不要。
+Last session: 2026-10-21T21:58:05.077Z
+Stopped at: Phase 4完了、Phase 5計画前
 
 ## Operator Next Steps
 
-- **次アクション:** `/gsd-execute-phase 4`。04-05-02 autoの証拠照合から再開。Task 1は再実装しない。未実施人手W項目は06-UAT-CARRYOVERへ移管済み。SUMMARY→Progress→validate-phase→全件pytest→正式完了→DoDの順を守る。
+- **次アクション:** `$gsd-discuss-phase 5`。Phase 4はCR-01修正・validate-phase・検証21/21 passed・単一全件1629 passed（1 warning、228.84秒）を経て正式完了。未実施人手W項目とWR-01は06-UAT-CARRYOVERへ移管済み。
 - **タグの push は未実施** — ユーザー選択によりローカルにのみ `v1.9.0` タグを作成した。リリース作業時に `git push origin v1.9.0` を実行する
 - **現在ブランチは `feature/v1.10.0`** — 引継ぎ文書を含む `quick/261021-os9-gsd` の HEAD（`ff6c5d3`）から作成。`main` への統合は PR 経由で行う
 - サンプルプロンプト 2 ファイルの再ビルド時消失対策は v1.10.0 へ採用。原本保持と同梱の検証を要件化する（260722-rel SUMMARY 参照）
 - 先送り課題（260722-gae 精査項目 3 ②③）: LLM 設定ダイアログへの「新世代 Gemini では
   temperature 欄が無視される」注記（UI 変更）/ 新世代 thinking 有効時の応答時間・
   トークン消費の実測（実 API 必要）— v1.9.0 Phase 2 では合流できず次マイルストーンへ継続
-
 
 ## 2026-10-22 承認済み受入再計画（現行）
 
@@ -446,4 +451,8 @@ Stopped at: 04-05-02 autoの証拠照合から再開。2026-10-22承認により
 - Phase 4正式完了にはSUMMARY→Progress→validate-phase実走→全件pytest→正式完了→DoD再確認を要する。
 - 移管正本: `.planning/phases/06-release-validation/06-UAT-CARRYOVER.md`。5要件の最終実機受入もここで追跡する。
 
-Quick task: `261022-1ns`。Phase 4は未完了、validate-phaseは未実走。過去の人手停止記録は履歴。
+Quick task: `261022-1ns`。当時はPhase 4未完了・validate-phase未実走。2026-10-22の04-06実行と再検証で正式完了した。過去の人手停止記録は履歴。
+
+## ????????2026-10-22?
+
+04-05???Progress 5/5?validate-phase???????????0?????pytest 1603 passed / 1 warning / 209.19???????19/21 gaps_found?CR-01: Win32Backend?????????????????????SC3/D-09/V110-START-03??Phase???????Complete??????????: `$gsd-plan-phase 4 --gaps`?W??????Phase6?????????????????????????

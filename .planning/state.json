@@ -1,28 +1,28 @@
 {
-  "contract": "1.0.0",
-  "flavor": "core",
-  "milestone": "v1.10.0 — 多重起動防止・起動操作の改善",
-  "phases": [
-    {
-      "number": "4",
-      "name": "起動制御と既存画面への復帰",
-      "status": "in_progress"
-    },
-    {
-      "number": "5",
-      "name": "設定読込・保存失敗の通知",
-      "status": "pending"
-    },
-    {
-      "number": "6",
-      "name": "サンプル配布とリリース検証",
-      "status": "pending"
-    }
-  ],
-  "next": {
-    "command": "/gsd-execute-phase 4",
-    "label": "Phase 4の証拠照合と検証を再開",
-    "reason": "04-05-02 auto。未実施人手W項目はPhase 6の必須受入へ移管済み"
-  },
-  "updated_at": "2026-10-21T16:15:53.179080+00:00"
+    "contract":  "1.0.0",
+    "flavor":  "core",
+    "milestone":  "v1.10.0 — 多重起動防止・起動操作の改善",
+    "phases":  [
+                   {
+                       "number":  "4",
+                       "name":  "起動制御と既存画面への復帰",
+                       "status":  "complete"
+                   },
+                   {
+                       "number":  "5",
+                       "name":  "設定読込・保存失敗の通知",
+                       "status":  "pending"
+                   },
+                   {
+                       "number":  "6",
+                       "name":  "サンプル配布とリリース検証",
+                       "status":  "pending"
+                   }
+               ],
+    "next":  {
+                 "command":  "/gsd-discuss-phase 5",
+                 "label":  "Phase 5の設定失敗通知を議論",
+                 "reason":  "Phase 4は6/6完了、検証21/21 passed、Nyquist validated。未実施人手受入とWR-01はPhase 6へ移管済み。"
+             },
+    "updated_at":  "2026-10-21T22:19:31.1555650Z"
 }

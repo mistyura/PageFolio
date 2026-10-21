@@ -114,7 +114,7 @@ Phase 1 は 01-06 / 01-07 の 2 回のギャップ是正を経て passed。Phase
 
 **Milestone Goal:** 同一 Windows ログインセッションでの多重起動による作業の分散を防ぎ、既存画面への復帰、設定失敗の把握、サンプル配布の再現性を実現する。
 
-- [ ] **Phase 4: 起動制御と既存画面への復帰** - 対応版同士の起動を1画面に制限し、2回目の起動操作から作業中の画面へ戻れる。
+- [x] **Phase 4: 起動制御と既存画面への復帰** - 対応版同士の起動を1画面に制限し、2回目の起動操作から作業中の画面へ戻れる。 (completed 2026-10-22)
 - [ ] **Phase 5: 設定読込・保存失敗の通知** - 設定エラーを把握でき、元の設定と編集操作が守られる。
 - [ ] **Phase 6: サンプル配布とリリース検証** - 2サンプルを再現可能に同梱し、実配布 EXE を含む受入と版情報の整合を確認できる。
 
@@ -136,7 +136,7 @@ Phase 1 は 01-06 / 01-07 の 2 回のギャップ是正を経て passed。Phase
 
 **受入範囲改訂（2026-10-22）**: Success Criteriaの実装/自動受入はPhase 4、未実施の最終人手受入はPhase 6。移管正本は[06-UAT-CARRYOVER.md](phases/06-release-validation/06-UAT-CARRYOVER.md)。
 
-**Plans**: 4/5 plans executed
+**Plans**: 6/6 plans complete（04-06 gap closure 実行済み、Phase正式検証待ち）
 **UI hint**: yes
 
 Plans:
@@ -153,7 +153,10 @@ Plans:
 - [x] 04-04-PLAN.md — 非活性の10秒案内とプロセス間集約（Wave 4、04-03依存）
 
 **Wave 5** *(blocked on Wave 4 completion)*
-- [ ] 04-05-PLAN.md — 自動受入・証拠照合とPhase 6実機受入移管（Wave 5、04-04依存）
+- [x] 04-05-PLAN.md — 自動受入・証拠照合とPhase 6実機受入移管（Wave 5、04-04依存）
+
+**Wave 6** *(blocked on Wave 5 completion)*
+- [x] 04-06-PLAN.md — CR-01: backend構築失敗の独立案内と部分初期化資源の安全な解放（04-05依存）
 
 共有する起動入口・OS境界・Windows試験と「1タスクずつ」の規約により直列実行する。Phase 4の版番号・README・開発履歴同期および実EXE配布統合はPhase 6へ引き継ぐ。
 
@@ -200,13 +203,13 @@ Plans:
 | v1.7.1 現機能ブラッシュアップ + APIキー入力欄 | 4 | 16 | ✅ Complete | 2026-07-05 |
 | v1.8.0 実用性の最大化・エコシステム洗練・堅牢性強化 | 6 | 22 | ✅ Complete | 2026-07-16 |
 | v1.9.0 安全性・整合性の是正 + OpenAI プロバイダ追加 | 3 | 15 | ✅ Complete | 2026-08-11 |
-| v1.10.0 多重起動防止・起動操作の改善 | 3 | 5（Phase 4確定、残りTBD） | 📋 Phase 4計画完了 | — |
+| v1.10.0 多重起動防止・起動操作の改善 | 3 | 6（Phase 4確定、残りTBD） | Phase 4完了・Phase 5計画前 | — |
 
 各マイルストーンのフェーズ単位の内訳は上記 `<details>` ブロックおよび各アーカイブ
 （`milestones/*-ROADMAP.md`）を参照。
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 4. 起動制御と既存画面への復帰 | 4/5 | In Progress | — |
+| 4. 起動制御と既存画面への復帰 | 6/6 | Complete | 2026-10-22 |
 | 5. 設定読込・保存失敗の通知 | 0/TBD | Not started | — |
 | 6. サンプル配布とリリース検証 | 0/TBD | Not started | — |

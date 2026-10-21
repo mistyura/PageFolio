@@ -17,7 +17,7 @@
 
 # Phase 4 — Windows受入記録
 
-状態: **04-05 Task 1完了 / Task 2未承認 / Phase 4未完了**。
+状態: **04-05 Task 1・Task 2証拠照合完了 / Phase 4正式検証待ち**。
 更新日: 2026-10-22。対象製品commit: `b26ddec`（04-05は試験と文書のみ）。
 実EXE・ビルド・版同期はPhase 6、実API/課金試験は今回の対象外。
 
@@ -27,7 +27,7 @@
 - **故障注入/純粋試験**: fake clock/OS失敗注入/identity関数での結果。実OS拒否・別session実証へ置換しない。
 - **人手実証**: 利用者の回答と実測recordが対応するもの。旧通知primitiveのA3/A4は新通知leaseの再受入には使わない。
 - **推定**: 設計/実装から想定した結果。passに数えない。
-- **not-run**: 必須観測が未実施または準備不能。failと共にTask 2/Phase完了を止める。
+- **not-run**: 必須観測が未実施または準備不能。現行再計画ではPhase 6へ移管し、リリース完了を止める。自動のfailはPhase 4でも停止する。
 
 ## 環境・原本保護
 
@@ -142,7 +142,9 @@ SPECなしedge5件は**unclassified/unresolved**、verification/resolution/reaso
 
 ## 完了ゲートと引き継ぎ
 
-**W11準備不能を含め必須not-runがあるため、04-05/Phase 4は完了不可。**
-Task 1のcommit後は`04-05-CHECKPOINT.md`に停止点を保存し、04-05-SUMMARY.mdを完了扱いで作らない。
-Task 2はgate=blocking-human。全必須pass→SUMMARY/Progress→validate-phase実走→VALIDATION実結果→単一全件pytest→親Phase完了→DoD再確認の順序を守る。
-現時点でvalidated・要件Complete・Phase[x]へ進めない。Phase 6の実EXE/実API未実施をPhase 4のpassへ混ぜない。
+2026-10-22承認済み再計画に従い、Task 2は自動証拠の照合と移管追跡を完了した。
+`04-05-EVIDENCE.json`の試験hashは現行ファイルと一致し、Task 1の7ea8fb4はHEADの祖先。
+W01〜W12の全未実施人手部分は`../06-release-validation/06-UAT-CARRYOVER.md`へID付きで対応付け済み。
+W11準備不能、W07b並行負荷109ms超過、禁止事項/edgeの未解決はそのまま保持する。
+SUMMARY→Progress→validate-phase実走→VALIDATION実結果→単一全件pytest→親Phase正式完了→DoD再確認の順序を守る。
+全必須人手passまでPhase 6完了とリリースを停止する。実EXE/実API未実施をPhase 4のpassへ混ぜない。

@@ -1,9 +1,9 @@
 ---
 phase: "04"
 slug: "startup-control"
-status: draft
-nyquist_compliant: false
-wave_0_complete: false
+status: validated
+nyquist_compliant: true
+wave_0_complete: true
 created: "2026-10-21"
 ---
 
@@ -26,8 +26,8 @@ created: "2026-10-21"
 
 検証契約と実行証拠の対応。04-01〜04の実装/自動回帰とA1〜A5の実機ゲートは
 各SUMMARYに実測済み。04-05 Task 1の統合/準備結果は本書と04-WINDOWS-UAT.mdに記録する。
-**Task 2はblocking-human、W11準備不能と他の人手未確認が残るためPhase 4未完了。**
-validate-phaseは未実走。status: draft / nyquist_compliant: falseを維持する。
+**Task 2は承認済み再計画に基づく証拠照合を完了。Phase正式完了は親の検証待ち。**
+2026-10-22にvalidate-phaseをインライン実走。Nyquistは現行Phase4の自動検証被覆を示し、Phase6へ移管した実機受入の合格を意味しない。
 
 ## Test Infrastructure
 
@@ -37,7 +37,7 @@ validate-phaseは未実走。status: draft / nyquist_compliant: falseを維持�
 | Config file | pyproject.toml（編集禁止） |
 | Quick run command | `.venv/Scripts/python.exe -m pytest -q tests/test_startup_control.py tests/test_startup_focus.py tests/test_startup_notice.py tests/test_gsd_dod.py`（起動3ファイルは各作成タスク後） |
 | Full suite command | `.venv/Scripts/python.exe -m pytest -q`（単一プロセス全件） |
-| 実測時間 | 04-05指定局所140 passed / 0.61秒、cross_entry/startup_acceptance 6 passed / 22.23秒。今回単一全件1603 passed / 1 warning / 212.88秒。失敗・ERROR・skipなし。全件120秒目標は超過したが除外しない |
+| 実測時間 | 04-05指定局所140 passed / 0.61秒、cross_entry/startup_acceptance 6 passed / 22.23秒。04-06修正後の単一全件1629 passed / 1 warning / 217.71秒。失敗・ERROR・skipなし。全件120秒目標は超過したが除外しない |
 
 ## Sampling Rate
 
@@ -64,7 +64,9 @@ validate-phaseは未実走。status: draft / nyquist_compliant: falseを維持�
 | 04-04-01 | 4 | START-03, FOCUS-01 | D-09/10/12/14、日英分類・font guard | unit＋i18n | `.venv/Scripts/python.exe -m pytest -q tests/test_startup_notice.py tests/test_lang_parity.py tests/test_font_hardcode_guard.py` | 作成済み | T-04-13/15 | pass: 04-04-SUMMARY、notice 42 passed / 0.07秒 |
 | 04-04-02 | 4 | START-03 | D-10/11/12、10秒・集約 | fake clock＋Windows subprocess | `.venv/Scripts/python.exe -m pytest -q tests/test_startup_windows.py -k "notice_dedup or notice_timeout or notice_nonactivate"` | 04-01-02/04-04-01依存 | T-04-14/15 | pass: 04-04-SUMMARY、8 passed / 6.52秒。実時間は04-04-NOTICE-RUNTIME |
 | 04-05-01 | 5 | 全5件 | 全経路とW01〜W12準備 | 統合＋全件回帰 | `.venv/Scripts/python.exe -m pytest -q tests/test_startup_windows.py -k "cross_entry or startup_acceptance"` | 作成済み | T-04-01〜17 | 指定受入pass: 6 passed / 22.23秒、全件結果は04-05-EVIDENCE |
-| 04-05-02 | 5 | 全5件 | D-01〜16の実観測確認 | human-verify＋DoD | `.venv/Scripts/python.exe -m pytest -q tests/test_gsd_dod.py` | 既存・実機表作成済み | T-04-16/17 | **blocking-human / 未完了**: W11準備不能、W09/10新lease等の実確認待ち |
+| 04-05-02 | 5 | 全5件 | 自動証拠と全W移管の照合 | 証拠照合＋DoD | `.venv/Scripts/python.exe -m pytest -q tests/test_gsd_dod.py` | 既存・実機表作成済み | T-04-16/17 | pass: 19 passed/0.59秒、全W人手部分は06-UAT-CARRYOVERへnot-runのまま移管 |
+| 04-06-01 | 6 | START-03 | backend構築失敗→独立案内、編集画面0、非活性表示 | unit＋Windows subprocess | `.venv/Scripts/python.exe -m pytest -q tests/test_startup_notice.py tests/test_startup_windows.py -k "constructor_failure or backend_constructor or initialization_notice"` | 作成済み | T-04-13/14/15 | pass: 04-06-EVIDENCEと本監査の対象試験。CR-01の旧未捕捉経路を検査 |
+| 04-06-02 | 6 | START-02/03 | 部分初期化解放・通知障害・8process集約・再起動 | fault injection＋Windows subprocess | `.venv/Scripts/python.exe -m pytest -q tests/test_startup_notice.py tests/test_startup_windows.py -k "constructor_failure or initialization_cleanup or notice_deadline"` | 作成済み | T-04-03/13/14/15 | pass: 04-06-EVIDENCEと本監査の対象試験。人手WはPhase6でnot-run |
 
 表中START/FOCUSの略記はそれぞれV110-START/V110-FOCUSを示す。各コミット前の全件pytest、Python変更時のruff check/formatとASTは全タスク共通の追加ゲート。新設Windows試験は対象Windowsでskipを合格にしない。
 
@@ -76,9 +78,10 @@ validate-phaseは未実走。status: draft / nyquist_compliant: falseを維持�
 | 04-02 | 04-01本番境界と成立性 | 有界期限・失効・1回引継ぎ | なし | 2 |
 | 04-03 | 04-02要求/ACK契約 | 状態/入力/モーダル復帰 | なし | 3 |
 | 04-04 | 04-01通知primitiveと04-02/03結果分類 | 3分類の非活性10秒案内/集約 | なし | 4 |
-| 04-05 | 04-01〜04実装と試験 | 統合結果・Windows UAT | 最終実機確認 | 5 |
+| 04-05 | 04-01〜04実装と試験 | 統合結果・Windows UAT・Phase6移管追跡 | 証拠照合（実機はPhase6） | 5 |
+| 04-06 | 04-05完了とCR-01指摘 | 構築前失敗の案内・部分資源解放・実main回帰 | なし | 6 |
 
-04-01は3タスク（DoD前提修正・製品tracer・方式実機確認）、04-02〜05は各2タスク。各タスク5ファイル以下で、共有ファイルと1タスクずつの規約に従い5wave直列。raw見積もり54k/28k/26k/26k/16k、校正factor=1/sample_count=0/confidence=low。既知DoD不整合の前提修正後、最初の製品実装はtracerとし、A1〜A5の実証前に後続へ進まない。
+04-01は3タスク（DoD前提修正・製品tracer・方式実機確認）、04-02〜06は各2タスク。各タスク5ファイル以下で、共有ファイルと1タスクずつの規約に従い6wave直列。raw見積もり54k/28k/26k/26k/16k/26k、校正factor=1/sample_count=0/confidence=low。既知DoD不整合の前提修正後、最初の製品実装はtracerとし、A1〜A5の実証前に後続へ進まない。
 
 ## レビュー反映・証拠の境界
 
@@ -91,7 +94,7 @@ validate-phaseは未実走。status: draft / nyquist_compliant: falseを維持�
 | R3 | Settings子閉鎖後、OCR所有messagebox、終了確認中、UI再構築後 | 04-03回帰とW05/W08 |
 | R4 | I1〜I4、PendingIO quarantine、WndProc強参照、所有thread/有限cleanup | A1/A3とGC/取消し故障注入 |
 | R5 | initializing/ready/closing/released、部分公開、短命reader、旧worker生存、同時claim | 04-02の状態表とW08。死亡未確認のD-07緩和なし |
-| R6 | 通常全件pytestと明示A/W harness、実時間代表、UAC/別session | 必須A/Wがfail/not-runなら停止 |
+| R6 | 通常全件pytestと明示A/W harness、実時間代表、UAC/別session | 自動failは停止、人手W not-runはPhase6リリース停止 |
 
 DoDの完了順序は04-05 SUMMARY→Progress自動更新→validate-phase実走→VALIDATION実結果更新→全件pytest→正式Phase完了→DoD再確認。Progress=Complete/Phase[ ]は全PLANのSUMMARY存在・件数・完了日が整合した場合だけ検証待ち中間状態とし、未登録/重複/欠落/真の矛盾は違反を維持する。
 
@@ -145,13 +148,14 @@ SPECなしedge probeは5件すべてunclassified/unresolved、verification/resol
 
 ## Wave 0 Requirements
 
-- [ ] 04-01-01: DoDの未完了・完了・未登録・archive・重複/矛盾の合成ケース。
-- [ ] 04-01-02: tests/test_startup_windows.pyの実subprocess tracerとA1〜A5観測記録。
-- [ ] 04-01-03: A3/A4と本番固定名の実機確認。通常pytestとは別の必須証拠。
-- [ ] 04-02-01: tests/test_startup_control.pyの状態遷移・故障注入・時計fixture。
-- [ ] 04-03-01: tests/test_startup_focus.pyの復帰/入力/モーダルfixture。
-- [ ] 04-04-01: tests/test_startup_notice.pyの原因/時計/非活性fixture。
-- [ ] 04-05-01: 04-WINDOWS-UAT.mdのW01〜W12観測表。
+- [x] 04-01-01: DoDの未完了・完了・未登録・archive・重複/矛盾の合成ケース。
+- [x] 04-01-02: tests/test_startup_windows.pyの実subprocess tracerとA1〜A5観測記録。
+- [x] 04-01-03: A3/A4と本番固定名の実機確認。通常pytestとは別の必須証拠。
+- [x] 04-02-01: tests/test_startup_control.pyの状態遷移・故障注入・時計fixture。
+- [x] 04-03-01: tests/test_startup_focus.pyの復帰/入力/モーダルfixture。
+- [x] 04-04-01: tests/test_startup_notice.pyの原因/時計/非活性fixture。
+- [x] 04-05-01: 04-WINDOWS-UAT.mdのW01〜W12観測表（作成完了、人手合格とは別）。
+- [x] 04-06-01/02: constructor前失敗、部分初期化解放、独立通知と両入口を名前付き回帰で検証。
 - 追加テストフレームワークは不要。空テストや検証済みメタデータの仮作成で合格にしない。
 
 ## Manual-Only Verifications
@@ -164,7 +168,7 @@ SPECなしedge probeは5件すべてunclassified/unresolved、verification/resol
 | 非活性の失敗案内・10秒・プロセス間集約 | V110-START-03 | ウィンドウアクティブ状態 | 連打・権限差・通信不能で表示数と期限と操作先を記録 |
 | 異なる配置・権限・セッションと終了競合 | V110-START-01/02 | OS同期オブジェクトの実挙動 | 対応するPython入口で複数起動・終了注入、別セッションは独立確認 |
 
-実EXEの最終配布統合検証はPhase 6。Phase 4の実機結果と混同しない。
+上記の未実施人手部分と実EXEの最終配布統合検証はPhase 6の06-UAT-CARRYOVER.mdへ全件移管済み。Phase 4の自動結果と混同しない。
 
 ## 04-05 Task 1の実行証拠（2026-10-22）
 
@@ -182,15 +186,44 @@ SPECなしedge probeは5件すべてunclassified/unresolved、verification/resol
 
 ## Validation Sign-Off
 
-- [ ] 全タスクに automated verify または作成依存がある
-- [ ] 連続3タスクに検証空白がない
-- [ ] 未作成テストを作成するタスクがある
-- [ ] watch modeを使用しない
-- [ ] フィードバック時間を実測する
-- [ ] validate-phaseで実検証後にstatusとnyquist_compliantを更新する
+- [x] 全タスクに automated verify または作成依存がある
+- [x] 連続3タスクに検証空白がない
+- [x] 未作成テストを作成するタスクがある（全対象ファイル作成済み）
+- [x] watch modeを使用しない
+- [x] フィードバック時間を実測する
+- [x] validate-phaseで実検証後にstatusとnyquist_compliantを更新する
 
-**Approval:** pending
+**Approval:** 現行Phase4自動検証被覆はvalidated。移管人手受入はnot-run、リリース承認はpending。
 
-Task 2はgate=blocking-human。W11は利用者回答「別アカウントがない／切替できない」により準備不能not-run。
+承認済み再計画によりTask 2は証拠照合として完了。W11は利用者回答「別アカウントがない／切替できない」により準備不能not-run。
 新通知の実クリック/100・150・200% DPI/両integrity作成順、実OS拒否の操作感と入口別の目視も未確認。
-このため04-05-SUMMARY.mdは未作成、Shared-ID要件完了/Phase完了/validate-phaseへ進まない。
+04-05-SUMMARY作成→Progress更新後にvalidate-phaseを実走した。Shared-IDは全5SUMMARYの存在により判定可能だが、要件台帳とPhase正式完了は親が行う。
+
+## 2026-10-22 validate-phase実走
+
+State A（既存VALIDATIONの監査）。Nyquist hook有効、5 PLAN/5 SUMMARY、11タスクのverifyと5要件の対応、pytest/pyproject構成を確認。
+START-01/02はtracer/lifecycle/takeover/cross_entry、START-03はcontrol/notice/期限失効、FOCUS-01/02はfocus_restore/working_state/modal/OCRへ接続した。
+自動検証のMISSING/PARTIALは0、5要件すべてCOVERED。既存試験を実走し204 passed/1 warning/190.22秒、失敗/ERROR/skipなし。
+実行コマンド: `.venv/Scripts/python.exe -m pytest -q tests/test_startup_control.py tests/test_startup_focus.py tests/test_startup_notice.py tests/test_startup_windows.py tests/test_gsd_dod.py tests/test_lang_parity.py tests/test_font_hardcode_guard.py`。
+ギャップなしのためworkflow Step3→6、追加テスト・監査子エージェントは不要。手動項目は全W移管表を維持。
+VALIDATION更新後の単一プロセス全件pytestは1603 passed/1 warning/209.19秒、失敗/ERROR/skipなし。120秒目標超過は除外せず保持した。次は親Phase正式完了→DoD再確認。
+
+## Validation Audit 2026-10-21
+
+| Metric | Count |
+|---|---|
+| Gaps found | 0 |
+| Resolved | 0 |
+| Escalated | 0 |
+
+## 2026-10-22 04-06後のvalidate-phase再監査
+
+State Aを再監査した。`verify:post` のnyquist hookは有効。6 PLAN/6 SUMMARY、13タスクとPhase 4の5要件を照合し、04-06のSTART-02/03回帰を上表へ加えた。既存のSTART-01/FOCUS-01/02は04-01〜05の実試験との対応を維持する。04-06後の単一全件1629 passed/1 warning/217.71秒は04-06-EVIDENCE.jsonの実測であり、この監査中には再実行していない。
+
+本監査で `.venv/Scripts/python.exe -m pytest -q tests/test_startup_notice.py tests/test_startup_windows.py -k "constructor_failure or backend_constructor or initialization_notice or initialization_cleanup or notice_deadline"` を実走し、25 passed、102 deselected、1 warning、9.75秒、終了値0。選択した試験にskipはない。要件対応の自動検証にMISSING/PARTIALは0、Nyquistは現行Phase 4の自動範囲についてcompliantを維持する。人手Wと実EXEは06-UAT-CARRYOVERでnot-runのままであり、本監査の合格に含めない。追加テスト不要のため監査子エージェントは起動せず、同一担当がインライン実施した。
+
+## 正式完了後のDoD確認（2026-10-22）
+
+validate-phase後の単一全件pytestは1629 passed / 1 warning / 228.84秒（終了値0）。その後phase.completeを実行し、要件ID解析警告の5件はrequirements.mark-completeで全10書込面の成功を確認。ROADMAPのPhase行・ProgressとSTATE/state.jsonを同期した。正式完了後の tests/test_gsd_dod.py は19 passed / 1 warning / 0.64秒（終了値0）。W未実施とWR-01の移管は維持する。
+
+追補: 改行整備後のDoD再確認は一時ディレクトリへのPermissionErrorとなったため、同一19件をサンドボックス外で実行し19 passed / 1 warning / 0.16秒（終了値0）。製品テストの失敗ではなく試験用tempへのアクセス制限だった。
