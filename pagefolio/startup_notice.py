@@ -67,8 +67,9 @@ def _record_notification_unavailable(reason, error, logger=None):
         (logger or logging.getLogger(__name__)).warning(
             "notification_unavailable reason=%s os_error=%s", reason, os_error
         )
-    except Exception:
+    except Exception as e:
         # 診断障害で元の通知失敗を境界外へ漏らさない。
+        _ = e
         return NoticeOutcome("notification_unavailable", reason, os_error)
     return NoticeOutcome("notification_unavailable", reason, os_error)
 

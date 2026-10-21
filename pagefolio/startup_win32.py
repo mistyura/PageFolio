@@ -212,7 +212,8 @@ class _Security:
             self.attributes = SECURITY_ATTRIBUTES(
                 ct.sizeof(SECURITY_ATTRIBUTES), self.descriptor, False
             )
-        except Exception:
+        except Exception as e:
+            _ = e
             self.close()
             raise
 
@@ -448,7 +449,8 @@ class Win32NoticeBackend:
                 self.api, self.sid, READ_CONTROL | 6
             )
             self._notice_resources.append(self.mapping_security)
-        except Exception:
+        except Exception as e:
+            _ = e
             # subclass の未完成 close へ動的 dispatch しない。
             try:
                 self._close_notice_resources()
@@ -502,7 +504,8 @@ class Win32NoticeBackend:
             ):
                 raise PermissionError("起動相手の識別に失敗")
             return process
-        except Exception:
+        except Exception as e:
+            _ = e
             process.close()
             raise
 
@@ -555,7 +558,8 @@ class Win32Backend(Win32NoticeBackend):
         self._closed = False
         try:
             self.pipe_security = _security_descriptor(self.api, self.sid, 0x12019F)
-        except Exception:
+        except Exception as e:
+            _ = e
             try:
                 self._close_notice_resources()
             except Exception as cleanup_error:

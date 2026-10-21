@@ -27,7 +27,8 @@ def main(*, backend_factory=None, notice_backend_factory=None):
                 if backend is not None:
                     try:
                         backend.close()
-                    except Exception:
+                    except Exception as e:
+                        _ = e  # 詳細を案内へ渡さない。
                         close_failed = True
                 notice = show_startup_initialization_failure(
                     backend_factory=notice_backend_factory
