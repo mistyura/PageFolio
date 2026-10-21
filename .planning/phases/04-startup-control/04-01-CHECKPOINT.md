@@ -1,22 +1,23 @@
 ---
 phase: 04-startup-control
 plan: "01"
-status: awaiting-human-verification
+status: resolved
 type: checkpoint:human-verify
 gate: blocking-human
-current_task: 04-01-03
-completed_tasks: [04-01-01, 04-01-02]
+current_task: completed
+completed_tasks: [04-01-01, 04-01-02, 04-01-03]
 task_commits: [8b5b304, 282d8fe, de27654]
 branch: feature/v1.10.0
 use_worktrees: false
-next_plan_allowed: false
+next_plan_allowed: true
 created: 2026-10-21
 ---
 
-# 04-01 — 方式成立性の実機確認待ち
+# 04-01 — 方式成立性の実機ゲート解消
 
-**進捗: 2/3 tasks。04-01/Phase4をcomplete・validatedへ変更しない。**
-SUMMARYは最終Task3完了後に作成する。要件をCompleteにせず、04-02を開始しない。
+**進捗: 3/3 tasks。04-01完了。Phase4全体は未完了・未validated。**
+Task3の生記録を照合してA1〜A5をpassと確定した。SUMMARYで完了記録を残す。
+共有要件のComplete昇格と04-02の開始は親オーケストレーターに委ねる。
 
 ## 完了した作業
 
@@ -33,6 +34,7 @@ SUMMARYは最終Task3完了後に作成する。要件をCompleteにせず、04-
 - pagefolio.py AST: AST OK。
 - 単一全件pytest: **1437 passed / 1 warning / 68.31秒**。
 - 計画指定Windows tracer: **14 passed / 1 warning / 37.46秒**。
+- 実機ゲート解消後の再確認: tracer **14 passed / 37.97秒**、単一全件 **1437 passed / 67.89秒**（双方warning1件）。
 - 元設定/2種プロンプト: 全試験・各spawn子の存在/SHA-256が不変。
 - UAC、別sessionログイン、クリック待ちは通常pytestに含めていない。
 - 対象commitの削除ファイルなし。既存未コミットplanning変更はそのまま保持。
@@ -40,13 +42,14 @@ SUMMARYは最終Task3完了後に作成する。要件をCompleteにせず、04-
 実測と手動試験の実行方法は [04-TRACER-EVIDENCE.md](04-TRACER-EVIDENCE.md) を参照。
 同時二次の実測terminalはforeground_deniedであり、OSによる前面化成功とは扱わない。
 
-## 現在の停止理由
+## 停止ゲートの解消根拠
 
-計画04-01-03の `gate="blocking-human"`。
-A3の実際のクリック/入力維持、A4の権限差全資源、固定本番名が未実施である。
-自動pytestの成功やworktree無効化の承認は、この実機ゲートの代替にならない。
+計画04-01-03の `gate="blocking-human"` は利用者の実操作と生記録で解消した。
+A3の実クリック閉鎖1937ms・無操作10000ms閉鎖と入力継続、A4の両作成順序/全4資源、
+固定本番名retryを確認した。初回の未成立・中断記録も残した。
+詳細は04-HUMAN-EVIDENCE.jsonと更新済み04-TRACER-EVIDENCE.mdを参照する。
 
-## 再開手順（実行担当が自動化を準備する）
+## 再現手順（今回実施済み。今後の必須操作待ちではない）
 
 1. 専用の対話セッションで、`_spawn` により一時fixtureを準備する。
    namespaceを試験ごとのUUIDにして通常/昇格の両子で共有する。
@@ -80,4 +83,4 @@ A3の実際のクリック/入力維持、A4の権限差全資源、固定本番
 ## 永続記録の自己検証: PASSED
 
 Task1/2の3コミットと対象ファイルの存在を確認した。
-04-01-SUMMARY.mdは存在せず、完了を偽っていない。
+Task3の原データ一致・原本不変と再開後の必須試験を確認し、SUMMARYへ引き継ぐ。

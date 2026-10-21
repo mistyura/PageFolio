@@ -1,0 +1,360 @@
+﻿{
+    "recorded":  "2026-10-21T22:24:13.5121908+09:00",
+    "records":  {
+                    "elevated-owner/manual-secondary":  {
+                                                            "resource-audit.json":  {
+                                                                                        "sid":  "S-1-5-5-0-204810",
+                                                                                        "authentication_luid":  209750,
+                                                                                        "session_id":  1,
+                                                                                        "pid":  33552,
+                                                                                        "owner_result":  "existing",
+                                                                                        "notice_acquired":  false,
+                                                                                        "snapshot":  {
+                                                                                                         "protocol":  1,
+                                                                                                         "generation":  "95bc3602d18c469cb5a99b54d041f06a",
+                                                                                                         "pid":  26640,
+                                                                                                         "process_created":  134370624938653294,
+                                                                                                         "session_id":  1,
+                                                                                                         "state":  "ready",
+                                                                                                         "ready":  true
+                                                                                                     },
+                                                                                        "terminal_result":  "completed",
+                                                                                        "elapsed":  63
+                                                                                    },
+                                                            "result.json":  {
+                                                                                "constructed":  0,
+                                                                                "restored":  0,
+                                                                                "status_preserved":  true,
+                                                                                "result":  "completed",
+                                                                                "elapsed":  63
+                                                                            }
+                                                        },
+                    "notice-manual":  {
+                                          "ready":  {
+                                                        "foreground_before":  135134,
+                                                        "started_tick":  56864203,
+                                                        "lease_acquired":  true,
+                                                        "hwnd":  2231234,
+                                                        "shown_tick":  56864203,
+                                                        "foreground_shown":  135134
+                                                    },
+                                          "result.json":  {
+                                                              "foreground_before":  135134,
+                                                              "started_tick":  56864203,
+                                                              "lease_acquired":  true,
+                                                              "hwnd":  2231234,
+                                                              "shown_tick":  56864203,
+                                                              "foreground_shown":  135134,
+                                                              "closed_tick":  56866140,
+                                                              "foreground_after":  135134
+                                                          }
+                                      },
+                    "elevated-owner/manual-owner":  {
+                                                        "resource-audit.json":  {
+                                                                                    "sid":  "S-1-5-5-0-204810",
+                                                                                    "authentication_luid":  208027,
+                                                                                    "session_id":  1,
+                                                                                    "pid":  26640,
+                                                                                    "owner_result":  "acquired",
+                                                                                    "notice_acquired":  true,
+                                                                                    "snapshot":  {
+                                                                                                     "protocol":  1,
+                                                                                                     "generation":  "95bc3602d18c469cb5a99b54d041f06a",
+                                                                                                     "pid":  26640,
+                                                                                                     "process_created":  134370624938653294,
+                                                                                                     "session_id":  1,
+                                                                                                     "state":  "initializing",
+                                                                                                     "ready":  false
+                                                                                                 }
+                                                                                },
+                                                        "ready":  {
+                                                                      "sid":  "S-1-5-5-0-204810",
+                                                                      "authentication_luid":  208027,
+                                                                      "session_id":  1,
+                                                                      "pid":  26640,
+                                                                      "owner_result":  "acquired",
+                                                                      "notice_acquired":  true,
+                                                                      "snapshot":  {
+                                                                                       "protocol":  1,
+                                                                                       "generation":  "95bc3602d18c469cb5a99b54d041f06a",
+                                                                                       "pid":  26640,
+                                                                                       "process_created":  134370624938653294,
+                                                                                       "session_id":  1,
+                                                                                       "state":  "initializing",
+                                                                                       "ready":  false
+                                                                                   }
+                                                                  },
+                                                        "result.json":  {
+                                                                            "constructed":  1,
+                                                                            "restored":  1,
+                                                                            "status_preserved":  true,
+                                                                            "result":  "primary",
+                                                                            "elapsed":  2703
+                                                                        }
+                                                    },
+                    "fixed-production/manual-owner":  {
+                                                          "resource-audit.json":  {
+                                                                                      "sid":  "S-1-5-5-0-204810",
+                                                                                      "authentication_luid":  209750,
+                                                                                      "session_id":  1,
+                                                                                      "pid":  32428,
+                                                                                      "owner_result":  "acquired",
+                                                                                      "notice_acquired":  true,
+                                                                                      "snapshot":  {
+                                                                                                       "protocol":  1,
+                                                                                                       "generation":  "3153b32d1ddd41f6aaf0efc8b693b578",
+                                                                                                       "pid":  32428,
+                                                                                                       "process_created":  134370625385970006,
+                                                                                                       "session_id":  1,
+                                                                                                       "state":  "initializing",
+                                                                                                       "ready":  false
+                                                                                                   }
+                                                                                  },
+                                                          "ready":  {
+                                                                        "sid":  "S-1-5-5-0-204810",
+                                                                        "authentication_luid":  209750,
+                                                                        "session_id":  1,
+                                                                        "pid":  32428,
+                                                                        "owner_result":  "acquired",
+                                                                        "notice_acquired":  true,
+                                                                        "snapshot":  {
+                                                                                         "protocol":  1,
+                                                                                         "generation":  "3153b32d1ddd41f6aaf0efc8b693b578",
+                                                                                         "pid":  32428,
+                                                                                         "process_created":  134370625385970006,
+                                                                                         "session_id":  1,
+                                                                                         "state":  "initializing",
+                                                                                         "ready":  false
+                                                                                     }
+                                                                    },
+                                                          "result.json":  {
+                                                                              "constructed":  1,
+                                                                              "restored":  0,
+                                                                              "status_preserved":  true,
+                                                                              "result":  "primary",
+                                                                              "elapsed":  2593
+                                                                          }
+                                                      },
+                    "medium-owner/manual-secondary":  {
+                                                          "resource-audit.json":  {
+                                                                                      "sid":  "S-1-5-5-0-204810",
+                                                                                      "authentication_luid":  208027,
+                                                                                      "session_id":  1,
+                                                                                      "pid":  10920,
+                                                                                      "owner_result":  "existing",
+                                                                                      "notice_acquired":  false,
+                                                                                      "snapshot":  {
+                                                                                                       "protocol":  1,
+                                                                                                       "generation":  "f17bf0fdeff44261b953600425ef867f",
+                                                                                                       "pid":  29640,
+                                                                                                       "process_created":  134370624245599175,
+                                                                                                       "session_id":  1,
+                                                                                                       "state":  "ready",
+                                                                                                       "ready":  true
+                                                                                                   },
+                                                                                      "terminal_result":  "foreground_denied",
+                                                                                      "elapsed":  62
+                                                                                  },
+                                                          "result.json":  {
+                                                                              "constructed":  0,
+                                                                              "restored":  0,
+                                                                              "status_preserved":  true,
+                                                                              "result":  "foreground_denied",
+                                                                              "elapsed":  62
+                                                                          }
+                                                      },
+                    "fixed-production-retry/manual-owner":  {
+                                                                "resource-audit.json":  {
+                                                                                            "sid":  "S-1-5-5-0-204810",
+                                                                                            "authentication_luid":  209750,
+                                                                                            "session_id":  1,
+                                                                                            "pid":  20592,
+                                                                                            "owner_result":  "acquired",
+                                                                                            "notice_acquired":  true,
+                                                                                            "snapshot":  {
+                                                                                                             "protocol":  1,
+                                                                                                             "generation":  "b25d80bb19ba4d1392250528b6f838b8",
+                                                                                                             "pid":  20592,
+                                                                                                             "process_created":  134370626135456852,
+                                                                                                             "session_id":  1,
+                                                                                                             "state":  "initializing",
+                                                                                                             "ready":  false
+                                                                                                         }
+                                                                                        },
+                                                                "ready":  {
+                                                                              "sid":  "S-1-5-5-0-204810",
+                                                                              "authentication_luid":  209750,
+                                                                              "session_id":  1,
+                                                                              "pid":  20592,
+                                                                              "owner_result":  "acquired",
+                                                                              "notice_acquired":  true,
+                                                                              "snapshot":  {
+                                                                                               "protocol":  1,
+                                                                                               "generation":  "b25d80bb19ba4d1392250528b6f838b8",
+                                                                                               "pid":  20592,
+                                                                                               "process_created":  134370626135456852,
+                                                                                               "session_id":  1,
+                                                                                               "state":  "initializing",
+                                                                                               "ready":  false
+                                                                                           }
+                                                                          },
+                                                                "result.json":  {
+                                                                                    "constructed":  1,
+                                                                                    "restored":  1,
+                                                                                    "status_preserved":  true,
+                                                                                    "result":  "primary",
+                                                                                    "elapsed":  3297
+                                                                                }
+                                                            },
+                    "medium-owner/manual-owner":  {
+                                                      "resource-audit.json":  {
+                                                                                  "sid":  "S-1-5-5-0-204810",
+                                                                                  "authentication_luid":  209750,
+                                                                                  "session_id":  1,
+                                                                                  "pid":  29640,
+                                                                                  "owner_result":  "acquired",
+                                                                                  "notice_acquired":  true,
+                                                                                  "snapshot":  {
+                                                                                                   "protocol":  1,
+                                                                                                   "generation":  "f17bf0fdeff44261b953600425ef867f",
+                                                                                                   "pid":  29640,
+                                                                                                   "process_created":  134370624245599175,
+                                                                                                   "session_id":  1,
+                                                                                                   "state":  "initializing",
+                                                                                                   "ready":  false
+                                                                                               }
+                                                                              },
+                                                      "ready":  {
+                                                                    "sid":  "S-1-5-5-0-204810",
+                                                                    "authentication_luid":  209750,
+                                                                    "session_id":  1,
+                                                                    "pid":  29640,
+                                                                    "owner_result":  "acquired",
+                                                                    "notice_acquired":  true,
+                                                                    "snapshot":  {
+                                                                                     "protocol":  1,
+                                                                                     "generation":  "f17bf0fdeff44261b953600425ef867f",
+                                                                                     "pid":  29640,
+                                                                                     "process_created":  134370624245599175,
+                                                                                     "session_id":  1,
+                                                                                     "state":  "initializing",
+                                                                                     "ready":  false
+                                                                                 }
+                                                                },
+                                                      "result.json":  {
+                                                                          "constructed":  1,
+                                                                          "restored":  1,
+                                                                          "status_preserved":  true,
+                                                                          "result":  "primary",
+                                                                          "elapsed":  5640
+                                                                      }
+                                                  },
+                    "notice-timer-retry":  {
+                                               "ready":  {
+                                                             "foreground_before":  1640822,
+                                                             "started_tick":  56982828,
+                                                             "lease_acquired":  true,
+                                                             "hwnd":  2626398,
+                                                             "shown_tick":  56982843,
+                                                             "foreground_shown":  1640822
+                                                         },
+                                               "result.json":  {
+                                                                   "foreground_before":  1640822,
+                                                                   "started_tick":  56982828,
+                                                                   "lease_acquired":  true,
+                                                                   "hwnd":  2626398,
+                                                                   "shown_tick":  56982843,
+                                                                   "foreground_shown":  1640822,
+                                                                   "closed_tick":  56992843,
+                                                                   "foreground_after":  1640822
+                                                               }
+                                           },
+                    "fixed-production-retry/manual-secondary":  {
+                                                                    "resource-audit.json":  {
+                                                                                                "sid":  "S-1-5-5-0-204810",
+                                                                                                "authentication_luid":  209750,
+                                                                                                "session_id":  1,
+                                                                                                "pid":  35168,
+                                                                                                "owner_result":  "existing",
+                                                                                                "notice_acquired":  false,
+                                                                                                "snapshot":  {
+                                                                                                                 "protocol":  1,
+                                                                                                                 "generation":  "b25d80bb19ba4d1392250528b6f838b8",
+                                                                                                                 "pid":  20592,
+                                                                                                                 "process_created":  134370626135456852,
+                                                                                                                 "session_id":  1,
+                                                                                                                 "state":  "ready",
+                                                                                                                 "ready":  true
+                                                                                                             },
+                                                                                                "terminal_result":  "foreground_denied",
+                                                                                                "elapsed":  31
+                                                                                            },
+                                                                    "result.json":  {
+                                                                                        "constructed":  0,
+                                                                                        "restored":  0,
+                                                                                        "status_preserved":  true,
+                                                                                        "result":  "foreground_denied",
+                                                                                        "elapsed":  31
+                                                                                    }
+                                                                },
+                    "notice-timer":  {
+                                         "ready":  {
+                                                       "foreground_before":  135134,
+                                                       "started_tick":  56922375,
+                                                       "lease_acquired":  true,
+                                                       "hwnd":  4720134,
+                                                       "shown_tick":  56922375,
+                                                       "foreground_shown":  135134
+                                                   },
+                                         "result.json":  {
+                                                             "foreground_before":  135134,
+                                                             "started_tick":  56922375,
+                                                             "lease_acquired":  true,
+                                                             "hwnd":  4720134,
+                                                             "shown_tick":  56922375,
+                                                             "foreground_shown":  135134,
+                                                             "closed_tick":  56924109,
+                                                             "foreground_after":  135134
+                                                         }
+                                     }
+                },
+    "owner_identity":  {
+                           "parent_pid":  32632,
+                           "launcher_pid":  32632,
+                           "verified":  true,
+                           "owner_pid":  20592
+                       },
+    "originals_unchanged":  true,
+    "run_root":  "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\phase04-human-687c05821bc9445ab735c887a5a48b71",
+    "observations":  {
+                         "fixed_retry":  "事前claimでno_existing_owner。readyのowner pidをCIMのlauncher子processと照合後だけ二次起動",
+                         "fixed_first":  "ランチャーPIDと実Python子PIDの相違により試験側の同一性確認で中断。二次未起動。製品不合格と区別",
+                         "timer_first":  "ユーザー回答: クリックした。自動閉鎖試験は未成立として再試行",
+                         "timer_retry":  "ユーザー回答: 触れずに待ち、入力も続けられた",
+                         "high_to_medium":  "一次Verb RunAs、二次Start-Process通常。両process終了",
+                         "medium_to_high":  "一次Start-Process通常、二次Verb RunAs。owner/session/logon SID・mapping snapshot・terminal/notice記録",
+                         "manual_close":  "ユーザー回答: クリックして閉じ、入力も続けられた"
+                     },
+    "commit":  "32868b72becbf3d5fcc3ffbf7335005907e74fa1",
+    "test_processes_remaining":  0,
+    "original_fingerprints":  {
+                                  "value":  [
+                                                {
+                                                    "sha256":  null,
+                                                    "name":  "pagefolio_settings.json",
+                                                    "exists":  false
+                                                },
+                                                {
+                                                    "sha256":  null,
+                                                    "name":  "ocr_custom_prompt.md",
+                                                    "exists":  false
+                                                },
+                                                {
+                                                    "sha256":  null,
+                                                    "name":  "ocr_summary_prompt.md",
+                                                    "exists":  false
+                                                }
+                                            ],
+                                  "Count":  3
+                              }
+}
