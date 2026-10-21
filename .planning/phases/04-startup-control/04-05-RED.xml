@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="1" time="4.242" timestamp="2026-10-22T00:32:43.480262+09:00" hostname="nullaze-z240"><testcase classname="tests.test_startup_windows" name="test_cross_entry_owner_accepts_both_entries_and_other_location[script]" time="3.951"><failure message="AssertionError: 前面化許可委譲: False / 5&#10;  起動accepted: 77bca3f6d6a9463bb6a27b0025c81c66 / deadline=64983437&#10;  Traceback (most recent call last):&#10;    File &quot;C:\Users\shdwf\work\project\PageFolio\tests\test_startup_windows.py&quot;, line 1683, in &lt;module&gt;&#10;      _test_scenario_bootstrap(Path(sys.argv[2]), sys.argv[3], sys.argv[4])&#10;      ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^&#10;    File &quot;C:\Users\shdwf\work\project\PageFolio\tests\test_startup_windows.py&quot;, line 1676, in _test_scenario_bootstrap&#10;      _run_scenario(fixture, namespace, role)&#10;      ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^&#10;    File &quot;C:\Users\shdwf\work\project\PageFolio\tests\test_startup_windows.py&quot;, line 1647, in _run_scenario&#10;      runpy.run_path(str(_ROOT / &quot;pagefolio.py&quot;), run_name=&quot;__main__&quot;)&#10;      ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^&#10;    File &quot;&lt;frozen runpy&gt;&quot;, line 292, in run_path&#10;    File &quot;&lt;frozen runpy&gt;&quot;, line 97, in _run_module_code&#10;    File &quot;&lt;frozen runpy&gt;&quot;, line 87, in _run_code&#10;    File &quot;C:\Users\shdwf\work\project\PageFolio\pagefolio.py&quot;, line 16, in &lt;module&gt;&#10;      if main() == &quot;notification_unavailable&quot;:&#10;         ~~~~^^&#10;    File &quot;C:\Users\shdwf\work\project\PageFolio\pagefolio\__main__.py&quot;, line 27, in main&#10;      notice = coordinator.backend.show_notice(outcome.result)&#10;    File &quot;C:\Users\shdwf\work\project\PageFolio\tests\test_startup_windows.py&quot;, line 1599, in show_notice&#10;      raise AssertionError(f&quot;正常tracerで失敗案内: {reason}&quot;)&#10;  AssertionError: 正常tracerで失敗案内: connection_failed&#10;  &#10;assert 1 == 0&#10; +  where 1 = &lt;Popen: returncode: 1 args: ['C:\\Users\\shdwf\\work\\project\\PageFolio\\.v...&gt;.returncode">tmp_path = WindowsPath('C:/Users/shdwf/AppData/Local/Temp/pytest-of-shdwf/pytest-50/test_cross_entry_owner_accepts0')
+entry = 'script'
+
+    @pytest.mark.parametrize("entry", ["script", "module", "relocated"])
+    def test_cross_entry_owner_accepts_both_entries_and_other_location(tmp_path, entry):
+        namespace = uuid4().hex
+        owner, path = _spawn(tmp_path, namespace, f"entry-owner-{entry}")
+        children = [owner]
+        try:
+            _wait_file(owner, path / "ready")
+            identity = json.loads((path / "ready").read_text())
+            for role in ("entry-script", "entry-module", "entry-relocated"):
+                child, fixture = _spawn(tmp_path, namespace, role, expected_owner=identity)
+                children.append(child)
+&gt;               result = _finish(child)
+                         ^^^^^^^^^^^^^^
+
+tests\test_startup_windows.py:724: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+child = &lt;Popen: returncode: 1 args: ['C:\\Users\\shdwf\\work\\project\\PageFolio\\.v...&gt;
+
+    def _finish(child):
+        try:
+            out, err = child.communicate(timeout=12)
+        except subprocess.TimeoutExpired:
+            child.kill()
+            child.communicate()
+            pytest.fail("子process が12秒以内に終了しない")
+&gt;       assert child.returncode == 0, err
+E       AssertionError: 前面化許可委譲: False / 5
+E         起動accepted: 77bca3f6d6a9463bb6a27b0025c81c66 / deadline=64983437
+E         Traceback (most recent call last):
+E           File "C:\Users\shdwf\work\project\PageFolio\tests\test_startup_windows.py", line 1683, in &lt;module&gt;
+E             _test_scenario_bootstrap(Path(sys.argv[2]), sys.argv[3], sys.argv[4])
+E             ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           File "C:\Users\shdwf\work\project\PageFolio\tests\test_startup_windows.py", line 1676, in _test_scenario_bootstrap
+E             _run_scenario(fixture, namespace, role)
+E             ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           File "C:\Users\shdwf\work\project\PageFolio\tests\test_startup_windows.py", line 1647, in _run_scenario
+E             runpy.run_path(str(_ROOT / "pagefolio.py"), run_name="__main__")
+E             ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           File "&lt;frozen runpy&gt;", line 292, in run_path
+E           File "&lt;frozen runpy&gt;", line 97, in _run_module_code
+E           File "&lt;frozen runpy&gt;", line 87, in _run_code
+E           File "C:\Users\shdwf\work\project\PageFolio\pagefolio.py", line 16, in &lt;module&gt;
+E             if main() == "notification_unavailable":
+E                ~~~~^^
+E           File "C:\Users\shdwf\work\project\PageFolio\pagefolio\__main__.py", line 27, in main
+E             notice = coordinator.backend.show_notice(outcome.result)
+E           File "C:\Users\shdwf\work\project\PageFolio\tests\test_startup_windows.py", line 1599, in show_notice
+E             raise AssertionError(f"正常tracerで失敗案内: {reason}")
+E         AssertionError: 正常tracerで失敗案内: connection_failed
+E         
+E       assert 1 == 0
+E        +  where 1 = &lt;Popen: returncode: 1 args: ['C:\\Users\\shdwf\\work\\project\\PageFolio\\.v...&gt;.returncode
+
+tests\test_startup_windows.py:100: AssertionError</failure></testcase></testsuite></testsuites>

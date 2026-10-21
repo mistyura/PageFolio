@@ -1,5 +1,6 @@
 """Windows 起動制御の実プロセス tracer（UAC・操作待ちは通常収集しない）。"""
 
+import argparse
 import ctypes as ct
 import hashlib
 import importlib.util
@@ -10,6 +11,7 @@ import runpy
 import shutil
 import subprocess
 import sys
+import tempfile
 import threading
 import time
 from ctypes import wintypes as wt
@@ -49,8 +51,10 @@ def _unchanged_originals():
     assert _fingerprints() == before
 
 
-def _spawn(tmp_path, namespace, role):
-    fixture = tmp_path / role
+def _spawn(
+    tmp_path, namespace, role, *, fixture_name=None, expected_owner=None, detached=False
+):
+    fixture = tmp_path / (fixture_name or role)
     fixture.mkdir()
     (fixture / "plugins").mkdir()
     (fixture / "pagefolio_settings.json").write_text(
@@ -58,7 +62,11 @@ def _spawn(tmp_path, namespace, role):
     )
     for name in _ORIGINALS[1:]:
         (fixture / name).write_text("isolated test prompt", encoding="utf-8")
-    if role == "entry-relocated":
+    if expected_owner:
+        (fixture / "expected-owner.json").write_text(
+            json.dumps(expected_owner), encoding="utf-8"
+        )
+    if role in {"entry-relocated", "entry-owner-relocated"}:
         shutil.copytree(
             _ROOT / "pagefolio",
             fixture / "alternate" / "pagefolio",
@@ -66,15 +74,29 @@ def _spawn(tmp_path, namespace, role):
         )
         shutil.copyfile(_ROOT / "pagefolio.py", fixture / "alternate" / "pagefolio.py")
     # コマンドは既知のPythonとこのファイルに固定。fixture/roleは試験自身が生成する。
+    command = [
+        sys.executable,
+        str(Path(__file__).resolve()),
+        "_test_scenario_bootstrap",
+        str(fixture),
+        namespace,
+        role,
+    ]
+    if detached:
+        with (
+            (fixture / "stdout.log").open("w", encoding="utf-8") as out,
+            (fixture / "stderr.log").open("w", encoding="utf-8") as err,
+        ):
+            child = subprocess.Popen(  # noqa: S603
+                command,
+                cwd=_ROOT,
+                stdout=out,
+                stderr=err,
+                creationflags=subprocess.CREATE_NO_WINDOW,
+            )
+        return child, fixture
     return subprocess.Popen(  # noqa: S603
-        [
-            sys.executable,
-            str(Path(__file__).resolve()),
-            "_test_scenario_bootstrap",
-            str(fixture),
-            namespace,
-            role,
-        ],
+        command,
         cwd=_ROOT,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
@@ -704,6 +726,88 @@ def test_lifecycle_both_python_entries_and_relocated_version_share_owner(tmp_pat
         _reclaim(children)
 
 
+@pytest.mark.parametrize("entry", ["script", "module", "relocated"])
+def test_cross_entry_owner_accepts_both_entries_and_other_location(tmp_path, entry):
+    namespace = uuid4().hex
+    owner, path = _spawn(tmp_path, namespace, f"entry-owner-{entry}")
+    children = [owner]
+    try:
+        _wait_file(owner, path / "ready")
+        identity = json.loads((path / "ready").read_text())
+        for role in ("entry-script", "entry-module", "entry-relocated"):
+            child, fixture = _spawn(tmp_path, namespace, role, expected_owner=identity)
+            children.append(child)
+            result = _finish(child)
+            assert result["constructed"] == 0
+            assert result["result"] in {"completed", "foreground_denied"}
+            audit = json.loads((fixture / "resource-audit.json").read_text())
+            # Windows venv launcher PID と実Python PIDは一致しないことがある。
+            assert audit["verified_owner"]["pid"] == identity["pid"]
+            assert "allow_foreground" in audit
+        (path / "stop").touch()
+        result = _finish(owner)
+        assert result["constructed"] == 1 and result["status_preserved"]
+        assert 1 <= result["restored"] <= 3
+    finally:
+        (path / "stop").touch()
+        _reclaim(children)
+
+
+def test_startup_acceptance_product_identity_ignores_version_location_and_frozen(
+    monkeypatch, tmp_path
+):
+    from pagefolio import constants
+    from pagefolio.startup_win32 import Win32Backend
+
+    identities = []
+    for version, frozen in (("v1.test", False), ("v99.test", True)):
+        monkeypatch.setattr(constants, "APP_VERSION", version)
+        monkeypatch.setattr(sys, "frozen", frozen, raising=False)
+        monkeypatch.setattr(sys, "executable", str(tmp_path / version / "app.exe"))
+        backend = Win32Backend()
+        try:
+            identities.append(
+                (backend.owner_name, backend.state_name, backend._pipe_name("x"))
+            )
+        finally:
+            backend.close()
+    assert identities[0] == identities[1]
+    assert identities[0][0] == "Local\\PageFolio.Startup.Owner"
+
+
+@pytest.mark.parametrize("owner_present", [True, False])
+def test_startup_acceptance_guard_never_requests_foreign_or_missing_owner(
+    tmp_path, owner_present
+):
+    namespace = uuid4().hex
+    children = []
+    try:
+        if owner_present:
+            owner, path = _spawn(tmp_path, namespace, "owner")
+            children.append(owner)
+            _wait_file(owner, path / "ready")
+            expected = json.loads((path / "ready").read_text())
+            expected["process_created"] += 1
+        else:
+            expected = {"pid": 1, "process_created": 1}
+        child, child_path = _spawn(
+            tmp_path, namespace, "entry-module", expected_owner=expected
+        )
+        children.append(child)
+        child.communicate(timeout=8)
+        assert child.returncode != 0
+        audit = json.loads((child_path / "resource-audit.json").read_text())
+        assert audit["guard_blocked"]
+        assert "allow_foreground" not in audit
+        assert not (child_path / "ready").exists()
+        if owner_present:
+            (path / "stop").touch()
+            result = _finish(owner)
+            assert result["constructed"] == 1 and result["restored"] == 0
+    finally:
+        _reclaim(children)
+
+
 def test_lifecycle_partial_mapping_reader_closes_without_takeover():
     from pagefolio.startup_control import StartupCoordinator
     from pagefolio.startup_win32 import READ_CONTROL, OwnedHandle, Win32Backend
@@ -911,7 +1015,7 @@ def test_working_state_real_main_continues(tmp_path, case):
         _reclaim(children)
 
 
-def _prepare_focus_case(app, fixture, case):
+def _prepare_focus_case(app, fixture, case, *, manual=False):
     """実main上で実widget/履歴/OCRを準備。native popupも期限内に自動閉鎖。"""
     import tkinter as tk
     from tkinter import messagebox, ttk
@@ -935,7 +1039,7 @@ def _prepare_focus_case(app, fixture, case):
         def ocr_image(self, b64_png, prompt, **kwargs):
             assert isinstance(b64_png, str)
             entered.set()
-            assert release.wait(6), "OCR解除の期限切れ"
+            assert release.wait(110 if manual else 6), "OCR解除の期限切れ"
             return "local OCR completed"
 
         def list_models(self):
@@ -1159,7 +1263,8 @@ def _prepare_focus_case(app, fixture, case):
                         return
                 root.after(30, close_native)
 
-            root.after(30, close_native)
+            if not manual:
+                root.after(30, close_native)
             if case == "native-quit":
                 pdf()
                 app._quit()
@@ -1204,7 +1309,10 @@ def test_lifecycle_released_identity_mismatch_cannot_overwrite_mapping():
 def _run_scenario(fixture, namespace, role):
     """各spawnで初回app import前に設定/プロンプト/pluginsを隔離する。"""
     sys.path.insert(
-        0, str(fixture / "alternate") if role == "entry-relocated" else str(_ROOT)
+        0,
+        str(fixture / "alternate")
+        if role in {"entry-relocated", "entry-owner-relocated"}
+        else str(_ROOT),
     )
     from pagefolio import plugins, settings
 
@@ -1369,7 +1477,16 @@ def _run_scenario(fixture, namespace, role):
         "owner",
         "manual-owner",
         "init-failure",
-    } or role.startswith(("simultaneous-", "takeover-", "lifecycle-", "focus-owner-"))
+    } or role.startswith(
+        (
+            "simultaneous-",
+            "takeover-",
+            "lifecycle-",
+            "focus-owner-",
+            "entry-owner-",
+            "uat-owner-",
+        )
+    )
     if may_be_primary:
         from pagefolio import app as app_module
 
@@ -1380,11 +1497,38 @@ def _run_scenario(fixture, namespace, role):
                     raise RuntimeError("tracer-initialization-failure")
                 super().__init__(root)
                 app_reference.append(self)
-                if role.startswith("focus-owner-"):
+                if role == "uat-owner-slowready":
+                    (fixture / "scenario-ready").touch()
+                    time.sleep(6.5)
+                if role == "uat-owner-busy":
+
+                    def busy():
+                        before = counts["restored"]
+                        (fixture / "scenario-ready").touch()
+                        time.sleep(6.5)
+                        self.root.after(
+                            500,
+                            lambda: (fixture / "busy-result.json").write_text(
+                                json.dumps(
+                                    {
+                                        "before": before,
+                                        "after": counts["restored"],
+                                        "tick": backend_instances[0].tick_ms(),
+                                    }
+                                )
+                            ),
+                        )
+
+                    root.after(500, busy)
+                if role.startswith(("focus-owner-", "uat-owner-")):
+                    case = role.split("owner-", 1)[1]
                     root.after(
                         150,
                         lambda: _prepare_focus_case(
-                            self, fixture, role.removeprefix("focus-owner-")
+                            self,
+                            fixture,
+                            "preview" if case in {"busy", "slowready"} else case,
+                            manual=role.startswith("uat-"),
                         ),
                     )
                 if role == "lifecycle-cancel-owner":
@@ -1400,7 +1544,7 @@ def _run_scenario(fixture, namespace, role):
                     if (fixture / "stop").exists() or (
                         fixture.parent / "stop-all"
                     ).exists():
-                        if role.startswith("focus-owner-"):
+                        if role.startswith(("focus-owner-", "uat-owner-")):
                             self._focus_cleanup()
                         self._quit()
                     else:
@@ -1415,7 +1559,16 @@ def _run_scenario(fixture, namespace, role):
                         root.after(50, stop_poll)
 
                 root.after(50, stop_poll)
-                root.after(120000 if role == "manual-owner" else 10000, self._quit)
+                root.after(
+                    120000
+                    if role == "manual-owner" or role.startswith("uat-")
+                    else 10000,
+                    lambda: (
+                        (self._focus_cleanup(), self._quit())
+                        if role.startswith("uat-")
+                        else self._quit()
+                    ),
+                )
 
         app_module.PDFEditorApp = TracedApp
 
@@ -1430,6 +1583,8 @@ def _run_scenario(fixture, namespace, role):
                 "authentication_luid": self.authentication_luid,
                 "session_id": self.session_id,
                 "pid": self.pid,
+                "process_created": self._created(self.api.GetCurrentProcess()),
+                "started_tick": self.tick_ms(),
             }
             self.notice_lease = None
             if role == "api-denied":
@@ -1469,10 +1624,26 @@ def _run_scenario(fixture, namespace, role):
             return result
 
         def _observe_owner(self, owner):
+            expected_file = fixture / "expected-owner.json"
+            if expected_file.exists():
+                expected = json.loads(expected_file.read_text(encoding="utf-8"))
+                if any(owner[k] != expected[k] for k in ("pid", "process_created")):
+                    self.audit["guard_blocked"] = "identity_mismatch"
+                    raise PermissionError("接続先が試験一次と異なるため要求を中断")
             process = super()._observe_owner(owner)
+            self.audit["verified_owner"] = owner
             if role.startswith("takeover-"):
                 (fixture / "observed").touch()
             return process
+
+        def _allow_foreground(self, pid):
+            result = super()._allow_foreground(pid)
+            self.audit["allow_foreground"] = {
+                "pid": pid,
+                "allowed": result[0],
+                "os_error": result[1],
+            }
+            return result
 
         def try_takeover(self, generation, expected, deadline):
             self.audit["death_confirmed"] = self._process_has_exited(
@@ -1488,6 +1659,15 @@ def _run_scenario(fixture, namespace, role):
 
             result = super().claim(generation)
             self.audit["owner_result"] = result
+            if (fixture / "expected-owner.json").exists() and result == "acquired":
+                self.audit["guard_blocked"] = "owner_missing"
+                raise PermissionError("試験一次が消失したため要求せず中断")
+            if role.startswith("uat-owner-") and result != "acquired":
+                raise PermissionError("試験一次を確保できないため要求せず中断")
+            if result == "acquired":
+                (fixture / "initializing.json").write_text(
+                    json.dumps(self.audit), encoding="utf-8"
+                )
             if role.startswith("manual-"):
                 if result == "acquired":
                     self.notice_lease = NoticeLease(self, "A4-resource-check")
@@ -1511,22 +1691,24 @@ def _run_scenario(fixture, namespace, role):
         def publish_state(self, state, ready):
             super().publish_state(state, ready)
             if ready:
+                self.audit["snapshot"] = self._read_owner()
+                self.audit["ready_tick"] = self.tick_ms()
                 (fixture / "ready").write_text(json.dumps(self.audit), encoding="utf-8")
 
         def restore_window(self, hwnd, is_current=lambda: True):
             counts["restored"] += 1
             app = app_reference[0]
             status = app.status_var.get()
-            if role.startswith("focus-owner-"):
+            if role.startswith(("focus-owner-", "uat-owner-")):
                 app._focus_before()
             result = super().restore_window(hwnd, is_current=is_current)
             counts["status_preserved"] &= app.status_var.get() == status
-            if role.startswith("focus-owner-"):
+            if role.startswith(("focus-owner-", "uat-owner-")):
                 app._focus_after(result)
             return result
 
         def _foreground_window(self, hwnd, is_current):
-            if role.startswith("focus-owner-"):
+            if role.startswith(("focus-owner-", "uat-owner-")):
                 state = app_reference[0]._focus_state
                 state["activated"] = hwnd
                 handles = [
@@ -1538,6 +1720,14 @@ def _run_scenario(fixture, namespace, role):
             return super()._foreground_window(hwnd, is_current)
 
         def show_notice(self, reason):
+            self.audit["notice_reason"] = reason
+            if self.audit.get("guard_blocked"):
+                raise AssertionError("接続先guardが要求を中断した")
+            expected_file = fixture / "expected-owner.json"
+            if expected_file.exists() and json.loads(expected_file.read_text()).get(
+                "manual"
+            ):
+                return super().show_notice(reason)
             if role in {"notice-via-main", "api-denied"} or role.startswith(
                 "notice-production-"
             ):
@@ -1551,7 +1741,11 @@ def _run_scenario(fixture, namespace, role):
             from pagefolio.startup_win32 import NativeNoticeLifetime, _bind
 
             notice = NativeNoticeLifetime(self, reason, text=text, lease=lease)
-            if role.startswith("notice-production-"):
+            expected_file = fixture / "expected-owner.json"
+            manual = expected_file.exists() and json.loads(
+                expected_file.read_text()
+            ).get("manual")
+            if role.startswith("notice-production-") or manual:
                 foreground = _bind(self.api.u, "GetForegroundWindow", wt.HWND)
                 self.audit["foreground_before"] = foreground()
 
@@ -1584,7 +1778,12 @@ def _run_scenario(fixture, namespace, role):
             from pagefolio import constants, startup_win32
 
             startup_win32.Win32Backend = Backend
-            if role == "entry-relocated":
+            entry = (
+                role.removeprefix("entry-owner-")
+                if role.startswith("entry-owner-")
+                else role.removeprefix("entry-")
+            )
+            if entry == "relocated":
                 constants.APP_VERSION = "v99.test"
                 assert Path(startup_win32.__file__).is_relative_to(
                     fixture / "alternate"
@@ -1592,11 +1791,16 @@ def _run_scenario(fixture, namespace, role):
                 runpy.run_path(
                     str(fixture / "alternate" / "pagefolio.py"), run_name="__main__"
                 )
-            elif role == "entry-script":
+            elif entry == "script":
                 runpy.run_path(str(_ROOT / "pagefolio.py"), run_name="__main__")
             else:
                 runpy.run_module("pagefolio", run_name="__main__")
-            result = backend_instances[-1].audit["terminal_result"]
+            audit = backend_instances[-1].audit
+            result = (
+                "primary"
+                if may_be_primary
+                else audit.get("notice_reason", audit["terminal_result"])
+            )
         else:
             result = main(backend_factory=Backend)
     except PermissionError:
@@ -1627,6 +1831,201 @@ def _test_scenario_bootstrap(fixture, namespace, role):
         assert _fingerprints() == before, "元設定/プロンプトが変更された"
 
 
+def _uat_harness(argv):
+    """明示実行専用。人の操作待ち・本番名は通常pytestへ収集しない。"""
+    sys.path.insert(0, str(_ROOT))
+    parser = argparse.ArgumentParser(description="隔離済みWindows受入の準備と観測")
+    parser.add_argument(
+        "action", choices=["start", "peer", "notice", "inspect", "stop"]
+    )
+    parser.add_argument("--run", type=Path)
+    parser.add_argument(
+        "--case",
+        default="preview",
+        choices=[
+            "normal",
+            "zoomed",
+            "thumb",
+            "preview",
+            "settings",
+            "nested",
+            "native-ocr",
+            "native-quit",
+            "pdf",
+            "ocr",
+            "busy",
+            "slowready",
+        ],
+    )
+    parser.add_argument(
+        "--entry", choices=["script", "module", "relocated"], default="module"
+    )
+    parser.add_argument("--production", action="store_true")
+    parser.add_argument("--namespace")
+    args = parser.parse_args(argv)
+    before = _fingerprints()
+    from pagefolio.startup_win32 import Win32Backend, _bind
+
+    def read_json(path):
+        return json.loads(path.read_text(encoding="utf-8"))
+
+    def save(path, value):
+        path.write_text(
+            json.dumps(value, ensure_ascii=False, indent=2), encoding="utf-8"
+        )
+
+    try:
+        if args.action in {"start", "notice"}:
+            if args.action == "notice" and args.production:
+                parser.error(
+                    "noticeは試験nonceでのみ実行する。既存本番通知へ接続しない"
+                )
+            run = Path(
+                tempfile.mkdtemp(
+                    prefix="pagefolio-uat-", dir=_ROOT / ".planning" / "tmp"
+                )
+            )
+            namespace = (
+                "fixed-production" if args.production else args.namespace or uuid4().hex
+            )
+            backend = Win32Backend(None if args.production else namespace)
+            try:
+                if args.action == "start":
+                    assert backend.claim(uuid4().hex) == "acquired", (
+                        "既存owner検出。要求せず中断"
+                    )
+                environment = {
+                    "os": str(sys.getwindowsversion()),
+                    "python": sys.version,
+                    "pointer_bits": ct.sizeof(wt.HANDLE) * 8,
+                    "session_id": backend.session_id,
+                    "sid": backend.sid,
+                    "authentication_luid": backend.authentication_luid,
+                    "foreground": _bind(
+                        backend.api.u, "GetForegroundWindow", wt.HWND
+                    )(),
+                    "is_admin": bool(ct.windll.shell32.IsUserAnAdmin()),
+                }
+            finally:
+                backend.close()
+            import tkinter as tk
+
+            interp = tk.Tcl()
+            environment["tcl"] = str(interp.call("info", "patchlevel"))
+            environment["tk"] = tk.TkVersion
+            role = (
+                "notice-case-production-owner"
+                if args.action == "notice"
+                else f"uat-owner-{args.case}"
+            )
+            child, fixture = _spawn(run, namespace, role, detached=True)
+            git_executable = shutil.which("git")
+            assert git_executable
+            manifest = {
+                "run": str(run),
+                "namespace": namespace,
+                "case": args.case,
+                "role": role,
+                "fixture": str(fixture),
+                "launcher_pid": child.pid,
+                "environment": environment,
+                "originals_before": before,
+                "source_commit": subprocess.check_output(  # noqa: S603
+                    [git_executable, "rev-parse", "HEAD"], cwd=_ROOT, text=True
+                ).strip(),
+            }
+            save(run / "manifest.json", manifest)
+            marker = (
+                "scenario-ready"
+                if args.case in {"busy", "slowready"} and args.action == "start"
+                else "focus-ready"
+                if args.action == "start"
+                else "ready"
+            )
+            _wait_file(child, fixture / marker)
+            if args.action == "start":
+                identity_path = fixture / "ready"
+                if not identity_path.exists():
+                    identity_path = fixture / "initializing.json"
+                manifest["expected_owner"] = {
+                    **read_json(identity_path),
+                    "manual": True,
+                }
+                save(run / "manifest.json", manifest)
+            print(json.dumps(manifest, ensure_ascii=False))
+            return
+
+        if args.run is None:
+            parser.error("--runにはstart/noticeが出力したディレクトリを指定する")
+        run = args.run.resolve()
+        assert run.is_relative_to((_ROOT / ".planning" / "tmp").resolve())
+        manifest = read_json(run / "manifest.json")
+        fixture = Path(manifest["fixture"]).resolve()
+        assert fixture.is_relative_to(run)
+        assert _fingerprints() == manifest["originals_before"], "原本が変化。試験を中断"
+        if args.action == "peer":
+            if manifest["role"].startswith("notice-case-"):
+                role, expected = "notice-case-peer-" + uuid4().hex, None
+            else:
+                role, expected = "entry-" + args.entry, manifest["expected_owner"]
+            child, path = _spawn(
+                run,
+                manifest["namespace"],
+                role,
+                fixture_name="peer-" + uuid4().hex,
+                expected_owner=expected,
+            )
+            try:
+                # 本番5秒+10秒案内も有限待機。timeout後はこの子だけ回収する。
+                out, err = child.communicate(timeout=18)
+                (path / "stdout.log").write_text(out, encoding="utf-8")
+                (path / "stderr.log").write_text(err, encoding="utf-8")
+                assert child.returncode == 0, err
+                result = read_json(path / "result.json")
+                print(
+                    json.dumps(
+                        {"fixture": str(path), "result": result}, ensure_ascii=False
+                    )
+                )
+            finally:
+                _reclaim([child])
+        elif args.action == "stop":
+            assert not manifest["role"].startswith("notice-case-"), (
+                "通知は実クリックまたは10秒で閉鎖する"
+            )
+            (fixture / "stop").touch()
+            deadline = time.monotonic() + 8
+            while (
+                not (fixture / "result.json").exists() and time.monotonic() < deadline
+            ):
+                time.sleep(0.05)
+            assert (fixture / "result.json").exists(), (
+                "停止未完了。120秒の安全終了後inspectする"
+            )
+        if args.action in {"inspect", "stop"}:
+            values = {
+                "manifest": manifest,
+                "originals_unchanged": _fingerprints() == before,
+            }
+            for name in (
+                "ready",
+                "resource-audit.json",
+                "result.json",
+                "focus-result.json",
+                "busy-result.json",
+            ):
+                path = fixture / name
+                if path.exists() and path.stat().st_size:
+                    values[name] = read_json(path)
+            save(run / "inspection.json", values)
+            print(json.dumps(values, ensure_ascii=False))
+    finally:
+        assert _fingerprints() == before, "元設定/プロンプトが変更された"
+
+
 if __name__ == "__main__":
-    assert sys.argv[1] == "_test_scenario_bootstrap"
-    _test_scenario_bootstrap(Path(sys.argv[2]), sys.argv[3], sys.argv[4])
+    if sys.argv[1] == "--uat":
+        _uat_harness(sys.argv[2:])
+    else:
+        assert sys.argv[1] == "_test_scenario_bootstrap"
+        _test_scenario_bootstrap(Path(sys.argv[2]), sys.argv[3], sys.argv[4])
