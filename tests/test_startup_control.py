@@ -35,6 +35,9 @@ class ClockBackend:
     def close(self, **kwargs):
         pass
 
+    def stop_accepting(self):
+        pass
+
 
 @pytest.fixture
 def control():
@@ -268,3 +271,171 @@ def test_guard_rechecks_before_foreground_and_flash():
     ticks = iter([True, True, False])
     assert backend.restore_window(7, is_current=lambda: next(ticks)) == "expired"
     assert calls == ["foreground"]
+
+
+class TakeoverBackend(ClockBackend):
+    def __init__(self):
+        super().__init__()
+        self.observed_owner = {
+            "pid": 77,
+            "process_created": 1234,
+            "generation": "a" * 32,
+            "state": "initializing",
+        }
+        self.observed_process = object()
+        self.exited = True
+        self.claims = 0
+        self.listen_calls = 0
+        self.winner = "acquired"
+
+    def _process_has_exited(self, process):
+        return self.exited
+
+    def try_takeover(self, generation, owner, deadline):
+        self.claims += 1
+        return self.winner
+
+    def listen(self, callback):
+        self.listen_calls += 1
+
+
+def test_confirmed_initializing_process_death_claims_only_once():
+    b = TakeoverBackend()
+    c = StartupCoordinator(b)
+    assert c._try_takeover(15000)
+    assert not c._try_takeover(15000)
+    assert b.claims == b.listen_calls == 1
+    assert c.takeover_attempted
+
+
+@pytest.mark.parametrize(
+    "condition",
+    ["alive", "ready", "closing", "released", "unknown", "no_handle", "deadline"],
+)
+def test_unconfirmed_or_noninitializing_death_never_claims(condition):
+    b = TakeoverBackend()
+    if condition == "alive":
+        b.exited = False
+    elif condition in {"ready", "closing", "released"}:
+        b.observed_owner["state"] = condition
+    elif condition == "unknown":
+        b.observed_owner = None
+    elif condition == "no_handle":
+        b.observed_process = None
+    elif condition == "deadline":
+        b.now = 15000
+    c = StartupCoordinator(b)
+    assert not c._try_takeover(15000)
+    assert b.claims == b.listen_calls == 0
+
+
+def test_losing_candidate_never_attempts_second_claim():
+    b = TakeoverBackend()
+    b.winner = "existing"
+    c = StartupCoordinator(b)
+    assert not c._try_takeover(15000)
+    assert not c._try_takeover(15000)
+    assert b.claims == 1
+    assert b.listen_calls == 0
+
+
+def test_close_publishes_release_only_after_root_destroyed():
+    b = ClockBackend()
+    records = []
+    b.close = lambda **kwargs: records.append(kwargs)
+    c = StartupCoordinator(b)
+    c.root = SimpleNamespace(winfo_exists=lambda: True)
+    c.close()
+    assert records == [{"root_absent": False}]
+    c = StartupCoordinator(b)
+    c.root = SimpleNamespace(winfo_exists=lambda: False)
+    c.close()
+    assert records[-1] == {"root_absent": True}
+
+
+@pytest.mark.parametrize(
+    "failure", [PermissionError("OpenProcess"), PermissionError("PID再利用")]
+)
+def test_identity_validation_failure_never_pins_or_takes_over(failure):
+    from pagefolio.startup_win32 import Win32Backend
+
+    b = Win32Backend.__new__(Win32Backend)
+    b.observed_owner = b.observed_process = None
+    b._validate_peer = lambda *args: (_ for _ in ()).throw(failure)
+    owner = {"pid": 1, "process_created": 123, "session_id": 1, "generation": "a" * 32}
+    with pytest.raises(PermissionError):
+        b._observe_owner(owner)
+    assert b.observed_process is b.observed_owner is None
+
+
+def test_wait_failed_is_not_death():
+    import ctypes as ct
+
+    from pagefolio.startup_win32 import Win32Backend
+
+    b = Win32Backend.__new__(Win32Backend)
+
+    def failed(*args):
+        ct.set_last_error(6)
+        return 0xFFFFFFFF
+
+    b.api = SimpleNamespace(WaitForSingleObject=failed)
+    with pytest.raises(OSError):
+        b._process_has_exited(SimpleNamespace(value=7))
+
+
+def test_readiness_retries_share_deadline_and_clamp_poll(monkeypatch):
+    from pagefolio import startup_win32 as win
+
+    b = win.Win32Backend.__new__(win.Win32Backend)
+    clock = [10000]
+    b.tick_ms = lambda: clock[0]
+    b.logger = SimpleNamespace(debug=lambda *args: None)
+    b.takeover_callback = lambda deadline: False
+    b._read_owner = lambda: {"state": "initializing", "ready": False}
+    b._observe_owner = lambda owner: object()
+    b._process_has_exited = lambda process: False
+    sleeps = []
+
+    def sleep(seconds):
+        sleeps.append(seconds)
+        clock[0] += int(seconds * 1000)
+
+    monkeypatch.setattr(win.time, "sleep", sleep)
+    assert b.request_activation(5013) == "expired"
+    assert clock[0] == 10013
+    assert sleeps == [0.013]
+
+
+@pytest.mark.parametrize("operation", ["read", "write"])
+def test_fragmented_transport_always_uses_original_deadline(monkeypatch, operation):
+    from pagefolio import startup_win32 as win
+
+    deadlines = []
+
+    def io(api, pipe, op, deadline, data=None, size=0):
+        deadlines.append(deadline)
+        return 1 if op == "write" else b"x"
+
+    monkeypatch.setattr(win, "_io", io)
+    if operation == "read":
+        assert win._read_exact(None, None, 4, 15000) == b"xxxx"
+    else:
+        win._write_frame(None, None, {"op": "activate"}, 15000)
+    assert len(deadlines) >= 4
+    assert set(deadlines) == {15000}
+
+
+def test_coalesced_terminal_may_precede_new_request_issued_tick():
+    from pagefolio.startup_win32 import Win32Backend
+
+    b = Win32Backend.__new__(Win32Backend)
+    b.tick_ms = lambda: 10499
+    reply = {
+        "request_id": "a" * 32,
+        "result": "foreground_denied",
+        "completed_tick": 10000,
+        "coalesced": True,
+    }
+    assert b._validate_reply(reply, "a" * 32, 10499, 15499) == "foreground_denied"
+    assert b._validate_reply(reply, "a" * 32, 10500, 15500) == "connection_failed"

@@ -8,6 +8,7 @@ import os
 import struct
 import threading
 import time
+from contextlib import nullcontext
 from ctypes import wintypes as wt
 from uuid import uuid4
 
@@ -23,6 +24,7 @@ _pending_io_quarantine = []
 _quarantine_lock = threading.Lock()
 _io_slots = threading.BoundedSemaphore(32)
 _notice_lifetime_quarantine = []
+_shutdown_owner_quarantine = []
 
 
 class SECURITY_ATTRIBUTES(ct.Structure):
@@ -412,6 +414,12 @@ class Win32Backend:
         self.workers = []
         self.pipes = []
         self.peer_handles = []
+        self.observed_owner = None
+        self.observed_process = None
+        self.takeover_callback = lambda deadline: False
+        self.state = "initializing"
+        self.release_generation = None
+        self._closed = False
         self.owner_security = _security_descriptor(self.api, self.sid, OWNER_ACCESS)
         self.mapping_security = _security_descriptor(
             self.api, self.sid, READ_CONTROL | 6
@@ -431,7 +439,7 @@ class Win32Backend:
         _check(self.api.GetProcessTimes(process, *(ct.byref(t) for t in times)))
         return times[0].value
 
-    def _validate_peer(self, pid, created=None):
+    def _validate_peer(self, pid, created=None, *, allow_exited=False):
         process = OwnedHandle(
             self.api, self.api.OpenProcess(SYNCHRONIZE | 0x1000, False, pid)
         )
@@ -440,7 +448,8 @@ class Win32Backend:
                 self._session(pid) != self.session_id
                 or _token(self.api, process.value)[0] != self.sid
                 or (created is not None and self._created(process.value) != created)
-                or self.api.WaitForSingleObject(process.value, 0) != WAIT_TIMEOUT
+                or self.api.WaitForSingleObject(process.value, 0)
+                not in ({0, WAIT_TIMEOUT} if allow_exited else {WAIT_TIMEOUT})
             ):
                 raise PermissionError("起動相手の識別に失敗")
             return process
@@ -463,28 +472,110 @@ class Win32Backend:
         result = self.api.WaitForSingleObject(self.owner.value, 0)
         if result == WAIT_TIMEOUT:
             return "existing"
-        if result == 0x80:
-            self.api.ReleaseMutex(self.owner.value)
-            return "abandoned"
-        if result != 0:
+        if result not in {0, 0x80}:
             raise ct.WinError(ct.get_last_error())
         self.owns_mutex = True
+        return self._claim_mapping(generation)
+
+    def _drop_mapping(self):
+        if self.view:
+            self.api.UnmapViewOfFile(self.view)
+            self.view = None
+        if self.mapping:
+            self.mapping.close()
+            self.mapping = None
+
+    def _yield_mutex(self):
+        if self.owns_mutex:
+            _check(self.api.ReleaseMutex(self.owner.value))
+            self.owns_mutex = False
+
+    def _claim_mapping(self, generation, expected=None, deadline=None):
+        """所有した候補だけがmappingを作り、旧世代を照合してから再公開する。"""
         self.generation = generation
-        self.mapping = OwnedHandle(
-            self.api,
-            self.api.CreateFileMappingW(
+        existing = self.api.OpenFileMappingW(READ_CONTROL | 6, False, self.state_name)
+        if existing:
+            self.mapping = OwnedHandle(self.api, existing)
+            self._mapping_existed = True
+        else:
+            if ct.get_last_error() != 2:
+                raise ct.WinError(ct.get_last_error())
+            handle = self.api.CreateFileMappingW(
                 INVALID_HANDLE_VALUE,
                 ct.byref(self.mapping_security.attributes),
                 4,
                 0,
                 4096,
                 self.state_name,
-            ),
-        )
+            )
+            self._mapping_existed = ct.get_last_error() == 183
+            self.mapping = OwnedHandle(self.api, handle)
         _validate_acl(self.api, self.mapping.value, self.mapping_security)
         self.view = _check(self.api.MapViewOfFile(self.mapping.value, 6, 0, 0, 4096))
+        # 新規mappingはゼロ初期化される。既存mappingの全公開前/破損を
+        # 空と誤認しないようCreateFileMapping直後の判定を使う。
+        if self._mapping_existed:
+            try:
+                previous = self._read_owner()
+                if expected is None:
+                    permitted = previous["state"] == "released"
+                    if permitted:
+                        try:
+                            with self._validate_peer(
+                                previous["pid"],
+                                previous["process_created"],
+                                allow_exited=True,
+                            ):
+                                pass
+                        except OSError as e:
+                            # 終了後PIDが存在しない場合もreleasedは有効。
+                            # 生存する別processのPID再利用/権限拒否は許さない。
+                            permitted = getattr(e, "winerror", None) == 87
+                else:
+                    permitted = (
+                        all(
+                            previous[key] == expected[key]
+                            for key in (
+                                "pid",
+                                "process_created",
+                                "session_id",
+                                "generation",
+                            )
+                        )
+                        and previous["state"] == "initializing"
+                    )
+                if not permitted:
+                    self._drop_mapping()
+                    self._yield_mutex()
+                    return "existing"
+            except (ValueError, FileNotFoundError):
+                self._drop_mapping()
+                self._yield_mutex()
+                return "existing"
+        if deadline is not None and self.tick_ms() >= deadline:
+            self._drop_mapping()
+            self._yield_mutex()
+            return "existing"
+        self.sequence = 0
+        self.release_generation = None
         self._publish_owner("initializing", False)
         return "acquired"
+
+    def try_takeover(self, generation, expected, deadline):
+        self._assert_thread()
+        if (
+            self.tick_ms() >= deadline
+            or self.observed_process is None
+            or not self._process_has_exited(self.observed_process)
+        ):
+            return "existing"
+        result = self.api.WaitForSingleObject(self.owner.value, 0)
+        if result == WAIT_TIMEOUT:
+            return "existing"
+        if result not in {0, 0x80}:
+            raise ct.WinError(ct.get_last_error())
+        self.owns_mutex = True
+        return self._claim_mapping(generation, expected, deadline)
 
     def _assert_thread(self):
         if threading.get_ident() != self.owner_thread:
@@ -499,15 +590,22 @@ class Win32Backend:
             "process_created": self._created(self.api.GetCurrentProcess()),
             "session_id": self.session_id,
         }
-        if self.sequence == 0:
-            data = json.dumps(identity).encode("utf-8")
-            ct.memset(self.view, 0, 4096)
-            ct.memmove(
-                self.view + 8, struct.pack("<I", len(data)) + data, 4 + len(data)
-            )
+        # identityもstateも同じseqlock内で置換する。古いreaderがmappingを
+        # 保持していても、旧identityと新stateの混在を公開しない。
+        self.sequence = ct.c_ulonglong.from_address(self.view).value
+        if self.sequence % 2:
+            self.sequence += 1
         self.sequence += 1
         ct.c_ulonglong.from_address(self.view).value = self.sequence
-        mutable = json.dumps({"state": state, "ready": ready}).encode("utf-8")
+        data = json.dumps(identity).encode("utf-8")
+        ct.memmove(self.view + 8, struct.pack("<I", len(data)) + data, 4 + len(data))
+        mutable = json.dumps(
+            {
+                "state": state,
+                "ready": ready,
+                "release_generation": self.release_generation,
+            }
+        ).encode("utf-8")
         ct.memmove(
             self.view + 2048,
             struct.pack("<I", len(mutable)) + mutable,
@@ -515,6 +613,7 @@ class Win32Backend:
         )
         self.sequence += 1
         ct.c_ulonglong.from_address(self.view).value = self.sequence
+        self.state = state
 
     def publish_state(self, state, ready):
         self._publish_owner(state, ready)
@@ -545,14 +644,50 @@ class Win32Backend:
                     or len(data["generation"]) != 32
                     or any(c not in "0123456789abcdef" for c in data["generation"])
                     or type(data.get("pid")) is not int
+                    or data["pid"] <= 0
                     or type(data.get("process_created")) is not int
+                    or data["process_created"] <= 0
                     or data.get("session_id") != self.session_id
                     or type(data.get("ready")) is not bool
+                    or data.get("state")
+                    not in {"initializing", "ready", "closing", "released"}
+                    or data["ready"] != (data["state"] == "ready")
+                    or (
+                        data["state"] == "released"
+                        and (
+                            not isinstance(data.get("release_generation"), str)
+                            or len(data["release_generation"]) != 32
+                            or any(
+                                c not in "0123456789abcdef"
+                                for c in data["release_generation"]
+                            )
+                        )
+                    )
                 ):
                     raise ValueError("所有者identityが不正")
                 return data
             finally:
                 self.api.UnmapViewOfFile(view)
+
+    def _observe_owner(self, owner):
+        keys = ("pid", "process_created", "session_id", "generation")
+        if self.observed_owner is not None and all(
+            owner[k] == self.observed_owner[k] for k in keys
+        ):
+            self.observed_owner = owner
+            return self.observed_process
+        process = self._validate_peer(owner["pid"], owner["process_created"])
+        if self.observed_process is not None:
+            self.observed_process.close()
+        self.observed_process = process
+        self.observed_owner = owner
+        return process
+
+    def _process_has_exited(self, process):
+        result = self.api.WaitForSingleObject(process.value, 0)
+        if result not in {0, WAIT_TIMEOUT}:
+            raise ct.WinError(ct.get_last_error())
+        return result == 0
 
     def _pipe_name(self, generation):
         sid = hashlib.sha256(self.sid.encode()).hexdigest()[:24]
@@ -662,10 +797,19 @@ class Win32Backend:
 
         while self.tick_ms() < deadline:
             try:
+                if self.takeover_callback(deadline):
+                    return "primary"
                 owner = self._read_owner()
-                with self._validate_peer(
-                    owner["pid"], owner["process_created"]
-                ) as process:
+                if owner["state"] in {"closing", "released"}:
+                    return "connection_failed"
+                with nullcontext(self._observe_owner(owner)) as process:
+                    if self._process_has_exited(process):
+                        if self.takeover_callback(deadline):
+                            return "primary"
+                        if owner["state"] != "initializing":
+                            return "connection_failed"
+                        pause(25)
+                        continue
                     if not owner["ready"]:
                         pause(25)
                         continue
@@ -768,9 +912,10 @@ class Win32Backend:
             tick = reply.get("completed_tick")
             if (
                 type(tick) is not int
-                or not issued <= tick < deadline
+                or not 0 <= tick < deadline
                 or tick > self.tick_ms()
                 or type(reply.get("coalesced")) is not bool
+                or (tick < issued and not (reply["coalesced"] and issued < tick + 500))
             ):
                 return "connection_failed"
         return result
@@ -797,27 +942,54 @@ class Win32Backend:
             if lease.acquired:
                 _show_notice_window(self, reason)
 
-    def close(self):
-        self._assert_thread()
-        self.stop.set()
+    def _cancel_pending_io(self):
         for pipe in self.pipes:
             if pipe.value is not None:
                 self.api.CancelIoEx(pipe.value, None)
+
+    def stop_accepting(self):
+        self._assert_thread()
+        if self.owns_mutex and self.view:
+            try:
+                self._publish_owner("closing", False)
+            except Exception as e:
+                self.logger.debug("終了状態の公開失敗: %s", e)
+        self.stop.set()
+        self._cancel_pending_io()
+
+    def close(self, *, root_absent=True):
+        self._assert_thread()
+        if self._closed:
+            return
+        self.stop_accepting()
         deadline = time.monotonic() + 0.5
         for worker in self.workers:
             worker.join(max(0, deadline - time.monotonic()))
         for index, pipe in enumerate(self.pipes):
             if index >= len(self.workers) or not self.workers[index].is_alive():
                 pipe.close()
-        if self.view:
-            self.api.UnmapViewOfFile(self.view)
-            self.view = None
-        if self.mapping:
-            self.mapping.close()
+        if self.owns_mutex and not root_absent:
+            # root破棄を証明できない異常終了はclosingの所有をprocess終了まで
+            # 保持する。二次を新GUIへ進ませるために排他を解放しない。
+            _shutdown_owner_quarantine.append(self)
+            return
+        if (
+            root_absent
+            and self.owns_mutex
+            and self.view
+            and not any(worker.is_alive() for worker in self.workers)
+        ):
+            try:
+                self.release_generation = uuid4().hex
+                self._publish_owner("released", False)
+            except Exception as e:
+                self.logger.debug("release公開失敗: %s", e)
+        self._drop_mapping()
+        if self.observed_process is not None:
+            self.observed_process.close()
+            self.observed_process = None
         if self.owner:
-            if self.owns_mutex:
-                _check(self.api.ReleaseMutex(self.owner.value))
-                self.owns_mutex = False
+            self._yield_mutex()
             self.owner.close()
         for security in (
             self.owner_security,
@@ -825,6 +997,7 @@ class Win32Backend:
             self.pipe_security,
         ):
             security.close()
+        self._closed = True
 
 
 def _restore_window(backend, hwnd):

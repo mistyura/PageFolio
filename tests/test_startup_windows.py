@@ -6,6 +6,8 @@ import importlib.util
 import json
 import logging
 import os
+import runpy
+import shutil
 import subprocess
 import sys
 import threading
@@ -56,6 +58,13 @@ def _spawn(tmp_path, namespace, role):
     )
     for name in _ORIGINALS[1:]:
         (fixture / name).write_text("isolated test prompt", encoding="utf-8")
+    if role == "entry-relocated":
+        shutil.copytree(
+            _ROOT / "pagefolio",
+            fixture / "alternate" / "pagefolio",
+            ignore=shutil.ignore_patterns("__pycache__", "*.pyc"),
+        )
+        shutil.copyfile(_ROOT / "pagefolio.py", fixture / "alternate" / "pagefolio.py")
     # コマンドは既知のPythonとこのファイルに固定。fixture/roleは試験自身が生成する。
     return subprocess.Popen(  # noqa: S603
         [
@@ -360,9 +369,373 @@ def test_tracer_notice_lease_process_dedup(tmp_path):
             holder.communicate()
 
 
+def _reclaim(children):
+    """この試験が生成したPIDだけをfinallyで回収する。"""
+    for child in children:
+        if child.poll() is None:
+            child.kill()
+        child.communicate()
+
+
+@pytest.mark.parametrize("count", [2, 8])
+def test_simultaneous_real_processes_construct_one_editor(tmp_path, count):
+    namespace = uuid4().hex
+    children = [_spawn(tmp_path, namespace, f"simultaneous-{i}") for i in range(count)]
+    try:
+        deadline = time.monotonic() + 8
+        while (
+            not any((fixture / "ready").exists() for _, fixture in children)
+            and time.monotonic() < deadline
+        ):
+            time.sleep(0.02)
+        assert sum((fixture / "ready").exists() for _, fixture in children) == 1
+        # 二次のterminal処理を済ませてから一次を終了する。
+        deadline = time.monotonic() + 6
+        while (
+            sum(child.poll() is not None for child, _ in children) < count - 1
+            and time.monotonic() < deadline
+        ):
+            time.sleep(0.02)
+        (tmp_path / "stop-all").touch()
+        results = [_finish(child) for child, _ in children]
+        assert sum(r["constructed"] for r in results) == 1
+        assert sum(r["result"] == "primary" for r in results) == 1
+        assert all(
+            r["result"] in {"primary", "completed", "foreground_denied"}
+            for r in results
+        )
+    finally:
+        _reclaim([child for child, _ in children])
+
+
+def test_takeover_two_candidates_after_confirmed_initialization_death(tmp_path):
+    namespace = uuid4().hex
+    owner, fixture = _spawn(tmp_path, namespace, "initializing-owner")
+    candidates = []
+    try:
+        _wait_file(owner, fixture / "ready")
+        candidates = [_spawn(tmp_path, namespace, f"takeover-{i}") for i in range(2)]
+        for child, path in candidates:
+            _wait_file(child, path / "observed")
+        owner.kill()
+        owner.communicate()
+        deadline = time.monotonic() + 6
+        while (
+            not any((path / "ready").exists() for _, path in candidates)
+            and time.monotonic() < deadline
+        ):
+            time.sleep(0.02)
+        assert sum((path / "ready").exists() for _, path in candidates) == 1
+        deadline = time.monotonic() + 5
+        while (
+            sum(child.poll() is not None for child, _ in candidates) < 1
+            and time.monotonic() < deadline
+        ):
+            time.sleep(0.02)
+        (tmp_path / "stop-all").touch()
+        results = [_finish(child) for child, _ in candidates]
+        assert sum(r["constructed"] for r in results) == 1
+        audits = [
+            json.loads((path / "resource-audit.json").read_text())
+            for _, path in candidates
+        ]
+        assert sum(a.get("takeover_claim") == "acquired" for a in audits) == 1
+        assert all(a.get("death_confirmed") for a in audits)
+    finally:
+        _reclaim([owner] + [child for child, _ in candidates])
+
+
+def test_lifecycle_cancel_quit_keeps_owner_then_restarts(tmp_path):
+    namespace = uuid4().hex
+    owner, fixture = _spawn(tmp_path, namespace, "lifecycle-cancel-owner")
+    children = [owner]
+    try:
+        _wait_file(owner, fixture / "ready")
+        (fixture / "cancel").touch()
+        _wait_file(owner, fixture / "cancelled")
+        secondary, _ = _spawn(tmp_path, namespace, "secondary-after-cancel")
+        children.append(secondary)
+        assert _finish(secondary)["result"] in {"completed", "foreground_denied"}
+        assert owner.poll() is None
+        (fixture / "stop").touch()
+        assert _finish(owner)["constructed"] == 1
+        restarted, path = _spawn(tmp_path, namespace, "lifecycle-restarted")
+        children.append(restarted)
+        _wait_file(restarted, path / "ready")
+        (path / "stop").touch()
+        assert _finish(restarted)["constructed"] == 1
+    finally:
+        _reclaim(children)
+
+
+def test_lifecycle_released_mapping_allows_new_claim_while_old_process_lives(tmp_path):
+    from pagefolio.startup_win32 import READ_CONTROL, OwnedHandle, Win32Backend
+
+    namespace = uuid4().hex
+    owner, fixture = _spawn(tmp_path, namespace, "lifecycle-worker")
+    reader = Win32Backend(namespace)
+    held = None
+    children = [owner]
+    try:
+        _wait_file(owner, fixture / "ready")
+        held = OwnedHandle(
+            reader.api,
+            reader.api.OpenFileMappingW(READ_CONTROL | 4, False, reader.state_name),
+        )
+        before = reader._read_owner()
+        (fixture / "stop").touch()
+        _wait_file(owner, fixture / "worker-alive")
+        released = reader._read_owner()
+        assert released["state"] == "released"
+        assert released["generation"] == before["generation"]
+        assert released["release_generation"]
+        assert owner.poll() is None
+        new, path = _spawn(tmp_path, namespace, "lifecycle-new-owner")
+        children.append(new)
+        _wait_file(new, path / "ready")
+        assert reader._read_owner()["generation"] != before["generation"]
+        (path / "stop").touch()
+        assert _finish(new)["constructed"] == 1
+        (fixture / "release-worker").touch()
+        assert _finish(owner)["constructed"] == 1
+    finally:
+        if held:
+            held.close()
+        reader.close()
+        _reclaim(children)
+
+
+@pytest.mark.parametrize("state", ["ready", "initializing"])
+def test_lifecycle_independent_restart_after_forced_owner_exit(tmp_path, state):
+    namespace = uuid4().hex
+    role = "lifecycle-killed-owner" if state == "ready" else "initializing-owner"
+    owner, fixture = _spawn(tmp_path, namespace, role)
+    children = [owner]
+    try:
+        _wait_file(owner, fixture / "ready")
+        owner.kill()
+        owner.communicate()
+        new, path = _spawn(tmp_path, namespace, "lifecycle-new-owner")
+        children.append(new)
+        _wait_file(new, path / "ready")
+        (path / "stop").touch()
+        assert _finish(new)["constructed"] == 1
+    finally:
+        _reclaim(children)
+
+
+def test_lifecycle_exception_before_identity_publication_then_restart(tmp_path):
+    namespace = uuid4().hex
+    failed, _ = _spawn(tmp_path, namespace, "prepublish-failure")
+    assert _finish(failed)["constructed"] == 0
+    owner, path = _spawn(tmp_path, namespace, "lifecycle-new-owner")
+    try:
+        _wait_file(owner, path / "ready")
+        (path / "stop").touch()
+        assert _finish(owner)["constructed"] == 1
+    finally:
+        _reclaim([owner])
+
+
+def test_lifecycle_both_python_entries_and_relocated_version_share_owner(tmp_path):
+    namespace = uuid4().hex
+    owner, path = _spawn(tmp_path, namespace, "owner")
+    children = [owner]
+    try:
+        _wait_file(owner, path / "ready")
+        for role in ("entry-script", "entry-module", "entry-relocated"):
+            child, _ = _spawn(tmp_path, namespace, role)
+            children.append(child)
+            result = _finish(child)
+            assert result["constructed"] == 0
+            assert result["result"] in {"completed", "foreground_denied"}
+        (path / "stop").touch()
+        assert _finish(owner)["constructed"] == 1
+    finally:
+        _reclaim(children)
+
+
+def test_lifecycle_partial_mapping_reader_closes_without_takeover():
+    from pagefolio.startup_control import StartupCoordinator
+    from pagefolio.startup_win32 import READ_CONTROL, OwnedHandle, Win32Backend
+
+    namespace = uuid4().hex
+    owner = Win32Backend(namespace)
+    secondary = Win32Backend(namespace)
+    next_owner = Win32Backend(namespace)
+    held = None
+    try:
+        assert owner.claim(uuid4().hex) == "acquired"
+        held = OwnedHandle(
+            secondary.api,
+            secondary.api.OpenFileMappingW(
+                READ_CONTROL | 4, False, secondary.state_name
+            ),
+        )
+        ct.c_ulonglong.from_address(owner.view).value = 3
+        control = StartupCoordinator(secondary)
+        assert not control.claim().primary
+        # 意図的に残余80msから開始し、長い組合せを通常pytestへ持ち込まない。
+        result = control.request_activation(secondary.tick_ms() - 4920)
+        assert result.result == "expired"
+        assert not control.takeover_attempted
+        assert secondary.observed_process is None
+        control.close()
+        owner.close()
+        # 全readerを閉じた後には、未知identityを上書きせず通常一次になれる。
+        held.close()
+        held = None
+        assert next_owner.claim(uuid4().hex) == "acquired"
+    finally:
+        if held:
+            held.close()
+        owner.close()
+        secondary.close()
+        next_owner.close()
+
+
+def test_takeover_abandoned_owner_thread_with_live_process_uses_existing_pipe():
+    from pagefolio.startup_control import StartupCoordinator
+    from pagefolio.startup_win32 import Win32Backend
+
+    namespace = uuid4().hex
+    holder = []
+
+    def owning_thread():
+        b = Win32Backend(namespace)
+        assert b.claim(uuid4().hex) == "acquired"
+        b.listen(
+            lambda raw: {
+                "request_id": raw["request_id"],
+                "result": "completed",
+                "completed_tick": b.tick_ms(),
+                "coalesced": False,
+            }
+        )
+        b.publish_state("ready", True)
+        holder.append(b)
+
+    worker = threading.Thread(target=owning_thread)
+    worker.start()
+    worker.join(2)
+    assert not worker.is_alive() and len(holder) == 1
+    secondary = Win32Backend(namespace)
+    control = StartupCoordinator(secondary)
+    try:
+        assert not control.claim().primary
+        assert not secondary.owns_mutex
+        assert control.request_activation(secondary.tick_ms()).result == "completed"
+        assert not control.takeover_attempted
+        assert control.root is None
+    finally:
+        control.close()
+        # 死亡threadの試験資源だけを回収する。mutexは候補が返却済み。
+        holder[0].owner_thread = threading.get_ident()
+        holder[0].owns_mutex = False
+        holder[0].close()
+
+
+def test_lifecycle_failed_release_is_closing_until_all_readers_close(monkeypatch):
+    from pagefolio.startup_win32 import READ_CONTROL, OwnedHandle, Win32Backend
+
+    namespace = uuid4().hex
+    owner, candidate, later = [Win32Backend(namespace) for _ in range(3)]
+    held = None
+    try:
+        assert owner.claim(uuid4().hex) == "acquired"
+        held = OwnedHandle(
+            candidate.api,
+            candidate.api.OpenFileMappingW(
+                READ_CONTROL | 4, False, candidate.state_name
+            ),
+        )
+        publish = owner._publish_owner
+
+        def fail_release(state, ready):
+            if state == "released":
+                raise OSError("release故障注入")
+            publish(state, ready)
+
+        monkeypatch.setattr(owner, "_publish_owner", fail_release)
+        owner.close(root_absent=True)
+        assert candidate._read_owner()["state"] == "closing"
+        assert candidate.claim(uuid4().hex) == "existing"
+        assert not candidate.owns_mutex
+        candidate.close()
+        held.close()
+        held = None
+        assert later.claim(uuid4().hex) == "acquired"
+    finally:
+        if held:
+            held.close()
+        owner.close()
+        candidate.close()
+        later.close()
+
+
+def test_lifecycle_release_follows_stop_and_precedes_mutex_release(monkeypatch):
+    from pagefolio.startup_win32 import Win32Backend
+
+    b = Win32Backend(uuid4().hex)
+    states = []
+    try:
+        assert b.claim(uuid4().hex) == "acquired"
+        b.listen(lambda raw: {"result": "expired"})
+        publish = b._publish_owner
+
+        def record(state, ready):
+            states.append(
+                (
+                    state,
+                    b.owns_mutex,
+                    b.stop.is_set(),
+                    any(w.is_alive() for w in b.workers),
+                )
+            )
+            publish(state, ready)
+
+        monkeypatch.setattr(b, "_publish_owner", record)
+        b.close(root_absent=True)
+        assert states[0][:3] == ("closing", True, False)
+        assert states[1] == ("released", True, True, False)
+        assert not b.owns_mutex
+    finally:
+        b.close()
+
+
+def test_lifecycle_released_identity_mismatch_cannot_overwrite_mapping():
+    from pagefolio.startup_win32 import READ_CONTROL, OwnedHandle, Win32Backend
+
+    namespace = uuid4().hex
+    owner, candidate = [Win32Backend(namespace) for _ in range(2)]
+    held = None
+    try:
+        assert owner.claim(uuid4().hex) == "acquired"
+        held = OwnedHandle(
+            candidate.api,
+            candidate.api.OpenFileMappingW(
+                READ_CONTROL | 4, False, candidate.state_name
+            ),
+        )
+        original_created = owner._created
+        owner._created = lambda process: original_created(process) + 1
+        owner.close(root_absent=True)
+        before = candidate._read_owner()
+        assert before["state"] == "released"
+        assert candidate.claim(uuid4().hex) == "existing"
+        assert candidate._read_owner() == before
+    finally:
+        if held:
+            held.close()
+        owner.close()
+        candidate.close()
+
+
 def _run_scenario(fixture, namespace, role):
     """各spawnで初回app import前に設定/プロンプト/pluginsを隔離する。"""
-    sys.path.insert(0, str(_ROOT))
+    sys.path.insert(
+        0, str(fixture / "alternate") if role == "entry-relocated" else str(_ROOT)
+    )
     from pagefolio import plugins, settings
 
     settings._get_base_dir = lambda: str(fixture)
@@ -370,6 +743,17 @@ def _run_scenario(fixture, namespace, role):
     from pagefolio.startup_win32 import Win32Backend, _tick_ms
 
     backend_namespace = None if namespace == "fixed-production" else namespace
+    if role == "initializing-owner":
+        backend = Win32Backend(backend_namespace)
+        try:
+            assert backend.claim(uuid4().hex) == "acquired"
+            (fixture / "ready").touch()
+            deadline = time.monotonic() + 10
+            while time.monotonic() < deadline:
+                time.sleep(0.02)
+        finally:
+            backend.close()
+        return
     if role.startswith("lease-"):
         from pagefolio.startup_win32 import NoticeLease
 
@@ -457,7 +841,13 @@ def _run_scenario(fixture, namespace, role):
 
     counts = {"constructed": 0, "restored": 0, "status_preserved": True}
     app_reference = []
-    if role in {"owner", "manual-owner", "init-failure"}:
+    backend_instances = []
+    may_be_primary = role in {
+        "owner",
+        "manual-owner",
+        "init-failure",
+    } or role.startswith(("simultaneous-", "takeover-", "lifecycle-"))
+    if may_be_primary:
         from pagefolio import app as app_module
 
         class TracedApp(app_module.PDFEditorApp):
@@ -467,11 +857,29 @@ def _run_scenario(fixture, namespace, role):
                     raise RuntimeError("tracer-initialization-failure")
                 super().__init__(root)
                 app_reference.append(self)
+                if role == "lifecycle-cancel-owner":
+                    import pymupdf as fitz
+
+                    self.doc = fitz.open()
+                    self.doc.new_page()
+                    app_module.messagebox.askyesno = lambda *a: (
+                        fixture / "stop"
+                    ).exists()
 
                 def stop_poll():
-                    if (fixture / "stop").exists():
+                    if (fixture / "stop").exists() or (
+                        fixture.parent / "stop-all"
+                    ).exists():
                         self._quit()
                     else:
+                        if (
+                            role == "lifecycle-cancel-owner"
+                            and (fixture / "cancel").exists()
+                            and not (fixture / "cancelled").exists()
+                        ):
+                            self._quit()
+                            assert root.winfo_exists()
+                            (fixture / "cancelled").touch()
                         root.after(50, stop_poll)
 
                 root.after(50, stop_poll)
@@ -482,6 +890,7 @@ def _run_scenario(fixture, namespace, role):
     class Backend(Win32Backend):
         def __init__(self):
             super().__init__(backend_namespace)
+            backend_instances.append(self)
             self.logger.setLevel(logging.DEBUG)
             self.logger.addHandler(logging.StreamHandler(sys.stderr))
             self.audit = {
@@ -506,10 +915,30 @@ def _run_scenario(fixture, namespace, role):
 
                 self.api.CreateFileW = deny_pipe
 
+        def _publish_owner(self, state, ready):
+            if role == "prepublish-failure":
+                raise RuntimeError("tracer-prepublish-failure")
+            return super()._publish_owner(state, ready)
+
         def request_activation(self, started_tick):
             result = super().request_activation(started_tick)
             self.audit["terminal_result"] = result
             self.audit["elapsed"] = self.tick_ms() - started_tick
+            return result
+
+        def _observe_owner(self, owner):
+            process = super()._observe_owner(owner)
+            if role.startswith("takeover-"):
+                (fixture / "observed").touch()
+            return process
+
+        def try_takeover(self, generation, expected, deadline):
+            self.audit["death_confirmed"] = self._process_has_exited(
+                self.observed_process
+            )
+            self.audit["dead_identity"] = expected
+            result = super().try_takeover(generation, expected, deadline)
+            self.audit["takeover_claim"] = result
             return result
 
         def claim(self, generation):
@@ -528,14 +957,14 @@ def _run_scenario(fixture, namespace, role):
                 self.audit["snapshot"] = self._read_owner()
             return result
 
-        def close(self):
+        def close(self, **kwargs):
             if self.notice_lease is not None:
                 self.notice_lease.__exit__(None, None, None)
                 self.notice_lease = None
             (fixture / "resource-audit.json").write_text(
                 json.dumps(self.audit), encoding="utf-8"
             )
-            super().close()
+            super().close(**kwargs)
 
         def publish_state(self, state, ready):
             super().publish_state(state, ready)
@@ -560,16 +989,41 @@ def _run_scenario(fixture, namespace, role):
 
     started = _tick_ms()
     try:
-        result = main(backend_factory=Backend)
+        if role.startswith("entry-"):
+            from pagefolio import constants, startup_win32
+
+            startup_win32.Win32Backend = Backend
+            if role == "entry-relocated":
+                constants.APP_VERSION = "v99.test"
+                assert Path(startup_win32.__file__).is_relative_to(
+                    fixture / "alternate"
+                )
+                runpy.run_path(
+                    str(fixture / "alternate" / "pagefolio.py"), run_name="__main__"
+                )
+            elif role == "entry-script":
+                runpy.run_path(str(_ROOT / "pagefolio.py"), run_name="__main__")
+            else:
+                runpy.run_module("pagefolio", run_name="__main__")
+            result = backend_instances[-1].audit["terminal_result"]
+        else:
+            result = main(backend_factory=Backend)
     except PermissionError:
         assert role == "api-denied"
         result = "api_denied"
     except RuntimeError as e:
-        assert role == "init-failure" and str(e) == "tracer-initialization-failure"
+        assert (
+            role == "init-failure" and str(e) == "tracer-initialization-failure"
+        ) or (role == "prepublish-failure" and str(e) == "tracer-prepublish-failure")
         result = "initialization_failed"
-    if role not in {"owner", "manual-owner", "init-failure"}:
+    if not may_be_primary:
         assert "pagefolio.app" not in sys.modules
     record = {**counts, "result": result, "elapsed": _tick_ms() - started}
+    if role == "lifecycle-worker":
+        (fixture / "worker-alive").touch()
+        deadline = time.monotonic() + 8
+        while not (fixture / "release-worker").exists() and time.monotonic() < deadline:
+            time.sleep(0.02)
     (fixture / "result.json").write_text(json.dumps(record), encoding="utf-8")
     print(json.dumps(record))
 

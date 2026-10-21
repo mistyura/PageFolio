@@ -61,13 +61,37 @@ class StartupCoordinator:
         self.first_terminal_tick = None
         self._cooldown_result = None
         self._cache_generation = self.generation
+        self.takeover_attempted = False
+        self.backend.takeover_callback = self._try_takeover
 
     def claim(self):
         result = self.backend.claim(self.generation)
         if result == "acquired":
             self.backend.listen(self._receive)
             return StartupOutcome("primary", True)
-        return StartupOutcome(result)
+        return StartupOutcome(result, result == "primary")
+
+    def _try_takeover(self, deadline):
+        owner = getattr(self.backend, "observed_owner", None)
+        process = getattr(self.backend, "observed_process", None)
+        if (
+            self.takeover_attempted
+            or self.backend.tick_ms() >= deadline
+            or not owner
+            or owner["state"] != "initializing"
+            or process is None
+            or not self.backend._process_has_exited(process)
+        ):
+            return False
+        self.takeover_attempted = True
+        result = self.backend.try_takeover(self.generation, owner, deadline)
+        self.backend.logger.debug(
+            "起動引継ぎ: %s / %s / deadline=%s", owner["pid"], result, deadline
+        )
+        if result != "acquired":
+            return False
+        self.backend.listen(self._receive)
+        return True
 
     def request_activation(self, started_tick):
         return self._wait_for_terminal(started_tick)
@@ -76,7 +100,7 @@ class StartupCoordinator:
         result = self.backend.request_activation(started_tick)
         if self.backend.tick_ms() >= started_tick + 5000:
             result = "expired"
-        return StartupOutcome(result)
+        return StartupOutcome(result, result == "primary")
 
     def _valid(self, request):
         return (
@@ -219,7 +243,19 @@ class StartupCoordinator:
                 self.active_batch = None
 
     def close(self):
+        root_absent = self.root is None
+        if self.root is not None:
+            try:
+                root_absent = not self.root.winfo_exists()
+            except Exception as e:
+                # destroy後のTclError以外は、root不存在を確認した扱いにしない。
+                import tkinter as tk
+
+                root_absent = isinstance(
+                    e, tk.TclError
+                ) and "application has been destroyed" in str(e)
         self.closed = True
+        self.backend.stop_accepting()
         if self.root is not None and self.after_id is not None:
             try:
                 self.root.after_cancel(self.after_id)
@@ -228,4 +264,4 @@ class StartupCoordinator:
         with self._lock:
             for item in tuple(self._pending.values()):
                 self._finish(item, "expired", self.backend.tick_ms())
-        self.backend.close()
+        self.backend.close(root_absent=root_absent)

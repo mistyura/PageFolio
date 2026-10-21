@@ -21,9 +21,10 @@ def main(*, backend_factory=None):
             if not outcome.primary:
                 if outcome.result == "existing":
                     outcome = coordinator.request_activation(started_tick)
-                if outcome.result not in {"completed", "foreground_denied"}:
-                    coordinator.backend.show_notice(outcome.result)
-                return outcome.result
+                if not outcome.primary:
+                    if outcome.result not in {"completed", "foreground_denied"}:
+                        coordinator.backend.show_notice(outcome.result)
+                    return outcome.result
 
         # 所有権を確定するまで、編集画面やプラグインを import しない。
         import tkinter as tk
@@ -39,6 +40,8 @@ def main(*, backend_factory=None):
             root_class = TkinterDnD.Tk
         # __init__ が途中で例外になっても、作成済みTkをfinallyで破棄する。
         root = root_class.__new__(root_class)
+        if coordinator:
+            coordinator.root = root
         root.__init__()
         app = PDFEditorApp(root)
         _setup_file_drop(app)
