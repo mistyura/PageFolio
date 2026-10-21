@@ -8,7 +8,10 @@ PageFolio GUI - Windows 11
 必要ライブラリ: pip install pymupdf pillow
 """
 
+import sys
+
 from pagefolio.__main__ import main
 
 if __name__ == "__main__":
-    main()
+    if main() == "notification_unavailable":
+        sys.exit(1)

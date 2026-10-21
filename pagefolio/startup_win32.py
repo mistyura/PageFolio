@@ -916,7 +916,10 @@ class Win32Backend:
             except TimeoutError:
                 return "expired"
             except Exception as e:
-                self.logger.debug("起動連絡失敗: %s", e)
+                self.last_os_error = (
+                    getattr(e, "winerror", None) or getattr(e, "errno", None) or 0
+                )
+                self.logger.debug("起動連絡失敗: os_error=%s", self.last_os_error)
                 return "connection_failed"
         return "expired"
 
@@ -1083,9 +1086,19 @@ class Win32Backend:
         return bool(self.api.AllowSetForegroundWindow(pid)), ct.get_last_error()
 
     def show_notice(self, reason):
-        with NoticeLease(self, reason) as lease:
-            if lease.acquired:
-                _show_notice_window(self, reason)
+        from pagefolio.startup_control import StartupOutcome
+        from pagefolio.startup_notice import show_startup_failure
+
+        return show_startup_failure(StartupOutcome(reason), self)
+
+    def _create_notice_lease(self, reason):
+        return NoticeLease(self, reason)
+
+    def notice_language(self):
+        return _bind(self.api.k, "GetUserDefaultUILanguage", wt.WORD)()
+
+    def display_notice(self, reason, text, lease):
+        NativeNoticeLifetime(self, reason, text=text).show()
 
     def _cancel_pending_io(self):
         for pipe in self.pipes:
@@ -1195,18 +1208,98 @@ class NoticeLease:
         self.handle.close()
 
 
-class NativeNoticeLifetime:
-    """WndProc を WM_NCDESTROY とクラス解除まで強保持する。"""
+class LOGFONT(ct.Structure):
+    _fields_ = (
+        [
+            (name, wt.LONG)
+            for name in (
+                "lfHeight",
+                "lfWidth",
+                "lfEscapement",
+                "lfOrientation",
+                "lfWeight",
+            )
+        ]
+        + [
+            (name, wt.BYTE)
+            for name in (
+                "lfItalic",
+                "lfUnderline",
+                "lfStrikeOut",
+                "lfCharSet",
+                "lfOutPrecision",
+                "lfClipPrecision",
+                "lfQuality",
+                "lfPitchAndFamily",
+            )
+        ]
+        + [("lfFaceName", wt.WCHAR * 32)]
+    )
 
-    def __init__(self, backend, reason):
+
+class NONCLIENTMETRICS(ct.Structure):
+    _fields_ = [
+        ("cbSize", wt.UINT),
+        ("iBorderWidth", ct.c_int),
+        ("iScrollWidth", ct.c_int),
+        ("iScrollHeight", ct.c_int),
+        ("iCaptionWidth", ct.c_int),
+        ("iCaptionHeight", ct.c_int),
+        ("lfCaptionFont", LOGFONT),
+        ("iSmCaptionWidth", ct.c_int),
+        ("iSmCaptionHeight", ct.c_int),
+        ("lfSmCaptionFont", LOGFONT),
+        ("iMenuWidth", ct.c_int),
+        ("iMenuHeight", ct.c_int),
+        ("lfMenuFont", LOGFONT),
+        ("lfStatusFont", LOGFONT),
+        ("lfMessageFont", LOGFONT),
+        ("iPaddedBorderWidth", ct.c_int),
+    ]
+
+
+class PAINTSTRUCT(ct.Structure):
+    _fields_ = [
+        ("hdc", wt.HDC),
+        ("fErase", wt.BOOL),
+        ("rcPaint", wt.RECT),
+        ("fRestore", wt.BOOL),
+        ("fIncUpdate", wt.BOOL),
+        ("rgbReserved", wt.BYTE * 32),
+    ]
+
+
+class NativeNoticeLifetime:
+    """生成スレッドで全資源を解放し、クラス解除まで WndProc を強保持する。"""
+
+    def __init__(self, backend, reason, *, text=None):
+        from pagefolio.startup_control import StartupOutcome
+        from pagefolio.startup_notice import (
+            _failure_reason,
+            _notice_language,
+            _notice_text,
+        )
+
         self.backend = backend
         self.reason = reason
+        classified = _failure_reason(StartupOutcome(reason), True)
+        self.text = text or _notice_text(
+            classified, _notice_language(backend.notice_language())
+        )
         self.callback = None
         self.hwnd = None
         self.error = None
+        self.deadline_tick = None
+        self.close_rect = wt.RECT()
+        self.message_rect = wt.RECT()
+        self.dpi = None
 
     def show(self, *, lifetime_ms=10000, on_show=None):
+        from pagefolio.startup_notice import notice_deadline_tick, notice_remaining_ms
+
+        self.backend._assert_thread()
         api = self.backend.api
+        gdi = ct.WinDLL("gdi32", use_last_error=True)
         callback_type = ct.WINFUNCTYPE(
             ct.c_ssize_t, wt.HWND, wt.UINT, wt.WPARAM, wt.LPARAM
         )
@@ -1235,23 +1328,97 @@ class NativeNoticeLifetime:
             wt.LPARAM,
         )
         destroy = _bind(api.u, "DestroyWindow", wt.BOOL, wt.HWND)
-        post_quit = _bind(api.u, "PostQuitMessage", None, ct.c_int)
+        timer = _bind(
+            api.u, "SetTimer", ct.c_size_t, wt.HWND, ct.c_size_t, wt.UINT, wt.LPVOID
+        )
+        kill_timer = _bind(api.u, "KillTimer", wt.BOOL, wt.HWND, ct.c_size_t)
+        select = _bind(gdi, "SelectObject", wt.HANDLE, wt.HDC, wt.HANDLE)
+        draw_text = _bind(
+            api.u,
+            "DrawTextW",
+            ct.c_int,
+            wt.HDC,
+            wt.LPCWSTR,
+            ct.c_int,
+            ct.POINTER(wt.RECT),
+            wt.UINT,
+        )
+        begin_paint = _bind(
+            api.u, "BeginPaint", wt.HDC, wt.HWND, ct.POINTER(PAINTSTRUCT)
+        )
+        end_paint = _bind(api.u, "EndPaint", wt.BOOL, wt.HWND, ct.POINTER(PAINTSTRUCT))
+        frame = _bind(
+            api.u,
+            "DrawFrameControl",
+            wt.BOOL,
+            wt.HDC,
+            ct.POINTER(wt.RECT),
+            wt.UINT,
+            wt.UINT,
+        )
+        background = _bind(gdi, "SetBkMode", ct.c_int, wt.HDC, ct.c_int)
+        font = None
 
         def procedure(hwnd, message, wparam, lparam):
             try:
-                if message == 0x21:
+                if message == 0x21:  # WM_MOUSEACTIVATE / MA_NOACTIVATE
                     return 3
-                close_click = message == 0x111 and wparam & 0xFFFF == 101
-                if message in {0x113, 0x10} or close_click:
+                if message == 0xF:  # WM_PAINT: 子BUTTON/STATICによるfocusを作らない。
+                    paint = PAINTSTRUCT()
+                    dc = _check(begin_paint(hwnd, ct.byref(paint)))
+                    try:
+                        if font:
+                            old = select(dc, font)
+                            try:
+                                background(dc, 1)
+                                draw_text(
+                                    dc,
+                                    self.text[1],
+                                    -1,
+                                    ct.byref(self.message_rect),
+                                    0x10 | 0x800,
+                                )
+                                frame(dc, ct.byref(self.close_rect), 4, 0x10)
+                                draw_text(
+                                    dc,
+                                    self.text[2],
+                                    -1,
+                                    ct.byref(self.close_rect),
+                                    1 | 4 | 0x20 | 0x800,
+                                )
+                            finally:
+                                select(dc, old)
+                    finally:
+                        end_paint(hwnd, ct.byref(paint))
+                    return 0
+                close_click = False
+                if message == 0x202:  # WM_LBUTTONUP / client座標
+                    x, y = (
+                        ct.c_short(lparam & 0xFFFF).value,
+                        ct.c_short((lparam >> 16) & 0xFFFF).value,
+                    )
+                    r = self.close_rect
+                    close_click = r.left <= x < r.right and r.top <= y < r.bottom
+                if message == 0x113:
+                    if (
+                        self.deadline_tick is not None
+                        and notice_remaining_ms(
+                            self.deadline_tick, self.backend.tick_ms()
+                        )
+                        == 0
+                    ):
+                        destroy(hwnd)
+                    return 0
+                if message == 0x10 or close_click:
                     destroy(hwnd)
                     return 0
-                if message == 0x82:
+                if message == 0x82:  # WM_NCDESTROY
+                    kill_timer(hwnd, 1)
                     self.hwnd = None
-                    post_quit(0)
                 return default(hwnd, message, wparam, lparam)
             except Exception as e:
                 self.error = e
-                post_quit(1)
+                destroy(hwnd)
                 return 0
 
         self.callback = callback_type(procedure)
@@ -1276,87 +1443,174 @@ class NativeNoticeLifetime:
             wt.LPVOID,
         )
         show = _bind(api.u, "ShowWindow", wt.BOOL, wt.HWND, ct.c_int)
-        timer = _bind(
-            api.u, "SetTimer", ct.c_size_t, wt.HWND, ct.c_size_t, wt.UINT, wt.LPVOID
+        peek = _bind(
+            api.u,
+            "PeekMessageW",
+            wt.BOOL,
+            ct.POINTER(wt.MSG),
+            wt.HWND,
+            wt.UINT,
+            wt.UINT,
+            wt.UINT,
         )
-        get_message = _bind(
-            api.u, "GetMessageW", wt.BOOL, ct.POINTER(wt.MSG), wt.HWND, wt.UINT, wt.UINT
-        )
-        translate = _bind(api.u, "TranslateMessage", wt.BOOL, ct.POINTER(wt.MSG))
         dispatch = _bind(api.u, "DispatchMessageW", ct.c_ssize_t, ct.POINTER(wt.MSG))
+        translate = _bind(api.u, "TranslateMessage", wt.BOOL, ct.POINTER(wt.MSG))
+        wait = _bind(
+            api.u,
+            "MsgWaitForMultipleObjectsEx",
+            wt.DWORD,
+            wt.DWORD,
+            wt.LPVOID,
+            wt.DWORD,
+            wt.DWORD,
+            wt.DWORD,
+        )
+        delete = _bind(gdi, "DeleteObject", wt.BOOL, wt.HANDLE)
         window_class = WNDCLASS()
         window_class.lpfnWndProc = self.callback
         window_class.lpszClassName = name
-        window_class.hbrBackground = 6
-        _check(register(ct.byref(window_class)))
+        window_class.hbrBackground = 6  # COLOR_WINDOW + 1
+        registered = False
         try:
-            text = "画面への連絡を確認できませんでした。タスクバーを確認してください。"
+            _check(register(ct.byref(window_class)))
+            registered = True
             self.hwnd = _check(
                 create(
                     0x08000080,
                     name,
-                    "PageFolio",
+                    self.text[0],
                     0x80000000,
-                    40,
-                    40,
-                    560,
-                    100,
+                    0,
+                    0,
+                    1,
+                    1,
                     None,
                     None,
                     None,
                     None,
                 )
+            )
+            self.dpi = _check(
+                _bind(api.u, "GetDpiForWindow", wt.UINT, wt.HWND)(self.hwnd)
+            )
+            metrics = NONCLIENTMETRICS(cbSize=ct.sizeof(NONCLIENTMETRICS))
+            spi = _bind(
+                api.u,
+                "SystemParametersInfoForDpi",
+                wt.BOOL,
+                wt.UINT,
+                wt.UINT,
+                wt.LPVOID,
+                wt.UINT,
+                wt.UINT,
+            )
+            _check(spi(0x29, metrics.cbSize, ct.byref(metrics), 0, self.dpi))
+            font = _check(
+                _bind(gdi, "CreateFontIndirectW", wt.HANDLE, ct.POINTER(LOGFONT))(
+                    ct.byref(metrics.lfMessageFont)
+                )
+            )
+            work = wt.RECT()
+            _check(
+                _bind(
+                    api.u,
+                    "SystemParametersInfoW",
+                    wt.BOOL,
+                    wt.UINT,
+                    wt.UINT,
+                    wt.LPVOID,
+                    wt.UINT,
+                )(0x30, 0, ct.byref(work), 0)
+            )
+            scale = self.dpi / 96
+            margin = max(1, round(16 * scale))
+            width = min(round(560 * scale), work.right - work.left - 2 * margin)
+            get_dc = _bind(api.u, "GetDC", wt.HDC, wt.HWND)
+            release_dc = _bind(api.u, "ReleaseDC", ct.c_int, wt.HWND, wt.HDC)
+            dc = _check(get_dc(self.hwnd))
+            old = select(dc, font)
+            try:
+                measured = wt.RECT(0, 0, width - 2 * margin, 0)
+                _check(
+                    draw_text(
+                        dc, self.text[1], -1, ct.byref(measured), 0x400 | 0x10 | 0x800
+                    )
+                )
+                close = wt.RECT()
+                _check(
+                    draw_text(
+                        dc, self.text[2], -1, ct.byref(close), 0x400 | 0x20 | 0x800
+                    )
+                )
+            finally:
+                select(dc, old)
+                release_dc(self.hwnd, dc)
+            self.message_rect = wt.RECT(
+                margin, margin, width - margin, margin + measured.bottom
+            )
+            button_height = max(close.bottom + margin, round(32 * scale))
+            button_width = max(close.right + 2 * margin, round(80 * scale))
+            top = self.message_rect.bottom + margin
+            self.close_rect = wt.RECT(
+                width - margin - button_width, top, width - margin, top + button_height
+            )
+            height = self.close_rect.bottom + margin
+            if width <= 2 * margin or height > work.bottom - work.top:
+                raise OSError("通知の表示領域を確保できない")
+            position = _bind(
+                api.u,
+                "SetWindowPos",
+                wt.BOOL,
+                wt.HWND,
+                wt.HWND,
+                ct.c_int,
+                ct.c_int,
+                ct.c_int,
+                ct.c_int,
+                wt.UINT,
             )
             _check(
-                create(
-                    0,
-                    "STATIC",
-                    text,
-                    0x50000000,
-                    12,
-                    20,
-                    440,
-                    60,
+                position(
                     self.hwnd,
                     None,
-                    None,
-                    None,
+                    work.right - width - margin,
+                    work.top + margin,
+                    width,
+                    height,
+                    0x14,
                 )
             )
-            _check(
-                create(
-                    0,
-                    "STATIC",
-                    "[閉じる]",
-                    0x50000100,
-                    470,
-                    20,
-                    80,
-                    60,
-                    self.hwnd,
-                    101,
-                    None,
-                    None,
-                )
+            # 最初の表示時刻に一度だけ確定。後続案内による期限更新を行わない。
+            self.deadline_tick = notice_deadline_tick(
+                self.backend.tick_ms(), lifetime_ms
             )
-            _check(timer(self.hwnd, 1, lifetime_ms, None))
-            show(self.hwnd, 4)
+            _check(timer(self.hwnd, 1, max(1, lifetime_ms), None))
+            show(self.hwnd, 4)  # SW_SHOWNOACTIVATE
             if on_show:
                 on_show(self.hwnd)
             message = wt.MSG()
-            while True:
-                result = get_message(ct.byref(message), None, 0, 0)
-                if result <= 0:
-                    if result == -1:
-                        raise ct.WinError(ct.get_last_error())
+            while self.hwnd:
+                remaining = notice_remaining_ms(
+                    self.deadline_tick, self.backend.tick_ms()
+                )
+                if not remaining:
+                    destroy(self.hwnd)
                     break
-                translate(ct.byref(message))
-                dispatch(ct.byref(message))
+                if peek(ct.byref(message), None, 0, 0, 1):
+                    if message.message == 0x12:
+                        destroy(self.hwnd)
+                        break
+                    translate(ct.byref(message))
+                    dispatch(ct.byref(message))
+                elif wait(0, None, remaining, 0x4FF, 4) == 0xFFFFFFFF:
+                    raise ct.WinError(ct.get_last_error())
         finally:
             if self.hwnd:
+                kill_timer(self.hwnd, 1)
                 destroy(self.hwnd)
-            if not unregister(name, None):
-                # OSがクラスを保持している間はWndProcの解放を禁止する。
+            if font:
+                delete(font)
+            if registered and not unregister(name, None):
                 _notice_lifetime_quarantine.append(self)
                 raise ct.WinError(ct.get_last_error())
         if self.error is not None:

@@ -232,7 +232,8 @@ def test_tracer_e2e_initialization_failure_releases_owner(tmp_path):
 def test_tracer_e2e_api_denial_does_not_construct_app(tmp_path):
     child, _ = _spawn(tmp_path, uuid4().hex, "api-denied")
     result = _finish(child)
-    assert result["result"] == "api_denied"
+    # 起動mutexと通知mutexの両APIを拒否。成功や表示済みへ偽装しない。
+    assert result["result"] == "notification_unavailable"
     assert result["constructed"] == 0
 
 
@@ -245,7 +246,7 @@ def test_tracer_notice_real_main_failure_path(tmp_path):
         result = _finish(child)
         assert result["result"] == "connection_failed"
         assert result["constructed"] == 0
-        assert 9900 <= result["elapsed"] <= 11500
+        assert 100 <= result["elapsed"] <= 2000
         (fixture / "stop").touch()
         _finish(owner)
     finally:
@@ -327,7 +328,8 @@ def test_tracer_notice_nonactivate_lifetime_and_close(manual_close):
     def observe(hwnd):
         seen.append((hwnd, foreground()))
         if manual_close:
-            assert post(hwnd, 0x111, 101, 0)
+            r = notice.close_rect
+            assert post(hwnd, 0x202, 0, ((r.top + 1) << 16) | (r.left + 1))
 
     try:
         notice = NativeNoticeLifetime(backend, "connection_failed")
@@ -341,15 +343,15 @@ def test_tracer_notice_nonactivate_lifetime_and_close(manual_close):
         backend.close()
 
 
-def test_tracer_notice_ten_second_production_timer():
+def test_tracer_notice_timeout_injected_timer():
     from pagefolio.startup_win32 import NativeNoticeLifetime, Win32Backend
 
     backend = Win32Backend(uuid4().hex)
     try:
         started = backend.tick_ms()
-        NativeNoticeLifetime(backend, "connection_failed").show()
+        NativeNoticeLifetime(backend, "connection_failed").show(lifetime_ms=150)
         elapsed = backend.tick_ms() - started
-        assert 9900 <= elapsed <= 11500
+        assert 140 <= elapsed <= 1000
     finally:
         backend.close()
 
@@ -1326,12 +1328,17 @@ def _run_scenario(fixture, namespace, role):
             return super()._foreground_window(hwnd, is_current)
 
         def show_notice(self, reason):
-            if role == "notice-via-main":
+            if role in {"notice-via-main", "api-denied"}:
                 return super().show_notice(reason)
             if role == "request-timeout":
                 assert reason == "expired"
                 return
             raise AssertionError(f"正常tracerで失敗案内: {reason}")
+
+        def display_notice(self, reason, text, lease):
+            from pagefolio.startup_win32 import NativeNoticeLifetime
+
+            NativeNoticeLifetime(self, reason, text=text).show(lifetime_ms=150)
 
     started = _tick_ms()
     try:

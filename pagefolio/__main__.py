@@ -24,7 +24,12 @@ def main(*, backend_factory=None):
                     outcome = coordinator.request_activation(started_tick)
                 if not outcome.primary:
                     if outcome.result not in {"completed", "foreground_denied"}:
-                        coordinator.backend.show_notice(outcome.result)
+                        notice = coordinator.backend.show_notice(outcome.result)
+                        if (
+                            getattr(notice, "result", None)
+                            == "notification_unavailable"
+                        ):
+                            return "notification_unavailable"
                     return outcome.result
 
         # 所有権を確定するまで、編集画面やプラグインを import しない。
@@ -70,4 +75,5 @@ def main(*, backend_factory=None):
 
 
 if __name__ == "__main__":
-    main()
+    if main() == "notification_unavailable":
+        sys.exit(1)

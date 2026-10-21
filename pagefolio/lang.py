@@ -6,6 +6,20 @@
 
 LANG = {
     "ja": {
+        "startup_notice_check_failed": (
+            "PageFolioの起動状態を確認できませんでした。"
+            "タスクバーを確認し、しばらくしてから起動し直してください。"
+        ),
+        "startup_notice_contact_failed": (
+            "起動済みの画面に接続できませんでした。"
+            "タスクバーからPageFolioを確認してください。"
+        ),
+        "startup_notice_timeout": (
+            "PageFolioの応答を5秒以内に確認できませんでした。"
+            "画面を確認してから、必要なら起動し直してください。"
+        ),
+        "startup_notice_close": "閉じる",
+        "startup_notice_title": "PageFolio",
         # ヘッダー / ステータス
         "status_initial": "ファイルを開いてください",
         # サムネイルパネル
@@ -804,6 +818,20 @@ LANG = {
         "batch_menu_item_off": "バッチOCR（OCR OFF）",
     },
     "en": {
+        "startup_notice_check_failed": (
+            "PageFolio's startup status could not be checked. Check the taskbar, "
+            "wait a moment, then try opening PageFolio again."
+        ),
+        "startup_notice_contact_failed": (
+            "The running PageFolio window could not be contacted. "
+            "Check PageFolio on the taskbar."
+        ),
+        "startup_notice_timeout": (
+            "PageFolio did not respond within 5 seconds. "
+            "Check the screen, then open PageFolio again if needed."
+        ),
+        "startup_notice_close": "Close",
+        "startup_notice_title": "PageFolio",
         # Header / status
         "status_initial": "Open a file to get started",
         # Thumbnail panel

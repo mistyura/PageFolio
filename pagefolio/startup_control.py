@@ -65,7 +65,11 @@ class StartupCoordinator:
         self.backend.takeover_callback = self._try_takeover
 
     def claim(self):
-        result = self.backend.claim(self.generation)
+        try:
+            result = self.backend.claim(self.generation)
+        except OSError as e:
+            self.backend.last_os_error = getattr(e, "winerror", None) or e.errno or 0
+            return StartupOutcome("check_failed")
         if result == "acquired":
             self.backend.listen(self._receive)
             return StartupOutcome("primary", True)
