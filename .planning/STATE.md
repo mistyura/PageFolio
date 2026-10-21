@@ -2,19 +2,19 @@
 gsd_state_version: "1.0"
 milestone: v1.10.0
 milestone_name: 多重起動防止・起動操作の改善
-current_phase: 4
+current_phase: 04
 current_phase_name: 起動制御と既存画面への復帰
-status: planning
-stopped_at: v1.10.0 のマイルストーン初期化完了。ロードマップ（Phase 4〜6・15/15要件割当）をユーザー承認済み。次は `/gsd-discuss-phase 4`、または `/gsd-plan-phase 4`。実装・フェーズ計画は未着手。
-last_updated: "2026-10-21T09:47:13.954Z"
-last_activity: 2026-10-21
-last_activity_desc: v1.10.0 のロードマップをユーザー承認、15要件を Phase 4〜6 に重複なく割当
-state_head: 5091d4072a87ce881ab2ff72956bed3296c298e3
+status: executing
+stopped_at: 04-05-02 autoの証拠照合から再開。未実施人手W項目はPhase 6へ移管済み。Task1再実装不要。
+last_updated: "2026-10-22"
+last_activity: 2026-10-22
+last_activity_desc: 受入再計画を反映。04-01〜04と04-05 Task1完了。人手停止を解除し証拠照合/validate-phase待ち。
+state_head: 1c65309dc481e9d0485c47b8a58076a65270468a
 progress:
   total_phases: 3
   completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
+  total_plans: 5
+  completed_plans: 4
   percent: 0
 ---
 
@@ -25,7 +25,7 @@ progress:
 See: .planning/PROJECT.md (updated 2026-10-21)
 
 **Core value:** 大きな PDF でも Undo/Redo が正しく・速く動作し、コードが読みやすく保守しやすい状態にする
-**Current focus:** v1.10.0 の15要件・保証範囲・Phase 4〜6 のロードマップをユーザー承認済み。マイルストーン初期化完了。次は Phase 4「起動制御と既存画面への復帰」の議論・計画。
+**Current focus:** Phase 04 — 起動制御と既存画面への復帰
 
 ## Shipped Milestone: v1.9.0（2026-08-11・verified_closeout）
 
@@ -45,22 +45,22 @@ See: .planning/PROJECT.md (updated 2026-10-21)
 
 ## Current Position
 
-Phase: 4 of 6 (起動制御と既存画面への復帰)
-Plan: — (未計画・総プラン0)
-Status: Ready to plan
-Last activity: 2026-10-21 — v1.10.0 のロードマップをユーザー承認、15要件を Phase 4〜6 に重複なく割当
+Phase: 04 (起動制御と既存画面への復帰) — EXECUTING
+Plan: 5 of 5
+Status: executing（受入再計画済み）
+Last activity: 2026-10-22 — 受入再計画を反映、04-05-02の証拠照合から再開可能
 
-Progress: [░░░░░░░░░░] 0%（v1.10.0: 0/3 フェーズ、0/0 確定プラン）
+Progress: [░░░░░░░░░░] 0%（v1.10.0: 0/3 フェーズ、4/5 確定プラン完了、04-05 Task 1完了）
 
-## v1.10.0 Phase Map（構成承認済み・計画前）
+## v1.10.0 Phase Map（構成承認済み）
 
 | Phase | Name | Requirements | 状態 |
 |-------|------|--------------|------|
-| 4 | 起動制御と既存画面への復帰 | V110-START-01〜03, V110-FOCUS-01/02 | 未着手・計画前 |
+| 4 | 起動制御と既存画面への復帰 | V110-START-01〜03, V110-FOCUS-01/02 | 4/5完了、04-05証拠照合・検証待ち |
 | 5 | 設定読込・保存失敗の通知 | V110-CFG-01〜04 | 未着手・計画前 |
 | 6 | サンプル配布とリリース検証 | V110-DIST-01〜03, V110-QA-01〜03 | 未着手・計画前 |
 
-Phase 4/5 はそれぞれの機能テストと必要な実機確認をフェーズ内で行う。Phase 6 は PyInstaller の実ビルド・再ビルドと実 EXE の UAT を含む最終検証。各フェーズ完了時は `/gsd-validate-phase` を実行する。
+Phase 4は自動受入/A1〜A5と証拠照合を行い、未実施人手W項目は承認によりPhase 6へ移管。Phase 5は機能テストと必要な実機確認を行う。Phase 6 は PyInstaller の実ビルド・再ビルドと実 EXE の UAT を含む最終検証。各フェーズ完了時は `/gsd-validate-phase` を実行する。
 
 ## v1.9.0 Phase Map
 
@@ -333,6 +333,7 @@ v1.9.0 クローズ時点で次マイルストーンへ引き継ぐ未解決項�
 
 | # | Description | Date | Commit | Directory |
 |---|-------------|------|--------|-----------|
+| 261022-1ns | Phase 4の未実施人手受入をPhase 6へ移管し、04-05-02の証拠照合から再開可能にする | 2026-10-22 | 本行を含むコミット | [261022-1ns-phase-4-phase-6](./quick/261022-1ns-phase-4-phase-6/) |
 | 260607-ccz | OCR 抽出画面に「⚙ LLM 設定…」ボタンを追加し既存 LLMConfigDialog でプロバイダ・モデルを変更可能化（ライブ更新・05-05 UAT 発見の不具合修正） | 2026-06-07 | f210f76 | [260607-ccz-ocr-llm-llmconfigdialog](./quick/260607-ccz-ocr-llm-llmconfigdialog/) |
 | 260609-aaa | v1.4.0 ビルド（PyInstaller）・git push・GitHub Release 作成（PageFolio-v1.4.0-win64.zip） | 2026-06-09 | 9888c4f | [260609-aaa-v140-build-release](./quick/260609-aaa-v140-build-release/) |
 | 260610-aaa | v1.4.0 リリース内容コードレビュー・修正計画文書化（H-1〜H-4 / M-1〜M-11 / L-1〜L-6） | 2026-06-10 | - | [260610-aaa-v140-review-fixplan](./quick/260610-aaa-v140-review-fixplan/) |
@@ -416,17 +417,33 @@ v1.9.0 クローズ時点で次マイルストーンへ引き継ぐ未解決項�
 
 ## Session Continuity
 
-**Resume file:** None
+**Resume file:** .planning/phases/04-startup-control/04-05-CHECKPOINT.md
 
-Last session: 2026-10-21
-Stopped at: v1.10.0 のマイルストーン初期化完了。ロードマップ（Phase 4〜6・15/15要件割当）をユーザー承認済み。次は `/gsd-discuss-phase 4`、または `/gsd-plan-phase 4`。実装・フェーズ計画は未着手。
+Last session: 2026-10-22
+Stopped at: 04-05-02 autoの証拠照合から再開。2026-10-22承認により未実施人手W項目をPhase 6へ移管し、blocking-humanを解除。Task1 7ea8fb4は再実装不要。
 
 ## Operator Next Steps
 
-- **次アクション:** `/gsd-discuss-phase 4` で起動制御・画面復帰の方式と受入を具体化する。直接計画する場合は `/gsd-plan-phase 4`。`/gsd-new-milestone v1.10.0` は完了済み
+- **次アクション:** `/gsd-execute-phase 4`。04-05-02 autoの証拠照合から再開。Task 1は再実装しない。未実施人手W項目は06-UAT-CARRYOVERへ移管済み。SUMMARY→Progress→validate-phase→全件pytest→正式完了→DoDの順を守る。
 - **タグの push は未実施** — ユーザー選択によりローカルにのみ `v1.9.0` タグを作成した。リリース作業時に `git push origin v1.9.0` を実行する
 - **現在ブランチは `feature/v1.10.0`** — 引継ぎ文書を含む `quick/261021-os9-gsd` の HEAD（`ff6c5d3`）から作成。`main` への統合は PR 経由で行う
 - サンプルプロンプト 2 ファイルの再ビルド時消失対策は v1.10.0 へ採用。原本保持と同梱の検証を要件化する（260722-rel SUMMARY 参照）
 - 先送り課題（260722-gae 精査項目 3 ②③）: LLM 設定ダイアログへの「新世代 Gemini では
   temperature 欄が無視される」注記（UI 変更）/ 新世代 thinking 有効時の応答時間・
   トークン消費の実測（実 API 必要）— v1.9.0 Phase 2 では合流できず次マイルストーンへ継続
+
+
+## 2026-10-22 承認済み受入再計画（現行）
+
+ユーザー承認: 「受入条件を再計画し、別セッション確認など準備できない項目をPhase 6へ移す」。
+従来のW全必須passまでPhase 4を停止する条件と移管不可の判断を置き換える。
+機能契約・保証範囲・実測・未実施の事実は変更しない。
+
+- Phase 4は自動/Windows subprocess受入、A1〜A5実証、証拠照合と移管追跡を確認する。
+- W01〜W12の未実施人手部分はPhase 6のV110-QA-02へ移管し、全件passまでリリースを停止する。
+- not-runをpassに変えない。別session準備不能も維持し、アカウント新設や資格情報取得は行わない。
+- 自動試験の失敗・未解決の製品欠陥・セキュリティhighは免除しない。
+- Phase 4正式完了にはSUMMARY→Progress→validate-phase実走→全件pytest→正式完了→DoD再確認を要する。
+- 移管正本: `.planning/phases/06-release-validation/06-UAT-CARRYOVER.md`。5要件の最終実機受入もここで追跡する。
+
+Quick task: `261022-1ns`。Phase 4は未完了、validate-phaseは未実走。過去の人手停止記録は履歴。

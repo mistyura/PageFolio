@@ -1,10 +1,10 @@
 ---
 phase: 04-startup-control
 plan: "05"
-status: checkpoint
+status: ready_to_resume
 task_completed: "04-05-01"
 resume_task: "04-05-02"
-gate: blocking-human
+gate: automated-evidence-review
 updated: 2026-10-22
 task_commit: 7ea8fb41e2ccb216509e5b3f4a358fb181a5eb7f
 plan_head_before: b26ddec8bd056ae66d0ac23788f33894408ed42f
@@ -14,12 +14,29 @@ task_diff_tokens_chars_div_4: 15722
 requirements_completed: []
 ---
 
+## 2026-10-22 承認済み受入再計画（現行）
+
+ユーザー承認: 「受入条件を再計画し、別セッション確認など準備できない項目をPhase 6へ移す」。
+従来のW全必須passまでPhase 4を停止する条件と移管不可の判断を置き換える。
+機能契約・保証範囲・実測・未実施の事実は変更しない。
+
+- Phase 4は自動/Windows subprocess受入、A1〜A5実証、証拠照合と移管追跡を確認する。
+- W01〜W12の未実施人手部分はPhase 6のV110-QA-02へ移管し、全件passまでリリースを停止する。
+- not-runをpassに変えない。別session準備不能も維持し、アカウント新設や資格情報取得は行わない。
+- 自動試験の失敗・未解決の製品欠陥・セキュリティhighは免除しない。
+- Phase 4正式完了にはSUMMARY→Progress→validate-phase実走→全件pytest→正式完了→DoD再確認を要する。
+- 移管正本: `.planning/phases/06-release-validation/06-UAT-CARRYOVER.md`。5要件の最終実機受入もここで追跡する。
+
+以下の旧停止条件は再計画前の履歴。実施時期は上記の現行条件を適用する。
+
 # 04-05 再開用チェックポイント
 
-## CHECKPOINT REACHED
+## 旧CHECKPOINT（再計画により解除）
 
-**Type:** human-verify
-**Gate:** blocking-human
+**現行再開点:** 04-05-02 auto（Task 1再実装不要）
+
+**旧Type:** human-verify
+**旧Gate:** blocking-human
 **Plan:** 04-05
 **Progress:** 1/2 tasks complete
 

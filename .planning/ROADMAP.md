@@ -118,11 +118,12 @@ Phase 1 は 01-06 / 01-07 の 2 回のギャップ是正を経て passed。Phase
 - [ ] **Phase 5: 設定読込・保存失敗の通知** - 設定エラーを把握でき、元の設定と編集操作が守られる。
 - [ ] **Phase 6: サンプル配布とリリース検証** - 2サンプルを再現可能に同梱し、実配布 EXE を含む受入と版情報の整合を確認できる。
 
-各機能フェーズは自分の障害注入・回帰テストと必要な Windows 11 実機確認を完了条件に含む。Phase 6 の V110-QA-01/02/03 はその結果をリリース時に総括・再検証するもので、機能検証を後送りにしない。各フェーズ完了前に `/gsd-validate-phase <番号>` を実行し、対応する `NN-VALIDATION.md` を `status: validated` にする。
+各機能フェーズは障害注入・回帰と必要な検証を完了条件に含む。2026-10-22承認によりPhase 4の未実施人手受入はPhase 6のV110-QA-02へ移管する。Phase 4は自動受入・A1〜A5・証拠照合を必須とし、最終実機受入が揃うまでリリースしない。各フェーズ完了前に `/gsd-validate-phase <番号>` を実行し、対応する `NN-VALIDATION.md` を `status: validated` にする。
 
 ## Phase Details
 
 ### Phase 4: 起動制御と既存画面への復帰
+
 **Goal**: 利用者が2回目に PageFolio を起動しても作業画面が増えず、進行中の作業を保ったまま既存画面へ戻れる。
 **Depends on**: Phase 3（v1.9.0 出荷済み）
 **Requirements**: V110-START-01, V110-START-02, V110-START-03, V110-FOCUS-01, V110-FOCUS-02
@@ -132,10 +133,32 @@ Phase 1 は 01-06 / 01-07 の 2 回のギャップ是正を経て passed。Phase
   3. 排他判定または既存画面への連絡に失敗した場合、利用者は「起動済み」と異なる理由を認識でき、後続起動は追加画面を作らず有限時間で終了する。
   4. 2回目の起動で最小化した既存画面が復元され、OS が許せば前面に出る。前面化を拒否された場合も視覚通知から既存画面を見つけられる。
   5. 未保存編集、Undo/Redo、進行中の OCR、開いているモーダル操作を保ったまま既存画面で作業を続けられる。
-**Plans**: TBD
+
+**受入範囲改訂（2026-10-22）**: Success Criteriaの実装/自動受入はPhase 4、未実施の最終人手受入はPhase 6。移管正本は[06-UAT-CARRYOVER.md](phases/06-release-validation/06-UAT-CARRYOVER.md)。
+
+**Plans**: 4/5 plans executed
 **UI hint**: yes
 
+Plans:
+**Wave 1**
+- [x] 04-01-PLAN.md — 品質ゲート前提修正と本番起動tracer（Wave 1）
+
+**Wave 2** *(blocked on Wave 1 completion)*
+- [x] 04-02-PLAN.md — 5秒の要求失効・終了競合・1回引継ぎ（Wave 2、04-01依存）
+
+**Wave 3** *(blocked on Wave 2 completion)*
+- [x] 04-03-PLAN.md — 状態と入力先を保つ既存画面/モーダル復帰（Wave 3、04-02依存）
+
+**Wave 4** *(blocked on Wave 3 completion)*
+- [x] 04-04-PLAN.md — 非活性の10秒案内とプロセス間集約（Wave 4、04-03依存）
+
+**Wave 5** *(blocked on Wave 4 completion)*
+- [ ] 04-05-PLAN.md — 自動受入・証拠照合とPhase 6実機受入移管（Wave 5、04-04依存）
+
+共有する起動入口・OS境界・Windows試験と「1タスクずつ」の規約により直列実行する。Phase 4の版番号・README・開発履歴同期および実EXE配布統合はPhase 6へ引き継ぐ。
+
 ### Phase 5: 設定読込・保存失敗の通知
+
 **Goal**: 利用者が設定の読込・保存失敗を正しく把握でき、元の設定ファイルと編集操作を失わない。
 **Depends on**: Phase 4
 **Requirements**: V110-CFG-01, V110-CFG-02, V110-CFG-03, V110-CFG-04
@@ -144,10 +167,12 @@ Phase 1 は 01-06 / 01-07 の 2 回のギャップ是正を経て passed。Phase
   2. 設定を保存する各画面で失敗したとき、利用者は変更が次回起動に残らないことを認識でき、成功表示に誤誘導されない。
   3. 読込失敗後の自動処理や保存途中の失敗で、既存設定ファイルが無断で上書き・破壊されない。
   4. 同じ設定エラーが続いても通知が集約され、ダイアログの連打や画面再構築による通知消失で編集を妨げられない。
+
 **Plans**: TBD
 **UI hint**: yes
 
 ### Phase 6: サンプル配布とリリース検証
+
 **Goal**: 配布担当者が同じ手順で安全にサンプル付き EXE を再生成でき、利用者と検証担当者が v1.10.0 の受入結果を確認できる。
 **Depends on**: Phase 4, Phase 5
 **Requirements**: V110-DIST-01, V110-DIST-02, V110-DIST-03, V110-QA-01, V110-QA-02, V110-QA-03
@@ -157,6 +182,9 @@ Phase 1 は 01-06 / 01-07 の 2 回のギャップ是正を経て passed。Phase
   3. 保守担当者が起動競合・初期化失敗・設定 I/O 障害・同梱不備の自動テストと、必須の lint・format・構文確認・全件テストを通せる。
   4. 検証担当者が Windows 11 の Python 各起動経路と実際の PyInstaller onedir 配布 EXE で起動・復帰・設定通知・同梱を確認し、実施結果と未実施項目を区別して記録できる。
   5. 利用者がアプリ・README・開発履歴で一致する v1.10.0 の版番号と変更内容、排他未対応旧版と OS 前面化制約の説明を確認できる。
+
+**引受必須**: [06-UAT-CARRYOVER.md](phases/06-release-validation/06-UAT-CARRYOVER.md)の全未実施人手項目。別session、DPI/UAC、OS拒否、操作状態維持を含む。not-run/failが残ればPhase 6完了・リリースを停止する。
+
 **Plans**: TBD
 
 ## Progress
@@ -172,13 +200,13 @@ Phase 1 は 01-06 / 01-07 の 2 回のギャップ是正を経て passed。Phase
 | v1.7.1 現機能ブラッシュアップ + APIキー入力欄 | 4 | 16 | ✅ Complete | 2026-07-05 |
 | v1.8.0 実用性の最大化・エコシステム洗練・堅牢性強化 | 6 | 22 | ✅ Complete | 2026-07-16 |
 | v1.9.0 安全性・整合性の是正 + OpenAI プロバイダ追加 | 3 | 15 | ✅ Complete | 2026-08-11 |
-| v1.10.0 多重起動防止・起動操作の改善 | 3 | TBD | 📋 計画前 | — |
+| v1.10.0 多重起動防止・起動操作の改善 | 3 | 5（Phase 4確定、残りTBD） | 📋 Phase 4計画完了 | — |
 
 各マイルストーンのフェーズ単位の内訳は上記 `<details>` ブロックおよび各アーカイブ
 （`milestones/*-ROADMAP.md`）を参照。
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 4. 起動制御と既存画面への復帰 | 0/TBD | Not started | — |
+| 4. 起動制御と既存画面への復帰 | 4/5 | In Progress | — |
 | 5. 設定読込・保存失敗の通知 | 0/TBD | Not started | — |
 | 6. サンプル配布とリリース検証 | 0/TBD | Not started | — |
