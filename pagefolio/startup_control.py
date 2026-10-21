@@ -1,8 +1,10 @@
 """Tk に依存しない起動要求と、メインスレッドへの有界受け渡し。"""
 
+import json
+from collections import OrderedDict
 from dataclasses import asdict, dataclass
-from queue import Empty, Full, Queue
-from threading import Event
+from queue import Empty, Queue
+from threading import RLock
 from uuid import uuid4
 
 
@@ -27,6 +29,8 @@ class ActivationRequest:
 class ActivationReply:
     request_id: str
     result: str
+    completed_tick: int | None = None
+    coalesced: bool = False
 
 
 @dataclass(frozen=True)
@@ -38,8 +42,6 @@ class StartupOutcome:
 @dataclass
 class _QueuedActivation:
     request: ActivationRequest
-    finished: Event
-    result: str = "expired"
 
 
 class StartupCoordinator:
@@ -52,6 +54,13 @@ class StartupCoordinator:
         self.after_id = None
         self.closed = False
         self.generation = uuid4().hex
+        self._lock = RLock()
+        self._pending = {}
+        self.terminal_cache = OrderedDict()
+        self.active_batch = None
+        self.first_terminal_tick = None
+        self._cooldown_result = None
+        self._cache_generation = self.generation
 
     def claim(self):
         result = self.backend.claim(self.generation)
@@ -61,12 +70,55 @@ class StartupCoordinator:
         return StartupOutcome(result)
 
     def request_activation(self, started_tick):
-        return StartupOutcome(self.backend.request_activation(started_tick))
+        return self._wait_for_terminal(started_tick)
+
+    def _wait_for_terminal(self, started_tick):
+        result = self.backend.request_activation(started_tick)
+        if self.backend.tick_ms() >= started_tick + 5000:
+            result = "expired"
+        return StartupOutcome(result)
+
+    def _valid(self, request):
+        return (
+            not self.closed
+            and request.generation == self.generation
+            and self.backend.tick_ms() < request.deadline_tick
+        )
+
+    def _finish(self, item, result, tick, coalesced=False):
+        reply = ActivationReply(item.request.request_id, result, tick, coalesced)
+        self._pending.pop(item.request.request_id, None)
+        self.terminal_cache[item.request.request_id] = (item.request, reply)
+        while len(self.terminal_cache) > 128:
+            self.terminal_cache.popitem(last=False)
+        self.backend.logger.debug(
+            "起動terminal: %s / %s / deadline=%s / tick=%s",
+            reply.request_id,
+            result,
+            item.request.deadline_tick,
+            tick,
+        )
+        return asdict(reply)
+
+    def _coalesce_request(self, item):
+        if self.active_batch is not None:
+            self.active_batch.append(item)
+            return asdict(ActivationReply(item.request.request_id, "accepted"))
+        now = self.backend.tick_ms()
+        if (
+            self.first_terminal_tick is not None
+            and now < self.first_terminal_tick + 500
+        ):
+            return self._finish(
+                item, self._cooldown_result, self.first_terminal_tick, True
+            )
+        self.queue.put_nowait(item)
+        return asdict(ActivationReply(item.request.request_id, "accepted"))
 
     def _receive(self, raw):
-        if self.closed:
-            return {"request_id": raw.get("request_id"), "result": "expired"}
         try:
+            if not isinstance(raw, dict) or len(json.dumps(raw).encode("utf-8")) > 1024:
+                return {"result": "invalid"}
             request = ActivationRequest(**raw)
         except (TypeError, ValueError):
             return {"result": "invalid"}
@@ -80,15 +132,33 @@ class StartupCoordinator:
             or request.deadline_tick - request.issued_tick > 5000
             or not isinstance(request.request_id, str)
             or len(request.request_id) != 32
+            or any(c not in "0123456789abcdef" for c in request.request_id)
         ):
             return asdict(ActivationReply(request.request_id, "expired"))
-        item = _QueuedActivation(request, Event())
-        try:
-            self.queue.put_nowait(item)
-        except Full:
-            return asdict(ActivationReply(request.request_id, "busy"))
-        item.finished.wait(max(0, request.deadline_tick - now) / 1000)
-        return asdict(ActivationReply(request.request_id, item.result))
+        with self._lock:
+            if self._cache_generation != self.generation:
+                self.terminal_cache.clear()
+                self.first_terminal_tick = None
+                self._cache_generation = self.generation
+            cached = self.terminal_cache.get(request.request_id)
+            if cached is not None:
+                return (
+                    asdict(cached[1]) if cached[0] == request else {"result": "invalid"}
+                )
+            pending = self._pending.get(request.request_id)
+            if pending is not None:
+                return (
+                    asdict(ActivationReply(request.request_id, "accepted"))
+                    if pending.request == request
+                    else {"result": "invalid"}
+                )
+            if not self._valid(request):
+                return asdict(ActivationReply(request.request_id, "expired"))
+            if len(self._pending) >= 32:
+                return asdict(ActivationReply(request.request_id, "busy"))
+            item = _QueuedActivation(request)
+            self._pending[request.request_id] = item
+            return self._coalesce_request(item)
 
     def attach_tk(self, root):
         self.root = root
@@ -99,15 +169,54 @@ class StartupCoordinator:
         self.after_id = None
         if self.closed:
             return
-        while True:
-            try:
-                item = self.queue.get_nowait()
-            except Empty:
-                break
-            if self.backend.tick_ms() < item.request.deadline_tick:
-                item.result = self.backend.restore_window(self.root.winfo_id())
-            item.finished.set()
+        self._dispatch_pending()
         self.after_id = self.root.after(50, self._poll)
+
+    def _dispatch_pending(self):
+        with self._lock:
+            if self.active_batch is not None or self.closed:
+                return
+            batch = []
+            while True:
+                try:
+                    item = self.queue.get_nowait()
+                except Empty:
+                    break
+                if self._valid(item.request):
+                    batch.append(item)
+                else:
+                    self._finish(item, "expired", self.backend.tick_ms())
+            if not batch:
+                return
+            self.active_batch = batch
+
+        def is_current():
+            with self._lock:
+                return any(self._valid(item.request) for item in batch)
+
+        result = "expired"
+        try:
+            if is_current():
+                result = self.backend.restore_window(
+                    self.root.winfo_id(), is_current=is_current
+                )
+        except Exception as e:
+            self.backend.logger.debug("起動復帰失敗: %s", e)
+            result = "connection_failed"
+        finally:
+            with self._lock:
+                tick = self.backend.tick_ms()
+                if result in {"completed", "foreground_denied"}:
+                    self.first_terminal_tick = tick
+                    self._cooldown_result = result
+                for index, item in enumerate(batch):
+                    self._finish(
+                        item,
+                        result if self._valid(item.request) else "expired",
+                        tick,
+                        index > 0,
+                    )
+                self.active_batch = None
 
     def close(self):
         self.closed = True
@@ -116,10 +225,7 @@ class StartupCoordinator:
                 self.root.after_cancel(self.after_id)
             except Exception as e:
                 self.backend.logger.debug("起動poll取消し: %s", e)
-        while True:
-            try:
-                item = self.queue.get_nowait()
-            except Empty:
-                break
-            item.finished.set()
+        with self._lock:
+            for item in tuple(self._pending.values()):
+                self._finish(item, "expired", self.backend.tick_ms())
         self.backend.close()

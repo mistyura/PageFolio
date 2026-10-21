@@ -331,6 +331,8 @@ def _reap():
 
 
 def _io(api, pipe, operation, deadline, data=None, size=0):
+    if _tick_ms(api) >= deadline:
+        raise TimeoutError("起動通信の期限切れ")
     buffer = (
         ct.create_string_buffer(data)
         if data is not None
@@ -618,9 +620,24 @@ class Win32Backend:
                     )
                     with self._validate_peer(pid.value):
                         request = _read_frame(self.api, pipe, deadline)
-                        deadline = min(deadline, request.get("deadline_tick", deadline))
+                        requested_deadline = request.get("deadline_tick")
+                        if type(requested_deadline) is not int:
+                            raise ValueError("要求期限が不正")
+                        deadline = min(deadline, requested_deadline)
                         reply = callback(request)
-                        if self.tick_ms() < deadline:
+                        if (
+                            reply.get("result") == "accepted"
+                            and self.tick_ms() < deadline
+                        ):
+                            _write_frame(self.api, pipe, reply, deadline)
+                            while not self.stop.is_set() and self.tick_ms() < deadline:
+                                self.stop.wait(
+                                    min(25, deadline - self.tick_ms()) / 1000
+                                )
+                                reply = callback(request)
+                                if reply.get("result") != "accepted":
+                                    break
+                        if self.tick_ms() < deadline and not self.stop.is_set():
                             _write_frame(self.api, pipe, reply, deadline)
                             # DisconnectNamedPipeは未読データを破棄する。
                             # terminalを読んだ相手の確認を同じ期限内で待つ。
@@ -639,6 +656,10 @@ class Win32Backend:
 
     def request_activation(self, started_tick):
         deadline = started_tick + 5000
+
+        def pause(milliseconds):
+            time.sleep(max(0, min(milliseconds, deadline - self.tick_ms())) / 1000)
+
         while self.tick_ms() < deadline:
             try:
                 owner = self._read_owner()
@@ -646,7 +667,7 @@ class Win32Backend:
                     owner["pid"], owner["process_created"]
                 ) as process:
                     if not owner["ready"]:
-                        time.sleep(0.025)
+                        pause(25)
                         continue
                     handle = self.api.CreateFileW(
                         self._pipe_name(owner["generation"]),
@@ -659,7 +680,7 @@ class Win32Backend:
                     )
                     if handle == INVALID_HANDLE_VALUE:
                         if ct.get_last_error() in {2, 231}:
-                            time.sleep(0.01)
+                            pause(10)
                             continue
                         raise ct.WinError(ct.get_last_error())
                     with OwnedHandle(self.api, handle) as pipe:
@@ -680,6 +701,8 @@ class Win32Backend:
                             != WAIT_TIMEOUT
                         ):
                             return "expired"
+                        if self.tick_ms() >= deadline:
+                            return "expired"
                         delegated, error = self._allow_foreground(owner["pid"])
                         self.logger.debug("前面化許可委譲: %s / %s", delegated, error)
                         request_id = uuid4().hex
@@ -695,15 +718,31 @@ class Win32Backend:
                             },
                             deadline,
                         )
-                        reply = _read_frame(self.api, pipe, deadline)
-                        if reply.get("request_id") != request_id:
+                        try:
+                            reply = _read_frame(self.api, pipe, deadline)
+                            while True:
+                                if self.tick_ms() >= deadline:
+                                    return "expired"
+                                result = self._validate_reply(
+                                    reply, request_id, started_tick, deadline
+                                )
+                                if result != "accepted":
+                                    break
+                                self.logger.debug(
+                                    "起動accepted: %s / deadline=%s",
+                                    request_id,
+                                    deadline,
+                                )
+                                reply = _read_frame(self.api, pipe, deadline)
+                        except ValueError:
+                            # 送信後は同じ副作用を新IDで再試行しない。
                             return "connection_failed"
                         _write_frame(self.api, pipe, {"received": request_id}, deadline)
                         if self.tick_ms() >= deadline:
                             return "expired"
-                        return reply.get("result", "connection_failed")
+                        return result
             except (FileNotFoundError, ValueError):
-                time.sleep(0.025)
+                pause(25)
             except TimeoutError:
                 return "expired"
             except Exception as e:
@@ -711,11 +750,42 @@ class Win32Backend:
                 return "connection_failed"
         return "expired"
 
-    def restore_window(self, hwnd):
+    def _validate_reply(self, reply, request_id, issued, deadline):
+        if reply.get("request_id") != request_id:
+            return "connection_failed"
+        result = reply.get("result")
+        if result not in {
+            "accepted",
+            "completed",
+            "foreground_denied",
+            "expired",
+            "busy",
+            "invalid",
+            "connection_failed",
+        }:
+            return "connection_failed"
+        if result in {"completed", "foreground_denied"}:
+            tick = reply.get("completed_tick")
+            if (
+                type(tick) is not int
+                or not issued <= tick < deadline
+                or tick > self.tick_ms()
+                or type(reply.get("coalesced")) is not bool
+            ):
+                return "connection_failed"
+        return result
+
+    def restore_window(self, hwnd, is_current=lambda: True):
         self._assert_thread()
+        if not is_current():
+            return "expired"
         hwnd = self.api.GetAncestor(hwnd, 2) or hwnd
+        if not is_current():
+            return "expired"
         if self.api.SetForegroundWindow(hwnd):
             return "completed"
+        if not is_current():
+            return "expired"
         _flash_window(self.api, hwnd)
         return "foreground_denied"
 

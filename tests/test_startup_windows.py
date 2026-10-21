@@ -178,7 +178,7 @@ def test_tracer_e2e_real_main_terminal_ack(tmp_path):
         (fixture / "stop").touch()
         result = _finish(owner)
         assert result["constructed"] == 1
-        assert result["restored"] >= 2
+        assert result["restored"] == 1
         assert result["status_preserved"]
     finally:
         if owner.poll() is None:
@@ -542,11 +542,11 @@ def _run_scenario(fixture, namespace, role):
             if ready:
                 (fixture / "ready").write_text(json.dumps(self.audit), encoding="utf-8")
 
-        def restore_window(self, hwnd):
+        def restore_window(self, hwnd, is_current=lambda: True):
             counts["restored"] += 1
             app = app_reference[0]
             status = app.status_var.get()
-            result = super().restore_window(hwnd)
+            result = super().restore_window(hwnd, is_current=is_current)
             counts["status_preserved"] &= app.status_var.get() == status
             return result
 
