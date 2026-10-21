@@ -90,6 +90,19 @@ class FocusRestorer:
                 record["visible"] = window.state() not in {"withdrawn", "iconic"}
             if not _alive(record["focus"]):
                 record["focus"] = None
+        if not _alive(self.last_focus_widget):
+            self.last_focus_widget = None
+        # 破棄済みdialogを保持し続けず、最後の操作先を生存するmasterへ繋ぐ。
+        dead = [window for window in self.windows if not _alive(window)]
+        for window in dead:
+            parent = self.windows[window]["parent"]
+            if self.last_toplevel is window:
+                self.last_toplevel = parent or self.root
+            for record in self.windows.values():
+                if record["parent"] is window:
+                    record["parent"] = parent
+            del self.windows[window]
+        self.bindings = [binding for binding in self.bindings if _alive(binding[0])]
         current = self.root.focus_get()
         if _alive(current):
             self._remember_focus(type("FocusEvent", (), {"widget": current})())
@@ -106,6 +119,8 @@ class FocusRestorer:
         if not _alive(widget):
             return
         window = widget.winfo_toplevel()
+        if not callable(getattr(window, "state", None)):
+            return
         if window not in self.windows:
             self._register(window)
         self.last_toplevel = window
@@ -175,6 +190,7 @@ class FocusRestorer:
                 and self.backend._top_level_hwnd(self.root) == root_hwnd
                 and self.backend._top_level_hwnd(target) == target_hwnd
                 and identity is not None
+                and self.backend._activation_target_valid(selected)
                 and self.backend._window_process_id(selected) == identity
                 and self.backend._owned_popup([h for h in handles if h]) == popup
             )
@@ -191,11 +207,14 @@ class FocusRestorer:
                     if not current():
                         return "expired"
                     self.root.state(self.last_non_iconic_state)
-                    if self.last_non_iconic_state == "normal" and self.normal_geometry:
-                        if not current():
-                            return "expired"
-                        if self.root.geometry() != self.normal_geometry:
-                            self.root.geometry(self.normal_geometry)
+                if (
+                    self.last_non_iconic_state == "normal"
+                    and self.normal_geometry
+                    and self.root.geometry() != self.normal_geometry
+                ):
+                    if not current():
+                        return "expired"
+                    self.root.geometry(self.normal_geometry)
             result = self.backend._foreground_window(selected, current)
             if result == "completed" and not popup and current():
                 widget = self._focus_widget(target)
@@ -236,3 +255,5 @@ class FocusRestorer:
                 self.root.after_cancel(key)
         self.bindings.clear()
         self.stop_ids.clear()
+        self.windows.clear()
+        self.last_focus_widget = None

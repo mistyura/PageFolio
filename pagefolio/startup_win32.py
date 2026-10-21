@@ -984,6 +984,9 @@ class Win32Backend:
             self.logger.debug("復帰HWNDの正規化: %s", e)
             return None
 
+    def _activation_target_valid(self, hwnd):
+        return bool(self._window_process_id(hwnd) and self.api.IsWindowEnabled(hwnd))
+
     def _z_order(self, handles):
         """EnumThreadWindowsのZ-orderを自process/UI-threadだけに制限する。"""
         result = []

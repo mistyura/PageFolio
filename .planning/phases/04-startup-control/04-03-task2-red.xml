@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="1" time="0.214" timestamp="2026-10-21T23:26:39.458621+09:00" hostname="nullaze-z240"><testcase classname="tests.test_startup_focus" name="test_rebuild_discards_dead_widget_and_falls_back_to_root" time="0.026"><failure message="assert &lt;tests.test_startup_focus.Widget object at 0x0000029A384EAE90&gt; is None&#10; +  where &lt;tests.test_startup_focus.Widget object at 0x0000029A384EAE90&gt; = &lt;pagefolio.startup_focus.FocusRestorer object at 0x0000029A3850AA50&gt;.last_focus_widget">def test_rebuild_discards_dead_widget_and_falls_back_to_root():
+        focus, root, _ = controller()
+        old = Widget(root)
+        old.winfo_toplevel = lambda: root
+        focus._remember_focus(SimpleNamespace(widget=old))
+        old.alive = False
+        assert focus.restore() == "completed"
+        assert not old.calls
+        assert root.calls == [("focus",)]
+&gt;       assert focus.last_focus_widget is None
+E       assert &lt;tests.test_startup_focus.Widget object at 0x0000029A384EAE90&gt; is None
+E        +  where &lt;tests.test_startup_focus.Widget object at 0x0000029A384EAE90&gt; = &lt;pagefolio.startup_focus.FocusRestorer object at 0x0000029A3850AA50&gt;.last_focus_widget
+
+tests\test_startup_focus.py:216: AssertionError</failure></testcase></testsuite></testsuites>

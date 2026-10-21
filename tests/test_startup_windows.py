@@ -703,6 +703,327 @@ def test_lifecycle_release_follows_stop_and_precedes_mutex_release(monkeypatch):
         b.close()
 
 
+@pytest.mark.parametrize("entry", ["entry-script", "entry-module"])
+@pytest.mark.parametrize(
+    "case",
+    [
+        "thumb",
+        "preview",
+        "settings",
+        "nested",
+        "native-ocr",
+        "native-quit",
+        "rebuild",
+        "normal",
+        "zoomed",
+    ],
+)
+def test_focus_restore_real_main_windows(tmp_path, entry, case):
+    namespace = uuid4().hex
+    owner, fixture = _spawn(tmp_path, namespace, f"focus-owner-{case}")
+    children = [owner]
+    try:
+        _wait_file(owner, fixture / "focus-ready")
+        child, _ = _spawn(tmp_path, namespace, entry)
+        children.append(child)
+        result = _finish(child)
+        assert result["constructed"] == 0
+        assert result["result"] in {"completed", "foreground_denied"}
+        _wait_file(owner, fixture / "focus-result.json")
+        measured = json.loads((fixture / "focus-result.json").read_text())
+        assert measured["state_preserved"]
+        assert measured["target_correct"]
+        assert measured["focus_correct"]
+        if case == "native-quit":
+            _wait_file(owner, fixture / "quit-cancelled")
+        (fixture / "stop").touch()
+        assert _finish(owner)["constructed"] == 1
+    finally:
+        _reclaim(children)
+
+
+@pytest.mark.parametrize("case", ["pdf", "ocr"])
+def test_working_state_real_main_continues(tmp_path, case):
+    namespace = uuid4().hex
+    owner, fixture = _spawn(tmp_path, namespace, f"focus-owner-{case}")
+    children = [owner]
+    try:
+        _wait_file(owner, fixture / "focus-ready")
+        child, _ = _spawn(tmp_path, namespace, "entry-module")
+        children.append(child)
+        assert _finish(child)["result"] in {"completed", "foreground_denied"}
+        _wait_file(owner, fixture / "focus-result.json")
+        measured = json.loads((fixture / "focus-result.json").read_text())
+        assert measured["state_preserved"] and measured["target_correct"]
+        _wait_file(owner, fixture / "continued")
+        (fixture / "stop").touch()
+        assert _finish(owner)["constructed"] == 1
+    finally:
+        _reclaim(children)
+
+
+def _prepare_focus_case(app, fixture, case):
+    """実main上で実widget/履歴/OCRを準備。native popupも期限内に自動閉鎖。"""
+    import tkinter as tk
+    from tkinter import messagebox, ttk
+
+    import pymupdf as fitz
+
+    from pagefolio.ocr_dialog import OCRDialog
+    from pagefolio.ocr_providers import OCRProvider
+    from pagefolio.startup_win32 import _bind
+    from pagefolio.undo_store import FileBlob, MemBlob
+
+    root, focus = app.root, app._startup_focus
+    backend = focus.backend
+    state = {"target": root, "entry": None, "ocr": None, "focus": None}
+    release = threading.Event()
+    entered = threading.Event()
+
+    class Provider(OCRProvider):
+        timeout = 10
+
+        def ocr_image(self, b64_png, prompt, **kwargs):
+            assert isinstance(b64_png, str)
+            entered.set()
+            assert release.wait(6), "OCR解除の期限切れ"
+            return "local OCR completed"
+
+        def list_models(self):
+            return ["isolated"]
+
+    def pdf():
+        app.doc = fitz.open()
+        for i in range(3):
+            app.doc.new_page().insert_text((50, 50), f"unsaved {i}")
+        app.selected_pages = {0}
+        app._rotate_selected(90)
+        app._duplicate_page()
+        # 本番delete経路でBlobを作り、確認だけ試験内で自動応答する。
+        ask = messagebox.askyesno
+        try:
+            messagebox.askyesno = lambda *a, **kw: True
+            app.selected_pages = {2}
+            app._delete_selected()
+        finally:
+            messagebox.askyesno = ask
+
+    def ocr_dialog():
+        if not app.doc:
+            app.doc = fitz.open()
+            app.doc.new_page(width=100, height=100)
+        dialog = OCRDialog(
+            root,
+            app,
+            app.doc,
+            [0],
+            "",
+            "isolated",
+            "text",
+            1,
+            10,
+            provider=Provider(),
+            concurrency=1,
+        )
+        state.update(target=dialog, ocr=dialog)
+        return dialog
+
+    def blobs(value):
+        if isinstance(value, (MemBlob, FileBlob)):
+            return (
+                id(value),
+                hashlib.sha256(app._blob_bytes(value)).hexdigest(),
+                value._released,
+            )
+        if isinstance(value, dict):
+            return tuple((k, blobs(v)) for k, v in value.items())
+        if isinstance(value, (list, tuple)):
+            return tuple(blobs(v) for v in value)
+        return value
+
+    def snapshot():
+        dialog, entry = state["ocr"], state["entry"]
+        return (
+            id(app),
+            id(app.doc),
+            tuple(hashlib.sha256(p.get_pixmap().samples).hexdigest() for p in app.doc)
+            if app.doc
+            else (),
+            tuple((id(s), blobs(s)) for s in app._undo_stack),
+            tuple((id(s), blobs(s)) for s in app._redo_stack),
+            set(app.selected_pages),
+            app.current_page,
+            app.status_var.get(),
+            str(root.grab_current()),
+            (
+                entry.get(),
+                entry.index("insert"),
+                entry.index("sel.first"),
+                entry.index("sel.last"),
+            )
+            if entry
+            else None,
+            (
+                id(dialog),
+                dialog._run_gen,
+                id(dialog._engine),
+                tuple(id(t) for t in dialog._engine._worker_threads),
+            )
+            if dialog and dialog._engine
+            else None,
+        )
+
+    def continued():
+        if case == "pdf":
+            for operation in (app._undo, app._redo, app._undo, app._redo):
+                operation()
+            assert len(app.doc) == 3 and app.doc[0].rotation == 90
+            (fixture / "continued").touch()
+        elif case == "ocr":
+            dialog = state["ocr"]
+            if dialog._done:
+                assert dialog.results == {0: "local OCR completed"}
+                assert not dialog.errors
+                assert all(not t.is_alive() for t in dialog._engine._worker_threads)
+                (fixture / "continued").touch()
+            else:
+                root.after(30, continued)
+
+    def before():
+        state["before"] = snapshot()
+
+    def after(result):
+        assert result in {"completed", "foreground_denied"}
+        preserved = snapshot() == state["before"]
+        expected = backend._top_level_hwnd(state["target"])
+        actual = state.get("activated")
+        if case.startswith("native-"):
+            correct = actual not in {None, expected} and state.get("native") == actual
+        else:
+            correct = actual == expected
+        if case in {"normal", "zoomed"}:
+            correct &= root.state() == case
+            if case == "normal":
+                correct &= root.geometry() == state["geometry"]
+        record = {
+            "state_preserved": preserved,
+            "target_correct": bool(correct),
+            "result": result,
+            "activated": actual,
+            "expected_tk": expected,
+            "native": state.get("native"),
+            "placement": root.state(),
+            "focus_correct": result != "completed"
+            or state["focus"] is None
+            or root.focus_get() is state["focus"],
+        }
+        (fixture / "focus-result.json").write_text(json.dumps(record))
+        release.set()
+        if case in {"pdf", "ocr"}:
+            root.after(30, continued)
+
+    def cleanup():
+        release.set()
+        for window in list(root.winfo_children()):
+            if isinstance(window, tk.Toplevel):
+                window.destroy()
+        if app.doc:
+            app._clear_undo_stacks()
+            app.doc.close()
+            app.doc = None
+
+    app._focus_before, app._focus_after = before, after
+    app._focus_state = state
+    app._focus_cleanup = cleanup
+    if case == "pdf":
+        pdf()
+    elif case in {"ocr", "native-ocr"}:
+        dialog = ocr_dialog()
+        if case == "ocr":
+            import pagefolio.ocr_dialog as module
+
+            module.build_provider = lambda *a, **kw: dialog.provider
+            dialog.force_ocr_var.set(True)
+            dialog._on_run(settings={**app.settings, "ocr_provider": "tesseract"})
+    elif case in {"settings", "nested"}:
+        app._open_settings()
+        dialog = app._settings_dialog
+        entry = ttk.Entry(dialog)
+        entry.pack()
+        entry.insert(0, "unsaved input")
+        entry.icursor(5)
+        entry.selection_range(1, 7)
+        entry.focus_set()
+        state.update(target=dialog, entry=entry)
+        state["focus"] = entry
+        if case == "nested":
+            dialog._open_llm_config()
+            nested = dialog._llm_config_dialog
+
+            def close_nested():
+                nested.destroy()
+                assert root.grab_current() is None
+                entry.focus_set()
+
+            root.after(100, close_nested)
+    elif case == "rebuild":
+        app.preview_canvas.focus_set()
+        app._rebuild_ui()
+    elif case in {"thumb", "preview"}:
+        widget = getattr(app, "thumb_canvas" if case == "thumb" else "preview_canvas")
+        widget.focus_set()
+        state["focus"] = widget
+    elif case in {"normal", "zoomed"}:
+        root.state(case)
+
+    def ready():
+        focus.observe()
+        if case == "ocr" and not entered.is_set():
+            root.after(20, ready)
+            return
+        if case in {"normal", "zoomed"}:
+            focus._remember_window_state()
+            state["geometry"] = root.geometry()
+            root.iconify()
+        (fixture / "focus-ready").touch()
+        if case.startswith("native-"):
+            deadline = time.monotonic() + 5
+            post = _bind(
+                backend.api.u,
+                "PostMessageW",
+                wt.BOOL,
+                wt.HWND,
+                wt.UINT,
+                wt.WPARAM,
+                wt.LPARAM,
+            )
+
+            def close_native():
+                if (
+                    fixture / "focus-result.json"
+                ).exists() or time.monotonic() > deadline:
+                    popup = backend._owned_popup(
+                        [backend._top_level_hwnd(state["target"])]
+                    )
+                    if popup:
+                        assert post(popup, 0x111, 7 if case == "native-quit" else 1, 0)
+                        return
+                root.after(30, close_native)
+
+            root.after(30, close_native)
+            if case == "native-quit":
+                pdf()
+                app._quit()
+                assert root.winfo_exists()
+                (fixture / "quit-cancelled").touch()
+            else:
+                messagebox.showinfo(
+                    "isolated OCR", "operation continues", parent=state["target"]
+                )
+
+    root.after(250, ready)
+
+
 def test_lifecycle_released_identity_mismatch_cannot_overwrite_mapping():
     from pagefolio.startup_win32 import READ_CONTROL, OwnedHandle, Win32Backend
 
@@ -846,7 +1167,7 @@ def _run_scenario(fixture, namespace, role):
         "owner",
         "manual-owner",
         "init-failure",
-    } or role.startswith(("simultaneous-", "takeover-", "lifecycle-"))
+    } or role.startswith(("simultaneous-", "takeover-", "lifecycle-", "focus-owner-"))
     if may_be_primary:
         from pagefolio import app as app_module
 
@@ -857,6 +1178,13 @@ def _run_scenario(fixture, namespace, role):
                     raise RuntimeError("tracer-initialization-failure")
                 super().__init__(root)
                 app_reference.append(self)
+                if role.startswith("focus-owner-"):
+                    root.after(
+                        150,
+                        lambda: _prepare_focus_case(
+                            self, fixture, role.removeprefix("focus-owner-")
+                        ),
+                    )
                 if role == "lifecycle-cancel-owner":
                     import pymupdf as fitz
 
@@ -870,6 +1198,8 @@ def _run_scenario(fixture, namespace, role):
                     if (fixture / "stop").exists() or (
                         fixture.parent / "stop-all"
                     ).exists():
+                        if role.startswith("focus-owner-"):
+                            self._focus_cleanup()
                         self._quit()
                     else:
                         if (
@@ -975,9 +1305,25 @@ def _run_scenario(fixture, namespace, role):
             counts["restored"] += 1
             app = app_reference[0]
             status = app.status_var.get()
+            if role.startswith("focus-owner-"):
+                app._focus_before()
             result = super().restore_window(hwnd, is_current=is_current)
             counts["status_preserved"] &= app.status_var.get() == status
+            if role.startswith("focus-owner-"):
+                app._focus_after(result)
             return result
+
+        def _foreground_window(self, hwnd, is_current):
+            if role.startswith("focus-owner-"):
+                state = app_reference[0]._focus_state
+                state["activated"] = hwnd
+                handles = [
+                    self._top_level_hwnd(w)
+                    for w in self.focus_restorer.windows
+                    if w.winfo_exists()
+                ]
+                state["native"] = self._owned_popup([h for h in handles if h])
+            return super()._foreground_window(hwnd, is_current)
 
         def show_notice(self, reason):
             if role == "notice-via-main":
