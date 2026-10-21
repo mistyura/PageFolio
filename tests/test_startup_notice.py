@@ -89,6 +89,68 @@ class NoticeBackend:
         if self.failed:
             raise OSError(5, "private secret")
 
+    def close(self):
+        pass
+
+
+@pytest.mark.skipif(sys.platform != "win32", reason="Windows 起動入口")
+def test_backend_constructor_failure_uses_independent_notice(monkeypatch):
+    from pagefolio import startup_win32
+    from pagefolio.__main__ import main
+
+    marker = "private-path-SID-secret"
+    calls = []
+    notice = NoticeBackend()
+    notice.observed_owner = None
+
+    def failed_backend():
+        calls.append("backend")
+        raise OSError(5, marker)
+
+    def notice_factory():
+        calls.append("notice")
+        return notice
+
+    monkeypatch.setattr(
+        startup_win32, "Win32NoticeBackend", notice_factory, raising=False
+    )
+    try:
+        result = main(backend_factory=failed_backend)
+    except OSError:
+        result = "unhandled_exception"
+    assert result == "check_failed"
+    assert calls == ["backend", "notice"]
+    assert [call[0] for call in notice.calls] == ["lease", "show", "release"]
+    assert not any(marker in str(call) for call in notice.calls)
+
+
+@pytest.mark.skipif(sys.platform != "win32", reason="Windows 起動入口")
+def test_initialization_notice_factory_failure_is_finite(monkeypatch, caplog):
+    from pagefolio import startup_win32
+    from pagefolio.__main__ import main
+
+    marker = "private-path-SID-secret"
+    attempts = []
+
+    def failed_backend():
+        raise OSError(5, marker)
+
+    def failed_notice():
+        attempts.append(1)
+        raise OSError(5, marker)
+
+    monkeypatch.setattr(
+        startup_win32, "Win32NoticeBackend", failed_notice, raising=False
+    )
+    with caplog.at_level(logging.WARNING):
+        try:
+            result = main(backend_factory=failed_backend)
+        except OSError:
+            result = "unhandled_exception"
+    assert result == "notification_unavailable"
+    assert attempts == [1]
+    assert marker not in caplog.text
+
 
 @pytest.mark.parametrize("result", ["completed", "foreground_denied", "primary"])
 def test_success_and_foreground_denial_never_enter_notice_boundary(result):

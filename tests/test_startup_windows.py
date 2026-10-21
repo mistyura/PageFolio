@@ -277,6 +277,64 @@ def test_tracer_notice_real_main_failure_path(tmp_path):
             owner.communicate()
 
 
+def test_constructor_failure_real_main_nonactivate_notice(tmp_path):
+    child, _ = _spawn(tmp_path, uuid4().hex, "constructor-failure-main")
+    result = _finish(child)
+    assert result["result"] == "check_failed"
+    assert result["constructed"] == 0
+    assert result["notice_calls"] == 1
+    assert result["reason"] == "check_failed"
+    assert result["foreground_before"] == result["foreground_shown"]
+    assert result["foreground_before_show"] == result["foreground_after_show"]
+    assert result["foreground_before_close"] == result["foreground_after_close"]
+    assert result["foreground_before"] == result["foreground_after"]
+    assert result["snapshot"]["deadline_tick"] - result["snapshot"]["shown_tick"] == 150
+
+
+def test_constructor_failure_entry_exit(tmp_path):
+    for role, expected in (
+        ("constructor-failure-module", "check_failed"),
+        ("constructor-failure-script", "check_failed"),
+        ("constructor-failure-unavailable-module", "notification_unavailable"),
+        ("constructor-failure-unavailable-script", "notification_unavailable"),
+    ):
+        child, _ = _spawn(tmp_path, uuid4().hex, role)
+        result = _finish(child)
+        assert result["result"] == expected
+        assert result["exit"] == (1 if "unavailable" in role else 0)
+        assert result["constructed"] == 0
+
+
+def test_constructor_failure_notice_dedup(tmp_path):
+    namespace = uuid4().hex
+    owner, fixture = _spawn(tmp_path, namespace, "constructor-failure-owner")
+    children = [owner]
+    try:
+        _wait_file(owner, fixture / "ready")
+        first = json.loads((fixture / "ready").read_text(encoding="utf-8"))
+        for index in range(7):
+            child, _ = _spawn(tmp_path, namespace, f"constructor-failure-join-{index}")
+            children.append(child)
+        joined = [_finish(child) for child in children[1:]]
+        assert all(item["result"] == "check_failed" for item in joined)
+        assert all(item["notice_calls"] == 0 for item in joined)
+        assert all(
+            item["snapshot"]["deadline_tick"] == first["snapshot"]["deadline_tick"]
+            for item in joined
+        )
+        assert _finish(owner)["notice_calls"] == 1
+    finally:
+        _reclaim(children)
+
+
+def test_constructor_failure_cleanup_allows_restart(tmp_path):
+    namespace = uuid4().hex
+    child, _ = _spawn(tmp_path, namespace, "constructor-failure-main")
+    assert _finish(child)["result"] == "check_failed"
+    child, _ = _spawn(tmp_path, namespace, "preflight")
+    assert _finish(child)["result"] == "no_existing_owner"
+
+
 def test_tracer_abi_shared_tick_wall_clock_independent(tmp_path, monkeypatch):
     from pagefolio.startup_win32 import _tick_ms
 
@@ -1469,6 +1527,83 @@ def _run_scenario(fixture, namespace, role):
     assert Path(settings._get_settings_path()).parent == fixture
     assert Path(plugins._get_plugins_dir()).parent == fixture
     from pagefolio.__main__ import main
+
+    if role.startswith("constructor-failure-"):
+        from pagefolio import startup_win32 as win
+
+        audit = {"constructed": 0, "notice_calls": 0}
+        unavailable = "unavailable" in role
+
+        def fail_startup():
+            raise OSError(5, "private-path-SID-secret")
+
+        class NoticeOnly(win.Win32NoticeBackend):
+            def __init__(self):
+                if unavailable:
+                    raise OSError(5, "private-path-SID-secret")
+                super().__init__(backend_namespace)
+
+            def _create_notice_lease(self, reason):
+                from contextlib import contextmanager
+
+                native = super()._create_notice_lease(reason)
+
+                @contextmanager
+                def observed():
+                    with native as lease:
+                        audit["snapshot"] = lease.snapshot
+                        yield lease
+
+                return observed()
+
+            def display_notice(self, reason, text, lease):
+                notice = win.NativeNoticeLifetime(self, reason, text=text, lease=lease)
+                foreground = win._bind(self.api.u, "GetForegroundWindow", wt.HWND)
+                audit["foreground_before"] = foreground()
+                audit["reason"] = str(reason)
+
+                def visible(hwnd):
+                    audit["notice_calls"] += 1
+                    audit["foreground_shown"] = foreground()
+                    audit["snapshot"] = lease.snapshot.copy()
+                    if role == "constructor-failure-owner":
+                        (fixture / "ready").write_text(
+                            json.dumps(audit), encoding="utf-8"
+                        )
+
+                notice.show(
+                    lifetime_ms=1800 if role == "constructor-failure-owner" else 150,
+                    on_show=visible,
+                )
+                audit.update(
+                    foreground_after=foreground(),
+                    foreground_before_show=notice.foreground_before_show,
+                    foreground_after_show=notice.foreground_after_show,
+                    foreground_before_close=notice.foreground_before_close,
+                    foreground_after_close=notice.foreground_after_close,
+                )
+
+        win.Win32Backend = fail_startup
+        win.Win32NoticeBackend = NoticeOnly
+        entry = role.removeprefix("constructor-failure-")
+        if entry in {"module", "script", "unavailable-module", "unavailable-script"}:
+            try:
+                if entry.endswith("script"):
+                    runpy.run_path(str(_ROOT / "pagefolio.py"), run_name="__main__")
+                else:
+                    runpy.run_module("pagefolio", run_name="__main__")
+            except SystemExit as e:
+                audit["exit"] = e.code
+            else:
+                audit["exit"] = 0
+            audit["result"] = (
+                "notification_unavailable" if unavailable else "check_failed"
+            )
+        else:
+            audit["result"] = main()
+        assert "pagefolio.app" not in sys.modules
+        print(json.dumps(audit))
+        return
 
     counts = {"constructed": 0, "restored": 0, "status_preserved": True}
     app_reference = []

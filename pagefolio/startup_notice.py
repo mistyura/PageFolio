@@ -1,5 +1,6 @@
 """編集画面にも設定 I/O にも依存しない、確認済み起動失敗の案内。"""
 
+import logging
 from dataclasses import dataclass
 from enum import StrEnum
 
@@ -58,6 +59,46 @@ def notice_remaining_ms(deadline_tick, now):
     return max(0, deadline_tick - now)
 
 
+def _record_notification_unavailable(reason, error, logger=None):
+    os_error = getattr(error, "winerror", None) or getattr(error, "errno", None) or 0
+    if type(os_error) is not int or os_error < 0:
+        os_error = 0
+    try:
+        (logger or logging.getLogger(__name__)).warning(
+            "notification_unavailable reason=%s os_error=%s", reason, os_error
+        )
+    except Exception:
+        # 診断障害で元の通知失敗を境界外へ漏らさない。
+        return NoticeOutcome("notification_unavailable", reason, os_error)
+    return NoticeOutcome("notification_unavailable", reason, os_error)
+
+
+def show_startup_initialization_failure(*, backend_factory=None):
+    """起動backendが未完成の時、別の通知専用backendを一度だけ作る。"""
+    from pagefolio.startup_control import StartupOutcome
+
+    if backend_factory is None:
+        from pagefolio.startup_win32 import Win32NoticeBackend
+
+        backend_factory = Win32NoticeBackend
+    backend = None
+    reason = StartupFailureReason.CHECK_FAILED
+    try:
+        backend = backend_factory()
+        result = show_startup_failure(StartupOutcome(reason), backend)
+    except Exception as e:
+        result = _record_notification_unavailable(reason, e)
+    finally:
+        if backend is not None:
+            try:
+                backend.close()
+            except Exception as e:
+                result = _record_notification_unavailable(
+                    reason, e, getattr(backend, "logger", None)
+                )
+    return result
+
+
 def show_startup_failure(outcome, backend):
     reason = _failure_reason(outcome, bool(getattr(backend, "observed_owner", None)))
     if reason is None:
@@ -70,9 +111,6 @@ def show_startup_failure(outcome, backend):
             backend.display_notice(reason, text, lease)
         return NoticeOutcome("shown", reason)
     except Exception as e:
-        error = getattr(e, "winerror", None) or getattr(e, "errno", None) or 0
-        # 例外本文にはパス/識別情報が含まれ得るため記録しない。
-        backend.logger.warning(
-            "notification_unavailable reason=%s os_error=%s", reason, error
+        return _record_notification_unavailable(
+            reason, e, getattr(backend, "logger", None)
         )
-        return NoticeOutcome("notification_unavailable", reason, error)

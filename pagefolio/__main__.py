@@ -6,18 +6,37 @@
 import sys
 
 
-def main(*, backend_factory=None):
+def main(*, backend_factory=None, notice_backend_factory=None):
     coordinator = None
+    backend = None
     root = None
     focus = None
     try:
         if sys.platform == "win32":
+            from pagefolio.startup_control import StartupCoordinator
+            from pagefolio.startup_notice import show_startup_initialization_failure
             from pagefolio.startup_win32 import Win32Backend, _tick_ms
 
-            started_tick = _tick_ms()
-            from pagefolio.startup_control import StartupCoordinator
-
-            coordinator = StartupCoordinator((backend_factory or Win32Backend)())
+            try:
+                started_tick = _tick_ms()
+                backend = (backend_factory or Win32Backend)()
+                coordinator = StartupCoordinator(backend)
+            except OSError:
+                # 例外本文は利用者向け案内や診断へ渡さない。
+                close_failed = False
+                if backend is not None:
+                    try:
+                        backend.close()
+                    except Exception:
+                        close_failed = True
+                notice = show_startup_initialization_failure(
+                    backend_factory=notice_backend_factory
+                )
+                return (
+                    "notification_unavailable"
+                    if close_failed or notice.result == "notification_unavailable"
+                    else "check_failed"
+                )
             outcome = coordinator.claim()
             if not outcome.primary:
                 if outcome.result == "existing":

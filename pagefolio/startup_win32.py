@@ -203,14 +203,18 @@ class _Security:
         self.api = api
         self.descriptor = wt.LPVOID()
         self.sddl = f"D:P(A;;0x{rights:x};;;{sid})(A;;0x{rights:x};;;SY)S:(ML;;NW;;;ME)"
-        _check(
-            api.ConvertStringSecurityDescriptorToSecurityDescriptorW(
-                self.sddl, 1, ct.byref(self.descriptor), None
+        try:
+            _check(
+                api.ConvertStringSecurityDescriptorToSecurityDescriptorW(
+                    self.sddl, 1, ct.byref(self.descriptor), None
+                )
             )
-        )
-        self.attributes = SECURITY_ATTRIBUTES(
-            ct.sizeof(SECURITY_ATTRIBUTES), self.descriptor, False
-        )
+            self.attributes = SECURITY_ATTRIBUTES(
+                ct.sizeof(SECURITY_ATTRIBUTES), self.descriptor, False
+            )
+        except Exception:
+            self.close()
+            raise
 
     def close(self):
         if self.descriptor:
@@ -418,40 +422,54 @@ def _write_frame(api, pipe, data, deadline):
         offset += length
 
 
-class Win32Backend:
+class Win32NoticeBackend:
+    """起動ownerを取得せず、同じidentityとACLで通知だけを表示する。"""
+
     def __init__(self, namespace=None):
-        self.api = _API()
         self.logger = logging.getLogger(__name__)
         self.owner_thread = threading.get_ident()
-        self.sid, self.authentication_luid = _token(
-            self.api, self.api.GetCurrentProcess()
-        )
-        self.pid = os.getpid()
-        self.session_id = self._session(self.pid)
-        self.prefix = "PageFolio.Startup" + (f".Test.{namespace}" if namespace else "")
-        self.owner_name = "Local\\" + self.prefix + ".Owner"
-        self.state_name = "Local\\" + self.prefix + ".State"
-        self.owner = None
-        self.mapping = None
-        self.view = None
-        self.owns_mutex = False
-        self.generation = None
-        self.sequence = 0
-        self.stop = threading.Event()
-        self.workers = []
-        self.pipes = []
-        self.peer_handles = []
-        self.observed_owner = None
-        self.observed_process = None
-        self.takeover_callback = lambda deadline: False
-        self.state = "initializing"
-        self.release_generation = None
-        self._closed = False
-        self.owner_security = _security_descriptor(self.api, self.sid, OWNER_ACCESS)
-        self.mapping_security = _security_descriptor(
-            self.api, self.sid, READ_CONTROL | 6
-        )
-        self.pipe_security = _security_descriptor(self.api, self.sid, 0x12019F)
+        self._notice_resources = []
+        self._notice_closed = False
+        try:
+            self.api = _API()
+            self.sid, self.authentication_luid = _token(
+                self.api, self.api.GetCurrentProcess()
+            )
+            self.pid = os.getpid()
+            self.session_id = self._session(self.pid)
+            self.prefix = "PageFolio.Startup" + (
+                f".Test.{namespace}" if namespace else ""
+            )
+            self.observed_owner = None
+            self.owner_security = _security_descriptor(self.api, self.sid, OWNER_ACCESS)
+            self._notice_resources.append(self.owner_security)
+            self.mapping_security = _security_descriptor(
+                self.api, self.sid, READ_CONTROL | 6
+            )
+            self._notice_resources.append(self.mapping_security)
+        except Exception:
+            # subclass の未完成 close へ動的 dispatch しない。
+            self._close_notice_resources()
+            raise
+
+    def _close_notice_resources(self):
+        if self._notice_closed:
+            return
+        first_error = None
+        for resource in reversed(self._notice_resources):
+            try:
+                resource.close()
+            except Exception as e:
+                if first_error is None:
+                    first_error = e
+        self._notice_resources.clear()
+        self._notice_closed = True
+        if first_error is not None:
+            raise first_error
+
+    def close(self):
+        self._assert_thread()
+        self._close_notice_resources()
 
     def tick_ms(self):
         return _tick_ms(self.api)
@@ -480,9 +498,62 @@ class Win32Backend:
             ):
                 raise PermissionError("起動相手の識別に失敗")
             return process
-        except Exception as e:
+        except Exception:
             process.close()
-            raise e
+            raise
+
+    def _process_has_exited(self, process):
+        result = self.api.WaitForSingleObject(process.value, 0)
+        if result not in {0, WAIT_TIMEOUT}:
+            raise ct.WinError(ct.get_last_error())
+        return result == 0
+
+    def _assert_thread(self):
+        if threading.get_ident() != self.owner_thread:
+            raise RuntimeError("mutex所有・解放は起動スレッドのみ")
+
+    def show_notice(self, reason):
+        from pagefolio.startup_control import StartupOutcome
+        from pagefolio.startup_notice import show_startup_failure
+
+        return show_startup_failure(StartupOutcome(reason), self)
+
+    def _create_notice_lease(self, reason):
+        return NoticeLease(self, reason)
+
+    def notice_language(self):
+        return _bind(self.api.k, "GetUserDefaultUILanguage", wt.WORD)()
+
+    def display_notice(self, reason, text, lease):
+        notice = NativeNoticeLifetime(self, reason, text=text, lease=lease)
+        notice.show()
+
+
+class Win32Backend(Win32NoticeBackend):
+    def __init__(self, namespace=None):
+        super().__init__(namespace)
+        self.owner_name = "Local\\" + self.prefix + ".Owner"
+        self.state_name = "Local\\" + self.prefix + ".State"
+        self.owner = None
+        self.mapping = None
+        self.view = None
+        self.owns_mutex = False
+        self.generation = None
+        self.sequence = 0
+        self.stop = threading.Event()
+        self.workers = []
+        self.pipes = []
+        self.peer_handles = []
+        self.observed_process = None
+        self.takeover_callback = lambda deadline: False
+        self.state = "initializing"
+        self.release_generation = None
+        self._closed = False
+        try:
+            self.pipe_security = _security_descriptor(self.api, self.sid, 0x12019F)
+        except Exception:
+            self._close_notice_resources()
+            raise
 
     def claim(self, generation):
         self._assert_thread()
@@ -604,10 +675,6 @@ class Win32Backend:
         self.owns_mutex = True
         return self._claim_mapping(generation, expected, deadline)
 
-    def _assert_thread(self):
-        if threading.get_ident() != self.owner_thread:
-            raise RuntimeError("mutex所有・解放は起動スレッドのみ")
-
     def _publish_owner(self, state, ready):
         self._assert_thread()
         identity = {
@@ -709,12 +776,6 @@ class Win32Backend:
         self.observed_process = process
         self.observed_owner = owner
         return process
-
-    def _process_has_exited(self, process):
-        result = self.api.WaitForSingleObject(process.value, 0)
-        if result not in {0, WAIT_TIMEOUT}:
-            raise ct.WinError(ct.get_last_error())
-        return result == 0
 
     def _pipe_name(self, generation):
         sid = hashlib.sha256(self.sid.encode()).hexdigest()[:24]
@@ -1086,22 +1147,6 @@ class Win32Backend:
     def _allow_foreground(self, pid):
         return bool(self.api.AllowSetForegroundWindow(pid)), ct.get_last_error()
 
-    def show_notice(self, reason):
-        from pagefolio.startup_control import StartupOutcome
-        from pagefolio.startup_notice import show_startup_failure
-
-        return show_startup_failure(StartupOutcome(reason), self)
-
-    def _create_notice_lease(self, reason):
-        return NoticeLease(self, reason)
-
-    def notice_language(self):
-        return _bind(self.api.k, "GetUserDefaultUILanguage", wt.WORD)()
-
-    def display_notice(self, reason, text, lease):
-        notice = NativeNoticeLifetime(self, reason, text=text, lease=lease)
-        notice.show()
-
     def _cancel_pending_io(self):
         for pipe in self.pipes:
             if pipe.value is not None:
@@ -1151,12 +1196,8 @@ class Win32Backend:
         if self.owner:
             self._yield_mutex()
             self.owner.close()
-        for security in (
-            self.owner_security,
-            self.mapping_security,
-            self.pipe_security,
-        ):
-            security.close()
+        self.pipe_security.close()
+        self._close_notice_resources()
         self._closed = True
 
 
