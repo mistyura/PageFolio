@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="1" time="0.121" timestamp="2026-10-22T00:01:11.948869+09:00" hostname="nullaze-z240"><testcase classname="tests.test_startup_notice" name="test_mutex_existence_without_published_window_is_not_coalesced" time="0.009"><failure message="AssertionError: assert 'coalesced' == 'notification_unavailable'&#10;  &#10;  - notification_unavailable&#10;  + coalesced">@pytest.mark.skipif(sys.platform != "win32", reason="実mutexの所有threadを確認")
+    def test_mutex_existence_without_published_window_is_not_coalesced():
+        from uuid import uuid4
+    
+        from pagefolio.startup_win32 import NoticeLease, Win32Backend
+    
+        namespace = uuid4().hex
+        ready, release = threading.Event(), threading.Event()
+        errors = []
+    
+        def hold_unpublished():
+            backend = Win32Backend(namespace)
+            try:
+                with NoticeLease(backend, "check_failed"):
+                    ready.set()
+                    release.wait(3)
+            except Exception as e:
+                errors.append(e)
+                ready.set()
+            finally:
+                backend.close()
+    
+        owner = threading.Thread(target=hold_unpublished)
+        owner.start()
+        backend = Win32Backend(namespace)
+        try:
+            assert ready.wait(2) and not errors
+            try:
+                with NoticeLease(backend, "check_failed") as lease:
+                    observed = "coalesced" if not lease.acquired else "new_window"
+            except (OSError, ValueError):
+                observed = "notification_unavailable"
+&gt;           assert observed == "notification_unavailable"
+E           AssertionError: assert 'coalesced' == 'notification_unavailable'
+E             
+E             - notification_unavailable
+E             + coalesced
+
+tests\test_startup_notice.py:177: AssertionError</failure></testcase></testsuite></testsuites>

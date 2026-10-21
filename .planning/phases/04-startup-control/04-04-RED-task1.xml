@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="1" time="0.137" timestamp="2026-10-21T23:42:45.623706+09:00" hostname="nullaze-z240"><testcase classname="tests.test_startup_notice" name="test_claim_failure_is_check_failed_without_owner_assumption" time="0.001"><failure message="AssertionError: assert 'unhandled_exception' == 'check_failed'&#10;  &#10;  - check_failed&#10;  + unhandled_exception">def test_claim_failure_is_check_failed_without_owner_assumption():
+        class Backend:
+            def claim(self, generation):
+                raise OSError(5, "private path / SID / API")
+    
+        try:
+            observed = StartupCoordinator(Backend()).claim().result
+        except OSError:
+            observed = "unhandled_exception"
+&gt;       assert observed == "check_failed"
+E       AssertionError: assert 'unhandled_exception' == 'check_failed'
+E         
+E         - check_failed
+E         + unhandled_exception
+
+tests\test_startup_notice.py:21: AssertionError</failure></testcase></testsuite></testsuites>
