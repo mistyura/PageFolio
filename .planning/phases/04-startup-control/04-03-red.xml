@@ -1,0 +1,260 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="14" skipped="0" tests="14" time="0.201" timestamp="2026-10-21T23:05:47.186443+09:00" hostname="nullaze-z240"><testcase classname="tests.test_startup_focus" name="test_placement_returns_to_last_non_iconic_state[normal]" time="0.003"><failure message="AssertionError: 既存状態を維持する FocusRestorer が必要&#10;assert None is not None&#10; +  where None = &lt;function find_spec at 0x00000162DD12FC10&gt;('pagefolio.startup_focus')&#10; +    where &lt;function find_spec at 0x00000162DD12FC10&gt; = &lt;module 'importlib.util' (frozen)&gt;.find_spec&#10; +      where &lt;module 'importlib.util' (frozen)&gt; = importlib.util">prior = 'normal'
+
+    @pytest.mark.parametrize("prior", ["normal", "zoomed"])
+    def test_placement_returns_to_last_non_iconic_state(prior):
+&gt;       focus, root, backend = controller()
+                               ^^^^^^^^^^^^
+
+tests\test_startup_focus.py:136: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def controller():
+&gt;       assert importlib.util.find_spec("pagefolio.startup_focus") is not None, (
+            "既存状態を維持する FocusRestorer が必要"
+        )
+E       AssertionError: 既存状態を維持する FocusRestorer が必要
+E       assert None is not None
+E        +  where None = &lt;function find_spec at 0x00000162DD12FC10&gt;('pagefolio.startup_focus')
+E        +    where &lt;function find_spec at 0x00000162DD12FC10&gt; = &lt;module 'importlib.util' (frozen)&gt;.find_spec
+E        +      where &lt;module 'importlib.util' (frozen)&gt; = importlib.util
+
+tests\test_startup_focus.py:123: AssertionError</failure></testcase><testcase classname="tests.test_startup_focus" name="test_placement_returns_to_last_non_iconic_state[zoomed]" time="0.001"><failure message="AssertionError: 既存状態を維持する FocusRestorer が必要&#10;assert None is not None&#10; +  where None = &lt;function find_spec at 0x00000162DD12FC10&gt;('pagefolio.startup_focus')&#10; +    where &lt;function find_spec at 0x00000162DD12FC10&gt; = &lt;module 'importlib.util' (frozen)&gt;.find_spec&#10; +      where &lt;module 'importlib.util' (frozen)&gt; = importlib.util">prior = 'zoomed'
+
+    @pytest.mark.parametrize("prior", ["normal", "zoomed"])
+    def test_placement_returns_to_last_non_iconic_state(prior):
+&gt;       focus, root, backend = controller()
+                               ^^^^^^^^^^^^
+
+tests\test_startup_focus.py:136: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def controller():
+&gt;       assert importlib.util.find_spec("pagefolio.startup_focus") is not None, (
+            "既存状態を維持する FocusRestorer が必要"
+        )
+E       AssertionError: 既存状態を維持する FocusRestorer が必要
+E       assert None is not None
+E        +  where None = &lt;function find_spec at 0x00000162DD12FC10&gt;('pagefolio.startup_focus')
+E        +    where &lt;function find_spec at 0x00000162DD12FC10&gt; = &lt;module 'importlib.util' (frozen)&gt;.find_spec
+E        +      where &lt;module 'importlib.util' (frozen)&gt; = importlib.util
+
+tests\test_startup_focus.py:123: AssertionError</failure></testcase><testcase classname="tests.test_startup_focus" name="test_placement_os_restored_correctly_does_not_rewrite_geometry" time="0.000"><failure message="AssertionError: 既存状態を維持する FocusRestorer が必要&#10;assert None is not None&#10; +  where None = &lt;function find_spec at 0x00000162DD12FC10&gt;('pagefolio.startup_focus')&#10; +    where &lt;function find_spec at 0x00000162DD12FC10&gt; = &lt;module 'importlib.util' (frozen)&gt;.find_spec&#10; +      where &lt;module 'importlib.util' (frozen)&gt; = importlib.util">def test_placement_os_restored_correctly_does_not_rewrite_geometry():
+&gt;       focus, root, backend = controller()
+                               ^^^^^^^^^^^^
+
+tests\test_startup_focus.py:149: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def controller():
+&gt;       assert importlib.util.find_spec("pagefolio.startup_focus") is not None, (
+            "既存状態を維持する FocusRestorer が必要"
+        )
+E       AssertionError: 既存状態を維持する FocusRestorer が必要
+E       assert None is not None
+E        +  where None = &lt;function find_spec at 0x00000162DD12FC10&gt;('pagefolio.startup_focus')
+E        +    where &lt;function find_spec at 0x00000162DD12FC10&gt; = &lt;module 'importlib.util' (frozen)&gt;.find_spec
+E        +      where &lt;module 'importlib.util' (frozen)&gt; = importlib.util
+
+tests\test_startup_focus.py:123: AssertionError</failure></testcase><testcase classname="tests.test_startup_focus" name="test_focus_child_preserved_and_toplevel_focus_does_not_overwrite[thumb_canvas]" time="0.001"><failure message="AssertionError: 既存状態を維持する FocusRestorer が必要&#10;assert None is not None&#10; +  where None = &lt;function find_spec at 0x00000162DD12FC10&gt;('pagefolio.startup_focus')&#10; +    where &lt;function find_spec at 0x00000162DD12FC10&gt; = &lt;module 'importlib.util' (frozen)&gt;.find_spec&#10; +      where &lt;module 'importlib.util' (frozen)&gt; = importlib.util">name = 'thumb_canvas'
+
+    @pytest.mark.parametrize("name", ["thumb_canvas", "preview_canvas", "entry"])
+    def test_focus_child_preserved_and_toplevel_focus_does_not_overwrite(name):
+&gt;       focus, root, backend = controller()
+                               ^^^^^^^^^^^^
+
+tests\test_startup_focus.py:158: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def controller():
+&gt;       assert importlib.util.find_spec("pagefolio.startup_focus") is not None, (
+            "既存状態を維持する FocusRestorer が必要"
+        )
+E       AssertionError: 既存状態を維持する FocusRestorer が必要
+E       assert None is not None
+E        +  where None = &lt;function find_spec at 0x00000162DD12FC10&gt;('pagefolio.startup_focus')
+E        +    where &lt;function find_spec at 0x00000162DD12FC10&gt; = &lt;module 'importlib.util' (frozen)&gt;.find_spec
+E        +      where &lt;module 'importlib.util' (frozen)&gt; = importlib.util
+
+tests\test_startup_focus.py:123: AssertionError</failure></testcase><testcase classname="tests.test_startup_focus" name="test_focus_child_preserved_and_toplevel_focus_does_not_overwrite[preview_canvas]" time="0.001"><failure message="AssertionError: 既存状態を維持する FocusRestorer が必要&#10;assert None is not None&#10; +  where None = &lt;function find_spec at 0x00000162DD12FC10&gt;('pagefolio.startup_focus')&#10; +    where &lt;function find_spec at 0x00000162DD12FC10&gt; = &lt;module 'importlib.util' (frozen)&gt;.find_spec&#10; +      where &lt;module 'importlib.util' (frozen)&gt; = importlib.util">name = 'preview_canvas'
+
+    @pytest.mark.parametrize("name", ["thumb_canvas", "preview_canvas", "entry"])
+    def test_focus_child_preserved_and_toplevel_focus_does_not_overwrite(name):
+&gt;       focus, root, backend = controller()
+                               ^^^^^^^^^^^^
+
+tests\test_startup_focus.py:158: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def controller():
+&gt;       assert importlib.util.find_spec("pagefolio.startup_focus") is not None, (
+            "既存状態を維持する FocusRestorer が必要"
+        )
+E       AssertionError: 既存状態を維持する FocusRestorer が必要
+E       assert None is not None
+E        +  where None = &lt;function find_spec at 0x00000162DD12FC10&gt;('pagefolio.startup_focus')
+E        +    where &lt;function find_spec at 0x00000162DD12FC10&gt; = &lt;module 'importlib.util' (frozen)&gt;.find_spec
+E        +      where &lt;module 'importlib.util' (frozen)&gt; = importlib.util
+
+tests\test_startup_focus.py:123: AssertionError</failure></testcase><testcase classname="tests.test_startup_focus" name="test_focus_child_preserved_and_toplevel_focus_does_not_overwrite[entry]" time="0.001"><failure message="AssertionError: 既存状態を維持する FocusRestorer が必要&#10;assert None is not None&#10; +  where None = &lt;function find_spec at 0x00000162DD12FC10&gt;('pagefolio.startup_focus')&#10; +    where &lt;function find_spec at 0x00000162DD12FC10&gt; = &lt;module 'importlib.util' (frozen)&gt;.find_spec&#10; +      where &lt;module 'importlib.util' (frozen)&gt; = importlib.util">name = 'entry'
+
+    @pytest.mark.parametrize("name", ["thumb_canvas", "preview_canvas", "entry"])
+    def test_focus_child_preserved_and_toplevel_focus_does_not_overwrite(name):
+&gt;       focus, root, backend = controller()
+                               ^^^^^^^^^^^^
+
+tests\test_startup_focus.py:158: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def controller():
+&gt;       assert importlib.util.find_spec("pagefolio.startup_focus") is not None, (
+            "既存状態を維持する FocusRestorer が必要"
+        )
+E       AssertionError: 既存状態を維持する FocusRestorer が必要
+E       assert None is not None
+E        +  where None = &lt;function find_spec at 0x00000162DD12FC10&gt;('pagefolio.startup_focus')
+E        +    where &lt;function find_spec at 0x00000162DD12FC10&gt; = &lt;module 'importlib.util' (frozen)&gt;.find_spec
+E        +      where &lt;module 'importlib.util' (frozen)&gt; = importlib.util
+
+tests\test_startup_focus.py:123: AssertionError</failure></testcase><testcase classname="tests.test_startup_focus" name="test_modal_without_grab_returns_to_live_parent_after_nested_close" time="0.001"><failure message="AssertionError: 既存状態を維持する FocusRestorer が必要&#10;assert None is not None&#10; +  where None = &lt;function find_spec at 0x00000162DD12FC10&gt;('pagefolio.startup_focus')&#10; +    where &lt;function find_spec at 0x00000162DD12FC10&gt; = &lt;module 'importlib.util' (frozen)&gt;.find_spec&#10; +      where &lt;module 'importlib.util' (frozen)&gt; = importlib.util">def test_modal_without_grab_returns_to_live_parent_after_nested_close():
+&gt;       focus, root, backend = controller()
+                               ^^^^^^^^^^^^
+
+tests\test_startup_focus.py:170: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def controller():
+&gt;       assert importlib.util.find_spec("pagefolio.startup_focus") is not None, (
+            "既存状態を維持する FocusRestorer が必要"
+        )
+E       AssertionError: 既存状態を維持する FocusRestorer が必要
+E       assert None is not None
+E        +  where None = &lt;function find_spec at 0x00000162DD12FC10&gt;('pagefolio.startup_focus')
+E        +    where &lt;function find_spec at 0x00000162DD12FC10&gt; = &lt;module 'importlib.util' (frozen)&gt;.find_spec
+E        +      where &lt;module 'importlib.util' (frozen)&gt; = importlib.util
+
+tests\test_startup_focus.py:123: AssertionError</failure></testcase><testcase classname="tests.test_startup_focus" name="test_modal_grab_and_native_popup_preserve_input_focus" time="0.000"><failure message="AssertionError: 既存状態を維持する FocusRestorer が必要&#10;assert None is not None&#10; +  where None = &lt;function find_spec at 0x00000162DD12FC10&gt;('pagefolio.startup_focus')&#10; +    where &lt;function find_spec at 0x00000162DD12FC10&gt; = &lt;module 'importlib.util' (frozen)&gt;.find_spec&#10; +      where &lt;module 'importlib.util' (frozen)&gt; = importlib.util">def test_modal_grab_and_native_popup_preserve_input_focus():
+&gt;       focus, root, backend = controller()
+                               ^^^^^^^^^^^^
+
+tests\test_startup_focus.py:187: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def controller():
+&gt;       assert importlib.util.find_spec("pagefolio.startup_focus") is not None, (
+            "既存状態を維持する FocusRestorer が必要"
+        )
+E       AssertionError: 既存状態を維持する FocusRestorer が必要
+E       assert None is not None
+E        +  where None = &lt;function find_spec at 0x00000162DD12FC10&gt;('pagefolio.startup_focus')
+E        +    where &lt;function find_spec at 0x00000162DD12FC10&gt; = &lt;module 'importlib.util' (frozen)&gt;.find_spec
+E        +      where &lt;module 'importlib.util' (frozen)&gt; = importlib.util
+
+tests\test_startup_focus.py:123: AssertionError</failure></testcase><testcase classname="tests.test_startup_focus" name="test_rebuild_discards_dead_widget_and_falls_back_to_root" time="0.001"><failure message="AssertionError: 既存状態を維持する FocusRestorer が必要&#10;assert None is not None&#10; +  where None = &lt;function find_spec at 0x00000162DD12FC10&gt;('pagefolio.startup_focus')&#10; +    where &lt;function find_spec at 0x00000162DD12FC10&gt; = &lt;module 'importlib.util' (frozen)&gt;.find_spec&#10; +      where &lt;module 'importlib.util' (frozen)&gt; = importlib.util">def test_rebuild_discards_dead_widget_and_falls_back_to_root():
+&gt;       focus, root, _ = controller()
+                         ^^^^^^^^^^^^
+
+tests\test_startup_focus.py:202: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def controller():
+&gt;       assert importlib.util.find_spec("pagefolio.startup_focus") is not None, (
+            "既存状態を維持する FocusRestorer が必要"
+        )
+E       AssertionError: 既存状態を維持する FocusRestorer が必要
+E       assert None is not None
+E        +  where None = &lt;function find_spec at 0x00000162DD12FC10&gt;('pagefolio.startup_focus')
+E        +    where &lt;function find_spec at 0x00000162DD12FC10&gt; = &lt;module 'importlib.util' (frozen)&gt;.find_spec
+E        +      where &lt;module 'importlib.util' (frozen)&gt; = importlib.util
+
+tests\test_startup_focus.py:123: AssertionError</failure></testcase><testcase classname="tests.test_startup_focus" name="test_foreground_denied_only_flashes_and_stop_never_retries[False]" time="0.001"><failure message="AssertionError: 既存状態を維持する FocusRestorer が必要&#10;assert None is not None&#10; +  where None = &lt;function find_spec at 0x00000162DD12FC10&gt;('pagefolio.startup_focus')&#10; +    where &lt;function find_spec at 0x00000162DD12FC10&gt; = &lt;module 'importlib.util' (frozen)&gt;.find_spec&#10; +      where &lt;module 'importlib.util' (frozen)&gt; = importlib.util">delegation = False
+
+    @pytest.mark.parametrize("delegation", [False, True])
+    def test_foreground_denied_only_flashes_and_stop_never_retries(delegation):
+&gt;       focus, root, backend = controller()
+                               ^^^^^^^^^^^^
+
+tests\test_startup_focus.py:214: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def controller():
+&gt;       assert importlib.util.find_spec("pagefolio.startup_focus") is not None, (
+            "既存状態を維持する FocusRestorer が必要"
+        )
+E       AssertionError: 既存状態を維持する FocusRestorer が必要
+E       assert None is not None
+E        +  where None = &lt;function find_spec at 0x00000162DD12FC10&gt;('pagefolio.startup_focus')
+E        +    where &lt;function find_spec at 0x00000162DD12FC10&gt; = &lt;module 'importlib.util' (frozen)&gt;.find_spec
+E        +      where &lt;module 'importlib.util' (frozen)&gt; = importlib.util
+
+tests\test_startup_focus.py:123: AssertionError</failure></testcase><testcase classname="tests.test_startup_focus" name="test_foreground_denied_only_flashes_and_stop_never_retries[True]" time="0.001"><failure message="AssertionError: 既存状態を維持する FocusRestorer が必要&#10;assert None is not None&#10; +  where None = &lt;function find_spec at 0x00000162DD12FC10&gt;('pagefolio.startup_focus')&#10; +    where &lt;function find_spec at 0x00000162DD12FC10&gt; = &lt;module 'importlib.util' (frozen)&gt;.find_spec&#10; +      where &lt;module 'importlib.util' (frozen)&gt; = importlib.util">delegation = True
+
+    @pytest.mark.parametrize("delegation", [False, True])
+    def test_foreground_denied_only_flashes_and_stop_never_retries(delegation):
+&gt;       focus, root, backend = controller()
+                               ^^^^^^^^^^^^
+
+tests\test_startup_focus.py:214: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def controller():
+&gt;       assert importlib.util.find_spec("pagefolio.startup_focus") is not None, (
+            "既存状態を維持する FocusRestorer が必要"
+        )
+E       AssertionError: 既存状態を維持する FocusRestorer が必要
+E       assert None is not None
+E        +  where None = &lt;function find_spec at 0x00000162DD12FC10&gt;('pagefolio.startup_focus')
+E        +    where &lt;function find_spec at 0x00000162DD12FC10&gt; = &lt;module 'importlib.util' (frozen)&gt;.find_spec
+E        +      where &lt;module 'importlib.util' (frozen)&gt; = importlib.util
+
+tests\test_startup_focus.py:123: AssertionError</failure></testcase><testcase classname="tests.test_startup_focus" name="test_expired_generation_and_destroyed_stop_are_inert" time="0.001"><failure message="AssertionError: 既存状態を維持する FocusRestorer が必要&#10;assert None is not None&#10; +  where None = &lt;function find_spec at 0x00000162DD12FC10&gt;('pagefolio.startup_focus')&#10; +    where &lt;function find_spec at 0x00000162DD12FC10&gt; = &lt;module 'importlib.util' (frozen)&gt;.find_spec&#10; +      where &lt;module 'importlib.util' (frozen)&gt; = importlib.util">def test_expired_generation_and_destroyed_stop_are_inert():
+&gt;       focus, root, backend = controller()
+                               ^^^^^^^^^^^^
+
+tests\test_startup_focus.py:231: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def controller():
+&gt;       assert importlib.util.find_spec("pagefolio.startup_focus") is not None, (
+            "既存状態を維持する FocusRestorer が必要"
+        )
+E       AssertionError: 既存状態を維持する FocusRestorer が必要
+E       assert None is not None
+E        +  where None = &lt;function find_spec at 0x00000162DD12FC10&gt;('pagefolio.startup_focus')
+E        +    where &lt;function find_spec at 0x00000162DD12FC10&gt; = &lt;module 'importlib.util' (frozen)&gt;.find_spec
+E        +      where &lt;module 'importlib.util' (frozen)&gt; = importlib.util
+
+tests\test_startup_focus.py:123: AssertionError</failure></testcase><testcase classname="tests.test_startup_focus" name="test_each_side_effect_rechecks_deadline_and_nested_restore_is_inert" time="0.001"><failure message="AssertionError: 既存状態を維持する FocusRestorer が必要&#10;assert None is not None&#10; +  where None = &lt;function find_spec at 0x00000162DD12FC10&gt;('pagefolio.startup_focus')&#10; +    where &lt;function find_spec at 0x00000162DD12FC10&gt; = &lt;module 'importlib.util' (frozen)&gt;.find_spec&#10; +      where &lt;module 'importlib.util' (frozen)&gt; = importlib.util">def test_each_side_effect_rechecks_deadline_and_nested_restore_is_inert():
+&gt;       focus, root, backend = controller()
+                               ^^^^^^^^^^^^
+
+tests\test_startup_focus.py:245: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def controller():
+&gt;       assert importlib.util.find_spec("pagefolio.startup_focus") is not None, (
+            "既存状態を維持する FocusRestorer が必要"
+        )
+E       AssertionError: 既存状態を維持する FocusRestorer が必要
+E       assert None is not None
+E        +  where None = &lt;function find_spec at 0x00000162DD12FC10&gt;('pagefolio.startup_focus')
+E        +    where &lt;function find_spec at 0x00000162DD12FC10&gt; = &lt;module 'importlib.util' (frozen)&gt;.find_spec
+E        +      where &lt;module 'importlib.util' (frozen)&gt; = importlib.util
+
+tests\test_startup_focus.py:123: AssertionError</failure></testcase><testcase classname="tests.test_startup_focus" name="test_close_removes_only_own_binding_ids" time="0.001"><failure message="AssertionError: 既存状態を維持する FocusRestorer が必要&#10;assert None is not None&#10; +  where None = &lt;function find_spec at 0x00000162DD12FC10&gt;('pagefolio.startup_focus')&#10; +    where &lt;function find_spec at 0x00000162DD12FC10&gt; = &lt;module 'importlib.util' (frozen)&gt;.find_spec&#10; +      where &lt;module 'importlib.util' (frozen)&gt; = importlib.util">def test_close_removes_only_own_binding_ids():
+&gt;       focus, root, _ = controller()
+                         ^^^^^^^^^^^^
+
+tests\test_startup_focus.py:259: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def controller():
+&gt;       assert importlib.util.find_spec("pagefolio.startup_focus") is not None, (
+            "既存状態を維持する FocusRestorer が必要"
+        )
+E       AssertionError: 既存状態を維持する FocusRestorer が必要
+E       assert None is not None
+E        +  where None = &lt;function find_spec at 0x00000162DD12FC10&gt;('pagefolio.startup_focus')
+E        +    where &lt;function find_spec at 0x00000162DD12FC10&gt; = &lt;module 'importlib.util' (frozen)&gt;.find_spec
+E        +      where &lt;module 'importlib.util' (frozen)&gt; = importlib.util
+
+tests\test_startup_focus.py:123: AssertionError</failure></testcase></testsuite></testsuites>

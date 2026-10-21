@@ -9,6 +9,7 @@ import sys
 def main(*, backend_factory=None):
     coordinator = None
     root = None
+    focus = None
     try:
         if sys.platform == "win32":
             from pagefolio.startup_win32 import Win32Backend, _tick_ms
@@ -46,10 +47,17 @@ def main(*, backend_factory=None):
         app = PDFEditorApp(root)
         _setup_file_drop(app)
         if coordinator:
+            from pagefolio.startup_focus import FocusRestorer
+
+            focus = FocusRestorer(app, coordinator.backend)
+            app._startup_focus = focus
+            coordinator.backend.focus_restorer = focus
             root.after_idle(lambda: coordinator.attach_tk(root))
         root.mainloop()
         return "primary"
     finally:
+        if focus is not None:
+            focus.close()
         if root is not None:
             try:
                 if root.winfo_exists():

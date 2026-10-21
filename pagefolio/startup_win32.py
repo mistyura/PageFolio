@@ -49,6 +49,20 @@ class SID_AND_ATTRIBUTES(ct.Structure):
     _fields_ = [("Sid", wt.LPVOID), ("Attributes", wt.DWORD)]
 
 
+class GUITHREADINFO(ct.Structure):
+    _fields_ = [
+        ("cbSize", wt.DWORD),
+        ("flags", wt.DWORD),
+        ("hwndActive", wt.HWND),
+        ("hwndFocus", wt.HWND),
+        ("hwndCapture", wt.HWND),
+        ("hwndMenuOwner", wt.HWND),
+        ("hwndMoveSize", wt.HWND),
+        ("hwndCaret", wt.HWND),
+        ("rcCaret", wt.RECT),
+    ]
+
+
 def _bind(dll, name, result, *args):
     function = getattr(dll, name)
     function.restype = result
@@ -113,6 +127,18 @@ class _API:
         self.AllowSetForegroundWindow = _bind(self.u, "AllowSetForegroundWindow", b, d)
         self.SetForegroundWindow = _bind(self.u, "SetForegroundWindow", b, wt.HWND)
         self.GetAncestor = _bind(self.u, "GetAncestor", wt.HWND, wt.HWND, wt.UINT)
+        for name, result, args in [
+            ("IsWindow", b, [wt.HWND]),
+            ("IsWindowVisible", b, [wt.HWND]),
+            ("IsWindowEnabled", b, [wt.HWND]),
+            ("IsIconic", b, [wt.HWND]),
+            ("ShowWindow", b, [wt.HWND, ct.c_int]),
+            ("GetWindowThreadProcessId", d, [wt.HWND, pd]),
+            ("GetWindow", wt.HWND, [wt.HWND, wt.UINT]),
+            ("GetLastActivePopup", wt.HWND, [wt.HWND]),
+            ("GetGUIThreadInfo", b, [d, ct.POINTER(GUITHREADINFO)]),
+        ]:
+            setattr(self, name, _bind(self.u, name, result, *args))
 
 
 def _check(value):
@@ -922,6 +948,9 @@ class Win32Backend:
 
     def restore_window(self, hwnd, is_current=lambda: True):
         self._assert_thread()
+        restorer = getattr(self, "focus_restorer", None)
+        if restorer is not None:
+            return restorer.restore(hwnd, is_current=is_current)
         if not is_current():
             return "expired"
         hwnd = self.api.GetAncestor(hwnd, 2) or hwnd
@@ -933,6 +962,119 @@ class Win32Backend:
             return "expired"
         _flash_window(self.api, hwnd)
         return "foreground_denied"
+
+    def _window_process_id(self, hwnd):
+        if not hwnd or not self.api.IsWindow(hwnd):
+            return None
+        pid = wt.DWORD()
+        thread = self.api.GetWindowThreadProcessId(hwnd, ct.byref(pid))
+        if pid.value != self.pid or thread != threading.get_native_id():
+            return None
+        return pid.value, thread
+
+    def _top_level_hwnd(self, widget):
+        self._assert_thread()
+        try:
+            inner = widget.winfo_id()
+            hwnd = self.api.GetAncestor(inner, 2)
+            if not hwnd:
+                hwnd = int(widget.wm_frame(), 0)
+            return hwnd if self._window_process_id(hwnd) else None
+        except Exception as e:
+            self.logger.debug("復帰HWNDの正規化: %s", e)
+            return None
+
+    def _z_order(self, handles):
+        """EnumThreadWindowsのZ-orderを自process/UI-threadだけに制限する。"""
+        result = []
+        callback_type = ct.WINFUNCTYPE(wt.BOOL, wt.HWND, wt.LPARAM)
+
+        def collect(hwnd, data):
+            if hwnd in handles and self._window_process_id(hwnd):
+                result.append(hwnd)
+            return True
+
+        callback = callback_type(collect)
+        enum = _bind(
+            self.api.u,
+            "EnumThreadWindows",
+            wt.BOOL,
+            wt.DWORD,
+            callback_type,
+            wt.LPARAM,
+        )
+        enum(threading.get_native_id(), callback, 0)
+        return result
+
+    def _owned_popup(self, handles):
+        known = set(handles)
+        candidates = []
+        info = GUITHREADINFO(cbSize=ct.sizeof(GUITHREADINFO))
+        if self.api.GetGUIThreadInfo(threading.get_native_id(), ct.byref(info)):
+            candidates.append(info.hwndActive)
+        candidates.extend(self.api.GetLastActivePopup(hwnd) for hwnd in handles)
+        # native modalがTk dialog所有でも、UI-thread列挙から漏らさない。
+        candidates.extend(self._thread_windows())
+        for hwnd in candidates:
+            if (
+                not hwnd
+                or hwnd in known
+                or not self._window_process_id(hwnd)
+                or not self.api.IsWindowVisible(hwnd)
+                or not self.api.IsWindowEnabled(hwnd)
+            ):
+                continue
+            cursor = hwnd
+            seen = set()
+            disabled_parent = False
+            while cursor and cursor not in seen:
+                seen.add(cursor)
+                if not self._window_process_id(cursor):
+                    break
+                if cursor in known:
+                    disabled_parent |= not self.api.IsWindowEnabled(cursor)
+                    if disabled_parent:
+                        return hwnd
+                    break
+                cursor = self.api.GetWindow(cursor, 4)  # GW_OWNER
+                if cursor:
+                    disabled_parent |= not self.api.IsWindowEnabled(cursor)
+        return None
+
+    def _thread_windows(self):
+        result = []
+        callback_type = ct.WINFUNCTYPE(wt.BOOL, wt.HWND, wt.LPARAM)
+
+        def collect(hwnd, data):
+            if self._window_process_id(hwnd):
+                result.append(hwnd)
+            return True
+
+        callback = callback_type(collect)
+        enum = _bind(
+            self.api.u, "EnumThreadWindows", wt.BOOL, wt.DWORD, callback_type, wt.LPARAM
+        )
+        enum(threading.get_native_id(), callback, 0)
+        return result
+
+    def _restore_placement(self, hwnd, is_current):
+        if not self._window_process_id(hwnd) or not is_current():
+            return False
+        self.api.ShowWindow(hwnd, 9)  # SW_RESTORE
+        return True
+
+    def _foreground_window(self, hwnd, is_current):
+        if not self._window_process_id(hwnd) or not is_current():
+            return "expired"
+        return (
+            "completed" if self.api.SetForegroundWindow(hwnd) else "foreground_denied"
+        )
+
+    def _flash_window(self, hwnd):
+        _flash_window(self.api, hwnd)
+
+    def _stop_flash(self, hwnd):
+        _flash_window(self.api, hwnd, stop=True)
 
     def _allow_foreground(self, pid):
         return bool(self.api.AllowSetForegroundWindow(pid)), ct.get_last_error()
@@ -1004,7 +1146,7 @@ def _restore_window(backend, hwnd):
     return backend.restore_window(hwnd)
 
 
-def _flash_window(api, hwnd):
+def _flash_window(api, hwnd, *, stop=False):
     class FLASHWINFO(ct.Structure):
         _fields_ = [
             ("cbSize", wt.UINT),
@@ -1015,7 +1157,7 @@ def _flash_window(api, hwnd):
         ]
 
     flash = _bind(api.u, "FlashWindowEx", wt.BOOL, ct.POINTER(FLASHWINFO))
-    flash(ct.byref(FLASHWINFO(ct.sizeof(FLASHWINFO), hwnd, 2, 3, 250)))
+    flash(ct.byref(FLASHWINFO(ct.sizeof(FLASHWINFO), hwnd, 0 if stop else 2, 3, 250)))
 
 
 class NoticeLease:

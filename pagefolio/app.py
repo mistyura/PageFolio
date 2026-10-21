@@ -136,6 +136,7 @@ class PDFEditorApp(
     MAX_UNDO = 20
 
     def __init__(self, root):
+        self._startup_focus = None
         logging.basicConfig(
             level=logging.WARNING,
             format="%(levelname)s:%(name)s:%(message)s",
