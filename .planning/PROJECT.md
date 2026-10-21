@@ -7,10 +7,19 @@ PageFolio の既存コードベースに対する最適化プロジェクト。
 
 **Core Value:** 大きな PDF でも Undo/Redo が正しく・速く動作し、コードが読みやすく保守しやすい状態にする。
 
-## Current Milestone: 未確定（`/gsd-new-milestone` で次マイルストーンを定義する）
+## Current Milestone: v1.10.0 多重起動防止・起動操作の改善
 
-v1.9.0 のクローズにより、現在アクティブなマイルストーンはありません。
-次の候補は「Next Milestone Goals」を参照してください。
+**Goal:** 多重起動による作業の分散を防ぎ、起動済み画面への復帰・設定失敗の把握・配布内容の再現性を改善する。
+
+**Target features（2026-10-21 ユーザー選択「1」で採用）:**
+- **多重起動防止:** 同一 Windows ログインセッション内で1つに制限する。別版・別配置・Python/EXE 起動も同じ制限対象とし、正常終了・強制終了後は再起動できる。
+- **起動済み画面の復元・前面表示:** 2回目の起動では編集画面を増やさず既存画面へ復帰する。未保存編集・OCR 実行中の作業を保護する。
+- **設定読込・保存失敗の通知:** 現在のログ記録に加え、設定が読み込めない／保存できないことを利用者が把握できるようにする。
+- **配布ビルド改善:** サンプルプロンプトの原本を保持し、再ビルドしても配布物への同梱が再現されるようにする。
+
+**Scope:** 起動時 PDF 引数の受け渡し、最近使ったファイル・閲覧位置の復元、異常終了後の編集復旧、OCR 共通化、技術的負債の一括解消、実 API UAT は今回に含めない。既存候補は保留として保持する。
+**Planning:** 要件定義・ロードマップ作成中。前マイルストーンの Phase 3 に続き Phase 4 から採番する。アプリ版番号の更新と README・開発履歴の同期は実装後のリリースゲートで行う。
+**Source:** `GSD_HANDOFF_2026-10-21.md` と今回の採用回答。名前付きミューテックス等は実装候補であり、採用方式は調査・フェーズ計画で確定する。
 
 ## Last Milestone: v1.9.0 安全性・整合性の是正 + OpenAI プロバイダ追加 — ✅ Shipped 2026-08-11
 
@@ -258,9 +267,14 @@ v1.9.0 のクローズにより、現在アクティブなマイルストーン�
 
 ### Active
 
-**なし** — v1.9.0 クローズにより全 27 要件（V190-*）が Validated へ移動済み。次マイルストーンの要件は `/gsd-new-milestone` で定義する。
+v1.10.0 の採用範囲（詳細な要件 ID・受入条件は要件定義で確定）:
 
-以下は次マイルストーンの要件候補として引き継ぐ申し送り（要件化はまだされていない）:
+- [ ] 多重起動防止（同一ログインセッション、別版・別配置・Python/EXE 共通、終了後の再起動）
+- [ ] 既存画面の復元・前面表示と既存作業の保護
+- [ ] 設定読込・保存失敗の利用者通知
+- [ ] サンプルプロンプト原本の保持と配布ビルドの同梱再現性
+
+以下は従来の申し送り。サンプルプロンプト同梱改善のみ今回の採用範囲とし、その他は保留する（要件化はまだされていない）:
 
 - **遡及 UAT の未実施 2 項目** — ③ max_tokens クランプ・429 リトライの実 API 検証（V16-QUAL-03 由来）／⑤-Claude の実 API 出力品質（`ANTHROPIC_API_KEY` 未設定）。実 API キー・課金が用意できた時点で消化する。詳細は `milestones/v1.9.0-phases/03-qa-release-gate/03-UAT-RESULTS.md`「## 未実施（理由付き・D-14）」
 - **技術的負債 10 件（v1.9.0 コードレビュー由来・Warning 4 / Info 6）** — `page_ops.py` 側の WR-03〜WR-06（一時 Document の finally 保護・insert base op の無意味な Undo エントリ・watermark/page-number ループの例外保護）は `file_ops.py` 側で既に解消済みのパターンの水平展開であり一括で閉じやすい。`file_ops.py` の WR-01（`content_at_risk` が立たない経路）／WR-02（`os.replace` 失敗時の `.tmp` 残置）、Phase 2 の WR-01/02（バッチ OCR コピペ移植の divergence リスク・エラー種別区別の粗さ）・IN-01（`OCR_PRICE_TABLE` の宣言順依存）も同様に非ブロッキング
@@ -469,12 +483,12 @@ PageFolio は `branching_strategy: "none"` / `quick_branch_template: null` の�
 
 **v1.9.0 で吸収済み:** IN-01（保存トースト再試行の確認再表示・V190-QA-02）、4手往復回帰テストの `duplicate`/`merge`/`merge_resize` への水平展開（V190-UNDO-02）、human-verify/UAT の実機目視の正式実施（V190-QA-03・v1.4.0/v1.6.0/v1.7.1 で 3 回続いた「一旦 pass」運用の解消）、Tkinter 実行環境問題のクローズ（V190-QA-01）。
 
-**v1.10.0 候補（v1.9.0 由来・優先度順）:**
+**保留候補（v1.9.0 由来・優先度順）:**
 
 1. **技術的負債 10 件の解消** — `page_ops.py` 側 WR-03〜WR-06 は `file_ops.py` 側で解消済みパターンの水平展開で一括処理しやすい。`file_ops.py` WR-01/02、Phase 2 の WR-01/02・IN-01 も同枠
 2. **未実施 UAT 2 項目の消化** — max_tokens クランプ・429 リトライの実 API 検証（V16-QUAL-03 由来・v1.6.0 から 3 マイルストーン持ち越し）／⑤-Claude 実 API 出力品質。実 API キー・課金の用意が前提
 3. **バッチ OCR の divergence 構造の解消** — `dialogs/batch_ocr.py` のコピペ移植（v1.8.0 Phase 4 の意図的判断）が単発版とのズレを構造的に許容している。共通化の是非を判断する
-4. **リポジトリ衛生** — 追跡外 `UsersshdwfAppDataLocalTemppfb/` の削除 or `.gitignore` 追加、PyInstaller ビルドでサンプルプロンプトが消える恒久課題のスクリプト化
+4. **リポジトリ衛生** — 追跡外 `UsersshdwfAppDataLocalTemppfb/` の削除 or `.gitignore` 追加は保留。PyInstaller ビルドでサンプルプロンプトが消える恒久課題のスクリプト化は v1.10.0 へ採用
 
 **v2 候補（STATE.md「Deferred Items」参照）:** バッチ OCR のバックグラウンド常駐継続・ジョブ永続化（BATCH-F01/F02）、プロンプトテンプレートのバージョン履歴/差分表示（TMPL-F01）、サムネイルの react-window 相当本格仮想化（PERF-F01）、OpenAI Responses API 移行（V190-F-01）、organization/project ID 自動検出（V190-F-02）、セッション API キー同期ループの完全動的化（V190-F-03）、OS キーストア連携による API キー永続化。
 
@@ -489,4 +503,6 @@ PageFolio は `branching_strategy: "none"` / `quick_branch_template: null` の�
 4. 決定事項 → Key Decisions を更新
 
 ---
-*Last updated: 2026-08-12 quick 260812-and — `## フェーズ完了 DoD` 節を `## ブランチ運用` の直後に新設し、機械ゲート `tests/test_gsd_dod.py`（6 テスト）を追加。適用範囲は v1.9.0 以降で、v1.9.0 未満の除外集合はテストが実ディレクトリと突き合わせて固定する。loto 実装は前提（ROADMAP の Phase 列 / フェーズ番号の連番性 / PyYAML）が PageFolio で成立しないため走査の入口をディレクトリ列挙へ差し替えた。3 プロジェクト比較の差分 #1〜#5 がこれで全て完了。前回更新: 2026-08-12 quick 260812-a8u — `## Constraints` 節を `## Context` の直後に新設（9 項目・正本は CLAUDE.md でその要約）。260812-9tv で暫定的に `## Context` 表へ置いていたブランチ運用ポインタを Constraints 末尾へ移設し、loto/numbers と同型（末尾がブランチ運用ポインタ）にした。CLAUDE.md・`pagefolio/` ソースは無変更。前回更新: 2026-08-12 quick 260812-9tv — ブランチ運用を姉妹プロジェクト（numbers `feature/v0.18.0` が原典・loto `main` が踏襲）と統一。`.planning/config.json` の `git` セクション 3 キー（`branching_strategy` = `milestone` / `milestone_branch_template` = `feature/{milestone}` / `quick_branch_template` = `quick/{num}-{slug}`）を 3 プロジェクト同値へ更新し、`## ブランチ運用` 節（5 部構成）を `## Key Decisions` の直前に新設、`## Context` 表へ入口 1 行を追加。発効は v1.10.0 以降。`git` 以外の config セクション・`pagefolio/` ソースは無変更。前回更新: 2026-08-11 after v1.9.0 milestone — マイルストーンクローズに伴う全項目の進化レビュー実施。v1.9.0 を Current State へ昇格し v1.8.0 以前を `<details>` へ格納、Context のテスト件数を実測 1404 件へ同期しリリースゲート行を追加、Active を空にして次マイルストーン候補（技術的負債 10 件・未実施 UAT 2 項目ほか）を Next Milestone Goals へ整理。Core Value・Out of Scope は再確認のうえ変更なし。前回更新: 2026-08-11 Phase 3 UAT 完了。*
+*Previous update: 2026-08-12 quick 260812-and — `## フェーズ完了 DoD` 節を `## ブランチ運用` の直後に新設し、機械ゲート `tests/test_gsd_dod.py`（6 テスト）を追加。適用範囲は v1.9.0 以降で、v1.9.0 未満の除外集合はテストが実ディレクトリと突き合わせて固定する。loto 実装は前提（ROADMAP の Phase 列 / フェーズ番号の連番性 / PyYAML）が PageFolio で成立しないため走査の入口をディレクトリ列挙へ差し替えた。3 プロジェクト比較の差分 #1〜#5 がこれで全て完了。前回更新: 2026-08-12 quick 260812-a8u — `## Constraints` 節を `## Context` の直後に新設（9 項目・正本は CLAUDE.md でその要約）。260812-9tv で暫定的に `## Context` 表へ置いていたブランチ運用ポインタを Constraints 末尾へ移設し、loto/numbers と同型（末尾がブランチ運用ポインタ）にした。CLAUDE.md・`pagefolio/` ソースは無変更。前回更新: 2026-08-12 quick 260812-9tv — ブランチ運用を姉妹プロジェクト（numbers `feature/v0.18.0` が原典・loto `main` が踏襲）と統一。`.planning/config.json` の `git` セクション 3 キー（`branching_strategy` = `milestone` / `milestone_branch_template` = `feature/{milestone}` / `quick_branch_template` = `quick/{num}-{slug}`）を 3 プロジェクト同値へ更新し、`## ブランチ運用` 節（5 部構成）を `## Key Decisions` の直前に新設、`## Context` 表へ入口 1 行を追加。発効は v1.10.0 以降。`git` 以外の config セクション・`pagefolio/` ソースは無変更。前回更新: 2026-08-11 after v1.9.0 milestone — マイルストーンクローズに伴う全項目の進化レビュー実施。v1.9.0 を Current State へ昇格し v1.8.0 以前を `<details>` へ格納、Context のテスト件数を実測 1404 件へ同期しリリースゲート行を追加、Active を空にして次マイルストーン候補（技術的負債 10 件・未実施 UAT 2 項目ほか）を Next Milestone Goals へ整理。Core Value・Out of Scope は再確認のうえ変更なし。前回更新: 2026-08-11 Phase 3 UAT 完了。*
+
+*Last updated: 2026-10-21 — v1.10.0 の採用範囲4項目を反映。要件・ロードマップは定義中。*

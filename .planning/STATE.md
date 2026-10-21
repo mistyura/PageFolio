@@ -1,31 +1,26 @@
 ---
 gsd_state_version: "1.0"
-milestone: v1.9.0
-status: Awaiting next milestone
-stopped_at: v1.9.0 マイルストーンをクローズ・アーカイブ済み。次は `/gsd-new-milestone` で次マイルストーンを定義する
-last_updated: "2026-10-21T08:54:25.404Z"
+milestone: v1.10.0
+milestone_name: 多重起動防止・起動操作の改善
+status: planning
+last_updated: "2026-10-21T09:07:33.916Z"
 last_activity: 2026-10-21
-last_activity_desc: Completed quick task 261021-os9 (GSD handoff document created; application unchanged)
-state_head: 50b553231e19c3eeca81c0e84ed4c412d9c96d2f
-milestone_name: 安全性・整合性の是正 + OpenAI プロバイダ追加
-current_phase: 03
-current_phase_name: qa-release-gate
 progress:
-  total_phases: 3
-  completed_phases: 3
-  total_plans: 15
-  completed_plans: 15
-  percent: 100
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-08-11)
+See: .planning/PROJECT.md (updated 2026-10-21)
 
 **Core value:** 大きな PDF でも Undo/Redo が正しく・速く動作し、コードが読みやすく保守しやすい状態にする
-**Current focus:** 次マイルストーンの定義待ち（`/gsd-new-milestone`）。候補は PROJECT.md「Next Milestone Goals」を参照
+**Current focus:** v1.10.0「多重起動防止・起動操作の改善」の要件・ロードマップ定義。多重起動防止、既存画面復元、設定失敗通知、配布ビルド改善の4項目を採用済み。次は調査方針の選択。
 
 ## Shipped Milestone: v1.9.0（2026-08-11・verified_closeout）
 
@@ -45,10 +40,10 @@ See: .planning/PROJECT.md (updated 2026-08-11)
 
 ## Current Position
 
-Phase: Milestone v1.9.0 complete
+Phase: Not started (defining requirements)
 Plan: —
-Status: Awaiting next milestone
-Last activity: 2026-10-21 — Completed quick task 261021-os9: 多重起動防止と追加対応案の引継ぎ文書 `GSD_HANDOFF_2026-10-21.md` を作成。アプリ実装・次期マイルストーン定義は未着手。
+Status: Defining requirements
+Last activity: 2026-10-21 — Milestone v1.10.0 started
 
 ## v1.9.0 Phase Map
 
@@ -406,17 +401,15 @@ v1.9.0 クローズ時点で次マイルストーンへ引き継ぐ未解決項�
 
 **Resume file:** None
 
-Last session: 2026-08-11
-Stopped at: v1.9.0 マイルストーンをクローズ・アーカイブ済み（verified_closeout・タグ `v1.9.0` 付与）。次は `/gsd-new-milestone`
+Last session: 2026-10-21
+Stopped at: v1.10.0 の採用範囲を PROJECT.md へ反映。調査方針の選択後に要件・ロードマップを作成する。Phase 4 から継続採番。
 
 ## Operator Next Steps
 
-- **次アクション:** `/clear` してから `/gsd-new-milestone` で次マイルストーンを定義する（questioning → research → requirements → roadmap）。候補は PROJECT.md「Next Milestone Goals」を参照
+- **次アクション:** `/gsd-new-milestone v1.10.0` の Step 8（調査方針の選択）から継続する。採用範囲は確認済み。要件一覧・ロードマップは作成後にユーザー確認を行う
 - **タグの push は未実施** — ユーザー選択によりローカルにのみ `v1.9.0` タグを作成した。リリース作業時に `git push origin v1.9.0` を実行する
-- **現在ブランチは `feature/v1.9.0`** — `main` へのマージは未実施（`branching_strategy: none` のため本ワークフローでは扱わない）。リリース時に PR / マージを判断する
-- サンプルプロンプト 2 ファイル（dist/PageFolio 直下のみ git 管理）が PyInstaller
-  `--noconfirm` ビルドで毎回消える恒久課題 — ソースツリー側へ原本移設 + ビルド後
-  コピーのスクリプト化を検討課題として保留中（260722-rel SUMMARY 参照）
+- **現在ブランチは `feature/v1.10.0`** — 引継ぎ文書を含む `quick/261021-os9-gsd` の HEAD（`ff6c5d3`）から作成。`main` への統合は PR 経由で行う
+- サンプルプロンプト 2 ファイルの再ビルド時消失対策は v1.10.0 へ採用。原本保持と同梱の検証を要件化する（260722-rel SUMMARY 参照）
 - 先送り課題（260722-gae 精査項目 3 ②③）: LLM 設定ダイアログへの「新世代 Gemini では
   temperature 欄が無視される」注記（UI 変更）/ 新世代 thinking 有効時の応答時間・
   トークン消費の実測（実 API 必要）— v1.9.0 Phase 2 では合流できず次マイルストーンへ継続
