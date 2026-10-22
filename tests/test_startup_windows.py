@@ -28,6 +28,8 @@ def test_tracer_abi_backend_available():
 
 pytestmark = pytest.mark.skipif(sys.platform != "win32", reason="Windows 実測")
 _ROOT = Path(__file__).resolve().parents[1]
+# Python import・Tk初期化の試験待機。製品の二次起動期限（5秒）とは別。
+_BOOTSTRAP_TIMEOUT = 30
 _ORIGINALS = (
     "pagefolio_settings.json",
     "ocr_custom_prompt.md",
@@ -118,13 +120,13 @@ def _finish(child):
 
 
 def _wait_file(child, path):
-    deadline = time.monotonic() + 8
+    deadline = time.monotonic() + _BOOTSTRAP_TIMEOUT
     while not path.exists() and time.monotonic() < deadline:
         if child.poll() is not None:
             _finish(child)
             pytest.fail("ownerがready前に終了")
         time.sleep(0.02)
-    assert path.exists(), "owner readyを8秒以内に確認できない"
+    assert path.exists(), f"{path.name}を{_BOOTSTRAP_TIMEOUT}秒以内に確認できない"
 
 
 def test_tracer_abi_64bit_snapshot_and_thread(tmp_path):
@@ -632,12 +634,15 @@ def _reclaim(children):
         child.communicate()
 
 
-@pytest.mark.parametrize("count", [2, 8])
-def test_simultaneous_real_processes_construct_one_editor(tmp_path, count):
+@pytest.mark.parametrize(
+    "count, slow", [(2, False), (8, False), (2, True)], ids=["2", "8", "slow"]
+)
+def test_simultaneous_real_processes_construct_one_editor(tmp_path, count, slow):
     namespace = uuid4().hex
-    children = [_spawn(tmp_path, namespace, f"simultaneous-{i}") for i in range(count)]
+    role_prefix = "simultaneous-slow" if slow else "simultaneous"
+    children = [_spawn(tmp_path, namespace, f"{role_prefix}-{i}") for i in range(count)]
     try:
-        deadline = time.monotonic() + 8
+        deadline = time.monotonic() + _BOOTSTRAP_TIMEOUT
         while (
             not any((fixture / "ready").exists() for _, fixture in children)
             and time.monotonic() < deadline
@@ -651,12 +656,35 @@ def test_simultaneous_real_processes_construct_one_editor(tmp_path, count):
             and time.monotonic() < deadline
         ):
             time.sleep(0.02)
+        owner, owner_path = next(
+            (child, path) for child, path in children if (path / "ready").exists()
+        )
+        results = [_finish(child) for child, _ in children if child is not owner]
+        # 初期化が5秒を超えた場合のexpiredは仕様どおり。新しい起動だけで復帰する。
+        for result in results:
+            if result["result"] == "expired":
+                assert 5000 <= result["elapsed"] < 6000
+        if slow:
+            assert all(result["result"] == "expired" for result in results)
+        fresh, _ = _spawn(
+            tmp_path,
+            namespace,
+            "entry-module",
+            expected_owner=json.loads((owner_path / "ready").read_text()),
+        )
+        children.append((fresh, tmp_path / "entry-module"))
+        fresh_result = _finish(fresh)
+        assert fresh_result["constructed"] == 0
+        assert fresh_result["result"] in {"completed", "foreground_denied"}
         (tmp_path / "stop-all").touch()
-        results = [_finish(child) for child, _ in children]
+        owner_result = _finish(owner)
+        if slow:
+            assert owner_result["restored"] == 1, "期限切れ要求は遅れて復帰させない"
+        results.append(owner_result)
         assert sum(r["constructed"] for r in results) == 1
         assert sum(r["result"] == "primary" for r in results) == 1
         assert all(
-            r["result"] in {"primary", "completed", "foreground_denied"}
+            r["result"] in {"primary", "completed", "foreground_denied", "expired"}
             for r in results
         )
     finally:
@@ -1070,7 +1098,7 @@ def test_focus_restore_real_main_windows(tmp_path, entry, case):
         measured = json.loads((fixture / "focus-result.json").read_text())
         assert measured["state_preserved"]
         assert measured["target_correct"]
-        assert measured["focus_correct"]
+        assert measured["focus_correct"], measured
         if case == "native-quit":
             _wait_file(owner, fixture / "quit-cancelled")
         (fixture / "stop").touch()
@@ -1250,11 +1278,24 @@ def _prepare_focus_case(app, fixture, case, *, manual=False):
             "expected_tk": expected,
             "native": state.get("native"),
             "placement": root.state(),
+            "expected_focus": str(state["focus"]),
+            "immediate_focus": str(root.focus_get()),
             "focus_correct": result != "completed"
             or state["focus"] is None
             or root.focus_get() is state["focus"],
         }
-        (fixture / "focus-result.json").write_text(json.dumps(record))
+
+        def settled():
+            # TkのFocusIn処理後に一度だけ観測。成功するまで再試行しない。
+            record["settled_focus"] = str(root.focus_get())
+            record["focus_correct"] = (
+                result != "completed"
+                or state["focus"] is None
+                or root.focus_get() is state["focus"]
+            )
+            (fixture / "focus-result.json").write_text(json.dumps(record))
+
+        root.after_idle(settled)
         release.set()
         if case in {"pdf", "ocr"}:
             root.after(30, continued)
@@ -1718,6 +1759,8 @@ def _run_scenario(fixture, namespace, role):
                 counts["constructed"] += 1
                 if role == "init-failure":
                     raise RuntimeError("tracer-initialization-failure")
+                if role.startswith("simultaneous-slow-"):
+                    time.sleep(8.5)
                 super().__init__(root)
                 app_reference.append(self)
                 if role == "uat-owner-slowready":
@@ -1957,6 +2000,8 @@ def _run_scenario(fixture, namespace, role):
                 return super().show_notice(reason)
             if role == "request-timeout":
                 assert reason == "expired"
+                return
+            if role.startswith("simultaneous-") and reason == "expired":
                 return
             raise AssertionError(f"正常tracerで失敗案内: {reason}")
 

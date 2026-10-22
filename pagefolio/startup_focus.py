@@ -158,7 +158,12 @@ class FocusRestorer:
             self.windows[target]["focus"],
             target.focus_lastfor(),
         ):
-            if _alive(widget) and widget.winfo_toplevel() is target:
+            # 前面化で一時的にtoplevel自身へ移ったfocusより、記憶した入力先を優先。
+            if (
+                widget is not target
+                and _alive(widget)
+                and widget.winfo_toplevel() is target
+            ):
                 return widget
         return target
 

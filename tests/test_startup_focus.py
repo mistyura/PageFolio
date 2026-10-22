@@ -173,16 +173,45 @@ def test_placement_corrects_mismatched_normal_geometry_after_os_restore():
 
 
 @pytest.mark.parametrize("name", ["thumb_canvas", "preview_canvas", "entry"])
-def test_focus_child_preserved_and_toplevel_focus_does_not_overwrite(name):
+@pytest.mark.parametrize("toplevel_focused", [False, True])
+def test_focus_child_preserved_and_toplevel_focus_does_not_overwrite(
+    name, toplevel_focused
+):
     focus, root, backend = controller()
     child = Widget(root)
     child.winfo_toplevel = lambda: root
     child.name = name
     focus._remember_focus(SimpleNamespace(widget=child))
     focus._remember_focus(SimpleNamespace(widget=root))
+    if toplevel_focused:
+        root.focused = root
     assert focus.restore() == "completed"
     assert child.calls == [("focus",)]
     assert len([c for c in backend.calls if c[0] == "foreground"]) == 1
+
+
+def test_current_input_wins_over_previously_remembered_input():
+    focus, root, _ = controller()
+    previous = Widget(root)
+    current = Widget(root)
+    for widget in (previous, current):
+        widget.winfo_toplevel = lambda: root
+    focus._remember_focus(SimpleNamespace(widget=previous))
+    root.focused = current
+    assert focus.restore() == "completed"
+    assert not previous.calls
+    assert current.calls == [("focus",)]
+
+
+def test_last_input_used_when_only_toplevel_was_observed():
+    focus, root, _ = controller()
+    child = Widget(root)
+    child.winfo_toplevel = lambda: root
+    root.focused = root
+    root.last = child
+    assert focus.restore() == "completed"
+    assert child.calls == [("focus",)]
+    assert not root.calls
 
 
 def test_modal_without_grab_returns_to_live_parent_after_nested_close():
