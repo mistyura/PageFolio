@@ -2,6 +2,7 @@
 
 import argparse
 import ctypes as ct
+import faulthandler
 import hashlib
 import importlib.util
 import json
@@ -14,7 +15,9 @@ import sys
 import tempfile
 import threading
 import time
+import warnings
 from ctypes import wintypes as wt
+from datetime import datetime, timedelta
 from pathlib import Path
 from uuid import uuid4
 
@@ -97,7 +100,11 @@ def _spawn(
                 creationflags=subprocess.CREATE_NO_WINDOW,
             )
         return child, fixture
-    return subprocess.Popen(  # noqa: S603
+    return _pipe_popen(command), fixture
+
+
+def _pipe_popen(command):
+    child = subprocess.Popen(  # noqa: S603
         command,
         cwd=_ROOT,
         stdout=subprocess.PIPE,
@@ -105,16 +112,82 @@ def _spawn(
         text=True,
         encoding="utf-8",
         creationflags=subprocess.CREATE_NO_WINDOW,
-    ), fixture
+    )
+    # _stall_reportが「起動後に生まれた生存process」を探す基準時刻。
+    child.pf_spawned_at = datetime.now()
+    return child
 
 
-def _finish(child):
+# 子processの完了（終了とstdout/stderrのEOF）を待つ試験用の期限。
+_FINISH_TIMEOUT = 12
+# 期限超過でkillした後にpipeが閉じるのを待つ追加の期限。
+# 保持者が残っても無期限には待たない。
+_DRAIN_TIMEOUT = 5
+
+
+def _stall_report(child):
+    """期限超過時、「process自体が生存」と「終了済みだがpipeを保持する者がいる」を
+    見分けるための証拠を集める。診断の失敗で本来の失敗を隠さない。"""
+    lines = [f"poll={child.poll()}"]
+    for name in ("stdout_thread", "stderr_thread"):
+        reader = getattr(child, name, None)
+        if reader is None:
+            continue
+        frame = sys._current_frames().get(reader.ident)
+        where = (
+            f"{Path(frame.f_code.co_filename).name}:{frame.f_lineno}" if frame else "-"
+        )
+        lines.append(f"{name}: alive={reader.is_alive()} at {where}")
+    spawned = getattr(child, "pf_spawned_at", None)
+    if spawned is not None:
+        # 孫は親(launcher/Python)が死ぬと親pidで辿れない。起動後に生まれ今も生きている
+        # processを、threadの状態別件数とともに列挙する（無関係なprocessも含みうる）。
+        since = (spawned - timedelta(seconds=1)).strftime("%Y-%m-%dT%H:%M:%S.%f")
+        script = (
+            f"$since=[datetime]'{since}'; "
+            "Get-CimInstance Win32_Process | "
+            "Where-Object { $_.CreationDate -ge $since } | ForEach-Object { "
+            "$t = try { (Get-Process -Id $_.ProcessId -ErrorAction Stop).Threads | "
+            'Group-Object { "$($_.ThreadState)/$($_.WaitReason)" } | '
+            'ForEach-Object { "$($_.Name)=$($_.Count)" } } catch { "gone" }; '
+            '"pid=$($_.ProcessId) ppid=$($_.ParentProcessId) $($_.Name) '
+            "created=$($_.CreationDate.ToString('HH:mm:ss.fff')) "
+            "threads=[$($t -join ',')]\" }"
+        )
+        try:
+            shown = subprocess.run(  # noqa: S603
+                ["powershell", "-NoProfile", "-Command", script],  # noqa: S607
+                capture_output=True,
+                text=True,
+                timeout=30,
+            )
+            lines.append("起動後に生まれた生存process:\n" + shown.stdout.strip())
+        except Exception as e:
+            lines.append(f"process一覧の取得に失敗: {e!r}")
+    return "\n".join(lines)
+
+
+def _finish(child, timeout=_FINISH_TIMEOUT):
     try:
-        out, err = child.communicate(timeout=12)
+        out, err = child.communicate(timeout=timeout)
     except subprocess.TimeoutExpired:
+        # killより前に証拠を採る。killすると生存/保持の区別が消える。
+        exited = child.poll() is not None
+        report = _stall_report(child)
         child.kill()
-        child.communicate()
-        pytest.fail("子process が12秒以内に終了しない")
+        try:
+            out, err = child.communicate(timeout=_DRAIN_TIMEOUT)
+        except subprocess.TimeoutExpired:
+            out = err = "<kill後もpipeを保持する者が残りEOF未到達>"
+        cause = (
+            "processは終了済みだが、stdout/stderrを保持する者がいてEOFが来ない"
+            if exited
+            else "process自体が終了しない"
+        )
+        pytest.fail(
+            f"子processが{timeout}秒以内に完了しない: {cause}\n{report}\n"
+            f"stdout={out}\nstderr={err}"
+        )
     assert child.returncode == 0, err
     return json.loads(out.strip().splitlines()[-1])
 
@@ -127,6 +200,59 @@ def _wait_file(child, path):
             pytest.fail("ownerがready前に終了")
         time.sleep(0.02)
     assert path.exists(), f"{path.name}を{_BOOTSTRAP_TIMEOUT}秒以内に確認できない"
+
+
+# 孫が継承したstdout/stderrを保持したまま、子本体は結果を出力して終了する。
+_PIPE_HOLDER = """
+import json, subprocess, sys
+g = subprocess.Popen(
+    [sys.executable, "-c", "import time; time.sleep(60)"],
+    close_fds=False,
+    creationflags=subprocess.CREATE_NO_WINDOW,
+)
+open(sys.argv[1], "w").write(str(g.pid))
+print(json.dumps({"result": "completed"}), flush=True)
+"""
+
+
+def test_finish_reports_exited_process_whose_pipes_are_held(tmp_path, monkeypatch):
+    """子は結果を出して終了済みでも、孫がpipeを保持するとcommunicateはEOFを待つ。
+    _finishはこれを「process生存」と誤認せず、保持者を報告し、無期限に待たない。"""
+    monkeypatch.setitem(globals(), "_DRAIN_TIMEOUT", 1)  # 試験時間の短縮
+    pid_file = tmp_path / "holder.pid"
+    child = _pipe_popen([sys.executable, "-c", _PIPE_HOLDER, str(pid_file)])
+    started = time.monotonic()
+    try:
+        with pytest.raises(pytest.fail.Exception) as info:
+            _finish(child, timeout=3)
+        elapsed = time.monotonic() - started
+        message = str(info.value)
+        holder = pid_file.read_text()
+        assert "processは終了済み" in message, message
+        assert "stdout_thread: alive=True" in message, message
+        assert f"pid={holder} " in message, message  # 保持者のpidを特定できる
+        # 孫の寿命(60秒)を待たず、期限+診断+kill後の追加期限の範囲で戻る。
+        assert elapsed < 3 + _DRAIN_TIMEOUT + 30, elapsed
+    finally:
+        if pid_file.exists():
+            subprocess.run(  # noqa: S603
+                ["taskkill", "/F", "/T", "/PID", pid_file.read_text()],  # noqa: S607
+                capture_output=True,
+                check=False,
+            )
+        _reclaim([child])
+
+
+def test_finish_reports_live_process_as_not_exiting():
+    child = _pipe_popen([sys.executable, "-c", "import time; time.sleep(60)"])
+    try:
+        with pytest.raises(pytest.fail.Exception) as info:
+            _finish(child, timeout=2)
+        message = str(info.value)
+        assert "process自体が終了しない" in message, message
+        assert "poll=None" in message, message
+    finally:
+        _reclaim([child])
 
 
 def test_tracer_abi_64bit_snapshot_and_thread(tmp_path):
@@ -631,7 +757,15 @@ def _reclaim(children):
     for child in children:
         if child.poll() is None:
             child.kill()
-        child.communicate()
+        try:
+            child.communicate(timeout=_DRAIN_TIMEOUT)
+        except subprocess.TimeoutExpired:
+            # 保持者が残っても回収で無期限に待たない。失敗の報告は_finishが担う。
+            warnings.warn(
+                f"pid={child.pid}のpipeが{_DRAIN_TIMEOUT}秒以内に閉じない",
+                RuntimeWarning,
+                stacklevel=2,
+            )
 
 
 @pytest.mark.parametrize(
@@ -2092,6 +2226,12 @@ def _run_scenario(fixture, namespace, role):
 
 
 def _test_scenario_bootstrap(fixture, namespace, role):
+    # 多数のlistenerスレッドのdumpで未読stderr pipeを詰まらせない。
+    # 時限dumpは取り消さない。シナリオ完了後に終了処理（interpreter finalization）が
+    # 止まった場合も、faulthandlerがfixtureへスタックを残す。fileはfaulthandlerが
+    # 参照を保持し、interpreter終了時に取り消される。
+    trace = (fixture / "traceback.log").open("w", encoding="utf-8")
+    faulthandler.dump_traceback_later(10, repeat=True, file=trace)
     before = _fingerprints()
     try:
         _run_scenario(fixture, namespace, role)
