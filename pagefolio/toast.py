@@ -36,8 +36,12 @@ class ToastManager:
         self._frame = None
         self._msg_var = None
         self._retry_btn = None
+        self._duration_after = None
+        self._on_close = None
 
-    def show(self, category, message, retry_cb):
+    def show(
+        self, category, message, retry_cb=None, *, duration_ms=None, on_close=None
+    ):
         """``category`` のトーストを表示する。
 
         既存トーストが表示中なら（カテゴリを問わず）常に破棄して新規で
@@ -49,17 +53,37 @@ class ToastManager:
             self._msg_var.set(message)
             if self._retry_btn is not None:
                 self._retry_btn.configure(command=retry_cb)
+            self._on_close = on_close
+            self._start_timer(duration_ms)
             return
         self._destroy_frame()
         self._active_category = category
+        self._on_close = on_close
         self._build_frame(category, message, retry_cb)
+        self._start_timer(duration_ms)
 
-    def dismiss(self, category):
+    def dismiss(self, category, *, reason="user"):
         """一致する category の場合のみトーストを破棄する（D-08）。"""
         if self._active_category != category:
             return
+        on_close = self._on_close
         self._destroy_frame()
         self._active_category = None
+        self._on_close = None
+        if on_close is not None:
+            on_close(reason)
+
+    def _start_timer(self, duration_ms):
+        if self._duration_after is not None:
+            self.app.root.after_cancel(self._duration_after)
+            self._duration_after = None
+        if duration_ms is not None:
+            self._duration_after = self.app.root.after(
+                duration_ms,
+                lambda category=self._active_category: self.dismiss(
+                    category, reason="expired"
+                ),
+            )
 
     def _build_frame(self, category, message, retry_cb):
         app = self.app
@@ -77,14 +101,15 @@ class ToastManager:
             justify="left",
         ).pack(side="left", padx=(12, 4), pady=8)
 
-        retry_btn = ttk.Button(
-            frame,
-            text=app._t("toast_retry_btn"),
-            style="Accent.TButton",
-            command=retry_cb,
-        )
-        retry_btn.pack(side="left", padx=4)
-        self._retry_btn = retry_btn
+        if retry_cb is not None:
+            retry_btn = ttk.Button(
+                frame,
+                text=app._t("toast_retry_btn"),
+                style="Accent.TButton",
+                command=retry_cb,
+            )
+            retry_btn.pack(side="left", padx=4)
+            self._retry_btn = retry_btn
 
         ttk.Button(
             frame,
@@ -96,6 +121,12 @@ class ToastManager:
         self._frame = frame
 
     def _destroy_frame(self):
+        if self._duration_after is not None:
+            try:
+                self.app.root.after_cancel(self._duration_after)
+            except tk.TclError:
+                pass
+            self._duration_after = None
         if self._frame is not None:
             try:
                 self._frame.destroy()

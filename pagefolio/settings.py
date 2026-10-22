@@ -6,6 +6,7 @@
 import json
 import logging
 import os
+from dataclasses import dataclass
 
 from pagefolio.constants import (
     CUSTOM_PROMPT_FILE,
@@ -251,8 +252,14 @@ def rename_template(settings, old_name, new_name):
         tpl["active"] = new_name
 
 
-def _load_settings():
-    """設定を読み込む。ファイルがなければデフォルト値を返す"""
+@dataclass(frozen=True)
+class SettingsLoadResult:
+    settings: dict
+    status: str
+
+
+def _load_settings_result():
+    """設定読込の結果と失敗種別を返す。原本は変更しない。"""
     defaults = {
         "theme": "dark",
         "font_size": 12,
@@ -299,16 +306,47 @@ def _load_settings():
         "ocr_fallback_chain": [],
     }
     try:
-        path = _get_settings_path()
-        if os.path.exists(path):
-            with open(path, "r", encoding="utf-8") as f:
-                data = json.load(f)
-            for k, v in defaults.items():
-                data.setdefault(k, v)
-            return data
+        with open(_get_settings_path(), "r", encoding="utf-8-sig") as f:
+            data = json.load(f)
+    except FileNotFoundError:
+        return SettingsLoadResult(defaults, "missing")
+    except (json.JSONDecodeError, UnicodeDecodeError) as e:
+        logger.debug("設定読込形式不正: %s", type(e).__name__)
+        return SettingsLoadResult(defaults, "corrupt")
     except Exception as e:
-        logger.debug("設定ファイル読み込み失敗: %s", e)
-    return dict(defaults)
+        logger.debug(
+            "設定読取不能: %s errno=%s", type(e).__name__, getattr(e, "errno", None)
+        )
+        return SettingsLoadResult(defaults, "unreadable")
+
+    if not isinstance(data, dict):
+        return SettingsLoadResult(defaults, "corrupt")
+    templates = data.get("prompt_templates")
+    valid = (
+        (
+            "font_size" not in data
+            or (type(data["font_size"]) is int and data["font_size"] > 0)
+        )
+        and ("lang" not in data or data["lang"] in ("ja", "en"))
+        and ("theme" not in data or isinstance(data["theme"], str))
+        and (
+            templates is None
+            if "prompt_templates" not in data
+            else isinstance(templates, dict)
+            and ("active" not in templates or isinstance(templates["active"], str))
+            and ("items" not in templates or isinstance(templates["items"], dict))
+        )
+    )
+    if not valid:
+        return SettingsLoadResult(defaults, "corrupt")
+    for key, value in defaults.items():
+        data.setdefault(key, value)
+    return SettingsLoadResult(data, "ok")
+
+
+def _load_settings():
+    """従来の辞書戻り値を維持する互換入口。"""
+    return _load_settings_result().settings
 
 
 def _save_settings(settings):

@@ -5,6 +5,7 @@
 
 import logging
 import os
+import time
 import tkinter as tk
 from collections import deque
 from tkinter import messagebox
@@ -22,7 +23,7 @@ from pagefolio.print_ops import PrintOpsMixin
 from pagefolio.redact_ops import RedactOpsMixin
 from pagefolio.settings import (
     _apply_theme,
-    _load_settings,
+    _load_settings_result,
     _save_settings,
     set_current_font_size,
 )
@@ -146,7 +147,20 @@ class PDFEditorApp(
         self.root.minsize(800, 600)
 
         # 設定読み込み・テーマ適用
-        self.settings = _load_settings()
+        load_result = _load_settings_result()
+        self.settings = load_result.settings
+        self._settings_load_status = load_result.status
+        self._settings_autosave_blocked = load_result.status in (
+            "corrupt",
+            "unreadable",
+        )
+        self._config_notices = deque()
+        self._config_notice_seq = 0
+        self._config_load_notice_registered = False
+        self._config_notice_after = None
+        self._config_displayed_id = None
+        if self._settings_autosave_blocked:
+            self._enqueue_config_notice(f"config_load_{load_result.status}")
         self.font_size = self.settings.get("font_size", 10)
         self.lang = self.settings.get("lang", "ja")
         set_current_font_size(self.font_size)
@@ -214,6 +228,7 @@ class PDFEditorApp(
         self._build_styles()
         self._build_ui()
         self._build_menubar()
+        self._schedule_config_notice()
 
         # WM_DELETE_WINDOW
         self.root.protocol("WM_DELETE_WINDOW", self._quit)
@@ -496,6 +511,69 @@ class PDFEditorApp(
 
         return event.action
 
+    def _enqueue_config_notice(self, message_key):
+        """設定通知のイベントを App に保持する。読込通知は一度だけ登録。"""
+        if message_key.startswith("config_load_"):
+            if self._config_load_notice_registered:
+                return
+            self._config_load_notice_registered = True
+        self._config_notice_seq += 1
+        self._config_notices.append(
+            {
+                "event_id": self._config_notice_seq,
+                "message_key": message_key,
+                "remaining_ms": 10000,
+                "shown_at": None,
+            }
+        )
+
+    def _schedule_config_notice(self):
+        if self._config_notices and self._config_notice_after is None:
+            self._config_notice_after = self.root.after_idle(
+                self._show_next_config_notice
+            )
+
+    def _show_next_config_notice(self):
+        """画面構築後の最新 Toast に、先頭の未消化イベントだけを表示する。"""
+        self._config_notice_after = None
+        try:
+            if not self.root.winfo_exists() or not self._config_notices:
+                return
+            toast = getattr(self, "_toast", None)
+            if toast is None:
+                return
+            notice = self._config_notices[0]
+            event_id = notice["event_id"]
+            if (
+                self._config_displayed_id == event_id
+                and toast._active_category == "config"
+            ):
+                return
+            if toast._active_category is not None:
+                return
+            self._config_displayed_id = event_id
+            notice["shown_at"] = time.monotonic()
+
+            def closed(reason):
+                if (
+                    not self._config_notices
+                    or self._config_notices[0]["event_id"] != event_id
+                ):
+                    return
+                if reason in ("user", "expired"):
+                    self._config_notices.popleft()
+                    self._config_displayed_id = None
+                    self._schedule_config_notice()
+
+            toast.show(
+                "config",
+                self._t(notice["message_key"]),
+                duration_ms=notice["remaining_ms"],
+                on_close=closed,
+            )
+        except tk.TclError:
+            self._config_displayed_id = None
+
     def _quit(self):
         self._save_window_state()
         if self.doc:
@@ -574,6 +652,8 @@ class PDFEditorApp(
 
     def _save_window_state(self):
         """ウィンドウのジオメトリ・サッシ位置・モードを設定に保存"""
+        if self._settings_autosave_blocked:
+            return
         try:
             geom = self.root.geometry()
             if geom and "x" in geom:
@@ -696,6 +776,11 @@ class PDFEditorApp(
 
     def _rebuild_ui(self):
         """テーマ・フォント変更時にUI全体を再構築"""
+        if getattr(self, "_toast", None) is not None:
+            self._toast._destroy_frame()
+        self._config_displayed_id = None
+        if self._config_notices:
+            self._config_notices[0]["shown_at"] = None
         self.root.configure(bg=C["BG_DARK"])
         for w in self.root.winfo_children():
             w.destroy()
@@ -714,6 +799,7 @@ class PDFEditorApp(
         self._build_styles()
         self._build_ui()
         self._build_menubar()
+        self._schedule_config_notice()
         if self.doc:
             self._refresh_all()
         else:

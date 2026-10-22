@@ -6,6 +6,19 @@
 
 LANG = {
     "ja": {
+        "config_load_corrupt": (
+            "保存済みの設定が破損しているため、既定値で起動しました。"
+        ),
+        "config_load_unreadable": (
+            "保存済みの設定を読み取れなかったため、既定値で起動しました。"
+        ),
+        "config_save_failed": (
+            "設定の保存に失敗しました。今回の変更は次回起動に残りません。"
+        ),
+        "config_save_blocked_unreadable": (
+            "元の設定を保護するため保存していません。"
+            "今回の変更は次回起動に残りません。"
+        ),
         "startup_notice_check_failed": (
             "PageFolioの起動状態を確認できませんでした。"
             "タスクバーを確認し、しばらくしてから起動し直してください。"
@@ -818,6 +831,22 @@ LANG = {
         "batch_menu_item_off": "バッチOCR（OCR OFF）",
     },
     "en": {
+        "config_load_corrupt": (
+            "Saved settings are invalid. "
+            "PageFolio started with default settings."
+        ),
+        "config_load_unreadable": (
+            "Saved settings could not be read. "
+            "PageFolio started with default settings."
+        ),
+        "config_save_failed": (
+            "Settings could not be saved. These changes will not be kept "
+            "the next time you start PageFolio."
+        ),
+        "config_save_blocked_unreadable": (
+            "Settings have not been saved to protect the original file. "
+            "These changes will not be kept the next time you start PageFolio."
+        ),
         "startup_notice_check_failed": (
             "PageFolio's startup status could not be checked. Check the taskbar, "
             "wait a moment, then try opening PageFolio again."
