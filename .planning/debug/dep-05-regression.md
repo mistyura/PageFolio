@@ -17,9 +17,9 @@ goal: find_and_fix
 ## Current Focus
 
 hypothesis: 【原因未確定】元失敗(二次result.json保存の約11.3秒後もstdout EOF未達)の残存仮説は3つ。H1=二次(venv launcher→実python)の終了遅延、H2=第三者によるpipe保持、H3=親pytest側のreader thread/GILの停止。H2は静的に可能性が低い(二次は孫を作らず、親にも並行CreateProcessの経路が無い)。どれも約820件の観測で再現していない。
-test: 新設の_finish診断(poll値・reader threadの生死と位置・起動後に生まれた生存process一覧とthread状態)と、時限dumpを常時armedにしたtraceback.logで、次の再発時に3仮説を1回で判別する。
+test: 診断commit 9384268は適用済み。_finish診断(poll値・reader threadの生死と位置・起動後に生まれた生存process一覧とthread状態)と、時限dumpを常時armedにしたtraceback.logを、Phase 5の単一全件ゲートでの再発時に確認する。
 expecting: 再発時、poll=None→H1(processが生存。traceback.logにPythonスタックがあればPython側、無ければOS/launcher側)。poll=0かつreader alive=True→H2(起動後に生存するprocess一覧に保持者)。reader aliveでなくTimeoutExpired→H3。
-next_action: 単一全件ゲートの結果を確認し、結論(原因未確定・診断強化・依存は未解除)をreportする。
+next_action: 2026-10-23の利用者判断に従い、DEP-05-REGRESSIONを未解除のまま再発監視へ移る。次の作業入口は $gsd-execute-phase 5（本debug継続では製品実装を開始しない）。単一全件ゲートで同種の失敗が再発したら実装・後続実行・コミットを停止し、最初の失敗出力・専用basetempのresult.json/traceback.log・poll/reader/process診断を保持して $gsd-debug continue dep-05-regression で再開する。再発証拠なしに同条件の再現試験を繰り返さない。
 
 ## Eliminated
 
@@ -37,6 +37,11 @@ next_action: 単一全件ゲートの結果を確認し、結論(原因未確定
   timestamp: 2026-10-23
 
 ## Evidence
+
+- timestamp: 2026-10-23（継続確認・既承認の監視方針へ状態整合）
+  checked: git log/status、9384268/973c6edの変更範囲、診断テスト・requirements・全件ログのSHA256、debugとPhase 5 review診断ファイルの更新時刻、製品/テスト差分と実行環境metadata
+  found: 診断は938426840c19731ba4d72076d699f15b2b1a513eでtests/test_startup_windows.pyのみ独立commit済み。調査記録と利用者判断は973c6edfea215c2eec9223de36aeb662224b5c71でcommit済み。テストSHA256 C61CA695A1CDAB0EFC21DE230D2F34A389905F1D0A93660443801C4EE73755BD、requirements SHA256 5AFFADBAB19AAC41E06B20142E67DAF1A4326B898D0DE4D34CFDBBFA1B403F74、全件ログSHA256 34C2B11C4A7DF4C9D72C342EE41FB029D100A66CF5360FCD1D37011D4B04D87Eは既存記録と一致。ログ末尾は1637 passed / 1 warning / 263.66s。診断commit後の製品・テスト差分なし。全件ログ後のPythonソース・.venvのdist-info metadata更新なし。Python 3.15.1、pytest 9.1.1、Ruff 0.17.1、PyMuPDF 1.28.2を確認。確認したdebug/review記録に新たな再発証拠なし。
+  implication: 診断採用は完了済みで、同条件の成功済み全件を再実行する根拠はない。旧Current Focus/STATE/実行依存文言だけを2026-10-23の承認済み条件へ整合する。新たな原因修復・依存解除・Phase 5実装完了ではなく、statusはinvestigatingのまま再発監視を継続する。
 
 - timestamp: 2026-10-23（常時armedの時限dumpが終了処理の停止を捕捉できることの確認）
   checked: scratchpad `arm_check.py`（`dump_traceback_later(2, repeat=True, file=trace)`をarmした関数が戻った後、非daemon threadが残りinterpreter finalizationで待たされる）
@@ -226,3 +231,12 @@ files_changed: tests/test_startup_windows.py(診断・待機上限化・試験2�
 # 汚れた親内の二次180件観測(scratchpadのtest_zz_campaign.pyを全件の後ろに連結)
 pytest tests/ <scratchpad>/test_zz_campaign.py -q --tb=short -p no:cacheprovider --rootdir=. --basetemp="$env:LOCALAPPDATA\Temp\pf_dep05_dbg_camp3_20261023_01"
 ```
+
+## Resolution（2026-10-23継続確認・未解決の監視継続）
+
+root_cause: 未確定。元のresult.json保存後約11.3秒のstdout EOF未達について、H1/H2/H3のいずれも実証されていない。今回確認した保存記録に新たな再発証拠はない。
+fix: 原因修復は適用していない。診断強化は9384268で採用済み。今回はCurrent Focus、STATE.md/state.json、ROADMAP、05-VALIDATION、05-01〜04 PLANの依存文言を、既承認の「未解除・条件付き実行・再発時停止」へ整合した。製品コード・テスト・requirements・版番号は変更していない。
+verification: 既存全件1637 passed / 1 warning / 263.66秒 / exit 0を、テスト・requirements・ログのSHA256一致と製品/テスト差分なし、環境metadata更新なしで再利用。pytest/ruff/ASTは今回再実行していない。JSON構文と未充足/monitoring/条件付き実行の整合、Phase 5 pending・maintenance incomplete・Nyquist未完了の維持、計画中の診断参照を確認。git diff --check成功。
+files_changed: .planning/debug/dep-05-regression.md、.planning/STATE.md、.planning/state.json、.planning/ROADMAP.md、.planning/phases/05-config-notification/05-VALIDATION.md、05-01-PLAN.md、05-02-PLAN.md、05-03-PLAN.md、05-04-PLAN.md。開始前からの計画・依存更新を含む未コミット差分は保持し、今回の独立記録commitへ混ぜない。
+disposition: monitoring。debugのstatusはinvestigating、DEP-05-REGRESSIONは未解除。resolved/へ移動しない。今回の継続確認は完了したが、元のバグが解決したことを意味しない。次の作業入口は $gsd-execute-phase 5。本debug依頼ではPhase 5製品実装を開始しない。
+prevention: 元失敗時はpoll値・reader状態・出力保持の診断が不足して原因を分離できなかった。guardは9384268の診断と決定的な2試験、およびPhase 5全件で同種失敗が出たら停止して最初の証拠を保存する運用。再発そのものの防止策は原因未確定のため未実装。
