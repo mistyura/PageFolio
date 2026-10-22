@@ -16,8 +16,7 @@ LANG = {
             "設定の保存に失敗しました。今回の変更は次回起動に残りません。"
         ),
         "config_save_blocked_unreadable": (
-            "元の設定を保護するため保存していません。"
-            "今回の変更は次回起動に残りません。"
+            "元の設定を保護するため保存していません。今回の変更は次回起動に残りません。"
         ),
         "startup_notice_check_failed": (
             "PageFolioの起動状態を確認できませんでした。"
@@ -832,12 +831,10 @@ LANG = {
     },
     "en": {
         "config_load_corrupt": (
-            "Saved settings are invalid. "
-            "PageFolio started with default settings."
+            "Saved settings are invalid. PageFolio started with default settings."
         ),
         "config_load_unreadable": (
-            "Saved settings could not be read. "
-            "PageFolio started with default settings."
+            "Saved settings could not be read. PageFolio started with default settings."
         ),
         "config_save_failed": (
             "Settings could not be saved. These changes will not be kept "
