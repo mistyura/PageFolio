@@ -15,7 +15,8 @@ source: 05-04-PLAN.md
 - 画面は通常のPageFolioと「PageFolio 隔離受入: scenario」の操作パネル。パネルを閉じると隠れる。終了はパネルの「製品の終了操作」を使う。
 - 保存/印刷競合の操作パネルボタンは既存ToastManagerへの開発用注入であり、OS印刷や実PDF保存を行わない。既存retry/bound_docの製品経路は自動回帰試験で別途確認する。
 - 各終了後、callback/Toast停止→Undo解放→Document close→root destroy→一時領域解放→利用者原本存在/相対パス/SHA256照合を行う。初期化例外時も同じ解放を行う。
-- 起動状態: **未起動**。最終ゲート成功後にエージェントが起動する。ここは起動実測後だけ更新する。
+- 起動状態: **read-corrupt起動済み**（2026-10-24 01:00 JST、launcher PID33244 / 実Python PID32632）。通常権限のGet-ProcessでMainWindowTitle=PageFolio、MainWindowHandle=16845424、Responding=True、stderr空を確認。これは画面生成の自動確認であり、人手合格ではない。sandboxのGet-Processはhandle=0を返したため、通常権限で照合した。
+- 初回Toastの10秒が経過した場合はエージェントがこの隔離harnessを終了・再起動する。利用者にCLIや実利用設定の操作を求めない。H01〜H03の起動直後確認は再起動後の実表示で行う。
 
 ## 操作と期待結果
 

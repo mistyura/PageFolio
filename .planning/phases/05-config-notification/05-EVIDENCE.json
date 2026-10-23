@@ -371,5 +371,20 @@
     "T-05-13": "実command/exit/count/hashと未実施を分離。",
     "T-05-SC": "新規installなし。"
   },
-  "release_status": "出荷不可。人手/独立検証/Nyquist/Phase6受入未完了。"
+  "release_status": "出荷不可。人手/独立検証/Nyquist/Phase6受入未完了。",
+  "manual_environment": {
+    "status": "read-corrupt-running",
+    "launcher_pid": 33244,
+    "python_pid": 32632,
+    "main_window_title": "PageFolio",
+    "main_window_handle": 16845424,
+    "responding": true,
+    "stderr_empty": true,
+    "verified_at": "2026-10-23T16:01Z",
+    "note": "通常権限でOS情報を取得。自動画面生成確認であり利用者目視のpassではない。"
+  },
+  "verification_environment_notes": [
+    "診断原本の再hashはsandbox PermissionError後に正規require_escalated経路で423件一致を確認。",
+    "harnessのMainWindowHandleはsandboxで0、通常権限で16845424を確認。画面未生成と誤判定しない。"
+  ]
 }
