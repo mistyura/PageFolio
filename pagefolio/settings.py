@@ -363,6 +363,8 @@ def _save_settings(settings):
         to_save = {k: v for k, v in settings.items() if k not in _SENSITIVE_KEYS}
     else:
         to_save = settings
+    owned_tmp = False
+    tmp_path = None
     try:
         path = _get_settings_path()
         # 02-REVIEW WR-05 修正: write-then-rename で原子的に書き込む。
@@ -373,11 +375,27 @@ def _save_settings(settings):
         # 常に「完全な旧内容」か「完全な新内容」のいずれかのみになる
         # （同一ファイルシステム内であれば os.replace は原子的）。
         tmp_path = path + ".tmp"
-        with open(tmp_path, "w", encoding="utf-8") as f:
+        with open(tmp_path, "x", encoding="utf-8") as f:
+            owned_tmp = True
             json.dump(to_save, f, ensure_ascii=False, indent=2)
         os.replace(tmp_path, path)
+        return True
     except Exception as e:
-        logger.debug("設定ファイル保存失敗: %s", e)
+        logger.debug(
+            "設定ファイル保存失敗: %s errno=%s",
+            type(e).__name__,
+            getattr(e, "errno", None),
+        )
+        if owned_tmp:
+            try:
+                os.unlink(tmp_path)
+            except Exception as cleanup_error:
+                logger.debug(
+                    "設定一時ファイル削除失敗: %s errno=%s",
+                    type(cleanup_error).__name__,
+                    getattr(cleanup_error, "errno", None),
+                )
+        return False
 
 
 def _detect_system_theme():

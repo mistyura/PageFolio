@@ -159,6 +159,7 @@ class PDFEditorApp(
         self._config_load_notice_registered = False
         self._config_notice_after = None
         self._config_displayed_id = None
+        self._settings_exit_save_failed = False
         if self._settings_autosave_blocked:
             self._enqueue_config_notice(f"config_load_{load_result.status}")
         self.font_size = self.settings.get("font_size", 10)
@@ -575,15 +576,35 @@ class PDFEditorApp(
             self._config_displayed_id = None
 
     def _quit(self):
-        self._save_window_state()
+        if self.doc and not messagebox.askyesno(
+            self._t("confirm_title"), self._t("quit_confirm")
+        ):
+            return
+        if not self._save_window_state():
+            self._settings_exit_save_failed = True
+            return
+        self._clear_undo_stacks()
         if self.doc:
-            if messagebox.askyesno(self._t("confirm_title"), self._t("quit_confirm")):
-                self._clear_undo_stacks()  # Blob 解放 + 一時ディレクトリ purge
-                self.doc.close()
-                self.root.destroy()
+            self.doc.close()
+        self.root.destroy()
+
+    def _persist_settings(self, *, explicit=True):
+        """保存結果を通知し、明示保存の成功時だけ読込保護を解除する。"""
+        if not explicit and self._settings_autosave_blocked:
+            return False
+        if self._settings_load_status == "unreadable":
+            self._enqueue_config_notice("config_save_blocked_unreadable")
+            self._schedule_config_notice()
+            return False
+        saved = _save_settings(self.settings)
+        if saved:
+            if explicit:
+                self._settings_autosave_blocked = False
+                self._settings_exit_save_failed = False
         else:
-            self._clear_undo_stacks()
-            self.root.destroy()
+            self._enqueue_config_notice("config_save_failed")
+            self._schedule_config_notice()
+        return saved
 
     def _set_status(self, msg):
         self.status_var.set(msg)
@@ -652,8 +673,8 @@ class PDFEditorApp(
 
     def _save_window_state(self):
         """ウィンドウのジオメトリ・サッシ位置・モードを設定に保存"""
-        if self._settings_autosave_blocked:
-            return
+        if self._settings_autosave_blocked or self._settings_exit_save_failed:
+            return True
         try:
             geom = self.root.geometry()
             if geom and "x" in geom:
@@ -662,7 +683,7 @@ class PDFEditorApp(
             logger.debug("ジオメトリ保存失敗: %s", e)
         self._save_sash_positions()
         self.settings["edit_mode"] = self.edit_mode
-        _save_settings(self.settings)
+        return self._persist_settings(explicit=False)
 
     def _font(self, delta=0, weight=None):
         """テーマ対応フォントタプルを返す"""
@@ -770,9 +791,11 @@ class PDFEditorApp(
         self.lang = new_settings.get("lang", self.lang)
         set_current_font_size(self.font_size)
         _apply_theme(new_settings.get("theme", "dark"))
-        _save_settings(new_settings)
+        saved = self._persist_settings()
         self._rebuild_ui()
-        self._set_status(self._t("status_settings"))
+        if saved:
+            self._set_status(self._t("status_settings"))
+        return saved
 
     def _rebuild_ui(self):
         """テーマ・フォント変更時にUI全体を再構築"""

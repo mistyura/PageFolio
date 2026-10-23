@@ -2,13 +2,144 @@
 
 import json
 import tkinter as tk
+from collections import deque
 from tkinter import ttk
+from types import SimpleNamespace
+from unittest.mock import Mock
 
 import fitz
 import pytest
 
 import pagefolio.plugins as plugins_mod
 import pagefolio.settings as settings_mod
+
+
+@pytest.fixture
+def save_app():
+    from pagefolio.app import PDFEditorApp
+
+    app = PDFEditorApp.__new__(PDFEditorApp)
+    app.settings = {"lang": "ja", "theme": "dark"}
+    app.lang = "ja"
+    app.font_size = 12
+    app._settings_load_status = "ok"
+    app._settings_autosave_blocked = False
+    app._settings_exit_save_failed = False
+    app._config_notices = deque()
+    app._config_notice_seq = 0
+    app._config_load_notice_registered = False
+    app._config_notice_after = None
+    app._config_displayed_id = None
+    app.root = SimpleNamespace(
+        geometry=lambda: "900x700+0+0",
+        destroy=Mock(),
+        after_idle=Mock(return_value="idle"),
+    )
+    app.doc = None
+    app.edit_mode = True
+    app._save_sash_positions = Mock()
+    app._clear_undo_stacks = Mock()
+    app._rebuild_ui = Mock()
+    app._set_status = Mock()
+    return app
+
+
+class TestSaveFlow:
+    @pytest.mark.parametrize("status", ["corrupt", "unreadable"])
+    def test_protected_explicit_save_rules(self, save_app, monkeypatch, status):
+        app = save_app
+        app._settings_load_status = status
+        app._settings_autosave_blocked = True
+        save = Mock(return_value=True)
+        monkeypatch.setattr("pagefolio.app._save_settings", save)
+        assert app._persist_settings(explicit=False) is False
+        assert not app._config_notices
+        assert app._persist_settings() is (status == "corrupt")
+        assert save.call_count == (status == "corrupt")
+        assert app._settings_autosave_blocked is (status == "unreadable")
+        assert len(app._config_notices) == (status == "unreadable")
+
+    def test_apply_failure_keeps_memory_and_original_without_success(
+        self, save_app, isolated_app, monkeypatch
+    ):
+        app = save_app
+        original = b"{corrupt"
+        isolated_app.write_bytes(original)
+        app._settings_load_status = "corrupt"
+        app._settings_autosave_blocked = True
+
+        def fail(*args):
+            raise PermissionError(13, "secret")
+
+        monkeypatch.setattr(settings_mod.os, "replace", fail)
+        values = {"lang": "en", "font_size": 14, "theme": "light"}
+        app._apply_settings(values)
+        assert app.settings == values
+        assert app.lang == "en" and app.font_size == 14
+        assert app._settings_autosave_blocked
+        assert isolated_app.read_bytes() == original
+        assert len(app._config_notices) == 1
+        assert app._config_notices[0]["message_key"] == "config_save_failed"
+        app._set_status.assert_not_called()
+        app._rebuild_ui.assert_called_once()
+
+    def test_explicit_success_clears_protection_and_exit_flag_only(
+        self, save_app, monkeypatch
+    ):
+        app = save_app
+        app._settings_exit_save_failed = True
+        app._settings_autosave_blocked = True
+        app._settings_load_status = "corrupt"
+        app._enqueue_config_notice("config_save_failed")
+        monkeypatch.setattr("pagefolio.app._save_settings", lambda settings: True)
+        assert app._persist_settings() is True
+        assert not app._settings_exit_save_failed
+        assert not app._settings_autosave_blocked
+        assert len(app._config_notices) == 1
+
+
+class TestExitSaveFailure:
+    def test_no_confirmation_never_saves_or_clears_failure(self, save_app, monkeypatch):
+        app = save_app
+        app.doc = Mock()
+        app._settings_exit_save_failed = True
+        save = Mock(return_value=False)
+        monkeypatch.setattr("pagefolio.app._save_settings", save)
+        monkeypatch.setattr("pagefolio.app.messagebox.askyesno", lambda *a: False)
+        app._quit()
+        save.assert_not_called()
+        assert app._settings_exit_save_failed
+        app.root.destroy.assert_not_called()
+
+    @pytest.mark.parametrize("document", [False, True])
+    def test_first_failure_preserves_work_and_second_exit_skips_save(
+        self, save_app, monkeypatch, document
+    ):
+        app = save_app
+        if document:
+            app.doc = Mock()
+        save = Mock(return_value=False)
+        monkeypatch.setattr("pagefolio.app._save_settings", save)
+        monkeypatch.setattr("pagefolio.app.messagebox.askyesno", lambda *a: True)
+        app._quit()
+        assert app._settings_exit_save_failed
+        assert len(app._config_notices) == 1
+        app.root.destroy.assert_not_called()
+        app._clear_undo_stacks.assert_not_called()
+        if document:
+            app.doc.close.assert_not_called()
+        app._quit()
+        save.assert_called_once()
+        app.root.destroy.assert_called_once()
+
+    def test_unreadable_exit_skips_collection_and_does_not_set_failure(self, save_app):
+        app = save_app
+        app._settings_autosave_blocked = True
+        app._settings_load_status = "unreadable"
+        app.root.geometry = Mock(side_effect=AssertionError("must not collect"))
+        assert app._save_window_state() is True
+        assert not app._settings_exit_save_failed
+        assert not app._config_notices
 
 
 @pytest.fixture

@@ -6,8 +6,81 @@
 import json
 import logging
 
+import pytest
+
 from pagefolio.ocr_providers.registry import sensitive_keys
 from pagefolio.settings import _SENSITIVE_KEYS, _load_settings, _save_settings
+
+
+class TestAtomicSettingsWrite:
+    @pytest.mark.parametrize("failure", ["open", "write", "close", "json", "replace"])
+    def test_failure_preserves_original_and_cleans_owned_tmp(
+        self, tmp_path, monkeypatch, caplog, failure
+    ):
+        import builtins
+
+        import pagefolio.settings as mod
+
+        path = tmp_path / "settings.json"
+        original = b'{"original":true}'
+        path.write_bytes(original)
+        monkeypatch.setattr(mod, "_get_settings_path", lambda: str(path))
+
+        def fail(*args, **kwargs):
+            raise OSError(5, "secret-sentinel")
+
+        class BrokenFile:
+            def __enter__(self):
+                self.file = builtins.open(str(path) + ".tmp", "x", encoding="utf-8")
+                return self
+
+            def write(self, text):
+                if failure == "write":
+                    fail()
+                return self.file.write(text)
+
+            def __exit__(self, *args):
+                self.file.close()
+                if failure == "close":
+                    fail()
+
+        if failure == "open":
+            monkeypatch.setattr(mod, "open", fail, raising=False)
+        elif failure in ("write", "close"):
+            monkeypatch.setattr(
+                mod, "open", lambda *a, **kw: BrokenFile(), raising=False
+            )
+        elif failure == "json":
+            monkeypatch.setattr(mod.json, "dump", fail)
+        else:
+            monkeypatch.setattr(mod.os, "replace", fail)
+        with caplog.at_level(logging.DEBUG):
+            assert mod._save_settings({"lang": "en"}) is False
+        assert path.read_bytes() == original
+        assert not path.with_suffix(".json.tmp").exists()
+        assert "secret-sentinel" not in caplog.text
+
+    def test_existing_tmp_is_not_overwritten_or_deleted(self, tmp_path, monkeypatch):
+        import pagefolio.settings as mod
+
+        path = tmp_path / "settings.json"
+        path.write_bytes(b"original")
+        temporary = path.with_suffix(".json.tmp")
+        temporary.write_bytes(b"other-writer")
+        monkeypatch.setattr(mod, "_get_settings_path", lambda: str(path))
+        assert mod._save_settings({"lang": "en"}) is False
+        assert path.read_bytes() == b"original"
+        assert temporary.read_bytes() == b"other-writer"
+
+    def test_success_returns_true_without_mutating_secrets(self, tmp_path, monkeypatch):
+        import pagefolio.settings as mod
+
+        path = tmp_path / "settings.json"
+        monkeypatch.setattr(mod, "_get_settings_path", lambda: str(path))
+        values = {"lang": "en", "api_key": "secret-sentinel"}
+        assert mod._save_settings(values) is True
+        assert values["api_key"] == "secret-sentinel"
+        assert json.loads(path.read_text(encoding="utf-8")) == {"lang": "en"}
 
 
 class TestSensitiveKeysConstant:
