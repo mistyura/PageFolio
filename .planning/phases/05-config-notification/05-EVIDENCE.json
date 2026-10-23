@@ -2,7 +2,7 @@
   "schema_version": 1,
   "phase": "05-config-notification",
   "plan": "05-04",
-  "status": "automated-passed-manual-pending",
+  "status": "automated-passed-manual-passed-independent-validation-pending",
   "tested_base_commit": "8c61ea8",
   "product_changes_in_this_plan": [],
   "runtime": {
@@ -306,29 +306,32 @@
     }
   },
   "isolation_assertions": "各context finallyで実設定・2prompt・pluginsの存在/相対名/hash一致。実plugin load0、初期化例外/終了Noを含む。実ACL変更なし。",
-  "manual_pending": [
-    "H01",
-    "H02",
-    "H03",
-    "H04",
-    "H05",
-    "H06",
-    "H07",
-    "H08",
-    "H09",
-    "H10",
-    "H11",
-    "H12"
-  ],
-  "human_judgment_status": "05-UAT全pending。自動focus結果からpassにしない。",
+  "manual_pending": [],
+  "manual_results": {
+    "source": "05-UAT.md",
+    "observer": "利用者",
+    "date_jst": "2026-10-24",
+    "passed": ["H01", "H02", "H03", "H04", "H05", "H06", "H07", "H08", "H09", "H10", "H11", "H12"],
+    "failed": [],
+    "launcher_pids": [31860, 21536, 31392, 31200, 9288, 23492],
+    "basis": "親エージェントが隔離harnessを起動し、各期待結果への利用者の明示回答を05-UAT.mdへ記録。自動focus結果を人手へ転用していない。",
+    "boundaries": [
+      "H03はread-corruptの約10秒自然消去経路。read-corruptでの✕は未実施、保存通知の✕はH04で確認。",
+      "H06はApply直後に実Settingsを10秒以上保持した目視。通知開始前の厳密な境界は自動試験の別証拠。",
+      "手動launcherのstdout/stderrに終了時hash照合結果の出力はない。全harnessの実終了・原本照合完了をログから推定しない。"
+    ]
+  },
+  "human_judgment_status": "05-UAT H01〜H12は利用者の明示回答により12 pass。独立検証・Nyquist・Phase6 EXE受入は別ゲート。",
   "prohibitions": [
     {
       "id": "descriptor-less-prohibition-1",
-      "status": "flagged-unverified"
+      "status": "flagged-unverified",
+      "evaluation": "H01/H02で文言・入力先・編集継続を利用者確認済み。ただし禁止内容のdescriptorがなく本IDとの対応を確定できないため未解除。"
     },
     {
       "id": "descriptor-less-prohibition-2",
-      "status": "flagged-unverified"
+      "status": "flagged-unverified",
+      "evaluation": "H01/H02/H06/H07で編集継続・通知保持を利用者確認済み。ただし禁止内容のdescriptorがなく本IDとの対応を確定できないため未解除。"
     }
   ],
   "edge_probes": [
@@ -368,12 +371,12 @@
   },
   "threats": {
     "T-05-12": "import/初期化前隔離・限定I/O注入・原本hash一致。局所280/全件1789成功。",
-    "T-05-13": "実command/exit/count/hashと未実施を分離。",
+    "T-05-13": "実command/exit/count/hashと利用者のH01〜H12明示回答を分離。descriptor不明2件と未分類4件は未解除。",
     "T-05-SC": "新規installなし。"
   },
-  "release_status": "出荷不可。人手/独立検証/Nyquist/Phase6受入未完了。",
+  "release_status": "出荷不可。H01〜H12は12 pass。独立検証/Nyquist/Phase6受入未完了、起動3症状は原因未解決。",
   "manual_environment": {
-    "status": "read-corrupt-running",
+    "status": "historical-initial-launch-observation",
     "launcher_pid": 33244,
     "python_pid": 32632,
     "main_window_title": "PageFolio",
@@ -381,7 +384,7 @@
     "responding": true,
     "stderr_empty": true,
     "verified_at": "2026-10-23T16:01Z",
-    "note": "通常権限でOS情報を取得。自動画面生成確認であり利用者目視のpassではない。"
+    "note": "通常権限でOS情報を取得した初回起動時の履歴。現在の生存状態・終了状態ではない。人手結果はmanual_resultsと05-UAT.mdを参照。"
   },
   "verification_environment_notes": [
     "診断原本の再hashはsandbox PermissionError後に正規require_escalated経路で423件一致を確認。",
