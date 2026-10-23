@@ -337,14 +337,14 @@ class TestNotificationLifecycle:
     def test_real_rebuild_restores_same_notice_in_current_language(
         self, isolated_app, monkeypatch
     ):
-        from tkinterdnd2 import TkinterDnD
-
         from pagefolio.app import PDFEditorApp
 
         isolated_app.write_bytes(b"{broken")
         clock = [0.0]
         monkeypatch.setattr("pagefolio.app.time.monotonic", lambda: clock[0])
-        root = TkinterDnD.Tk()
+        # 通知の再構築を検証する。D&D 拡張のロードはこの契約と無関係。
+        monkeypatch.setattr("pagefolio.app._setup_file_drop", lambda _app: None)
+        root = tk.Tk()
         app = None
         try:
             app = PDFEditorApp(root)
