@@ -1,36 +1,36 @@
 ---
 phase: 05-config-notification
-verified: 2026-10-23T17:30:10Z
-status: human_needed
+verified: 2026-10-23T18:14:21Z
+status: passed
 score: 23/23 must-haves verified
 covered_files: [".planning/phases/05-config-notification/05-01-PLAN.md",".planning/phases/05-config-notification/05-01-SUMMARY.md",".planning/phases/05-config-notification/05-02-PLAN.md",".planning/phases/05-config-notification/05-02-SUMMARY.md",".planning/phases/05-config-notification/05-03-PLAN.md",".planning/phases/05-config-notification/05-03-SUMMARY.md",".planning/phases/05-config-notification/05-04-PLAN.md",".planning/phases/05-config-notification/05-04-SUMMARY.md",".planning/phases/05-config-notification/05-EVIDENCE.json",".planning/phases/05-config-notification/05-REVIEW-DISPOSITION.md",".planning/phases/05-config-notification/05-REVIEW.md",".planning/phases/05-config-notification/05-SECURITY.md",".planning/phases/05-config-notification/05-UAT.md",".planning/phases/05-config-notification/05-VALIDATION.md",".planning/phases/05-config-notification/05-focus-proof-final/pytest.txt",".planning/phases/05-config-notification/05-focus-proof-final/status.json",".planning/phases/05-config-notification/05-focus-proof-inputs.json","docs/CONFIGURATION.md","pagefolio.py","pagefolio/__init__.py","pagefolio/__main__.py","pagefolio/app.py","pagefolio/batch_ocr_state.py","pagefolio/constants.py","pagefolio/dialogs/__init__.py","pagefolio/dialogs/about.py","pagefolio/dialogs/batch_ocr.py","pagefolio/dialogs/export_images.py","pagefolio/dialogs/llm_config/__init__.py","pagefolio/dialogs/llm_config/dialog.py","pagefolio/dialogs/llm_config/model_fetch.py","pagefolio/dialogs/llm_config/sections.py","pagefolio/dialogs/merge.py","pagefolio/dialogs/password.py","pagefolio/dialogs/plugin.py","pagefolio/dialogs/settings.py","pagefolio/dialogs/shortcuts.py","pagefolio/dnd.py","pagefolio/file_drop.py","pagefolio/file_ops.py","pagefolio/lang.py","pagefolio/md_render.py","pagefolio/ocr.py","pagefolio/ocr_dialog.py","pagefolio/ocr_engine.py","pagefolio/ocr_fallback.py","pagefolio/ocr_pipeline.py","pagefolio/ocr_providers/__init__.py","pagefolio/ocr_providers/base.py","pagefolio/ocr_providers/catalog.py","pagefolio/ocr_providers/claude.py","pagefolio/ocr_providers/errors.py","pagefolio/ocr_providers/gemini.py","pagefolio/ocr_providers/lmstudio.py","pagefolio/ocr_providers/ollama.py","pagefolio/ocr_providers/openai_provider.py","pagefolio/ocr_providers/registry.py","pagefolio/ocr_providers/runpod.py","pagefolio/ocr_providers/tesseract.py","pagefolio/page_ops.py","pagefolio/pagination.py","pagefolio/plugins.py","pagefolio/print_ops.py","pagefolio/redact_ops.py","pagefolio/settings.py","pagefolio/startup_control.py","pagefolio/startup_focus.py","pagefolio/startup_notice.py","pagefolio/startup_win32.py","pagefolio/themes.py","pagefolio/thumb_cache.py","pagefolio/toast.py","pagefolio/ui_builder.py","pagefolio/undo_store.py","pagefolio/viewer.py","plugins/page_info.py","pyproject.toml","requirements.txt","tests/__init__.py","tests/config_notice_support.py","tests/conftest.py","tests/test_batch_ocr_dialog.py","tests/test_batch_ocr_state.py","tests/test_config_notification.py","tests/test_export_images.py","tests/test_font_hardcode_guard.py","tests/test_gsd_dod.py","tests/test_imports.py","tests/test_lang_parity.py","tests/test_md_render.py","tests/test_ocr.py","tests/test_ocr_dialog_center.py","tests/test_ocr_engine.py","tests/test_ocr_fallback.py","tests/test_ocr_pipeline.py","tests/test_ocr_provider_catalog.py","tests/test_ocr_providers.py","tests/test_page_polish.py","tests/test_pagination.py","tests/test_password.py","tests/test_pdf_ops.py","tests/test_plugin_dialog_wheel.py","tests/test_plugins.py","tests/test_print.py","tests/test_prompt_templates.py","tests/test_provider_ui.py","tests/test_save_overwrite.py","tests/test_selection_invariant.py","tests/test_settings_keyguard.py","tests/test_shortcuts_dialog.py","tests/test_source_keyguard.py","tests/test_startup_control.py","tests/test_startup_focus.py","tests/test_startup_notice.py","tests/test_startup_windows.py","tests/test_thumb_cache.py","tests/test_toast.py","tests/test_undo_stress.py","tests/test_utils.py","tests/test_v150_regression.py","tests/test_viewer.py","開発履歴.md"]
-covered_digest: "v3:sha256:d314220be5aceb8d05bce25ac425a7c25b2e9989bb751dd015a429db5bbf0991"
+covered_digest: "v3:sha256:9e1bedc000056740954b066ac220000aa197aef95a15d9bf4c914029a0178277"
 behavior_unverified: 0
 overrides_applied: 0
-flagged_prohibitions: 2
+flagged_prohibitions: 0
 unclassified_edges: 4
+re_verification:
+  previous_status: human_needed
+  previous_score: 23/23
+  gaps_closed: []
+  gaps_remaining: []
+  regressions: []
 decision_coverage:
   honored: 21
   total: 22
   not_honored: [D-22]
 prohibitions:
   - statement: "設定障害の通知でPDF編集内容まで失われたと誤認させない"
-    status: flagged-unverified
-    verdict: UNCERTAIN
-    classification: WARNING
-    reason: "05-01-PLANの具体的statementは存在するがverification tierと項目別人手resolutionがない。文言・編集継続の既存UATを本項目の明示解決へ読み替えない。"
+    status: resolved
+    verdict: VERIFIED
+    classification: HUMAN_RESOLVED
+    reason: "05-UAT.md Test 1に利用者の項目別passと記録時刻2026-10-23T18:09:21.4084125Zがある。05-01-PLANの具体的statementへの意味評価として解決。"
   - statement: "設定保存失敗を理由に作業中のPDFを捨てる操作や再起動を促さない"
-    status: flagged-unverified
-    verdict: UNCERTAIN
-    classification: WARNING
-    reason: "実文言に該当する勧告は検出しなかったが、05-01-PLANが保留した意味評価について項目別の明示人手resolutionがない。"
-human_verification:
-  - test: "禁止事項1の明示判断: 設定通知がPDF編集内容の喪失を意味すると誤認させないか"
-    expected: "日英の読込破損・読取不能・保存失敗・保護による未保存の4文言について、設定JSONだけを対象としPDFの編集内容喪失を意味しないと利用者が判断する。項目名と判断を記録する。"
-    why_human: "05-01-PLANのjudgment相当の禁止事項。H01/H02等は文言・編集継続の確認だが、この禁止事項ごとの明示解決記録ではない。"
-  - test: "禁止事項2の明示判断: 設定保存失敗時にPDF破棄・再起動を促していないか"
-    expected: "4文言と失敗後の操作案内を、PDF破棄や再起動を促さず編集を続行できる案内として利用者が確認し、項目名と判断を記録する。"
-    why_human: "静的文言と編集継続試験は肯定的な証拠だが、保留された意味評価の明示人手解決は代理できない。"
+    status: resolved
+    verdict: VERIFIED
+    classification: HUMAN_RESOLVED
+    reason: "05-UAT.md Test 2に利用者の項目別passと記録時刻2026-10-23T18:09:21.4084125Zがある。05-01-PLANの具体的statementへの意味評価として解決。"
+human_verification: []
 deferred:
   - truth: "実配布EXE・Python各入口・DPI/UACを含む最終実機受入と版番号/README/開発履歴のリリース同期"
     addressed_in: "Phase 6 / V110-QA-02, V110-QA-03"
@@ -40,13 +40,13 @@ deferred:
 # Phase 5: 設定読込・保存失敗の通知 検証報告
 
 **Phase Goal:** 利用者が設定の読込・保存失敗を正しく把握でき、元の設定ファイルと編集操作を失わない。  
-**Verified:** 2026-10-23T17:30:10Z（2026-10-24 JST）  
-**Status:** human_needed  
-**Re-verification:** No — 初回。既存05-VERIFICATION.mdなし。
+**Verified:** 2026-10-23T18:14:21Z（2026-10-24 JST）
+**Status:** passed
+**Re-verification:** Yes — 2026-10-23T17:30:10Zのhuman_needed報告から、UATによる意味評価2件の解決を差分再検証。
 
-肯定的な実装契約23件は実コード・試験内容・現在入力と一致する生ログで確認した。具体的な実装欠落、STUB、未接続、未対策high脅威は検出していない。一方、PLANの禁止事項2件は項目別の明示人手判断が残るため、契約上の総合判定はhuman_needed。これは設定通知の機能欠落を示すgaps_foundではなく、禁止事項を黙って合格にしないsoft gateである。
+肯定的な実装契約23件と実装gap 0件は前回の独立検証結果を再利用した。今回の差分は、05-UAT.mdに記録された利用者のTest 1・2各passを05-01-PLANの具体的禁止事項2件と照合したこと。実装・依存・検証入力・環境は変わらず、05-VALIDATION.mdの同一入力成功済み検証の再利用契約に従いpytest/GUIを再実行していない。既存の23/23、全件1797 passed/1 warning/exit0、入力103件のSHA256一致を再利用し、項目別判断が済んだため総合判定をpassedとする。
 
-**2 flagged prohibitions — unverified-prohibition — human review recommended.** 内容不明のedge4件も未分類・未解決を維持する。DEP-05/owner_missing/通知前景不一致の原因未解決と出荷不可は解除しない。
+**禁止事項2件は利用者の明示判断で解決、flagged 0件。** 内容不明のedge4件は未分類・未解決を維持する。DEP-05/owner_missing/通知前景不一致の原因未解決と出荷不可は解除しない。
 
 ## Goal Achievement
 
@@ -80,16 +80,16 @@ ROADMAPの4成功基準を先頭に置き、4 PLANの19 truthを具体化とし�
 | 22 | 05-04: 既存PDF保存/印刷retryとDocument同一性を維持 | VERIFIED | T:437の確認非反復、:538/:595/:702/:827の閉鎖/差替え後別docへ書かない回帰、印刷retry。現行fullにTとtest_pdf_opsを含む。設定側カテゴリ待機/成功dismissはC:116。H08はToast注入であり実OS印刷とは区別 |
 | 23 | 05-04: 実測/未実施/未分類を分け、全件とNyquist前にPhase完了としない | VERIFIED | 最新raw status/pytestと103hash一致を独立確認。VALIDATIONはvalidated/compliant/wave0=true、REVIEW clean・disposition3fixed、SECURITY14closed。UATは利用者14passと旧metadata/終了ログ限界を区別。共有PhaseはIn Progressで正式完了を先取りしていない |
 
-**Score:** 23/23肯定truth verified、0 present-but-behavior-unverified。禁止事項2件のUNCERTAINをこの得点で隠さない。既存全件の成功を再利用しており、本verifierがpytestを新規実行したとの主張はしない。
+**Score:** 23/23肯定truth verified、0 present-but-behavior-unverified（前回の独立検証結果を同一入力で再利用）。禁止事項2件は別途UATの項目別passで解決した。本verifierがpytestを新規実行したとの主張はしない。
 
-### Prohibitions — WARNING
+### Prohibitions — 項目別人手判断済み
 
-| 禁止事項（05-01-PLAN frontmatter原文） | 状態 | 根拠と残件 |
+| 禁止事項（05-01-PLAN frontmatter原文） | 状態 | 根拠 |
 |---|---|---|
-| 設定障害の通知でPDF編集内容まで失われたと誤認させない | UNCERTAIN / WARNING | 実文言は設定を明示し、H01/H02は文言とPDF操作を確認済み。ただし項目別の意味判断は記録されていない |
-| 設定保存失敗を理由に作業中のPDFを捨てる操作や再起動を促さない | UNCERTAIN / WARNING | 実文言に破棄/再起動の推奨を検出せず、編集継続試験も成功。保留された人手意味評価の明示解決は未記録 |
+| 設定障害の通知でPDF編集内容まで失われたと誤認させない | VERIFIED / 人手判断済み | 05-UAT.md Test 1、利用者の明示pass、2026-10-23T18:09:21.4084125Z |
+| 設定保存失敗を理由に作業中のPDFを捨てる操作や再起動を促さない | VERIFIED / 人手判断済み | 05-UAT.md Test 2、利用者の明示pass、同時刻 |
 
-PLANには具体的statementがある。PLAN本文・EVIDENCEが「descriptor-less」と呼ぶ旧投影IDにはdescriptor/verification tierがなく、同一性を憶測で確定しない。2件をさらに別の2禁止へ増やすことも、既存H結果でresolvedへ書換えることもしていない。tier未指定からwired test enforcementを捏造せず、judgment相当のfail-closed guardとして明示人手判断へ送る。違反自体を実証したわけではない。
+PLANには具体的statementがあり、今回のTest 1・2はそれぞれ同じ意味の項目を明示している。PLAN本文・EVIDENCEが「descriptor-less」と呼ぶ旧投影IDにはdescriptor/verification tierがなく、その同一性は推測で確定しない。既存H01〜H14を禁止事項のresolutionへ読み替えず、追加の項目別回答だけを使用した。tier未指定からwired test enforcementは捏造しない。
 
 ### Required Artifacts
 
@@ -166,7 +166,7 @@ N/A。scriptsディレクトリとprobe-*.shの宣言はなく、Phaseは設定U
 | V110-CFG-03 | 05-01/02/03/04 | 自動上書き/保存途中破壊を防ぐ | SATISFIED | Truth3/9/11/16/20/21、bytes・tmp・I/O0・正常再読込assert |
 | V110-CFG-04 | 05-01/02/03/04 | 通知連打/再構築消失で編集を阻害しない | SATISFIED | Truth4/13/14/18/21/22、FIFO/世代/可視性/外側grab、H04/H06/H07/H08/H13/H14 |
 
-REQUIREMENTSのPhase5割当は上記4IDのみ、全PLANの和集合と一致しORPHANED=0。機能要件の充足と、禁止事項の明示人手解決・正式完了・出荷の判断は別である。
+REQUIREMENTSのPhase5割当は上記4IDのみ、全PLANの和集合と一致しORPHANED=0。禁止事項の明示人手判断は今回のUATで解決した。Phase検証の合格と出荷判断は別である。
 
 ### Decision Coverage (warning)
 
@@ -196,28 +196,22 @@ T冒頭の既存`pytest.importorskip("tkinter")`はTk未導入時の条件分岐
 | pagefolio/viewer.py | 遅延描画部 | placeholder/空初期状態 | Info | 実renderが後続で埋める既存表示部品。stub不成立 |
 | 05-UI-REVIEW.md | V-01/S-01 | ✕の説明、固定幅320pxの境界 | Advisory | 静的UI推奨で実クリッピング等の欠陥は未実証。Phase6実画面/DPI確認へ残す |
 
-変更実装と要件リンク試験に未参照TBD/FIXME/XXXの債務コメント、空handler、console-only、ダミーデータ固定を検出しなかった。BLOCKER=0。再検証モードではないためconvergence evidence gateによるdowngradeは適用していない。UI推奨のAdvisoryは当該監査の性質を示し、再検証用frontmatter `advisory:` とは別である。
+前回の独立検証では、変更実装と要件リンク試験に未参照TBD/FIXME/XXXの債務コメント、空handler、console-only、ダミーデータ固定を検出しなかった。BLOCKER=0。今回の差分では新たな実装変更や反証を認めず、同一入力の結果を再利用した。UI推奨のAdvisoryは当該監査の性質を示すもので、今回の新規blockerではない。
 
-### Human Verification Required
+### Advisory (New Scope, Unevidenced)
+
+なし。今回の差分再検証で、新たな未証明のStep 7 blockerは見つかっていない。
+
+### 完了した人手判断（履歴）
 
 既存H01〜H12は利用者の2026-10-24明示回答による12pass、修正7bbb06c後H13/H14は別の2pass。修正前/後を区別し、その14件を再要求しない。05-04のdeferred human-checkはこの証拠で満たされている。
 
-1. **禁止事項1の明示判断**  
-   **Test:** 日英4通知文を確認し、「設定障害の通知でPDF編集内容まで失われたと誤認させない」について判断する。  
-   **Expected:** 設定だけの失敗と認識できる旨を項目名とともに記録する。  
-   **Why human:** 文言の意味評価。H01等は有力な証拠だが、項目別の明示resolutionは残っていない。
-
-2. **禁止事項2の明示判断**  
-   **Test:** 日英4通知文と失敗後の案内を確認し、「設定保存失敗を理由に作業中のPDFを捨てる操作や再起動を促さない」について判断する。  
-   **Expected:** PDF破棄/再起動を促さず作業継続できる案内として確認し、項目名と判断を記録する。  
-   **Why human:** コードとUATから推定して保留された禁止事項を代理解決しないため。
-
-この待機の出典は `gsd-core/references` を参照するverifier契約Step2bの「Interactive verify requires explicit human resolution per item」と、05-01-PLANのunresolved禁止事項。人手section非空なのでStep9 Rule2によりhuman_needed。内容不明の旧edge4件だけを理由に新しい製品挙動や修正要求を発明していない。
+前回のhuman_neededを生んだ禁止事項1・2は、05-UAT.md末尾のTest 1・2として項目別に利用者がpassを回答した（両記録時刻2026-10-23T18:09:21.4084125Z）。これにより現在のhuman_verificationは空。旧投影IDと内容不明のedge4件に解決済みの意味を付与しない。
 
 ### Deferred Items / 残存制約
 
 - 実配布EXE・各起動経路・DPI/UAC・Phase4移管UATはROADMAP Phase6 SC4と06-UAT-CARRYOVER。全必須passまでリリース停止。APP_VERSION/README同期はSC5。
-- Phase5の禁止2件をPhase6へ移す明示的ROADMAP根拠は見当たらない。Phase4の禁止3件の移管記録をPhase5へ流用せず、今回のhuman_neededに残した。
+- Phase5の禁止2件は本Phaseの項目別UATで解決した。Phase4の禁止3件の移管記録をPhase5へ流用していない。
 - DEP-05・owner_missing・通知前景不一致は原因未確定。同種再発時は実装/後続実行/commit停止と最初の失敗保存を維持。今回の成功を修復や出荷承認としない。
 - Tcl別thread解放RuntimeWarningは05-03-deferred-items.mdのopenを維持。最新warning1件はPyMuPDF ByteString非推奨であり、未観測を原因解決としない。
 - 手動harness全起動の正常終了・原本hash照合結果はstdout/stderrから確認不能。自動TestScenarioIsolationの原本hash/実plugin load0/例外cleanupの証明と区別する。残存processの強制終了や実設定操作は実施していない。
@@ -225,9 +219,9 @@ T冒頭の既存`pytest.importorskip("tkinter")`はTk未導入時の条件分岐
 
 ### 判定
 
-実装上の具体的な不足を示すgapsは0件、全4要件の肯定的契約は実証済み。総合statusは、明示人手解決を欠く禁止2件による **human_needed**。自動チェックの成功と未解除metadataを混同してpassedへ上書きしない。人手判断後は該当2項目の記録を正本と照合し、他の同一入力検証は必要なく反復しない。
+実装上の具体的な不足を示すgapsは0件、全4要件の肯定的契約23/23は前回の独立検証で実証済み。保留された禁止事項2件は今回の項目別UAT回答で解決し、現在のhuman_verificationは空。よって総合statusは **passed**。旧投影IDとedge4件は内容不明のままであり、この判定によって解決済みとはしない。DEP-05等の停止条件とPhase6の実機受入・出荷停止も維持する。
 
-covered_files/covered_digestは `query verification.fingerprint .planning/phases/05-config-notification <103入力+説明/証拠>` のexit0出力をそのまま転記した（122 covered files、PLAN/SUMMARY自動追加）。手計算hashなし。実装/共有文書の編集・commitは行っていない。
+covered_files/covered_digestは、既存のcovered_files集合を入力した `query verification.fingerprint .planning/phases/05-config-notification <既存covered_files>` のexit0出力をそのまま転記した（122 covered files、PLAN/SUMMARY自動追加）。手計算hashや旧digest流用なし。実装/共有文書の編集・commitは行っていない。
 
 ---
 

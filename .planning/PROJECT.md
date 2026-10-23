@@ -31,7 +31,7 @@ PageFolio の既存コードベースに対する最適化プロジェクト。
 - **配布ビルド改善:** サンプルプロンプトの原本を保持し、再ビルドしても配布物への同梱が再現されるようにする。
 
 **Scope:** 起動時 PDF 引数の受け渡し、最近使ったファイル・閲覧位置の復元、異常終了後の編集復旧、OCR 共通化、技術的負債の一括解消、実 API UAT は今回に含めない。既存候補は保留として保持する。
-**Planning:** [15要件と保証範囲](REQUIREMENTS.md)および[Phase 4〜6 のロードマップ](ROADMAP.md)を2026-10-21にユーザー承認済み。Phase 4は6/6計画・検証21/21で完了し、次はPhase 5の議論・計画。アプリ版番号の更新と README・開発履歴の同期は実装後の Phase 6 リリースゲートで行う。
+**Planning:** [15要件と保証範囲](REQUIREMENTS.md)および[Phase 4〜6 のロードマップ](ROADMAP.md)を2026-10-21にユーザー承認済み。Phase 5は4/4計画・検証23/23・操作受入14件と意味評価2件の合格で2026-10-24に完了し、次はPhase 6の議論・計画。Phase 4の完了履歴は保持するが、現行コードに対する検証報告はstaleのため再検証が必要。アプリ版番号の更新と README・開発履歴の同期はPhase 6リリースゲートで行う。
 **Source:** [申し送り](notes/GSD_HANDOFF_2026-10-21.md)、[調査統合](research/SUMMARY.md)、今回の採用・要件承認回答。名前付きミューテックス等は実装候補であり、採用方式の詳細はフェーズ計画で確定する。
 
 ## Last Milestone: v1.9.0 安全性・整合性の是正 + OpenAI プロバイダ追加 — ✅ Shipped 2026-08-11
@@ -238,6 +238,8 @@ PageFolio の既存コードベースに対する最適化プロジェクト。
 
 ### Validated
 
+- ✓ V110-CFG-01〜04: 設定読込・保存失敗の通知、原本保護、編集継続 — Phase 5（2026-10-24、4/4計画・検証23/23、操作受入14件＋禁止事項の意味評価2件pass）。実EXE受入・未解決回帰原因・出荷停止は維持。
+
 - ✓ V110-START-01〜03・V110-FOCUS-01/02: 起動制御・既存画面復帰の実装と自動受入 — Phase 4（2026-10-22、6/6計画・検証21/21）。最終人手/実EXE受入は承認済みPhase 6へ移管し、リリース条件として保持。
 
 - ✓ Tkinter UI フレームワーク — 既存
@@ -286,7 +288,6 @@ v1.10.0 の採用範囲（要件 ID・受入条件は承認済みの [REQUIREMEN
 
 - [ ] 多重起動防止（同一ログインセッション、別版・別配置・Python/EXE 共通、終了後の再起動）
 - [ ] 既存画面の復元・前面表示と既存作業の保護
-- [ ] 設定読込・保存失敗の利用者通知
 - [ ] サンプルプロンプト原本の保持と配布ビルドの同梱再現性
 
 以下は従来の申し送り。サンプルプロンプト同梱改善のみ今回の採用範囲とし、その他は保留する（要件化はまだされていない）:
@@ -361,6 +362,12 @@ PageFolio は `branching_strategy: "none"` / `quick_branch_template: null` の�
 参照: [../tests/test_gsd_dod.py](../tests/test_gsd_dod.py) / [quick/260812-and-dod/260812-and-SUMMARY.md](quick/260812-and-dod/260812-and-SUMMARY.md)
 
 ## Key Decisions
+
+Phase 5で確認した決定（2026-10-24）:
+
+- 読込失敗時は原本保護と編集継続を優先し、固定文言の非モーダル通知で案内する。
+- 失敗通知はFIFOで保持し、モーダル・再構築・非表示中にも未消化イベントを失わない。
+- PDF編集内容の喪失との誤認、PDF破棄・再起動の勧告を避ける2件の意味評価を、利用者の項目別passで確認した。実機受入と原因未確定の回帰問題は出荷条件として残す。
 
 Phase 4（2026-10-22）: 起動判定backendの構築失敗は通知専用backendへ接続し、起動所有権を再試行しない。部分初期化の資源は取得直後に登録して逆順解放する。CR-01は独立レビューで解消を確認し、人手W項目とWR-01の実測はPhase 6へ保持する。
 
@@ -522,4 +529,4 @@ Phase 4（2026-10-22）: 起動判定backendの構築失敗は通知専用backen
 ---
 *Previous update: 2026-08-12 quick 260812-and — `## フェーズ完了 DoD` 節を `## ブランチ運用` の直後に新設し、機械ゲート `tests/test_gsd_dod.py`（6 テスト）を追加。適用範囲は v1.9.0 以降で、v1.9.0 未満の除外集合はテストが実ディレクトリと突き合わせて固定する。loto 実装は前提（ROADMAP の Phase 列 / フェーズ番号の連番性 / PyYAML）が PageFolio で成立しないため走査の入口をディレクトリ列挙へ差し替えた。3 プロジェクト比較の差分 #1〜#5 がこれで全て完了。前回更新: 2026-08-12 quick 260812-a8u — `## Constraints` 節を `## Context` の直後に新設（9 項目・正本は CLAUDE.md でその要約）。260812-9tv で暫定的に `## Context` 表へ置いていたブランチ運用ポインタを Constraints 末尾へ移設し、loto/numbers と同型（末尾がブランチ運用ポインタ）にした。CLAUDE.md・`pagefolio/` ソースは無変更。前回更新: 2026-08-12 quick 260812-9tv — ブランチ運用を姉妹プロジェクト（numbers `feature/v0.18.0` が原典・loto `main` が踏襲）と統一。`.planning/config.json` の `git` セクション 3 キー（`branching_strategy` = `milestone` / `milestone_branch_template` = `feature/{milestone}` / `quick_branch_template` = `quick/{num}-{slug}`）を 3 プロジェクト同値へ更新し、`## ブランチ運用` 節（5 部構成）を `## Key Decisions` の直前に新設、`## Context` 表へ入口 1 行を追加。発効は v1.10.0 以降。`git` 以外の config セクション・`pagefolio/` ソースは無変更。前回更新: 2026-08-11 after v1.9.0 milestone — マイルストーンクローズに伴う全項目の進化レビュー実施。v1.9.0 を Current State へ昇格し v1.8.0 以前を `<details>` へ格納、Context のテスト件数を実測 1404 件へ同期しリリースゲート行を追加、Active を空にして次マイルストーン候補（技術的負債 10 件・未実施 UAT 2 項目ほか）を Next Milestone Goals へ整理。Core Value・Out of Scope は再確認のうえ変更なし。前回更新: 2026-08-11 Phase 3 UAT 完了。*
 
-*Last updated: 2026-10-22 — Phase 4正式完了（6/6計画・検証21/21）、Phase 5計画前。最終実機受入はPhase 6で維持。*
+*Last updated: 2026-10-24 — Phase 5正式完了（4/4計画・検証23/23・人手16件pass）、Phase 6計画前。Phase 4のstale再検証と最終実機受入・出荷停止を維持。*

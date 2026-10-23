@@ -115,7 +115,7 @@ Phase 1 は 01-06 / 01-07 の 2 回のギャップ是正を経て passed。Phase
 **Milestone Goal:** 同一 Windows ログインセッションでの多重起動による作業の分散を防ぎ、既存画面への復帰、設定失敗の把握、サンプル配布の再現性を実現する。
 
 - [x] **Phase 4: 起動制御と既存画面への復帰** - 対応版同士の起動を1画面に制限し、2回目の起動操作から作業中の画面へ戻れる。 (completed 2026-10-22)
-- [ ] **Phase 5: 設定読込・保存失敗の通知** - 設定エラーを把握でき、元の設定と編集操作が守られる。
+- [x] **Phase 5: 設定読込・保存失敗の通知** - 設定エラーを把握でき、元の設定と編集操作が守られる。 (completed 2026-10-24)
 - [ ] **Phase 6: サンプル配布とリリース検証** - 2サンプルを再現可能に同梱し、実配布 EXE を含む受入と版情報の整合を確認できる。
 
 各機能フェーズは障害注入・回帰と必要な検証を完了条件に含む。2026-10-22承認によりPhase 4の未実施人手受入はPhase 6のV110-QA-02へ移管する。Phase 4は自動受入・A1〜A5・証拠照合を必須とし、最終実機受入が揃うまでリリースしない。各フェーズ完了前に `/gsd-validate-phase <番号>` を実行し、対応する `NN-VALIDATION.md` を `status: validated` にする。
@@ -171,10 +171,10 @@ Plans:
   3. 読込失敗後の自動処理や保存途中の失敗で、既存設定ファイルが無断で上書き・破壊されない。
   4. 同じ設定エラーが続いても通知が集約され、ダイアログの連打や画面再構築による通知消失で編集を妨げられない。
 
-**Plans**: 4/4 plans executed
+**Plans**: 4/4 plans complete
 **UI hint**: yes
 
-**実行依存**: `DEP-05-REGRESSION`は未充足・原因未確定のまま。2026-10-23の利用者判断により、診断commit `9384268`を採用してPhase 5へ進むことを条件付き承認済み。実装前の診断版単一全件は1637 passed / 1 warning / 263.66秒 / exit 0で対象hash一致。05-01実装後の単一全件は1660 passed / 1 warning / 234.19秒 / exit 0。どちらの成功も原因修復や依存解除とは扱わない。後続の単一全件ゲートで同種失敗が再発したら実装・後続実行・コミットを停止し、最初の失敗出力とresult.json/traceback.log・poll/reader/process診断を保持して `$gsd-debug continue dep-05-regression` で再開する。独立修復`8689c27`の成功とレビュー時1 failed/1634 passedは履歴として保持。05-01〜04は実装済み。最終1797 passed / 1 warning / 266.81秒、独立レビューclean・Nyquist validated・Security14 closed・人手14 pass。最終検証はhuman_neededで、通知の意味に関する禁止事項2件の項目別判断を05-UAT末尾へ記録して正式完了を保留。owner_missing・通知前景不一致も原因未確定で、条件付き実装承認と再発時停止を維持する。詳細は `debug/dep-05-regression.md`、`05-VALIDATION.md`、`05-01-SUMMARY.md`。
+**実行依存**: `DEP-05-REGRESSION`は未充足・原因未確定のまま。2026-10-23の利用者判断により、診断commit `9384268`を採用してPhase 5へ進むことを条件付き承認済み。実装前の診断版単一全件は1637 passed / 1 warning / 263.66秒 / exit 0で対象hash一致。05-01実装後の単一全件は1660 passed / 1 warning / 234.19秒 / exit 0。どちらの成功も原因修復や依存解除とは扱わない。後続の単一全件ゲートで同種失敗が再発したら実装・後続実行・コミットを停止し、最初の失敗出力とresult.json/traceback.log・poll/reader/process診断を保持して `$gsd-debug continue dep-05-regression` で再開する。独立修復`8689c27`の成功とレビュー時1 failed/1634 passedは履歴として保持。05-01〜04は実装済み。最終1797 passed / 1 warning / 266.81秒、独立レビューclean・Nyquist validated・Security14 closed・人手14 pass。2026-10-24の利用者による意味評価2件の項目別passを05-UATへ記録し、最終検証passed（23/23）・人手計16 passとして正式完了。Phase 4報告のstale再検証とPhase 6実EXE受入は後続に残す。owner_missing・通知前景不一致も原因未確定で、条件付き実装承認と再発時停止を維持する。詳細は `debug/dep-05-regression.md`、`05-VALIDATION.md`、`05-01-SUMMARY.md`。
 
 Plans:
 **Wave 1**
@@ -218,7 +218,7 @@ Plans:
 | v1.7.1 現機能ブラッシュアップ + APIキー入力欄 | 4 | 16 | ✅ Complete | 2026-07-05 |
 | v1.8.0 実用性の最大化・エコシステム洗練・堅牢性強化 | 6 | 22 | ✅ Complete | 2026-07-16 |
 | v1.9.0 安全性・整合性の是正 + OpenAI プロバイダ追加 | 3 | 15 | ✅ Complete | 2026-08-11 |
-| v1.10.0 多重起動防止・起動操作の改善 | 3 | 10（Phase 4/5確定、Phase 6はTBD） | Phase 4完了・Phase 5計画検証合格、依存未解除・再発時停止の条件付き実行承認 | — |
+| v1.10.0 多重起動防止・起動操作の改善 | 3 | 10（Phase 4/5確定、Phase 6はTBD） | Phase 5完了・Phase 6計画前。Phase 4報告stale・回帰原因未解決・出荷停止を維持 | — |
 
 各マイルストーンのフェーズ単位の内訳は上記 `<details>` ブロックおよび各アーカイブ
 （`milestones/*-ROADMAP.md`）を参照。
@@ -226,5 +226,5 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 4. 起動制御と既存画面への復帰 | 6/6 | Complete | 2026-10-22 |
-| 5. 設定読込・保存失敗の通知 | 4/4 | In Progress | — |
+| 5. 設定読込・保存失敗の通知 | 4/4 | Complete | 2026-10-24 |
 | 6. サンプル配布とリリース検証 | 0/TBD | Not started | — |
