@@ -1,15 +1,15 @@
 ---
 phase: "05"
 slug: "config-notification"
-status: draft
-nyquist_compliant: false
-wave_0_complete: false
+status: validated
+nyquist_compliant: true
+wave_0_complete: true
 created: "2026-10-22"
 ---
 
 # Phase 5 — Validation Strategy
 
-設定読込・保存失敗の通知と原本保護の検証契約。05-01〜04の自動実測と2026-10-24 JSTの利用者によるH01〜H12の12 passを下記へ同期した。独立Nyquist実走前のためdraft/nyquist_compliant=false/wave_0_complete=falseを維持する。実測正本は[05-EVIDENCE.json](05-EVIDENCE.json)、人手は[05-UAT.md](05-UAT.md)。独立検証・Nyquist実走前にPhase正式完了としない。
+設定読込・保存失敗の通知と原本保護の検証契約。05-01〜04の自動実測と2026-10-24 JSTの利用者によるH01〜H12の12 passを下記へ同期した。独立Nyquist監査で4/4要件COVERED・9/9タスク自動検証・具体的な試験ギャップ0、現行入力103件のSHA256一致を確認した。実測正本は[05-EVIDENCE.json](05-EVIDENCE.json)、人手は[05-UAT.md](05-UAT.md)。外部依存と内容不明のプローブの未解除は維持し、Phase正式完了は後続の独立検証で判定する。
 
 ## Test Infrastructure
 
@@ -84,13 +84,13 @@ T-05-SC は各PLAN共通の導入ゲートであり、本計画に新規パッ�
 
 上の実測表と05-EVIDENCEが自動実行値の正本。人手は05-UATの利用者回答を正本とし、H03の約10秒自然消去とH04の✕、H06のApply直後のモーダル保持を区別する。通知開始前の厳密な境界は自動証拠。独立検証・Nyquist・Phase 6 EXE受入は未実施のまま。
 
-### Wave 0監査待ち項目（元のチェック状態を維持）
+### Wave 0監査項目（2026-10-24独立監査済み）
 
-- [ ] `tests/test_config_notification.py` — 05-01-01 の先頭tracerで作成し、その後の各タスクが上表のクラスを追加する。テストだけの独立した基盤waveは設けない。
-- [ ] `tests/test_settings_keyguard.py` — 05-01-02/05-02-01で読込境界・AtomicSettingsWriteを拡張する。
-- [ ] `tests/test_toast.py` — 05-02-02で再試行なし/自動消去/競合を追加し、既存PDF保存/印刷の再試行動作も維持する。
-- [ ] `tests/config_notice_support.py`・`05-NOTICE-HARNESS.py`・`TestScenarioIsolation` — 05-04-01で作成し、恒久pytestはtests内helperだけをimportする。隔離検証後に人手確認へ使う。
-- [ ] `tests/test_provider_ui.py`・`tests/test_ocr.py`・`tests/test_pagination.py` — 05-03-02/03で実App保存owner経由へ既存spy/stubを移行し、保存一回と状態更新のassertを維持する。
+- [x] `tests/test_config_notification.py` — 05-01-01 の先頭tracerで作成し、その後の各タスクが上表のクラスを追加した。テストだけの独立した基盤waveは設けない。
+- [x] `tests/test_settings_keyguard.py` — 05-01-02/05-02-01で読込境界・AtomicSettingsWriteを拡張した。
+- [x] `tests/test_toast.py` — 05-02-02で再試行なし/自動消去/競合を追加し、既存PDF保存/印刷の再試行動作も維持した。
+- [x] `tests/config_notice_support.py`・`05-NOTICE-HARNESS.py`・`TestScenarioIsolation` — 05-04-01で作成し、恒久pytestはtests内helperだけをimportする。隔離自動検証と人手12項目を実施した。
+- [x] `tests/test_provider_ui.py`・`tests/test_ocr.py`・`tests/test_pagination.py` — 05-03-02/03で実App保存owner経由へ既存spy/stubを移行し、保存一回と状態更新のassertを維持した。
 - [x] Tcl/Tkの実行経路は制限外 `.venv`・専用basetempとする。05-PLANNING-CHECKS.mdのToast 33 passedおよび全件ERROR 0が根拠。sandboxのTclError原因解明・全件合格とは区別する。
 - [ ] `DEP-05-REGRESSION` — 診断版の全件は1637 passedだが、元の終了待ち失敗は未再現・原因未確定で未解除。2026-10-23利用者判断により診断採用・再発時停止の条件で実行する。チェックを完了に変えない。
 - 新規テストフレームワーク・パッケージの導入は不要。
@@ -111,11 +111,19 @@ SPECなしの edge-probe は V110-CFG-01/02/03/04 全4行が `unclassified` / `u
 
 ## Validation Sign-Off
 
-- [ ] 全タスクに automated verify または Wave 0 作成依存がある
-- [ ] 自動検証なしのタスクが3つ連続しない
-- [ ] Wave 0 が未作成の参照を被覆する
-- [ ] watch-mode を使用しない
-- [ ] 局所フィードバック60秒目標と全件実測を記録する
-- [ ] 実装後に確認してから `nyquist_compliant: true` にする
+- [x] 全タスクに automated verify または Wave 0 作成依存がある
+- [x] 自動検証なしのタスクが3つ連続しない
+- [x] Wave 0 が未作成の参照を被覆する
+- [x] watch-mode を使用しない
+- [x] 局所フィードバック60秒目標と全件実測を記録する
+- [x] 実装後に確認してから `nyquist_compliant: true` にする
 
-**Approval:** pending
+**Approval:** validated 2026-10-24（独立監査、4要件・9タスク、追加ギャップ0）
+
+## Validation Audit 2026-10-23
+
+| Metric | Count |
+|---|---|
+| Gaps found | 0 |
+| Resolved | 0 |
+| Escalated | 0 |
