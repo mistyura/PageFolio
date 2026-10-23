@@ -1,0 +1,11 @@
+{
+  "ready": false,
+  "observations": [
+    {
+      "monotonic": 11147.8346801,
+      "hwnd": 199190,
+      "pid": 30308,
+      "class": "CASCADIA_HOSTING_WINDOW_CLASS"
+    }
+  ]
+}

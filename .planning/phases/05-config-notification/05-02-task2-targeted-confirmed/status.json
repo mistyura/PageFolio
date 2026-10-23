@@ -1,0 +1,18 @@
+{
+  "state": "passed",
+  "command": [
+    "C:\\Users\\shdwf\\work\\project\\PageFolio\\.venv\\Scripts\\python.exe",
+    "-m",
+    "pytest",
+    "tests/test_config_notification.py",
+    "tests/test_toast.py",
+    "tests/test_settings_keyguard.py",
+    "-x",
+    "-q",
+    "--tb=short",
+    "--basetemp=C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0502_task2_targeted_confirmed"
+  ],
+  "exit_code": 0,
+  "seconds": 4.942559099999926,
+  "artifacts": 0
+}

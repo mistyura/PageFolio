@@ -1,0 +1,17 @@
+{
+  "ready": true,
+  "observations": [
+    {
+      "monotonic": 10934.2949554,
+      "hwnd": 199190,
+      "pid": 30308,
+      "class": "CASCADIA_HOSTING_WINDOW_CLASS"
+    },
+    {
+      "monotonic": 10940.1223534,
+      "hwnd": 6622722,
+      "pid": 12996,
+      "class": "Chrome_WidgetWin_1"
+    }
+  ]
+}

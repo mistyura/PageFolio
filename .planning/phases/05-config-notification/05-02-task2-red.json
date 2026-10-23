@@ -1,0 +1,13 @@
+{
+    "reportModifiedAt":  "2026-10-23T14:10:46.2116404Z",
+    "targetTest":  "test_interruption_preserves_remaining_time[save_file]",
+    "expected":  "remaining_ms = 6000 after 4000ms visible before replacement",
+    "command":  ".venv/Scripts/python.exe -m pytest -q tests/test_config_notification.py::TestNotificationLifecycle::test_interruption_preserves_remaining_time[save_file] --tb=short --junitxml=.planning/phases/05-config-notification/05-02-task2-red.xml",
+    "actual":  "remaining_ms = 10000",
+    "output":  "\u003c?xml version=\"1.0\" encoding=\"utf-8\"?\u003e\u003ctestsuites name=\"pytest tests\"\u003e\u003ctestsuite name=\"pytest\" errors=\"0\" failures=\"1\" skipped=\"0\" tests=\"1\" time=\"0.439\" timestamp=\"2026-10-23T23:10:45.721771+09:00\" hostname=\"nullaze-z240\"\u003e\u003ctestcase classname=\"tests.test_config_notification.TestNotificationLifecycle\" name=\"test_interruption_preserves_remaining_time[save_file]\" time=\"0.107\"\u003e\u003cfailure message=\"assert 10000 == 6000\"\u003etests\\test_config_notification.py:121: in test_interruption_preserves_remaining_time\r\n    assert app._config_notices[0][\"remaining_ms\"] == 6000\r\nE   assert 10000 == 6000\u003c/failure\u003e\u003c/testcase\u003e\u003c/testsuite\u003e\u003c/testsuites\u003e",
+    "reportPath":  "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\phases\\05-config-notification\\05-02-task2-red.xml",
+    "runStartedAt":  "2026-10-23T23:10:45.721771+09:00",
+    "exitCode":  1,
+    "semanticAssessment":  "対象が実行され、置換時に可視経過を差し引かない予定assertionで失敗。fixture/collection障害なし。",
+    "targetFile":  "tests/test_config_notification.py"
+}

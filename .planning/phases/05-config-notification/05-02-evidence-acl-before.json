@@ -1,0 +1,18 @@
+﻿[
+    {
+        "Path":  "C:\\Users\\shdwf\\work\\project\\PageFolio\\pf_owner_missing_entry_audit_20261023",
+        "Sddl":  "O:S-1-5-21-3981194367-4234006448-940056512-1003G:S-1-5-21-3981194367-4234006448-940056512-513D:P(A;OICI;FA;;;OW)(A;OICI;FA;;;SY)(A;OICI;FA;;;BA)"
+    },
+    {
+        "Path":  "C:\\Users\\shdwf\\work\\project\\PageFolio\\pf_owner_missing_entry_audit_20261023\\test_simultaneous_exit_audit_d0",
+        "Sddl":  "O:S-1-5-21-3981194367-4234006448-940056512-1003G:S-1-5-21-3981194367-4234006448-940056512-513D:P(A;OICI;FA;;;OW)(A;OICI;FA;;;SY)(A;OICI;FA;;;BA)"
+    },
+    {
+        "Path":  "C:\\Users\\shdwf\\work\\project\\PageFolio\\pf_owner_missing_entry_audit_20261023\\test_simultaneous_exit_audit_d1",
+        "Sddl":  "O:S-1-5-21-3981194367-4234006448-940056512-1003G:S-1-5-21-3981194367-4234006448-940056512-513D:P(A;OICI;FA;;;OW)(A;OICI;FA;;;SY)(A;OICI;FA;;;BA)"
+    },
+    {
+        "Path":  "C:\\Users\\shdwf\\work\\project\\PageFolio\\pf_owner_missing_entry_audit_20261023\\test_simultaneous_exit_audit_d2",
+        "Sddl":  "O:S-1-5-21-3981194367-4234006448-940056512-1003G:S-1-5-21-3981194367-4234006448-940056512-513D:P(A;OICI;FA;;;OW)(A;OICI;FA;;;SY)(A;OICI;FA;;;BA)"
+    }
+]
