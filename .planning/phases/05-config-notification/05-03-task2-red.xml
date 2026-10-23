@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="1" time="0.306" timestamp="2026-10-23T23:59:58.617884+09:00" hostname="nullaze-z240"><testcase classname="tests.test_config_notification.TestLlmSaveOrigins" name="test_nested_apply_saves_once_without_general_settings" time="0.060"><failure message="AssertionError: assert 2 == 1&#10; +  where 2 = &lt;Mock id='1532558413504'&gt;.call_count">self = &lt;tests.test_config_notification.TestLlmSaveOrigins object at 0x00000164D3D0B890&gt;
+save_app = &lt;pagefolio.app.PDFEditorApp object at 0x00000164D3998050&gt;
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x00000164D3D7ED70&gt;
+
+    def test_nested_apply_saves_once_without_general_settings(self, save_app, monkeypatch):
+        save = Mock(return_value=True)
+        monkeypatch.setattr("pagefolio.app._save_settings", save)
+        monkeypatch.setattr(settings_mod, "_save_settings", save)
+        dialog, apply = self._nested(save_app, monkeypatch)
+        apply({"ocr_provider": "off"})
+&gt;       assert save.call_count == 1
+E       AssertionError: assert 2 == 1
+E        +  where 2 = &lt;Mock id='1532558413504'&gt;.call_count
+
+tests\test_config_notification.py:486: AssertionError</failure></testcase></testsuite></testsuites>

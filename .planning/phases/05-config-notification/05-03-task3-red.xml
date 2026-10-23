@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="1" time="0.348" timestamp="2026-10-24T00:29:07.734227+09:00" hostname="nullaze-z240"><testcase classname="tests.test_config_notification.TestToolSaveOrigins" name="test_handler_preserves_memory_and_protection[mosaic-False-ok]" time="0.068"><failure message="assert 0 == ((not False))&#10; +  where 0 = len(deque([]))&#10; +    where deque([]) = &lt;pagefolio.app.PDFEditorApp object at 0x00000236CF333B60&gt;._config_notices">self = &lt;tests.test_config_notification.TestToolSaveOrigins object at 0x00000236CF515C70&gt;
+save_app = &lt;pagefolio.app.PDFEditorApp object at 0x00000236CF333B60&gt;
+isolated_app = WindowsPath('C:/Users/shdwf/AppData/Local/Temp/pf_0503_task3_red/test_handler_preserves_memory_0/pagefolio_settings.json')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x00000236CF32F230&gt;
+status = 'ok', saved = False, origin = 'mosaic'
+
+    @pytest.mark.parametrize("status", ["ok", "corrupt", "unreadable"])
+    @pytest.mark.parametrize("saved", [True, False])
+    @pytest.mark.parametrize("origin", ["shortcuts", "mosaic", "zoom", "page_size"])
+    def test_handler_preserves_memory_and_protection(
+        self, save_app, isolated_app, monkeypatch, status, saved, origin
+    ):
+        from pagefolio.dialogs.shortcuts import ShortcutsDialog
+    
+        app = save_app
+        original = b"{protected-original"
+        isolated_app.write_bytes(original)
+        app._settings_load_status = status
+        app._settings_autosave_blocked = status != "ok"
+        app._refresh_all = Mock()
+        app._invalidate_thumb_cache = Mock()
+        app._bind_shortcuts = Mock()
+        app.selected_pages = {3, 25}
+        save = Mock(wraps=settings_mod._save_settings)
+        monkeypatch.setattr("pagefolio.app._save_settings", save)
+        monkeypatch.setattr(settings_mod, "_save_settings", save)
+        if not saved:
+            monkeypatch.setattr(settings_mod.os, "replace", Mock(side_effect=PermissionError("private")))
+        if origin == "shortcuts":
+            app._default_shortcuts = {"quit": "&lt;F1&gt;"}
+            dialog = SimpleNamespace(_app=app, _capturing_cmd=None,
+                                     _shortcuts={"quit": "&lt;F2&gt;"}, destroy=Mock())
+            ShortcutsDialog._on_save(dialog)
+            assert app.settings["shortcuts"] == {"quit": "&lt;F2&gt;"}
+            app._bind_shortcuts.assert_called_once()
+            dialog.destroy.assert_called_once()
+        elif origin == "mosaic":
+            app.mosaic_block_var = SimpleNamespace(get=lambda: 16)
+            app._on_mosaic_block_release()
+            assert app.settings["mosaic_block"] == 16
+        elif origin == "zoom":
+            app.thumb_zoom_var = SimpleNamespace(get=lambda: 1.7)
+            app._on_thumb_zoom_release()
+            assert app.settings["thumb_zoom"] == 1.7
+            app._invalidate_thumb_cache.assert_called_once()
+            app._refresh_all.assert_called_once()
+        else:
+            app.page_size_var = SimpleNamespace(get=lambda: 30)
+            app.current_page = 25
+            app._on_page_size_change()
+            assert app.settings["thumb_page_size"] == app._page_size == 30
+            assert app._page_window_start == 0
+            app._refresh_all.assert_called_once()
+            app._invalidate_thumb_cache.assert_not_called()
+        assert app.selected_pages == {3, 25}
+        assert save.call_count == (status != "unreadable")
+&gt;       assert len(app._config_notices) == (not saved or status == "unreadable")
+E       assert 0 == ((not False))
+E        +  where 0 = len(deque([]))
+E        +    where deque([]) = &lt;pagefolio.app.PDFEditorApp object at 0x00000236CF333B60&gt;._config_notices
+
+tests\test_config_notification.py:800: AssertionError</failure></testcase></testsuite></testsuites>

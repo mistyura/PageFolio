@@ -1,0 +1,29 @@
+{
+  "ready": true,
+  "observations": [
+    {
+      "monotonic": 14813.1446263,
+      "hwnd": 134248,
+      "pid": 27368,
+      "class": "Chrome_WidgetWin_1"
+    },
+    {
+      "monotonic": 14814.0497628,
+      "hwnd": 7016030,
+      "pid": 30980,
+      "class": "TChildForm"
+    },
+    {
+      "monotonic": 14815.6574481,
+      "hwnd": 199190,
+      "pid": 30308,
+      "class": "CASCADIA_HOSTING_WINDOW_CLASS"
+    },
+    {
+      "monotonic": 14817.9705052,
+      "hwnd": 7016030,
+      "pid": 30980,
+      "class": "TChildForm"
+    }
+  ]
+}

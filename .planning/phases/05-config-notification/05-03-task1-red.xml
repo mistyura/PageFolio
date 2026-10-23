@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="1" time="0.275" timestamp="2026-10-23T23:42:41.873279+09:00" hostname="nullaze-z240"><testcase classname="tests.test_config_notification.TestAppSaveOrigins" name="test_failure_keeps_applied_memory_and_one_event[language-ok]" time="0.052"><failure message="assert 0 == 1&#10; +  where 0 = len(deque([]))&#10; +    where deque([]) = &lt;pagefolio.app.PDFEditorApp object at 0x000001F7E60CB8C0&gt;._config_notices">self = &lt;tests.test_config_notification.TestAppSaveOrigins object at 0x000001F7E605F4D0&gt;
+save_app = &lt;pagefolio.app.PDFEditorApp object at 0x000001F7E60CB8C0&gt;
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x000001F7E62D2EA0&gt;
+status = 'ok', origin = 'language'
+
+    @pytest.mark.parametrize("status", ["ok", "corrupt", "unreadable"])
+    @pytest.mark.parametrize("origin", ["language", "llm", "plugin"])
+    def test_failure_keeps_applied_memory_and_one_event(
+        self, save_app, monkeypatch, status, origin
+    ):
+        from pagefolio.dialogs.plugin import PluginDialog
+    
+        app = save_app
+        app._settings_load_status = status
+        app._settings_autosave_blocked = status != "ok"
+        app._update_ocr_buttons_state = Mock()
+        app._build_plugin_ui = Mock()
+        app.plugin_manager = Mock()
+        app.plugin_manager.get_disabled_ids.return_value = ["example"]
+        save = Mock(return_value=False)
+        monkeypatch.setattr("pagefolio.app._save_settings", save)
+        if origin == "language":
+            app._toggle_lang()
+            assert app.settings["lang"] == app.lang == "en"
+            app._rebuild_ui.assert_called_once()
+        elif origin == "llm":
+            assert app._apply_llm_settings_live({"ocr_provider": "off"}) is False
+            assert app.settings["ocr_provider"] == "off"
+            app._update_ocr_buttons_state.assert_called_once()
+        else:
+            dialog = SimpleNamespace(
+                app=app, pm=app.plugin_manager,
+                _check_vars={"example": SimpleNamespace(get=lambda: False)},
+                destroy=Mock(),
+            )
+            PluginDialog._toggle(dialog, "example")
+            PluginDialog._close(dialog)
+            assert app.settings["disabled_plugins"] == ["example"]
+            app.plugin_manager.disable_plugin.assert_called_once_with("example", app)
+            app._build_plugin_ui.assert_called_once()
+            dialog.destroy.assert_called_once()
+        assert save.call_count == (status != "unreadable")
+&gt;       assert len(app._config_notices) == 1
+E       assert 0 == 1
+E        +  where 0 = len(deque([]))
+E        +    where deque([]) = &lt;pagefolio.app.PDFEditorApp object at 0x000001F7E60CB8C0&gt;._config_notices
+
+tests\test_config_notification.py:316: AssertionError</failure></testcase></testsuite></testsuites>

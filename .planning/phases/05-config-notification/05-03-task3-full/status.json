@@ -1,0 +1,15 @@
+{
+  "state": "passed",
+  "command": [
+    "C:\\Users\\shdwf\\work\\project\\PageFolio\\.venv\\Scripts\\python.exe",
+    "-m",
+    "pytest",
+    "-x",
+    "-q",
+    "--tb=short",
+    "--basetemp=C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0503_task3_full"
+  ],
+  "exit_code": 0,
+  "seconds": 276.90626000000157,
+  "artifacts": 423
+}

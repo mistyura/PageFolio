@@ -1,0 +1,16 @@
+{
+  "state": "passed",
+  "command": [
+    "C:\\Users\\shdwf\\work\\project\\PageFolio\\.venv\\Scripts\\python.exe",
+    "-m",
+    "pytest",
+    "tests/test_config_notification.py::TestAppSaveOrigins",
+    "-x",
+    "-q",
+    "--tb=short",
+    "--basetemp=C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0503_task1_targeted_confirmed"
+  ],
+  "exit_code": 0,
+  "seconds": 3.4029343000001973,
+  "artifacts": 0
+}

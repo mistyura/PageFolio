@@ -1,0 +1,17 @@
+{
+  "ready": true,
+  "observations": [
+    {
+      "monotonic": 12971.5894394,
+      "hwnd": 199190,
+      "pid": 30308,
+      "class": "CASCADIA_HOSTING_WINDOW_CLASS"
+    },
+    {
+      "monotonic": 12972.2922876,
+      "hwnd": 7016030,
+      "pid": 30980,
+      "class": "TChildForm"
+    }
+  ]
+}

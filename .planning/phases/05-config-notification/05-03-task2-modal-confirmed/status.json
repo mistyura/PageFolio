@@ -1,0 +1,16 @@
+{
+  "state": "failed",
+  "command": [
+    "C:\\Users\\shdwf\\work\\project\\PageFolio\\.venv\\Scripts\\python.exe",
+    "-m",
+    "pytest",
+    "tests/test_config_notification.py::TestLlmSaveOrigins::test_real_nested_close_restores_outer_grab",
+    "-x",
+    "-q",
+    "--tb=short",
+    "--basetemp=C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0503_task2_modal_confirmed"
+  ],
+  "exit_code": 1,
+  "seconds": 2.7160381999983656,
+  "artifacts": 0
+}

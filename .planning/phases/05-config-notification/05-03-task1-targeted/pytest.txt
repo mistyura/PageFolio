@@ -1,0 +1,30 @@
+...........F
+================================== FAILURES ===================================
+____________ TestAppSaveOrigins.test_changed_rescan_persists_once _____________
+tests\test_config_notification.py:363: in test_changed_rescan_persists_once
+    PluginDialog._rescan(dialog)
+pagefolio\dialogs\plugin.py:227: in _rescan
+    self.app._reload_plugins(persist=set(self.pm.get_disabled_ids()) != before)
+pagefolio\app.py:814: in _reload_plugins
+    self.settings["disabled_plugins"] = self.plugin_manager.get_disabled_ids()
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Programs\Python\Python315\Lib\unittest\mock.py:1176: in __call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Programs\Python\Python315\Lib\unittest\mock.py:1180: in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Programs\Python\Python315\Lib\unittest\mock.py:1243: in _execute_mock_call
+    result = next(effect)
+             ^^^^^^^^^^^^
+E   StopIteration
+============================== warnings summary ===============================
+.venv\Lib\site-packages\pymupdf\__init__.py:470
+  C:\Users\shdwf\work\project\PageFolio\.venv\Lib\site-packages\pymupdf\__init__.py:470: DeprecationWarning: 'typing.ByteString' and 'collections.abc.ByteString' are deprecated and slated for removal in Python 3.17
+    ByteString = typing.ByteString
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED tests/test_config_notification.py::TestAppSaveOrigins::test_changed_rescan_persists_once
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!
+1 failed, 11 passed, 1 warning in 0.38s

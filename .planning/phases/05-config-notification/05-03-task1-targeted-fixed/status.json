@@ -1,0 +1,4 @@
+{
+  "state": "error",
+  "error": "RuntimeError('前景が安定せず、試験開始前に停止')"
+}

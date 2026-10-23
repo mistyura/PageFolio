@@ -1,0 +1,17 @@
+{
+  "state": "passed",
+  "command": [
+    "C:\\Users\\shdwf\\work\\project\\PageFolio\\.venv\\Scripts\\python.exe",
+    "-m",
+    "pytest",
+    "tests/test_config_notification.py::TestAppSaveOrigins",
+    "tests/test_plugin_dialog_wheel.py",
+    "-x",
+    "-q",
+    "--tb=short",
+    "--basetemp=C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0503_task1_regression_fixed"
+  ],
+  "exit_code": 0,
+  "seconds": 4.288696600000549,
+  "artifacts": 0
+}

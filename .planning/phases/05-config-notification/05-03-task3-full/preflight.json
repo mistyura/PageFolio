@@ -1,0 +1,11 @@
+{
+  "ready": true,
+  "observations": [
+    {
+      "monotonic": 15537.5108841,
+      "hwnd": 7016030,
+      "pid": 30980,
+      "class": "TChildForm"
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "state": "passed",
+  "command": [
+    "C:\\Users\\shdwf\\work\\project\\PageFolio\\.venv\\Scripts\\python.exe",
+    "-m",
+    "pytest",
+    "tests/test_config_notification.py::TestLlmSaveOrigins",
+    "tests/test_provider_ui.py",
+    "tests/test_ocr.py",
+    "-x",
+    "-q",
+    "--tb=short",
+    "--basetemp=C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0503_task2_targeted_fixed"
+  ],
+  "exit_code": 0,
+  "seconds": 3.0599108999995224,
+  "artifacts": 0
+}

@@ -1,0 +1,9 @@
+{
+  "state": "stopped",
+  "completed": [
+    "job-01-modal.json",
+    "job-02-task2-fixed.json",
+    "job-03-task2-full.json",
+    "job-04-task3-full.json"
+  ]
+}
