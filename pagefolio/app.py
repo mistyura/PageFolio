@@ -159,6 +159,10 @@ class PDFEditorApp(
         self._config_load_notice_registered = False
         self._config_notice_after = None
         self._config_displayed_id = None
+        self._config_notice_generation = 0
+        self._config_notice_monitor = None
+        self._config_notice_closed = False
+        self.root.bind("<Destroy>", self._on_config_root_destroy, add="+")
         self._settings_exit_save_failed = False
         if self._settings_autosave_blocked:
             self._enqueue_config_notice(f"config_load_{load_result.status}")
@@ -529,16 +533,94 @@ class PDFEditorApp(
         )
 
     def _schedule_config_notice(self):
+        if self._config_notice_closed:
+            return
         if self._config_notices and self._config_notice_after is None:
             self._config_notice_after = self.root.after_idle(
                 self._show_next_config_notice
             )
 
+    def _config_modal_active(self):
+        grab = self.root.grab_current()
+        return grab is not None and grab is not self.root
+
+    def _monitor_config_notice(self):
+        self._config_notice_monitor = None
+        if self._config_notice_closed or not self._config_notices:
+            return
+        toast = getattr(self, "_toast", None)
+        if self._config_modal_active():
+            if toast is not None and toast.active_category == "config_notice":
+                toast.dismiss("config_notice", reason="modal")
+        elif self._config_displayed_id is None:
+            self._schedule_config_notice()
+        self._ensure_config_notice_monitor()
+
+    def _ensure_config_notice_monitor(self):
+        if self._config_notices and self._config_notice_monitor is None:
+            self._config_notice_monitor = self.root.after(
+                100, self._monitor_config_notice
+            )
+
+    def _cancel_config_notice_callbacks(self):
+        for attr in ("_config_notice_after", "_config_notice_monitor"):
+            token = getattr(self, attr)
+            if token is not None:
+                try:
+                    self.root.after_cancel(token)
+                except tk.TclError as e:
+                    logger.debug("設定通知 timer 取消失敗: %s", type(e).__name__)
+                setattr(self, attr, None)
+
+    def _prepare_config_notice_rebuild(self):
+        toast = getattr(self, "_toast", None)
+        if toast is not None:
+            toast.dispose(reason="rebuild")
+        self._config_notice_generation += 1
+        self._cancel_config_notice_callbacks()
+
+    def _close_config_notices(self):
+        self._config_notice_closed = True
+        self._prepare_config_notice_rebuild()
+
+    def _on_config_root_destroy(self, event):
+        if event.widget is self.root:
+            self._close_config_notices()
+
+    def _on_config_notice_closed(self, event_id, generation, reason):
+        if (
+            generation != self._config_notice_generation
+            or self._config_displayed_id != event_id
+            or not self._config_notices
+            or self._config_notices[0]["event_id"] != event_id
+        ):
+            return
+        notice = self._config_notices[0]
+        elapsed = max(0, round((time.monotonic() - notice["shown_at"]) * 1000))
+        notice["remaining_ms"] = max(0, notice["remaining_ms"] - elapsed)
+        notice["shown_at"] = None
+        self._config_displayed_id = None
+        if reason == "expired" and self._config_modal_active():
+            reason = "modal"
+        if reason in ("user", "expired"):
+            self._config_notices.popleft()
+        if not self._config_notices:
+            self._cancel_config_notice_callbacks()
+        elif not self._config_notice_closed:
+            self._schedule_config_notice()
+
     def _show_next_config_notice(self):
         """画面構築後の最新 Toast に、先頭の未消化イベントだけを表示する。"""
         self._config_notice_after = None
         try:
-            if not self.root.winfo_exists() or not self._config_notices:
+            if (
+                self._config_notice_closed
+                or not self.root.winfo_exists()
+                or not self._config_notices
+            ):
+                return
+            self._ensure_config_notice_monitor()
+            if self._config_modal_active():
                 return
             toast = getattr(self, "_toast", None)
             if toast is None:
@@ -547,32 +629,26 @@ class PDFEditorApp(
             event_id = notice["event_id"]
             if (
                 self._config_displayed_id == event_id
-                and toast._active_category == "config"
+                and toast.active_category == "config_notice"
             ):
                 return
-            if toast._active_category is not None:
+            if toast.active_category is not None:
                 return
+            self._config_notice_generation += 1
+            generation = self._config_notice_generation
             self._config_displayed_id = event_id
             notice["shown_at"] = time.monotonic()
 
-            def closed(reason):
-                if (
-                    not self._config_notices
-                    or self._config_notices[0]["event_id"] != event_id
-                ):
-                    return
-                if reason in ("user", "expired"):
-                    self._config_notices.popleft()
-                    self._config_displayed_id = None
-                    self._schedule_config_notice()
-
             toast.show(
-                "config",
+                "config_notice",
                 self._t(notice["message_key"]),
                 duration_ms=notice["remaining_ms"],
-                on_close=closed,
+                on_close=lambda reason: self._on_config_notice_closed(
+                    event_id, generation, reason
+                ),
             )
-        except tk.TclError:
+        except tk.TclError as e:
+            logger.debug("設定通知表示失敗: %s", type(e).__name__)
             self._config_displayed_id = None
 
     def _quit(self):
@@ -586,6 +662,7 @@ class PDFEditorApp(
         self._clear_undo_stacks()
         if self.doc:
             self.doc.close()
+        self._close_config_notices()
         self.root.destroy()
 
     def _persist_settings(self, *, explicit=True):
@@ -799,11 +876,7 @@ class PDFEditorApp(
 
     def _rebuild_ui(self):
         """テーマ・フォント変更時にUI全体を再構築"""
-        if getattr(self, "_toast", None) is not None:
-            self._toast._destroy_frame()
-        self._config_displayed_id = None
-        if self._config_notices:
-            self._config_notices[0]["shown_at"] = None
+        self._prepare_config_notice_rebuild()
         self.root.configure(bg=C["BG_DARK"])
         for w in self.root.winfo_children():
             w.destroy()

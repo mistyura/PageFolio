@@ -185,6 +185,7 @@ class UIBuilderMixin:
         # 全破棄するため、_build_menubar() と同様に _build_ui() 内で毎回再生成する
         # 必要がある（Pitfall 2）。テーマ切替でトーストが消えても再表示は不要。
         self._toast = ToastManager(self)
+        self._toast.on_idle = self._schedule_config_notice
 
     def _show_error_or_toast(self, category, title, msg, retry_cb):
         """トースト表示 or messagebox フォールバックを一元化する（レビュー R2）。

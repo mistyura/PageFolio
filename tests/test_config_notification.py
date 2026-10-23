@@ -30,10 +30,14 @@ def save_app():
     app._config_load_notice_registered = False
     app._config_notice_after = None
     app._config_displayed_id = None
+    app._config_notice_generation = 0
+    app._config_notice_monitor = None
+    app._config_notice_closed = False
     app.root = SimpleNamespace(
         geometry=lambda: "900x700+0+0",
         destroy=Mock(),
         after_idle=Mock(return_value="idle"),
+        after_cancel=Mock(),
     )
     app.doc = None
     app.edit_mode = True
@@ -42,6 +46,233 @@ def save_app():
     app._rebuild_ui = Mock()
     app._set_status = Mock()
     return app
+
+
+class _NoticeClock:
+    """after/idle と単調時計を一緒に進める。実時間の sleep は不要。"""
+
+    def __init__(self):
+        self.now = 0
+        self.sequence = 0
+        self.pending = {}
+        self.grab = None
+
+    def after(self, delay, callback):
+        self.sequence += 1
+        self.pending[self.sequence] = (self.now + delay, callback)
+        return self.sequence
+
+    def after_idle(self, callback):
+        return self.after(0, callback)
+
+    def after_cancel(self, token):
+        self.pending.pop(token, None)
+
+    def advance(self, milliseconds=0):
+        end = self.now + milliseconds
+        while self.pending:
+            token = min(self.pending, key=lambda t: (self.pending[t][0], t))
+            due, callback = self.pending[token]
+            if due > end:
+                break
+            self.now = due
+            del self.pending[token]
+            callback()
+        self.now = end
+
+    def grab_current(self):
+        return self.grab
+
+    def winfo_exists(self):
+        return True
+
+
+@pytest.fixture
+def notice_app(save_app, monkeypatch):
+    from pagefolio.toast import ToastManager
+
+    app = save_app
+    app.root = _NoticeClock()
+    monkeypatch.setattr("pagefolio.app.time.monotonic", lambda: app.root.now / 1000)
+
+    def build_frame(manager, category, message, retry_cb):
+        manager._frame = SimpleNamespace(destroy=Mock())
+        manager._msg_var = SimpleNamespace(set=Mock())
+        manager.message = message
+
+    monkeypatch.setattr(ToastManager, "_build_frame", build_frame)
+    app._toast = ToastManager(app)
+    app._toast.on_idle = app._schedule_config_notice
+    return app
+
+
+class TestNotificationLifecycle:
+    def _start(self, app, count=1):
+        for _ in range(count):
+            app._enqueue_config_notice("config_save_failed")
+        app._schedule_config_notice()
+        app.root.advance()
+
+    @pytest.mark.parametrize("category", ["save_file", "print"])
+    def test_interruption_preserves_remaining_time(self, notice_app, category):
+        app = notice_app
+        self._start(app)
+        app.root.advance(4000)
+        app._toast.show(category, "操作失敗", retry_cb=lambda: None)
+        assert app._config_notices[0]["remaining_ms"] == 6000
+        app.root.advance(20000)
+        assert len(app._config_notices) == 1
+        app._toast.dismiss(category)
+        app.root.advance(5999)
+        assert len(app._config_notices) == 1
+        app.root.advance(1)
+        assert not app._config_notices
+        assert not app.root.pending
+
+    def test_fifo_boundary_and_stale_close_never_consume_next(self, notice_app):
+        app = notice_app
+        self._start(app, 3)
+        ids = [n["event_id"] for n in app._config_notices]
+        assert len(set(ids)) == 3
+        stale_close = app._toast._on_close
+        stale_timer = app.root.pending[app._toast._duration_after][1]
+        app.root.advance(9999)
+        assert len(app._config_notices) == 3
+        app.root.advance(1)
+        assert app._config_notices[0]["event_id"] == ids[1]
+        stale_close("expired")
+        stale_timer()
+        assert len(app._config_notices) == 2
+        app._toast.dismiss(app._toast._active_category, reason="user")
+        app.root.advance()
+        assert app._config_notices[0]["event_id"] == ids[2]
+        app.root.advance(10000)
+        assert not app._config_notices
+
+    def test_rebuild_preserves_time_language_and_rejects_old_callbacks(
+        self, notice_app
+    ):
+        from pagefolio.toast import ToastManager
+
+        app = notice_app
+        self._start(app)
+        old = app._toast
+        old_close = old._on_close
+        old_timer = app.root.pending[old._duration_after][1]
+        app.root.advance(4000)
+        app._prepare_config_notice_rebuild()
+        app.lang = "en"
+        app._toast = ToastManager(app)
+        app._toast.on_idle = app._schedule_config_notice
+        app._schedule_config_notice()
+        app.root.advance()
+        assert app._toast.message == app._t("config_save_failed")
+        assert app._config_notices[0]["remaining_ms"] == 6000
+        old_close("user")
+        old_timer()
+        assert len(app._config_notices) == 1
+        app.root.advance(5999)
+        assert len(app._config_notices) == 1
+        app.root.advance(1)
+        assert not app._config_notices
+
+    def test_existing_operation_and_initial_nested_grab_hold_unshown_time(
+        self, notice_app
+    ):
+        app = notice_app
+        app._toast.show("print", "印刷失敗")
+        outer, inner = object(), object()
+        app.root.grab = inner
+        self._start(app)
+        app.root.advance(20000)
+        assert app._toast._active_category == "print"
+        app._toast.dismiss("print")
+        app.root.grab = outer
+        app.root.advance(20000)
+        assert app._config_notices[0]["shown_at"] is None
+        assert app._config_notices[0]["remaining_ms"] == 10000
+        app.root.grab = None
+        app.root.advance(100)
+        app.root.advance(9999)
+        assert len(app._config_notices) == 1
+        app.root.advance(1)
+        assert not app._config_notices
+
+    def test_modal_suspends_display_and_nested_exit_does_not_resume(self, notice_app):
+        app = notice_app
+        self._start(app)
+        app.root.advance(3900)
+        app.root.grab = object()
+        app.root.advance(100)
+        assert app._config_notices[0]["remaining_ms"] == 6000
+        assert app._toast._frame is None
+        app.root.advance(20000)
+        app.root.grab = object()
+        app.root.advance(1000)
+        assert app._toast._frame is None
+        app.root.grab = None
+        app.root.advance(100)
+        app.root.advance(5999)
+        assert len(app._config_notices) == 1
+        app.root.advance(1)
+        assert not app._config_notices
+
+    def test_grab_at_expiry_keeps_event_until_release(self, notice_app):
+        app = notice_app
+        self._start(app)
+        app.root.advance(9999)
+        app.root.grab = object()
+        app.root.advance(1)
+        assert len(app._config_notices) == 1
+        app.root.advance(20000)
+        assert len(app._config_notices) == 1
+        app.root.grab = None
+        app.root.advance(100)
+        assert not app._config_notices
+
+    def test_shutdown_cancels_all_owned_callbacks(self, notice_app):
+        app = notice_app
+        self._start(app, 2)
+        app._close_config_notices()
+        app.root.advance(20000)
+        assert len(app._config_notices) == 2
+        assert not app.root.pending
+
+    def test_real_rebuild_restores_same_notice_in_current_language(
+        self, isolated_app, monkeypatch
+    ):
+        from tkinterdnd2 import TkinterDnD
+
+        from pagefolio.app import PDFEditorApp
+
+        isolated_app.write_bytes(b"{broken")
+        clock = [0.0]
+        monkeypatch.setattr("pagefolio.app.time.monotonic", lambda: clock[0])
+        root = TkinterDnD.Tk()
+        root.withdraw()
+        app = None
+        try:
+            app = PDFEditorApp(root)
+            root.update_idletasks()
+            old = app._toast
+            old_frame = old._frame
+            event_id = app._config_notices[0]["event_id"]
+            clock[0] = 4.0
+            app.lang = "en"
+            app._rebuild_ui()
+            root.update_idletasks()
+            assert app._toast is not old
+            assert not old_frame.winfo_exists()
+            assert app._config_notices[0]["event_id"] == event_id
+            assert app._config_notices[0]["remaining_ms"] == 6000
+            assert app._toast._msg_var.get() == app._t("config_load_corrupt")
+            assert root.grab_current() is None
+            assert isolated_app.read_bytes() == b"{broken"
+        finally:
+            if app is not None:
+                app._close_config_notices()
+                app._clear_undo_stacks()
+            root.destroy()
 
 
 class TestSaveFlow:
@@ -182,7 +413,7 @@ class TestLoadTracer:
             assert app._toast._active_category is None
 
             root.update_idletasks()
-            assert app._toast._active_category == "config"
+            assert app._toast._active_category == "config_notice"
             assert app._toast._retry_btn is None
             assert app._toast._frame.winfo_exists()
             assert app._toast._duration_after is not None

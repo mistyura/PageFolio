@@ -168,6 +168,91 @@ def test_toast_retry_btn_lang_keys_present():
     assert "toast_retry_btn" in LANG["en"]
 
 
+class TestToastLifecycle:
+    def test_retry_presence_changes_and_order_is_retry_then_close(self, tk_root):
+        manager = toast_mod.ToastManager(_FakeApp(tk_root))
+        calls = []
+        try:
+            manager.show("save_file", "失敗")
+            assert _find_button(manager._frame, "再試行") is None
+            manager.show("save_file", "再試行可能", retry_cb=lambda: calls.append(1))
+            buttons = [
+                w for w in manager._frame.winfo_children() if isinstance(w, ttk.Button)
+            ]
+            assert [b.cget("text") for b in buttons] == ["再試行", "✕"]
+            buttons[0].invoke()
+            assert calls == [1]
+            manager.show("save_file", "再試行なし")
+            assert _find_button(manager._frame, "再試行") is None
+            assert _find_button(manager._frame, "✕") is not None
+        finally:
+            manager.dispose()
+
+    def test_close_cleans_frame_timer_before_callback_and_idle(self, tk_root):
+        manager = toast_mod.ToastManager(_FakeApp(tk_root))
+        calls = []
+
+        def closed(reason):
+            assert manager._frame is None
+            assert manager.active_category is None
+            assert manager._duration_after is None
+            assert manager._on_close is None
+            calls.append(reason)
+
+        manager.on_idle = lambda: calls.append("idle")
+        try:
+            manager.show("config_notice", "設定", duration_ms=10000, on_close=closed)
+            frame = manager._frame
+            _find_button(frame, "✕").invoke()
+            assert calls == ["user"]
+            assert not frame.winfo_exists()
+            tk_root.update_idletasks()
+            assert calls == ["user", "idle"]
+        finally:
+            manager.dispose()
+
+    @pytest.mark.parametrize("category", ["save_file", "print"])
+    def test_replacement_programmatic_dismiss_and_dispose_idle(self, tk_root, category):
+        manager = toast_mod.ToastManager(_FakeApp(tk_root))
+        calls = []
+        manager.on_idle = lambda: calls.append("idle")
+        try:
+            manager.show(
+                "config_notice", "設定", duration_ms=10000, on_close=calls.append
+            )
+            stale_generation = manager._generation
+            manager.show(category, "操作失敗", retry_cb=lambda: None)
+            assert calls == ["replaced"]
+            manager._expire(stale_generation)
+            assert manager.active_category == category
+            manager.dismiss(category)
+            assert calls == ["replaced"]
+            tk_root.update_idletasks()
+            assert calls == ["replaced", "idle"]
+            manager.show(category, "操作失敗")
+            manager.dismiss(category)
+            manager.dispose()
+            tk_root.update_idletasks()
+            assert calls == ["replaced", "idle"]
+        finally:
+            manager.dispose()
+
+    def test_timer_expiry_closes_once_and_does_not_touch_input(self, tk_root):
+        manager = toast_mod.ToastManager(_FakeApp(tk_root))
+        calls = []
+        focused = tk_root.focus_get()
+        grabbed = tk_root.grab_current()
+        try:
+            manager.show("config_notice", "設定", duration_ms=0, on_close=calls.append)
+            tk_root.update()
+            assert calls == ["expired"]
+            assert manager.active_category is None
+            assert tk_root.focus_get() is focused
+            assert tk_root.grab_current() is grabbed
+        finally:
+            manager.dispose()
+
+
 class TestToastRegeneratedAfterRebuild:
     """`_rebuild_ui()` 相当（root 直下ウィジェット全破棄→再生成）の後も
 

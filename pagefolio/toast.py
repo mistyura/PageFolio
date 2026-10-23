@@ -38,6 +38,14 @@ class ToastManager:
         self._retry_btn = None
         self._duration_after = None
         self._on_close = None
+        self.on_idle = None
+        self._idle_after = None
+        self._generation = 0
+        self._disposed = False
+
+    @property
+    def active_category(self):
+        return self._active_category
 
     def show(
         self, category, message, retry_cb=None, *, duration_ms=None, on_close=None
@@ -49,41 +57,78 @@ class ToastManager:
         再生成せず文言のみ更新する（D-04）。この場合も再試行ボタンの
         コールバックは最新の ``retry_cb`` へ差し替える（WR-03）。
         """
-        if self._active_category == category and self._frame is not None:
+        if self._disposed:
+            return
+        self._cancel_idle()
+        if (
+            self._active_category == category
+            and self._frame is not None
+            and (self._retry_btn is not None) == (retry_cb is not None)
+        ):
             self._msg_var.set(message)
             if self._retry_btn is not None:
                 self._retry_btn.configure(command=retry_cb)
             self._on_close = on_close
             self._start_timer(duration_ms)
             return
-        self._destroy_frame()
+        self._finish("replaced", notify_idle=False)
         self._active_category = category
         self._on_close = on_close
         self._build_frame(category, message, retry_cb)
         self._start_timer(duration_ms)
 
-    def dismiss(self, category, *, reason="user"):
+    def dismiss(self, category, *, reason="programmatic"):
         """一致する category の場合のみトーストを破棄する（D-08）。"""
         if self._active_category != category:
             return
+        self._finish(reason)
+
+    def _finish(self, reason, *, notify_idle=True):
         on_close = self._on_close
         self._destroy_frame()
         self._active_category = None
         self._on_close = None
         if on_close is not None:
             on_close(reason)
+        if notify_idle and not self._disposed and self._idle_after is None:
+            self._idle_after = self.app.root.after_idle(self._notify_idle)
+
+    def _notify_idle(self):
+        self._idle_after = None
+        if not self._disposed and self._active_category is None and self.on_idle:
+            self.on_idle()
+
+    def _cancel_idle(self):
+        if self._idle_after is not None:
+            try:
+                self.app.root.after_cancel(self._idle_after)
+            except tk.TclError as e:
+                logger.debug("トースト idle 取消失敗: %s", type(e).__name__)
+            self._idle_after = None
+
+    def dispose(self, *, reason="rebuild"):
+        self._disposed = True
+        self._cancel_idle()
+        self._finish(reason, notify_idle=False)
+        self.on_idle = None
 
     def _start_timer(self, duration_ms):
+        self._generation += 1
         if self._duration_after is not None:
             self.app.root.after_cancel(self._duration_after)
             self._duration_after = None
         if duration_ms is not None:
+            generation = self._generation
             self._duration_after = self.app.root.after(
                 duration_ms,
-                lambda category=self._active_category: self.dismiss(
-                    category, reason="expired"
-                ),
+                lambda: self._expire(generation),
             )
+
+    def _expire(self, generation):
+        if self._disposed or generation != self._generation:
+            return
+        self._duration_after = None
+        self._finish("expired")
 
     def _build_frame(self, category, message, retry_cb):
         app = self.app
@@ -115,17 +160,18 @@ class ToastManager:
             frame,
             text="✕",
             width=2,
-            command=lambda c=category: self.dismiss(c),
+            command=lambda c=category: self.dismiss(c, reason="user"),
         ).pack(side="left", padx=(0, 8))
 
         self._frame = frame
 
     def _destroy_frame(self):
+        self._generation += 1
         if self._duration_after is not None:
             try:
                 self.app.root.after_cancel(self._duration_after)
-            except tk.TclError:
-                pass
+            except tk.TclError as e:
+                logger.debug("トースト timer 取消失敗: %s", type(e).__name__)
             self._duration_after = None
         if self._frame is not None:
             try:
