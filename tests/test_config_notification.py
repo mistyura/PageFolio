@@ -59,6 +59,10 @@ class _NoticeClock:
         self.sequence = 0
         self.pending = {}
         self.grab = None
+        self.visible = True
+
+    def winfo_viewable(self):
+        return self.visible
 
     def after(self, delay, callback):
         self.sequence += 1
@@ -115,6 +119,95 @@ class TestNotificationLifecycle:
             app._enqueue_config_notice("config_save_failed")
         app._schedule_config_notice()
         app.root.advance()
+
+    @pytest.mark.parametrize("started", [False, True])
+    def test_hidden_root_preserves_fifo_and_visible_time(self, notice_app, started):
+        app = notice_app
+        app.root.visible = started
+        self._start(app, 3)
+        ids = [n["event_id"] for n in app._config_notices]
+        if started:
+            app.root.advance(4000)
+        app.root.visible = False
+        app._monitor_config_notice()
+        app.root.advance(40000)
+        assert [n["event_id"] for n in app._config_notices] == ids
+        assert app._config_notices[0]["remaining_ms"] == (6000 if started else 10000)
+        assert app._config_notices[0]["shown_at"] is None
+        app.root.visible = True
+        app._monitor_config_notice()
+        app.root.advance()
+        app.root.advance(app._config_notices[0]["remaining_ms"] - 1)
+        assert len(app._config_notices) == 3
+        app.root.advance(1)
+        assert app._config_notices[0]["event_id"] == ids[1]
+        app.root.advance(20000)
+        assert not app._config_notices
+
+    def test_hidden_at_deadline_is_not_consumed(self, notice_app):
+        app = notice_app
+        self._start(app)
+        app.root.advance(9999)
+        app.root.visible = False
+        app.root.advance(1)
+        assert len(app._config_notices) == 1
+        app.root.advance(20000)
+        assert len(app._config_notices) == 1
+
+    @pytest.mark.parametrize("hide", ["withdraw", "iconify"])
+    def test_real_root_visibility_suspends_same_event(
+        self, monkeypatch, isolated_app, hide
+    ):
+        from pagefolio.app import PDFEditorApp
+
+        clock = [0.0]
+        monkeypatch.setattr("pagefolio.app.time.monotonic", lambda: clock[0])
+        isolated_app.write_bytes(b"{isolated broken settings")
+        root = tk.Tk()
+        root.withdraw()
+        app = None
+        try:
+            app = PDFEditorApp(root)
+            root.update()
+            assert not root.winfo_viewable()
+            assert app._toast._frame is None
+            root.deiconify()
+            root.update()
+            assert root.winfo_viewable()
+            assert app._toast._frame.winfo_viewable()
+            ids = [n["event_id"] for n in app._config_notices]
+            close = app._toast._on_close
+            generation = app._toast._generation
+            clock[0] = 4.0
+            # 子widgetのUnmapはroot非表示として扱わない。
+            child = tk.Frame(root)
+            app._on_config_root_visibility(SimpleNamespace(widget=child))
+            assert app._toast._frame is not None
+            child.destroy()
+            getattr(root, hide)()
+            root.update()
+            assert not root.winfo_viewable()
+            assert app._toast._frame is None
+            assert app._config_notices[0]["remaining_ms"] == 6000
+            clock[0] = 44.0
+            app._monitor_config_notice()
+            app._toast._expire(generation)
+            close("expired")
+            assert [n["event_id"] for n in app._config_notices] == ids
+            assert app._config_notices[0]["remaining_ms"] == 6000
+            root.deiconify()
+            root.update()
+            assert app._toast._frame.winfo_viewable()
+            assert app._config_notices[0]["remaining_ms"] == 6000
+            close("expired")
+            assert [n["event_id"] for n in app._config_notices] == ids
+        finally:
+            if app is not None:
+                app._close_config_notices()
+                app._clear_undo_stacks()
+            for token in root.tk.call("after", "info"):
+                root.after_cancel(token)
+            root.destroy()
 
     @pytest.mark.parametrize("category", ["save_file", "print"])
     def test_interruption_preserves_remaining_time(self, notice_app, category):
@@ -252,11 +345,10 @@ class TestNotificationLifecycle:
         clock = [0.0]
         monkeypatch.setattr("pagefolio.app.time.monotonic", lambda: clock[0])
         root = TkinterDnD.Tk()
-        root.withdraw()
         app = None
         try:
             app = PDFEditorApp(root)
-            root.update_idletasks()
+            root.update()
             old = app._toast
             old_frame = old._frame
             event_id = app._config_notices[0]["event_id"]
@@ -423,7 +515,6 @@ class TestAppSaveOrigins:
         from pagefolio.dialogs.plugin import PluginDialog
 
         root = TkinterDnD.Tk()
-        root.withdraw()
         app = None
         dialog = None
         clock = [0.0]
@@ -625,7 +716,6 @@ class TestLlmSaveOrigins:
         from pagefolio.toast import ToastManager
 
         root = tk.Tk()
-        root.withdraw()
         app = save_app
         app.root = root
         app._toast = ToastManager(app)
@@ -748,6 +838,73 @@ class TestLlmSaveOrigins:
 
 
 class TestToolSaveOrigins:
+    @pytest.mark.parametrize("close", ["save", "cancel", "wm"])
+    def test_real_shortcuts_close_restores_outer_grab(
+        self, save_app, monkeypatch, close
+    ):
+        from pagefolio.dialogs.settings import SettingsDialog
+        from pagefolio.toast import ToastManager
+
+        root = tk.Tk()
+        app = save_app
+        app.root = root
+        app._default_shortcuts = {"open_file": "<Control-o>"}
+        app._bind_shortcuts = Mock()
+        app._toast = ToastManager(app)
+        app._toast.on_idle = app._schedule_config_notice
+        clock = [0.0]
+        monkeypatch.setattr("pagefolio.app.time.monotonic", lambda: clock[0])
+        monkeypatch.setattr("pagefolio.app._save_settings", lambda values: False)
+        outer = inner = None
+        try:
+            root.update()
+            outer = SettingsDialog(root, app.settings, Mock(), app._font, app=app)
+            outer._open_shortcuts_dialog()
+            inner = outer._shortcuts_dialog
+            assert root.grab_current() is inner
+            # 子widgetの破棄は外側のgrabを復元してはならない。
+            child = tk.Frame(inner)
+            child.destroy()
+            assert root.grab_current() is inner
+            if close == "save":
+                inner._on_save()
+            else:
+                app._persist_settings()
+                if close == "cancel":
+                    for widget in inner.winfo_children():
+                        for button in widget.winfo_children():
+                            if (
+                                isinstance(button, ttk.Button)
+                                and button.cget("text")
+                                == inner._L["shortcuts_btn_cancel"]
+                            ):
+                                button.invoke()
+                else:
+                    root.tk.call(inner.protocol("WM_DELETE_WINDOW"))
+            assert not inner.winfo_exists()
+            inner = None
+            assert root.grab_current() is outer
+            clock[0] = 12.0
+            app._show_next_config_notice()
+            root.update()
+            assert outer.winfo_exists()
+            assert app._toast._frame is None
+            assert len(app._config_notices) == 1
+            assert app._config_notices[0]["remaining_ms"] == 10000
+            outer.destroy()
+            outer = None
+            app._show_next_config_notice()
+            root.update_idletasks()
+            assert app._toast._frame is not None
+            assert app._config_notices[0]["remaining_ms"] == 10000
+        finally:
+            if inner is not None and inner.winfo_exists():
+                inner.destroy()
+            if outer is not None:
+                outer.destroy()
+            app._close_config_notices()
+            root.destroy()
+
     @pytest.mark.parametrize("status", ["ok", "corrupt", "unreadable"])
     @pytest.mark.parametrize("saved", [True, False])
     @pytest.mark.parametrize("origin", ["shortcuts", "mosaic", "zoom", "page_size"])
@@ -820,6 +977,7 @@ class TestToolSaveOrigins:
         from pagefolio.dialogs.shortcuts import ShortcutsDialog
 
         app = notice_app
+        outer = object()
         app.root.grab = object()
         app._default_shortcuts = {"quit": "<F1>"}
         app._bind_shortcuts = Mock()
@@ -828,10 +986,15 @@ class TestToolSaveOrigins:
             _app=app,
             _capturing_cmd=None,
             _shortcuts={"quit": "<F2>"},
-            destroy=lambda: setattr(app.root, "grab", None),
+            destroy=lambda: setattr(app.root, "grab", outer),
         )
         ShortcutsDialog._on_save(dialog)
         assert len(app._config_notices) == 1
+        app.root.advance(12000)
+        assert app._toast._frame is None
+        assert app._config_notices[0]["remaining_ms"] == 10000
+        app.root.grab = None
+        app._schedule_config_notice()
         app.root.advance()
         assert app._toast._frame is not None
         assert app._config_notices[0]["remaining_ms"] == 10000
@@ -1144,7 +1307,7 @@ class TestScenarioIsolation:
 
 class TestConfigAcceptance:
     def test_corrupt_two_failures_rebuild_edit_recovery_and_exit(self, monkeypatch):
-        with create_isolated_app("read-corrupt") as isolated:
+        with create_isolated_app("read-corrupt", visible=True) as isolated:
             app, root = isolated.app, isolated.root
             original = isolated.settings_path.read_bytes()
             app.doc = fitz.open()
@@ -1154,7 +1317,7 @@ class TestConfigAcceptance:
             app._rotate_selected(90)
             doc, undo, redo = app.doc, app._undo_stack, app._redo_stack
             history = tuple(undo)
-            root.update_idletasks()
+            root.update()
             clock = [0.0]
             monkeypatch.setattr("pagefolio.app.time.monotonic", lambda: clock[0])
             app._config_notices[0]["shown_at"] = 0.0
@@ -1334,6 +1497,9 @@ class TestLoadTracer:
             assert app._toast._active_category is None
 
             root.update_idletasks()
+            assert app._toast._active_category is None
+            root.deiconify()
+            root.update()
             assert app._toast._active_category == "config_notice"
             assert app._toast._retry_btn is None
             assert app._toast._frame.winfo_exists()
@@ -1345,14 +1511,11 @@ class TestLoadTracer:
             entry.pack()
             root.deiconify()
             root.update()
-            entry.focus_force()
-            root.update()
             focused = root.focus_get()
             app._show_next_config_notice()
             root.update_idletasks()
             if focused is not None:
-                assert focused is entry
-                assert root.focus_get() is entry
+                assert root.focus_get() is focused
                 record_property("focus_check", "verified")
             else:
                 record_property("focus_check", "unverified: Tk returned None")

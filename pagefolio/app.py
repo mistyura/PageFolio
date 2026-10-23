@@ -163,6 +163,8 @@ class PDFEditorApp(
         self._config_notice_monitor = None
         self._config_notice_closed = False
         self.root.bind("<Destroy>", self._on_config_root_destroy, add="+")
+        self.root.bind("<Unmap>", self._on_config_root_visibility, add="+")
+        self.root.bind("<Map>", self._on_config_root_visibility, add="+")
         self._settings_exit_save_failed = False
         if self._settings_autosave_blocked:
             self._enqueue_config_notice(f"config_load_{load_result.status}")
@@ -544,14 +546,25 @@ class PDFEditorApp(
         grab = self.root.grab_current()
         return grab is not None and grab is not self.root
 
+    def _on_config_root_visibility(self, event):
+        """root自身の非表示で可視時間を止め、再表示時に同じ通知を再開する。"""
+        if event.widget is not self.root or self._config_notice_closed:
+            return
+        if not self.root.winfo_viewable():
+            toast = getattr(self, "_toast", None)
+            if toast is not None:
+                toast.dismiss("config_notice", reason="hidden")
+        else:
+            self._schedule_config_notice()
+
     def _monitor_config_notice(self):
         self._config_notice_monitor = None
         if self._config_notice_closed or not self._config_notices:
             return
         toast = getattr(self, "_toast", None)
-        if self._config_modal_active():
+        if not self.root.winfo_viewable() or self._config_modal_active():
             if toast is not None and toast.active_category == "config_notice":
-                toast.dismiss("config_notice", reason="modal")
+                toast.dismiss("config_notice", reason="interrupted")
         elif self._config_displayed_id is None:
             self._schedule_config_notice()
         self._ensure_config_notice_monitor()
@@ -600,8 +613,10 @@ class PDFEditorApp(
         notice["remaining_ms"] = max(0, notice["remaining_ms"] - elapsed)
         notice["shown_at"] = None
         self._config_displayed_id = None
-        if reason == "expired" and self._config_modal_active():
-            reason = "modal"
+        if reason == "expired" and (
+            not self.root.winfo_viewable() or self._config_modal_active()
+        ):
+            reason = "interrupted"
         if reason in ("user", "expired"):
             self._config_notices.popleft()
         if not self._config_notices:
@@ -620,7 +635,7 @@ class PDFEditorApp(
             ):
                 return
             self._ensure_config_notice_monitor()
-            if self._config_modal_active():
+            if not self.root.winfo_viewable() or self._config_modal_active():
                 return
             toast = getattr(self, "_toast", None)
             if toast is None:

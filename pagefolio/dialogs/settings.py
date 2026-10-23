@@ -283,6 +283,17 @@ class SettingsDialog(tk.Toplevel):
             font_func=self._font,
             lang=lang,
         )
+        dialog = self._shortcuts_dialog
+
+        def restore_outer_grab(event):
+            if event.widget is dialog:
+                try:
+                    if self.winfo_exists():
+                        self.grab_set()
+                except tk.TclError as e:
+                    logger.debug("外側設定grab復元終了: %s", type(e).__name__)
+
+        dialog.bind("<Destroy>", restore_outer_grab, add="+")
 
     def _apply(self):
         new_settings = dict(self.current_settings)
