@@ -1,9 +1,9 @@
 ---
 phase: 05-config-notification
-status: testing
+status: complete
 source: [05-VERIFICATION.md]
 started: 2026-10-23T17:36:19.861Z
-updated: 2026-10-23T17:36:19.861Z
+updated: 2026-10-23T18:09:55.453Z
 ---
 
 # Phase 5 設定通知の人手受入
@@ -50,7 +50,7 @@ H01〜H12は修正前の結果として保持し、追加2境界だけを上記�
 
 ## 未確定項目の状態
 
-- descriptor-less prohibition 2件は **flagged-unverified**。H01/H02/H06/H07で文言・入力先・編集継続・通知保持の利用者目視は得たが、禁止内容のdescriptorがなく各IDとの対応を確定できない。目視完了だけでresolvedへ変更しない。
+- 禁止事項2件の意味評価は、2026-10-24 JSTの利用者による項目別の明示回答で **2件ともpass**。Test 1でPDF編集内容の喪失と誤認させないこと、Test 2でPDF破棄・再起動を促さないことをそれぞれ確認した。旧投影IDのdescriptor同一性を推測で補完したものではない。
 - edge-probe 4件（CFG-01〜04）は **unclassified/unresolved**、verification/resolution=null。自動境界試験による読み替えなし。
 - Nyquist実走、独立code/secure/goal-backward確認、Phase 6 EXE受入は未実施。
 
@@ -64,28 +64,30 @@ H01初回のlauncher PIDは31860。ほかの再起動PIDは上表のとおりで
 
 ## Current Test
 
-number: 1
-name: 禁止事項1の明示判断
-expected: |
-  日英の破損・読取不能・保存失敗・保護による未保存の4通知文言が、設定JSONだけを対象とし、PDF編集内容の喪失を意味しないと利用者が判断する。
-awaiting: user response
+[testing complete]
 
 ## Tests
 
 ### 1. 禁止事項1: PDF編集内容の喪失と誤認させない
 expected: 設定通知をPDF編集内容の喪失と誤認しないことを、項目名と判断を明示して確認する。
-result: [pending]
+result: pass
+reported: "pass"
+confirmed_by: 利用者（本チャットのTest 1への明示回答）
+recorded_at: 2026-10-23T18:09:21.4084125Z
 
 ### 2. 禁止事項2: PDF破棄や再起動を促さない
 expected: 4文言と失敗後の案内がPDF破棄・再起動を促さず、編集を続行できる案内であることを、項目名と判断を明示して確認する。
-result: [pending]
+result: pass
+reported: "pass"
+confirmed_by: 利用者（本チャットのTest 2への明示回答）
+recorded_at: 2026-10-23T18:09:21.4084125Z
 
 ## Summary
 
 total: 2
-passed: 0
+passed: 2
 issues: 0
-pending: 2
+pending: 0
 skipped: 0
 blocked: 0
 
