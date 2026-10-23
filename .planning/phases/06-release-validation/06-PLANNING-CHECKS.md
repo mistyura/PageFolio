@@ -1,5 +1,64 @@
 # Phase 06 — 計画監査
 
+## Reviews再計画 Round 1（2026-10-24、レビュー基準 8b513b8）
+
+### コミット前の全件ゲート（親、2026-10-24）
+
+**後続デバッグで今回のテスト保留を解除:** `config-notice-tk-lifecycle`でDnD初期化失敗→残留root→後続画像先不一致を故障注入で確認し、通知再構築テストの不要DnD依存だけを除去。修正後native単一全件は1797 passed / 1 warning / 269.43秒 / exit 0、Ruff check（native再確認で警告なし）・format・ASTも合格。証拠は`.planning/debug/config-notice-tk-lifecycle-evidence/RESULTS.md`。製品コード・版番号変更なし。以下は初回失敗の履歴として保持し、外部tkdnd間欠原因・DEP-05等の未解除条件とPhase6実機受入/出荷停止は維持する。
+
+テスト隔離修正と専用証拠は `98dd70a` に分離commit。今回の計画差分とは別commitにし、既存のrequirements/startup診断/config等のdirtyは取り込まない。検証はそれらを含む現行作業ツリーで実施したもので、clean checkoutだけの検証とは区別する。rawログのCRLF・pytest由来の末尾空白は証拠SHA保持のため変更しない。差分空白検査ではrawログだけを除外し、編集したコード/Markdown/JSONを確認する。
+
+- 初回sandbox: 1700 passed / 68 failed / 29 errors / 4 warnings / 193.95秒 / exit 1。`Cannot find a usable init.tcl`が多発。ログ`06-reviews-pytest-sandbox.txt`、basetemp `C:/Users/shdwf/AppData/Local/Temp/pf06_reviews_20261024-055130`を保持。
+- sandbox外の最小Tk起動は9.0.4で成功。そのため別の新規basetempで全件を一度再実行した。
+- native: 1795 passed / 2 failed / 2 warnings / 269.56秒 / exit 1。`tests/test_config_notification.py::TestNotificationLifecycle::test_real_rebuild_restores_same_notice_in_current_language`が`can't find package tkdnd`→`Unable to load tkdnd library.`、`TestLoadTracer::test_corrupt_settings_show_one_real_toast_and_keep_pdf_editable`が`image "pyimage9" does not exist`。原因未確定。ログ`06-reviews-pytest-native.txt`、basetemp `C:/Users/shdwf/AppData/Local/Temp/pf06_reviews_native_20261024-055832`を保持。
+- 両ログはTemp原本からコピーしSHA-256一致確認済み。既存dirtyの製品コードは変更せず、修復・除外・期限延長・追加再試行はしていない。計画検証の合格とコミット前pytestの未合格を分離し、commitと後続実行を保留する。次はGSD debugで2件を調査する。Phase6の製品実装/build/人手UATは未実施。
+
+親の独立checkerは今回改訂後に `VERIFICATION PASSED`（blocker 0 / warning 0 / info 0）を返した。6要件・D-01〜16・レビューR06-01〜12の反映を確認。decision-coverageは16/16、post-planning gap-analysisは22/22、未被覆0。verify-failure-directionsはtask内15件ok/readError=null。verify-command-pathsは15件not_applicableでありPythonコマンドのパス実在確認を意味しない。製品実装・build・実機受入の合格ではない。
+
+今回の正本は各PLANのReview Dispositions Ledger。旧「最終計画レビュー」「Checker revision」は前回計画時の履歴であり、今回の独立checker合格として再利用しない。R06-01〜12と全current actionable個別指摘に採用/見送りを明記した。plannerは製品コード・STATE・ROADMAP・CONTEXT・レビュー原文・既存dirtyを編集していない。親は検証後にSTATEの再開説明を更新し、既存dirtyを保持した。
+
+| 対象 | 今回の実行契約変更 |
+|---|---|
+| 06-01 | 絶対argv、既定dist正例、実build前の境界負例、repo外tracer、限定-text属性、process/lock、同梱詳細文書 |
+| 06-02 | dirty hunk分離、最新節/最終更新欄、offline詳細リンク、古lock/保持容量の手動手順 |
+| 06-03 | 全subrow require-pass、read-only build/preparation監査、1page画像OCR、実在W05b modal、外部設定障害証拠、再開/失効契約 |
+| 06-04 | 実build2回と読取verifyの分離、最終build前の親Phase4再検証、実接続/保護の完了監査 |
+| 06-05 | 来歴固定の別版peer、X01無警告/About表示、EXEの手動状態準備、担当16ID全subrow監査 |
+| 06-06 | 担当15ID全subrow監査、WR-01不適合分岐、W11判断依頼、台帳確定後の全件一度とread-only引渡し |
+
+6 plans / 6 waves / 12 tasks / tracer先頭を維持。各task最大5変更ファイル。追加の実装予定ファイルは06-01-02の.gitattributesだけで、正本4パスへの-text属性を扱う。既存CONFIGURATIONは配布時にcopyするが新しいsource正本を複製しない。見積はcalibration実測factor=1/sample_count=0/confidence=low、合計174000 tokens（38000/17000/42000/24000/26000/27000）。scopeを縮小していない。
+
+### Reviews source coverage
+
+| SOURCE | ID | Plan / Task | Status |
+|---|---|---|---|
+| GOAL / REQ / CONTEXT | 既存5成功条件・6要件・D-01〜D-16・持越し条件 | 下記Multi-Source Coverage Auditの既存割当を維持 | COVERED（計画割当のみ） |
+| RESEARCH | 出力境界/私有作業先/原本bytes | 06-01-01/02。旧記述の曖昧な「ソースとの親子重複」は操作先ごとの判定へ具体化 | COVERED |
+| RESEARCH | 詳細文書の到達性 | 06-01-01 + 06-02-02で同梱docs/CONFIGURATION.mdを選択 | COVERED |
+| RESEARCH | 実EXE接続/故障/証拠種別 | 06-03-01/02 + 06-04-02 + 06-05-01/02 | COVERED |
+| RESEARCH | Phase4再検証・最終品質・未解除 | 06-04 phase4_dependency / 06-06-01/02 | COVERED |
+| REVIEWS | R06-01/02 | 06-01-01/02/build_contract | COVERED |
+| REVIEWS | R06-03 | 06-03-01 audit_contract / 06-04-01 | COVERED |
+| REVIEWS | R06-04 | 06-03 resume_contract / 06-04 phase4_dependency / 06-05/06 | COVERED |
+| REVIEWS | R06-05 | 06-05 peer_contract / 06-05-01/02 | COVERED |
+| REVIEWS | R06-06 | 06-06-01 | COVERED |
+| REVIEWS | R06-07/08/09 | 06-03-02 / 06-04-02 / 06-05-01/02 | COVERED |
+| REVIEWS | R06-10 | 06-05-02 | COVERED |
+| REVIEWS | R06-11 | 06-03 audit_contract / 06-04-02 / 06-05-02 / 06-06-01 | COVERED |
+| REVIEWS | R06-12 | 全PLAN execution_rules / 06-02-01 / 06-04-01 | COVERED |
+
+各reviewerのLOW/MEDIUM追加案（改行、ガイド成果物、lock/timeout、rename retry、容量、索引、mainリンク、plugins、audit独立点検、copy再利用、再開、W06試行上限、品質二重実行）も関連PLANのledgerで採否を記録。Antigravityの架空path/API/要件/About説明とatomic要約はConsensus訂正を優先し、実装へ採用しない。
+
+### Current runtime checks / source grounding
+
+- GSD init/stateを読取、query agent-skills gsd-planner --skills-onlyは設定なし。project skillはsession-handoffのみ。graphify statusはdisabled。追加研究/mapperは再実行せず06-RESEARCH/06-PATTERNSと親のソース訂正を再利用。
+- plan:pre activeHooksのplanner contribution4件を確認。assumption-delta scan 6はdetected=false/signals=[]。schema対象なし。改訂後の全PLAN＋ROADMAPをapi-coverage.cjsへ入力しdetected=false/signals=[]、既存COVERAGE.mdの理由を維持。security ASVS1/highとT-06-01〜14の一意性を維持。
+- 親の今回precheckはcontext-drift stale=[]、codebase-drift skipped/no-mapped-commit、UI frontend=false/block=false。下段の旧precheck記録を今回結果へ読み替えない。
+- git ls-filesで既存の2原本、pagefolio.py/pagefolio.ico、constants/settings/app/ocr/ocr_dialog/ollama/about、docs/CONFIGURATION/DEVELOPMENT、README/開発履歴、tests/conftest/test_gsd_dod/test_startup_windows/config_notice_support、.gitignoreを確認。引用pathは実在するtracked source。新規.gitattributes、distribution/、tools/build_release.py、tests/test_release_*とrelease_uat_support/release_fake_ocr、後続BUILD/PROTECTION/UAT/MANUAL/EVIDENCE/RELEASE-GATEは実装予定であり現存扱いしない。
+- SPECなし。親の今回edge-probeは全6件unclassified/unresolved、verification/resolution/reason=null、probe=unclassified — review manually。coverage applicable6/resolved0/unresolved6/unclassified6。下段のflagged assumptions・prohibition recall/projectProhibitions/descriptorless契約をそのまま保持する。
+- frontmatter.validate --schema planとverify.plan-structureは全6PLAN valid=true、errors0/warnings0、各2task。静的検査は12task/17automatedの直後fails_when、各task最大5files、D-01〜16、6要件、T-06-01〜14一意、全PLANのRound 1 ledgerを確認（errors=[]）。局所/全件の全pytestコマンドはGUID付きrepo外専用basetempを使う。末尾</output>、継続sentinelなし。git diff --checkはexit0。製品の実装/pytest/build/manualはこのplannerでは未実施。独立checkerとcommitは親担当。
+
+
 ## 最終計画レビュー（2026-10-24）
 
 - 独立checker初回はblocker2/warning1。revision1の後、別のcheckerが再評価し `VERIFICATION PASSED`、blocker0/warning0/info0。

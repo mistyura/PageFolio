@@ -1,0 +1,275 @@
+............................................F........................... [  4%]
+........................................................................ [  8%]
+.......F................................................................ [ 12%]
+........................................................................ [ 16%]
+........................................................................ [ 20%]
+........................................................................ [ 24%]
+........................................................................ [ 28%]
+........................................................................ [ 32%]
+........................................................................ [ 36%]
+........................................................................ [ 40%]
+........................................................................ [ 44%]
+........................................................................ [ 48%]
+........................................................................ [ 52%]
+........................................................................ [ 56%]
+........................................................................ [ 60%]
+........................................................................ [ 64%]
+........................................................................ [ 68%]
+........................................................................ [ 72%]
+........................................................................ [ 76%]
+........................................................................ [ 80%]
+........................................................................ [ 84%]
+........................................................................ [ 88%]
+........................................................................ [ 92%]
+........................................................................ [ 96%]
+.....................................................................    [100%]
+================================== FAILURES ===================================
+_ TestNotificationLifecycle.test_real_rebuild_restores_same_notice_in_current_language _
+
+tkroot = <tkinterdnd2.TkinterDnD.Tk object .>
+
+    def _require(tkroot):
+        '''Internal function.'''
+        global TkdndVersion
+        try:
+            import os
+            import platform
+    
+            # On Windows, platform.machine() returns the identifier of the
+            # *host* architecture, which does not necessarily match the
+            # architecture of the running python process. For example, when
+            # running x86 python under x64 Windows, the return value is AMD64;
+            # when running either x86 or x64 python under arm64 Windows, the
+            # return value is ARM64. The architecture of the running process
+            # can be obtained from the PROCESSOR_ARCHITECTURE environment variable,
+            # which is automatically set by Windows / WOW subsystem.
+            system = platform.system()
+            if system=="Windows":
+                machine = os.environ.get('PROCESSOR_ARCHITECTURE', platform.machine())
+            else:
+                machine = platform.machine()
+    
+            if system=="Darwin" and machine=="arm64":
+                tkdnd_platform_rep = "osx-arm64"
+            elif system=="Darwin" and machine=="x86_64":
+                tkdnd_platform_rep = "osx-x64"
+            elif system=="Linux" and machine=="aarch64":
+                tkdnd_platform_rep = "linux-arm64"
+            elif system=="Linux" and machine=="x86_64":
+                tkdnd_platform_rep = "linux-x64"
+            elif system=="Windows" and machine=="ARM64":
+                tkdnd_platform_rep = "win-arm64"
+            elif system=="Windows" and machine=="AMD64":
+                tkdnd_platform_rep = "win-x64"
+            elif system=="Windows" and machine=="x86":
+                tkdnd_platform_rep = "win-x86"
+            else:
+                raise RuntimeError('Plaform not supported.')
+    
+            tcl_major = int(tkroot.tk.call('info', 'tclversion').split('.')[0])
+            if tcl_major >= 9:
+                tcl9_path = os.path.join(os.path.dirname(__file__), 'tkdnd', tkdnd_platform_rep + '-tcl9')
+                module_path = tcl9_path if os.path.isdir(tcl9_path) else os.path.join(os.path.dirname(__file__), 'tkdnd', tkdnd_platform_rep)
+            else:
+                module_path = os.path.join(os.path.dirname(__file__), 'tkdnd', tkdnd_platform_rep)
+            tkroot.tk.call('lappend', 'auto_path', module_path)
+>           TkdndVersion = tkroot.tk.call('package', 'require', 'tkdnd')
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           _tkinter.TclError: can't find package tkdnd
+
+.venv\Lib\site-packages\tkinterdnd2\TkinterDnD.py:74: TclError
+
+During handling of the above exception, another exception occurred:
+
+self = <tests.test_config_notification.TestNotificationLifecycle object at 0x000002453DDD3EE0>
+isolated_app = WindowsPath('C:/Users/shdwf/AppData/Local/Temp/pf_config_notice_hx20izx6/pagefolio_settings.json')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000002453F791C50>
+
+    def test_real_rebuild_restores_same_notice_in_current_language(
+        self, isolated_app, monkeypatch
+    ):
+        from tkinterdnd2 import TkinterDnD
+    
+        from pagefolio.app import PDFEditorApp
+    
+        isolated_app.write_bytes(b"{broken")
+        clock = [0.0]
+        monkeypatch.setattr("pagefolio.app.time.monotonic", lambda: clock[0])
+>       root = TkinterDnD.Tk()
+               ^^^^^^^^^^^^^^^
+
+tests\test_config_notification.py:347: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+.venv\Lib\site-packages\tkinterdnd2\TkinterDnD.py:324: in __init__
+    self.TkdndVersion = _require(self)
+                        ^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+tkroot = <tkinterdnd2.TkinterDnD.Tk object .>
+
+    def _require(tkroot):
+        '''Internal function.'''
+        global TkdndVersion
+        try:
+            import os
+            import platform
+    
+            # On Windows, platform.machine() returns the identifier of the
+            # *host* architecture, which does not necessarily match the
+            # architecture of the running python process. For example, when
+            # running x86 python under x64 Windows, the return value is AMD64;
+            # when running either x86 or x64 python under arm64 Windows, the
+            # return value is ARM64. The architecture of the running process
+            # can be obtained from the PROCESSOR_ARCHITECTURE environment variable,
+            # which is automatically set by Windows / WOW subsystem.
+            system = platform.system()
+            if system=="Windows":
+                machine = os.environ.get('PROCESSOR_ARCHITECTURE', platform.machine())
+            else:
+                machine = platform.machine()
+    
+            if system=="Darwin" and machine=="arm64":
+                tkdnd_platform_rep = "osx-arm64"
+            elif system=="Darwin" and machine=="x86_64":
+                tkdnd_platform_rep = "osx-x64"
+            elif system=="Linux" and machine=="aarch64":
+                tkdnd_platform_rep = "linux-arm64"
+            elif system=="Linux" and machine=="x86_64":
+                tkdnd_platform_rep = "linux-x64"
+            elif system=="Windows" and machine=="ARM64":
+                tkdnd_platform_rep = "win-arm64"
+            elif system=="Windows" and machine=="AMD64":
+                tkdnd_platform_rep = "win-x64"
+            elif system=="Windows" and machine=="x86":
+                tkdnd_platform_rep = "win-x86"
+            else:
+                raise RuntimeError('Plaform not supported.')
+    
+            tcl_major = int(tkroot.tk.call('info', 'tclversion').split('.')[0])
+            if tcl_major >= 9:
+                tcl9_path = os.path.join(os.path.dirname(__file__), 'tkdnd', tkdnd_platform_rep + '-tcl9')
+                module_path = tcl9_path if os.path.isdir(tcl9_path) else os.path.join(os.path.dirname(__file__), 'tkdnd', tkdnd_platform_rep)
+            else:
+                module_path = os.path.join(os.path.dirname(__file__), 'tkdnd', tkdnd_platform_rep)
+            tkroot.tk.call('lappend', 'auto_path', module_path)
+            TkdndVersion = tkroot.tk.call('package', 'require', 'tkdnd')
+        except tkinter.TclError:
+>           raise RuntimeError('Unable to load tkdnd library.')
+E           RuntimeError: Unable to load tkdnd library.
+
+.venv\Lib\site-packages\tkinterdnd2\TkinterDnD.py:76: RuntimeError
+_ TestLoadTracer.test_corrupt_settings_show_one_real_toast_and_keep_pdf_editable _
+
+self = <tests.test_config_notification.TestLoadTracer object at 0x000002453DEAB610>
+isolated_app = WindowsPath('C:/Users/shdwf/AppData/Local/Temp/pf_config_notice_40ldlt4u/pagefolio_settings.json')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000002453DE26580>
+record_property = <function record_property.<locals>.append_property at 0x000002454197E350>
+
+    def test_corrupt_settings_show_one_real_toast_and_keep_pdf_editable(
+        self, isolated_app, monkeypatch, record_property
+    ):
+        import pagefolio.app as app_mod
+    
+        settings_path = isolated_app
+        original = b'{"secret": "sentinel-private-2048", bad json'
+        settings_path.write_bytes(original)
+        root = tk.Tk()
+        root.withdraw()
+        app = None
+        built = []
+        original_build = app_mod.PDFEditorApp._build_ui
+    
+        def observed_build(self):
+            built.append(getattr(self, "_toast", None))
+            return original_build(self)
+    
+        monkeypatch.setattr(app_mod.PDFEditorApp, "_build_ui", observed_build)
+        try:
+            app = app_mod.PDFEditorApp(root)
+            assert built == [None]
+            assert app._settings_autosave_blocked
+            assert len(app._config_notices) == 1
+            assert app._toast._active_category is None
+    
+            root.update_idletasks()
+            assert app._toast._active_category is None
+            root.deiconify()
+            root.update()
+            assert app._toast._active_category == "config_notice"
+            assert app._toast._retry_btn is None
+            assert app._toast._frame.winfo_exists()
+            assert app._toast._duration_after is not None
+            assert root.grab_current() is None
+            assert "sentinel-private-2048" not in app._toast._msg_var.get()
+    
+            entry = ttk.Entry(root)
+            entry.pack()
+            root.deiconify()
+            root.update()
+            entry.focus_set()
+            root.update_idletasks()
+            focused = root.focus_get()
+            app._show_next_config_notice()
+            root.update_idletasks()
+            if focused is not None:
+                assert root.focus_get() is focused
+                record_property("widget_focus_check", "verified")
+            if focused is entry:
+                record_property("focus_check", "verified")
+            elif focused is None:
+                record_property("focus_check", "unverified: Tk returned None")
+            else:
+                record_property(
+                    "focus_check", "unverified: focused widget is not the input entry"
+                )
+            assert root.grab_current() is None
+    
+            app.doc = fitz.open()
+            app.doc.new_page()
+>           app._rotate_selected(90)
+
+tests\test_config_notification.py:1534: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+pagefolio\page_ops.py:142: in _rotate_selected
+    self._refresh_all()
+pagefolio\viewer.py:227: in _refresh_all
+    self._show_preview()
+pagefolio\viewer.py:116: in _show_preview
+    self.preview_canvas.create_image(pad, pad, anchor="nw", image=photo)
+..\..\..\AppData\Local\Programs\Python\Python315\Lib\tkinter\__init__.py:3119: in create_image
+    return self._create('image', args, kw)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tkinter.Canvas object .!panedwindow.!frame2.!frame2.!canvas>
+itemType = 'image', args = (10, 10)
+kw = {'anchor': 'nw', 'image': <PIL.ImageTk.PhotoImage object at 0x000002453F866450>}
+
+    def _create(self, itemType, args, kw): # Args: (val, val, ..., cnf={})
+        """Internal function."""
+        args = _flatten(args)
+        cnf = args[-1]
+        if isinstance(cnf, (dict, tuple)):
+            args = args[:-1]
+        else:
+            cnf = {}
+>       return self.tk.getint(self.tk.call(
+            self._w, 'create', itemType,
+            *(args + self._options(cnf, kw))))
+E       _tkinter.TclError: image "pyimage9" does not exist
+
+..\..\..\AppData\Local\Programs\Python\Python315\Lib\tkinter\__init__.py:3105: TclError
+============================== warnings summary ===============================
+.venv\Lib\site-packages\pymupdf\__init__.py:470
+  C:\Users\shdwf\work\project\PageFolio\.venv\Lib\site-packages\pymupdf\__init__.py:470: DeprecationWarning: 'typing.ByteString' and 'collections.abc.ByteString' are deprecated and slated for removal in Python 3.17
+    ByteString = typing.ByteString
+
+tests/test_ocr_engine.py::TestOCRRunEngineE2E::test_on_success_exception_still_reaches_on_complete
+  C:\Users\shdwf\AppData\Local\Programs\Python\Python315\Lib\logging\__init__.py:194: RuntimeWarning: the Tcl interpreter is leaked because it was deallocated in a thread other than the one it was created in (see gh-83274)
+    def _is_internal_frame(frame):
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED tests/test_config_notification.py::TestNotificationLifecycle::test_real_rebuild_restores_same_notice_in_current_language
+FAILED tests/test_config_notification.py::TestLoadTracer::test_corrupt_settings_show_one_real_toast_and_keep_pdf_editable
+2 failed, 1795 passed, 2 warnings in 269.56s (0:04:29)

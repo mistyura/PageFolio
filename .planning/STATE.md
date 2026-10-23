@@ -6,11 +6,11 @@ current_phase: 06
 current_phase_name: サンプル配布とリリース検証
 current_plan: Not started
 status: executing
-stopped_at: Phase 06 計画検証合格・実行待ち（6計画・6wave）
-last_updated: "2026-10-23T19:41:41.847Z"
+stopped_at: Phase 06 レビュー計画検証合格・通知テスト修正後全1797件合格・実行待ち
+last_updated: "2026-10-23T21:27:22.195Z"
 last_activity: 2026-10-24
-last_activity_desc: Phase 06の調査・6計画作成・独立計画検証完了
-state_head: 5b0e1d0330dd31c8e3887a77b0f430c07f3cc118
+last_activity_desc: Phase 06レビュー反映と通知テスト隔離修正、native全件1797 passed/1 warning
+state_head: 8b513b83da8ca22558f846fdc5ca6c0493932d96
 progress:
   total_phases: 3
   completed_phases: 2
@@ -51,9 +51,11 @@ Current Plan: Not started
 Total Plans in Phase: 6
 Plan: 06-01から実行待ち（0/6完了）
 Status: Ready to execute
-Last activity: 2026-10-24 — Phase 06の6計画・6wave・12taskを作成、独立検証合格
+Last activity: 2026-10-24 — Phase 06レビュー反映・独立検証合格、通知テスト修正後の全件1797 passed
 
-**現行再開点:** `$gsd-execute-phase 06`。Phase 06は6計画・6直列wave・12task、独立計画検証は修正1回後にblocker/warning 0、要件6/6・決定16/16を被覆。製品実装・実build・実機受入は未実施。Phase 05は4/4計画・検証passed（23/23）、操作受入H01〜H14と意味評価Test 1/2の計16件passで正式完了。既存1797 passed / 1 warning / 266.81秒 / exit 0は過去の入力103件hash一致による再利用記録。Nyquist validated、Security14 closed。Phase 04報告はstaleのため `$gsd-execute-phase 04` による再検証が06-05の実機開始前に必要。DEP-05・owner_missing・通知前景不一致・Tcl警告・未分類edge4件は未解除。再発時停止・Phase 6手動UAT not-run・出荷停止を維持する。
+**今回のデバッグ完了（2026-10-24）:** Phase06計画は6計画・6wave、独立checker blocker/warning 0・要件6/6・決定16/16。コミット前のnative 2失敗は、通知テストの不要なDnD初期化失敗による残留Tk rootと後続画像のinterpreter不一致という連鎖を故障注入で再現した。当該通知再構築テストだけを通常Tkへ隔離し、実Appの通知検証を維持。修正後native単一全件は1797 passed / 1 warning / 269.43秒 / exit 0、Ruff check/format・ASTも合格し、今回のテスト保留を解除した。証拠は`debug/resolved/config-notice-tk-lifecycle.md`と`debug/config-notice-tk-lifecycle-evidence/RESULTS.md`。最終専用basetempは`C:/Users/shdwf/AppData/Local/Temp/pf_config_notice_full_20261024_1`。元の失敗ログ2件とbasetempは保持。製品コード・版番号は変更なし。外部tkdndの間欠読込失敗の発生条件とDEP-05等の既存原因は未解除。成功結果は既存dirtyの入力を含む作業ツリー上の検証であり、それらの別作業差分を今回commitへ混入させない。
+
+**現行再開点:** `$gsd-execute-phase 06`。Phase 06は6計画・6直列wave・12task、独立計画検証は修正1回後にblocker/warning 0、要件6/6・決定16/16を被覆。製品実装・実build・実機受入は未実施。Phase 05は4/4計画・検証passed（23/23）、操作受入H01〜H14と意味評価Test 1/2の計16件passで正式完了。既存1797 passed / 1 warning / 266.81秒 / exit 0は過去の入力103件hash一致による再利用記録。Nyquist validated、Security14 closed。Phase 04報告はstaleのため `$gsd-execute-phase 04` による再検証をWave3後・06-04の最終ビルド前に行う。DEP-05・owner_missing・通知前景不一致・Tcl警告・未分類edge4件は未解除。再発時停止・Phase 6手動UAT not-run・出荷停止を維持する。
 
 `DEP-05-REGRESSION` は未充足のまま。元のnormal-entry-scriptのcommunicate期限超過は未再現・原因未確定で、Tcl警告との因果も未証明。レビュー時の1 failed / 1634 passedは履歴として保持する。診断強化は `9384268` で独立commit済み、実装前の単一全件は1637 passed / 1 warning / 263.66秒 / exit 0で対象hash一致を確認した。2026-10-23の利用者判断による条件付き実行の下、05-01の実装後単一全件は1660 passed / 1 warning / 234.19秒 / exit 0。上記05-01時点の実装位置は履歴。現行は05-01〜04・Nyquist・人手受入まで完了。今回の成功を原因修復や依存解除とは扱わない。後続の単一全件ゲートで同種失敗が再発したら実装・後続実行・コミットを停止し、最初の失敗出力と専用basetempの診断を保持して `$gsd-debug continue dep-05-regression` で再開する。証拠正本は `debug/dep-05-regression.md`、`05-VALIDATION.md`、`05-01-SUMMARY.md`。
 

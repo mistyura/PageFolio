@@ -20,9 +20,9 @@
     }
   ],
   "next": {
-    "command": "/gsd-progress --next",
-    "label": "Advance to the next step",
-    "reason": "Phase 3 of 3 · 63% · executing"
+    "command": "/gsd-execute-phase 06",
+    "label": "Phase 06の計画を実行",
+    "reason": "6計画のレビュー反映・独立検証合格、通知テスト隔離修正後native全1797件合格。実機受入・出荷停止条件は維持"
   },
-  "updated_at": "2026-10-23T19:43:48.617Z"
+  "updated_at": "2026-10-23T21:27:22.195Z"
 }
