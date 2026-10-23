@@ -203,7 +203,28 @@ Plans:
 
 **引受必須**: [06-UAT-CARRYOVER.md](phases/06-release-validation/06-UAT-CARRYOVER.md)の全未実施人手項目。別session、DPI/UAC、OS拒否、操作状態維持を含む。not-run/failが残ればPhase 6完了・リリースを停止する。
 
-**Plans**: TBD
+**Plans**: 6 plans
+
+Plans:
+**Wave 1**
+- [ ] 06-01-PLAN.md — 専用CLIの実onedir tracerと非破壊ビルド境界（Wave 1）
+
+**Wave 2** *(blocked on Wave 1 completion)*
+- [ ] 06-02-PLAN.md — v1.10.0・サンプル利用・更新/再ビルド説明の同期（Wave 2）
+
+**Wave 3** *(blocked on Wave 2 completion)*
+- [ ] 06-03-PLAN.md — 実EXE観測adapterとfake OCR/設定障害の準備（Wave 3）
+
+**Wave 4** *(blocked on Wave 3 completion)*
+- [ ] 06-04-PLAN.md — 最終版の実初回/再ビルド・原本保護・EXE接続実証（Wave 4）
+
+**Wave 5** *(blocked on Wave 4 completion)*
+- [ ] 06-05-PLAN.md — 全ケースカードと操作状態/混在入口/EXE設定受入（Wave 5）
+
+**Wave 6** *(blocked on Wave 5 completion)*
+- [ ] 06-06-PLAN.md — OS条件/別session受入と品質・鮮度・出荷停止照合（Wave 6）
+
+共有する配布tree・証拠台帳・Windows foregroundと1タスクずつの規約により直列。全24枝番＋WR-01は06-VALIDATIONへ割当済み。Phase4 stale再検証が実機受入開始/完了の前提で、W11未準備・必須not-run/failはPhase6完了/出荷を停止する。計画合格は製品実装・実機合格ではない。
 
 ## Progress
 
@@ -218,7 +239,7 @@ Plans:
 | v1.7.1 現機能ブラッシュアップ + APIキー入力欄 | 4 | 16 | ✅ Complete | 2026-07-05 |
 | v1.8.0 実用性の最大化・エコシステム洗練・堅牢性強化 | 6 | 22 | ✅ Complete | 2026-07-16 |
 | v1.9.0 安全性・整合性の是正 + OpenAI プロバイダ追加 | 3 | 15 | ✅ Complete | 2026-08-11 |
-| v1.10.0 多重起動防止・起動操作の改善 | 3 | 10（Phase 4/5確定、Phase 6はTBD） | Phase 5完了・Phase 6計画前。Phase 4報告stale・回帰原因未解決・出荷停止を維持 | — |
+| v1.10.0 多重起動防止・起動操作の改善 | 3 | 16（Phase 4:6、Phase 5:4、Phase 6:6） | Phase 5完了・Phase 6計画済み。Phase 4報告stale・回帰原因未解決・出荷停止を維持 | — |
 
 各マイルストーンのフェーズ単位の内訳は上記 `<details>` ブロックおよび各アーカイブ
 （`milestones/*-ROADMAP.md`）を参照。
@@ -227,4 +248,4 @@ Plans:
 |-------|----------------|--------|-----------|
 | 4. 起動制御と既存画面への復帰 | 6/6 | Complete | 2026-10-22 |
 | 5. 設定読込・保存失敗の通知 | 4/4 | Complete | 2026-10-24 |
-| 6. サンプル配布とリリース検証 | 0/TBD | Not started | — |
+| 6. サンプル配布とリリース検証 | 0/6 | Planned | — |

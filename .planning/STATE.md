@@ -5,18 +5,18 @@ milestone_name: 多重起動防止・起動操作の改善
 current_phase: 06
 current_phase_name: サンプル配布とリリース検証
 current_plan: Not started
-status: planning
-stopped_at: Phase 06 の議論完了・計画作成待ち
-last_updated: "2026-10-23T18:44:39.684Z"
+status: executing
+stopped_at: Phase 06 計画検証合格・実行待ち（6計画・6wave）
+last_updated: "2026-10-23T19:41:41.847Z"
 last_activity: 2026-10-24
-last_activity_desc: Phase 05のUAT・正式検証完了、Phase 06の議論・計画前
-state_head: 3a40aa8948ce05d1d4b0b13cfca24f136a05f2d7
+last_activity_desc: Phase 06の調査・6計画作成・独立計画検証完了
+state_head: 5b0e1d0330dd31c8e3887a77b0f430c07f3cc118
 progress:
   total_phases: 3
   completed_phases: 2
-  total_plans: 10
+  total_plans: 16
   completed_plans: 10
-  percent: 67
+  percent: 63
 ---
 
 # Project State
@@ -46,18 +46,18 @@ See: .planning/PROJECT.md (updated 2026-10-24)
 
 ## Current Position
 
-Phase: 06 — サンプル配布とリリース検証
+Phase: 06 (サンプル配布とリリース検証) — READY TO EXECUTE
 Current Plan: Not started
-Total Plans in Phase: TBD
-Plan: 未計画
-Status: Ready to plan
-Last activity: 2026-10-24 — Phase 05 complete, transitioned to Phase 06
+Total Plans in Phase: 6
+Plan: 06-01から実行待ち（0/6完了）
+Status: Ready to execute
+Last activity: 2026-10-24 — Phase 06の6計画・6wave・12taskを作成、独立検証合格
 
-**現行再開点:** `$gsd-discuss-phase 06`。Phase 05は4/4計画・検証passed（23/23）、操作受入H01〜H14と意味評価Test 1/2の計16件passで正式完了。既存1797 passed / 1 warning / 266.81秒 / exit 0を入力103件のhash一致で再利用。Nyquist validated、Security14 closed。Phase 04報告はstaleのため `$gsd-execute-phase 04` による再検証が後続で必要。DEP-05・owner_missing・通知前景不一致・Tcl警告・未分類edge4件は未解除。再発時停止・Phase 6手動UAT not-run・出荷停止を維持する。
+**現行再開点:** `$gsd-execute-phase 06`。Phase 06は6計画・6直列wave・12task、独立計画検証は修正1回後にblocker/warning 0、要件6/6・決定16/16を被覆。製品実装・実build・実機受入は未実施。Phase 05は4/4計画・検証passed（23/23）、操作受入H01〜H14と意味評価Test 1/2の計16件passで正式完了。既存1797 passed / 1 warning / 266.81秒 / exit 0は過去の入力103件hash一致による再利用記録。Nyquist validated、Security14 closed。Phase 04報告はstaleのため `$gsd-execute-phase 04` による再検証が06-05の実機開始前に必要。DEP-05・owner_missing・通知前景不一致・Tcl警告・未分類edge4件は未解除。再発時停止・Phase 6手動UAT not-run・出荷停止を維持する。
 
 `DEP-05-REGRESSION` は未充足のまま。元のnormal-entry-scriptのcommunicate期限超過は未再現・原因未確定で、Tcl警告との因果も未証明。レビュー時の1 failed / 1634 passedは履歴として保持する。診断強化は `9384268` で独立commit済み、実装前の単一全件は1637 passed / 1 warning / 263.66秒 / exit 0で対象hash一致を確認した。2026-10-23の利用者判断による条件付き実行の下、05-01の実装後単一全件は1660 passed / 1 warning / 234.19秒 / exit 0。上記05-01時点の実装位置は履歴。現行は05-01〜04・Nyquist・人手受入まで完了。今回の成功を原因修復や依存解除とは扱わない。後続の単一全件ゲートで同種失敗が再発したら実装・後続実行・コミットを停止し、最初の失敗出力と専用basetempの診断を保持して `$gsd-debug continue dep-05-regression` で再開する。証拠正本は `debug/dep-05-regression.md`、`05-VALIDATION.md`、`05-01-SUMMARY.md`。
 
-Progress: [███████░░░] 67%（Phase 4/5の完了履歴2/3フェーズ。Phase 4検証報告はstaleで再検証が必要。Phase 6は計画前で、必須実機受入と出荷停止を維持する。）
+Progress: [██████░░░░] 63%（計画10/16完了、Phase 4/5の完了履歴2/3フェーズ。Phase 4検証報告はstaleで再検証が必要。Phase 6は計画済み・実行未着手、必須実機受入と出荷停止を維持する。）
 
 ## v1.10.0 Phase Map（構成承認済み）
 
@@ -65,7 +65,7 @@ Progress: [███████░░░] 67%（Phase 4/5の完了履歴2/3フ�
 |-------|------|--------------|------|
 | 4 | 起動制御と既存画面への復帰 | V110-START-01〜03, V110-FOCUS-01/02 | Complete（6/6、検証21/21 passed） |
 | 5 | 設定読込・保存失敗の通知 | V110-CFG-01〜04 | Complete（4/4、検証23/23 passed、人手16 pass）。回帰原因未解決・再発時停止を維持 |
-| 6 | サンプル配布とリリース検証 | V110-DIST-01〜03, V110-QA-01〜03 | 未着手・計画前 |
+| 6 | サンプル配布とリリース検証 | V110-DIST-01〜03, V110-QA-01〜03 | Planned（6計画・6wave、0/6完了） |
 
 Phase 4は自動受入/A1〜A5と証拠照合を行い、未実施人手W項目は承認によりPhase 6へ移管。Phase 5は機能テストと必要な実機確認を行う。Phase 6 は PyInstaller の実ビルド・再ビルドと実 EXE の UAT を含む最終検証。各フェーズ完了時は `/gsd-validate-phase` を実行する。
 

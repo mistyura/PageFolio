@@ -11,18 +11,18 @@
     {
       "number": "5",
       "name": "設定読込・保存失敗の通知",
-      "status": "in_progress"
+      "status": "complete"
     },
     {
       "number": "6",
       "name": "サンプル配布とリリース検証",
-      "status": "pending"
+      "status": "in_progress"
     }
   ],
   "next": {
     "command": "/gsd-progress --next",
-    "label": "Phase 6の計画へ進む",
-    "reason": "Phase 5のUATと検証は完了。Phase 6は計画前。Phase 4報告のstale再検証と出荷停止は維持する。"
+    "label": "Advance to the next step",
+    "reason": "Phase 3 of 3 · 63% · executing"
   },
-  "updated_at": "2026-10-23T18:17:17.291Z"
+  "updated_at": "2026-10-23T19:43:48.617Z"
 }
