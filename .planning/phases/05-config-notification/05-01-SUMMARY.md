@@ -56,8 +56,8 @@ status: complete
 
 ## Task Commits
 
-1. **05-01-01 起動tracerと通知経路:** `be8f78a` — 実App、実Toast、PDF回転、原本保護を実装・検証。
-2. **05-01-02 読込境界と終了保護:** `58f017d` — 破損/読取不能/不存在/競合と終了分岐の試験を追加。文言定義を整形。
+1. **Task 1: 05-01-01 起動tracerと通知経路:** `be8f78a` — 実App、実Toast、PDF回転、原本保護を実装・検証。
+2. **Task 2: 05-01-02 読込境界と終了保護:** `58f017d` — 破損/読取不能/不存在/競合と終了分岐の試験を追加。文言定義を整形。
 
 ## Verification
 
@@ -86,5 +86,11 @@ status: complete
 - 保存失敗イベントのFIFOと再構築・PDF/印刷通知競合、明示保存での保護解除は05-02以降の担当。V110-CFG-01/03/04の最終要件完了と人手UATはまだ主張しない。
 
 ## Self-Check: PASSED
+
+## 2026-10-23 再開時の後処理
+
+- SUMMARY・focus.xmlを `ca052ab` で限定コミットし、開始前のROADMAP等のindexを保持した。
+- CLIの実装済み入口は `check ui-safety-gate 5`。旧query名ではなく正式checkを実行しexit 0 / block=falseを確認。Task行形式をパーサー契約へ合わせた後はscopeStatusのdegraded表示も解消した。TkinterのPythonファイルはこのゲートのWeb向けUI判定対象外であり、実Tk検証の代替とはしない。
+- `check verify-schema-drift 5`: block=false。`check verify-codebase-drift 5`: no-mapped-commitによるskip。Wave 1の必須ゲートのcommand errorは復旧済み。
 
 変更5ファイル、SUMMARY、検証記録2件、JUnitの存在と、`be8f78a`・`58f017d`がHEADの祖先であることを確認した。台帳基点からの実測コミット数は2。
