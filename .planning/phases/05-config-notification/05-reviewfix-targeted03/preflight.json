@@ -1,0 +1,11 @@
+{
+  "ready": true,
+  "observations": [
+    {
+      "monotonic": 20224.7058536,
+      "hwnd": 6622892,
+      "pid": 27072,
+      "class": "Chrome_WidgetWin_1"
+    }
+  ]
+}

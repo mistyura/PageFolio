@@ -1,0 +1,18 @@
+{
+  "state": "passed",
+  "command": [
+    "C:\\Users\\shdwf\\work\\project\\PageFolio\\.venv\\Scripts\\python.exe",
+    "-m",
+    "pytest",
+    "tests/test_config_notification.py",
+    "tests/test_toast.py",
+    "tests/test_pdf_ops.py",
+    "-x",
+    "-q",
+    "--tb=short",
+    "--basetemp=C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_reviewfix_targeted04"
+  ],
+  "exit_code": 0,
+  "seconds": 16.030698099999427,
+  "artifacts": 0
+}

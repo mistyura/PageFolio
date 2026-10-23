@@ -1,0 +1,20 @@
+........................................................................ [  4%]
+........................................................................ [  8%]
+....................................................F
+================================== FAILURES ===================================
+_____________________ test_completed_phases_are_validated _____________________
+tests\test_gsd_dod.py:293: in test_completed_phases_are_validated
+    assert not violations, "DoD 違反を検出:\n" + "\n".join(
+E   AssertionError: DoD 違反を検出:
+E     - phases/05-config-notification: 判定不能: 未完了ProgressとPLAN/SUMMARY件数が不整合
+E   assert not [('phases/05-config-notification', '判定不能: 未完了ProgressとPLAN/SUMMARY件数が不整合')]
+============================== warnings summary ===============================
+.venv\Lib\site-packages\pymupdf\__init__.py:470
+  C:\Users\shdwf\work\project\PageFolio\.venv\Lib\site-packages\pymupdf\__init__.py:470: DeprecationWarning: 'typing.ByteString' and 'collections.abc.ByteString' are deprecated and slated for removal in Python 3.17
+    ByteString = typing.ByteString
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED tests/test_gsd_dod.py::test_completed_phases_are_validated - Assertion...
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!
+1 failed, 196 passed, 1 warning in 13.99s

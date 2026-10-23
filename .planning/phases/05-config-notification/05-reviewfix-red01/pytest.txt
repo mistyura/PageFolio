@@ -1,0 +1,18 @@
+F
+================================== FAILURES ===================================
+___ TestToolSaveOrigins.test_real_shortcuts_close_restores_outer_grab[save] ___
+tests\test_config_notification.py:831: in test_real_shortcuts_close_restores_outer_grab
+    assert root.grab_current() is outer
+E   assert None is <pagefolio.dialogs.settings.SettingsDialog object .!settingsdialog>
+E    +  where None = grab_current()
+E    +    where grab_current = <tkinter.Tk object .>.grab_current
+============================== warnings summary ===============================
+.venv\Lib\site-packages\pymupdf\__init__.py:470
+  C:\Users\shdwf\work\project\PageFolio\.venv\Lib\site-packages\pymupdf\__init__.py:470: DeprecationWarning: 'typing.ByteString' and 'collections.abc.ByteString' are deprecated and slated for removal in Python 3.17
+    ByteString = typing.ByteString
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED tests/test_config_notification.py::TestToolSaveOrigins::test_real_shortcuts_close_restores_outer_grab[save]
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!
+1 failed, 1 warning in 1.59s

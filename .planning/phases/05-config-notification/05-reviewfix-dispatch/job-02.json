@@ -1,0 +1,1 @@
+{"evidence":"C:/Users/shdwf/work/project/PageFolio/.planning/phases/05-config-notification/05-reviewfix-red02","temporary":"C:/Users/shdwf/AppData/Local/Temp/pf_reviewfix_red02","selectors":["tests/test_config_notification.py::TestNotificationLifecycle::test_hidden_root_preserves_fifo_and_visible_time"]}

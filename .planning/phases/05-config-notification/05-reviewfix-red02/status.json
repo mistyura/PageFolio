@@ -1,0 +1,16 @@
+{
+  "state": "failed",
+  "command": [
+    "C:\\Users\\shdwf\\work\\project\\PageFolio\\.venv\\Scripts\\python.exe",
+    "-m",
+    "pytest",
+    "tests/test_config_notification.py::TestNotificationLifecycle::test_hidden_root_preserves_fifo_and_visible_time",
+    "-x",
+    "-q",
+    "--tb=short",
+    "--basetemp=C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_reviewfix_red02"
+  ],
+  "exit_code": 1,
+  "seconds": 0.926879700000427,
+  "artifacts": 0
+}

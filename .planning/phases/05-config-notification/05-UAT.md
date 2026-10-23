@@ -39,6 +39,17 @@ H09/H10は保存失敗による終了保留を認識できるか、H01/H02/H06�
 
 ## 未確定項目
 
+## レビュー修正後の追加人手受入
+
+| ID | 対象 | 判定 | 実施者・時刻・根拠 |
+|---|---|---|---|
+| H13 / CR-01 | 保存失敗通知を作りSettings→Shortcutsを開閉し、外側を10秒以上保持した後の通知保持 | pass | 利用者・2026-10-24 JST。修正7bbb06c、起動PID18164。「2項目とも確認できた」で明示確認 |
+| H14 / CR-02 | 通知を約4秒表示→最小化10秒以上→復元後に残り約6秒表示 | pass | 利用者・2026-10-24 JST。修正7bbb06c、起動PID18164。「2項目とも確認できた」で明示確認 |
+
+H01〜H12は修正前の結果として保持し、追加2境界だけを上記で補完した。
+
+## 未確定項目の状態
+
 - descriptor-less prohibition 2件は **flagged-unverified**。H01/H02/H06/H07で文言・入力先・編集継続・通知保持の利用者目視は得たが、禁止内容のdescriptorがなく各IDとの対応を確定できない。目視完了だけでresolvedへ変更しない。
 - edge-probe 4件（CFG-01〜04）は **unclassified/unresolved**、verification/resolution=null。自動境界試験による読み替えなし。
 - Nyquist実走、独立code/secure/goal-backward確認、Phase 6 EXE受入は未実施。

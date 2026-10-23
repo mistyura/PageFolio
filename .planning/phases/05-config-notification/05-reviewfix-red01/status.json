@@ -1,0 +1,16 @@
+{
+  "state": "failed",
+  "command": [
+    "C:\\Users\\shdwf\\work\\project\\PageFolio\\.venv\\Scripts\\python.exe",
+    "-m",
+    "pytest",
+    "tests/test_config_notification.py::TestToolSaveOrigins::test_real_shortcuts_close_restores_outer_grab",
+    "-x",
+    "-q",
+    "--tb=short",
+    "--basetemp=C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_reviewfix_red01"
+  ],
+  "exit_code": 1,
+  "seconds": 2.5191668000006757,
+  "artifacts": 0
+}

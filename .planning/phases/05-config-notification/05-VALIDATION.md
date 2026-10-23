@@ -120,10 +120,24 @@ SPECなしの edge-probe は V110-CFG-01/02/03/04 全4行が `unclassified` / `u
 
 **Approval:** validated 2026-10-24（独立監査、4要件・9タスク、追加ギャップ0）
 
+## レビュー修正後の検証
+
+`7bbb06c`でCR-01（内側Shortcuts終了後の外側grab）とCR-02（最小化/非表示中の通知時間）を修正し、実Tkを含む8回帰を追加した。`2654882`でWR-01の入力欄フォーカス証拠を修正。最新単一全件は **1797 passed / failed 0 / ERROR 0 / 1 warning / 266.81秒 / exit 0**。Ruff→Python限定format109 unchanged→Ruff→AST→diff成功。現行103入力と診断423件の原本/コピー/manifestのSHA256不一致0。正本は05-EVIDENCE.jsonのlatest_automated_verification、05-focus-proof-final/。
+
+独立再レビューはcritical/warning/info各0でclean。製品修正後の利用者H13/H14は2 passで、元のH01〜H12の12 passと分けて05-UAT.mdへ記録した。Phase 4検証で参照する5試験ファイルは全件pytestに含まれ、同一入力の成功結果を回帰ゲートへ再利用する。DEP-05等の未解除条件はそのまま維持する。
+
 ## Validation Audit 2026-10-23
 
 | Metric | Count |
 |---|---|
 | Gaps found | 0 |
 | Resolved | 0 |
+| Escalated | 0 |
+
+## Validation Audit 2026-10-23
+
+| Metric | Count |
+|---|---|
+| Gaps found | 2 |
+| Resolved | 2 |
 | Escalated | 0 |

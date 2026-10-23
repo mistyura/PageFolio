@@ -1,6 +1,6 @@
 ---
 phase: 05-config-notification
-reviewed: 2026-10-23T16:42:28Z
+reviewed: 2026-10-23T17:19:55Z
 depth: standard
 files_reviewed: 21
 files_reviewed_list:
@@ -26,70 +26,50 @@ files_reviewed_list:
   - tests/test_toast.py
   - 開発履歴.md
 findings:
-  critical: 2
+  critical: 0
   warning: 0
   info: 0
-  total: 2
-status: issues_found
+  total: 0
+status: clean
 ---
 
 # Phase 5: コードレビュー報告
 
-**レビュー日時:** 2026-10-23T16:42:28Z（2026-10-24 JST）
+**レビュー日時:** 2026-10-23T17:19:55Z（2026-10-24 JST）
 **深度:** standard
 **対象ファイル:** 21
-**状態:** issues_found
+**状態:** clean
 
 ## Summary
 
-指定された21ファイルを対象に、基点 `4f0fb97` からのPhase 5差分と現在の呼出関係を確認した。新しい設定通知が利用者に見えない間に消化される経路を2件検出した。いずれも通知キューが保持するイベントを失う正しさの問題であり、D-18/D-21とV110-CFG-04の受入に影響する。BLOCKERは2件、WARNING・INFOはnone。
+前回のWR-01を修正コミット `2654882b7dc8abc3c8a78f802e27175845b7c8c8` の8行差分で再確認し、解消と判定した。CR-01/CR-02は前回確認した `7bbb06ce7f409b8ed090eb73d7a812ec9293926f` の製品修正を再利用し、修正後の利用者確認H13/H14も照合した。未解決のコード指摘はなく、BLOCKER・WARNING・INFOはいずれも0件、statusはclean。
 
-構造プリパスと外部レビューレーンの指定はない。過去のレビュー結果・計画・テスト成功は現行コードの正しさの証明として扱わず、下記の具体的な経路をソースで追跡した。既知のDEP-05/owner_missing/通知前景不一致/Tcl解放警告、descriptor不明の禁止2件、未分類edge4件、および既報のUI advisoryは本指摘に重複計上していない。既存の未コミット別件差分は変更していない。
+指定21ファイルの既読レビュー結果を引き継ぎ、今回の追加確認は `tests/test_config_notification.py` の8行と `05-UAT.md` のH13/H14に限定した。全ソースの再調査や試験の再実行はしていない。構造プリパスと外部レビューレーンの指定はない。前回報告は `05-REVIEW.iter2.md` に保存され、更新前の本書とのSHA256一致を確認した。初回報告は `05-REVIEW.iter1.md` に残る。
 
 ## Narrative Findings (AI reviewer)
 
-## Critical Issues
+未解決の指摘なし。今回の修正差分から新しい具体的欠陥は検出しなかった。
 
-### CR-01: BLOCKER — 内側ショートカット画面の終了で外側設定画面の通知保護が失われる
+## 前回指摘の解決判定
 
-**File:** `C:/Users/shdwf/work/project/PageFolio/pagefolio/dialogs/shortcuts.py:283-284`
+| 元ID | 判定 | 現行ソース・回帰の根拠 |
+|---|---|---|
+| CR-01（元BLOCKER） | 解消、利用者確認H13 pass | 修正 `7bbb06ce7f409b8ed090eb73d7a812ec9293926f`。`dialogs/settings.py:286-296` は内側Shortcuts自身のDestroyに限定し、生存する外側へgrabを復元する。実save/cancel/wm 3経路、子widget破棄、外側12秒保持、閉鎖後の通知開始は前回のコード・自動回帰確認を再利用した。H13は利用者が2026-10-24 JSTに修正7bbb06cで保存失敗→Settings→Shortcuts開閉→外側10秒以上保持後の通知保持を確認し、「2項目とも確認できた」と明示回答した。 |
+| CR-02（元BLOCKER） | 解消、利用者確認H14 pass | 修正 `7bbb06ce7f409b8ed090eb73d7a812ec9293926f`。root Map/Unmap、表示開始・監視・期限時の可視性再検査、非消化中断、同event_idの残時間復帰、旧callback拒否とFIFOは前回のコード・自動回帰確認を再利用した。H14は利用者が2026-10-24 JSTに修正7bbb06cで約4秒表示→10秒以上最小化→復元後に残り約6秒を確認し、「2項目とも確認できた」と明示回答した。 |
+| WR-01（元WARNING） | 解消 | 修正 `2654882b7dc8abc3c8a78f802e27175845b7c8c8`。`tests/test_config_notification.py:1514-1529` は通常の `entry.focus_set()` 後に観測し、非Noneの一般widget同一性を `widget_focus_check` へ別記する。`focus_check=verified` は `focused is entry` の場合だけとなり、Noneと非入力widgetはそれぞれ理由付きunverifiedへ分岐する。前景の強制取得は追加されていない。 |
 
-**関連箇所:** `pagefolio/dialogs/settings.py:279-285`、`pagefolio/app.py:543-555`、`pagefolio/app.py:603-606`。
-
-**発火条件:** 一般設定を開き、その中のショートカット設定で「保存」を押す。設定JSONの保存が失敗するか、unreadable保護によって保存が抑止され、外側の一般設定画面を10秒以上開いたままにする。既に待機中の読込・保存通知がある状態で内側をキャンセルした場合も同じ経路になる。
-
-**Issue:** 内側の `ShortcutsDialog` は `grab_set()`（同ファイル60行）で外側のgrabを置き換える。保存は新しい `_persist_settings()` を通って通知を登録した直後、内側だけを `destroy()` する。呼出側 `_open_shortcuts_dialog()` に外側grabを復元する処理がなく、外側SettingsDialogが生存していてもgrabがなくなる。通知監視は `grab_current()` だけでモーダルを判定するため、次のidle/監視でメイン画面のToastを表示し、外側画面を閉じる前に期限でイベントを `popleft()` する。外側に隠れた保存失敗通知を利用者が閉鎖後に確認できなくなる。
-
-**根拠:** 同じ問題に対し、LLM画面には `dialogs/settings.py:246-258` と `ocr_dialog.py:1030-1042` に内側Destroy時の外側grab復元が追加されているが、ショートカット経路には接続されていない。既存 `TestLlmSaveOrigins.test_real_nested_close_restores_outer_grab` はこのTkのgrab消失を扱う。一方、`TestToolSaveOrigins.test_shortcuts_close_leaves_failed_event_for_display` はfakeの `destroy` でgrabをNoneにし、外側SettingsDialogの存在を表現せず通知開始を期待しているため、この製品経路を検出できない。既報の「外側Applyによるショートカット値の巻戻り」とは別の通知寿命の欠陥である。
-
-**影響:** ショートカット保存の失敗・保存抑止を認識できず、読込通知を含む待機イベントも外側画面の背後で消化される。文書化された「内側を閉じても外側モーダルがある間は待つ」（`docs/CONFIGURATION.md:323`）を満たさない。
-
-**Fix:** ショートカットにも内側自身のDestroy時に生存する外側SettingsDialogへgrabを戻す処理を接続する。保存・キャンセル・WM閉鎖を同じ後処理に通し、他の子widgetのDestroyでは復元しない。LLMと共通の小さなヘルパーにまとめてもよい。実Settings→実Shortcuts→保存失敗／キャンセル→外側を10秒以上保持→外側閉鎖の回帰を追加し、外側grab・イベント数・未消化時間を確認する。
-
-### CR-02: BLOCKER — 最小化中にも設定通知の期限が進み未確認イベントを破棄する
-
-**File:** `C:/Users/shdwf/work/project/PageFolio/pagefolio/app.py:616-645`
-
-**関連箇所:** `pagefolio/app.py:547-557`、`pagefolio/app.py:598-606`、`pagefolio/toast.py:120-131`。
-
-**発火条件:** 読込失敗または保存失敗の通知が表示中／待機中にメインウィンドウを最小化し、そのまま通知の残時間以上待つ。例えば表示4秒後に最小化して6秒以上待つ。
-
-**Issue:** 表示開始条件はrootの存在・grab・Toastのカテゴリだけであり、rootが実際に表示されているかを確認しない。表示中の監視もgrabの有無しか確認せず、最小化による非表示を中断理由にしていない。Tkの `after` は最小化中も進むため、Toastの期限callbackから `expired` が送られ、`_on_config_notice_closed()` は不可視時間を残時間から引いてイベントを消化する。後続イベントも `after_idle` で同じ最小化中のrootに表示開始され、最小化を続ければFIFO全体が画面に出ないまま失われる。
-
-**根拠:** `shown_at` は `app.py:640` で無条件に開始し、`toast.py:122` の期限はウィンドウの表示状態と独立して予約される。`app.py:603-604` が期限時に再判定するのはモーダルgrabのみ。対象のApp/Toastに `<Map>`/`<Unmap>` や `winfo_viewable()` 等による中断・復帰の処理はない。既存試験は `withdraw()` したrootでも通知の開始を許しており、非表示時間を可視時間から除く境界を検証していない。
-
-**影響:** 元の設定を読めなかったこと、または変更が次回起動に残らないことを利用者が一度も確認できない。D-21の各イベント10秒の「可視時間」と、未消化通知を捨てない契約に反する。これは他アプリによる通常の重なり検出を要求する指摘ではなく、製品自身が観測できる最小化・非表示状態に限定する。
-
-**Fix:** rootが非表示／最小化された場合は設定通知だけを非消化の終了理由で中断し、可視だった時間だけを残時間から差し引く。表示開始と期限の消化条件にも可視性を含め、再表示時に同じevent_id・残時間で再開する。root自身のMap/Unmapイベント等を使い、子widgetイベントや既存PDF/印刷Toastに干渉しない。通知前に最小化、4秒表示後に最小化、複数イベントを残したまま長時間最小化の回帰で、復帰前の消化0と復帰後の残り6秒／各10秒を確認する。
+H13/H14の人手根拠は `05-UAT.md` の追加受入表（起動PID18164）。前回報告時の `fixed: requires human verification` はこの利用者確認で充足した。今回の最終差分はテスト記録のみで、7bbb06cの製品実装を変更しない。H01〜H12の12 passは引き続き修正前の証拠として区別する。
 
 ## レビューの証拠と限界
 
-- 本報告の2件は現行ソースの呼出・grab・timer・消化条件から導いた指摘である。レビュー中に新しいGUI・実プロセス・障害注入試験は起動しておらず、新規の実機再現結果とは表記しない。
-- 既存の全件1789 passed / 1 warning、局所280 passed、Ruff/format/AST、H01〜H12の12 passは提出済み証拠として参照した。今回の2境界を通過した証拠ではない。不要な成功試験の反復は行っていない。
+- 製品修正時の局所288 passed / 1 warning / 15.35秒、全件1797 passed / 1 warning / 266.50秒、Ruff/format109/ASTと追加8回帰のコード照合は前回結果を再利用した。
+- 最終テスト修正後は `05-focus-proof-final/status.json` のexit0と `pytest.txt` の1797 passed / 1 warning / 266.81秒を読み、現行差分に未コミット変更がないことを確認した。Ruff/format109/AST成功、`05-focus-proof-inputs.json` の入力103件と診断423件の現行hash一致は親の提出済み照合結果を参照する。レビュー中の新規試験・GUI実行はなく、これらを自分の再実行結果とは表記しない。
+- 人手確認は利用者のH13/H14の観測と明示回答に基づく。レビュー担当自身による独立目視ではない。H01〜H12との実施時点を分け、自動試験から人手合格を推測していない。
+- DEP-05/owner_missing/通知前景不一致/Tcl解放警告、descriptor不明の禁止2件、未分類edge4件は未解除。今回のコード判定は出荷承認・Phase正式完了ではなく、同種再発時停止を維持する。既報UI advisoryを新規指摘へ重複計上しない。
 - 実装・テスト・共有文書は変更していない。出力は本レビューのみで、commitは行っていない。
 
 ---
 
-_Reviewed: 2026-10-23T16:42:28Z_
+_Reviewed: 2026-10-23T17:19:55Z_
 _Reviewer: gsd-code-reviewer_
 _Depth: standard_
