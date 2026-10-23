@@ -1,0 +1,2117 @@
+[
+  {
+    "file": "test_foreground_audit_receives0\\foreground-audit.jsonl",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_foreground_audit_receives0\\foreground-audit.jsonl",
+    "sha256": "8b97dd17de832dd077501fb6bda73243bde14a19f9fff4e2ce9a1623873d0b96"
+  },
+  {
+    "file": "test_working_state_real_main_c1\\entry-module\\resource-audit.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_working_state_real_main_c1\\entry-module\\resource-audit.json",
+    "sha256": "d776951d42f1467bb3549d50b3391249867eeadbd64dcee50b8de2f554670396"
+  },
+  {
+    "file": "test_working_state_real_main_c1\\entry-module\\result.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_working_state_real_main_c1\\entry-module\\result.json",
+    "sha256": "3c178502c45e82deb9d88d97441aabba75a01014f6c3531115fe35aa02059207"
+  },
+  {
+    "file": "test_working_state_real_main_c1\\entry-module\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_working_state_real_main_c1\\entry-module\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_working_state_real_main_c1\\focus-owner-ocr\\ready",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_working_state_real_main_c1\\focus-owner-ocr\\ready",
+    "sha256": "ad1742e10071e214923a02999cda4c670ff9e7e9cf96cf83bcdba250ce5c2aa7"
+  },
+  {
+    "file": "test_working_state_real_main_c1\\focus-owner-ocr\\resource-audit.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_working_state_real_main_c1\\focus-owner-ocr\\resource-audit.json",
+    "sha256": "ad1742e10071e214923a02999cda4c670ff9e7e9cf96cf83bcdba250ce5c2aa7"
+  },
+  {
+    "file": "test_working_state_real_main_c1\\focus-owner-ocr\\result.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_working_state_real_main_c1\\focus-owner-ocr\\result.json",
+    "sha256": "36255c1da0377637e61bc7378f77eb5fd5e828adb42c5a275b4d713549be54d4"
+  },
+  {
+    "file": "test_working_state_real_main_c1\\focus-owner-ocr\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_working_state_real_main_c1\\focus-owner-ocr\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_working_state_real_main_c0\\entry-module\\resource-audit.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_working_state_real_main_c0\\entry-module\\resource-audit.json",
+    "sha256": "d314f0099ffa9a03039c32e67c9c2f0930260661b9bda30aff09a7a65146af64"
+  },
+  {
+    "file": "test_working_state_real_main_c0\\entry-module\\result.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_working_state_real_main_c0\\entry-module\\result.json",
+    "sha256": "d18eb36117a9e7d693e637fd772749aa23efa52d49b0bd775a7a3ecc9b721fdc"
+  },
+  {
+    "file": "test_working_state_real_main_c0\\entry-module\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_working_state_real_main_c0\\entry-module\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_working_state_real_main_c0\\focus-owner-pdf\\ready",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_working_state_real_main_c0\\focus-owner-pdf\\ready",
+    "sha256": "72cd68fc507ed3c26e328ec1d7562e91d22ec7b1e42241bf8d8e293ca9af0295"
+  },
+  {
+    "file": "test_working_state_real_main_c0\\focus-owner-pdf\\resource-audit.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_working_state_real_main_c0\\focus-owner-pdf\\resource-audit.json",
+    "sha256": "72cd68fc507ed3c26e328ec1d7562e91d22ec7b1e42241bf8d8e293ca9af0295"
+  },
+  {
+    "file": "test_working_state_real_main_c0\\focus-owner-pdf\\result.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_working_state_real_main_c0\\focus-owner-pdf\\result.json",
+    "sha256": "89d43db7f9268fd89e3a1e127face89e8224108771f8418c44b295ce8d77d548"
+  },
+  {
+    "file": "test_working_state_real_main_c0\\focus-owner-pdf\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_working_state_real_main_c0\\focus-owner-pdf\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_tracer_notice_real_main_f0\\notice-via-main\\resource-audit.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_tracer_notice_real_main_f0\\notice-via-main\\resource-audit.json",
+    "sha256": "6c05a497cb26a2e671381d92c5de41fc6e5ffb47c3fb22315416490ac760de0c"
+  },
+  {
+    "file": "test_tracer_notice_real_main_f0\\notice-via-main\\result.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_tracer_notice_real_main_f0\\notice-via-main\\result.json",
+    "sha256": "51b55018f60dd20237aace672ec6d44bcea1a6b88f4ccb6a129682adac994abb"
+  },
+  {
+    "file": "test_tracer_notice_real_main_f0\\notice-via-main\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_tracer_notice_real_main_f0\\notice-via-main\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_tracer_notice_real_main_f0\\stall\\ready",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_tracer_notice_real_main_f0\\stall\\ready",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_tracer_notice_real_main_f0\\stall\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_tracer_notice_real_main_f0\\stall\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_tracer_notice_lease_proce0\\lease-owner\\ready",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_tracer_notice_lease_proce0\\lease-owner\\ready",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_tracer_notice_lease_proce0\\lease-owner\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_tracer_notice_lease_proce0\\lease-owner\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_tracer_notice_lease_proce0\\lease-secondary\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_tracer_notice_lease_proce0\\lease-secondary\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_tracer_io_lifetime_unresp0\\request-timeout\\resource-audit.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_tracer_io_lifetime_unresp0\\request-timeout\\resource-audit.json",
+    "sha256": "07a2e219fef4bbdd7eed396c711a06a16d87c1c0142813d1af2a1febace05089"
+  },
+  {
+    "file": "test_tracer_io_lifetime_unresp0\\request-timeout\\result.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_tracer_io_lifetime_unresp0\\request-timeout\\result.json",
+    "sha256": "ab2dca20e0eda92fc2fd2a9f26e4f3572c662c190b1d3b021b6e3f6f185125e1"
+  },
+  {
+    "file": "test_tracer_io_lifetime_unresp0\\request-timeout\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_tracer_io_lifetime_unresp0\\request-timeout\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_tracer_io_lifetime_unresp0\\stall\\ready",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_tracer_io_lifetime_unresp0\\stall\\ready",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_tracer_io_lifetime_unresp0\\stall\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_tracer_io_lifetime_unresp0\\stall\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_tracer_e2e_real_main_term0\\owner\\ready",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_tracer_e2e_real_main_term0\\owner\\ready",
+    "sha256": "11c83c38c4955036efe15816f35f60f86d7b93833d506c7610e02e0e18d3df4d"
+  },
+  {
+    "file": "test_tracer_e2e_real_main_term0\\owner\\resource-audit.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_tracer_e2e_real_main_term0\\owner\\resource-audit.json",
+    "sha256": "11c83c38c4955036efe15816f35f60f86d7b93833d506c7610e02e0e18d3df4d"
+  },
+  {
+    "file": "test_tracer_e2e_real_main_term0\\owner\\result.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_tracer_e2e_real_main_term0\\owner\\result.json",
+    "sha256": "8e942a512b5507adfc3011394ab3cb77abc54f80ab079d85ab60386965677010"
+  },
+  {
+    "file": "test_tracer_e2e_real_main_term0\\owner\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_tracer_e2e_real_main_term0\\owner\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_tracer_e2e_real_main_term0\\secondary-a\\resource-audit.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_tracer_e2e_real_main_term0\\secondary-a\\resource-audit.json",
+    "sha256": "154be36d2fd1f5bd7faceeb34093e894ce012b4a48c1e2e380647ab4ef7ed290"
+  },
+  {
+    "file": "test_tracer_e2e_real_main_term0\\secondary-a\\result.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_tracer_e2e_real_main_term0\\secondary-a\\result.json",
+    "sha256": "03228dda86b6b5a1b1d20fe6ea212b3efdea1cd3426b5f1a300fa1f469334d72"
+  },
+  {
+    "file": "test_tracer_e2e_real_main_term0\\secondary-a\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_tracer_e2e_real_main_term0\\secondary-a\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_tracer_e2e_real_main_term0\\secondary-b\\resource-audit.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_tracer_e2e_real_main_term0\\secondary-b\\resource-audit.json",
+    "sha256": "fbd337f0272405520718fc31797fa865252cf744f63749887dc8b9b05c00e1eb"
+  },
+  {
+    "file": "test_tracer_e2e_real_main_term0\\secondary-b\\result.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_tracer_e2e_real_main_term0\\secondary-b\\result.json",
+    "sha256": "03228dda86b6b5a1b1d20fe6ea212b3efdea1cd3426b5f1a300fa1f469334d72"
+  },
+  {
+    "file": "test_tracer_e2e_real_main_term0\\secondary-b\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_tracer_e2e_real_main_term0\\secondary-b\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_tracer_e2e_initialization0\\init-failure\\resource-audit.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_tracer_e2e_initialization0\\init-failure\\resource-audit.json",
+    "sha256": "1cc5dda196de10a4f3eabb82fe0a8d2d4d5ba17dcf99e0f58126831e996af5e2"
+  },
+  {
+    "file": "test_tracer_e2e_initialization0\\init-failure\\result.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_tracer_e2e_initialization0\\init-failure\\result.json",
+    "sha256": "c2984f2c2ef44487147b17aa65b30f683e208eaa9233297da7577190d50c43fb"
+  },
+  {
+    "file": "test_tracer_e2e_initialization0\\init-failure\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_tracer_e2e_initialization0\\init-failure\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_tracer_e2e_initialization0\\owner\\ready",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_tracer_e2e_initialization0\\owner\\ready",
+    "sha256": "50b3f0a416f2fc308047a8b83a7a0dec4fa2ea83f4b165d6d5ddbdb90eb0cf2e"
+  },
+  {
+    "file": "test_tracer_e2e_initialization0\\owner\\resource-audit.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_tracer_e2e_initialization0\\owner\\resource-audit.json",
+    "sha256": "50b3f0a416f2fc308047a8b83a7a0dec4fa2ea83f4b165d6d5ddbdb90eb0cf2e"
+  },
+  {
+    "file": "test_tracer_e2e_initialization0\\owner\\result.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_tracer_e2e_initialization0\\owner\\result.json",
+    "sha256": "cddc347c5011bb3ca61de7d1db5cf09ac7bf29f28ee7587296b3f1a29706f6e0"
+  },
+  {
+    "file": "test_tracer_e2e_initialization0\\owner\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_tracer_e2e_initialization0\\owner\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_tracer_e2e_api_denial_doe0\\api-denied\\resource-audit.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_tracer_e2e_api_denial_doe0\\api-denied\\resource-audit.json",
+    "sha256": "67a6a7f89603e86fc4744f8ad099a012adcf34730a104236a6479ff879100638"
+  },
+  {
+    "file": "test_tracer_e2e_api_denial_doe0\\api-denied\\result.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_tracer_e2e_api_denial_doe0\\api-denied\\result.json",
+    "sha256": "ab1cc721959e41a5903b300f8f17a9ec7d36c30583c1d6bf783ca70dd9cfdcfe"
+  },
+  {
+    "file": "test_tracer_e2e_api_denial_doe0\\api-denied\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_tracer_e2e_api_denial_doe0\\api-denied\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_tracer_abi_shared_tick_wa0\\tick\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_tracer_abi_shared_tick_wa0\\tick\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_takeover_two_candidates_a0\\initializing-owner\\ready",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_takeover_two_candidates_a0\\initializing-owner\\ready",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_takeover_two_candidates_a0\\initializing-owner\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_takeover_two_candidates_a0\\initializing-owner\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_takeover_two_candidates_a0\\takeover-0\\ready",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_takeover_two_candidates_a0\\takeover-0\\ready",
+    "sha256": "16e8f81fe025208ffb97756052089218a23747a1629128c97580177f8f7c41a6"
+  },
+  {
+    "file": "test_takeover_two_candidates_a0\\takeover-0\\resource-audit.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_takeover_two_candidates_a0\\takeover-0\\resource-audit.json",
+    "sha256": "16e8f81fe025208ffb97756052089218a23747a1629128c97580177f8f7c41a6"
+  },
+  {
+    "file": "test_takeover_two_candidates_a0\\takeover-0\\result.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_takeover_two_candidates_a0\\takeover-0\\result.json",
+    "sha256": "a56093814712c2f7e6beb78d8e89361d57a60f2468bf8a7c1825e6ec1fcd2e53"
+  },
+  {
+    "file": "test_takeover_two_candidates_a0\\takeover-0\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_takeover_two_candidates_a0\\takeover-0\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_takeover_two_candidates_a0\\takeover-1\\resource-audit.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_takeover_two_candidates_a0\\takeover-1\\resource-audit.json",
+    "sha256": "a8fd3f28579a06a9a3ab432dd71db77cdd572844c295350e7bcb3e1d2dda7982"
+  },
+  {
+    "file": "test_takeover_two_candidates_a0\\takeover-1\\result.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_takeover_two_candidates_a0\\takeover-1\\result.json",
+    "sha256": "8207ce1d5b92c07f7c12655455a896e9dfd76213d613316dd862edd3a7d08cb9"
+  },
+  {
+    "file": "test_takeover_two_candidates_a0\\takeover-1\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_takeover_two_candidates_a0\\takeover-1\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_startup_acceptance_guard_1\\entry-module\\resource-audit.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_startup_acceptance_guard_1\\entry-module\\resource-audit.json",
+    "sha256": "26e77086c0379ebd0cb8e48885316e005a3740012a4e93e61110b6572f671742"
+  },
+  {
+    "file": "test_startup_acceptance_guard_1\\entry-module\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_startup_acceptance_guard_1\\entry-module\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_startup_acceptance_guard_0\\entry-module\\resource-audit.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_startup_acceptance_guard_0\\entry-module\\resource-audit.json",
+    "sha256": "e8ab8c316d3c063a8be987acc75b5062ab2974a71931aa3a4d76a8d54444562e"
+  },
+  {
+    "file": "test_startup_acceptance_guard_0\\entry-module\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_startup_acceptance_guard_0\\entry-module\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_startup_acceptance_guard_0\\owner\\ready",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_startup_acceptance_guard_0\\owner\\ready",
+    "sha256": "1b4e8aec3b73b17bc4f04971b5ea656f14a413e8a335e7bafdae46c63512a57d"
+  },
+  {
+    "file": "test_startup_acceptance_guard_0\\owner\\resource-audit.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_startup_acceptance_guard_0\\owner\\resource-audit.json",
+    "sha256": "1b4e8aec3b73b17bc4f04971b5ea656f14a413e8a335e7bafdae46c63512a57d"
+  },
+  {
+    "file": "test_startup_acceptance_guard_0\\owner\\result.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_startup_acceptance_guard_0\\owner\\result.json",
+    "sha256": "0008e0be06fe1204275c0b28e78af11331323dc0e45721b716bc3d5f715666f1"
+  },
+  {
+    "file": "test_startup_acceptance_guard_0\\owner\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_startup_acceptance_guard_0\\owner\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_simultaneous_real_process2\\entry-module\\resource-audit.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_simultaneous_real_process2\\entry-module\\resource-audit.json",
+    "sha256": "388a820da3e6e854b8a5a8c79c82c42039b8a7986a021fd90f48651806d86aac"
+  },
+  {
+    "file": "test_simultaneous_real_process2\\entry-module\\result.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_simultaneous_real_process2\\entry-module\\result.json",
+    "sha256": "03228dda86b6b5a1b1d20fe6ea212b3efdea1cd3426b5f1a300fa1f469334d72"
+  },
+  {
+    "file": "test_simultaneous_real_process2\\entry-module\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_simultaneous_real_process2\\entry-module\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_simultaneous_real_process2\\simultaneous-slow-0\\resource-audit.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_simultaneous_real_process2\\simultaneous-slow-0\\resource-audit.json",
+    "sha256": "89233eb6b7e9e9f3c23d5828e8bebe3df0debd597741a063a570a5c57889e93a"
+  },
+  {
+    "file": "test_simultaneous_real_process2\\simultaneous-slow-0\\result.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_simultaneous_real_process2\\simultaneous-slow-0\\result.json",
+    "sha256": "e2d7e09614cbe169d9b9fb67eeef585ed61548c2b8c16c31477a11180d2d1ac0"
+  },
+  {
+    "file": "test_simultaneous_real_process2\\simultaneous-slow-0\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_simultaneous_real_process2\\simultaneous-slow-0\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_simultaneous_real_process2\\simultaneous-slow-1\\exit-audit.jsonl",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_simultaneous_real_process2\\simultaneous-slow-1\\exit-audit.jsonl",
+    "sha256": "9b9a4bcc050e3dd7b2da58bb0f39b977ad089362aa0739e2be4de6935422fb51"
+  },
+  {
+    "file": "test_simultaneous_real_process2\\simultaneous-slow-1\\fresh-completed.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_simultaneous_real_process2\\simultaneous-slow-1\\fresh-completed.json",
+    "sha256": "6ea3c5a1611de1adf55677cb13b7899df78d9da2dddff85fd314826020f98f84"
+  },
+  {
+    "file": "test_simultaneous_real_process2\\simultaneous-slow-1\\ready",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_simultaneous_real_process2\\simultaneous-slow-1\\ready",
+    "sha256": "3ed74c4edca19d8295623d81a68d25a2df0db31ba1ff96f37b7acb9c4b1163da"
+  },
+  {
+    "file": "test_simultaneous_real_process2\\simultaneous-slow-1\\resource-audit.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_simultaneous_real_process2\\simultaneous-slow-1\\resource-audit.json",
+    "sha256": "3ed74c4edca19d8295623d81a68d25a2df0db31ba1ff96f37b7acb9c4b1163da"
+  },
+  {
+    "file": "test_simultaneous_real_process2\\simultaneous-slow-1\\result.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_simultaneous_real_process2\\simultaneous-slow-1\\result.json",
+    "sha256": "1a6fa39e9fcb60a73fd672d53c03481d3127dc09db4b7688ba8c7cbb26980bfe"
+  },
+  {
+    "file": "test_simultaneous_real_process2\\simultaneous-slow-1\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_simultaneous_real_process2\\simultaneous-slow-1\\traceback.log",
+    "sha256": "33861cc0b4eb285cf11304f45d7233ea431511d1cd3514cbc4c9bef537f740b7"
+  },
+  {
+    "file": "test_simultaneous_real_process1\\entry-module\\resource-audit.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_simultaneous_real_process1\\entry-module\\resource-audit.json",
+    "sha256": "ab9f3a2a3f16963bc1c6b3a4cf13004bef236148856ae5908f1fd6b361a6d89f"
+  },
+  {
+    "file": "test_simultaneous_real_process1\\entry-module\\result.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_simultaneous_real_process1\\entry-module\\result.json",
+    "sha256": "3c178502c45e82deb9d88d97441aabba75a01014f6c3531115fe35aa02059207"
+  },
+  {
+    "file": "test_simultaneous_real_process1\\entry-module\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_simultaneous_real_process1\\entry-module\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_simultaneous_real_process1\\simultaneous-0\\resource-audit.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_simultaneous_real_process1\\simultaneous-0\\resource-audit.json",
+    "sha256": "6f5e4840c61343440793d9eb6c646b1ff354ea5b58ebc707ce50a4f40cc7e670"
+  },
+  {
+    "file": "test_simultaneous_real_process1\\simultaneous-0\\result.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_simultaneous_real_process1\\simultaneous-0\\result.json",
+    "sha256": "31f78c6b75ea5edb0816ca60b34cd096828be4a758e1b0fc9b05e5db0f20b647"
+  },
+  {
+    "file": "test_simultaneous_real_process1\\simultaneous-0\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_simultaneous_real_process1\\simultaneous-0\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_simultaneous_real_process1\\simultaneous-1\\exit-audit.jsonl",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_simultaneous_real_process1\\simultaneous-1\\exit-audit.jsonl",
+    "sha256": "b8a01432d69f6f2f75cde268c9d11c67437ddee603d30f9ac95e1bdb133bc089"
+  },
+  {
+    "file": "test_simultaneous_real_process1\\simultaneous-1\\fresh-completed.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_simultaneous_real_process1\\simultaneous-1\\fresh-completed.json",
+    "sha256": "6f65f873b7b1dd2bc9ebe2eee68f19c4ee9d63927eb829908da32595c158fc60"
+  },
+  {
+    "file": "test_simultaneous_real_process1\\simultaneous-1\\ready",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_simultaneous_real_process1\\simultaneous-1\\ready",
+    "sha256": "a30d16d4c00a936764cd1c1df9b09fc7e35ff687e56a6a2f5cf1ca9a60df4ca2"
+  },
+  {
+    "file": "test_simultaneous_real_process1\\simultaneous-1\\resource-audit.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_simultaneous_real_process1\\simultaneous-1\\resource-audit.json",
+    "sha256": "a30d16d4c00a936764cd1c1df9b09fc7e35ff687e56a6a2f5cf1ca9a60df4ca2"
+  },
+  {
+    "file": "test_simultaneous_real_process1\\simultaneous-1\\result.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_simultaneous_real_process1\\simultaneous-1\\result.json",
+    "sha256": "ffbb7e8f5eeb7501002b1e3661c651468ca83940684853286f9560984adac5fb"
+  },
+  {
+    "file": "test_simultaneous_real_process1\\simultaneous-1\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_simultaneous_real_process1\\simultaneous-1\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_simultaneous_real_process1\\simultaneous-2\\resource-audit.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_simultaneous_real_process1\\simultaneous-2\\resource-audit.json",
+    "sha256": "39e98cc98df29846e9645c101f19fc6823d479c5744b658928d5f2495833fceb"
+  },
+  {
+    "file": "test_simultaneous_real_process1\\simultaneous-2\\result.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_simultaneous_real_process1\\simultaneous-2\\result.json",
+    "sha256": "817977b23a18ee4bfa35b0bce3501e0f11ddbbc25ae0c8cb991b72bffaba9f01"
+  },
+  {
+    "file": "test_simultaneous_real_process1\\simultaneous-2\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_simultaneous_real_process1\\simultaneous-2\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_simultaneous_real_process1\\simultaneous-3\\resource-audit.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_simultaneous_real_process1\\simultaneous-3\\resource-audit.json",
+    "sha256": "42179e4aedf7a0aea0afe14eddfd2ba01141c04e6981be7807d3cf48645b066f"
+  },
+  {
+    "file": "test_simultaneous_real_process1\\simultaneous-3\\result.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_simultaneous_real_process1\\simultaneous-3\\result.json",
+    "sha256": "e0b6adf24947dcf2be4cba9ee738f0efbaf1a1eafc953e88724fc6ee6ce8286b"
+  },
+  {
+    "file": "test_simultaneous_real_process1\\simultaneous-3\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_simultaneous_real_process1\\simultaneous-3\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_simultaneous_real_process1\\simultaneous-4\\resource-audit.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_simultaneous_real_process1\\simultaneous-4\\resource-audit.json",
+    "sha256": "7d48d1cc2b1f70fa2e877bc75640b2bcde9b3a8c0215b4242a57bd6c867200eb"
+  },
+  {
+    "file": "test_simultaneous_real_process1\\simultaneous-4\\result.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_simultaneous_real_process1\\simultaneous-4\\result.json",
+    "sha256": "e0b6adf24947dcf2be4cba9ee738f0efbaf1a1eafc953e88724fc6ee6ce8286b"
+  },
+  {
+    "file": "test_simultaneous_real_process1\\simultaneous-4\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_simultaneous_real_process1\\simultaneous-4\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_simultaneous_real_process1\\simultaneous-5\\resource-audit.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_simultaneous_real_process1\\simultaneous-5\\resource-audit.json",
+    "sha256": "82b7bd86aba448cc2213471799b768ad659527bdc77fc150626d2fb0232c525e"
+  },
+  {
+    "file": "test_simultaneous_real_process1\\simultaneous-5\\result.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_simultaneous_real_process1\\simultaneous-5\\result.json",
+    "sha256": "e0b6adf24947dcf2be4cba9ee738f0efbaf1a1eafc953e88724fc6ee6ce8286b"
+  },
+  {
+    "file": "test_simultaneous_real_process1\\simultaneous-5\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_simultaneous_real_process1\\simultaneous-5\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_simultaneous_real_process1\\simultaneous-6\\resource-audit.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_simultaneous_real_process1\\simultaneous-6\\resource-audit.json",
+    "sha256": "8a97fed4cc16f44b77fd237b92468fc714d80726ce4758ccba6d1d7fd68f5012"
+  },
+  {
+    "file": "test_simultaneous_real_process1\\simultaneous-6\\result.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_simultaneous_real_process1\\simultaneous-6\\result.json",
+    "sha256": "e0b6adf24947dcf2be4cba9ee738f0efbaf1a1eafc953e88724fc6ee6ce8286b"
+  },
+  {
+    "file": "test_simultaneous_real_process1\\simultaneous-6\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_simultaneous_real_process1\\simultaneous-6\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_simultaneous_real_process1\\simultaneous-7\\resource-audit.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_simultaneous_real_process1\\simultaneous-7\\resource-audit.json",
+    "sha256": "38080b466a1c5cab6d5c76be3ce148f9bf24895c207c91a33d4d7bd145f66f25"
+  },
+  {
+    "file": "test_simultaneous_real_process1\\simultaneous-7\\result.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_simultaneous_real_process1\\simultaneous-7\\result.json",
+    "sha256": "e0b6adf24947dcf2be4cba9ee738f0efbaf1a1eafc953e88724fc6ee6ce8286b"
+  },
+  {
+    "file": "test_simultaneous_real_process1\\simultaneous-7\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_simultaneous_real_process1\\simultaneous-7\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_simultaneous_real_process0\\entry-module\\resource-audit.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_simultaneous_real_process0\\entry-module\\resource-audit.json",
+    "sha256": "b2c727bcde1316b60f4047c58f8096f12a4303f8b720a94a71e5057660ca85d2"
+  },
+  {
+    "file": "test_simultaneous_real_process0\\entry-module\\result.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_simultaneous_real_process0\\entry-module\\result.json",
+    "sha256": "23568565eb5979f72f68c153f16a671c6029c9ba5c1d77521d6fb43fc3006376"
+  },
+  {
+    "file": "test_simultaneous_real_process0\\entry-module\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_simultaneous_real_process0\\entry-module\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_simultaneous_real_process0\\simultaneous-0\\exit-audit.jsonl",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_simultaneous_real_process0\\simultaneous-0\\exit-audit.jsonl",
+    "sha256": "ff7e22628f68b4b7c3cde4078f7945760a1235ee2fd0ce93374fda2f2cc21bfb"
+  },
+  {
+    "file": "test_simultaneous_real_process0\\simultaneous-0\\fresh-completed.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_simultaneous_real_process0\\simultaneous-0\\fresh-completed.json",
+    "sha256": "5342b3062a70f15b5a5402708fd043115dfb56077b6737920d891b4100e76105"
+  },
+  {
+    "file": "test_simultaneous_real_process0\\simultaneous-0\\ready",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_simultaneous_real_process0\\simultaneous-0\\ready",
+    "sha256": "f36b87788c36c646977de45844d5bbc3e663eb7048bed52008070cb312e7ee0f"
+  },
+  {
+    "file": "test_simultaneous_real_process0\\simultaneous-0\\resource-audit.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_simultaneous_real_process0\\simultaneous-0\\resource-audit.json",
+    "sha256": "f36b87788c36c646977de45844d5bbc3e663eb7048bed52008070cb312e7ee0f"
+  },
+  {
+    "file": "test_simultaneous_real_process0\\simultaneous-0\\result.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_simultaneous_real_process0\\simultaneous-0\\result.json",
+    "sha256": "8cc8148d67cdf215a40da5f6fb43f51e380245282cb2cc133da8430c1a86ceda"
+  },
+  {
+    "file": "test_simultaneous_real_process0\\simultaneous-0\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_simultaneous_real_process0\\simultaneous-0\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_simultaneous_real_process0\\simultaneous-1\\resource-audit.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_simultaneous_real_process0\\simultaneous-1\\resource-audit.json",
+    "sha256": "361d0b8e84f96adf37fffb8db3abcabe6787d04b691c3fc5559f770812d89278"
+  },
+  {
+    "file": "test_simultaneous_real_process0\\simultaneous-1\\result.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_simultaneous_real_process0\\simultaneous-1\\result.json",
+    "sha256": "d88b74e7d062f21d59a61a28b9ffdf95f5e5b6858654768cb1a1b6a838c78d5e"
+  },
+  {
+    "file": "test_simultaneous_real_process0\\simultaneous-1\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_simultaneous_real_process0\\simultaneous-1\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_simultaneous_exit_audit_n0\\simultaneous-audit-native-wm\\exit-audit.jsonl",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_simultaneous_exit_audit_n0\\simultaneous-audit-native-wm\\exit-audit.jsonl",
+    "sha256": "671c018f6024a2ef2dde1bb0007e190df9377066cea66193a4fb3d9a3683d845"
+  },
+  {
+    "file": "test_simultaneous_exit_audit_n0\\simultaneous-audit-native-wm\\native-trigger.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_simultaneous_exit_audit_n0\\simultaneous-audit-native-wm\\native-trigger.json",
+    "sha256": "b7b987b51bf4b4dbb30bc8fe6f543815f715a31c2a3247b5c3651810f305a570"
+  },
+  {
+    "file": "test_simultaneous_exit_audit_n0\\simultaneous-audit-native-wm\\ready",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_simultaneous_exit_audit_n0\\simultaneous-audit-native-wm\\ready",
+    "sha256": "fa2c768438ca2a84897bb86c6a4d827383299e93dc632fef1333379b8986ce8b"
+  },
+  {
+    "file": "test_simultaneous_exit_audit_n0\\simultaneous-audit-native-wm\\resource-audit.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_simultaneous_exit_audit_n0\\simultaneous-audit-native-wm\\resource-audit.json",
+    "sha256": "fa2c768438ca2a84897bb86c6a4d827383299e93dc632fef1333379b8986ce8b"
+  },
+  {
+    "file": "test_simultaneous_exit_audit_n0\\simultaneous-audit-native-wm\\result.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_simultaneous_exit_audit_n0\\simultaneous-audit-native-wm\\result.json",
+    "sha256": "39ec96b9973cd4bd2b18b641de7b8a9a7820fc19924804627dba263853e61225"
+  },
+  {
+    "file": "test_simultaneous_exit_audit_n0\\simultaneous-audit-native-wm\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_simultaneous_exit_audit_n0\\simultaneous-audit-native-wm\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_simultaneous_exit_audit_d2\\simultaneous-audit-watchdog\\exit-audit.jsonl",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_simultaneous_exit_audit_d2\\simultaneous-audit-watchdog\\exit-audit.jsonl",
+    "sha256": "76b654997cc3f654d13b35f5a6e243dbaae92150d0ce8118256a447cf7d3b9b3"
+  },
+  {
+    "file": "test_simultaneous_exit_audit_d2\\simultaneous-audit-watchdog\\ready",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_simultaneous_exit_audit_d2\\simultaneous-audit-watchdog\\ready",
+    "sha256": "881d5e6c726dcb93167e77e8ded5785b36a48e4a0cc4a4e8ae0f6ca050b0542e"
+  },
+  {
+    "file": "test_simultaneous_exit_audit_d2\\simultaneous-audit-watchdog\\resource-audit.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_simultaneous_exit_audit_d2\\simultaneous-audit-watchdog\\resource-audit.json",
+    "sha256": "881d5e6c726dcb93167e77e8ded5785b36a48e4a0cc4a4e8ae0f6ca050b0542e"
+  },
+  {
+    "file": "test_simultaneous_exit_audit_d2\\simultaneous-audit-watchdog\\result.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_simultaneous_exit_audit_d2\\simultaneous-audit-watchdog\\result.json",
+    "sha256": "e5283c3313b4fe5a41a7513eb4858968a633fda2fb88acf2aa372beff3658e26"
+  },
+  {
+    "file": "test_simultaneous_exit_audit_d2\\simultaneous-audit-watchdog\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_simultaneous_exit_audit_d2\\simultaneous-audit-watchdog\\traceback.log",
+    "sha256": "432db888ddb8eb44419cbd4ecaabc34caa4cf3518b7b9ac170414a3e854654af"
+  },
+  {
+    "file": "test_simultaneous_exit_audit_d1\\simultaneous-audit-button\\exit-audit.jsonl",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_simultaneous_exit_audit_d1\\simultaneous-audit-button\\exit-audit.jsonl",
+    "sha256": "8a0273a01f42b7f35049fc05e79f9c4421c11307578d3773b6e5af0d94139504"
+  },
+  {
+    "file": "test_simultaneous_exit_audit_d1\\simultaneous-audit-button\\ready",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_simultaneous_exit_audit_d1\\simultaneous-audit-button\\ready",
+    "sha256": "fbbe8f6824f20dc7929ba1074081b97103174da1d9ae2f1248774cb9733a43a4"
+  },
+  {
+    "file": "test_simultaneous_exit_audit_d1\\simultaneous-audit-button\\resource-audit.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_simultaneous_exit_audit_d1\\simultaneous-audit-button\\resource-audit.json",
+    "sha256": "fbbe8f6824f20dc7929ba1074081b97103174da1d9ae2f1248774cb9733a43a4"
+  },
+  {
+    "file": "test_simultaneous_exit_audit_d1\\simultaneous-audit-button\\result.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_simultaneous_exit_audit_d1\\simultaneous-audit-button\\result.json",
+    "sha256": "169beece3484f35592ff983e08b4af8678cbad72cc60153a950f535696bc370a"
+  },
+  {
+    "file": "test_simultaneous_exit_audit_d1\\simultaneous-audit-button\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_simultaneous_exit_audit_d1\\simultaneous-audit-button\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_simultaneous_exit_audit_d0\\simultaneous-audit-wm\\exit-audit.jsonl",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_simultaneous_exit_audit_d0\\simultaneous-audit-wm\\exit-audit.jsonl",
+    "sha256": "6c5dda9a1baf155304b24f3013b2b383132b58badf9a2547538702c56ecfd559"
+  },
+  {
+    "file": "test_simultaneous_exit_audit_d0\\simultaneous-audit-wm\\ready",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_simultaneous_exit_audit_d0\\simultaneous-audit-wm\\ready",
+    "sha256": "8e9fe00cdf3c9f311fb2935c4d437198bc34e0fab104269450540e10c7b4d9de"
+  },
+  {
+    "file": "test_simultaneous_exit_audit_d0\\simultaneous-audit-wm\\resource-audit.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_simultaneous_exit_audit_d0\\simultaneous-audit-wm\\resource-audit.json",
+    "sha256": "8e9fe00cdf3c9f311fb2935c4d437198bc34e0fab104269450540e10c7b4d9de"
+  },
+  {
+    "file": "test_simultaneous_exit_audit_d0\\simultaneous-audit-wm\\result.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_simultaneous_exit_audit_d0\\simultaneous-audit-wm\\result.json",
+    "sha256": "572eacb72281bb5ded13a98a8d15db76121b6bd135206155d6912e7de66578b9"
+  },
+  {
+    "file": "test_simultaneous_exit_audit_d0\\simultaneous-audit-wm\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_simultaneous_exit_audit_d0\\simultaneous-audit-wm\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_notice_dedup_owner_crash_0\\notice-case-owner\\foreground-audit.jsonl",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_notice_dedup_owner_crash_0\\notice-case-owner\\foreground-audit.jsonl",
+    "sha256": "e0d7c41f9aadf394ba582106ce9793db8fbbbd57ca9f7f263c384f4316955a0c"
+  },
+  {
+    "file": "test_notice_dedup_owner_crash_0\\notice-case-owner\\ready",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_notice_dedup_owner_crash_0\\notice-case-owner\\ready",
+    "sha256": "43c00bf35e3357bc6ca7153ac7aa2b0cd665f9063023cefc924310dd91710224"
+  },
+  {
+    "file": "test_notice_dedup_owner_crash_0\\notice-case-owner\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_notice_dedup_owner_crash_0\\notice-case-owner\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_notice_dedup_owner_crash_0\\notice-case-renewed\\ready",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_notice_dedup_owner_crash_0\\notice-case-renewed\\ready",
+    "sha256": "386a3e8dc82767ecc527b3facb106e301065a8b6457bf9222ab22550148843d0"
+  },
+  {
+    "file": "test_notice_dedup_owner_crash_0\\notice-case-renewed\\result.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_notice_dedup_owner_crash_0\\notice-case-renewed\\result.json",
+    "sha256": "10a6dddcb9ef38e5e610f273e9975d54ebd53f3db69f96f7f79ec36507408c30"
+  },
+  {
+    "file": "test_notice_dedup_owner_crash_0\\notice-case-renewed\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_notice_dedup_owner_crash_0\\notice-case-renewed\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_notice_dedup_eight_proces0\\notice-case-owner\\foreground-audit.jsonl",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_notice_dedup_eight_proces0\\notice-case-owner\\foreground-audit.jsonl",
+    "sha256": "4b7f395130d43664397213f5ffa9b7df75146285335e409f08fc56a8c55fa97c"
+  },
+  {
+    "file": "test_notice_dedup_eight_proces0\\notice-case-owner\\ready",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_notice_dedup_eight_proces0\\notice-case-owner\\ready",
+    "sha256": "6bb95cc28e2755a40d8d490436cd6f9a47b6ebbbf87bbf9f56872f1f6a09cebf"
+  },
+  {
+    "file": "test_notice_dedup_eight_proces0\\notice-case-owner\\result.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_notice_dedup_eight_proces0\\notice-case-owner\\result.json",
+    "sha256": "5b0dd0ba51aed8e507dbf96de7c9d7069d062e1941feb9e2b5a0f3ba25258954"
+  },
+  {
+    "file": "test_notice_dedup_eight_proces0\\notice-case-owner\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_notice_dedup_eight_proces0\\notice-case-owner\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_notice_dedup_eight_proces0\\notice-case-peer-0\\result.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_notice_dedup_eight_proces0\\notice-case-peer-0\\result.json",
+    "sha256": "7eec8563f66126acc2d07ac2036813edb8dc132ee1f84c6ed9101afe6c0fab4a"
+  },
+  {
+    "file": "test_notice_dedup_eight_proces0\\notice-case-peer-0\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_notice_dedup_eight_proces0\\notice-case-peer-0\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_notice_dedup_eight_proces0\\notice-case-peer-1\\result.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_notice_dedup_eight_proces0\\notice-case-peer-1\\result.json",
+    "sha256": "7eec8563f66126acc2d07ac2036813edb8dc132ee1f84c6ed9101afe6c0fab4a"
+  },
+  {
+    "file": "test_notice_dedup_eight_proces0\\notice-case-peer-1\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_notice_dedup_eight_proces0\\notice-case-peer-1\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_notice_dedup_eight_proces0\\notice-case-peer-2\\result.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_notice_dedup_eight_proces0\\notice-case-peer-2\\result.json",
+    "sha256": "7eec8563f66126acc2d07ac2036813edb8dc132ee1f84c6ed9101afe6c0fab4a"
+  },
+  {
+    "file": "test_notice_dedup_eight_proces0\\notice-case-peer-2\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_notice_dedup_eight_proces0\\notice-case-peer-2\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_notice_dedup_eight_proces0\\notice-case-peer-3\\result.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_notice_dedup_eight_proces0\\notice-case-peer-3\\result.json",
+    "sha256": "7579d11d0dd07f8fececa100368924822b60d8a4666c6b175fe7c632a6052a81"
+  },
+  {
+    "file": "test_notice_dedup_eight_proces0\\notice-case-peer-3\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_notice_dedup_eight_proces0\\notice-case-peer-3\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_notice_dedup_eight_proces0\\notice-case-peer-4\\result.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_notice_dedup_eight_proces0\\notice-case-peer-4\\result.json",
+    "sha256": "7eec8563f66126acc2d07ac2036813edb8dc132ee1f84c6ed9101afe6c0fab4a"
+  },
+  {
+    "file": "test_notice_dedup_eight_proces0\\notice-case-peer-4\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_notice_dedup_eight_proces0\\notice-case-peer-4\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_notice_dedup_eight_proces0\\notice-case-peer-5\\result.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_notice_dedup_eight_proces0\\notice-case-peer-5\\result.json",
+    "sha256": "7eec8563f66126acc2d07ac2036813edb8dc132ee1f84c6ed9101afe6c0fab4a"
+  },
+  {
+    "file": "test_notice_dedup_eight_proces0\\notice-case-peer-5\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_notice_dedup_eight_proces0\\notice-case-peer-5\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_notice_dedup_eight_proces0\\notice-case-peer-6\\result.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_notice_dedup_eight_proces0\\notice-case-peer-6\\result.json",
+    "sha256": "7eec8563f66126acc2d07ac2036813edb8dc132ee1f84c6ed9101afe6c0fab4a"
+  },
+  {
+    "file": "test_notice_dedup_eight_proces0\\notice-case-peer-6\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_notice_dedup_eight_proces0\\notice-case-peer-6\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_notice_dedup_eight_proces0\\notice-case-peer-7\\result.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_notice_dedup_eight_proces0\\notice-case-peer-7\\result.json",
+    "sha256": "7eec8563f66126acc2d07ac2036813edb8dc132ee1f84c6ed9101afe6c0fab4a"
+  },
+  {
+    "file": "test_notice_dedup_eight_proces0\\notice-case-peer-7\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_notice_dedup_eight_proces0\\notice-case-peer-7\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_notice_dedup_different_re0\\notice-case-other-reason\\ready",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_notice_dedup_different_re0\\notice-case-other-reason\\ready",
+    "sha256": "be8eba57f8d5926d93c46c3a987bf05d4cac9a428bfa7ab3b8b11ce8678c7543"
+  },
+  {
+    "file": "test_notice_dedup_different_re0\\notice-case-other-reason\\result.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_notice_dedup_different_re0\\notice-case-other-reason\\result.json",
+    "sha256": "b2430bc3762192bfd4a830320201f52cd045f77392ff2470747b3d99b26f98d3"
+  },
+  {
+    "file": "test_notice_dedup_different_re0\\notice-case-other-reason\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_notice_dedup_different_re0\\notice-case-other-reason\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_notice_dedup_different_re0\\notice-case-owner\\foreground-audit.jsonl",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_notice_dedup_different_re0\\notice-case-owner\\foreground-audit.jsonl",
+    "sha256": "a521c0175333b6f75df86ef51264ef0bf8d02615d69b1d039d1c7f5fa488a79d"
+  },
+  {
+    "file": "test_notice_dedup_different_re0\\notice-case-owner\\ready",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_notice_dedup_different_re0\\notice-case-owner\\ready",
+    "sha256": "672a8ea2afeb60470597bb05326571b9bce054907e06738dcfbe9b85ce305840"
+  },
+  {
+    "file": "test_notice_dedup_different_re0\\notice-case-owner\\result.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_notice_dedup_different_re0\\notice-case-owner\\result.json",
+    "sha256": "f0e11a45be1ce2464da61fa9d43395a6a56e4d865fa7817a9a36b2c7bac2c82a"
+  },
+  {
+    "file": "test_notice_dedup_different_re0\\notice-case-owner\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_notice_dedup_different_re0\\notice-case-owner\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_notice_dedup_different_re0\\notice-case-renewed\\ready",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_notice_dedup_different_re0\\notice-case-renewed\\ready",
+    "sha256": "953484490d58927fad1846ab23e348d2b856d9c13533e3d767dca0cc25c44bad"
+  },
+  {
+    "file": "test_notice_dedup_different_re0\\notice-case-renewed\\result.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_notice_dedup_different_re0\\notice-case-renewed\\result.json",
+    "sha256": "31009963a9ca6d261e27769481fefd570aaa73ca0a6602b91d07dd376897b15c"
+  },
+  {
+    "file": "test_notice_dedup_different_re0\\notice-case-renewed\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_notice_dedup_different_re0\\notice-case-renewed\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_notice_dedup_access_denia0\\notice-case-owner\\foreground-audit.jsonl",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_notice_dedup_access_denia0\\notice-case-owner\\foreground-audit.jsonl",
+    "sha256": "d0e1fc391b7917c1cff4d67505e944e933e0ae620582d065d265c47464aa055e"
+  },
+  {
+    "file": "test_notice_dedup_access_denia0\\notice-case-owner\\ready",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_notice_dedup_access_denia0\\notice-case-owner\\ready",
+    "sha256": "61f6f17add9ffde894d3d6ae4ba16d69233badc338a76823191c7908677d0be4"
+  },
+  {
+    "file": "test_notice_dedup_access_denia0\\notice-case-owner\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_notice_dedup_access_denia0\\notice-case-owner\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_lifecycle_released_mappin0\\lifecycle-new-owner\\ready",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_lifecycle_released_mappin0\\lifecycle-new-owner\\ready",
+    "sha256": "65c394172615c1d163734958f3717d416603c5f4b615a9aab35e2e2dd5b4a353"
+  },
+  {
+    "file": "test_lifecycle_released_mappin0\\lifecycle-new-owner\\resource-audit.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_lifecycle_released_mappin0\\lifecycle-new-owner\\resource-audit.json",
+    "sha256": "65c394172615c1d163734958f3717d416603c5f4b615a9aab35e2e2dd5b4a353"
+  },
+  {
+    "file": "test_lifecycle_released_mappin0\\lifecycle-new-owner\\result.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_lifecycle_released_mappin0\\lifecycle-new-owner\\result.json",
+    "sha256": "848105eadf96e658782102f63c844f047ba9b207f813eaa8280903b808f5a886"
+  },
+  {
+    "file": "test_lifecycle_released_mappin0\\lifecycle-new-owner\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_lifecycle_released_mappin0\\lifecycle-new-owner\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_lifecycle_released_mappin0\\lifecycle-worker\\ready",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_lifecycle_released_mappin0\\lifecycle-worker\\ready",
+    "sha256": "1159e9bf80cb8d11a3b43241684c04ff48267c452de5f45de9b45f4315f4b2e8"
+  },
+  {
+    "file": "test_lifecycle_released_mappin0\\lifecycle-worker\\resource-audit.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_lifecycle_released_mappin0\\lifecycle-worker\\resource-audit.json",
+    "sha256": "1159e9bf80cb8d11a3b43241684c04ff48267c452de5f45de9b45f4315f4b2e8"
+  },
+  {
+    "file": "test_lifecycle_released_mappin0\\lifecycle-worker\\result.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_lifecycle_released_mappin0\\lifecycle-worker\\result.json",
+    "sha256": "24e645512fcf139ab13b53c538fa1577d1a84fa04b6322959f76d4cc3e57d594"
+  },
+  {
+    "file": "test_lifecycle_released_mappin0\\lifecycle-worker\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_lifecycle_released_mappin0\\lifecycle-worker\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_lifecycle_independent_res1\\initializing-owner\\ready",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_lifecycle_independent_res1\\initializing-owner\\ready",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_lifecycle_independent_res1\\initializing-owner\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_lifecycle_independent_res1\\initializing-owner\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_lifecycle_independent_res1\\lifecycle-new-owner\\ready",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_lifecycle_independent_res1\\lifecycle-new-owner\\ready",
+    "sha256": "c78b80e5012b825b38197d6f763e447f26920d5c542502e3cba8cb9c88e40efe"
+  },
+  {
+    "file": "test_lifecycle_independent_res1\\lifecycle-new-owner\\resource-audit.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_lifecycle_independent_res1\\lifecycle-new-owner\\resource-audit.json",
+    "sha256": "c78b80e5012b825b38197d6f763e447f26920d5c542502e3cba8cb9c88e40efe"
+  },
+  {
+    "file": "test_lifecycle_independent_res1\\lifecycle-new-owner\\result.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_lifecycle_independent_res1\\lifecycle-new-owner\\result.json",
+    "sha256": "3fc2ec55464fbb2f76e20d39ee67ae37aea8bc6505651126ed74a44ce3bafff3"
+  },
+  {
+    "file": "test_lifecycle_independent_res1\\lifecycle-new-owner\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_lifecycle_independent_res1\\lifecycle-new-owner\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_lifecycle_independent_res0\\lifecycle-killed-owner\\ready",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_lifecycle_independent_res0\\lifecycle-killed-owner\\ready",
+    "sha256": "7db3f527cb04c83cf32453a3413e55cffb4d307b07bc092ddc1945687c0c59ea"
+  },
+  {
+    "file": "test_lifecycle_independent_res0\\lifecycle-killed-owner\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_lifecycle_independent_res0\\lifecycle-killed-owner\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_lifecycle_independent_res0\\lifecycle-new-owner\\ready",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_lifecycle_independent_res0\\lifecycle-new-owner\\ready",
+    "sha256": "a55bcfcd6f145394542a20a1d99567e63d5ef3362b0e608e734e75776c3d7ed8"
+  },
+  {
+    "file": "test_lifecycle_independent_res0\\lifecycle-new-owner\\resource-audit.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_lifecycle_independent_res0\\lifecycle-new-owner\\resource-audit.json",
+    "sha256": "a55bcfcd6f145394542a20a1d99567e63d5ef3362b0e608e734e75776c3d7ed8"
+  },
+  {
+    "file": "test_lifecycle_independent_res0\\lifecycle-new-owner\\result.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_lifecycle_independent_res0\\lifecycle-new-owner\\result.json",
+    "sha256": "a61881ecd2c8127ff5a63fe1bc09b185a2a5fa748043bd47a84c907d5dbcb6c7"
+  },
+  {
+    "file": "test_lifecycle_independent_res0\\lifecycle-new-owner\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_lifecycle_independent_res0\\lifecycle-new-owner\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_lifecycle_exception_befor0\\lifecycle-new-owner\\ready",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_lifecycle_exception_befor0\\lifecycle-new-owner\\ready",
+    "sha256": "81ac62d9d7b99d8d38db377da3c681d19055c3fa43aecd972b2161d21d74672d"
+  },
+  {
+    "file": "test_lifecycle_exception_befor0\\lifecycle-new-owner\\resource-audit.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_lifecycle_exception_befor0\\lifecycle-new-owner\\resource-audit.json",
+    "sha256": "81ac62d9d7b99d8d38db377da3c681d19055c3fa43aecd972b2161d21d74672d"
+  },
+  {
+    "file": "test_lifecycle_exception_befor0\\lifecycle-new-owner\\result.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_lifecycle_exception_befor0\\lifecycle-new-owner\\result.json",
+    "sha256": "ac16cba0f3c7acfb978c55ccd371d3e0578a63a13f77ad70005acd5180ce0847"
+  },
+  {
+    "file": "test_lifecycle_exception_befor0\\lifecycle-new-owner\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_lifecycle_exception_befor0\\lifecycle-new-owner\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_lifecycle_exception_befor0\\prepublish-failure\\resource-audit.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_lifecycle_exception_befor0\\prepublish-failure\\resource-audit.json",
+    "sha256": "d472a8a51d81e7d53f6623ca307e2b21f3dbcddbb78c34552749118168ce4583"
+  },
+  {
+    "file": "test_lifecycle_exception_befor0\\prepublish-failure\\result.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_lifecycle_exception_befor0\\prepublish-failure\\result.json",
+    "sha256": "3e22e9377167076d06c1aa0b2d450695b65b0223e518039e2674b4a415753847"
+  },
+  {
+    "file": "test_lifecycle_exception_befor0\\prepublish-failure\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_lifecycle_exception_befor0\\prepublish-failure\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_lifecycle_cancel_quit_kee0\\lifecycle-cancel-owner\\ready",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_lifecycle_cancel_quit_kee0\\lifecycle-cancel-owner\\ready",
+    "sha256": "b7863fc88db252776db3aa2d63216bfc7ab47ffad9262bec8726d79756b049f2"
+  },
+  {
+    "file": "test_lifecycle_cancel_quit_kee0\\lifecycle-cancel-owner\\resource-audit.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_lifecycle_cancel_quit_kee0\\lifecycle-cancel-owner\\resource-audit.json",
+    "sha256": "b7863fc88db252776db3aa2d63216bfc7ab47ffad9262bec8726d79756b049f2"
+  },
+  {
+    "file": "test_lifecycle_cancel_quit_kee0\\lifecycle-cancel-owner\\result.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_lifecycle_cancel_quit_kee0\\lifecycle-cancel-owner\\result.json",
+    "sha256": "846493765a25b1c7d8757236ef9fd6e9fcb8fbe6cb69292516a7c341aa5bab53"
+  },
+  {
+    "file": "test_lifecycle_cancel_quit_kee0\\lifecycle-cancel-owner\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_lifecycle_cancel_quit_kee0\\lifecycle-cancel-owner\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_lifecycle_cancel_quit_kee0\\lifecycle-restarted\\ready",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_lifecycle_cancel_quit_kee0\\lifecycle-restarted\\ready",
+    "sha256": "141c69f1404d583a4a97ed75d00aff01111eafe35971caa7a900c9ca7776acc1"
+  },
+  {
+    "file": "test_lifecycle_cancel_quit_kee0\\lifecycle-restarted\\resource-audit.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_lifecycle_cancel_quit_kee0\\lifecycle-restarted\\resource-audit.json",
+    "sha256": "141c69f1404d583a4a97ed75d00aff01111eafe35971caa7a900c9ca7776acc1"
+  },
+  {
+    "file": "test_lifecycle_cancel_quit_kee0\\lifecycle-restarted\\result.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_lifecycle_cancel_quit_kee0\\lifecycle-restarted\\result.json",
+    "sha256": "6a87b68d7b732f5dd6cc2d1ca3e7c46a55170495da0fe883b9ea26b0a5d25d34"
+  },
+  {
+    "file": "test_lifecycle_cancel_quit_kee0\\lifecycle-restarted\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_lifecycle_cancel_quit_kee0\\lifecycle-restarted\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_lifecycle_cancel_quit_kee0\\secondary-after-cancel\\resource-audit.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_lifecycle_cancel_quit_kee0\\secondary-after-cancel\\resource-audit.json",
+    "sha256": "91dd24e1793c0241731213a13189ccf073e1c621f27a7a1f10118b8ef612aa42"
+  },
+  {
+    "file": "test_lifecycle_cancel_quit_kee0\\secondary-after-cancel\\result.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_lifecycle_cancel_quit_kee0\\secondary-after-cancel\\result.json",
+    "sha256": "d18eb36117a9e7d693e637fd772749aa23efa52d49b0bd775a7a3ecc9b721fdc"
+  },
+  {
+    "file": "test_lifecycle_cancel_quit_kee0\\secondary-after-cancel\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_lifecycle_cancel_quit_kee0\\secondary-after-cancel\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_lifecycle_both_python_ent0\\entry-module\\resource-audit.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_lifecycle_both_python_ent0\\entry-module\\resource-audit.json",
+    "sha256": "c6b65c85a1d11366a1bcbe175a59c734111ae9b1a5711c26a8c2cf5c1cdb15ee"
+  },
+  {
+    "file": "test_lifecycle_both_python_ent0\\entry-module\\result.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_lifecycle_both_python_ent0\\entry-module\\result.json",
+    "sha256": "df37f8c188fa37a79d537ec47f5ecd9cab9d1f38aa99bc8d0315ce45ec806d94"
+  },
+  {
+    "file": "test_lifecycle_both_python_ent0\\entry-module\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_lifecycle_both_python_ent0\\entry-module\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_lifecycle_both_python_ent0\\entry-relocated\\resource-audit.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_lifecycle_both_python_ent0\\entry-relocated\\resource-audit.json",
+    "sha256": "eac5878ab570e6ef39693a61750f4409c00e61f1986593cf4a2ed02eb0b84d48"
+  },
+  {
+    "file": "test_lifecycle_both_python_ent0\\entry-relocated\\result.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_lifecycle_both_python_ent0\\entry-relocated\\result.json",
+    "sha256": "d21f67f90f8d95138bb9089dae6575121fe14fb456371db343673cc4a28202a6"
+  },
+  {
+    "file": "test_lifecycle_both_python_ent0\\entry-relocated\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_lifecycle_both_python_ent0\\entry-relocated\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_lifecycle_both_python_ent0\\entry-script\\resource-audit.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_lifecycle_both_python_ent0\\entry-script\\resource-audit.json",
+    "sha256": "970c19e3cbe7220835dd45533c122a08c0ab6d9821142532cd172eb09b8d027f"
+  },
+  {
+    "file": "test_lifecycle_both_python_ent0\\entry-script\\result.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_lifecycle_both_python_ent0\\entry-script\\result.json",
+    "sha256": "05807a42c7a7045249ec087d0ce0e0e91ea84c5e81e69f9ffbdafc2cf018b4fb"
+  },
+  {
+    "file": "test_lifecycle_both_python_ent0\\entry-script\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_lifecycle_both_python_ent0\\entry-script\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_lifecycle_both_python_ent0\\owner\\ready",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_lifecycle_both_python_ent0\\owner\\ready",
+    "sha256": "25e3273cbca6e74ee720e708edd69cf421e75b00cd0a03cb804e5c7c63cded7b"
+  },
+  {
+    "file": "test_lifecycle_both_python_ent0\\owner\\resource-audit.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_lifecycle_both_python_ent0\\owner\\resource-audit.json",
+    "sha256": "25e3273cbca6e74ee720e708edd69cf421e75b00cd0a03cb804e5c7c63cded7b"
+  },
+  {
+    "file": "test_lifecycle_both_python_ent0\\owner\\result.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_lifecycle_both_python_ent0\\owner\\result.json",
+    "sha256": "00d07035dc4ea8088e81ff6f432ea24ad5ae4dbcb4d138e70f30be43881f5861"
+  },
+  {
+    "file": "test_lifecycle_both_python_ent0\\owner\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_lifecycle_both_python_ent0\\owner\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_focus_restore_real_main_w9\\entry-module\\resource-audit.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w9\\entry-module\\resource-audit.json",
+    "sha256": "e722de749066cc35cb86911cfc31075a95d41051c42107262ff4fc15adc41ca7"
+  },
+  {
+    "file": "test_focus_restore_real_main_w9\\entry-module\\result.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w9\\entry-module\\result.json",
+    "sha256": "3c178502c45e82deb9d88d97441aabba75a01014f6c3531115fe35aa02059207"
+  },
+  {
+    "file": "test_focus_restore_real_main_w9\\entry-module\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w9\\entry-module\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_focus_restore_real_main_w9\\focus-owner-native-ocr\\ready",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w9\\focus-owner-native-ocr\\ready",
+    "sha256": "47c854346c2a6ac2c55ffdc49d85d62e7254c09eed0f5675d69087b7905f9d6e"
+  },
+  {
+    "file": "test_focus_restore_real_main_w9\\focus-owner-native-ocr\\resource-audit.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w9\\focus-owner-native-ocr\\resource-audit.json",
+    "sha256": "47c854346c2a6ac2c55ffdc49d85d62e7254c09eed0f5675d69087b7905f9d6e"
+  },
+  {
+    "file": "test_focus_restore_real_main_w9\\focus-owner-native-ocr\\result.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w9\\focus-owner-native-ocr\\result.json",
+    "sha256": "6e1d3fea334e2b48185feef52874e2c57f667dfdddabf1f63b4e18506e9ac500"
+  },
+  {
+    "file": "test_focus_restore_real_main_w9\\focus-owner-native-ocr\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w9\\focus-owner-native-ocr\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_focus_restore_real_main_w8\\entry-script\\resource-audit.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w8\\entry-script\\resource-audit.json",
+    "sha256": "9207eef94c0686a32c8243316251b7b8ecd86888950306b8dcbbece9eafe39f6"
+  },
+  {
+    "file": "test_focus_restore_real_main_w8\\entry-script\\result.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w8\\entry-script\\result.json",
+    "sha256": "9d671d22c8e37800727f5915288e2422585a06403539b38681c42bd8ca73a8c9"
+  },
+  {
+    "file": "test_focus_restore_real_main_w8\\entry-script\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w8\\entry-script\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_focus_restore_real_main_w8\\focus-owner-native-ocr\\ready",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w8\\focus-owner-native-ocr\\ready",
+    "sha256": "d5a18f2807675c9d6d7b8d46f5288640cba394246b3f4cf5d899ef1a01b85346"
+  },
+  {
+    "file": "test_focus_restore_real_main_w8\\focus-owner-native-ocr\\resource-audit.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w8\\focus-owner-native-ocr\\resource-audit.json",
+    "sha256": "d5a18f2807675c9d6d7b8d46f5288640cba394246b3f4cf5d899ef1a01b85346"
+  },
+  {
+    "file": "test_focus_restore_real_main_w8\\focus-owner-native-ocr\\result.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w8\\focus-owner-native-ocr\\result.json",
+    "sha256": "0e934d00745749822984404e6a24e21a810a2eb9907801b45f4c943716a70955"
+  },
+  {
+    "file": "test_focus_restore_real_main_w8\\focus-owner-native-ocr\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w8\\focus-owner-native-ocr\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_focus_restore_real_main_w7\\entry-module\\resource-audit.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w7\\entry-module\\resource-audit.json",
+    "sha256": "f58d089128efbeff71692a55ab86c6840e31c45efd1c7d59eda02246b22f0e2e"
+  },
+  {
+    "file": "test_focus_restore_real_main_w7\\entry-module\\result.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w7\\entry-module\\result.json",
+    "sha256": "bb404892fb82a0a76be08c2c43279e5ab788ee02905382e00876fe71a5252965"
+  },
+  {
+    "file": "test_focus_restore_real_main_w7\\entry-module\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w7\\entry-module\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_focus_restore_real_main_w7\\focus-owner-nested\\ready",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w7\\focus-owner-nested\\ready",
+    "sha256": "152e282dbd10cd5d686cfe2eb635bfbd2c0ec2a4cf33d919692df14fbbe9e49a"
+  },
+  {
+    "file": "test_focus_restore_real_main_w7\\focus-owner-nested\\resource-audit.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w7\\focus-owner-nested\\resource-audit.json",
+    "sha256": "152e282dbd10cd5d686cfe2eb635bfbd2c0ec2a4cf33d919692df14fbbe9e49a"
+  },
+  {
+    "file": "test_focus_restore_real_main_w7\\focus-owner-nested\\result.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w7\\focus-owner-nested\\result.json",
+    "sha256": "9b07ad328624f222eee07433601ad0ce4115cc741d4a5c0c4f98e35db6bd60e8"
+  },
+  {
+    "file": "test_focus_restore_real_main_w7\\focus-owner-nested\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w7\\focus-owner-nested\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_focus_restore_real_main_w6\\entry-script\\resource-audit.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w6\\entry-script\\resource-audit.json",
+    "sha256": "57fa6524da50e9160c917b32d6072f005c83a4ea56410272efaaa8e0141312e8"
+  },
+  {
+    "file": "test_focus_restore_real_main_w6\\entry-script\\result.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w6\\entry-script\\result.json",
+    "sha256": "03228dda86b6b5a1b1d20fe6ea212b3efdea1cd3426b5f1a300fa1f469334d72"
+  },
+  {
+    "file": "test_focus_restore_real_main_w6\\entry-script\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w6\\entry-script\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_focus_restore_real_main_w6\\focus-owner-nested\\ready",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w6\\focus-owner-nested\\ready",
+    "sha256": "c7d4d60142047f6c800118e2da89102182b5ba761726b3b01f0a7dbb9b3a727f"
+  },
+  {
+    "file": "test_focus_restore_real_main_w6\\focus-owner-nested\\resource-audit.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w6\\focus-owner-nested\\resource-audit.json",
+    "sha256": "c7d4d60142047f6c800118e2da89102182b5ba761726b3b01f0a7dbb9b3a727f"
+  },
+  {
+    "file": "test_focus_restore_real_main_w6\\focus-owner-nested\\result.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w6\\focus-owner-nested\\result.json",
+    "sha256": "2e25b6632c6f703b1ba9f1df01efb2f4056157d626c7078938efc1ca85b9535b"
+  },
+  {
+    "file": "test_focus_restore_real_main_w6\\focus-owner-nested\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w6\\focus-owner-nested\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_focus_restore_real_main_w5\\entry-module\\resource-audit.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w5\\entry-module\\resource-audit.json",
+    "sha256": "c2cb17b731c4a6ea6d86f1947f4d181071ade2a36388b6bda50a66daf228c7a0"
+  },
+  {
+    "file": "test_focus_restore_real_main_w5\\entry-module\\result.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w5\\entry-module\\result.json",
+    "sha256": "03228dda86b6b5a1b1d20fe6ea212b3efdea1cd3426b5f1a300fa1f469334d72"
+  },
+  {
+    "file": "test_focus_restore_real_main_w5\\entry-module\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w5\\entry-module\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_focus_restore_real_main_w5\\focus-owner-settings\\ready",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w5\\focus-owner-settings\\ready",
+    "sha256": "f60cd856a6f978bd5d99bef4a8e5fa949067a552deb4572eb6c5c161705eae19"
+  },
+  {
+    "file": "test_focus_restore_real_main_w5\\focus-owner-settings\\resource-audit.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w5\\focus-owner-settings\\resource-audit.json",
+    "sha256": "f60cd856a6f978bd5d99bef4a8e5fa949067a552deb4572eb6c5c161705eae19"
+  },
+  {
+    "file": "test_focus_restore_real_main_w5\\focus-owner-settings\\result.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w5\\focus-owner-settings\\result.json",
+    "sha256": "3c17a1892ba4fd28735a2fa3c8449af5dc9e1bec0353473d94062269f01f05fd"
+  },
+  {
+    "file": "test_focus_restore_real_main_w5\\focus-owner-settings\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w5\\focus-owner-settings\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_focus_restore_real_main_w4\\entry-script\\resource-audit.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w4\\entry-script\\resource-audit.json",
+    "sha256": "80c5f67a5e7a34f55380923be0802179b32db87e8cbbf68fe8aba55180120c99"
+  },
+  {
+    "file": "test_focus_restore_real_main_w4\\entry-script\\result.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w4\\entry-script\\result.json",
+    "sha256": "d18eb36117a9e7d693e637fd772749aa23efa52d49b0bd775a7a3ecc9b721fdc"
+  },
+  {
+    "file": "test_focus_restore_real_main_w4\\entry-script\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w4\\entry-script\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_focus_restore_real_main_w4\\focus-owner-settings\\ready",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w4\\focus-owner-settings\\ready",
+    "sha256": "e72a96f2e66b8ddf520f01f8fce9dfe51a2da6ad08abcdfab3834ab537fc6c36"
+  },
+  {
+    "file": "test_focus_restore_real_main_w4\\focus-owner-settings\\resource-audit.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w4\\focus-owner-settings\\resource-audit.json",
+    "sha256": "e72a96f2e66b8ddf520f01f8fce9dfe51a2da6ad08abcdfab3834ab537fc6c36"
+  },
+  {
+    "file": "test_focus_restore_real_main_w4\\focus-owner-settings\\result.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w4\\focus-owner-settings\\result.json",
+    "sha256": "a3bff63fa45b82621c15ff20c31dce0e866aee3aa40754ad3159f347eb50eebc"
+  },
+  {
+    "file": "test_focus_restore_real_main_w4\\focus-owner-settings\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w4\\focus-owner-settings\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_focus_restore_real_main_w3\\entry-module\\resource-audit.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w3\\entry-module\\resource-audit.json",
+    "sha256": "3dadd449507fb1ee4e4b7375bde72577264724578665c27728ac616bf18b01fc"
+  },
+  {
+    "file": "test_focus_restore_real_main_w3\\entry-module\\result.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w3\\entry-module\\result.json",
+    "sha256": "03228dda86b6b5a1b1d20fe6ea212b3efdea1cd3426b5f1a300fa1f469334d72"
+  },
+  {
+    "file": "test_focus_restore_real_main_w3\\entry-module\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w3\\entry-module\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_focus_restore_real_main_w3\\focus-owner-preview\\ready",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w3\\focus-owner-preview\\ready",
+    "sha256": "096cb9abf0254532b43b8d4f7d32e40a38061a6eb3728068bd2a26382d2396d1"
+  },
+  {
+    "file": "test_focus_restore_real_main_w3\\focus-owner-preview\\resource-audit.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w3\\focus-owner-preview\\resource-audit.json",
+    "sha256": "096cb9abf0254532b43b8d4f7d32e40a38061a6eb3728068bd2a26382d2396d1"
+  },
+  {
+    "file": "test_focus_restore_real_main_w3\\focus-owner-preview\\result.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w3\\focus-owner-preview\\result.json",
+    "sha256": "baca66e94459144063cf1fc5d228ba81474227a7455908777892191731e2f36c"
+  },
+  {
+    "file": "test_focus_restore_real_main_w3\\focus-owner-preview\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w3\\focus-owner-preview\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_focus_restore_real_main_w2\\entry-script\\resource-audit.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w2\\entry-script\\resource-audit.json",
+    "sha256": "3f007f04df0cd7286827dd49b27bdf50feb19ef6eacab46ed60899a4414513ad"
+  },
+  {
+    "file": "test_focus_restore_real_main_w2\\entry-script\\result.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w2\\entry-script\\result.json",
+    "sha256": "d21f67f90f8d95138bb9089dae6575121fe14fb456371db343673cc4a28202a6"
+  },
+  {
+    "file": "test_focus_restore_real_main_w2\\entry-script\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w2\\entry-script\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_focus_restore_real_main_w2\\focus-owner-preview\\ready",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w2\\focus-owner-preview\\ready",
+    "sha256": "1aac6bfe0e1de58fbde0cba2b181bd2cda7e44cf55375399f0614d244788e062"
+  },
+  {
+    "file": "test_focus_restore_real_main_w2\\focus-owner-preview\\resource-audit.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w2\\focus-owner-preview\\resource-audit.json",
+    "sha256": "1aac6bfe0e1de58fbde0cba2b181bd2cda7e44cf55375399f0614d244788e062"
+  },
+  {
+    "file": "test_focus_restore_real_main_w2\\focus-owner-preview\\result.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w2\\focus-owner-preview\\result.json",
+    "sha256": "e13eba6d1b24a25a9ca591eb0fc6b9acd31d3329306c1b54c87409a7eaa5d095"
+  },
+  {
+    "file": "test_focus_restore_real_main_w2\\focus-owner-preview\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w2\\focus-owner-preview\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_focus_restore_real_main_w17\\entry-module\\resource-audit.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w17\\entry-module\\resource-audit.json",
+    "sha256": "bd525d7ee89caf83f8a7062b458f376a06d49d007d9b44f304b0a659f12a2046"
+  },
+  {
+    "file": "test_focus_restore_real_main_w17\\entry-module\\result.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w17\\entry-module\\result.json",
+    "sha256": "71825b36773015c72021d56c53fbb2db04abf25fa92783b5bcf8123bec0093b3"
+  },
+  {
+    "file": "test_focus_restore_real_main_w17\\entry-module\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w17\\entry-module\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_focus_restore_real_main_w17\\focus-owner-zoomed\\ready",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w17\\focus-owner-zoomed\\ready",
+    "sha256": "4451a465cb8434d11942f76f59867db197d39e5329881d66b553d86392755e78"
+  },
+  {
+    "file": "test_focus_restore_real_main_w17\\focus-owner-zoomed\\resource-audit.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w17\\focus-owner-zoomed\\resource-audit.json",
+    "sha256": "4451a465cb8434d11942f76f59867db197d39e5329881d66b553d86392755e78"
+  },
+  {
+    "file": "test_focus_restore_real_main_w17\\focus-owner-zoomed\\result.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w17\\focus-owner-zoomed\\result.json",
+    "sha256": "7541541dfe02bf3111bc0f8d5a0d8a71f63bf623be1b7f86b12b75d5c6fb448f"
+  },
+  {
+    "file": "test_focus_restore_real_main_w17\\focus-owner-zoomed\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w17\\focus-owner-zoomed\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_focus_restore_real_main_w16\\entry-script\\resource-audit.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w16\\entry-script\\resource-audit.json",
+    "sha256": "e3d289e909dfb0a888b0babc4504abf6c46c24b01c89cffc581c454c2612f0e8"
+  },
+  {
+    "file": "test_focus_restore_real_main_w16\\entry-script\\result.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w16\\entry-script\\result.json",
+    "sha256": "71825b36773015c72021d56c53fbb2db04abf25fa92783b5bcf8123bec0093b3"
+  },
+  {
+    "file": "test_focus_restore_real_main_w16\\entry-script\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w16\\entry-script\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_focus_restore_real_main_w16\\focus-owner-zoomed\\ready",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w16\\focus-owner-zoomed\\ready",
+    "sha256": "67935b0e8ee626304aff6fd51bf414e3415da70397cf480e4c9fa5253b501621"
+  },
+  {
+    "file": "test_focus_restore_real_main_w16\\focus-owner-zoomed\\resource-audit.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w16\\focus-owner-zoomed\\resource-audit.json",
+    "sha256": "67935b0e8ee626304aff6fd51bf414e3415da70397cf480e4c9fa5253b501621"
+  },
+  {
+    "file": "test_focus_restore_real_main_w16\\focus-owner-zoomed\\result.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w16\\focus-owner-zoomed\\result.json",
+    "sha256": "2f0df609f9a0926bacf7571bc3cd782f197415429900b0d8a8ecae4791afe3b0"
+  },
+  {
+    "file": "test_focus_restore_real_main_w16\\focus-owner-zoomed\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w16\\focus-owner-zoomed\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_focus_restore_real_main_w15\\entry-module\\resource-audit.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w15\\entry-module\\resource-audit.json",
+    "sha256": "0a6d947ec56dee854cfd3b5161a7ddf4677da834f482546b654640b0c2e61054"
+  },
+  {
+    "file": "test_focus_restore_real_main_w15\\entry-module\\result.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w15\\entry-module\\result.json",
+    "sha256": "00be531f0cce5d73e6c29db566524696c008df45228d80ae419c3d80ca9ee119"
+  },
+  {
+    "file": "test_focus_restore_real_main_w15\\entry-module\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w15\\entry-module\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_focus_restore_real_main_w15\\focus-owner-normal\\ready",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w15\\focus-owner-normal\\ready",
+    "sha256": "7aefecca4fc30eb0926fd9b51b13a5058dbf1534611694ca8c7038d0b195e264"
+  },
+  {
+    "file": "test_focus_restore_real_main_w15\\focus-owner-normal\\resource-audit.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w15\\focus-owner-normal\\resource-audit.json",
+    "sha256": "7aefecca4fc30eb0926fd9b51b13a5058dbf1534611694ca8c7038d0b195e264"
+  },
+  {
+    "file": "test_focus_restore_real_main_w15\\focus-owner-normal\\result.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w15\\focus-owner-normal\\result.json",
+    "sha256": "7bbc0f3a697b0f3d27c41d4d8cbd81a2c07897487e03de4d53392a8fccd9d9b5"
+  },
+  {
+    "file": "test_focus_restore_real_main_w15\\focus-owner-normal\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w15\\focus-owner-normal\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_focus_restore_real_main_w14\\entry-script\\resource-audit.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w14\\entry-script\\resource-audit.json",
+    "sha256": "2bd7eda79110b13a8e4a65e9930c76bcbbeb98bda79691f7b4b61119bd02733b"
+  },
+  {
+    "file": "test_focus_restore_real_main_w14\\entry-script\\result.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w14\\entry-script\\result.json",
+    "sha256": "335862ff2eca79d064394b6c33c518c669986ebd09b5c54044d28a444721fef5"
+  },
+  {
+    "file": "test_focus_restore_real_main_w14\\entry-script\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w14\\entry-script\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_focus_restore_real_main_w14\\focus-owner-normal\\ready",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w14\\focus-owner-normal\\ready",
+    "sha256": "1130bb5b01276a8e7b88bfec3bfb44d007d76bfd1f65e9ea744eb4b8b0731187"
+  },
+  {
+    "file": "test_focus_restore_real_main_w14\\focus-owner-normal\\resource-audit.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w14\\focus-owner-normal\\resource-audit.json",
+    "sha256": "1130bb5b01276a8e7b88bfec3bfb44d007d76bfd1f65e9ea744eb4b8b0731187"
+  },
+  {
+    "file": "test_focus_restore_real_main_w14\\focus-owner-normal\\result.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w14\\focus-owner-normal\\result.json",
+    "sha256": "5c3ea913a0987a2acd92cf7f03c905c2df3e21a8b754f86c08da7db682c90a4e"
+  },
+  {
+    "file": "test_focus_restore_real_main_w14\\focus-owner-normal\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w14\\focus-owner-normal\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_focus_restore_real_main_w13\\entry-module\\resource-audit.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w13\\entry-module\\resource-audit.json",
+    "sha256": "a1ec80cb7065aebee20aae374652fb4d357f69bdbfb37765be71704b8ce2bed3"
+  },
+  {
+    "file": "test_focus_restore_real_main_w13\\entry-module\\result.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w13\\entry-module\\result.json",
+    "sha256": "5273558b169e53e94146ef87ff665e380570a937ec9b5be04ea4c26ca0a15459"
+  },
+  {
+    "file": "test_focus_restore_real_main_w13\\entry-module\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w13\\entry-module\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_focus_restore_real_main_w13\\focus-owner-rebuild\\ready",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w13\\focus-owner-rebuild\\ready",
+    "sha256": "52f8084b8d01a14973f954e5a076eac3eef30cdf1951a49261ea9e817407ab75"
+  },
+  {
+    "file": "test_focus_restore_real_main_w13\\focus-owner-rebuild\\resource-audit.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w13\\focus-owner-rebuild\\resource-audit.json",
+    "sha256": "52f8084b8d01a14973f954e5a076eac3eef30cdf1951a49261ea9e817407ab75"
+  },
+  {
+    "file": "test_focus_restore_real_main_w13\\focus-owner-rebuild\\result.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w13\\focus-owner-rebuild\\result.json",
+    "sha256": "6780e771d4d5cb269ded241dc7d03e2954477185018228d4e678448935f4d2e9"
+  },
+  {
+    "file": "test_focus_restore_real_main_w13\\focus-owner-rebuild\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w13\\focus-owner-rebuild\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_focus_restore_real_main_w12\\entry-script\\resource-audit.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w12\\entry-script\\resource-audit.json",
+    "sha256": "1fe6ddf42c2a400e6f90ba6f5e4838e13fcf13a34a4b5ca366c18decab8e55b4"
+  },
+  {
+    "file": "test_focus_restore_real_main_w12\\entry-script\\result.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w12\\entry-script\\result.json",
+    "sha256": "03228dda86b6b5a1b1d20fe6ea212b3efdea1cd3426b5f1a300fa1f469334d72"
+  },
+  {
+    "file": "test_focus_restore_real_main_w12\\entry-script\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w12\\entry-script\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_focus_restore_real_main_w12\\focus-owner-rebuild\\ready",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w12\\focus-owner-rebuild\\ready",
+    "sha256": "96d4d0b80f1c162b1580094688c23ce32762bdb0e528de5e5c7efea043a08fe8"
+  },
+  {
+    "file": "test_focus_restore_real_main_w12\\focus-owner-rebuild\\resource-audit.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w12\\focus-owner-rebuild\\resource-audit.json",
+    "sha256": "96d4d0b80f1c162b1580094688c23ce32762bdb0e528de5e5c7efea043a08fe8"
+  },
+  {
+    "file": "test_focus_restore_real_main_w12\\focus-owner-rebuild\\result.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w12\\focus-owner-rebuild\\result.json",
+    "sha256": "494dbdcf81f02ece32f38f1db5af9dc68d97f58bd128de8eeb3b196dcafff47d"
+  },
+  {
+    "file": "test_focus_restore_real_main_w12\\focus-owner-rebuild\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w12\\focus-owner-rebuild\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_focus_restore_real_main_w11\\entry-module\\resource-audit.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w11\\entry-module\\resource-audit.json",
+    "sha256": "0eb4e133097a526a8022c51a3ccff419fa7e69a745559f24475ca24d5a24abca"
+  },
+  {
+    "file": "test_focus_restore_real_main_w11\\entry-module\\result.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w11\\entry-module\\result.json",
+    "sha256": "3c178502c45e82deb9d88d97441aabba75a01014f6c3531115fe35aa02059207"
+  },
+  {
+    "file": "test_focus_restore_real_main_w11\\entry-module\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w11\\entry-module\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_focus_restore_real_main_w11\\focus-owner-native-quit\\ready",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w11\\focus-owner-native-quit\\ready",
+    "sha256": "e001387ec688c81a0bf3d34748ea6bf5d82baea91173c838552624bf5141d891"
+  },
+  {
+    "file": "test_focus_restore_real_main_w11\\focus-owner-native-quit\\resource-audit.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w11\\focus-owner-native-quit\\resource-audit.json",
+    "sha256": "e001387ec688c81a0bf3d34748ea6bf5d82baea91173c838552624bf5141d891"
+  },
+  {
+    "file": "test_focus_restore_real_main_w11\\focus-owner-native-quit\\result.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w11\\focus-owner-native-quit\\result.json",
+    "sha256": "652b027d4c049f3f0144d07f7c9c4e058f9b8c4a31a9751d796760b6f6b7dda1"
+  },
+  {
+    "file": "test_focus_restore_real_main_w11\\focus-owner-native-quit\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w11\\focus-owner-native-quit\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_focus_restore_real_main_w10\\entry-script\\resource-audit.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w10\\entry-script\\resource-audit.json",
+    "sha256": "1f434f7491603bef055380a6191acbf82b6b79a9469b0003b42c489eeb174148"
+  },
+  {
+    "file": "test_focus_restore_real_main_w10\\entry-script\\result.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w10\\entry-script\\result.json",
+    "sha256": "5273558b169e53e94146ef87ff665e380570a937ec9b5be04ea4c26ca0a15459"
+  },
+  {
+    "file": "test_focus_restore_real_main_w10\\entry-script\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w10\\entry-script\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_focus_restore_real_main_w10\\focus-owner-native-quit\\ready",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w10\\focus-owner-native-quit\\ready",
+    "sha256": "b5f2d74a3846351668a7c2145f8fbd3334935e5ee99071773380446bb96c96c8"
+  },
+  {
+    "file": "test_focus_restore_real_main_w10\\focus-owner-native-quit\\resource-audit.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w10\\focus-owner-native-quit\\resource-audit.json",
+    "sha256": "b5f2d74a3846351668a7c2145f8fbd3334935e5ee99071773380446bb96c96c8"
+  },
+  {
+    "file": "test_focus_restore_real_main_w10\\focus-owner-native-quit\\result.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w10\\focus-owner-native-quit\\result.json",
+    "sha256": "2e6b295e3a617871691e8dc3ab15437dbc86d09f07cf0864004c776b59ccc5b4"
+  },
+  {
+    "file": "test_focus_restore_real_main_w10\\focus-owner-native-quit\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w10\\focus-owner-native-quit\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_focus_restore_real_main_w1\\entry-module\\resource-audit.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w1\\entry-module\\resource-audit.json",
+    "sha256": "aff62603235fe17f2b4efffb8a28dba5aa31c41d387c2792cff47080c398d409"
+  },
+  {
+    "file": "test_focus_restore_real_main_w1\\entry-module\\result.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w1\\entry-module\\result.json",
+    "sha256": "3c178502c45e82deb9d88d97441aabba75a01014f6c3531115fe35aa02059207"
+  },
+  {
+    "file": "test_focus_restore_real_main_w1\\entry-module\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w1\\entry-module\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_focus_restore_real_main_w1\\focus-owner-thumb\\ready",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w1\\focus-owner-thumb\\ready",
+    "sha256": "d7be80e99333aa79166837f367d0e34765803fc72ebe231ac3926874797c22ed"
+  },
+  {
+    "file": "test_focus_restore_real_main_w1\\focus-owner-thumb\\resource-audit.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w1\\focus-owner-thumb\\resource-audit.json",
+    "sha256": "d7be80e99333aa79166837f367d0e34765803fc72ebe231ac3926874797c22ed"
+  },
+  {
+    "file": "test_focus_restore_real_main_w1\\focus-owner-thumb\\result.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w1\\focus-owner-thumb\\result.json",
+    "sha256": "a2ee7f721d8b0b4f9db660d82b6fb68ebe2d66828264e9097379485e9da1a896"
+  },
+  {
+    "file": "test_focus_restore_real_main_w1\\focus-owner-thumb\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w1\\focus-owner-thumb\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_focus_restore_real_main_w0\\entry-script\\resource-audit.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w0\\entry-script\\resource-audit.json",
+    "sha256": "f1cc0018e9d35091dfe4856b90c70158476bd78e06672798078c028de3941082"
+  },
+  {
+    "file": "test_focus_restore_real_main_w0\\entry-script\\result.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w0\\entry-script\\result.json",
+    "sha256": "03228dda86b6b5a1b1d20fe6ea212b3efdea1cd3426b5f1a300fa1f469334d72"
+  },
+  {
+    "file": "test_focus_restore_real_main_w0\\entry-script\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w0\\entry-script\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_focus_restore_real_main_w0\\focus-owner-thumb\\ready",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w0\\focus-owner-thumb\\ready",
+    "sha256": "e35a73a36a62cb9c2699a8e94da12f164c6d9f2648b9678fef48997a97ddf4f5"
+  },
+  {
+    "file": "test_focus_restore_real_main_w0\\focus-owner-thumb\\resource-audit.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w0\\focus-owner-thumb\\resource-audit.json",
+    "sha256": "e35a73a36a62cb9c2699a8e94da12f164c6d9f2648b9678fef48997a97ddf4f5"
+  },
+  {
+    "file": "test_focus_restore_real_main_w0\\focus-owner-thumb\\result.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w0\\focus-owner-thumb\\result.json",
+    "sha256": "318ab0745561bcb71ed4c1ce97d793c9bfbb4fa9cb034d3b0f5ed9d067af3103"
+  },
+  {
+    "file": "test_focus_restore_real_main_w0\\focus-owner-thumb\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_focus_restore_real_main_w0\\focus-owner-thumb\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_cross_entry_owner_accepts2\\entry-module\\resource-audit.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_cross_entry_owner_accepts2\\entry-module\\resource-audit.json",
+    "sha256": "031160d96b35eff529fb8174631d83a43133c15a8506f17c70cb72153c3a4b26"
+  },
+  {
+    "file": "test_cross_entry_owner_accepts2\\entry-module\\result.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_cross_entry_owner_accepts2\\entry-module\\result.json",
+    "sha256": "d3c68d0b9c42841b6ece56af4ab0ca5f386286a280971ab1619ebeedcc0b7d95"
+  },
+  {
+    "file": "test_cross_entry_owner_accepts2\\entry-module\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_cross_entry_owner_accepts2\\entry-module\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_cross_entry_owner_accepts2\\entry-owner-relocated\\ready",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_cross_entry_owner_accepts2\\entry-owner-relocated\\ready",
+    "sha256": "955fd99250f19a746cb36127b981489bd6c82533e8dbbbb9c379a5f0ee4c53ff"
+  },
+  {
+    "file": "test_cross_entry_owner_accepts2\\entry-owner-relocated\\resource-audit.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_cross_entry_owner_accepts2\\entry-owner-relocated\\resource-audit.json",
+    "sha256": "955fd99250f19a746cb36127b981489bd6c82533e8dbbbb9c379a5f0ee4c53ff"
+  },
+  {
+    "file": "test_cross_entry_owner_accepts2\\entry-owner-relocated\\result.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_cross_entry_owner_accepts2\\entry-owner-relocated\\result.json",
+    "sha256": "e50f8fd60cd63173018f0b0fd8f0208d7c0a37f315c29f5c632812dce5f3a06a"
+  },
+  {
+    "file": "test_cross_entry_owner_accepts2\\entry-owner-relocated\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_cross_entry_owner_accepts2\\entry-owner-relocated\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_cross_entry_owner_accepts2\\entry-relocated\\resource-audit.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_cross_entry_owner_accepts2\\entry-relocated\\resource-audit.json",
+    "sha256": "58293ea3dd3a1df9269ef270eb9ae639ceffc96fffcf285649c3432f10231971"
+  },
+  {
+    "file": "test_cross_entry_owner_accepts2\\entry-relocated\\result.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_cross_entry_owner_accepts2\\entry-relocated\\result.json",
+    "sha256": "23568565eb5979f72f68c153f16a671c6029c9ba5c1d77521d6fb43fc3006376"
+  },
+  {
+    "file": "test_cross_entry_owner_accepts2\\entry-relocated\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_cross_entry_owner_accepts2\\entry-relocated\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_cross_entry_owner_accepts2\\entry-script\\resource-audit.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_cross_entry_owner_accepts2\\entry-script\\resource-audit.json",
+    "sha256": "5f702a397acb9f18df7f84bee9490692596ef408381eda8725dfca858bdb1269"
+  },
+  {
+    "file": "test_cross_entry_owner_accepts2\\entry-script\\result.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_cross_entry_owner_accepts2\\entry-script\\result.json",
+    "sha256": "9d671d22c8e37800727f5915288e2422585a06403539b38681c42bd8ca73a8c9"
+  },
+  {
+    "file": "test_cross_entry_owner_accepts2\\entry-script\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_cross_entry_owner_accepts2\\entry-script\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_cross_entry_owner_accepts1\\entry-module\\resource-audit.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_cross_entry_owner_accepts1\\entry-module\\resource-audit.json",
+    "sha256": "10db3316e745affb6e38111af53914aa1418b68a6118063632f0ff2f72d0b044"
+  },
+  {
+    "file": "test_cross_entry_owner_accepts1\\entry-module\\result.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_cross_entry_owner_accepts1\\entry-module\\result.json",
+    "sha256": "a83eab68152486f152122eeeb1ec8f10840646107bc5ee73473c0f97f2f54656"
+  },
+  {
+    "file": "test_cross_entry_owner_accepts1\\entry-module\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_cross_entry_owner_accepts1\\entry-module\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_cross_entry_owner_accepts1\\entry-owner-module\\ready",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_cross_entry_owner_accepts1\\entry-owner-module\\ready",
+    "sha256": "62f982390b3b7a6ad6792a3ed4e5f417d471291aac8ebd9848e6dddaa17c125a"
+  },
+  {
+    "file": "test_cross_entry_owner_accepts1\\entry-owner-module\\resource-audit.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_cross_entry_owner_accepts1\\entry-owner-module\\resource-audit.json",
+    "sha256": "62f982390b3b7a6ad6792a3ed4e5f417d471291aac8ebd9848e6dddaa17c125a"
+  },
+  {
+    "file": "test_cross_entry_owner_accepts1\\entry-owner-module\\result.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_cross_entry_owner_accepts1\\entry-owner-module\\result.json",
+    "sha256": "78be124921880851ae86270f559871eb56d47558594694ce45c2ed891e2fe47a"
+  },
+  {
+    "file": "test_cross_entry_owner_accepts1\\entry-owner-module\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_cross_entry_owner_accepts1\\entry-owner-module\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_cross_entry_owner_accepts1\\entry-relocated\\resource-audit.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_cross_entry_owner_accepts1\\entry-relocated\\resource-audit.json",
+    "sha256": "fb71dc45d23ff12b4b2b68840432e672a4468201704fd4be2acf8990dba41f23"
+  },
+  {
+    "file": "test_cross_entry_owner_accepts1\\entry-relocated\\result.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_cross_entry_owner_accepts1\\entry-relocated\\result.json",
+    "sha256": "23568565eb5979f72f68c153f16a671c6029c9ba5c1d77521d6fb43fc3006376"
+  },
+  {
+    "file": "test_cross_entry_owner_accepts1\\entry-relocated\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_cross_entry_owner_accepts1\\entry-relocated\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_cross_entry_owner_accepts1\\entry-script\\resource-audit.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_cross_entry_owner_accepts1\\entry-script\\resource-audit.json",
+    "sha256": "02095fba74a4a8579f8a06a059d20b7396aa4cad7e521980e4f6e720164bc752"
+  },
+  {
+    "file": "test_cross_entry_owner_accepts1\\entry-script\\result.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_cross_entry_owner_accepts1\\entry-script\\result.json",
+    "sha256": "9d671d22c8e37800727f5915288e2422585a06403539b38681c42bd8ca73a8c9"
+  },
+  {
+    "file": "test_cross_entry_owner_accepts1\\entry-script\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_cross_entry_owner_accepts1\\entry-script\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_cross_entry_owner_accepts0\\entry-module\\resource-audit.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_cross_entry_owner_accepts0\\entry-module\\resource-audit.json",
+    "sha256": "64c2a9e6abf4de9126205896dd68d498fbafc1091c8f03e719604c21aca14982"
+  },
+  {
+    "file": "test_cross_entry_owner_accepts0\\entry-module\\result.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_cross_entry_owner_accepts0\\entry-module\\result.json",
+    "sha256": "a83eab68152486f152122eeeb1ec8f10840646107bc5ee73473c0f97f2f54656"
+  },
+  {
+    "file": "test_cross_entry_owner_accepts0\\entry-module\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_cross_entry_owner_accepts0\\entry-module\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_cross_entry_owner_accepts0\\entry-owner-script\\ready",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_cross_entry_owner_accepts0\\entry-owner-script\\ready",
+    "sha256": "134a9b938c170ea064d97776f88d125d074ce8d2062c7ffe3e876a4118378cd2"
+  },
+  {
+    "file": "test_cross_entry_owner_accepts0\\entry-owner-script\\resource-audit.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_cross_entry_owner_accepts0\\entry-owner-script\\resource-audit.json",
+    "sha256": "134a9b938c170ea064d97776f88d125d074ce8d2062c7ffe3e876a4118378cd2"
+  },
+  {
+    "file": "test_cross_entry_owner_accepts0\\entry-owner-script\\result.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_cross_entry_owner_accepts0\\entry-owner-script\\result.json",
+    "sha256": "2494d0ff2198bf59154e93a429560052581a7a65cd1957e8a7cc4d87cc7708ed"
+  },
+  {
+    "file": "test_cross_entry_owner_accepts0\\entry-owner-script\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_cross_entry_owner_accepts0\\entry-owner-script\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_cross_entry_owner_accepts0\\entry-relocated\\resource-audit.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_cross_entry_owner_accepts0\\entry-relocated\\resource-audit.json",
+    "sha256": "cee2b0a06cb1e309e347d33d4e478ff12a0be68543fe5aa27e0d455de8f80273"
+  },
+  {
+    "file": "test_cross_entry_owner_accepts0\\entry-relocated\\result.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_cross_entry_owner_accepts0\\entry-relocated\\result.json",
+    "sha256": "03228dda86b6b5a1b1d20fe6ea212b3efdea1cd3426b5f1a300fa1f469334d72"
+  },
+  {
+    "file": "test_cross_entry_owner_accepts0\\entry-relocated\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_cross_entry_owner_accepts0\\entry-relocated\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_cross_entry_owner_accepts0\\entry-script\\resource-audit.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_cross_entry_owner_accepts0\\entry-script\\resource-audit.json",
+    "sha256": "312b4db0b05547257ec03f41aed4f8cca43322bcc0c96ae64eb9c3dcde05de83"
+  },
+  {
+    "file": "test_cross_entry_owner_accepts0\\entry-script\\result.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_cross_entry_owner_accepts0\\entry-script\\result.json",
+    "sha256": "03228dda86b6b5a1b1d20fe6ea212b3efdea1cd3426b5f1a300fa1f469334d72"
+  },
+  {
+    "file": "test_cross_entry_owner_accepts0\\entry-script\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_cross_entry_owner_accepts0\\entry-script\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_constructor_failure_real_0\\constructor-failure-main\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_constructor_failure_real_0\\constructor-failure-main\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_constructor_failure_notic1\\constructor-failure-join-0\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_constructor_failure_notic1\\constructor-failure-join-0\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_constructor_failure_notic1\\constructor-failure-join-2\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_constructor_failure_notic1\\constructor-failure-join-2\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_constructor_failure_notic1\\constructor-failure-join-4\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_constructor_failure_notic1\\constructor-failure-join-4\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_constructor_failure_notic1\\constructor-failure-join-6\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_constructor_failure_notic1\\constructor-failure-join-6\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_constructor_failure_notic1\\constructor-failure-legacy-join-1\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_constructor_failure_notic1\\constructor-failure-legacy-join-1\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_constructor_failure_notic1\\constructor-failure-legacy-join-3\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_constructor_failure_notic1\\constructor-failure-legacy-join-3\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_constructor_failure_notic1\\constructor-failure-legacy-join-5\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_constructor_failure_notic1\\constructor-failure-legacy-join-5\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_constructor_failure_notic1\\constructor-failure-legacy-owner\\ready",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_constructor_failure_notic1\\constructor-failure-legacy-owner\\ready",
+    "sha256": "7a5a7b681bf608694b879d853b8d3fde97f171c112b5d1ee3697c20d75bf6196"
+  },
+  {
+    "file": "test_constructor_failure_notic1\\constructor-failure-legacy-owner\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_constructor_failure_notic1\\constructor-failure-legacy-owner\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_constructor_failure_notic0\\constructor-failure-join-0\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_constructor_failure_notic0\\constructor-failure-join-0\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_constructor_failure_notic0\\constructor-failure-join-2\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_constructor_failure_notic0\\constructor-failure-join-2\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_constructor_failure_notic0\\constructor-failure-join-4\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_constructor_failure_notic0\\constructor-failure-join-4\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_constructor_failure_notic0\\constructor-failure-join-6\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_constructor_failure_notic0\\constructor-failure-join-6\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_constructor_failure_notic0\\constructor-failure-legacy-join-1\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_constructor_failure_notic0\\constructor-failure-legacy-join-1\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_constructor_failure_notic0\\constructor-failure-legacy-join-3\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_constructor_failure_notic0\\constructor-failure-legacy-join-3\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_constructor_failure_notic0\\constructor-failure-legacy-join-5\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_constructor_failure_notic0\\constructor-failure-legacy-join-5\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_constructor_failure_notic0\\constructor-failure-owner\\ready",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_constructor_failure_notic0\\constructor-failure-owner\\ready",
+    "sha256": "965cdf21c74b7720c36ae13a5150e4d554a78dd7c3fd862e8a64e55505924511"
+  },
+  {
+    "file": "test_constructor_failure_notic0\\constructor-failure-owner\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_constructor_failure_notic0\\constructor-failure-owner\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_constructor_failure_manua0\\constructor-failure-manual\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_constructor_failure_manua0\\constructor-failure-manual\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_constructor_failure_entry0\\constructor-failure-module\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_constructor_failure_entry0\\constructor-failure-module\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_constructor_failure_entry0\\constructor-failure-script\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_constructor_failure_entry0\\constructor-failure-script\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_constructor_failure_entry0\\constructor-failure-unavailable-module\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_constructor_failure_entry0\\constructor-failure-unavailable-module\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_constructor_failure_entry0\\constructor-failure-unavailable-script\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_constructor_failure_entry0\\constructor-failure-unavailable-script\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_constructor_failure_descr0\\constructor-failure-descriptor\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_constructor_failure_descr0\\constructor-failure-descriptor\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_constructor_failure_clean0\\constructor-failure-main\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_constructor_failure_clean0\\constructor-failure-main\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "test_constructor_failure_clean0\\preflight\\traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_0504_task1_full\\test_constructor_failure_clean0\\preflight\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }
+]

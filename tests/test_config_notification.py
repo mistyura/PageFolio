@@ -14,6 +14,7 @@ import pytest
 
 import pagefolio.plugins as plugins_mod
 import pagefolio.settings as settings_mod
+from tests.config_notice_support import create_isolated_app
 
 
 @pytest.fixture
@@ -1060,13 +1061,249 @@ class TestExitSaveFailure:
 @pytest.fixture
 def isolated_app(monkeypatch, tmp_path):
     """設定・外部プロンプト・プラグインの解決先を分離する。"""
-    settings_path = tmp_path / "pagefolio_settings.json"
-    plugins_path = tmp_path / "plugins"
-    plugins_path.mkdir()
-    monkeypatch.setattr(settings_mod, "_get_settings_path", lambda: str(settings_path))
-    monkeypatch.setattr(settings_mod, "_get_base_dir", lambda: str(tmp_path))
-    monkeypatch.setattr(plugins_mod, "_get_plugins_dir", lambda: str(plugins_path))
-    yield settings_path
+    isolated = create_isolated_app()
+    try:
+        yield isolated.settings_path
+    finally:
+        isolated.close()
+
+
+class TestScenarioIsolation:
+    @pytest.mark.parametrize(
+        ("scenario", "status"),
+        [("read-corrupt", "corrupt"), ("read-unreadable", "unreadable")],
+    )
+    def test_scenario_classifies_real_load_and_preserves_originals(
+        self, scenario, status
+    ):
+        isolated = create_isolated_app(scenario)
+        with isolated:
+            assert isolated.app._settings_load_status == status
+            assert Path(settings_mod._get_base_dir()) == isolated.base
+            assert Path(plugins_mod._get_plugins_dir()) == isolated.plugins_path
+        assert isolated.originals_before == isolated.originals_after
+        assert not isolated.base.exists()
+
+    @pytest.mark.parametrize("scenario", ["save-write", "save-replace"])
+    def test_save_fault_only_changes_memory_then_recovers(self, scenario):
+        isolated = create_isolated_app(scenario)
+        with isolated:
+            original = isolated.settings_path.read_bytes()
+            app = isolated.app
+            app.settings["thumb_page_size"] = 30
+            assert app._persist_settings() is False
+            assert isolated.settings_path.read_bytes() == original
+            assert not Path(str(isolated.settings_path) + ".tmp").exists()
+            assert app.settings["thumb_page_size"] == 30
+            isolated.fault_enabled = False
+            assert app._persist_settings() is True
+            assert settings_mod._load_settings()["thumb_page_size"] == 30
+
+    def test_prompt_and_plugin_resolvers_never_load_real_plugins(self, monkeypatch):
+        loaded = []
+        original_load = plugins_mod.PluginManager.load_plugin
+
+        def observe(manager, plugin_id, path, *args, **kwargs):
+            loaded.append(Path(path))
+            return original_load(manager, plugin_id, path, *args, **kwargs)
+
+        monkeypatch.setattr(plugins_mod.PluginManager, "load_plugin", observe)
+        with create_isolated_app() as isolated:
+            assert settings_mod.load_custom_prompt({}) == ""
+            assert settings_mod.load_summary_prompt({}) == ""
+            assert settings_mod.save_prompt_file(
+                settings_mod.CUSTOM_PROMPT_FILE, "isolated OCR"
+            )
+            assert settings_mod.save_prompt_file(
+                settings_mod.SUMMARY_PROMPT_FILE, "isolated summary"
+            )
+            assert (isolated.base / settings_mod.CUSTOM_PROMPT_FILE).read_text(
+                encoding="utf-8"
+            ) == "isolated OCR"
+            assert (isolated.base / settings_mod.SUMMARY_PROMPT_FILE).read_text(
+                encoding="utf-8"
+            ) == "isolated summary"
+            assert loaded == []
+
+    def test_partial_initialization_exception_cleans_root_and_temporary(
+        self, monkeypatch
+    ):
+        from pagefolio.app import PDFEditorApp
+
+        def fail_build(app):
+            app.root.after(10000, lambda: None)
+            raise RuntimeError("isolated build failure")
+
+        monkeypatch.setattr(PDFEditorApp, "_build_ui", fail_build)
+        isolated = create_isolated_app("read-corrupt")
+        with pytest.raises(RuntimeError, match="isolated build failure"):
+            isolated.start()
+        assert not isolated.base.exists()
+        assert isolated.originals_before == isolated.originals_after
+
+
+class TestConfigAcceptance:
+    def test_corrupt_two_failures_rebuild_edit_recovery_and_exit(self, monkeypatch):
+        with create_isolated_app("read-corrupt") as isolated:
+            app, root = isolated.app, isolated.root
+            original = isolated.settings_path.read_bytes()
+            app.doc = fitz.open()
+            app.doc.new_page()
+            app.edit_mode = True
+            app.selected_pages = {0}
+            app._rotate_selected(90)
+            doc, undo, redo = app.doc, app._undo_stack, app._redo_stack
+            history = tuple(undo)
+            root.update_idletasks()
+            clock = [0.0]
+            monkeypatch.setattr("pagefolio.app.time.monotonic", lambda: clock[0])
+            app._config_notices[0]["shown_at"] = 0.0
+            clock[0] = 4.0
+            with monkeypatch.context() as fault:
+                fault.setattr("pagefolio.app._save_settings", lambda values: False)
+                values = dict(app.settings, font_size=14)
+                app._apply_settings(values)
+                app._apply_settings(values)
+                app._toggle_lang()
+            root.update_idletasks()
+            assert app.lang == "en"
+            assert [n["message_key"] for n in app._config_notices] == [
+                "config_load_corrupt"
+            ] + ["config_save_failed"] * 3
+            ids = [n["event_id"] for n in app._config_notices]
+            assert len(set(ids)) == 4
+            assert app._config_notices[0]["remaining_ms"] == 6000
+            assert app._toast._msg_var.get() == app._t("config_load_corrupt")
+            assert isolated.settings_path.read_bytes() == original
+            assert (
+                app.doc is doc and app._undo_stack is undo and app._redo_stack is redo
+            )
+            assert tuple(undo) == history and app.selected_pages == {0}
+            assert app.doc[0].rotation == 90
+            seen = []
+            while app._config_notices:
+                seen.append(app._config_notices[0]["event_id"])
+                app._toast.dismiss("config_notice", reason="user")
+                root.update_idletasks()
+            assert seen == ids
+            assert app._persist_settings() is True
+            assert not app._settings_autosave_blocked
+            assert settings_mod._load_settings()["font_size"] == 14
+            app._undo()
+            assert app.doc[0].rotation == 0
+            app._redo()
+            assert app.doc[0].rotation == 90
+            monkeypatch.setattr("pagefolio.app.messagebox.askyesno", lambda *args: True)
+            app._quit()
+            assert doc.is_closed
+
+    @pytest.mark.parametrize("recover_explicitly", [False, True])
+    def test_exit_no_first_failure_next_exit_and_explicit_flag_reset(
+        self, monkeypatch, recover_explicitly
+    ):
+        with create_isolated_app("save-replace") as isolated:
+            app, root = isolated.app, isolated.root
+            app.doc = fitz.open()
+            app.doc.new_page()
+            doc = app.doc
+            original = isolated.settings_path.read_bytes()
+            monkeypatch.setattr(
+                "pagefolio.app.messagebox.askyesno", lambda *args: False
+            )
+            app._quit()
+            assert not app._settings_exit_save_failed and not app._config_notices
+            monkeypatch.setattr("pagefolio.app.messagebox.askyesno", lambda *args: True)
+            app._quit()
+            assert app._settings_exit_save_failed and root.winfo_exists()
+            assert app.doc is doc and not doc.is_closed
+            assert len(app._config_notices) == 1
+            monkeypatch.setattr(
+                "pagefolio.app.messagebox.askyesno", lambda *args: False
+            )
+            app._quit()
+            assert app._settings_exit_save_failed and root.winfo_exists()
+            if recover_explicitly:
+                isolated.fault_enabled = False
+                assert app._persist_settings() is True
+                assert not app._settings_exit_save_failed
+                isolated.fault_enabled = True
+                monkeypatch.setattr(
+                    "pagefolio.app.messagebox.askyesno", lambda *args: True
+                )
+                app._quit()
+                assert app._settings_exit_save_failed and root.winfo_exists()
+                app._quit()
+            else:
+                monkeypatch.setattr(
+                    "pagefolio.app.messagebox.askyesno", lambda *args: True
+                )
+                app._quit()
+                assert isolated.settings_path.read_bytes() == original
+            assert doc.is_closed
+
+    def test_unreadable_permission_recovery_stays_blocked_until_restart(self):
+        isolated = create_isolated_app("read-unreadable")
+        with isolated:
+            app = isolated.app
+            original = isolated.settings_path.read_bytes()
+            isolated.fault_enabled = False
+            app.settings["lang"] = "en"
+            assert app._persist_settings() is False
+            assert [n["message_key"] for n in app._config_notices] == [
+                "config_load_unreadable",
+                "config_save_blocked_unreadable",
+            ]
+            assert isolated.settings_path.read_bytes() == original
+            app._quit()
+            assert app._settings_exit_save_failed is False
+            assert app._config_notice_seq == 2
+            from tkinterdnd2 import TkinterDnD
+
+            from pagefolio.app import PDFEditorApp
+
+            isolated.root = TkinterDnD.Tk()
+            isolated.root.withdraw()
+            isolated.app = PDFEditorApp(isolated.root)
+            assert isolated.app._settings_load_status == "ok"
+            assert isolated.app.lang == "ja"
+            assert isolated.app._persist_settings() is True
+
+    def test_hundred_failures_all_consume_fifo_with_nested_modal_and_operation(
+        self, notice_app
+    ):
+        app = notice_app
+        app.root.grab = object()
+        for _index in range(100):
+            app._enqueue_config_notice("config_save_failed")
+        ids = [notice["event_id"] for notice in app._config_notices]
+        app._schedule_config_notice()
+        app.root.advance(20000)
+        assert all(n["remaining_ms"] == 10000 for n in app._config_notices)
+        app.root.grab = None
+        app.root.advance(100)
+        app.root.advance(4000)
+        for category in ("save_file", "print"):
+            app._toast.show(category, "操作通知", retry_cb=lambda: None)
+            app.root.advance(20000)
+            assert app._config_notices[0]["remaining_ms"] == 6000
+            app._toast.dismiss(category)
+            app.root.advance()
+        app.root.grab = object()
+        app.root.advance(100)
+        remaining = app._config_notices[0]["remaining_ms"]
+        app.root.advance(20000)
+        app.root.grab = object()
+        app.root.advance(20000)
+        assert app._config_notices[0]["remaining_ms"] == remaining
+        app.root.grab = None
+        app.root.advance(100)
+        seen = []
+        while app._config_notices:
+            current = app._config_notices[0]
+            seen.append(current["event_id"])
+            app.root.advance(current["remaining_ms"])
+        assert seen == ids and len(set(seen)) == 100
+        assert not app.root.pending
 
 
 class TestLoadTracer:

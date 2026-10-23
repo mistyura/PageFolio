@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="1" time="2.632" timestamp="2026-10-24T00:47:23.990476+09:00" hostname="nullaze-z240"><testcase classname="tests.test_config_notification.TestScenarioIsolation" name="test_scenario_classifies_real_load_and_preserves_originals[read-corrupt-corrupt]" time="2.444"><failure message="AssertionError: assert 'missing' == 'corrupt'&#10;  &#10;  - corrupt&#10;  + missing">tests\test_config_notification.py:1081: in test_scenario_classifies_real_load_and_preserves_originals
+    assert isolated.app._settings_load_status == status
+E   AssertionError: assert 'missing' == 'corrupt'
+E     
+E     - corrupt
+E     + missing</failure></testcase></testsuite></testsuites>

@@ -1,0 +1,11 @@
+{
+  "command": ".venv/Scripts/python.exe -m pytest tests/test_config_notification.py::TestScenarioIsolation -x -q --tb=short --junitxml=.planning/phases/05-config-notification/05-04-task1-red-normal.xml --basetemp=C:/Users/shdwf/AppData/Local/Temp/pf_0504_red_normal",
+  "exitCode": 1,
+  "output": "<?xml version=\"1.0\" encoding=\"utf-8\"?><testsuites name=\"pytest tests\"><testsuite name=\"pytest\" errors=\"0\" failures=\"1\" skipped=\"0\" tests=\"1\" time=\"2.632\" timestamp=\"2026-10-24T00:47:23.990476+09:00\" hostname=\"nullaze-z240\"><testcase classname=\"tests.test_config_notification.TestScenarioIsolation\" name=\"test_scenario_classifies_real_load_and_preserves_originals[read-corrupt-corrupt]\" time=\"2.444\"><failure message=\"AssertionError: assert 'missing' == 'corrupt'&#10;  &#10;  - corrupt&#10;  + missing\">tests\\test_config_notification.py:1081: in test_scenario_classifies_real_load_and_preserves_originals\r\n    assert isolated.app._settings_load_status == status\r\nE   AssertionError: assert 'missing' == 'corrupt'\r\nE     \r\nE     - corrupt\r\nE     + missing</failure></testcase></testsuite></testsuites>",
+  "targetTest": "test_scenario_classifies_real_load_and_preserves_originals[read-corrupt-corrupt]",
+  "targetFile": "tests/test_config_notification.py",
+  "expected": "corrupt",
+  "actual": "missing",
+  "reportPath": ".planning/phases/05-config-notification/05-04-task1-red-normal.xml",
+  "semanticAssessment": "対象の実App読込は完走し、未実装scenarioのmissingに対してcorruptを期待するassertだけが失敗。sandbox TclErrorはREDに使用しない。"
+}

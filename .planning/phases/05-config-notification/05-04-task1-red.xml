@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="1" time="0.441" timestamp="2026-10-24T00:47:11.995039+09:00" hostname="nullaze-z240"><testcase classname="tests.test_config_notification.TestScenarioIsolation" name="test_scenario_classifies_real_load_and_preserves_originals[read-corrupt-corrupt]" time="0.077"><failure message="_tkinter.TclError: Cannot find a usable init.tcl in the following directories: &#10;    C:/Users/shdwf/AppData/Local/Programs/Python/Python315/lib/tcl9.0 C:/Users/shdwf/AppData/Local/Programs/Python/lib/tcl9.0 C:/Users/shdwf/AppData/Local/Programs/lib/tcl9.0 C:/Users/shdwf/AppData/Local/Programs/Python/library C:/Users/shdwf/AppData/Local/Programs/library C:/Users/shdwf/AppData/Local/Programs/tcl9.0/library C:/Users/shdwf/AppData/Local/Programs/tcl9.0.4/library C:/Users/shdwf/AppData/Local/tcl9.0.4/library&#10;&#10;&#10;&#10;This probably means that Tcl wasn't installed properly.">tests\test_config_notification.py:1080: in test_scenario_classifies_real_load_and_preserves_originals
+    with isolated:
+         ^^^^^^^^
+tests\config_notice_support.py:111: in __enter__
+    return self.start()
+           ^^^^^^^^^^^^
+tests\config_notice_support.py:74: in start
+    self.root = TkinterDnD.Tk()
+                ^^^^^^^^^^^^^^^
+.venv\Lib\site-packages\tkinterdnd2\TkinterDnD.py:323: in __init__
+    tkinter.Tk.__init__(self, *args, **kw)
+..\..\..\AppData\Local\Programs\Python\Python315\Lib\tkinter\__init__.py:2576: in __init__
+    self.tk = _tkinter.create(screenName, baseName, className, interactive, wantobjects, useTk, sync, use)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   _tkinter.TclError: Cannot find a usable init.tcl in the following directories: 
+E       C:/Users/shdwf/AppData/Local/Programs/Python/Python315/lib/tcl9.0 C:/Users/shdwf/AppData/Local/Programs/Python/lib/tcl9.0 C:/Users/shdwf/AppData/Local/Programs/lib/tcl9.0 C:/Users/shdwf/AppData/Local/Programs/Python/library C:/Users/shdwf/AppData/Local/Programs/library C:/Users/shdwf/AppData/Local/Programs/tcl9.0/library C:/Users/shdwf/AppData/Local/Programs/tcl9.0.4/library C:/Users/shdwf/AppData/Local/tcl9.0.4/library
+E   
+E   
+E   
+E   This probably means that Tcl wasn't installed properly.</failure></testcase></testsuite></testsuites>

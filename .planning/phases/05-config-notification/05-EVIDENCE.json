@@ -1,0 +1,375 @@
+{
+  "schema_version": 1,
+  "phase": "05-config-notification",
+  "plan": "05-04",
+  "status": "automated-passed-manual-pending",
+  "tested_base_commit": "8c61ea8",
+  "product_changes_in_this_plan": [],
+  "runtime": {
+    "python": "3.15.1 (tags/v3.15.1:c37e74c, Oct 21 2026, 06:24:08) [MSC v.1951 64 bit (AMD64)]",
+    "platform": "win32",
+    "tk": "9.0",
+    "pytest": "9.1.1",
+    "ruff": "0.17.1",
+    "execution_boundary": "通常Windows/.venv。全件はhidden pythonw→固定05-02-verify.py→python.exe単一pytest。"
+  },
+  "dependency": {
+    "id": "DEP-05-REGRESSION",
+    "status": "investigating-unresolved",
+    "diagnostic_commit": "938426840c19731ba4d72076d699f15b2b1a513e",
+    "authorization": "2026-10-23利用者の条件付き実装継続承認。原因修復・出荷承認ではない。",
+    "recurrence_stop": [
+      "owner_missing",
+      "通知前景HWND不一致",
+      "normal-entry-script communicate(timeout=12)"
+    ],
+    "on_recurrence": "実装/後続/commit停止。最初の失敗とresult/traceback/poll/reader/process診断をhash照合して保存。"
+  },
+  "commands": [
+    {
+      "label": "sandbox-red-environment-failure",
+      "command": ".venv/Scripts/python.exe -m pytest tests/test_config_notification.py::TestScenarioIsolation -x -q --tb=short --junitxml=.planning/phases/05-config-notification/05-04-task1-red.xml --basetemp=pf_0504_red",
+      "exit_code": 1,
+      "passed": 0,
+      "failed": 1,
+      "errors": 0,
+      "warnings": 3,
+      "seconds": 0.49,
+      "result": "TclError init.tcl。assert未到達、RED不採用。"
+    },
+    {
+      "label": "normal-red",
+      "command": ".venv/Scripts/python.exe -m pytest tests/test_config_notification.py::TestScenarioIsolation -x -q --tb=short --junitxml=.planning/phases/05-config-notification/05-04-task1-red-normal.xml --basetemp=C:/Users/shdwf/AppData/Local/Temp/pf_0504_red_normal",
+      "exit_code": 1,
+      "passed": 0,
+      "failed": 1,
+      "errors": 0,
+      "warnings": 1,
+      "seconds": 2.63,
+      "result": "実Appのmissingに対しcorruptを期待するassert失敗。RED_EVIDENCE_OK。"
+    },
+    {
+      "label": "targeted-initial",
+      "command": ".venv/Scripts/python.exe -m pytest tests/test_config_notification.py::TestConfigAcceptance tests/test_config_notification.py::TestScenarioIsolation tests/test_toast.py -x -q --tb=short --basetemp=C:/Users/shdwf/AppData/Local/Temp/pf_0504_targeted1",
+      "exit_code": 1,
+      "passed": 9,
+      "failed": 1,
+      "errors": 0,
+      "warnings": 1,
+      "seconds": 5.28,
+      "result": "新規spy API名typoをload_pluginへ修正。"
+    },
+    {
+      "label": "targeted-fixture-first",
+      "command": ".venv/Scripts/python.exe -m pytest tests/test_config_notification.py tests/test_toast.py tests/test_pdf_ops.py -x -q --tb=short --basetemp=C:/Users/shdwf/AppData/Local/Temp/pf_0504_targeted2",
+      "exit_code": 1,
+      "passed": 107,
+      "failed": 1,
+      "errors": 0,
+      "warnings": 1,
+      "seconds": 5.96,
+      "result": "helperの別Tk default rootによるimage不在。製品変更なし。"
+    },
+    {
+      "label": "targeted-fixture-second",
+      "command": ".venv/Scripts/python.exe -m pytest tests/test_config_notification.py tests/test_toast.py tests/test_pdf_ops.py -x -q --tb=short --basetemp=C:/Users/shdwf/AppData/Local/Temp/pf_0504_targeted3",
+      "exit_code": 1,
+      "passed": 112,
+      "failed": 1,
+      "errors": 0,
+      "warnings": 1,
+      "seconds": 7.85,
+      "result": "破棄済みroot復元。default root退避を生成前へ移した。"
+    },
+    {
+      "label": "targeted-final",
+      "command": ".venv/Scripts/python.exe -m pytest tests/test_config_notification.py tests/test_toast.py tests/test_pdf_ops.py -x -q --tb=short --basetemp=C:/Users/shdwf/AppData/Local/Temp/pf_0504_targeted4",
+      "exit_code": 0,
+      "passed": 280,
+      "failed": 0,
+      "errors": 0,
+      "warnings": 1,
+      "seconds": 11.3,
+      "result": "恒久fixture/複合操作/隔離/100件FIFO/既存retry・bound_doc回帰成功。"
+    }
+  ],
+  "quality": {
+    "commands": [
+      ".venv/Scripts/ruff.exe check .",
+      ".venv/Scripts/ruff.exe format . --config \"include = ['*.py', '*.pyi', '*.ipynb']\"",
+      ".venv/Scripts/ruff.exe check .",
+      ".venv/Scripts/ruff.exe check .planning/phases/05-config-notification/05-NOTICE-HARNESS.py .planning/phases/05-config-notification/05-04-dispatcher.py",
+      ".venv/Scripts/python.exe -c \"import ast; ast.parse(open('pagefolio.py', encoding='utf-8').read()); print('AST OK')\"",
+      "git diff --check"
+    ],
+    "exit_code": 0,
+    "formatted_files_unchanged": 108,
+    "pyproject_changed": false,
+    "markdown_formatted": false
+  },
+  "single_full_current": {
+    "status": "passed",
+    "evidence": "05-04-task1-full/status.json",
+    "command": [
+      ".venv/Scripts/python.exe",
+      "-m",
+      "pytest",
+      "-x",
+      "-q",
+      "--tb=short",
+      "--basetemp=C:/Users/shdwf/AppData/Local/Temp/pf_0504_task1_full"
+    ],
+    "exit_code": 0,
+    "passed": 1789,
+    "failed": 0,
+    "errors": 0,
+    "skipped": 0,
+    "warnings": 1,
+    "pytest_seconds": 278.95,
+    "runner_seconds": 279.7486822999999,
+    "artifacts": 423,
+    "diagnostic_original_copy_manifest_sha256_match": true,
+    "inputs_unchanged": 103,
+    "crash": false,
+    "excluded_tests": [],
+    "note": "helper teardown調整後の最終入力。正常Windowsの単一pytest、selectorなし。-xは最初の失敗保持用で、全件成功のため除外なし。"
+  },
+  "historical_only": [
+    {
+      "source": "05-PLANNING-CHECKS.md",
+      "result": "sandbox全件35 failed/1570 passed/24 errors/107.84s。今回の成功へ転用しない。"
+    },
+    {
+      "source": "05-PLANNING-CHECKS.md",
+      "result": "通常Toast単体33 passed/1 warning/0.49s。全件合格ではない。"
+    },
+    {
+      "source": "05-PLANNING-CHECKS.md",
+      "result": "既存basetemp削除拒否1391 passed/238 errors/239 warnings/40.45s。未合格。"
+    },
+    {
+      "source": "05-01/02/03-SUMMARY.md",
+      "result": "親の専用basetemp全件は各当時の入力限定。今回の成功へ流用しない。計画前maintenanceは別quick作業。"
+    }
+  ],
+  "tested_files_sha256": {
+    "pagefolio.py": "0C5EDCD8DD7DACDCD8DC74F7EBDD274526159D315A1EE022AD6E21DFFE2D1635",
+    "pagefolio/__init__.py": "999925CEE2BA4025AF59E909E0A6F5DD1328DF2302DF9B5145B9543640376A30",
+    "pagefolio/__main__.py": "D0BA162FD6C3BB89BF0047F4AB8A7694679930F1593FAA9D86D633736596BA56",
+    "pagefolio/app.py": "ECCA7ECCCA703450FCFA323641A30F813390C5C89905039173272E11F5167DA4",
+    "pagefolio/batch_ocr_state.py": "C2331823FF1F86E02DB03C3FBA300B4C32A81E33B88016935850E410631BFFAD",
+    "pagefolio/constants.py": "6A84D64613D5C462EDD35F9B1EA7BD86EE0BB3A4E1BE91B8AA8B5B292C458B10",
+    "pagefolio/dialogs/__init__.py": "242B891BA8A018C6106CEA3F8E07C257AA3B676EEDD04706162086D48A8B141A",
+    "pagefolio/dialogs/about.py": "50595B3B7A38DB38ED8B0C8025D206E0B2E90F391E8E9A3A8E9D281AA5FCD864",
+    "pagefolio/dialogs/batch_ocr.py": "137B31F100622D8DA0B86996D4AFAAFC0598FC7EEB9791395C6DC3FF3477048F",
+    "pagefolio/dialogs/export_images.py": "FEE5F6A315ABFE8F93B48938901420BA6E7DA86BD7D07237845AE8A7BE3566CA",
+    "pagefolio/dialogs/llm_config/__init__.py": "7CF2558CAEA40696D6EBCBDD786D1B57A24DAE49334C1D87ACEDDDAFC3822431",
+    "pagefolio/dialogs/llm_config/dialog.py": "EAA49B967F49123E0E3A85F8B2EF937EA499032F7795C48115196ECDA2B04C58",
+    "pagefolio/dialogs/llm_config/model_fetch.py": "D3D4D5D25E055B080083C7BB32581986C24690B2AE49097231A9FDF35C93F7BA",
+    "pagefolio/dialogs/llm_config/sections.py": "ACA4297E8DAE4C2DFA64C7BCBB2F17F625C83052AF47873AF96436186154ADC6",
+    "pagefolio/dialogs/merge.py": "946ABCE73DF25E68A03B7F5F497B76AD5A4554791A99306CCF5F945F41665342",
+    "pagefolio/dialogs/password.py": "3C6594A87F92D3E0DC706AD4A110E21A1F9E2333316C7DF51596AC96A621A50E",
+    "pagefolio/dialogs/plugin.py": "13A7BCD7FB467F3DF4676CD58B8BE94D0A1FA3CEB7160D18E40DCC91B9D99ACC",
+    "pagefolio/dialogs/settings.py": "988EBA05A392ED30B721730869A2C18FB73B793C2145642E251453874908B84D",
+    "pagefolio/dialogs/shortcuts.py": "8776F21A07507A1547334F8616B0C5BB12B7AE76EB47C0861368C23D58D401BF",
+    "pagefolio/dnd.py": "1D74FAF275688F96B3AF0D617512BCFE6CDC7F51C714647D33AFB316EA2481C3",
+    "pagefolio/file_drop.py": "7D3F5DD9B01A352F25925846A970117C567DBBA1478AE8933D83B951E7AFB59F",
+    "pagefolio/file_ops.py": "66F97850BD95F42AD3072F54362380F69AE5F1F91AC757E1C1326648DF910097",
+    "pagefolio/lang.py": "72F795B89F85EEB4A5FA895EBBF9BD35594B774DC231AD7A3160E9AB7D4C8E04",
+    "pagefolio/md_render.py": "795BC4D2091B86393085F6C56BCF65D40A8431F274AC546E12DF33D803230EE4",
+    "pagefolio/ocr.py": "E6860681AC4CB10D2EF3182ADBEE7E70C31262B5735096FDF758F3AE8A1CF512",
+    "pagefolio/ocr_dialog.py": "1BE3333FCF1AF178BC814D8329C901A0887C4166BEA9A3A8BE4E654DFE92AEBD",
+    "pagefolio/ocr_engine.py": "B21D85B33FBD4857839328FC073A610AA650AA960BBE242E1A1D1E7947397BD2",
+    "pagefolio/ocr_fallback.py": "A890FB547D27D7449AB796D9BB36700F637BC726656156D96D23D3A252A98D1B",
+    "pagefolio/ocr_pipeline.py": "D846CCFCC55524C51350743C9081168B7C016872F6086AC825953C097C35E63D",
+    "pagefolio/ocr_providers/__init__.py": "9CEFCBA0E065E6FACA493185AFF3095540CA79D0D5B21E5C3C62EC17F0959BD5",
+    "pagefolio/ocr_providers/base.py": "C594BAFAA298F2341D6B5ADB10FC124911B71BE66D978E144F671EA61E785C00",
+    "pagefolio/ocr_providers/catalog.py": "FB7D9EE6EA9D551C3F5861720EE45EF2E397A7F097035F558CB6F4E538F72D0A",
+    "pagefolio/ocr_providers/claude.py": "B2C8533E17F7B492E2BB3219726A43139A31F66654938669B1874A55D8785467",
+    "pagefolio/ocr_providers/errors.py": "B93B239F32690D0DA52DB44CEA54DE1D07AF799CCA85EE58664AE90F7E163BF6",
+    "pagefolio/ocr_providers/gemini.py": "668A16BA3D3ADCFA93D5055EE9FF8E44A85F998C3DF8FE2E75F86805F0554728",
+    "pagefolio/ocr_providers/lmstudio.py": "B2A292DF0A601ADBCAF09FC8ED17A71E89482DC889FE4DA3037E2FF43D966B2B",
+    "pagefolio/ocr_providers/ollama.py": "6E302EC5A46E85D3FA52D9D1349432C062FF43B7988229646CDC44562EDA2B6E",
+    "pagefolio/ocr_providers/openai_provider.py": "424826CE66BF9EB662A1402EFF56FE1AE39122B3F8A141ECCD8D10BC40FB16DA",
+    "pagefolio/ocr_providers/registry.py": "35C9C0BD1F8D6834C214FDC9A8DC1A2CEFCF65306404290DA75154AF539BE0B9",
+    "pagefolio/ocr_providers/runpod.py": "36BEB347EE025390DFA651A1ED3E214D1E3392E047E421C0E6AB02B74AB7E975",
+    "pagefolio/ocr_providers/tesseract.py": "17A7F999C7F51D33F77EA3FEDDA66242A60222DF1C0A744E7CA499153EC3776F",
+    "pagefolio/page_ops.py": "81ECBB526DCA42530971BCF560D71171076B1C20C49975D4B981F4F0CB76E9A1",
+    "pagefolio/pagination.py": "9C8FA031719AAEE6011EAC7EB7F0279C72E48F4F3BD8700DD4981EF98CBAC40D",
+    "pagefolio/plugins.py": "59DB9EB4F84A264930563DB7CCB53054EC6C216BC0038ED7678DA4109F915DF4",
+    "pagefolio/print_ops.py": "2B84734F22855984B14E7F923FE789842408BCE365ACFADCCE606E6E220FCC0D",
+    "pagefolio/redact_ops.py": "8A8063D82E3103B3A70AB35434460A1B4F81F9800BE1EF9D574F04829DD09E25",
+    "pagefolio/settings.py": "7B6BB2ED3AF80F010DC27F60491BCE24B1B22B2085C759EE54ECBB9448621CB1",
+    "pagefolio/startup_control.py": "39AB94D5AC2CA137E49BA61201A5F32FD942AD23F4B52DDA09EC0ECFC8D27ED6",
+    "pagefolio/startup_focus.py": "B9F605201E394FABC75EFD06B6B3CB3F9A4574CE3924FE9565898A1C2FD2B881",
+    "pagefolio/startup_notice.py": "473C8EA1723A350CC445BCEF8649C75BD228EC3E37BEA12D81CA5A166A4C0C40",
+    "pagefolio/startup_win32.py": "1A6694535AA716CC584175F4A1B375877B0A7FC626A21505E7314A4EB066CA70",
+    "pagefolio/themes.py": "F27488312F8A03224667C17A6362066F4320ACA1DD0016F624A50639348AA522",
+    "pagefolio/thumb_cache.py": "94F0E53A6987387E6414DBA06C2A5293B923F6DA2F917C1BF0CBB406828B5EE1",
+    "pagefolio/toast.py": "847144A0D35133D785C6A1E208B7A021DFB011100D18F2D8284CF84F79965007",
+    "pagefolio/ui_builder.py": "8018BB1335E2F3E4954D4DD42C0981EF6E18A083097FEF94335CDC10163FC9BF",
+    "pagefolio/undo_store.py": "4D99A5100951D437294BFB709D67504501B6BDD6EAF56834CED0F0AA415FF893",
+    "pagefolio/viewer.py": "78A1D4A59D0C787DA71D23B40219252DE80286BB5734C2D9063E1A4ABCB6D3FA",
+    "plugins/page_info.py": "A481B6CAC734251AAE3A76E9DF064E208713EB572401EE1BCCBACF49B53B3A8F",
+    "pyproject.toml": "95A5F3370EF5CB84791B94D4F893449188CFB78A5AC65E2944E5A675E51EC59D",
+    "requirements.txt": "5AFFADBAB19AAC41E06B20142E67DAF1A4326B898D0DE4D34CFDBBFA1B403F74",
+    "tests/__init__.py": "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855",
+    "tests/config_notice_support.py": "9590343BEE17FF3919577F1A70E91F6B2EF56F5B101D21B74FFC120402CE008A",
+    "tests/conftest.py": "DC1B73BB2293AEBD3FE132E3C55C5D2CB9E4E8750126DB6AAC14E5A6ABC17C21",
+    "tests/test_batch_ocr_dialog.py": "2141FEB54B152559BBEF61397F94ED6B3E88E78846DACE6A0DEFA4AC782CF357",
+    "tests/test_batch_ocr_state.py": "88FF8E5571D73CC9D5904455874D460EEE0141BF19054104E41AFF6A540EB49E",
+    "tests/test_config_notification.py": "AFB8698E63D0C2CEF6D42B2202715894F25E82379D234A0906196F96D46B84FA",
+    "tests/test_export_images.py": "1B6BACCE1630A6320922EE269B7542E995CAECE7E17D16E15A1C0575A99AFA82",
+    "tests/test_font_hardcode_guard.py": "7A347ADBD7CF40072ECB7C55DE4EE4C4A50FC621890B1DAFB66C508ED6D6BBA7",
+    "tests/test_gsd_dod.py": "A1988CE7802DDB1F020A0A8E706CCB2790BFE9C4FC0E902EB010EC927310D1E1",
+    "tests/test_imports.py": "FFE5B29376F3D42433E28C046300EFF75D9AC36715F04E93CDFF148D87B013C1",
+    "tests/test_lang_parity.py": "8D165633F8D8AE234DD155353A9CB63C0B2DF5DAFE2DAFC2742E49EF75CA9B09",
+    "tests/test_md_render.py": "46E707BD5F4F8D438A3B0E64084E787A525FE1E942C852D074779847202B2D1D",
+    "tests/test_ocr.py": "A315D6FECF430ECA1793C29FAD3B249B73150FCB31857DCB552ADBD68C2EED6A",
+    "tests/test_ocr_dialog_center.py": "ECB03C0138591AAB51C0A855BE542F347C10A814CA15E9253E95B6B7F90D7B3D",
+    "tests/test_ocr_engine.py": "0DDBFDB0C992EDA09650CA1DCC5DDF44CD98178A1A6C2BE2CEAA2EE8B9958189",
+    "tests/test_ocr_fallback.py": "FE19520F0C268FFA53228EC4082DC8DD6797CC10EF632D7B3506EC01A494AEE7",
+    "tests/test_ocr_pipeline.py": "F48841698489F01C244B672F4B2E60EC5A5A350E321AEF45E59D632534EBAFD6",
+    "tests/test_ocr_provider_catalog.py": "ACE46031FED586D0E03D4E3BCCEC667B1AEF00B43007CF5669D06215D5D4124A",
+    "tests/test_ocr_providers.py": "4EAC85128704DF8D755FB59A5C03F455F27E5F1F3F8CB437C942CAE198B5A5FC",
+    "tests/test_page_polish.py": "23772C9623C50C35AF22021E48537BD2D9B354764D320401D5D065836CD07D44",
+    "tests/test_pagination.py": "C033B842C3277C767D778798C23800E293918C8658E51FA39FB065B7BFC1312F",
+    "tests/test_password.py": "A6870E8ECAFCA0B2CAA2314919BA2E08C7F29EE4F118A80BAFC2C82E2D317112",
+    "tests/test_pdf_ops.py": "FC9A8C32BB950C6F59C02ADDC1A17C5418B56F375B81CAEB36F505EE6FA7FC35",
+    "tests/test_plugin_dialog_wheel.py": "1EDC51CEF169729775024B4A0213CF679A052F7728999D289A0D75112523451C",
+    "tests/test_plugins.py": "546F3251AAE16546034CE51839853C972D103C9F52280F9A99555C62BC8C8E42",
+    "tests/test_print.py": "23BFFBF39C3004ACB3786A03A6EEC5D3DED995131FD57A1EA9B2C32131638107",
+    "tests/test_prompt_templates.py": "9F8852A21458A7566D1C902497FFB090256CCEB0D43879C8BB97D60428074199",
+    "tests/test_provider_ui.py": "A91DCD029FCFDEDEE1C56E87A3C60A6BDD52BF8C05E7CB3A99792147900DAE91",
+    "tests/test_save_overwrite.py": "7C225461B1D915A7C4D6A43621C0C4133758FA58DBFAC81C491235A42568AFFC",
+    "tests/test_selection_invariant.py": "BA21FB9002831FA46CD1141FA4FA91307C487FE108EED6880A04EA2BCF248302",
+    "tests/test_settings_keyguard.py": "5A7A88D6DA0D411D6039A9A11D3CF0E13607F63E6ABA19259B54C776FE5B0782",
+    "tests/test_shortcuts_dialog.py": "514671B90DCE52B637E98496AC1F13C10E685D7C75411442CD2D48F4EBBA6347",
+    "tests/test_source_keyguard.py": "9FCA43F82CD5B976212B9492AE63B19512DF4B93CDEBDA90BFDD4FFD81E43EDC",
+    "tests/test_startup_control.py": "E88D67156D8B8B9B78C32A1528DC9900CE95AA536C6D0C81300890ED8F3541D3",
+    "tests/test_startup_focus.py": "8573A40B3B97CC4911EC61592B1EA7B7392ADA07DEA097A67E0BFF903B5348D1",
+    "tests/test_startup_notice.py": "A4C2E6F93482B160AC5265A225F83074B4B8EA9F926233E31D0E35F80E461B5F",
+    "tests/test_startup_windows.py": "B3A4AFCB619284E572628C2925AF3AF4680C424139A8734861712E73355AAA24",
+    "tests/test_thumb_cache.py": "6B6C269BDDDBD32867C50D9B9370EB4C67C3620BA79D2B6241F33A6AFB9C751E",
+    "tests/test_toast.py": "F2BA3120200EF1310F72661E189B88C4EC66A30C7A61419C6A5224E00E4F2BEF",
+    "tests/test_undo_stress.py": "1F727A33601EF68F7529981B64A143D6DE067C3F6977DD9BFFD517618C220D0B",
+    "tests/test_utils.py": "CEE90707F67DE0673FC31AFC990F67DCBA404DF14B6742824BE4FBDF946CE8C5",
+    "tests/test_v150_regression.py": "6B2BA4BAE1017E97052E2AD86127D35562224453A6698B2F2D0F68552228036F",
+    "tests/test_viewer.py": "29D88031098AE4B03A7E3F71929E9C5DE4FDA8EE46F0E8B10C9002B1903BC6F2"
+  },
+  "requirements_worktree_sha256": "5AFFADBAB19AAC41E06B20142E67DAF1A4326B898D0DE4D34CFDBBFA1B403F74",
+  "requirements_note": "開始前からの未コミット依存差分を保持。install/変更なし。",
+  "original_files_before": {
+    "plugins_exists": true,
+    "settings": {
+      "exists": false,
+      "sha256": null
+    },
+    "ocr_prompt": {
+      "exists": false,
+      "sha256": null
+    },
+    "summary_prompt": {
+      "exists": false,
+      "sha256": null
+    },
+    "plugins/page_info.py": {
+      "exists": true,
+      "sha256": "a481b6cac734251aae3a76e9df064e208713eb572401ee1bccbacf49b53b3a8f"
+    },
+    "plugins/__pycache__/page_info.cpython-315.pyc": {
+      "exists": true,
+      "sha256": "27a73182395e0a1b8572063eb452adcfcbe8ffd24e538e00f31e1952da468bf3"
+    }
+  },
+  "original_files_after": {
+    "plugins_exists": true,
+    "settings": {
+      "exists": false,
+      "sha256": null
+    },
+    "ocr_prompt": {
+      "exists": false,
+      "sha256": null
+    },
+    "summary_prompt": {
+      "exists": false,
+      "sha256": null
+    },
+    "plugins/page_info.py": {
+      "exists": true,
+      "sha256": "a481b6cac734251aae3a76e9df064e208713eb572401ee1bccbacf49b53b3a8f"
+    },
+    "plugins/__pycache__/page_info.cpython-315.pyc": {
+      "exists": true,
+      "sha256": "27a73182395e0a1b8572063eb452adcfcbe8ffd24e538e00f31e1952da468bf3"
+    }
+  },
+  "isolation_assertions": "各context finallyで実設定・2prompt・pluginsの存在/相対名/hash一致。実plugin load0、初期化例外/終了Noを含む。実ACL変更なし。",
+  "manual_pending": [
+    "H01",
+    "H02",
+    "H03",
+    "H04",
+    "H05",
+    "H06",
+    "H07",
+    "H08",
+    "H09",
+    "H10",
+    "H11",
+    "H12"
+  ],
+  "human_judgment_status": "05-UAT全pending。自動focus結果からpassにしない。",
+  "prohibitions": [
+    {
+      "id": "descriptor-less-prohibition-1",
+      "status": "flagged-unverified"
+    },
+    {
+      "id": "descriptor-less-prohibition-2",
+      "status": "flagged-unverified"
+    }
+  ],
+  "edge_probes": [
+    {
+      "id": "V110-CFG-01",
+      "status": "unclassified",
+      "resolution_status": "unresolved",
+      "verification": null,
+      "resolution": null
+    },
+    {
+      "id": "V110-CFG-02",
+      "status": "unclassified",
+      "resolution_status": "unresolved",
+      "verification": null,
+      "resolution": null
+    },
+    {
+      "id": "V110-CFG-03",
+      "status": "unclassified",
+      "resolution_status": "unresolved",
+      "verification": null,
+      "resolution": null
+    },
+    {
+      "id": "V110-CFG-04",
+      "status": "unclassified",
+      "resolution_status": "unresolved",
+      "verification": null,
+      "resolution": null
+    }
+  ],
+  "nyquist": {
+    "status": "draft",
+    "nyquist_compliant": false,
+    "wave_0_complete": false
+  },
+  "threats": {
+    "T-05-12": "import/初期化前隔離・限定I/O注入・原本hash一致。局所280/全件1789成功。",
+    "T-05-13": "実command/exit/count/hashと未実施を分離。",
+    "T-05-SC": "新規installなし。"
+  },
+  "release_status": "出荷不可。人手/独立検証/Nyquist/Phase6受入未完了。"
+}
