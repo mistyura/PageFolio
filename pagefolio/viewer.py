@@ -159,9 +159,7 @@ class ViewerMixin:
         if not hasattr(self, "thumb_zoom_var"):
             return
         self.settings["thumb_zoom"] = self.thumb_zoom_var.get()
-        from pagefolio.settings import _save_settings
-
-        _save_settings(self.settings)
+        self._persist_settings()
         self._invalidate_thumb_cache()
         self._refresh_all()
 
@@ -180,9 +178,7 @@ class ViewerMixin:
             raw = 20
         self._page_size = clamp_page_size(raw)
         self.settings["thumb_page_size"] = self._page_size
-        from pagefolio.settings import _save_settings
-
-        _save_settings(self.settings)
+        self._persist_settings()
         # current を含む窓へ追従してから再描画（D-11）。
         self._page_window_start = window_for_page(self.current_page, self._page_size)
         self._refresh_all()

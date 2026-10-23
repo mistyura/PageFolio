@@ -256,6 +256,4 @@ class RedactOpsMixin:
         if not hasattr(self, "mosaic_block_var"):
             return
         self.settings["mosaic_block"] = int(self.mosaic_block_var.get())
-        from pagefolio.settings import _save_settings
-
-        _save_settings(self.settings)
+        self._persist_settings()

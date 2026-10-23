@@ -1,8 +1,10 @@
 """設定読込障害の実 App 経路と原本保護。"""
 
+import ast
 import json
 import tkinter as tk
 from collections import deque
+from pathlib import Path
 from tkinter import ttk
 from types import SimpleNamespace
 from unittest.mock import Mock
@@ -742,6 +744,219 @@ class TestLlmSaveOrigins:
         assert len(app._config_notices) == 1
         app.root.advance(1)
         assert not app._config_notices
+
+
+class TestToolSaveOrigins:
+    @pytest.mark.parametrize("status", ["ok", "corrupt", "unreadable"])
+    @pytest.mark.parametrize("saved", [True, False])
+    @pytest.mark.parametrize("origin", ["shortcuts", "mosaic", "zoom", "page_size"])
+    def test_handler_preserves_memory_and_protection(
+        self, save_app, isolated_app, monkeypatch, status, saved, origin
+    ):
+        from pagefolio.dialogs.shortcuts import ShortcutsDialog
+
+        app = save_app
+        original = b"{protected-original"
+        isolated_app.write_bytes(original)
+        app._settings_load_status = status
+        app._settings_autosave_blocked = status != "ok"
+        app._refresh_all = Mock()
+        app._invalidate_thumb_cache = Mock()
+        app._bind_shortcuts = Mock()
+        app.selected_pages = {3, 25}
+        save = Mock(wraps=settings_mod._save_settings)
+        monkeypatch.setattr("pagefolio.app._save_settings", save)
+        monkeypatch.setattr(settings_mod, "_save_settings", save)
+        if not saved:
+            monkeypatch.setattr(
+                settings_mod.os, "replace", Mock(side_effect=PermissionError("private"))
+            )
+        if origin == "shortcuts":
+            app._default_shortcuts = {"quit": "<F1>"}
+            dialog = SimpleNamespace(
+                _app=app,
+                _capturing_cmd=None,
+                _shortcuts={"quit": "<F2>"},
+                destroy=Mock(),
+            )
+            ShortcutsDialog._on_save(dialog)
+            assert app.settings["shortcuts"] == {"quit": "<F2>"}
+            app._bind_shortcuts.assert_called_once()
+            dialog.destroy.assert_called_once()
+        elif origin == "mosaic":
+            app.mosaic_block_var = SimpleNamespace(get=lambda: 16)
+            app._on_mosaic_block_release()
+            assert app.settings["mosaic_block"] == 16
+        elif origin == "zoom":
+            app.thumb_zoom_var = SimpleNamespace(get=lambda: 1.7)
+            app._on_thumb_zoom_release()
+            assert app.settings["thumb_zoom"] == 1.7
+            app._invalidate_thumb_cache.assert_called_once()
+            app._refresh_all.assert_called_once()
+        else:
+            app.page_size_var = SimpleNamespace(get=lambda: 30)
+            app.current_page = 25
+            app._on_page_size_change()
+            assert app.settings["thumb_page_size"] == app._page_size == 30
+            assert app._page_window_start == 0
+            app._refresh_all.assert_called_once()
+            app._invalidate_thumb_cache.assert_not_called()
+        assert app.selected_pages == {3, 25}
+        assert save.call_count == (status != "unreadable")
+        assert len(app._config_notices) == (not saved or status == "unreadable")
+        assert app._settings_autosave_blocked is (
+            status != "ok" and (not saved or status == "unreadable")
+        )
+        if not saved or status == "unreadable":
+            assert isolated_app.read_bytes() == original
+        else:
+            assert json.loads(isolated_app.read_text(encoding="utf-8")) == app.settings
+        app._set_status.assert_not_called()
+
+    def test_shortcuts_close_leaves_failed_event_for_display(
+        self, notice_app, monkeypatch
+    ):
+        from pagefolio.dialogs.shortcuts import ShortcutsDialog
+
+        app = notice_app
+        app.root.grab = object()
+        app._default_shortcuts = {"quit": "<F1>"}
+        app._bind_shortcuts = Mock()
+        monkeypatch.setattr("pagefolio.app._save_settings", lambda settings: False)
+        dialog = SimpleNamespace(
+            _app=app,
+            _capturing_cmd=None,
+            _shortcuts={"quit": "<F2>"},
+            destroy=lambda: setattr(app.root, "grab", None),
+        )
+        ShortcutsDialog._on_save(dialog)
+        assert len(app._config_notices) == 1
+        app.root.advance()
+        assert app._toast._frame is not None
+        assert app._config_notices[0]["remaining_ms"] == 10000
+        assert app.settings["shortcuts"] == {"quit": "<F2>"}
+        app._set_status.assert_not_called()
+
+
+class TestSaveOriginCoverage:
+    def _exports(self):
+        root = Path(__file__).resolve().parents[1]
+        tree = ast.parse((root / "pagefolio/__init__.py").read_text(encoding="utf-8"))
+        exports = {}
+        for node in tree.body:
+            if isinstance(node, ast.Assign) and any(
+                isinstance(target, ast.Name) and target.id == "_EXPORTS"
+                for target in node.targets
+            ):
+                for module, names in ast.literal_eval(node.value).items():
+                    exports.update(
+                        {
+                            "pagefolio." + name: "pagefolio." + module + "." + name
+                            for name in names
+                        }
+                    )
+        assert (
+            exports.get("pagefolio._save_settings")
+            == "pagefolio.settings._save_settings"
+        )
+        return exports
+
+    def _callers(self, source, module_name):
+        tree = ast.parse(source)
+        exports = self._exports()
+        aliases = {}
+        package = module_name.rsplit(".", 1)[0]
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Import):
+                for item in node.names:
+                    aliases[item.asname or item.name.split(".")[0]] = (
+                        item.name if item.asname else item.name.split(".")[0]
+                    )
+            elif isinstance(node, ast.ImportFrom):
+                module = node.module or ""
+                if node.level:
+                    parts = package.split(".")
+                    module = ".".join(
+                        parts[: len(parts) - node.level + 1]
+                        + ([module] if module else [])
+                    )
+                for item in node.names:
+                    if item.name == "*":
+                        aliases.update(
+                            {
+                                key.rsplit(".", 1)[1]: value
+                                for key, value in exports.items()
+                                if key.rsplit(".", 1)[0] == module
+                            }
+                        )
+                    else:
+                        symbol = module + "." + item.name
+                        aliases[item.asname or item.name] = exports.get(symbol, symbol)
+
+        def resolve(node):
+            if isinstance(node, ast.Name):
+                return aliases.get(node.id, node.id)
+            if isinstance(node, ast.Attribute):
+                symbol = resolve(node.value) + "." + node.attr
+                return exports.get(symbol, symbol)
+            return ""
+
+        callers = set()
+        scope = []
+
+        class Visitor(ast.NodeVisitor):
+            def visit_ClassDef(self, node):
+                scope.append(node.name)
+                self.generic_visit(node)
+                scope.pop()
+
+            def visit_FunctionDef(self, node):
+                scope.append(node.name)
+                self.generic_visit(node)
+                scope.pop()
+
+            visit_AsyncFunctionDef = visit_FunctionDef
+
+            def visit_Call(self, node):
+                if resolve(node.func) == "pagefolio.settings._save_settings":
+                    callers.add(".".join(scope) or "<module>")
+                self.generic_visit(node)
+
+        Visitor().visit(tree)
+        return callers
+
+    @pytest.mark.parametrize(
+        "statement,call",
+        [
+            ("from pagefolio.settings import _save_settings as save", "save"),
+            ("import pagefolio.settings as config", "config._save_settings"),
+            ("import pagefolio.settings", "pagefolio.settings._save_settings"),
+            ("from pagefolio import _save_settings as save", "save"),
+            ("import pagefolio as pf", "pf._save_settings"),
+            ("from .settings import _save_settings", "_save_settings"),
+            ("from pagefolio import *", "_save_settings"),
+        ],
+    )
+    def test_inventory_resolves_alias_attribute_and_reexport(self, statement, call):
+        source = statement + "\ndef operation():\n    " + call + "({})\n"
+        assert self._callers(source, "pagefolio.consumer") == {"operation"}
+
+    def test_only_app_owner_calls_low_level_save(self):
+        root = Path(__file__).resolve().parents[1]
+        callers = set()
+        for directory in ("pagefolio", "plugins"):
+            for path in (root / directory).rglob("*.py"):
+                relative = path.relative_to(root).as_posix()
+                module = relative.removesuffix(".py").replace("/", ".")
+                callers.update(
+                    (relative, caller)
+                    for caller in self._callers(
+                        path.read_text(encoding="utf-8-sig"), module
+                    )
+                )
+        expected = {("pagefolio/app.py", "PDFEditorApp._persist_settings")}
+        assert callers
+        assert callers == expected
 
 
 class TestSaveFlow:

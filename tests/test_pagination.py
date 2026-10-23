@@ -8,6 +8,8 @@ named クラスは 02-RESEARCH.md L398-403 / 02-VALIDATION.md Per-Task Map に�
 
 import json
 import types
+from collections import deque
+from unittest.mock import Mock
 
 from pagefolio.pagination import (
     clamp_page_size,
@@ -446,6 +448,20 @@ class TestThumbCacheRetention:
         stub._refresh_all = lambda: None
         stub._set_status = lambda msg: None
         stub._move_window = lambda direction: ViewerMixin._move_window(stub, direction)
+        from pagefolio.app import PDFEditorApp
+
+        stub._settings_load_status = "ok"
+        stub._settings_autosave_blocked = False
+        stub._settings_exit_save_failed = False
+        stub._config_notices = deque()
+        stub._config_notice_seq = 0
+        stub._enqueue_config_notice = types.MethodType(
+            PDFEditorApp._enqueue_config_notice, stub
+        )
+        stub._schedule_config_notice = lambda: None
+        stub._persist_settings = types.MethodType(PDFEditorApp._persist_settings, stub)
+        stub._refresh_all = Mock()
+        stub.selected_pages = {3, 25}
         return stub
 
     def test_prev_window_keeps_cache_identity(self):
@@ -465,11 +481,9 @@ class TestThumbCacheRetention:
         )
 
     def test_page_size_change_keeps_cache_identity(self, monkeypatch):
-        # _on_page_size_change はハンドラ内で pagefolio.settings._save_settings を
-        # import して呼ぶため、ディスク書き込みを no-op へ差し替える。
-        import pagefolio.settings as settings_mod
-
-        monkeypatch.setattr(settings_mod, "_save_settings", lambda s: None)
+        # 実App ownerを経由する低層保存を捕捉する。
+        save = Mock(return_value=True)
+        monkeypatch.setattr("pagefolio.app._save_settings", save)
         stub = self._make_stub()
         before = id(stub.thumb_cache)
         ViewerMixin._on_page_size_change(stub)
@@ -479,12 +493,14 @@ class TestThumbCacheRetention:
         # 副次的に件数が clamp_page_size 経由で反映されることも確認（30 は範囲内）
         assert stub._page_size == 30
         assert stub.settings["thumb_page_size"] == 30
+        save.assert_called_once_with(stub.settings)
+        stub._refresh_all.assert_called_once()
+        assert stub.selected_pages == {3, 25}
 
     def test_page_size_change_handles_error_fallback(self, monkeypatch):
         # page_size_var.get() が空文字相当で失敗しても既定 20 へフォールバック。
-        import pagefolio.settings as settings_mod
-
-        monkeypatch.setattr(settings_mod, "_save_settings", lambda s: None)
+        save = Mock(return_value=True)
+        monkeypatch.setattr("pagefolio.app._save_settings", save)
         stub = self._make_stub()
 
         def _raise():
@@ -495,6 +511,9 @@ class TestThumbCacheRetention:
         ViewerMixin._on_page_size_change(stub)
         assert id(stub.thumb_cache) == before
         assert stub._page_size == 20
+        save.assert_called_once_with(stub.settings)
+        stub._refresh_all.assert_called_once()
+        assert stub.selected_pages == {3, 25}
 
 
 class TestMoveWindowHandler:

@@ -280,7 +280,5 @@ class ShortcutsDialog(tk.Toplevel):
         self._app.settings["shortcuts"] = diff
         self._app._bind_shortcuts()
 
-        from pagefolio.settings import _save_settings
-
-        _save_settings(self._app.settings)
+        self._app._persist_settings()
         self.destroy()
