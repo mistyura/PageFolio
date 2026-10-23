@@ -2,7 +2,7 @@
   "schema_version": 1,
   "phase": "05-config-notification",
   "plan": "05-04",
-  "status": "automated-and-manual-passed-independent-goal-verification-pending",
+  "status": "human-needed-two-prohibition-judgments",
   "tested_base_commit": "8c61ea8",
   "product_changes_in_this_plan": [],
   "runtime": {
@@ -306,7 +306,10 @@
     }
   },
   "isolation_assertions": "各context finallyで実設定・2prompt・pluginsの存在/相対名/hash一致。実plugin load0、初期化例外/終了Noを含む。実ACL変更なし。",
-  "manual_pending": [],
+  "manual_pending": [
+    "禁止事項1: 設定通知をPDF編集内容の喪失と誤認させないことの項目別判断",
+    "禁止事項2: 設定通知がPDF破棄・再起動を促さないことの項目別判断"
+  ],
   "manual_results": {
     "source": "05-UAT.md",
     "observer": "利用者",
@@ -560,5 +563,16 @@
     "manual_result": "2 pass; user explicit reply 2026-10-24 JST",
     "prior_manual": "H01-H12: 12 pass before product review fix; preserved as historical evidence",
     "quality": "Ruff check, Python-only format 109 unchanged, Ruff recheck, AST, diff check: exit 0"
+  },
+  "independent_goal_verification": {
+    "report": "05-VERIFICATION.md",
+    "status": "human_needed",
+    "truths_verified": 23,
+    "truths_total": 23,
+    "requirements_satisfied": 4,
+    "implementation_gaps": 0,
+    "existing_manual_passed": 14,
+    "pending_explicit_prohibition_judgments": 2,
+    "next_command": "/gsd-verify-work 05"
   }
 }

@@ -1,7 +1,9 @@
 ---
 phase: 05-config-notification
-status: complete
-source: 05-04-PLAN.md
+status: testing
+source: [05-VERIFICATION.md]
+started: 2026-10-23T17:36:19.861Z
+updated: 2026-10-23T17:36:19.861Z
 ---
 
 # Phase 5 設定通知の人手受入
@@ -37,8 +39,6 @@ source: 05-04-PLAN.md
 
 H09/H10は保存失敗による終了保留を認識できるか、H01/H02/H06は文言と編集継続の人間の認識を判定する。結果は `pass` / `fail` と観測内容で返す。画像だけで入力先や編集継続を推測しない。
 
-## 未確定項目
-
 ## レビュー修正後の追加人手受入
 
 | ID | 対象 | 判定 | 実施者・時刻・根拠 |
@@ -61,3 +61,34 @@ H01初回のlauncher PIDは31860。ほかの再起動PIDは上表のとおりで
 ## 自動証拠の参照
 
 `05-EVIDENCE.json`と各PLANのSUMMARYに実command/exit/件数/hashを記録する。自動試験は手動欄を更新しない。2026-10-24 JSTの利用者の明示回答に基づきH01〜H12をpassとした。独立レビュー・Nyquist・Phase検証は別の完了ゲートであり、本書だけでPhase 5の正式完了としない。
+
+## Current Test
+
+number: 1
+name: 禁止事項1の明示判断
+expected: |
+  日英の破損・読取不能・保存失敗・保護による未保存の4通知文言が、設定JSONだけを対象とし、PDF編集内容の喪失を意味しないと利用者が判断する。
+awaiting: user response
+
+## Tests
+
+### 1. 禁止事項1: PDF編集内容の喪失と誤認させない
+expected: 設定通知をPDF編集内容の喪失と誤認しないことを、項目名と判断を明示して確認する。
+result: [pending]
+
+### 2. 禁止事項2: PDF破棄や再起動を促さない
+expected: 4文言と失敗後の案内がPDF破棄・再起動を促さず、編集を続行できる案内であることを、項目名と判断を明示して確認する。
+result: [pending]
+
+## Summary
+
+total: 2
+passed: 0
+issues: 0
+pending: 2
+skipped: 0
+blocked: 0
+
+上記は独立検証が追加した意味評価2件の集計である。既存の操作受入H01〜H14の14 passは保持し、再実施しない。
+
+## Gaps
