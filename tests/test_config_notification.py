@@ -1511,14 +1511,22 @@ class TestLoadTracer:
             entry.pack()
             root.deiconify()
             root.update()
+            entry.focus_set()
+            root.update_idletasks()
             focused = root.focus_get()
             app._show_next_config_notice()
             root.update_idletasks()
             if focused is not None:
                 assert root.focus_get() is focused
+                record_property("widget_focus_check", "verified")
+            if focused is entry:
                 record_property("focus_check", "verified")
-            else:
+            elif focused is None:
                 record_property("focus_check", "unverified: Tk returned None")
+            else:
+                record_property(
+                    "focus_check", "unverified: focused widget is not the input entry"
+                )
             assert root.grab_current() is None
 
             app.doc = fitz.open()
