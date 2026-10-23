@@ -15,6 +15,7 @@ import sys
 import tempfile
 import threading
 import time
+import traceback
 import warnings
 from ctypes import wintypes as wt
 from datetime import datetime, timedelta
@@ -1889,6 +1890,29 @@ def _run_scenario(fixture, namespace, role):
         from pagefolio import app as app_module
 
         class TracedApp(app_module.PDFEditorApp):
+            def _quit(self):
+                if role.startswith("simultaneous-"):
+                    record = {
+                        "event": "quit_requested",
+                        "tick": _tick_ms(),
+                        "monotonic": time.monotonic(),
+                        "stop": (fixture / "stop").exists(),
+                        "stop_all": (fixture.parent / "stop-all").exists(),
+                        "stack": [
+                            {
+                                "file": Path(frame.filename).name,
+                                "line": frame.lineno,
+                                "function": frame.name,
+                            }
+                            for frame in traceback.extract_stack(limit=8)
+                        ],
+                    }
+                    with (fixture / "exit-audit.jsonl").open(
+                        "a", encoding="utf-8"
+                    ) as audit_file:
+                        audit_file.write(json.dumps(record) + "\n")
+                return super()._quit()
+
             def __init__(self, root):
                 counts["constructed"] += 1
                 if role == "init-failure":
