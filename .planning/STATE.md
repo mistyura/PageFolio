@@ -6,17 +6,17 @@ current_phase: 06
 current_phase_name: サンプル配布とリリース検証
 current_plan: Not started
 status: planning
-stopped_at: Phase 05 complete, ready to plan Phase 06
-last_updated: "2026-10-23T18:17:17.228Z"
+stopped_at: Phase 06 の議論完了・計画作成待ち
+last_updated: "2026-10-23T18:44:39.684Z"
 last_activity: 2026-10-24
 last_activity_desc: Phase 05のUAT・正式検証完了、Phase 06の議論・計画前
-state_head: fdcf64f1ecd05df23843b19c14dbff4ef136e1b2
+state_head: 3a40aa8948ce05d1d4b0b13cfca24f136a05f2d7
 progress:
   total_phases: 3
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 10
   completed_plans: 10
-  percent: 33
+  percent: 67
 ---
 
 # Project State
@@ -57,7 +57,7 @@ Last activity: 2026-10-24 — Phase 05 complete, transitioned to Phase 06
 
 `DEP-05-REGRESSION` は未充足のまま。元のnormal-entry-scriptのcommunicate期限超過は未再現・原因未確定で、Tcl警告との因果も未証明。レビュー時の1 failed / 1634 passedは履歴として保持する。診断強化は `9384268` で独立commit済み、実装前の単一全件は1637 passed / 1 warning / 263.66秒 / exit 0で対象hash一致を確認した。2026-10-23の利用者判断による条件付き実行の下、05-01の実装後単一全件は1660 passed / 1 warning / 234.19秒 / exit 0。上記05-01時点の実装位置は履歴。現行は05-01〜04・Nyquist・人手受入まで完了。今回の成功を原因修復や依存解除とは扱わない。後続の単一全件ゲートで同種失敗が再発したら実装・後続実行・コミットを停止し、最初の失敗出力と専用basetempの診断を保持して `$gsd-debug continue dep-05-regression` で再開する。証拠正本は `debug/dep-05-regression.md`、`05-VALIDATION.md`、`05-01-SUMMARY.md`。
 
-Progress: [████████████████████] 10/10 plans (100%)（確定済みPhase 4/5計画の実行率。Phase 6はTBDで、マイルストーン完了率ではない。共有完了集計はPhase 4報告staleにより1/3のまま。）
+Progress: [███████░░░] 67%（Phase 4/5の完了履歴2/3フェーズ。Phase 4検証報告はstaleで再検証が必要。Phase 6は計画前で、必須実機受入と出荷停止を維持する。）
 
 ## v1.10.0 Phase Map（構成承認済み）
 
@@ -435,10 +435,10 @@ v1.9.0 クローズ時点で次マイルストーンへ引き継ぐ未解決項�
 
 ## Session Continuity
 
-**Resume file:** None
+**Resume file:** .planning/phases/06-release-validation/06-CONTEXT.md
 
-Last session: 2026-10-23T18:21:11.1245246Z
-Stopped at: Phase 05 complete, ready to discuss Phase 06
+Last session: 2026-10-23T18:41:51.251Z
+Stopped at: Phase 06 の議論完了・計画作成待ち
 
 ## Operator Next Steps
 
