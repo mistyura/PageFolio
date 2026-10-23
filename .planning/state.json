@@ -20,9 +20,9 @@
     }
   ],
   "next": {
-    "command": "/gsd-verify-work 05",
-    "label": "Phase 5の禁止事項2件を確認",
-    "reason": "4/4プラン実装、1797テスト成功、人手14項目pass。独立検証human_neededの意味評価2件のみ残る。"
+    "command": "/gsd-progress --next",
+    "label": "Phase 6の計画へ進む",
+    "reason": "Phase 5のUATと検証は完了。Phase 6は計画前。Phase 4報告のstale再検証と出荷停止は維持する。"
   },
-  "updated_at": "2026-10-23T17:37:47.691Z"
+  "updated_at": "2026-10-23T18:17:17.291Z"
 }
