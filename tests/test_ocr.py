@@ -20,6 +20,24 @@ from pagefolio.ocr_providers import LMStudioProvider, OCRProvider  # noqa: E402
 
 LANG_JA = LANG["ja"]
 
+
+def _bind_settings_persistence(app):
+    """保存spyはAppの実ownerを経由させ、通知と保護状態も保持する。"""
+    from collections import deque
+    from types import MethodType
+
+    from pagefolio.app import PDFEditorApp
+
+    app._settings_load_status = "ok"
+    app._settings_autosave_blocked = False
+    app._settings_exit_save_failed = False
+    app._config_notices = deque()
+    app._config_notice_seq = 0
+    app._enqueue_config_notice = MethodType(PDFEditorApp._enqueue_config_notice, app)
+    app._schedule_config_notice = lambda: None
+    app._persist_settings = MethodType(PDFEditorApp._persist_settings, app)
+
+
 # ===== テスト用ダブル =====
 
 
@@ -896,6 +914,7 @@ class TestOcrDialogLlmConfig:
             settings=settings,
             _session_api_keys={},
         )
+        _bind_settings_persistence(app)
 
         fake = types.SimpleNamespace(
             app=app,
@@ -932,10 +951,10 @@ class TestOcrDialogLlmConfig:
 
     def test_apply_updates_settings(self, monkeypatch):
         """llm_settings を渡すと fake.app.settings に反映される。"""
+        import pagefolio.app as app_mod
         import pagefolio.ocr as ocr_mod
-        import pagefolio.settings as settings_mod
 
-        monkeypatch.setattr(settings_mod, "_save_settings", lambda _: None)
+        monkeypatch.setattr(app_mod, "_save_settings", lambda _: None)
         monkeypatch.setattr(
             ocr_mod,
             "build_provider",
@@ -959,8 +978,8 @@ class TestOcrDialogLlmConfig:
 
     def test_apply_persists_via_save_settings(self, monkeypatch):
         """_apply_llm_settings が _save_settings(app.settings) を1回呼ぶ。"""
+        import pagefolio.app as app_mod
         import pagefolio.ocr_providers as prov_mod
-        import pagefolio.settings as settings_mod
 
         saved = {"count": 0, "arg": None}
 
@@ -968,7 +987,7 @@ class TestOcrDialogLlmConfig:
             saved["count"] += 1
             saved["arg"] = s
 
-        monkeypatch.setattr(settings_mod, "_save_settings", mock_save)
+        monkeypatch.setattr(app_mod, "_save_settings", mock_save)
         monkeypatch.setattr(prov_mod, "LMStudioProvider", lambda **kw: object())
 
         fake = self._make_fake()
@@ -985,11 +1004,11 @@ class TestOcrDialogLlmConfig:
 
     def test_apply_regenerates_provider_lmstudio_and_claude(self, monkeypatch):
         """ocr_provider='lmstudio' → LMStudioProvider、='claude' → build_provider。"""
+        import pagefolio.app as app_mod
         import pagefolio.ocr as ocr_mod
         import pagefolio.ocr_providers as prov_mod
-        import pagefolio.settings as settings_mod
 
-        monkeypatch.setattr(settings_mod, "_save_settings", lambda _: None)
+        monkeypatch.setattr(app_mod, "_save_settings", lambda _: None)
 
         # lmstudio パス
         lmstudio_marker = object()
@@ -1024,15 +1043,15 @@ class TestOcrDialogLlmConfig:
         万一含まれた場合も _save_settings の _SENSITIVE_KEYS ガードで除外される。
         ここでは正常な llm_settings には機密キーが含まれないことを確認する。
         """
+        import pagefolio.app as app_mod
         import pagefolio.ocr_providers as prov_mod
-        import pagefolio.settings as settings_mod
 
         saved_settings = {}
 
         def mock_save(s):
             saved_settings.update(s)
 
-        monkeypatch.setattr(settings_mod, "_save_settings", mock_save)
+        monkeypatch.setattr(app_mod, "_save_settings", mock_save)
         monkeypatch.setattr(prov_mod, "LMStudioProvider", lambda **kw: object())
 
         # api_key 系を含まない正常な llm_settings（LLMConfigDialog の実挙動）
@@ -2002,6 +2021,7 @@ class TestOCRDisabledGuard:
             settings.update(extra_settings)
 
         app = types.SimpleNamespace(settings=settings, _session_api_keys={})
+        _bind_settings_persistence(app)
         # off 分岐でも provider を保持したまま H-3 の再クランプ処理
         # (self.provider.max_concurrency) を通過できるよう、実 Provider 相当の
         # 最小属性（max_concurrency・lang_fallback=False）を持たせる。
@@ -2038,9 +2058,9 @@ class TestOCRDisabledGuard:
         ocr_disabled_msg が設定される（D-07・T-01-06）。"""
         import types
 
-        import pagefolio.settings as settings_mod
+        import pagefolio.app as app_mod
 
-        monkeypatch.setattr(settings_mod, "_save_settings", lambda _: None)
+        monkeypatch.setattr(app_mod, "_save_settings", lambda _: None)
 
         fake, sentinel_provider = self._make_fake_ocr_dialog()
         progress_values = []

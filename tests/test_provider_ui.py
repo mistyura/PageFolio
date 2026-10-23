@@ -1483,6 +1483,7 @@ def _make_apply_llm_settings_stub(settings, provider=None, app_extra=None):
             )
         },
     )
+    _bind_settings_persistence(stub.app)
     return stub
 
 
@@ -1495,7 +1496,7 @@ class TestApplyLlmSettingsCustomPromptSync:
         """_apply_llm_settings 後、custom_prompt が app.settings の最新値になる。"""
         from pagefolio.ocr_dialog import OCRDialog
 
-        monkeypatch.setattr("pagefolio.settings._save_settings", lambda settings: None)
+        monkeypatch.setattr("pagefolio.app._save_settings", lambda settings: None)
         stub = _make_apply_llm_settings_stub(
             settings={"ocr_provider": "tesseract", "ocr_custom_prompt": ""}
         )
@@ -1508,7 +1509,7 @@ class TestApplyLlmSettingsCustomPromptSync:
         """空欄に変更した場合も self.custom_prompt が空文字へ同期される。"""
         from pagefolio.ocr_dialog import OCRDialog
 
-        monkeypatch.setattr("pagefolio.settings._save_settings", lambda settings: None)
+        monkeypatch.setattr("pagefolio.app._save_settings", lambda settings: None)
         stub = _make_apply_llm_settings_stub(
             settings={
                 "ocr_provider": "tesseract",
@@ -1530,7 +1531,7 @@ class TestApplyLlmSettingsOffToggleButtons:
         """provider='off' へ切替後、app._update_ocr_buttons_state が呼ばれる。"""
         from pagefolio.ocr_dialog import OCRDialog
 
-        monkeypatch.setattr("pagefolio.settings._save_settings", lambda settings: None)
+        monkeypatch.setattr("pagefolio.app._save_settings", lambda settings: None)
         calls = {"n": 0}
         stub = _make_apply_llm_settings_stub(
             settings={"ocr_provider": "off"},
@@ -1549,7 +1550,7 @@ class TestApplyLlmSettingsOffToggleButtons:
         """provider 再生成が例外で失敗しても呼ばれる（Pitfall 6）。"""
         from pagefolio.ocr_dialog import OCRDialog
 
-        monkeypatch.setattr("pagefolio.settings._save_settings", lambda settings: None)
+        monkeypatch.setattr("pagefolio.app._save_settings", lambda settings: None)
         # tesseract/プラグイン分岐は build_provider を呼ぶため、これを失敗させる
         monkeypatch.setattr(
             "pagefolio.ocr.build_provider",
@@ -1571,7 +1572,7 @@ class TestApplyLlmSettingsOffToggleButtons:
         """app に _update_ocr_buttons_state が無くても例外を出さない（後方互換）。"""
         from pagefolio.ocr_dialog import OCRDialog
 
-        monkeypatch.setattr("pagefolio.settings._save_settings", lambda settings: None)
+        monkeypatch.setattr("pagefolio.app._save_settings", lambda settings: None)
         stub = _make_apply_llm_settings_stub(settings={"ocr_provider": "off"})
         # AttributeError 等を出さず正常終了すること
         OCRDialog._apply_llm_settings(stub, {"ocr_provider": "off"})
@@ -1591,7 +1592,7 @@ class TestApplyLlmSettingsOpenAiApiKeyWiringRegression:
     ):
         from pagefolio.ocr_dialog import OCRDialog
 
-        monkeypatch.setattr("pagefolio.settings._save_settings", lambda settings: None)
+        monkeypatch.setattr("pagefolio.app._save_settings", lambda settings: None)
 
         build_calls = []
 
@@ -1704,11 +1705,12 @@ class TestSettingsDialogOpenLlmConfigPersists:
         """LLM 設定ダイアログの on_apply が _save_settings を呼ぶことを確認する。"""
         import types as _types
 
+        from pagefolio.app import PDFEditorApp
         from pagefolio.dialogs.settings import SettingsDialog
 
         saved = {}
         monkeypatch.setattr(
-            "pagefolio.settings._save_settings", lambda settings: saved.update(settings)
+            "pagefolio.app._save_settings", lambda settings: saved.update(settings)
         )
 
         captured_kwargs = {}
@@ -1725,6 +1727,12 @@ class TestSettingsDialogOpenLlmConfigPersists:
             current_settings={"ocr_provider": "lmstudio", "ocr_custom_prompt": "old"},
             _font=lambda delta=0, weight=None: ("Segoe UI", 10),
             _plugin_manager=None,
+        )
+        app = _types.SimpleNamespace(settings=dict(stub.current_settings))
+        _bind_settings_persistence(app)
+        _bind_ocr_button_state_methods(app)
+        stub._on_llm_apply = lambda settings: PDFEditorApp._apply_llm_settings_live(
+            app, settings
         )
         SettingsDialog._open_llm_config(stub)
 
@@ -2402,7 +2410,7 @@ class TestSettingsDialogNestedApplyCascade:
         呼ばれる。"""
         from pagefolio.dialogs.settings import SettingsDialog
 
-        monkeypatch.setattr("pagefolio.settings._save_settings", lambda settings: None)
+        monkeypatch.setattr("pagefolio.app._save_settings", lambda settings: None)
         captured_kwargs = self._patch_fake_llm_config_dialog(monkeypatch)
 
         live_calls = []
@@ -2427,7 +2435,7 @@ class TestSettingsDialogNestedApplyCascade:
         from pagefolio.app import PDFEditorApp
         from pagefolio.dialogs.settings import SettingsDialog
 
-        monkeypatch.setattr("pagefolio.settings._save_settings", lambda settings: None)
+        monkeypatch.setattr("pagefolio.app._save_settings", lambda settings: None)
         monkeypatch.setattr("pagefolio.app._save_settings", lambda settings: None)
         captured_kwargs = self._patch_fake_llm_config_dialog(monkeypatch)
 
@@ -2456,7 +2464,7 @@ class TestSettingsDialogNestedApplyCascade:
         例外を出さずに完了する。"""
         from pagefolio.dialogs.settings import SettingsDialog
 
-        monkeypatch.setattr("pagefolio.settings._save_settings", lambda settings: None)
+        monkeypatch.setattr("pagefolio.app._save_settings", lambda settings: None)
         captured_kwargs = self._patch_fake_llm_config_dialog(monkeypatch)
 
         stub = types.SimpleNamespace(
@@ -2477,7 +2485,7 @@ class TestSettingsDialogNestedApplyCascade:
         from pagefolio.dialogs.llm_config import LLMConfigDialog
         from pagefolio.dialogs.settings import SettingsDialog
 
-        monkeypatch.setattr("pagefolio.settings._save_settings", lambda settings: None)
+        monkeypatch.setattr("pagefolio.app._save_settings", lambda settings: None)
         captured_kwargs = self._patch_fake_llm_config_dialog(monkeypatch)
 
         live_settings = {}

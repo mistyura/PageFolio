@@ -455,6 +455,295 @@ class TestAppSaveOrigins:
             root.destroy()
 
 
+class TestLlmSaveOrigins:
+    def _nested(self, app, monkeypatch, owner="callback"):
+        from pagefolio.dialogs.settings import SettingsDialog
+
+        captured = {}
+        monkeypatch.setattr(
+            "pagefolio.dialogs.llm_config.LLMConfigDialog",
+            lambda *args, **kwargs: captured.update(kwargs),
+        )
+        app._update_ocr_buttons_state = Mock()
+        app._session_api_keys = {"openai": "session-only-secret"}
+        dialog = SimpleNamespace(
+            current_settings={**app.settings, "theme": "light"},
+            _font=app._font,
+            callback=Mock(),
+            _app=app,
+            _session_api_keys=app._session_api_keys,
+        )
+        if owner == "callback":
+            dialog._on_llm_apply = app._apply_llm_settings_live
+        SettingsDialog._open_llm_config(dialog)
+        assert captured["session_api_keys"] is app._session_api_keys
+        return dialog, captured["on_apply"]
+
+    def test_nested_apply_saves_once_without_general_settings(
+        self, save_app, monkeypatch
+    ):
+        save = Mock(return_value=True)
+        monkeypatch.setattr("pagefolio.app._save_settings", save)
+        monkeypatch.setattr(settings_mod, "_save_settings", save)
+        dialog, apply = self._nested(save_app, monkeypatch)
+        apply({"ocr_provider": "off"})
+        assert save.call_count == 1
+        assert save.call_args.args[0]["theme"] == "dark"
+        assert save_app.settings["ocr_provider"] == "off"
+        assert dialog.current_settings["theme"] == "light"
+        dialog.callback.assert_not_called()
+        save_app._rebuild_ui.assert_not_called()
+
+    @pytest.mark.parametrize("status", ["ok", "corrupt", "unreadable"])
+    @pytest.mark.parametrize("saved", [True, False])
+    @pytest.mark.parametrize("owner", ["callback", "app"])
+    def test_nested_cancel_retains_llm_and_protects_original(
+        self, save_app, isolated_app, monkeypatch, status, saved, owner
+    ):
+        app = save_app
+        original = b"{protected-original"
+        isolated_app.write_bytes(original)
+        app._settings_load_status = status
+        app._settings_autosave_blocked = status != "ok"
+        save = Mock(wraps=settings_mod._save_settings)
+        monkeypatch.setattr("pagefolio.app._save_settings", save)
+        monkeypatch.setattr(settings_mod, "_save_settings", save)
+        if not saved:
+            monkeypatch.setattr(
+                settings_mod.os, "replace", Mock(side_effect=PermissionError("private"))
+            )
+        dialog, apply = self._nested(app, monkeypatch, owner)
+        assert apply({"ocr_provider": "off", "ocr_custom_prompt": "new"}) is (
+            saved and status != "unreadable"
+        )
+        assert app.settings["theme"] == "dark"
+        assert app.settings["ocr_custom_prompt"] == "new"
+        assert dialog.current_settings["theme"] == "light"
+        assert save.call_count == (status != "unreadable")
+        assert len(app._config_notices) == (not saved or status == "unreadable")
+        assert app._settings_autosave_blocked is (
+            status != "ok" and (not saved or status == "unreadable")
+        )
+        if not saved or status == "unreadable":
+            assert isolated_app.read_bytes() == original
+        else:
+            assert (
+                json.loads(isolated_app.read_text(encoding="utf-8"))["theme"] == "dark"
+            )
+            assert "session-only-secret" not in isolated_app.read_text(encoding="utf-8")
+        app._update_ocr_buttons_state.assert_called_once()
+        dialog.callback.assert_not_called()
+        app._rebuild_ui.assert_not_called()
+
+    def test_ownerless_stub_updates_memory_only(self, monkeypatch):
+        from pagefolio.dialogs.settings import SettingsDialog
+
+        captured = {}
+        monkeypatch.setattr(
+            "pagefolio.dialogs.llm_config.LLMConfigDialog",
+            lambda *a, **kw: captured.update(kw),
+        )
+        save = Mock(return_value=True)
+        monkeypatch.setattr(settings_mod, "_save_settings", save)
+        dialog = SimpleNamespace(
+            current_settings={},
+            _font=lambda *a: None,
+            callback=Mock(),
+            _on_llm_apply="not callable",
+        )
+        SettingsDialog._open_llm_config(dialog)
+        assert captured["on_apply"]({"ocr_provider": "off"}) is False
+        assert dialog.current_settings["ocr_provider"] == "off"
+        save.assert_not_called()
+        dialog.callback.assert_not_called()
+
+    @pytest.mark.parametrize("status", ["ok", "corrupt", "unreadable"])
+    @pytest.mark.parametrize("saved", [True, False])
+    def test_ocr_apply_keeps_provider_prompt_keys_and_buttons(
+        self, save_app, isolated_app, monkeypatch, status, saved
+    ):
+        from pagefolio.ocr_dialog import OCRDialog
+
+        app = save_app
+        app._settings_load_status = status
+        app._settings_autosave_blocked = status != "ok"
+        app._session_api_keys = {"openai": "session-only-secret"}
+        app._update_ocr_buttons_state = Mock()
+        monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+        save = Mock(return_value=saved)
+        monkeypatch.setattr("pagefolio.app._save_settings", save)
+        monkeypatch.setattr(settings_mod, "_save_settings", save)
+        marker = SimpleNamespace(max_concurrency=4)
+        build = Mock(return_value=marker)
+        monkeypatch.setattr("pagefolio.ocr.build_provider", build)
+        dialog = SimpleNamespace(
+            app=app,
+            provider=None,
+            concurrency=2,
+            custom_prompt="old",
+            _update_preset_note=Mock(),
+            _refresh_provider_dependent_ui=Mock(),
+            _sync_param_vars_from_settings=Mock(),
+            _update_summary_btn_state=Mock(),
+            _maybe_show_lang_fallback_notice=Mock(),
+            progress_var=Mock(),
+        )
+        OCRDialog._apply_llm_settings(
+            dialog, {"ocr_provider": "openai", "ocr_custom_prompt": "new"}
+        )
+        assert save.call_count == (status != "unreadable")
+        assert len(app._config_notices) == (not saved or status == "unreadable")
+        assert dialog.provider is marker
+        assert dialog.custom_prompt == "new"
+        assert build.call_args.kwargs["api_key"] == "session-only-secret"
+        assert app._session_api_keys == {"openai": "session-only-secret"}
+        dialog._sync_param_vars_from_settings.assert_called_once()
+        dialog._refresh_provider_dependent_ui.assert_called_once()
+        dialog._update_summary_btn_state.assert_called_once()
+        app._update_ocr_buttons_state.assert_called_once()
+        app._set_status.assert_not_called()
+
+    def test_product_open_settings_injects_owner(self, save_app, monkeypatch):
+        dialog = Mock()
+        monkeypatch.setattr("pagefolio.app.SettingsDialog", dialog)
+        save_app._open_settings()
+        assert dialog.call_args.kwargs["app"] is save_app
+        assert (
+            dialog.call_args.kwargs["on_llm_apply"] == save_app._apply_llm_settings_live
+        )
+
+    @pytest.mark.parametrize("apply_inner", [True, False])
+    @pytest.mark.parametrize("origin", ["settings", "ocr"])
+    def test_real_nested_close_restores_outer_grab(
+        self, save_app, isolated_app, monkeypatch, origin, apply_inner
+    ):
+        from pagefolio.dialogs.settings import SettingsDialog
+        from pagefolio.ocr_dialog import OCRDialog
+        from pagefolio.toast import ToastManager
+
+        root = tk.Tk()
+        root.withdraw()
+        app = save_app
+        app.root = root
+        app._toast = ToastManager(app)
+        app._toast.on_idle = app._schedule_config_notice
+        app._update_ocr_buttons_state = Mock()
+        clock = [0.0]
+        monkeypatch.setattr("pagefolio.app.time.monotonic", lambda: clock[0])
+        monkeypatch.setattr("pagefolio.app._save_settings", lambda settings: False)
+        captured = {}
+
+        class NestedDialog(tk.Toplevel):
+            def __init__(self, parent, settings, **kwargs):
+                super().__init__(parent)
+                self.withdraw()
+                self.grab_set()
+                captured.update(kwargs)
+
+        monkeypatch.setattr(
+            "pagefolio.dialogs.llm_config.LLMConfigDialog", NestedDialog
+        )
+        outer = None
+        inner = None
+        try:
+            if origin == "settings":
+                outer = SettingsDialog(
+                    root,
+                    app.settings,
+                    Mock(),
+                    app._font,
+                    app=app,
+                    on_llm_apply=app._apply_llm_settings_live,
+                )
+            else:
+                outer = OCRDialog.__new__(OCRDialog)
+                tk.Toplevel.__init__(outer, root)
+                outer.app = app
+                outer._started = False
+                outer._done = False
+                outer._summary_running = False
+                outer._font = app._font
+                outer.provider = SimpleNamespace(max_concurrency=1)
+                outer.concurrency = 1
+                outer.progress_var = Mock()
+                for name in (
+                    "_refresh_provider_dependent_ui",
+                    "_sync_param_vars_from_settings",
+                    "_maybe_show_lang_fallback_notice",
+                    "_update_summary_btn_state",
+                    "_update_preset_note",
+                ):
+                    setattr(outer, name, Mock())
+            outer.withdraw()
+            outer.grab_set()
+            if not apply_inner:
+                app._persist_settings()
+            outer._open_llm_config()
+            inner = outer._llm_config_dialog
+            inner.destroy()
+            inner = None
+            if apply_inner:
+                assert captured["on_apply"]({"ocr_provider": "off"}) is False
+            assert root.grab_current() is outer
+            root.update()
+            clock[0] = 12.0
+            app._show_next_config_notice()
+            assert app._toast._frame is None
+            assert app._config_notices[0]["remaining_ms"] == 10000
+            outer.destroy()
+            outer = None
+            app._schedule_config_notice()
+            root.update()
+            assert app._toast._frame is not None
+            assert app._config_notices[0]["remaining_ms"] == 10000
+        finally:
+            if inner is not None:
+                inner.destroy()
+            if outer is not None:
+                outer.destroy()
+            app._close_config_notices()
+            root.destroy()
+
+    @pytest.mark.parametrize("origin", ["settings", "ocr"])
+    def test_nested_modal_keeps_event_after_inner_exit(
+        self, notice_app, monkeypatch, origin
+    ):
+        app = notice_app
+        app.root.grab = object()
+        save = Mock(return_value=False)
+        monkeypatch.setattr("pagefolio.app._save_settings", save)
+        monkeypatch.setattr(settings_mod, "_save_settings", save)
+        if origin == "settings":
+            dialog, apply = self._nested(app, monkeypatch)
+            apply({"ocr_provider": "off"})
+        else:
+            from pagefolio.ocr_dialog import OCRDialog
+
+            dialog = SimpleNamespace(
+                app=app,
+                provider=SimpleNamespace(max_concurrency=1),
+                concurrency=1,
+                progress_var=Mock(),
+                _refresh_provider_dependent_ui=Mock(),
+                _sync_param_vars_from_settings=Mock(),
+                _maybe_show_lang_fallback_notice=Mock(),
+                _update_summary_btn_state=Mock(),
+            )
+            OCRDialog._apply_llm_settings(dialog, {"ocr_provider": "off"})
+        app.root.advance(12000)
+        app.root.grab = object()
+        app.root.advance(12000)
+        assert len(app._config_notices) == 1
+        assert app._toast._frame is None
+        app.root.grab = None
+        app.root.advance(100)
+        assert app._toast._frame is not None
+        app.root.advance(9999)
+        assert len(app._config_notices) == 1
+        app.root.advance(1)
+        assert not app._config_notices
+
+
 class TestSaveFlow:
     @pytest.mark.parametrize("status", ["corrupt", "unreadable"])
     def test_protected_explicit_save_rules(self, save_app, monkeypatch, status):

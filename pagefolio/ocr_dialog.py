@@ -1027,6 +1027,19 @@ class OCRDialog(tk.Toplevel):
             plugin_manager=getattr(self.app, "plugin_manager", None),
             session_api_keys=getattr(self.app, "_session_api_keys", None),
         )
+        dialog = self._llm_config_dialog
+        bind = getattr(dialog, "bind", None)
+        if callable(bind):
+
+            def restore_outer_grab(event):
+                if event.widget is dialog:
+                    try:
+                        if self.winfo_exists():
+                            self.grab_set()
+                    except tk.TclError as e:
+                        logger.debug("外側OCR grab復元終了: %s", type(e).__name__)
+
+            bind("<Destroy>", restore_outer_grab, add="+")
 
     def _apply_llm_settings(self, llm_settings):
         """LLMConfigDialog の on_apply コールバック。設定更新・永続化・ライブ更新。
@@ -1036,10 +1049,8 @@ class OCRDialog(tk.Toplevel):
         """
         # (a) 設定を app.settings に反映
         self.app.settings.update(llm_settings)
-        # (b) 永続化（機密キー除外は _save_settings 内部で実施済み）
-        from pagefolio.settings import _save_settings
-
-        _save_settings(self.app.settings)
+        # (b) App ownerで保存・失敗通知。失敗しても後続のライブ更新を続ける。
+        saved = self.app._persist_settings()
         # self.custom_prompt は __init__ 時点の値をキャッシュしているだけで
         # 以降の app.settings 更新が反映されないため、ここで明示的に同期する
         # （さもないと _on_run が 1 回前のカスタムプロンプトを使い続ける）。
@@ -1187,6 +1198,7 @@ class OCRDialog(tk.Toplevel):
             update_ocr_buttons()
         # provider 差し替えで supports_text_prompt が変わり得るため再評価する
         self._update_summary_btn_state()
+        return saved
 
     def _maybe_show_lang_fallback_notice(self):
         """D-07: TesseractProvider の段階的縮退フォールバックを検知したら

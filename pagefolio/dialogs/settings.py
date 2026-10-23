@@ -222,22 +222,17 @@ class SettingsDialog(tk.Toplevel):
         lang = self.current_settings.get("lang", "ja")
 
         def on_apply(llm_settings):
-            # current_settings は SettingsDialog 自身のコピーで、外側の「適用」
-            # ボタン（_apply）を押すまで呼び出し元 app には反映されない。
-            # ここで即座に永続化しないと、LLM 設定側の「適用」を押した直後に
-            # 外側ダイアログを「キャンセル」で閉じた場合、変更が無かったことに
-            # なってしまう（「適用しても更新されない」バグ）ため、ここで先に保存する。
+            # 外側の一般設定は未適用のまま保ち、LLM部分だけApp ownerへ渡す。
             self.current_settings.update(llm_settings)
-            from pagefolio.settings import _save_settings
-
-            _save_settings(self.current_settings)
-            # D-14: ディスク保存に加え、外側 Apply/Cancel から独立して
-            # app.settings（メモリ）へも即時反映する（C4 の不整合解消）。
-            # getattr は既存の SimpleNamespace スタブ（_on_llm_apply 未設定）
-            # との後方互換のための防御的パターン。
             on_llm_apply = getattr(self, "_on_llm_apply", None)
-            if on_llm_apply:
-                on_llm_apply(dict(llm_settings))
+            if callable(on_llm_apply):
+                return on_llm_apply(dict(llm_settings))
+            app = getattr(self, "_app", None)
+            apply_live = getattr(app, "_apply_llm_settings_live", None)
+            if callable(apply_live):
+                return apply_live(dict(llm_settings))
+            # 未束縛のテスト用stubはメモリだけ更新し、保存成功にはしない。
+            return False
 
         self._llm_config_dialog = LLMConfigDialog(
             self,
@@ -248,6 +243,19 @@ class SettingsDialog(tk.Toplevel):
             plugin_manager=getattr(self, "_plugin_manager", None),
             session_api_keys=getattr(self, "_session_api_keys", None),
         )
+        dialog = self._llm_config_dialog
+        bind = getattr(dialog, "bind", None)
+        if callable(bind):
+
+            def restore_outer_grab(event):
+                if event.widget is dialog:
+                    try:
+                        if self.winfo_exists():
+                            self.grab_set()
+                    except tk.TclError as e:
+                        logger.debug("外側設定grab復元終了: %s", type(e).__name__)
+
+            bind("<Destroy>", restore_outer_grab, add="+")
 
     def _open_shortcuts_dialog(self):
         """ショートカット設定ダイアログを開く（二重起動ガード付き・D-01）。
