@@ -171,8 +171,23 @@ Plans:
   3. 読込失敗後の自動処理や保存途中の失敗で、既存設定ファイルが無断で上書き・破壊されない。
   4. 同じ設定エラーが続いても通知が集約され、ダイアログの連打や画面再構築による通知消失で編集を妨げられない。
 
-**Plans**: TBD
+**Plans**: 4/4 plans executed
 **UI hint**: yes
+
+**実行依存**: `DEP-05-REGRESSION`は未充足・原因未確定のまま。2026-10-23の利用者判断により、診断commit `9384268`を採用してPhase 5へ進むことを条件付き承認済み。実装前の診断版単一全件は1637 passed / 1 warning / 263.66秒 / exit 0で対象hash一致。05-01実装後の単一全件は1660 passed / 1 warning / 234.19秒 / exit 0。どちらの成功も原因修復や依存解除とは扱わない。後続の単一全件ゲートで同種失敗が再発したら実装・後続実行・コミットを停止し、最初の失敗出力とresult.json/traceback.log・poll/reader/process診断を保持して `$gsd-debug continue dep-05-regression` で再開する。独立修復`8689c27`の成功とレビュー時1 failed/1634 passedは履歴として保持。05-01〜04は実装済み。最終1797 passed / 1 warning / 266.81秒、独立レビューclean・Nyquist validated・Security14 closed・人手14 pass。最終検証はhuman_neededで、通知の意味に関する禁止事項2件の項目別判断を05-UAT末尾へ記録して正式完了を保留。owner_missing・通知前景不一致も原因未確定で、条件付き実装承認と再発時停止を維持する。詳細は `debug/dep-05-regression.md`、`05-VALIDATION.md`、`05-01-SUMMARY.md`。
+
+Plans:
+**Wave 1**
+- [x] 05-01-PLAN.md — 設定読込失敗の実App通知tracerと原本保護（Wave 1）
+
+**Wave 2** *(blocked on Wave 1 completion)*
+- [x] 05-02-PLAN.md — 保存結果・原子的保存と通知ライフサイクル（Wave 2、05-01依存）
+
+**Wave 3** *(blocked on Wave 2 completion)*
+- [x] 05-03-PLAN.md — 全保存元の共通経路化とLLM二重保存の解消（Wave 3、05-02依存）
+
+**Wave 4** *(blocked on Wave 3 completion)*
+- [x] 05-04-PLAN.md — 複合操作受入・隔離harness・説明と品質ゲート（Wave 4、05-03依存）
 
 ### Phase 6: サンプル配布とリリース検証
 
@@ -203,7 +218,7 @@ Plans:
 | v1.7.1 現機能ブラッシュアップ + APIキー入力欄 | 4 | 16 | ✅ Complete | 2026-07-05 |
 | v1.8.0 実用性の最大化・エコシステム洗練・堅牢性強化 | 6 | 22 | ✅ Complete | 2026-07-16 |
 | v1.9.0 安全性・整合性の是正 + OpenAI プロバイダ追加 | 3 | 15 | ✅ Complete | 2026-08-11 |
-| v1.10.0 多重起動防止・起動操作の改善 | 3 | 6（Phase 4確定、残りTBD） | Phase 4完了・Phase 5計画前 | — |
+| v1.10.0 多重起動防止・起動操作の改善 | 3 | 10（Phase 4/5確定、Phase 6はTBD） | Phase 4完了・Phase 5計画検証合格、依存未解除・再発時停止の条件付き実行承認 | — |
 
 各マイルストーンのフェーズ単位の内訳は上記 `<details>` ブロックおよび各アーカイブ
 （`milestones/*-ROADMAP.md`）を参照。
@@ -211,5 +226,5 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 4. 起動制御と既存画面への復帰 | 6/6 | Complete | 2026-10-22 |
-| 5. 設定読込・保存失敗の通知 | 0/TBD | Not started | — |
+| 5. 設定読込・保存失敗の通知 | 4/4 | In Progress | — |
 | 6. サンプル配布とリリース検証 | 0/TBD | Not started | — |

@@ -2,20 +2,20 @@
 gsd_state_version: "1.0"
 milestone: v1.10.0
 milestone_name: 多重起動防止・起動操作の改善
-current_phase: 5
+current_phase: 05
 current_phase_name: 設定読込・保存失敗の通知
-current_plan: Not started
-status: planning
-stopped_at: Phase 5 context gathered
-last_updated: "2026-10-21T22:43:07.924Z"
-last_activity: 2026-10-22
-last_activity_desc: Phase 4完了、Phase 5へ移行
-state_head: 4bd44a6e2052444d9a771af712f426a98d47a2fb
+current_plan: 4
+status: executing
+stopped_at: Phase 05 human_needed; two explicit prohibition judgments pending; H01-H14 passed
+last_updated: "2026-10-23T17:39:15.708Z"
+last_activity: 2026-10-24
+last_activity_desc: 実装4プラン・1797テスト・人手14項目成功。通知の意味評価2件待ち
+state_head: 8c61ea8d0bce0c84ace3d0a68cf1ecd83c7b6a81
 progress:
   total_phases: 3
   completed_phases: 1
-  total_plans: 6
-  completed_plans: 6
+  total_plans: 10
+  completed_plans: 9
   percent: 33
 ---
 
@@ -26,7 +26,7 @@ progress:
 See: .planning/PROJECT.md (updated 2026-10-22)
 
 **Core value:** 大きな PDF でも Undo/Redo が正しく・速く動作し、コードが読みやすく保守しやすい状態にする
-**Current focus:** Phase 5 — 設定読込・保存失敗の通知
+**Current focus:** Phase 05 — 設定読込・保存失敗の通知
 
 ## Shipped Milestone: v1.9.0（2026-08-11・verified_closeout）
 
@@ -46,12 +46,16 @@ See: .planning/PROJECT.md (updated 2026-10-22)
 
 ## Current Position
 
-Phase: 5 — 設定読込・保存失敗の通知
-Current Plan: Not started
-Total Plans in Phase: 未計画
-Plan: Not started（Phase 4は6/6完了）
-Status: Ready to plan
-Last activity: 2026-10-22 — Phase 4完了、Phase 5へ移行
+Phase: 05 (設定読込・保存失敗の通知) — EXECUTING
+Current Plan: 4
+Total Plans in Phase: 4
+Plan: 4 of 4
+Status: Human verification needed
+Last activity: 2026-10-24 — 独立検証human_needed、禁止事項2件の明示判断待ち
+
+**現行再開点:** `$gsd-verify-work 05`。独立goal検証はhuman_needed、23/23 truth・4要件の実装を確認し具体的実装gap0。全4プラン完了、レビュー修正`7bbb06c`・検証記録修正`2654882`、独立再レビューclean。最新全件1797 passed / 1 warning / 266.81秒 / exit 0、入力103件・診断423件hash一致。人手H01〜H14は14 passで再実施不要。残るのは05-UAT.md末尾Testsに記録した、PDF編集内容喪失との誤認・PDF破棄/再起動を促さない旨の項目別明示判断2件。Nyquist validated、Security14 closed。正式Phase完了・Phase 6開始は保留。owner_missing・通知前景不一致・DEP-05・Tcl警告・未分類edge4件は未解除、再発時停止・出荷不可・Phase 6手動UAT not-runを維持する。
+
+`DEP-05-REGRESSION` は未充足のまま。元のnormal-entry-scriptのcommunicate期限超過は未再現・原因未確定で、Tcl警告との因果も未証明。レビュー時の1 failed / 1634 passedは履歴として保持する。診断強化は `9384268` で独立commit済み、実装前の単一全件は1637 passed / 1 warning / 263.66秒 / exit 0で対象hash一致を確認した。2026-10-23の利用者判断による条件付き実行の下、05-01の実装後単一全件は1660 passed / 1 warning / 234.19秒 / exit 0。05-01/02は実装済み、05-03/04およびNyquist/UATは未実施。今回の成功を原因修復や依存解除とは扱わない。後続の単一全件ゲートで同種失敗が再発したら実装・後続実行・コミットを停止し、最初の失敗出力と専用basetempの診断を保持して `$gsd-debug continue dep-05-regression` で再開する。証拠正本は `debug/dep-05-regression.md`、`05-VALIDATION.md`、`05-01-SUMMARY.md`。
 
 Progress: [███░░░░░░░] 33%（v1.10.0: 1/3 フェーズ完了、Phase 4は6/6実行済み）
 
@@ -60,7 +64,7 @@ Progress: [███░░░░░░░] 33%（v1.10.0: 1/3 フェーズ完了
 | Phase | Name | Requirements | 状態 |
 |-------|------|--------------|------|
 | 4 | 起動制御と既存画面への復帰 | V110-START-01〜03, V110-FOCUS-01/02 | Complete（6/6、検証21/21 passed） |
-| 5 | 設定読込・保存失敗の通知 | V110-CFG-01〜04 | 未着手・計画前 |
+| 5 | 設定読込・保存失敗の通知 | V110-CFG-01〜04 | 全4プラン実装完了、human_needed（禁止事項の意味評価2件）。回帰依存未充足・再発時停止を維持 |
 | 6 | サンプル配布とリリース検証 | V110-DIST-01〜03, V110-QA-01〜03 | 未着手・計画前 |
 
 Phase 4は自動受入/A1〜A5と証拠照合を行い、未実施人手W項目は承認によりPhase 6へ移管。Phase 5は機能テストと必要な実機確認を行う。Phase 6 は PyInstaller の実ビルド・再ビルドと実 EXE の UAT を含む最終検証。各フェーズ完了時は `/gsd-validate-phase` を実行する。
@@ -170,6 +174,8 @@ Phase 4は自動受入/A1〜A5と証拠照合を行い、未実施人手W項目�
 | Phase 03-qa-release-gate P03 | 約35分 | 5 tasks | 1 files |
 | Phase 03 P04 | 約5分 | 2 tasks | 3 files |
 | Phase 04 P06 | 未計測 | 2 tasks | 6 files |
+| Phase 05 P01 | 54min | 2 tasks | 5 files |
+| Phase 05 P02 | 27min | 2 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -300,6 +306,9 @@ Decisions are logged in PROJECT.md Key Decisions table.
 - [Phase ?]: [03-04]: 開発履歴.mdの詳細節は新設せずv1.8.0/v1.8.1と同型の1段落形式を踏襲。テスト件数は本セッション実測の1398件のみを出典とした
 - [Phase 04]: 起動backend未完成時は独立した通知専用Win32 backendで確認済みcheck_failedだけを案内する
 - [Phase 04]: 通知同期・表示・解放が確認できなければnotification_unavailableとして両入口を非zero終了させる
+- [Phase 05]: 読込失敗時は例外本文を通知・ログに出さず固定文言と例外型・errnoのみを使う
+- [Phase 05]: 終了自動保存は読込失敗中にメモリ値の収集より前で止める
+- [Phase 05]: 05-02は既存差分と承認済み証拠を照合し、通知残時間と世代管理を実装。1694 passedで両タスク完了、未解決起動問題と手動UATの出荷停止は維持
 
 ### Pending Todos
 
@@ -423,14 +432,30 @@ v1.9.0 クローズ時点で次マイルストーンへ引き継ぐ未解決項�
 
 ## Session Continuity
 
-**Resume file:** .planning/phases/05-config-notification/05-CONTEXT.md
+**Resume file:** .planning/phases/05-config-notification/05-UAT.md
 
-Last session: 2026-10-21T22:43:07.848Z
-Stopped at: Phase 5 context gathered
+Last session: 2026-10-23T14:35:13.994Z
+Stopped at: Phase 05 human_needed; prohibition judgments pending
 
 ## Operator Next Steps
 
-- **次アクション:** `$gsd-discuss-phase 5`。Phase 4はCR-01修正・validate-phase・検証21/21 passed・単一全件1629 passed（1 warning、228.84秒）を経て正式完了。未実施人手W項目とWR-01は06-UAT-CARRYOVERへ移管済み。
+- **2026-10-23T14:35Z 以前の実装位置:** 05-02完了、SUMMARYと実装はコミット済み。単一全件1694 passed、診断423ファイルの原本/コピーSHA256一致。この後05-03と05-04-01も完了済み。以下の停止記録は履歴として読み、上記の現行再開点を優先する。未解決原因と再発時停止条件は引き続き有効。
+
+- **2026-10-23T13:50:58Z 現行の再開判定PASS:** 利用者が「一次生存・前景監査・対象3回連続・全件1回成功」で原因未確定のまま実装再開する条件を承認。最終対象9件×3回、全件1680 passed/1 warning/254.81秒、Ruff/AST成功。`debug/simultaneous-owner-missing-evidence/resume-check-20261023.md`と診断711ファイルを保存。次は`$gsd-execute-phase 5`で05-02-01既存差分を照合。owner_missing/DEP-05未解決、出荷不可、再発時停止を維持。以下の過去記録の「原因確定まで停止」「方針確認待ち」はこの承認と検証で置き換える。
+
+- **2026-10-23T12:54:47Z 実OS経路検証完了・全件は別失敗:** 利用者が再発待ちから選択1「実OS経路検証」へ変更。実WM_CLOSE受信→Tk入口→_quit→破棄を確認し、既存3入口と識別できた。最新全件は1678 passed/1 failed/1 warning（274.31秒）。失敗は通知8プロセス試験の前景HWND不一致199190→134248で、owner_missing/DEP-05 timeoutとは別症状。証拠37ファイルを原本保持・SHA256一致で保存。`debug/simultaneous-owner-missing-evidence/native-audit-20261023.md`参照。Phase 5停止・未コミット・DEP-05未解除を維持し、次は新しい前景不一致の切り分け方針確認。下記の再発待ちだけの方針はこの承認で更新する。
+
+- **2026-10-23T12:38:20Z利用者判断（選択1）:** 追加監査を保持し、新しい再発証拠を待つ。判断待ちは解消したが原因は未確定。同条件反復・外部トレース設計・Phase再開・コミットは行わない。再発時は最初の失敗ログとexit-audit.jsonl/resource-audit/result/tracebackを保存して `$gsd-debug continue simultaneous-owner-missing` で継続する。Phase 5停止・DEP-05未解除を維持。以下の調査方針の選択待ちはこの判断で更新する。
+
+- **2026-10-23T12:30:59Z入口監査の検証:** WM/終了ボタン/watchdogを区別する診断と独立3試験を追加。3 passed、診断追加後の全件1回1678 passed/1 warning/266.92秒。通常同時起動3ケースはstop-allで正常終了。初回owner_missingは未再現・原因未確定で、製品修復・Phase再開・コミットなし。`debug/simultaneous-owner-missing-evidence/entry-audit-20261023.md`参照。次は新しい再発証拠を待つかOS入力元トレースの設計を進めるかの判断。DEP-05未解除を維持。
+
+- **2026-10-23T12:11:30Z継続調査:** 原本時刻で一次はfresh fixture準備後・fresh bootstrap前に終了。通常のstop-all共有、時計変更、復帰処理の直接closeを支持する証拠なし。終了入口は未確定で、入口別診断または再発stackが必要。`debug/simultaneous-owner-missing-evidence/forensics-20261023.md`参照。コード変更・試験反復・コミットなし、Phase停止・DEP-05未解除を維持。
+
+- **2026-10-23独立調査後の現況:** `debug/simultaneous-owner-missing.md`を参照。終了要求診断を追加し、対象1+10回および全件1675 passedを確認したが初回失敗は未再現。原因修復とは扱わず05-02-01未完了・未コミットとPhase停止を維持。次の入口は `$gsd-debug continue simultaneous-owner-missing`。DEP-05も未解除。
+
+- **現行の最優先:** `$gsd-verify-work 05`で禁止事項の意味評価2件だけを項目別に確認し、検証をpassedへ再判定する。既存H01〜H14の再実施は不要。検証passed前に正式完了へ進まない。成功済み同一入力の全件は再利用する。
+
+- **次アクション:** `$gsd-execute-phase 5`。2026-10-23利用者判断により診断版で進める。DEP-05-REGRESSIONは未解除で、単一全件ゲートに同種失敗が再発した時点で実装・後続実行・コミットを停止し、最初の失敗出力とresult.json/traceback.log・poll/reader/process診断を保持して `$gsd-debug continue dep-05-regression`。Phase 4の未実施人手W項目とWR-01は06-UAT-CARRYOVERへ移管済み。
 - **タグの push は未実施** — ユーザー選択によりローカルにのみ `v1.9.0` タグを作成した。リリース作業時に `git push origin v1.9.0` を実行する
 - **現在ブランチは `feature/v1.10.0`** — 引継ぎ文書を含む `quick/261021-os9-gsd` の HEAD（`ff6c5d3`）から作成。`main` への統合は PR 経由で行う
 - サンプルプロンプト 2 ファイルの再ビルド時消失対策は v1.10.0 へ採用。原本保持と同梱の検証を要件化する（260722-rel SUMMARY 参照）

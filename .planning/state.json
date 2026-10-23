@@ -1,28 +1,28 @@
 {
-    "contract":  "1.0.0",
-    "flavor":  "core",
-    "milestone":  "v1.10.0 — 多重起動防止・起動操作の改善",
-    "phases":  [
-                   {
-                       "number":  "4",
-                       "name":  "起動制御と既存画面への復帰",
-                       "status":  "complete"
-                   },
-                   {
-                       "number":  "5",
-                       "name":  "設定読込・保存失敗の通知",
-                       "status":  "pending"
-                   },
-                   {
-                       "number":  "6",
-                       "name":  "サンプル配布とリリース検証",
-                       "status":  "pending"
-                   }
-               ],
-    "next":  {
-                 "command":  "/gsd-discuss-phase 5",
-                 "label":  "Phase 5の設定失敗通知を議論",
-                 "reason":  "Phase 4は6/6完了、検証21/21 passed、Nyquist validated。未実施人手受入とWR-01はPhase 6へ移管済み。"
-             },
-    "updated_at":  "2026-10-21T22:19:31.1555650Z"
+  "contract": "1.0.0",
+  "flavor": "core",
+  "milestone": "v1.10.0 — 多重起動防止・起動操作の改善",
+  "phases": [
+    {
+      "number": "4",
+      "name": "起動制御と既存画面への復帰",
+      "status": "complete"
+    },
+    {
+      "number": "5",
+      "name": "設定読込・保存失敗の通知",
+      "status": "in_progress"
+    },
+    {
+      "number": "6",
+      "name": "サンプル配布とリリース検証",
+      "status": "pending"
+    }
+  ],
+  "next": {
+    "command": "/gsd-verify-work 05",
+    "label": "Phase 5の禁止事項2件を確認",
+    "reason": "4/4プラン実装、1797テスト成功、人手14項目pass。独立検証human_neededの意味評価2件のみ残る。"
+  },
+  "updated_at": "2026-10-23T17:37:47.691Z"
 }
