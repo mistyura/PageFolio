@@ -25,6 +25,7 @@ class PluginDialog(tk.Toplevel):
         self.configure(bg=C["BG_DARK"])
         self.resizable(True, True)
         self.grab_set()
+        self.protocol("WM_DELETE_WINDOW", self._close)
 
         self.app = app
         self.pm = app.plugin_manager
@@ -213,16 +214,20 @@ class PluginDialog(tk.Toplevel):
             self.pm.enable_plugin(plugin_id, self.app)
         else:
             self.pm.disable_plugin(plugin_id, self.app)
-        self.app._reload_plugins()
+        self.app._reload_plugins(persist=True)
 
     def _rescan(self):
         """プラグインを再検出・再読み込みする"""
+        before = set(self.pm.get_disabled_ids())
         for pid in list(self.pm.all_plugins.keys()):
             self.pm.unload_plugin(pid, self.app)
         disabled = self.app.settings.get("disabled_plugins", [])
         self.pm.load_all(app=self.app, disabled_ids=disabled)
         self._refresh_list()
-        self.app._reload_plugins()
+        if set(self.pm.get_disabled_ids()) != before:
+            self.app._reload_plugins(persist=True)
+        else:
+            self.app._reload_plugins()
 
     def _open_folder(self):
         """プラグインフォルダを作成して開く"""
@@ -236,5 +241,4 @@ class PluginDialog(tk.Toplevel):
             subprocess.Popen(["xdg-open", plugins_dir])  # noqa: S603, S607
 
     def _close(self):
-        self.app._reload_plugins()
         self.destroy()

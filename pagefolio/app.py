@@ -777,7 +777,7 @@ class PDFEditorApp(
         """言語を切り替えて UI を再構築する"""
         self.lang = "en" if self.lang == "ja" else "ja"
         self.settings["lang"] = self.lang
-        _save_settings(self.settings)
+        self._persist_settings()
         self._rebuild_ui()
 
     # ══════════════════════════════════════════
@@ -808,10 +808,11 @@ class PDFEditorApp(
         """プラグイン管理ダイアログを開く"""
         PluginDialog(self.root, self)
 
-    def _reload_plugins(self):
-        """プラグインを再読み込みして設定を保存する"""
-        self.settings["disabled_plugins"] = self.plugin_manager.get_disabled_ids()
-        _save_settings(self.settings)
+    def _reload_plugins(self, *, persist=False):
+        """UIを再構築し、有効/無効の変更操作だけ保存する。"""
+        if persist:
+            self.settings["disabled_plugins"] = self.plugin_manager.get_disabled_ids()
+            self._persist_settings()
         self._build_plugin_ui()
 
     # ══════════════════════════════════════════
@@ -851,15 +852,16 @@ class PDFEditorApp(
         `_rebuild_ui()` は呼ばない（ここで呼ぶと、開いている SettingsDialog
         Toplevel まで `root.winfo_children()` の destroy 対象になってしまう）。
         外側 SettingsDialog のキャンセルとは独立して確定させることで、
-        ディスク（`_save_settings` 済み）とメモリの不整合（C4）を解消する。
+        保存成否にかかわらずメモリとOCR操作状態へ反映する。
         """
         self.settings.update(llm_settings)
-        _save_settings(self.settings)
+        saved = self._persist_settings()
         # CONCERNS.md「OCRDialog LLM Settings Callback Consistency」是正:
         # ネスト Apply 直後に OCR ボタン群とバッチOCR メニューの活性状態を
         # 再評価する（_update_ocr_buttons_state が末尾で _update_batch_menu_state
         # を呼ぶため両方が連動する）。
         self._update_ocr_buttons_state()
+        return saved
 
     def _apply_settings(self, new_settings):
         """設定変更を適用してUIを再構築"""

@@ -10,6 +10,7 @@
 import ast
 import pathlib
 import types
+from collections import deque
 
 import pytest
 
@@ -2309,6 +2310,22 @@ class TestMaybeShowLangFallbackNotice:
 # ══════════════════════════════════════════════════════════════
 
 
+def _bind_settings_persistence(stub):
+    """UIなしAppでも実保存ownerと原本保護・通知イベントを使う。"""
+    from pagefolio.app import PDFEditorApp
+
+    stub._settings_load_status = "ok"
+    stub._settings_autosave_blocked = False
+    stub._settings_exit_save_failed = False
+    stub._config_notices = deque()
+    stub._config_notice_seq = 0
+    stub._enqueue_config_notice = types.MethodType(
+        PDFEditorApp._enqueue_config_notice, stub
+    )
+    stub._schedule_config_notice = lambda: None
+    stub._persist_settings = types.MethodType(PDFEditorApp._persist_settings, stub)
+
+
 class TestApplyLlmSettingsLive:
     """D-14: app._apply_llm_settings_live が app.settings（メモリ）へ即時反映し、
     _rebuild_ui を呼ばない軽量反映であることを検証する。
@@ -2326,6 +2343,7 @@ class TestApplyLlmSettingsLive:
             _rebuild_ui=lambda: rebuild_calls.__setitem__("n", rebuild_calls["n"] + 1),
         )
         _bind_ocr_button_state_methods(stub)
+        _bind_settings_persistence(stub)
         PDFEditorApp._apply_llm_settings_live(stub, {"ocr_provider": "claude"})
 
         assert stub.settings["ocr_provider"] == "claude"
@@ -2340,6 +2358,7 @@ class TestApplyLlmSettingsLive:
         monkeypatch.setattr("pagefolio.app._save_settings", lambda s: saved.update(s))
         stub = types.SimpleNamespace(settings={"theme": "dark"})
         _bind_ocr_button_state_methods(stub)
+        _bind_settings_persistence(stub)
         PDFEditorApp._apply_llm_settings_live(
             stub, {"claude_model": "claude-sonnet-4-6"}
         )
@@ -2355,6 +2374,7 @@ class TestApplyLlmSettingsLive:
         monkeypatch.setattr("pagefolio.app._save_settings", lambda s: None)
         stub = types.SimpleNamespace(settings={})
         _bind_ocr_button_state_methods(stub)
+        _bind_settings_persistence(stub)
         PDFEditorApp._apply_llm_settings_live(stub, {"ocr_provider": "claude"})
         assert not any("api_key" in k.lower() for k in stub.settings)
 
@@ -2415,6 +2435,7 @@ class TestSettingsDialogNestedApplyCascade:
             settings={"theme": "dark", "ocr_provider": "lmstudio"}
         )
         _bind_ocr_button_state_methods(app_stub)
+        _bind_settings_persistence(app_stub)
         settings_dialog_stub = types.SimpleNamespace(
             current_settings={"ocr_provider": "lmstudio"},
             _font=lambda delta=0, weight=None: ("Segoe UI", 10),

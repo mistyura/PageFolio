@@ -275,6 +275,186 @@ class TestNotificationLifecycle:
             root.destroy()
 
 
+class TestAppSaveOrigins:
+    @pytest.mark.parametrize("status", ["ok", "corrupt", "unreadable"])
+    @pytest.mark.parametrize("origin", ["language", "llm", "plugin"])
+    def test_success_obeys_protection(
+        self, save_app, isolated_app, monkeypatch, status, origin
+    ):
+        app = save_app
+        isolated_app.write_bytes(b"{protected-original")
+        app._settings_load_status = status
+        app._settings_autosave_blocked = status != "ok"
+        app._update_ocr_buttons_state = Mock()
+        app._build_plugin_ui = Mock()
+        app.plugin_manager = Mock()
+        app.plugin_manager.get_disabled_ids.return_value = ["example"]
+        save = Mock(wraps=settings_mod._save_settings)
+        monkeypatch.setattr("pagefolio.app._save_settings", save)
+        if origin == "language":
+            app._toggle_lang()
+        elif origin == "llm":
+            assert app._apply_llm_settings_live({"ocr_provider": "off"}) is (
+                status != "unreadable"
+            )
+        else:
+            app._reload_plugins(persist=True)
+        assert save.call_count == (status != "unreadable")
+        assert app._settings_autosave_blocked is (status == "unreadable")
+        if status == "unreadable":
+            assert isolated_app.read_bytes() == b"{protected-original"
+            assert len(app._config_notices) == 1
+        else:
+            assert json.loads(isolated_app.read_text(encoding="utf-8")) == app.settings
+            assert not app._config_notices
+
+    @pytest.mark.parametrize("status", ["ok", "corrupt", "unreadable"])
+    @pytest.mark.parametrize("origin", ["language", "llm", "plugin"])
+    def test_failure_keeps_applied_memory_and_one_event(
+        self, save_app, monkeypatch, status, origin
+    ):
+        from pagefolio.dialogs.plugin import PluginDialog
+
+        app = save_app
+        app._settings_load_status = status
+        app._settings_autosave_blocked = status != "ok"
+        app._update_ocr_buttons_state = Mock()
+        app._build_plugin_ui = Mock()
+        app.plugin_manager = Mock()
+        app.plugin_manager.get_disabled_ids.return_value = ["example"]
+        save = Mock(return_value=False)
+        monkeypatch.setattr("pagefolio.app._save_settings", save)
+        if origin == "language":
+            app._toggle_lang()
+            assert app.settings["lang"] == app.lang == "en"
+            app._rebuild_ui.assert_called_once()
+        elif origin == "llm":
+            assert app._apply_llm_settings_live({"ocr_provider": "off"}) is False
+            assert app.settings["ocr_provider"] == "off"
+            app._update_ocr_buttons_state.assert_called_once()
+        else:
+            dialog = SimpleNamespace(
+                app=app,
+                pm=app.plugin_manager,
+                _check_vars={"example": SimpleNamespace(get=lambda: False)},
+                destroy=Mock(),
+            )
+            PluginDialog._toggle(dialog, "example")
+            PluginDialog._close(dialog)
+            assert app.settings["disabled_plugins"] == ["example"]
+            app.plugin_manager.disable_plugin.assert_called_once_with("example", app)
+            app._build_plugin_ui.assert_called_once()
+            dialog.destroy.assert_called_once()
+        assert save.call_count == (status != "unreadable")
+        assert len(app._config_notices) == 1
+        assert app._config_notices[0]["message_key"] == (
+            "config_save_blocked_unreadable"
+            if status == "unreadable"
+            else "config_save_failed"
+        )
+        assert app._settings_autosave_blocked is (status != "ok")
+        app._set_status.assert_not_called()
+
+    @pytest.mark.parametrize("status", ["corrupt", "unreadable"])
+    def test_plugin_noop_rescan_close_preserves_original(
+        self, save_app, isolated_app, monkeypatch, status
+    ):
+        from pagefolio.dialogs.plugin import PluginDialog
+
+        original = b"{protected-original"
+        isolated_app.write_bytes(original)
+        app = save_app
+        app._settings_load_status = status
+        app._settings_autosave_blocked = True
+        app.settings["disabled_plugins"] = ["example"]
+        app._build_plugin_ui = Mock()
+        app.plugin_manager = Mock(all_plugins={})
+        app.plugin_manager.get_disabled_ids.return_value = ["example"]
+        save = Mock(wraps=settings_mod._save_settings)
+        monkeypatch.setattr("pagefolio.app._save_settings", save)
+        dialog = SimpleNamespace(
+            app=app, pm=app.plugin_manager, _refresh_list=Mock(), destroy=Mock()
+        )
+        app._reload_plugins()
+        PluginDialog._rescan(dialog)
+        PluginDialog._close(dialog)
+        save.assert_not_called()
+        assert not app._config_notices
+        assert app._settings_autosave_blocked
+        assert isolated_app.read_bytes() == original
+
+    def test_changed_rescan_persists_once(self, save_app, monkeypatch):
+        from pagefolio.dialogs.plugin import PluginDialog
+
+        app = save_app
+        app.settings["disabled_plugins"] = []
+        app._build_plugin_ui = Mock()
+        app.plugin_manager = Mock(all_plugins={})
+        app.plugin_manager.get_disabled_ids.side_effect = [[], ["example"], ["example"]]
+        save = Mock(return_value=True)
+        monkeypatch.setattr("pagefolio.app._save_settings", save)
+        dialog = SimpleNamespace(app=app, pm=app.plugin_manager, _refresh_list=Mock())
+        PluginDialog._rescan(dialog)
+        save.assert_called_once_with(app.settings)
+        assert app.settings["disabled_plugins"] == ["example"]
+
+    @pytest.mark.parametrize("origin", ["general", "llm"])
+    def test_same_value_explicit_apply_retries(self, save_app, monkeypatch, origin):
+        app = save_app
+        app._update_ocr_buttons_state = Mock()
+        save = Mock(side_effect=[False, True])
+        monkeypatch.setattr("pagefolio.app._save_settings", save)
+        apply = (
+            app._apply_settings if origin == "general" else app._apply_llm_settings_live
+        )
+        values = dict(app.settings)
+        assert apply(dict(values)) is False
+        assert apply(dict(values)) is True
+        assert save.call_count == 2
+        assert len(app._config_notices) == 1
+
+    def test_plugin_failure_waits_for_real_modal_close(self, isolated_app, monkeypatch):
+        from tkinterdnd2 import TkinterDnD
+
+        from pagefolio.app import PDFEditorApp
+        from pagefolio.dialogs.plugin import PluginDialog
+
+        root = TkinterDnD.Tk()
+        root.withdraw()
+        app = None
+        dialog = None
+        clock = [0.0]
+        monkeypatch.setattr("pagefolio.app.time.monotonic", lambda: clock[0])
+        monkeypatch.setattr("pagefolio.app._save_settings", lambda settings: False)
+        try:
+            app = PDFEditorApp(root)
+            dialog = PluginDialog(root, app)
+            dialog.withdraw()
+            dialog.grab_set()
+            dialog.pm.disable_plugin = Mock()
+            dialog.pm.get_disabled_ids = Mock(return_value=["example"])
+            dialog._check_vars = {"example": SimpleNamespace(get=lambda: False)}
+            dialog._toggle("example")
+            root.update()
+            clock[0] = 12.0
+            app._show_next_config_notice()
+            assert app._toast._frame is None
+            assert app._config_notices[0]["remaining_ms"] == 10000
+            dialog._close()
+            dialog = None
+            app._schedule_config_notice()
+            root.update()
+            assert app._toast._frame is not None
+            assert app._config_notices[0]["remaining_ms"] == 10000
+        finally:
+            if dialog is not None:
+                dialog.destroy()
+            if app is not None:
+                app._close_config_notices()
+                app._clear_undo_stacks()
+            root.destroy()
+
+
 class TestSaveFlow:
     @pytest.mark.parametrize("status", ["corrupt", "unreadable"])
     def test_protected_explicit_save_rules(self, save_app, monkeypatch, status):
