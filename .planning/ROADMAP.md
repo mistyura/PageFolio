@@ -203,14 +203,14 @@ Plans:
 
 **引受必須**: [06-UAT-CARRYOVER.md](phases/06-release-validation/06-UAT-CARRYOVER.md)の全未実施人手項目。別session、DPI/UAC、OS拒否、操作状態維持を含む。not-run/failが残ればPhase 6完了・リリースを停止する。
 
-**Plans**: 1/6 plans executed
+**Plans**: 2/6 plans executed
 
 Plans:
 **Wave 1**
 - [x] 06-01-PLAN.md — 専用CLIの実onedir tracerと非破壊ビルド境界（Wave 1）
 
 **Wave 2** *(blocked on Wave 1 completion)*
-- [ ] 06-02-PLAN.md — v1.10.0・サンプル利用・更新/再ビルド説明の同期（Wave 2）
+- [x] 06-02-PLAN.md — v1.10.0・サンプル利用・更新/再ビルド説明の同期（Wave 2）
 
 **Wave 3** *(blocked on Wave 2 completion)*
 - [ ] 06-03-PLAN.md — 実EXE観測adapterとfake OCR/設定障害の準備（Wave 3）
@@ -248,4 +248,4 @@ Plans:
 |-------|----------------|--------|-----------|
 | 4. 起動制御と既存画面への復帰 | 6/6 | Complete | 2026-10-22 |
 | 5. 設定読込・保存失敗の通知 | 4/4 | Complete | 2026-10-24 |
-| 6. サンプル配布とリリース検証 | 1/6 | Planned | — |
+| 6. サンプル配布とリリース検証 | 2/6 | Planned | — |

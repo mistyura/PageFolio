@@ -4,18 +4,18 @@ milestone: v1.10.0
 milestone_name: 多重起動防止・起動操作の改善
 current_phase: 06
 current_phase_name: サンプル配布とリリース検証
-current_plan: 2
+current_plan: 3
 status: executing
-stopped_at: Completed 06-01-PLAN.md
-last_updated: "2026-10-24T05:58:25.496Z"
+stopped_at: Completed 06-02-PLAN.md
+last_updated: "2026-10-24T06:19:24.034Z"
 last_activity: 2026-10-24
 last_activity_desc: Phase 06 execution resumed (wave continue)
-state_head: db7ba213130cf6e63dc13c69929b001ce58b002f
+state_head: e748ca880b58f78f12569913ff3ee32c71447d2d
 progress:
   total_phases: 3
   completed_phases: 2
   total_plans: 16
-  completed_plans: 11
+  completed_plans: 12
   percent: 67
 ---
 
@@ -47,9 +47,9 @@ See: .planning/PROJECT.md (updated 2026-10-24)
 ## Current Position
 
 Phase: 06 (サンプル配布とリリース検証) — EXECUTING
-Current Plan: 2
+Current Plan: 3
 Total Plans in Phase: 6
-Plan: 2 of 6
+Plan: 3 of 6
 Status: Ready to execute
 Last activity: 2026-10-24 — Phase 06 execution resumed (wave continue)
 
@@ -179,6 +179,7 @@ Phase 4は自動受入/A1〜A5と証拠照合を行い、未実施人手W項目�
 | Phase 05 P01 | 54min | 2 tasks | 5 files |
 | Phase 05 P02 | 27min | 2 tasks | 7 files |
 | Phase 06 P01 | 1h | 2 tasks | 6 files |
+| Phase 06 P02 | 1.5h | 2 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -313,6 +314,8 @@ Decisions are logged in PROJECT.md Key Decisions table.
 - [Phase 05]: 終了自動保存は読込失敗中にメモリ値の収集より前で止める
 - [Phase 05]: 05-02は既存差分と承認済み証拠を照合し、通知残時間と世代管理を実装。1694 passedで両タスク完了、未解決起動問題と手動UATの出荷停止は維持
 - [Phase 06]: 06-01: 管理済み再ビルドは同梱reportのrun_idから外部run reportを引き、manifest/hash/dirsの三者一致を要求。成功reportは書込成功後にのみ反映
+- [Phase 06]: [06-02] ガイドの詳細リンクは同梱する docs/CONFIGURATION.md のみとし、同梱されない docs/PLUGINS.md はテキスト案内にする。plugins は自動移行せず旧フォルダー保持で既存導入手順へ案内する
+- [Phase 06]: [06-02] Ruff等の版表記の同期は、qv7 の requirements.txt 変更が commit されるまで見送り（docs が commit 済み pin と矛盾するのを避ける）
 
 ### Pending Todos
 
@@ -441,8 +444,8 @@ v1.9.0 クローズ時点で次マイルストーンへ引き継ぐ未解決項�
 
 **Resume file:** None
 
-Last session: 2026-10-24T05:58:25.015Z
-Stopped at: Completed 06-01-PLAN.md
+Last session: 2026-10-24T06:19:23.524Z
+Stopped at: Completed 06-02-PLAN.md
 
 ## Operator Next Steps
 
