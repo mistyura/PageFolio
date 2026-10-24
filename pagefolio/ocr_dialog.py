@@ -1063,6 +1063,13 @@ class OCRDialog(tk.Toplevel):
         """
         # (a) 設定を app.settings に反映
         self.app.settings.update(llm_settings)
+        # 実行時に確定したダイアログローカルのスナップショット（_on_run/_on_summary/
+        # フォールバックが保存し、_provider_display_name/_provider_model_name/
+        # _active_provider_name が app.settings より優先する）は、ここで破棄する。
+        # 残すと、LLM 設定で切り替えたプロバイダではなく実行時点の旧プロバイダを
+        # 表示し続け、表示と実際の送信先が食い違う（次回 _on_run は app.settings から
+        # 新しいスナップショットを確定し直す）。
+        self._active_ocr_settings = None
         # (b) App ownerで保存・失敗通知。失敗しても後続のライブ更新を続ける。
         saved = self.app._persist_settings()
         # self.custom_prompt は __init__ 時点の値をキャッシュしているだけで
@@ -1075,8 +1082,10 @@ class OCRDialog(tk.Toplevel):
         update_preset_note = getattr(self, "_update_preset_note", None)
         if callable(update_preset_note):
             update_preset_note()
-        # (c)〜(g) UI 更新
-        self._refresh_provider_dependent_ui()
+        # (c)〜(g) UI 更新のうち、プロバイダ表示（_refresh_provider_dependent_ui）は
+        # provider 再生成の後（下記 try/except の直後）に行う。_provider_display_name は
+        # isinstance(self.provider, ...) で旧 provider を優先判定するため、再生成前に
+        # 呼ぶと切替後も旧プロバイダ名・旧モデルが表示される。
         # 全プロバイダ共通: 読み取り専用の数値パラメータ表示を settings 値へ即時同期
         # (D-03)。LM Studio 専用 (g) ブロックの外で行い claude/gemini でも反映する。
         self._sync_param_vars_from_settings()
@@ -1208,6 +1217,10 @@ class OCRDialog(tk.Toplevel):
             logger.error("provider 再生成に失敗しました: %s", e)
             lang = self.app.settings.get("lang", "ja")
             self.progress_var.set(LANG[lang]["ocr_provider_rebuild_error"].format(e=e))
+        # (c)〜(g) プロバイダ依存 UI の再評価。provider 再生成が例外で失敗しても
+        # 必ず実行されるよう try/except の外側に置く。再生成後（self.provider が新
+        # プロバイダ）に呼ぶことで、表示ラベル・モデル名が切替後の値になる。
+        self._refresh_provider_dependent_ui()
         # L-6j: "off" 切替時にメイン画面ツールバーの OCR ボタン状態を同期する。
         # provider 再生成が例外で失敗しても必ず実行されるよう try/except の
         # 外側（Pitfall 6）に置く。app 属性は既存の防御的パターン（getattr
