@@ -17,6 +17,7 @@ import threading
 import time
 import traceback
 import warnings
+from contextlib import nullcontext
 from ctypes import wintypes as wt
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -606,6 +607,165 @@ def test_tracer_notice_lease_process_dedup(tmp_path):
             holder.communicate()
 
 
+class _ForegroundAudit:
+    """試験スレッドのWinEvent監査。入力・前景・製品の期限は変更しない。"""
+
+    def __init__(self, backend, path, *, event=3):
+        from pagefolio.startup_win32 import _bind
+
+        self.backend = backend
+        self.event = event
+        self.path = path
+        self.errors = []
+        self.hook = None
+        self.stream = None
+        self.foreground = _bind(backend.api.u, "GetForegroundWindow", wt.HWND)
+        self.window_thread = _bind(
+            backend.api.u,
+            "GetWindowThreadProcessId",
+            wt.DWORD,
+            wt.HWND,
+            ct.POINTER(wt.DWORD),
+        )
+        self.window_class = _bind(
+            backend.api.u, "GetClassNameW", ct.c_int, wt.HWND, wt.LPWSTR, ct.c_int
+        )
+        callback_type = ct.WINFUNCTYPE(
+            None, wt.HANDLE, wt.DWORD, wt.HWND, wt.LONG, wt.LONG, wt.DWORD, wt.DWORD
+        )
+        self.callback = callback_type(self._receive)
+        self.install = _bind(
+            backend.api.u,
+            "SetWinEventHook",
+            wt.HANDLE,
+            wt.DWORD,
+            wt.DWORD,
+            wt.HMODULE,
+            callback_type,
+            wt.DWORD,
+            wt.DWORD,
+            wt.DWORD,
+        )
+        self.remove = _bind(backend.api.u, "UnhookWinEvent", wt.BOOL, wt.HANDLE)
+        self.peek = _bind(
+            backend.api.u,
+            "PeekMessageW",
+            wt.BOOL,
+            ct.POINTER(wt.MSG),
+            wt.HWND,
+            wt.UINT,
+            wt.UINT,
+            wt.UINT,
+        )
+        self.translate = _bind(
+            backend.api.u, "TranslateMessage", wt.BOOL, ct.POINTER(wt.MSG)
+        )
+        self.dispatch = _bind(
+            backend.api.u, "DispatchMessageW", ct.c_ssize_t, ct.POINTER(wt.MSG)
+        )
+
+    def mark(self, event, *, hwnd=None, **details):
+        if hwnd is None:
+            hwnd = self.foreground()
+        pid = wt.DWORD()
+        thread_id = self.window_thread(hwnd, ct.byref(pid)) if hwnd else 0
+        name = ct.create_unicode_buffer(256)
+        length = self.window_class(hwnd, name, len(name)) if hwnd else 0
+        record = {
+            "event": event,
+            "tick": self.backend.tick_ms(),
+            "monotonic": time.monotonic(),
+            "hwnd": hwnd,
+            "pid": pid.value,
+            "window_thread_id": thread_id,
+            "class_name": name.value if length else "",
+            "identity_available": bool(thread_id and length),
+            **details,
+        }
+        self.stream.write(json.dumps(record) + "\n")
+        self.stream.flush()
+
+    def _receive(self, hook, event, hwnd, object_id, child_id, thread_id, event_tick):
+        try:
+            self.mark(
+                "winevent",
+                hwnd=hwnd or 0,
+                event_id=event,
+                event_tick=event_tick,
+                event_thread_id=thread_id,
+                object_id=object_id,
+                child_id=child_id,
+            )
+        except Exception as e:
+            # ctypes境界へ例外を漏らさず、終了時に診断失敗を不合格にする。
+            self.errors.append(type(e).__name__)
+
+    def __enter__(self):
+        self.backend._assert_thread()
+        self.stream = self.path.open("x", encoding="utf-8")
+        try:
+            # OUTOFCONTEXT。自processも含め、現在のdesktopの対象eventだけを観測。
+            self.hook = self.install(
+                self.event, self.event, None, self.callback, 0, 0, 0
+            )
+            if not self.hook:
+                raise ct.WinError(ct.get_last_error())
+            self.mark("observer_started", event_id=self.event)
+            return self
+        except Exception as e:
+            if self.hook:
+                self.remove(self.hook)
+            self.stream.close()
+            raise e
+
+    def __exit__(self, exc_type, exc, tb):
+        self.backend._assert_thread()
+        try:
+            # show()のmessage loop終了直後に到着済みの通知を同じthreadで処理。
+            message = wt.MSG()
+            for _ in range(256):
+                if not self.peek(ct.byref(message), None, 0, 0, 1):
+                    break
+                self.translate(ct.byref(message))
+                self.dispatch(ct.byref(message))
+            else:
+                self.errors.append("drain_limit")
+        finally:
+            removed = bool(self.remove(self.hook))
+            try:
+                self.mark("observer_stopped", removed=removed, errors=self.errors)
+            finally:
+                self.stream.close()
+        if exc_type is None:
+            assert removed and not self.errors, "前景監査の解除/受信に失敗"
+
+
+def test_foreground_audit_receives_native_window_event(tmp_path):
+    """実window表示eventでhookの受信・所有者記録・解除を検証。前景強制なし。"""
+    from pagefolio.startup_win32 import NativeNoticeLifetime, Win32Backend
+
+    backend = Win32Backend(uuid4().hex)
+    path = tmp_path / "foreground-audit.jsonl"
+    shown = []
+    try:
+        # EVENT_OBJECT_SHOWで同じ受信経路を検証。前景不変の製品合否とは別試験。
+        with _ForegroundAudit(backend, path, event=0x8002):
+            notice = NativeNoticeLifetime(backend, "contact_failed")
+            notice.show(lifetime_ms=150, on_show=shown.append)
+        records = [json.loads(line) for line in path.read_text().splitlines()]
+        received = [
+            row
+            for row in records
+            if row["event"] == "winevent" and row["hwnd"] == shown[0]
+        ]
+        assert received, "実windowの表示eventを受信していない"
+        assert all(row["pid"] == os.getpid() for row in received)
+        assert all(row["identity_available"] and row["event_tick"] for row in received)
+        assert records[-1]["removed"] and not records[-1]["errors"]
+    finally:
+        backend.close()
+
+
 def test_notice_dedup_eight_processes_keep_original_deadline(tmp_path):
     namespace = uuid4().hex
     owner, path = _spawn(tmp_path, namespace, "notice-case-owner")
@@ -624,6 +784,15 @@ def test_notice_dedup_eight_processes_keep_original_deadline(tmp_path):
         assert final["foreground_before"] == final["foreground_after"]
         assert 1700 <= final["elapsed"] < 3000
         assert final["deadline_tick"] == initial["snapshot"]["deadline_tick"]
+        records = [
+            json.loads(line)
+            for line in (path / "foreground-audit.jsonl").read_text().splitlines()
+        ]
+        assert records[0]["event"] == "observer_started"
+        assert records[-1]["removed"] and not records[-1]["errors"]
+        assert {"notice_show_call", "notice_published", "notice_returned"} <= {
+            row["event"] for row in records
+        }
     finally:
         _reclaim(children)
 
@@ -801,6 +970,7 @@ def test_simultaneous_real_processes_construct_one_editor(tmp_path, count, slow)
                 assert 5000 <= result["elapsed"] < 6000
         if slow:
             assert all(result["result"] == "expired" for result in results)
+        assert owner.poll() is None, "fresh起動前に一次processが終了した"
         fresh, _ = _spawn(
             tmp_path,
             namespace,
@@ -811,6 +981,11 @@ def test_simultaneous_real_processes_construct_one_editor(tmp_path, count, slow)
         fresh_result = _finish(fresh)
         assert fresh_result["constructed"] == 0
         assert fresh_result["result"] in {"completed", "foreground_denied"}
+        assert owner.poll() is None, "fresh応答完了までに一次processが終了した"
+        (owner_path / "fresh-completed.json").write_text(
+            json.dumps({"monotonic": time.monotonic(), "result": fresh_result}),
+            encoding="utf-8",
+        )
         (tmp_path / "stop-all").touch()
         owner_result = _finish(owner)
         if slow:
@@ -822,8 +997,147 @@ def test_simultaneous_real_processes_construct_one_editor(tmp_path, count, slow)
             r["result"] in {"primary", "completed", "foreground_denied", "expired"}
             for r in results
         )
+        records = [
+            json.loads(line)
+            for line in (owner_path / "exit-audit.jsonl").read_text().splitlines()
+        ]
+        completed = json.loads((owner_path / "fresh-completed.json").read_text())
+        quits = [row for row in records if row["event"] == "quit_requested"]
+        assert len(quits) == 1
+        assert quits[0]["stop_all"]
+        assert quits[0]["monotonic"] >= completed["monotonic"]
+        assert not any(row["event"] == "native_audit_error" for row in records)
+        assert any(
+            row["event"] == "native_observer_removed" and row["removed"]
+            for row in records
+        )
     finally:
         _reclaim([child for child, _ in children])
+
+
+@pytest.mark.parametrize("entry", ["wm", "button", "watchdog"])
+def test_simultaneous_exit_audit_distinguishes_entry(tmp_path, entry):
+    """入口を意図的に発火し、監査と元の正常終了が両立することを確認する。"""
+    child, fixture = _spawn(tmp_path, uuid4().hex, f"simultaneous-audit-{entry}")
+    try:
+        _wait_file(child, fixture / "ready")
+        if entry != "watchdog":
+            (fixture / "audit-trigger").touch()
+        result = _finish(child)
+        assert result["constructed"] == 1
+        assert result["result"] == "primary"
+        records = [
+            json.loads(line)
+            for line in (fixture / "exit-audit.jsonl").read_text().splitlines()
+        ]
+        registered = [r for r in records if r["event"] == "entry_registered"]
+        assert {r["entry"] for r in registered} == {"wm", "button", "watchdog"}
+        fired = [r for r in records if r["event"] == "entry_fired"]
+        assert [r["entry"] for r in fired] == [entry]
+        quits = [r for r in records if r["event"] == "quit_requested"]
+        assert len(quits) == 1
+        assert not any(r["event"] == "native_close_received" for r in records)
+        assert not any(r["event"] == "native_audit_error" for r in records)
+        assert not quits[0]["stop"] and not quits[0]["stop_all"]
+        assert records.index(fired[0]) < records.index(quits[0])
+        watchdog = next(r for r in registered if r["entry"] == "watchdog")
+        assert watchdog["delay_ms"] == 10000
+        assert watchdog["after_id"]
+        # Tcl 9.0 afterはTcl_GetTimeの絶対時刻で発火する。Pythonの
+        # monotonicとは時計が異なるため、同じTcl時計で期限を比較する。
+        if entry == "watchdog":
+            assert fired[0]["tcl_microseconds"] >= watchdog["due_tcl_microseconds"]
+        else:
+            assert fired[0]["tcl_microseconds"] < watchdog["due_tcl_microseconds"]
+    finally:
+        _reclaim([child])
+
+
+def test_simultaneous_exit_audit_native_wm_close(tmp_path):
+    """実OSメッセージの受信から元のTk終了処理までを試験専用HWNDで確認。"""
+    from pagefolio.startup_win32 import Win32Backend, _bind
+
+    namespace = uuid4().hex
+    child, fixture = _spawn(tmp_path, namespace, "simultaneous-audit-native-wm")
+    try:
+        _wait_file(child, fixture / "ready")
+        ready = json.loads((fixture / "ready").read_text())
+        initial_records = [
+            json.loads(line)
+            for line in (fixture / "exit-audit.jsonl").read_text().splitlines()
+        ]
+        hwnd = next(
+            r["hwnd"]
+            for r in initial_records
+            if r["event"] == "native_observer_registered"
+        )
+        user32 = ct.WinDLL("user32", use_last_error=True)
+        owner_pid = wt.DWORD()
+        window_thread = _bind(
+            user32, "GetWindowThreadProcessId", wt.DWORD, wt.HWND, ct.POINTER(wt.DWORD)
+        )
+        assert child.poll() is None
+        assert window_thread(hwnd, ct.byref(owner_pid))
+        # Windows venvではPopen.pidはlauncher、Tk所有者はその実行process。
+        assert owner_pid.value == ready["pid"] == ready["snapshot"]["pid"], (
+            "このfixtureが公開した実行processのHWNDだけに送る"
+        )
+        post = _bind(
+            user32, "PostMessageW", wt.BOOL, wt.HWND, wt.UINT, wt.WPARAM, wt.LPARAM
+        )
+        # 送信元はこの意図的操作の記録。受信側から未知の送信元を推定しない。
+        sent = {
+            "event": "test_native_close_post",
+            "sender_pid": os.getpid(),
+            "launcher_pid": child.pid,
+            "target_pid": owner_pid.value,
+            "hwnd": hwnd,
+            "message": 0x10,
+            "monotonic": time.monotonic(),
+        }
+        (fixture / "native-trigger.json").write_text(json.dumps(sent), encoding="utf-8")
+        backend = Win32Backend(namespace)
+        try:
+            with backend._validate_peer(owner_pid.value, ready["process_created"]):
+                assert post(hwnd, 0x10, 0, 0), ct.get_last_error()
+        finally:
+            backend.close()
+        result = _finish(child)
+        assert result["result"] == "primary"
+        assert result["constructed"] == 1
+        records = [
+            json.loads(line)
+            for line in (fixture / "exit-audit.jsonl").read_text().splitlines()
+        ]
+        received = [r for r in records if r["event"] == "native_close_received"]
+        fired = [r for r in records if r["event"] == "entry_fired"]
+        quits = [r for r in records if r["event"] == "quit_requested"]
+        destroyed = [r for r in records if r["event"] == "native_observer_removed"]
+        assert len(received) == len(fired) == len(quits) == len(destroyed) == 1
+        assert received[0]["hwnd"] == hwnd
+        assert fired[0]["entry"] == "wm"
+        assert not quits[0]["stop"] and not quits[0]["stop_all"]
+        assert destroyed[0]["removed"]
+        assert not any(r["event"] == "native_audit_error" for r in records)
+        assert (
+            records.index(received[0])
+            < records.index(fired[0])
+            < records.index(quits[0])
+            < records.index(destroyed[0])
+        )
+        assert received[0]["monotonic"] >= sent["monotonic"]
+        watchdog = next(
+            r
+            for r in records
+            if r["event"] == "entry_registered" and r["entry"] == "watchdog"
+        )
+        assert watchdog["delay_ms"] == 10000
+        assert quits[0]["monotonic"] < watchdog["due_monotonic"]
+        assert "window_geometry" in json.loads(
+            (fixture / "pagefolio_settings.json").read_text(encoding="utf-8")
+        )
+    finally:
+        _reclaim([child])
 
 
 def test_takeover_two_candidates_after_confirmed_initialization_death(tmp_path):
@@ -1610,6 +1924,8 @@ def _run_scenario(fixture, namespace, role):
                     notice = NativeNoticeLifetime(backend, reason, lease=lease)
 
                     def published(hwnd):
+                        if observer is not None:
+                            observer.mark("notice_published", hwnd=hwnd)
                         audit.update(
                             snapshot=lease.snapshot,
                             deadline_tick=notice.deadline_tick,
@@ -1625,7 +1941,29 @@ def _run_scenario(fixture, namespace, role):
                             json.dumps(audit), encoding="utf-8"
                         )
 
-                    notice.show(lifetime_ms=lifetime, on_show=published)
+                    with (
+                        _ForegroundAudit(backend, fixture / "foreground-audit.jsonl")
+                        if role == "notice-case-owner"
+                        else nullcontext()
+                    ) as observer:
+                        if observer is not None:
+                            observer.mark("notice_show_call")
+                        notice.show(lifetime_ms=lifetime, on_show=published)
+                        # 既存の4実測値とイベント時系列を両方保存する。
+                        audit.update(
+                            foreground_before_show=notice.foreground_before_show,
+                            foreground_after_show=notice.foreground_after_show,
+                            foreground_before_close=notice.foreground_before_close,
+                            foreground_after_close=notice.foreground_after_close,
+                        )
+                        if observer is not None:
+                            observer.mark(
+                                "notice_returned",
+                                foreground_before_show=notice.foreground_before_show,
+                                foreground_after_show=notice.foreground_after_show,
+                                foreground_before_close=notice.foreground_before_close,
+                                foreground_after_close=notice.foreground_after_close,
+                            )
             audit.update(
                 elapsed=backend.tick_ms() - started, foreground_after=foreground()
             )
@@ -1890,10 +2228,10 @@ def _run_scenario(fixture, namespace, role):
         from pagefolio import app as app_module
 
         class TracedApp(app_module.PDFEditorApp):
-            def _quit(self):
+            def _audit_exit(self, event, **details):
                 if role.startswith("simultaneous-"):
                     record = {
-                        "event": "quit_requested",
+                        "event": event,
                         "tick": _tick_ms(),
                         "monotonic": time.monotonic(),
                         "stop": (fixture / "stop").exists(),
@@ -1906,12 +2244,128 @@ def _run_scenario(fixture, namespace, role):
                             }
                             for frame in traceback.extract_stack(limit=8)
                         ],
+                        **details,
                     }
                     with (fixture / "exit-audit.jsonl").open(
                         "a", encoding="utf-8"
                     ) as audit_file:
                         audit_file.write(json.dumps(record) + "\n")
+
+            def _quit(self):
+                self._audit_exit("quit_requested")
                 return super()._quit()
+
+            def _audit_native_close(self, root):
+                from pagefolio.startup_win32 import _bind
+
+                # HWND所有thread内で登録。元のWndProcには必ず全メッセージを渡す。
+                hwnd = backend_instances[0]._top_level_hwnd(root)
+                assert hwnd, "終了監査には試験ウィンドウのHWNDが必要"
+                comctl = ct.WinDLL("comctl32", use_last_error=True)
+                callback_type = ct.WINFUNCTYPE(
+                    ct.c_ssize_t,
+                    wt.HWND,
+                    wt.UINT,
+                    wt.WPARAM,
+                    wt.LPARAM,
+                    ct.c_size_t,
+                    ct.c_size_t,
+                )
+                install = _bind(
+                    comctl,
+                    "SetWindowSubclass",
+                    wt.BOOL,
+                    wt.HWND,
+                    callback_type,
+                    ct.c_size_t,
+                    ct.c_size_t,
+                )
+                remove = _bind(
+                    comctl,
+                    "RemoveWindowSubclass",
+                    wt.BOOL,
+                    wt.HWND,
+                    callback_type,
+                    ct.c_size_t,
+                )
+                forward = _bind(
+                    comctl,
+                    "DefSubclassProc",
+                    ct.c_ssize_t,
+                    wt.HWND,
+                    wt.UINT,
+                    wt.WPARAM,
+                    wt.LPARAM,
+                )
+
+                def observe(window, message, wparam, lparam, subclass_id, ref_data):
+                    try:
+                        if message == 0x10:  # WM_CLOSE
+                            self._audit_exit("native_close_received", hwnd=window)
+                        elif message == 0x82:  # WM_NCDESTROY
+                            removed = remove(
+                                window, self._native_close_callback, subclass_id
+                            )
+                            self._audit_exit(
+                                "native_observer_removed",
+                                hwnd=window,
+                                removed=bool(removed),
+                            )
+                    except Exception as e:
+                        # ctypes callbackから例外を漏らさず、診断失敗でも元処理を通す。
+                        logging.exception("native exit audit failed")
+                        try:
+                            self._audit_exit(
+                                "native_audit_error", error=type(e).__name__
+                            )
+                        except Exception as audit_error:
+                            logging.error(
+                                "native audit write failed: %s",
+                                type(audit_error).__name__,
+                            )
+                    return forward(window, message, wparam, lparam)
+
+                # C側は参照を保持しない。アプリの生存中callbackを解放しない。
+                self._native_close_callback = callback_type(observe)
+                assert install(hwnd, self._native_close_callback, 1, 0)
+                self._audit_exit("native_observer_registered", hwnd=hwnd)
+
+            def _audit_exit_entries(self, root):
+                # 元のTcl commandへ委譲し、製品の終了判断・保存処理を維持する。
+                def wrap(entry, command):
+                    def callback():
+                        # Tcl時計はTkが呼び出したPython callback内でだけ取得する。
+                        # Win32 subclassの受信callbackからTkを再入呼出ししない。
+                        self._audit_exit(
+                            "entry_fired",
+                            entry=entry,
+                            tcl_microseconds=int(root.tk.call("clock", "microseconds")),
+                        )
+                        return root.tk.call(command)
+
+                    return callback
+
+                command = root.protocol("WM_DELETE_WINDOW")
+                root.protocol("WM_DELETE_WINDOW", wrap("wm", command))
+                self._audit_exit(
+                    "entry_registered", entry="wm", original_command=command
+                )
+                pending = [root]
+                buttons = []
+                while pending:
+                    widget = pending.pop()
+                    pending.extend(widget.winfo_children())
+                    if widget.winfo_class() == "TButton" and widget.cget(
+                        "text"
+                    ) == self._t("btn_quit"):
+                        buttons.append(widget)
+                assert len(buttons) == 1, "終了入口監査の対象ボタンは1つ"
+                self._audit_quit_button = buttons[0]
+                command = str(buttons[0].cget("command"))
+                buttons[0].configure(command=wrap("button", command))
+                self._audit_exit(
+                    "entry_registered", entry="button", original_command=command
+                )
 
             def __init__(self, root):
                 counts["constructed"] += 1
@@ -1920,6 +2374,9 @@ def _run_scenario(fixture, namespace, role):
                 if role.startswith("simultaneous-slow-"):
                     time.sleep(8.5)
                 super().__init__(root)
+                if role.startswith("simultaneous-"):
+                    self._audit_exit_entries(root)
+                    self._audit_native_close(root)
                 app_reference.append(self)
                 if role == "uat-owner-slowready":
                     (fixture / "scenario-ready").touch()
@@ -1965,6 +2422,16 @@ def _run_scenario(fixture, namespace, role):
                     ).exists()
 
                 def stop_poll():
+                    if (
+                        role in {"simultaneous-audit-wm", "simultaneous-audit-button"}
+                        and (fixture / "audit-trigger").exists()
+                    ):
+                        self._audit_exit("test_trigger", entry=role.rsplit("-", 1)[1])
+                        if role == "simultaneous-audit-wm":
+                            root.tk.call(root.protocol("WM_DELETE_WINDOW"))
+                        else:
+                            self._audit_quit_button.invoke()
+                        return
                     if (fixture / "stop").exists() or (
                         fixture.parent / "stop-all"
                     ).exists():
@@ -1983,15 +2450,34 @@ def _run_scenario(fixture, namespace, role):
                         root.after(50, stop_poll)
 
                 root.after(50, stop_poll)
-                root.after(
+                delay_ms = (
                     120000
                     if role == "manual-owner" or role.startswith("uat-")
-                    else 10000,
-                    lambda: (
-                        (self._focus_cleanup(), self._quit())
-                        if role.startswith("uat-")
-                        else self._quit()
-                    ),
+                    else 10000
+                )
+
+                def watchdog():
+                    self._audit_exit(
+                        "entry_fired",
+                        entry="watchdog",
+                        tcl_microseconds=int(root.tk.call("clock", "microseconds")),
+                    )
+                    if role.startswith("uat-"):
+                        self._focus_cleanup()
+                    self._quit()
+
+                registered_tcl_us = int(root.tk.call("clock", "microseconds"))
+                registered_at = time.monotonic()
+                after_id = root.after(delay_ms, watchdog)
+                self._audit_exit(
+                    "entry_registered",
+                    entry="watchdog",
+                    delay_ms=delay_ms,
+                    after_id=after_id,
+                    registered_monotonic=registered_at,
+                    due_monotonic=registered_at + delay_ms / 1000,
+                    registered_tcl_microseconds=registered_tcl_us,
+                    due_tcl_microseconds=registered_tcl_us + delay_ms * 1000,
                 )
 
         app_module.PDFEditorApp = TracedApp
