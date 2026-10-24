@@ -538,6 +538,13 @@ def main():
     ap.add_argument("--w05b-session")
     ap.add_argument("--accept-user-answers", action="store_true")
     ap.add_argument(
+        "--supplement-json",
+        help=(
+            "接続行への補足(connection_supplements: kind->追記dict)と世代2の不成立試行"
+            "(failed_connection_attempts)。既存キーの上書きは拒否する(生記録を弱めない)"
+        ),
+    )
+    ap.add_argument(
         "--extra-json",
         help="証拠へ追記する最上位キー(connection_preflight, verification 等)のJSON",
     )
@@ -572,6 +579,11 @@ def main():
         "connection_pending": ["ocr-single", "w05b-modal"],
         "faults": build_faults(t2),
     }
+    supplement = (
+        json.loads(Path(args.supplement_json).read_text("utf-8"))
+        if args.supplement_json
+        else {}
+    )
     for flag, kind in (
         (args.ocr_session, "ocr-single"),
         (args.w05b_session, "w05b-modal"),
@@ -582,11 +594,29 @@ def main():
             raise SystemExit(
                 "接続の記録には --accept-user-answers(回答を人が確認したことの明示)が必要です"
             )
-        evidence["connection"].append(build_connection(load_session(flag), kind))
+        entry = build_connection(load_session(flag), kind)
+        for key, value in (
+            (supplement.get("connection_supplements") or {}).get(kind, {}).items()
+        ):
+            if key in entry:
+                raise SystemExit(f"補足が既存キーを上書きします: {kind}.{key}")
+            entry[key] = value
+        evidence["connection"].append(entry)
         evidence["connection_pending"].remove(kind)
+    if supplement.get("failed_connection_attempts"):
+        evidence["failed_connection_attempts"] = supplement[
+            "failed_connection_attempts"
+        ]
     if not evidence["connection_pending"]:
         evidence["status"] = "complete"
         del evidence["connection_pending"]
+    override = supplement.get("status_override")
+    if override:
+        # 機械判定の結果を人が読みで覆すためには使えない。completeより弱い状態への格下げ専用
+        if override["status"] == "complete":
+            raise SystemExit("status_override は complete にできません(格下げ専用)")
+        evidence["status"] = override["status"]
+        evidence["status_reason"] = override["reason"]
     if args.extra_json:
         evidence.update(json.loads(Path(args.extra_json).read_text("utf-8")))
     S.write_json(EVIDENCE, evidence)

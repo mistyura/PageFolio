@@ -61,6 +61,8 @@ run 参照（`run-ref: <32桁hex>` 形式の行）は下記の生成ブロック
 | run-ref: baf05b8dc25a41078ad50ae4fd6e7d0a | 更新 collision new(final) |
 | run-ref: f7315188f0954ecabc9c8d5ff2447af3 | 更新 no_collision old(initial run tree) |
 | run-ref: 407c0a66363649389729d81b22ba79bb | 更新 no_collision new(final) |
+| run-ref: cd4dc81af699415abcb3be8ad2cb44aa | 接続実証 ocr-single |
+| run-ref: 3dab246a0dd34f6eae066392a88ffd3a | 接続実証 w05b-modal |
 | run-ref: 4ef38ba7f7df48bda95d3491925bb026 | 障害 X01 |
 | run-ref: c60fc8eba2a449a18df2fbc6bb105a50 | 障害 X02 |
 | run-ref: cb067afb49e04824b36c8e4a0e49c5a2 | 障害 X03 |

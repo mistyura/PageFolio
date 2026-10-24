@@ -1,0 +1,69 @@
+{
+  "connection_supplements": {
+    "ocr-single": {
+      "terminal_answer_assessment": {
+        "status": "invalid-as-observation",
+        "terminal_answer_verbatim": "--- Page 1 ---",
+        "reason": "利用者が端末で『結果欄に期待文言が表示されたか』に答える際、複数行のクリップボードを誤って貼り付け、先頭行(結果テキストの1行目)が自動入力された。利用者本人の観測ではないと採用側(orchestrator)が判断した。session JSON は原本のまま保持し、user_answer も端末記録のまま残す",
+        "session_file_edited": false
+      },
+      "supplementary_user_answer": {
+        "text": "5.期待通りの表示を確認",
+        "source": "chat (orchestrator relay)",
+        "given_at": "2026-10-24 (JST、接続実証の直後。人手確認の報告に含まれる)",
+        "supplements": "端末の user_answer(クリップボード誤貼り付け)の代わりに、利用者本人の観測を補う",
+        "context": "手順5=OCRダイアログの結果欄に『PageFolio UAT 合成OCR結果』が表示されたかの確認",
+        "reason": "端末回答が誤貼り付けで観測として使えないため、利用者がチャットで述べた観測を逐語で補足する。orchestrator経由の中継であり、利用者本人の端末入力ではない"
+      },
+      "effective_basis": "外部観測(合成server: received→peer→released→completed、attempt 6ee70ff9d65d-1、POST 1件、再送なし、completed_seen=True)+ 補足回答(chat relay)。端末のuser_answerは根拠に使わない",
+      "stop_observation": {
+        "stop": "[0] pid 32156 terminated(所有handleで強制終了) / [1] pid 11716 already-exited",
+        "note": "close要求でEXEが終了しなかった(X04と同系統)。合否判定ではなく観測として06-05-02へ持ち越す"
+      }
+    },
+    "w05b-modal": {
+      "typed_answers_verbatim": [
+        "OCR実行中です。",
+        "OCR実行中です。～の画面 Y/Nボタン",
+        "準備中",
+        "PageFolio UAT 合成OCR結果"
+      ],
+      "answer_assessment": {
+        "status": "valid",
+        "note": "4回とも端末での利用者の直接入力(session user_inputs)。『いいえ』後の『準備中』はOCRダイアログが残り処理中だったという利用者の観測で、orchestrator はこれを『ダイアログ処理継続中』と読む(読みであり、利用者の言葉ではない)"
+      },
+      "effective_basis": "外部観測(合成server: received→released→completed、attempt 6ee70ff9d65d-1、POST 1件、再送なし、completed_seen=True)+ 利用者の端末入力4件",
+      "stop_observation": {
+        "stop": "[0] pid 9144 terminated(所有handleで強制終了) / [1] pid 37896 already-exited",
+        "note": "close要求でEXEが終了しなかった(ocr-singleと同じ観測)。06-05-02へ持ち越す"
+      },
+      "peer_foreground_observation": {
+        "automated_check": "peer_returned_to_modal=false(06-UAT準備の監査 rule: 同hwndの確認ダイアログがpeer後も存在し、かつforegroundがPageFolio本体pidであること)",
+        "facts": "確認ダイアログ(#32770 『確認』、hwnd 25759754)はpeer前後とも同hwndで可視のまま残った。一方 peer起動の約4秒後・およびその直後のforegroundはPageFolio本体(pid 9144)ではなく利用者の端末 Windows PowerShell(pid 24068)のままだった。peer(pid 37896)は可視windowを持たず既に終了していた",
+        "user_typed_observation": "OCR実行中です。～の画面 Y/Nボタン(ダイアログの内容を述べたもので、前面か否かの明言ではない)",
+        "not_inferred": "foregroundが取れなかった原因(Windowsの前面化制約か製品の挙動か)は推測しない。Phase 4の通知前景不一致(notice-foreground-mismatch)と同系統の可能性があるが未分類",
+        "disposition": "監査の機械判定を弱めない。W05b本受入(06-05-02)で『許可API戻りと実foreground』を別記して人手確認する"
+      }
+    }
+  },
+  "failed_connection_attempts": [
+    {
+      "attempt_run": "release-uat-7e4629e4f555465183a070c1efdbfb6e",
+      "kind": "w05b-modal",
+      "generation": 2,
+      "status": "not-established",
+      "reason": "クリップボードの複数行貼り付け(『--- Page 1 ---』『PageFolio UAT 合成OCR結果』)が端末の問い2件へ自動回答として入り、利用者が意図した観測にならなかった。orchestrator の指示で利用者が中断した。サーバーは received→expired(hold_limit 420秒)→completed で released なし。session は interrupted=true",
+      "server_events": [
+        "received",
+        "expired",
+        "completed"
+      ],
+      "released": false,
+      "used_as_evidence": false
+    }
+  ],
+  "status_override": {
+    "status": "recorded-audit-failing",
+    "reason": "ocr-single と w05b-modal の接続実証は実測・記録した(server: 1 POST・再送なし・待機→解放→完了、w05b は modal表示・『いいえ』・同処理完了を確認)が、w05b-modal の peer_returned_to_modal が false(peer後のforegroundがPageFolio本体でなく利用者の端末)のため、準備監査(--preparation-only)が不成立。成立済みにしない"
+  }
+}
