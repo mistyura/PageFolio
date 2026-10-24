@@ -1,0 +1,103 @@
+{
+  "connection_preflight": {
+    "purpose": "接続実証の事前確認(connection-preparation の前段)。EXEは起動していない。証拠のconnection(成立)ではない",
+    "script": ".planning/phases/06-release-validation/06-04-drivers/conn_session.py --scenario ocr-single --check-routing-only",
+    "run_dir": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf06_t2_9dded6e883224a7ba1293b767ef019b6\\runs\\release-uat-c077bf885c6043deaf6a71b6fd6b2023",
+    "note": "利用者の接続実証セッションでも同じ事前確認が起動前に自動実行され、失敗時はEXEを起動しない(session JSONのrouting_selfcheck)",
+    "negative_control": "世代1の旧最終distに同じ確認を当てると『EXE内蔵コード=HEADのソース』が不一致(pagefolio.lang/ocr/ocr_dialog)、resolve_local_endpointがKeyErrorで不合格になることを確認(旧不具合の経路を検出できる)",
+    "report": {
+      "ok": true,
+      "at": "2026-10-24T12:06:04.012679+00:00",
+      "exe_started": false,
+      "resolved_endpoint": [
+        "http://127.0.0.1:1671",
+        "pagefolio-uat-fixture"
+      ],
+      "server_url": "http://127.0.0.1:1671",
+      "checks": [
+        {
+          "name": "設定: ocr_provider=ollama",
+          "ok": true,
+          "detail": null
+        },
+        {
+          "name": "設定: ollama_url=合成サーバーURL",
+          "ok": true,
+          "detail": {
+            "ollama_url": "http://127.0.0.1:1671",
+            "server": "http://127.0.0.1:1671"
+          }
+        },
+        {
+          "name": "設定: 接続先はloopback(127.0.0.1)",
+          "ok": true,
+          "detail": "http://127.0.0.1:1671"
+        },
+        {
+          "name": "設定: 並列1・fallback無効",
+          "ok": true,
+          "detail": null
+        },
+        {
+          "name": "copy内EXE=最終buildのEXE",
+          "ok": true,
+          "detail": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17"
+        },
+        {
+          "name": "EXE内蔵コード=HEADのソース(pagefolio全モジュール)",
+          "ok": true,
+          "detail": {
+            "compared": 56,
+            "mismatched": [],
+            "not_in_pyz": []
+          }
+        },
+        {
+          "name": "EXE内蔵resolve_local_endpoint(ollama)=合成サーバーURL・モデル",
+          "ok": true,
+          "detail": [
+            "http://127.0.0.1:1671",
+            "pagefolio-uat-fixture"
+          ]
+        },
+        {
+          "name": "lmstudio側URLは合成サーバーではない(旧不具合の経路と区別)",
+          "ok": true,
+          "detail": [
+            "http://localhost:1234",
+            ""
+          ]
+        },
+        {
+          "name": "EXE内蔵OCRDialogがresolve_local_endpointを参照",
+          "ok": true,
+          "detail": null
+        },
+        {
+          "name": "合成サーバーが/v1/modelsに応答",
+          "ok": true,
+          "detail": "{\"object\": \"list\", \"data\": [{\"id\": \"pagefolio-uat-fixture\", \"object\": \"model\"}]}"
+        }
+      ]
+    }
+  },
+  "verification": {
+    "pytest_release_support": {
+      "command": "pytest -q tests/test_release_uat_support.py tests/test_release_build.py::TestPreflight",
+      "result": "111 passed, 1 warning in 36.16s",
+      "note": "fixture/CLI境界の試験であり、実EXE接続の合格ではない"
+    },
+    "audit_build_only": {
+      "exit": 0,
+      "ok": true
+    },
+    "audit_preparation_only": {
+      "exit": 1,
+      "ok": false,
+      "reasons": [
+        "実接続(ocr-single)とnative modal(w05b-modal)の両方が必要です"
+      ],
+      "meaning": "保護停止/起動/更新/障害X01〜X05は成立。未成立は利用者の接続実証のみ(回答待ち)"
+    }
+  }
+}

@@ -7,6 +7,7 @@ OCR開始・閉じる確認・「いいえ」・結果表示を操作し、ス�
 
 usage:
   python conn_session.py --t2 <t2_root> --scenario ocr-single
+  python conn_session.py --t2 <t2_root> --scenario ocr-single --check-routing-only   (事前確認のみ。EXEは起動しない)
   python conn_session.py --t2 <t2_root> --scenario w05b-modal
   python conn_session.py --t2 <t2_root> --scenario ocr-single --selftest   (機構確認用。証拠にしない)
 
@@ -46,6 +47,174 @@ def now():
 
 def say(text=""):
     print(text, flush=True)
+
+
+def _norm_code(code):
+    """co_filename・行番号表を除いた比較用の正規形。"""
+    import types
+
+    return (
+        code.co_name,
+        code.co_code,
+        code.co_names,
+        code.co_varnames,
+        code.co_argcount,
+        code.co_flags,
+        tuple(
+            _norm_code(k) if isinstance(k, types.CodeType) else k
+            for k in code.co_consts
+        ),
+    )
+
+
+def _module_of(rel):
+    parts = list(Path(rel).with_suffix("").parts)
+    if parts[-1] == "__init__":
+        parts.pop()
+    return ".".join(parts)
+
+
+KEY_MODULES = ("pagefolio.ocr", "pagefolio.ocr_dialog", "pagefolio.lang")
+
+
+def routing_selfcheck(manifest, server):
+    """配布copyの設定が、このEXE自身のコードでloopbackの合成OCRへ届くことを事前確認する。
+
+    EXEは起動しない(読むだけ)。確認内容:
+      1. copy内の pagefolio_settings.json が ollama + 合成サーバーURL(127.0.0.1)・並列1・fallback無効
+      2. copy内のEXEが最終buildのEXEと同一SHA-256
+      3. EXE内蔵のPYZから取り出した pagefolio.ocr / ocr_dialog / lang のバイトコードが、
+         監査済みHEADのソースをコンパイルしたものと一致(=製品修正入りの実体)
+      4. EXE内蔵の resolve_local_endpoint に上の設定を渡すと (合成サーバーURL, モデル) になる
+         (lmstudio 側のURLは合成サーバーではない)
+      5. 合成サーバーが /v1/models に応答する
+    """
+    import contextlib
+    import os
+    import tempfile
+    from urllib.parse import urlparse
+
+    from PyInstaller.archive.readers import CArchiveReader, ZlibArchiveReader
+
+    checks = []
+
+    def check(name, ok, detail=None):
+        checks.append({"name": name, "ok": bool(ok), "detail": detail})
+        return bool(ok)
+
+    copy = Path(manifest["copy"])
+    exe = copy / "PageFolio.exe"
+    settings_path = copy / S.SETTINGS_NAME
+    settings = json.loads(settings_path.read_text("utf-8"))
+    check("設定: ocr_provider=ollama", settings.get("ocr_provider") == "ollama")
+    check(
+        "設定: ollama_url=合成サーバーURL",
+        settings.get("ollama_url") == server.url,
+        {"ollama_url": settings.get("ollama_url"), "server": server.url},
+    )
+    check(
+        "設定: 接続先はloopback(127.0.0.1)",
+        urlparse(server.url).hostname == "127.0.0.1",
+        server.url,
+    )
+    check(
+        "設定: 並列1・fallback無効",
+        settings.get("ocr_concurrency") == 1
+        and settings.get("ocr_fallback_enabled") is False,
+    )
+    exe_sha = S.sha_file(exe)
+    check(
+        "copy内EXE=最終buildのEXE",
+        exe_sha == BUILD["final_release"]["exe_sha256"],
+        exe_sha,
+    )
+
+    tmp = Path(tempfile.mkdtemp(prefix="pf_routing_"))
+    endpoint = None
+    try:
+        pyz = tmp / "PYZ.pyz"
+        pyz.write_bytes(CArchiveReader(str(exe)).extract("PYZ.pyz"))
+        archive = ZlibArchiveReader(str(pyz))
+        mismatched, compared, missing = [], 0, []
+        for src in sorted((REPO / "pagefolio").rglob("*.py")):
+            rel = src.relative_to(REPO).as_posix()
+            mod = _module_of(rel)
+            if mod not in archive.toc:
+                missing.append(mod)
+                continue
+            mine = compile(src.read_bytes(), rel, "exec", dont_inherit=True)
+            compared += 1
+            if _norm_code(mine) != _norm_code(archive.extract(mod)):
+                mismatched.append(mod)
+        check(
+            "EXE内蔵コード=HEADのソース(pagefolio全モジュール)",
+            not mismatched and all(m in archive.toc for m in KEY_MODULES),
+            {"compared": compared, "mismatched": mismatched, "not_in_pyz": missing},
+        )
+        ns = {"__name__": "pagefolio._dist_ocr_probe", "__file__": "<EXE PYZ>"}
+        with contextlib.redirect_stderr(io.StringIO()):
+            exec(archive.extract("pagefolio.ocr"), ns)
+        resolve = ns["resolve_local_endpoint"]
+        endpoint = resolve(settings, "ollama")
+        check(
+            "EXE内蔵resolve_local_endpoint(ollama)=合成サーバーURL・モデル",
+            endpoint == (server.url, F.MODEL),
+            endpoint,
+        )
+        lm = resolve(settings, "lmstudio")
+        check(
+            "lmstudio側URLは合成サーバーではない(旧不具合の経路と区別)",
+            lm is not None and lm[0] != server.url,
+            lm,
+        )
+        dialog_code = archive.extract("pagefolio.ocr_dialog")
+        names = set()
+
+        def walk(code):
+            import types
+
+            names.update(code.co_names)
+            for k in code.co_consts:
+                if isinstance(k, types.CodeType):
+                    walk(k)
+
+        walk(dialog_code)
+        check(
+            "EXE内蔵OCRDialogがresolve_local_endpointを参照",
+            "resolve_local_endpoint" in names,
+        )
+    except Exception as error:
+        check("EXE内蔵コードの確認が例外なく完了", False, repr(error))
+    finally:
+        import shutil
+
+        shutil.rmtree(tmp, ignore_errors=True)
+    try:
+        with urllib.request.urlopen(server.url + "/v1/models", timeout=10) as r:
+            body = r.read().decode("utf-8", "replace")
+        check("合成サーバーが/v1/modelsに応答", F.MODEL in body, body[:200])
+    except Exception as error:
+        check("合成サーバーが/v1/modelsに応答", False, repr(error))
+    return {
+        "ok": all(c["ok"] for c in checks),
+        "at": now(),
+        "exe_started": False,
+        "resolved_endpoint": list(endpoint) if endpoint else None,
+        "server_url": server.url,
+        "checks": checks,
+    }
+
+
+def print_selfcheck(report):
+    say("== 事前確認(EXEは起動していません) ==")
+    for c in report["checks"]:
+        say(f"  [{'OK' if c['ok'] else 'NG'}] {c['name']}")
+    if report["ok"]:
+        say("[OK] この配布コピーのOCR設定は、合成OCRサーバーへ届くことを確認しました。")
+    else:
+        say(
+            "[NG] 事前確認に失敗したため、PageFolio は起動しません。担当へ伝えてください。"
+        )
 
 
 class Session:
@@ -129,6 +298,15 @@ class Session:
             )
             result["pdf"] = pdf
             result["settings_keys"] = sorted(json.loads(settings))
+            report = routing_selfcheck(manifest, server)
+            result["routing_selfcheck"] = report
+            print_selfcheck(report)
+            if self.args.check_routing_only:
+                result["outcome"] = "routing-check-only"
+                return result, server, run
+            if not report["ok"]:
+                result["outcome"] = "routing-selfcheck-failed"
+                return result, server, run
             S.start(run, settle=5.0)
             self.step(
                 "started", windows=self.windows(run), foreground=S.foreground_info()
@@ -149,6 +327,13 @@ class Session:
                     )
                 except Exception:
                     pass
+            say("")
+            say(
+                "【重要】LLM設定(🤖)は開かないでください。プロバイダも変更しないでください。"
+            )
+            say(
+                "        設定は合成OCRサーバーへ向けて準備済みです。変更すると接続実証になりません。"
+            )
             say("手順:")
             say(
                 "  1. PageFolio の画面へ上のPDFを開く (ドラッグ&ドロップ、または ファイルを開く)"
@@ -248,6 +433,7 @@ class Session:
         say("[OK] 待機を解放しました。")
         answer = self.ask(
             "OCRダイアログの結果欄に『PageFolio UAT 合成OCR結果』が表示されましたか?\n"
+            "(画像の文字『OCR TEST 0123456789』が出た場合は合成サーバー以外が使われています。その旨をそのまま入力)\n"
             "見えた内容・気づいた点をそのまま入力してください (例: 表示された / 表示されない):"
         )
         result["user_answer"] = answer
@@ -296,6 +482,11 @@ def main():
     ap.add_argument("--t2", required=True)
     ap.add_argument("--scenario", choices=("ocr-single", "w05b-modal"), required=True)
     ap.add_argument("--selftest", action="store_true")
+    ap.add_argument(
+        "--check-routing-only",
+        action="store_true",
+        help="事前確認だけ行う(EXEは起動しない)。証拠のconnectionには使わない",
+    )
     args = ap.parse_args()
     session = Session(args)
     result = {"scenario": args.scenario, "selftest": args.selftest}

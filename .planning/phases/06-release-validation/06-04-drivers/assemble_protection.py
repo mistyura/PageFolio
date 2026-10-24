@@ -23,7 +23,8 @@ from tests import release_uat_support as S  # noqa: E402
 PHASE = REPO / ".planning/phases/06-release-validation"
 EVIDENCE = PHASE / "06-PROTECTION-EVIDENCE.json"
 PREP = PHASE / "06-UAT-PREPARATION.md"
-RAW_T2 = "06-04-t2-result.json"
+RAW_T2 = "06-04g2-t2-result.json"  # 世代2。世代1は06-04-t2-result.json(原本保持)
+GEN1_RAW_T2 = "06-04-t2-result.json"
 MARK_START = "<!-- run-refs:start (assemble_protection.py が生成。手で編集しない) -->"
 MARK_END = "<!-- run-refs:end -->"
 SETTINGS = S.SETTINGS_NAME
@@ -415,8 +416,32 @@ def build_connection(session, kind):
     return entry
 
 
+def _collect_runs(ev, prefix):
+    labels = {}
+    for item in ev.get("protection_stop", []):
+        labels[item["run_id"]] = f"{prefix}保護停止 {item['name']}"
+    for case in ev.get("launch", {}).get("cases", []):
+        labels[case["run_id"]] = f"{prefix}起動時保持 {case['name']}"
+    for scenario, v in ev.get("update", {}).items():
+        for c in v["copies"]:
+            labels[c["run_id"]] = f"{prefix}更新 {scenario} {c['role']}"
+    for item in ev.get("connection", []):
+        labels[item["run_id"]] = f"{prefix}接続実証 {item['kind']}"
+    for fid, v in ev.get("faults", {}).items():
+        labels[v["run_id"]] = f"{prefix}障害 {fid}"
+        obs = v["observation"]
+        for sub in ("write", "replace"):
+            if isinstance(obs.get(sub), dict) and obs[sub].get("run_id"):
+                labels[obs[sub]["run_id"]] = f"{prefix}障害 {fid}-{sub}"
+    return labels
+
+
 def build_run_refs(evidence):
     labels = {}
+    for gen in evidence.get("previous_generations", []):
+        labels.update(
+            _collect_runs(gen["evidence"], f"[世代{gen['generation']} superseded] ")
+        )
     for item in evidence.get("protection_stop", []):
         labels[item["run_id"]] = f"保護停止 {item['name']}"
     for case in evidence.get("launch", {}).get("cases", []):
@@ -456,19 +481,80 @@ def patch_prep(evidence):
     return labels
 
 
+def previous_generations():
+    """世代1(78dcfe8時点)の証拠を原文のまま保持する。再実行時は既存の保持分を引き継ぐ。"""
+    cur = json.loads(EVIDENCE.read_text("utf-8")) if EVIDENCE.exists() else None
+    if cur is None:
+        return []
+    if cur.get("generation") == 2:
+        return cur["previous_generations"]
+    return [
+        {
+            "generation": 1,
+            "status": "superseded",
+            "superseded_reason": (
+                "接続実証(06-04-02 human-check)で製品バグ発見: ocr_provider=ollama でも"
+                "OCRダイアログがLM Studio(localhost:1234)へ送信。製品修正(52258de/7fb41a2)後、"
+                "06-03 resume_contract に従い build/保護/接続を新世代で取り直した"
+            ),
+            "evidence_commit": "78dcfe8",
+            "raw_observation_log": GEN1_RAW_T2,
+            "old_t2_dir_preserved": (
+                r"C:\Users\shdwf\AppData\Local\Temp\pf06_t2_f157d1e5a0454f7e89c363383182dff5"
+            ),
+            "failed_connection_attempts": [
+                {
+                    "attempt_run": "release-uat-c75a19aa09b84f1788c0dee965915dd7",
+                    "kind": "ocr-single",
+                    "status": "not-established",
+                    "reason": (
+                        "利用者がLLM設定でOllama->Geminiへ変更。ダイアログ表示は『ollama』のまま、"
+                        "合成サーバーは要求0件、結果欄に画像の文字『PageFolio UAT / OCR TEST "
+                        "0123456789』(実Geminiによる読取とみられる。送信は合成画像のみ)。"
+                        "表示と実送信先の不一致。成立と記録しない"
+                    ),
+                },
+                {
+                    "attempt_run": "release-uat-034578b2c4b94c2aae9fa70afe620d25",
+                    "kind": "ocr-single",
+                    "status": "not-established",
+                    "reason": (
+                        "ocr_provider=ollama / ollama_url=http://127.0.0.1:17327 だが読取実行で"
+                        "『LM Studio に接続できませんでした。URL: http://localhost:1234 … "
+                        "[WinError 10061]』。製品バグ(_start_ocr がlm_studio_urlを渡し、"
+                        "OCRDialog実行時再生成がurl_varでOllamaProviderを作る)。成立と記録しない"
+                    ),
+                },
+            ],
+            "evidence": cur,
+        }
+    ]
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--t2", required=True)
     ap.add_argument("--ocr-session")
     ap.add_argument("--w05b-session")
     ap.add_argument("--accept-user-answers", action="store_true")
+    ap.add_argument(
+        "--extra-json",
+        help="証拠へ追記する最上位キー(connection_preflight, verification 等)のJSON",
+    )
     args = ap.parse_args()
     t2_path = Path(args.t2) / "t2-result.json"
     t2 = json.loads(t2_path.read_text("utf-8"))
     build = S.read_json(PHASE / "06-BUILD-EVIDENCE.json")
     final = build["final_release"]
     final_run = [r for r in final["runs"] if r["order"] == "rebuild"][0]["run_id"]
+    prev = previous_generations()
     evidence = {
+        "generation": 2,
+        "previous_generations": prev,
+        "generation_note": (
+            "製品修正(52258de/7fb41a2)後の新世代。世代1(78dcfe8)の証拠は"
+            "previous_generationsへ原文保持し、上書きしない"
+        ),
         "version": final.get("version") or build.get("version"),
         "status": "partial-pending-human-check",
         "release_allowed": False,
@@ -501,6 +587,8 @@ def main():
     if not evidence["connection_pending"]:
         evidence["status"] = "complete"
         del evidence["connection_pending"]
+    if args.extra_json:
+        evidence.update(json.loads(Path(args.extra_json).read_text("utf-8")))
     S.write_json(EVIDENCE, evidence)
     labels = patch_prep(evidence)
     print(
