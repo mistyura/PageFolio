@@ -119,14 +119,17 @@ class IsolatedConfigApp:
     def start(self):
         import tkinter as tk
 
-        from tkinterdnd2 import TkinterDnD
-
+        import pagefolio.app as app_mod
         from pagefolio.app import PDFEditorApp
 
         try:
             # 生成より先に退避し、破棄済みのTkをdefault rootへ戻さない。
             self.stack.enter_context(patch.object(tk, "_default_root", None))
-            self.root = TkinterDnD.Tk()
+            # 設定通知・隔離App契約はネイティブD&D拡張ロードに依存しない。
+            self.stack.enter_context(
+                patch.object(app_mod, "_setup_file_drop", lambda _app: None)
+            )
+            self.root = tk.Tk()
             if not self.visible:
                 self.root.withdraw()
             self.app = PDFEditorApp.__new__(PDFEditorApp)

@@ -509,12 +509,11 @@ class TestAppSaveOrigins:
         assert len(app._config_notices) == 1
 
     def test_plugin_failure_waits_for_real_modal_close(self, isolated_app, monkeypatch):
-        from tkinterdnd2 import TkinterDnD
-
         from pagefolio.app import PDFEditorApp
         from pagefolio.dialogs.plugin import PluginDialog
 
-        root = TkinterDnD.Tk()
+        monkeypatch.setattr("pagefolio.app._setup_file_drop", lambda _app: None)
+        root = tk.Tk()
         app = None
         dialog = None
         clock = [0.0]
@@ -1420,11 +1419,9 @@ class TestConfigAcceptance:
             app._quit()
             assert app._settings_exit_save_failed is False
             assert app._config_notice_seq == 2
-            from tkinterdnd2 import TkinterDnD
-
             from pagefolio.app import PDFEditorApp
 
-            isolated.root = TkinterDnD.Tk()
+            isolated.root = tk.Tk()
             isolated.root.withdraw()
             isolated.app = PDFEditorApp(isolated.root)
             assert isolated.app._settings_load_status == "ok"

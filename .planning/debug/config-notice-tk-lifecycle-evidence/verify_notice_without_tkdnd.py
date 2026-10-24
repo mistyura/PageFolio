@@ -1,4 +1,4 @@
-"""通知再構築テストが D&D のネイティブ初期化に依存しないことを検証する。"""
+"""設定通知テスト群全体が D&D のネイティブ初期化に依存しないことを検証する。"""
 
 import sys
 from unittest.mock import patch
@@ -16,7 +16,7 @@ with patch.object(TkinterDnD, "_require", unavailable):
         pytest.main(
             [
                 "-q",
-                "tests/test_config_notification.py::TestNotificationLifecycle::test_real_rebuild_restores_same_notice_in_current_language",
+                "tests/test_config_notification.py",
                 f"--basetemp={sys.argv[1]}",
             ]
         )

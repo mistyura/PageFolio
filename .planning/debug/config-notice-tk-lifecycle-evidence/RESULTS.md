@@ -35,3 +35,11 @@
 | `full-native-20261024.txt` | `3941E9E81231265CD5FC7B6ACFC6E42A164E1DD03192D244E09AC34FB142DBE1` |
 
 既存dirtyファイルの内容を本調査では変更していない。`開発履歴.md` へは今回の一行のみ追加した。
+
+## 2回目調査・全箇所分離（2026-10-24 14:18 JST）
+
+- 再発ログ: `.planning/phases/06-release-validation/06-01-task1-full.txt`（原本保持、basetemp `C:/Users/shdwf/AppData/Local/Temp/pf06_01_task1_full_cb15e160a1524036b359e9237d26e5f1` 保持）。`1 failed, 1812 passed, 2 warnings in 267.63s`。
+- 失敗箇所: `tests/test_config_notification.py::TestConfigAcceptance::test_unreadable_permission_recovery_stays_blocked_until_restart` が `tests/config_notice_support.py:129` の `TkinterDnD.Tk()` で `Unable to load tkdnd library.`。また破棄されない途中生成Tk rootが後続 `test_ocr_engine.py` のスレッドGCで解放され `RuntimeWarning: the Tcl interpreter is leaked` が発生。
+- 追加分離: `tests/config_notice_support.py:129`（`IsolatedConfigApp.start`）および `tests/test_config_notification.py` の517行目・1427行目に残っていた `TkinterDnD.Tk()` をすべて `tk.Tk()`＋`_setup_file_drop` 無効化へ統一。
+- 故障注入検証: `verify_notice_without_tkdnd.py` で `TkinterDnD._require` を常時例外にして `tests/test_config_notification.py` 全件を実行し `143 passed, 1 warning in 9.94s`。
+- 単一プロセス全件検証: `--basetemp=C:\Users\shdwf\AppData\Local\Temp\pf06_01_task1_full_after_debug_14057535288b47bc9c29ab74fd7b2429` にて `1813 passed, 1 warning in 260.31s (0:04:20)`、exit 0（ログ: `.planning/phases/06-release-validation/06-01-task1-full-after-debug.txt`）。Tcl interpreter leak 警告なし。
