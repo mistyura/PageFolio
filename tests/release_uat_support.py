@@ -183,8 +183,12 @@ def _overlap(left, right):
     return left == right or left in right.parents or right in left.parents
 
 
-def walk_tree(root):
-    """(files{相対名: sha256}, dirs[相対名])。リンク/reparse/特殊ファイルは拒否。"""
+def walk_tree(root, *, locked_ok=frozenset(), locked=None):
+    """(files{相対名: sha256}, dirs[相対名])。リンク/reparse/特殊ファイルは拒否。
+
+    locked_okに挙げた相対名だけは、外部handle(設定障害X03の排他lock)でhashを読めなくても
+    例外にせず、lockedへ記録してfilesから除く。それ以外の読取失敗は従来どおり例外にする。
+    """
     root = Path(root)
     files, dirs = {}, []
 
@@ -200,7 +204,12 @@ def walk_tree(root):
                 dirs.append(rel)
                 visit(entry.path)
             elif stat.S_ISREG(info.st_mode):
-                files[rel] = sha_file(entry.path)
+                try:
+                    files[rel] = sha_file(entry.path)
+                except PermissionError:
+                    if rel not in locked_ok or locked is None:
+                        raise
+                    locked.append(rel)
             else:
                 raise IsolationError(f"通常ファイルでない項目があります: {entry.path}")
 
@@ -606,9 +615,14 @@ def snapshot_originals(repo):
 def verify_copy(manifest):
     """配布manifest(不変)とfixture overlay(可変)を別々に照合する。"""
     copy = Path(manifest["copy"])
-    files, dirs = walk_tree(copy)
     distribution = manifest["distribution_manifest"]
     overlay = manifest["overlay"]
+    locked = []
+    files, dirs = walk_tree(copy, locked_ok=frozenset(overlay), locked=locked)
+    # 外部lock中は内容を確認できない。宣言済みoverlayの期待値とみなし、別欄に残す。
+    for name in locked:
+        expected = overlay[name]
+        files[name] = expected if expected is not None else "<locked-absent-declared>"
     changed = sorted(r for r, h in distribution.items() if files.get(r) != h)
     missing_dirs = sorted(set(manifest["distribution_dirs"]) - set(dirs))
     extra_dirs = sorted(set(dirs) - set(manifest["distribution_dirs"]))
@@ -623,6 +637,7 @@ def verify_copy(manifest):
         "extra_dirs": extra_dirs,
         "undeclared": undeclared,
         "overlay_changed": overlay_changed,
+        "locked_unverified": sorted(locked),
         "tree_sha256": tree_sha(files, dirs),
         "exe_sha256": files.get("PageFolio.exe"),
     }

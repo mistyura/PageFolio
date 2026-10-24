@@ -756,6 +756,51 @@ class TestFakeOcr:
 
 # ---------------------------------------------------------------------------
 @windows_only
+class TestLockedOverlayVerification:
+    """X03の排他lock中でも、宣言済みoverlayだけは起動/観測の照合を止めない(06-04で判明)。"""
+
+    def test_held_overlay_is_reported_not_fatal_and_verified_after_release(
+        self, tmp_path, repo
+    ):
+        data = b'{"theme": "dark"}'
+        manifest = prep(tmp_path, repo, overlays={sup.SETTINGS_NAME: data})
+        settings = Path(manifest["copy"]) / sup.SETTINGS_NAME
+        with sup.prepare_settings_fault(manifest["copy"], "unreadable"):
+            with pytest.raises(PermissionError):
+                sup.sha_file(settings)  # 実際に読めない状態である
+            check = sup.verify_copy(manifest)
+            assert check["ok"] is True
+            assert check["overlay_changed"] == []
+            assert check["locked_unverified"] == [sup.SETTINGS_NAME]
+        released = sup.verify_copy(manifest)
+        assert released["locked_unverified"] == []
+        assert released["overlay_changed"] == []
+        assert sup.sha_file(settings) == hashlib.sha256(data).hexdigest()
+
+    def test_held_distribution_file_still_fails_closed(self, tmp_path, repo):
+        manifest = prep(tmp_path, repo)
+        target = Path(manifest["copy"]) / "_internal/lib.bin"
+        handle = sup._hold(target, sup.GENERIC_READ, 0)
+        try:
+            with pytest.raises(PermissionError):
+                sup.verify_copy(manifest)
+        finally:
+            sup._api().k.CloseHandle(handle)
+
+    def test_held_overlay_declared_absent_is_flagged_as_changed(self, tmp_path, repo):
+        manifest = prep(tmp_path, repo, overlays={sup.SETTINGS_NAME: None})
+        settings = Path(manifest["copy"]) / sup.SETTINGS_NAME
+        settings.write_bytes(b"{}")  # 不存在宣言なのに存在する(無断作成相当)
+        handle = sup._hold(settings, sup.GENERIC_READ, 0)
+        try:
+            check = sup.verify_copy(manifest)
+            assert check["overlay_changed"] == [sup.SETTINGS_NAME]
+        finally:
+            sup._api().k.CloseHandle(handle)
+
+
+# ---------------------------------------------------------------------------
+@windows_only
 class TestSettingsFaultPreparation:
     @pytest.fixture
     def area(self, tmp_path, monkeypatch):
