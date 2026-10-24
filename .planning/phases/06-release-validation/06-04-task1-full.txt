@@ -1,0 +1,119 @@
+........................................................................ [  3%]
+........................................................................ [  7%]
+........................................................................ [ 10%]
+........................................................................ [ 14%]
+........................................................................ [ 18%]
+........................................................................ [ 21%]
+........................................................................ [ 25%]
+........................................................................ [ 29%]
+........................................................................ [ 32%]
+........................................................................ [ 36%]
+........................................................................ [ 40%]
+........................................................................ [ 43%]
+........................................................................ [ 47%]
+........................................................................ [ 51%]
+........................................................................ [ 54%]
+........................................................................ [ 58%]
+........................................................................ [ 62%]
+........................................................................ [ 65%]
+........................................................................ [ 69%]
+........................................................................ [ 73%]
+........................................................................ [ 76%]
+........................................................................ [ 80%]
+........................................................................ [ 84%]
+........................................................................ [ 87%]
+.....................................................F.................. [ 91%]
+........................................................................ [ 95%]
+........................................................................ [ 98%]
+.........................                                                [100%]
+================================== FAILURES ===================================
+______ test_takeover_two_candidates_after_confirmed_initialization_death ______
+
+tmp_path = WindowsPath('C:/Users/shdwf/AppData/Local/Temp/pf06_04_full_8495defe95524f18a9f6a77372280aab/test_takeover_two_candidates_a0')
+
+    def test_takeover_two_candidates_after_confirmed_initialization_death(tmp_path):
+        namespace = uuid4().hex
+        owner, fixture = _spawn(tmp_path, namespace, "initializing-owner")
+        candidates = []
+        try:
+            _wait_file(owner, fixture / "ready")
+            candidates = [_spawn(tmp_path, namespace, f"takeover-{i}") for i in range(2)]
+            for child, path in candidates:
+                _wait_file(child, path / "observed")
+            owner.kill()
+            owner.communicate()
+            deadline = time.monotonic() + 6
+            while (
+                not any((path / "ready").exists() for _, path in candidates)
+                and time.monotonic() < deadline
+            ):
+                time.sleep(0.02)
+            assert sum((path / "ready").exists() for _, path in candidates) == 1
+            deadline = time.monotonic() + 5
+            while (
+                sum(child.poll() is not None for child, _ in candidates) < 1
+                and time.monotonic() < deadline
+            ):
+                time.sleep(0.02)
+            (tmp_path / "stop-all").touch()
+>           results = [_finish(child) for child, _ in candidates]
+                       ^^^^^^^^^^^^^^
+
+tests\test_startup_windows.py:1168: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+child = <Popen: returncode: 1 args: ['C:\\Users\\shdwf\\work\\project\\PageFolio\\.v...>
+timeout = 12
+
+    def _finish(child, timeout=_FINISH_TIMEOUT):
+        try:
+            out, err = child.communicate(timeout=timeout)
+        except subprocess.TimeoutExpired:
+            # killより前に証拠を採る。killすると生存/保持の区別が消える。
+            exited = child.poll() is not None
+            report = _stall_report(child)
+            child.kill()
+            try:
+                out, err = child.communicate(timeout=_DRAIN_TIMEOUT)
+            except subprocess.TimeoutExpired:
+                out = err = "<kill後もpipeを保持する者が残りEOF未到達>"
+            cause = (
+                "processは終了済みだが、stdout/stderrを保持する者がいてEOFが来ない"
+                if exited
+                else "process自体が終了しない"
+            )
+            pytest.fail(
+                f"子processが{timeout}秒以内に完了しない: {cause}\n{report}\n"
+                f"stdout={out}\nstderr={err}"
+            )
+>       assert child.returncode == 0, err
+E       AssertionError: 起動引継ぎ: 6228 / existing / deadline=28915453
+E         Traceback (most recent call last):
+E           File "C:\Users\shdwf\work\project\PageFolio\tests\test_startup_windows.py", line 2949, in <module>
+E             _test_scenario_bootstrap(Path(sys.argv[2]), sys.argv[3], sys.argv[4])
+E             ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           File "C:\Users\shdwf\work\project\PageFolio\tests\test_startup_windows.py", line 2747, in _test_scenario_bootstrap
+E             _run_scenario(fixture, namespace, role)
+E             ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           File "C:\Users\shdwf\work\project\PageFolio\tests\test_startup_windows.py", line 2717, in _run_scenario
+E             result = main(backend_factory=Backend)
+E           File "C:\Users\shdwf\work\project\PageFolio\pagefolio\__main__.py", line 47, in main
+E             notice = coordinator.backend.show_notice(outcome.result)
+E           File "C:\Users\shdwf\work\project\PageFolio\tests\test_startup_windows.py", line 2650, in show_notice
+E             raise AssertionError(f"正常tracerで失敗案内: {reason}")
+E         AssertionError: 正常tracerで失敗案内: expired
+E         
+E       assert 1 == 0
+E        +  where 1 = <Popen: returncode: 1 args: ['C:\\Users\\shdwf\\work\\project\\PageFolio\\.v...>.returncode
+
+tests\test_startup_windows.py:193: AssertionError
+============================== warnings summary ===============================
+.venv\Lib\site-packages\pymupdf\__init__.py:470
+  C:\Users\shdwf\work\project\PageFolio\.venv\Lib\site-packages\pymupdf\__init__.py:470: DeprecationWarning: 'typing.ByteString' and 'collections.abc.ByteString' are deprecated and slated for removal in Python 3.17
+    ByteString = typing.ByteString
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED tests/test_startup_windows.py::test_takeover_two_candidates_after_confirmed_initialization_death
+1 failed, 1968 passed, 1 warning in 468.79s (0:07:48)
+EXIT=1
