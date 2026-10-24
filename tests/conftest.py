@@ -1,5 +1,6 @@
 """PageFolio テスト用フィクスチャ"""
 
+import gc
 import json
 import os
 import sys
@@ -9,6 +10,25 @@ import pytest
 
 # pagefolio.py をインポートできるようにプロジェクトルートをパスに追加
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+
+@pytest.hookimpl(wrapper=True)
+def pytest_runtest_teardown(item, nextitem):
+    """各テストの後始末（モジュール/セッション fixture 分を含む）の直後に、
+    メインスレッドで循環ガベージを回収する。
+
+    tkinter の Tk root / Variable は循環参照を作り、テスト終了後も回収待ちで残る。
+    その回収が run_parallel 等のワーカースレッド内の GC で起きると、Tcl interpreter が
+    生成元と別スレッドで解放され `RuntimeWarning: the Tcl interpreter is leaked ...
+    (gh-83274)` と `Variable.__del__` の `RuntimeError: main thread is not in main loop`
+    （PytestUnraisableExceptionWarning）が無関係なテストに帰属する。
+    GC 発火位置はアロケーション列に依存するため、個別テストの修正ではなく
+    テスト境界での決定的なメインスレッド回収で防ぐ（tcl-leak-test-ocr）。
+    """
+    try:
+        return (yield)
+    finally:
+        gc.collect()
 
 
 @pytest.fixture()
