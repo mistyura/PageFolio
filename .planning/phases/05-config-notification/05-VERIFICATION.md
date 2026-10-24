@@ -1,16 +1,16 @@
 ---
 phase: 05-config-notification
-verified: 2026-10-23T18:14:21Z
+verified: 2026-10-24T11:47:08Z
 status: passed
 score: 23/23 must-haves verified
 covered_files: [".planning/phases/05-config-notification/05-01-PLAN.md",".planning/phases/05-config-notification/05-01-SUMMARY.md",".planning/phases/05-config-notification/05-02-PLAN.md",".planning/phases/05-config-notification/05-02-SUMMARY.md",".planning/phases/05-config-notification/05-03-PLAN.md",".planning/phases/05-config-notification/05-03-SUMMARY.md",".planning/phases/05-config-notification/05-04-PLAN.md",".planning/phases/05-config-notification/05-04-SUMMARY.md",".planning/phases/05-config-notification/05-EVIDENCE.json",".planning/phases/05-config-notification/05-REVIEW-DISPOSITION.md",".planning/phases/05-config-notification/05-REVIEW.md",".planning/phases/05-config-notification/05-SECURITY.md",".planning/phases/05-config-notification/05-UAT.md",".planning/phases/05-config-notification/05-VALIDATION.md",".planning/phases/05-config-notification/05-focus-proof-final/pytest.txt",".planning/phases/05-config-notification/05-focus-proof-final/status.json",".planning/phases/05-config-notification/05-focus-proof-inputs.json","docs/CONFIGURATION.md","pagefolio.py","pagefolio/__init__.py","pagefolio/__main__.py","pagefolio/app.py","pagefolio/batch_ocr_state.py","pagefolio/constants.py","pagefolio/dialogs/__init__.py","pagefolio/dialogs/about.py","pagefolio/dialogs/batch_ocr.py","pagefolio/dialogs/export_images.py","pagefolio/dialogs/llm_config/__init__.py","pagefolio/dialogs/llm_config/dialog.py","pagefolio/dialogs/llm_config/model_fetch.py","pagefolio/dialogs/llm_config/sections.py","pagefolio/dialogs/merge.py","pagefolio/dialogs/password.py","pagefolio/dialogs/plugin.py","pagefolio/dialogs/settings.py","pagefolio/dialogs/shortcuts.py","pagefolio/dnd.py","pagefolio/file_drop.py","pagefolio/file_ops.py","pagefolio/lang.py","pagefolio/md_render.py","pagefolio/ocr.py","pagefolio/ocr_dialog.py","pagefolio/ocr_engine.py","pagefolio/ocr_fallback.py","pagefolio/ocr_pipeline.py","pagefolio/ocr_providers/__init__.py","pagefolio/ocr_providers/base.py","pagefolio/ocr_providers/catalog.py","pagefolio/ocr_providers/claude.py","pagefolio/ocr_providers/errors.py","pagefolio/ocr_providers/gemini.py","pagefolio/ocr_providers/lmstudio.py","pagefolio/ocr_providers/ollama.py","pagefolio/ocr_providers/openai_provider.py","pagefolio/ocr_providers/registry.py","pagefolio/ocr_providers/runpod.py","pagefolio/ocr_providers/tesseract.py","pagefolio/page_ops.py","pagefolio/pagination.py","pagefolio/plugins.py","pagefolio/print_ops.py","pagefolio/redact_ops.py","pagefolio/settings.py","pagefolio/startup_control.py","pagefolio/startup_focus.py","pagefolio/startup_notice.py","pagefolio/startup_win32.py","pagefolio/themes.py","pagefolio/thumb_cache.py","pagefolio/toast.py","pagefolio/ui_builder.py","pagefolio/undo_store.py","pagefolio/viewer.py","plugins/page_info.py","pyproject.toml","requirements.txt","tests/__init__.py","tests/config_notice_support.py","tests/conftest.py","tests/test_batch_ocr_dialog.py","tests/test_batch_ocr_state.py","tests/test_config_notification.py","tests/test_export_images.py","tests/test_font_hardcode_guard.py","tests/test_gsd_dod.py","tests/test_imports.py","tests/test_lang_parity.py","tests/test_md_render.py","tests/test_ocr.py","tests/test_ocr_dialog_center.py","tests/test_ocr_engine.py","tests/test_ocr_fallback.py","tests/test_ocr_pipeline.py","tests/test_ocr_provider_catalog.py","tests/test_ocr_providers.py","tests/test_page_polish.py","tests/test_pagination.py","tests/test_password.py","tests/test_pdf_ops.py","tests/test_plugin_dialog_wheel.py","tests/test_plugins.py","tests/test_print.py","tests/test_prompt_templates.py","tests/test_provider_ui.py","tests/test_save_overwrite.py","tests/test_selection_invariant.py","tests/test_settings_keyguard.py","tests/test_shortcuts_dialog.py","tests/test_source_keyguard.py","tests/test_startup_control.py","tests/test_startup_focus.py","tests/test_startup_notice.py","tests/test_startup_windows.py","tests/test_thumb_cache.py","tests/test_toast.py","tests/test_undo_stress.py","tests/test_utils.py","tests/test_v150_regression.py","tests/test_viewer.py","開発履歴.md"]
-covered_digest: "v3:sha256:9e1bedc000056740954b066ac220000aa197aef95a15d9bf4c914029a0178277"
+covered_digest: "v3:sha256:5e1b3d4ce8b5f5eeed41dcf971459d5fc51edf2105dbbae328e9d52614470d31"
 behavior_unverified: 0
 overrides_applied: 0
 flagged_prohibitions: 0
 unclassified_edges: 4
 re_verification:
-  previous_status: human_needed
+  previous_status: passed
   previous_score: 23/23
   gaps_closed: []
   gaps_remaining: []
@@ -40,13 +40,13 @@ deferred:
 # Phase 5: 設定読込・保存失敗の通知 検証報告
 
 **Phase Goal:** 利用者が設定の読込・保存失敗を正しく把握でき、元の設定ファイルと編集操作を失わない。  
-**Verified:** 2026-10-23T18:14:21Z（2026-10-24 JST）
+**Verified:** 2026-10-24T11:47:08Z（2026-10-24 20:47 JST）
 **Status:** passed
-**Re-verification:** Yes — 2026-10-23T17:30:10Zのhuman_needed報告から、UATによる意味評価2件の解決を差分再検証。
+**Re-verification:** Yes — 2026-10-23T18:14:21Zのpassed報告後、covered files 11件が変更されfingerprintがstaleになったため差分再検証（実装gapなし）。
 
-肯定的な実装契約23件と実装gap 0件は前回の独立検証結果を再利用した。今回の差分は、05-UAT.mdに記録された利用者のTest 1・2各passを05-01-PLANの具体的禁止事項2件と照合したこと。実装・依存・検証入力・環境は変わらず、05-VALIDATION.mdの同一入力成功済み検証の再利用契約に従いpytest/GUIを再実行していない。既存の23/23、全件1797 passed/1 warning/exit0、入力103件のSHA256一致を再利用し、項目別判断が済んだため総合判定をpassedとする。
+前回passed報告（2026-10-23T18:14:21Z）以降、covered filesのうち11件（docs/CONFIGURATION.md、pagefolio/constants.py・lang.py・ocr.py・ocr_dialog.py、tests/config_notice_support.py・conftest.py・test_config_notification.py・test_ocr.py・test_startup_windows.py、開発履歴.md）が変更されて`verification status`がstaleとなった。全変更コミットを差分で評価し、Phase 5のmust-have（設定読込・保存失敗の通知、原本保護、`config_*`日英4キー、通知FIFO/寿命）を弱める変更は無いと確認した。肯定的な実装契約23件と実装gap 0件は維持。禁止事項2件のUAT解決（Test 1・2 pass）とH01〜H14の人手受入結果も履歴として維持する。本検証はpytest/GUIを新規実行していない（並行するPhase 4検証との実Tk/OS名前空間競合を避けるため）。現行の製品・試験バイトに対する親session実測の単一プロセス全件 `2014 passed, 1 warning in 710.70s (0:11:50) / exit 0` を引用する。
 
-**禁止事項2件は利用者の明示判断で解決、flagged 0件。** 内容不明のedge4件は未分類・未解決を維持する。DEP-05/owner_missing/通知前景不一致の原因未解決と出荷不可は解除しない。
+**禁止事項2件は利用者の明示判断で解決、flagged 0件。** 内容不明のedge4件は未分類・未解決を維持する。DEP-05-REGRESSION・owner_missing・通知前景不一致の原因未解決と出荷不可は解除せず、DEP-05-REGRESSIONは未解決のままである。
 
 ## Goal Achievement
 
@@ -138,20 +138,42 @@ LANGの固定通知文は実I/O結果を安全に説明する仕様であり、�
 
 ### Behavioral Spot-Checks
 
-同一コード・入力・環境の成功済み検証を再利用するPLAN/VALIDATION契約と親の不要再実行禁止に従い、サーバー/GUI/pytestを新規起動しなかった。必要な状態遷移を確認する既存named test本文を読み、含まれる最新fullの生ログと入力hashを照合した。
+並行するPhase 4検証との競合回避と親の指示に従い、サーバー/GUI/pytestを新規起動しなかった（静的チェックのみ実行）。必要な状態遷移を確認する既存named test本文を読み、含まれる最新fullの生ログと入力hashを照合した。
 
 | Behavior | Command / evidence | Result | Status |
 |---|---|---|---|
 | 読込→実Toast→PDF編集、保存失敗→原本保持 | C::TestLoadTracer::test_corrupt_settings_show_one_real_toast_and_keep_pdf_editable、S::TestAtomicSettingsWrite::test_failure_preserves_original_and_cleans_owned_tmp | 最新full内で成功。名前だけでなくassertを読取 | PASS（既存実走再利用） |
 | 終了保留/明示回復/再構築/FIFO | C::TestConfigAcceptanceの4状態列、TestNotificationLifecycle | 同上、実資源とfake clockを区別 | PASS（既存実走再利用） |
-| 修正CR-01/02 | C::TestToolSaveOrigins::test_real_shortcuts_close_restores_outer_grab、TestNotificationLifecycle::test_real_root_visibility_suspends_same_event | 追加8paramケースを含む1797件、H13/H14もpass | PASS（既存実走再利用） |
+| 修正CR-01/02 | C::TestToolSaveOrigins::test_real_shortcuts_close_restores_outer_grab、TestNotificationLifecycle::test_real_root_visibility_suspends_same_event | 現行全件2014件に含まれ成功、H13/H14もpass | PASS（親session実走を引用） |
 | 現行単一全件 | `.venv/Scripts/python.exe -m pytest -x -q --tb=short --basetemp=C:/Users/shdwf/AppData/Local/Temp/pf_focus_proof_final` | raw pytest.txt=1797 passed/1 warning/266.81s、status.json exit0、runner267.655s。selectorなし、100%完走 | PASS |
+| 現行単一全件（再検証時点） | 親sessionの`pytest`単一プロセス全件（生ログ: scratchpad `full_pytest_ab.txt`、最終更新20:39:42 JST） | `2014 passed, 1 warning in 710.70s (0:11:50)` / exit 0。実行開始（約20:28）は最終の製品/試験ファイル更新（20:26:52 JST）より後で、対象ファイルはgit上も未変更（clean）のため現行バイトに対する実走 | PASS（本検証は未実行・引用） |
 | 検証入力同一性 | verifierのpython hashlib照合、05-focus-proof-inputs.json | 103件、missing/hash不一致0 | PASS（本検証で実行） |
 | 品質 | 最新EVIDENCE.review_followupと05-reviewfix-quality.json | Ruff→Python限定format109 unchanged→Ruff→AST→diff成功。修正後検証として提出済み | PASS（既存実走再利用） |
 
 最新1797件と修正前1789件/278.95秒、修正直後1797件/266.50秒、runner時間を区別した。診断423件の原本/コピー/manifest一致は親の通常権限照合結果であり、本verifierの独立原本再hashとは称さない。最新copy manifestとstatusの423記録は読取確認した。
 
 Phase4は04-VERIFICATIONの21truth/参照ファイルを読み、Appの終了確認と資源保持に関する変更箇所を回帰確認した。最新全件に `test_gsd_dod.py / test_startup_control.py / test_startup_focus.py / test_startup_notice.py / test_startup_windows.py` を含む。これらの現行hashも103一致に含まれる。Phase4の実EXE/別session等not-runは継承し、今回の成功で解除しない。
+
+### 再検証の差分評価（stale 11ファイル）
+
+前回報告の`verified`（2026-10-23T18:14:21Z = 2026-10-24 03:14 JST）以降のコミットを`git log`/`git diff 98dd70a^ HEAD`で列挙し、covered filesへの変更を全件確認した。`pagefolio/app.py`・`settings.py`・`toast.py`・`ui_builder.py`・`dialogs/*`・`viewer.py`・`redact_ops.py`は変更なし（Phase 5の通知owner・原子的保存・保存元の実装はバイト不変）。
+
+| ファイル | 変更コミット | 内容 | Phase 5 must-haveへの影響 |
+|---|---|---|---|
+| pagefolio/lang.py | 52258de/7fb41a2 | `ocr_err_connection`（日英）を`{provider}`/接続先表示のプロバイダ中立文言へ変更。日英キー集合は一致（差分0）、`config_load_corrupt`/`config_load_unreadable`/`config_save_failed`/`config_save_blocked_unreadable`は日英とも非空で不変 | なし（`config_*`4キー不変、パリティ維持） |
+| pagefolio/ocr_dialog.py | 52258de/7fb41a2 | 接続先を有効スナップショットから`resolve_local_endpoint`で解決、LLM適用後に`_active_ocr_settings`を破棄、`_refresh_provider_dependent_ui`をprovider再生成のtry/except外側・後へ移動。`saved = self.app._persist_settings()`は保存直後のまま、失敗しても後続のprovider/prompt/UI更新を続行する構造を維持（Truth 15/19・Key Link「OCRDialog→App」） | なし（保存owner経由と失敗後続行は不変。UI更新順の改善のみ） |
+| pagefolio/ocr.py | 52258de | `DEFAULT_OLLAMA_URL`と`resolve_local_endpoint`の追加、`_start_ocr`の接続先決定の変更 | なし（設定保存/通知経路に触れない） |
+| pagefolio/constants.py | c09baea | `APP_VERSION`を`v1.10.0`へ同期（Phase 6 SC5の範囲） | なし（Phase 5はバージョン同期を明示的にPhase 6へ繰延べ済み） |
+| docs/CONFIGURATION.md | 06-01/06-02 | 配布版サンプルプロンプトの説明を追記 | なし（読込保護・明示/自動保存・終了契約・FIFOの記述は不変） |
+| tests/config_notice_support.py / test_config_notification.py | 98dd70a/07244dc | 設定通知試験の`TkinterDnD.Tk()`を`tk.Tk()`＋`_setup_file_drop`無効化へ置換（ネイティブD&D拡張ロードという無関係な環境要因から分離） | なし（assert・原本hash・FIFO・Document identity等の検証本体は不変。差分は初期化方式のみで、`pagefolio.app._setup_file_drop`はapp.py:16/921に実在。アサート削除なし）。試験内行番号が最大4行ずれたため、前掲Evidenceの`C:`行番号は±4行の目安 |
+| tests/conftest.py | 89582df | `pytest_runtest_teardown`でメインスレッド`gc.collect()`を追加（Tclリーク警告の誤帰属防止） | なし（試験を除外・skipしない。`tests/test_gc_barrier_guard.py`が構造を固定） |
+| tests/test_ocr.py | 52258de | `_on_run`の接続先解決変更に合わせ、`lm_studio_model`をsettingsにも設定 | なし（OCR接続先の試験前提の追従） |
+| tests/test_startup_windows.py | 3925d5f/3e56452 | Phase 4の前景監査診断ハーネス追加と、引継ぎ敗者`expired`を条件付き（5000〜6000ms・勝者ready差≥4500ms）で許容、`takeover-slow`回帰追加 | なし（Phase 4領域。製品コードと5000ms期限契約は不変。Phase 4のnot-run継承は変わらない） |
+| 開発履歴.md | 複数 | 履歴追記 | なし |
+
+**判定: 回帰・弱体化なし。** 追加された試験（`test_ocr_dialog_provider_refresh.py`・`test_ocr_local_endpoint.py`・`test_release_*`等）は全件に含まれ成功している。`ruff check pagefolio tests`は`All checks passed!`（静的、本検証で実行）。`APP_VERSION`は`v1.10.0`。
+
+**未コミット内容の注記:** coveredに含まれる`開発履歴.md`と`requirements.txt`は作業ツリーで未コミット変更（他作業由来）を含むため、`covered_digest`にはその未コミット内容が含まれる。`05-CONTEXT.md`は他作業でdirtyだがcovered外であり、編集していない。
 
 ### Probe Execution
 
@@ -212,7 +234,7 @@ T冒頭の既存`pytest.importorskip("tkinter")`はTk未導入時の条件分岐
 
 - 実配布EXE・各起動経路・DPI/UAC・Phase4移管UATはROADMAP Phase6 SC4と06-UAT-CARRYOVER。全必須passまでリリース停止。APP_VERSION/README同期はSC5。
 - Phase5の禁止2件は本Phaseの項目別UATで解決した。Phase4の禁止3件の移管記録をPhase5へ流用していない。
-- DEP-05・owner_missing・通知前景不一致は原因未確定。同種再発時は実装/後続実行/commit停止と最初の失敗保存を維持。今回の成功を修復や出荷承認としない。
+- DEP-05（DEP-05-REGRESSIONは未解決のまま）・owner_missing・通知前景不一致は原因未確定。同種再発時は実装/後続実行/commit停止と最初の失敗保存を維持。今回の成功を修復や出荷承認としない。
 - Tcl別thread解放RuntimeWarningは05-03-deferred-items.mdのopenを維持。最新warning1件はPyMuPDF ByteString非推奨であり、未観測を原因解決としない。
 - 手動harness全起動の正常終了・原本hash照合結果はstdout/stderrから確認不能。自動TestScenarioIsolationの原本hash/実plugin load0/例外cleanupの証明と区別する。残存processの強制終了や実設定操作は実施していない。
 - UI静的22/24は独立visual合格ではない。固定幅/閉鎖操作の意味・テーマ/DPIはPhase6最終実画面受入に留意。
@@ -221,7 +243,7 @@ T冒頭の既存`pytest.importorskip("tkinter")`はTk未導入時の条件分岐
 
 実装上の具体的な不足を示すgapsは0件、全4要件の肯定的契約23/23は前回の独立検証で実証済み。保留された禁止事項2件は今回の項目別UAT回答で解決し、現在のhuman_verificationは空。よって総合statusは **passed**。旧投影IDとedge4件は内容不明のままであり、この判定によって解決済みとはしない。DEP-05等の停止条件とPhase6の実機受入・出荷停止も維持する。
 
-covered_files/covered_digestは、既存のcovered_files集合を入力した `query verification.fingerprint .planning/phases/05-config-notification <既存covered_files>` のexit0出力をそのまま転記した（122 covered files、PLAN/SUMMARY自動追加）。手計算hashや旧digest流用なし。実装/共有文書の編集・commitは行っていない。
+covered_files/covered_digestは、前回と同じ122件の集合を入力した `query verification.fingerprint .planning/phases/05-config-notification <既存covered_files>` のexit0出力をそのまま転記した（PLAN/SUMMARY自動追加）。手計算hashや旧digest流用なし。実装/共有文書の編集・commitは行っていない。
 
 ---
 
