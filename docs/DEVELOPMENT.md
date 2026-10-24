@@ -60,47 +60,53 @@ python pagefolio.py
 | `ruff check .` | リントチェック |
 | `ruff format .` | コードフォーマット |
 | `ruff check . && ruff format .` | リント + フォーマットを一括実行 |
-| `pyinstaller --onedir --noconsole --icon=pagefolio.ico --name=PageFolio pagefolio.py` | Windows 向け実行ファイルをビルド（onedir 形式） |
+| `.venv/Scripts/python.exe tools/build_release.py --output-root <出力先>` | Windows 向け配布フォルダーをビルド（onedir・サンプル同梱・照合。詳細は下記「配布ビルド」） |
 
-### PyInstaller ビルドについて
+### 配布ビルド（専用CLI）
 
-`PageFolio.spec` は `.gitignore` 対象（`*.spec`）のためリポジトリには基本存在しません。初回ビルドは以下のコマンドをそのまま実行してください（実行すると `PageFolio.spec` が自動生成されます）。
+配布用の EXE は、専用 CLI の **1 コマンド**で作ります。初回ビルドも再ビルドも同じコマンドで、手動の `pyinstaller` 実行や、サンプルの退避・復元は不要です。
 
 ```bash
-pyinstaller --onedir --noconsole --icon=pagefolio.ico --name=PageFolio pagefolio.py
+.venv/Scripts/python.exe tools/build_release.py --output-root <出力先フォルダー>
 ```
 
 | オプション | 意味 |
 |-----------|------|
-| `--onedir` | ディレクトリ配布形式（`dist/PageFolio/` に exe + 依存ファイル一式を出力） |
-| `--noconsole` | 起動時にコンソールウィンドウを表示しない（GUI アプリ用） |
-| `--icon=pagefolio.ico` | アプリアイコンを指定 |
-| `--name=PageFolio` | 出力名（`dist/PageFolio/PageFolio.exe`） |
+| `--output-root` | 出力先フォルダー（既定は `dist`）。この直下に `PageFolio-<APP_VERSION>` が作られる |
 
-- 生成物は `dist/PageFolio/` ディレクトリに配置されます。`dist/PageFolio/` はリビルドのたびにコミットして追跡する運用です（`.gitignore` は `dist/*` を除外しつつ `!dist/PageFolio` / `!dist/PageFolio/**` で例外的に再許可している）。
-- 2 回目以降は自動生成された `PageFolio.spec` を使って `pyinstaller PageFolio.spec` でも同じ構成でリビルドできます（spec を手元で編集した場合はこちら）。
-- 確認プロンプトをスキップして再実行する場合は `--noconfirm` を付与します（`pyinstaller PageFolio.spec --noconfirm --clean` など）。この場合は下記「サンプルプロンプトファイルの退避」に必ず対応してください。
-- ビルド前に `venv` が有効化されていることを確認してください。
+- 版番号は `pagefolio/constants.py` の `APP_VERSION` から導きます。CLI・文書に別の版定数を持たないでください（フォルダー名は `PageFolio-<APP_VERSION>`）。
+- 実行順は、preflight（出力先の安全確認）→ EXE ビルド（所有 run 内の私有領域）→ サンプルとガイド（`はじめに.md`・`docs/CONFIGURATION.md`）の同梱 → SHA-256 照合 → 公開、です。サンプルの正本は `distribution/samples/`（出力先の外）にあり、`dist` 配下を原本にしません。
+- 画面には短い成否と出力先だけを表示します。詳細は同梱の `release-report.json`（版・同梱ファイル・SHA-256 照合結果）と、出力先の `.release-work/<run-id>/`（`report.json`・`build.log`）に残ります。
+- 成功後も生成した EXE は自動起動しない仕様です。配布元を直接起動せず、完全な複製を別の場所へ作り、その複製上で手動起動して実機受入を行ってください。ビルド照合の成功は実機受入や出荷承認ではなく、生成物は `release_allowed=false` のままです。
 
-#### サンプルプロンプトファイルの退避（重要）
+#### 出力先に利用者ファイルがある場合
 
-`dist/PageFolio/ocr_custom_prompt_sample.md` と `dist/PageFolio/ocr_summary_prompt_sample.md` は **`dist/PageFolio/` 直下にのみ Git 管理されており、ソースツリー側に原本が存在しません**。PyInstaller を `--noconfirm` 付きで実行すると `dist/PageFolio/` が丸ごと再作成されるため、この 2 ファイルは毎回消失します。リビルド時は以下の手順で退避 → 復元してください。
+preflight が、削除・置換・ビルド開始より前に停止します。`pagefolio_settings.json`・`ocr_custom_prompt.md`・`ocr_summary_prompt.md`（大文字小文字を区別しない同名のフォルダー・リンクを含む）、未知のファイル、リンク、前回の検証済み一覧と一致しない配布がある場合は、ファイルの存在を示して別の空フォルダーを指定するよう案内します。出力先を直接編集せず、別の空フォルダーでビルドしてください。
 
-```bash
-# 1. ビルド前に退避
-cp dist/PageFolio/ocr_custom_prompt_sample.md  /tmp/ocr_custom_prompt_sample.md
-cp dist/PageFolio/ocr_summary_prompt_sample.md /tmp/ocr_summary_prompt_sample.md
+#### 再ビルド
 
-# 2. ビルド実行（--noconfirm で dist/PageFolio が再生成される）
-pyinstaller PageFolio.spec --noconfirm --clean
+前回の検証済み一覧と完全に一致する管理済み配布だけが再ビルド対象です。旧い成果物は削除せず `.release-history/<run-id>/` へ保持され、公開や復帰に失敗しても旧配布は残ります。利用者の設定や実利用プロンプトは、配布先へ置かない前提です（置いてあれば上記のとおり停止します）。
 
-# 3. ビルド後に復元
-cp /tmp/ocr_custom_prompt_sample.md  dist/PageFolio/ocr_custom_prompt_sample.md
-cp /tmp/ocr_summary_prompt_sample.md dist/PageFolio/ocr_summary_prompt_sample.md
-```
+#### 失敗した場合
 
-- 復元後は `git diff` で退避前の内容と完全一致することを確認してからコミットしてください（サンプルの内容が意図せず変わっていないかのチェックも兼ねます）。
-- これは既知の恒久課題です（`.planning/codebase/CONCERNS.md` 参照）。根本解決には、サンプルをソースツリー（例: `pagefolio/samples/`）へ移設し、ビルド後コピーまたは PyInstaller の `--add-data` で `dist/PageFolio/` へ配置する仕組みが必要です。
+失敗した成果物は `.release-work/<run-id>/` に `INCOMPLETE` の印・`build.log`・`report.json` とともに残ります。配布用の成功物とは区別され、未検証の生成物を成功扱いしません。原因を確認してから別の run を実行してください。
+
+#### 古い lock の回復
+
+同じ最終先に `.PageFolio-<APP_VERSION>.lock` が残っていると、CLI は所有者を確認できるまで奪いません。回復は、lock に記録された PID と生成時刻の所有者が終了済みであると確認できた場合だけです。その場合に限り、lock の内容と確認結果を別保存してから、該当 lock を手動で解除します。所有者を確認できない場合は解除しないでください。
+
+#### 履歴と作業領域の容量
+
+`.release-history/` と `.release-work/` は自動では削除されません。使用容量と run一覧を確認し、必要な証拠（`report.json`・`build.log`・`release-report.json`）と旧成功先を別保存して SHA-256 を照合した上で、不要と明示的に選んだ自分の run だけを手動で回収します。実行中・失敗調査中の run と旧dist（追跡済みの `dist/PageFolio`）は保持します。
+
+#### Git の扱い
+
+- 版付きの生成物（`PageFolio-<APP_VERSION>` や `.release-*`）は、既存の `dist/*` の ignore のままローカルの release 候補として保持します。巨大な成果物を stage せず、Release の公開もこの手順には含みません。
+- 旧追跡の `dist/PageFolio` は保持します（削除・書き換えは行いません）。stage するのは正本・ガイド・コード・小さい証拠ファイルだけで、全ファイルの一括 add は行わず、個別に指定します。
+
+#### 利用者向けの更新
+
+更新手順（別フォルダーへ展開し、旧フォルダーを残して設定・実利用プロンプトだけをコピー、同名があれば止めて選ぶ）は同梱の `はじめに.md` と [README.md](../README.md) にあります。plugins は自動では移行しない対象です。旧フォルダーを保持したまま、[PLUGINS.md](PLUGINS.md) の導入手順で入れ直します。
 
 ---
 

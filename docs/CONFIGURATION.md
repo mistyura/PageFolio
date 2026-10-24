@@ -124,6 +124,8 @@ OCR で実際に送信されるプロンプトと、結果の表示形式は以�
 連動を始めるには、空の md ファイルを上記の場所に置くだけです（次回の「適用」から書き込まれます）。
 ファイルを削除すれば settings のみの通常動作へ戻ります。
 
+配布版（EXE）には、実利用ファイルの元になるサンプル `ocr_custom_prompt_sample.md` / `ocr_summary_prompt_sample.md` が同梱されます。サンプルは連動の対象ではありません。必要な方だけ、`ocr_custom_prompt.md` / `ocr_summary_prompt.md` の名前でコピーして使います。サンプル自体を実利用ファイルとして編集しません。コピー先に同名のファイルがある場合は上書きしないで、両方の内容を確認してから選びます。版を更新するときは、旧フォルダーを残したまま、`pagefolio_settings.json` と実利用のプロンプトだけを新しいフォルダーへコピーします（手順は同梱の `はじめに.md`）。
+
 **3. プロンプトテンプレート管理**
 
 `prompt_templates` キーで、OCR プロンプト・サマリプロンプトのペアを名前付きで複数保存・切替できます。
@@ -356,6 +358,7 @@ UIでApply・言語切替・その他の設定変更を行うと保存を試み�
 | `pagefolio/constants.py` | `SETTINGS_FILE` / `CUSTOM_PROMPT_FILE` / `SUMMARY_PROMPT_FILE` 定数（ファイル名定義） |
 | `pagefolio/ocr_providers/registry.py` | プロバイダ→環境変数の中央レジストリ（`sensitive_keys()` / `resolve_env_key()`）。標準ライブラリ `os` のみに依存し、循環 import を防ぐ独立モジュール |
 | `ocr_custom_prompt.md` / `ocr_summary_prompt.md` | （任意配置）外部プロンプトファイル。存在すれば設定欄と連動する（→ [カスタム / サマリプロンプトの仕様](#カスタム--サマリプロンプトの仕様)） |
+| `ocr_custom_prompt_sample.md` / `ocr_summary_prompt_sample.md` | 配布版（EXE）に同梱されるサンプル。連動の対象外で、必要な方だけ実利用名へコピーして使う（上書きしない） |
 | `pagefolio/themes.py` | `THEMES` 辞書（テーマ定義）と実行時辞書 `C` |
 | `pagefolio/pagination.py` | `clamp_page_size` 等のページネーション純ロジック（`thumb_page_size` のクランプ範囲定義） |
 | `pagefolio/ocr.py` | OCR 既定値定数（`DEFAULT_LM_STUDIO_URL` 等）・`build_provider`・`_resolve_api_key`・`resolve_ocr_prompt` / `resolve_summary_prompt` |
