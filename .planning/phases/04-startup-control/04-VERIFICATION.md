@@ -1,10 +1,10 @@
 ---
 phase: 04-startup-control
-verified: 2026-10-24T08:40:00Z
+verified: 2026-10-24T11:20:00Z
 status: passed
 score: 21/21 must-haves verified
 covered_files: [".planning/phases/04-startup-control/04-01-PLAN.md", ".planning/phases/04-startup-control/04-01-SUMMARY.md", ".planning/phases/04-startup-control/04-02-PLAN.md", ".planning/phases/04-startup-control/04-02-SUMMARY.md", ".planning/phases/04-startup-control/04-03-PLAN.md", ".planning/phases/04-startup-control/04-03-SUMMARY.md", ".planning/phases/04-startup-control/04-04-PLAN.md", ".planning/phases/04-startup-control/04-04-SUMMARY.md", ".planning/phases/04-startup-control/04-05-PLAN.md", ".planning/phases/04-startup-control/04-05-SUMMARY.md", ".planning/phases/04-startup-control/04-06-EVIDENCE.json", ".planning/phases/04-startup-control/04-06-PLAN.md", ".planning/phases/04-startup-control/04-06-SUMMARY.md", "pagefolio.py", "pagefolio/__init__.py", "pagefolio/__main__.py", "pagefolio/app.py", "pagefolio/lang.py", "pagefolio/startup_control.py", "pagefolio/startup_focus.py", "pagefolio/startup_notice.py", "pagefolio/startup_win32.py", "tests/test_gsd_dod.py", "tests/test_startup_control.py", "tests/test_startup_focus.py", "tests/test_startup_notice.py", "tests/test_startup_windows.py"]
-covered_digest: "v3:sha256:e0d6d98737c72029932bd6c815158ef4b7f70ec603258b6a455aac0756c70417"
+covered_digest: "v3:sha256:7436bfbe557b89884f4d6842c32f94a27f1f70da4e5c099e33745fc8700b4982"
 behavior_unverified: 0
 overrides_applied: 0
 human_verification: []
@@ -14,7 +14,7 @@ re_verification:
   gaps_closed: []
   gaps_remaining: []
   regressions: []
-  trigger: "3e56452 が tests/test_startup_windows.py(+58/-7)のみを変更し、dd10ce7 時点の指紋(v3:sha256:5011dcc61c28...)が失効。製品コード(pagefolio/)は不変"
+  trigger: "52258de / 7fb41a2(OCR修正)が被覆ファイル pagefolio/lang.py の ocr_err_connection 文言(ja/en、+8/-8)を変更し、e9d2170 時点の指紋(v3:sha256:e0d6d98737c7...0417)が失効。startup_notice_* を含む Phase 4 のキーは不変、他の被覆ファイルも不変"
 flagged_prohibitions: 3
 unclassified_edges: 5
 decision_coverage:
@@ -53,7 +53,7 @@ prohibitions:
 
 **目標:** 利用者が2回目に PageFolio を起動しても作業画面が増えず、進行中の作業を保ったまま既存画面へ戻れる。
 **判定:** passed(Phase 4の実装/自動受入範囲 21/21)。Phase 6の実機受入は未実施のまま。
-**検証種別:** 再検証(2回目)。dd10ce7 で再生成した報告(21/21 passed)の指紋が、`3e56452` による `tests/test_startup_windows.py` の試験のみの変更(+58/-7)で失効したため、この試験変更が Phase 4 の must-have(D-05〜D-08)を弱めていないかを精査し、被覆ファイルの不変を `git diff dd10ce7..HEAD` で確認した。製品コードは変更なし。コミットなし。
+**検証種別:** 再検証(3回目、OCR修正後のstale解消)。直前の再検証(2回目)は以下のとおり。dd10ce7 で再生成した報告(21/21 passed)の指紋が、`3e56452` による `tests/test_startup_windows.py` の試験のみの変更(+58/-7)で失効したため、この試験変更が Phase 4 の must-have(D-05〜D-08)を弱めていないかを精査し、被覆ファイルの不変を `git diff dd10ce7..HEAD` で確認した。製品コードは変更なし。コミットなし。
 
 **dd10ce7 以降の変更の全体:** `git diff --name-only dd10ce7..HEAD` は `tests/test_startup_windows.py` / `.planning/debug/resolved/takeover-loser-expired.md` / `.planning/phases/04-startup-control/04-VALIDATION.md`(+4行、被覆集合外の計画文書)の3件のみ。`pagefolio/`・`pagefolio.py`・他の被覆試験は dd10ce7 から不変。
 
@@ -69,6 +69,18 @@ prohibitions:
 - **Tcl warning**: `test_ocr_engine.py` のTcl interpreter別thread破棄に由来する警告。因果不明。
 - **未分類edge 5件**: Phase 6で実機照合する。
 - **WR-01**: 並行負荷の二次終了 15609ms(15.5秒上限を109ms超過)と単独 15140ms は両方保持。
+
+## 再検証(3回目): OCR修正コミット 52258de / 7fb41a2 による lang.py 変更の精査
+
+e9d2170 で再生成した報告(21/21 passed、指紋 `v3:sha256:e0d6d98737c7...0417`)は、OCR のプロバイダ表示不具合を直す `52258de` / `7fb41a2` が被覆ファイル `pagefolio/lang.py` を変更したため stale になった。変更が Phase 4 の must-have に触れていないかを静的に確認した(pytest は並行する Phase 5 検証と固定 OS 名前空間が衝突するため本検証では実行せず、オーケストレーターが取得した全件ログを引用する)。HEAD は `202b2c0`。
+
+**被覆集合に対する `git diff --stat e9d2170..HEAD`:** 変更は `pagefolio/lang.py` の1件(+8/-8)のみ。`pagefolio.py` / `pagefolio/__init__.py` / `__main__.py` / `app.py` / `startup_control.py` / `startup_focus.py` / `startup_notice.py` / `startup_win32.py`、4つの `tests/test_startup_*.py`、`tests/test_gsd_dod.py`、04-0x の PLAN/SUMMARY/04-06-EVIDENCE.json はすべて e9d2170 から不変。
+
+**`lang.py` 差分の内訳:** ja/en 各1箇所の `ocr_err_connection` 文言のみ(ja は「LM Studio に接続できませんでした」→ `{provider}` を使うプロバイダ非依存の文言、en も同様に `{provider}` 化)。`startup_notice_check_failed` / `_contact_failed` / `_timeout` / `_close` / `_title`(ja 21-34行、en 847-860行)は差分に含まれず、他の Phase 4 キーにも触れていない。`ocr_err_connection` の参照元は `pagefolio/ocr_dialog.py:2085` と OCR 試験(`tests/test_ocr_local_endpoint.py`)のみで、起動制御(startup_*)・`__main__.py` からの参照はない。したがって truth 16(固定案内文言)・truth 3 を含む21 truth のいずれにも影響しない。
+
+**被覆集合外の変更(影響評価):** `pagefolio/ocr.py` / `ocr_dialog.py` と OCR 試験は Phase 4 のスコープ外。`tests/conftest.py` は各テスト後始末の直後に `gc.collect()` を呼ぶ `pytest_runtest_teardown` フック(+20行)を追加したが、被覆集合には入らず、起動制御の assertion を変えない(Tcl interpreter の別スレッド破棄警告の防止策。因果未確定の Tcl warning は引き続き未解決として扱う)。`tests/release_uat_support.py` ほか Phase 6 関連の `.planning/` 資料も Phase 4 の被覆集合外。
+
+**結論:** `lang.py` の変更は Phase 4 の must-have・禁止事項・決定(D-01〜D-16)に影響しない。判定は passed / 21/21 のまま維持し、被覆ファイルは同一集合で指紋だけを現行バイトに再計算した。
 
 ## 再検証: `3e56452` の試験変更が must-have を弱めていないかの精査
 
@@ -185,14 +197,14 @@ ROADMAP5基準を先頭に置き、全PLANの追加truthを重複統合した。
 
 ### Behavioral Spot-Checks
 
-回帰証拠は次の2系統。(a) 現行 HEAD バイトに対する単一プロセス全件 pytest(オーケストレーター実走、本検証では再実行せず引用)、(b) 本検証で独立実走した Phase 4 対象5ファイル。
+回帰証拠は次の2系統。(a) 現行バイトに対する単一プロセス全件 pytest(オーケストレーター実走、本検証では再実行せず引用)、(b) 本検証で独立実走した Phase 4 対象5ファイル。
 
-(a) の対応: 全件ログは HEAD(`3e56452`/`40cc1be`)のバイトに対して取得されたもの(オーケストレーター申告)。dd10ce7 以降に変わった実装/試験バイトは `tests/test_startup_windows.py` のみで、これは (b) で独立実走した。
+(a) の対応: 全件ログは現行の製品/試験バイトに対して取得されたもの(オーケストレーター申告)。e9d2170 以降に変わった被覆バイトは `pagefolio/lang.py` の `ocr_err_connection` のみで、Phase 4 のキーと無関係(上記)。(b) は e9d2170 の再検証時の実走(`tests/test_startup_windows.py` を含む)で、以降 Phase 4 の被覆試験バイトは不変。本回は並行検証との競合回避のため pytest を再実行していない。
 
 | Behavior | Command | Result | Status |
 |---|---|---|---|
-| HEAD バイトの単一プロセス全件 | `C:\Users\shdwf\AppData\Local\Temp\claude\C--Users-shdwf-work-project-PageFolio\ce16e575-317d-4582-a7f5-f17bbae7daa7\scratchpad\full_run.txt`(オーケストレーター実走) | 1970 passed, 1 warning in 429.91s / exit 0。除外なし | PASS(引用) |
-| Phase 4 対象5ファイル | `.venv\Scripts\python.exe -m pytest -q tests/test_startup_control.py tests/test_startup_focus.py tests/test_startup_notice.py tests/test_gsd_dod.py tests/test_startup_windows.py --basetemp=C:\Users\shdwf\AppData\Local\Temp\pf04_reverify_20261024172920` | 239 passed, 1 warning in 315.36s (0:05:15)。失敗0・ERROR0・skip0。新規 `test_takeover_loser_expires_when_winner_initialization_exceeds_deadline` と改修後 `test_takeover_two_candidates_after_confirmed_initialization_death` を含む | PASS(本検証で実走) |
+| 現行バイトの単一プロセス全件 | `C:\Users\shdwf\AppData\Local\Temp\claude\C--Users-shdwf-work-project-PageFolio\ce16e575-317d-4582-a7f5-f17bbae7daa7\scratchpad\full_pytest_ab.txt`(オーケストレーター実走) | 2014 passed, 1 warning in 710.70s (0:11:50) / exit 0。除外なし | PASS(引用) |
+| Phase 4 対象5ファイル(e9d2170 再検証時の実走、本回は再実行なし) | `.venv\Scripts\python.exe -m pytest -q tests/test_startup_control.py tests/test_startup_focus.py tests/test_startup_notice.py tests/test_gsd_dod.py tests/test_startup_windows.py --basetemp=C:\Users\shdwf\AppData\Local\Temp\pf04_reverify_20261024172920` | 239 passed, 1 warning in 315.36s (0:05:15)。失敗0・ERROR0・skip0。新規 `test_takeover_loser_expires_when_winner_initialization_exceeds_deadline` と改修後 `test_takeover_two_candidates_after_confirmed_initialization_death` を含む | PASS(前回実走を引用、被覆試験バイト不変) |
 
 警告1件は既存の PyMuPDF `typing.ByteString` 非推奨で、failure/ERROR/対象 skip は0。症状①(TclError セットアップ ERROR)は CLAUDE.md の通り再発し得る既知の環境症状であり、今回の実走では観測されなかったが「非再現」とは扱わない。
 
@@ -235,9 +247,9 @@ REQUIREMENTS.md は5件とも `[x]` / Complete だが、これは Phase 4 の自
 
 ### Gaps Summary
 
-BLOCKER なし。Phase 5 と debug コミットによる `app.py` / `lang.py` / `startup_focus.py` の変更は、Phase 4 の21 truth のいずれも回帰させていない(`_quit` のキャンセル保持は強化、focus の入力先維持も強化、lang は additive、bind は add="+" で共存)。HEAD バイトの単一プロセス全件(1970 passed、引用)と本検証の Phase 4 対象5ファイル実走(239 passed)で確認した。`3e56452` の試験変更は D-05〜D-08 の assertion を弱めず、製品コードは dd10ce7 から不変である。DEP-05-REGRESSION、owner_missing、通知前景不一致、Tcl warning、未分類 edge 5件、WR-01 は解決済みと扱わず、禁止事項3件は flagged-unverified、W 人手部分は not-run を維持して Phase 6 へ引き継ぐ。
+BLOCKER なし。Phase 5 と debug コミットによる `app.py` / `lang.py` / `startup_focus.py` の変更は、Phase 4 の21 truth のいずれも回帰させていない(`_quit` のキャンセル保持は強化、focus の入力先維持も強化、lang は additive、bind は add="+" で共存)。現行バイトの単一プロセス全件(2014 passed、引用)と、被覆試験バイトが不変であることの git 差分確認で担保した(Phase 4 対象5ファイル実走 239 passed は e9d2170 時点)。OCR修正による `lang.py` の `ocr_err_connection` 変更は Phase 4 に無関係。`3e56452` の試験変更は D-05〜D-08 の assertion を弱めず、製品コードは dd10ce7 から不変である。DEP-05-REGRESSION、owner_missing、通知前景不一致、Tcl warning、未分類 edge 5件、WR-01 は解決済みと扱わず、禁止事項3件は flagged-unverified、W 人手部分は not-run を維持して Phase 6 へ引き継ぐ。
 
 ---
 
-_Verified: 2026-10-24T08:40:00Z_
+_Verified: 2026-10-24T11:20:00Z_
 _Verifier: Claude (gsd-verifier、再検証)_
