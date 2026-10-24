@@ -1,0 +1,85 @@
+"""Tk/Variable の生成テスト・破棄(ファイナライズ)スレッド・破棄時のテストを自然GCのまま記録する診断プラグイン。
+
+- tkinter.Tk.__init__ / tkinter.Variable.__init__ をラップし、weakref.finalize で解放時の
+  スレッド名と「その時点で実行中のテスト」を記録する。
+- GC の挙動は変更しない（TK_LIFE_THRESH 指定時のみ gc.set_threshold で圧力を掛ける）。
+"""
+
+import gc
+import os
+import sys
+import threading
+import time
+import weakref
+
+import pytest
+
+OUT = os.environ["TK_LIFE_OUT"]
+_state = {"cur": "<none>", "n": 0, "main": threading.main_thread().ident}
+_live = {}
+_lock = threading.Lock()
+
+
+def _log(msg):
+    with _lock, open(OUT, "a", encoding="utf-8") as f:
+        f.write(msg + "\n")
+
+
+def _on_final(key):
+    th = threading.current_thread()
+    info = _live.pop(key, None)
+    kind, creator, cthread = info if info else ("?", "?", "?")
+    in_main = th.ident == _state["main"]
+    _log(
+        f"FINAL\t{kind}\tcreated_in={creator}\tcreated_thread={cthread}"
+        f"\tfinal_thread={th.name}\tfinal_in_main={in_main}\tduring={_state['cur']}"
+    )
+
+
+def _register(obj, kind):
+    with _lock:
+        _state["n"] += 1
+        key = _state["n"]
+        _live[key] = (kind, _state["cur"], threading.current_thread().name)
+    weakref.finalize(obj, _on_final, key)
+
+
+def pytest_configure(config):
+    import tkinter
+
+    th = os.environ.get("TK_LIFE_THRESH")
+    if th:
+        gc.set_threshold(int(th), 10, 10)
+    _log(f"# life probe start thresh={gc.get_threshold()}")
+
+    orig_tk = tkinter.Tk.__init__
+
+    def tk_init(self, *a, **k):
+        orig_tk(self, *a, **k)
+        _register(self, "Tk")
+
+    tkinter.Tk.__init__ = tk_init
+
+    orig_var = tkinter.Variable.__init__
+
+    def var_init(self, *a, **k):
+        orig_var(self, *a, **k)
+        _register(self, "Var")
+
+    tkinter.Variable.__init__ = var_init
+
+
+@pytest.hookimpl(tryfirst=True)
+def pytest_runtest_protocol(item, nextitem):
+    _state["cur"] = item.nodeid
+
+
+def pytest_sessionfinish(session, exitstatus):
+    _state["cur"] = "<sessionfinish>"
+    with _lock:
+        left = dict(_live)
+    summary = {}
+    for kind, creator, _ in left.values():
+        summary[(kind, creator)] = summary.get((kind, creator), 0) + 1
+    for (kind, creator), n in sorted(summary.items()):
+        _log(f"ALIVE_AT_END\t{kind}\tx{n}\tcreated_in={creator}")

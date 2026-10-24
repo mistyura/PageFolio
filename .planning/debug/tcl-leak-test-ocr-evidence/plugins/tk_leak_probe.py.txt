@@ -1,0 +1,57 @@
+"""各テストの teardown 後に Tk/Variable ガベージを計測する診断プラグイン（診断専用・製品非依存）。
+
+- 自動GCを無効化し、ガベージを蓄積させる。
+- teardown 後に gc.get_objects() 上の Tk/Variable 数(before)を数え、メインスレッドで gc.collect() 後(after)も数える。
+- before - after が「循環ガベージとして残っていた Tk/Variable」(＝非メインスレッドGCで leak 警告を起こしうる)。
+"""
+
+import gc
+import os
+import sys
+
+import pytest
+
+OUT = os.environ["TK_PROBE_OUT"]
+
+
+def _log(msg):
+    with open(OUT, "a", encoding="utf-8") as f:
+        f.write(msg + "\n")
+
+
+def _count():
+    tk = sys.modules.get("tkinter")
+    if tk is None:
+        return 0, 0
+    tks = vs = 0
+    objs = gc.get_objects()
+    for o in objs:
+        try:
+            if isinstance(o, tk.Tk):
+                tks += 1
+            elif isinstance(o, tk.Variable):
+                vs += 1
+        except Exception:
+            pass
+    del objs
+    return tks, vs
+
+
+def pytest_configure(config):
+    if os.environ.get("TK_PROBE_NOGC", "1") == "1":
+        gc.disable()
+    _log(f"# probe start gc.isenabled={gc.isenabled()}")
+
+
+@pytest.hookimpl(wrapper=True)
+def pytest_runtest_teardown(item, nextitem):
+    result = yield
+    b = _count()
+    gc.collect()
+    a = _count()
+    if b != (0, 0) or a != (0, 0):
+        _log(
+            f"{item.nodeid}\tbefore(Tk,Var)={b}\tafter_collect={a}\t"
+            f"garbage=({b[0] - a[0]},{b[1] - a[1]})"
+        )
+    return result

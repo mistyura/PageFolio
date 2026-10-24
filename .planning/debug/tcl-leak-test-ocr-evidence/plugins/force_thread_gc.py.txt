@@ -1,0 +1,19 @@
+"""決定的な機構確認: 自動GCを止めてガベージを蓄積し、対象テスト直前にワーカースレッドで gc.collect() を実行する。"""
+
+import gc
+import threading
+
+import pytest
+
+
+def pytest_configure(config):
+    gc.disable()
+
+
+@pytest.hookimpl(wrapper=True)
+def pytest_runtest_call(item):
+    if item.name == "test_always_retryable_errors_after_max_retries":
+        t = threading.Thread(target=gc.collect, name="probe-gc-worker")
+        t.start()
+        t.join()
+    return (yield)

@@ -1,0 +1,12 @@
+"""修正案の模擬: 各テストの teardown 完了後(モジュール/セッション fixture 後始末を含む)にメインスレッドで gc.collect()。"""
+
+import gc
+
+import pytest
+
+
+@pytest.hookimpl(wrapper=True)
+def pytest_runtest_teardown(item, nextitem):
+    result = yield
+    gc.collect()
+    return result

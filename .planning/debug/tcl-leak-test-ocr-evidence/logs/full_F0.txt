@@ -1,0 +1,61 @@
+F0 basetemp=C:\Users\shdwf\AppData\Local/Temp/pf_tclleak_F0_1792833602
+........................................................................ [  3%]
+........................................................................ [  7%]
+........................................................................ [ 10%]
+........................................................................ [ 14%]
+........................................................................ [ 18%]
+........................................................................ [ 21%]
+........................................................................ [ 25%]
+........................................................................ [ 29%]
+........................................................................ [ 32%]
+........................................................................ [ 36%]
+........................................................................ [ 40%]
+........................................................................ [ 43%]
+........................................................................ [ 47%]
+........................................................................ [ 51%]
+........................................................................ [ 54%]
+........................................................................ [ 58%]
+........................................................................ [ 62%]
+........................................................................ [ 65%]
+........................................................................ [ 69%]
+........................................................................ [ 72%]
+........................................................................ [ 76%]
+........................................................................ [ 80%]
+........................................................................ [ 83%]
+........................................................................ [ 87%]
+........................................................................ [ 91%]
+........................................................................ [ 94%]
+........................................................................ [ 98%]
+.............................                                            [100%]
+============================== warnings summary ===============================
+.venv\Lib\site-packages\pymupdf\__init__.py:470
+  C:\Users\shdwf\work\project\PageFolio\.venv\Lib\site-packages\pymupdf\__init__.py:470: DeprecationWarning: 'typing.ByteString' and 'collections.abc.ByteString' are deprecated and slated for removal in Python 3.17
+    ByteString = typing.ByteString
+
+tests/test_ocr.py::TestRunParallelBackoff::test_retryable_once_then_success
+  C:\Users\shdwf\work\project\PageFolio\.venv\Lib\site-packages\_pytest\unraisableexception.py:67: PytestUnraisableExceptionWarning: Exception ignored while calling deallocator <function Variable.__del__ at 0x00000244B5951220>: None
+  
+  Traceback (most recent call last):
+    File "C:\Users\shdwf\work\project\PageFolio\pagefolio\ocr.py", line 359, in _call
+      text = provider.ocr_image(b64, prompt)
+    File "C:\Users\shdwf\work\project\PageFolio\tests\test_ocr.py", line 56, in ocr_image
+      return self._side_effect(b64_png, prompt)
+             ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+    File "C:\Users\shdwf\work\project\PageFolio\tests\test_ocr.py", line 671, in side_effect
+      raise OCRRetryableError("429 rate limit", retry_after=None)
+  pagefolio.ocr_providers.errors.OCRRetryableError: 429 rate limit
+  
+  During handling of the above exception, another exception occurred:
+  
+  Traceback (most recent call last):
+    File "C:\Users\shdwf\AppData\Local\Programs\Python\Python315\Lib\tkinter\__init__.py", line 420, in __del__
+      if self._tk.getboolean(self._tk.call("info", "exists", self._name)):
+                             ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  RuntimeError: main thread is not in main loop
+  
+  
+    warnings.warn(pytest.PytestUnraisableExceptionWarning(msg))
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+1973 passed, 2 warnings in 434.26s (0:07:14)
+exit=0

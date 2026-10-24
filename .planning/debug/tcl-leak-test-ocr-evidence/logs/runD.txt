@@ -1,0 +1,30 @@
+........................................................................ [ 16%]
+........................................................................ [ 32%]
+........................................................................ [ 48%]
+........................................................................ [ 64%]
+........................................................................ [ 80%]
+........................................................................ [ 96%]
+...............                                                          [100%]
+============================== warnings summary ===============================
+.venv\Lib\site-packages\pymupdf\__init__.py:470
+  C:\Users\shdwf\work\project\PageFolio\.venv\Lib\site-packages\pymupdf\__init__.py:470: DeprecationWarning: 'typing.ByteString' and 'collections.abc.ByteString' are deprecated and slated for removal in Python 3.17
+    ByteString = typing.ByteString
+
+tests/test_ocr.py::TestRunParallelBackoff::test_always_retryable_errors_after_max_retries
+  C:\Users\shdwf\AppData\Local\Programs\Python\Python315\Lib\threading.py:1160: RuntimeWarning: the Tcl interpreter is leaked because it was deallocated in a thread other than the one it was created in (see gh-83274)
+    self._target(*self._args, **self._kwargs)
+
+tests/test_ocr.py::TestRunParallelBackoff::test_always_retryable_errors_after_max_retries
+  C:\Users\shdwf\work\project\PageFolio\.venv\Lib\site-packages\_pytest\unraisableexception.py:67: PytestUnraisableExceptionWarning: Exception ignored while calling deallocator <function Variable.__del__ at 0x0000019BDFD27270>: None
+  
+  Traceback (most recent call last):
+    File "C:\Users\shdwf\AppData\Local\Programs\Python\Python315\Lib\tkinter\__init__.py", line 420, in __del__
+      if self._tk.getboolean(self._tk.call("info", "exists", self._name)):
+                             ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  RuntimeError: main thread is not in main loop
+  
+  
+    warnings.warn(pytest.PytestUnraisableExceptionWarning(msg))
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+447 passed, 3 warnings in 123.50s (0:02:03)
