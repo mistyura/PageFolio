@@ -10,6 +10,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+from tests import release_uat_support as sup
+
 ROOT = Path(__file__).resolve().parents[1]
 SAMPLES = ("ocr_custom_prompt_sample.md", "ocr_summary_prompt_sample.md")
 # 元の dist/PageFolio にあった2サンプルの全文SHA-256（内容改稿はこのphaseの範囲外）。
@@ -307,5 +309,357 @@ class TestGuideAndWorkflow:
             "UTF-8",
             "書き戻す",
             "毎回再読込",
+        ):
+            assert needle in text, needle
+
+
+# ---------------------------------------------------------------------------
+# 06-05-01: 全ケースの入口別カードと証拠台帳（TestCaseCoverage）
+# ---------------------------------------------------------------------------
+PHASE_DIR = ROOT / ".planning/phases/06-release-validation"
+CARRYOVER_CASES = (
+    "W01 W02 W03 W04 W05a W05b W05c W06 W07a W07b W08a W08b W08c W08d "
+    "W09a W09b W09c W09d W10a W10b W11 W12a W12b W12c WR-01"
+).split()
+FAULT_CASES = tuple(f"X0{n}" for n in range(1, 7))
+GROUPS = {
+    **dict.fromkeys(("W01", "W02"), "G1"),
+    **dict.fromkeys(("W03", "W04"), "G2"),
+    **dict.fromkeys(("W05a", "W05b", "W05c"), "G3"),
+    **dict.fromkeys(("W12a", "W12b", "W12c"), "G4"),
+    **dict.fromkeys(("X01", "X02", "X03"), "G5"),
+    **dict.fromkeys(("X04", "X05", "X06"), "G6"),
+    **dict.fromkeys(("W06", "W07a"), "G7"),
+    **dict.fromkeys(("W07b", "WR-01"), "G8"),
+    **dict.fromkeys(("W08a", "W08b"), "G9"),
+    **dict.fromkeys(("W08c", "W08d"), "G10"),
+    **dict.fromkeys(("W09a", "W09b"), "G11"),
+    **dict.fromkeys(("W09c", "W09d"), "G12"),
+    **dict.fromkeys(("W10a", "W10b"), "G13"),
+    "W11": "G14",
+}
+ENTRIES3 = ("script", "module", "production-exe")
+CARD_LABELS = (
+    "準備コマンド",
+    "利用者操作",
+    "期待",
+    "必須観測",
+    "失敗時の回収",
+    "出典",
+)
+CARD_HEAD = re.compile(r"^### ((?:W\d{2}[a-d]?|WR-01|X\d{2}))/(\S+)\s*$", re.MULTILINE)
+
+
+def pairs(conds, entries):
+    return {(c, e) for c in conds for e in entries}
+
+
+# 台帳のsubrowが満たすべき (条件, 入口) の宣言。台帳側の宣言を写すのではなく、
+# 計画(D-13〜D-16・移管条件)から独立に書いた期待値。
+EXPECTED_PAIRS = {
+    "W01": pairs(("normal", "zoomed"), ENTRIES3),
+    "W02": pairs(("settings", "thumb", "preview"), ENTRIES3),
+    "W03": pairs(("pdf-3page",), ENTRIES3),
+    "W04": pairs(("ocr-1page",), ENTRIES3),
+    "W05a": pairs(("nested-settings",), ENTRIES3),
+    "W05b": pairs(("ocr-close-confirm",), ENTRIES3),
+    "W05c": pairs(("quit-no",), ENTRIES3),
+    "W12a": {
+        (f"{a}-{b}", a)
+        for a in ("script", "module", "relocated")
+        for b in ("script", "module", "relocated")
+    },
+}
+W12B_CONDITIONS = {
+    "exe-exe-samecopy",
+    "exe-script",
+    "script-exe",
+    "exe-module",
+    "module-exe",
+    "exe-tracer",
+    "tracer-exe",
+    "exe-relocated-copy",
+    "relocated-copy-exe",
+}
+W12C_CONDITIONS = {
+    "explorer-python",
+    "terminal-python",
+    "explorer-exe",
+    "terminal-exe",
+}
+X04_CONDITIONS = {
+    "general-settings",
+    "llm-or-external-prompt",
+    "shortcut",
+    "plugin-change",
+    "ocr-conditions",
+    "tool-settings",
+    "window-exit",
+    "replace-notification",
+}
+PHASE5_H = tuple(f"H{n:02d}" for n in range(1, 15))
+# 実機passになった行が属してよいstatus。passの妥当性はauditが検査する。
+STATUSES = ("not-run", "pass", "fail", "blocked")
+
+
+def ledger():
+    return json.loads((PHASE_DIR / "06-MANUAL-EVIDENCE.json").read_text("utf-8"))
+
+
+def cards():
+    text = (PHASE_DIR / "06-UAT.md").read_text("utf-8")
+    heads = list(CARD_HEAD.finditer(text))
+    found = {}
+    for i, head in enumerate(heads):
+        end = heads[i + 1].start() if i + 1 < len(heads) else len(text)
+        found[f"{head.group(1)}/{head.group(2)}"] = text[head.end() : end]
+    return found
+
+
+def rows():
+    for case in ledger()["cases"]:
+        for sub in case["subrows"]:
+            yield case, sub
+
+
+def carryover_ids():
+    ids = []
+    for line in (PHASE_DIR / "06-UAT-CARRYOVER.md").read_text("utf-8").splitlines():
+        if not line.startswith("| W"):
+            continue
+        cell = line.split("|")[1].strip()
+        match = re.match(r"(W\d{2})([a-d](?:/[a-d])*)?", cell)
+        base, letters = match.group(1), match.group(2)
+        if letters:
+            ids += [base + letter for letter in letters.split("/")]
+        else:
+            ids.append(base)
+    return ids
+
+
+class TestCaseCoverage:
+    def test_all_carryover_cases_and_fault_cases_are_declared_once(self):
+        ids = [case["id"] for case in ledger()["cases"]]
+        assert len(ids) == len(set(ids)), "ケースIDが重複しています"
+        assert set(ids) == set(CARRYOVER_CASES) | set(FAULT_CASES)
+        assert len(CARRYOVER_CASES) == 25  # 24枝番 + WR-01
+        # 移管正本(06-UAT-CARRYOVER)の表の全IDが台帳で追跡されている
+        assert set(carryover_ids()) <= set(ids)
+        assert set(CARRYOVER_CASES) - {"WR-01"} == set(carryover_ids())
+
+    def test_groups_and_tasks_follow_the_validation_table(self):
+        for case in ledger()["cases"]:
+            assert case["group"] == GROUPS[case["id"]], case["id"]
+            task = "06-05-02" if case["id"] in sup.TASK_IDS["06-05-02"] else None
+            task = task or (
+                "06-06-01" if case["id"] in sup.TASK_IDS["06-06-01"] else ""
+            )
+            assert case["task"] == task, case["id"]
+        assigned = set(sup.TASK_IDS["06-05-02"]) | set(sup.TASK_IDS["06-06-01"])
+        assert assigned == set(CARRYOVER_CASES) | set(FAULT_CASES)
+
+    def test_subrows_expand_by_entry_and_condition(self):
+        by_case = {c["id"]: c["subrows"] for c in ledger()["cases"]}
+        for case_id, expected in EXPECTED_PAIRS.items():
+            got = [(s["condition"], s["entry"]) for s in by_case[case_id]]
+            assert len(got) == len(set(got)), case_id
+            assert set(got) == expected, case_id
+        assert {s["condition"] for s in by_case["W12b"]} == W12B_CONDITIONS
+        assert {s["condition"] for s in by_case["W12c"]} == W12C_CONDITIONS
+        assert {s["condition"] for s in by_case["X04"]} == X04_CONDITIONS
+        for case_id in FAULT_CASES:
+            assert {s["entry"] for s in by_case[case_id]} == {"production-exe"}
+
+    def test_python_injection_and_exe_common_behavior_are_separate_rows(self):
+        by_case = {c["id"]: c["subrows"] for c in ledger()["cases"]}
+        for case_id in ("W07a", "W07b", "W08a", "W08b", "W08d"):
+            kinds = {(s["entry"], s["evidence_kind"]) for s in by_case[case_id]}
+            assert any(k == "fault-injection" for _, k in kinds), case_id
+            assert ("production-exe", "production-exe") in kinds, case_id
+            for entry, kind in kinds:
+                # 注入はPython入口だけ。実EXEへfrozen hookを仮定した行を作らない
+                assert (kind == "fault-injection") == (entry != "production-exe"), (
+                    case_id,
+                    entry,
+                    kind,
+                )
+
+    def test_every_subrow_is_fully_declared_and_not_prematurely_passed(self):
+        target = json.loads((PHASE_DIR / "06-BUILD-EVIDENCE.json").read_text("utf-8"))
+        exe = target["final_release"]["exe_sha256"]
+        seen = set()
+        for case, sub in rows():
+            where = f"{case['id']}/{sub['subrow']}"
+            assert where not in seen, where
+            seen.add(where)
+            assert sub["status"] in STATUSES, where
+            assert sub["evidence_kind"] in sup.EVIDENCE_KINDS, where
+            assert sub["required_observations"], where
+            assert len(set(sub["required_observations"])) == len(
+                sub["required_observations"]
+            ), where
+            assert sub["card"] == where, where
+            # 準備(担当が用意した)と実機passは別フィールド
+            assert sub["preparation"]["status"] in (
+                "not-prepared",
+                "driver-ready",
+                "prepared",
+            ), where
+            if sub["entry"] == "production-exe":
+                assert sub["evidence_kind"] == "production-exe", where
+                assert sub["expected_binary_sha256"] == exe, where
+            if sub["status"] == "not-run":
+                # 空欄補完・準備済みを回答/pass根拠に変えない
+                assert sub["answer"] == "", where
+                assert sub["observations"] == {}, where
+                assert sub["observed_at"] == "", where
+                assert sub["binary_sha256"] == "", where
+
+    def test_cards_cover_every_subrow_with_all_required_labels(self):
+        found = cards()
+        expected = {f"{case['id']}/{sub['subrow']}" for case, sub in rows()}
+        assert set(found) == expected
+        for key, body in found.items():
+            for label in CARD_LABELS:
+                assert label in body, (key, label)
+        for case, sub in rows():
+            body = found[f"{case['id']}/{sub['subrow']}"]
+            for name in sub["required_observations"]:
+                assert name in body, (case["id"], sub["subrow"], name)
+
+    def test_phase5_results_are_referenced_not_repeated(self):
+        data = ledger()
+        reuse = data["phase5_reuse"]
+        assert [item["id"] for item in reuse["human_checks"]] == list(PHASE5_H)
+        assert len(reuse["semantic_evaluations"]) == 2
+        source = (ROOT / ".planning/phases/05-config-notification/05-UAT.md").read_text(
+            "utf-8"
+        )
+        for item in reuse["human_checks"]:
+            assert re.search(rf"\| {item['id']}\b.*\| pass \|", source), item["id"]
+            assert item["reuse"] == "reference-only-not-repeated"
+        assert reuse["source"].endswith("05-UAT.md")
+        # H01〜H14を06-05の枝番として再実施する行は作らない
+        assert not any(re.fullmatch(r"H\d\d", c["id"]) for c in data["cases"])
+        assert {c["id"] for c in data["cases"]}.isdisjoint(PHASE5_H)
+
+    def test_w12b_roles_hashes_and_both_directions(self):
+        build = json.loads((PHASE_DIR / "06-BUILD-EVIDENCE.json").read_text("utf-8"))
+        final = build["final_release"]["exe_sha256"]
+        w12b = next(c for c in ledger()["cases"] if c["id"] == "W12b")
+        by = {s["condition"]: s for s in w12b["subrows"]}
+        for pair in (
+            ("exe-script", "script-exe"),
+            ("exe-module", "module-exe"),
+            ("exe-tracer", "tracer-exe"),
+            ("exe-relocated-copy", "relocated-copy-exe"),
+        ):
+            assert all(name in by for name in pair), pair  # 両方向
+        for sub in w12b["subrows"]:
+            assert sub["subject"]["role"] == "final-release-candidate"
+            assert sub["subject"]["binary_sha256"] == final
+            assert sub["evidence_kind"] == "production-exe"
+            assert sub["binary_sha256"] in ("", final)
+        for name in ("exe-tracer", "tracer-exe"):
+            peer = by[name]["peer"]
+            assert peer["role"] == "technical-tracer-real-exe"
+            assert peer["binary_sha256"] != final
+            assert peer["version"] != build["version"]
+            assert peer["provenance"]["run_id"]
+            assert peer["provenance"]["source_manifest_sha256"]
+            # tracerを公式旧版/最終EXE受入済みとして扱わない
+            assert peer.get("official_release") is False
+        for name in ("exe-exe-samecopy", "exe-relocated-copy", "relocated-copy-exe"):
+            peer = by[name]["peer"]
+            assert peer["role"] == "same-version-copy"
+            assert peer["binary_sha256"] == final
+            assert peer["version"] == build["version"]
+        for name in ("exe-script", "script-exe"):
+            assert by[name]["peer"] == {"role": "python-entry", "entry": "script"}
+        for name in ("exe-module", "module-exe"):
+            assert by[name]["peer"] == {"role": "python-entry", "entry": "module"}
+
+    def test_structure_audit_accepts_ledger_and_rejects_false_pass(self, tmp_path):
+        for name in ("06-BUILD-EVIDENCE.json", "06-MANUAL-EVIDENCE.json"):
+            shutil.copyfile(PHASE_DIR / name, tmp_path / name)
+        audit = sup.run_audit(tmp_path, mode="allow-pending")
+        assert audit.ok, audit.reasons
+        # 全subrow未実施のままrequire-passは通らない(構造専用allow-pendingとは別)
+        if any(sub["status"] != "pass" for _, sub in rows()):
+            assert not sup.run_audit(
+                tmp_path, mode="require-pass", require="W01,W02"
+            ).ok
+
+        def mutate(change):
+            data = ledger()
+            change(data)
+            (tmp_path / "06-MANUAL-EVIDENCE.json").write_text(
+                json.dumps(data, ensure_ascii=False), encoding="utf-8"
+            )
+            return sup.run_audit(tmp_path, mode="allow-pending")
+
+        def passed_without_answer(data):
+            sub = next(c for c in data["cases"] if c["id"] == "W03")["subrows"][0]
+            sub["status"] = "pass"
+
+        def unit_as_pass(data):
+            sub = next(c for c in data["cases"] if c["id"] == "W04")["subrows"][0]
+            sub.update(status="pass", evidence_kind="unit", answer="W04：期待どおり")
+
+        def exe_without_binary_hash(data):
+            sub = next(
+                s
+                for c in data["cases"]
+                if c["id"] == "W03"
+                for s in c["subrows"]
+                if s["entry"] == "production-exe"
+            )
+            sub.update(
+                status="pass",
+                answer="W03：期待どおり",
+                observations={n: "x" for n in sub["required_observations"]},
+                run_id="r",
+                observed_at="2026-10-25T00:00:00+00:00",
+                environment={"os": "Windows 11", "elevated": False, "session_id": 1},
+                binary_sha256="",
+            )
+
+        def dropped_case(data):
+            data["cases"] = [c for c in data["cases"] if c["id"] != "W06"]
+
+        def missing_condition(data):
+            case = next(c for c in data["cases"] if c["id"] == "W01")
+            case["subrows"] = [s for s in case["subrows"] if s["condition"] != "zoomed"]
+
+        assert not mutate(passed_without_answer).ok
+        assert not mutate(unit_as_pass).ok
+        assert not mutate(exe_without_binary_hash).ok
+        # 台帳の漏れ(ケース/条件)はrequire-passの宣言検査で拒否される
+        dropped = ledger()
+        dropped_case(dropped)
+        (tmp_path / "06-MANUAL-EVIDENCE.json").write_text(
+            json.dumps(dropped, ensure_ascii=False), encoding="utf-8"
+        )
+        assert not sup.run_audit(tmp_path, mode="require-pass", require="W06").ok
+        missing = ledger()
+        missing_condition(missing)
+        (tmp_path / "06-MANUAL-EVIDENCE.json").write_text(
+            json.dumps(missing, ensure_ascii=False), encoding="utf-8"
+        )
+        assert not sup.run_audit(tmp_path, mode="require-pass", require="W01").ok
+
+    def test_uat_document_keeps_states_separate_and_never_claims_pass(self):
+        text = (PHASE_DIR / "06-UAT.md").read_text("utf-8")
+        assert not FALSE_PASS.search(text)
+        for needle in (
+            "準備完了・build成功・人手pass・Phase完了は別の状態",
+            "ケースID",
+            "貼り付け",
+            "LLM",
+            "06-UAT-CARRYOVER.md",
+            "04-WINDOWS-UAT.md",
+            "05-UAT.md",
+            "technical-tracer-real-exe",
+            "final-release-candidate",
         ):
             assert needle in text, needle

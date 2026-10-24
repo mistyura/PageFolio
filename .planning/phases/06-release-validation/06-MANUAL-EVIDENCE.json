@@ -1,0 +1,3549 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-10-24T13:09:26.870461+00:00",
+  "plan": "06-05",
+  "task": "06-05-01",
+  "state_semantics": "準備完了・build成功・人手pass・Phase完了は別の状態。各subrowの status は人手passの記録で、preparation は実行担当の準備状況(別フィールド)。06-04の接続準備回答を本受入のpassへ転記しない。",
+  "target": {
+    "version": "v1.10.0",
+    "role": "final-release-candidate",
+    "exe_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17",
+    "tree_sha256": "3436ac39cfd7a426e8a5982fa2f1e9f7bbc87ebd8176721b32d88cec1ff8489a",
+    "input_manifest_sha256": "0874f3579c73163b8c4b684a75e68f7baf10e7b763acd87b12e9c945134fa6d7",
+    "final_run_id": "c937c5a3e7344f0080090413612ddb6d",
+    "final_dir": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf06_final_b492037015cd42c5a57d28ca0f329773\\out\\PageFolio-v1.10.0"
+  },
+  "groups": {
+    "G1": [
+      "W01",
+      "W02"
+    ],
+    "G2": [
+      "W03",
+      "W04"
+    ],
+    "G3": [
+      "W05a",
+      "W05b",
+      "W05c"
+    ],
+    "G4": [
+      "W12a",
+      "W12b",
+      "W12c"
+    ],
+    "G5": [
+      "X01",
+      "X02",
+      "X03"
+    ],
+    "G6": [
+      "X04",
+      "X05",
+      "X06"
+    ],
+    "G7": [
+      "W06",
+      "W07a"
+    ],
+    "G8": [
+      "W07b",
+      "WR-01"
+    ],
+    "G9": [
+      "W08a",
+      "W08b"
+    ],
+    "G10": [
+      "W08c",
+      "W08d"
+    ],
+    "G11": [
+      "W09a",
+      "W09b"
+    ],
+    "G12": [
+      "W09c",
+      "W09d"
+    ],
+    "G13": [
+      "W10a",
+      "W10b"
+    ],
+    "G14": [
+      "W11"
+    ]
+  },
+  "carried_observations_from_06_04": [
+    "W05b: 実際のダブルクリック起動でのforeground(06-04は合成peerで前景成立。本受入でAPI戻りと別記)",
+    "EXEがclose要求(WM_CLOSE)で終了せず所有handleで強制終了された観測(ocr-single/w05b-modal/X04)。合否ではなく観測として記録",
+    "ocr-singleの補足回答はチャット中継であり、本受入では利用者本人の端末入力を記録する"
+  ],
+  "phase5_reuse": {
+    "source": ".planning/phases/05-config-notification/05-UAT.md",
+    "policy": "Phase5 H01〜H14と意味評価2件は既存正本の対象hash/環境/回答を参照し、変更理由がない限り再実施しない。EXE固有受入はX01〜X06",
+    "human_checks": [
+      {
+        "id": "H01",
+        "scenario": "read-corrupt: 起動画面と入力欄",
+        "result": "pass",
+        "reuse": "reference-only-not-repeated"
+      },
+      {
+        "id": "H02",
+        "scenario": "read-unreadable: 起動画面と同値Apply",
+        "result": "pass",
+        "reuse": "reference-only-not-repeated"
+      },
+      {
+        "id": "H03",
+        "scenario": "read-corrupt: 10秒/✕の消化",
+        "result": "pass",
+        "reuse": "reference-only-not-repeated"
+      },
+      {
+        "id": "H04",
+        "scenario": "save-write: 2回Apply→言語切替",
+        "result": "pass",
+        "reuse": "reference-only-not-repeated"
+      },
+      {
+        "id": "H05",
+        "scenario": "save-replace: 失敗→解除→保存成功",
+        "result": "pass",
+        "reuse": "reference-only-not-repeated"
+      },
+      {
+        "id": "H06",
+        "scenario": "save-write: Settings保持中の通知保持",
+        "result": "pass",
+        "reuse": "reference-only-not-repeated"
+      },
+      {
+        "id": "H07",
+        "scenario": "save-write: 内側LLM開閉と外側保持",
+        "result": "pass",
+        "reuse": "reference-only-not-repeated"
+      },
+      {
+        "id": "H08",
+        "scenario": "save-write: 既存Toast後の設定失敗",
+        "result": "pass",
+        "reuse": "reference-only-not-repeated"
+      },
+      {
+        "id": "H09",
+        "scenario": "save-replace: 終了No/Yes/No/Yes",
+        "result": "pass",
+        "reuse": "reference-only-not-repeated"
+      },
+      {
+        "id": "H10",
+        "scenario": "save-replace: 失敗flag解除と再注入",
+        "result": "pass",
+        "reuse": "reference-only-not-repeated"
+      },
+      {
+        "id": "H11",
+        "scenario": "read-unreadable: 障害解除後の終了Yes",
+        "result": "pass",
+        "reuse": "reference-only-not-repeated"
+      },
+      {
+        "id": "H12",
+        "scenario": "save-write: 実Plugin無変更close/rescan",
+        "result": "pass",
+        "reuse": "reference-only-not-repeated"
+      },
+      {
+        "id": "H13",
+        "scenario": "CR-01: Shortcuts開閉後の通知保持",
+        "result": "pass",
+        "reuse": "reference-only-not-repeated"
+      },
+      {
+        "id": "H14",
+        "scenario": "CR-02: 最小化・復元後の残り時間",
+        "result": "pass",
+        "reuse": "reference-only-not-repeated"
+      }
+    ],
+    "semantic_evaluations": [
+      {
+        "id": "Test1",
+        "title": "禁止事項1: PDF編集内容の喪失と誤認させない",
+        "result": "pass",
+        "reuse": "reference-only-not-repeated"
+      },
+      {
+        "id": "Test2",
+        "title": "禁止事項2: PDF破棄や再起動を促さない",
+        "result": "pass",
+        "reuse": "reference-only-not-repeated"
+      }
+    ]
+  },
+  "resume_contract": "06-03 resume_contract(06-RESUME-STATE.json / supersede_rows)。中断時はrun・hash・環境・回答済み/未実施subrowを保存し、同一性確認後だけ再開",
+  "cases": [
+    {
+      "id": "W01",
+      "group": "G1",
+      "task": "06-05-02",
+      "title": "最小化からの復元(通常/最大化)",
+      "source": "04-WINDOWS-UAT W01 / 06-UAT-CARRYOVER W01 / 06-VALIDATION W01",
+      "subrows": [
+        {
+          "subrow": "normal@script",
+          "card": "W01/normal@script",
+          "entry": "script",
+          "condition": "normal",
+          "evidence_kind": "python-real",
+          "status": "not-run",
+          "preparation": {
+            "status": "not-prepared",
+            "note": "カード作成のみ。実行担当の準備(driver/隔離copy/fixture)は未実施"
+          },
+          "required_observations": [
+            "state_before",
+            "state_after",
+            "geometry_match",
+            "status_text_kept",
+            "single_screen"
+          ],
+          "observations": {},
+          "answer": "",
+          "raw_inputs": [],
+          "run_id": "",
+          "observed_at": "",
+          "environment": {},
+          "binary_sha256": "",
+          "input_manifest_sha256": ""
+        },
+        {
+          "subrow": "normal@module",
+          "card": "W01/normal@module",
+          "entry": "module",
+          "condition": "normal",
+          "evidence_kind": "python-real",
+          "status": "not-run",
+          "preparation": {
+            "status": "not-prepared",
+            "note": "カード作成のみ。実行担当の準備(driver/隔離copy/fixture)は未実施"
+          },
+          "required_observations": [
+            "state_before",
+            "state_after",
+            "geometry_match",
+            "status_text_kept",
+            "single_screen"
+          ],
+          "observations": {},
+          "answer": "",
+          "raw_inputs": [],
+          "run_id": "",
+          "observed_at": "",
+          "environment": {},
+          "binary_sha256": "",
+          "input_manifest_sha256": ""
+        },
+        {
+          "subrow": "normal@production-exe",
+          "card": "W01/normal@production-exe",
+          "entry": "production-exe",
+          "condition": "normal",
+          "evidence_kind": "production-exe",
+          "status": "not-run",
+          "preparation": {
+            "status": "not-prepared",
+            "note": "カード作成のみ。実行担当の準備(driver/隔離copy/fixture)は未実施"
+          },
+          "required_observations": [
+            "state_before",
+            "state_after",
+            "geometry_match",
+            "status_text_kept",
+            "single_screen",
+            "foreground_after"
+          ],
+          "observations": {},
+          "answer": "",
+          "raw_inputs": [],
+          "run_id": "",
+          "observed_at": "",
+          "environment": {},
+          "binary_sha256": "",
+          "input_manifest_sha256": "",
+          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17"
+        },
+        {
+          "subrow": "zoomed@script",
+          "card": "W01/zoomed@script",
+          "entry": "script",
+          "condition": "zoomed",
+          "evidence_kind": "python-real",
+          "status": "not-run",
+          "preparation": {
+            "status": "not-prepared",
+            "note": "カード作成のみ。実行担当の準備(driver/隔離copy/fixture)は未実施"
+          },
+          "required_observations": [
+            "state_before",
+            "state_after",
+            "geometry_match",
+            "status_text_kept",
+            "single_screen"
+          ],
+          "observations": {},
+          "answer": "",
+          "raw_inputs": [],
+          "run_id": "",
+          "observed_at": "",
+          "environment": {},
+          "binary_sha256": "",
+          "input_manifest_sha256": ""
+        },
+        {
+          "subrow": "zoomed@module",
+          "card": "W01/zoomed@module",
+          "entry": "module",
+          "condition": "zoomed",
+          "evidence_kind": "python-real",
+          "status": "not-run",
+          "preparation": {
+            "status": "not-prepared",
+            "note": "カード作成のみ。実行担当の準備(driver/隔離copy/fixture)は未実施"
+          },
+          "required_observations": [
+            "state_before",
+            "state_after",
+            "geometry_match",
+            "status_text_kept",
+            "single_screen"
+          ],
+          "observations": {},
+          "answer": "",
+          "raw_inputs": [],
+          "run_id": "",
+          "observed_at": "",
+          "environment": {},
+          "binary_sha256": "",
+          "input_manifest_sha256": ""
+        },
+        {
+          "subrow": "zoomed@production-exe",
+          "card": "W01/zoomed@production-exe",
+          "entry": "production-exe",
+          "condition": "zoomed",
+          "evidence_kind": "production-exe",
+          "status": "not-run",
+          "preparation": {
+            "status": "not-prepared",
+            "note": "カード作成のみ。実行担当の準備(driver/隔離copy/fixture)は未実施"
+          },
+          "required_observations": [
+            "state_before",
+            "state_after",
+            "geometry_match",
+            "status_text_kept",
+            "single_screen",
+            "foreground_after"
+          ],
+          "observations": {},
+          "answer": "",
+          "raw_inputs": [],
+          "run_id": "",
+          "observed_at": "",
+          "environment": {},
+          "binary_sha256": "",
+          "input_manifest_sha256": "",
+          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17"
+        }
+      ]
+    },
+    {
+      "id": "W02",
+      "group": "G1",
+      "task": "06-05-02",
+      "title": "二次起動後の実入力・選択・カーソル・入力先維持",
+      "source": "04-WINDOWS-UAT W02 / 06-UAT-CARRYOVER W02 / 06-VALIDATION W02",
+      "subrows": [
+        {
+          "subrow": "settings@script",
+          "card": "W02/settings@script",
+          "entry": "script",
+          "condition": "settings",
+          "evidence_kind": "python-real",
+          "status": "not-run",
+          "preparation": {
+            "status": "not-prepared",
+            "note": "カード作成のみ。実行担当の準備(driver/隔離copy/fixture)は未実施"
+          },
+          "required_observations": [
+            "typed_text_kept",
+            "selection_kept",
+            "cursor_kept",
+            "input_target_kept",
+            "foreground_result"
+          ],
+          "observations": {},
+          "answer": "",
+          "raw_inputs": [],
+          "run_id": "",
+          "observed_at": "",
+          "environment": {},
+          "binary_sha256": "",
+          "input_manifest_sha256": ""
+        },
+        {
+          "subrow": "settings@module",
+          "card": "W02/settings@module",
+          "entry": "module",
+          "condition": "settings",
+          "evidence_kind": "python-real",
+          "status": "not-run",
+          "preparation": {
+            "status": "not-prepared",
+            "note": "カード作成のみ。実行担当の準備(driver/隔離copy/fixture)は未実施"
+          },
+          "required_observations": [
+            "typed_text_kept",
+            "selection_kept",
+            "cursor_kept",
+            "input_target_kept",
+            "foreground_result"
+          ],
+          "observations": {},
+          "answer": "",
+          "raw_inputs": [],
+          "run_id": "",
+          "observed_at": "",
+          "environment": {},
+          "binary_sha256": "",
+          "input_manifest_sha256": ""
+        },
+        {
+          "subrow": "settings@production-exe",
+          "card": "W02/settings@production-exe",
+          "entry": "production-exe",
+          "condition": "settings",
+          "evidence_kind": "production-exe",
+          "status": "not-run",
+          "preparation": {
+            "status": "not-prepared",
+            "note": "カード作成のみ。実行担当の準備(driver/隔離copy/fixture)は未実施"
+          },
+          "required_observations": [
+            "typed_text_kept",
+            "selection_kept",
+            "cursor_kept",
+            "input_target_kept",
+            "foreground_result"
+          ],
+          "observations": {},
+          "answer": "",
+          "raw_inputs": [],
+          "run_id": "",
+          "observed_at": "",
+          "environment": {},
+          "binary_sha256": "",
+          "input_manifest_sha256": "",
+          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17"
+        },
+        {
+          "subrow": "thumb@script",
+          "card": "W02/thumb@script",
+          "entry": "script",
+          "condition": "thumb",
+          "evidence_kind": "python-real",
+          "status": "not-run",
+          "preparation": {
+            "status": "not-prepared",
+            "note": "カード作成のみ。実行担当の準備(driver/隔離copy/fixture)は未実施"
+          },
+          "required_observations": [
+            "typed_text_kept",
+            "selection_kept",
+            "cursor_kept",
+            "input_target_kept",
+            "foreground_result"
+          ],
+          "observations": {},
+          "answer": "",
+          "raw_inputs": [],
+          "run_id": "",
+          "observed_at": "",
+          "environment": {},
+          "binary_sha256": "",
+          "input_manifest_sha256": ""
+        },
+        {
+          "subrow": "thumb@module",
+          "card": "W02/thumb@module",
+          "entry": "module",
+          "condition": "thumb",
+          "evidence_kind": "python-real",
+          "status": "not-run",
+          "preparation": {
+            "status": "not-prepared",
+            "note": "カード作成のみ。実行担当の準備(driver/隔離copy/fixture)は未実施"
+          },
+          "required_observations": [
+            "typed_text_kept",
+            "selection_kept",
+            "cursor_kept",
+            "input_target_kept",
+            "foreground_result"
+          ],
+          "observations": {},
+          "answer": "",
+          "raw_inputs": [],
+          "run_id": "",
+          "observed_at": "",
+          "environment": {},
+          "binary_sha256": "",
+          "input_manifest_sha256": ""
+        },
+        {
+          "subrow": "thumb@production-exe",
+          "card": "W02/thumb@production-exe",
+          "entry": "production-exe",
+          "condition": "thumb",
+          "evidence_kind": "production-exe",
+          "status": "not-run",
+          "preparation": {
+            "status": "not-prepared",
+            "note": "カード作成のみ。実行担当の準備(driver/隔離copy/fixture)は未実施"
+          },
+          "required_observations": [
+            "typed_text_kept",
+            "selection_kept",
+            "cursor_kept",
+            "input_target_kept",
+            "foreground_result"
+          ],
+          "observations": {},
+          "answer": "",
+          "raw_inputs": [],
+          "run_id": "",
+          "observed_at": "",
+          "environment": {},
+          "binary_sha256": "",
+          "input_manifest_sha256": "",
+          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17"
+        },
+        {
+          "subrow": "preview@script",
+          "card": "W02/preview@script",
+          "entry": "script",
+          "condition": "preview",
+          "evidence_kind": "python-real",
+          "status": "not-run",
+          "preparation": {
+            "status": "not-prepared",
+            "note": "カード作成のみ。実行担当の準備(driver/隔離copy/fixture)は未実施"
+          },
+          "required_observations": [
+            "typed_text_kept",
+            "selection_kept",
+            "cursor_kept",
+            "input_target_kept",
+            "foreground_result"
+          ],
+          "observations": {},
+          "answer": "",
+          "raw_inputs": [],
+          "run_id": "",
+          "observed_at": "",
+          "environment": {},
+          "binary_sha256": "",
+          "input_manifest_sha256": ""
+        },
+        {
+          "subrow": "preview@module",
+          "card": "W02/preview@module",
+          "entry": "module",
+          "condition": "preview",
+          "evidence_kind": "python-real",
+          "status": "not-run",
+          "preparation": {
+            "status": "not-prepared",
+            "note": "カード作成のみ。実行担当の準備(driver/隔離copy/fixture)は未実施"
+          },
+          "required_observations": [
+            "typed_text_kept",
+            "selection_kept",
+            "cursor_kept",
+            "input_target_kept",
+            "foreground_result"
+          ],
+          "observations": {},
+          "answer": "",
+          "raw_inputs": [],
+          "run_id": "",
+          "observed_at": "",
+          "environment": {},
+          "binary_sha256": "",
+          "input_manifest_sha256": ""
+        },
+        {
+          "subrow": "preview@production-exe",
+          "card": "W02/preview@production-exe",
+          "entry": "production-exe",
+          "condition": "preview",
+          "evidence_kind": "production-exe",
+          "status": "not-run",
+          "preparation": {
+            "status": "not-prepared",
+            "note": "カード作成のみ。実行担当の準備(driver/隔離copy/fixture)は未実施"
+          },
+          "required_observations": [
+            "typed_text_kept",
+            "selection_kept",
+            "cursor_kept",
+            "input_target_kept",
+            "foreground_result"
+          ],
+          "observations": {},
+          "answer": "",
+          "raw_inputs": [],
+          "run_id": "",
+          "observed_at": "",
+          "environment": {},
+          "binary_sha256": "",
+          "input_manifest_sha256": "",
+          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17"
+        }
+      ]
+    },
+    {
+      "id": "W03",
+      "group": "G2",
+      "task": "06-05-02",
+      "title": "未保存編集とUndo→Redo→Undo→Redoの内容",
+      "source": "04-WINDOWS-UAT W03 / 06-UAT-CARRYOVER W03 / 06-VALIDATION W03",
+      "subrows": [
+        {
+          "subrow": "pdf-3page@script",
+          "card": "W03/pdf-3page@script",
+          "entry": "script",
+          "condition": "pdf-3page",
+          "evidence_kind": "python-real",
+          "status": "not-run",
+          "preparation": {
+            "status": "not-prepared",
+            "note": "カード作成のみ。実行担当の準備(driver/隔離copy/fixture)は未実施"
+          },
+          "required_observations": [
+            "edit_visible_after_restore",
+            "undo_1",
+            "redo_1",
+            "undo_2",
+            "redo_2",
+            "original_pdf_untouched"
+          ],
+          "observations": {},
+          "answer": "",
+          "raw_inputs": [],
+          "run_id": "",
+          "observed_at": "",
+          "environment": {},
+          "binary_sha256": "",
+          "input_manifest_sha256": ""
+        },
+        {
+          "subrow": "pdf-3page@module",
+          "card": "W03/pdf-3page@module",
+          "entry": "module",
+          "condition": "pdf-3page",
+          "evidence_kind": "python-real",
+          "status": "not-run",
+          "preparation": {
+            "status": "not-prepared",
+            "note": "カード作成のみ。実行担当の準備(driver/隔離copy/fixture)は未実施"
+          },
+          "required_observations": [
+            "edit_visible_after_restore",
+            "undo_1",
+            "redo_1",
+            "undo_2",
+            "redo_2",
+            "original_pdf_untouched"
+          ],
+          "observations": {},
+          "answer": "",
+          "raw_inputs": [],
+          "run_id": "",
+          "observed_at": "",
+          "environment": {},
+          "binary_sha256": "",
+          "input_manifest_sha256": ""
+        },
+        {
+          "subrow": "pdf-3page@production-exe",
+          "card": "W03/pdf-3page@production-exe",
+          "entry": "production-exe",
+          "condition": "pdf-3page",
+          "evidence_kind": "production-exe",
+          "status": "not-run",
+          "preparation": {
+            "status": "not-prepared",
+            "note": "カード作成のみ。実行担当の準備(driver/隔離copy/fixture)は未実施"
+          },
+          "required_observations": [
+            "edit_visible_after_restore",
+            "undo_1",
+            "redo_1",
+            "undo_2",
+            "redo_2",
+            "original_pdf_untouched",
+            "foreground_after"
+          ],
+          "observations": {},
+          "answer": "",
+          "raw_inputs": [],
+          "run_id": "",
+          "observed_at": "",
+          "environment": {},
+          "binary_sha256": "",
+          "input_manifest_sha256": "",
+          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17"
+        }
+      ]
+    },
+    {
+      "id": "W04",
+      "group": "G2",
+      "task": "06-05-02",
+      "title": "fake OCRの進捗/完了と状態維持(1page画像PDF・並列1)",
+      "source": "04-WINDOWS-UAT W04 / 06-UAT-CARRYOVER W04 / 06-UAT-PREPARATION fake OCR",
+      "subrows": [
+        {
+          "subrow": "ocr-1page@script",
+          "card": "W04/ocr-1page@script",
+          "entry": "script",
+          "condition": "ocr-1page",
+          "evidence_kind": "python-real",
+          "status": "not-run",
+          "preparation": {
+            "status": "not-prepared",
+            "note": "カード作成のみ。実行担当の準備(driver/隔離copy/fixture)は未実施"
+          },
+          "required_observations": [
+            "progress_shown",
+            "same_page_attempt",
+            "completed_shown",
+            "post_count_1",
+            "summary_not_run"
+          ],
+          "observations": {},
+          "answer": "",
+          "raw_inputs": [],
+          "run_id": "",
+          "observed_at": "",
+          "environment": {},
+          "binary_sha256": "",
+          "input_manifest_sha256": ""
+        },
+        {
+          "subrow": "ocr-1page@module",
+          "card": "W04/ocr-1page@module",
+          "entry": "module",
+          "condition": "ocr-1page",
+          "evidence_kind": "python-real",
+          "status": "not-run",
+          "preparation": {
+            "status": "not-prepared",
+            "note": "カード作成のみ。実行担当の準備(driver/隔離copy/fixture)は未実施"
+          },
+          "required_observations": [
+            "progress_shown",
+            "same_page_attempt",
+            "completed_shown",
+            "post_count_1",
+            "summary_not_run"
+          ],
+          "observations": {},
+          "answer": "",
+          "raw_inputs": [],
+          "run_id": "",
+          "observed_at": "",
+          "environment": {},
+          "binary_sha256": "",
+          "input_manifest_sha256": ""
+        },
+        {
+          "subrow": "ocr-1page@production-exe",
+          "card": "W04/ocr-1page@production-exe",
+          "entry": "production-exe",
+          "condition": "ocr-1page",
+          "evidence_kind": "production-exe",
+          "status": "not-run",
+          "preparation": {
+            "status": "not-prepared",
+            "note": "カード作成のみ。実行担当の準備(driver/隔離copy/fixture)は未実施"
+          },
+          "required_observations": [
+            "progress_shown",
+            "same_page_attempt",
+            "completed_shown",
+            "post_count_1",
+            "summary_not_run",
+            "foreground_after"
+          ],
+          "observations": {},
+          "answer": "",
+          "raw_inputs": [],
+          "run_id": "",
+          "observed_at": "",
+          "environment": {},
+          "binary_sha256": "",
+          "input_manifest_sha256": "",
+          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17"
+        }
+      ]
+    },
+    {
+      "id": "W05a",
+      "group": "G3",
+      "task": "06-05-02",
+      "title": "入れ子を閉じた外側ダイアログの入力維持",
+      "source": "04-WINDOWS-UAT W05a / 06-UAT-CARRYOVER W05a",
+      "subrows": [
+        {
+          "subrow": "nested-settings@script",
+          "card": "W05a/nested-settings@script",
+          "entry": "script",
+          "condition": "nested-settings",
+          "evidence_kind": "python-real",
+          "status": "not-run",
+          "preparation": {
+            "status": "not-prepared",
+            "note": "カード作成のみ。実行担当の準備(driver/隔離copy/fixture)は未実施"
+          },
+          "required_observations": [
+            "outer_input_kept",
+            "selection_kept",
+            "grab_released_after_inner_close"
+          ],
+          "observations": {},
+          "answer": "",
+          "raw_inputs": [],
+          "run_id": "",
+          "observed_at": "",
+          "environment": {},
+          "binary_sha256": "",
+          "input_manifest_sha256": ""
+        },
+        {
+          "subrow": "nested-settings@module",
+          "card": "W05a/nested-settings@module",
+          "entry": "module",
+          "condition": "nested-settings",
+          "evidence_kind": "python-real",
+          "status": "not-run",
+          "preparation": {
+            "status": "not-prepared",
+            "note": "カード作成のみ。実行担当の準備(driver/隔離copy/fixture)は未実施"
+          },
+          "required_observations": [
+            "outer_input_kept",
+            "selection_kept",
+            "grab_released_after_inner_close"
+          ],
+          "observations": {},
+          "answer": "",
+          "raw_inputs": [],
+          "run_id": "",
+          "observed_at": "",
+          "environment": {},
+          "binary_sha256": "",
+          "input_manifest_sha256": ""
+        },
+        {
+          "subrow": "nested-settings@production-exe",
+          "card": "W05a/nested-settings@production-exe",
+          "entry": "production-exe",
+          "condition": "nested-settings",
+          "evidence_kind": "production-exe",
+          "status": "not-run",
+          "preparation": {
+            "status": "not-prepared",
+            "note": "カード作成のみ。実行担当の準備(driver/隔離copy/fixture)は未実施"
+          },
+          "required_observations": [
+            "outer_input_kept",
+            "selection_kept",
+            "grab_released_after_inner_close",
+            "foreground_after"
+          ],
+          "observations": {},
+          "answer": "",
+          "raw_inputs": [],
+          "run_id": "",
+          "observed_at": "",
+          "environment": {},
+          "binary_sha256": "",
+          "input_manifest_sha256": "",
+          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17"
+        }
+      ]
+    },
+    {
+      "id": "W05b",
+      "group": "G3",
+      "task": "06-05-02",
+      "title": "hold中のOCRDialog閉じる確認へ二次起動後も復帰し「いいえ」で同処理を完了",
+      "source": "04-WINDOWS-UAT W05b / 06-UAT-CARRYOVER W05b / 06-04-SUMMARY Known Gaps 1",
+      "subrows": [
+        {
+          "subrow": "ocr-close-confirm@script",
+          "card": "W05b/ocr-close-confirm@script",
+          "entry": "script",
+          "condition": "ocr-close-confirm",
+          "evidence_kind": "python-real",
+          "status": "not-run",
+          "preparation": {
+            "status": "not-prepared",
+            "note": "カード作成のみ。実行担当の準備(driver/隔離copy/fixture)は未実施"
+          },
+          "required_observations": [
+            "modal_shown",
+            "peer_returned_to_modal",
+            "answered_no",
+            "input_and_process_kept",
+            "same_request_completed",
+            "foreground_result"
+          ],
+          "observations": {},
+          "answer": "",
+          "raw_inputs": [],
+          "run_id": "",
+          "observed_at": "",
+          "environment": {},
+          "binary_sha256": "",
+          "input_manifest_sha256": ""
+        },
+        {
+          "subrow": "ocr-close-confirm@module",
+          "card": "W05b/ocr-close-confirm@module",
+          "entry": "module",
+          "condition": "ocr-close-confirm",
+          "evidence_kind": "python-real",
+          "status": "not-run",
+          "preparation": {
+            "status": "not-prepared",
+            "note": "カード作成のみ。実行担当の準備(driver/隔離copy/fixture)は未実施"
+          },
+          "required_observations": [
+            "modal_shown",
+            "peer_returned_to_modal",
+            "answered_no",
+            "input_and_process_kept",
+            "same_request_completed",
+            "foreground_result"
+          ],
+          "observations": {},
+          "answer": "",
+          "raw_inputs": [],
+          "run_id": "",
+          "observed_at": "",
+          "environment": {},
+          "binary_sha256": "",
+          "input_manifest_sha256": ""
+        },
+        {
+          "subrow": "ocr-close-confirm@production-exe",
+          "card": "W05b/ocr-close-confirm@production-exe",
+          "entry": "production-exe",
+          "condition": "ocr-close-confirm",
+          "evidence_kind": "production-exe",
+          "status": "not-run",
+          "preparation": {
+            "status": "not-prepared",
+            "note": "カード作成のみ。実行担当の準備(driver/隔離copy/fixture)は未実施"
+          },
+          "required_observations": [
+            "modal_shown",
+            "peer_returned_to_modal",
+            "answered_no",
+            "input_and_process_kept",
+            "same_request_completed",
+            "real_double_click_foreground",
+            "foreground_after"
+          ],
+          "observations": {},
+          "answer": "",
+          "raw_inputs": [],
+          "run_id": "",
+          "observed_at": "",
+          "environment": {},
+          "binary_sha256": "",
+          "input_manifest_sha256": "",
+          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17",
+          "carryover_from_06_04": "実ダブルクリックでの前景挙動は未確認だった(06-04-SUMMARY Known Gaps 1)"
+        }
+      ]
+    },
+    {
+      "id": "W05c",
+      "group": "G3",
+      "task": "06-05-02",
+      "title": "終了確認Noと編集・排他の維持",
+      "source": "04-WINDOWS-UAT W05c / 06-UAT-CARRYOVER W05c / 06-04-SUMMARY Known Gaps 3",
+      "subrows": [
+        {
+          "subrow": "quit-no@script",
+          "card": "W05c/quit-no@script",
+          "entry": "script",
+          "condition": "quit-no",
+          "evidence_kind": "python-real",
+          "status": "not-run",
+          "preparation": {
+            "status": "not-prepared",
+            "note": "カード作成のみ。実行担当の準備(driver/隔離copy/fixture)は未実施"
+          },
+          "required_observations": [
+            "quit_confirm_shown",
+            "answered_no",
+            "edit_state_kept",
+            "owner_kept"
+          ],
+          "observations": {},
+          "answer": "",
+          "raw_inputs": [],
+          "run_id": "",
+          "observed_at": "",
+          "environment": {},
+          "binary_sha256": "",
+          "input_manifest_sha256": ""
+        },
+        {
+          "subrow": "quit-no@module",
+          "card": "W05c/quit-no@module",
+          "entry": "module",
+          "condition": "quit-no",
+          "evidence_kind": "python-real",
+          "status": "not-run",
+          "preparation": {
+            "status": "not-prepared",
+            "note": "カード作成のみ。実行担当の準備(driver/隔離copy/fixture)は未実施"
+          },
+          "required_observations": [
+            "quit_confirm_shown",
+            "answered_no",
+            "edit_state_kept",
+            "owner_kept"
+          ],
+          "observations": {},
+          "answer": "",
+          "raw_inputs": [],
+          "run_id": "",
+          "observed_at": "",
+          "environment": {},
+          "binary_sha256": "",
+          "input_manifest_sha256": ""
+        },
+        {
+          "subrow": "quit-no@production-exe",
+          "card": "W05c/quit-no@production-exe",
+          "entry": "production-exe",
+          "condition": "quit-no",
+          "evidence_kind": "production-exe",
+          "status": "not-run",
+          "preparation": {
+            "status": "not-prepared",
+            "note": "カード作成のみ。実行担当の準備(driver/隔離copy/fixture)は未実施"
+          },
+          "required_observations": [
+            "quit_confirm_shown",
+            "answered_no",
+            "edit_state_kept",
+            "owner_kept",
+            "stop_outcome",
+            "foreground_after"
+          ],
+          "observations": {},
+          "answer": "",
+          "raw_inputs": [],
+          "run_id": "",
+          "observed_at": "",
+          "environment": {},
+          "binary_sha256": "",
+          "input_manifest_sha256": "",
+          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17"
+        }
+      ]
+    },
+    {
+      "id": "W12a",
+      "group": "G4",
+      "task": "06-05-02",
+      "title": "Python両入口・別配置の一次/二次3x3",
+      "source": "04-WINDOWS-UAT W12a / 06-UAT-CARRYOVER W12a / 06-VALIDATION W12a",
+      "subrows": [
+        {
+          "subrow": "script-script@script",
+          "card": "W12a/script-script@script",
+          "entry": "script",
+          "condition": "script-script",
+          "evidence_kind": "python-real",
+          "status": "not-run",
+          "preparation": {
+            "status": "not-prepared",
+            "note": "G4で一次入口を選べるdriverを用意するまで未準備(既存`--uat start`は一次入口を選べない)"
+          },
+          "required_observations": [
+            "one_primary_screen",
+            "secondary_returns_to_primary",
+            "state_kept",
+            "api_return",
+            "actual_foreground"
+          ],
+          "observations": {},
+          "answer": "",
+          "raw_inputs": [],
+          "run_id": "",
+          "observed_at": "",
+          "environment": {},
+          "binary_sha256": "",
+          "input_manifest_sha256": ""
+        },
+        {
+          "subrow": "script-module@script",
+          "card": "W12a/script-module@script",
+          "entry": "script",
+          "condition": "script-module",
+          "evidence_kind": "python-real",
+          "status": "not-run",
+          "preparation": {
+            "status": "not-prepared",
+            "note": "G4で一次入口を選べるdriverを用意するまで未準備(既存`--uat start`は一次入口を選べない)"
+          },
+          "required_observations": [
+            "one_primary_screen",
+            "secondary_returns_to_primary",
+            "state_kept",
+            "api_return",
+            "actual_foreground"
+          ],
+          "observations": {},
+          "answer": "",
+          "raw_inputs": [],
+          "run_id": "",
+          "observed_at": "",
+          "environment": {},
+          "binary_sha256": "",
+          "input_manifest_sha256": ""
+        },
+        {
+          "subrow": "script-relocated@script",
+          "card": "W12a/script-relocated@script",
+          "entry": "script",
+          "condition": "script-relocated",
+          "evidence_kind": "python-real",
+          "status": "not-run",
+          "preparation": {
+            "status": "not-prepared",
+            "note": "G4で一次入口を選べるdriverを用意するまで未準備(既存`--uat start`は一次入口を選べない)"
+          },
+          "required_observations": [
+            "one_primary_screen",
+            "secondary_returns_to_primary",
+            "state_kept",
+            "api_return",
+            "actual_foreground"
+          ],
+          "observations": {},
+          "answer": "",
+          "raw_inputs": [],
+          "run_id": "",
+          "observed_at": "",
+          "environment": {},
+          "binary_sha256": "",
+          "input_manifest_sha256": ""
+        },
+        {
+          "subrow": "module-script@module",
+          "card": "W12a/module-script@module",
+          "entry": "module",
+          "condition": "module-script",
+          "evidence_kind": "python-real",
+          "status": "not-run",
+          "preparation": {
+            "status": "not-prepared",
+            "note": "G4で一次入口を選べるdriverを用意するまで未準備(既存`--uat start`は一次入口を選べない)"
+          },
+          "required_observations": [
+            "one_primary_screen",
+            "secondary_returns_to_primary",
+            "state_kept",
+            "api_return",
+            "actual_foreground"
+          ],
+          "observations": {},
+          "answer": "",
+          "raw_inputs": [],
+          "run_id": "",
+          "observed_at": "",
+          "environment": {},
+          "binary_sha256": "",
+          "input_manifest_sha256": ""
+        },
+        {
+          "subrow": "module-module@module",
+          "card": "W12a/module-module@module",
+          "entry": "module",
+          "condition": "module-module",
+          "evidence_kind": "python-real",
+          "status": "not-run",
+          "preparation": {
+            "status": "not-prepared",
+            "note": "G4で一次入口を選べるdriverを用意するまで未準備(既存`--uat start`は一次入口を選べない)"
+          },
+          "required_observations": [
+            "one_primary_screen",
+            "secondary_returns_to_primary",
+            "state_kept",
+            "api_return",
+            "actual_foreground"
+          ],
+          "observations": {},
+          "answer": "",
+          "raw_inputs": [],
+          "run_id": "",
+          "observed_at": "",
+          "environment": {},
+          "binary_sha256": "",
+          "input_manifest_sha256": ""
+        },
+        {
+          "subrow": "module-relocated@module",
+          "card": "W12a/module-relocated@module",
+          "entry": "module",
+          "condition": "module-relocated",
+          "evidence_kind": "python-real",
+          "status": "not-run",
+          "preparation": {
+            "status": "not-prepared",
+            "note": "G4で一次入口を選べるdriverを用意するまで未準備(既存`--uat start`は一次入口を選べない)"
+          },
+          "required_observations": [
+            "one_primary_screen",
+            "secondary_returns_to_primary",
+            "state_kept",
+            "api_return",
+            "actual_foreground"
+          ],
+          "observations": {},
+          "answer": "",
+          "raw_inputs": [],
+          "run_id": "",
+          "observed_at": "",
+          "environment": {},
+          "binary_sha256": "",
+          "input_manifest_sha256": ""
+        },
+        {
+          "subrow": "relocated-script@relocated",
+          "card": "W12a/relocated-script@relocated",
+          "entry": "relocated",
+          "condition": "relocated-script",
+          "evidence_kind": "python-real",
+          "status": "not-run",
+          "preparation": {
+            "status": "not-prepared",
+            "note": "G4で一次入口を選べるdriverを用意するまで未準備(既存`--uat start`は一次入口を選べない)"
+          },
+          "required_observations": [
+            "one_primary_screen",
+            "secondary_returns_to_primary",
+            "state_kept",
+            "api_return",
+            "actual_foreground"
+          ],
+          "observations": {},
+          "answer": "",
+          "raw_inputs": [],
+          "run_id": "",
+          "observed_at": "",
+          "environment": {},
+          "binary_sha256": "",
+          "input_manifest_sha256": ""
+        },
+        {
+          "subrow": "relocated-module@relocated",
+          "card": "W12a/relocated-module@relocated",
+          "entry": "relocated",
+          "condition": "relocated-module",
+          "evidence_kind": "python-real",
+          "status": "not-run",
+          "preparation": {
+            "status": "not-prepared",
+            "note": "G4で一次入口を選べるdriverを用意するまで未準備(既存`--uat start`は一次入口を選べない)"
+          },
+          "required_observations": [
+            "one_primary_screen",
+            "secondary_returns_to_primary",
+            "state_kept",
+            "api_return",
+            "actual_foreground"
+          ],
+          "observations": {},
+          "answer": "",
+          "raw_inputs": [],
+          "run_id": "",
+          "observed_at": "",
+          "environment": {},
+          "binary_sha256": "",
+          "input_manifest_sha256": ""
+        },
+        {
+          "subrow": "relocated-relocated@relocated",
+          "card": "W12a/relocated-relocated@relocated",
+          "entry": "relocated",
+          "condition": "relocated-relocated",
+          "evidence_kind": "python-real",
+          "status": "not-run",
+          "preparation": {
+            "status": "not-prepared",
+            "note": "G4で一次入口を選べるdriverを用意するまで未準備(既存`--uat start`は一次入口を選べない)"
+          },
+          "required_observations": [
+            "one_primary_screen",
+            "secondary_returns_to_primary",
+            "state_kept",
+            "api_return",
+            "actual_foreground"
+          ],
+          "observations": {},
+          "answer": "",
+          "raw_inputs": [],
+          "run_id": "",
+          "observed_at": "",
+          "environment": {},
+          "binary_sha256": "",
+          "input_manifest_sha256": ""
+        }
+      ]
+    },
+    {
+      "id": "W12b",
+      "group": "G4",
+      "task": "06-05-02",
+      "title": "最終実EXEとPython/対応版tracer/別配置の双方向混在",
+      "source": "04-WINDOWS-UAT W12b / 06-UAT-CARRYOVER W12b / 06-05-PLAN peer_contract",
+      "subrows": [
+        {
+          "subrow": "exe-exe-samecopy@production-exe",
+          "card": "W12b/exe-exe-samecopy@production-exe",
+          "entry": "production-exe",
+          "condition": "exe-exe-samecopy",
+          "evidence_kind": "production-exe",
+          "status": "not-run",
+          "preparation": {
+            "status": "not-prepared",
+            "note": "カード作成のみ。実行担当の準備(driver/隔離copy/fixture)は未実施"
+          },
+          "required_observations": [
+            "single_primary_screen",
+            "same_session_return",
+            "primary_state_kept",
+            "api_return",
+            "actual_foreground",
+            "peer_identity"
+          ],
+          "observations": {},
+          "answer": "",
+          "raw_inputs": [],
+          "run_id": "",
+          "observed_at": "",
+          "environment": {},
+          "binary_sha256": "",
+          "input_manifest_sha256": "",
+          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17",
+          "subject": {
+            "role": "final-release-candidate",
+            "binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17",
+            "version": "v1.10.0"
+          },
+          "peer": {
+            "role": "same-version-copy",
+            "binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17",
+            "version": "v1.10.0",
+            "claims_other_version": false,
+            "note": "同版copyは別配置の根拠だけ。別版互換の根拠にしない"
+          },
+          "direction": "一次=最終EXE→二次=同版の別配置copy"
+        },
+        {
+          "subrow": "exe-script@production-exe",
+          "card": "W12b/exe-script@production-exe",
+          "entry": "production-exe",
+          "condition": "exe-script",
+          "evidence_kind": "production-exe",
+          "status": "not-run",
+          "preparation": {
+            "status": "not-prepared",
+            "note": "カード作成のみ。実行担当の準備(driver/隔離copy/fixture)は未実施"
+          },
+          "required_observations": [
+            "single_primary_screen",
+            "same_session_return",
+            "primary_state_kept",
+            "api_return",
+            "actual_foreground",
+            "peer_identity"
+          ],
+          "observations": {},
+          "answer": "",
+          "raw_inputs": [],
+          "run_id": "",
+          "observed_at": "",
+          "environment": {},
+          "binary_sha256": "",
+          "input_manifest_sha256": "",
+          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17",
+          "subject": {
+            "role": "final-release-candidate",
+            "binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17",
+            "version": "v1.10.0"
+          },
+          "peer": {
+            "role": "python-entry",
+            "entry": "script"
+          },
+          "direction": "一次=最終EXE→二次=Python直接起動"
+        },
+        {
+          "subrow": "script-exe@script",
+          "card": "W12b/script-exe@script",
+          "entry": "script",
+          "condition": "script-exe",
+          "evidence_kind": "production-exe",
+          "status": "not-run",
+          "preparation": {
+            "status": "not-prepared",
+            "note": "カード作成のみ。実行担当の準備(driver/隔離copy/fixture)は未実施"
+          },
+          "required_observations": [
+            "single_primary_screen",
+            "same_session_return",
+            "primary_state_kept",
+            "api_return",
+            "actual_foreground",
+            "peer_identity"
+          ],
+          "observations": {},
+          "answer": "",
+          "raw_inputs": [],
+          "run_id": "",
+          "observed_at": "",
+          "environment": {},
+          "binary_sha256": "",
+          "input_manifest_sha256": "",
+          "subject": {
+            "role": "final-release-candidate",
+            "binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17",
+            "version": "v1.10.0"
+          },
+          "peer": {
+            "role": "python-entry",
+            "entry": "script"
+          },
+          "direction": "一次=Python直接起動→二次=最終EXE"
+        },
+        {
+          "subrow": "exe-module@production-exe",
+          "card": "W12b/exe-module@production-exe",
+          "entry": "production-exe",
+          "condition": "exe-module",
+          "evidence_kind": "production-exe",
+          "status": "not-run",
+          "preparation": {
+            "status": "not-prepared",
+            "note": "カード作成のみ。実行担当の準備(driver/隔離copy/fixture)は未実施"
+          },
+          "required_observations": [
+            "single_primary_screen",
+            "same_session_return",
+            "primary_state_kept",
+            "api_return",
+            "actual_foreground",
+            "peer_identity"
+          ],
+          "observations": {},
+          "answer": "",
+          "raw_inputs": [],
+          "run_id": "",
+          "observed_at": "",
+          "environment": {},
+          "binary_sha256": "",
+          "input_manifest_sha256": "",
+          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17",
+          "subject": {
+            "role": "final-release-candidate",
+            "binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17",
+            "version": "v1.10.0"
+          },
+          "peer": {
+            "role": "python-entry",
+            "entry": "module"
+          },
+          "direction": "一次=最終EXE→二次=Python -m"
+        },
+        {
+          "subrow": "module-exe@module",
+          "card": "W12b/module-exe@module",
+          "entry": "module",
+          "condition": "module-exe",
+          "evidence_kind": "production-exe",
+          "status": "not-run",
+          "preparation": {
+            "status": "not-prepared",
+            "note": "カード作成のみ。実行担当の準備(driver/隔離copy/fixture)は未実施"
+          },
+          "required_observations": [
+            "single_primary_screen",
+            "same_session_return",
+            "primary_state_kept",
+            "api_return",
+            "actual_foreground",
+            "peer_identity"
+          ],
+          "observations": {},
+          "answer": "",
+          "raw_inputs": [],
+          "run_id": "",
+          "observed_at": "",
+          "environment": {},
+          "binary_sha256": "",
+          "input_manifest_sha256": "",
+          "subject": {
+            "role": "final-release-candidate",
+            "binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17",
+            "version": "v1.10.0"
+          },
+          "peer": {
+            "role": "python-entry",
+            "entry": "module"
+          },
+          "direction": "一次=Python -m→二次=最終EXE"
+        },
+        {
+          "subrow": "exe-tracer@production-exe",
+          "card": "W12b/exe-tracer@production-exe",
+          "entry": "production-exe",
+          "condition": "exe-tracer",
+          "evidence_kind": "production-exe",
+          "status": "not-run",
+          "preparation": {
+            "status": "not-prepared",
+            "note": "カード作成のみ。実行担当の準備(driver/隔離copy/fixture)は未実施"
+          },
+          "required_observations": [
+            "single_primary_screen",
+            "same_session_return",
+            "primary_state_kept",
+            "api_return",
+            "actual_foreground",
+            "peer_identity"
+          ],
+          "observations": {},
+          "answer": "",
+          "raw_inputs": [],
+          "run_id": "",
+          "observed_at": "",
+          "environment": {},
+          "binary_sha256": "",
+          "input_manifest_sha256": "",
+          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17",
+          "subject": {
+            "role": "final-release-candidate",
+            "binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17",
+            "version": "v1.10.0"
+          },
+          "peer": {
+            "role": "technical-tracer-real-exe",
+            "binary_sha256": "c082f6f4c35af75f07e574f2ef30f41c25e41965f7f9f17a8b65ac71e9183ba7",
+            "version": "v1.9.1",
+            "official_release": false,
+            "final_exe_accepted": false,
+            "retained_path": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf06_tracer_acce06df0c694f10be4a1ed80f690793\\PageFolio-v1.9.1",
+            "pyinstaller": "6.22.3",
+            "provenance": {
+              "run_id": "2db21a6b3e8b4aed80d92adc3a521668",
+              "source_manifest_sha256": "d53ca450a6e326e4ca46b33cddb984bfa8bb90c9617da2959baed347d9bcefe5",
+              "source_commit": "509e05c37a9dbdee0364a36a398ef1c9d6058ac5",
+              "dirty_sha256": "bdaf0683f8199efce310395c6a12e5d8b8ef6fd888730842d125348c725db0b5",
+              "origin": "06-01 技術tracer(実PyInstaller)。06-01-SUMMARY参照",
+              "correspondence_check": "pending(G4): 起動排他/固定namespace/protocolを持つ実装であることをsource manifestと同世代の自動証拠に照合してから使用。照合できなければこのpeerの行はnot-runのまま"
+            }
+          },
+          "direction": "一次=最終EXE→二次=06-01技術tracer(v1.9.1実EXE)"
+        },
+        {
+          "subrow": "tracer-exe@tracer",
+          "card": "W12b/tracer-exe@tracer",
+          "entry": "tracer",
+          "condition": "tracer-exe",
+          "evidence_kind": "production-exe",
+          "status": "not-run",
+          "preparation": {
+            "status": "not-prepared",
+            "note": "カード作成のみ。実行担当の準備(driver/隔離copy/fixture)は未実施"
+          },
+          "required_observations": [
+            "single_primary_screen",
+            "same_session_return",
+            "primary_state_kept",
+            "api_return",
+            "actual_foreground",
+            "peer_identity"
+          ],
+          "observations": {},
+          "answer": "",
+          "raw_inputs": [],
+          "run_id": "",
+          "observed_at": "",
+          "environment": {},
+          "binary_sha256": "",
+          "input_manifest_sha256": "",
+          "subject": {
+            "role": "final-release-candidate",
+            "binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17",
+            "version": "v1.10.0"
+          },
+          "peer": {
+            "role": "technical-tracer-real-exe",
+            "binary_sha256": "c082f6f4c35af75f07e574f2ef30f41c25e41965f7f9f17a8b65ac71e9183ba7",
+            "version": "v1.9.1",
+            "official_release": false,
+            "final_exe_accepted": false,
+            "retained_path": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf06_tracer_acce06df0c694f10be4a1ed80f690793\\PageFolio-v1.9.1",
+            "pyinstaller": "6.22.3",
+            "provenance": {
+              "run_id": "2db21a6b3e8b4aed80d92adc3a521668",
+              "source_manifest_sha256": "d53ca450a6e326e4ca46b33cddb984bfa8bb90c9617da2959baed347d9bcefe5",
+              "source_commit": "509e05c37a9dbdee0364a36a398ef1c9d6058ac5",
+              "dirty_sha256": "bdaf0683f8199efce310395c6a12e5d8b8ef6fd888730842d125348c725db0b5",
+              "origin": "06-01 技術tracer(実PyInstaller)。06-01-SUMMARY参照",
+              "correspondence_check": "pending(G4): 起動排他/固定namespace/protocolを持つ実装であることをsource manifestと同世代の自動証拠に照合してから使用。照合できなければこのpeerの行はnot-runのまま"
+            }
+          },
+          "direction": "一次=06-01技術tracer→二次=最終EXE"
+        },
+        {
+          "subrow": "exe-relocated-copy@production-exe",
+          "card": "W12b/exe-relocated-copy@production-exe",
+          "entry": "production-exe",
+          "condition": "exe-relocated-copy",
+          "evidence_kind": "production-exe",
+          "status": "not-run",
+          "preparation": {
+            "status": "not-prepared",
+            "note": "カード作成のみ。実行担当の準備(driver/隔離copy/fixture)は未実施"
+          },
+          "required_observations": [
+            "single_primary_screen",
+            "same_session_return",
+            "primary_state_kept",
+            "api_return",
+            "actual_foreground",
+            "peer_identity"
+          ],
+          "observations": {},
+          "answer": "",
+          "raw_inputs": [],
+          "run_id": "",
+          "observed_at": "",
+          "environment": {},
+          "binary_sha256": "",
+          "input_manifest_sha256": "",
+          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17",
+          "subject": {
+            "role": "final-release-candidate",
+            "binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17",
+            "version": "v1.10.0"
+          },
+          "peer": {
+            "role": "same-version-copy",
+            "binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17",
+            "version": "v1.10.0",
+            "claims_other_version": false,
+            "note": "同版copyは別配置の根拠だけ。別版互換の根拠にしない"
+          },
+          "direction": "一次=最終EXE→二次=別配置の同版copy"
+        },
+        {
+          "subrow": "relocated-copy-exe@relocated-copy",
+          "card": "W12b/relocated-copy-exe@relocated-copy",
+          "entry": "relocated-copy",
+          "condition": "relocated-copy-exe",
+          "evidence_kind": "production-exe",
+          "status": "not-run",
+          "preparation": {
+            "status": "not-prepared",
+            "note": "カード作成のみ。実行担当の準備(driver/隔離copy/fixture)は未実施"
+          },
+          "required_observations": [
+            "single_primary_screen",
+            "same_session_return",
+            "primary_state_kept",
+            "api_return",
+            "actual_foreground",
+            "peer_identity"
+          ],
+          "observations": {},
+          "answer": "",
+          "raw_inputs": [],
+          "run_id": "",
+          "observed_at": "",
+          "environment": {},
+          "binary_sha256": "",
+          "input_manifest_sha256": "",
+          "subject": {
+            "role": "final-release-candidate",
+            "binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17",
+            "version": "v1.10.0"
+          },
+          "peer": {
+            "role": "same-version-copy",
+            "binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17",
+            "version": "v1.10.0",
+            "claims_other_version": false,
+            "note": "同版copyは別配置の根拠だけ。別版互換の根拠にしない"
+          },
+          "direction": "一次=別配置の同版copy→二次=最終EXE"
+        }
+      ]
+    },
+    {
+      "id": "W12c",
+      "group": "G4",
+      "task": "06-05-02",
+      "title": "Explorer/端末の実入力とAPI戻り・foregroundの別記",
+      "source": "04-WINDOWS-UAT W12c / 06-UAT-CARRYOVER W12c",
+      "subrows": [
+        {
+          "subrow": "explorer-python@script",
+          "card": "W12c/explorer-python@script",
+          "entry": "script",
+          "condition": "explorer-python",
+          "evidence_kind": "python-real",
+          "status": "not-run",
+          "preparation": {
+            "status": "not-prepared",
+            "note": "カード作成のみ。実行担当の準備(driver/隔離copy/fixture)は未実施"
+          },
+          "required_observations": [
+            "launch_route",
+            "api_return",
+            "actual_foreground",
+            "real_input_target_kept"
+          ],
+          "observations": {},
+          "answer": "",
+          "raw_inputs": [],
+          "run_id": "",
+          "observed_at": "",
+          "environment": {},
+          "binary_sha256": "",
+          "input_manifest_sha256": ""
+        },
+        {
+          "subrow": "terminal-python@script",
+          "card": "W12c/terminal-python@script",
+          "entry": "script",
+          "condition": "terminal-python",
+          "evidence_kind": "python-real",
+          "status": "not-run",
+          "preparation": {
+            "status": "not-prepared",
+            "note": "カード作成のみ。実行担当の準備(driver/隔離copy/fixture)は未実施"
+          },
+          "required_observations": [
+            "launch_route",
+            "api_return",
+            "actual_foreground",
+            "real_input_target_kept"
+          ],
+          "observations": {},
+          "answer": "",
+          "raw_inputs": [],
+          "run_id": "",
+          "observed_at": "",
+          "environment": {},
+          "binary_sha256": "",
+          "input_manifest_sha256": ""
+        },
+        {
+          "subrow": "explorer-exe@production-exe",
+          "card": "W12c/explorer-exe@production-exe",
+          "entry": "production-exe",
+          "condition": "explorer-exe",
+          "evidence_kind": "production-exe",
+          "status": "not-run",
+          "preparation": {
+            "status": "not-prepared",
+            "note": "カード作成のみ。実行担当の準備(driver/隔離copy/fixture)は未実施"
+          },
+          "required_observations": [
+            "launch_route",
+            "api_return",
+            "actual_foreground",
+            "real_input_target_kept"
+          ],
+          "observations": {},
+          "answer": "",
+          "raw_inputs": [],
+          "run_id": "",
+          "observed_at": "",
+          "environment": {},
+          "binary_sha256": "",
+          "input_manifest_sha256": "",
+          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17"
+        },
+        {
+          "subrow": "terminal-exe@production-exe",
+          "card": "W12c/terminal-exe@production-exe",
+          "entry": "production-exe",
+          "condition": "terminal-exe",
+          "evidence_kind": "production-exe",
+          "status": "not-run",
+          "preparation": {
+            "status": "not-prepared",
+            "note": "カード作成のみ。実行担当の準備(driver/隔離copy/fixture)は未実施"
+          },
+          "required_observations": [
+            "launch_route",
+            "api_return",
+            "actual_foreground",
+            "real_input_target_kept"
+          ],
+          "observations": {},
+          "answer": "",
+          "raw_inputs": [],
+          "run_id": "",
+          "observed_at": "",
+          "environment": {},
+          "binary_sha256": "",
+          "input_manifest_sha256": "",
+          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17"
+        }
+      ]
+    },
+    {
+      "id": "X01",
+      "group": "G5",
+      "task": "06-05-02",
+      "title": "設定ファイル不存在の既定起動",
+      "source": "05-CONTEXT D-13 / 06-VALIDATION X01 / 06-UAT-PREPARATION 設定障害",
+      "subrows": [
+        {
+          "subrow": "missing@production-exe",
+          "card": "X01/missing@production-exe",
+          "entry": "production-exe",
+          "condition": "missing",
+          "evidence_kind": "production-exe",
+          "status": "not-run",
+          "preparation": {
+            "status": "not-prepared",
+            "note": "カード作成のみ。実行担当の準備(driver/隔離copy/fixture)は未実施"
+          },
+          "required_observations": [
+            "settings_absent_until_stable",
+            "no_warning_shown",
+            "default_launch",
+            "exit_creation_not_failure"
+          ],
+          "observations": {},
+          "answer": "",
+          "raw_inputs": [],
+          "run_id": "",
+          "observed_at": "",
+          "environment": {},
+          "binary_sha256": "",
+          "input_manifest_sha256": "",
+          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17"
+        }
+      ]
+    },
+    {
+      "id": "X02",
+      "group": "G5",
+      "task": "06-05-02",
+      "title": "破損設定の非モーダル通知と原本保持",
+      "source": "05-CONTEXT D-13 / 06-VALIDATION X02",
+      "subrows": [
+        {
+          "subrow": "corrupt@production-exe",
+          "card": "X02/corrupt@production-exe",
+          "entry": "production-exe",
+          "condition": "corrupt",
+          "evidence_kind": "production-exe",
+          "status": "not-run",
+          "preparation": {
+            "status": "not-prepared",
+            "note": "カード作成のみ。実行担当の準備(driver/隔離copy/fixture)は未実施"
+          },
+          "required_observations": [
+            "corrupt_notice_text",
+            "original_bytes_preserved",
+            "default_values_launch",
+            "input_target_unchanged"
+          ],
+          "observations": {},
+          "answer": "",
+          "raw_inputs": [],
+          "run_id": "",
+          "observed_at": "",
+          "environment": {},
+          "binary_sha256": "",
+          "input_manifest_sha256": "",
+          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17"
+        }
+      ]
+    },
+    {
+      "id": "X03",
+      "group": "G5",
+      "task": "06-05-02",
+      "title": "読取不能設定の別文言と保存抑止",
+      "source": "05-CONTEXT D-13/D-20 / 06-VALIDATION X03",
+      "subrows": [
+        {
+          "subrow": "unreadable@production-exe",
+          "card": "X03/unreadable@production-exe",
+          "entry": "production-exe",
+          "condition": "unreadable",
+          "evidence_kind": "production-exe",
+          "status": "not-run",
+          "preparation": {
+            "status": "not-prepared",
+            "note": "カード作成のみ。実行担当の準備(driver/隔離copy/fixture)は未実施"
+          },
+          "required_observations": [
+            "unreadable_notice_text",
+            "original_hash_preserved",
+            "unsaved_notice_on_apply",
+            "holder_probe"
+          ],
+          "observations": {},
+          "answer": "",
+          "raw_inputs": [],
+          "run_id": "",
+          "observed_at": "",
+          "environment": {},
+          "binary_sha256": "",
+          "input_manifest_sha256": "",
+          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17"
+        }
+      ]
+    },
+    {
+      "id": "X04",
+      "group": "G6",
+      "task": "06-05-02",
+      "title": "保存失敗の保存元別通知(write/replace)",
+      "source": "05-CONTEXT D-19/D-21 / 06-VALIDATION X04",
+      "subrows": [
+        {
+          "subrow": "general-settings@production-exe",
+          "card": "X04/general-settings@production-exe",
+          "entry": "production-exe",
+          "condition": "general-settings",
+          "evidence_kind": "production-exe",
+          "status": "not-run",
+          "preparation": {
+            "status": "not-prepared",
+            "note": "カード作成のみ。実行担当の準備(driver/隔離copy/fixture)は未実施"
+          },
+          "required_observations": [
+            "fault_established_probe",
+            "failure_notice_text",
+            "memory_value_kept",
+            "original_hash_unchanged",
+            "operation_time"
+          ],
+          "observations": {},
+          "answer": "",
+          "raw_inputs": [],
+          "run_id": "",
+          "observed_at": "",
+          "environment": {},
+          "binary_sha256": "",
+          "input_manifest_sha256": "",
+          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17"
+        },
+        {
+          "subrow": "llm-or-external-prompt@production-exe",
+          "card": "X04/llm-or-external-prompt@production-exe",
+          "entry": "production-exe",
+          "condition": "llm-or-external-prompt",
+          "evidence_kind": "production-exe",
+          "status": "not-run",
+          "preparation": {
+            "status": "not-prepared",
+            "note": "カード作成のみ。実行担当の準備(driver/隔離copy/fixture)は未実施"
+          },
+          "required_observations": [
+            "fault_established_probe",
+            "failure_notice_text",
+            "memory_value_kept",
+            "original_hash_unchanged",
+            "operation_time"
+          ],
+          "observations": {},
+          "answer": "",
+          "raw_inputs": [],
+          "run_id": "",
+          "observed_at": "",
+          "environment": {},
+          "binary_sha256": "",
+          "input_manifest_sha256": "",
+          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17"
+        },
+        {
+          "subrow": "shortcut@production-exe",
+          "card": "X04/shortcut@production-exe",
+          "entry": "production-exe",
+          "condition": "shortcut",
+          "evidence_kind": "production-exe",
+          "status": "not-run",
+          "preparation": {
+            "status": "not-prepared",
+            "note": "カード作成のみ。実行担当の準備(driver/隔離copy/fixture)は未実施"
+          },
+          "required_observations": [
+            "fault_established_probe",
+            "failure_notice_text",
+            "memory_value_kept",
+            "original_hash_unchanged",
+            "operation_time"
+          ],
+          "observations": {},
+          "answer": "",
+          "raw_inputs": [],
+          "run_id": "",
+          "observed_at": "",
+          "environment": {},
+          "binary_sha256": "",
+          "input_manifest_sha256": "",
+          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17"
+        },
+        {
+          "subrow": "plugin-change@production-exe",
+          "card": "X04/plugin-change@production-exe",
+          "entry": "production-exe",
+          "condition": "plugin-change",
+          "evidence_kind": "production-exe",
+          "status": "not-run",
+          "preparation": {
+            "status": "not-prepared",
+            "note": "カード作成のみ。実行担当の準備(driver/隔離copy/fixture)は未実施"
+          },
+          "required_observations": [
+            "fault_established_probe",
+            "failure_notice_text",
+            "memory_value_kept",
+            "original_hash_unchanged",
+            "operation_time"
+          ],
+          "observations": {},
+          "answer": "",
+          "raw_inputs": [],
+          "run_id": "",
+          "observed_at": "",
+          "environment": {},
+          "binary_sha256": "",
+          "input_manifest_sha256": "",
+          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17"
+        },
+        {
+          "subrow": "ocr-conditions@production-exe",
+          "card": "X04/ocr-conditions@production-exe",
+          "entry": "production-exe",
+          "condition": "ocr-conditions",
+          "evidence_kind": "production-exe",
+          "status": "not-run",
+          "preparation": {
+            "status": "not-prepared",
+            "note": "カード作成のみ。実行担当の準備(driver/隔離copy/fixture)は未実施"
+          },
+          "required_observations": [
+            "fault_established_probe",
+            "failure_notice_text",
+            "memory_value_kept",
+            "original_hash_unchanged",
+            "operation_time"
+          ],
+          "observations": {},
+          "answer": "",
+          "raw_inputs": [],
+          "run_id": "",
+          "observed_at": "",
+          "environment": {},
+          "binary_sha256": "",
+          "input_manifest_sha256": "",
+          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17"
+        },
+        {
+          "subrow": "tool-settings@production-exe",
+          "card": "X04/tool-settings@production-exe",
+          "entry": "production-exe",
+          "condition": "tool-settings",
+          "evidence_kind": "production-exe",
+          "status": "not-run",
+          "preparation": {
+            "status": "not-prepared",
+            "note": "カード作成のみ。実行担当の準備(driver/隔離copy/fixture)は未実施"
+          },
+          "required_observations": [
+            "fault_established_probe",
+            "failure_notice_text",
+            "memory_value_kept",
+            "original_hash_unchanged",
+            "operation_time"
+          ],
+          "observations": {},
+          "answer": "",
+          "raw_inputs": [],
+          "run_id": "",
+          "observed_at": "",
+          "environment": {},
+          "binary_sha256": "",
+          "input_manifest_sha256": "",
+          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17"
+        },
+        {
+          "subrow": "window-exit@production-exe",
+          "card": "X04/window-exit@production-exe",
+          "entry": "production-exe",
+          "condition": "window-exit",
+          "evidence_kind": "production-exe",
+          "status": "not-run",
+          "preparation": {
+            "status": "not-prepared",
+            "note": "カード作成のみ。実行担当の準備(driver/隔離copy/fixture)は未実施"
+          },
+          "required_observations": [
+            "fault_established_probe",
+            "failure_notice_text",
+            "memory_value_kept",
+            "original_hash_unchanged",
+            "operation_time"
+          ],
+          "observations": {},
+          "answer": "",
+          "raw_inputs": [],
+          "run_id": "",
+          "observed_at": "",
+          "environment": {},
+          "binary_sha256": "",
+          "input_manifest_sha256": "",
+          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17"
+        },
+        {
+          "subrow": "replace-notification@production-exe",
+          "card": "X04/replace-notification@production-exe",
+          "entry": "production-exe",
+          "condition": "replace-notification",
+          "evidence_kind": "production-exe",
+          "status": "not-run",
+          "preparation": {
+            "status": "not-prepared",
+            "note": "カード作成のみ。実行担当の準備(driver/隔離copy/fixture)は未実施"
+          },
+          "required_observations": [
+            "fault_established_probe",
+            "failure_notice_text",
+            "memory_value_kept",
+            "original_hash_unchanged",
+            "operation_time"
+          ],
+          "observations": {},
+          "answer": "",
+          "raw_inputs": [],
+          "run_id": "",
+          "observed_at": "",
+          "environment": {},
+          "binary_sha256": "",
+          "input_manifest_sha256": "",
+          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17"
+        }
+      ]
+    },
+    {
+      "id": "X05",
+      "group": "G6",
+      "task": "06-05-02",
+      "title": "通知のFIFO・再構築残時間・終了D19/D20",
+      "source": "05-CONTEXT D-19/D-20/D-21 / 06-VALIDATION X05",
+      "subrows": [
+        {
+          "subrow": "fifo-10s@production-exe",
+          "card": "X05/fifo-10s@production-exe",
+          "entry": "production-exe",
+          "condition": "fifo-10s",
+          "evidence_kind": "production-exe",
+          "status": "not-run",
+          "preparation": {
+            "status": "not-prepared",
+            "note": "カード作成のみ。実行担当の準備(driver/隔離copy/fixture)は未実施"
+          },
+          "required_observations": [
+            "events_in_order",
+            "visible_10s_each",
+            "no_merge_or_drop",
+            "fault_established_probe",
+            "operation_time"
+          ],
+          "observations": {},
+          "answer": "",
+          "raw_inputs": [],
+          "run_id": "",
+          "observed_at": "",
+          "environment": {},
+          "binary_sha256": "",
+          "input_manifest_sha256": "",
+          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17"
+        },
+        {
+          "subrow": "rebuild-remaining-time@production-exe",
+          "card": "X05/rebuild-remaining-time@production-exe",
+          "entry": "production-exe",
+          "condition": "rebuild-remaining-time",
+          "evidence_kind": "production-exe",
+          "status": "not-run",
+          "preparation": {
+            "status": "not-prepared",
+            "note": "カード作成のみ。実行担当の準備(driver/隔離copy/fixture)は未実施"
+          },
+          "required_observations": [
+            "language_switch_done",
+            "remaining_time_only",
+            "fault_established_probe",
+            "operation_time"
+          ],
+          "observations": {},
+          "answer": "",
+          "raw_inputs": [],
+          "run_id": "",
+          "observed_at": "",
+          "environment": {},
+          "binary_sha256": "",
+          "input_manifest_sha256": "",
+          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17"
+        },
+        {
+          "subrow": "exit-no-first-fail-second-exit@production-exe",
+          "card": "X05/exit-no-first-fail-second-exit@production-exe",
+          "entry": "production-exe",
+          "condition": "exit-no-first-fail-second-exit",
+          "evidence_kind": "production-exe",
+          "status": "not-run",
+          "preparation": {
+            "status": "not-prepared",
+            "note": "カード作成のみ。実行担当の準備(driver/隔離copy/fixture)は未実施"
+          },
+          "required_observations": [
+            "exit_no_no_save",
+            "first_yes_fails_and_stays",
+            "next_exit_skips_save",
+            "fault_established_probe",
+            "operation_time"
+          ],
+          "observations": {},
+          "answer": "",
+          "raw_inputs": [],
+          "run_id": "",
+          "observed_at": "",
+          "environment": {},
+          "binary_sha256": "",
+          "input_manifest_sha256": "",
+          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17"
+        },
+        {
+          "subrow": "unreadable-save-suppressed@production-exe",
+          "card": "X05/unreadable-save-suppressed@production-exe",
+          "entry": "production-exe",
+          "condition": "unreadable-save-suppressed",
+          "evidence_kind": "production-exe",
+          "status": "not-run",
+          "preparation": {
+            "status": "not-prepared",
+            "note": "カード作成のみ。実行担当の準備(driver/隔離copy/fixture)は未実施"
+          },
+          "required_observations": [
+            "unsaved_notice_each_apply",
+            "no_extra_notice_on_exit",
+            "exit_via_confirm",
+            "fault_established_probe",
+            "operation_time"
+          ],
+          "observations": {},
+          "answer": "",
+          "raw_inputs": [],
+          "run_id": "",
+          "observed_at": "",
+          "environment": {},
+          "binary_sha256": "",
+          "input_manifest_sha256": "",
+          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17"
+        }
+      ]
+    },
+    {
+      "id": "X06",
+      "group": "G6",
+      "task": "06-05-02",
+      "title": "サンプル利用・更新保護・版表示",
+      "source": "06-02 同梱文書 / 06-04 保護 / 06-VALIDATION X06",
+      "subrows": [
+        {
+          "subrow": "sample-llm-ui-read@production-exe",
+          "card": "X06/sample-llm-ui-read@production-exe",
+          "entry": "production-exe",
+          "condition": "sample-llm-ui-read",
+          "evidence_kind": "production-exe",
+          "status": "not-run",
+          "preparation": {
+            "status": "not-prepared",
+            "note": "カード作成のみ。実行担当の準備(driver/隔離copy/fixture)は未実施"
+          },
+          "required_observations": [
+            "copied_sample_loaded",
+            "loaded_text_head"
+          ],
+          "observations": {},
+          "answer": "",
+          "raw_inputs": [],
+          "run_id": "",
+          "observed_at": "",
+          "environment": {},
+          "binary_sha256": "",
+          "input_manifest_sha256": "",
+          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17"
+        },
+        {
+          "subrow": "sample-ocr-actual-read@production-exe",
+          "card": "X06/sample-ocr-actual-read@production-exe",
+          "entry": "production-exe",
+          "condition": "sample-ocr-actual-read",
+          "evidence_kind": "production-exe",
+          "status": "not-run",
+          "preparation": {
+            "status": "not-prepared",
+            "note": "カード作成のみ。実行担当の準備(driver/隔離copy/fixture)は未実施"
+          },
+          "required_observations": [
+            "prompt_used_in_request",
+            "post_count_1"
+          ],
+          "observations": {},
+          "answer": "",
+          "raw_inputs": [],
+          "run_id": "",
+          "observed_at": "",
+          "environment": {},
+          "binary_sha256": "",
+          "input_manifest_sha256": "",
+          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17"
+        },
+        {
+          "subrow": "name-collision-stops@production-exe",
+          "card": "X06/name-collision-stops@production-exe",
+          "entry": "production-exe",
+          "condition": "name-collision-stops",
+          "evidence_kind": "production-exe",
+          "status": "not-run",
+          "preparation": {
+            "status": "not-prepared",
+            "note": "カード作成のみ。実行担当の準備(driver/隔離copy/fixture)は未実施"
+          },
+          "required_observations": [
+            "collision_stopped_before_choice",
+            "both_files_unchanged"
+          ],
+          "observations": {},
+          "answer": "",
+          "raw_inputs": [],
+          "run_id": "",
+          "observed_at": "",
+          "environment": {},
+          "binary_sha256": "",
+          "input_manifest_sha256": "",
+          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17"
+        },
+        {
+          "subrow": "guide-update-steps@production-exe",
+          "card": "X06/guide-update-steps@production-exe",
+          "entry": "production-exe",
+          "condition": "guide-update-steps",
+          "evidence_kind": "production-exe",
+          "status": "not-run",
+          "preparation": {
+            "status": "not-prepared",
+            "note": "カード作成のみ。実行担当の準備(driver/隔離copy/fixture)は未実施"
+          },
+          "required_observations": [
+            "guide_steps_followed",
+            "old_folder_kept"
+          ],
+          "observations": {},
+          "answer": "",
+          "raw_inputs": [],
+          "run_id": "",
+          "observed_at": "",
+          "environment": {},
+          "binary_sha256": "",
+          "input_manifest_sha256": "",
+          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17"
+        },
+        {
+          "subrow": "about-version-match@production-exe",
+          "card": "X06/about-version-match@production-exe",
+          "entry": "production-exe",
+          "condition": "about-version-match",
+          "evidence_kind": "production-exe",
+          "status": "not-run",
+          "preparation": {
+            "status": "not-prepared",
+            "note": "カード作成のみ。実行担当の準備(driver/隔離copy/fixture)は未実施"
+          },
+          "required_observations": [
+            "about_version_text",
+            "matches_folder_and_report",
+            "title_unchanged"
+          ],
+          "observations": {},
+          "answer": "",
+          "raw_inputs": [],
+          "run_id": "",
+          "observed_at": "",
+          "environment": {},
+          "binary_sha256": "",
+          "input_manifest_sha256": "",
+          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17"
+        }
+      ]
+    },
+    {
+      "id": "W06",
+      "group": "G7",
+      "task": "06-06-01",
+      "title": "他process入力中の実OS拒否・有限点滅・15秒再前面化なし",
+      "source": "04-WINDOWS-UAT W06",
+      "subrows": [
+        {
+          "subrow": "foreground-denied@script",
+          "card": "W06/foreground-denied@script",
+          "entry": "script",
+          "condition": "foreground-denied",
+          "evidence_kind": "python-real",
+          "status": "not-run",
+          "preparation": {
+            "status": "not-prepared",
+            "note": "カード作成のみ。実行担当の準備(driver/隔離copy/fixture)は未実施"
+          },
+          "required_observations": [
+            "other_process_input_continued",
+            "os_denied_observed",
+            "taskbar_flash_finite",
+            "no_refocus_after_15s"
+          ],
+          "observations": {},
+          "answer": "",
+          "raw_inputs": [],
+          "run_id": "",
+          "observed_at": "",
+          "environment": {},
+          "binary_sha256": "",
+          "input_manifest_sha256": ""
+        },
+        {
+          "subrow": "foreground-denied@module",
+          "card": "W06/foreground-denied@module",
+          "entry": "module",
+          "condition": "foreground-denied",
+          "evidence_kind": "python-real",
+          "status": "not-run",
+          "preparation": {
+            "status": "not-prepared",
+            "note": "カード作成のみ。実行担当の準備(driver/隔離copy/fixture)は未実施"
+          },
+          "required_observations": [
+            "other_process_input_continued",
+            "os_denied_observed",
+            "taskbar_flash_finite",
+            "no_refocus_after_15s"
+          ],
+          "observations": {},
+          "answer": "",
+          "raw_inputs": [],
+          "run_id": "",
+          "observed_at": "",
+          "environment": {},
+          "binary_sha256": "",
+          "input_manifest_sha256": ""
+        },
+        {
+          "subrow": "foreground-denied@production-exe",
+          "card": "W06/foreground-denied@production-exe",
+          "entry": "production-exe",
+          "condition": "foreground-denied",
+          "evidence_kind": "production-exe",
+          "status": "not-run",
+          "preparation": {
+            "status": "not-prepared",
+            "note": "カード作成のみ。実行担当の準備(driver/隔離copy/fixture)は未実施"
+          },
+          "required_observations": [
+            "other_process_input_continued",
+            "os_denied_observed",
+            "taskbar_flash_finite",
+            "no_refocus_after_15s",
+            "foreground_after"
+          ],
+          "observations": {},
+          "answer": "",
+          "raw_inputs": [],
+          "run_id": "",
+          "observed_at": "",
+          "environment": {},
+          "binary_sha256": "",
+          "input_manifest_sha256": "",
+          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17"
+        }
+      ]
+    },
+    {
+      "id": "W07a",
+      "group": "G7",
+      "task": "06-06-01",
+      "title": "slowready: 5秒失効・10秒案内・遅延復帰0",
+      "source": "04-WINDOWS-UAT W07a / 05-CONTEXT D-05/06/08",
+      "subrows": [
+        {
+          "subrow": "slowready@script",
+          "card": "W07a/slowready@script",
+          "entry": "script",
+          "condition": "slowready",
+          "evidence_kind": "fault-injection",
+          "status": "not-run",
+          "preparation": {
+            "status": "not-prepared",
+            "note": "カード作成のみ。実行担当の準備(driver/隔離copy/fixture)は未実施"
+          },
+          "required_observations": [
+            "backend_expired_5000ms",
+            "notice_10000ms",
+            "restored_count_0",
+            "primary_normal_display"
+          ],
+          "observations": {},
+          "answer": "",
+          "raw_inputs": [],
+          "run_id": "",
+          "observed_at": "",
+          "environment": {},
+          "binary_sha256": "",
+          "input_manifest_sha256": ""
+        },
+        {
+          "subrow": "cold-start-double-launch@production-exe",
+          "card": "W07a/cold-start-double-launch@production-exe",
+          "entry": "production-exe",
+          "condition": "cold-start-double-launch",
+          "evidence_kind": "production-exe",
+          "status": "not-run",
+          "preparation": {
+            "status": "not-prepared",
+            "note": "カード作成のみ。実行担当の準備(driver/隔離copy/fixture)は未実施"
+          },
+          "required_observations": [
+            "single_primary_screen",
+            "no_late_restore",
+            "foreground_after"
+          ],
+          "observations": {},
+          "answer": "",
+          "raw_inputs": [],
+          "run_id": "",
+          "observed_at": "",
+          "environment": {},
+          "binary_sha256": "",
+          "input_manifest_sha256": "",
+          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17"
+        }
+      ]
+    },
+    {
+      "id": "W07b",
+      "group": "G8",
+      "task": "06-06-01",
+      "title": "busy: 失効後のqueue副作用0",
+      "source": "04-WINDOWS-UAT W07b / 06-UAT-CARRYOVER W07b",
+      "subrows": [
+        {
+          "subrow": "busy@module",
+          "card": "W07b/busy@module",
+          "entry": "module",
+          "condition": "busy",
+          "evidence_kind": "fault-injection",
+          "status": "not-run",
+          "preparation": {
+            "status": "not-prepared",
+            "note": "カード作成のみ。実行担当の準備(driver/隔離copy/fixture)は未実施"
+          },
+          "required_observations": [
+            "backend_expired_5000ms",
+            "restored_count_0_before_after",
+            "expired_queue_no_side_effect"
+          ],
+          "observations": {},
+          "answer": "",
+          "raw_inputs": [],
+          "run_id": "",
+          "observed_at": "",
+          "environment": {},
+          "binary_sha256": "",
+          "input_manifest_sha256": ""
+        },
+        {
+          "subrow": "natural-busy@production-exe",
+          "card": "W07b/natural-busy@production-exe",
+          "entry": "production-exe",
+          "condition": "natural-busy",
+          "evidence_kind": "production-exe",
+          "status": "not-run",
+          "preparation": {
+            "status": "not-prepared",
+            "note": "カード作成のみ。実行担当の準備(driver/隔離copy/fixture)は未実施"
+          },
+          "required_observations": [
+            "busy_created_by_real_operation",
+            "expired_queue_no_side_effect",
+            "foreground_after"
+          ],
+          "observations": {},
+          "answer": "",
+          "raw_inputs": [],
+          "run_id": "",
+          "observed_at": "",
+          "environment": {},
+          "binary_sha256": "",
+          "input_manifest_sha256": "",
+          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17"
+        }
+      ]
+    },
+    {
+      "id": "W08a",
+      "group": "G9",
+      "task": "06-06-01",
+      "title": "初期化死亡・同時claim・引継ぎ1回",
+      "source": "04-WINDOWS-UAT W08a",
+      "subrows": [
+        {
+          "subrow": "init-death-simultaneous-claim@script",
+          "card": "W08a/init-death-simultaneous-claim@script",
+          "entry": "script",
+          "condition": "init-death-simultaneous-claim",
+          "evidence_kind": "fault-injection",
+          "status": "not-run",
+          "preparation": {
+            "status": "not-prepared",
+            "note": "カード作成のみ。実行担当の準備(driver/隔離copy/fixture)は未実施"
+          },
+          "required_observations": [
+            "one_new_primary",
+            "takeover_once",
+            "raw_result_reviewed"
+          ],
+          "observations": {},
+          "answer": "",
+          "raw_inputs": [],
+          "run_id": "",
+          "observed_at": "",
+          "environment": {},
+          "binary_sha256": "",
+          "input_manifest_sha256": ""
+        },
+        {
+          "subrow": "simultaneous-launch-and-takeover@production-exe",
+          "card": "W08a/simultaneous-launch-and-takeover@production-exe",
+          "entry": "production-exe",
+          "condition": "simultaneous-launch-and-takeover",
+          "evidence_kind": "production-exe",
+          "status": "not-run",
+          "preparation": {
+            "status": "not-prepared",
+            "note": "カード作成のみ。実行担当の準備(driver/隔離copy/fixture)は未実施"
+          },
+          "required_observations": [
+            "one_primary_screen",
+            "takeover_after_owner_death",
+            "foreground_after"
+          ],
+          "observations": {},
+          "answer": "",
+          "raw_inputs": [],
+          "run_id": "",
+          "observed_at": "",
+          "environment": {},
+          "binary_sha256": "",
+          "input_manifest_sha256": "",
+          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17"
+        }
+      ]
+    },
+    {
+      "id": "W08b",
+      "group": "G9",
+      "task": "06-06-01",
+      "title": "終了形態別の再起動",
+      "source": "04-WINDOWS-UAT W08b",
+      "subrows": [
+        {
+          "subrow": "lifecycle-exit-modes@script",
+          "card": "W08b/lifecycle-exit-modes@script",
+          "entry": "script",
+          "condition": "lifecycle-exit-modes",
+          "evidence_kind": "fault-injection",
+          "status": "not-run",
+          "preparation": {
+            "status": "not-prepared",
+            "note": "カード作成のみ。実行担当の準備(driver/隔離copy/fixture)は未実施"
+          },
+          "required_observations": [
+            "restart_new_primary",
+            "raw_result_reviewed"
+          ],
+          "observations": {},
+          "answer": "",
+          "raw_inputs": [],
+          "run_id": "",
+          "observed_at": "",
+          "environment": {},
+          "binary_sha256": "",
+          "input_manifest_sha256": ""
+        },
+        {
+          "subrow": "normal-exit-relaunch@production-exe",
+          "card": "W08b/normal-exit-relaunch@production-exe",
+          "entry": "production-exe",
+          "condition": "normal-exit-relaunch",
+          "evidence_kind": "production-exe",
+          "status": "not-run",
+          "preparation": {
+            "status": "not-prepared",
+            "note": "カード作成のみ。実行担当の準備(driver/隔離copy/fixture)は未実施"
+          },
+          "required_observations": [
+            "restart_new_primary",
+            "raw_result_reviewed",
+            "foreground_after"
+          ],
+          "observations": {},
+          "answer": "",
+          "raw_inputs": [],
+          "run_id": "",
+          "observed_at": "",
+          "environment": {},
+          "binary_sha256": "",
+          "input_manifest_sha256": "",
+          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17"
+        },
+        {
+          "subrow": "forced-kill-relaunch@production-exe",
+          "card": "W08b/forced-kill-relaunch@production-exe",
+          "entry": "production-exe",
+          "condition": "forced-kill-relaunch",
+          "evidence_kind": "production-exe",
+          "status": "not-run",
+          "preparation": {
+            "status": "not-prepared",
+            "note": "カード作成のみ。実行担当の準備(driver/隔離copy/fixture)は未実施"
+          },
+          "required_observations": [
+            "restart_new_primary",
+            "raw_result_reviewed",
+            "foreground_after"
+          ],
+          "observations": {},
+          "answer": "",
+          "raw_inputs": [],
+          "run_id": "",
+          "observed_at": "",
+          "environment": {},
+          "binary_sha256": "",
+          "input_manifest_sha256": "",
+          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17"
+        }
+      ]
+    },
+    {
+      "id": "W08c",
+      "group": "G10",
+      "task": "06-06-01",
+      "title": "終了Noのmutex保持とYes後の新一次",
+      "source": "04-WINDOWS-UAT W08c / W05c対応",
+      "subrows": [
+        {
+          "subrow": "quit-no-then-yes@script",
+          "card": "W08c/quit-no-then-yes@script",
+          "entry": "script",
+          "condition": "quit-no-then-yes",
+          "evidence_kind": "python-real",
+          "status": "not-run",
+          "preparation": {
+            "status": "not-prepared",
+            "note": "カード作成のみ。実行担当の準備(driver/隔離copy/fixture)は未実施"
+          },
+          "required_observations": [
+            "no_keeps_mutex",
+            "yes_then_new_primary",
+            "linked_w05c_answer"
+          ],
+          "observations": {},
+          "answer": "",
+          "raw_inputs": [],
+          "run_id": "",
+          "observed_at": "",
+          "environment": {},
+          "binary_sha256": "",
+          "input_manifest_sha256": ""
+        },
+        {
+          "subrow": "quit-no-then-yes@production-exe",
+          "card": "W08c/quit-no-then-yes@production-exe",
+          "entry": "production-exe",
+          "condition": "quit-no-then-yes",
+          "evidence_kind": "production-exe",
+          "status": "not-run",
+          "preparation": {
+            "status": "not-prepared",
+            "note": "カード作成のみ。実行担当の準備(driver/隔離copy/fixture)は未実施"
+          },
+          "required_observations": [
+            "no_keeps_mutex",
+            "yes_then_new_primary",
+            "linked_w05c_answer",
+            "foreground_after"
+          ],
+          "observations": {},
+          "answer": "",
+          "raw_inputs": [],
+          "run_id": "",
+          "observed_at": "",
+          "environment": {},
+          "binary_sha256": "",
+          "input_manifest_sha256": "",
+          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17"
+        }
+      ]
+    },
+    {
+      "id": "W08d",
+      "group": "G10",
+      "task": "06-06-01",
+      "title": "root消失・旧worker・released・古mapping・同時claim・OS死亡",
+      "source": "04-WINDOWS-UAT W08d",
+      "subrows": [
+        {
+          "subrow": "root-missing@script",
+          "card": "W08d/root-missing@script",
+          "entry": "script",
+          "condition": "root-missing",
+          "evidence_kind": "fault-injection",
+          "status": "not-run",
+          "preparation": {
+            "status": "not-prepared",
+            "note": "カード作成のみ。実行担当の準備(driver/隔離copy/fixture)は未実施"
+          },
+          "required_observations": [
+            "record_reviewed",
+            "not_confused_with_other_cause"
+          ],
+          "observations": {},
+          "answer": "",
+          "raw_inputs": [],
+          "run_id": "",
+          "observed_at": "",
+          "environment": {},
+          "binary_sha256": "",
+          "input_manifest_sha256": ""
+        },
+        {
+          "subrow": "worker-alive@script",
+          "card": "W08d/worker-alive@script",
+          "entry": "script",
+          "condition": "worker-alive",
+          "evidence_kind": "fault-injection",
+          "status": "not-run",
+          "preparation": {
+            "status": "not-prepared",
+            "note": "カード作成のみ。実行担当の準備(driver/隔離copy/fixture)は未実施"
+          },
+          "required_observations": [
+            "record_reviewed",
+            "not_confused_with_other_cause"
+          ],
+          "observations": {},
+          "answer": "",
+          "raw_inputs": [],
+          "run_id": "",
+          "observed_at": "",
+          "environment": {},
+          "binary_sha256": "",
+          "input_manifest_sha256": ""
+        },
+        {
+          "subrow": "released-mapping@script",
+          "card": "W08d/released-mapping@script",
+          "entry": "script",
+          "condition": "released-mapping",
+          "evidence_kind": "fault-injection",
+          "status": "not-run",
+          "preparation": {
+            "status": "not-prepared",
+            "note": "カード作成のみ。実行担当の準備(driver/隔離copy/fixture)は未実施"
+          },
+          "required_observations": [
+            "record_reviewed",
+            "not_confused_with_other_cause"
+          ],
+          "observations": {},
+          "answer": "",
+          "raw_inputs": [],
+          "run_id": "",
+          "observed_at": "",
+          "environment": {},
+          "binary_sha256": "",
+          "input_manifest_sha256": ""
+        },
+        {
+          "subrow": "stale-mapping@script",
+          "card": "W08d/stale-mapping@script",
+          "entry": "script",
+          "condition": "stale-mapping",
+          "evidence_kind": "fault-injection",
+          "status": "not-run",
+          "preparation": {
+            "status": "not-prepared",
+            "note": "カード作成のみ。実行担当の準備(driver/隔離copy/fixture)は未実施"
+          },
+          "required_observations": [
+            "record_reviewed",
+            "not_confused_with_other_cause"
+          ],
+          "observations": {},
+          "answer": "",
+          "raw_inputs": [],
+          "run_id": "",
+          "observed_at": "",
+          "environment": {},
+          "binary_sha256": "",
+          "input_manifest_sha256": ""
+        },
+        {
+          "subrow": "simultaneous-claim@script",
+          "card": "W08d/simultaneous-claim@script",
+          "entry": "script",
+          "condition": "simultaneous-claim",
+          "evidence_kind": "fault-injection",
+          "status": "not-run",
+          "preparation": {
+            "status": "not-prepared",
+            "note": "カード作成のみ。実行担当の準備(driver/隔離copy/fixture)は未実施"
+          },
+          "required_observations": [
+            "record_reviewed",
+            "not_confused_with_other_cause"
+          ],
+          "observations": {},
+          "answer": "",
+          "raw_inputs": [],
+          "run_id": "",
+          "observed_at": "",
+          "environment": {},
+          "binary_sha256": "",
+          "input_manifest_sha256": ""
+        },
+        {
+          "subrow": "os-death@script",
+          "card": "W08d/os-death@script",
+          "entry": "script",
+          "condition": "os-death",
+          "evidence_kind": "fault-injection",
+          "status": "not-run",
+          "preparation": {
+            "status": "not-prepared",
+            "note": "カード作成のみ。実行担当の準備(driver/隔離copy/fixture)は未実施"
+          },
+          "required_observations": [
+            "record_reviewed",
+            "not_confused_with_other_cause"
+          ],
+          "observations": {},
+          "answer": "",
+          "raw_inputs": [],
+          "run_id": "",
+          "observed_at": "",
+          "environment": {},
+          "binary_sha256": "",
+          "input_manifest_sha256": ""
+        },
+        {
+          "subrow": "os-death-forced-kill@production-exe",
+          "card": "W08d/os-death-forced-kill@production-exe",
+          "entry": "production-exe",
+          "condition": "os-death-forced-kill",
+          "evidence_kind": "production-exe",
+          "status": "not-run",
+          "preparation": {
+            "status": "not-prepared",
+            "note": "カード作成のみ。実行担当の準備(driver/隔離copy/fixture)は未実施"
+          },
+          "required_observations": [
+            "owner_gone_confirmed",
+            "new_primary_after_death",
+            "foreground_after"
+          ],
+          "observations": {},
+          "answer": "",
+          "raw_inputs": [],
+          "run_id": "",
+          "observed_at": "",
+          "environment": {},
+          "binary_sha256": "",
+          "input_manifest_sha256": "",
+          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17"
+        }
+      ]
+    },
+    {
+      "id": "W09a",
+      "group": "G11",
+      "task": "06-06-01",
+      "title": "新通知の実クリック・入力非干渉・10秒・集約",
+      "source": "04-WINDOWS-UAT W09a",
+      "subrows": [
+        {
+          "subrow": "notice-click-input-10s-aggregate@script",
+          "card": "W09a/notice-click-input-10s-aggregate@script",
+          "entry": "script",
+          "condition": "notice-click-input-10s-aggregate",
+          "evidence_kind": "python-real",
+          "status": "not-run",
+          "preparation": {
+            "status": "not-prepared",
+            "note": "カード作成のみ。実行担当の準備(driver/隔離copy/fixture)は未実施"
+          },
+          "required_observations": [
+            "click_closes",
+            "input_not_disturbed",
+            "auto_close_10s",
+            "aggregated_single_display",
+            "no_residual_15s_after_close"
+          ],
+          "observations": {},
+          "answer": "",
+          "raw_inputs": [],
+          "run_id": "",
+          "observed_at": "",
+          "environment": {},
+          "binary_sha256": "",
+          "input_manifest_sha256": ""
+        },
+        {
+          "subrow": "suspended-primary-notice@production-exe",
+          "card": "W09a/suspended-primary-notice@production-exe",
+          "entry": "production-exe",
+          "condition": "suspended-primary-notice",
+          "evidence_kind": "production-exe",
+          "status": "not-run",
+          "preparation": {
+            "status": "not-prepared",
+            "note": "カード作成のみ。実行担当の準備(driver/隔離copy/fixture)は未実施"
+          },
+          "required_observations": [
+            "click_closes",
+            "input_not_disturbed",
+            "auto_close_10s",
+            "aggregated_single_display",
+            "no_residual_15s_after_close",
+            "foreground_after"
+          ],
+          "observations": {},
+          "answer": "",
+          "raw_inputs": [],
+          "run_id": "",
+          "observed_at": "",
+          "environment": {},
+          "binary_sha256": "",
+          "input_manifest_sha256": "",
+          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17"
+        }
+      ]
+    },
+    {
+      "id": "W09b",
+      "group": "G11",
+      "task": "06-06-01",
+      "title": "実DPI 100% の通知表示",
+      "source": "04-WINDOWS-UAT W09b",
+      "subrows": [
+        {
+          "subrow": "dpi-100@script",
+          "card": "W09b/dpi-100@script",
+          "entry": "script",
+          "condition": "dpi-100",
+          "evidence_kind": "python-real",
+          "status": "not-run",
+          "preparation": {
+            "status": "not-prepared",
+            "note": "カード作成のみ。実行担当の準備(driver/隔離copy/fixture)は未実施"
+          },
+          "required_observations": [
+            "dpi_setting",
+            "full_text_visible",
+            "close_area_visible",
+            "screen_record"
+          ],
+          "observations": {},
+          "answer": "",
+          "raw_inputs": [],
+          "run_id": "",
+          "observed_at": "",
+          "environment": {},
+          "binary_sha256": "",
+          "input_manifest_sha256": ""
+        },
+        {
+          "subrow": "dpi-100@production-exe",
+          "card": "W09b/dpi-100@production-exe",
+          "entry": "production-exe",
+          "condition": "dpi-100",
+          "evidence_kind": "production-exe",
+          "status": "not-run",
+          "preparation": {
+            "status": "not-prepared",
+            "note": "カード作成のみ。実行担当の準備(driver/隔離copy/fixture)は未実施"
+          },
+          "required_observations": [
+            "dpi_setting",
+            "full_text_visible",
+            "close_area_visible",
+            "screen_record",
+            "foreground_after"
+          ],
+          "observations": {},
+          "answer": "",
+          "raw_inputs": [],
+          "run_id": "",
+          "observed_at": "",
+          "environment": {},
+          "binary_sha256": "",
+          "input_manifest_sha256": "",
+          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17"
+        }
+      ]
+    },
+    {
+      "id": "W09c",
+      "group": "G12",
+      "task": "06-06-01",
+      "title": "実DPI 150% の通知表示",
+      "source": "04-WINDOWS-UAT W09c",
+      "subrows": [
+        {
+          "subrow": "dpi-150@script",
+          "card": "W09c/dpi-150@script",
+          "entry": "script",
+          "condition": "dpi-150",
+          "evidence_kind": "python-real",
+          "status": "not-run",
+          "preparation": {
+            "status": "not-prepared",
+            "note": "カード作成のみ。実行担当の準備(driver/隔離copy/fixture)は未実施"
+          },
+          "required_observations": [
+            "dpi_setting",
+            "full_text_visible",
+            "close_area_visible",
+            "screen_record"
+          ],
+          "observations": {},
+          "answer": "",
+          "raw_inputs": [],
+          "run_id": "",
+          "observed_at": "",
+          "environment": {},
+          "binary_sha256": "",
+          "input_manifest_sha256": ""
+        },
+        {
+          "subrow": "dpi-150@production-exe",
+          "card": "W09c/dpi-150@production-exe",
+          "entry": "production-exe",
+          "condition": "dpi-150",
+          "evidence_kind": "production-exe",
+          "status": "not-run",
+          "preparation": {
+            "status": "not-prepared",
+            "note": "カード作成のみ。実行担当の準備(driver/隔離copy/fixture)は未実施"
+          },
+          "required_observations": [
+            "dpi_setting",
+            "full_text_visible",
+            "close_area_visible",
+            "screen_record",
+            "foreground_after"
+          ],
+          "observations": {},
+          "answer": "",
+          "raw_inputs": [],
+          "run_id": "",
+          "observed_at": "",
+          "environment": {},
+          "binary_sha256": "",
+          "input_manifest_sha256": "",
+          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17"
+        }
+      ]
+    },
+    {
+      "id": "W09d",
+      "group": "G12",
+      "task": "06-06-01",
+      "title": "実DPI 200% の通知表示",
+      "source": "04-WINDOWS-UAT W09d",
+      "subrows": [
+        {
+          "subrow": "dpi-200@script",
+          "card": "W09d/dpi-200@script",
+          "entry": "script",
+          "condition": "dpi-200",
+          "evidence_kind": "python-real",
+          "status": "not-run",
+          "preparation": {
+            "status": "not-prepared",
+            "note": "カード作成のみ。実行担当の準備(driver/隔離copy/fixture)は未実施"
+          },
+          "required_observations": [
+            "dpi_setting",
+            "full_text_visible",
+            "close_area_visible",
+            "screen_record"
+          ],
+          "observations": {},
+          "answer": "",
+          "raw_inputs": [],
+          "run_id": "",
+          "observed_at": "",
+          "environment": {},
+          "binary_sha256": "",
+          "input_manifest_sha256": ""
+        },
+        {
+          "subrow": "dpi-200@production-exe",
+          "card": "W09d/dpi-200@production-exe",
+          "entry": "production-exe",
+          "condition": "dpi-200",
+          "evidence_kind": "production-exe",
+          "status": "not-run",
+          "preparation": {
+            "status": "not-prepared",
+            "note": "カード作成のみ。実行担当の準備(driver/隔離copy/fixture)は未実施"
+          },
+          "required_observations": [
+            "dpi_setting",
+            "full_text_visible",
+            "close_area_visible",
+            "screen_record",
+            "foreground_after"
+          ],
+          "observations": {},
+          "answer": "",
+          "raw_inputs": [],
+          "run_id": "",
+          "observed_at": "",
+          "environment": {},
+          "binary_sha256": "",
+          "input_manifest_sha256": "",
+          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17"
+        }
+      ]
+    },
+    {
+      "id": "W10a",
+      "group": "G13",
+      "task": "06-06-01",
+      "title": "UAC medium→elevated",
+      "source": "04-WINDOWS-UAT W10a",
+      "subrows": [
+        {
+          "subrow": "medium→elevated@script",
+          "card": "W10a/medium→elevated@script",
+          "entry": "script",
+          "condition": "medium→elevated",
+          "evidence_kind": "python-real",
+          "status": "not-run",
+          "preparation": {
+            "status": "not-prepared",
+            "note": "カード作成のみ。実行担当の準備(driver/隔離copy/fixture)は未実施"
+          },
+          "required_observations": [
+            "owner_resource",
+            "sid_luid_session",
+            "uac_operation"
+          ],
+          "observations": {},
+          "answer": "",
+          "raw_inputs": [],
+          "run_id": "",
+          "observed_at": "",
+          "environment": {},
+          "binary_sha256": "",
+          "input_manifest_sha256": ""
+        },
+        {
+          "subrow": "medium→elevated@production-exe",
+          "card": "W10a/medium→elevated@production-exe",
+          "entry": "production-exe",
+          "condition": "medium→elevated",
+          "evidence_kind": "production-exe",
+          "status": "not-run",
+          "preparation": {
+            "status": "not-prepared",
+            "note": "カード作成のみ。実行担当の準備(driver/隔離copy/fixture)は未実施"
+          },
+          "required_observations": [
+            "owner_resource",
+            "sid_luid_session",
+            "uac_operation",
+            "foreground_after"
+          ],
+          "observations": {},
+          "answer": "",
+          "raw_inputs": [],
+          "run_id": "",
+          "observed_at": "",
+          "environment": {},
+          "binary_sha256": "",
+          "input_manifest_sha256": "",
+          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17"
+        }
+      ]
+    },
+    {
+      "id": "W10b",
+      "group": "G13",
+      "task": "06-06-01",
+      "title": "UAC elevated→medium",
+      "source": "04-WINDOWS-UAT W10b",
+      "subrows": [
+        {
+          "subrow": "elevated→medium@script",
+          "card": "W10b/elevated→medium@script",
+          "entry": "script",
+          "condition": "elevated→medium",
+          "evidence_kind": "python-real",
+          "status": "not-run",
+          "preparation": {
+            "status": "not-prepared",
+            "note": "カード作成のみ。実行担当の準備(driver/隔離copy/fixture)は未実施"
+          },
+          "required_observations": [
+            "owner_resource",
+            "sid_luid_session",
+            "uac_operation"
+          ],
+          "observations": {},
+          "answer": "",
+          "raw_inputs": [],
+          "run_id": "",
+          "observed_at": "",
+          "environment": {},
+          "binary_sha256": "",
+          "input_manifest_sha256": ""
+        },
+        {
+          "subrow": "elevated→medium@production-exe",
+          "card": "W10b/elevated→medium@production-exe",
+          "entry": "production-exe",
+          "condition": "elevated→medium",
+          "evidence_kind": "production-exe",
+          "status": "not-run",
+          "preparation": {
+            "status": "not-prepared",
+            "note": "カード作成のみ。実行担当の準備(driver/隔離copy/fixture)は未実施"
+          },
+          "required_observations": [
+            "owner_resource",
+            "sid_luid_session",
+            "uac_operation",
+            "foreground_after"
+          ],
+          "observations": {},
+          "answer": "",
+          "raw_inputs": [],
+          "run_id": "",
+          "observed_at": "",
+          "environment": {},
+          "binary_sha256": "",
+          "input_manifest_sha256": "",
+          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17"
+        }
+      ]
+    },
+    {
+      "id": "W11",
+      "group": "G14",
+      "task": "06-06-01",
+      "title": "既存別sessionへの各1画面と復帰",
+      "source": "04-WINDOWS-UAT W11(準備不能)",
+      "subrows": [
+        {
+          "subrow": "other-session@script",
+          "card": "W11/other-session@script",
+          "entry": "script",
+          "condition": "other-session",
+          "evidence_kind": "python-real",
+          "status": "not-run",
+          "preparation": {
+            "status": "not-prepared",
+            "note": "カード作成のみ。実行担当の準備(driver/隔離copy/fixture)は未実施"
+          },
+          "required_observations": [
+            "each_session_one_screen",
+            "returns_to_same_session",
+            "origin_state_kept",
+            "session_ids"
+          ],
+          "observations": {},
+          "answer": "",
+          "raw_inputs": [],
+          "run_id": "",
+          "observed_at": "",
+          "environment": {},
+          "binary_sha256": "",
+          "input_manifest_sha256": ""
+        },
+        {
+          "subrow": "other-session@production-exe",
+          "card": "W11/other-session@production-exe",
+          "entry": "production-exe",
+          "condition": "other-session",
+          "evidence_kind": "production-exe",
+          "status": "not-run",
+          "preparation": {
+            "status": "not-prepared",
+            "note": "カード作成のみ。実行担当の準備(driver/隔離copy/fixture)は未実施"
+          },
+          "required_observations": [
+            "each_session_one_screen",
+            "returns_to_same_session",
+            "origin_state_kept",
+            "session_ids",
+            "foreground_after"
+          ],
+          "observations": {},
+          "answer": "",
+          "raw_inputs": [],
+          "run_id": "",
+          "observed_at": "",
+          "environment": {},
+          "binary_sha256": "",
+          "input_manifest_sha256": "",
+          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17"
+        }
+      ]
+    },
+    {
+      "id": "WR-01",
+      "group": "G8",
+      "task": "06-06-01",
+      "title": "15609ms(並行負荷)と15140ms(単独)の保持と15.5秒契約の再評価",
+      "source": "06-UAT-CARRYOVER WR-01 / 04-WINDOWS-UAT W07b",
+      "subrows": [
+        {
+          "subrow": "retained-15609-15140@script",
+          "card": "WR-01/retained-15609-15140@script",
+          "entry": "script",
+          "condition": "retained-15609-15140",
+          "evidence_kind": "manual",
+          "status": "not-run",
+          "preparation": {
+            "status": "not-prepared",
+            "note": "カード作成のみ。実行担当の準備(driver/隔離copy/fixture)は未実施"
+          },
+          "required_observations": [
+            "both_values_retained",
+            "contract_reevaluation"
+          ],
+          "observations": {},
+          "answer": "",
+          "raw_inputs": [],
+          "run_id": "",
+          "observed_at": "",
+          "environment": {},
+          "binary_sha256": "",
+          "input_manifest_sha256": ""
+        },
+        {
+          "subrow": "rerun-same-load@module",
+          "card": "WR-01/rerun-same-load@module",
+          "entry": "module",
+          "condition": "rerun-same-load",
+          "evidence_kind": "python-real",
+          "status": "not-run",
+          "preparation": {
+            "status": "not-prepared",
+            "note": "カード作成のみ。実行担当の準備(driver/隔離copy/fixture)は未実施"
+          },
+          "required_observations": [
+            "rerun_elapsed_ms",
+            "within_15500ms"
+          ],
+          "observations": {},
+          "answer": "",
+          "raw_inputs": [],
+          "run_id": "",
+          "observed_at": "",
+          "environment": {},
+          "binary_sha256": "",
+          "input_manifest_sha256": ""
+        },
+        {
+          "subrow": "exe-second-launch-elapsed@production-exe",
+          "card": "WR-01/exe-second-launch-elapsed@production-exe",
+          "entry": "production-exe",
+          "condition": "exe-second-launch-elapsed",
+          "evidence_kind": "production-exe",
+          "status": "not-run",
+          "preparation": {
+            "status": "not-prepared",
+            "note": "カード作成のみ。実行担当の準備(driver/隔離copy/fixture)は未実施"
+          },
+          "required_observations": [
+            "elapsed_ms",
+            "condition",
+            "foreground_after"
+          ],
+          "observations": {},
+          "answer": "",
+          "raw_inputs": [],
+          "run_id": "",
+          "observed_at": "",
+          "environment": {},
+          "binary_sha256": "",
+          "input_manifest_sha256": "",
+          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17"
+        }
+      ]
+    }
+  ]
+}

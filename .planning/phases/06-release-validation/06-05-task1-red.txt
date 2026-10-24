@@ -1,0 +1,15 @@
+    ByteString = typing.ByteString
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED tests/test_release_contract.py::TestCaseCoverage::test_all_carryover_cases_and_fault_cases_are_declared_once
+FAILED tests/test_release_contract.py::TestCaseCoverage::test_groups_and_tasks_follow_the_validation_table
+FAILED tests/test_release_contract.py::TestCaseCoverage::test_subrows_expand_by_entry_and_condition
+FAILED tests/test_release_contract.py::TestCaseCoverage::test_python_injection_and_exe_common_behavior_are_separate_rows
+FAILED tests/test_release_contract.py::TestCaseCoverage::test_every_subrow_is_fully_declared_and_not_prematurely_passed
+FAILED tests/test_release_contract.py::TestCaseCoverage::test_cards_cover_every_subrow_with_all_required_labels
+FAILED tests/test_release_contract.py::TestCaseCoverage::test_phase5_results_are_referenced_not_repeated
+FAILED tests/test_release_contract.py::TestCaseCoverage::test_w12b_roles_hashes_and_both_directions
+FAILED tests/test_release_contract.py::TestCaseCoverage::test_structure_audit_accepts_ledger_and_rejects_false_pass
+FAILED tests/test_release_contract.py::TestCaseCoverage::test_uat_document_keeps_states_separate_and_never_claims_pass
+10 failed, 1 warning in 0.47s
