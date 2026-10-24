@@ -1,0 +1,283 @@
+{
+  "row": "W02/thumb@script",
+  "case": "W02",
+  "condition": "thumb",
+  "entry": "script",
+  "selftest": true,
+  "started_at": "2026-10-24T14:34:07.038263+00:00",
+  "target_exe_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17",
+  "steps": [
+    {
+      "at": "2026-10-24T14:34:07.038374+00:00",
+      "step": "start-harness"
+    },
+    {
+      "at": "2026-10-24T14:34:17.584739+00:00",
+      "step": "prepared",
+      "windows": [
+        {
+          "hwnd": 16127240,
+          "pid": 32512,
+          "title": "PageFolio",
+          "class": "TkTopLevel",
+          "visible": true,
+          "iconic": false,
+          "zoomed": false,
+          "rect": [
+            26,
+            26,
+            1242,
+            865
+          ]
+        }
+      ],
+      "foreground": {
+        "hwnd": 656216,
+        "pid": 24068,
+        "title": "⠸ 作成 ロト7予測動画 | ロト予測"
+      },
+      "pids": [
+        32512,
+        32860,
+        37476
+      ]
+    },
+    {
+      "at": "2026-10-24T14:34:17.584789+00:00",
+      "step": "peer"
+    },
+    {
+      "at": "2026-10-24T14:34:20.792843+00:00",
+      "step": "after-peer",
+      "windows": [
+        {
+          "hwnd": 16127240,
+          "pid": 32512,
+          "title": "PageFolio",
+          "class": "TkTopLevel",
+          "visible": true,
+          "iconic": false,
+          "zoomed": false,
+          "rect": [
+            26,
+            26,
+            1242,
+            865
+          ]
+        }
+      ],
+      "foreground": {
+        "hwnd": 16127240,
+        "pid": 32512,
+        "title": "PageFolio"
+      }
+    },
+    {
+      "at": "2026-10-24T14:34:20.793007+00:00",
+      "step": "key-probe-instructed",
+      "key": "F5",
+      "presses": 2
+    }
+  ],
+  "harness_start": {
+    "returncode": 0,
+    "stderr_tail": ""
+  },
+  "run": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-xs1a74bp",
+  "harness_manifest": {
+    "run": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-xs1a74bp",
+    "namespace": "7404f85f4b3b4b3ba48ce23c3af02d2a",
+    "case": "thumb",
+    "launcher_pid": 37476,
+    "source_commit": "b7d1912fd857ac37924b0788794587ea86b467fa"
+  },
+  "owned_pids": [
+    {
+      "pid": 32512,
+      "created": 134373260476334865,
+      "image": "C:\\Users\\shdwf\\AppData\\Local\\Programs\\Python\\Python315\\python.exe"
+    },
+    {
+      "pid": 37476,
+      "created": 134373260475845227,
+      "image": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.venv\\Scripts\\python.exe"
+    }
+  ],
+  "harness_peer": {
+    "returncode": 0,
+    "stderr_tail": "",
+    "json": {
+      "fixture": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-xs1a74bp\\peer-0fa9c43022034cb19b26401f77f6874c",
+      "result": {
+        "constructed": 0,
+        "restored": 0,
+        "status_preserved": true,
+        "result": "completed",
+        "elapsed": 250
+      }
+    }
+  },
+  "answers": {
+    "foreground": "出た",
+    "key_reached": "変わった",
+    "restored": "戻った",
+    "kept": "保たれた",
+    "single": "1つ",
+    "note": "なし"
+  },
+  "harness_inspect": {
+    "returncode": 0,
+    "stderr_tail": "",
+    "json": {
+      "manifest": {
+        "run": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-xs1a74bp",
+        "namespace": "7404f85f4b3b4b3ba48ce23c3af02d2a",
+        "case": "thumb",
+        "role": "uat-owner-thumb",
+        "fixture": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-xs1a74bp\\uat-owner-thumb",
+        "launcher_pid": 37476,
+        "environment": {
+          "os": "sys.getwindowsversion(major=10, minor=0, build=26300, platform=2, service_pack='')",
+          "python": "3.15.1 (tags/v3.15.1:c37e74c, Oct 21 2026, 06:24:08) [MSC v.1951 64 bit (AMD64)]",
+          "pointer_bits": 64,
+          "session_id": 1,
+          "sid": "S-1-5-5-0-214973",
+          "authentication_luid": 221490,
+          "foreground": 656216,
+          "is_admin": false,
+          "tcl": "9.0.4",
+          "tk": 9.0
+        },
+        "originals_before": {
+          "pagefolio_settings.json": null,
+          "ocr_custom_prompt.md": null,
+          "ocr_summary_prompt.md": null
+        },
+        "source_commit": "b7d1912fd857ac37924b0788794587ea86b467fa",
+        "expected_owner": {
+          "sid": "S-1-5-5-0-214973",
+          "authentication_luid": 221490,
+          "session_id": 1,
+          "pid": 32512,
+          "process_created": 134373260476334865,
+          "started_tick": 54309671,
+          "owner_result": "acquired",
+          "snapshot": {
+            "protocol": 1,
+            "generation": "59603182250d45ae9cd43c763d2a3e79",
+            "pid": 32512,
+            "process_created": 134373260476334865,
+            "session_id": 1,
+            "state": "ready",
+            "ready": true,
+            "release_generation": null
+          },
+          "ready_tick": 54316531,
+          "manual": true
+        }
+      },
+      "originals_unchanged": true,
+      "ready": {
+        "sid": "S-1-5-5-0-214973",
+        "authentication_luid": 221490,
+        "session_id": 1,
+        "pid": 32512,
+        "process_created": 134373260476334865,
+        "started_tick": 54309671,
+        "owner_result": "acquired",
+        "snapshot": {
+          "protocol": 1,
+          "generation": "59603182250d45ae9cd43c763d2a3e79",
+          "pid": 32512,
+          "process_created": 134373260476334865,
+          "session_id": 1,
+          "state": "ready",
+          "ready": true,
+          "release_generation": null
+        },
+        "ready_tick": 54316531
+      },
+      "focus-result.json": {
+        "state_preserved": true,
+        "target_correct": true,
+        "result": "completed",
+        "activated": 16127240,
+        "expected_tk": 16127240,
+        "native": null,
+        "placement": "normal",
+        "expected_focus": ".!panedwindow.!frame.!frame4.!canvas",
+        "immediate_focus": ".!panedwindow.!frame.!frame4.!canvas",
+        "focus_correct": true,
+        "settled_focus": ".!panedwindow.!frame.!frame4.!canvas"
+      }
+    }
+  },
+  "outcome": "answered",
+  "harness_stop": {
+    "returncode": 0,
+    "stderr_tail": ""
+  },
+  "cleanup": {
+    "left_after_harness_stop": [],
+    "terminated_owned": [],
+    "alive_after": []
+  },
+  "finished_at": "2026-10-24T14:34:22.823599+00:00",
+  "raw_inputs": [
+    {
+      "at": "2026-10-24T14:34:17.584786+00:00",
+      "key": "enter",
+      "text": "",
+      "selftest": true
+    },
+    {
+      "at": "2026-10-24T14:34:20.793193+00:00",
+      "key": "enter",
+      "text": "",
+      "selftest": true
+    },
+    {
+      "at": "2026-10-24T14:34:20.793338+00:00",
+      "key": "foreground",
+      "attempt": 1,
+      "text": "出た",
+      "rejected": null
+    },
+    {
+      "at": "2026-10-24T14:34:20.793388+00:00",
+      "key": "key_reached",
+      "attempt": 1,
+      "text": "変わった",
+      "rejected": null
+    },
+    {
+      "at": "2026-10-24T14:34:20.793414+00:00",
+      "key": "restored",
+      "attempt": 1,
+      "text": "戻った",
+      "rejected": null
+    },
+    {
+      "at": "2026-10-24T14:34:20.793442+00:00",
+      "key": "kept",
+      "attempt": 1,
+      "text": "保たれた",
+      "rejected": null
+    },
+    {
+      "at": "2026-10-24T14:34:20.793465+00:00",
+      "key": "single",
+      "attempt": 1,
+      "text": "1つ",
+      "rejected": null
+    },
+    {
+      "at": "2026-10-24T14:34:20.793482+00:00",
+      "key": "note",
+      "attempt": 1,
+      "text": "なし",
+      "rejected": null
+    }
+  ],
+  "composed_answer": "W02 thumb script：foreground=出た・key_reached=変わった・restored=戻った・kept=保たれた・single=1つ（メモ: なし）"
+}

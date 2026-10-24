@@ -274,15 +274,18 @@ class Row:
             "target_exe_sha256": EXE_SHA,
             "steps": [],
         }
-        self.prompter = Prompter(
-            selftest,
-            canned=[
+        if self.case == "W01":
+            canned = [
                 "通常" if self.cond != "zoomed" else "最大化",
+                "同じ" if self.entry == "production-exe" else "はい",
                 "1つ",
                 "見える",
-                "なし",
-            ],
-        )
+            ]
+        elif self.cond == "settings":
+            canned = ["出た", "入った", "保たれた", "1つ"]
+        else:
+            canned = ["出た", "変わった", "戻った", "保たれた", "1つ"]
+        self.prompter = Prompter(selftest, canned=[*canned, "なし"])
 
     def step(self, name, **fields):
         self.session["steps"].append({"at": now(), "step": name, **fields})
@@ -317,7 +320,7 @@ class Row:
                 "status",
                 "4/4 画面上部(ヘッダー)のステータス表示は見えますか? 「見える」「見えない」",
             )
-        else:
+        elif self.cond == "settings":
             target = W02_TARGETS[self.cond]
             a["foreground"] = p.ask(
                 "foreground",
@@ -330,14 +333,70 @@ class Row:
             )
             a["kept"] = p.ask(
                 "kept",
-                "3/4 入力済みの文字・選択・カーソル(または選択ページの強調)は保たれていましたか?"
+                "3/4 入力済みの文字・選択・カーソルは保たれていましたか?"
                 " 「保たれた」「変わった」「分からない」",
             )
             a["single"] = p.ask(
                 "single", "4/4 PageFolioの画面は1つだけですか? 「1つ」「複数」"
             )
+        else:
+            # thumb / preview: これらのCanvasは文字キーを受けないため、x ではなく
+            # 製品の既定ショートカット F5(閲覧/編集モード切替)で「キー入力がPageFolioに届いたか」を見る。
+            # 入力先がCanvasのままだったことは自動harnessのfocus-result(focus_correct/settled_focus)が証拠。
+            target = W02_TARGETS[self.cond]
+            a["foreground"] = p.ask(
+                "foreground",
+                "1/5 二次起動のあと、PageFolioの画面は前面に出ましたか? 「出た」「出ない」",
+            )
+            a["key_reached"] = p.ask(
+                "key_reached",
+                "2/5 F5を1回押したとき、ヘッダーのモード表示ボタンの文字(閲覧モード/編集モード)は変わりましたか?"
+                " 「変わった」「変わらない」「押していない」(押さなかった場合は理由を一言)",
+            )
+            a["restored"] = p.ask(
+                "restored",
+                "3/5 F5をもう1回押したとき、モード表示は元の文字に戻りましたか?"
+                " 「戻った」「戻らない」「押していない」",
+            )
+            a["kept"] = p.ask(
+                "kept",
+                f"4/5 {target}で、選択中のサムネイル/表示ページは変わらず保たれていましたか?"
+                " 「保たれた」「変わった」「分からない」(PDFが開いていない場合は「PDFなし」)",
+            )
+            a["single"] = p.ask(
+                "single", "5/5 PageFolioの画面は1つだけですか? 「1つ」「複数」"
+            )
         a["note"] = p.ask("note", "最後に気づいたことを一言(なければ「なし」)")
         return a
+
+    def key_step(self):
+        """W02の観察手順。settingsは文字入力(x)、thumb/previewはF5(モード切替)で行う。
+
+        thumb/previewのCanvasは文字キーを受けず、利用者に効果が見えないためxは使わない。
+        """
+        p = self.prompter
+        say("")
+        if self.cond == "settings":
+            say(
+                "PageFolioが前面に出ていたら、キーボードで x を1文字だけ押してください(マウスは使わない)。"
+            )
+            say(
+                "前面に出なかった場合は何も押さず、そのように答えてください。押したあとにこの端末へ戻って答えます。"
+            )
+        else:
+            say(
+                "PageFolioが前面に出ていたら、キーボードで F5 を1回だけ押してください"
+                "(閲覧モード/編集モードの切替。ヘッダーのモード表示ボタン「👁 閲覧モード」「📝 編集モード」の文字が変わります)。"
+                "マウスは使わない。"
+            )
+            say(
+                "文字が変わったのを見たら、F5 をもう1回だけ押して元の表示に戻し、戻ったのを確認してください。"
+            )
+            say(
+                "前面に出なかった場合は何も押さず、そのように答えてください。押したあとにこの端末へ戻って答えます。"
+            )
+            self.step("key-probe-instructed", key="F5", presses=2)
+        p.enter("操作が終わったら Enter を押してください。")
 
     # -- Python入口 -----------------------------------------------------------
     def run_python(self):
@@ -397,14 +456,7 @@ class Row:
             fg1 = S.foreground_info()
             self.step("after-peer", windows=after, foreground=fg1)
             if self.case == "W02":
-                say("")
-                say(
-                    "PageFolioが前面に出ていたら、キーボードで x を1文字だけ押してください(マウスは使わない)。"
-                )
-                say(
-                    "前面に出なかった場合は何も押さず、そのように答えてください。押したあとにこの端末へ戻って答えます。"
-                )
-                p.enter("操作が終わったら Enter を押してください。")
+                self.key_step()
             answers = self.questions(exe=False)
             self.session["answers"] = answers
             inspected = harness("inspect", "--run", run, timeout=60)
@@ -549,12 +601,7 @@ class Row:
                 foreground_before_peer=fg0,
             )
             if self.case == "W02":
-                say("")
-                say(
-                    "PageFolioが前面に出ていたら、キーボードで x を1文字だけ押してください(マウスは使わない)。"
-                )
-                say("前面に出なかった場合は何も押さず、そのように答えてください。")
-                p.enter("操作が終わったら Enter を押してください。")
+                self.key_step()
             answers = self.questions(exe=True)
             self.session["answers"] = answers
             self.session["outcome"] = "answered"

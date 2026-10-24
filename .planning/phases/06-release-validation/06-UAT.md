@@ -340,15 +340,17 @@ created: 2026-10-24
 - **利用者操作**:
   1. 実行担当: `start --case thumb` で隔離ownerを準備する(左ペインのサムネイル欄: 対象ページが選択済み)。
   2. 実行担当: `peer --entry script` で二次起動し、API戻り・OS error・foregroundを記録する。
-  3. 利用者: キーボードで1文字入力し、入力が左ペインのサムネイル欄に入るか、選択・カーソルが保たれているかを答える。
-- **期待**: 左ペインのサムネイル欄の入力・選択・カーソルが保たれ、実キー入力が同じ入力先へ入る。拒否されたfocus移譲は成功と数えない。
+  3. 利用者: PageFolioが前面に出ていたら、キーボードで F5 を1回だけ押す(閲覧/編集モード切替。ヘッダーのモード表示ボタン「👁 閲覧モード」「📝 編集モード」の文字が変わる。マウスは使わない)。変わったのを見たらF5をもう1回押して元に戻し、戻ったか・選択中のサムネイル/表示ページが保たれたかを答える(PDFを開いていないPython入口では選択は「PDFなし」)。文字キー(x)はCanvasが受けないため使わない。
+  4. 自動証拠: harnessのfocus-result(focus_correct / settled_focus)で、二次起動後も入力先が左ペインのサムネイル欄のCanvasのままだったことを記録する(人手回答ではない)。
+- **期待**: 二次起動後にPageFolioが前面に出て、F5がPageFolioに届いてモード表示が変わり、もう1回で元に戻る。選択中のサムネイル/表示ページが保たれ、入力先は左ペインのサムネイル欄のCanvasのまま(自動証拠)。拒否されたfocus移譲は成功と数えない。
 - **必須観測**:
-  - `typed_text_kept`: 入力済みの文字が残っている
-  - `selection_kept`: 選択範囲が保たれている
-  - `cursor_kept`: カーソル位置が保たれている
-  - `input_target_kept`: 実キー入力が元の入力先(widget)に入る
   - `foreground_result`: 許可APIの戻りと実foregroundを別記(拒否を実キーボードfocus復帰成功と扱わない)
+  - `key_reached_window`: F5を1回押すとモード表示ボタンの文字が変わる(キー入力がPageFolioに届いた)
+  - `mode_restored`: F5をもう1回押すと元のモード表示に戻る
+  - `selection_kept`: 選択中のサムネイル/表示ページが変わらず保たれている(PDFなしのPython入口は自動のstate_preservedで代替)
+  - `input_target_canvas`: 自動harnessのfocus-resultで focus_correct=true・settled_focus=左ペインのサムネイル欄のCanvas(自動証拠)
 - **失敗時の回収**: 共通の失敗時回収に従う。harnessの `stop` で所有runだけを回収する。
+- **手順変更の記録**: 旧手順(文字キーxの入力)は観察不適合のため廃止。旧記録 `06-05-evidence/W02_thumb_at_script-20261024T142939Z.json` は superseded(製品挙動は自動証拠で正常。本行は再実施までnot-run)。
 - **出典**: 04-WINDOWS-UAT W02 / 06-UAT-CARRYOVER W02 / 06-VALIDATION W02
 
 ### W02/thumb@module
@@ -367,14 +369,15 @@ created: 2026-10-24
 - **利用者操作**:
   1. 実行担当: `start --case thumb` で隔離ownerを準備する(左ペインのサムネイル欄: 対象ページが選択済み)。
   2. 実行担当: `peer --entry module` で二次起動し、API戻り・OS error・foregroundを記録する。
-  3. 利用者: キーボードで1文字入力し、入力が左ペインのサムネイル欄に入るか、選択・カーソルが保たれているかを答える。
-- **期待**: 左ペインのサムネイル欄の入力・選択・カーソルが保たれ、実キー入力が同じ入力先へ入る。拒否されたfocus移譲は成功と数えない。
+  3. 利用者: PageFolioが前面に出ていたら、キーボードで F5 を1回だけ押す(閲覧/編集モード切替。ヘッダーのモード表示ボタン「👁 閲覧モード」「📝 編集モード」の文字が変わる。マウスは使わない)。変わったのを見たらF5をもう1回押して元に戻し、戻ったか・選択中のサムネイル/表示ページが保たれたかを答える(PDFを開いていないPython入口では選択は「PDFなし」)。文字キー(x)はCanvasが受けないため使わない。
+  4. 自動証拠: harnessのfocus-result(focus_correct / settled_focus)で、二次起動後も入力先が左ペインのサムネイル欄のCanvasのままだったことを記録する(人手回答ではない)。
+- **期待**: 二次起動後にPageFolioが前面に出て、F5がPageFolioに届いてモード表示が変わり、もう1回で元に戻る。選択中のサムネイル/表示ページが保たれ、入力先は左ペインのサムネイル欄のCanvasのまま(自動証拠)。拒否されたfocus移譲は成功と数えない。
 - **必須観測**:
-  - `typed_text_kept`: 入力済みの文字が残っている
-  - `selection_kept`: 選択範囲が保たれている
-  - `cursor_kept`: カーソル位置が保たれている
-  - `input_target_kept`: 実キー入力が元の入力先(widget)に入る
   - `foreground_result`: 許可APIの戻りと実foregroundを別記(拒否を実キーボードfocus復帰成功と扱わない)
+  - `key_reached_window`: F5を1回押すとモード表示ボタンの文字が変わる(キー入力がPageFolioに届いた)
+  - `mode_restored`: F5をもう1回押すと元のモード表示に戻る
+  - `selection_kept`: 選択中のサムネイル/表示ページが変わらず保たれている(PDFなしのPython入口は自動のstate_preservedで代替)
+  - `input_target_canvas`: 自動harnessのfocus-resultで focus_correct=true・settled_focus=左ペインのサムネイル欄のCanvas(自動証拠)
 - **失敗時の回収**: 共通の失敗時回収に従う。harnessの `stop` で所有runだけを回収する。
 - **出典**: 04-WINDOWS-UAT W02 / 06-UAT-CARRYOVER W02 / 06-VALIDATION W02
 
@@ -396,14 +399,13 @@ created: 2026-10-24
   1. 実行担当: 隔離copyを `start` で起動する(EXEへ状態は注入できない。状態は利用者が作る)。
   2. 利用者: 実行担当が用意した3ページPDFを開き、左ペインのサムネイルでページを1つ選択する。
   3. 実行担当: 同じ配布copyから `peer` で二次起動し、API戻り・OS error・foregroundを外部観測する。
-  4. 利用者: キーボードで1文字入力し、左ペインのサムネイル欄に入るか、選択・カーソルが保たれているかを答える。
-- **期待**: 実EXEで左ペインのサムネイル欄の入力・選択・カーソルが保たれ、実キー入力が同じ入力先へ入る。
+  4. 利用者: PageFolioが前面に出ていたら、キーボードで F5 を1回だけ押す(閲覧/編集モード切替。ヘッダーのモード表示ボタン「👁 閲覧モード」「📝 編集モード」の文字が変わる。マウスは使わない)。変わったのを見たらF5をもう1回押して元に戻し、戻ったか・選択中のサムネイル/表示ページが保たれたかを答える。文字キー(x)はCanvasが受けないため使わない。
+- **期待**: 実EXEで二次起動後にPageFolioが前面に出て、F5がPageFolioに届いてモード表示が変わり、もう1回で元に戻る。選択中のサムネイル/表示ページ(左ペインのサムネイル欄)が保たれる。
 - **必須観測**:
-  - `typed_text_kept`: 入力済みの文字が残っている
-  - `selection_kept`: 選択範囲が保たれている
-  - `cursor_kept`: カーソル位置が保たれている
-  - `input_target_kept`: 実キー入力が元の入力先(widget)に入る
   - `foreground_result`: 許可APIの戻りと実foregroundを別記
+  - `key_reached_window`: F5を1回押すとモード表示ボタンの文字が変わる(キー入力がPageFolioに届いた)
+  - `mode_restored`: F5をもう1回押すと元のモード表示に戻る
+  - `selection_kept`: 選択中のサムネイル/表示ページが変わらず保たれている
 - **失敗時の回収**: 共通の失敗時回収に従う。`stop` で所有PIDだけを回収する。
 - **出典**: 04-WINDOWS-UAT W02 / 06-UAT-CARRYOVER W02 / 06-VALIDATION W02
 
@@ -423,14 +425,15 @@ created: 2026-10-24
 - **利用者操作**:
   1. 実行担当: `start --case preview` で隔離ownerを準備する(中央のプレビュー: PDFを開いたプレビューが操作先)。
   2. 実行担当: `peer --entry script` で二次起動し、API戻り・OS error・foregroundを記録する。
-  3. 利用者: キーボードで1文字入力し、入力が中央のプレビューに入るか、選択・カーソルが保たれているかを答える。
-- **期待**: 中央のプレビューの入力・選択・カーソルが保たれ、実キー入力が同じ入力先へ入る。拒否されたfocus移譲は成功と数えない。
+  3. 利用者: PageFolioが前面に出ていたら、キーボードで F5 を1回だけ押す(閲覧/編集モード切替。ヘッダーのモード表示ボタン「👁 閲覧モード」「📝 編集モード」の文字が変わる。マウスは使わない)。変わったのを見たらF5をもう1回押して元に戻し、戻ったか・選択中のサムネイル/表示ページが保たれたかを答える(PDFを開いていないPython入口では選択は「PDFなし」)。文字キー(x)はCanvasが受けないため使わない。
+  4. 自動証拠: harnessのfocus-result(focus_correct / settled_focus)で、二次起動後も入力先が中央のプレビューのCanvasのままだったことを記録する(人手回答ではない)。
+- **期待**: 二次起動後にPageFolioが前面に出て、F5がPageFolioに届いてモード表示が変わり、もう1回で元に戻る。選択中のサムネイル/表示ページが保たれ、入力先は中央のプレビューのCanvasのまま(自動証拠)。拒否されたfocus移譲は成功と数えない。
 - **必須観測**:
-  - `typed_text_kept`: 入力済みの文字が残っている
-  - `selection_kept`: 選択範囲が保たれている
-  - `cursor_kept`: カーソル位置が保たれている
-  - `input_target_kept`: 実キー入力が元の入力先(widget)に入る
   - `foreground_result`: 許可APIの戻りと実foregroundを別記(拒否を実キーボードfocus復帰成功と扱わない)
+  - `key_reached_window`: F5を1回押すとモード表示ボタンの文字が変わる(キー入力がPageFolioに届いた)
+  - `mode_restored`: F5をもう1回押すと元のモード表示に戻る
+  - `selection_kept`: 選択中のサムネイル/表示ページが変わらず保たれている(PDFなしのPython入口は自動のstate_preservedで代替)
+  - `input_target_canvas`: 自動harnessのfocus-resultで focus_correct=true・settled_focus=中央のプレビューのCanvas(自動証拠)
 - **失敗時の回収**: 共通の失敗時回収に従う。harnessの `stop` で所有runだけを回収する。
 - **出典**: 04-WINDOWS-UAT W02 / 06-UAT-CARRYOVER W02 / 06-VALIDATION W02
 
@@ -450,14 +453,15 @@ created: 2026-10-24
 - **利用者操作**:
   1. 実行担当: `start --case preview` で隔離ownerを準備する(中央のプレビュー: PDFを開いたプレビューが操作先)。
   2. 実行担当: `peer --entry module` で二次起動し、API戻り・OS error・foregroundを記録する。
-  3. 利用者: キーボードで1文字入力し、入力が中央のプレビューに入るか、選択・カーソルが保たれているかを答える。
-- **期待**: 中央のプレビューの入力・選択・カーソルが保たれ、実キー入力が同じ入力先へ入る。拒否されたfocus移譲は成功と数えない。
+  3. 利用者: PageFolioが前面に出ていたら、キーボードで F5 を1回だけ押す(閲覧/編集モード切替。ヘッダーのモード表示ボタン「👁 閲覧モード」「📝 編集モード」の文字が変わる。マウスは使わない)。変わったのを見たらF5をもう1回押して元に戻し、戻ったか・選択中のサムネイル/表示ページが保たれたかを答える(PDFを開いていないPython入口では選択は「PDFなし」)。文字キー(x)はCanvasが受けないため使わない。
+  4. 自動証拠: harnessのfocus-result(focus_correct / settled_focus)で、二次起動後も入力先が中央のプレビューのCanvasのままだったことを記録する(人手回答ではない)。
+- **期待**: 二次起動後にPageFolioが前面に出て、F5がPageFolioに届いてモード表示が変わり、もう1回で元に戻る。選択中のサムネイル/表示ページが保たれ、入力先は中央のプレビューのCanvasのまま(自動証拠)。拒否されたfocus移譲は成功と数えない。
 - **必須観測**:
-  - `typed_text_kept`: 入力済みの文字が残っている
-  - `selection_kept`: 選択範囲が保たれている
-  - `cursor_kept`: カーソル位置が保たれている
-  - `input_target_kept`: 実キー入力が元の入力先(widget)に入る
   - `foreground_result`: 許可APIの戻りと実foregroundを別記(拒否を実キーボードfocus復帰成功と扱わない)
+  - `key_reached_window`: F5を1回押すとモード表示ボタンの文字が変わる(キー入力がPageFolioに届いた)
+  - `mode_restored`: F5をもう1回押すと元のモード表示に戻る
+  - `selection_kept`: 選択中のサムネイル/表示ページが変わらず保たれている(PDFなしのPython入口は自動のstate_preservedで代替)
+  - `input_target_canvas`: 自動harnessのfocus-resultで focus_correct=true・settled_focus=中央のプレビューのCanvas(自動証拠)
 - **失敗時の回収**: 共通の失敗時回収に従う。harnessの `stop` で所有runだけを回収する。
 - **出典**: 04-WINDOWS-UAT W02 / 06-UAT-CARRYOVER W02 / 06-VALIDATION W02
 
@@ -479,14 +483,13 @@ created: 2026-10-24
   1. 実行担当: 隔離copyを `start` で起動する(EXEへ状態は注入できない。状態は利用者が作る)。
   2. 利用者: 実行担当が用意した3ページPDFを開き、中央のプレビューをクリックして操作先にする。
   3. 実行担当: 同じ配布copyから `peer` で二次起動し、API戻り・OS error・foregroundを外部観測する。
-  4. 利用者: キーボードで1文字入力し、中央のプレビューに入るか、選択・カーソルが保たれているかを答える。
-- **期待**: 実EXEで中央のプレビューの入力・選択・カーソルが保たれ、実キー入力が同じ入力先へ入る。
+  4. 利用者: PageFolioが前面に出ていたら、キーボードで F5 を1回だけ押す(閲覧/編集モード切替。ヘッダーのモード表示ボタン「👁 閲覧モード」「📝 編集モード」の文字が変わる。マウスは使わない)。変わったのを見たらF5をもう1回押して元に戻し、戻ったか・選択中のサムネイル/表示ページが保たれたかを答える。文字キー(x)はCanvasが受けないため使わない。
+- **期待**: 実EXEで二次起動後にPageFolioが前面に出て、F5がPageFolioに届いてモード表示が変わり、もう1回で元に戻る。選択中のサムネイル/表示ページ(中央のプレビュー)が保たれる。
 - **必須観測**:
-  - `typed_text_kept`: 入力済みの文字が残っている
-  - `selection_kept`: 選択範囲が保たれている
-  - `cursor_kept`: カーソル位置が保たれている
-  - `input_target_kept`: 実キー入力が元の入力先(widget)に入る
   - `foreground_result`: 許可APIの戻りと実foregroundを別記
+  - `key_reached_window`: F5を1回押すとモード表示ボタンの文字が変わる(キー入力がPageFolioに届いた)
+  - `mode_restored`: F5をもう1回押すと元のモード表示に戻る
+  - `selection_kept`: 選択中のサムネイル/表示ページが変わらず保たれている
 - **失敗時の回収**: 共通の失敗時回収に従う。`stop` で所有PIDだけを回収する。
 - **出典**: 04-WINDOWS-UAT W02 / 06-UAT-CARRYOVER W02 / 06-VALIDATION W02
 

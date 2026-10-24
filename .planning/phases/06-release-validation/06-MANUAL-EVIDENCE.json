@@ -203,7 +203,7 @@
             "status": "driver-ready",
             "note": "利用者が自分のPowerShellで実行するdriverを用意(機構確認のみ)。隔離runの準備・起動はまだ行っていない。準備済みはpassではない",
             "driver": ".planning/phases/06-release-validation/06-05-drivers/uat_row.py",
-            "driver_sha256": "54c34e445fde2f8ec55231fd9ed0c98c3742cf991c1c5528c526a0d5354e9109",
+            "driver_sha256": "ea751632ee4ebbcf5ec0e41d8cf14f46d18b8f051217e95c9359c3ac6939697a",
             "command": ".venv/Scripts/python.exe .planning/phases/06-release-validation/06-05-drivers/uat_row.py --row W01/normal@script",
             "selftest_exercised_this_row": [
               "W01_normal_at_script-20261024T131839Z.json"
@@ -237,7 +237,7 @@
             "status": "driver-ready",
             "note": "利用者が自分のPowerShellで実行するdriverを用意(機構確認のみ)。隔離runの準備・起動はまだ行っていない。準備済みはpassではない",
             "driver": ".planning/phases/06-release-validation/06-05-drivers/uat_row.py",
-            "driver_sha256": "54c34e445fde2f8ec55231fd9ed0c98c3742cf991c1c5528c526a0d5354e9109",
+            "driver_sha256": "ea751632ee4ebbcf5ec0e41d8cf14f46d18b8f051217e95c9359c3ac6939697a",
             "command": ".venv/Scripts/python.exe .planning/phases/06-release-validation/06-05-drivers/uat_row.py --row W01/normal@module",
             "selftest_exercised_this_row": [],
             "selftest_note": "selftestはcanned回答で証拠にしない(06-05-evidence/selftest/)"
@@ -269,7 +269,7 @@
             "status": "driver-ready",
             "note": "利用者が自分のPowerShellで実行するdriverを用意(機構確認のみ)。隔離runの準備・起動はまだ行っていない。準備済みはpassではない",
             "driver": ".planning/phases/06-release-validation/06-05-drivers/uat_row.py",
-            "driver_sha256": "54c34e445fde2f8ec55231fd9ed0c98c3742cf991c1c5528c526a0d5354e9109",
+            "driver_sha256": "ea751632ee4ebbcf5ec0e41d8cf14f46d18b8f051217e95c9359c3ac6939697a",
             "command": ".venv/Scripts/python.exe .planning/phases/06-release-validation/06-05-drivers/uat_row.py --row W01/normal@production-exe",
             "selftest_exercised_this_row": [
               "W01_normal_at_production-exe-20261024T131911Z.json"
@@ -305,7 +305,7 @@
             "status": "driver-ready",
             "note": "利用者が自分のPowerShellで実行するdriverを用意(機構確認のみ)。隔離runの準備・起動はまだ行っていない。準備済みはpassではない",
             "driver": ".planning/phases/06-release-validation/06-05-drivers/uat_row.py",
-            "driver_sha256": "54c34e445fde2f8ec55231fd9ed0c98c3742cf991c1c5528c526a0d5354e9109",
+            "driver_sha256": "ea751632ee4ebbcf5ec0e41d8cf14f46d18b8f051217e95c9359c3ac6939697a",
             "command": ".venv/Scripts/python.exe .planning/phases/06-release-validation/06-05-drivers/uat_row.py --row W01/zoomed@script",
             "selftest_exercised_this_row": [
               "W01_zoomed_at_script-20261024T132148Z.json"
@@ -339,7 +339,7 @@
             "status": "driver-ready",
             "note": "利用者が自分のPowerShellで実行するdriverを用意(機構確認のみ)。隔離runの準備・起動はまだ行っていない。準備済みはpassではない",
             "driver": ".planning/phases/06-release-validation/06-05-drivers/uat_row.py",
-            "driver_sha256": "54c34e445fde2f8ec55231fd9ed0c98c3742cf991c1c5528c526a0d5354e9109",
+            "driver_sha256": "ea751632ee4ebbcf5ec0e41d8cf14f46d18b8f051217e95c9359c3ac6939697a",
             "command": ".venv/Scripts/python.exe .planning/phases/06-release-validation/06-05-drivers/uat_row.py --row W01/zoomed@module",
             "selftest_exercised_this_row": [],
             "selftest_note": "selftestはcanned回答で証拠にしない(06-05-evidence/selftest/)"
@@ -371,7 +371,7 @@
             "status": "driver-ready",
             "note": "利用者が自分のPowerShellで実行するdriverを用意(機構確認のみ)。隔離runの準備・起動はまだ行っていない。準備済みはpassではない",
             "driver": ".planning/phases/06-release-validation/06-05-drivers/uat_row.py",
-            "driver_sha256": "54c34e445fde2f8ec55231fd9ed0c98c3742cf991c1c5528c526a0d5354e9109",
+            "driver_sha256": "ea751632ee4ebbcf5ec0e41d8cf14f46d18b8f051217e95c9359c3ac6939697a",
             "command": ".venv/Scripts/python.exe .planning/phases/06-release-validation/06-05-drivers/uat_row.py --row W01/zoomed@production-exe",
             "selftest_exercised_this_row": [
               "W01_zoomed_at_production-exe-20261024T131953Z.json",
@@ -417,7 +417,7 @@
             "status": "driver-ready",
             "note": "利用者が自分のPowerShellで実行するdriverを用意(機構確認のみ)。隔離runの準備・起動はまだ行っていない。準備済みはpassではない",
             "driver": ".planning/phases/06-release-validation/06-05-drivers/uat_row.py",
-            "driver_sha256": "54c34e445fde2f8ec55231fd9ed0c98c3742cf991c1c5528c526a0d5354e9109",
+            "driver_sha256": "ea751632ee4ebbcf5ec0e41d8cf14f46d18b8f051217e95c9359c3ac6939697a",
             "command": ".venv/Scripts/python.exe .planning/phases/06-release-validation/06-05-drivers/uat_row.py --row W02/settings@script",
             "selftest_exercised_this_row": [
               "W02_settings_at_script-20261024T132047Z.json"
@@ -451,7 +451,7 @@
             "status": "driver-ready",
             "note": "利用者が自分のPowerShellで実行するdriverを用意(機構確認のみ)。隔離runの準備・起動はまだ行っていない。準備済みはpassではない",
             "driver": ".planning/phases/06-release-validation/06-05-drivers/uat_row.py",
-            "driver_sha256": "54c34e445fde2f8ec55231fd9ed0c98c3742cf991c1c5528c526a0d5354e9109",
+            "driver_sha256": "ea751632ee4ebbcf5ec0e41d8cf14f46d18b8f051217e95c9359c3ac6939697a",
             "command": ".venv/Scripts/python.exe .planning/phases/06-release-validation/06-05-drivers/uat_row.py --row W02/settings@module",
             "selftest_exercised_this_row": [],
             "selftest_note": "selftestはcanned回答で証拠にしない(06-05-evidence/selftest/)"
@@ -483,7 +483,7 @@
             "status": "driver-ready",
             "note": "利用者が自分のPowerShellで実行するdriverを用意(機構確認のみ)。隔離runの準備・起動はまだ行っていない。準備済みはpassではない",
             "driver": ".planning/phases/06-release-validation/06-05-drivers/uat_row.py",
-            "driver_sha256": "54c34e445fde2f8ec55231fd9ed0c98c3742cf991c1c5528c526a0d5354e9109",
+            "driver_sha256": "ea751632ee4ebbcf5ec0e41d8cf14f46d18b8f051217e95c9359c3ac6939697a",
             "command": ".venv/Scripts/python.exe .planning/phases/06-release-validation/06-05-drivers/uat_row.py --row W02/settings@production-exe",
             "selftest_exercised_this_row": [],
             "selftest_note": "selftestはcanned回答で証拠にしない(06-05-evidence/selftest/)"
@@ -516,17 +516,19 @@
             "status": "driver-ready",
             "note": "利用者が自分のPowerShellで実行するdriverを用意(機構確認のみ)。隔離runの準備・起動はまだ行っていない。準備済みはpassではない",
             "driver": ".planning/phases/06-release-validation/06-05-drivers/uat_row.py",
-            "driver_sha256": "54c34e445fde2f8ec55231fd9ed0c98c3742cf991c1c5528c526a0d5354e9109",
+            "driver_sha256": "ea751632ee4ebbcf5ec0e41d8cf14f46d18b8f051217e95c9359c3ac6939697a",
             "command": ".venv/Scripts/python.exe .planning/phases/06-release-validation/06-05-drivers/uat_row.py --row W02/thumb@script",
-            "selftest_exercised_this_row": [],
+            "selftest_exercised_this_row": [
+              "W02_thumb_at_script-20261024T143422Z.json"
+            ],
             "selftest_note": "selftestはcanned回答で証拠にしない(06-05-evidence/selftest/)"
           },
           "required_observations": [
-            "typed_text_kept",
+            "foreground_result",
+            "key_reached_window",
+            "mode_restored",
             "selection_kept",
-            "cursor_kept",
-            "input_target_kept",
-            "foreground_result"
+            "input_target_canvas"
           ],
           "observations": {},
           "answer": "",
@@ -535,7 +537,26 @@
           "observed_at": "",
           "environment": {},
           "binary_sha256": "",
-          "input_manifest_sha256": ""
+          "input_manifest_sha256": "",
+          "observation_procedure": "F5(閲覧/編集モード切替)を2回押して表示の変化と復帰を見る。文字キー(x)はCanvasが受けないため使わない。入力先がCanvasのままだったことは自動harnessのfocus-result(focus_correct/settled_focus)が証拠(EXEは外部foreground観測のみ)",
+          "superseded_records": [
+            {
+              "file": "06-05-evidence/W02_thumb_at_script-20261024T142939Z.json",
+              "status": "superseded",
+              "reason": "観察手順不適合(サムネイルCanvasは文字キーを受けず、x入力の効果を利用者が確認できない)。製品挙動は自動証拠で正常",
+              "automated_evidence": {
+                "focus_correct": true,
+                "settled_focus": ".!panedwindow.!frame.!frame4.!canvas",
+                "state_preserved": true
+              },
+              "human_answers_as_recorded": {
+                "foreground": "出た",
+                "input": "入らない",
+                "kept": "分からない"
+              },
+              "note": "ファイルは保持。このsubrowは再実施までnot-runのまま(passに数えない)"
+            }
+          ]
         },
         {
           "subrow": "thumb@module",
@@ -548,17 +569,17 @@
             "status": "driver-ready",
             "note": "利用者が自分のPowerShellで実行するdriverを用意(機構確認のみ)。隔離runの準備・起動はまだ行っていない。準備済みはpassではない",
             "driver": ".planning/phases/06-release-validation/06-05-drivers/uat_row.py",
-            "driver_sha256": "54c34e445fde2f8ec55231fd9ed0c98c3742cf991c1c5528c526a0d5354e9109",
+            "driver_sha256": "ea751632ee4ebbcf5ec0e41d8cf14f46d18b8f051217e95c9359c3ac6939697a",
             "command": ".venv/Scripts/python.exe .planning/phases/06-release-validation/06-05-drivers/uat_row.py --row W02/thumb@module",
             "selftest_exercised_this_row": [],
             "selftest_note": "selftestはcanned回答で証拠にしない(06-05-evidence/selftest/)"
           },
           "required_observations": [
-            "typed_text_kept",
+            "foreground_result",
+            "key_reached_window",
+            "mode_restored",
             "selection_kept",
-            "cursor_kept",
-            "input_target_kept",
-            "foreground_result"
+            "input_target_canvas"
           ],
           "observations": {},
           "answer": "",
@@ -567,7 +588,8 @@
           "observed_at": "",
           "environment": {},
           "binary_sha256": "",
-          "input_manifest_sha256": ""
+          "input_manifest_sha256": "",
+          "observation_procedure": "F5(閲覧/編集モード切替)を2回押して表示の変化と復帰を見る。文字キー(x)はCanvasが受けないため使わない。入力先がCanvasのままだったことは自動harnessのfocus-result(focus_correct/settled_focus)が証拠(EXEは外部foreground観測のみ)"
         },
         {
           "subrow": "thumb@production-exe",
@@ -580,7 +602,7 @@
             "status": "driver-ready",
             "note": "利用者が自分のPowerShellで実行するdriverを用意(機構確認のみ)。隔離runの準備・起動はまだ行っていない。準備済みはpassではない",
             "driver": ".planning/phases/06-release-validation/06-05-drivers/uat_row.py",
-            "driver_sha256": "54c34e445fde2f8ec55231fd9ed0c98c3742cf991c1c5528c526a0d5354e9109",
+            "driver_sha256": "ea751632ee4ebbcf5ec0e41d8cf14f46d18b8f051217e95c9359c3ac6939697a",
             "command": ".venv/Scripts/python.exe .planning/phases/06-release-validation/06-05-drivers/uat_row.py --row W02/thumb@production-exe",
             "selftest_exercised_this_row": [
               "W02_thumb_at_production-exe-20261024T132107Z.json"
@@ -588,11 +610,10 @@
             "selftest_note": "selftestはcanned回答で証拠にしない(06-05-evidence/selftest/)"
           },
           "required_observations": [
-            "typed_text_kept",
-            "selection_kept",
-            "cursor_kept",
-            "input_target_kept",
-            "foreground_result"
+            "foreground_result",
+            "key_reached_window",
+            "mode_restored",
+            "selection_kept"
           ],
           "observations": {},
           "answer": "",
@@ -602,7 +623,8 @@
           "environment": {},
           "binary_sha256": "",
           "input_manifest_sha256": "",
-          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17"
+          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17",
+          "observation_procedure": "F5(閲覧/編集モード切替)を2回押して表示の変化と復帰を見る。文字キー(x)はCanvasが受けないため使わない。入力先がCanvasのままだったことは自動harnessのfocus-result(focus_correct/settled_focus)が証拠(EXEは外部foreground観測のみ)"
         },
         {
           "subrow": "preview@script",
@@ -615,17 +637,17 @@
             "status": "driver-ready",
             "note": "利用者が自分のPowerShellで実行するdriverを用意(機構確認のみ)。隔離runの準備・起動はまだ行っていない。準備済みはpassではない",
             "driver": ".planning/phases/06-release-validation/06-05-drivers/uat_row.py",
-            "driver_sha256": "54c34e445fde2f8ec55231fd9ed0c98c3742cf991c1c5528c526a0d5354e9109",
+            "driver_sha256": "ea751632ee4ebbcf5ec0e41d8cf14f46d18b8f051217e95c9359c3ac6939697a",
             "command": ".venv/Scripts/python.exe .planning/phases/06-release-validation/06-05-drivers/uat_row.py --row W02/preview@script",
             "selftest_exercised_this_row": [],
             "selftest_note": "selftestはcanned回答で証拠にしない(06-05-evidence/selftest/)"
           },
           "required_observations": [
-            "typed_text_kept",
+            "foreground_result",
+            "key_reached_window",
+            "mode_restored",
             "selection_kept",
-            "cursor_kept",
-            "input_target_kept",
-            "foreground_result"
+            "input_target_canvas"
           ],
           "observations": {},
           "answer": "",
@@ -634,7 +656,8 @@
           "observed_at": "",
           "environment": {},
           "binary_sha256": "",
-          "input_manifest_sha256": ""
+          "input_manifest_sha256": "",
+          "observation_procedure": "F5(閲覧/編集モード切替)を2回押して表示の変化と復帰を見る。文字キー(x)はCanvasが受けないため使わない。入力先がCanvasのままだったことは自動harnessのfocus-result(focus_correct/settled_focus)が証拠(EXEは外部foreground観測のみ)"
         },
         {
           "subrow": "preview@module",
@@ -647,17 +670,17 @@
             "status": "driver-ready",
             "note": "利用者が自分のPowerShellで実行するdriverを用意(機構確認のみ)。隔離runの準備・起動はまだ行っていない。準備済みはpassではない",
             "driver": ".planning/phases/06-release-validation/06-05-drivers/uat_row.py",
-            "driver_sha256": "54c34e445fde2f8ec55231fd9ed0c98c3742cf991c1c5528c526a0d5354e9109",
+            "driver_sha256": "ea751632ee4ebbcf5ec0e41d8cf14f46d18b8f051217e95c9359c3ac6939697a",
             "command": ".venv/Scripts/python.exe .planning/phases/06-release-validation/06-05-drivers/uat_row.py --row W02/preview@module",
             "selftest_exercised_this_row": [],
             "selftest_note": "selftestはcanned回答で証拠にしない(06-05-evidence/selftest/)"
           },
           "required_observations": [
-            "typed_text_kept",
+            "foreground_result",
+            "key_reached_window",
+            "mode_restored",
             "selection_kept",
-            "cursor_kept",
-            "input_target_kept",
-            "foreground_result"
+            "input_target_canvas"
           ],
           "observations": {},
           "answer": "",
@@ -666,7 +689,8 @@
           "observed_at": "",
           "environment": {},
           "binary_sha256": "",
-          "input_manifest_sha256": ""
+          "input_manifest_sha256": "",
+          "observation_procedure": "F5(閲覧/編集モード切替)を2回押して表示の変化と復帰を見る。文字キー(x)はCanvasが受けないため使わない。入力先がCanvasのままだったことは自動harnessのfocus-result(focus_correct/settled_focus)が証拠(EXEは外部foreground観測のみ)"
         },
         {
           "subrow": "preview@production-exe",
@@ -679,17 +703,18 @@
             "status": "driver-ready",
             "note": "利用者が自分のPowerShellで実行するdriverを用意(機構確認のみ)。隔離runの準備・起動はまだ行っていない。準備済みはpassではない",
             "driver": ".planning/phases/06-release-validation/06-05-drivers/uat_row.py",
-            "driver_sha256": "54c34e445fde2f8ec55231fd9ed0c98c3742cf991c1c5528c526a0d5354e9109",
+            "driver_sha256": "ea751632ee4ebbcf5ec0e41d8cf14f46d18b8f051217e95c9359c3ac6939697a",
             "command": ".venv/Scripts/python.exe .planning/phases/06-release-validation/06-05-drivers/uat_row.py --row W02/preview@production-exe",
-            "selftest_exercised_this_row": [],
+            "selftest_exercised_this_row": [
+              "W02_preview_at_production-exe-20261024T143450Z.json"
+            ],
             "selftest_note": "selftestはcanned回答で証拠にしない(06-05-evidence/selftest/)"
           },
           "required_observations": [
-            "typed_text_kept",
-            "selection_kept",
-            "cursor_kept",
-            "input_target_kept",
-            "foreground_result"
+            "foreground_result",
+            "key_reached_window",
+            "mode_restored",
+            "selection_kept"
           ],
           "observations": {},
           "answer": "",
@@ -699,7 +724,8 @@
           "environment": {},
           "binary_sha256": "",
           "input_manifest_sha256": "",
-          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17"
+          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17",
+          "observation_procedure": "F5(閲覧/編集モード切替)を2回押して表示の変化と復帰を見る。文字キー(x)はCanvasが受けないため使わない。入力先がCanvasのままだったことは自動harnessのfocus-result(focus_correct/settled_focus)が証拠(EXEは外部foreground観測のみ)"
         }
       ]
     },

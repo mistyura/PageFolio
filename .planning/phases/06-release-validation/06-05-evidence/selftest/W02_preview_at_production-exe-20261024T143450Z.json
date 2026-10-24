@@ -1,0 +1,200 @@
+{
+  "row": "W02/preview@production-exe",
+  "case": "W02",
+  "condition": "preview",
+  "entry": "production-exe",
+  "selftest": true,
+  "started_at": "2026-10-24T14:34:29.646411+00:00",
+  "target_exe_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17",
+  "steps": [
+    {
+      "at": "2026-10-24T14:34:45.511000+00:00",
+      "step": "started",
+      "windows": [],
+      "foreground": {
+        "hwnd": 656216,
+        "pid": 24068,
+        "title": "◑ 前景監査の診断ハーネス"
+      }
+    },
+    {
+      "at": "2026-10-24T14:34:45.511913+00:00",
+      "step": "target-ready",
+      "windows": [],
+      "foreground": {
+        "hwnd": 656216,
+        "pid": 24068,
+        "title": "◑ 前景監査の診断ハーネス"
+      }
+    },
+    {
+      "at": "2026-10-24T14:34:49.732255+00:00",
+      "step": "after-peer",
+      "windows": [
+        {
+          "hwnd": 26871058,
+          "pid": 23904,
+          "title": "PageFolio",
+          "class": "TkTopLevel",
+          "visible": true,
+          "iconic": false,
+          "zoomed": false,
+          "rect": [
+            78,
+            78,
+            1294,
+            917
+          ]
+        }
+      ],
+      "foreground": {
+        "hwnd": 26871058,
+        "pid": 23904,
+        "title": "PageFolio",
+        "owned_by": "primary"
+      },
+      "owner_probe": [
+        {
+          "kind": "mutex",
+          "name": "Local\\PageFolio.Startup.Owner",
+          "state": "open"
+        },
+        {
+          "kind": "mapping",
+          "name": "Local\\PageFolio.Startup.State",
+          "state": "open"
+        }
+      ],
+      "foreground_before_peer": {
+        "hwnd": 656216,
+        "pid": 24068,
+        "title": "◑ 前景監査の診断ハーネス"
+      }
+    },
+    {
+      "at": "2026-10-24T14:34:49.732282+00:00",
+      "step": "key-probe-instructed",
+      "key": "F5",
+      "presses": 2
+    }
+  ],
+  "run": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\release-uat-1de7c0c116044a3fb4d7b886e566c001",
+  "run_id": "1de7c0c116044a3fb4d7b886e566c001",
+  "binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17",
+  "tree_sha256": "3436ac39cfd7a426e8a5982fa2f1e9f7bbc87ebd8176721b32d88cec1ff8489a",
+  "environment": {
+    "os": "Windows-11-10.0.26300-SP0",
+    "observer_python": "3.15.1 (tags/v3.15.1:c37e74c, Oct 21 2026, 06:24:08) [MSC v.1951 64 bit (AMD64)]",
+    "observer_tk": "9.0",
+    "elevated": false,
+    "session_id": 1
+  },
+  "fixture_pdf": {
+    "path": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\release-uat-1de7c0c116044a3fb4d7b886e566c001\\fixtures\\edit-three-page.pdf",
+    "pages": 3,
+    "has_embedded_text": true,
+    "images_on_first_page": 0,
+    "sha256": "1052c1f94eeb68d89fa4081e0054c2f2df87d14ef813014937ab747f6845272f"
+  },
+  "primary": {
+    "pid": 23904,
+    "created": 134373260803201016,
+    "image": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\release-uat-1de7c0c116044a3fb4d7b886e566c001\\dist\\PageFolio.exe"
+  },
+  "peer": {
+    "pid": 4336,
+    "created": 134373260856079278,
+    "image": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\release-uat-1de7c0c116044a3fb4d7b886e566c001\\dist\\PageFolio.exe"
+  },
+  "answers": {
+    "foreground": "出た",
+    "key_reached": "変わった",
+    "restored": "戻った",
+    "kept": "保たれた",
+    "single": "1つ",
+    "note": "なし"
+  },
+  "outcome": "answered",
+  "stop": [
+    {
+      "pid": 23904,
+      "result": "closed"
+    },
+    {
+      "pid": 4336,
+      "result": "already-exited"
+    }
+  ],
+  "verify_after": {
+    "ok": false,
+    "overlay_changed": [],
+    "distribution_changed": [],
+    "undeclared": [
+      "pagefolio_settings.json"
+    ],
+    "extra_dirs": [],
+    "missing_dirs": [],
+    "exe_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17",
+    "tree_sha256": "1ef6d64b1f2085625796da63fd384d265c29aeac0050e8ebae6be17a8d7a177f"
+  },
+  "source_distribution_unchanged": true,
+  "owner_after": [],
+  "finished_at": "2026-10-24T14:34:50.289916+00:00",
+  "raw_inputs": [
+    {
+      "at": "2026-10-24T14:34:45.511063+00:00",
+      "key": "enter",
+      "text": "",
+      "selftest": true
+    },
+    {
+      "at": "2026-10-24T14:34:49.732295+00:00",
+      "key": "enter",
+      "text": "",
+      "selftest": true
+    },
+    {
+      "at": "2026-10-24T14:34:49.732312+00:00",
+      "key": "foreground",
+      "attempt": 1,
+      "text": "出た",
+      "rejected": null
+    },
+    {
+      "at": "2026-10-24T14:34:49.732320+00:00",
+      "key": "key_reached",
+      "attempt": 1,
+      "text": "変わった",
+      "rejected": null
+    },
+    {
+      "at": "2026-10-24T14:34:49.732326+00:00",
+      "key": "restored",
+      "attempt": 1,
+      "text": "戻った",
+      "rejected": null
+    },
+    {
+      "at": "2026-10-24T14:34:49.732332+00:00",
+      "key": "kept",
+      "attempt": 1,
+      "text": "保たれた",
+      "rejected": null
+    },
+    {
+      "at": "2026-10-24T14:34:49.732337+00:00",
+      "key": "single",
+      "attempt": 1,
+      "text": "1つ",
+      "rejected": null
+    },
+    {
+      "at": "2026-10-24T14:34:49.732341+00:00",
+      "key": "note",
+      "attempt": 1,
+      "text": "なし",
+      "rejected": null
+    }
+  ],
+  "composed_answer": "W02 preview production-exe：foreground=出た・key_reached=変わった・restored=戻った・kept=保たれた・single=1つ（メモ: なし）"
+}
