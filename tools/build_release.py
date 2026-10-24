@@ -157,12 +157,57 @@ def _snapshot(path, protected):
     return {"files": files, "directories": sorted(directories)}
 
 
-def _existing(final, protected):
+def _read_report(path):
+    _no_links(path)
+    try:
+        value = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as error:
+        raise BuildError(f"前回のreportを読めません: {path}") from error
+    if not isinstance(value, dict):
+        raise BuildError(f"前回のreportの形式が不正です: {path}")
+    return value
+
+
+def _managed(final, output, snapshot):
+    """空でない既存先は、前回の検証済みmanifestと全名/bytesが一致する場合だけ許可。"""
+    files = snapshot["files"]
+    embedded_hash = files.get("release-report.json")
+    if embedded_hash is None:
+        raise BuildError(
+            "前回の管理済み配布ではありません。別の空フォルダーを指定してください"
+        )
+    embedded = _read_report(final / "release-report.json")
+    run_id = embedded.get("run_id")
+    if not isinstance(run_id, str) or not re.fullmatch(r"[0-9a-f]{32}", run_id):
+        raise BuildError("同梱reportのrun_idが不正です")
+    external = _read_report(output / ".release-work" / run_id / "report.json")
+    manifest = embedded.get("distribution_manifest")
+    directories = embedded.get("distribution_directories")
+    consistent = (
+        isinstance(manifest, dict)
+        and isinstance(directories, list)
+        and embedded.get("success") is True
+        and external.get("success") is True
+        and embedded.get("status") == "VERIFIED_BUILD"
+        and external.get("status") == "VERIFIED_BUILD"
+        and external.get("run_id") == run_id
+        and external.get("distribution_manifest") == manifest
+        and external.get("distribution_directories") == directories
+        and external.get("embedded_report_sha256") == embedded_hash
+        and {**manifest, "release-report.json": embedded_hash} == files
+        and sorted(directories) == snapshot["directories"]
+    )
+    if not consistent:
+        raise BuildError(
+            "既存配布が前回の検証済みmanifestと一致しません。"
+            "未知/改変/欠落があるため別の空フォルダーを指定してください"
+        )
+
+
+def _existing(final, output, protected):
     snapshot = _snapshot(final, protected)
     if snapshot and (snapshot["files"] or snapshot["directories"]):
-        raise BuildError(
-            "既存配布はまだ再ビルド検証対象外です。別の空フォルダーを指定してください"
-        )
+        _managed(final, output, snapshot)
     return snapshot
 
 
@@ -285,7 +330,12 @@ def run_build(output_root, *, repo=None, builder=None):
         lock_target = output / f".PageFolio-{version}.lock"
         operations = (final, run_target, history, lock_target)
         _guard(repo, output, operations)
-        snapshot = _existing(final, protected)
+        for name in (".release-work", ".release-history"):
+            owned = output / name
+            _no_links(owned)
+            if owned.exists() and not owned.is_dir():
+                raise BuildError(f"所有領域名が通常directoryではありません: {owned}")
+        snapshot = _existing(final, output, protected)
         input_manifest = _inputs(repo)
         sources = {name: repo / "distribution/samples" / name for name in SAMPLES}
         sources["はじめに.md"] = repo / "distribution/はじめに.md"
@@ -298,9 +348,15 @@ def run_build(output_root, *, repo=None, builder=None):
         lock_bytes = json.dumps(
             {**_identity(), "run_id": run_id}, sort_keys=True
         ).encode()
-        with lock_target.open("xb") as stream:
-            lock = lock_target
-            stream.write(lock_bytes)
+        try:
+            with lock_target.open("xb") as stream:
+                lock = lock_target
+                stream.write(lock_bytes)
+        except FileExistsError as error:
+            raise BuildError(
+                "同じ最終先のlockが存在します。所有者を確認するまで奪いません: "
+                f"{lock_target}"
+            ) from error
         run_target.mkdir(parents=True)
         run = run_target
         (run / "INCOMPLETE").write_text("検証未完了", encoding="utf-8")
@@ -309,7 +365,7 @@ def run_build(output_root, *, repo=None, builder=None):
             version=version,
             output=str(final),
             run=str(run),
-            old_output=None,
+            old_output=str(history) if final.exists() else None,
             input_manifest=input_manifest,
             external_report=str(run / "report.json"),
             source_commit=None,
@@ -386,7 +442,10 @@ def run_build(output_root, *, repo=None, builder=None):
         expected = _snapshot(stage, protected)
         report["stage"] = "publish"
         _guard(repo, output, (*operations, stage))
-        if lock.read_bytes() != lock_bytes or _existing(final, protected) != snapshot:
+        if (
+            lock.read_bytes() != lock_bytes
+            or _existing(final, output, protected) != snapshot
+        ):
             raise BuildError("公開前に出力またはlockが変化しました")
         # 初回の空directoryも履歴として残す。二つのrenameは一括atomicではない。
         if final.exists():
@@ -398,13 +457,15 @@ def run_build(output_root, *, repo=None, builder=None):
             report["stage"] = "post-publish-verify"
             if _snapshot(final, protected) != expected:
                 raise BuildError("公開後のSHA-256照合に失敗しました")
-            report.update(
+            done = dict(
+                report,
                 success=True,
                 status="VERIFIED_BUILD",
                 stage="complete",
                 finished_at=_now(),
             )
-            _write_json(run / "report.json", report)
+            _write_json(run / "report.json", done)
+            report.update(done)
         except Exception as publish_error:
             try:
                 if final.exists() and not stage.exists():
@@ -417,12 +478,16 @@ def run_build(output_root, *, repo=None, builder=None):
         (run / "INCOMPLETE").unlink()
     except (Exception, KeyboardInterrupt) as error:
         report.update(
-            success=False, status="INCOMPLETE", error=repr(error), finished_at=_now()
+            success=False,
+            status="INCOMPLETE",
+            failed_stage=report["stage"],
+            error=repr(error),
+            finished_at=_now(),
         )
         if run is not None:
             try:
-                _write_json(run / "report.json", report)
                 (run / "INCOMPLETE").write_text(str(error), encoding="utf-8")
+                _write_json(run / "report.json", report)
             except Exception as report_error:
                 report["report_error"] = repr(report_error)
                 try:
@@ -446,11 +511,11 @@ def run_build(output_root, *, repo=None, builder=None):
     return report
 
 
-def main(argv=None):
+def main(argv=None, *, builder=None, repo=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output-root", type=Path, default=Path("dist"))
     args = parser.parse_args(argv)
-    result = run_build(args.output_root)
+    result = run_build(args.output_root, repo=repo, builder=builder)
     if result["success"]:
         print(f"ビルド照合成功: {result['output']}")
         print(

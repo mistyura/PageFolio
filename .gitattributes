@@ -1,0 +1,5 @@
+# 旧dist/PageFolio内の2サンプルとdistribution/samples内の2正本だけ、改行変換を行わない。
+dist/PageFolio/ocr_custom_prompt_sample.md -text
+dist/PageFolio/ocr_summary_prompt_sample.md -text
+distribution/samples/ocr_custom_prompt_sample.md -text
+distribution/samples/ocr_summary_prompt_sample.md -text
