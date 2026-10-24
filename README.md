@@ -4,7 +4,7 @@
 **PDF ページ整理ツール** — Python + Tkinter 製の Windows 11 向け GUI アプリケーション。
 テキスト編集や注釈追加は行わず、**ページ単位の操作**（回転・削除・トリミング・結合・分割・OCR など）に特化しています。
 
-![Version](https://img.shields.io/badge/version-v1.9.1-blue)
+![Version](https://img.shields.io/badge/version-v1.10.0-blue)
 ![Stable](https://img.shields.io/badge/status-stable-green)
 ![License](https://img.shields.io/badge/license-MIT-lightgrey)
 
@@ -19,6 +19,8 @@
 Python のインストールは不要です。[Releases](https://github.com/mistyura/PageFolio/releases) から最新の `PageFolio-vX.X.X-win64.zip` をダウンロードし、任意のフォルダに展開して `PageFolio.exe` を実行してください。
 
 > `--onedir` 形式で配布しているため、`PageFolio.exe` と `_internal/` フォルダは同じディレクトリに置いたまま利用してください。
+
+展開先・サンプルプロンプト・更新手順は [配布版（EXE）の使い方](#配布版exeの使い方) を参照してください。
 
 ### 開発者向け（ソースから実行）
 
@@ -43,6 +45,37 @@ python pagefolio.py
 3. 「保存」または「名前を付けて保存」で結果を書き出します。
 
 `python -m pagefolio` でも同じアプリを起動できます。
+
+---
+
+## 配布版（EXE）の使い方
+
+配布物は版番号付きのフォルダー（標準の展開先は `PageFolio-v1.10.0`）です。配布元を直接起動せず、フォルダー全体を作業用の別フォルダーへコピーしてから `PageFolio.exe` を実行してください。`PageFolio.exe` と `_internal/` は同じ階層に置いたままにします。同梱の [はじめに.md](distribution/はじめに.md) に最短の手順があり、詳細は [設定リファレンス](docs/CONFIGURATION.md) を参照してください。
+
+### プロンプトのサンプル
+
+OCR 用とサマリ用は別々に用意されています。必要な方だけ、EXE と同じフォルダーへ次の名前でコピーします。サンプルそのものを編集・上書きせず、コピーした実利用ファイルを外部のテキストエディタで編集してください。
+
+| 用途 | コピー元 | コピー後の名前 |
+|------|----------|----------------|
+| OCR | `ocr_custom_prompt_sample.md` | `ocr_custom_prompt.md` |
+| サマリ | `ocr_summary_prompt_sample.md` | `ocr_summary_prompt.md` |
+
+コピー先に同名のファイルがある場合は作業を止め、両方の内容を確認してから残す方を選びます。自動では上書きしません。
+
+### 新しい版への更新
+
+1. 新しい版を、旧フォルダーとは別のフォルダー（例: `PageFolio-v1.10.0`）へ展開します。旧フォルダーは削除せず残します。
+2. 引き継ぎたい `pagefolio_settings.json` と、実利用のプロンプト（`ocr_custom_prompt.md` / `ocr_summary_prompt.md`）だけを新しいフォルダーへコピーします。新しいフォルダーに同名ファイルが既にある場合はコピーを止め、内容を確認して選びます。上書きしない運用です。
+3. プラグインは自動では移行されません。旧フォルダーを残したまま、[プラグイン開発ガイド](docs/PLUGINS.md) の導入手順で新しいフォルダーへ入れ直してください。
+4. 問題が起きた場合は、旧フォルダーの `PageFolio.exe` を起動すれば元の版へ戻れます。
+
+### 保証範囲と未実施の確認
+
+- 起動排他と既存画面への復帰は、排他に対応した版同士が同じ session で起動された場合が対象です。別の配置フォルダー・Python 起動・EXE 起動の混在も、対応版同士で同じ session であれば対象です。
+- 排他未対応の旧版との同時起動、および OS が行う強制的な前面化の拒否は保証外です。この場合、起動中の画面が前面に出ないことがあります。
+- 配布 EXE の実機受入と出荷承認は未実施です。ビルド時の照合成功は、同梱ファイルの内容一致を機械的に確認した結果であり、実機での合格を意味しません。
+- 再ビルドの手順（保守担当者向け）は [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) を参照してください。
 
 ---
 
