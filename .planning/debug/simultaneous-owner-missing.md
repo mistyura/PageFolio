@@ -2,15 +2,15 @@
 status: investigating
 trigger: "$gsd-debug で独立調査して / restart"
 created: 2026-10-23
-updated: 2026-10-23T12:03:35Z
+updated: 2026-10-23T13:50:58Z
 ---
 
 ## Current Focus
 
-hypothesis: 原因未確定。初回の一次はready約0.4秒後に通常終了したが、終了要求の呼出元が当時記録されていない。利用者は手動終了を否定した。
-test: 再発時に一次fixtureのexit-audit.jsonlとresource-audit/result/tracebackを照合する。未調整の同条件試験を追加反復しない。
-expecting: stop_pollならstop/stop-allの生成元、callitならwatchdog、Tk __call__直下ならWM/ボタン要求を切り分けられる。quit記録がなければmainloopの直接終了経路を調べる。
-next_action: Phase 5停止を維持。診断付き再発証拠または追加の調査仮説を得たら同じdebugを継続する。原因修復・条件付き再開のいずれも今回確認していない。
+hypothesis: 原因未確定。原本時系列で一次の終了はfresh fixture準備後・fresh bootstrap前と判明。通常のstop-all/後続ケースからの停止と時計変更を支持する証拠は無い。初回の終了要求stackが無く、WM/ボタン経由のイベントと異常なwatchdog発火を区別できない。利用者の手動終了は否定済み。
+test: 承認条件の最終再チェックは対象9件×3回連続成功、単一全件1680 passed / 1 warning / 254.81秒 / exit 0。Ruff・Python102ファイルformat・AST成功。途中失敗を保存し、前景環境と診断の時計比較・Tcl再入を修正した。resume-check-20261023.md参照。
+expecting: native_close_receivedにより実WM_CLOSEとTk直接WM呼出しを識別できる。初回の終了要求・未知の送信元PIDの遡及復元はできない。新しい通知試験失敗との因果も未確定。
+next_action: 承認された再開条件を全て満たしたため、$gsd-execute-phase 5で05-02-01の既存差分・検証証拠を照合して実装を条件付き再開可。元のowner_missingとDEP-05は未解決・監視継続、出荷承認ではない。再発時は実装・後続実行・コミットを停止して最初の証拠から調査する。05-02未完了・未コミットは維持。本承認は従来の原因確定まで停止する条件を置き換える。
 
 ## Symptoms
 
@@ -21,6 +21,31 @@ timeline: 05-02-01の保存・終了制御変更後の初回全件で発生。�
 reproduction: 既存.venvの単一全件pytest、専用basetemp pf_0502_task1_20261023。1674 passed/1 failed、252.25秒。
 
 ## Evidence
+
+- timestamp: 2026-10-23T13:50:58Z 条件付き実装再開の再チェックPASS
+  checked: resume-check-20261023.md、resume-final-20261023/status.jsonと診断711ファイル（全hash再確認）、最終tracer・runner・静的検証
+  found: 最終対象9件×3回成功、全件1680 passed/1 warning/254.81秒。fresh前後の一次生存・応答後のstop_all終了を確認。途中の前景不一致はTerminal→Codeの待機中イベントを実測。Tcl時計でのwatchdog比較へ修正し、診断が追加したnative callbackからのTcl再入を除去。target-3でTcl期限比+11642usとmonotonic期限比-3602.8usを実測した。製品等4ファイルhash不変。
+  implication: 利用者の新しい条件を全て満たしたので実装再開は許可。過去の原因未確定を解決扱いせず、DEP-05未解除・出荷不可・再発時停止を維持。今回05-02-02への着手やコミットは行っていない。
+
+- timestamp: 2026-10-23T13:06:34Z 通知前景不一致の切り分け
+  checked: notice-focus-20261023.md、保存済みnotice 9プロセスのresult、notice-caseとNativeNoticeLifetime、追加診断の単体証拠19ファイル
+  found: 失敗時8 peerの前後は199190、owner終了後134248、通知HWND6295044。表示/破棄前後の既存4値がこの分岐では未保存だったためtracerに保存を追加。単体1 passed/1 warning/2.49秒、今回は6時点全て199190、elapsed1875ms、期限差1800ms。原本と19ファイルのSHA256一致。Ruff check・Python101ファイルformat・AST成功。誤って整形した対象外60文書は原文へ復元。
+  implication: 変化区間を切り分ける診断は準備できたが、失敗時のPID/class・イベント時刻を遡及復元できず原因未確定。製品修復・全件再実行なし。最新全件1 failed、Phase停止・未コミット・DEP-05未解除を維持。
+
+- timestamp: 2026-10-23T12:54:47Z 実OS終了経路検証
+  checked: tests/test_startup_windows.py、native-audit-20261023.md、native-audit-artifacts/targetedとfullの37ファイル（全SHA256一致）
+  found: 親が試験実行PIDと生成時刻を確認してWM_CLOSEを送信。native_close_received→entry_fired/wm→quit_requested→native_observer_removedを実測。Tk直接WM/ボタン/watchdogではnative受信なし。通常同時起動3件もnative受信なし・stop_all=true、7ケース全て解除成功・監査errorなし。全件は1678 passed/1 failed、通知8プロセス試験の前景HWNDが199190から134248へ変化。初期の新規試験2失敗はHWND取得元・launcher PID誤認を修正し、両ログを保存した。
+  implication: 承認された実OS経路検証は完了。初回owner_missingは未再現・未解決。通知試験の新失敗は原因未確定で環境要因と断定せず、修復や再実行で消さない。製品4ファイルhashは不変、Phase停止・未コミット・DEP-05未解除を維持。
+
+- timestamp: 2026-10-23T12:30:59Z 終了入口監査と独立検証
+  checked: tests/test_startup_windows.py、entry-audit-20261023.md、entry-audit-artifacts/の6 JSONL（原本SHA256一致）
+  found: WM/ボタンは元Tcl commandへ委譲、watchdogは既存10000msを維持して登録/発火を記録。独立3試験は3 passed/19.08秒。単一全件は1678 passed/1 warning/266.92秒/exit 0。通常同時起動3ケースは全てstop_all=true・stop_poll経由。初回sandbox3 failedはinit.tclアクセス不可で、通常権限では成功。
+  implication: 入口監査の動作を確認したが初回owner_missingは未再現。製品4ファイルhashは従前一致、製品修復なし。Ruffはsandbox生成物ディレクトリだけを走査除外して101 Pythonソースを検証。原因未確定・Phase停止・DEP-05未解除・未コミットを維持し、次の調査方針のcheckpointへ。
+
+- timestamp: 2026-10-23T12:11:30Z 継続調査・原本時系列と追加3仮説
+  checked: simultaneous-owner-missing-evidence/forensics-20261023.md、元basetempの3ケースのmetadata（昇格読み取りのみ）、Systemイベント、startup_focus/startup_win32/__main__/appとtracerの停止経路
+  found: ready=11:43:01.182Z→初期二次result=.308Z→fresh fixture=.412Z→一次設定保存=.498Z→一次result=.581Z→fresh bootstrap=.793Z→owner_missing=.866Z。失敗ケースにはstop/stop-all無し、後続ケースのstop-allは別パス・6秒以上後。失敗前後5分のSystemイベント0件、復帰処理にroot破棄やclose送信なし。製品4ファイルと診断テストのhashは従前と一致。
+  implication: 一次はfreshの所有権確認前に終了したが、fresh準備前に終了したわけではない。通常のstop-all共有・時計変更・復帰要求の直接closeを支持せず、入口別イベントまたは再発stackが必要。コード変更・試験反復・commitなし、調査は未解決。
 
 - timestamp: 2026-10-23 診断付き全件と上限10回の対象試験
   checked: simultaneous-owner-missing-evidence/full-01.txt、campaign.txt、専用basetemp pf_owner_missing_full_01
@@ -44,6 +69,9 @@ reproduction: 既存.venvの単一全件pytest、専用basetemp pf_0502_task1_20
 
 ## Eliminated
 
+- hypothesis: 後続の同時起動[8]/[slow]ケースの通常stop-allが失敗[2]の一次を閉じた。
+  evidence: 原本の親ディレクトリはprocess0/process1/process2に分離され、後続stop-allの最早作成は11:43:07.472Z。失敗一次resultは11:43:01.581Z。パスと順序が成立しない。外部による一時作成・削除までは未監査。
+
 - hypothesis: 利用者が試験ウィンドウを閉じた。
   evidence: 利用者回答「閉じていない」。外部ソフトやOSからの終了要求までは検証できていない。
 - hypothesis: 通常の試験watchdogが予定どおり10秒経過して終了した。
@@ -52,10 +80,10 @@ reproduction: 既存.venvの単一全件pytest、専用basetemp pf_0502_task1_20
 ## Resolution
 
 root_cause: 未確定。初回の呼出stack欠落により、どの終了要求が一次を閉じたかを遡って実証できない。
-fix: 製品修復なし。simultaneous系TracedApp._quitにtick/monotonic/stop/stop_all/呼出stackを専用JSONLへ記録する診断を追加。期限・合否条件・guardは不変。
-verification: 対象1件+上限10回成功、単一全件1675 passed/2 warnings/242.80秒/exit 0。全体Ruff check、Python対象format（101 files unchanged）、再check、pagefolio.py AST、diff --check成功。Phase 5の既存4ファイルのhashは初回失敗時から一致。
-files_changed: tests/test_startup_windows.py（24行の診断追加）、本debug記録と証拠コピー。STATE/state.json/05-02-CHECKPOINTは未解決の現況を追記し、先行差分とともに未コミットで保持する。
-disposition: unresolved。resolvedへ移動しない。DEP-05-REGRESSIONも未解除。Phase 5の05-02-01は未完了、Phase実装の再開・コミットは行わない。
+fix: 製品修復なし。前景WinEvent監査・一次生存assert・非表示検証runnerを追加。診断の時計比較はTcl時計へ揃え、native callbackからTkを再入呼出ししないよう修正。期限・guard・元の製品合否条件は維持。
+verification: 最終対象9件×3回連続成功、全件1680 passed/1 warning/254.81秒/exit 0。Ruff check、Python対象format（102 files unchanged）、AST3ファイル、diff --check成功。診断711ファイルのSHA256一致。Ruffはアクセス不可のsandbox生成物1ディレクトリだけを走査除外。製品等の既存4ファイルhashは初回失敗時から一致。
+files_changed: tests/test_startup_windows.py、本debug記録・証拠、開発履歴.md。STATE/state.json/05-02-CHECKPOINTに実OS検証結果と全件の別失敗を記録し、先行差分とともに未コミットで保持する。
+disposition: unresolved/monitoring。resolvedへ移動しない。DEP-05-REGRESSIONも未解除。利用者承認の条件を満たしたのでPhase 5実装は条件付きで再開可、出荷は不可。05-02-01は未コミットで、次のexecute-phaseで既存作業を照合する。同種失敗の再発時は再停止する。
 
 ## 実行commandと証拠hash
 

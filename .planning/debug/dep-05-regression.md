@@ -16,6 +16,8 @@ goal: find_and_fix
 
 ## Current Focus
 
+最新の再開条件確認（2026-10-23T13:50:58Z）: 利用者承認の条件付き実装再開ゲートを、対象9件×3回連続成功・単一全件1680 passed/1 warning/254.81秒・Ruff/AST成功で通過。`simultaneous-owner-missing-evidence/resume-check-20261023.md`参照。DEP-05の原因解決・解除ではなく、investigating/monitoringと再発時停止を維持する。出荷承認なし。次の入口は`$gsd-execute-phase 5`で05-02-01既存差分の照合。
+
 hypothesis: 【原因未確定】元失敗(二次result.json保存の約11.3秒後もstdout EOF未達)の残存仮説は3つ。H1=二次(venv launcher→実python)の終了遅延、H2=第三者によるpipe保持、H3=親pytest側のreader thread/GILの停止。H2は静的に可能性が低い(二次は孫を作らず、親にも並行CreateProcessの経路が無い)。どれも約820件の観測で再現していない。
 test: 診断commit 9384268は適用済み。_finish診断(poll値・reader threadの生死と位置・起動後に生まれた生存process一覧とthread状態)と、時限dumpを常時armedにしたtraceback.logを、Phase 5の単一全件ゲートでの再発時に確認する。
 expecting: 再発時、poll=None→H1(processが生存。traceback.logにPythonスタックがあればPython側、無ければOS/launcher側)。poll=0かつreader alive=True→H2(起動後に生存するprocess一覧に保持者)。reader aliveでなくTimeoutExpired→H3。

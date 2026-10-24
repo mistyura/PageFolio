@@ -329,6 +329,8 @@ Decisions are logged in PROJECT.md Key Decisions table.
 - [Phase 04 / 検証鮮度] 現行コード5ファイルの変更により04-VERIFICATION.mdはstale。Phase 05のpassedで代替せず、後続で `$gsd-execute-phase 04` により再検証する。
 - [全体監査CLI] audit-openは旧v1.6.0の03-VERIFICATION-REALAPI.mdのstatus draftで拒否された。全体監査成功とは扱わない。今回のPhase 05は固有のverification.statusとphase uat-passed --require-verificationで合格を確認した。
 
+- [2026-10-22 quick 261022-qv7・未完了] 仮想環境をPython 3.15.1へ修復し依存更新。監査0件、依存整合性とPythonコード検査は合格。全1629テストは1620成功・9失敗、段階的な再検証で8件成功・起動引継ぎテスト1件残存。既存計画Markdownの整形指摘59ファイルも未解消。詳細は `quick/261022-qv7-security-dependency-update/261022-qv7-SUMMARY.md`。コミットと完了登録は保留。
+
 v1.9.0 クローズ時点で次マイルストーンへ引き継ぐ未解決項目（いずれも非ブロッキング）:
 
 - [v1.6.0 Phase 3 継続 → v1.9.0 Phase 3 で維持]: V16-QUAL-03（max_tokens/429 実機検証）は実 API 課金・レート制限誘発が必要なため「未実施（理由付き）」で維持。あわせて ⑤-Claude（Claude 実 API 出力品質・`ANTHROPIC_API_KEY` 未設定）も同様に未実施 → **次マイルストーンで実 API キーが用意でき次第消化**。消化条件は `milestones/v1.9.0-phases/03-qa-release-gate/03-UAT-RESULTS.md`「## 未実施（理由付き・D-14）」に記録済み
