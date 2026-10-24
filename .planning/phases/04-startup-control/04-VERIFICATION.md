@@ -1,10 +1,10 @@
 ---
 phase: 04-startup-control
-verified: 2026-10-24T07:40:00Z
+verified: 2026-10-24T08:40:00Z
 status: passed
 score: 21/21 must-haves verified
 covered_files: [".planning/phases/04-startup-control/04-01-PLAN.md", ".planning/phases/04-startup-control/04-01-SUMMARY.md", ".planning/phases/04-startup-control/04-02-PLAN.md", ".planning/phases/04-startup-control/04-02-SUMMARY.md", ".planning/phases/04-startup-control/04-03-PLAN.md", ".planning/phases/04-startup-control/04-03-SUMMARY.md", ".planning/phases/04-startup-control/04-04-PLAN.md", ".planning/phases/04-startup-control/04-04-SUMMARY.md", ".planning/phases/04-startup-control/04-05-PLAN.md", ".planning/phases/04-startup-control/04-05-SUMMARY.md", ".planning/phases/04-startup-control/04-06-EVIDENCE.json", ".planning/phases/04-startup-control/04-06-PLAN.md", ".planning/phases/04-startup-control/04-06-SUMMARY.md", "pagefolio.py", "pagefolio/__init__.py", "pagefolio/__main__.py", "pagefolio/app.py", "pagefolio/lang.py", "pagefolio/startup_control.py", "pagefolio/startup_focus.py", "pagefolio/startup_notice.py", "pagefolio/startup_win32.py", "tests/test_gsd_dod.py", "tests/test_startup_control.py", "tests/test_startup_focus.py", "tests/test_startup_notice.py", "tests/test_startup_windows.py"]
-covered_digest: "v3:sha256:5011dcc61c28d464c999fb55d198dffacd9a78688bc34240ef1dfb67b20be168"
+covered_digest: "v3:sha256:e0d6d98737c72029932bd6c815158ef4b7f70ec603258b6a455aac0756c70417"
 behavior_unverified: 0
 overrides_applied: 0
 human_verification: []
@@ -14,7 +14,7 @@ re_verification:
   gaps_closed: []
   gaps_remaining: []
   regressions: []
-  trigger: "Phase 5 (be8f78a..7bbb06c) とdebugコミット(be1eb19, 3925d5f)が app.py / lang.py / startup_focus.py / test_startup_focus.py / test_startup_windows.py を変更し、前回の指紋(v3:sha256:9a78307802b2...)が失効"
+  trigger: "3e56452 が tests/test_startup_windows.py(+58/-7)のみを変更し、dd10ce7 時点の指紋(v3:sha256:5011dcc61c28...)が失効。製品コード(pagefolio/)は不変"
 flagged_prohibitions: 3
 unclassified_edges: 5
 decision_coverage:
@@ -53,7 +53,9 @@ prohibitions:
 
 **目標:** 利用者が2回目に PageFolio を起動しても作業画面が増えず、進行中の作業を保ったまま既存画面へ戻れる。
 **判定:** passed(Phase 4の実装/自動受入範囲 21/21)。Phase 6の実機受入は未実施のまま。
-**検証種別:** 再検証。前回(2026-10-21T22:12Z、21/21 passed)の指紋が、Phase 5とdebugコミットによる `app.py` / `lang.py` / `startup_focus.py` / `tests/test_startup_focus.py` / `tests/test_startup_windows.py` の変更で失効したため、現行コミット済みコードに対してPhase 4のtruthが保たれているかを再評価した。コミットなし。
+**検証種別:** 再検証(2回目)。dd10ce7 で再生成した報告(21/21 passed)の指紋が、`3e56452` による `tests/test_startup_windows.py` の試験のみの変更(+58/-7)で失効したため、この試験変更が Phase 4 の must-have(D-05〜D-08)を弱めていないかを精査し、被覆ファイルの不変を `git diff dd10ce7..HEAD` で確認した。製品コードは変更なし。コミットなし。
+
+**dd10ce7 以降の変更の全体:** `git diff --name-only dd10ce7..HEAD` は `tests/test_startup_windows.py` / `.planning/debug/resolved/takeover-loser-expired.md` / `.planning/phases/04-startup-control/04-VALIDATION.md`(+4行、被覆集合外の計画文書)の3件のみ。`pagefolio/`・`pagefolio.py`・他の被覆試験は dd10ce7 から不変。
 
 **3 flagged prohibitions — unverified-prohibition — human review recommended.** 禁止事項3件とedge5件は未解決のままPhase 6へ明示移管しており、リリース承認を意味しない。W人手項目は全行 not-run のままで、本報告はpassへ変更していない。Phase 4の合格は自動範囲に限り、最終人手受入の代替にはしない。
 
@@ -68,7 +70,22 @@ prohibitions:
 - **未分類edge 5件**: Phase 6で実機照合する。
 - **WR-01**: 並行負荷の二次終了 15609ms(15.5秒上限を109ms超過)と単独 15140ms は両方保持。
 
-## 再検証: Phase 5変更による回帰分析
+## 再検証: `3e56452` の試験変更が must-have を弱めていないかの精査
+
+根本原因は `.planning/debug/resolved/takeover-loser-expired.md`。引継ぎ競合試験で敗者が `expired` になるのは、勝者の実アプリ初期化(Python/Tk、環境負荷で1〜7秒)が敗者の5秒期限(D-05)を超えた場合の**仕様どおりの結果**であり、製品の5000ms期限は変更していない(`pagefolio/` 差分0)。
+
+| 観点 | 変更後の試験の状態 | 評価 |
+|---|---|---|
+| 単一引継ぎ(D-07) | `sum(constructed)==1`、`takeover_claim=="acquired"` がちょうど1件、全候補 `death_confirmed` を従来どおり assert。新規試験 `test_takeover_loser_expires_when_winner_initialization_exceeds_deadline` も同3項目に加え勝者 constructed==1・敗者 constructed==0 を assert | 維持・強化 |
+| 5秒待機・期限非更新(D-05/D-06/D-08) | `expired` を許すのは `5000 <= elapsed < 6000` かつ `勝者ready_tick − 敗者started_tick >= 4500` の場合のみ。下限5000は5秒待機を満たしたこと、上限6000は期限が延長・更新されていないことを要求する | 期限契約を直接 assert しており緩和ではない |
+| expired以外の失敗 | else 枝は `terminal_result in {"completed","foreground_denied"}` のみ許可。`check_failed`・`owner_missing` 等は失敗のまま | 従来どおり失敗 |
+| harness の許容範囲 | `_run_scenario` の通知段で `takeover-*` ロールにも `reason == "expired"` だけを許可(従来 `simultaneous-*` のみ)。他の理由は `AssertionError`。勝者は構築に成功するためこの経路に到達しない | `expired` 限定で、試験側の上記条件 assert が後段で絞る |
+| 決定的な回帰試験 | `takeover-slow-N` ロールが勝者初期化に6.5秒の遅延を入れ、敗者 `expired` 経路を決定的に固定 | 仕様経路を偶然に頼らず検証 |
+| 待機の分離 | 勝者ready待機を6秒から `_BOOTSTRAP_TIMEOUT` へ(製品期限と試験待機の切離し)。その後の敗者終了待機は5秒のまま | assertion を変えない待機のみの調整 |
+
+結論: この変更は genuine な引継ぎ欠陥(多重構築、claim二重取得、死亡未確認、expired以外の失敗理由、期限の延長)を引き続き検出する。`expired` の受理は文書化された仕様(勝者初期化が敗者期限を超えた場合)に限定され、Phase 4 の D-05〜D-08 を弱めていない。従来 flaky だった `takeover_two_candidates...` は仕様経路を明示的に許容する形になっただけで、削除・skip・xfail化はない。なお `owner_missing` 単発事象(`simultaneous-owner-missing.md`)は別事象で、この変更では解決していない。
+
+## 再検証(前回分): Phase 5変更による回帰分析
 
 前回検証基点 `15fde05`(2026-10-22 07:05 JST)から現行 HEAD までの、Phase 4被覆ファイルの差分を精読した。差分があるのは5ファイルのみで、`__main__.py` / `__init__.py` / `pagefolio.py` / `startup_control.py` / `startup_notice.py` / `startup_win32.py` / `test_startup_control.py` / `test_startup_notice.py` / `test_gsd_dod.py` は基点から不変。
 
@@ -168,15 +185,14 @@ ROADMAP5基準を先頭に置き、全PLANの追加truthを重複統合した。
 
 ### Behavioral Spot-Checks
 
-回帰証拠は次の2系統。(a) 現行バイトに対する単一プロセス全件 pytest(06-03、本検証では再実行せず引用)、(b) 本検証で独立実走した対象試験。
+回帰証拠は次の2系統。(a) 現行 HEAD バイトに対する単一プロセス全件 pytest(オーケストレーター実走、本検証では再実行せず引用)、(b) 本検証で独立実走した Phase 4 対象5ファイル。
 
-(a) の対応: `pagefolio/` の最終変更は 2026-10-24 15:09 JST(`constants.py` の `APP_VERSION` のみ、コミット c09baea)、`app.py` は 01:49、`startup_focus.py` は 2026-10-22、`tests/test_startup_windows.py` のファイル更新時刻は 2026-10-23 22:35 で、全件ログ(2026-10-24 15:51 JST)より前。全件ログ以降に変更されたバイトはなく、3925d5f は同一バイトのコミットである。
+(a) の対応: 全件ログは HEAD(`3e56452`/`40cc1be`)のバイトに対して取得されたもの(オーケストレーター申告)。dd10ce7 以降に変わった実装/試験バイトは `tests/test_startup_windows.py` のみで、これは (b) で独立実走した。
 
 | Behavior | Command | Result | Status |
 |---|---|---|---|
-| 現行バイトの単一プロセス全件 | `.planning/phases/06-release-validation/06-03-task2-full.txt`(basetemp `C:\Users\shdwf\AppData\Local\Temp\pf06_03_t2_full_a415ec3d9adf4122`) | 1969 passed, 1 warning in 361.39s / EXIT=0。除外なし | PASS(引用) |
-| control/focus/notice/DoD | `.venv\Scripts\python.exe -m pytest -q tests/test_startup_control.py tests/test_startup_focus.py tests/test_startup_notice.py tests/test_gsd_dod.py --basetemp=%LOCALAPPDATA%\Temp\pf04_reverify_<ts>` | 164 passed, 1 warning, 0.41s | PASS(本検証で実走) |
-| 実Windows 対象(constructor失敗・初期化通知・期限・同時起動・再起動・最小化) | `... pytest -q tests/test_startup_windows.py -k "constructor_failure or backend_constructor or initialization_notice or initialization_cleanup or notice_deadline or simultaneous_real or two_launch or restart or minimized"` | 14 passed, 60 deselected, 1 warning, 90.83s | PASS(本検証で実走) |
+| HEAD バイトの単一プロセス全件 | `C:\Users\shdwf\AppData\Local\Temp\claude\C--Users-shdwf-work-project-PageFolio\ce16e575-317d-4582-a7f5-f17bbae7daa7\scratchpad\full_run.txt`(オーケストレーター実走) | 1970 passed, 1 warning in 429.91s / exit 0。除外なし | PASS(引用) |
+| Phase 4 対象5ファイル | `.venv\Scripts\python.exe -m pytest -q tests/test_startup_control.py tests/test_startup_focus.py tests/test_startup_notice.py tests/test_gsd_dod.py tests/test_startup_windows.py --basetemp=C:\Users\shdwf\AppData\Local\Temp\pf04_reverify_20261024172920` | 239 passed, 1 warning in 315.36s (0:05:15)。失敗0・ERROR0・skip0。新規 `test_takeover_loser_expires_when_winner_initialization_exceeds_deadline` と改修後 `test_takeover_two_candidates_after_confirmed_initialization_death` を含む | PASS(本検証で実走) |
 
 警告1件は既存の PyMuPDF `typing.ByteString` 非推奨で、failure/ERROR/対象 skip は0。症状①(TclError セットアップ ERROR)は CLAUDE.md の通り再発し得る既知の環境症状であり、今回の実走では観測されなかったが「非再現」とは扱わない。
 
@@ -209,6 +225,7 @@ REQUIREMENTS.md は5件とも `[x]` / Complete だが、これは Phase 4 の自
 | tests/test_gsd_dod.py | 216/225 | TBD という文法リテラル | Info | 未完了件数表記の解析用。負債コメントではない |
 | startup_win32.py | 287/307/819 | 並行負荷で予算超過 | WARNING / WR-01 | Phase 6 再評価へ移管、元数値保持 |
 | tests/test_startup_windows.py | 計装 | debug 用の終了/前景監査 harness が本番試験ファイルに同居 | Info | 既存 assertion は不変。製品コードへの影響なし |
+| tests/test_startup_windows.py | 1219-1223 | 引継ぎ試験が条件付きで `expired` を許容 | Info | 5000<=elapsed<6000 かつ勝者ready−敗者開始>=4500 に限定。D-05〜D-08 を弱めない(上記精査) |
 
 未参照 FIXME/XXX/TBD コメント、placeholder、空 handler による未実装は検出なし(Phase 4被覆ファイルの変更差分範囲)。
 
@@ -218,9 +235,9 @@ REQUIREMENTS.md は5件とも `[x]` / Complete だが、これは Phase 4 の自
 
 ### Gaps Summary
 
-BLOCKER なし。Phase 5 と debug コミットによる `app.py` / `lang.py` / `startup_focus.py` の変更は、Phase 4 の21 truth のいずれも回帰させていない(`_quit` のキャンセル保持は強化、focus の入力先維持も強化、lang は additive、bind は add="+" で共存)。現行バイトの単一プロセス全件(1969 passed)と本検証の対象実走(164 + 14 passed)で確認した。DEP-05-REGRESSION、owner_missing、通知前景不一致、Tcl warning、未分類 edge 5件、WR-01 は解決済みと扱わず、禁止事項3件は flagged-unverified、W 人手部分は not-run を維持して Phase 6 へ引き継ぐ。
+BLOCKER なし。Phase 5 と debug コミットによる `app.py` / `lang.py` / `startup_focus.py` の変更は、Phase 4 の21 truth のいずれも回帰させていない(`_quit` のキャンセル保持は強化、focus の入力先維持も強化、lang は additive、bind は add="+" で共存)。HEAD バイトの単一プロセス全件(1970 passed、引用)と本検証の Phase 4 対象5ファイル実走(239 passed)で確認した。`3e56452` の試験変更は D-05〜D-08 の assertion を弱めず、製品コードは dd10ce7 から不変である。DEP-05-REGRESSION、owner_missing、通知前景不一致、Tcl warning、未分類 edge 5件、WR-01 は解決済みと扱わず、禁止事項3件は flagged-unverified、W 人手部分は not-run を維持して Phase 6 へ引き継ぐ。
 
 ---
 
-_Verified: 2026-10-24T07:40:00Z_
+_Verified: 2026-10-24T08:40:00Z_
 _Verifier: Claude (gsd-verifier、再検証)_
