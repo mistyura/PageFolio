@@ -473,10 +473,10 @@ LANG = {
             "OCR 実行中です。\nウィンドウを閉じると処理は中断されます。\n閉じますか？"
         ),
         "ocr_err_connection": (
-            "LM Studio に接続できませんでした。\n"
-            "URL: {url}\n\n"
-            "LM Studio が起動していること、URL が正しいことを\n"
-            "確認してください。\n\n詳細: {error}"
+            "{provider} に接続できませんでした。\n"
+            "接続先: {url}\n\n"
+            "接続先が起動していること、URL とネットワーク接続が\n"
+            "正しいことを確認してください。\n\n詳細: {error}"
         ),
         "ocr_err_timeout": (
             "OCR がタイムアウトしました ({timeout} 秒)。\n"
@@ -1287,10 +1287,10 @@ LANG = {
             "Close anyway?"
         ),
         "ocr_err_connection": (
-            "Failed to connect to LM Studio.\n"
-            "URL: {url}\n\n"
-            "Please make sure LM Studio is running\n"
-            "and the URL is correct.\n\nDetails: {error}"
+            "Failed to connect to {provider}.\n"
+            "Target: {url}\n\n"
+            "Please make sure the server is running\n"
+            "and the URL and network connection are correct.\n\nDetails: {error}"
         ),
         "ocr_err_timeout": (
             "OCR timed out ({timeout}s).\n"

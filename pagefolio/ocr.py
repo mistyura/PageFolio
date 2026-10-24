@@ -151,6 +151,9 @@ def resolve_summary_prompt(provider_name, custom_prompt=""):
 
 
 DEFAULT_LM_STUDIO_URL = "http://localhost:1234"
+# Ollama の既定 URL（settings.py の既定値・OllamaProvider の既定と同一。11434 は Ollama
+# の標準ポート）。build_provider / resolve_local_endpoint が参照する単一の定義。
+DEFAULT_OLLAMA_URL = "http://localhost:11434"
 DEFAULT_OCR_TIMEOUT = 120  # 秒
 DEFAULT_OCR_SCALE = 1.5  # D-11: 新規既定 1.5 に統一（WR-01）
 DEFAULT_OCR_MAX_TOKENS = -1  # -1: モデル側の最大値（context window）に委ねる
@@ -426,6 +429,43 @@ def run_parallel(
     return results, errors, fatal["msg"], fatal["kind"]
 
 
+def resolve_local_endpoint(settings, name):
+    """プロバイダ名に対応する接続先 (url, model) を settings から解決する純関数。
+
+    OCR ダイアログの表示欄（url_var / model_var）と、実行時にダイアログが再生成する
+    プロバイダの接続先を「有効なプロバイダの設定キー」から決めるための単一の入口。
+    以前は _start_ocr が常に lm_studio_* を渡し、_on_run がその値で Ollama を再生成して
+    いたため、ocr_provider=ollama でも LM Studio の URL へ送信されていた。
+
+    対応: lmstudio（空文字も後方互換で lmstudio 扱い）→ lm_studio_url /
+    lm_studio_model、
+    ollama → ollama_url / ollama_model（空 URL は OllamaProvider と同じく既定 URL）、
+    runpod → runpod_url / runpod_model。値は前後の空白を除去する。
+
+    引数:
+      settings: アプリ設定辞書、またはダイアログローカルの設定スナップショット
+      name:     プロバイダ名（settings["ocr_provider"] の値）
+
+    戻り値: (url, model) のタプル。ローカル接続先設定を持たないプロバイダ
+    （claude / gemini / openai / tesseract / off / プラグイン等）は None。
+    """
+
+    def _text(key, default=""):
+        value = settings.get(key, default)
+        return "" if value is None else str(value).strip()
+
+    if name in ("lmstudio", ""):
+        return _text("lm_studio_url", DEFAULT_LM_STUDIO_URL), _text("lm_studio_model")
+    if name == "ollama":
+        return (
+            _text("ollama_url", DEFAULT_OLLAMA_URL) or DEFAULT_OLLAMA_URL,
+            _text("ollama_model"),
+        )
+    if name == "runpod":
+        return _text("runpod_url"), _text("runpod_model")
+    return None
+
+
 def build_provider(settings, api_key=None, plugin_manager=None):
     """settings 辞書から OCRProvider インスタンスを生成するファクトリ。
 
@@ -521,7 +561,7 @@ def build_provider(settings, api_key=None, plugin_manager=None):
         from pagefolio.ocr_providers import OllamaProvider
 
         return OllamaProvider(
-            url=settings.get("ollama_url", "http://localhost:11434"),
+            url=settings.get("ollama_url", DEFAULT_OLLAMA_URL),
             model=settings.get("ollama_model", ""),
             timeout=int(settings.get("ocr_timeout", DEFAULT_OCR_TIMEOUT)),
             max_tokens=int(settings.get("ocr_max_tokens", DEFAULT_OCR_MAX_TOKENS)),
@@ -588,8 +628,17 @@ class OCRMixin:
         """OCR ダイアログを開いて非同期実行する"""
         from pagefolio.ocr_dialog import OCRDialog
 
-        url = self.settings.get("lm_studio_url", DEFAULT_LM_STUDIO_URL)
-        model = self.settings.get("lm_studio_model", "")
+        # OCRDialog の表示欄（url_var / model_var）の初期値は、有効なプロバイダの
+        # 接続先から決める（以前は常に lm_studio_* で、ollama 選択時に実行時の
+        # プロバイダ再生成が LM Studio の URL へ送信していた）。ローカル接続先設定を
+        # 持たないプロバイダ（クラウド等）は非表示欄の初期値として従来どおり
+        # lm_studio_* を渡す。
+        endpoint = resolve_local_endpoint(
+            self.settings, self.settings.get("ocr_provider", "")
+        )
+        if endpoint is None:
+            endpoint = resolve_local_endpoint(self.settings, "lmstudio")
+        url, model = endpoint
         preset = self.settings.get("ocr_prompt_preset", "text")
         # V174-2: 外部 md ファイル（exe と同階層）があれば設定欄より優先
         from pagefolio.settings import load_custom_prompt

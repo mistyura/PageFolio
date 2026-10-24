@@ -1502,8 +1502,11 @@ class TestClearResetsFatalState:
 
         from pagefolio.ocr_dialog import OCRDialog
 
+        # model_var は設定の読み取り専用ミラー。_on_run は接続先を有効スナップショット
+        # （settings）から解決するため、モデル値を settings 側にも揃えて表示欄との
+        # 食い違い（=書き戻し発生）を起こさない
         app = types.SimpleNamespace(
-            settings={"ocr_provider": "lmstudio"},
+            settings={"ocr_provider": "lmstudio", "lm_studio_model": "test-model"},
             _session_api_keys={},
             plugin_manager=None,
         )
@@ -1617,7 +1620,10 @@ class TestOcrDialogOnRun:
             settings={
                 "ocr_provider": "lmstudio",
                 "lm_studio_url": "http://localhost:1234",
-                "lm_studio_model": "",
+                # model_var は設定の読み取り専用ミラー（編集導線は LLMConfigDialog に
+                # 一元化済み）。_on_run は接続先を有効スナップショットから解決するため、
+                # model_var のライブ値と同じ値を設定側にも持たせる
+                "lm_studio_model": model,
                 "ocr_timeout": 120,
                 "ocr_max_tokens": -1,
                 "ocr_temperature": 0.1,

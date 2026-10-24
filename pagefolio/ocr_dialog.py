@@ -19,6 +19,7 @@ from pagefolio.ocr import (
     build_provider,
     has_embedded_text,
     page_to_png_b64,
+    resolve_local_endpoint,
     resolve_ocr_prompt,
     resolve_summary_prompt,
 )
@@ -100,6 +101,19 @@ def _lookup_price(model: str) -> tuple[float, float]:
         if key in model:
             return prices
     return _PRICE_FALLBACK
+
+
+def _set_var_if_changed(var, value):
+    """Tk 変数の値が異なるときだけ書き換える（不要な write トレースを避ける）。
+
+    ウィジェット破棄後などの TclError は表示更新の失敗に過ぎないため握りつぶす
+    （呼び出し元の接続先決定は var ではなく解決済みの値で行われる）。
+    """
+    try:
+        if var.get() != value:
+            var.set(value)
+    except tk.TclError as e:
+        logger.debug("表示変数の更新をスキップ: %s", type(e).__name__)
 
 
 def _resolved_host_text(name, settings, lang_dict):
@@ -1120,17 +1134,20 @@ class OCRDialog(tk.Toplevel):
             elif name == "ollama":
                 from pagefolio.ocr_providers import OllamaProvider
 
+                # 接続先の解決は _start_ocr / _on_run と同じ resolve_local_endpoint に
+                # 一本化（表示欄と実送信先の食い違いを構造的に防ぐ）
+                ollama_url, ollama_model = resolve_local_endpoint(
+                    self.app.settings, "ollama"
+                )
                 self.provider = OllamaProvider(
-                    url=self.app.settings.get("ollama_url", "http://localhost:11434"),
-                    model=self.app.settings.get("ollama_model", ""),
+                    url=ollama_url,
+                    model=ollama_model,
                     timeout=int(self.app.settings.get("ocr_timeout", 120)),
                     max_tokens=int(self.app.settings.get("ocr_max_tokens", -1)),
                     temperature=float(self.app.settings.get("ocr_temperature", 0.1)),
                 )
-                self.url_var.set(
-                    self.app.settings.get("ollama_url", "http://localhost:11434")
-                )
-                self.model_var.set(self.app.settings.get("ollama_model", ""))
+                self.url_var.set(ollama_url)
+                self.model_var.set(ollama_model)
             elif name == "runpod":
                 from pagefolio.ocr import _resolve_api_key, build_provider
                 from pagefolio.ocr_providers import OCRAPIKeyError
@@ -1145,23 +1162,25 @@ class OCRDialog(tk.Toplevel):
                     api_key=api_key,
                     plugin_manager=getattr(self.app, "plugin_manager", None),
                 )
-                self.url_var.set(self.app.settings.get("runpod_url", ""))
-                self.model_var.set(self.app.settings.get("runpod_model", ""))
+                runpod_url, runpod_model = resolve_local_endpoint(
+                    self.app.settings, "runpod"
+                )
+                self.url_var.set(runpod_url)
+                self.model_var.set(runpod_model)
             elif name in ("lmstudio", ""):
                 from pagefolio.ocr_providers import LMStudioProvider
 
+                lm_url, lm_model = resolve_local_endpoint(self.app.settings, "lmstudio")
                 self.provider = LMStudioProvider(
-                    url=self.app.settings.get("lm_studio_url", "http://localhost:1234"),
-                    model=self.app.settings.get("lm_studio_model", ""),
+                    url=lm_url,
+                    model=lm_model,
                     timeout=int(self.app.settings.get("ocr_timeout", 120)),
                     max_tokens=int(self.app.settings.get("ocr_max_tokens", -1)),
                     temperature=float(self.app.settings.get("ocr_temperature", 0.1)),
                 )
                 # (g) LM Studio 欄の Tk 変数も settings に合わせて更新
-                self.url_var.set(
-                    self.app.settings.get("lm_studio_url", "http://localhost:1234")
-                )
-                self.model_var.set(self.app.settings.get("lm_studio_model", ""))
+                self.url_var.set(lm_url)
+                self.model_var.set(lm_model)
             elif name == "off":
                 # V190-SAFE-03・D-06/D-07・T-01-06: OCR ダイアログを開いたまま
                 # LLM 設定で off へ切替えた実在経路。provider は差し替えず
@@ -1531,16 +1550,30 @@ class OCRDialog(tk.Toplevel):
             self._force_ocr = False
 
         # CR-02（中立化版）: プロバイダ種別に応じて provider を再生成する
-        # lmstudio / off → LMStudioProvider（live 値で再生成・後方互換維持）
+        # lmstudio / ollama / runpod → 有効スナップショット s の接続先設定で再生成
         # claude → build_provider 経由で ClaudeProvider（api_key は引数注入のみ・D-01）
-        try:
-            url = self.url_var.get().strip()
-        except (tk.TclError, ValueError):
-            url = getattr(self.provider, "url", "") if self.provider else ""
-        try:
-            model = self.model_var.get().strip()
-        except (tk.TclError, ValueError):
-            model = getattr(self.provider, "model", "") if self.provider else ""
+        #
+        # 接続先 (url, model) は表示欄（url_var / model_var）ではなく有効スナップ
+        # ショット s から決める。表示欄は _start_ocr が起動時のプロバイダ用に初期化した
+        # 値で、フォールバック（lmstudio -> ollama 等）で s のプロバイダが変わっても
+        # 追随しないため、それを真値にすると ollama でも LM Studio の URL へ送信して
+        # いた。解決した接続先は表示欄へ書き戻し、表示と実送信先を一致させる。
+        endpoint = resolve_local_endpoint(s, name)
+        if endpoint is not None:
+            url, model = endpoint
+            _set_var_if_changed(self.url_var, url)
+            _set_var_if_changed(self.model_var, model)
+        else:
+            # ローカル接続先設定を持たないプロバイダ（クラウド/tesseract/プラグイン
+            # 等）は url/model を送信に使わない。従来どおり表示欄のライブ値を読む。
+            try:
+                url = self.url_var.get().strip()
+            except (tk.TclError, ValueError):
+                url = getattr(self.provider, "url", "") if self.provider else ""
+            try:
+                model = self.model_var.get().strip()
+            except (tk.TclError, ValueError):
+                model = getattr(self.provider, "model", "") if self.provider else ""
         try:
             raw_mt = int(self.max_tokens_var.get())
             max_tokens = max(-1, min(MAX_OCR_MAX_TOKENS, raw_mt))
@@ -1620,7 +1653,9 @@ class OCRDialog(tk.Toplevel):
                 plugin_manager=getattr(self.app, "plugin_manager", None),
             )
         elif name in ("lmstudio", "", "off"):
-            # lmstudio / off: ライブ値で再生成（CR-02 後方互換）
+            # lmstudio: 有効スナップショットの接続先（上で解決済みの url/model）で
+            # 再生成する。off は入口で中断済みのためここには到達しない
+            # （構造的安全網として残す）。
             from pagefolio.ocr_providers import LMStudioProvider
 
             self.provider = LMStudioProvider(
@@ -2032,8 +2067,12 @@ class OCRDialog(tk.Toplevel):
             return
         self._done = True
         if kind == "connection":
+            # 接続エラーは全プロバイダが送出するため、LM Studio 固定文言ではなく
+            # 実際に接続できなかったプロバイダ名と接続先を表示する。
             user_msg = self._L["ocr_err_connection"].format(
-                url=self.url_var.get(), error=msg
+                provider=self._provider_display_name(),
+                url=self._connection_target_text(),
+                error=msg,
             )
         elif kind == "timeout":
             user_msg = self._L["ocr_err_timeout"].format(
@@ -2061,6 +2100,26 @@ class OCRDialog(tk.Toplevel):
         self._after_run_ui_reset()
         # V180-FALL-02: フォールバック提案フック（D-11）
         self._propose_fallback(kind, msg)
+
+    def _connection_target_text(self):
+        """接続エラー文言に表示する「実際に接続しようとした先」を返す。
+
+        優先順: ① 実行中プロバイダの url（LM Studio / Ollama / RunPod では
+        実送信先そのもの）② 有効設定から解決したローカル接続先
+        ③ クラウド等の送信先ホスト
+        （_resolved_host_text。解決不能なら送信先不明の旨）。表示欄 url_var は
+        ローカル系の初期値であり、クラウドプロバイダのときは無関係な LM Studio の値が
+        残り得るため参照しない。
+        """
+        url = getattr(self.provider, "url", "")
+        if isinstance(url, str) and url:
+            return url
+        settings = getattr(self, "_active_ocr_settings", None) or self.app.settings
+        name = settings.get("ocr_provider", "")
+        endpoint = resolve_local_endpoint(settings, name)
+        if endpoint is not None and endpoint[0]:
+            return endpoint[0]
+        return _resolved_host_text(name, settings, self._L)
 
     def _append_resume_hint(self):
         """部分的に成功している場合、未処理ページ数と再開案内を結果欄に追記する"""
