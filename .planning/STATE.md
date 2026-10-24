@@ -4,18 +4,18 @@ milestone: v1.10.0
 milestone_name: 多重起動防止・起動操作の改善
 current_phase: 06
 current_phase_name: サンプル配布とリリース検証
-current_plan: 3
+current_plan: 4
 status: executing
-stopped_at: Completed 06-02-PLAN.md
-last_updated: "2026-10-24T06:19:24.034Z"
+stopped_at: Completed 06-03-PLAN.md
+last_updated: "2026-10-24T06:53:37.447Z"
 last_activity: 2026-10-24
 last_activity_desc: Phase 06 execution resumed (wave continue)
-state_head: e748ca880b58f78f12569913ff3ee32c71447d2d
+state_head: 7536b8a8cf9385a6bde5f0cc0ea0f02385ddb957
 progress:
   total_phases: 3
   completed_phases: 2
   total_plans: 16
-  completed_plans: 12
+  completed_plans: 13
   percent: 67
 ---
 
@@ -47,9 +47,9 @@ See: .planning/PROJECT.md (updated 2026-10-24)
 ## Current Position
 
 Phase: 06 (サンプル配布とリリース検証) — EXECUTING
-Current Plan: 3
+Current Plan: 4
 Total Plans in Phase: 6
-Plan: 3 of 6
+Plan: 4 of 6
 Status: Ready to execute
 Last activity: 2026-10-24 — Phase 06 execution resumed (wave continue)
 
@@ -180,6 +180,7 @@ Phase 4は自動受入/A1〜A5と証拠照合を行い、未実施人手W項目�
 | Phase 05 P02 | 27min | 2 tasks | 7 files |
 | Phase 06 P01 | 1h | 2 tasks | 6 files |
 | Phase 06 P02 | 1.5h | 2 tasks | 7 files |
+| Phase 06 P03 | 約3時間 | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -316,6 +317,8 @@ Decisions are logged in PROJECT.md Key Decisions table.
 - [Phase 06]: 06-01: 管理済み再ビルドは同梱reportのrun_idから外部run reportを引き、manifest/hash/dirsの三者一致を要求。成功reportは書込成功後にのみ反映
 - [Phase 06]: [06-02] ガイドの詳細リンクは同梱する docs/CONFIGURATION.md のみとし、同梱されない docs/PLUGINS.md はテキスト案内にする。plugins は自動移行せず旧フォルダー保持で既存導入手順へ案内する
 - [Phase 06]: [06-02] Ruff等の版表記の同期は、qv7 の requirements.txt 変更が commit されるまで見送り（docs が commit 済み pin と矛盾するのを避ける）
+- [Phase 06]: 06-03: audit入力schemaは06-UAT-PREPARATION.mdを正本とし、RELEASE-GATE.mdはrelease-gate付きjsonブロックを機械可読部とする
+- [Phase 06]: 06-03: fake OCRは描画hashを事前確定できないため既定は最初の1画像をp1へ束縛(対象ページ数超過は拒否)、事前登録hashで厳格モード
 
 ### Pending Todos
 
@@ -444,8 +447,8 @@ v1.9.0 クローズ時点で次マイルストーンへ引き継ぐ未解決項�
 
 **Resume file:** None
 
-Last session: 2026-10-24T06:19:23.524Z
-Stopped at: Completed 06-02-PLAN.md
+Last session: 2026-10-24T06:53:36.901Z
+Stopped at: Completed 06-03-PLAN.md
 
 ## Operator Next Steps
 
