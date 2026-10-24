@@ -1140,24 +1140,33 @@ def test_simultaneous_exit_audit_native_wm_close(tmp_path):
         _reclaim([child])
 
 
-def test_takeover_two_candidates_after_confirmed_initialization_death(tmp_path):
+def _takeover_race(tmp_path, role_prefix):
+    """初期化中ownerを殺し、2候補の引継ぎ競合を実processで走らせる。
+
+    (各候補のscenario結果, 各候補のresource-audit)を候補の順で返す。"""
     namespace = uuid4().hex
     owner, fixture = _spawn(tmp_path, namespace, "initializing-owner")
     candidates = []
     try:
         _wait_file(owner, fixture / "ready")
-        candidates = [_spawn(tmp_path, namespace, f"takeover-{i}") for i in range(2)]
+        candidates = [
+            _spawn(tmp_path, namespace, f"{role_prefix}-{i}") for i in range(2)
+        ]
         for child, path in candidates:
             _wait_file(child, path / "observed")
         owner.kill()
         owner.communicate()
-        deadline = time.monotonic() + 6
+        # 勝者の実アプリ初期化は環境負荷で1〜7秒に揺れる。試験の待機は製品の
+        # 二次起動期限（5秒）と切り離し、Python/Tk初期化と同じ上限にする。
+        deadline = time.monotonic() + _BOOTSTRAP_TIMEOUT
         while (
             not any((path / "ready").exists() for _, path in candidates)
             and time.monotonic() < deadline
         ):
             time.sleep(0.02)
         assert sum((path / "ready").exists() for _, path in candidates) == 1
+        # 敗者はreadyの直後に合流するか、自身の5秒期限で終了する。どちらもready
+        # 観測の後は短時間で済むため、この待機はreadyを基準にした5秒で足りる。
         deadline = time.monotonic() + 5
         while (
             sum(child.poll() is not None for child, _ in candidates) < 1
@@ -1166,15 +1175,52 @@ def test_takeover_two_candidates_after_confirmed_initialization_death(tmp_path):
             time.sleep(0.02)
         (tmp_path / "stop-all").touch()
         results = [_finish(child) for child, _ in candidates]
-        assert sum(r["constructed"] for r in results) == 1
         audits = [
             json.loads((path / "resource-audit.json").read_text())
             for _, path in candidates
         ]
-        assert sum(a.get("takeover_claim") == "acquired" for a in audits) == 1
-        assert all(a.get("death_confirmed") for a in audits)
+        return results, audits
     finally:
         _reclaim([owner] + [child for child, _ in candidates])
+
+
+def test_takeover_loser_expires_when_winner_initialization_exceeds_deadline(tmp_path):
+    """勝者の初期化が敗者の5秒期限を超えたとき、敗者のexpiredは仕様どおりの結果。
+
+    実アプリ初期化の揺れ（takeover-loser-expired）で偶然に起きる経路を、勝者の
+    初期化を決定的に遅らせて固定する。製品の5000ms期限は変えない。"""
+    results, audits = _takeover_race(tmp_path, "takeover-slow")
+    winner = next(
+        i for i, a in enumerate(audits) if a.get("takeover_claim") == "acquired"
+    )
+    loser = 1 - winner
+    assert sum(a.get("takeover_claim") == "acquired" for a in audits) == 1
+    assert all(a.get("death_confirmed") for a in audits)
+    assert results[winner]["constructed"] == 1
+    assert results[loser]["constructed"] == 0
+    assert audits[loser]["terminal_result"] == "expired"
+    assert results[loser]["result"] == "expired"
+    assert 5000 <= audits[loser]["elapsed"] < 6000
+    assert audits[winner]["ready_tick"] - audits[loser]["started_tick"] >= 4500
+
+
+def test_takeover_two_candidates_after_confirmed_initialization_death(tmp_path):
+    results, audits = _takeover_race(tmp_path, "takeover")
+    assert sum(r["constructed"] for r in results) == 1
+    assert sum(a.get("takeover_claim") == "acquired" for a in audits) == 1
+    assert all(a.get("death_confirmed") for a in audits)
+    winner = next(
+        i for i, a in enumerate(audits) if a.get("takeover_claim") == "acquired"
+    )
+    loser = audits[1 - winner]
+    # 実アプリ初期化は環境で変動する。敗者は勝者へ合流するのが通常。勝者の準備が
+    # 敗者の5秒期限の近傍かそれ以後だった場合に限り、expiredも仕様どおりの結果。
+    # 条件を満たさないexpiredや他の結果は従来どおり失敗にする。
+    if loser["terminal_result"] == "expired":
+        assert 5000 <= loser["elapsed"] < 6000
+        assert audits[winner]["ready_tick"] - loser["started_tick"] >= 4500
+    else:
+        assert loser["terminal_result"] in {"completed", "foreground_denied"}
 
 
 def test_lifecycle_cancel_quit_keeps_owner_then_restarts(tmp_path):
@@ -2373,6 +2419,9 @@ def _run_scenario(fixture, namespace, role):
                     raise RuntimeError("tracer-initialization-failure")
                 if role.startswith("simultaneous-slow-"):
                     time.sleep(8.5)
+                if role.startswith("takeover-slow-"):
+                    # 引継ぎ勝者の初期化が、敗者の5秒期限を確実に超える決定的な遅延。
+                    time.sleep(6.5)
                 super().__init__(root)
                 if role.startswith("simultaneous-"):
                     self._audit_exit_entries(root)
@@ -2645,7 +2694,9 @@ def _run_scenario(fixture, namespace, role):
             if role == "request-timeout":
                 assert reason == "expired"
                 return
-            if role.startswith("simultaneous-") and reason == "expired":
+            # 初期化が5秒を超えた場合のexpiredだけは仕様どおりの案内。理由が
+            # expired以外の失敗は従来どおり異常として扱う。
+            if role.startswith(("simultaneous-", "takeover-")) and reason == "expired":
                 return
             raise AssertionError(f"正常tracerで失敗案内: {reason}")
 
