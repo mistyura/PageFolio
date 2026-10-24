@@ -227,3 +227,7 @@ State Aを再監査した。`verify:post` のnyquist hookは有効。6 PLAN/6 SU
 validate-phase後の単一全件pytestは1629 passed / 1 warning / 228.84秒（終了値0）。その後phase.completeを実行し、要件ID解析警告の5件はrequirements.mark-completeで全10書込面の成功を確認。ROADMAPのPhase行・ProgressとSTATE/state.jsonを同期した。正式完了後の tests/test_gsd_dod.py は19 passed / 1 warning / 0.64秒（終了値0）。W未実施とWR-01の移管は維持する。
 
 追補: 改行整備後のDoD再確認は一時ディレクトリへのPermissionErrorとなったため、同一19件をサンドボックス外で実行し19 passed / 1 warning / 0.16秒（終了値0）。製品テストの失敗ではなく試験用tempへのアクセス制限だった。
+
+## 2026-10-24 Phase 6前提の再監査（Phase 5変更後）
+
+Phase 4検証報告のstale解消（`dd10ce7`、21/21 passed、digest `v3:sha256:5011dcc6...`）に続き、06-04最終build前の依存として実走した。現行HEAD（`dd10ce7`）で `tests/test_startup_control.py tests/test_startup_focus.py tests/test_startup_notice.py tests/test_gsd_dod.py tests/test_startup_windows.py` を実行し **238 passed, 1 warning in 276.15s**、失敗/ERROR/skipなし（basetemp `C:\Users\shdwf\AppData\Local\Temp\pf04_validate_1792826444`）。5要件のMISSING/PARTIALは0でNyquist compliantを維持する。追加テストは不要のため監査子エージェントは起動していない。人手Wと実EXEは06-UAT-CARRYOVERでnot-runのままであり、本監査の合格に含めない。
