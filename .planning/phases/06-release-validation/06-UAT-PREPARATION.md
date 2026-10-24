@@ -19,10 +19,10 @@ Phase 完了は別の状態であり、本書のどの記述も受入合格・�
 | 実配布EXE（v1.10.0 最終版） | **作成済み**（06-04-01 世代2: 初回/再 build 各 1 回、最終EXE sha256 `b3d4a07e…8c17`。`06-BUILD-EVIDENCE.json`。世代1の `f918bf76…da23` は superseded） |
 | 保護 3 名の build 開始前停止・起動時保持・更新/衝突の保持（06-04-02 自動部分） | **実測済み**（`06-PROTECTION-EVIDENCE.json`、世代2の生記録 `06-04g2-t2-result.json`。世代1は `06-04-t2-result.json` に原本保持） |
 | X01〜X05 の外部 lock/tmp/hash 成立（実EXE上） | **実測済み**（同上。通知・操作時点の人手観測は 06-05-02） |
-| 実配布EXEへの fake OCR 接続（ocr-single）・native modal（w05b-modal） | **not-run（利用者の操作と回答待ち）**。回答を得るまで成立済みにしない |
+| 実配布EXEへの fake OCR 接続（ocr-single）・native modal（w05b-modal） | **準備段階として実測・記録済み**（ocr-single = `cd4dc81a…`、w05b-modal = `9cea6581…`。`audit --preparation-only` は exit 0）。ただし受入ではない。実際のダブルクリック起動での前景挙動は 06-05-02 の W05b 本受入で人手確認する |
 | W01〜W12・WR-01・X01〜X06 の人手 pass | **not-run**（06-05-02 / 06-06-01） |
 
-世代2について: 製品修正（52258de ollama 選択時の送信先修正 / 7fb41a2 LLM 設定適用後のプロバイダ表示更新）の後に、build・保護・起動・更新・障害 X01〜X05 を新しい最終 EXE で取り直した。世代1（旧 EXE に対する記録）は `06-PROTECTION-EVIDENCE.json` の `previous_generations` に原文のまま保持し、本書の run 参照では `[世代1 superseded]` と表記する。世代1で不成立だった接続実証 2 回（`release-uat-c75a19aa09b84f1788c0dee965915dd7` / `release-uat-034578b2c4b94c2aae9fa70afe620d25`）は成立と記録せず、理由を同 JSON に残す。
+世代2について: 製品修正（52258de ollama 選択時の送信先修正 / 7fb41a2 LLM 設定適用後のプロバイダ表示更新）の後に、build・保護・起動・更新・障害 X01〜X05 を新しい最終 EXE で取り直した。世代1（旧 EXE に対する記録）は `06-PROTECTION-EVIDENCE.json` の `previous_generations` に原文のまま保持し、本書の run 参照では `[世代1 superseded]` と表記する。w05b-modal は有効試行を 2 回得た。先の `release-uat-3dab246a0dd34f6eae066392a88ffd3a` は peer 後の前景が入力中の PowerShell のままで `peer_returned_to_modal=false`（原因未確定）となり準備監査が不成立だったため、利用者の判断で同じ未変更のシナリオを再実行した `release-uat-9cea65811a8c4db998d9dfcf54e849e6` を準備証拠として採用した。3dab246a… は `06-PROTECTION-EVIDENCE.json` の `failed_connection_attempts` に superseded として保持している（破棄しない）。また無効試行 `release-uat-7e4629e4f555465183a070c1efdbfb6e`（クリップボード誤貼り付けで中断）も同所に保持している。世代1で不成立だった接続実証 2 回（`release-uat-c75a19aa09b84f1788c0dee965915dd7` / `release-uat-034578b2c4b94c2aae9fa70afe620d25`）は成立と記録せず、理由を同 JSON に残す。
 
 run 参照（`run-ref: <32桁hex>` 形式の行）は下記の生成ブロックに置く。06-PROTECTION-EVIDENCE.json の
 `run_id` と双方向に一致しない場合、`audit --preparation-only` は不合格になる。ブロックは
@@ -62,7 +62,7 @@ run 参照（`run-ref: <32桁hex>` 形式の行）は下記の生成ブロック
 | run-ref: f7315188f0954ecabc9c8d5ff2447af3 | 更新 no_collision old(initial run tree) |
 | run-ref: 407c0a66363649389729d81b22ba79bb | 更新 no_collision new(final) |
 | run-ref: cd4dc81af699415abcb3be8ad2cb44aa | 接続実証 ocr-single |
-| run-ref: 3dab246a0dd34f6eae066392a88ffd3a | 接続実証 w05b-modal |
+| run-ref: 9cea65811a8c4db998d9dfcf54e849e6 | 接続実証 w05b-modal |
 | run-ref: 4ef38ba7f7df48bda95d3491925bb026 | 障害 X01 |
 | run-ref: c60fc8eba2a449a18df2fbc6bb105a50 | 障害 X02 |
 | run-ref: cb067afb49e04824b36c8e4a0e49c5a2 | 障害 X03 |

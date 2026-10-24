@@ -23,26 +23,31 @@
     },
     "w05b-modal": {
       "typed_answers_verbatim": [
-        "OCR実行中です。",
-        "OCR実行中です。～の画面 Y/Nボタン",
+        "ステータス準備中のまま、結果の表示なし ",
+        "消えずに同じものが前面に出る",
         "準備中",
         "PageFolio UAT 合成OCR結果"
       ],
       "answer_assessment": {
         "status": "valid",
-        "note": "4回とも端末での利用者の直接入力(session user_inputs)。『いいえ』後の『準備中』はOCRダイアログが残り処理中だったという利用者の観測で、orchestrator はこれを『ダイアログ処理継続中』と読む(読みであり、利用者の言葉ではない)"
+        "note": "4件とも端末での利用者の直接入力(session user_inputs)。ただし1件目『ステータス準備中のまま、結果の表示なし』は、問い(確認ダイアログが表示されたら見えたことを入力)に対して確認ダイアログそのものではなくOCRダイアログの状態(ステータス・結果欄)を述べている。確認ダイアログが見えていたことの根拠は利用者の言葉ではなく、同時刻の自動window一覧(#32770『確認』 hwnd 57283200 が visible)である。3件目『準備中』は『いいえ』後もOCRダイアログが処理中だったという利用者の観測で、orchestrator はこれを『ダイアログ処理継続中』と読む(読みであり、利用者の言葉ではない)"
       },
-      "effective_basis": "外部観測(合成server: received→released→completed、attempt 6ee70ff9d65d-1、POST 1件、再送なし、completed_seen=True)+ 利用者の端末入力4件",
+      "effective_basis": "外部観測(合成server: received→released→completed、attempt 6ee70ff9d65d-1、POST 1件、再送なし、completed_seen=True)+ 自動window/foreground観測 + 利用者の端末入力4件(1件目は確認ダイアログではなくOCRダイアログの状態を述べたものとして扱う)",
       "stop_observation": {
-        "stop": "[0] pid 9144 terminated(所有handleで強制終了) / [1] pid 37896 already-exited",
-        "note": "close要求でEXEが終了しなかった(ocr-singleと同じ観測)。06-05-02へ持ち越す"
+        "stop": "[0] pid 18604 terminated(所有handleで強制終了) / [1] pid 20168 already-exited",
+        "note": "close要求でEXEが終了しなかった(ocr-single・前回のw05b試行と同じ観測)。合否判定ではなく観測として06-05-02へ持ち越す"
       },
       "peer_foreground_observation": {
-        "automated_check": "peer_returned_to_modal=false(06-UAT準備の監査 rule: 同hwndの確認ダイアログがpeer後も存在し、かつforegroundがPageFolio本体pidであること)",
-        "facts": "確認ダイアログ(#32770 『確認』、hwnd 25759754)はpeer前後とも同hwndで可視のまま残った。一方 peer起動の約4秒後・およびその直後のforegroundはPageFolio本体(pid 9144)ではなく利用者の端末 Windows PowerShell(pid 24068)のままだった。peer(pid 37896)は可視windowを持たず既に終了していた",
-        "user_typed_observation": "OCR実行中です。～の画面 Y/Nボタン(ダイアログの内容を述べたもので、前面か否かの明言ではない)",
-        "not_inferred": "foregroundが取れなかった原因(Windowsの前面化制約か製品の挙動か)は推測しない。Phase 4の通知前景不一致(notice-foreground-mismatch)と同系統の可能性があるが未分類",
-        "disposition": "監査の機械判定を弱めない。W05b本受入(06-05-02)で『許可API戻りと実foreground』を別記して人手確認する"
+        "automated_check": "peer_returned_to_modal=true(06-UAT準備の監査 rule: 同hwndの確認ダイアログがpeer前後とも可視で、かつpeer後のforegroundがPageFolio本体pid)",
+        "facts": "確認ダイアログ(#32770 『確認』、hwnd 57283200)はpeer前後とも同hwndで可視のまま残った。peer後のforeground(foreground_after_peer)は hwnd 57283200 『確認』 pid 18604(primary、owned_by primary)で、steps の peer 時点のforegroundも同じ。なお modal-up 時点(peer起動前)のforegroundは利用者の端末 Windows PowerShell(pid 24068)だった。peer(pid 20168)は既に終了していた",
+        "scope": "合成peer(別プロセスからの2度目起動)による前面化の観測であり、利用者の実際のダブルクリック起動での前景挙動を確認したものではない",
+        "not_inferred": "前回試行(release-uat-3dab246a…)でpeer後に前景が端末のままだった原因(入力中のPowerShellが前景だったためとみられるが原因未確定)は、本試行の結果から確定させない",
+        "disposition": "実際のダブルクリックでの前景挙動はW05b本受入(06-05-02)で『許可API戻りと実foreground』を別記して人手確認する(利用者判断)"
+      },
+      "attempt_selection": {
+        "adopted_run": "release-uat-9cea65811a8c4db998d9dfcf54e849e6",
+        "reason": "前回の有効試行(release-uat-3dab246a…)は peer_returned_to_modal=false(peer後の前景が端末のPowerShell)で準備監査が不成立だった。利用者が同じ未変更のシナリオ(コミット済み conn_session.py の w05b-modal)を再実行し、この試行を採用すると利用者が決めた(チャットでorchestratorへ)。途中で放棄したダブルクリック版の試作は破棄済みで使っていない",
+        "previous_run": "release-uat-3dab246a0dd34f6eae066392a88ffd3a(failed_connection_attempts に保持)"
       }
     }
   },
@@ -60,10 +65,32 @@
       ],
       "released": false,
       "used_as_evidence": false
+    },
+    {
+      "attempt_run": "release-uat-3dab246a0dd34f6eae066392a88ffd3a",
+      "kind": "w05b-modal",
+      "generation": 2,
+      "status": "superseded",
+      "superseded_by": "release-uat-9cea65811a8c4db998d9dfcf54e849e6",
+      "reason": "peer後の前景が不成立(peer_returned_to_modal=false)。確認ダイアログ(#32770 『確認』、hwnd 25759754)はpeer前後とも同hwndで可視だったが、peer起動の約4秒後およびその直後のforegroundはPageFolio本体(pid 9144)ではなく利用者の端末 Windows PowerShell(pid 24068)のままだった。入力中のPowerShellが前景だったためとみられるが、原因は確定していない(Windowsの前面化制約か製品の挙動かは推測しない)",
+      "server_events": [
+        "received",
+        "released",
+        "completed"
+      ],
+      "released": true,
+      "completed": ["6ee70ff9d65d-1"],
+      "main_pid": 9144,
+      "peer_pid": 37896,
+      "foreground_after_peer": {"pid": 24068, "title": "Windows PowerShell"},
+      "typed_answers_verbatim": [
+        "OCR実行中です。",
+        "OCR実行中です。～の画面 Y/Nボタン",
+        "準備中",
+        "PageFolio UAT 合成OCR結果"
+      ],
+      "used_as_evidence": false,
+      "preserved_note": "有効な実測記録として履歴に保持する(破棄しない)。準備証拠としては採用せず、利用者の判断で再実行した release-uat-9cea65811a8c4db998d9dfcf54e849e6 に置き換えた"
     }
-  ],
-  "status_override": {
-    "status": "recorded-audit-failing",
-    "reason": "ocr-single と w05b-modal の接続実証は実測・記録した(server: 1 POST・再送なし・待機→解放→完了、w05b は modal表示・『いいえ』・同処理完了を確認)が、w05b-modal の peer_returned_to_modal が false(peer後のforegroundがPageFolio本体でなく利用者の端末)のため、準備監査(--preparation-only)が不成立。成立済みにしない"
-  }
+  ]
 }

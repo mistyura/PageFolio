@@ -1291,7 +1291,7 @@
   ],
   "generation_note": "製品修正(52258de/7fb41a2)後の新世代。世代1(78dcfe8)の証拠はprevious_generationsへ原文保持し、上書きしない",
   "version": "v1.10.0",
-  "status": "recorded-audit-failing",
+  "status": "complete",
   "release_allowed": false,
   "purpose_note": "build/保護/起動/更新/障害は自動実測。接続実証(connection)は利用者の回答を得るまで成立済みにしない",
   "build_ref": {
@@ -2045,7 +2045,7 @@
       "run_id": "cd4dc81af699415abcb3be8ad2cb44aa",
       "binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17",
       "tree_sha256": "3436ac39cfd7a426e8a5982fa2f1e9f7bbc87ebd8176721b32d88cec1ff8489a",
-      "observed_at": "2026-10-24T12:34:19.503788+00:00",
+      "observed_at": "2026-10-24T12:56:53.572344+00:00",
       "server": {
         "posts": 1,
         "attempts_by_image": {
@@ -2748,10 +2748,10 @@
     {
       "purpose": "connection-preparation",
       "kind": "w05b-modal",
-      "run_id": "3dab246a0dd34f6eae066392a88ffd3a",
+      "run_id": "9cea65811a8c4db998d9dfcf54e849e6",
       "binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17",
       "tree_sha256": "3436ac39cfd7a426e8a5982fa2f1e9f7bbc87ebd8176721b32d88cec1ff8489a",
-      "observed_at": "2026-10-24T12:34:19.504607+00:00",
+      "observed_at": "2026-10-24T12:56:53.574163+00:00",
       "server": {
         "posts": 1,
         "attempts_by_image": {
@@ -2771,101 +2771,101 @@
           {
             "event": "models",
             "attempt_id": null,
-            "time": "2026-10-24T12:26:50.673602+00:00"
+            "time": "2026-10-24T12:49:21.253698+00:00"
           },
           {
             "event": "received",
             "attempt_id": "6ee70ff9d65d-1",
-            "time": "2026-10-24T12:27:10.580533+00:00"
+            "time": "2026-10-24T12:49:45.066852+00:00"
           },
           {
             "event": "released",
             "attempt_id": "6ee70ff9d65d-1",
-            "time": "2026-10-24T12:30:20.057882+00:00"
+            "time": "2026-10-24T12:52:27.145814+00:00"
           },
           {
             "event": "completed",
             "attempt_id": "6ee70ff9d65d-1",
-            "time": "2026-10-24T12:30:20.061784+00:00"
+            "time": "2026-10-24T12:52:27.147702+00:00"
           }
         ]
       },
       "user_answer": "PageFolio UAT 合成OCR結果",
-      "session_file": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf06_t2_9dded6e883224a7ba1293b767ef019b6\\runs\\release-uat-3dab246a0dd34f6eae066392a88ffd3a\\evidence\\session-w05b-modal.json",
+      "session_file": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf06_t2_9dded6e883224a7ba1293b767ef019b6\\runs\\release-uat-9cea65811a8c4db998d9dfcf54e849e6\\evidence\\session-w05b-modal.json",
       "user_inputs": [
         {
-          "at": "2026-10-24T12:28:16.836814+00:00",
+          "at": "2026-10-24T12:51:35.543346+00:00",
           "prompt": "確認ダイアログが表示されたら、見えたことを入力して Enter:",
-          "text": "OCR実行中です。"
+          "text": "ステータス準備中のまま、結果の表示なし "
         },
         {
-          "at": "2026-10-24T12:29:50.546870+00:00",
+          "at": "2026-10-24T12:52:07.248955+00:00",
           "prompt": "確認ダイアログは消えずに(または同じものが)前面に出ていますか? 見えたことを入力:",
-          "text": "OCR実行中です。～の画面 Y/Nボタン"
+          "text": "消えずに同じものが前面に出る"
         },
         {
-          "at": "2026-10-24T12:30:18.972069+00:00",
+          "at": "2026-10-24T12:52:26.050657+00:00",
           "prompt": "確認ダイアログの『いいえ』を押してください。OCRダイアログが残り、処理が続いていれば、",
           "text": "準備中"
         },
         {
-          "at": "2026-10-24T12:30:33.648886+00:00",
+          "at": "2026-10-24T12:52:39.671106+00:00",
           "prompt": "OCRダイアログの結果欄に『PageFolio UAT 合成OCR結果』が表示されましたか? (同じ処理が完了したか)",
           "text": "PageFolio UAT 合成OCR結果"
         }
       ],
       "expected_text": "PageFolio UAT 合成OCR結果",
       "peer": {
-        "record_pid": 37896,
-        "launched_at": "2026-10-24T12:28:16.906380+00:00",
+        "record_pid": 20168,
+        "launched_at": "2026-10-24T12:51:35.617885+00:00",
         "processes": [
           {
             "role": "primary",
-            "pid": 9144,
-            "created": 134373184112040922,
+            "pid": 18604,
+            "created": 134373197618189885,
             "identity": "same",
             "alive": true,
             "session_id": 1,
             "elevated": false,
             "windows": [
               {
-                "hwnd": 25759754,
+                "hwnd": 57283200,
                 "visible": true,
                 "title": "確認",
                 "class": "#32770",
                 "rect": [
-                  719,
-                  457,
-                  1004,
-                  623
+                  956,
+                  466,
+                  1241,
+                  632
                 ]
               },
               {
-                "hwnd": 1512954,
+                "hwnd": 67178688,
                 "visible": true,
                 "title": "OCR",
                 "class": "TkTopLevel",
                 "rect": [
-                  59,
-                  127,
-                  1225,
-                  846
+                  189,
+                  257,
+                  1355,
+                  976
                 ]
               },
               {
-                "hwnd": 173150790,
+                "hwnd": 7935354,
                 "visible": true,
                 "title": "PageFolio",
                 "class": "TkTopLevel",
                 "rect": [
-                  26,
-                  26,
-                  1242,
-                  865
+                  156,
+                  156,
+                  1372,
+                  995
                 ]
               },
               {
-                "hwnd": 1905878,
+                "hwnd": 45746606,
                 "visible": false,
                 "title": "",
                 "class": "WorkerW",
@@ -2877,7 +2877,7 @@
                 ]
               },
               {
-                "hwnd": 33165054,
+                "hwnd": 6034436,
                 "visible": false,
                 "title": "TclNotifier",
                 "class": "TclNotifier",
@@ -2889,7 +2889,7 @@
                 ]
               },
               {
-                "hwnd": 11538774,
+                "hwnd": 19989778,
                 "visible": false,
                 "title": "GDI+ Window (PageFolio.exe)",
                 "class": "GDI+ Hook Window Class",
@@ -2901,7 +2901,7 @@
                 ]
               },
               {
-                "hwnd": 1053706,
+                "hwnd": 53874396,
                 "visible": false,
                 "title": "EmbeddedMenuWindow",
                 "class": "EmbeddedMenuWindowClass",
@@ -2913,7 +2913,7 @@
                 ]
               },
               {
-                "hwnd": 1774726,
+                "hwnd": 1381096,
                 "visible": false,
                 "title": "MenuWindow",
                 "class": "MenuWindowClass",
@@ -2925,31 +2925,31 @@
                 ]
               },
               {
-                "hwnd": 38931902,
+                "hwnd": 20189544,
                 "visible": false,
                 "title": "",
                 "class": "Wtk_TaskbarHandler",
                 "rect": [
                   0,
                   0,
-                  1306,
-                  761
+                  1436,
+                  891
                 ]
               },
               {
-                "hwnd": 56755088,
+                "hwnd": 21238396,
                 "visible": false,
                 "title": "TtkMonitorWindow",
                 "class": "TtkMonitorClass",
                 "rect": [
-                  26,
-                  26,
-                  1306,
-                  761
+                  130,
+                  130,
+                  1410,
+                  865
                 ]
               },
               {
-                "hwnd": 51383638,
+                "hwnd": 19468334,
                 "visible": false,
                 "title": "MSCTFIME UI",
                 "class": "MSCTFIME UI",
@@ -2961,7 +2961,7 @@
                 ]
               },
               {
-                "hwnd": 34082060,
+                "hwnd": 7345092,
                 "visible": false,
                 "title": "Default IME",
                 "class": "IME",
@@ -2973,7 +2973,7 @@
                 ]
               },
               {
-                "hwnd": 4331150,
+                "hwnd": 48435400,
                 "visible": false,
                 "title": "Default IME",
                 "class": "IME",
@@ -2985,7 +2985,7 @@
                 ]
               },
               {
-                "hwnd": 1709042,
+                "hwnd": 37622332,
                 "visible": false,
                 "title": "",
                 "class": "BingIMESysMessageWindow",
@@ -3000,8 +3000,8 @@
           },
           {
             "role": "peer",
-            "pid": 37896,
-            "created": 134373184969005970,
+            "pid": 20168,
+            "created": 134373198956110295,
             "identity": "gone",
             "alive": false,
             "session_id": null,
@@ -3010,10 +3010,10 @@
           }
         ],
         "foreground": {
-          "hwnd": 656216,
-          "pid": 24068,
-          "title": "Windows PowerShell",
-          "owned_by": null
+          "hwnd": 57283200,
+          "pid": 18604,
+          "title": "確認",
+          "owned_by": "primary"
         },
         "owner_probe": [
           {
@@ -3031,36 +3031,24 @@
       "peer_error": null,
       "steps": [
         {
-          "at": "2026-10-24T12:26:56.334054+00:00",
+          "at": "2026-10-24T12:49:26.957746+00:00",
           "step": "started",
           "windows": {
-            "primary:9144": [
+            "primary:18604": [
               {
-                "hwnd": 11538774,
-                "visible": false,
-                "title": "GDI+ Window (PageFolio.exe)",
-                "class": "GDI+ Hook Window Class",
-                "rect": [
-                  0,
-                  0,
-                  1,
-                  1
-                ]
-              },
-              {
-                "hwnd": 173150790,
+                "hwnd": 7935354,
                 "visible": true,
                 "title": "PageFolio",
                 "class": "TkTopLevel",
                 "rect": [
-                  26,
-                  26,
-                  1242,
-                  865
+                  156,
+                  156,
+                  1372,
+                  995
                 ]
               },
               {
-                "hwnd": 1053706,
+                "hwnd": 53874396,
                 "visible": false,
                 "title": "EmbeddedMenuWindow",
                 "class": "EmbeddedMenuWindowClass",
@@ -3072,7 +3060,7 @@
                 ]
               },
               {
-                "hwnd": 1774726,
+                "hwnd": 1381096,
                 "visible": false,
                 "title": "MenuWindow",
                 "class": "MenuWindowClass",
@@ -3084,43 +3072,31 @@
                 ]
               },
               {
-                "hwnd": 38931902,
+                "hwnd": 20189544,
                 "visible": false,
                 "title": "",
                 "class": "Wtk_TaskbarHandler",
                 "rect": [
                   0,
                   0,
-                  1306,
-                  761
+                  1436,
+                  891
                 ]
               },
               {
-                "hwnd": 56755088,
+                "hwnd": 21238396,
                 "visible": false,
                 "title": "TtkMonitorWindow",
                 "class": "TtkMonitorClass",
                 "rect": [
-                  26,
-                  26,
-                  1306,
-                  761
+                  130,
+                  130,
+                  1410,
+                  865
                 ]
               },
               {
-                "hwnd": 51383638,
-                "visible": false,
-                "title": "MSCTFIME UI",
-                "class": "MSCTFIME UI",
-                "rect": [
-                  0,
-                  0,
-                  0,
-                  0
-                ]
-              },
-              {
-                "hwnd": 34082060,
+                "hwnd": 7345092,
                 "visible": false,
                 "title": "Default IME",
                 "class": "IME",
@@ -3132,10 +3108,10 @@
                 ]
               },
               {
-                "hwnd": 1709042,
+                "hwnd": 19468334,
                 "visible": false,
-                "title": "",
-                "class": "BingIMESysMessageWindow",
+                "title": "MSCTFIME UI",
+                "class": "MSCTFIME UI",
                 "rect": [
                   0,
                   0,
@@ -3146,42 +3122,42 @@
             ]
           },
           "foreground": {
-            "hwnd": 173150790,
-            "pid": 9144,
-            "title": "PageFolio"
+            "hwnd": 1577956,
+            "pid": 30552,
+            "title": "無題-1 * - Mery"
           }
         },
         {
-          "at": "2026-10-24T12:27:10.582766+00:00",
+          "at": "2026-10-24T12:49:45.211820+00:00",
           "step": "received",
           "windows": {
-            "primary:9144": [
+            "primary:18604": [
               {
-                "hwnd": 1512954,
+                "hwnd": 67178688,
                 "visible": true,
                 "title": "OCR",
                 "class": "TkTopLevel",
                 "rect": [
-                  59,
-                  127,
-                  1225,
-                  846
+                  189,
+                  257,
+                  1355,
+                  976
                 ]
               },
               {
-                "hwnd": 173150790,
+                "hwnd": 7935354,
                 "visible": true,
                 "title": "PageFolio",
                 "class": "TkTopLevel",
                 "rect": [
-                  26,
-                  26,
-                  1242,
-                  865
+                  156,
+                  156,
+                  1372,
+                  995
                 ]
               },
               {
-                "hwnd": 1905878,
+                "hwnd": 45746606,
                 "visible": false,
                 "title": "",
                 "class": "WorkerW",
@@ -3193,7 +3169,7 @@
                 ]
               },
               {
-                "hwnd": 33165054,
+                "hwnd": 6034436,
                 "visible": false,
                 "title": "TclNotifier",
                 "class": "TclNotifier",
@@ -3205,7 +3181,7 @@
                 ]
               },
               {
-                "hwnd": 11538774,
+                "hwnd": 19989778,
                 "visible": false,
                 "title": "GDI+ Window (PageFolio.exe)",
                 "class": "GDI+ Hook Window Class",
@@ -3217,7 +3193,7 @@
                 ]
               },
               {
-                "hwnd": 1053706,
+                "hwnd": 53874396,
                 "visible": false,
                 "title": "EmbeddedMenuWindow",
                 "class": "EmbeddedMenuWindowClass",
@@ -3229,7 +3205,7 @@
                 ]
               },
               {
-                "hwnd": 1774726,
+                "hwnd": 1381096,
                 "visible": false,
                 "title": "MenuWindow",
                 "class": "MenuWindowClass",
@@ -3241,31 +3217,31 @@
                 ]
               },
               {
-                "hwnd": 38931902,
+                "hwnd": 20189544,
                 "visible": false,
                 "title": "",
                 "class": "Wtk_TaskbarHandler",
                 "rect": [
                   0,
                   0,
-                  1306,
-                  761
+                  1436,
+                  891
                 ]
               },
               {
-                "hwnd": 56755088,
+                "hwnd": 21238396,
                 "visible": false,
                 "title": "TtkMonitorWindow",
                 "class": "TtkMonitorClass",
                 "rect": [
-                  26,
-                  26,
-                  1306,
-                  761
+                  130,
+                  130,
+                  1410,
+                  865
                 ]
               },
               {
-                "hwnd": 51383638,
+                "hwnd": 19468334,
                 "visible": false,
                 "title": "MSCTFIME UI",
                 "class": "MSCTFIME UI",
@@ -3277,7 +3253,7 @@
                 ]
               },
               {
-                "hwnd": 34082060,
+                "hwnd": 7345092,
                 "visible": false,
                 "title": "Default IME",
                 "class": "IME",
@@ -3289,7 +3265,7 @@
                 ]
               },
               {
-                "hwnd": 4331150,
+                "hwnd": 48435400,
                 "visible": false,
                 "title": "Default IME",
                 "class": "IME",
@@ -3301,7 +3277,7 @@
                 ]
               },
               {
-                "hwnd": 1709042,
+                "hwnd": 37622332,
                 "visible": false,
                 "title": "",
                 "class": "BingIMESysMessageWindow",
@@ -3315,54 +3291,54 @@
             ]
           },
           "foreground": {
-            "hwnd": 1512954,
-            "pid": 9144,
+            "hwnd": 67178688,
+            "pid": 18604,
             "title": "OCR"
           }
         },
         {
-          "at": "2026-10-24T12:28:16.839767+00:00",
+          "at": "2026-10-24T12:51:35.545985+00:00",
           "step": "modal-up",
           "windows": {
-            "primary:9144": [
+            "primary:18604": [
               {
-                "hwnd": 25759754,
+                "hwnd": 57283200,
                 "visible": true,
                 "title": "確認",
                 "class": "#32770",
                 "rect": [
-                  719,
-                  457,
-                  1004,
-                  623
+                  956,
+                  466,
+                  1241,
+                  632
                 ]
               },
               {
-                "hwnd": 1512954,
+                "hwnd": 67178688,
                 "visible": true,
                 "title": "OCR",
                 "class": "TkTopLevel",
                 "rect": [
-                  59,
-                  127,
-                  1225,
-                  846
+                  189,
+                  257,
+                  1355,
+                  976
                 ]
               },
               {
-                "hwnd": 173150790,
+                "hwnd": 7935354,
                 "visible": true,
                 "title": "PageFolio",
                 "class": "TkTopLevel",
                 "rect": [
-                  26,
-                  26,
-                  1242,
-                  865
+                  156,
+                  156,
+                  1372,
+                  995
                 ]
               },
               {
-                "hwnd": 1905878,
+                "hwnd": 45746606,
                 "visible": false,
                 "title": "",
                 "class": "WorkerW",
@@ -3374,7 +3350,7 @@
                 ]
               },
               {
-                "hwnd": 33165054,
+                "hwnd": 6034436,
                 "visible": false,
                 "title": "TclNotifier",
                 "class": "TclNotifier",
@@ -3386,7 +3362,7 @@
                 ]
               },
               {
-                "hwnd": 11538774,
+                "hwnd": 19989778,
                 "visible": false,
                 "title": "GDI+ Window (PageFolio.exe)",
                 "class": "GDI+ Hook Window Class",
@@ -3398,7 +3374,7 @@
                 ]
               },
               {
-                "hwnd": 1053706,
+                "hwnd": 53874396,
                 "visible": false,
                 "title": "EmbeddedMenuWindow",
                 "class": "EmbeddedMenuWindowClass",
@@ -3410,7 +3386,7 @@
                 ]
               },
               {
-                "hwnd": 1774726,
+                "hwnd": 1381096,
                 "visible": false,
                 "title": "MenuWindow",
                 "class": "MenuWindowClass",
@@ -3422,31 +3398,31 @@
                 ]
               },
               {
-                "hwnd": 38931902,
+                "hwnd": 20189544,
                 "visible": false,
                 "title": "",
                 "class": "Wtk_TaskbarHandler",
                 "rect": [
                   0,
                   0,
-                  1306,
-                  761
+                  1436,
+                  891
                 ]
               },
               {
-                "hwnd": 56755088,
+                "hwnd": 21238396,
                 "visible": false,
                 "title": "TtkMonitorWindow",
                 "class": "TtkMonitorClass",
                 "rect": [
-                  26,
-                  26,
-                  1306,
-                  761
+                  130,
+                  130,
+                  1410,
+                  865
                 ]
               },
               {
-                "hwnd": 51383638,
+                "hwnd": 19468334,
                 "visible": false,
                 "title": "MSCTFIME UI",
                 "class": "MSCTFIME UI",
@@ -3458,7 +3434,7 @@
                 ]
               },
               {
-                "hwnd": 34082060,
+                "hwnd": 7345092,
                 "visible": false,
                 "title": "Default IME",
                 "class": "IME",
@@ -3470,7 +3446,7 @@
                 ]
               },
               {
-                "hwnd": 4331150,
+                "hwnd": 48435400,
                 "visible": false,
                 "title": "Default IME",
                 "class": "IME",
@@ -3482,7 +3458,7 @@
                 ]
               },
               {
-                "hwnd": 1709042,
+                "hwnd": 37622332,
                 "visible": false,
                 "title": "",
                 "class": "BingIMESysMessageWindow",
@@ -3502,48 +3478,48 @@
           }
         },
         {
-          "at": "2026-10-24T12:28:21.013087+00:00",
+          "at": "2026-10-24T12:51:39.725108+00:00",
           "step": "peer",
           "windows": {
-            "primary:9144": [
+            "primary:18604": [
               {
-                "hwnd": 25759754,
+                "hwnd": 57283200,
                 "visible": true,
                 "title": "確認",
                 "class": "#32770",
                 "rect": [
-                  719,
-                  457,
-                  1004,
-                  623
+                  956,
+                  466,
+                  1241,
+                  632
                 ]
               },
               {
-                "hwnd": 1512954,
+                "hwnd": 67178688,
                 "visible": true,
                 "title": "OCR",
                 "class": "TkTopLevel",
                 "rect": [
-                  59,
-                  127,
-                  1225,
-                  846
+                  189,
+                  257,
+                  1355,
+                  976
                 ]
               },
               {
-                "hwnd": 173150790,
+                "hwnd": 7935354,
                 "visible": true,
                 "title": "PageFolio",
                 "class": "TkTopLevel",
                 "rect": [
-                  26,
-                  26,
-                  1242,
-                  865
+                  156,
+                  156,
+                  1372,
+                  995
                 ]
               },
               {
-                "hwnd": 1905878,
+                "hwnd": 45746606,
                 "visible": false,
                 "title": "",
                 "class": "WorkerW",
@@ -3555,7 +3531,7 @@
                 ]
               },
               {
-                "hwnd": 33165054,
+                "hwnd": 6034436,
                 "visible": false,
                 "title": "TclNotifier",
                 "class": "TclNotifier",
@@ -3567,7 +3543,7 @@
                 ]
               },
               {
-                "hwnd": 11538774,
+                "hwnd": 19989778,
                 "visible": false,
                 "title": "GDI+ Window (PageFolio.exe)",
                 "class": "GDI+ Hook Window Class",
@@ -3579,7 +3555,7 @@
                 ]
               },
               {
-                "hwnd": 1053706,
+                "hwnd": 53874396,
                 "visible": false,
                 "title": "EmbeddedMenuWindow",
                 "class": "EmbeddedMenuWindowClass",
@@ -3591,7 +3567,7 @@
                 ]
               },
               {
-                "hwnd": 1774726,
+                "hwnd": 1381096,
                 "visible": false,
                 "title": "MenuWindow",
                 "class": "MenuWindowClass",
@@ -3603,31 +3579,31 @@
                 ]
               },
               {
-                "hwnd": 38931902,
+                "hwnd": 20189544,
                 "visible": false,
                 "title": "",
                 "class": "Wtk_TaskbarHandler",
                 "rect": [
                   0,
                   0,
-                  1306,
-                  761
+                  1436,
+                  891
                 ]
               },
               {
-                "hwnd": 56755088,
+                "hwnd": 21238396,
                 "visible": false,
                 "title": "TtkMonitorWindow",
                 "class": "TtkMonitorClass",
                 "rect": [
-                  26,
-                  26,
-                  1306,
-                  761
+                  130,
+                  130,
+                  1410,
+                  865
                 ]
               },
               {
-                "hwnd": 51383638,
+                "hwnd": 19468334,
                 "visible": false,
                 "title": "MSCTFIME UI",
                 "class": "MSCTFIME UI",
@@ -3639,7 +3615,7 @@
                 ]
               },
               {
-                "hwnd": 34082060,
+                "hwnd": 7345092,
                 "visible": false,
                 "title": "Default IME",
                 "class": "IME",
@@ -3651,7 +3627,7 @@
                 ]
               },
               {
-                "hwnd": 4331150,
+                "hwnd": 48435400,
                 "visible": false,
                 "title": "Default IME",
                 "class": "IME",
@@ -3663,7 +3639,7 @@
                 ]
               },
               {
-                "hwnd": 1709042,
+                "hwnd": 37622332,
                 "visible": false,
                 "title": "",
                 "class": "BingIMESysMessageWindow",
@@ -3675,46 +3651,46 @@
                 ]
               }
             ],
-            "peer:37896": []
+            "peer:20168": []
           },
           "foreground": {
-            "hwnd": 656216,
-            "pid": 24068,
-            "title": "Windows PowerShell",
-            "owned_by": null
+            "hwnd": 57283200,
+            "pid": 18604,
+            "title": "確認",
+            "owned_by": "primary"
           }
         },
         {
-          "at": "2026-10-24T12:30:18.974091+00:00",
+          "at": "2026-10-24T12:52:26.052752+00:00",
           "step": "answered-no",
           "windows": {
-            "primary:9144": [
+            "primary:18604": [
               {
-                "hwnd": 1512954,
+                "hwnd": 67178688,
                 "visible": true,
                 "title": "OCR",
                 "class": "TkTopLevel",
                 "rect": [
-                  59,
-                  127,
-                  1225,
-                  846
+                  189,
+                  257,
+                  1355,
+                  976
                 ]
               },
               {
-                "hwnd": 173150790,
+                "hwnd": 7935354,
                 "visible": true,
                 "title": "PageFolio",
                 "class": "TkTopLevel",
                 "rect": [
-                  26,
-                  26,
-                  1242,
-                  865
+                  156,
+                  156,
+                  1372,
+                  995
                 ]
               },
               {
-                "hwnd": 1905878,
+                "hwnd": 45746606,
                 "visible": false,
                 "title": "",
                 "class": "WorkerW",
@@ -3726,7 +3702,7 @@
                 ]
               },
               {
-                "hwnd": 33165054,
+                "hwnd": 6034436,
                 "visible": false,
                 "title": "TclNotifier",
                 "class": "TclNotifier",
@@ -3738,7 +3714,7 @@
                 ]
               },
               {
-                "hwnd": 11538774,
+                "hwnd": 19989778,
                 "visible": false,
                 "title": "GDI+ Window (PageFolio.exe)",
                 "class": "GDI+ Hook Window Class",
@@ -3750,7 +3726,7 @@
                 ]
               },
               {
-                "hwnd": 1053706,
+                "hwnd": 53874396,
                 "visible": false,
                 "title": "EmbeddedMenuWindow",
                 "class": "EmbeddedMenuWindowClass",
@@ -3762,7 +3738,7 @@
                 ]
               },
               {
-                "hwnd": 1774726,
+                "hwnd": 1381096,
                 "visible": false,
                 "title": "MenuWindow",
                 "class": "MenuWindowClass",
@@ -3774,31 +3750,31 @@
                 ]
               },
               {
-                "hwnd": 38931902,
+                "hwnd": 20189544,
                 "visible": false,
                 "title": "",
                 "class": "Wtk_TaskbarHandler",
                 "rect": [
                   0,
                   0,
-                  1306,
-                  761
+                  1436,
+                  891
                 ]
               },
               {
-                "hwnd": 56755088,
+                "hwnd": 21238396,
                 "visible": false,
                 "title": "TtkMonitorWindow",
                 "class": "TtkMonitorClass",
                 "rect": [
-                  26,
-                  26,
-                  1306,
-                  761
+                  130,
+                  130,
+                  1410,
+                  865
                 ]
               },
               {
-                "hwnd": 51383638,
+                "hwnd": 19468334,
                 "visible": false,
                 "title": "MSCTFIME UI",
                 "class": "MSCTFIME UI",
@@ -3810,7 +3786,7 @@
                 ]
               },
               {
-                "hwnd": 34082060,
+                "hwnd": 7345092,
                 "visible": false,
                 "title": "Default IME",
                 "class": "IME",
@@ -3822,7 +3798,7 @@
                 ]
               },
               {
-                "hwnd": 4331150,
+                "hwnd": 48435400,
                 "visible": false,
                 "title": "Default IME",
                 "class": "IME",
@@ -3834,7 +3810,7 @@
                 ]
               },
               {
-                "hwnd": 1709042,
+                "hwnd": 37622332,
                 "visible": false,
                 "title": "",
                 "class": "BingIMESysMessageWindow",
@@ -3846,17 +3822,17 @@
                 ]
               }
             ],
-            "peer:37896": []
+            "peer:20168": []
           }
         }
       ],
       "stop": [
         {
-          "pid": 9144,
+          "pid": 18604,
           "result": "terminated"
         },
         {
-          "pid": 37896,
+          "pid": 20168,
           "result": "already-exited"
         }
       ],
@@ -3879,102 +3855,107 @@
         "ollama_url"
       ],
       "pdf": {
-        "path": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf06_t2_9dded6e883224a7ba1293b767ef019b6\\runs\\release-uat-3dab246a0dd34f6eae066392a88ffd3a\\fixtures\\ocr-one-page.pdf",
+        "path": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf06_t2_9dded6e883224a7ba1293b767ef019b6\\runs\\release-uat-9cea65811a8c4db998d9dfcf54e849e6\\fixtures\\ocr-one-page.pdf",
         "pages": 1,
         "has_embedded_text": false,
         "images_on_first_page": 1,
-        "sha256": "ecf4434711e194f57d3240db01981b11e03d64093cdea7fc6816a580cbbb4a12"
+        "sha256": "0de8fff87d27df14a93866d5f99709de2280635017db09d4239dba4ca2ef30bd"
       },
       "summary_executed": false,
       "target_pages": 1,
       "ocr_concurrency": 1,
       "modal_shown": true,
-      "peer_returned_to_modal": false,
+      "peer_returned_to_modal": true,
       "answered_no": true,
       "same_request_completed": true,
       "derivation": {
         "modal_before_peer": [
           {
-            "hwnd": 25759754,
+            "hwnd": 57283200,
             "visible": true,
             "title": "確認",
             "class": "#32770",
             "rect": [
-              719,
-              457,
-              1004,
-              623
+              956,
+              466,
+              1241,
+              632
             ]
           }
         ],
         "modal_after_peer": [
           {
-            "hwnd": 25759754,
+            "hwnd": 57283200,
             "visible": true,
             "title": "確認",
             "class": "#32770",
             "rect": [
-              719,
-              457,
-              1004,
-              623
+              956,
+              466,
+              1241,
+              632
             ]
           }
         ],
         "foreground_after_peer": {
-          "hwnd": 656216,
-          "pid": 24068,
-          "title": "Windows PowerShell"
+          "hwnd": 57283200,
+          "pid": 18604,
+          "title": "確認"
         },
         "primary_windows_after_no": [
           {
-            "hwnd": 1512954,
+            "hwnd": 67178688,
             "visible": true,
             "title": "OCR",
             "class": "TkTopLevel",
             "rect": [
-              59,
-              127,
-              1225,
-              846
+              189,
+              257,
+              1355,
+              976
             ]
           },
           {
-            "hwnd": 173150790,
+            "hwnd": 7935354,
             "visible": true,
             "title": "PageFolio",
             "class": "TkTopLevel",
             "rect": [
-              26,
-              26,
-              1242,
-              865
+              156,
+              156,
+              1372,
+              995
             ]
           }
         ],
         "rule": "modal_shown=peer前にprimaryのvisible #32770がある / peer_returned_to_modal=同hwndがpeer後も存在かつforegroundがprimary / answered_no=modal消失かつOCR windowが残存 / same_request_completed=server 1受信・1解放・1完了"
       },
       "typed_answers_verbatim": [
-        "OCR実行中です。",
-        "OCR実行中です。～の画面 Y/Nボタン",
+        "ステータス準備中のまま、結果の表示なし ",
+        "消えずに同じものが前面に出る",
         "準備中",
         "PageFolio UAT 合成OCR結果"
       ],
       "answer_assessment": {
         "status": "valid",
-        "note": "4回とも端末での利用者の直接入力(session user_inputs)。『いいえ』後の『準備中』はOCRダイアログが残り処理中だったという利用者の観測で、orchestrator はこれを『ダイアログ処理継続中』と読む(読みであり、利用者の言葉ではない)"
+        "note": "4件とも端末での利用者の直接入力(session user_inputs)。ただし1件目『ステータス準備中のまま、結果の表示なし』は、問い(確認ダイアログが表示されたら見えたことを入力)に対して確認ダイアログそのものではなくOCRダイアログの状態(ステータス・結果欄)を述べている。確認ダイアログが見えていたことの根拠は利用者の言葉ではなく、同時刻の自動window一覧(#32770『確認』 hwnd 57283200 が visible)である。3件目『準備中』は『いいえ』後もOCRダイアログが処理中だったという利用者の観測で、orchestrator はこれを『ダイアログ処理継続中』と読む(読みであり、利用者の言葉ではない)"
       },
-      "effective_basis": "外部観測(合成server: received→released→completed、attempt 6ee70ff9d65d-1、POST 1件、再送なし、completed_seen=True)+ 利用者の端末入力4件",
+      "effective_basis": "外部観測(合成server: received→released→completed、attempt 6ee70ff9d65d-1、POST 1件、再送なし、completed_seen=True)+ 自動window/foreground観測 + 利用者の端末入力4件(1件目は確認ダイアログではなくOCRダイアログの状態を述べたものとして扱う)",
       "stop_observation": {
-        "stop": "[0] pid 9144 terminated(所有handleで強制終了) / [1] pid 37896 already-exited",
-        "note": "close要求でEXEが終了しなかった(ocr-singleと同じ観測)。06-05-02へ持ち越す"
+        "stop": "[0] pid 18604 terminated(所有handleで強制終了) / [1] pid 20168 already-exited",
+        "note": "close要求でEXEが終了しなかった(ocr-single・前回のw05b試行と同じ観測)。合否判定ではなく観測として06-05-02へ持ち越す"
       },
       "peer_foreground_observation": {
-        "automated_check": "peer_returned_to_modal=false(06-UAT準備の監査 rule: 同hwndの確認ダイアログがpeer後も存在し、かつforegroundがPageFolio本体pidであること)",
-        "facts": "確認ダイアログ(#32770 『確認』、hwnd 25759754)はpeer前後とも同hwndで可視のまま残った。一方 peer起動の約4秒後・およびその直後のforegroundはPageFolio本体(pid 9144)ではなく利用者の端末 Windows PowerShell(pid 24068)のままだった。peer(pid 37896)は可視windowを持たず既に終了していた",
-        "user_typed_observation": "OCR実行中です。～の画面 Y/Nボタン(ダイアログの内容を述べたもので、前面か否かの明言ではない)",
-        "not_inferred": "foregroundが取れなかった原因(Windowsの前面化制約か製品の挙動か)は推測しない。Phase 4の通知前景不一致(notice-foreground-mismatch)と同系統の可能性があるが未分類",
-        "disposition": "監査の機械判定を弱めない。W05b本受入(06-05-02)で『許可API戻りと実foreground』を別記して人手確認する"
+        "automated_check": "peer_returned_to_modal=true(06-UAT準備の監査 rule: 同hwndの確認ダイアログがpeer前後とも可視で、かつpeer後のforegroundがPageFolio本体pid)",
+        "facts": "確認ダイアログ(#32770 『確認』、hwnd 57283200)はpeer前後とも同hwndで可視のまま残った。peer後のforeground(foreground_after_peer)は hwnd 57283200 『確認』 pid 18604(primary、owned_by primary)で、steps の peer 時点のforegroundも同じ。なお modal-up 時点(peer起動前)のforegroundは利用者の端末 Windows PowerShell(pid 24068)だった。peer(pid 20168)は既に終了していた",
+        "scope": "合成peer(別プロセスからの2度目起動)による前面化の観測であり、利用者の実際のダブルクリック起動での前景挙動を確認したものではない",
+        "not_inferred": "前回試行(release-uat-3dab246a…)でpeer後に前景が端末のままだった原因(入力中のPowerShellが前景だったためとみられるが原因未確定)は、本試行の結果から確定させない",
+        "disposition": "実際のダブルクリックでの前景挙動はW05b本受入(06-05-02)で『許可API戻りと実foreground』を別記して人手確認する(利用者判断)"
+      },
+      "attempt_selection": {
+        "adopted_run": "release-uat-9cea65811a8c4db998d9dfcf54e849e6",
+        "reason": "前回の有効試行(release-uat-3dab246a…)は peer_returned_to_modal=false(peer後の前景が端末のPowerShell)で準備監査が不成立だった。利用者が同じ未変更のシナリオ(コミット済み conn_session.py の w05b-modal)を再実行し、この試行を採用すると利用者が決めた(チャットでorchestratorへ)。途中で放棄したダブルクリック版の試作は破棄済みで使っていない",
+        "previous_run": "release-uat-3dab246a0dd34f6eae066392a88ffd3a(failed_connection_attempts に保持)"
       }
     }
   ],
@@ -4394,9 +4375,39 @@
       ],
       "released": false,
       "used_as_evidence": false
+    },
+    {
+      "attempt_run": "release-uat-3dab246a0dd34f6eae066392a88ffd3a",
+      "kind": "w05b-modal",
+      "generation": 2,
+      "status": "superseded",
+      "superseded_by": "release-uat-9cea65811a8c4db998d9dfcf54e849e6",
+      "reason": "peer後の前景が不成立(peer_returned_to_modal=false)。確認ダイアログ(#32770 『確認』、hwnd 25759754)はpeer前後とも同hwndで可視だったが、peer起動の約4秒後およびその直後のforegroundはPageFolio本体(pid 9144)ではなく利用者の端末 Windows PowerShell(pid 24068)のままだった。入力中のPowerShellが前景だったためとみられるが、原因は確定していない(Windowsの前面化制約か製品の挙動かは推測しない)",
+      "server_events": [
+        "received",
+        "released",
+        "completed"
+      ],
+      "released": true,
+      "completed": [
+        "6ee70ff9d65d-1"
+      ],
+      "main_pid": 9144,
+      "peer_pid": 37896,
+      "foreground_after_peer": {
+        "pid": 24068,
+        "title": "Windows PowerShell"
+      },
+      "typed_answers_verbatim": [
+        "OCR実行中です。",
+        "OCR実行中です。～の画面 Y/Nボタン",
+        "準備中",
+        "PageFolio UAT 合成OCR結果"
+      ],
+      "used_as_evidence": false,
+      "preserved_note": "有効な実測記録として履歴に保持する(破棄しない)。準備証拠としては採用せず、利用者の判断で再実行した release-uat-9cea65811a8c4db998d9dfcf54e849e6 に置き換えた"
     }
   ],
-  "status_reason": "ocr-single と w05b-modal の接続実証は実測・記録した(server: 1 POST・再送なし・待機→解放→完了、w05b は modal表示・『いいえ』・同処理完了を確認)が、w05b-modal の peer_returned_to_modal が false(peer後のforegroundがPageFolio本体でなく利用者の端末)のため、準備監査(--preparation-only)が不成立。成立済みにしない",
   "connection_preflight": {
     "purpose": "接続実証の事前確認(connection-preparation の前段)。EXEは起動していない。証拠のconnection(成立)ではない",
     "script": ".planning/phases/06-release-validation/06-04-drivers/conn_session.py --scenario ocr-single --check-routing-only",
@@ -4490,12 +4501,35 @@
       "ok": true
     },
     "audit_preparation_only": {
-      "exit": 1,
-      "ok": false,
-      "reasons": [
-        "実接続(ocr-single)とnative modal(w05b-modal)の両方が必要です"
-      ],
-      "meaning": "保護停止/起動/更新/障害X01〜X05は成立。未成立は利用者の接続実証のみ(回答待ち)"
+      "exit": 0,
+      "ok": true,
+      "reasons": [],
+      "phase_complete": false,
+      "release_allowed": false,
+      "output_file": ".planning/phases/06-release-validation/06-04g2-audit-preparation-only.json",
+      "adopted_w05b_run": "release-uat-9cea65811a8c4db998d9dfcf54e849e6",
+      "meaning": "準備監査(--preparation-only)のみ成立。phase_complete=false・release_allowed=false のまま(06-05の受入が未実施)。実際のダブルクリック起動での前景挙動は06-05-02のW05b本受入で人手確認する",
+      "history": [
+        {
+          "stage": "接続実証の記録前",
+          "exit": 1,
+          "ok": false,
+          "reasons": [
+            "実接続(ocr-single)とnative modal(w05b-modal)の両方が必要です"
+          ],
+          "meaning": "保護停止/起動/更新/障害X01〜X05は成立。未成立は利用者の接続実証のみ(回答待ち)"
+        },
+        {
+          "stage": "w05b-modal 有効試行 release-uat-3dab246a0dd34f6eae066392a88ffd3a を採用した時点",
+          "exit": 1,
+          "ok": false,
+          "reasons": [
+            "接続(w05b-modal): native modal→peer→いいえ→同処理完了の観測が不足です"
+          ],
+          "output_file": ".planning/phases/06-release-validation/06-04g2-audit-preparation-only-3dab246a-failed.json",
+          "meaning": "peer後の前景が端末のPowerShellで peer_returned_to_modal=false。判定は弱めず保持"
+        }
+      ]
     }
   }
 }

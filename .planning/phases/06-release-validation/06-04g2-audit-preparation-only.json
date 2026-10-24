@@ -1,10 +1,8 @@
 {
   "mode": "preparation-only",
-  "ok": false,
-  "exit_code": 1,
-  "reasons": [
-    "接続(w05b-modal): native modal→peer→いいえ→同処理完了の観測が不足です"
-  ],
+  "ok": true,
+  "exit_code": 0,
+  "reasons": [],
   "phase_complete": false,
   "release_allowed": false
 }

@@ -92,12 +92,35 @@
       "ok": true
     },
     "audit_preparation_only": {
-      "exit": 1,
-      "ok": false,
-      "reasons": [
-        "実接続(ocr-single)とnative modal(w05b-modal)の両方が必要です"
-      ],
-      "meaning": "保護停止/起動/更新/障害X01〜X05は成立。未成立は利用者の接続実証のみ(回答待ち)"
+      "exit": 0,
+      "ok": true,
+      "reasons": [],
+      "phase_complete": false,
+      "release_allowed": false,
+      "output_file": ".planning/phases/06-release-validation/06-04g2-audit-preparation-only.json",
+      "adopted_w05b_run": "release-uat-9cea65811a8c4db998d9dfcf54e849e6",
+      "meaning": "準備監査(--preparation-only)のみ成立。phase_complete=false・release_allowed=false のまま(06-05の受入が未実施)。実際のダブルクリック起動での前景挙動は06-05-02のW05b本受入で人手確認する",
+      "history": [
+        {
+          "stage": "接続実証の記録前",
+          "exit": 1,
+          "ok": false,
+          "reasons": [
+            "実接続(ocr-single)とnative modal(w05b-modal)の両方が必要です"
+          ],
+          "meaning": "保護停止/起動/更新/障害X01〜X05は成立。未成立は利用者の接続実証のみ(回答待ち)"
+        },
+        {
+          "stage": "w05b-modal 有効試行 release-uat-3dab246a0dd34f6eae066392a88ffd3a を採用した時点",
+          "exit": 1,
+          "ok": false,
+          "reasons": [
+            "接続(w05b-modal): native modal→peer→いいえ→同処理完了の観測が不足です"
+          ],
+          "output_file": ".planning/phases/06-release-validation/06-04g2-audit-preparation-only-3dab246a-failed.json",
+          "meaning": "peer後の前景が端末のPowerShellで peer_returned_to_modal=false。判定は弱めず保持"
+        }
+      ]
     }
   }
 }
