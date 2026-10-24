@@ -2240,9 +2240,6 @@ def _fault(args):
             declare_overlay(
                 args.run, {SETTINGS_NAME: b'{"theme": "dark"}'}, "障害準備用の合成設定"
             )
-    if args.kind == "save-write":
-        declare_overlay(args.run, {SETTINGS_NAME + ".tmp": b"uat-owned-tmp"}, "tmp衝突")
-        Path(manifest["copy"], SETTINGS_NAME + ".tmp").unlink()
     if args.kind == "missing":
         declare_overlay(args.run, {SETTINGS_NAME: None}, "設定不存在")
     try:
@@ -2257,6 +2254,16 @@ def _fault(args):
             }
         )
         return 3
+    copy_dir = Path(manifest["copy"])
+    if args.kind == "corrupt":  # 作った実bytesをoverlayの正本として宣言する
+        declare_overlay(
+            args.run,
+            {SETTINGS_NAME: (copy_dir / SETTINGS_NAME).read_bytes()},
+            "破損JSON",
+        )
+    elif args.kind == "save-write":
+        tmp = SETTINGS_NAME + ".tmp"
+        declare_overlay(args.run, {tmp: (copy_dir / tmp).read_bytes()}, "tmp衝突")
     _json_out(fault.record)
     flag = Path(args.run) / "release-fault.flag"
     deadline = time.monotonic() + args.hold_seconds

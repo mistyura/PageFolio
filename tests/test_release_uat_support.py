@@ -7,18 +7,23 @@ tmp_pathだけで完結し、06-04で初めて作る実配布物を前提にし�
 from __future__ import annotations
 
 import ast
+import base64
 import copy
 import hashlib
+import io
 import json
 import os
 import shutil
 import subprocess
 import sys
+import threading
+import time
 import uuid
 from pathlib import Path
 
 import pytest
 
+from tests import release_fake_ocr as fake
 from tests import release_uat_support as sup
 
 windows_only = pytest.mark.skipif(os.name != "nt", reason="Windows専用の観測")
@@ -507,6 +512,344 @@ class TestOwnership:
         assert {"hwnd", "pid", "title"} <= set(info)
         env = sup.collect_environment()
         assert env["session_id"] is not None and "observer_python" in env
+
+
+# ---------------------------------------------------------------------------
+def png_b64(color="white"):
+    from PIL import Image
+
+    buffer = io.BytesIO()
+    Image.new("RGB", (12, 12), color).save(buffer, "PNG")
+    return base64.b64encode(buffer.getvalue()).decode("ascii")
+
+
+def provider(server, timeout=10):
+    from pagefolio.ocr_providers import OllamaProvider
+
+    return OllamaProvider(server.url, fake.MODEL, timeout=timeout)
+
+
+@pytest.fixture
+def server(tmp_path):
+    items = []
+
+    def make(**kwargs):
+        item = fake.FakeOcrServer(run_id="r" * 8, **kwargs).start()
+        items.append(item)
+        return item
+
+    yield make
+    for item in items:
+        item.stop()
+
+
+class TestFakeOcr:
+    def test_listens_on_loopback_only_and_never_forwards(self, server):
+        with pytest.raises(ValueError):
+            fake.FakeOcrServer(host="0.0.0.0")  # noqa: S104
+        item = server()
+        assert item._httpd.server_address[0] == "127.0.0.1"
+        assert item.url.startswith("http://127.0.0.1:")
+        tree = ast.parse(
+            (Path(__file__).parent / "release_fake_ocr.py").read_text("utf-8")
+        )
+        imported = {
+            (n.module or "") if isinstance(n, ast.ImportFrom) else a.name
+            for n in ast.walk(tree)
+            if isinstance(n, (ast.Import, ast.ImportFrom))
+            for a in (n.names if isinstance(n, ast.Import) else [None])
+        }
+        assert not {"urllib.request", "http.client", "requests", "socket"} & imported
+
+    def test_models_and_chat_shapes_work_with_existing_ollama_provider(self, server):
+        item = server()
+        client = provider(item)
+        assert client.list_models() == [fake.MODEL]
+        assert client.ocr_image(png_b64(), "p") == fake.RESULT_TEXT
+        ok, reasons = item.single_attempt_ok(1)
+        assert ok, reasons
+
+    def test_settings_match_what_build_provider_consumes(self, server, tmp_path, repo):
+        from pagefolio.ocr import build_provider
+        from pagefolio.ocr_providers import OllamaProvider
+
+        item = server()
+        settings = sup.ocr_settings(item.url)
+        built = build_provider(settings)
+        assert isinstance(built, OllamaProvider)
+        assert built.url == item.url and built.model == fake.MODEL
+        assert settings["ocr_concurrency"] == 1
+        assert settings["ocr_fallback_enabled"] is False
+        manifest = prep(tmp_path, repo, case="W04")
+        info = sup.prepare_ocr_connection(manifest["run"], item)
+        saved = json.loads(
+            (Path(manifest["copy"]) / "pagefolio_settings.json").read_text("utf-8")
+        )
+        assert saved == settings
+        assert info["pdf"]["pages"] == 1 and info["pdf"]["has_embedded_text"] is False
+        assert info["expected_posts"] == 1 and info["summary_executed"] is False
+        assert sup.verify_copy(sup.load_run(manifest["run"]))["ok"]
+
+    def test_hold_then_release_records_the_same_attempt(self, server, tmp_path):
+        item = server(mode="hold", log_path=tmp_path / "events.jsonl")
+        outcome = {}
+        worker = threading.Thread(
+            target=lambda: outcome.update(text=provider(item).ocr_image(png_b64(), "p"))
+        )
+        worker.start()
+        assert item.wait_received(1)
+        assert item.summary()["completed"] == []  # 待機中は完了していない
+        item.release()
+        worker.join(timeout=10)
+        data = item.summary()
+        assert outcome["text"] == fake.RESULT_TEXT
+        received = [e for e in data["events"] if e["event"] == "received"][0]
+        assert data["released"] == data["completed"] == [received["attempt_id"]]
+        assert received["page_id"] == "p1" and len(received["image_sha256"]) == 64
+        assert item.single_attempt_ok(1)[0]
+        lines = (tmp_path / "events.jsonl").read_text("utf-8").splitlines()
+        assert [json.loads(x)["event"] for x in lines] == [
+            "received",
+            "released",
+            "completed",
+        ]
+
+    def test_release_flag_file_releases_a_held_request(self, server, tmp_path):
+        flag = tmp_path / "release.flag"
+        item = server(mode="hold", release_flag=flag)
+        worker = threading.Thread(
+            target=lambda: provider(item).ocr_image(png_b64(), "p")
+        )
+        worker.start()
+        assert item.wait_received(1)
+        flag.write_text("go")
+        worker.join(timeout=10)
+        assert not worker.is_alive() and item.single_attempt_ok(1)[0]
+
+    def test_retransmission_keeps_original_attempt_and_fails_single_expectation(
+        self, server
+    ):
+        item = server()
+        image = png_b64()
+        provider(item).ocr_image(image, "p")
+        provider(item).ocr_image(image, "p")
+        data = item.summary()
+        assert data["posts"] == 2 and len(data["retransmissions"]) == 1
+        ids = data["retransmissions"][0]["attempt_ids"]
+        assert ids[0].endswith("-1") and ids[1].endswith("-2")
+        ok, reasons = item.single_attempt_ok(1)
+        assert not ok and any("再送" in r for r in reasons)
+
+    def test_page_count_is_not_projected_into_request_count(self, server):
+        item = server(expected_pages=1)
+        provider(item).ocr_image(png_b64("white"), "p")
+        with pytest.raises(RuntimeError):  # 409: 対象外の別画像は拒否される
+            provider(item).ocr_image(png_b64("black"), "p")
+        data = item.summary()
+        assert data["posts"] == 1 and len(data["rejected"]) == 1
+        assert not item.single_attempt_ok(1)[0]
+        wide = server(expected_pages=3)
+        for color in ("white", "black", "red"):
+            provider(wide).ocr_image(png_b64(color), "p")
+        assert wide.summary()["posts"] == 3 and wide.single_attempt_ok(3)[0]
+
+    def test_strict_registration_rejects_unregistered_images(self, server):
+        item = server()
+        item.allow_image(hashlib.sha256(base64.b64decode(png_b64("white"))).hexdigest())
+        provider(item).ocr_image(png_b64("white"), "p")
+        with pytest.raises(RuntimeError):
+            provider(item).ocr_image(png_b64("black"), "p")
+
+    def test_non_synthetic_or_malformed_input_is_rejected(self, server):
+        item = server()
+        import urllib.error
+        import urllib.request
+
+        def post(body):
+            request = urllib.request.Request(  # noqa: S310
+                item.url + "/v1/chat/completions",
+                data=json.dumps(body).encode(),
+                headers={"Content-Type": "application/json"},
+                method="POST",
+            )
+            return urllib.request.urlopen(request, timeout=5)  # noqa: S310
+
+        for body in (
+            {"messages": [{"role": "user", "content": "text only"}]},
+            {
+                "messages": [
+                    {
+                        "content": [
+                            {
+                                "type": "image_url",
+                                "image_url": {"url": "data:image/png;base64,AAAA"},
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                "messages": [
+                    {
+                        "content": [
+                            {
+                                "type": "image_url",
+                                "image_url": {"url": "https://example.com/x.png"},
+                            }
+                        ]
+                    }
+                ]
+            },
+        ):
+            with pytest.raises(urllib.error.HTTPError) as caught:
+                post(body)
+            assert caught.value.code == 400
+        assert item.summary()["posts"] == 0 and len(item.summary()["rejected"]) == 3
+
+    def test_error_mode_never_uses_retry_inducing_status(self, server):
+        for status in (429, 500, 503):
+            with pytest.raises(ValueError):
+                fake.FakeOcrServer(mode="error", error_status=status)
+        item = server(mode="error", error_status=400)
+        with pytest.raises(RuntimeError):
+            provider(item).ocr_image(png_b64(), "p")
+        assert item.summary()["completed"]
+
+    def test_hold_limit_is_shorter_than_provider_timeout_and_expiry_is_visible(
+        self, server
+    ):
+        with pytest.raises(ValueError):
+            fake.FakeOcrServer(mode="hold", provider_timeout=10, hold_limit=10)
+        item = server(mode="hold", provider_timeout=5, hold_limit=0.3)
+        started = time.monotonic()
+        assert provider(item, timeout=5).ocr_image(png_b64(), "p") == fake.RESULT_TEXT
+        assert time.monotonic() - started < 5
+        ok, reasons = item.single_attempt_ok(1)
+        assert not ok and any("待機上限" in r for r in reasons)
+
+    def test_models_endpoint_and_unknown_paths(self, server):
+        import urllib.error
+        import urllib.request
+
+        item = server()
+        with pytest.raises(urllib.error.HTTPError) as caught:
+            urllib.request.urlopen(item.url + "/api/tags", timeout=5)  # noqa: S310
+        assert caught.value.code == 404
+
+    def test_connection_entry_is_labeled_preparation_not_acceptance(
+        self, server, tmp_path, repo
+    ):
+        item = server()
+        provider(item).ocr_image(png_b64(), "p")
+        manifest = prep(tmp_path, repo, case="W04")
+        entry = sup.build_connection_entry(
+            manifest["run"], item.summary(), user_answer="W04準備：結果表示を確認"
+        )
+        assert entry["purpose"] == "connection-preparation"
+        assert entry["binary_sha256"] == manifest["source"]["exe_sha256"]
+        assert entry["server"]["posts"] == 1 and len(entry["server"]["attempts"]) == 1
+        assert [e["event"] for e in entry["server"]["events"]] == [
+            "received",
+            "completed",
+        ]
+
+
+# ---------------------------------------------------------------------------
+@windows_only
+class TestSettingsFaultPreparation:
+    @pytest.fixture
+    def area(self, tmp_path, monkeypatch):
+        import pagefolio.settings as settings_mod
+
+        directory = tmp_path / "copy"
+        directory.mkdir()
+        path = directory / "pagefolio_settings.json"
+        monkeypatch.setattr(settings_mod, "_get_settings_path", lambda: str(path))
+        return directory, path, settings_mod
+
+    def test_missing_is_absent_and_product_classifies_it(self, area):
+        directory, path, mod = area
+        with sup.prepare_settings_fault(directory, "missing") as fault:
+            assert fault.record["established"] is True
+            assert mod._load_settings_result().status == "missing"
+        path.write_text("{}")
+        with pytest.raises(sup.NotEstablished):
+            sup.prepare_settings_fault(directory, "missing")
+
+    def test_corrupt_bytes_are_classified_corrupt_by_the_product(self, area):
+        directory, path, mod = area
+        with sup.prepare_settings_fault(directory, "corrupt") as fault:
+            assert fault.record["json_parseable"] is False
+            assert mod._load_settings_result().status == "corrupt"
+
+    def test_unreadable_uses_external_share_restriction(self, area):
+        directory, path, mod = area
+        path.write_text('{"theme": "dark"}', "utf-8")
+        before = hashlib.sha256(path.read_bytes())
+        with sup.prepare_settings_fault(directory, "unreadable") as fault:
+            record = fault.record
+            assert record["probe_read"]["win32_error"] == sup.ERROR_SHARING_VIOLATION
+            assert record["handle"]["share"] == hex(0)
+            assert record["observer"]["pid"] == os.getpid()
+            assert record["observer"]["created"] > 0
+            assert mod._load_settings_result().status == "unreadable"
+        assert mod._load_settings_result().status == "ok"  # 解放後は読める
+        assert hashlib.sha256(path.read_bytes()).hexdigest() == before.hexdigest()
+
+    def test_save_write_is_tmp_collision_before_any_write(self, area):
+        directory, path, mod = area
+        path.write_text('{"theme": "dark"}', "utf-8")
+        original = hashlib.sha256(path.read_bytes()).hexdigest()
+        with sup.prepare_settings_fault(directory, "save-write") as fault:
+            tmp = Path(str(path) + ".tmp")
+            assert fault.record["tmp"]["exclusive_create_collision"] is True
+            assert "書込途中失敗ではない" in fault.record["note"]
+            assert mod._save_settings({"theme": "light"}) is False
+            assert tmp.exists() and tmp.read_bytes() == b"uat-owned-tmp"  # 削除されない
+            assert hashlib.sha256(path.read_bytes()).hexdigest() == original
+
+    def test_save_replace_blocks_delete_share_and_keeps_original(self, area):
+        directory, path, mod = area
+        path.write_text('{"theme": "dark"}', "utf-8")
+        original = hashlib.sha256(path.read_bytes()).hexdigest()
+        with sup.prepare_settings_fault(directory, "save-replace") as fault:
+            record = fault.record
+            assert record["probe_delete"]["win32_error"] == sup.ERROR_SHARING_VIOLATION
+            assert record["probe_read"]["ok"] is True
+            assert mod._save_settings({"theme": "light"}) is False
+            assert not Path(str(path) + ".tmp").exists()  # 所有tmpは消去される
+            assert hashlib.sha256(path.read_bytes()).hexdigest() == original
+        assert mod._save_settings({"theme": "light"}) is True  # 解放後は保存できる
+
+    def test_unestablished_fault_is_not_run_and_releases_handles(self, area):
+        directory, path, mod = area
+        with pytest.raises(sup.NotEstablished):  # 合成設定が無い
+            sup.prepare_settings_fault(directory, "unreadable")
+        with pytest.raises(sup.SupportError):
+            sup.prepare_settings_fault(directory, "unknown-kind")
+
+    @pytest.mark.parametrize(
+        "kind", ["missing", "corrupt", "unreadable", "save-write", "save-replace"]
+    )
+    def test_fault_cli_keeps_copy_consistent_with_overlay_manifest(
+        self, tmp_path, repo, capsys, kind
+    ):
+        manifest = prep(tmp_path, repo, case="X03")
+        run = manifest["run"]
+        code = sup.main(
+            ["fault", "--run", str(run), "--kind", kind, "--hold-seconds", "0.2"]
+        )
+        record = json.loads(capsys.readouterr().out)
+        assert code == 0 and record["established"] is True
+        check = sup.verify_copy(sup.load_run(run))
+        assert check["ok"] and check["overlay_changed"] == []  # 起動前の拒否理由が無い
+
+    def test_fault_overlay_names_stay_inside_declared_set(self, tmp_path, repo):
+        manifest = prep(tmp_path, repo, case="X03")
+        run = manifest["run"]
+        sup.declare_overlay(run, {"pagefolio_settings.json": b"{}"}, "障害準備")
+        sup.declare_overlay(run, {"pagefolio_settings.json.tmp": b"t"}, "tmp衝突")
+        assert sup.verify_copy(sup.load_run(run))["ok"]
 
 
 # ---------------------------------------------------------------------------
