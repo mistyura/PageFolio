@@ -1,0 +1,7 @@
+ビルド照合成功: C:\Users\shdwf\AppData\Local\Temp\pf06_tracer_acce06df0c694f10be4a1ed80f690793\PageFolio-v1.9.1
+配布元を直接起動せず完全copy上で実機確認してください。出荷承認・実機合格は未実施です。
+
+real	0m31.634s
+user	0m0.000s
+sys	0m0.000s
+exit=0

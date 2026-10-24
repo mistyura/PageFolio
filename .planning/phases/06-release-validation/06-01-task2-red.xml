@@ -1,0 +1,444 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="16" skipped="0" tests="70" time="19.515" timestamp="2026-10-24T14:47:36.382284+09:00" hostname="nullaze-z240"><testcase classname="tests.test_release_build.TestReleaseTracer" name="test_empty_output_builds_verified_bundle" time="0.403" /><testcase classname="tests.test_release_build.TestReleaseTracer" name="test_default_dist_preserves_legacy" time="0.415" /><testcase classname="tests.test_release_build.TestReleaseTracer" name="test_source_overlap_rejected_before_builder[.]" time="0.015" /><testcase classname="tests.test_release_build.TestReleaseTracer" name="test_source_overlap_rejected_before_builder[pagefolio]" time="0.074" /><testcase classname="tests.test_release_build.TestReleaseTracer" name="test_source_overlap_rejected_before_builder[distribution]" time="0.056" /><testcase classname="tests.test_release_build.TestReleaseTracer" name="test_source_overlap_rejected_before_builder[tools]" time="0.072" /><testcase classname="tests.test_release_build.TestReleaseTracer" name="test_source_overlap_rejected_before_builder[tests]" time="0.061" /><testcase classname="tests.test_release_build.TestReleaseTracer" name="test_source_overlap_rejected_before_builder[docs]" time="0.062" /><testcase classname="tests.test_release_build.TestReleaseTracer" name="test_source_overlap_rejected_before_builder[.git]" time="0.070" /><testcase classname="tests.test_release_build.TestReleaseTracer" name="test_source_overlap_rejected_before_builder[dist/PageFolio]" time="0.058" /><testcase classname="tests.test_release_build.TestReleaseTracer" name="test_user_file_rejected_before_builder[pagefolio_settings.json]" time="0.069" /><testcase classname="tests.test_release_build.TestReleaseTracer" name="test_user_file_rejected_before_builder[ocr_custom_prompt.md]" time="0.074" /><testcase classname="tests.test_release_build.TestReleaseTracer" name="test_user_file_rejected_before_builder[ocr_summary_prompt.md]" time="0.069" /><testcase classname="tests.test_release_build.TestReleaseTracer" name="test_reparse_ancestor_rejected" time="0.009" /><testcase classname="tests.test_release_build.TestReleaseTracer" name="test_unreadable_destination_rejected" time="0.062" /><testcase classname="tests.test_release_build.TestReleaseTracer" name="test_original_samples_preserved" time="0.001" /><testcase classname="tests.test_release_build.TestPreflight" name="test_protected_name_kinds_stop_before_any_change[pagefolio_settings.json-file]" time="0.082" /><testcase classname="tests.test_release_build.TestPreflight" name="test_protected_name_kinds_stop_before_any_change[pagefolio_settings.json-directory]" time="0.075" /><testcase classname="tests.test_release_build.TestPreflight" name="test_protected_name_kinds_stop_before_any_change[pagefolio_settings.json-broken-link]" time="0.116" /><testcase classname="tests.test_release_build.TestPreflight" name="test_protected_name_kinds_stop_before_any_change[ocr_custom_prompt.md-file]" time="0.090" /><testcase classname="tests.test_release_build.TestPreflight" name="test_protected_name_kinds_stop_before_any_change[ocr_custom_prompt.md-directory]" time="0.079" /><testcase classname="tests.test_release_build.TestPreflight" name="test_protected_name_kinds_stop_before_any_change[ocr_custom_prompt.md-broken-link]" time="0.130" /><testcase classname="tests.test_release_build.TestPreflight" name="test_protected_name_kinds_stop_before_any_change[ocr_summary_prompt.md-file]" time="0.101" /><testcase classname="tests.test_release_build.TestPreflight" name="test_protected_name_kinds_stop_before_any_change[ocr_summary_prompt.md-directory]" time="0.101" /><testcase classname="tests.test_release_build.TestPreflight" name="test_protected_name_kinds_stop_before_any_change[ocr_summary_prompt.md-broken-link]" time="0.143" /><testcase classname="tests.test_release_build.TestPreflight" name="test_protected_name_is_case_insensitive" time="0.094" /><testcase classname="tests.test_release_build.TestPreflight" name="test_unknown_existing_file_rejected" time="0.098" /><testcase classname="tests.test_release_build.TestPreflight" name="test_real_junction_destination_rejected" time="0.143" /><testcase classname="tests.test_release_build.TestPreflight" name="test_real_junction_ancestor_rejected" time="0.083" /><testcase classname="tests.test_release_build.TestPreflight" name="test_work_or_history_name_taken_by_file[.release-work]" time="0.195" /><testcase classname="tests.test_release_build.TestPreflight" name="test_work_or_history_name_taken_by_file[.release-history]" time="0.484"><failure message="assert True is False">self = &lt;tests.test_release_build.TestPreflight object at 0x00000217E28C8E90&gt;
+repo = WindowsPath('C:/Users/shdwf/AppData/Local/Temp/pf06_01_2_red2_00a083f7a96948418f6b07d3e72589a7/test_work_or_history_name_take1/repo')
+tmp_path = WindowsPath('C:/Users/shdwf/AppData/Local/Temp/pf06_01_2_red2_00a083f7a96948418f6b07d3e72589a7/test_work_or_history_name_take1')
+name = '.release-history'
+
+    @pytest.mark.parametrize("name", [".release-work", ".release-history"])
+    def test_work_or_history_name_taken_by_file(self, repo, tmp_path, name):
+        out = tmp_path / "output"
+        out.mkdir()
+        (out / name).write_bytes(b"not a directory")
+        result, builder = invoke(repo, out)
+&gt;       assert result["success"] is False
+E       assert True is False
+
+tests\test_release_build.py:328: AssertionError</failure></testcase><testcase classname="tests.test_release_build.TestPreflight" name="test_tracked_source_file_collision_rejected" time="0.319" /><testcase classname="tests.test_release_build.TestPreflight" name="test_stale_or_foreign_lock_is_never_taken" time="0.137" /><testcase classname="tests.test_release_build.TestPreflight" name="test_shell_characters_are_literal[a b]" time="0.375" /><testcase classname="tests.test_release_build.TestPreflight" name="test_shell_characters_are_literal[a&amp;b]" time="0.432" /><testcase classname="tests.test_release_build.TestPreflight" name="test_shell_characters_are_literal[a'b]" time="0.456" /><testcase classname="tests.test_release_build.TestPreflight" name="test_shell_characters_are_literal[a$b;(c)]" time="0.435" /><testcase classname="tests.test_release_build.TestPreflight" name="test_shell_characters_are_literal[a%b^c]" time="0.573" /><testcase classname="tests.test_release_build.TestPreflight" name="test_shell_characters_are_literal[\u65e5\u672c\u8a9e \u51fa\u529b]" time="0.618" /><testcase classname="tests.test_release_build.TestPreflight" name="test_secrets_are_not_collected" time="0.577" /><testcase classname="tests.test_release_build.TestRebuild" name="test_managed_rebuild_keeps_previous_tree" time="0.638"><failure message="assert False is True">self = &lt;tests.test_release_build.TestRebuild object at 0x00000217E2C8F750&gt;
+repo = WindowsPath('C:/Users/shdwf/AppData/Local/Temp/pf06_01_2_red2_00a083f7a96948418f6b07d3e72589a7/test_managed_rebuild_keeps_pre0/repo')
+tmp_path = WindowsPath('C:/Users/shdwf/AppData/Local/Temp/pf06_01_2_red2_00a083f7a96948418f6b07d3e72589a7/test_managed_rebuild_keeps_pre0')
+
+    def test_managed_rebuild_keeps_previous_tree(self, repo, tmp_path):
+        out = tmp_path / "output"
+        first, old_tree = build_managed(repo, out)
+        second_builder = FakeBuilder(b"second executable")
+        second, _ = invoke(repo, out, second_builder)
+&gt;       assert second["success"] is True
+E       assert False is True
+
+tests\test_release_build.py:393: AssertionError</failure></testcase><testcase classname="tests.test_release_build.TestRebuild" name="test_changed_managed_tree_rejected_before_builder[modified]" time="0.534" /><testcase classname="tests.test_release_build.TestRebuild" name="test_changed_managed_tree_rejected_before_builder[unknown]" time="0.486" /><testcase classname="tests.test_release_build.TestRebuild" name="test_changed_managed_tree_rejected_before_builder[missing]" time="0.456" /><testcase classname="tests.test_release_build.TestRebuild" name="test_changed_managed_tree_rejected_before_builder[report]" time="0.459" /><testcase classname="tests.test_release_build.TestRebuild" name="test_changed_managed_tree_rejected_before_builder[directory]" time="0.678" /><testcase classname="tests.test_release_build.TestRebuild" name="test_changed_managed_tree_rejected_before_builder[docs]" time="0.551" /><testcase classname="tests.test_release_build.TestRebuild" name="test_missing_external_report_rejected" time="0.526" /><testcase classname="tests.test_release_build.TestRebuild" name="test_user_prompt_copy_in_managed_tree_stops" time="0.509" /><testcase classname="tests.test_release_build.TestRebuild" name="test_concurrent_run_cannot_share_output" time="0.534" /><testcase classname="tests.test_release_build.TestRebuild" name="test_output_change_during_build_blocks_publish" time="0.507"><failure message="FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf06_01_2_red2_00a083f7a96948418f6b07d3e72589a7\\test_output_change_during_buil0\\output\\PageFolio-v9.8.7\\late.txt'">self = &lt;tests.test_release_build.TestRebuild object at 0x00000217E3471130&gt;
+repo = WindowsPath('C:/Users/shdwf/AppData/Local/Temp/pf06_01_2_red2_00a083f7a96948418f6b07d3e72589a7/test_output_change_during_buil0/repo')
+tmp_path = WindowsPath('C:/Users/shdwf/AppData/Local/Temp/pf06_01_2_red2_00a083f7a96948418f6b07d3e72589a7/test_output_change_during_buil0')
+
+    def test_output_change_during_build_blocks_publish(self, repo, tmp_path):
+        out = tmp_path / "output"
+        first, _ = build_managed(repo, out)
+        final = Path(first["output"])
+    
+        def racing(argv, *, cwd, log, report):
+            FakeBuilder(b"second")(argv, cwd=cwd, log=log, report=report)
+            (final / "late.txt").write_bytes(b"someone else")
+    
+        result = load_cli().run_build(out, repo=repo, builder=racing)
+        assert result["success"] is False
+&gt;       assert (final / "late.txt").read_bytes() == b"someone else"
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_release_build.py:485: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+..\..\..\AppData\Local\Programs\Python\Python315\Lib\pathlib\__init__.py:976: in read_bytes
+    with self.open(mode='rb', buffering=0) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = WindowsPath('C:/Users/shdwf/AppData/Local/Temp/pf06_01_2_red2_00a083f7a96948418f6b07d3e72589a7/test_output_change_during_buil0/output/PageFolio-v9.8.7/late.txt')
+mode = 'rb', buffering = 0, encoding = None, errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed to by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+&gt;       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf06_01_2_red2_00a083f7a96948418f6b07d3e72589a7\\test_output_change_during_buil0\\output\\PageFolio-v9.8.7\\late.txt'
+
+..\..\..\AppData\Local\Programs\Python\Python315\Lib\pathlib\__init__.py:970: FileNotFoundError</failure></testcase><testcase classname="tests.test_release_build.TestRebuild" name="test_lock_replaced_during_build_blocks_publish" time="0.509" /><testcase classname="tests.test_release_build.TestRebuild" name="test_input_change_during_build_blocks_publish" time="0.325" /><testcase classname="tests.test_release_build.TestFailureRetention" name="test_builder_failure_keeps_log_and_old_output" time="0.438"><failure message="KeyError: 'run'">self = &lt;tests.test_release_build.TestFailureRetention object at 0x00000217E2C8F610&gt;
+repo = WindowsPath('C:/Users/shdwf/AppData/Local/Temp/pf06_01_2_red2_00a083f7a96948418f6b07d3e72589a7/test_builder_failure_keeps_log0/repo')
+tmp_path = WindowsPath('C:/Users/shdwf/AppData/Local/Temp/pf06_01_2_red2_00a083f7a96948418f6b07d3e72589a7/test_builder_failure_keeps_log0')
+
+    def test_builder_failure_keeps_log_and_old_output(self, repo, tmp_path):
+        out, final, old_tree = self.managed(repo, tmp_path)
+        cli = load_cli()
+    
+        def failing(argv, *, cwd, log, report):
+            log.write_text("partial pyinstaller output", encoding="utf-8")
+            raise cli.BuildError("injected build failure")
+    
+        result = cli.run_build(out, repo=repo, builder=failing)
+&gt;       run, report = self.failed_run(result)
+                      ^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_release_build.py:539: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = &lt;tests.test_release_build.TestFailureRetention object at 0x00000217E2C8F610&gt;
+result = {'schema_version': 1, 'run_id': '529ead11a5d3438984480c2c67a2cbd2', 'success': False, 'status': 'INCOMPLETE', ...}
+
+    def failed_run(self, result):
+&gt;       run = Path(result["run"])
+                   ^^^^^^^^^^^^^
+E       KeyError: 'run'
+
+tests\test_release_build.py:516: KeyError</failure></testcase><testcase classname="tests.test_release_build.TestFailureRetention" name="test_interrupt_is_reported_not_success" time="0.301" /><testcase classname="tests.test_release_build.TestFailureRetention" name="test_missing_executable_fails" time="0.662"><failure message="KeyError: 'run'">self = &lt;tests.test_release_build.TestFailureRetention object at 0x00000217E2C07BB0&gt;
+repo = WindowsPath('C:/Users/shdwf/AppData/Local/Temp/pf06_01_2_red2_00a083f7a96948418f6b07d3e72589a7/test_missing_executable_fails0/repo')
+tmp_path = WindowsPath('C:/Users/shdwf/AppData/Local/Temp/pf06_01_2_red2_00a083f7a96948418f6b07d3e72589a7/test_missing_executable_fails0')
+
+    def test_missing_executable_fails(self, repo, tmp_path):
+        out, final, old_tree = self.managed(repo, tmp_path)
+    
+        def empty(argv, *, cwd, log, report):
+            Path(argv[argv.index("--distpath") + 1], "PageFolio").mkdir(parents=True)
+    
+        result = load_cli().run_build(out, repo=repo, builder=empty)
+&gt;       self.failed_run(result)
+
+tests\test_release_build.py:564: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = &lt;tests.test_release_build.TestFailureRetention object at 0x00000217E2C07BB0&gt;
+result = {'schema_version': 1, 'run_id': '483499134d4c468492e4d1a1765c2df0', 'success': False, 'status': 'INCOMPLETE', ...}
+
+    def failed_run(self, result):
+&gt;       run = Path(result["run"])
+                   ^^^^^^^^^^^^^
+E       KeyError: 'run'
+
+tests\test_release_build.py:516: KeyError</failure></testcase><testcase classname="tests.test_release_build.TestFailureRetention" name="test_copy_hash_mismatch_fails_before_publish" time="0.551"><failure message="KeyError: 'run'">self = &lt;tests.test_release_build.TestFailureRetention object at 0x00000217E2ED0770&gt;
+repo = WindowsPath('C:/Users/shdwf/AppData/Local/Temp/pf06_01_2_red2_00a083f7a96948418f6b07d3e72589a7/test_copy_hash_mismatch_fails_0/repo')
+tmp_path = WindowsPath('C:/Users/shdwf/AppData/Local/Temp/pf06_01_2_red2_00a083f7a96948418f6b07d3e72589a7/test_copy_hash_mismatch_fails_0')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x00000217E24C4490&gt;
+
+    def test_copy_hash_mismatch_fails_before_publish(
+        self, repo, tmp_path, monkeypatch
+    ):
+        out, final, old_tree = self.managed(repo, tmp_path)
+        cli = load_cli()
+        real_copy = shutil.copyfile
+    
+        def corrupt(source, target, *args, **kwargs):
+            real_copy(source, target, *args, **kwargs)
+            if Path(target).name == "ocr_custom_prompt_sample.md":
+                Path(target).write_bytes(b"corrupt")
+            return target
+    
+        monkeypatch.setattr(cli.shutil, "copyfile", corrupt)
+        result = cli.run_build(out, repo=repo, builder=FakeBuilder())
+&gt;       run, report = self.failed_run(result)
+                      ^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_release_build.py:582: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = &lt;tests.test_release_build.TestFailureRetention object at 0x00000217E2ED0770&gt;
+result = {'schema_version': 1, 'run_id': '1bfb5b47c45e41aca2eb6dde21b3b38f', 'success': False, 'status': 'INCOMPLETE', ...}
+
+    def failed_run(self, result):
+&gt;       run = Path(result["run"])
+                   ^^^^^^^^^^^^^
+E       KeyError: 'run'
+
+tests\test_release_build.py:516: KeyError</failure></testcase><testcase classname="tests.test_release_build.TestFailureRetention" name="test_report_write_failure_is_not_success_and_rolls_back" time="0.519"><failure message="KeyError: 'run'">self = &lt;tests.test_release_build.TestFailureRetention object at 0x00000217E2C271D0&gt;
+repo = WindowsPath('C:/Users/shdwf/AppData/Local/Temp/pf06_01_2_red2_00a083f7a96948418f6b07d3e72589a7/test_report_write_failure_is_n0/repo')
+tmp_path = WindowsPath('C:/Users/shdwf/AppData/Local/Temp/pf06_01_2_red2_00a083f7a96948418f6b07d3e72589a7/test_report_write_failure_is_n0')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x00000217E24C5F20&gt;
+
+    def test_report_write_failure_is_not_success_and_rolls_back(
+        self, repo, tmp_path, monkeypatch
+    ):
+        out, final, old_tree = self.managed(repo, tmp_path)
+        cli = load_cli()
+        real_write = cli._write_json
+    
+        def failing_write(path, value):
+            if path.name == "report.json" and value.get("status") == "VERIFIED_BUILD":
+                raise OSError("injected disk full")
+            return real_write(path, value)
+    
+        monkeypatch.setattr(cli, "_write_json", failing_write)
+        result = cli.run_build(out, repo=repo, builder=FakeBuilder(b"second"))
+&gt;       run, report = self.failed_run(result)
+                      ^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_release_build.py:601: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = &lt;tests.test_release_build.TestFailureRetention object at 0x00000217E2C271D0&gt;
+result = {'schema_version': 1, 'run_id': 'e6394be1f28a46de8616ed64f5fc0a44', 'success': False, 'status': 'INCOMPLETE', ...}
+
+    def failed_run(self, result):
+&gt;       run = Path(result["run"])
+                   ^^^^^^^^^^^^^
+E       KeyError: 'run'
+
+tests\test_release_build.py:516: KeyError</failure></testcase><testcase classname="tests.test_release_build.TestFailureRetention" name="test_promote_failure_restores_previous_output" time="0.567"><failure message="KeyError: 'run'">self = &lt;tests.test_release_build.TestFailureRetention object at 0x00000217E2317BD0&gt;
+repo = WindowsPath('C:/Users/shdwf/AppData/Local/Temp/pf06_01_2_red2_00a083f7a96948418f6b07d3e72589a7/test_promote_failure_restores_0/repo')
+tmp_path = WindowsPath('C:/Users/shdwf/AppData/Local/Temp/pf06_01_2_red2_00a083f7a96948418f6b07d3e72589a7/test_promote_failure_restores_0')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x00000217E3308650&gt;
+
+    def test_promote_failure_restores_previous_output(
+        self, repo, tmp_path, monkeypatch
+    ):
+        out, final, old_tree = self.managed(repo, tmp_path)
+        cli = load_cli()
+        real_rename = Path.rename
+    
+        def failing(self, target):
+            if self.name == "PageFolio":
+                raise OSError("injected promote failure")
+            return real_rename(self, target)
+    
+        monkeypatch.setattr(Path, "rename", failing)
+        result = cli.run_build(out, repo=repo, builder=FakeBuilder(b"second"))
+&gt;       run, report = self.failed_run(result)
+                      ^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_release_build.py:621: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = &lt;tests.test_release_build.TestFailureRetention object at 0x00000217E2317BD0&gt;
+result = {'schema_version': 1, 'run_id': 'b69440a380f747c196023cafbd516037', 'success': False, 'status': 'INCOMPLETE', ...}
+
+    def failed_run(self, result):
+&gt;       run = Path(result["run"])
+                   ^^^^^^^^^^^^^
+E       KeyError: 'run'
+
+tests\test_release_build.py:516: KeyError</failure></testcase><testcase classname="tests.test_release_build.TestFailureRetention" name="test_history_move_failure_leaves_old_output" time="0.423"><failure message="KeyError: 'run'">self = &lt;tests.test_release_build.TestFailureRetention object at 0x00000217E2338270&gt;
+repo = WindowsPath('C:/Users/shdwf/AppData/Local/Temp/pf06_01_2_red2_00a083f7a96948418f6b07d3e72589a7/test_history_move_failure_leav0/repo')
+tmp_path = WindowsPath('C:/Users/shdwf/AppData/Local/Temp/pf06_01_2_red2_00a083f7a96948418f6b07d3e72589a7/test_history_move_failure_leav0')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x00000217E3090650&gt;
+
+    def test_history_move_failure_leaves_old_output(
+        self, repo, tmp_path, monkeypatch
+    ):
+        out, final, old_tree = self.managed(repo, tmp_path)
+        cli = load_cli()
+        real_rename = Path.rename
+    
+        def failing(self, target):
+            if self.name == "PageFolio-v9.8.7":
+                raise OSError("injected history failure")
+            return real_rename(self, target)
+    
+        monkeypatch.setattr(Path, "rename", failing)
+        result = cli.run_build(out, repo=repo, builder=FakeBuilder(b"second"))
+&gt;       run, _ = self.failed_run(result)
+                 ^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_release_build.py:641: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = &lt;tests.test_release_build.TestFailureRetention object at 0x00000217E2338270&gt;
+result = {'schema_version': 1, 'run_id': '1470b822c82b49b1bc49c67c4e11c34e', 'success': False, 'status': 'INCOMPLETE', ...}
+
+    def failed_run(self, result):
+&gt;       run = Path(result["run"])
+                   ^^^^^^^^^^^^^
+E       KeyError: 'run'
+
+tests\test_release_build.py:516: KeyError</failure></testcase><testcase classname="tests.test_release_build.TestFailureRetention" name="test_rollback_failure_is_reported_and_history_kept" time="0.470"><failure message="KeyError: 'run'">self = &lt;tests.test_release_build.TestFailureRetention object at 0x00000217E346BD50&gt;
+repo = WindowsPath('C:/Users/shdwf/AppData/Local/Temp/pf06_01_2_red2_00a083f7a96948418f6b07d3e72589a7/test_rollback_failure_is_repor0/repo')
+tmp_path = WindowsPath('C:/Users/shdwf/AppData/Local/Temp/pf06_01_2_red2_00a083f7a96948418f6b07d3e72589a7/test_rollback_failure_is_repor0')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x00000217E3065310&gt;
+
+    def test_rollback_failure_is_reported_and_history_kept(
+        self, repo, tmp_path, monkeypatch
+    ):
+        out, final, old_tree = self.managed(repo, tmp_path)
+        cli = load_cli()
+        real_rename = Path.rename
+    
+        def failing(self, target):
+            if self.name == "PageFolio" or self.parent.name == ".release-history":
+                raise OSError(f"injected failure for {self.name}")
+            return real_rename(self, target)
+    
+        monkeypatch.setattr(Path, "rename", failing)
+        result = cli.run_build(out, repo=repo, builder=FakeBuilder(b"second"))
+&gt;       run, report = self.failed_run(result)
+                      ^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_release_build.py:659: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = &lt;tests.test_release_build.TestFailureRetention object at 0x00000217E346BD50&gt;
+result = {'schema_version': 1, 'run_id': '1d89dcb84aa34c90b54f20faeb5ba309', 'success': False, 'status': 'INCOMPLETE', ...}
+
+    def failed_run(self, result):
+&gt;       run = Path(result["run"])
+                   ^^^^^^^^^^^^^
+E       KeyError: 'run'
+
+tests\test_release_build.py:516: KeyError</failure></testcase><testcase classname="tests.test_release_build.TestFailureRetention" name="test_post_publish_mismatch_restores_previous_output" time="0.465"><failure message="KeyError: 'run'">self = &lt;tests.test_release_build.TestFailureRetention object at 0x00000217E2EC0150&gt;
+repo = WindowsPath('C:/Users/shdwf/AppData/Local/Temp/pf06_01_2_red2_00a083f7a96948418f6b07d3e72589a7/test_post_publish_mismatch_res0/repo')
+tmp_path = WindowsPath('C:/Users/shdwf/AppData/Local/Temp/pf06_01_2_red2_00a083f7a96948418f6b07d3e72589a7/test_post_publish_mismatch_res0')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x00000217E3065C70&gt;
+
+    def test_post_publish_mismatch_restores_previous_output(
+        self, repo, tmp_path, monkeypatch
+    ):
+        out, final, old_tree = self.managed(repo, tmp_path)
+        cli = load_cli()
+        real_rename = Path.rename
+    
+        def tamper(self, target):
+            moved = real_rename(self, target)
+            if self.name == "PageFolio":
+                (Path(target) / "PageFolio.exe").write_bytes(b"tampered after copy")
+            return moved
+    
+        monkeypatch.setattr(Path, "rename", tamper)
+        result = cli.run_build(out, repo=repo, builder=FakeBuilder(b"second"))
+&gt;       run, report = self.failed_run(result)
+                      ^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_release_build.py:680: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = &lt;tests.test_release_build.TestFailureRetention object at 0x00000217E2EC0150&gt;
+result = {'schema_version': 1, 'run_id': '6d31df61d54b49db8c3a7ef30d403f45', 'success': False, 'status': 'INCOMPLETE', ...}
+
+    def failed_run(self, result):
+&gt;       run = Path(result["run"])
+                   ^^^^^^^^^^^^^
+E       KeyError: 'run'
+
+tests\test_release_build.py:516: KeyError</failure></testcase><testcase classname="tests.test_release_build.TestFailureRetention" name="test_kept_lock_survives_unreclaimed_builder" time="0.229" /><testcase classname="tests.test_release_build.TestCommandLine" name="test_success_exit_and_guidance" time="0.014"><failure message="TypeError: main() got an unexpected keyword argument 'builder'">self = &lt;tests.test_release_build.TestCommandLine object at 0x00000217E2C8F110&gt;
+repo = WindowsPath('C:/Users/shdwf/AppData/Local/Temp/pf06_01_2_red2_00a083f7a96948418f6b07d3e72589a7/test_success_exit_and_guidance0/repo')
+tmp_path = WindowsPath('C:/Users/shdwf/AppData/Local/Temp/pf06_01_2_red2_00a083f7a96948418f6b07d3e72589a7/test_success_exit_and_guidance0')
+capsys = &lt;_pytest.capture.CaptureFixture object at 0x00000217E3075E80&gt;
+
+    def test_success_exit_and_guidance(self, repo, tmp_path, capsys):
+&gt;       code = load_cli().main(
+            ["--output-root", str(tmp_path / "out")], builder=FakeBuilder(), repo=repo
+        )
+E       TypeError: main() got an unexpected keyword argument 'builder'
+
+tests\test_release_build.py:701: TypeError</failure></testcase><testcase classname="tests.test_release_build.TestCommandLine" name="test_failure_exit_is_nonzero_and_keeps_user_file" time="0.010"><failure message="TypeError: main() got an unexpected keyword argument 'builder'">self = &lt;tests.test_release_build.TestCommandLine object at 0x00000217E2C8E710&gt;
+repo = WindowsPath('C:/Users/shdwf/AppData/Local/Temp/pf06_01_2_red2_00a083f7a96948418f6b07d3e72589a7/test_failure_exit_is_nonzero_a0/repo')
+tmp_path = WindowsPath('C:/Users/shdwf/AppData/Local/Temp/pf06_01_2_red2_00a083f7a96948418f6b07d3e72589a7/test_failure_exit_is_nonzero_a0')
+capsys = &lt;_pytest.capture.CaptureFixture object at 0x00000217E2C8D810&gt;
+
+    def test_failure_exit_is_nonzero_and_keeps_user_file(
+        self, repo, tmp_path, capsys
+    ):
+        out = tmp_path / "out"
+        (out / "PageFolio-v9.8.7").mkdir(parents=True)
+        (out / "PageFolio-v9.8.7/ocr_custom_prompt.md").write_bytes(b"mine")
+&gt;       code = load_cli().main(
+            ["--output-root", str(out)], builder=FakeBuilder(), repo=repo
+        )
+E       TypeError: main() got an unexpected keyword argument 'builder'
+
+tests\test_release_build.py:716: TypeError</failure></testcase><testcase classname="tests.test_release_build.TestGitAttributes" name="test_only_four_paths_are_unset" time="0.000"><failure message="FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\shdwf\\work\\project\\PageFolio\\.gitattributes'">self = &lt;tests.test_release_build.TestGitAttributes object at 0x00000217E2C8F9D0&gt;
+
+    def test_only_four_paths_are_unset(self):
+        lines = [
+            line.strip()
+&gt;           for line in (ROOT / ".gitattributes").read_text("utf-8").splitlines()
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+            if line.strip() and not line.startswith("#")
+        ]
+
+tests\test_release_build.py:747: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+..\..\..\AppData\Local\Programs\Python\Python315\Lib\pathlib\__init__.py:986: in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors, newline=newline) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = WindowsPath('C:/Users/shdwf/work/project/PageFolio/.gitattributes')
+mode = 'r', buffering = -1, encoding = 'utf-8', errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed to by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+&gt;       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\shdwf\\work\\project\\PageFolio\\.gitattributes'
+
+..\..\..\AppData\Local\Programs\Python\Python315\Lib\pathlib\__init__.py:970: FileNotFoundError</failure></testcase><testcase classname="tests.test_release_build.TestGitAttributes" name="test_check_attr_reports_unset_only_for_the_four" time="0.036"><failure message="AssertionError: assert {'unspecified'} == {'unset'}&#10;  &#10;  Extra items in the left set:&#10;  'unspecified'&#10;  Extra items in the right set:&#10;  'unset'&#10;  Use -v to get more diff">self = &lt;tests.test_release_build.TestGitAttributes object at 0x00000217E2C8FB10&gt;
+
+    def test_check_attr_reports_unset_only_for_the_four(self):
+        out = self.git(ROOT, "check-attr", "text", "--", *self.PATHS, "README.md")
+        states = {}
+        for line in out.decode("utf-8").splitlines():
+            name, _, state = line.partition(": text: ")
+            states[name] = state
+&gt;       assert {states[p] for p in self.PATHS} == {"unset"}
+E       AssertionError: assert {'unspecified'} == {'unset'}
+E         
+E         Extra items in the left set:
+E         'unspecified'
+E         Extra items in the right set:
+E         'unset'
+E         Use -v to get more diff
+
+tests\test_release_build.py:758: AssertionError</failure></testcase><testcase classname="tests.test_release_build.TestGitAttributes" name="test_originals_and_canonical_copies_are_byte_identical" time="0.001" /><testcase classname="tests.test_release_build.TestGitAttributes" name="test_index_blobs_match_worktree_bytes" time="0.151" /><testcase classname="tests.test_release_build.TestGitAttributes" name="test_autocrlf_true_isolated_fixture_keeps_bytes" time="0.008"><failure message="FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\shdwf\\work\\project\\PageFolio\\.gitattributes'">self = &lt;tests.test_release_build.TestGitAttributes object at 0x00000217E2C27770&gt;
+tmp_path = WindowsPath('C:/Users/shdwf/AppData/Local/Temp/pf06_01_2_red2_00a083f7a96948418f6b07d3e72589a7/test_autocrlf_true_isolated_fi0')
+
+    def test_autocrlf_true_isolated_fixture_keeps_bytes(self, tmp_path):
+        work = tmp_path / "fixture"
+        for path in (*self.PATHS, ".gitattributes"):
+            (work / path).parent.mkdir(parents=True, exist_ok=True)
+&gt;           shutil.copyfile(ROOT / path, work / path)
+
+tests\test_release_build.py:775: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+src = WindowsPath('C:/Users/shdwf/work/project/PageFolio/.gitattributes')
+dst = WindowsPath('C:/Users/shdwf/AppData/Local/Temp/pf06_01_2_red2_00a083f7a96948418f6b07d3e72589a7/test_autocrlf_true_isolated_fi0/fixture/.gitattributes')
+follow_symlinks = True
+
+    def copyfile(src, dst, *, follow_symlinks=True):
+        """Copy data from src to dst in the most efficient way possible.
+    
+        If follow_symlinks is not set and src is a symbolic link, a new
+        symlink will be created instead of copying the file it points to.
+    
+        """
+        sys.audit("shutil.copyfile", src, dst)
+    
+        if _samefile(src, dst):
+            raise SameFileError("{!r} and {!r} are the same file".format(src, dst))
+    
+        file_size = 0
+        for i, fn in enumerate([src, dst]):
+            try:
+                st = _stat(fn)
+            except OSError:
+                # File most likely does not exist
+                pass
+            else:
+                # XXX What about other special files? (sockets, devices...)
+                if stat.S_ISFIFO(st.st_mode):
+                    fn = fn.path if isinstance(fn, os.DirEntry) else fn
+                    raise SpecialFileError("`%s` is a named pipe" % fn)
+                if _WINDOWS and i == 0:
+                    file_size = st.st_size
+    
+        if not follow_symlinks and _islink(src):
+            os.symlink(os.readlink(src), dst)
+        else:
+&gt;           with open(src, 'rb') as fsrc:
+                 ^^^^^^^^^^^^^^^
+E           FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\shdwf\\work\\project\\PageFolio\\.gitattributes'
+
+..\..\..\AppData\Local\Programs\Python\Python315\Lib\shutil.py:313: FileNotFoundError</failure></testcase></testsuite></testsuites>

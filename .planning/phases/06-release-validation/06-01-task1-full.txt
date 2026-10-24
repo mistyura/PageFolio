@@ -1,0 +1,170 @@
+........................................................................ [  3%]
+........................................................................ [  7%]
+.....F.................................................................. [ 11%]
+........................................................................ [ 15%]
+........................................................................ [ 19%]
+........................................................................ [ 23%]
+........................................................................ [ 27%]
+........................................................................ [ 31%]
+........................................................................ [ 35%]
+........................................................................ [ 39%]
+........................................................................ [ 43%]
+........................................................................ [ 47%]
+........................................................................ [ 51%]
+........................................................................ [ 55%]
+........................................................................ [ 59%]
+........................................................................ [ 63%]
+........................................................................ [ 67%]
+........................................................................ [ 71%]
+........................................................................ [ 75%]
+........................................................................ [ 79%]
+........................................................................ [ 83%]
+........................................................................ [ 87%]
+........................................................................ [ 91%]
+........................................................................ [ 95%]
+........................................................................ [ 99%]
+.............                                                            [100%]
+================================== FAILURES ===================================
+_ TestConfigAcceptance.test_unreadable_permission_recovery_stays_blocked_until_restart _
+
+tkroot = <tkinterdnd2.TkinterDnD.Tk object .>
+
+    def _require(tkroot):
+        '''Internal function.'''
+        global TkdndVersion
+        try:
+            import os
+            import platform
+    
+            # On Windows, platform.machine() returns the identifier of the
+            # *host* architecture, which does not necessarily match the
+            # architecture of the running python process. For example, when
+            # running x86 python under x64 Windows, the return value is AMD64;
+            # when running either x86 or x64 python under arm64 Windows, the
+            # return value is ARM64. The architecture of the running process
+            # can be obtained from the PROCESSOR_ARCHITECTURE environment variable,
+            # which is automatically set by Windows / WOW subsystem.
+            system = platform.system()
+            if system=="Windows":
+                machine = os.environ.get('PROCESSOR_ARCHITECTURE', platform.machine())
+            else:
+                machine = platform.machine()
+    
+            if system=="Darwin" and machine=="arm64":
+                tkdnd_platform_rep = "osx-arm64"
+            elif system=="Darwin" and machine=="x86_64":
+                tkdnd_platform_rep = "osx-x64"
+            elif system=="Linux" and machine=="aarch64":
+                tkdnd_platform_rep = "linux-arm64"
+            elif system=="Linux" and machine=="x86_64":
+                tkdnd_platform_rep = "linux-x64"
+            elif system=="Windows" and machine=="ARM64":
+                tkdnd_platform_rep = "win-arm64"
+            elif system=="Windows" and machine=="AMD64":
+                tkdnd_platform_rep = "win-x64"
+            elif system=="Windows" and machine=="x86":
+                tkdnd_platform_rep = "win-x86"
+            else:
+                raise RuntimeError('Plaform not supported.')
+    
+            tcl_major = int(tkroot.tk.call('info', 'tclversion').split('.')[0])
+            if tcl_major >= 9:
+                tcl9_path = os.path.join(os.path.dirname(__file__), 'tkdnd', tkdnd_platform_rep + '-tcl9')
+                module_path = tcl9_path if os.path.isdir(tcl9_path) else os.path.join(os.path.dirname(__file__), 'tkdnd', tkdnd_platform_rep)
+            else:
+                module_path = os.path.join(os.path.dirname(__file__), 'tkdnd', tkdnd_platform_rep)
+            tkroot.tk.call('lappend', 'auto_path', module_path)
+>           TkdndVersion = tkroot.tk.call('package', 'require', 'tkdnd')
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           _tkinter.TclError: couldn't read file "C:\Users\shdwf\work\project\PageFolio\.venv\Lib\site-packages\tkinterdnd2\tkdnd\win-x64-tcl9/tkdnd_compat.tcl": no such file or directory
+
+.venv\Lib\site-packages\tkinterdnd2\TkinterDnD.py:74: TclError
+
+During handling of the above exception, another exception occurred:
+
+self = <tests.test_config_notification.TestConfigAcceptance object at 0x0000027489702C40>
+
+    def test_unreadable_permission_recovery_stays_blocked_until_restart(self):
+        isolated = create_isolated_app("read-unreadable")
+>       with isolated:
+             ^^^^^^^^
+
+tests\test_config_notification.py:1409: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\config_notice_support.py:167: in __enter__
+    return self.start()
+           ^^^^^^^^^^^^
+tests\config_notice_support.py:129: in start
+    self.root = TkinterDnD.Tk()
+                ^^^^^^^^^^^^^^^
+.venv\Lib\site-packages\tkinterdnd2\TkinterDnD.py:324: in __init__
+    self.TkdndVersion = _require(self)
+                        ^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+tkroot = <tkinterdnd2.TkinterDnD.Tk object .>
+
+    def _require(tkroot):
+        '''Internal function.'''
+        global TkdndVersion
+        try:
+            import os
+            import platform
+    
+            # On Windows, platform.machine() returns the identifier of the
+            # *host* architecture, which does not necessarily match the
+            # architecture of the running python process. For example, when
+            # running x86 python under x64 Windows, the return value is AMD64;
+            # when running either x86 or x64 python under arm64 Windows, the
+            # return value is ARM64. The architecture of the running process
+            # can be obtained from the PROCESSOR_ARCHITECTURE environment variable,
+            # which is automatically set by Windows / WOW subsystem.
+            system = platform.system()
+            if system=="Windows":
+                machine = os.environ.get('PROCESSOR_ARCHITECTURE', platform.machine())
+            else:
+                machine = platform.machine()
+    
+            if system=="Darwin" and machine=="arm64":
+                tkdnd_platform_rep = "osx-arm64"
+            elif system=="Darwin" and machine=="x86_64":
+                tkdnd_platform_rep = "osx-x64"
+            elif system=="Linux" and machine=="aarch64":
+                tkdnd_platform_rep = "linux-arm64"
+            elif system=="Linux" and machine=="x86_64":
+                tkdnd_platform_rep = "linux-x64"
+            elif system=="Windows" and machine=="ARM64":
+                tkdnd_platform_rep = "win-arm64"
+            elif system=="Windows" and machine=="AMD64":
+                tkdnd_platform_rep = "win-x64"
+            elif system=="Windows" and machine=="x86":
+                tkdnd_platform_rep = "win-x86"
+            else:
+                raise RuntimeError('Plaform not supported.')
+    
+            tcl_major = int(tkroot.tk.call('info', 'tclversion').split('.')[0])
+            if tcl_major >= 9:
+                tcl9_path = os.path.join(os.path.dirname(__file__), 'tkdnd', tkdnd_platform_rep + '-tcl9')
+                module_path = tcl9_path if os.path.isdir(tcl9_path) else os.path.join(os.path.dirname(__file__), 'tkdnd', tkdnd_platform_rep)
+            else:
+                module_path = os.path.join(os.path.dirname(__file__), 'tkdnd', tkdnd_platform_rep)
+            tkroot.tk.call('lappend', 'auto_path', module_path)
+            TkdndVersion = tkroot.tk.call('package', 'require', 'tkdnd')
+        except tkinter.TclError:
+>           raise RuntimeError('Unable to load tkdnd library.')
+E           RuntimeError: Unable to load tkdnd library.
+
+.venv\Lib\site-packages\tkinterdnd2\TkinterDnD.py:76: RuntimeError
+============================== warnings summary ===============================
+.venv\Lib\site-packages\pymupdf\__init__.py:470
+  C:\Users\shdwf\work\project\PageFolio\.venv\Lib\site-packages\pymupdf\__init__.py:470: DeprecationWarning: 'typing.ByteString' and 'collections.abc.ByteString' are deprecated and slated for removal in Python 3.17
+    ByteString = typing.ByteString
+
+tests/test_ocr_engine.py::TestOCRRunEngineE2E::test_on_success_exception_still_reaches_on_complete
+  C:\Users\shdwf\AppData\Local\Programs\Python\Python315\Lib\traceback.py:342: RuntimeWarning: the Tcl interpreter is leaked because it was deallocated in a thread other than the one it was created in (see gh-83274)
+    def __init__(self, filename, lineno, name, *, lookup_line=True,
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED tests/test_config_notification.py::TestConfigAcceptance::test_unreadable_permission_recovery_stays_blocked_until_restart
+1 failed, 1812 passed, 2 warnings in 267.63s (0:04:27)

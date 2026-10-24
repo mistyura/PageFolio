@@ -4,19 +4,19 @@ milestone: v1.10.0
 milestone_name: 多重起動防止・起動操作の改善
 current_phase: 06
 current_phase_name: サンプル配布とリリース検証
-current_plan: Not started
+current_plan: 2
 status: executing
-stopped_at: Phase 06 レビュー計画検証合格・通知テスト修正後全1797件合格・実行待ち
-last_updated: "2026-10-23T21:27:22.195Z"
+stopped_at: Completed 06-01-PLAN.md
+last_updated: "2026-10-24T05:58:25.496Z"
 last_activity: 2026-10-24
-last_activity_desc: Phase 06レビュー反映と通知テスト隔離修正、native全件1797 passed/1 warning
-state_head: 8b513b83da8ca22558f846fdc5ca6c0493932d96
+last_activity_desc: Phase 06 execution resumed (wave continue)
+state_head: db7ba213130cf6e63dc13c69929b001ce58b002f
 progress:
   total_phases: 3
   completed_phases: 2
   total_plans: 16
-  completed_plans: 10
-  percent: 63
+  completed_plans: 11
+  percent: 67
 ---
 
 # Project State
@@ -46,12 +46,12 @@ See: .planning/PROJECT.md (updated 2026-10-24)
 
 ## Current Position
 
-Phase: 06 (サンプル配布とリリース検証) — READY TO EXECUTE
-Current Plan: Not started
+Phase: 06 (サンプル配布とリリース検証) — EXECUTING
+Current Plan: 2
 Total Plans in Phase: 6
-Plan: 06-01から実行待ち（0/6完了）
+Plan: 2 of 6
 Status: Ready to execute
-Last activity: 2026-10-24 — Phase 06レビュー反映・独立検証合格、通知テスト修正後の全件1797 passed
+Last activity: 2026-10-24 — Phase 06 execution resumed (wave continue)
 
 **今回のデバッグ完了（2026-10-24）:** Phase06計画は6計画・6wave、独立checker blocker/warning 0・要件6/6・決定16/16。コミット前のnative 2失敗は、通知テストの不要なDnD初期化失敗による残留Tk rootと後続画像のinterpreter不一致という連鎖を故障注入で再現した。当該通知再構築テストだけを通常Tkへ隔離し、実Appの通知検証を維持。修正後native単一全件は1797 passed / 1 warning / 269.43秒 / exit 0、Ruff check/format・ASTも合格し、今回のテスト保留を解除した。証拠は`debug/resolved/config-notice-tk-lifecycle.md`と`debug/config-notice-tk-lifecycle-evidence/RESULTS.md`。最終専用basetempは`C:/Users/shdwf/AppData/Local/Temp/pf_config_notice_full_20261024_1`。元の失敗ログ2件とbasetempは保持。製品コード・版番号は変更なし。外部tkdndの間欠読込失敗の発生条件とDEP-05等の既存原因は未解除。成功結果は既存dirtyの入力を含む作業ツリー上の検証であり、それらの別作業差分を今回commitへ混入させない。
 
@@ -59,7 +59,7 @@ Last activity: 2026-10-24 — Phase 06レビュー反映・独立検証合格、
 
 `DEP-05-REGRESSION` は未充足のまま。元のnormal-entry-scriptのcommunicate期限超過は未再現・原因未確定で、Tcl警告との因果も未証明。レビュー時の1 failed / 1634 passedは履歴として保持する。診断強化は `9384268` で独立commit済み、実装前の単一全件は1637 passed / 1 warning / 263.66秒 / exit 0で対象hash一致を確認した。2026-10-23の利用者判断による条件付き実行の下、05-01の実装後単一全件は1660 passed / 1 warning / 234.19秒 / exit 0。上記05-01時点の実装位置は履歴。現行は05-01〜04・Nyquist・人手受入まで完了。今回の成功を原因修復や依存解除とは扱わない。後続の単一全件ゲートで同種失敗が再発したら実装・後続実行・コミットを停止し、最初の失敗出力と専用basetempの診断を保持して `$gsd-debug continue dep-05-regression` で再開する。証拠正本は `debug/dep-05-regression.md`、`05-VALIDATION.md`、`05-01-SUMMARY.md`。
 
-Progress: [██████░░░░] 63%（計画10/16完了、Phase 4/5の完了履歴2/3フェーズ。Phase 4検証報告はstaleで再検証が必要。Phase 6は計画済み・実行未着手、必須実機受入と出荷停止を維持する。）
+Progress: [███████░░░] 67%（計画10/16完了、Phase 4/5の完了履歴2/3フェーズ。Phase 4検証報告はstaleで再検証が必要。Phase 6は計画済み・実行未着手、必須実機受入と出荷停止を維持する。）
 
 ## v1.10.0 Phase Map（構成承認済み）
 
@@ -178,6 +178,7 @@ Phase 4は自動受入/A1〜A5と証拠照合を行い、未実施人手W項目�
 | Phase 04 P06 | 未計測 | 2 tasks | 6 files |
 | Phase 05 P01 | 54min | 2 tasks | 5 files |
 | Phase 05 P02 | 27min | 2 tasks | 7 files |
+| Phase 06 P01 | 1h | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -311,6 +312,7 @@ Decisions are logged in PROJECT.md Key Decisions table.
 - [Phase 05]: 読込失敗時は例外本文を通知・ログに出さず固定文言と例外型・errnoのみを使う
 - [Phase 05]: 終了自動保存は読込失敗中にメモリ値の収集より前で止める
 - [Phase 05]: 05-02は既存差分と承認済み証拠を照合し、通知残時間と世代管理を実装。1694 passedで両タスク完了、未解決起動問題と手動UATの出荷停止は維持
+- [Phase 06]: 06-01: 管理済み再ビルドは同梱reportのrun_idから外部run reportを引き、manifest/hash/dirsの三者一致を要求。成功reportは書込成功後にのみ反映
 
 ### Pending Todos
 
@@ -437,10 +439,10 @@ v1.9.0 クローズ時点で次マイルストーンへ引き継ぐ未解決項�
 
 ## Session Continuity
 
-**Resume file:** .planning/phases/06-release-validation/06-CONTEXT.md
+**Resume file:** None
 
-Last session: 2026-10-23T18:41:51.251Z
-Stopped at: Phase 06 の議論完了・計画作成待ち
+Last session: 2026-10-24T05:58:25.015Z
+Stopped at: Completed 06-01-PLAN.md
 
 ## Operator Next Steps
 

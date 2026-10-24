@@ -1,0 +1,14 @@
+{
+  "head": "07244dce67b774a59f7831cbbc27c7485fbf8cdd",
+  "unrelated": {
+    ".planning/STATE.md": "a9e828f3c76b8db5a12f5c62d64579aa0422c7deee2e4d0a1c104f259eefbae3",
+    ".planning/config.json": "7321f52b7271ffe8da9ab8c5d986d20eb24191215d484f0b9d70c0affeb3d04a",
+    ".planning/debug/dep-05-regression.md": "388215d3cd5265333d4e57339ccdbb3bca16731f8190251c1bb113b7570b48f2",
+    ".planning/debug/simultaneous-owner-missing.md": "c742eb991b82fa265aaf993ebcd751e5e2c67be1b613b1cfb7cbf9b34fba179e",
+    ".planning/phases/05-config-notification/05-CONTEXT.md": "f63fa92fee73736feda67deeecb9b9c2a5d6e6f9db37a7a415467a48157d113a",
+    "requirements.txt": "5affadbab19aac41e06b20142e67daf1a4326b898d0de4d34cfdbbfa1b403f74",
+    "tests/test_startup_windows.py": "b3a4afcb619284e572628c2925af3af4680c424139a8734861712e73355aaa24",
+    "開発履歴.md": "4a9c393fa63f5e503682084e034d623762bc06b6bbbc9a50c5b14327b9ff2e17"
+  },
+  "cached_diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+}

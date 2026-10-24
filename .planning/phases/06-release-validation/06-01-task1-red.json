@@ -1,0 +1,13 @@
+{
+  "command": "python -m pytest tests/test_release_build.py::TestReleaseTracer::test_empty_output_builds_verified_bundle --junitxml=.planning\\phases\\06-release-validation\\06-01-task1-red.xml",
+  "exitCode": 1,
+  "output": "<?xml version=\"1.0\" encoding=\"utf-8\"?><testsuites name=\"pytest tests\"><testsuite name=\"pytest\" errors=\"0\" failures=\"1\" skipped=\"0\" tests=\"1\" time=\"0.123\" timestamp=\"2026-10-24T09:06:51.193473+09:00\" hostname=\"nullaze-z240\"><testcase classname=\"tests.test_release_build.TestReleaseTracer\" name=\"test_empty_output_builds_verified_bundle\" time=\"0.009\"><failure message=\"AssertionError: 安全な配布CLIが必要&#10;assert False&#10; +  where False = is_file()&#10; +    where is_file = WindowsPath('C:/Users/shdwf/work/project/PageFolio/tools/build_release.py').is_file\">self = &lt;tests.test_release_build.TestReleaseTracer object at 0x0000024464621A90&gt;\nrepo = WindowsPath('C:/Users/shdwf/AppData/Local/Temp/pf06_01_red_45deea8351da4bb881cea63927e85ef7/test_empty_output_builds_verif0/repo')\ntmp_path = WindowsPath('C:/Users/shdwf/AppData/Local/Temp/pf06_01_red_45deea8351da4bb881cea63927e85ef7/test_empty_output_builds_verif0')\n\n    def test_empty_output_builds_verified_bundle(self, repo, tmp_path):\n&gt;       result, builder = invoke(repo, tmp_path / \"output &amp; legal space\")\n                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\ntests\\test_release_build.py:89: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _\ntests\\test_release_build.py:84: in invoke\n    return load_cli().run_build(output, repo=repo, builder=builder), builder\n           ^^^^^^^^^^\n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _\n\n    def load_cli():\n        path = ROOT / \"tools/build_release.py\"\n&gt;       assert path.is_file(), \"安全な配布CLIが必要\"\nE       AssertionError: 安全な配布CLIが必要\nE       assert False\nE        +  where False = is_file()\nE        +    where is_file = WindowsPath('C:/Users/shdwf/work/project/PageFolio/tools/build_release.py').is_file\n\ntests\\test_release_build.py:19: AssertionError</failure></testcase></testsuite></testsuites>",
+  "targetTest": "test_empty_output_builds_verified_bundle",
+  "targetFile": "tests/test_release_build.py",
+  "expected": "空の出力先から検証済み配布を生成するCLIが存在する",
+  "actual": "安全な配布CLIが必要のassertionで失敗",
+  "reportPath": ".planning\\phases\\06-release-validation\\06-01-task1-red.xml",
+  "runStartedAt": "2026-10-24T00:00:00Z",
+  "reportModifiedAt": "2026-10-24T00:06:51.362091+00:00",
+  "semanticAssessment": "target実行済み、fixture/collection成功、計画されたCLI欠落のassertionで失敗"
+}

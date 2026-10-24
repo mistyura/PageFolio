@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="1" time="0.123" timestamp="2026-10-24T09:06:51.193473+09:00" hostname="nullaze-z240"><testcase classname="tests.test_release_build.TestReleaseTracer" name="test_empty_output_builds_verified_bundle" time="0.009"><failure message="AssertionError: 安全な配布CLIが必要&#10;assert False&#10; +  where False = is_file()&#10; +    where is_file = WindowsPath('C:/Users/shdwf/work/project/PageFolio/tools/build_release.py').is_file">self = &lt;tests.test_release_build.TestReleaseTracer object at 0x0000024464621A90&gt;
+repo = WindowsPath('C:/Users/shdwf/AppData/Local/Temp/pf06_01_red_45deea8351da4bb881cea63927e85ef7/test_empty_output_builds_verif0/repo')
+tmp_path = WindowsPath('C:/Users/shdwf/AppData/Local/Temp/pf06_01_red_45deea8351da4bb881cea63927e85ef7/test_empty_output_builds_verif0')
+
+    def test_empty_output_builds_verified_bundle(self, repo, tmp_path):
+&gt;       result, builder = invoke(repo, tmp_path / "output &amp; legal space")
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_release_build.py:89: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_release_build.py:84: in invoke
+    return load_cli().run_build(output, repo=repo, builder=builder), builder
+           ^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def load_cli():
+        path = ROOT / "tools/build_release.py"
+&gt;       assert path.is_file(), "安全な配布CLIが必要"
+E       AssertionError: 安全な配布CLIが必要
+E       assert False
+E        +  where False = is_file()
+E        +    where is_file = WindowsPath('C:/Users/shdwf/work/project/PageFolio/tools/build_release.py').is_file
+
+tests\test_release_build.py:19: AssertionError</failure></testcase></testsuite></testsuites>
