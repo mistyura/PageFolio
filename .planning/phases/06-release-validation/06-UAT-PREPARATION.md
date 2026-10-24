@@ -1,7 +1,7 @@
 ---
 phase: 06-release-validation
 document: uat-preparation
-status: prepared-tooling-only
+status: preparation-partial-pending-human-check
 created: 2026-10-24
 ---
 
@@ -16,12 +16,41 @@ Phase 完了は別の状態であり、本書のどの記述も受入合格・�
 | 項目 | 状態 |
 |---|---|
 | 検証支援ツール（`tests/release_uat_support.py`）・合成OCR（`tests/release_fake_ocr.py`） | 実装済み。単体試験で支援ロジックを検証（実配布EXEの証拠ではない） |
-| 実配布EXE（v1.10.0 最終版） | **未作成**（06-04-01 で初回/再 build を各 1 回実施） |
-| 実配布EXEへの fake OCR 接続・native modal・lock 成立 | **not-run**（06-04-02） |
+| 実配布EXE（v1.10.0 最終版） | **作成済み**（06-04-01: 初回/再 build 各 1 回、EXE sha256 `f918bf76…da23`。`06-BUILD-EVIDENCE.json`） |
+| 保護 3 名の build 開始前停止・起動時保持・更新/衝突の保持（06-04-02 自動部分） | **実測済み**（`06-PROTECTION-EVIDENCE.json`、生記録 `06-04-t2-result.json`） |
+| X01〜X05 の外部 lock/tmp/hash 成立（実EXE上） | **実測済み**（同上。通知・操作時点の人手観測は 06-05-02） |
+| 実配布EXEへの fake OCR 接続（ocr-single）・native modal（w05b-modal） | **not-run（利用者の操作と回答待ち）**。回答を得るまで成立済みにしない |
 | W01〜W12・WR-01・X01〜X06 の人手 pass | **not-run**（06-05-02 / 06-06-01） |
 
-run 参照（`run-ref: <32桁hex>` 形式の行）はここへ 06-04-02 以降の担当が追記する。06-PROTECTION-EVIDENCE.json の
-`run_id` と双方向に一致しない場合、`audit --preparation-only` は不合格になる。現時点で参照行は 0 件。
+run 参照（`run-ref: <32桁hex>` 形式の行）は下記の生成ブロックに置く。06-PROTECTION-EVIDENCE.json の
+`run_id` と双方向に一致しない場合、`audit --preparation-only` は不合格になる。ブロックは
+`06-04-drivers/assemble_protection.py` が証拠 JSON から再生成する（手で編集しない）。接続実証 2 件は
+利用者の回答後に追加される。
+
+## run 参照（06-04-02）
+
+<!-- run-refs:start (assemble_protection.py が生成。手で編集しない) -->
+
+| run-ref | 用途 |
+|---|---|
+| run-ref: 034da46ced8d4c02b001c1350ad4cfbf | 保護停止 ocr_custom_prompt.md |
+| run-ref: 5787245f4ffc41ad8142f14f7fb7eebd | 保護停止 pagefolio_settings.json |
+| run-ref: f597309fe4ac4f958994fc9000bef612 | 保護停止 ocr_summary_prompt.md |
+| run-ref: 0c289c364a25402e9aa514b5be8fe2c2 | 起動時保持 normal |
+| run-ref: f7a78d95a4cc442b815d8e79c001d488 | 起動時保持 corrupt |
+| run-ref: 2b7a53f82f014af294721a2c96ee6f2a | 起動時保持 unreadable |
+| run-ref: 65468902bf4f4efeb4f880f83f302acc | 更新 collision old(initial run tree) |
+| run-ref: eea9ec4a38e044f989f27d52a9a185de | 更新 collision new(final) |
+| run-ref: 64058e97276540f38e6ae5c6f4052f5d | 更新 no_collision old(initial run tree) |
+| run-ref: db2f16a9041546caaf9bc9d5eb015683 | 更新 no_collision new(final) |
+| run-ref: 2354dd0e4c934de6a44fc624f62e01da | 障害 X01 |
+| run-ref: ca66fbc00cdf49958d7d0f801949d934 | 障害 X02 |
+| run-ref: bbe088a0fd8344a688d81ec4eaa66d89 | 障害 X03 |
+| run-ref: efbcd9bebc234e5ba8b4029d2d1a8b97 | 障害 X04-write |
+| run-ref: d04fea5666194452b2cd65aa4a5ce20e | 障害 X04-replace |
+| run-ref: 2680bdf5bd9943cbb99c3a7e63e78e97 | 障害 X05 |
+
+<!-- run-refs:end -->
 
 ## 共通の約束（D-13〜D-16・移管条件）
 

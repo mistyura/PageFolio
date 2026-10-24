@@ -1,0 +1,2335 @@
+{
+  "protection_stop": [
+    {
+      "name": "ocr_custom_prompt.md",
+      "run_id": "034da46ced8d4c02b001c1350ad4cfbf",
+      "cli_argv": [
+        "C:\\Users\\shdwf\\work\\project\\PageFolio\\.venv\\Scripts\\python.exe",
+        "C:\\Users\\shdwf\\work\\project\\PageFolio\\tools\\build_release.py",
+        "--output-root",
+        "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf06_t2_f157d1e5a0454f7e89c363383182dff5\\protect\\034da46ced8d4c02b001c1350ad4cfbf\\out"
+      ],
+      "exit_code": 1,
+      "builder_started": false,
+      "stderr": "ビルド失敗 [preflight]: BuildError('保護対象があります。別の空フォルダーを指定してください: C:\\\\Users\\\\shdwf\\\\AppData\\\\Local\\\\Temp\\\\pf06_t2_f157d1e5a0454f7e89c363383182dff5\\\\protect\\\\034da46ced8d4c02b001c1350ad4cfbf\\\\out\\\\PageFolio-v1.10.0\\\\ocr_custom_prompt.md')",
+      "stdout": "",
+      "before": {
+        "PageFolio-v1.10.0": {
+          "kind": "dir",
+          "sha256": null,
+          "size": 0
+        },
+        "PageFolio-v1.10.0/ocr_custom_prompt.md": {
+          "kind": "file",
+          "sha256": "f26673b324b8c3e260c317d35f64c7418aa17d573d8dbb8c0b07b051f8b9c7cf",
+          "size": 51
+        }
+      },
+      "after": {
+        "PageFolio-v1.10.0": {
+          "kind": "dir",
+          "sha256": null,
+          "size": 0
+        },
+        "PageFolio-v1.10.0/ocr_custom_prompt.md": {
+          "kind": "file",
+          "sha256": "f26673b324b8c3e260c317d35f64c7418aa17d573d8dbb8c0b07b051f8b9c7cf",
+          "size": 51
+        }
+      },
+      "elapsed_seconds": 1.7783439999984694,
+      "output_root": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf06_t2_f157d1e5a0454f7e89c363383182dff5\\protect\\034da46ced8d4c02b001c1350ad4cfbf\\out",
+      "placed": "PageFolio-v1.10.0/ocr_custom_prompt.md"
+    },
+    {
+      "name": "pagefolio_settings.json",
+      "run_id": "5787245f4ffc41ad8142f14f7fb7eebd",
+      "cli_argv": [
+        "C:\\Users\\shdwf\\work\\project\\PageFolio\\.venv\\Scripts\\python.exe",
+        "C:\\Users\\shdwf\\work\\project\\PageFolio\\tools\\build_release.py",
+        "--output-root",
+        "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf06_t2_f157d1e5a0454f7e89c363383182dff5\\protect\\5787245f4ffc41ad8142f14f7fb7eebd\\out"
+      ],
+      "exit_code": 1,
+      "builder_started": false,
+      "stderr": "ビルド失敗 [preflight]: BuildError('保護対象があります。別の空フォルダーを指定してください: C:\\\\Users\\\\shdwf\\\\AppData\\\\Local\\\\Temp\\\\pf06_t2_f157d1e5a0454f7e89c363383182dff5\\\\protect\\\\5787245f4ffc41ad8142f14f7fb7eebd\\\\out\\\\PageFolio-v1.10.0\\\\pagefolio_settings.json')",
+      "stdout": "",
+      "before": {
+        "PageFolio-v1.10.0": {
+          "kind": "dir",
+          "sha256": null,
+          "size": 0
+        },
+        "PageFolio-v1.10.0/pagefolio_settings.json": {
+          "kind": "file",
+          "sha256": "3cebc5e8233bd7f8836df4aeb6d782e37d364263d76b72808ec100b698a11279",
+          "size": 54
+        }
+      },
+      "after": {
+        "PageFolio-v1.10.0": {
+          "kind": "dir",
+          "sha256": null,
+          "size": 0
+        },
+        "PageFolio-v1.10.0/pagefolio_settings.json": {
+          "kind": "file",
+          "sha256": "3cebc5e8233bd7f8836df4aeb6d782e37d364263d76b72808ec100b698a11279",
+          "size": 54
+        }
+      },
+      "elapsed_seconds": 1.798142599996936,
+      "output_root": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf06_t2_f157d1e5a0454f7e89c363383182dff5\\protect\\5787245f4ffc41ad8142f14f7fb7eebd\\out",
+      "placed": "PageFolio-v1.10.0/pagefolio_settings.json"
+    },
+    {
+      "name": "ocr_summary_prompt.md",
+      "run_id": "f597309fe4ac4f958994fc9000bef612",
+      "cli_argv": [
+        "C:\\Users\\shdwf\\work\\project\\PageFolio\\.venv\\Scripts\\python.exe",
+        "C:\\Users\\shdwf\\work\\project\\PageFolio\\tools\\build_release.py",
+        "--output-root",
+        "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf06_t2_f157d1e5a0454f7e89c363383182dff5\\protect\\f597309fe4ac4f958994fc9000bef612\\out"
+      ],
+      "exit_code": 1,
+      "builder_started": false,
+      "stderr": "ビルド失敗 [preflight]: BuildError('保護対象があります。別の空フォルダーを指定してください: C:\\\\Users\\\\shdwf\\\\AppData\\\\Local\\\\Temp\\\\pf06_t2_f157d1e5a0454f7e89c363383182dff5\\\\protect\\\\f597309fe4ac4f958994fc9000bef612\\\\out\\\\PageFolio-v1.10.0\\\\ocr_summary_prompt.md')",
+      "stdout": "",
+      "before": {
+        "PageFolio-v1.10.0": {
+          "kind": "dir",
+          "sha256": null,
+          "size": 0
+        },
+        "PageFolio-v1.10.0/ocr_summary_prompt.md": {
+          "kind": "file",
+          "sha256": "07876f068328a92f05809dff661c2c5c879afa658d7d45a08b2893f20bfad825",
+          "size": 52
+        }
+      },
+      "after": {
+        "PageFolio-v1.10.0": {
+          "kind": "dir",
+          "sha256": null,
+          "size": 0
+        },
+        "PageFolio-v1.10.0/ocr_summary_prompt.md": {
+          "kind": "file",
+          "sha256": "07876f068328a92f05809dff661c2c5c879afa658d7d45a08b2893f20bfad825",
+          "size": 52
+        }
+      },
+      "elapsed_seconds": 1.756435400006012,
+      "output_root": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf06_t2_f157d1e5a0454f7e89c363383182dff5\\protect\\f597309fe4ac4f958994fc9000bef612\\out",
+      "placed": "PageFolio-v1.10.0/ocr_summary_prompt.md"
+    }
+  ],
+  "launch": {
+    "cases": [
+      {
+        "run_id": "0c289c364a25402e9aa514b5be8fe2c2",
+        "run": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf06_t2_f157d1e5a0454f7e89c363383182dff5\\runs\\release-uat-0c289c364a25402e9aa514b5be8fe2c2",
+        "case": "launch-normal",
+        "faults": [],
+        "binary_sha256": "f918bf767fb828afcaac3b329c3d6340e812ba931a704f1d3635994e8e20da23",
+        "tree_sha256": "a5392ed80813de39ab643c7b795e29579a2d387d50aa555bc0fd86545459a2ac",
+        "fault_records": {},
+        "hash_pre_fault": {
+          "ocr_custom_prompt.md": "03ec2d06b184282974d32be00f228bc37126c79b58aa9ec6e5fc38633e648e5d",
+          "pagefolio_settings.json": "19c31743a1b6b433fd7816682707d2572456d5fd8d04b3b2e55c91693c76317f",
+          "ocr_summary_prompt.md": "6960cb29b8b65b9823a2c48011316ae83dbec32331d2ab63260f910ce2c08b55",
+          "pagefolio_settings.json.tmp": null
+        },
+        "hash_before": {
+          "ocr_custom_prompt.md": "03ec2d06b184282974d32be00f228bc37126c79b58aa9ec6e5fc38633e648e5d",
+          "pagefolio_settings.json": "19c31743a1b6b433fd7816682707d2572456d5fd8d04b3b2e55c91693c76317f",
+          "ocr_summary_prompt.md": "6960cb29b8b65b9823a2c48011316ae83dbec32331d2ab63260f910ce2c08b55",
+          "pagefolio_settings.json.tmp": null
+        },
+        "hash_before_effective": {
+          "ocr_custom_prompt.md": "03ec2d06b184282974d32be00f228bc37126c79b58aa9ec6e5fc38633e648e5d",
+          "pagefolio_settings.json": "19c31743a1b6b433fd7816682707d2572456d5fd8d04b3b2e55c91693c76317f",
+          "ocr_summary_prompt.md": "6960cb29b8b65b9823a2c48011316ae83dbec32331d2ab63260f910ce2c08b55",
+          "pagefolio_settings.json.tmp": null
+        },
+        "probe_owner_before": [],
+        "hash_stable": {
+          "ocr_custom_prompt.md": "03ec2d06b184282974d32be00f228bc37126c79b58aa9ec6e5fc38633e648e5d",
+          "pagefolio_settings.json": "19c31743a1b6b433fd7816682707d2572456d5fd8d04b3b2e55c91693c76317f",
+          "ocr_summary_prompt.md": "6960cb29b8b65b9823a2c48011316ae83dbec32331d2ab63260f910ce2c08b55",
+          "pagefolio_settings.json.tmp": null
+        },
+        "hash_stable_effective": {
+          "ocr_custom_prompt.md": "03ec2d06b184282974d32be00f228bc37126c79b58aa9ec6e5fc38633e648e5d",
+          "pagefolio_settings.json": "19c31743a1b6b433fd7816682707d2572456d5fd8d04b3b2e55c91693c76317f",
+          "ocr_summary_prompt.md": "6960cb29b8b65b9823a2c48011316ae83dbec32331d2ab63260f910ce2c08b55",
+          "pagefolio_settings.json.tmp": null
+        },
+        "inspect_stable": {
+          "processes": [
+            {
+              "role": "primary",
+              "pid": 12916,
+              "created": 134373095700370476,
+              "identity": "same",
+              "alive": true,
+              "session_id": 1,
+              "elevated": false,
+              "windows": [
+                {
+                  "hwnd": 31002134,
+                  "visible": false,
+                  "title": "GDI+ Window (PageFolio.exe)",
+                  "class": "GDI+ Hook Window Class",
+                  "rect": [
+                    0,
+                    0,
+                    1,
+                    1
+                  ]
+                },
+                {
+                  "hwnd": 28377116,
+                  "visible": true,
+                  "title": "PageFolio",
+                  "class": "TkTopLevel",
+                  "rect": [
+                    208,
+                    208,
+                    1424,
+                    1047
+                  ]
+                },
+                {
+                  "hwnd": 20382558,
+                  "visible": false,
+                  "title": "EmbeddedMenuWindow",
+                  "class": "EmbeddedMenuWindowClass",
+                  "rect": [
+                    0,
+                    0,
+                    10,
+                    10
+                  ]
+                },
+                {
+                  "hwnd": 24383906,
+                  "visible": false,
+                  "title": "MenuWindow",
+                  "class": "MenuWindowClass",
+                  "rect": [
+                    0,
+                    0,
+                    10,
+                    10
+                  ]
+                },
+                {
+                  "hwnd": 3932742,
+                  "visible": false,
+                  "title": "",
+                  "class": "Wtk_TaskbarHandler",
+                  "rect": [
+                    0,
+                    0,
+                    1488,
+                    943
+                  ]
+                },
+                {
+                  "hwnd": 4197634,
+                  "visible": false,
+                  "title": "TtkMonitorWindow",
+                  "class": "TtkMonitorClass",
+                  "rect": [
+                    182,
+                    182,
+                    1462,
+                    917
+                  ]
+                },
+                {
+                  "hwnd": 17432914,
+                  "visible": false,
+                  "title": "MSCTFIME UI",
+                  "class": "MSCTFIME UI",
+                  "rect": [
+                    0,
+                    0,
+                    0,
+                    0
+                  ]
+                },
+                {
+                  "hwnd": 29363396,
+                  "visible": false,
+                  "title": "Default IME",
+                  "class": "IME",
+                  "rect": [
+                    0,
+                    0,
+                    0,
+                    0
+                  ]
+                },
+                {
+                  "hwnd": 33690156,
+                  "visible": false,
+                  "title": "",
+                  "class": "BingIMESysMessageWindow",
+                  "rect": [
+                    0,
+                    0,
+                    0,
+                    0
+                  ]
+                }
+              ]
+            }
+          ],
+          "foreground": {
+            "hwnd": 28377116,
+            "pid": 12916,
+            "title": "PageFolio",
+            "owned_by": "primary"
+          },
+          "copy_ok": true,
+          "locked_unverified": [],
+          "owner_probe": [
+            {
+              "kind": "mutex",
+              "name": "Local\\PageFolio.Startup.Owner",
+              "state": "open"
+            },
+            {
+              "kind": "mapping",
+              "name": "Local\\PageFolio.Startup.State",
+              "state": "open"
+            }
+          ]
+        },
+        "observed_at": "2026-10-24T09:59:38.187096+00:00",
+        "stop": [
+          {
+            "pid": 12916,
+            "result": "closed"
+          }
+        ],
+        "stop_diagnostics": [],
+        "hash_after_exit_with_hold": {
+          "ocr_custom_prompt.md": "03ec2d06b184282974d32be00f228bc37126c79b58aa9ec6e5fc38633e648e5d",
+          "pagefolio_settings.json": "a15b1ff051b042b36280e0fefbf67047c4a1406c0e04a84a2ad9a5856f7abab5",
+          "ocr_summary_prompt.md": "6960cb29b8b65b9823a2c48011316ae83dbec32331d2ab63260f910ce2c08b55",
+          "pagefolio_settings.json.tmp": null
+        },
+        "holder_hash_after_exit": null,
+        "hash_after_exit": {
+          "ocr_custom_prompt.md": "03ec2d06b184282974d32be00f228bc37126c79b58aa9ec6e5fc38633e648e5d",
+          "pagefolio_settings.json": "a15b1ff051b042b36280e0fefbf67047c4a1406c0e04a84a2ad9a5856f7abab5",
+          "ocr_summary_prompt.md": "6960cb29b8b65b9823a2c48011316ae83dbec32331d2ab63260f910ce2c08b55",
+          "pagefolio_settings.json.tmp": null
+        },
+        "verify_after": {
+          "ok": true,
+          "overlay_changed": [
+            "pagefolio_settings.json"
+          ],
+          "distribution_changed": [],
+          "locked_unverified": []
+        },
+        "source_unchanged": true,
+        "owner_after": [],
+        "name": "normal"
+      },
+      {
+        "run_id": "f7a78d95a4cc442b815d8e79c001d488",
+        "run": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf06_t2_f157d1e5a0454f7e89c363383182dff5\\runs\\release-uat-f7a78d95a4cc442b815d8e79c001d488",
+        "case": "launch-corrupt",
+        "faults": [
+          "corrupt"
+        ],
+        "binary_sha256": "f918bf767fb828afcaac3b329c3d6340e812ba931a704f1d3635994e8e20da23",
+        "tree_sha256": "a5392ed80813de39ab643c7b795e29579a2d387d50aa555bc0fd86545459a2ac",
+        "fault_records": {
+          "corrupt": {
+            "kind": "corrupt",
+            "settings_path": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf06_t2_f157d1e5a0454f7e89c363383182dff5\\runs\\release-uat-f7a78d95a4cc442b815d8e79c001d488\\dist\\pagefolio_settings.json",
+            "observer": {
+              "pid": 17948,
+              "created": 134373095647217856
+            },
+            "observed_at": "2026-10-24T09:59:42.677360+00:00",
+            "bytes_sha256": "ed0de1871216dc34d3db64391895a0e9959743309f9398ebec9a6693a6c025bc",
+            "json_parseable": false,
+            "established": true
+          }
+        },
+        "hash_pre_fault": {
+          "ocr_custom_prompt.md": "03ec2d06b184282974d32be00f228bc37126c79b58aa9ec6e5fc38633e648e5d",
+          "pagefolio_settings.json": null,
+          "ocr_summary_prompt.md": "6960cb29b8b65b9823a2c48011316ae83dbec32331d2ab63260f910ce2c08b55",
+          "pagefolio_settings.json.tmp": null
+        },
+        "hash_before": {
+          "ocr_custom_prompt.md": "03ec2d06b184282974d32be00f228bc37126c79b58aa9ec6e5fc38633e648e5d",
+          "pagefolio_settings.json": "ed0de1871216dc34d3db64391895a0e9959743309f9398ebec9a6693a6c025bc",
+          "ocr_summary_prompt.md": "6960cb29b8b65b9823a2c48011316ae83dbec32331d2ab63260f910ce2c08b55",
+          "pagefolio_settings.json.tmp": null
+        },
+        "hash_before_effective": {
+          "ocr_custom_prompt.md": "03ec2d06b184282974d32be00f228bc37126c79b58aa9ec6e5fc38633e648e5d",
+          "pagefolio_settings.json": "ed0de1871216dc34d3db64391895a0e9959743309f9398ebec9a6693a6c025bc",
+          "ocr_summary_prompt.md": "6960cb29b8b65b9823a2c48011316ae83dbec32331d2ab63260f910ce2c08b55",
+          "pagefolio_settings.json.tmp": null
+        },
+        "probe_owner_before": [],
+        "hash_stable": {
+          "ocr_custom_prompt.md": "03ec2d06b184282974d32be00f228bc37126c79b58aa9ec6e5fc38633e648e5d",
+          "pagefolio_settings.json": "ed0de1871216dc34d3db64391895a0e9959743309f9398ebec9a6693a6c025bc",
+          "ocr_summary_prompt.md": "6960cb29b8b65b9823a2c48011316ae83dbec32331d2ab63260f910ce2c08b55",
+          "pagefolio_settings.json.tmp": null
+        },
+        "hash_stable_effective": {
+          "ocr_custom_prompt.md": "03ec2d06b184282974d32be00f228bc37126c79b58aa9ec6e5fc38633e648e5d",
+          "pagefolio_settings.json": "ed0de1871216dc34d3db64391895a0e9959743309f9398ebec9a6693a6c025bc",
+          "ocr_summary_prompt.md": "6960cb29b8b65b9823a2c48011316ae83dbec32331d2ab63260f910ce2c08b55",
+          "pagefolio_settings.json.tmp": null
+        },
+        "inspect_stable": {
+          "processes": [
+            {
+              "role": "primary",
+              "pid": 28524,
+              "created": 134373095833630021,
+              "identity": "same",
+              "alive": true,
+              "session_id": 1,
+              "elevated": false,
+              "windows": [
+                {
+                  "hwnd": 12193968,
+                  "visible": false,
+                  "title": "GDI+ Window (PageFolio.exe)",
+                  "class": "GDI+ Hook Window Class",
+                  "rect": [
+                    0,
+                    0,
+                    1,
+                    1
+                  ]
+                },
+                {
+                  "hwnd": 3150104,
+                  "visible": true,
+                  "title": "PageFolio",
+                  "class": "TkTopLevel",
+                  "rect": [
+                    26,
+                    26,
+                    1242,
+                    865
+                  ]
+                },
+                {
+                  "hwnd": 26612018,
+                  "visible": false,
+                  "title": "EmbeddedMenuWindow",
+                  "class": "EmbeddedMenuWindowClass",
+                  "rect": [
+                    0,
+                    0,
+                    10,
+                    10
+                  ]
+                },
+                {
+                  "hwnd": 31067400,
+                  "visible": false,
+                  "title": "MenuWindow",
+                  "class": "MenuWindowClass",
+                  "rect": [
+                    0,
+                    0,
+                    10,
+                    10
+                  ]
+                },
+                {
+                  "hwnd": 34212236,
+                  "visible": false,
+                  "title": "",
+                  "class": "Wtk_TaskbarHandler",
+                  "rect": [
+                    0,
+                    0,
+                    1306,
+                    761
+                  ]
+                },
+                {
+                  "hwnd": 23134554,
+                  "visible": false,
+                  "title": "TtkMonitorWindow",
+                  "class": "TtkMonitorClass",
+                  "rect": [
+                    234,
+                    234,
+                    1514,
+                    969
+                  ]
+                },
+                {
+                  "hwnd": 30740098,
+                  "visible": false,
+                  "title": "MSCTFIME UI",
+                  "class": "MSCTFIME UI",
+                  "rect": [
+                    0,
+                    0,
+                    0,
+                    0
+                  ]
+                },
+                {
+                  "hwnd": 20448094,
+                  "visible": false,
+                  "title": "Default IME",
+                  "class": "IME",
+                  "rect": [
+                    0,
+                    0,
+                    0,
+                    0
+                  ]
+                },
+                {
+                  "hwnd": 30478476,
+                  "visible": false,
+                  "title": "",
+                  "class": "BingIMESysMessageWindow",
+                  "rect": [
+                    0,
+                    0,
+                    0,
+                    0
+                  ]
+                }
+              ]
+            }
+          ],
+          "foreground": {
+            "hwnd": 3150104,
+            "pid": 28524,
+            "title": "PageFolio",
+            "owned_by": "primary"
+          },
+          "copy_ok": true,
+          "locked_unverified": [],
+          "owner_probe": [
+            {
+              "kind": "mutex",
+              "name": "Local\\PageFolio.Startup.Owner",
+              "state": "open"
+            },
+            {
+              "kind": "mapping",
+              "name": "Local\\PageFolio.Startup.State",
+              "state": "open"
+            }
+          ]
+        },
+        "observed_at": "2026-10-24T09:59:51.500181+00:00",
+        "stop": [
+          {
+            "pid": 28524,
+            "result": "closed"
+          }
+        ],
+        "stop_diagnostics": [],
+        "hash_after_exit_with_hold": {
+          "ocr_custom_prompt.md": "03ec2d06b184282974d32be00f228bc37126c79b58aa9ec6e5fc38633e648e5d",
+          "pagefolio_settings.json": "ed0de1871216dc34d3db64391895a0e9959743309f9398ebec9a6693a6c025bc",
+          "ocr_summary_prompt.md": "6960cb29b8b65b9823a2c48011316ae83dbec32331d2ab63260f910ce2c08b55",
+          "pagefolio_settings.json.tmp": null
+        },
+        "holder_hash_after_exit": null,
+        "hash_after_exit": {
+          "ocr_custom_prompt.md": "03ec2d06b184282974d32be00f228bc37126c79b58aa9ec6e5fc38633e648e5d",
+          "pagefolio_settings.json": "ed0de1871216dc34d3db64391895a0e9959743309f9398ebec9a6693a6c025bc",
+          "ocr_summary_prompt.md": "6960cb29b8b65b9823a2c48011316ae83dbec32331d2ab63260f910ce2c08b55",
+          "pagefolio_settings.json.tmp": null
+        },
+        "verify_after": {
+          "ok": true,
+          "overlay_changed": [],
+          "distribution_changed": [],
+          "locked_unverified": []
+        },
+        "source_unchanged": true,
+        "owner_after": [],
+        "name": "corrupt"
+      },
+      {
+        "run_id": "2b7a53f82f014af294721a2c96ee6f2a",
+        "run": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf06_t2_f157d1e5a0454f7e89c363383182dff5\\runs\\release-uat-2b7a53f82f014af294721a2c96ee6f2a",
+        "case": "launch-unreadable",
+        "faults": [
+          "unreadable"
+        ],
+        "binary_sha256": "f918bf767fb828afcaac3b329c3d6340e812ba931a704f1d3635994e8e20da23",
+        "tree_sha256": "a5392ed80813de39ab643c7b795e29579a2d387d50aa555bc0fd86545459a2ac",
+        "fault_records": {
+          "unreadable": {
+            "kind": "unreadable",
+            "settings_path": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf06_t2_f157d1e5a0454f7e89c363383182dff5\\runs\\release-uat-2b7a53f82f014af294721a2c96ee6f2a\\dist\\pagefolio_settings.json",
+            "observer": {
+              "pid": 17948,
+              "created": 134373095647217856
+            },
+            "observed_at": "2026-10-24T09:59:55.929885+00:00",
+            "handle": {
+              "access": "0x80000000",
+              "share": "0x0"
+            },
+            "probe_read": {
+              "ok": false,
+              "win32_error": 32,
+              "access": "0x80000000"
+            },
+            "original_sha256": "19c31743a1b6b433fd7816682707d2572456d5fd8d04b3b2e55c91693c76317f",
+            "established": true
+          }
+        },
+        "hash_pre_fault": {
+          "ocr_custom_prompt.md": "03ec2d06b184282974d32be00f228bc37126c79b58aa9ec6e5fc38633e648e5d",
+          "pagefolio_settings.json": "19c31743a1b6b433fd7816682707d2572456d5fd8d04b3b2e55c91693c76317f",
+          "ocr_summary_prompt.md": "6960cb29b8b65b9823a2c48011316ae83dbec32331d2ab63260f910ce2c08b55",
+          "pagefolio_settings.json.tmp": null
+        },
+        "hash_before": {
+          "ocr_custom_prompt.md": "03ec2d06b184282974d32be00f228bc37126c79b58aa9ec6e5fc38633e648e5d",
+          "pagefolio_settings.json": "<locked>",
+          "ocr_summary_prompt.md": "6960cb29b8b65b9823a2c48011316ae83dbec32331d2ab63260f910ce2c08b55",
+          "pagefolio_settings.json.tmp": null
+        },
+        "hash_before_effective": {
+          "ocr_custom_prompt.md": "03ec2d06b184282974d32be00f228bc37126c79b58aa9ec6e5fc38633e648e5d",
+          "pagefolio_settings.json": "19c31743a1b6b433fd7816682707d2572456d5fd8d04b3b2e55c91693c76317f",
+          "ocr_summary_prompt.md": "6960cb29b8b65b9823a2c48011316ae83dbec32331d2ab63260f910ce2c08b55",
+          "pagefolio_settings.json.tmp": null
+        },
+        "probe_owner_before": [],
+        "hash_stable": {
+          "ocr_custom_prompt.md": "03ec2d06b184282974d32be00f228bc37126c79b58aa9ec6e5fc38633e648e5d",
+          "pagefolio_settings.json": "<locked>",
+          "ocr_summary_prompt.md": "6960cb29b8b65b9823a2c48011316ae83dbec32331d2ab63260f910ce2c08b55",
+          "pagefolio_settings.json.tmp": null
+        },
+        "hash_stable_effective": {
+          "ocr_custom_prompt.md": "03ec2d06b184282974d32be00f228bc37126c79b58aa9ec6e5fc38633e648e5d",
+          "pagefolio_settings.json": "19c31743a1b6b433fd7816682707d2572456d5fd8d04b3b2e55c91693c76317f",
+          "ocr_summary_prompt.md": "6960cb29b8b65b9823a2c48011316ae83dbec32331d2ab63260f910ce2c08b55",
+          "pagefolio_settings.json.tmp": null
+        },
+        "probe_during_run": {
+          "ok": false,
+          "win32_error": 32,
+          "access": "0x80000000"
+        },
+        "inspect_stable": {
+          "processes": [
+            {
+              "role": "primary",
+              "pid": 31020,
+              "created": 134373095966118880,
+              "identity": "same",
+              "alive": true,
+              "session_id": 1,
+              "elevated": false,
+              "windows": [
+                {
+                  "hwnd": 31262348,
+                  "visible": false,
+                  "title": "GDI+ Window (PageFolio.exe)",
+                  "class": "GDI+ Hook Window Class",
+                  "rect": [
+                    0,
+                    0,
+                    1,
+                    1
+                  ]
+                },
+                {
+                  "hwnd": 43912612,
+                  "visible": true,
+                  "title": "PageFolio",
+                  "class": "TkTopLevel",
+                  "rect": [
+                    78,
+                    78,
+                    1294,
+                    917
+                  ]
+                },
+                {
+                  "hwnd": 30019118,
+                  "visible": false,
+                  "title": "EmbeddedMenuWindow",
+                  "class": "EmbeddedMenuWindowClass",
+                  "rect": [
+                    0,
+                    0,
+                    10,
+                    10
+                  ]
+                },
+                {
+                  "hwnd": 34082324,
+                  "visible": false,
+                  "title": "MenuWindow",
+                  "class": "MenuWindowClass",
+                  "rect": [
+                    0,
+                    0,
+                    10,
+                    10
+                  ]
+                },
+                {
+                  "hwnd": 31132936,
+                  "visible": false,
+                  "title": "",
+                  "class": "Wtk_TaskbarHandler",
+                  "rect": [
+                    0,
+                    0,
+                    1358,
+                    813
+                  ]
+                },
+                {
+                  "hwnd": 40962842,
+                  "visible": false,
+                  "title": "TtkMonitorWindow",
+                  "class": "TtkMonitorClass",
+                  "rect": [
+                    52,
+                    52,
+                    1332,
+                    787
+                  ]
+                },
+                {
+                  "hwnd": 34803788,
+                  "visible": false,
+                  "title": "MSCTFIME UI",
+                  "class": "MSCTFIME UI",
+                  "rect": [
+                    0,
+                    0,
+                    0,
+                    0
+                  ]
+                },
+                {
+                  "hwnd": 39914642,
+                  "visible": false,
+                  "title": "Default IME",
+                  "class": "IME",
+                  "rect": [
+                    0,
+                    0,
+                    0,
+                    0
+                  ]
+                },
+                {
+                  "hwnd": 29233670,
+                  "visible": false,
+                  "title": "",
+                  "class": "BingIMESysMessageWindow",
+                  "rect": [
+                    0,
+                    0,
+                    0,
+                    0
+                  ]
+                }
+              ]
+            }
+          ],
+          "foreground": {
+            "hwnd": 43912612,
+            "pid": 31020,
+            "title": "PageFolio",
+            "owned_by": "primary"
+          },
+          "copy_ok": true,
+          "locked_unverified": [
+            "pagefolio_settings.json"
+          ],
+          "owner_probe": [
+            {
+              "kind": "mutex",
+              "name": "Local\\PageFolio.Startup.Owner",
+              "state": "open"
+            },
+            {
+              "kind": "mapping",
+              "name": "Local\\PageFolio.Startup.State",
+              "state": "open"
+            }
+          ]
+        },
+        "observed_at": "2026-10-24T10:00:04.745695+00:00",
+        "stop": [
+          {
+            "pid": 31020,
+            "result": "closed"
+          }
+        ],
+        "stop_diagnostics": [],
+        "hash_after_exit_with_hold": {
+          "ocr_custom_prompt.md": "03ec2d06b184282974d32be00f228bc37126c79b58aa9ec6e5fc38633e648e5d",
+          "pagefolio_settings.json": "<locked>",
+          "ocr_summary_prompt.md": "6960cb29b8b65b9823a2c48011316ae83dbec32331d2ab63260f910ce2c08b55",
+          "pagefolio_settings.json.tmp": null
+        },
+        "holder_hash_after_exit": "19c31743a1b6b433fd7816682707d2572456d5fd8d04b3b2e55c91693c76317f",
+        "hash_after_exit": {
+          "ocr_custom_prompt.md": "03ec2d06b184282974d32be00f228bc37126c79b58aa9ec6e5fc38633e648e5d",
+          "pagefolio_settings.json": "19c31743a1b6b433fd7816682707d2572456d5fd8d04b3b2e55c91693c76317f",
+          "ocr_summary_prompt.md": "6960cb29b8b65b9823a2c48011316ae83dbec32331d2ab63260f910ce2c08b55",
+          "pagefolio_settings.json.tmp": null
+        },
+        "verify_after": {
+          "ok": true,
+          "overlay_changed": [],
+          "distribution_changed": [],
+          "locked_unverified": []
+        },
+        "source_unchanged": true,
+        "owner_after": [],
+        "name": "unreadable"
+      }
+    ]
+  },
+  "update": {
+    "collision": {
+      "run_id": "1415fdeadeba4570aa5c229c2603002b",
+      "old_copy_run": "65468902bf4f4efeb4f880f83f302acc",
+      "new_copy_run": "eea9ec4a38e044f989f27d52a9a185de",
+      "procedure": "はじめに.md 手順2-3の非上書きコピーを検証担当が手で行う操作として模擬(製品機能ではない)",
+      "old_source": "initial runのtree(.release-history)",
+      "result": {
+        "stopped_before_choice": true,
+        "collisions": [
+          "pagefolio_settings.json"
+        ],
+        "copied": []
+      },
+      "old_before": {
+        "ocr_custom_prompt.md": "7f403bb260a3b4089031c55db6c1fb07f50a4f0942a2f2fc55a01943e62b3386",
+        "pagefolio_settings.json": "63a3ab04b57033db1a613747f96005065b7898e234bbaec4cbe895cfc43d9ee8",
+        "ocr_summary_prompt.md": "ba7a48670cebeaaecb3844ea16c2853a8fb935bbee08d6c451357e05688278fe",
+        "pagefolio_settings.json.tmp": null
+      },
+      "old_after": {
+        "ocr_custom_prompt.md": "7f403bb260a3b4089031c55db6c1fb07f50a4f0942a2f2fc55a01943e62b3386",
+        "pagefolio_settings.json": "63a3ab04b57033db1a613747f96005065b7898e234bbaec4cbe895cfc43d9ee8",
+        "ocr_summary_prompt.md": "ba7a48670cebeaaecb3844ea16c2853a8fb935bbee08d6c451357e05688278fe",
+        "pagefolio_settings.json.tmp": null
+      },
+      "new_before": {
+        "ocr_custom_prompt.md": null,
+        "pagefolio_settings.json": "fdd517cbcbd42b4ad79dd4dfe355b98ae8854f3587b66e1892c7470d34c51b17",
+        "ocr_summary_prompt.md": null,
+        "pagefolio_settings.json.tmp": null
+      },
+      "new_after": {
+        "ocr_custom_prompt.md": null,
+        "pagefolio_settings.json": "fdd517cbcbd42b4ad79dd4dfe355b98ae8854f3587b66e1892c7470d34c51b17",
+        "ocr_summary_prompt.md": null,
+        "pagefolio_settings.json.tmp": null
+      },
+      "old_tree_sha256_source": "6c73bd24145000cbda39179fd9217366899b6aa880489cfd61c775773c89d287",
+      "new_tree_sha256_source": "a5392ed80813de39ab643c7b795e29579a2d387d50aa555bc0fd86545459a2ac",
+      "stopped_before_choice": true
+    },
+    "no_collision": {
+      "run_id": "9c25fd933e0549ab80c14914eebdd161",
+      "old_copy_run": "64058e97276540f38e6ae5c6f4052f5d",
+      "new_copy_run": "db2f16a9041546caaf9bc9d5eb015683",
+      "procedure": "はじめに.md 手順2-3の非上書きコピーを検証担当が手で行う操作として模擬(製品機能ではない)",
+      "old_source": "initial runのtree(.release-history)",
+      "result": {
+        "stopped_before_choice": false,
+        "collisions": [],
+        "copied": [
+          "ocr_custom_prompt.md",
+          "pagefolio_settings.json",
+          "ocr_summary_prompt.md"
+        ]
+      },
+      "old_before": {
+        "ocr_custom_prompt.md": "7f403bb260a3b4089031c55db6c1fb07f50a4f0942a2f2fc55a01943e62b3386",
+        "pagefolio_settings.json": "63a3ab04b57033db1a613747f96005065b7898e234bbaec4cbe895cfc43d9ee8",
+        "ocr_summary_prompt.md": "ba7a48670cebeaaecb3844ea16c2853a8fb935bbee08d6c451357e05688278fe",
+        "pagefolio_settings.json.tmp": null
+      },
+      "old_after": {
+        "ocr_custom_prompt.md": "7f403bb260a3b4089031c55db6c1fb07f50a4f0942a2f2fc55a01943e62b3386",
+        "pagefolio_settings.json": "63a3ab04b57033db1a613747f96005065b7898e234bbaec4cbe895cfc43d9ee8",
+        "ocr_summary_prompt.md": "ba7a48670cebeaaecb3844ea16c2853a8fb935bbee08d6c451357e05688278fe",
+        "pagefolio_settings.json.tmp": null
+      },
+      "new_before": {
+        "ocr_custom_prompt.md": null,
+        "pagefolio_settings.json": null,
+        "ocr_summary_prompt.md": null,
+        "pagefolio_settings.json.tmp": null
+      },
+      "new_after": {
+        "ocr_custom_prompt.md": "7f403bb260a3b4089031c55db6c1fb07f50a4f0942a2f2fc55a01943e62b3386",
+        "pagefolio_settings.json": "63a3ab04b57033db1a613747f96005065b7898e234bbaec4cbe895cfc43d9ee8",
+        "ocr_summary_prompt.md": "ba7a48670cebeaaecb3844ea16c2853a8fb935bbee08d6c451357e05688278fe",
+        "pagefolio_settings.json.tmp": null
+      },
+      "old_tree_sha256_source": "6c73bd24145000cbda39179fd9217366899b6aa880489cfd61c775773c89d287",
+      "new_tree_sha256_source": "a5392ed80813de39ab643c7b795e29579a2d387d50aa555bc0fd86545459a2ac",
+      "copied_hash_match": true,
+      "old_preserved": true
+    }
+  },
+  "fault_sessions": {
+    "X01": {
+      "run_id": "2354dd0e4c934de6a44fc624f62e01da",
+      "run": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf06_t2_f157d1e5a0454f7e89c363383182dff5\\runs\\release-uat-2354dd0e4c934de6a44fc624f62e01da",
+      "case": "fault-x01-missing",
+      "faults": [
+        "missing"
+      ],
+      "binary_sha256": "f918bf767fb828afcaac3b329c3d6340e812ba931a704f1d3635994e8e20da23",
+      "tree_sha256": "a5392ed80813de39ab643c7b795e29579a2d387d50aa555bc0fd86545459a2ac",
+      "fault_records": {
+        "missing": {
+          "kind": "missing",
+          "settings_path": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf06_t2_f157d1e5a0454f7e89c363383182dff5\\runs\\release-uat-2354dd0e4c934de6a44fc624f62e01da\\dist\\pagefolio_settings.json",
+          "observer": {
+            "pid": 7504,
+            "created": 134373096394136789
+          },
+          "observed_at": "2026-10-24T10:00:44.345936+00:00",
+          "settings_exists": false,
+          "established": true
+        }
+      },
+      "hash_pre_fault": {
+        "ocr_custom_prompt.md": null,
+        "pagefolio_settings.json": null,
+        "ocr_summary_prompt.md": null,
+        "pagefolio_settings.json.tmp": null
+      },
+      "hash_before": {
+        "ocr_custom_prompt.md": null,
+        "pagefolio_settings.json": null,
+        "ocr_summary_prompt.md": null,
+        "pagefolio_settings.json.tmp": null
+      },
+      "hash_before_effective": {
+        "ocr_custom_prompt.md": null,
+        "pagefolio_settings.json": null,
+        "ocr_summary_prompt.md": null,
+        "pagefolio_settings.json.tmp": null
+      },
+      "probe_owner_before": [],
+      "hash_stable": {
+        "ocr_custom_prompt.md": null,
+        "pagefolio_settings.json": null,
+        "ocr_summary_prompt.md": null,
+        "pagefolio_settings.json.tmp": null
+      },
+      "hash_stable_effective": {
+        "ocr_custom_prompt.md": null,
+        "pagefolio_settings.json": null,
+        "ocr_summary_prompt.md": null,
+        "pagefolio_settings.json.tmp": null
+      },
+      "inspect_stable": {
+        "processes": [
+          {
+            "role": "primary",
+            "pid": 20792,
+            "created": 134373096448924963,
+            "identity": "same",
+            "alive": true,
+            "session_id": 1,
+            "elevated": false,
+            "windows": [
+              {
+                "hwnd": 14946060,
+                "visible": false,
+                "title": "GDI+ Window (PageFolio.exe)",
+                "class": "GDI+ Hook Window Class",
+                "rect": [
+                  0,
+                  0,
+                  1,
+                  1
+                ]
+              },
+              {
+                "hwnd": 26284070,
+                "visible": true,
+                "title": "PageFolio",
+                "class": "TkTopLevel",
+                "rect": [
+                  156,
+                  156,
+                  1372,
+                  995
+                ]
+              },
+              {
+                "hwnd": 31788300,
+                "visible": false,
+                "title": "EmbeddedMenuWindow",
+                "class": "EmbeddedMenuWindowClass",
+                "rect": [
+                  0,
+                  0,
+                  10,
+                  10
+                ]
+              },
+              {
+                "hwnd": 20975952,
+                "visible": false,
+                "title": "MenuWindow",
+                "class": "MenuWindowClass",
+                "rect": [
+                  0,
+                  0,
+                  10,
+                  10
+                ]
+              },
+              {
+                "hwnd": 34213396,
+                "visible": false,
+                "title": "",
+                "class": "Wtk_TaskbarHandler",
+                "rect": [
+                  0,
+                  0,
+                  1436,
+                  891
+                ]
+              },
+              {
+                "hwnd": 18877808,
+                "visible": false,
+                "title": "TtkMonitorWindow",
+                "class": "TtkMonitorClass",
+                "rect": [
+                  130,
+                  130,
+                  1410,
+                  865
+                ]
+              },
+              {
+                "hwnd": 4723020,
+                "visible": false,
+                "title": "MSCTFIME UI",
+                "class": "MSCTFIME UI",
+                "rect": [
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              },
+              {
+                "hwnd": 33885556,
+                "visible": false,
+                "title": "Default IME",
+                "class": "IME",
+                "rect": [
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              },
+              {
+                "hwnd": 45223746,
+                "visible": false,
+                "title": "",
+                "class": "BingIMESysMessageWindow",
+                "rect": [
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              }
+            ]
+          }
+        ],
+        "foreground": {
+          "hwnd": 26284070,
+          "pid": 20792,
+          "title": "PageFolio",
+          "owned_by": "primary"
+        },
+        "copy_ok": true,
+        "locked_unverified": [],
+        "owner_probe": [
+          {
+            "kind": "mutex",
+            "name": "Local\\PageFolio.Startup.Owner",
+            "state": "open"
+          },
+          {
+            "kind": "mapping",
+            "name": "Local\\PageFolio.Startup.State",
+            "state": "open"
+          }
+        ]
+      },
+      "observed_at": "2026-10-24T10:00:53.041548+00:00",
+      "stop": [
+        {
+          "pid": 20792,
+          "result": "closed"
+        }
+      ],
+      "stop_diagnostics": [],
+      "hash_after_exit_with_hold": {
+        "ocr_custom_prompt.md": null,
+        "pagefolio_settings.json": "222f3f793bcd95e994cac536d157142e9b6cea76e3d6bfe422c9d1e37657712d",
+        "ocr_summary_prompt.md": null,
+        "pagefolio_settings.json.tmp": null
+      },
+      "holder_hash_after_exit": null,
+      "hash_after_exit": {
+        "ocr_custom_prompt.md": null,
+        "pagefolio_settings.json": "222f3f793bcd95e994cac536d157142e9b6cea76e3d6bfe422c9d1e37657712d",
+        "ocr_summary_prompt.md": null,
+        "pagefolio_settings.json.tmp": null
+      },
+      "verify_after": {
+        "ok": true,
+        "overlay_changed": [
+          "pagefolio_settings.json"
+        ],
+        "distribution_changed": [],
+        "locked_unverified": []
+      },
+      "source_unchanged": true,
+      "owner_after": []
+    },
+    "X02": {
+      "run_id": "ca66fbc00cdf49958d7d0f801949d934",
+      "run": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf06_t2_f157d1e5a0454f7e89c363383182dff5\\runs\\release-uat-ca66fbc00cdf49958d7d0f801949d934",
+      "case": "fault-x02-corrupt",
+      "faults": [
+        "corrupt"
+      ],
+      "binary_sha256": "f918bf767fb828afcaac3b329c3d6340e812ba931a704f1d3635994e8e20da23",
+      "tree_sha256": "a5392ed80813de39ab643c7b795e29579a2d387d50aa555bc0fd86545459a2ac",
+      "fault_records": {
+        "corrupt": {
+          "kind": "corrupt",
+          "settings_path": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf06_t2_f157d1e5a0454f7e89c363383182dff5\\runs\\release-uat-ca66fbc00cdf49958d7d0f801949d934\\dist\\pagefolio_settings.json",
+          "observer": {
+            "pid": 7504,
+            "created": 134373096394136789
+          },
+          "observed_at": "2026-10-24T10:00:57.485278+00:00",
+          "bytes_sha256": "ed0de1871216dc34d3db64391895a0e9959743309f9398ebec9a6693a6c025bc",
+          "json_parseable": false,
+          "established": true
+        }
+      },
+      "hash_pre_fault": {
+        "ocr_custom_prompt.md": null,
+        "pagefolio_settings.json": null,
+        "ocr_summary_prompt.md": null,
+        "pagefolio_settings.json.tmp": null
+      },
+      "hash_before": {
+        "ocr_custom_prompt.md": null,
+        "pagefolio_settings.json": "ed0de1871216dc34d3db64391895a0e9959743309f9398ebec9a6693a6c025bc",
+        "ocr_summary_prompt.md": null,
+        "pagefolio_settings.json.tmp": null
+      },
+      "hash_before_effective": {
+        "ocr_custom_prompt.md": null,
+        "pagefolio_settings.json": "ed0de1871216dc34d3db64391895a0e9959743309f9398ebec9a6693a6c025bc",
+        "ocr_summary_prompt.md": null,
+        "pagefolio_settings.json.tmp": null
+      },
+      "probe_owner_before": [],
+      "hash_stable": {
+        "ocr_custom_prompt.md": null,
+        "pagefolio_settings.json": "ed0de1871216dc34d3db64391895a0e9959743309f9398ebec9a6693a6c025bc",
+        "ocr_summary_prompt.md": null,
+        "pagefolio_settings.json.tmp": null
+      },
+      "hash_stable_effective": {
+        "ocr_custom_prompt.md": null,
+        "pagefolio_settings.json": "ed0de1871216dc34d3db64391895a0e9959743309f9398ebec9a6693a6c025bc",
+        "ocr_summary_prompt.md": null,
+        "pagefolio_settings.json.tmp": null
+      },
+      "inspect_stable": {
+        "processes": [
+          {
+            "role": "primary",
+            "pid": 32680,
+            "created": 134373096581401791,
+            "identity": "same",
+            "alive": true,
+            "session_id": 1,
+            "elevated": false,
+            "windows": [
+              {
+                "hwnd": 7671518,
+                "visible": false,
+                "title": "GDI+ Window (PageFolio.exe)",
+                "class": "GDI+ Hook Window Class",
+                "rect": [
+                  0,
+                  0,
+                  1,
+                  1
+                ]
+              },
+              {
+                "hwnd": 30216334,
+                "visible": true,
+                "title": "PageFolio",
+                "class": "TkTopLevel",
+                "rect": [
+                  208,
+                  208,
+                  1424,
+                  1047
+                ]
+              },
+              {
+                "hwnd": 23597596,
+                "visible": false,
+                "title": "EmbeddedMenuWindow",
+                "class": "EmbeddedMenuWindowClass",
+                "rect": [
+                  0,
+                  0,
+                  10,
+                  10
+                ]
+              },
+              {
+                "hwnd": 52104942,
+                "visible": false,
+                "title": "MenuWindow",
+                "class": "MenuWindowClass",
+                "rect": [
+                  0,
+                  0,
+                  10,
+                  10
+                ]
+              },
+              {
+                "hwnd": 60559104,
+                "visible": false,
+                "title": "",
+                "class": "Wtk_TaskbarHandler",
+                "rect": [
+                  0,
+                  0,
+                  1488,
+                  943
+                ]
+              },
+              {
+                "hwnd": 33951092,
+                "visible": false,
+                "title": "TtkMonitorWindow",
+                "class": "TtkMonitorClass",
+                "rect": [
+                  182,
+                  182,
+                  1462,
+                  917
+                ]
+              },
+              {
+                "hwnd": 12390576,
+                "visible": false,
+                "title": "MSCTFIME UI",
+                "class": "MSCTFIME UI",
+                "rect": [
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              },
+              {
+                "hwnd": 31264278,
+                "visible": false,
+                "title": "Default IME",
+                "class": "IME",
+                "rect": [
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              },
+              {
+                "hwnd": 6230502,
+                "visible": false,
+                "title": "",
+                "class": "BingIMESysMessageWindow",
+                "rect": [
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              }
+            ]
+          }
+        ],
+        "foreground": {
+          "hwnd": 30216334,
+          "pid": 32680,
+          "title": "PageFolio",
+          "owned_by": "primary"
+        },
+        "copy_ok": true,
+        "locked_unverified": [],
+        "owner_probe": [
+          {
+            "kind": "mutex",
+            "name": "Local\\PageFolio.Startup.Owner",
+            "state": "open"
+          },
+          {
+            "kind": "mapping",
+            "name": "Local\\PageFolio.Startup.State",
+            "state": "open"
+          }
+        ]
+      },
+      "observed_at": "2026-10-24T10:01:06.271712+00:00",
+      "stop": [
+        {
+          "pid": 32680,
+          "result": "closed"
+        }
+      ],
+      "stop_diagnostics": [],
+      "hash_after_exit_with_hold": {
+        "ocr_custom_prompt.md": null,
+        "pagefolio_settings.json": "ed0de1871216dc34d3db64391895a0e9959743309f9398ebec9a6693a6c025bc",
+        "ocr_summary_prompt.md": null,
+        "pagefolio_settings.json.tmp": null
+      },
+      "holder_hash_after_exit": null,
+      "hash_after_exit": {
+        "ocr_custom_prompt.md": null,
+        "pagefolio_settings.json": "ed0de1871216dc34d3db64391895a0e9959743309f9398ebec9a6693a6c025bc",
+        "ocr_summary_prompt.md": null,
+        "pagefolio_settings.json.tmp": null
+      },
+      "verify_after": {
+        "ok": true,
+        "overlay_changed": [],
+        "distribution_changed": [],
+        "locked_unverified": []
+      },
+      "source_unchanged": true,
+      "owner_after": []
+    },
+    "X03": {
+      "run_id": "bbe088a0fd8344a688d81ec4eaa66d89",
+      "run": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf06_t2_f157d1e5a0454f7e89c363383182dff5\\runs\\release-uat-bbe088a0fd8344a688d81ec4eaa66d89",
+      "case": "fault-x03-unreadable",
+      "faults": [
+        "unreadable"
+      ],
+      "binary_sha256": "f918bf767fb828afcaac3b329c3d6340e812ba931a704f1d3635994e8e20da23",
+      "tree_sha256": "a5392ed80813de39ab643c7b795e29579a2d387d50aa555bc0fd86545459a2ac",
+      "fault_records": {
+        "unreadable": {
+          "kind": "unreadable",
+          "settings_path": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf06_t2_f157d1e5a0454f7e89c363383182dff5\\runs\\release-uat-bbe088a0fd8344a688d81ec4eaa66d89\\dist\\pagefolio_settings.json",
+          "observer": {
+            "pid": 7504,
+            "created": 134373096394136789
+          },
+          "observed_at": "2026-10-24T10:01:10.705742+00:00",
+          "handle": {
+            "access": "0x80000000",
+            "share": "0x0"
+          },
+          "probe_read": {
+            "ok": false,
+            "win32_error": 32,
+            "access": "0x80000000"
+          },
+          "original_sha256": "19c31743a1b6b433fd7816682707d2572456d5fd8d04b3b2e55c91693c76317f",
+          "established": true
+        }
+      },
+      "hash_pre_fault": {
+        "ocr_custom_prompt.md": null,
+        "pagefolio_settings.json": "19c31743a1b6b433fd7816682707d2572456d5fd8d04b3b2e55c91693c76317f",
+        "ocr_summary_prompt.md": null,
+        "pagefolio_settings.json.tmp": null
+      },
+      "hash_before": {
+        "ocr_custom_prompt.md": null,
+        "pagefolio_settings.json": "<locked>",
+        "ocr_summary_prompt.md": null,
+        "pagefolio_settings.json.tmp": null
+      },
+      "hash_before_effective": {
+        "ocr_custom_prompt.md": null,
+        "pagefolio_settings.json": "19c31743a1b6b433fd7816682707d2572456d5fd8d04b3b2e55c91693c76317f",
+        "ocr_summary_prompt.md": null,
+        "pagefolio_settings.json.tmp": null
+      },
+      "probe_owner_before": [],
+      "hash_stable": {
+        "ocr_custom_prompt.md": null,
+        "pagefolio_settings.json": "<locked>",
+        "ocr_summary_prompt.md": null,
+        "pagefolio_settings.json.tmp": null
+      },
+      "hash_stable_effective": {
+        "ocr_custom_prompt.md": null,
+        "pagefolio_settings.json": "19c31743a1b6b433fd7816682707d2572456d5fd8d04b3b2e55c91693c76317f",
+        "ocr_summary_prompt.md": null,
+        "pagefolio_settings.json.tmp": null
+      },
+      "probe_during_run": {
+        "ok": false,
+        "win32_error": 32,
+        "access": "0x80000000"
+      },
+      "inspect_stable": {
+        "processes": [
+          {
+            "role": "primary",
+            "pid": 29748,
+            "created": 134373096713514012,
+            "identity": "same",
+            "alive": true,
+            "session_id": 1,
+            "elevated": false,
+            "windows": [
+              {
+                "hwnd": 36375978,
+                "visible": false,
+                "title": "GDI+ Window (PageFolio.exe)",
+                "class": "GDI+ Hook Window Class",
+                "rect": [
+                  0,
+                  0,
+                  1,
+                  1
+                ]
+              },
+              {
+                "hwnd": 6951258,
+                "visible": true,
+                "title": "PageFolio",
+                "class": "TkTopLevel",
+                "rect": [
+                  26,
+                  26,
+                  1242,
+                  865
+                ]
+              },
+              {
+                "hwnd": 24183128,
+                "visible": false,
+                "title": "EmbeddedMenuWindow",
+                "class": "EmbeddedMenuWindowClass",
+                "rect": [
+                  0,
+                  0,
+                  10,
+                  10
+                ]
+              },
+              {
+                "hwnd": 64098266,
+                "visible": false,
+                "title": "MenuWindow",
+                "class": "MenuWindowClass",
+                "rect": [
+                  0,
+                  0,
+                  10,
+                  10
+                ]
+              },
+              {
+                "hwnd": 68751624,
+                "visible": false,
+                "title": "",
+                "class": "Wtk_TaskbarHandler",
+                "rect": [
+                  0,
+                  0,
+                  1306,
+                  761
+                ]
+              },
+              {
+                "hwnd": 52170478,
+                "visible": false,
+                "title": "TtkMonitorWindow",
+                "class": "TtkMonitorClass",
+                "rect": [
+                  234,
+                  234,
+                  1514,
+                  969
+                ]
+              },
+              {
+                "hwnd": 20841310,
+                "visible": false,
+                "title": "MSCTFIME UI",
+                "class": "MSCTFIME UI",
+                "rect": [
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              },
+              {
+                "hwnd": 45485890,
+                "visible": false,
+                "title": "Default IME",
+                "class": "IME",
+                "rect": [
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              },
+              {
+                "hwnd": 30675586,
+                "visible": false,
+                "title": "",
+                "class": "BingIMESysMessageWindow",
+                "rect": [
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              }
+            ]
+          }
+        ],
+        "foreground": {
+          "hwnd": 6951258,
+          "pid": 29748,
+          "title": "PageFolio",
+          "owned_by": "primary"
+        },
+        "copy_ok": true,
+        "locked_unverified": [
+          "pagefolio_settings.json"
+        ],
+        "owner_probe": [
+          {
+            "kind": "mutex",
+            "name": "Local\\PageFolio.Startup.Owner",
+            "state": "open"
+          },
+          {
+            "kind": "mapping",
+            "name": "Local\\PageFolio.Startup.State",
+            "state": "open"
+          }
+        ]
+      },
+      "observed_at": "2026-10-24T10:01:19.494017+00:00",
+      "stop": [
+        {
+          "pid": 29748,
+          "result": "closed"
+        }
+      ],
+      "stop_diagnostics": [],
+      "hash_after_exit_with_hold": {
+        "ocr_custom_prompt.md": null,
+        "pagefolio_settings.json": "<locked>",
+        "ocr_summary_prompt.md": null,
+        "pagefolio_settings.json.tmp": null
+      },
+      "holder_hash_after_exit": "19c31743a1b6b433fd7816682707d2572456d5fd8d04b3b2e55c91693c76317f",
+      "hash_after_exit": {
+        "ocr_custom_prompt.md": null,
+        "pagefolio_settings.json": "19c31743a1b6b433fd7816682707d2572456d5fd8d04b3b2e55c91693c76317f",
+        "ocr_summary_prompt.md": null,
+        "pagefolio_settings.json.tmp": null
+      },
+      "verify_after": {
+        "ok": true,
+        "overlay_changed": [],
+        "distribution_changed": [],
+        "locked_unverified": []
+      },
+      "source_unchanged": true,
+      "owner_after": []
+    },
+    "X04-write": {
+      "run_id": "efbcd9bebc234e5ba8b4029d2d1a8b97",
+      "run": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf06_t2_f157d1e5a0454f7e89c363383182dff5\\runs\\release-uat-efbcd9bebc234e5ba8b4029d2d1a8b97",
+      "case": "fault-x04-save-write",
+      "faults": [
+        "save-write"
+      ],
+      "binary_sha256": "f918bf767fb828afcaac3b329c3d6340e812ba931a704f1d3635994e8e20da23",
+      "tree_sha256": "a5392ed80813de39ab643c7b795e29579a2d387d50aa555bc0fd86545459a2ac",
+      "fault_records": {
+        "save-write": {
+          "kind": "save-write",
+          "settings_path": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf06_t2_f157d1e5a0454f7e89c363383182dff5\\runs\\release-uat-efbcd9bebc234e5ba8b4029d2d1a8b97\\dist\\pagefolio_settings.json",
+          "observer": {
+            "pid": 7504,
+            "created": 134373096394136789
+          },
+          "observed_at": "2026-10-24T10:01:23.867632+00:00",
+          "original_sha256": "19c31743a1b6b433fd7816682707d2572456d5fd8d04b3b2e55c91693c76317f",
+          "tmp": {
+            "exists": true,
+            "sha256": "e54cf6c32bba3c1d1b3a4c795710ef76e20e4749d98134a168b7a1135fa54438",
+            "owner": "release_uat_support",
+            "exclusive_create_collision": true
+          },
+          "note": "書込開始前の失敗(tmp衝突)であり、書込途中失敗ではない",
+          "established": true
+        }
+      },
+      "hash_pre_fault": {
+        "ocr_custom_prompt.md": null,
+        "pagefolio_settings.json": "19c31743a1b6b433fd7816682707d2572456d5fd8d04b3b2e55c91693c76317f",
+        "ocr_summary_prompt.md": null,
+        "pagefolio_settings.json.tmp": null
+      },
+      "hash_before": {
+        "ocr_custom_prompt.md": null,
+        "pagefolio_settings.json": "19c31743a1b6b433fd7816682707d2572456d5fd8d04b3b2e55c91693c76317f",
+        "ocr_summary_prompt.md": null,
+        "pagefolio_settings.json.tmp": "e54cf6c32bba3c1d1b3a4c795710ef76e20e4749d98134a168b7a1135fa54438"
+      },
+      "hash_before_effective": {
+        "ocr_custom_prompt.md": null,
+        "pagefolio_settings.json": "19c31743a1b6b433fd7816682707d2572456d5fd8d04b3b2e55c91693c76317f",
+        "ocr_summary_prompt.md": null,
+        "pagefolio_settings.json.tmp": "e54cf6c32bba3c1d1b3a4c795710ef76e20e4749d98134a168b7a1135fa54438"
+      },
+      "probe_owner_before": [],
+      "hash_stable": {
+        "ocr_custom_prompt.md": null,
+        "pagefolio_settings.json": "19c31743a1b6b433fd7816682707d2572456d5fd8d04b3b2e55c91693c76317f",
+        "ocr_summary_prompt.md": null,
+        "pagefolio_settings.json.tmp": "e54cf6c32bba3c1d1b3a4c795710ef76e20e4749d98134a168b7a1135fa54438"
+      },
+      "hash_stable_effective": {
+        "ocr_custom_prompt.md": null,
+        "pagefolio_settings.json": "19c31743a1b6b433fd7816682707d2572456d5fd8d04b3b2e55c91693c76317f",
+        "ocr_summary_prompt.md": null,
+        "pagefolio_settings.json.tmp": "e54cf6c32bba3c1d1b3a4c795710ef76e20e4749d98134a168b7a1135fa54438"
+      },
+      "tmp_during_run": {
+        "exists": true,
+        "sha256": "e54cf6c32bba3c1d1b3a4c795710ef76e20e4749d98134a168b7a1135fa54438"
+      },
+      "inspect_stable": {
+        "processes": [
+          {
+            "role": "primary",
+            "pid": 17992,
+            "created": 134373096844889688,
+            "identity": "same",
+            "alive": true,
+            "session_id": 1,
+            "elevated": false,
+            "windows": [
+              {
+                "hwnd": 12718474,
+                "visible": false,
+                "title": "GDI+ Window (PageFolio.exe)",
+                "class": "GDI+ Hook Window Class",
+                "rect": [
+                  0,
+                  0,
+                  1,
+                  1
+                ]
+              },
+              {
+                "hwnd": 24908194,
+                "visible": true,
+                "title": "PageFolio",
+                "class": "TkTopLevel",
+                "rect": [
+                  78,
+                  78,
+                  1294,
+                  917
+                ]
+              },
+              {
+                "hwnd": 17826130,
+                "visible": false,
+                "title": "EmbeddedMenuWindow",
+                "class": "EmbeddedMenuWindowClass",
+                "rect": [
+                  0,
+                  0,
+                  10,
+                  10
+                ]
+              },
+              {
+                "hwnd": 49089960,
+                "visible": false,
+                "title": "MenuWindow",
+                "class": "MenuWindowClass",
+                "rect": [
+                  0,
+                  0,
+                  10,
+                  10
+                ]
+              },
+              {
+                "hwnd": 31198570,
+                "visible": false,
+                "title": "",
+                "class": "Wtk_TaskbarHandler",
+                "rect": [
+                  0,
+                  0,
+                  1358,
+                  813
+                ]
+              },
+              {
+                "hwnd": 31919372,
+                "visible": false,
+                "title": "TtkMonitorWindow",
+                "class": "TtkMonitorClass",
+                "rect": [
+                  52,
+                  52,
+                  1332,
+                  787
+                ]
+              },
+              {
+                "hwnd": 28970532,
+                "visible": false,
+                "title": "MSCTFIME UI",
+                "class": "MSCTFIME UI",
+                "rect": [
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              },
+              {
+                "hwnd": 24248664,
+                "visible": false,
+                "title": "Default IME",
+                "class": "IME",
+                "rect": [
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              },
+              {
+                "hwnd": 17436618,
+                "visible": false,
+                "title": "",
+                "class": "BingIMESysMessageWindow",
+                "rect": [
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              }
+            ]
+          }
+        ],
+        "foreground": {
+          "hwnd": 24908194,
+          "pid": 17992,
+          "title": "PageFolio",
+          "owned_by": "primary"
+        },
+        "copy_ok": true,
+        "locked_unverified": [],
+        "owner_probe": [
+          {
+            "kind": "mutex",
+            "name": "Local\\PageFolio.Startup.Owner",
+            "state": "open"
+          },
+          {
+            "kind": "mapping",
+            "name": "Local\\PageFolio.Startup.State",
+            "state": "open"
+          }
+        ]
+      },
+      "observed_at": "2026-10-24T10:01:32.636681+00:00",
+      "stop": [
+        {
+          "pid": 17992,
+          "result": "terminated"
+        }
+      ],
+      "stop_diagnostics": [
+        "stop-diagnostics-17992.json"
+      ],
+      "hash_after_exit_with_hold": {
+        "ocr_custom_prompt.md": null,
+        "pagefolio_settings.json": "19c31743a1b6b433fd7816682707d2572456d5fd8d04b3b2e55c91693c76317f",
+        "ocr_summary_prompt.md": null,
+        "pagefolio_settings.json.tmp": "e54cf6c32bba3c1d1b3a4c795710ef76e20e4749d98134a168b7a1135fa54438"
+      },
+      "holder_hash_after_exit": null,
+      "hash_after_exit": {
+        "ocr_custom_prompt.md": null,
+        "pagefolio_settings.json": "19c31743a1b6b433fd7816682707d2572456d5fd8d04b3b2e55c91693c76317f",
+        "ocr_summary_prompt.md": null,
+        "pagefolio_settings.json.tmp": "e54cf6c32bba3c1d1b3a4c795710ef76e20e4749d98134a168b7a1135fa54438"
+      },
+      "verify_after": {
+        "ok": true,
+        "overlay_changed": [],
+        "distribution_changed": [],
+        "locked_unverified": []
+      },
+      "source_unchanged": true,
+      "owner_after": []
+    },
+    "X04-replace": {
+      "run_id": "d04fea5666194452b2cd65aa4a5ce20e",
+      "run": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf06_t2_f157d1e5a0454f7e89c363383182dff5\\runs\\release-uat-d04fea5666194452b2cd65aa4a5ce20e",
+      "case": "fault-x04-save-replace",
+      "faults": [
+        "save-replace"
+      ],
+      "binary_sha256": "f918bf767fb828afcaac3b329c3d6340e812ba931a704f1d3635994e8e20da23",
+      "tree_sha256": "a5392ed80813de39ab643c7b795e29579a2d387d50aa555bc0fd86545459a2ac",
+      "fault_records": {
+        "save-replace": {
+          "kind": "save-replace",
+          "settings_path": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf06_t2_f157d1e5a0454f7e89c363383182dff5\\runs\\release-uat-d04fea5666194452b2cd65aa4a5ce20e\\dist\\pagefolio_settings.json",
+          "observer": {
+            "pid": 7504,
+            "created": 134373096394136789
+          },
+          "observed_at": "2026-10-24T10:01:49.056087+00:00",
+          "handle": {
+            "access": "0xc0000000",
+            "share": "0x3"
+          },
+          "probe_delete": {
+            "ok": false,
+            "win32_error": 32,
+            "access": "0x10000"
+          },
+          "probe_read": {
+            "ok": true,
+            "win32_error": 0,
+            "access": "0x80000000"
+          },
+          "original_sha256": "19c31743a1b6b433fd7816682707d2572456d5fd8d04b3b2e55c91693c76317f",
+          "established": true
+        }
+      },
+      "hash_pre_fault": {
+        "ocr_custom_prompt.md": null,
+        "pagefolio_settings.json": "19c31743a1b6b433fd7816682707d2572456d5fd8d04b3b2e55c91693c76317f",
+        "ocr_summary_prompt.md": null,
+        "pagefolio_settings.json.tmp": null
+      },
+      "hash_before": {
+        "ocr_custom_prompt.md": null,
+        "pagefolio_settings.json": "19c31743a1b6b433fd7816682707d2572456d5fd8d04b3b2e55c91693c76317f",
+        "ocr_summary_prompt.md": null,
+        "pagefolio_settings.json.tmp": null
+      },
+      "hash_before_effective": {
+        "ocr_custom_prompt.md": null,
+        "pagefolio_settings.json": "19c31743a1b6b433fd7816682707d2572456d5fd8d04b3b2e55c91693c76317f",
+        "ocr_summary_prompt.md": null,
+        "pagefolio_settings.json.tmp": null
+      },
+      "probe_owner_before": [],
+      "hash_stable": {
+        "ocr_custom_prompt.md": null,
+        "pagefolio_settings.json": "19c31743a1b6b433fd7816682707d2572456d5fd8d04b3b2e55c91693c76317f",
+        "ocr_summary_prompt.md": null,
+        "pagefolio_settings.json.tmp": null
+      },
+      "hash_stable_effective": {
+        "ocr_custom_prompt.md": null,
+        "pagefolio_settings.json": "19c31743a1b6b433fd7816682707d2572456d5fd8d04b3b2e55c91693c76317f",
+        "ocr_summary_prompt.md": null,
+        "pagefolio_settings.json.tmp": null
+      },
+      "probe_delete_during_run": {
+        "ok": false,
+        "win32_error": 32,
+        "access": "0x10000"
+      },
+      "probe_read_during_run": {
+        "ok": true,
+        "win32_error": 0,
+        "access": "0x80000000"
+      },
+      "inspect_stable": {
+        "processes": [
+          {
+            "role": "primary",
+            "pid": 5276,
+            "created": 134373097097975937,
+            "identity": "same",
+            "alive": true,
+            "session_id": 1,
+            "elevated": false,
+            "windows": [
+              {
+                "hwnd": 28901404,
+                "visible": false,
+                "title": "GDI+ Window (PageFolio.exe)",
+                "class": "GDI+ Hook Window Class",
+                "rect": [
+                  0,
+                  0,
+                  1,
+                  1
+                ]
+              },
+              {
+                "hwnd": 6885784,
+                "visible": true,
+                "title": "PageFolio",
+                "class": "TkTopLevel",
+                "rect": [
+                  156,
+                  156,
+                  1372,
+                  995
+                ]
+              },
+              {
+                "hwnd": 12718256,
+                "visible": false,
+                "title": "EmbeddedMenuWindow",
+                "class": "EmbeddedMenuWindowClass",
+                "rect": [
+                  0,
+                  0,
+                  10,
+                  10
+                ]
+              },
+              {
+                "hwnd": 7082330,
+                "visible": false,
+                "title": "MenuWindow",
+                "class": "MenuWindowClass",
+                "rect": [
+                  0,
+                  0,
+                  10,
+                  10
+                ]
+              },
+              {
+                "hwnd": 11866262,
+                "visible": false,
+                "title": "",
+                "class": "Wtk_TaskbarHandler",
+                "rect": [
+                  0,
+                  0,
+                  1436,
+                  891
+                ]
+              },
+              {
+                "hwnd": 20972382,
+                "visible": false,
+                "title": "TtkMonitorWindow",
+                "class": "TtkMonitorClass",
+                "rect": [
+                  130,
+                  130,
+                  1410,
+                  865
+                ]
+              },
+              {
+                "hwnd": 18223616,
+                "visible": false,
+                "title": "MSCTFIME UI",
+                "class": "MSCTFIME UI",
+                "rect": [
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              },
+              {
+                "hwnd": 64229338,
+                "visible": false,
+                "title": "Default IME",
+                "class": "IME",
+                "rect": [
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              },
+              {
+                "hwnd": 25039266,
+                "visible": false,
+                "title": "",
+                "class": "BingIMESysMessageWindow",
+                "rect": [
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              }
+            ]
+          }
+        ],
+        "foreground": {
+          "hwnd": 6885784,
+          "pid": 5276,
+          "title": "PageFolio",
+          "owned_by": "primary"
+        },
+        "copy_ok": true,
+        "locked_unverified": [],
+        "owner_probe": [
+          {
+            "kind": "mutex",
+            "name": "Local\\PageFolio.Startup.Owner",
+            "state": "open"
+          },
+          {
+            "kind": "mapping",
+            "name": "Local\\PageFolio.Startup.State",
+            "state": "open"
+          }
+        ]
+      },
+      "observed_at": "2026-10-24T10:01:57.933858+00:00",
+      "stop": [
+        {
+          "pid": 5276,
+          "result": "terminated"
+        }
+      ],
+      "stop_diagnostics": [
+        "stop-diagnostics-5276.json"
+      ],
+      "hash_after_exit_with_hold": {
+        "ocr_custom_prompt.md": null,
+        "pagefolio_settings.json": "19c31743a1b6b433fd7816682707d2572456d5fd8d04b3b2e55c91693c76317f",
+        "ocr_summary_prompt.md": null,
+        "pagefolio_settings.json.tmp": null
+      },
+      "holder_hash_after_exit": "19c31743a1b6b433fd7816682707d2572456d5fd8d04b3b2e55c91693c76317f",
+      "hash_after_exit": {
+        "ocr_custom_prompt.md": null,
+        "pagefolio_settings.json": "19c31743a1b6b433fd7816682707d2572456d5fd8d04b3b2e55c91693c76317f",
+        "ocr_summary_prompt.md": null,
+        "pagefolio_settings.json.tmp": null
+      },
+      "verify_after": {
+        "ok": true,
+        "overlay_changed": [],
+        "distribution_changed": [],
+        "locked_unverified": []
+      },
+      "source_unchanged": true,
+      "owner_after": []
+    },
+    "X05": {
+      "run_id": "2680bdf5bd9943cbb99c3a7e63e78e97",
+      "run": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf06_t2_f157d1e5a0454f7e89c363383182dff5\\runs\\release-uat-2680bdf5bd9943cbb99c3a7e63e78e97",
+      "case": "fault-x05-combined",
+      "faults": [
+        "save-write",
+        "unreadable"
+      ],
+      "binary_sha256": "f918bf767fb828afcaac3b329c3d6340e812ba931a704f1d3635994e8e20da23",
+      "tree_sha256": "a5392ed80813de39ab643c7b795e29579a2d387d50aa555bc0fd86545459a2ac",
+      "fault_records": {
+        "save-write": {
+          "kind": "save-write",
+          "settings_path": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf06_t2_f157d1e5a0454f7e89c363383182dff5\\runs\\release-uat-2680bdf5bd9943cbb99c3a7e63e78e97\\dist\\pagefolio_settings.json",
+          "observer": {
+            "pid": 7504,
+            "created": 134373096394136789
+          },
+          "observed_at": "2026-10-24T10:02:14.276840+00:00",
+          "original_sha256": "19c31743a1b6b433fd7816682707d2572456d5fd8d04b3b2e55c91693c76317f",
+          "tmp": {
+            "exists": true,
+            "sha256": "e54cf6c32bba3c1d1b3a4c795710ef76e20e4749d98134a168b7a1135fa54438",
+            "owner": "release_uat_support",
+            "exclusive_create_collision": true
+          },
+          "note": "書込開始前の失敗(tmp衝突)であり、書込途中失敗ではない",
+          "established": true
+        },
+        "unreadable": {
+          "kind": "unreadable",
+          "settings_path": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf06_t2_f157d1e5a0454f7e89c363383182dff5\\runs\\release-uat-2680bdf5bd9943cbb99c3a7e63e78e97\\dist\\pagefolio_settings.json",
+          "observer": {
+            "pid": 7504,
+            "created": 134373096394136789
+          },
+          "observed_at": "2026-10-24T10:02:14.304066+00:00",
+          "handle": {
+            "access": "0x80000000",
+            "share": "0x0"
+          },
+          "probe_read": {
+            "ok": false,
+            "win32_error": 32,
+            "access": "0x80000000"
+          },
+          "original_sha256": "19c31743a1b6b433fd7816682707d2572456d5fd8d04b3b2e55c91693c76317f",
+          "established": true
+        }
+      },
+      "hash_pre_fault": {
+        "ocr_custom_prompt.md": null,
+        "pagefolio_settings.json": "19c31743a1b6b433fd7816682707d2572456d5fd8d04b3b2e55c91693c76317f",
+        "ocr_summary_prompt.md": null,
+        "pagefolio_settings.json.tmp": null
+      },
+      "hash_before": {
+        "ocr_custom_prompt.md": null,
+        "pagefolio_settings.json": "<locked>",
+        "ocr_summary_prompt.md": null,
+        "pagefolio_settings.json.tmp": "e54cf6c32bba3c1d1b3a4c795710ef76e20e4749d98134a168b7a1135fa54438"
+      },
+      "hash_before_effective": {
+        "ocr_custom_prompt.md": null,
+        "pagefolio_settings.json": "19c31743a1b6b433fd7816682707d2572456d5fd8d04b3b2e55c91693c76317f",
+        "ocr_summary_prompt.md": null,
+        "pagefolio_settings.json.tmp": "e54cf6c32bba3c1d1b3a4c795710ef76e20e4749d98134a168b7a1135fa54438"
+      },
+      "probe_owner_before": [],
+      "hash_stable": {
+        "ocr_custom_prompt.md": null,
+        "pagefolio_settings.json": "<locked>",
+        "ocr_summary_prompt.md": null,
+        "pagefolio_settings.json.tmp": "e54cf6c32bba3c1d1b3a4c795710ef76e20e4749d98134a168b7a1135fa54438"
+      },
+      "hash_stable_effective": {
+        "ocr_custom_prompt.md": null,
+        "pagefolio_settings.json": "19c31743a1b6b433fd7816682707d2572456d5fd8d04b3b2e55c91693c76317f",
+        "ocr_summary_prompt.md": null,
+        "pagefolio_settings.json.tmp": "e54cf6c32bba3c1d1b3a4c795710ef76e20e4749d98134a168b7a1135fa54438"
+      },
+      "probe_during_run": {
+        "ok": false,
+        "win32_error": 32,
+        "access": "0x80000000"
+      },
+      "tmp_during_run": {
+        "exists": true,
+        "sha256": "e54cf6c32bba3c1d1b3a4c795710ef76e20e4749d98134a168b7a1135fa54438"
+      },
+      "inspect_stable": {
+        "processes": [
+          {
+            "role": "primary",
+            "pid": 29152,
+            "created": 134373097349877608,
+            "identity": "same",
+            "alive": true,
+            "session_id": 1,
+            "elevated": false,
+            "windows": [
+              {
+                "hwnd": 3739964,
+                "visible": false,
+                "title": "",
+                "class": "Wtk_TaskbarHandler",
+                "rect": [
+                  0,
+                  0,
+                  1488,
+                  943
+                ]
+              },
+              {
+                "hwnd": 24055160,
+                "visible": false,
+                "title": "TtkMonitorWindow",
+                "class": "TtkMonitorClass",
+                "rect": [
+                  182,
+                  182,
+                  1462,
+                  917
+                ]
+              },
+              {
+                "hwnd": 33033746,
+                "visible": true,
+                "title": "PageFolio",
+                "class": "TkTopLevel",
+                "rect": [
+                  208,
+                  208,
+                  1424,
+                  1047
+                ]
+              },
+              {
+                "hwnd": 32248194,
+                "visible": false,
+                "title": "EmbeddedMenuWindow",
+                "class": "EmbeddedMenuWindowClass",
+                "rect": [
+                  0,
+                  0,
+                  10,
+                  10
+                ]
+              },
+              {
+                "hwnd": 9307866,
+                "visible": false,
+                "title": "MenuWindow",
+                "class": "MenuWindowClass",
+                "rect": [
+                  0,
+                  0,
+                  10,
+                  10
+                ]
+              },
+              {
+                "hwnd": 45879106,
+                "visible": false,
+                "title": "Default IME",
+                "class": "IME",
+                "rect": [
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              },
+              {
+                "hwnd": 29101604,
+                "visible": false,
+                "title": "MSCTFIME UI",
+                "class": "MSCTFIME UI",
+                "rect": [
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              }
+            ]
+          }
+        ],
+        "foreground": {
+          "hwnd": 656216,
+          "pid": 24068,
+          "title": "◐ 前景監査の診断ハーネス",
+          "owned_by": null
+        },
+        "copy_ok": true,
+        "locked_unverified": [
+          "pagefolio_settings.json"
+        ],
+        "owner_probe": [
+          {
+            "kind": "mutex",
+            "name": "Local\\PageFolio.Startup.Owner",
+            "state": "open"
+          },
+          {
+            "kind": "mapping",
+            "name": "Local\\PageFolio.Startup.State",
+            "state": "open"
+          }
+        ]
+      },
+      "observed_at": "2026-10-24T10:02:23.127954+00:00",
+      "stop": [
+        {
+          "pid": 29152,
+          "result": "closed"
+        }
+      ],
+      "stop_diagnostics": [],
+      "hash_after_exit_with_hold": {
+        "ocr_custom_prompt.md": null,
+        "pagefolio_settings.json": "<locked>",
+        "ocr_summary_prompt.md": null,
+        "pagefolio_settings.json.tmp": "e54cf6c32bba3c1d1b3a4c795710ef76e20e4749d98134a168b7a1135fa54438"
+      },
+      "holder_hash_after_exit": "19c31743a1b6b433fd7816682707d2572456d5fd8d04b3b2e55c91693c76317f",
+      "hash_after_exit": {
+        "ocr_custom_prompt.md": null,
+        "pagefolio_settings.json": "19c31743a1b6b433fd7816682707d2572456d5fd8d04b3b2e55c91693c76317f",
+        "ocr_summary_prompt.md": null,
+        "pagefolio_settings.json.tmp": "e54cf6c32bba3c1d1b3a4c795710ef76e20e4749d98134a168b7a1135fa54438"
+      },
+      "verify_after": {
+        "ok": true,
+        "overlay_changed": [],
+        "distribution_changed": [],
+        "locked_unverified": []
+      },
+      "source_unchanged": true,
+      "owner_after": []
+    }
+  }
+}
