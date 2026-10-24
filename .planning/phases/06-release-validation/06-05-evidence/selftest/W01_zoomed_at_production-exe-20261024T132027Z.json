@@ -1,0 +1,232 @@
+{
+  "row": "W01/zoomed@production-exe",
+  "case": "W01",
+  "condition": "zoomed",
+  "entry": "production-exe",
+  "selftest": true,
+  "started_at": "2026-10-24T13:20:07.404880+00:00",
+  "target_exe_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17",
+  "steps": [
+    {
+      "at": "2026-10-24T13:20:21.525656+00:00",
+      "step": "started",
+      "windows": [
+        {
+          "hwnd": 47188398,
+          "pid": 29564,
+          "title": "PageFolio",
+          "class": "TkTopLevel",
+          "visible": true,
+          "iconic": false,
+          "zoomed": false,
+          "rect": [
+            234,
+            228,
+            1450,
+            1067
+          ]
+        }
+      ],
+      "foreground": {
+        "hwnd": 47188398,
+        "pid": 29564,
+        "title": "PageFolio"
+      }
+    },
+    {
+      "at": "2026-10-24T13:20:21.526587+00:00",
+      "step": "before-minimize",
+      "windows": [
+        {
+          "hwnd": 47188398,
+          "pid": 29564,
+          "title": "PageFolio",
+          "class": "TkTopLevel",
+          "visible": true,
+          "iconic": false,
+          "zoomed": false,
+          "rect": [
+            234,
+            228,
+            1450,
+            1067
+          ]
+        }
+      ],
+      "foreground": {
+        "hwnd": 47188398,
+        "pid": 29564,
+        "title": "PageFolio"
+      }
+    },
+    {
+      "at": "2026-10-24T13:20:22.537138+00:00",
+      "step": "minimized",
+      "windows": [
+        {
+          "hwnd": 47188398,
+          "pid": 29564,
+          "title": "PageFolio",
+          "class": "TkTopLevel",
+          "visible": true,
+          "iconic": true,
+          "zoomed": false,
+          "rect": [
+            -32000,
+            -32000,
+            -31763,
+            -31961
+          ]
+        }
+      ]
+    },
+    {
+      "at": "2026-10-24T13:20:26.732232+00:00",
+      "step": "after-peer",
+      "windows": [
+        {
+          "hwnd": 47188398,
+          "pid": 29564,
+          "title": "PageFolio",
+          "class": "TkTopLevel",
+          "visible": true,
+          "iconic": false,
+          "zoomed": false,
+          "rect": [
+            234,
+            228,
+            1450,
+            1067
+          ]
+        }
+      ],
+      "foreground": {
+        "hwnd": 47188398,
+        "pid": 29564,
+        "title": "PageFolio",
+        "owned_by": "primary"
+      },
+      "owner_probe": [
+        {
+          "kind": "mutex",
+          "name": "Local\\PageFolio.Startup.Owner",
+          "state": "open"
+        },
+        {
+          "kind": "mapping",
+          "name": "Local\\PageFolio.Startup.State",
+          "state": "open"
+        }
+      ],
+      "foreground_before_peer": {
+        "hwnd": 656216,
+        "pid": 24068,
+        "title": "◐ 前景監査の診断ハーネス"
+      }
+    }
+  ],
+  "run": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\release-uat-bb7a4241644c4889825f2beb5e2b8224",
+  "run_id": "bb7a4241644c4889825f2beb5e2b8224",
+  "binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17",
+  "tree_sha256": "3436ac39cfd7a426e8a5982fa2f1e9f7bbc87ebd8176721b32d88cec1ff8489a",
+  "environment": {
+    "os": "Windows-11-10.0.26300-SP0",
+    "observer_python": "3.15.1 (tags/v3.15.1:c37e74c, Oct 21 2026, 06:24:08) [MSC v.1951 64 bit (AMD64)]",
+    "observer_tk": "9.0",
+    "elevated": false,
+    "session_id": 1
+  },
+  "primary": {
+    "pid": 29564,
+    "created": 134373216162955521,
+    "image": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\release-uat-bb7a4241644c4889825f2beb5e2b8224\\dist\\PageFolio.exe"
+  },
+  "peer": {
+    "pid": 37484,
+    "created": 134373216226266790,
+    "image": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\release-uat-bb7a4241644c4889825f2beb5e2b8224\\dist\\PageFolio.exe"
+  },
+  "answers": {
+    "state_after": "最大化",
+    "geometry": "1つ",
+    "single": "見える",
+    "status": "なし",
+    "note": "(selftest)"
+  },
+  "outcome": "answered",
+  "stop": [
+    {
+      "pid": 29564,
+      "result": "closed"
+    },
+    {
+      "pid": 37484,
+      "result": "already-exited"
+    }
+  ],
+  "verify_after": {
+    "ok": false,
+    "overlay_changed": [],
+    "distribution_changed": [],
+    "undeclared": [
+      "pagefolio_settings.json"
+    ],
+    "extra_dirs": [],
+    "missing_dirs": [],
+    "exe_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17",
+    "tree_sha256": "3b5f0a2f4b3d24e3648f38dd3fbc026c0a205482e5a27bb44794cd6ad9612ad0"
+  },
+  "source_distribution_unchanged": true,
+  "owner_after": [],
+  "finished_at": "2026-10-24T13:20:27.284049+00:00",
+  "raw_inputs": [
+    {
+      "at": "2026-10-24T13:20:21.525708+00:00",
+      "key": "enter",
+      "text": "",
+      "selftest": true
+    },
+    {
+      "at": "2026-10-24T13:20:21.526604+00:00",
+      "key": "enter",
+      "text": "",
+      "selftest": true
+    },
+    {
+      "at": "2026-10-24T13:20:26.732276+00:00",
+      "key": "state_after",
+      "attempt": 1,
+      "text": "最大化",
+      "rejected": null
+    },
+    {
+      "at": "2026-10-24T13:20:26.732287+00:00",
+      "key": "geometry",
+      "attempt": 1,
+      "text": "1つ",
+      "rejected": null
+    },
+    {
+      "at": "2026-10-24T13:20:26.732293+00:00",
+      "key": "single",
+      "attempt": 1,
+      "text": "見える",
+      "rejected": null
+    },
+    {
+      "at": "2026-10-24T13:20:26.732299+00:00",
+      "key": "status",
+      "attempt": 1,
+      "text": "なし",
+      "rejected": null
+    },
+    {
+      "at": "2026-10-24T13:20:26.732307+00:00",
+      "key": "note",
+      "attempt": 1,
+      "text": "(selftest)",
+      "rejected": null
+    }
+  ],
+  "composed_answer": "W01 zoomed production-exe：state_after=最大化・geometry=1つ・single=見える・status=なし（メモ: (selftest)）"
+}

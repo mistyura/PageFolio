@@ -200,8 +200,15 @@
           "evidence_kind": "python-real",
           "status": "not-run",
           "preparation": {
-            "status": "not-prepared",
-            "note": "カード作成のみ。実行担当の準備(driver/隔離copy/fixture)は未実施"
+            "status": "driver-ready",
+            "note": "利用者が自分のPowerShellで実行するdriverを用意(機構確認のみ)。隔離runの準備・起動はまだ行っていない。準備済みはpassではない",
+            "driver": ".planning/phases/06-release-validation/06-05-drivers/uat_row.py",
+            "driver_sha256": "54c34e445fde2f8ec55231fd9ed0c98c3742cf991c1c5528c526a0d5354e9109",
+            "command": ".venv/Scripts/python.exe .planning/phases/06-release-validation/06-05-drivers/uat_row.py --row W01/normal@script",
+            "selftest_exercised_this_row": [
+              "W01_normal_at_script-20261024T131839Z.json"
+            ],
+            "selftest_note": "selftestはcanned回答で証拠にしない(06-05-evidence/selftest/)"
           },
           "required_observations": [
             "state_before",
@@ -227,8 +234,13 @@
           "evidence_kind": "python-real",
           "status": "not-run",
           "preparation": {
-            "status": "not-prepared",
-            "note": "カード作成のみ。実行担当の準備(driver/隔離copy/fixture)は未実施"
+            "status": "driver-ready",
+            "note": "利用者が自分のPowerShellで実行するdriverを用意(機構確認のみ)。隔離runの準備・起動はまだ行っていない。準備済みはpassではない",
+            "driver": ".planning/phases/06-release-validation/06-05-drivers/uat_row.py",
+            "driver_sha256": "54c34e445fde2f8ec55231fd9ed0c98c3742cf991c1c5528c526a0d5354e9109",
+            "command": ".venv/Scripts/python.exe .planning/phases/06-release-validation/06-05-drivers/uat_row.py --row W01/normal@module",
+            "selftest_exercised_this_row": [],
+            "selftest_note": "selftestはcanned回答で証拠にしない(06-05-evidence/selftest/)"
           },
           "required_observations": [
             "state_before",
@@ -254,8 +266,15 @@
           "evidence_kind": "production-exe",
           "status": "not-run",
           "preparation": {
-            "status": "not-prepared",
-            "note": "カード作成のみ。実行担当の準備(driver/隔離copy/fixture)は未実施"
+            "status": "driver-ready",
+            "note": "利用者が自分のPowerShellで実行するdriverを用意(機構確認のみ)。隔離runの準備・起動はまだ行っていない。準備済みはpassではない",
+            "driver": ".planning/phases/06-release-validation/06-05-drivers/uat_row.py",
+            "driver_sha256": "54c34e445fde2f8ec55231fd9ed0c98c3742cf991c1c5528c526a0d5354e9109",
+            "command": ".venv/Scripts/python.exe .planning/phases/06-release-validation/06-05-drivers/uat_row.py --row W01/normal@production-exe",
+            "selftest_exercised_this_row": [
+              "W01_normal_at_production-exe-20261024T131911Z.json"
+            ],
+            "selftest_note": "selftestはcanned回答で証拠にしない(06-05-evidence/selftest/)"
           },
           "required_observations": [
             "state_before",
@@ -283,8 +302,15 @@
           "evidence_kind": "python-real",
           "status": "not-run",
           "preparation": {
-            "status": "not-prepared",
-            "note": "カード作成のみ。実行担当の準備(driver/隔離copy/fixture)は未実施"
+            "status": "driver-ready",
+            "note": "利用者が自分のPowerShellで実行するdriverを用意(機構確認のみ)。隔離runの準備・起動はまだ行っていない。準備済みはpassではない",
+            "driver": ".planning/phases/06-release-validation/06-05-drivers/uat_row.py",
+            "driver_sha256": "54c34e445fde2f8ec55231fd9ed0c98c3742cf991c1c5528c526a0d5354e9109",
+            "command": ".venv/Scripts/python.exe .planning/phases/06-release-validation/06-05-drivers/uat_row.py --row W01/zoomed@script",
+            "selftest_exercised_this_row": [
+              "W01_zoomed_at_script-20261024T132148Z.json"
+            ],
+            "selftest_note": "selftestはcanned回答で証拠にしない(06-05-evidence/selftest/)"
           },
           "required_observations": [
             "state_before",
@@ -310,8 +336,13 @@
           "evidence_kind": "python-real",
           "status": "not-run",
           "preparation": {
-            "status": "not-prepared",
-            "note": "カード作成のみ。実行担当の準備(driver/隔離copy/fixture)は未実施"
+            "status": "driver-ready",
+            "note": "利用者が自分のPowerShellで実行するdriverを用意(機構確認のみ)。隔離runの準備・起動はまだ行っていない。準備済みはpassではない",
+            "driver": ".planning/phases/06-release-validation/06-05-drivers/uat_row.py",
+            "driver_sha256": "54c34e445fde2f8ec55231fd9ed0c98c3742cf991c1c5528c526a0d5354e9109",
+            "command": ".venv/Scripts/python.exe .planning/phases/06-release-validation/06-05-drivers/uat_row.py --row W01/zoomed@module",
+            "selftest_exercised_this_row": [],
+            "selftest_note": "selftestはcanned回答で証拠にしない(06-05-evidence/selftest/)"
           },
           "required_observations": [
             "state_before",
@@ -337,8 +368,16 @@
           "evidence_kind": "production-exe",
           "status": "not-run",
           "preparation": {
-            "status": "not-prepared",
-            "note": "カード作成のみ。実行担当の準備(driver/隔離copy/fixture)は未実施"
+            "status": "driver-ready",
+            "note": "利用者が自分のPowerShellで実行するdriverを用意(機構確認のみ)。隔離runの準備・起動はまだ行っていない。準備済みはpassではない",
+            "driver": ".planning/phases/06-release-validation/06-05-drivers/uat_row.py",
+            "driver_sha256": "54c34e445fde2f8ec55231fd9ed0c98c3742cf991c1c5528c526a0d5354e9109",
+            "command": ".venv/Scripts/python.exe .planning/phases/06-release-validation/06-05-drivers/uat_row.py --row W01/zoomed@production-exe",
+            "selftest_exercised_this_row": [
+              "W01_zoomed_at_production-exe-20261024T131953Z.json",
+              "W01_zoomed_at_production-exe-20261024T132027Z.json"
+            ],
+            "selftest_note": "selftestはcanned回答で証拠にしない(06-05-evidence/selftest/)"
           },
           "required_observations": [
             "state_before",
@@ -375,8 +414,15 @@
           "evidence_kind": "python-real",
           "status": "not-run",
           "preparation": {
-            "status": "not-prepared",
-            "note": "カード作成のみ。実行担当の準備(driver/隔離copy/fixture)は未実施"
+            "status": "driver-ready",
+            "note": "利用者が自分のPowerShellで実行するdriverを用意(機構確認のみ)。隔離runの準備・起動はまだ行っていない。準備済みはpassではない",
+            "driver": ".planning/phases/06-release-validation/06-05-drivers/uat_row.py",
+            "driver_sha256": "54c34e445fde2f8ec55231fd9ed0c98c3742cf991c1c5528c526a0d5354e9109",
+            "command": ".venv/Scripts/python.exe .planning/phases/06-release-validation/06-05-drivers/uat_row.py --row W02/settings@script",
+            "selftest_exercised_this_row": [
+              "W02_settings_at_script-20261024T132047Z.json"
+            ],
+            "selftest_note": "selftestはcanned回答で証拠にしない(06-05-evidence/selftest/)"
           },
           "required_observations": [
             "typed_text_kept",
@@ -402,8 +448,13 @@
           "evidence_kind": "python-real",
           "status": "not-run",
           "preparation": {
-            "status": "not-prepared",
-            "note": "カード作成のみ。実行担当の準備(driver/隔離copy/fixture)は未実施"
+            "status": "driver-ready",
+            "note": "利用者が自分のPowerShellで実行するdriverを用意(機構確認のみ)。隔離runの準備・起動はまだ行っていない。準備済みはpassではない",
+            "driver": ".planning/phases/06-release-validation/06-05-drivers/uat_row.py",
+            "driver_sha256": "54c34e445fde2f8ec55231fd9ed0c98c3742cf991c1c5528c526a0d5354e9109",
+            "command": ".venv/Scripts/python.exe .planning/phases/06-release-validation/06-05-drivers/uat_row.py --row W02/settings@module",
+            "selftest_exercised_this_row": [],
+            "selftest_note": "selftestはcanned回答で証拠にしない(06-05-evidence/selftest/)"
           },
           "required_observations": [
             "typed_text_kept",
@@ -429,8 +480,13 @@
           "evidence_kind": "production-exe",
           "status": "not-run",
           "preparation": {
-            "status": "not-prepared",
-            "note": "カード作成のみ。実行担当の準備(driver/隔離copy/fixture)は未実施"
+            "status": "driver-ready",
+            "note": "利用者が自分のPowerShellで実行するdriverを用意(機構確認のみ)。隔離runの準備・起動はまだ行っていない。準備済みはpassではない",
+            "driver": ".planning/phases/06-release-validation/06-05-drivers/uat_row.py",
+            "driver_sha256": "54c34e445fde2f8ec55231fd9ed0c98c3742cf991c1c5528c526a0d5354e9109",
+            "command": ".venv/Scripts/python.exe .planning/phases/06-release-validation/06-05-drivers/uat_row.py --row W02/settings@production-exe",
+            "selftest_exercised_this_row": [],
+            "selftest_note": "selftestはcanned回答で証拠にしない(06-05-evidence/selftest/)"
           },
           "required_observations": [
             "typed_text_kept",
@@ -457,8 +513,13 @@
           "evidence_kind": "python-real",
           "status": "not-run",
           "preparation": {
-            "status": "not-prepared",
-            "note": "カード作成のみ。実行担当の準備(driver/隔離copy/fixture)は未実施"
+            "status": "driver-ready",
+            "note": "利用者が自分のPowerShellで実行するdriverを用意(機構確認のみ)。隔離runの準備・起動はまだ行っていない。準備済みはpassではない",
+            "driver": ".planning/phases/06-release-validation/06-05-drivers/uat_row.py",
+            "driver_sha256": "54c34e445fde2f8ec55231fd9ed0c98c3742cf991c1c5528c526a0d5354e9109",
+            "command": ".venv/Scripts/python.exe .planning/phases/06-release-validation/06-05-drivers/uat_row.py --row W02/thumb@script",
+            "selftest_exercised_this_row": [],
+            "selftest_note": "selftestはcanned回答で証拠にしない(06-05-evidence/selftest/)"
           },
           "required_observations": [
             "typed_text_kept",
@@ -484,8 +545,13 @@
           "evidence_kind": "python-real",
           "status": "not-run",
           "preparation": {
-            "status": "not-prepared",
-            "note": "カード作成のみ。実行担当の準備(driver/隔離copy/fixture)は未実施"
+            "status": "driver-ready",
+            "note": "利用者が自分のPowerShellで実行するdriverを用意(機構確認のみ)。隔離runの準備・起動はまだ行っていない。準備済みはpassではない",
+            "driver": ".planning/phases/06-release-validation/06-05-drivers/uat_row.py",
+            "driver_sha256": "54c34e445fde2f8ec55231fd9ed0c98c3742cf991c1c5528c526a0d5354e9109",
+            "command": ".venv/Scripts/python.exe .planning/phases/06-release-validation/06-05-drivers/uat_row.py --row W02/thumb@module",
+            "selftest_exercised_this_row": [],
+            "selftest_note": "selftestはcanned回答で証拠にしない(06-05-evidence/selftest/)"
           },
           "required_observations": [
             "typed_text_kept",
@@ -511,8 +577,15 @@
           "evidence_kind": "production-exe",
           "status": "not-run",
           "preparation": {
-            "status": "not-prepared",
-            "note": "カード作成のみ。実行担当の準備(driver/隔離copy/fixture)は未実施"
+            "status": "driver-ready",
+            "note": "利用者が自分のPowerShellで実行するdriverを用意(機構確認のみ)。隔離runの準備・起動はまだ行っていない。準備済みはpassではない",
+            "driver": ".planning/phases/06-release-validation/06-05-drivers/uat_row.py",
+            "driver_sha256": "54c34e445fde2f8ec55231fd9ed0c98c3742cf991c1c5528c526a0d5354e9109",
+            "command": ".venv/Scripts/python.exe .planning/phases/06-release-validation/06-05-drivers/uat_row.py --row W02/thumb@production-exe",
+            "selftest_exercised_this_row": [
+              "W02_thumb_at_production-exe-20261024T132107Z.json"
+            ],
+            "selftest_note": "selftestはcanned回答で証拠にしない(06-05-evidence/selftest/)"
           },
           "required_observations": [
             "typed_text_kept",
@@ -539,8 +612,13 @@
           "evidence_kind": "python-real",
           "status": "not-run",
           "preparation": {
-            "status": "not-prepared",
-            "note": "カード作成のみ。実行担当の準備(driver/隔離copy/fixture)は未実施"
+            "status": "driver-ready",
+            "note": "利用者が自分のPowerShellで実行するdriverを用意(機構確認のみ)。隔離runの準備・起動はまだ行っていない。準備済みはpassではない",
+            "driver": ".planning/phases/06-release-validation/06-05-drivers/uat_row.py",
+            "driver_sha256": "54c34e445fde2f8ec55231fd9ed0c98c3742cf991c1c5528c526a0d5354e9109",
+            "command": ".venv/Scripts/python.exe .planning/phases/06-release-validation/06-05-drivers/uat_row.py --row W02/preview@script",
+            "selftest_exercised_this_row": [],
+            "selftest_note": "selftestはcanned回答で証拠にしない(06-05-evidence/selftest/)"
           },
           "required_observations": [
             "typed_text_kept",
@@ -566,8 +644,13 @@
           "evidence_kind": "python-real",
           "status": "not-run",
           "preparation": {
-            "status": "not-prepared",
-            "note": "カード作成のみ。実行担当の準備(driver/隔離copy/fixture)は未実施"
+            "status": "driver-ready",
+            "note": "利用者が自分のPowerShellで実行するdriverを用意(機構確認のみ)。隔離runの準備・起動はまだ行っていない。準備済みはpassではない",
+            "driver": ".planning/phases/06-release-validation/06-05-drivers/uat_row.py",
+            "driver_sha256": "54c34e445fde2f8ec55231fd9ed0c98c3742cf991c1c5528c526a0d5354e9109",
+            "command": ".venv/Scripts/python.exe .planning/phases/06-release-validation/06-05-drivers/uat_row.py --row W02/preview@module",
+            "selftest_exercised_this_row": [],
+            "selftest_note": "selftestはcanned回答で証拠にしない(06-05-evidence/selftest/)"
           },
           "required_observations": [
             "typed_text_kept",
@@ -593,8 +676,13 @@
           "evidence_kind": "production-exe",
           "status": "not-run",
           "preparation": {
-            "status": "not-prepared",
-            "note": "カード作成のみ。実行担当の準備(driver/隔離copy/fixture)は未実施"
+            "status": "driver-ready",
+            "note": "利用者が自分のPowerShellで実行するdriverを用意(機構確認のみ)。隔離runの準備・起動はまだ行っていない。準備済みはpassではない",
+            "driver": ".planning/phases/06-release-validation/06-05-drivers/uat_row.py",
+            "driver_sha256": "54c34e445fde2f8ec55231fd9ed0c98c3742cf991c1c5528c526a0d5354e9109",
+            "command": ".venv/Scripts/python.exe .planning/phases/06-release-validation/06-05-drivers/uat_row.py --row W02/preview@production-exe",
+            "selftest_exercised_this_row": [],
+            "selftest_note": "selftestはcanned回答で証拠にしない(06-05-evidence/selftest/)"
           },
           "required_observations": [
             "typed_text_kept",

@@ -70,7 +70,7 @@ created: 2026-10-24
 
 **W01 / 通常の大きさ / Python直接起動(python pagefolio.py)**(証拠種別: `python-real`)
 
-- **状態**: not-run / 準備: 未準備(別フィールド)
+- **状態**: not-run / 準備: driver準備済み(隔離runは未準備・別フィールド。準備済みはpassではない)
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
   ```powershell
   $uat = .venv/Scripts/python.exe tests/test_startup_windows.py --uat start --case normal | ConvertFrom-Json
@@ -78,6 +78,7 @@ created: 2026-10-24
   .venv/Scripts/python.exe tests/test_startup_windows.py --uat inspect --run $uat.run
   .venv/Scripts/python.exe tests/test_startup_windows.py --uat stop --run $uat.run
   ```
+- **利用者が実行するdriver**: `.venv/Scripts/python.exe .planning/phases/06-release-validation/06-05-drivers/uat_row.py --row W01/normal@script`(質問に短く答える。機構確認のみ済みで証拠ではない)
 - **利用者操作**:
   1. 実行担当: `start --case normal` で隔離ownerを準備する(通常の大きさで、最小化済みの状態に整えられる)。
   2. 実行担当: `peer --entry script` で二次起動する。
@@ -96,7 +97,7 @@ created: 2026-10-24
 
 **W01 / 通常の大きさ / Python -m pagefolio**(証拠種別: `python-real`)
 
-- **状態**: not-run / 準備: 未準備(別フィールド)
+- **状態**: not-run / 準備: driver準備済み(隔離runは未準備・別フィールド。準備済みはpassではない)
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
   ```powershell
   $uat = .venv/Scripts/python.exe tests/test_startup_windows.py --uat start --case normal | ConvertFrom-Json
@@ -104,6 +105,7 @@ created: 2026-10-24
   .venv/Scripts/python.exe tests/test_startup_windows.py --uat inspect --run $uat.run
   .venv/Scripts/python.exe tests/test_startup_windows.py --uat stop --run $uat.run
   ```
+- **利用者が実行するdriver**: `.venv/Scripts/python.exe .planning/phases/06-release-validation/06-05-drivers/uat_row.py --row W01/normal@module`(質問に短く答える。機構確認のみ済みで証拠ではない)
 - **利用者操作**:
   1. 実行担当: `start --case normal` で隔離ownerを準備する(通常の大きさで、最小化済みの状態に整えられる)。
   2. 実行担当: `peer --entry module` で二次起動する。
@@ -122,7 +124,7 @@ created: 2026-10-24
 
 **W01 / 通常の大きさ / 実配布EXE(隔離copy。最終v1.10.0)**(証拠種別: `production-exe`)
 
-- **状態**: not-run / 準備: 未準備(別フィールド)
+- **状態**: not-run / 準備: driver準備済み(隔離runは未準備・別フィールド。準備済みはpassではない)
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
   ```powershell
   $run = (.venv/Scripts/python.exe tests/release_uat_support.py prepare --distribution "C:\Users\shdwf\AppData\Local\Temp\pf06_final_b492037015cd42c5a57d28ca0f329773\out\PageFolio-v1.10.0" --case W01).run  # 完全copy・hash固定
@@ -131,6 +133,7 @@ created: 2026-10-24
   .venv/Scripts/python.exe tests/release_uat_support.py inspect --run $run
   .venv/Scripts/python.exe tests/release_uat_support.py stop --run $run
   ```
+- **利用者が実行するdriver**: `.venv/Scripts/python.exe .planning/phases/06-release-validation/06-05-drivers/uat_row.py --row W01/normal@production-exe`(質問に短く答える。機構確認のみ済みで証拠ではない)
 - **利用者操作**:
   1. 実行担当: 隔離copyを `start` で起動し、PID・hash・foregroundを記録する。
   2. 利用者: 表示されたPageFolioを通常の大きさにして、ヘッダーのステータス文字を目で覚える(通常の場合は位置・大きさも覚える)。
@@ -152,7 +155,7 @@ created: 2026-10-24
 
 **W01 / 最大化 / Python直接起動(python pagefolio.py)**(証拠種別: `python-real`)
 
-- **状態**: not-run / 準備: 未準備(別フィールド)
+- **状態**: not-run / 準備: driver準備済み(隔離runは未準備・別フィールド。準備済みはpassではない)
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
   ```powershell
   $uat = .venv/Scripts/python.exe tests/test_startup_windows.py --uat start --case zoomed | ConvertFrom-Json
@@ -160,6 +163,7 @@ created: 2026-10-24
   .venv/Scripts/python.exe tests/test_startup_windows.py --uat inspect --run $uat.run
   .venv/Scripts/python.exe tests/test_startup_windows.py --uat stop --run $uat.run
   ```
+- **利用者が実行するdriver**: `.venv/Scripts/python.exe .planning/phases/06-release-validation/06-05-drivers/uat_row.py --row W01/zoomed@script`(質問に短く答える。機構確認のみ済みで証拠ではない)
 - **利用者操作**:
   1. 実行担当: `start --case zoomed` で隔離ownerを準備する(最大化で、最小化済みの状態に整えられる)。
   2. 実行担当: `peer --entry script` で二次起動する。
@@ -178,7 +182,7 @@ created: 2026-10-24
 
 **W01 / 最大化 / Python -m pagefolio**(証拠種別: `python-real`)
 
-- **状態**: not-run / 準備: 未準備(別フィールド)
+- **状態**: not-run / 準備: driver準備済み(隔離runは未準備・別フィールド。準備済みはpassではない)
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
   ```powershell
   $uat = .venv/Scripts/python.exe tests/test_startup_windows.py --uat start --case zoomed | ConvertFrom-Json
@@ -186,6 +190,7 @@ created: 2026-10-24
   .venv/Scripts/python.exe tests/test_startup_windows.py --uat inspect --run $uat.run
   .venv/Scripts/python.exe tests/test_startup_windows.py --uat stop --run $uat.run
   ```
+- **利用者が実行するdriver**: `.venv/Scripts/python.exe .planning/phases/06-release-validation/06-05-drivers/uat_row.py --row W01/zoomed@module`(質問に短く答える。機構確認のみ済みで証拠ではない)
 - **利用者操作**:
   1. 実行担当: `start --case zoomed` で隔離ownerを準備する(最大化で、最小化済みの状態に整えられる)。
   2. 実行担当: `peer --entry module` で二次起動する。
@@ -204,7 +209,7 @@ created: 2026-10-24
 
 **W01 / 最大化 / 実配布EXE(隔離copy。最終v1.10.0)**(証拠種別: `production-exe`)
 
-- **状態**: not-run / 準備: 未準備(別フィールド)
+- **状態**: not-run / 準備: driver準備済み(隔離runは未準備・別フィールド。準備済みはpassではない)
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
   ```powershell
   $run = (.venv/Scripts/python.exe tests/release_uat_support.py prepare --distribution "C:\Users\shdwf\AppData\Local\Temp\pf06_final_b492037015cd42c5a57d28ca0f329773\out\PageFolio-v1.10.0" --case W01).run  # 完全copy・hash固定
@@ -213,6 +218,7 @@ created: 2026-10-24
   .venv/Scripts/python.exe tests/release_uat_support.py inspect --run $run
   .venv/Scripts/python.exe tests/release_uat_support.py stop --run $run
   ```
+- **利用者が実行するdriver**: `.venv/Scripts/python.exe .planning/phases/06-release-validation/06-05-drivers/uat_row.py --row W01/zoomed@production-exe`(質問に短く答える。機構確認のみ済みで証拠ではない)
 - **利用者操作**:
   1. 実行担当: 隔離copyを `start` で起動し、PID・hash・foregroundを記録する。
   2. 利用者: 表示されたPageFolioを最大化にして、ヘッダーのステータス文字を目で覚える(通常の場合は位置・大きさも覚える)。
@@ -239,7 +245,7 @@ created: 2026-10-24
 
 **W02 / 設定ダイアログの入力欄 / Python直接起動(python pagefolio.py)**(証拠種別: `python-real`)
 
-- **状態**: not-run / 準備: 未準備(別フィールド)
+- **状態**: not-run / 準備: driver準備済み(隔離runは未準備・別フィールド。準備済みはpassではない)
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
   ```powershell
   $uat = .venv/Scripts/python.exe tests/test_startup_windows.py --uat start --case settings | ConvertFrom-Json
@@ -247,6 +253,7 @@ created: 2026-10-24
   .venv/Scripts/python.exe tests/test_startup_windows.py --uat inspect --run $uat.run
   .venv/Scripts/python.exe tests/test_startup_windows.py --uat stop --run $uat.run
   ```
+- **利用者が実行するdriver**: `.venv/Scripts/python.exe .planning/phases/06-release-validation/06-05-drivers/uat_row.py --row W02/settings@script`(質問に短く答える。機構確認のみ済みで証拠ではない)
 - **利用者操作**:
   1. 実行担当: `start --case settings` で隔離ownerを準備する(設定ダイアログの入力欄: unsaved input・カーソル5・選択1〜7が準備済み)。
   2. 実行担当: `peer --entry script` で二次起動し、API戻り・OS error・foregroundを記録する。
@@ -265,7 +272,7 @@ created: 2026-10-24
 
 **W02 / 設定ダイアログの入力欄 / Python -m pagefolio**(証拠種別: `python-real`)
 
-- **状態**: not-run / 準備: 未準備(別フィールド)
+- **状態**: not-run / 準備: driver準備済み(隔離runは未準備・別フィールド。準備済みはpassではない)
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
   ```powershell
   $uat = .venv/Scripts/python.exe tests/test_startup_windows.py --uat start --case settings | ConvertFrom-Json
@@ -273,6 +280,7 @@ created: 2026-10-24
   .venv/Scripts/python.exe tests/test_startup_windows.py --uat inspect --run $uat.run
   .venv/Scripts/python.exe tests/test_startup_windows.py --uat stop --run $uat.run
   ```
+- **利用者が実行するdriver**: `.venv/Scripts/python.exe .planning/phases/06-release-validation/06-05-drivers/uat_row.py --row W02/settings@module`(質問に短く答える。機構確認のみ済みで証拠ではない)
 - **利用者操作**:
   1. 実行担当: `start --case settings` で隔離ownerを準備する(設定ダイアログの入力欄: unsaved input・カーソル5・選択1〜7が準備済み)。
   2. 実行担当: `peer --entry module` で二次起動し、API戻り・OS error・foregroundを記録する。
@@ -291,7 +299,7 @@ created: 2026-10-24
 
 **W02 / 設定ダイアログの入力欄 / 実配布EXE(隔離copy。最終v1.10.0)**(証拠種別: `production-exe`)
 
-- **状態**: not-run / 準備: 未準備(別フィールド)
+- **状態**: not-run / 準備: driver準備済み(隔離runは未準備・別フィールド。準備済みはpassではない)
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
   ```powershell
   $run = (.venv/Scripts/python.exe tests/release_uat_support.py prepare --distribution "C:\Users\shdwf\AppData\Local\Temp\pf06_final_b492037015cd42c5a57d28ca0f329773\out\PageFolio-v1.10.0" --case W02).run
@@ -300,6 +308,7 @@ created: 2026-10-24
   .venv/Scripts/python.exe tests/release_uat_support.py inspect --run $run
   .venv/Scripts/python.exe tests/release_uat_support.py stop --run $run
   ```
+- **利用者が実行するdriver**: `.venv/Scripts/python.exe .planning/phases/06-release-validation/06-05-drivers/uat_row.py --row W02/settings@production-exe`(質問に短く答える。機構確認のみ済みで証拠ではない)
 - **利用者操作**:
   1. 実行担当: 隔離copyを `start` で起動する(EXEへ状態は注入できない。状態は利用者が作る)。
   2. 利用者: 「⚙ 設定」を開き、入力欄の1つに文字を入れ、一部を選択してカーソルを置く(LLM設定は開かない)。
@@ -319,7 +328,7 @@ created: 2026-10-24
 
 **W02 / 左ペインのサムネイル欄 / Python直接起動(python pagefolio.py)**(証拠種別: `python-real`)
 
-- **状態**: not-run / 準備: 未準備(別フィールド)
+- **状態**: not-run / 準備: driver準備済み(隔離runは未準備・別フィールド。準備済みはpassではない)
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
   ```powershell
   $uat = .venv/Scripts/python.exe tests/test_startup_windows.py --uat start --case thumb | ConvertFrom-Json
@@ -327,6 +336,7 @@ created: 2026-10-24
   .venv/Scripts/python.exe tests/test_startup_windows.py --uat inspect --run $uat.run
   .venv/Scripts/python.exe tests/test_startup_windows.py --uat stop --run $uat.run
   ```
+- **利用者が実行するdriver**: `.venv/Scripts/python.exe .planning/phases/06-release-validation/06-05-drivers/uat_row.py --row W02/thumb@script`(質問に短く答える。機構確認のみ済みで証拠ではない)
 - **利用者操作**:
   1. 実行担当: `start --case thumb` で隔離ownerを準備する(左ペインのサムネイル欄: 対象ページが選択済み)。
   2. 実行担当: `peer --entry script` で二次起動し、API戻り・OS error・foregroundを記録する。
@@ -345,7 +355,7 @@ created: 2026-10-24
 
 **W02 / 左ペインのサムネイル欄 / Python -m pagefolio**(証拠種別: `python-real`)
 
-- **状態**: not-run / 準備: 未準備(別フィールド)
+- **状態**: not-run / 準備: driver準備済み(隔離runは未準備・別フィールド。準備済みはpassではない)
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
   ```powershell
   $uat = .venv/Scripts/python.exe tests/test_startup_windows.py --uat start --case thumb | ConvertFrom-Json
@@ -353,6 +363,7 @@ created: 2026-10-24
   .venv/Scripts/python.exe tests/test_startup_windows.py --uat inspect --run $uat.run
   .venv/Scripts/python.exe tests/test_startup_windows.py --uat stop --run $uat.run
   ```
+- **利用者が実行するdriver**: `.venv/Scripts/python.exe .planning/phases/06-release-validation/06-05-drivers/uat_row.py --row W02/thumb@module`(質問に短く答える。機構確認のみ済みで証拠ではない)
 - **利用者操作**:
   1. 実行担当: `start --case thumb` で隔離ownerを準備する(左ペインのサムネイル欄: 対象ページが選択済み)。
   2. 実行担当: `peer --entry module` で二次起動し、API戻り・OS error・foregroundを記録する。
@@ -371,7 +382,7 @@ created: 2026-10-24
 
 **W02 / 左ペインのサムネイル欄 / 実配布EXE(隔離copy。最終v1.10.0)**(証拠種別: `production-exe`)
 
-- **状態**: not-run / 準備: 未準備(別フィールド)
+- **状態**: not-run / 準備: driver準備済み(隔離runは未準備・別フィールド。準備済みはpassではない)
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
   ```powershell
   $run = (.venv/Scripts/python.exe tests/release_uat_support.py prepare --distribution "C:\Users\shdwf\AppData\Local\Temp\pf06_final_b492037015cd42c5a57d28ca0f329773\out\PageFolio-v1.10.0" --case W02 --pdf edit-three-page).run
@@ -380,6 +391,7 @@ created: 2026-10-24
   .venv/Scripts/python.exe tests/release_uat_support.py inspect --run $run
   .venv/Scripts/python.exe tests/release_uat_support.py stop --run $run
   ```
+- **利用者が実行するdriver**: `.venv/Scripts/python.exe .planning/phases/06-release-validation/06-05-drivers/uat_row.py --row W02/thumb@production-exe`(質問に短く答える。機構確認のみ済みで証拠ではない)
 - **利用者操作**:
   1. 実行担当: 隔離copyを `start` で起動する(EXEへ状態は注入できない。状態は利用者が作る)。
   2. 利用者: 実行担当が用意した3ページPDFを開き、左ペインのサムネイルでページを1つ選択する。
@@ -399,7 +411,7 @@ created: 2026-10-24
 
 **W02 / 中央のプレビュー / Python直接起動(python pagefolio.py)**(証拠種別: `python-real`)
 
-- **状態**: not-run / 準備: 未準備(別フィールド)
+- **状態**: not-run / 準備: driver準備済み(隔離runは未準備・別フィールド。準備済みはpassではない)
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
   ```powershell
   $uat = .venv/Scripts/python.exe tests/test_startup_windows.py --uat start --case preview | ConvertFrom-Json
@@ -407,6 +419,7 @@ created: 2026-10-24
   .venv/Scripts/python.exe tests/test_startup_windows.py --uat inspect --run $uat.run
   .venv/Scripts/python.exe tests/test_startup_windows.py --uat stop --run $uat.run
   ```
+- **利用者が実行するdriver**: `.venv/Scripts/python.exe .planning/phases/06-release-validation/06-05-drivers/uat_row.py --row W02/preview@script`(質問に短く答える。機構確認のみ済みで証拠ではない)
 - **利用者操作**:
   1. 実行担当: `start --case preview` で隔離ownerを準備する(中央のプレビュー: PDFを開いたプレビューが操作先)。
   2. 実行担当: `peer --entry script` で二次起動し、API戻り・OS error・foregroundを記録する。
@@ -425,7 +438,7 @@ created: 2026-10-24
 
 **W02 / 中央のプレビュー / Python -m pagefolio**(証拠種別: `python-real`)
 
-- **状態**: not-run / 準備: 未準備(別フィールド)
+- **状態**: not-run / 準備: driver準備済み(隔離runは未準備・別フィールド。準備済みはpassではない)
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
   ```powershell
   $uat = .venv/Scripts/python.exe tests/test_startup_windows.py --uat start --case preview | ConvertFrom-Json
@@ -433,6 +446,7 @@ created: 2026-10-24
   .venv/Scripts/python.exe tests/test_startup_windows.py --uat inspect --run $uat.run
   .venv/Scripts/python.exe tests/test_startup_windows.py --uat stop --run $uat.run
   ```
+- **利用者が実行するdriver**: `.venv/Scripts/python.exe .planning/phases/06-release-validation/06-05-drivers/uat_row.py --row W02/preview@module`(質問に短く答える。機構確認のみ済みで証拠ではない)
 - **利用者操作**:
   1. 実行担当: `start --case preview` で隔離ownerを準備する(中央のプレビュー: PDFを開いたプレビューが操作先)。
   2. 実行担当: `peer --entry module` で二次起動し、API戻り・OS error・foregroundを記録する。
@@ -451,7 +465,7 @@ created: 2026-10-24
 
 **W02 / 中央のプレビュー / 実配布EXE(隔離copy。最終v1.10.0)**(証拠種別: `production-exe`)
 
-- **状態**: not-run / 準備: 未準備(別フィールド)
+- **状態**: not-run / 準備: driver準備済み(隔離runは未準備・別フィールド。準備済みはpassではない)
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
   ```powershell
   $run = (.venv/Scripts/python.exe tests/release_uat_support.py prepare --distribution "C:\Users\shdwf\AppData\Local\Temp\pf06_final_b492037015cd42c5a57d28ca0f329773\out\PageFolio-v1.10.0" --case W02 --pdf edit-three-page).run
@@ -460,6 +474,7 @@ created: 2026-10-24
   .venv/Scripts/python.exe tests/release_uat_support.py inspect --run $run
   .venv/Scripts/python.exe tests/release_uat_support.py stop --run $run
   ```
+- **利用者が実行するdriver**: `.venv/Scripts/python.exe .planning/phases/06-release-validation/06-05-drivers/uat_row.py --row W02/preview@production-exe`(質問に短く答える。機構確認のみ済みで証拠ではない)
 - **利用者操作**:
   1. 実行担当: 隔離copyを `start` で起動する(EXEへ状態は注入できない。状態は利用者が作る)。
   2. 利用者: 実行担当が用意した3ページPDFを開き、中央のプレビューをクリックして操作先にする。

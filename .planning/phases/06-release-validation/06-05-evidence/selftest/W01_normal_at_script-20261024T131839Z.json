@@ -1,0 +1,263 @@
+{
+  "row": "W01/normal@script",
+  "case": "W01",
+  "condition": "normal",
+  "entry": "script",
+  "selftest": true,
+  "started_at": "2026-10-24T13:18:30.204325+00:00",
+  "target_exe_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17",
+  "steps": [
+    {
+      "at": "2026-10-24T13:18:30.204460+00:00",
+      "step": "start-harness"
+    },
+    {
+      "at": "2026-10-24T13:18:36.644252+00:00",
+      "step": "prepared",
+      "windows": [
+        {
+          "hwnd": 12063886,
+          "pid": 5200,
+          "title": "PageFolio",
+          "class": "TkTopLevel",
+          "visible": true,
+          "iconic": true,
+          "zoomed": false,
+          "rect": [
+            -32000,
+            -32000,
+            -31763,
+            -31961
+          ]
+        }
+      ],
+      "foreground": {
+        "hwnd": 12063886,
+        "pid": 5200,
+        "title": "PageFolio"
+      },
+      "pids": [
+        5200,
+        6364,
+        15700
+      ]
+    },
+    {
+      "at": "2026-10-24T13:18:36.644292+00:00",
+      "step": "peer"
+    },
+    {
+      "at": "2026-10-24T13:18:39.011303+00:00",
+      "step": "after-peer",
+      "windows": [
+        {
+          "hwnd": 12063886,
+          "pid": 5200,
+          "title": "PageFolio",
+          "class": "TkTopLevel",
+          "visible": true,
+          "iconic": false,
+          "zoomed": false,
+          "rect": [
+            78,
+            78,
+            1294,
+            917
+          ]
+        }
+      ],
+      "foreground": {
+        "hwnd": 12063886,
+        "pid": 5200,
+        "title": "PageFolio"
+      }
+    }
+  ],
+  "harness_start": {
+    "returncode": 0,
+    "stderr_tail": ""
+  },
+  "run": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-yer6q0rw",
+  "harness_manifest": {
+    "run": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-yer6q0rw",
+    "namespace": "325bb073476b471e8c4a0f11f2182625",
+    "case": "normal",
+    "launcher_pid": 15700,
+    "source_commit": "f6f026c9201b5880c25649408fb128da3d6398d0"
+  },
+  "owned_pids": [
+    {
+      "pid": 5200,
+      "created": 134373215106061741,
+      "image": "C:\\Users\\shdwf\\AppData\\Local\\Programs\\Python\\Python315\\python.exe"
+    },
+    {
+      "pid": 15700,
+      "created": 134373215105543186,
+      "image": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.venv\\Scripts\\python.exe"
+    }
+  ],
+  "harness_peer": {
+    "returncode": 0,
+    "stderr_tail": "",
+    "json": {
+      "fixture": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-yer6q0rw\\peer-66cbbbe4c2ae4e7ba50e47b2c5f0eb9b",
+      "result": {
+        "constructed": 0,
+        "restored": 0,
+        "status_preserved": true,
+        "result": "completed",
+        "elapsed": 94
+      }
+    }
+  },
+  "answers": {
+    "state_after": "通常",
+    "geometry": "1つ",
+    "single": "見える",
+    "status": "なし",
+    "note": "(selftest)"
+  },
+  "harness_inspect": {
+    "returncode": 0,
+    "stderr_tail": "",
+    "json": {
+      "manifest": {
+        "run": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-yer6q0rw",
+        "namespace": "325bb073476b471e8c4a0f11f2182625",
+        "case": "normal",
+        "role": "uat-owner-normal",
+        "fixture": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-yer6q0rw\\uat-owner-normal",
+        "launcher_pid": 15700,
+        "environment": {
+          "os": "sys.getwindowsversion(major=10, minor=0, build=26300, platform=2, service_pack='')",
+          "python": "3.15.1 (tags/v3.15.1:c37e74c, Oct 21 2026, 06:24:08) [MSC v.1951 64 bit (AMD64)]",
+          "pointer_bits": 64,
+          "session_id": 1,
+          "sid": "S-1-5-5-0-214973",
+          "authentication_luid": 221490,
+          "foreground": 656216,
+          "is_admin": false,
+          "tcl": "9.0.4",
+          "tk": 9.0
+        },
+        "originals_before": {
+          "pagefolio_settings.json": null,
+          "ocr_custom_prompt.md": null,
+          "ocr_summary_prompt.md": null
+        },
+        "source_commit": "f6f026c9201b5880c25649408fb128da3d6398d0",
+        "expected_owner": {
+          "sid": "S-1-5-5-0-214973",
+          "authentication_luid": 221490,
+          "session_id": 1,
+          "pid": 5200,
+          "process_created": 134373215106061741,
+          "started_tick": 49772187,
+          "owner_result": "acquired",
+          "snapshot": {
+            "protocol": 1,
+            "generation": "2fcae98c275b47ddb8b49864b2af1cb3",
+            "pid": 5200,
+            "process_created": 134373215106061741,
+            "session_id": 1,
+            "state": "ready",
+            "ready": true,
+            "release_generation": null
+          },
+          "ready_tick": 49775906,
+          "manual": true
+        }
+      },
+      "originals_unchanged": true,
+      "ready": {
+        "sid": "S-1-5-5-0-214973",
+        "authentication_luid": 221490,
+        "session_id": 1,
+        "pid": 5200,
+        "process_created": 134373215106061741,
+        "started_tick": 49772187,
+        "owner_result": "acquired",
+        "snapshot": {
+          "protocol": 1,
+          "generation": "2fcae98c275b47ddb8b49864b2af1cb3",
+          "pid": 5200,
+          "process_created": 134373215106061741,
+          "session_id": 1,
+          "state": "ready",
+          "ready": true,
+          "release_generation": null
+        },
+        "ready_tick": 49775906
+      },
+      "focus-result.json": {
+        "state_preserved": true,
+        "target_correct": true,
+        "result": "completed",
+        "activated": 12063886,
+        "expected_tk": 12063886,
+        "native": null,
+        "placement": "normal",
+        "expected_focus": "None",
+        "immediate_focus": "None",
+        "focus_correct": true,
+        "settled_focus": "."
+      }
+    }
+  },
+  "outcome": "answered",
+  "harness_stop": {
+    "returncode": 0,
+    "stderr_tail": ""
+  },
+  "cleanup": {
+    "left_after_harness_stop": [],
+    "terminated_owned": [],
+    "alive_after": []
+  },
+  "finished_at": "2026-10-24T13:18:39.998107+00:00",
+  "raw_inputs": [
+    {
+      "at": "2026-10-24T13:18:36.644290+00:00",
+      "key": "enter",
+      "text": "",
+      "selftest": true
+    },
+    {
+      "at": "2026-10-24T13:18:39.011353+00:00",
+      "key": "state_after",
+      "attempt": 1,
+      "text": "通常",
+      "rejected": null
+    },
+    {
+      "at": "2026-10-24T13:18:39.011363+00:00",
+      "key": "geometry",
+      "attempt": 1,
+      "text": "1つ",
+      "rejected": null
+    },
+    {
+      "at": "2026-10-24T13:18:39.011369+00:00",
+      "key": "single",
+      "attempt": 1,
+      "text": "見える",
+      "rejected": null
+    },
+    {
+      "at": "2026-10-24T13:18:39.011374+00:00",
+      "key": "status",
+      "attempt": 1,
+      "text": "なし",
+      "rejected": null
+    },
+    {
+      "at": "2026-10-24T13:18:39.011380+00:00",
+      "key": "note",
+      "attempt": 1,
+      "text": "(selftest)",
+      "rejected": null
+    }
+  ],
+  "composed_answer": "W01 normal script：state_after=通常・geometry=1つ・single=見える・status=なし（メモ: (selftest)）"
+}
