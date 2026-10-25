@@ -1,8 +1,8 @@
 ---
-status: investigating
+status: resolved
 trigger: "06-05 G1 人手受入 W02/preview@script で、二次起動による既存画面復帰後の入力先が preview_canvas ではなく右ペインのボタン(.!panedwindow.!frame3.!canvas.!frame.!frame2.!button)になった(focus_correct=false)。同手順の W02/thumb@script・W02/settings@script は正しく復帰。"
 created: 2026-10-24
-updated: 2026-10-25T12:40:00+09:00
+updated: 2026-10-25T15:05:00+09:00
 ---
 
 # Debug: preview-focus-not-restored
@@ -81,6 +81,11 @@ reasoning_checkpoint:
   and_gate: "no — 単一の寄与条件(btn_open への押下 = 記憶入力先の変更)で署名は完全に再現し、他条件との同時成立は不要。ただし『押下があった』ことと『G1 の期待値(prepared 時の入力先 = preview_canvas に固定)が、利用者が PageFolio 内で入力先を変えた場合も製品失敗と判定する』ことの 2 つが揃って初めて失敗記録になる。後者は是正(手順側)の対象。"
 
 ## Evidence
+
+- timestamp: 2026-10-25（承認後の再走 2 回目・新 driver 9758a3a6…・Alt+Tab のみ）
+  checked: .planning/phases/06-release-validation/06-05-evidence/W02_preview_at_script-20261025T060315Z.json
+  found: procedure_verdict=clean / focus_attribution=product-focus-ok / outcome=answered。マウス押下 0 件、監視 errors 0・max_gap 0.014s・truncated=false。キーは post-peer(参考記録のみ)の F5(vk116)×4 と Tab(vk9)のみ。focus-result: result=completed / target_correct=true / state_preserved=true / settled_focus=.!panedwindow.!frame2.!frame2.!canvas / focus_correct=true。利用者回答: foreground=出た・key_reached=変わった・restored=戻った・kept=PDFなし・single=１つ。
+  implication: falsification_test の「押下ログ空で canvas に復帰」が成立。分岐 A(Enter 前の PageFolio 内ボタン押下で記憶入力先が変わった手順混入)を確定し、製品欠陥ではないと結論する。resolved。
 
 - timestamp: 2026-10-25（承認後の再走 1 回目・新 driver 9758a3a6…）
   checked: .planning/phases/06-release-validation/06-05-evidence/W02_preview_at_script-20261025T055841Z.json の input_monitor・procedure_assessment・harness_inspect focus-result・steps[].windows[].rect
@@ -246,7 +251,7 @@ fix: |
   (4) 注意文の具体化: 「Enter を押すまで PageFolio の画面内は一切クリックしない(ボタン・サムネイル・プレビュー・余白も含む)。PowerShell へはタイトルバーをクリックするか Alt+Tab で戻る(隠れているときはタスクバーの PowerShell ボタンでも可)」。準備時の前景が PageFolio かどうかで文を出し分ける。
   (5) 原本保持: session JSON の保存先ファイル名はタイムスタンプ付きで、同名が既にあれば連番を付けて上書きしない。原失敗の W02_preview_at_script-20261024T144058Z.json は一切変更しない。再走は別ファイルとして保存される。
   (6) 新設 CLI `--check-monitor`: 入力監視ロジックの機構確認(窓も入力も作らず前景も変えない)。実EXE 行は利用者が PageFolio 内を操作する手順のため監視対象外(input_monitor.enabled=false・procedure_verdict=not-monitored を記録)。
-verification: 適用済み・再走待ち。機構確認は合格(ruff check / ruff format 当該ファイルのみ / AST / `--check-monitor` 全項目 / 偽 harness 統合確認。詳細は Evidence 末尾「是正の適用・機構確認」)。製品の復帰が仕様どおりという結論の最終確認(分岐 A の確定)は、W02/preview@script の再走結果で行う: 押下ログが空 かつ canvas に復帰 → A 確認(resolved 可)/ 押下ログが空 かつ settled=btn_open → A 反証、B/C を再検討 / 押下ログに PageFolio 上の押下あり → 手順汚染で再走。
+verification: 合格。再走 2 回目(W02_preview_at_script-20261025T060315Z.json)が procedure_verdict=clean・押下 0 件で settled_focus=preview_canvas・focus_correct=true となり分岐 A を確定。再走 1 回目(…20261025T055841Z.json)はタイトルバーでの窓移動を contaminated と判定(合否不使用。復帰は canvas で正)。機構確認(ruff/AST/--check-monitor/偽 harness 統合確認)も合格。製品・tests/・Phase 4 被覆ファイルの変更なし=Phase 4/5 の鮮度と 06-04 最終ビルドに影響なし。残課題: driver はタイトルバー(非クライアント領域)押下もクライアント押下と同じく汚染判定する(偽陽性。必要なら別途改善)。06-MANUAL-EVIDENCE.json の driver_sha256 更新は 06-05 側で行う。
 files_changed:
   - .planning/phases/06-release-validation/06-05-drivers/uat_row.py (sha256 9758a3a67c80c7f93dc465860bd80347668fcc474a5208a3b78588acc63d76b3。旧 ea751632ee4e...。06-MANUAL-EVIDENCE.json の driver_sha256 は旧値のまま=更新が必要)
 diagnostic_files_added:
