@@ -82,6 +82,11 @@ reasoning_checkpoint:
 
 ## Evidence
 
+- timestamp: 2026-10-25（承認後の再走 1 回目・新 driver 9758a3a6…）
+  checked: .planning/phases/06-release-validation/06-05-evidence/W02_preview_at_script-20261025T055841Z.json の input_monitor・procedure_assessment・harness_inspect focus-result・steps[].windows[].rect
+  found: procedure_verdict=contaminated（awaiting-enter で PageFolio 上の左押下 1 回: down (716,243) → up (743,155)）。押下時の窓 rect=[234,228,1450,1067] で y=243 は上端から 15px のタイトルバー（WindowFromPoint の child_hwnd が TkTopLevel 自身＝クライアント領域の Tk 部品ではない）。押下後の窓 rect=[261,140,…] で移動量 (+27,-88) がドラッグ量と一致＝タイトルバーでの窓移動。復帰結果は settled_focus=.!panedwindow.!frame2.!frame2.!canvas / focus_correct=true / result=completed。
+  implication: 手順上は汚染判定のため合否には使わない（規則どおり再走が必要）。ただし非クライアント領域の押下では Tk 入力先が変わらず canvas に戻った＝分岐 A（クライアント領域のボタン押下で記憶入力先が変わる）と整合し、反証しない。driver はタイトルバー押下とクライアント領域押下を区別していない（偽陽性の余地）。clean な再走 1 回で A を確認して閉じる。
+
 - timestamp: 2026-10-24
   checked: 06-05 証拠 JSON(preview/thumb/settings)と driver/harness/FocusRestorer のコード
   found: |
