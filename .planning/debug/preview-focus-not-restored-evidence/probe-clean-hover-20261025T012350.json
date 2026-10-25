@@ -1,0 +1,406 @@
+{
+  "purpose": "debug preview-focus-not-restored: 分岐A機構の決定的再現 (G1 の合否には使わない)",
+  "intervene": "hover",
+  "started_at": "2026-10-24T16:23:38.836862+00:00",
+  "namespace": "b93f3e2001ff4d229444a2a5a23e559b",
+  "steps": [
+    {
+      "at": "2026-10-24T16:23:44.555101+00:00",
+      "step": "pf-foreground",
+      "attempt": 1,
+      "ok": true,
+      "foreground": {
+        "hwnd": 32640538,
+        "title": "PageFolio",
+        "class": "TkTopLevel"
+      }
+    },
+    {
+      "at": "2026-10-24T16:23:45.931415+00:00",
+      "step": "intervened:hover"
+    }
+  ],
+  "aim": [
+    {
+      "attempt": 1,
+      "btn_rect": [
+        830,
+        368,
+        399,
+        37
+      ],
+      "under_cursor": ".!panedwindow.!frame3.!canvas.!frame.!frame2.!button",
+      "pointer": [
+        1029,
+        386
+      ]
+    }
+  ],
+  "geometry": {
+    "btn_open": ".!panedwindow.!frame3.!canvas.!frame.!frame2.!button",
+    "btn_rect": [
+      830,
+      368,
+      399,
+      37
+    ],
+    "btn_mapped": true,
+    "btn_takefocus": "ttk::takefocus",
+    "canvas_rect": [
+      245,
+      223,
+      549,
+      647
+    ],
+    "under_cursor": ".!panedwindow.!frame3.!canvas.!frame.!frame2.!button",
+    "pointer": [
+      1029,
+      386
+    ],
+    "top_hwnd": 32640538,
+    "tk_focus_next_of_preview": ".!panedwindow.!frame3.!canvas.!frame.!frame.!button"
+  },
+  "aimed_at_btn_open": true,
+  "safe_to_input": true,
+  "decoy_rc": 0,
+  "decoy_stderr": "",
+  "decoy_fault": "",
+  "decoy_log": "60887.28 decoy-start\n60887.59 decoy-fg-set\n60890.63 pumped-60\n60890.63 go-start\n60890.63 peer-popen\n60890.90 peer-exited\n",
+  "btn_open_invoked": false,
+  "peer": {
+    "state": "exited",
+    "rc": 0,
+    "elapsed": 0.27,
+    "out": "{\"terminal_result\": \"completed\", \"elapsed\": 31}\n",
+    "err": ""
+  },
+  "outcome": "done",
+  "owner_returncode": 0,
+  "focus_result": {
+    "result": "completed",
+    "expected_focus": ".!panedwindow.!frame2.!frame2.!canvas",
+    "immediate_focus": "None",
+    "settled_focus": ".!panedwindow.!frame2.!frame2.!canvas",
+    "focus_correct": true
+  },
+  "focus_trace": [
+    {
+      "t": 0.0,
+      "kind": "trace-start",
+      "foreground": 32640538,
+      "own": 32640538,
+      "tk_focus": ".",
+      "lastfor": ".",
+      "record": ".",
+      "last_widget": ".",
+      "os_focus": 25366456,
+      "os_focus_widget": ".",
+      "cursor": [
+        1045,
+        747
+      ],
+      "under_cursor": ".!panedwindow.!frame3.!canvas"
+    },
+    {
+      "t": 0.002,
+      "kind": "tcl-focus",
+      "text": ".!panedwindow.!frame2.!frame2.!canvas ->  tcl-caller: ",
+      "py": [
+        "__main__.py:81:main",
+        "diag_owner.py:270:<lambda>",
+        "diag_btn_press.py:62:prepare",
+        "diag_owner.py:185:prepare"
+      ]
+    },
+    {
+      "t": 0.025,
+      "kind": "FocusOut",
+      "args": [
+        ".",
+        "NotifyNormal",
+        "NotifyInferior"
+      ]
+    },
+    {
+      "t": 0.025,
+      "kind": "FocusIn",
+      "args": [
+        ".!panedwindow",
+        "NotifyNormal",
+        "NotifyVirtual"
+      ]
+    },
+    {
+      "t": 0.025,
+      "kind": "FocusIn",
+      "args": [
+        ".!panedwindow.!frame2",
+        "NotifyNormal",
+        "NotifyVirtual"
+      ]
+    },
+    {
+      "t": 0.025,
+      "kind": "FocusIn",
+      "args": [
+        ".!panedwindow.!frame2.!frame2",
+        "NotifyNormal",
+        "NotifyVirtual"
+      ]
+    },
+    {
+      "t": 0.025,
+      "kind": "FocusIn",
+      "args": [
+        ".!panedwindow.!frame2.!frame2.!canvas",
+        "NotifyNormal",
+        "NotifyAncestor"
+      ]
+    },
+    {
+      "t": 0.124,
+      "kind": "change",
+      "foreground": 32640538,
+      "own": 32640538,
+      "tk_focus": ".!panedwindow.!frame2.!frame2.!canvas",
+      "lastfor": ".!panedwindow.!frame2.!frame2.!canvas",
+      "record": ".!panedwindow.!frame2.!frame2.!canvas",
+      "last_widget": ".!panedwindow.!frame2.!frame2.!canvas",
+      "os_focus": 25366456,
+      "os_focus_widget": ".",
+      "cursor": [
+        1045,
+        747
+      ],
+      "under_cursor": ".!panedwindow.!frame3.!canvas.!frame.!frame4"
+    },
+    {
+      "t": 1.446,
+      "kind": "change",
+      "foreground": 32640538,
+      "own": 32640538,
+      "tk_focus": ".!panedwindow.!frame2.!frame2.!canvas",
+      "lastfor": ".!panedwindow.!frame2.!frame2.!canvas",
+      "record": ".!panedwindow.!frame2.!frame2.!canvas",
+      "last_widget": ".!panedwindow.!frame2.!frame2.!canvas",
+      "os_focus": 25366456,
+      "os_focus_widget": ".",
+      "cursor": [
+        1029,
+        386
+      ],
+      "under_cursor": ".!panedwindow.!frame3.!canvas.!frame.!frame2.!button"
+    },
+    {
+      "t": 3.207,
+      "kind": "FocusOut",
+      "args": [
+        ".!panedwindow.!frame2.!frame2.!canvas",
+        "NotifyNormal",
+        "NotifyAncestor"
+      ]
+    },
+    {
+      "t": 3.207,
+      "kind": "FocusOut",
+      "args": [
+        ".!panedwindow.!frame2.!frame2",
+        "NotifyNormal",
+        "NotifyVirtual"
+      ]
+    },
+    {
+      "t": 3.207,
+      "kind": "FocusOut",
+      "args": [
+        ".!panedwindow.!frame2",
+        "NotifyNormal",
+        "NotifyVirtual"
+      ]
+    },
+    {
+      "t": 3.207,
+      "kind": "FocusOut",
+      "args": [
+        ".!panedwindow",
+        "NotifyNormal",
+        "NotifyVirtual"
+      ]
+    },
+    {
+      "t": 3.207,
+      "kind": "FocusOut",
+      "args": [
+        ".",
+        "NotifyNormal",
+        "NotifyVirtual"
+      ]
+    },
+    {
+      "t": 3.214,
+      "kind": "change",
+      "foreground": 725650,
+      "own": 32640538,
+      "tk_focus": "None",
+      "lastfor": ".!panedwindow.!frame2.!frame2.!canvas",
+      "record": ".!panedwindow.!frame2.!frame2.!canvas",
+      "last_widget": ".!panedwindow.!frame2.!frame2.!canvas",
+      "os_focus": null,
+      "os_focus_widget": null,
+      "cursor": [
+        1029,
+        386
+      ],
+      "under_cursor": ".!panedwindow.!frame3.!canvas.!frame.!frame2.!button"
+    },
+    {
+      "t": 6.475,
+      "kind": "restore-before",
+      "foreground": 725650,
+      "own": 32640538,
+      "tk_focus": "None",
+      "lastfor": ".!panedwindow.!frame2.!frame2.!canvas",
+      "record": ".!panedwindow.!frame2.!frame2.!canvas",
+      "last_widget": ".!panedwindow.!frame2.!frame2.!canvas",
+      "os_focus": null,
+      "os_focus_widget": null,
+      "cursor": [
+        1029,
+        386
+      ],
+      "under_cursor": ".!panedwindow.!frame3.!canvas.!frame.!frame2.!button"
+    },
+    {
+      "t": 6.482,
+      "kind": "tcl-focus",
+      "text": ".!panedwindow.!frame2.!frame2.!canvas ->  tcl-caller: ",
+      "py": [
+        "startup_control.py:228:_dispatch_pending",
+        "diag_owner.py:190:traced_restore",
+        "startup_win32.py:1029:restore_window",
+        "startup_focus.py:227:restore"
+      ]
+    },
+    {
+      "t": 6.482,
+      "kind": "restore-result",
+      "result": "completed"
+    },
+    {
+      "t": 6.482,
+      "kind": "restore-after",
+      "foreground": 32640538,
+      "own": 32640538,
+      "tk_focus": "None",
+      "lastfor": ".!panedwindow.!frame2.!frame2.!canvas",
+      "record": ".!panedwindow.!frame2.!frame2.!canvas",
+      "last_widget": ".!panedwindow.!frame2.!frame2.!canvas",
+      "os_focus": 25366456,
+      "os_focus_widget": ".",
+      "cursor": [
+        1029,
+        386
+      ],
+      "under_cursor": ".!panedwindow.!frame3.!canvas.!frame.!frame2.!button"
+    },
+    {
+      "t": 6.482,
+      "kind": "FocusIn",
+      "args": [
+        ".",
+        "NotifyNormal",
+        "NotifyVirtual"
+      ]
+    },
+    {
+      "t": 6.482,
+      "kind": "FocusIn",
+      "args": [
+        ".!panedwindow",
+        "NotifyNormal",
+        "NotifyVirtual"
+      ]
+    },
+    {
+      "t": 6.482,
+      "kind": "FocusIn",
+      "args": [
+        ".!panedwindow.!frame2",
+        "NotifyNormal",
+        "NotifyVirtual"
+      ]
+    },
+    {
+      "t": 6.482,
+      "kind": "FocusIn",
+      "args": [
+        ".!panedwindow.!frame2.!frame2",
+        "NotifyNormal",
+        "NotifyVirtual"
+      ]
+    },
+    {
+      "t": 6.482,
+      "kind": "FocusIn",
+      "args": [
+        ".!panedwindow.!frame2.!frame2.!canvas",
+        "NotifyNormal",
+        "NotifyAncestor"
+      ]
+    },
+    {
+      "t": 6.482,
+      "kind": "settled",
+      "foreground": 32640538,
+      "own": 32640538,
+      "tk_focus": ".!panedwindow.!frame2.!frame2.!canvas",
+      "lastfor": ".!panedwindow.!frame2.!frame2.!canvas",
+      "record": ".!panedwindow.!frame2.!frame2.!canvas",
+      "last_widget": ".!panedwindow.!frame2.!frame2.!canvas",
+      "os_focus": 25366456,
+      "os_focus_widget": ".",
+      "cursor": [
+        1029,
+        386
+      ],
+      "under_cursor": ".!panedwindow.!frame3.!canvas.!frame.!frame2.!button"
+    },
+    {
+      "t": 6.534,
+      "kind": "change",
+      "foreground": 32640538,
+      "own": 32640538,
+      "tk_focus": ".!panedwindow.!frame2.!frame2.!canvas",
+      "lastfor": ".!panedwindow.!frame2.!frame2.!canvas",
+      "record": ".!panedwindow.!frame2.!frame2.!canvas",
+      "last_widget": ".!panedwindow.!frame2.!frame2.!canvas",
+      "os_focus": 25366456,
+      "os_focus_widget": ".",
+      "cursor": [
+        1029,
+        386
+      ],
+      "under_cursor": ".!panedwindow.!frame3.!canvas.!frame.!frame2.!button"
+    },
+    {
+      "t": 7.409,
+      "kind": "trace-stop",
+      "foreground": 32640538,
+      "own": 32640538,
+      "tk_focus": ".!panedwindow.!frame2.!frame2.!canvas",
+      "lastfor": ".!panedwindow.!frame2.!frame2.!canvas",
+      "record": ".!panedwindow.!frame2.!frame2.!canvas",
+      "last_widget": ".!panedwindow.!frame2.!frame2.!canvas",
+      "os_focus": 25366456,
+      "os_focus_widget": ".",
+      "cursor": [
+        1045,
+        747
+      ],
+      "under_cursor": ".!panedwindow.!frame3.!canvas.!frame.!frame4"
+    }
+  ],
+  "heartbeat_tail": "60884.89 60885.4 60885.9 60886.41 60886.91 60887.42 60887.93 60888.43 60888.94 60889.44 60889.95 60890.46 60890.96 60891.47",
+  "owner_err_tail": "",
+  "finished_at": "2026-10-24T16:23:50.858800+00:00"
+}

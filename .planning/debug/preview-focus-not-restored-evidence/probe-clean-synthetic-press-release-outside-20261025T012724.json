@@ -1,0 +1,547 @@
+{
+  "purpose": "debug preview-focus-not-restored: 分岐A機構の決定的再現 (G1 の合否には使わない)",
+  "intervene": "synthetic-press-release-outside",
+  "started_at": "2026-10-24T16:27:12.627313+00:00",
+  "namespace": "4ff7ca04a9d24cfab5b3a0a314cfaa33",
+  "steps": [
+    {
+      "at": "2026-10-24T16:27:18.389645+00:00",
+      "step": "pf-foreground",
+      "attempt": 1,
+      "ok": true,
+      "foreground": {
+        "hwnd": 24383900,
+        "title": "PageFolio",
+        "class": "TkTopLevel"
+      }
+    },
+    {
+      "at": "2026-10-24T16:27:19.119456+00:00",
+      "step": "intervened:synthetic-press-release-outside"
+    }
+  ],
+  "geometry": {
+    "btn_open": ".!panedwindow.!frame3.!canvas.!frame.!frame2.!button",
+    "btn_rect": [
+      908,
+      446,
+      399,
+      37
+    ],
+    "btn_mapped": true,
+    "btn_takefocus": "ttk::takefocus",
+    "canvas_rect": [
+      323,
+      301,
+      549,
+      647
+    ],
+    "under_cursor": ".!panedwindow.!frame3.!canvas.!frame.!frame3.!button",
+    "pointer": [
+      1045,
+      747
+    ],
+    "top_hwnd": 24383900,
+    "tk_focus_next_of_preview": ".!panedwindow.!frame3.!canvas.!frame.!frame.!button"
+  },
+  "aimed_at_btn_open": false,
+  "safe_to_input": true,
+  "synthetic_done": true,
+  "decoy_rc": 0,
+  "decoy_stderr": "",
+  "decoy_fault": "",
+  "decoy_log": "61100.36 decoy-start\n61100.63 decoy-fg-set\n61103.68 pumped-60\n61103.68 go-start\n61103.69 peer-popen\n61103.95 peer-exited\n",
+  "btn_open_invoked": false,
+  "peer": {
+    "state": "exited",
+    "rc": 0,
+    "elapsed": 0.26,
+    "out": "{\"terminal_result\": \"completed\", \"elapsed\": 32}\n",
+    "err": ""
+  },
+  "outcome": "done",
+  "owner_returncode": 0,
+  "focus_result": {
+    "result": "completed",
+    "expected_focus": ".!panedwindow.!frame2.!frame2.!canvas",
+    "immediate_focus": "None",
+    "settled_focus": ".!panedwindow.!frame3.!canvas.!frame.!frame2.!button",
+    "focus_correct": false
+  },
+  "focus_trace": [
+    {
+      "t": 0.0,
+      "kind": "trace-start",
+      "foreground": 24383900,
+      "own": 24383900,
+      "tk_focus": ".",
+      "lastfor": ".",
+      "record": ".",
+      "last_widget": ".",
+      "os_focus": 2822162,
+      "os_focus_widget": ".",
+      "cursor": [
+        1045,
+        747
+      ],
+      "under_cursor": ".!panedwindow.!frame3.!canvas.!frame"
+    },
+    {
+      "t": 0.002,
+      "kind": "tcl-focus",
+      "text": ".!panedwindow.!frame2.!frame2.!canvas ->  tcl-caller: ",
+      "py": [
+        "__main__.py:81:main",
+        "diag_owner.py:270:<lambda>",
+        "diag_btn_press.py:62:prepare",
+        "diag_owner.py:185:prepare"
+      ]
+    },
+    {
+      "t": 0.002,
+      "kind": "FocusOut",
+      "args": [
+        ".",
+        "NotifyNormal",
+        "NotifyInferior"
+      ]
+    },
+    {
+      "t": 0.003,
+      "kind": "FocusIn",
+      "args": [
+        ".!panedwindow",
+        "NotifyNormal",
+        "NotifyVirtual"
+      ]
+    },
+    {
+      "t": 0.003,
+      "kind": "FocusIn",
+      "args": [
+        ".!panedwindow.!frame2",
+        "NotifyNormal",
+        "NotifyVirtual"
+      ]
+    },
+    {
+      "t": 0.003,
+      "kind": "FocusIn",
+      "args": [
+        ".!panedwindow.!frame2.!frame2",
+        "NotifyNormal",
+        "NotifyVirtual"
+      ]
+    },
+    {
+      "t": 0.003,
+      "kind": "FocusIn",
+      "args": [
+        ".!panedwindow.!frame2.!frame2.!canvas",
+        "NotifyNormal",
+        "NotifyAncestor"
+      ]
+    },
+    {
+      "t": 0.101,
+      "kind": "change",
+      "foreground": 24383900,
+      "own": 24383900,
+      "tk_focus": ".!panedwindow.!frame2.!frame2.!canvas",
+      "lastfor": ".!panedwindow.!frame2.!frame2.!canvas",
+      "record": ".!panedwindow.!frame2.!frame2.!canvas",
+      "last_widget": ".!panedwindow.!frame2.!frame2.!canvas",
+      "os_focus": 2822162,
+      "os_focus_widget": ".",
+      "cursor": [
+        1045,
+        747
+      ],
+      "under_cursor": ".!panedwindow.!frame3.!canvas.!frame.!frame3.!button"
+    },
+    {
+      "t": 1.399,
+      "kind": "tcl-focus",
+      "text": ".!panedwindow.!frame3.!canvas.!frame.!frame2.!button ->  tcl-caller: ttk::clickToFocus .!panedwindow.!frame3.!canvas.!frame.!frame2.!button",
+      "py": [
+        "diag_owner.py:273:main",
+        "pagefolio.py:16:<module>",
+        "__main__.py:81:main",
+        "diag_btn_press.py:97:poll"
+      ]
+    },
+    {
+      "t": 1.399,
+      "kind": "ButtonPress",
+      "args": [
+        ".!panedwindow.!frame3.!canvas.!frame.!frame2.!button",
+        "1",
+        "918",
+        "456"
+      ]
+    },
+    {
+      "t": 1.399,
+      "kind": "FocusOut",
+      "args": [
+        ".!panedwindow.!frame2.!frame2.!canvas",
+        "NotifyNormal",
+        "NotifyNonlinear"
+      ]
+    },
+    {
+      "t": 1.399,
+      "kind": "FocusOut",
+      "args": [
+        ".!panedwindow.!frame2.!frame2",
+        "NotifyNormal",
+        "NotifyNonlinearVirtual"
+      ]
+    },
+    {
+      "t": 1.399,
+      "kind": "FocusOut",
+      "args": [
+        ".!panedwindow.!frame2",
+        "NotifyNormal",
+        "NotifyNonlinearVirtual"
+      ]
+    },
+    {
+      "t": 1.399,
+      "kind": "FocusIn",
+      "args": [
+        ".!panedwindow.!frame3",
+        "NotifyNormal",
+        "NotifyNonlinearVirtual"
+      ]
+    },
+    {
+      "t": 1.399,
+      "kind": "FocusIn",
+      "args": [
+        ".!panedwindow.!frame3.!canvas",
+        "NotifyNormal",
+        "NotifyNonlinearVirtual"
+      ]
+    },
+    {
+      "t": 1.399,
+      "kind": "FocusIn",
+      "args": [
+        ".!panedwindow.!frame3.!canvas.!frame",
+        "NotifyNormal",
+        "NotifyNonlinearVirtual"
+      ]
+    },
+    {
+      "t": 1.399,
+      "kind": "FocusIn",
+      "args": [
+        ".!panedwindow.!frame3.!canvas.!frame.!frame2",
+        "NotifyNormal",
+        "NotifyNonlinearVirtual"
+      ]
+    },
+    {
+      "t": 1.399,
+      "kind": "FocusIn",
+      "args": [
+        ".!panedwindow.!frame3.!canvas.!frame.!frame2.!button",
+        "NotifyNormal",
+        "NotifyNonlinear"
+      ]
+    },
+    {
+      "t": 1.4,
+      "kind": "ButtonRelease",
+      "args": [
+        ".!panedwindow.!frame3.!canvas.!frame.!frame2.!button",
+        "1",
+        "708",
+        "246"
+      ]
+    },
+    {
+      "t": 1.43,
+      "kind": "change",
+      "foreground": 24383900,
+      "own": 24383900,
+      "tk_focus": ".!panedwindow.!frame3.!canvas.!frame.!frame2.!button",
+      "lastfor": ".!panedwindow.!frame3.!canvas.!frame.!frame2.!button",
+      "record": ".!panedwindow.!frame3.!canvas.!frame.!frame2.!button",
+      "last_widget": ".!panedwindow.!frame3.!canvas.!frame.!frame2.!button",
+      "os_focus": 2822162,
+      "os_focus_widget": ".",
+      "cursor": [
+        1045,
+        747
+      ],
+      "under_cursor": ".!panedwindow.!frame3.!canvas.!frame.!frame3.!button"
+    },
+    {
+      "t": 2.421,
+      "kind": "change",
+      "foreground": 16191430,
+      "own": 24383900,
+      "tk_focus": ".!panedwindow.!frame3.!canvas.!frame.!frame2.!button",
+      "lastfor": ".!panedwindow.!frame3.!canvas.!frame.!frame2.!button",
+      "record": ".!panedwindow.!frame3.!canvas.!frame.!frame2.!button",
+      "last_widget": ".!panedwindow.!frame3.!canvas.!frame.!frame2.!button",
+      "os_focus": 2822162,
+      "os_focus_widget": ".",
+      "cursor": [
+        1045,
+        747
+      ],
+      "under_cursor": ".!panedwindow.!frame3.!canvas.!frame.!frame3.!button"
+    },
+    {
+      "t": 2.425,
+      "kind": "FocusOut",
+      "args": [
+        ".!panedwindow.!frame3.!canvas.!frame.!frame2.!button",
+        "NotifyNormal",
+        "NotifyAncestor"
+      ]
+    },
+    {
+      "t": 2.425,
+      "kind": "FocusOut",
+      "args": [
+        ".!panedwindow.!frame3.!canvas.!frame.!frame2",
+        "NotifyNormal",
+        "NotifyVirtual"
+      ]
+    },
+    {
+      "t": 2.425,
+      "kind": "FocusOut",
+      "args": [
+        ".!panedwindow.!frame3.!canvas.!frame",
+        "NotifyNormal",
+        "NotifyVirtual"
+      ]
+    },
+    {
+      "t": 2.425,
+      "kind": "FocusOut",
+      "args": [
+        ".!panedwindow.!frame3.!canvas",
+        "NotifyNormal",
+        "NotifyVirtual"
+      ]
+    },
+    {
+      "t": 2.425,
+      "kind": "FocusOut",
+      "args": [
+        ".!panedwindow.!frame3",
+        "NotifyNormal",
+        "NotifyVirtual"
+      ]
+    },
+    {
+      "t": 2.425,
+      "kind": "FocusOut",
+      "args": [
+        ".!panedwindow",
+        "NotifyNormal",
+        "NotifyVirtual"
+      ]
+    },
+    {
+      "t": 2.425,
+      "kind": "FocusOut",
+      "args": [
+        ".",
+        "NotifyNormal",
+        "NotifyVirtual"
+      ]
+    },
+    {
+      "t": 2.523,
+      "kind": "change",
+      "foreground": 16191430,
+      "own": 24383900,
+      "tk_focus": "None",
+      "lastfor": ".!panedwindow.!frame3.!canvas.!frame.!frame2.!button",
+      "record": ".!panedwindow.!frame3.!canvas.!frame.!frame2.!button",
+      "last_widget": ".!panedwindow.!frame3.!canvas.!frame.!frame2.!button",
+      "os_focus": null,
+      "os_focus_widget": null,
+      "cursor": [
+        1045,
+        747
+      ],
+      "under_cursor": ".!panedwindow.!frame3.!canvas.!frame.!frame3.!button"
+    },
+    {
+      "t": 5.668,
+      "kind": "restore-before",
+      "foreground": 16191430,
+      "own": 24383900,
+      "tk_focus": "None",
+      "lastfor": ".!panedwindow.!frame3.!canvas.!frame.!frame2.!button",
+      "record": ".!panedwindow.!frame3.!canvas.!frame.!frame2.!button",
+      "last_widget": ".!panedwindow.!frame3.!canvas.!frame.!frame2.!button",
+      "os_focus": null,
+      "os_focus_widget": null,
+      "cursor": [
+        1045,
+        747
+      ],
+      "under_cursor": ".!panedwindow.!frame3.!canvas.!frame.!frame3.!button"
+    },
+    {
+      "t": 5.676,
+      "kind": "tcl-focus",
+      "text": ".!panedwindow.!frame3.!canvas.!frame.!frame2.!button ->  tcl-caller: ",
+      "py": [
+        "startup_control.py:228:_dispatch_pending",
+        "diag_owner.py:190:traced_restore",
+        "startup_win32.py:1029:restore_window",
+        "startup_focus.py:227:restore"
+      ]
+    },
+    {
+      "t": 5.676,
+      "kind": "restore-result",
+      "result": "completed"
+    },
+    {
+      "t": 5.676,
+      "kind": "restore-after",
+      "foreground": 24383900,
+      "own": 24383900,
+      "tk_focus": "None",
+      "lastfor": ".!panedwindow.!frame3.!canvas.!frame.!frame2.!button",
+      "record": ".!panedwindow.!frame3.!canvas.!frame.!frame2.!button",
+      "last_widget": ".!panedwindow.!frame3.!canvas.!frame.!frame2.!button",
+      "os_focus": 2822162,
+      "os_focus_widget": ".",
+      "cursor": [
+        1045,
+        747
+      ],
+      "under_cursor": ".!panedwindow.!frame3.!canvas.!frame.!frame3.!button"
+    },
+    {
+      "t": 5.677,
+      "kind": "FocusIn",
+      "args": [
+        ".",
+        "NotifyNormal",
+        "NotifyVirtual"
+      ]
+    },
+    {
+      "t": 5.677,
+      "kind": "FocusIn",
+      "args": [
+        ".!panedwindow",
+        "NotifyNormal",
+        "NotifyVirtual"
+      ]
+    },
+    {
+      "t": 5.677,
+      "kind": "FocusIn",
+      "args": [
+        ".!panedwindow.!frame3",
+        "NotifyNormal",
+        "NotifyVirtual"
+      ]
+    },
+    {
+      "t": 5.677,
+      "kind": "FocusIn",
+      "args": [
+        ".!panedwindow.!frame3.!canvas",
+        "NotifyNormal",
+        "NotifyVirtual"
+      ]
+    },
+    {
+      "t": 5.677,
+      "kind": "FocusIn",
+      "args": [
+        ".!panedwindow.!frame3.!canvas.!frame",
+        "NotifyNormal",
+        "NotifyVirtual"
+      ]
+    },
+    {
+      "t": 5.677,
+      "kind": "FocusIn",
+      "args": [
+        ".!panedwindow.!frame3.!canvas.!frame.!frame2",
+        "NotifyNormal",
+        "NotifyVirtual"
+      ]
+    },
+    {
+      "t": 5.677,
+      "kind": "FocusIn",
+      "args": [
+        ".!panedwindow.!frame3.!canvas.!frame.!frame2.!button",
+        "NotifyNormal",
+        "NotifyAncestor"
+      ]
+    },
+    {
+      "t": 5.677,
+      "kind": "settled",
+      "foreground": 24383900,
+      "own": 24383900,
+      "tk_focus": ".!panedwindow.!frame3.!canvas.!frame.!frame2.!button",
+      "lastfor": ".!panedwindow.!frame3.!canvas.!frame.!frame2.!button",
+      "record": ".!panedwindow.!frame3.!canvas.!frame.!frame2.!button",
+      "last_widget": ".!panedwindow.!frame3.!canvas.!frame.!frame2.!button",
+      "os_focus": 2822162,
+      "os_focus_widget": ".",
+      "cursor": [
+        1045,
+        747
+      ],
+      "under_cursor": ".!panedwindow.!frame3.!canvas.!frame.!frame3.!button"
+    },
+    {
+      "t": 5.735,
+      "kind": "change",
+      "foreground": 24383900,
+      "own": 24383900,
+      "tk_focus": ".!panedwindow.!frame3.!canvas.!frame.!frame2.!button",
+      "lastfor": ".!panedwindow.!frame3.!canvas.!frame.!frame2.!button",
+      "record": ".!panedwindow.!frame3.!canvas.!frame.!frame2.!button",
+      "last_widget": ".!panedwindow.!frame3.!canvas.!frame.!frame2.!button",
+      "os_focus": 2822162,
+      "os_focus_widget": ".",
+      "cursor": [
+        1045,
+        747
+      ],
+      "under_cursor": ".!panedwindow.!frame3.!canvas.!frame.!frame3.!button"
+    },
+    {
+      "t": 6.673,
+      "kind": "trace-stop",
+      "foreground": 24383900,
+      "own": 24383900,
+      "tk_focus": ".!panedwindow.!frame3.!canvas.!frame.!frame2.!button",
+      "lastfor": ".!panedwindow.!frame3.!canvas.!frame.!frame2.!button",
+      "record": ".!panedwindow.!frame3.!canvas.!frame.!frame2.!button",
+      "last_widget": ".!panedwindow.!frame3.!canvas.!frame.!frame2.!button",
+      "os_focus": 2822162,
+      "os_focus_widget": ".",
+      "cursor": [
+        1045,
+        747
+      ],
+      "under_cursor": ".!panedwindow.!frame3.!canvas.!frame.!frame3.!button"
+    }
+  ],
+  "heartbeat_tail": "61098.72 61099.23 61099.73 61100.24 61100.75 61101.26 61101.76 61102.27 61102.78 61103.28 61103.79 61104.29 61104.8",
+  "owner_err_tail": "",
+  "finished_at": "2026-10-24T16:27:24.018538+00:00"
+}
