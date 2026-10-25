@@ -2,7 +2,7 @@
 status: investigating
 trigger: "Phase 5 DEP-05-REGRESSION（normal-entry-scriptのcommunicate期限超過を再調査）"
 created: 2026-10-22
-updated: 2026-10-23
+updated: 2026-10-25
 goal: find_and_fix
 ---
 
@@ -39,6 +39,11 @@ next_action: 2026-10-23の利用者判断に従い、DEP-05-REGRESSIONを未解�
   timestamp: 2026-10-23
 
 ## Evidence
+
+- timestamp: 2026-10-25（再発監視の確認・利用者判断で監視継続）
+  checked: Phase 6 の単一全件ログ 15 本（.planning/phases/06-release-validation/*full*.txt・06-preflight/06-reviews-pytest*.txt、2026-10-24 05:54〜22:30）
+  found: 失敗があったのは 3 本で、内容は test_config_notification の 3 件（Tcl 同種、06-01-STOP.md→親 debug commit 07244dc で解消）と test_takeover_two_candidates_after_confirmed_initialization_death（resolved/takeover-loser-expired.md でテスト側の前提誤りと確定）。normal-entry-script の communicate 期限超過・owner_missing の再発は 0 件。最新は 2024 passed / 1 warning（06-05-g1prep-full.txt）。
+  implication: 再発証拠なし。原因未確定のため resolved にはせず、status investigating（再発監視）を維持する。Phase 6 最終ゲートまで監視し、再発時は最初の証拠を保持して continue で再開する。
 
 - timestamp: 2026-10-23（継続確認・既承認の監視方針へ状態整合）
   checked: git log/status、9384268/973c6edの変更範囲、診断テスト・requirements・全件ログのSHA256、debugとPhase 5 review診断ファイルの更新時刻、製品/テスト差分と実行環境metadata

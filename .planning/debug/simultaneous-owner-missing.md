@@ -2,7 +2,7 @@
 status: investigating
 trigger: "$gsd-debug で独立調査して / restart"
 created: 2026-10-23
-updated: 2026-10-23T13:50:58Z
+updated: 2026-10-25
 ---
 
 ## Current Focus
@@ -21,6 +21,11 @@ timeline: 05-02-01の保存・終了制御変更後の初回全件で発生。�
 reproduction: 既存.venvの単一全件pytest、専用basetemp pf_0502_task1_20261023。1674 passed/1 failed、252.25秒。
 
 ## Evidence
+
+- timestamp: 2026-10-25（再発監視の確認・利用者判断で監視継続）
+  checked: Phase 6 の単一全件ログ 15 本（.planning/phases/06-release-validation/*full*.txt・06-preflight/06-reviews-pytest*.txt、2026-10-24 05:54〜22:30）
+  found: 失敗があったのは 3 本で、内容は test_config_notification の 3 件（Tcl 同種、06-01-STOP.md→親 debug commit 07244dc で解消）と test_takeover_two_candidates_after_confirmed_initialization_death（resolved/takeover-loser-expired.md でテスト側の前提誤りと確定）。normal-entry-script の communicate 期限超過・owner_missing の再発は 0 件。最新は 2024 passed / 1 warning（06-05-g1prep-full.txt）。
+  implication: 再発証拠なし。原因未確定のため resolved にはせず、status investigating（再発監視）を維持する。Phase 6 最終ゲートまで監視し、再発時は最初の証拠を保持して continue で再開する。
 
 - timestamp: 2026-10-23T13:50:58Z 条件付き実装再開の再チェックPASS
   checked: resume-check-20261023.md、resume-final-20261023/status.jsonと診断711ファイル（全hash再確認）、最終tracer・runner・静的検証
