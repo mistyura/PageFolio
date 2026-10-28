@@ -1,0 +1,11 @@
+const fs=require('node:fs'),path=require('node:path'),cp=require('node:child_process');
+const root=path.resolve(__dirname,'../../..');
+const r=cp.spawnSync('git',['-c','core.whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol','diff','--cached','--check'],{cwd:root,encoding:'utf8',windowsHide:true,maxBuffer:8*1024*1024});
+const findings=r.stdout.split(/\r?\n/).filter(line=>/^.*:\d+: (trailing whitespace|new blank line at EOF|space before tab)/.test(line));
+const rawPrefix='.planning/phases/06-release-validation/06-08-';
+const preserved=findings.filter(line=>line.startsWith(rawPrefix)&&(line.includes('-preserved-')||/\.(stdout|stderr)\.txt:\d+:/.test(line)||line.includes('06-08-evidence/')));
+const unexpected=findings.filter(line=>!preserved.includes(line));
+const result={git_exit:r.status,cr_at_eol:true,raw_evidence_findings:preserved,unexpected,stderr:r.stderr,note:'保存した原記録の空白と改行を変更せず、通常の編集ファイルでは全whitespace検査を維持する。'};
+fs.writeFileSync(path.join(__dirname,'06-08-evidence/staged-whitespace.json'),JSON.stringify(result,null,2)+'\n');
+console.log(JSON.stringify({git_exit:r.status,raw_evidence_count:preserved.length,unexpected,paths:[...new Set(preserved.map(line=>line.split(':')[0]))]}));
+if(r.status===null||r.status>2||unexpected.length||(!findings.length&&r.status!==0))process.exitCode=1;

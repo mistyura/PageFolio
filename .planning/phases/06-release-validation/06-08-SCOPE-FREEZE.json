@@ -1,0 +1,20 @@
+{
+  "generation": 5,
+  "at": "2026-10-28T09:01:07.268Z",
+  "build_root": "C:/Users/shdwf/AppData/Local/Temp/pf06_final_3f96a37a7cef4ee1ab3a1c1b2f2c435f",
+  "build_input_digest": "ae08f9422ee0010bbc827720aae0c1873552d0dd51b63ddf4960baeba036658d",
+  "head": "d31f86404da7c4a04640c4a55e46961c4c609f25",
+  "scope": {
+    "06-RELEASE-SCOPE.json": {
+      "source": ".planning/phases/06-release-validation/06-RELEASE-SCOPE.json",
+      "frozen": ".planning/phases/06-release-validation/06-08-frozen-06-RELEASE-SCOPE.json",
+      "sha256": "85c15942e7cc55c386c9a4dc4bbe55c625cd337723d383e4f68dd72b308e8559"
+    },
+    "06-W11-SCOPE-APPROVAL.md": {
+      "source": ".planning/phases/06-release-validation/06-W11-SCOPE-APPROVAL.md",
+      "frozen": ".planning/phases/06-release-validation/06-08-frozen-06-W11-SCOPE-APPROVAL.md",
+      "sha256": "95b1fda6a2742991f2e3c19b870754b46396aba4d11eb03980b9c57dd034e278"
+    }
+  },
+  "quality": ".planning/phases/06-release-validation/06-08-evidence/native-docs-20261028/result.json"
+}

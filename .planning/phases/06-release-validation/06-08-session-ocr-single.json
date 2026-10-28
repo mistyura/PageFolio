@@ -1,0 +1,1309 @@
+{
+  "scenario": "ocr-single",
+  "selftest": false,
+  "run_id": "18986e4dd7b341bd81d4a6d4b0da8afd",
+  "run": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf06_t2_g5_3f96a37a7cef4ee1ab3a1c1b2f2c435f\\runs\\release-uat-18986e4dd7b341bd81d4a6d4b0da8afd",
+  "binary_sha256": "66be5df663e333057c5c3cde02180857f930d2433e377f69c2838432d49a19d4",
+  "tree_sha256": "b1e55ca6efa3a7bafb4dec9ea9fa2c715dfca6f538ba906632058f912f575d85",
+  "server_url": "http://127.0.0.1:2893",
+  "hold_limit_seconds": 420,
+  "provider_timeout_seconds": 600,
+  "started_at": "2026-10-28T09:17:54.273762+00:00",
+  "pdf": {
+    "path": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf06_t2_g5_3f96a37a7cef4ee1ab3a1c1b2f2c435f\\runs\\release-uat-18986e4dd7b341bd81d4a6d4b0da8afd\\fixtures\\ocr-one-page.pdf",
+    "pages": 1,
+    "has_embedded_text": false,
+    "images_on_first_page": 1,
+    "sha256": "b52fc40b39f3fe26466386066269c07becf7de8fbc7527ee6997ccfe93a95cbb"
+  },
+  "settings_keys": [
+    "lang",
+    "ocr_concurrency",
+    "ocr_fallback_chain",
+    "ocr_fallback_enabled",
+    "ocr_provider",
+    "ocr_timeout",
+    "ollama_model",
+    "ollama_url"
+  ],
+  "routing_selfcheck": {
+    "ok": true,
+    "at": "2026-10-28T09:17:54.896587+00:00",
+    "exe_started": false,
+    "resolved_endpoint": [
+      "http://127.0.0.1:2893",
+      "pagefolio-uat-fixture"
+    ],
+    "server_url": "http://127.0.0.1:2893",
+    "checks": [
+      {
+        "name": "設定: ocr_provider=ollama",
+        "ok": true,
+        "detail": null
+      },
+      {
+        "name": "設定: ollama_url=合成サーバーURL",
+        "ok": true,
+        "detail": {
+          "ollama_url": "http://127.0.0.1:2893",
+          "server": "http://127.0.0.1:2893"
+        }
+      },
+      {
+        "name": "設定: 接続先はloopback(127.0.0.1)",
+        "ok": true,
+        "detail": "http://127.0.0.1:2893"
+      },
+      {
+        "name": "設定: 並列1・fallback無効",
+        "ok": true,
+        "detail": null
+      },
+      {
+        "name": "copy内EXE=最終buildのEXE",
+        "ok": true,
+        "detail": "66be5df663e333057c5c3cde02180857f930d2433e377f69c2838432d49a19d4"
+      },
+      {
+        "name": "EXE内蔵コード=HEADのソース(pagefolio全モジュール)",
+        "ok": true,
+        "detail": {
+          "compared": 57,
+          "mismatched": [],
+          "not_in_pyz": []
+        }
+      },
+      {
+        "name": "EXE内蔵resolve_local_endpoint(ollama)=合成サーバーURL・モデル",
+        "ok": true,
+        "detail": [
+          "http://127.0.0.1:2893",
+          "pagefolio-uat-fixture"
+        ]
+      },
+      {
+        "name": "lmstudio側URLは合成サーバーではない(旧不具合の経路と区別)",
+        "ok": true,
+        "detail": [
+          "http://localhost:1234",
+          ""
+        ]
+      },
+      {
+        "name": "EXE内蔵OCRDialogがresolve_local_endpointを参照",
+        "ok": true,
+        "detail": null
+      },
+      {
+        "name": "合成サーバーが/v1/modelsに応答",
+        "ok": true,
+        "detail": "{\"object\": \"list\", \"data\": [{\"id\": \"pagefolio-uat-fixture\", \"object\": \"model\"}]}"
+      }
+    ]
+  },
+  "peer": {
+    "record_pid": 33484,
+    "launched_at": "2026-10-28T09:19:16.610542+00:00",
+    "processes": [
+      {
+        "role": "primary",
+        "pid": 28072,
+        "created": 134376526753756589,
+        "identity": "same",
+        "alive": true,
+        "session_id": 1,
+        "elevated": false,
+        "windows": [
+          {
+            "hwnd": 21762364,
+            "visible": true,
+            "title": "OCR",
+            "class": "TkTopLevel",
+            "rect": [
+              241,
+              309,
+              1407,
+              1028
+            ]
+          },
+          {
+            "hwnd": 29888650,
+            "visible": true,
+            "title": "PageFolio",
+            "class": "TkTopLevel",
+            "rect": [
+              208,
+              208,
+              1424,
+              1047
+            ]
+          },
+          {
+            "hwnd": 20254452,
+            "visible": false,
+            "title": "",
+            "class": "WorkerW",
+            "rect": [
+              0,
+              0,
+              136,
+              39
+            ]
+          },
+          {
+            "hwnd": 6164732,
+            "visible": false,
+            "title": "TclNotifier",
+            "class": "TclNotifier",
+            "rect": [
+              0,
+              0,
+              136,
+              39
+            ]
+          },
+          {
+            "hwnd": 19205344,
+            "visible": false,
+            "title": "GDI+ Window (PageFolio.exe)",
+            "class": "GDI+ Hook Window Class",
+            "rect": [
+              0,
+              0,
+              1,
+              1
+            ]
+          },
+          {
+            "hwnd": 21303396,
+            "visible": false,
+            "title": "EmbeddedMenuWindow",
+            "class": "EmbeddedMenuWindowClass",
+            "rect": [
+              0,
+              0,
+              10,
+              10
+            ]
+          },
+          {
+            "hwnd": 24645880,
+            "visible": false,
+            "title": "MenuWindow",
+            "class": "MenuWindowClass",
+            "rect": [
+              0,
+              0,
+              10,
+              10
+            ]
+          },
+          {
+            "hwnd": 13242914,
+            "visible": false,
+            "title": "",
+            "class": "Wtk_TaskbarHandler",
+            "rect": [
+              0,
+              0,
+              1488,
+              943
+            ]
+          },
+          {
+            "hwnd": 10555132,
+            "visible": false,
+            "title": "TtkMonitorWindow",
+            "class": "TtkMonitorClass",
+            "rect": [
+              182,
+              182,
+              1462,
+              917
+            ]
+          },
+          {
+            "hwnd": 15798904,
+            "visible": false,
+            "title": "MSCTFIME UI",
+            "class": "MSCTFIME UI",
+            "rect": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "hwnd": 9244078,
+            "visible": false,
+            "title": "Default IME",
+            "class": "IME",
+            "rect": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "hwnd": 24318262,
+            "visible": false,
+            "title": "Default IME",
+            "class": "IME",
+            "rect": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "hwnd": 29954230,
+            "visible": false,
+            "title": "",
+            "class": "BingIMESysMessageWindow",
+            "rect": [
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        ]
+      },
+      {
+        "role": "peer",
+        "pid": 33484,
+        "created": 134376527565984703,
+        "identity": "gone",
+        "alive": false,
+        "session_id": null,
+        "elevated": null,
+        "windows": []
+      }
+    ],
+    "foreground": {
+      "hwnd": 21762364,
+      "pid": 28072,
+      "title": "OCR",
+      "owned_by": "primary"
+    },
+    "owner_probe": [
+      {
+        "kind": "mutex",
+        "name": "Local\\PageFolio.Startup.Owner",
+        "state": "open"
+      },
+      {
+        "kind": "mapping",
+        "name": "Local\\PageFolio.Startup.State",
+        "state": "open"
+      }
+    ]
+  },
+  "foreground_trace": [
+    {
+      "at": "2026-10-28T09:19:16.519940+00:00",
+      "monotonic_ns": 36811629249400,
+      "hwnd": 21762364,
+      "pid": 28072
+    },
+    {
+      "at": "2026-10-28T09:19:16.575242+00:00",
+      "monotonic_ns": 36811684539200,
+      "hwnd": 21762364,
+      "pid": 28072
+    },
+    {
+      "at": "2026-10-28T09:19:16.628525+00:00",
+      "monotonic_ns": 36811737856200,
+      "hwnd": 21762364,
+      "pid": 28072
+    },
+    {
+      "at": "2026-10-28T09:19:16.691845+00:00",
+      "monotonic_ns": 36811801144800,
+      "hwnd": 21762364,
+      "pid": 28072
+    },
+    {
+      "at": "2026-10-28T09:19:16.759800+00:00",
+      "monotonic_ns": 36811869101000,
+      "hwnd": 21762364,
+      "pid": 28072
+    },
+    {
+      "at": "2026-10-28T09:19:16.811305+00:00",
+      "monotonic_ns": 36811920604500,
+      "hwnd": 21762364,
+      "pid": 28072
+    },
+    {
+      "at": "2026-10-28T09:19:16.875699+00:00",
+      "monotonic_ns": 36811985009200,
+      "hwnd": 21762364,
+      "pid": 28072
+    },
+    {
+      "at": "2026-10-28T09:19:16.927924+00:00",
+      "monotonic_ns": 36812037238500,
+      "hwnd": 21762364,
+      "pid": 28072
+    },
+    {
+      "at": "2026-10-28T09:19:16.993592+00:00",
+      "monotonic_ns": 36812102897000,
+      "hwnd": 21762364,
+      "pid": 28072
+    },
+    {
+      "at": "2026-10-28T09:19:17.045827+00:00",
+      "monotonic_ns": 36812155128300,
+      "hwnd": 21762364,
+      "pid": 28072
+    },
+    {
+      "at": "2026-10-28T09:19:17.109104+00:00",
+      "monotonic_ns": 36812218406800,
+      "hwnd": 21762364,
+      "pid": 28072
+    },
+    {
+      "at": "2026-10-28T09:19:17.160872+00:00",
+      "monotonic_ns": 36812270180200,
+      "hwnd": 21762364,
+      "pid": 28072
+    },
+    {
+      "at": "2026-10-28T09:19:17.223798+00:00",
+      "monotonic_ns": 36812333113200,
+      "hwnd": 21762364,
+      "pid": 28072
+    },
+    {
+      "at": "2026-10-28T09:19:17.275958+00:00",
+      "monotonic_ns": 36812385269600,
+      "hwnd": 21762364,
+      "pid": 28072
+    },
+    {
+      "at": "2026-10-28T09:19:17.339907+00:00",
+      "monotonic_ns": 36812449206400,
+      "hwnd": 21762364,
+      "pid": 28072
+    },
+    {
+      "at": "2026-10-28T09:19:17.391596+00:00",
+      "monotonic_ns": 36812500896200,
+      "hwnd": 21762364,
+      "pid": 28072
+    },
+    {
+      "at": "2026-10-28T09:19:17.443650+00:00",
+      "monotonic_ns": 36812552951700,
+      "hwnd": 21762364,
+      "pid": 28072
+    },
+    {
+      "at": "2026-10-28T09:19:17.509487+00:00",
+      "monotonic_ns": 36812618801300,
+      "hwnd": 21762364,
+      "pid": 28072
+    },
+    {
+      "at": "2026-10-28T09:19:17.562317+00:00",
+      "monotonic_ns": 36812671634700,
+      "hwnd": 21762364,
+      "pid": 28072
+    },
+    {
+      "at": "2026-10-28T09:19:17.620093+00:00",
+      "monotonic_ns": 36812729398300,
+      "hwnd": 21762364,
+      "pid": 28072
+    },
+    {
+      "at": "2026-10-28T09:19:17.684979+00:00",
+      "monotonic_ns": 36812794288500,
+      "hwnd": 21762364,
+      "pid": 28072
+    },
+    {
+      "at": "2026-10-28T09:19:17.736322+00:00",
+      "monotonic_ns": 36812845650400,
+      "hwnd": 21762364,
+      "pid": 28072
+    },
+    {
+      "at": "2026-10-28T09:19:17.799846+00:00",
+      "monotonic_ns": 36812909158400,
+      "hwnd": 21762364,
+      "pid": 28072
+    },
+    {
+      "at": "2026-10-28T09:19:17.851595+00:00",
+      "monotonic_ns": 36812960911600,
+      "hwnd": 21762364,
+      "pid": 28072
+    },
+    {
+      "at": "2026-10-28T09:19:17.902264+00:00",
+      "monotonic_ns": 36813011573900,
+      "hwnd": 21762364,
+      "pid": 28072
+    },
+    {
+      "at": "2026-10-28T09:19:17.960767+00:00",
+      "monotonic_ns": 36813070070300,
+      "hwnd": 21762364,
+      "pid": 28072
+    },
+    {
+      "at": "2026-10-28T09:19:18.017653+00:00",
+      "monotonic_ns": 36813126967300,
+      "hwnd": 21762364,
+      "pid": 28072
+    },
+    {
+      "at": "2026-10-28T09:19:18.075807+00:00",
+      "monotonic_ns": 36813185112700,
+      "hwnd": 21762364,
+      "pid": 28072
+    },
+    {
+      "at": "2026-10-28T09:19:18.135763+00:00",
+      "monotonic_ns": 36813245093300,
+      "hwnd": 21762364,
+      "pid": 28072
+    },
+    {
+      "at": "2026-10-28T09:19:18.201196+00:00",
+      "monotonic_ns": 36813310537100,
+      "hwnd": 21762364,
+      "pid": 28072
+    },
+    {
+      "at": "2026-10-28T09:19:18.250881+00:00",
+      "monotonic_ns": 36813360280200,
+      "hwnd": 21762364,
+      "pid": 28072
+    },
+    {
+      "at": "2026-10-28T09:19:18.311558+00:00",
+      "monotonic_ns": 36813420865500,
+      "hwnd": 21762364,
+      "pid": 28072
+    },
+    {
+      "at": "2026-10-28T09:19:18.370297+00:00",
+      "monotonic_ns": 36813479597700,
+      "hwnd": 21762364,
+      "pid": 28072
+    },
+    {
+      "at": "2026-10-28T09:19:18.435152+00:00",
+      "monotonic_ns": 36813544455700,
+      "hwnd": 21762364,
+      "pid": 28072
+    },
+    {
+      "at": "2026-10-28T09:19:18.485020+00:00",
+      "monotonic_ns": 36813594320000,
+      "hwnd": 21762364,
+      "pid": 28072
+    },
+    {
+      "at": "2026-10-28T09:19:18.553184+00:00",
+      "monotonic_ns": 36813662515000,
+      "hwnd": 21762364,
+      "pid": 28072
+    },
+    {
+      "at": "2026-10-28T09:19:18.617771+00:00",
+      "monotonic_ns": 36813727089000,
+      "hwnd": 21762364,
+      "pid": 28072
+    },
+    {
+      "at": "2026-10-28T09:19:18.675107+00:00",
+      "monotonic_ns": 36813784406200,
+      "hwnd": 21762364,
+      "pid": 28072
+    },
+    {
+      "at": "2026-10-28T09:19:18.735724+00:00",
+      "monotonic_ns": 36813845035500,
+      "hwnd": 21762364,
+      "pid": 28072
+    },
+    {
+      "at": "2026-10-28T09:19:18.786252+00:00",
+      "monotonic_ns": 36813895556200,
+      "hwnd": 21762364,
+      "pid": 28072
+    },
+    {
+      "at": "2026-10-28T09:19:18.836510+00:00",
+      "monotonic_ns": 36813945830700,
+      "hwnd": 21762364,
+      "pid": 28072
+    },
+    {
+      "at": "2026-10-28T09:19:18.901386+00:00",
+      "monotonic_ns": 36814010717600,
+      "hwnd": 21762364,
+      "pid": 28072
+    },
+    {
+      "at": "2026-10-28T09:19:18.952339+00:00",
+      "monotonic_ns": 36814061724000,
+      "hwnd": 21762364,
+      "pid": 28072
+    },
+    {
+      "at": "2026-10-28T09:19:19.002601+00:00",
+      "monotonic_ns": 36814111916300,
+      "hwnd": 21762364,
+      "pid": 28072
+    },
+    {
+      "at": "2026-10-28T09:19:19.054771+00:00",
+      "monotonic_ns": 36814164092700,
+      "hwnd": 21762364,
+      "pid": 28072
+    },
+    {
+      "at": "2026-10-28T09:19:19.108790+00:00",
+      "monotonic_ns": 36814218104900,
+      "hwnd": 21762364,
+      "pid": 28072
+    },
+    {
+      "at": "2026-10-28T09:19:19.169303+00:00",
+      "monotonic_ns": 36814278615100,
+      "hwnd": 21762364,
+      "pid": 28072
+    },
+    {
+      "at": "2026-10-28T09:19:19.221123+00:00",
+      "monotonic_ns": 36814330434500,
+      "hwnd": 21762364,
+      "pid": 28072
+    },
+    {
+      "at": "2026-10-28T09:19:19.284777+00:00",
+      "monotonic_ns": 36814394076500,
+      "hwnd": 21762364,
+      "pid": 28072
+    },
+    {
+      "at": "2026-10-28T09:19:19.336051+00:00",
+      "monotonic_ns": 36814445355300,
+      "hwnd": 21762364,
+      "pid": 28072
+    },
+    {
+      "at": "2026-10-28T09:19:19.386460+00:00",
+      "monotonic_ns": 36814495762900,
+      "hwnd": 21762364,
+      "pid": 28072
+    },
+    {
+      "at": "2026-10-28T09:19:19.437347+00:00",
+      "monotonic_ns": 36814546648400,
+      "hwnd": 21762364,
+      "pid": 28072
+    },
+    {
+      "at": "2026-10-28T09:19:19.502730+00:00",
+      "monotonic_ns": 36814612032900,
+      "hwnd": 21762364,
+      "pid": 28072
+    },
+    {
+      "at": "2026-10-28T09:19:19.553445+00:00",
+      "monotonic_ns": 36814662797700,
+      "hwnd": 21762364,
+      "pid": 28072
+    },
+    {
+      "at": "2026-10-28T09:19:19.604214+00:00",
+      "monotonic_ns": 36814713543200,
+      "hwnd": 21762364,
+      "pid": 28072
+    },
+    {
+      "at": "2026-10-28T09:19:19.668892+00:00",
+      "monotonic_ns": 36814778222300,
+      "hwnd": 21762364,
+      "pid": 28072
+    },
+    {
+      "at": "2026-10-28T09:19:19.737028+00:00",
+      "monotonic_ns": 36814846351000,
+      "hwnd": 21762364,
+      "pid": 28072
+    },
+    {
+      "at": "2026-10-28T09:19:19.789229+00:00",
+      "monotonic_ns": 36814898549300,
+      "hwnd": 21762364,
+      "pid": 28072
+    },
+    {
+      "at": "2026-10-28T09:19:19.852368+00:00",
+      "monotonic_ns": 36814961691700,
+      "hwnd": 21762364,
+      "pid": 28072
+    },
+    {
+      "at": "2026-10-28T09:19:19.906568+00:00",
+      "monotonic_ns": 36815015892600,
+      "hwnd": 21762364,
+      "pid": 28072
+    },
+    {
+      "at": "2026-10-28T09:19:19.970331+00:00",
+      "monotonic_ns": 36815079671300,
+      "hwnd": 21762364,
+      "pid": 28072
+    },
+    {
+      "at": "2026-10-28T09:19:20.020814+00:00",
+      "monotonic_ns": 36815130147300,
+      "hwnd": 21762364,
+      "pid": 28072
+    },
+    {
+      "at": "2026-10-28T09:19:20.085188+00:00",
+      "monotonic_ns": 36815194488700,
+      "hwnd": 21762364,
+      "pid": 28072
+    },
+    {
+      "at": "2026-10-28T09:19:20.137898+00:00",
+      "monotonic_ns": 36815247209200,
+      "hwnd": 21762364,
+      "pid": 28072
+    },
+    {
+      "at": "2026-10-28T09:19:20.189042+00:00",
+      "monotonic_ns": 36815298361500,
+      "hwnd": 21762364,
+      "pid": 28072
+    },
+    {
+      "at": "2026-10-28T09:19:20.253560+00:00",
+      "monotonic_ns": 36815362884600,
+      "hwnd": 21762364,
+      "pid": 28072
+    },
+    {
+      "at": "2026-10-28T09:19:20.305805+00:00",
+      "monotonic_ns": 36815415119600,
+      "hwnd": 21762364,
+      "pid": 28072
+    },
+    {
+      "at": "2026-10-28T09:19:20.369035+00:00",
+      "monotonic_ns": 36815478334800,
+      "hwnd": 21762364,
+      "pid": 28072
+    },
+    {
+      "at": "2026-10-28T09:19:20.420378+00:00",
+      "monotonic_ns": 36815529692400,
+      "hwnd": 21762364,
+      "pid": 28072
+    },
+    {
+      "at": "2026-10-28T09:19:20.470516+00:00",
+      "monotonic_ns": 36815579817100,
+      "hwnd": 21762364,
+      "pid": 28072
+    },
+    {
+      "at": "2026-10-28T09:19:20.522973+00:00",
+      "monotonic_ns": 36815632290300,
+      "hwnd": 21762364,
+      "pid": 28072
+    },
+    {
+      "at": "2026-10-28T09:19:20.586222+00:00",
+      "monotonic_ns": 36815695530900,
+      "hwnd": 21762364,
+      "pid": 28072
+    },
+    {
+      "at": "2026-10-28T09:19:20.636984+00:00",
+      "monotonic_ns": 36815746292900,
+      "hwnd": 21762364,
+      "pid": 28072
+    },
+    {
+      "at": "2026-10-28T09:19:20.688220+00:00",
+      "monotonic_ns": 36815797517500,
+      "hwnd": 21762364,
+      "pid": 28072
+    }
+  ],
+  "foreground_trace_errors": [],
+  "foreground_trace_interval_ms": 50,
+  "release_at": "2026-10-28T09:19:21.936850+00:00",
+  "completed_seen": true,
+  "user_answer": "「PageFolio UAT 合成OCR結果」が表示された。利用者回答「PageFolio を終了した」（チャット回答を代理入力）。",
+  "expected_text": "PageFolio UAT 合成OCR結果",
+  "finished_at": "2026-10-28T09:20:08.770323+00:00",
+  "stop": [
+    {
+      "pid": 28072,
+      "result": "already-exited"
+    },
+    {
+      "pid": 33484,
+      "result": "already-exited"
+    }
+  ],
+  "verify_after": {
+    "ok": true,
+    "overlay_changed": [
+      "pagefolio_settings.json"
+    ],
+    "distribution_changed": []
+  },
+  "owner_after": [],
+  "user_inputs": [
+    {
+      "at": "2026-10-28T09:20:08.086923+00:00",
+      "prompt": "OCRダイアログの結果欄に『PageFolio UAT 合成OCR結果』が表示されましたか?",
+      "text": "「PageFolio UAT 合成OCR結果」が表示された。利用者回答「PageFolio を終了した」（チャット回答を代理入力）。"
+    }
+  ],
+  "steps": [
+    {
+      "at": "2026-10-28T09:18:00.528964+00:00",
+      "step": "started",
+      "windows": {
+        "primary:28072": [
+          {
+            "hwnd": 19205344,
+            "visible": false,
+            "title": "GDI+ Window (PageFolio.exe)",
+            "class": "GDI+ Hook Window Class",
+            "rect": [
+              0,
+              0,
+              1,
+              1
+            ]
+          },
+          {
+            "hwnd": 29888650,
+            "visible": true,
+            "title": "PageFolio",
+            "class": "TkTopLevel",
+            "rect": [
+              208,
+              208,
+              1424,
+              1047
+            ]
+          },
+          {
+            "hwnd": 21303396,
+            "visible": false,
+            "title": "EmbeddedMenuWindow",
+            "class": "EmbeddedMenuWindowClass",
+            "rect": [
+              0,
+              0,
+              10,
+              10
+            ]
+          },
+          {
+            "hwnd": 24645880,
+            "visible": false,
+            "title": "MenuWindow",
+            "class": "MenuWindowClass",
+            "rect": [
+              0,
+              0,
+              10,
+              10
+            ]
+          },
+          {
+            "hwnd": 13242914,
+            "visible": false,
+            "title": "",
+            "class": "Wtk_TaskbarHandler",
+            "rect": [
+              0,
+              0,
+              1488,
+              943
+            ]
+          },
+          {
+            "hwnd": 10555132,
+            "visible": false,
+            "title": "TtkMonitorWindow",
+            "class": "TtkMonitorClass",
+            "rect": [
+              182,
+              182,
+              1462,
+              917
+            ]
+          },
+          {
+            "hwnd": 15798904,
+            "visible": false,
+            "title": "MSCTFIME UI",
+            "class": "MSCTFIME UI",
+            "rect": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "hwnd": 9244078,
+            "visible": false,
+            "title": "Default IME",
+            "class": "IME",
+            "rect": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "hwnd": 29954230,
+            "visible": false,
+            "title": "",
+            "class": "BingIMESysMessageWindow",
+            "rect": [
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        ]
+      },
+      "foreground": {
+        "hwnd": 29888650,
+        "pid": 28072,
+        "title": "PageFolio"
+      }
+    },
+    {
+      "at": "2026-10-28T09:19:14.518506+00:00",
+      "step": "received",
+      "windows": {
+        "primary:28072": [
+          {
+            "hwnd": 21762364,
+            "visible": true,
+            "title": "OCR",
+            "class": "TkTopLevel",
+            "rect": [
+              241,
+              309,
+              1407,
+              1028
+            ]
+          },
+          {
+            "hwnd": 29888650,
+            "visible": true,
+            "title": "PageFolio",
+            "class": "TkTopLevel",
+            "rect": [
+              208,
+              208,
+              1424,
+              1047
+            ]
+          },
+          {
+            "hwnd": 20254452,
+            "visible": false,
+            "title": "",
+            "class": "WorkerW",
+            "rect": [
+              0,
+              0,
+              136,
+              39
+            ]
+          },
+          {
+            "hwnd": 6164732,
+            "visible": false,
+            "title": "TclNotifier",
+            "class": "TclNotifier",
+            "rect": [
+              0,
+              0,
+              136,
+              39
+            ]
+          },
+          {
+            "hwnd": 19205344,
+            "visible": false,
+            "title": "GDI+ Window (PageFolio.exe)",
+            "class": "GDI+ Hook Window Class",
+            "rect": [
+              0,
+              0,
+              1,
+              1
+            ]
+          },
+          {
+            "hwnd": 21303396,
+            "visible": false,
+            "title": "EmbeddedMenuWindow",
+            "class": "EmbeddedMenuWindowClass",
+            "rect": [
+              0,
+              0,
+              10,
+              10
+            ]
+          },
+          {
+            "hwnd": 24645880,
+            "visible": false,
+            "title": "MenuWindow",
+            "class": "MenuWindowClass",
+            "rect": [
+              0,
+              0,
+              10,
+              10
+            ]
+          },
+          {
+            "hwnd": 13242914,
+            "visible": false,
+            "title": "",
+            "class": "Wtk_TaskbarHandler",
+            "rect": [
+              0,
+              0,
+              1488,
+              943
+            ]
+          },
+          {
+            "hwnd": 10555132,
+            "visible": false,
+            "title": "TtkMonitorWindow",
+            "class": "TtkMonitorClass",
+            "rect": [
+              182,
+              182,
+              1462,
+              917
+            ]
+          },
+          {
+            "hwnd": 15798904,
+            "visible": false,
+            "title": "MSCTFIME UI",
+            "class": "MSCTFIME UI",
+            "rect": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "hwnd": 9244078,
+            "visible": false,
+            "title": "Default IME",
+            "class": "IME",
+            "rect": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "hwnd": 24318262,
+            "visible": false,
+            "title": "Default IME",
+            "class": "IME",
+            "rect": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "hwnd": 29954230,
+            "visible": false,
+            "title": "",
+            "class": "BingIMESysMessageWindow",
+            "rect": [
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        ]
+      },
+      "foreground": {
+        "hwnd": 21762364,
+        "pid": 28072,
+        "title": "OCR"
+      }
+    },
+    {
+      "at": "2026-10-28T09:19:20.729632+00:00",
+      "step": "peer",
+      "windows": {
+        "primary:28072": [
+          {
+            "hwnd": 21762364,
+            "visible": true,
+            "title": "OCR",
+            "class": "TkTopLevel",
+            "rect": [
+              241,
+              309,
+              1407,
+              1028
+            ]
+          },
+          {
+            "hwnd": 29888650,
+            "visible": true,
+            "title": "PageFolio",
+            "class": "TkTopLevel",
+            "rect": [
+              208,
+              208,
+              1424,
+              1047
+            ]
+          },
+          {
+            "hwnd": 20254452,
+            "visible": false,
+            "title": "",
+            "class": "WorkerW",
+            "rect": [
+              0,
+              0,
+              136,
+              39
+            ]
+          },
+          {
+            "hwnd": 6164732,
+            "visible": false,
+            "title": "TclNotifier",
+            "class": "TclNotifier",
+            "rect": [
+              0,
+              0,
+              136,
+              39
+            ]
+          },
+          {
+            "hwnd": 19205344,
+            "visible": false,
+            "title": "GDI+ Window (PageFolio.exe)",
+            "class": "GDI+ Hook Window Class",
+            "rect": [
+              0,
+              0,
+              1,
+              1
+            ]
+          },
+          {
+            "hwnd": 21303396,
+            "visible": false,
+            "title": "EmbeddedMenuWindow",
+            "class": "EmbeddedMenuWindowClass",
+            "rect": [
+              0,
+              0,
+              10,
+              10
+            ]
+          },
+          {
+            "hwnd": 24645880,
+            "visible": false,
+            "title": "MenuWindow",
+            "class": "MenuWindowClass",
+            "rect": [
+              0,
+              0,
+              10,
+              10
+            ]
+          },
+          {
+            "hwnd": 13242914,
+            "visible": false,
+            "title": "",
+            "class": "Wtk_TaskbarHandler",
+            "rect": [
+              0,
+              0,
+              1488,
+              943
+            ]
+          },
+          {
+            "hwnd": 10555132,
+            "visible": false,
+            "title": "TtkMonitorWindow",
+            "class": "TtkMonitorClass",
+            "rect": [
+              182,
+              182,
+              1462,
+              917
+            ]
+          },
+          {
+            "hwnd": 15798904,
+            "visible": false,
+            "title": "MSCTFIME UI",
+            "class": "MSCTFIME UI",
+            "rect": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "hwnd": 9244078,
+            "visible": false,
+            "title": "Default IME",
+            "class": "IME",
+            "rect": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "hwnd": 24318262,
+            "visible": false,
+            "title": "Default IME",
+            "class": "IME",
+            "rect": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "hwnd": 29954230,
+            "visible": false,
+            "title": "",
+            "class": "BingIMESysMessageWindow",
+            "rect": [
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        ],
+        "peer:33484": []
+      },
+      "foreground": {
+        "hwnd": 21762364,
+        "pid": 28072,
+        "title": "OCR",
+        "owned_by": "primary"
+      }
+    }
+  ],
+  "server_summary": {
+    "posts": 1,
+    "rejected": [],
+    "attempts_by_image": {
+      "6ee70ff9d65d47b460369fa68eadc0761b160b81b96945dc27308885471e1751": 1
+    },
+    "retransmissions": [],
+    "completed": [
+      "6ee70ff9d65d-1"
+    ],
+    "released": [
+      "6ee70ff9d65d-1"
+    ],
+    "expired": [],
+    "events": [
+      {
+        "seq": 1,
+        "event": "models",
+        "time": "2026-10-28T09:17:54.895537+00:00",
+        "monotonic": 36730.0048434,
+        "run_id": "18986e4dd7b341bd81d4a6d4b0da8afd",
+        "mode": "hold",
+        "path": "/v1/models"
+      },
+      {
+        "seq": 2,
+        "event": "received",
+        "time": "2026-10-28T09:19:14.468176+00:00",
+        "monotonic": 36809.5774718,
+        "run_id": "18986e4dd7b341bd81d4a6d4b0da8afd",
+        "mode": "hold",
+        "request_id": "49fb0efb286145b0b7fabceddea8a062",
+        "attempt_id": "6ee70ff9d65d-1",
+        "image_sha256": "6ee70ff9d65d47b460369fa68eadc0761b160b81b96945dc27308885471e1751",
+        "page_id": "p1"
+      },
+      {
+        "seq": 3,
+        "event": "released",
+        "time": "2026-10-28T09:19:21.787718+00:00",
+        "monotonic": 36816.8970563,
+        "run_id": "18986e4dd7b341bd81d4a6d4b0da8afd",
+        "mode": "hold",
+        "request_id": "49fb0efb286145b0b7fabceddea8a062",
+        "attempt_id": "6ee70ff9d65d-1",
+        "image_sha256": "6ee70ff9d65d47b460369fa68eadc0761b160b81b96945dc27308885471e1751",
+        "page_id": "p1"
+      },
+      {
+        "seq": 4,
+        "event": "completed",
+        "time": "2026-10-28T09:19:21.791764+00:00",
+        "monotonic": 36816.9010772,
+        "run_id": "18986e4dd7b341bd81d4a6d4b0da8afd",
+        "mode": "hold",
+        "status": 200,
+        "request_id": "49fb0efb286145b0b7fabceddea8a062",
+        "attempt_id": "6ee70ff9d65d-1",
+        "image_sha256": "6ee70ff9d65d47b460369fa68eadc0761b160b81b96945dc27308885471e1751",
+        "page_id": "p1"
+      }
+    ]
+  }
+}

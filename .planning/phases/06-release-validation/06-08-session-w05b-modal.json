@@ -1,0 +1,2000 @@
+{
+  "scenario": "w05b-modal",
+  "selftest": false,
+  "run_id": "af629ccbe3514294a7814e1de2e98463",
+  "run": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf06_t2_g5_3f96a37a7cef4ee1ab3a1c1b2f2c435f\\runs\\release-uat-af629ccbe3514294a7814e1de2e98463",
+  "binary_sha256": "66be5df663e333057c5c3cde02180857f930d2433e377f69c2838432d49a19d4",
+  "tree_sha256": "b1e55ca6efa3a7bafb4dec9ea9fa2c715dfca6f538ba906632058f912f575d85",
+  "server_url": "http://127.0.0.1:29499",
+  "hold_limit_seconds": 420,
+  "provider_timeout_seconds": 600,
+  "started_at": "2026-10-28T09:30:45.884693+00:00",
+  "pdf": {
+    "path": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf06_t2_g5_3f96a37a7cef4ee1ab3a1c1b2f2c435f\\runs\\release-uat-af629ccbe3514294a7814e1de2e98463\\fixtures\\ocr-one-page.pdf",
+    "pages": 1,
+    "has_embedded_text": false,
+    "images_on_first_page": 1,
+    "sha256": "26094fa5a65a151242ea2851c2c69c5a5a2cec0fc5ca0a369b7b43ce0fe3891e"
+  },
+  "settings_keys": [
+    "lang",
+    "ocr_concurrency",
+    "ocr_fallback_chain",
+    "ocr_fallback_enabled",
+    "ocr_provider",
+    "ocr_timeout",
+    "ollama_model",
+    "ollama_url"
+  ],
+  "routing_selfcheck": {
+    "ok": true,
+    "at": "2026-10-28T09:30:46.413400+00:00",
+    "exe_started": false,
+    "resolved_endpoint": [
+      "http://127.0.0.1:29499",
+      "pagefolio-uat-fixture"
+    ],
+    "server_url": "http://127.0.0.1:29499",
+    "checks": [
+      {
+        "name": "設定: ocr_provider=ollama",
+        "ok": true,
+        "detail": null
+      },
+      {
+        "name": "設定: ollama_url=合成サーバーURL",
+        "ok": true,
+        "detail": {
+          "ollama_url": "http://127.0.0.1:29499",
+          "server": "http://127.0.0.1:29499"
+        }
+      },
+      {
+        "name": "設定: 接続先はloopback(127.0.0.1)",
+        "ok": true,
+        "detail": "http://127.0.0.1:29499"
+      },
+      {
+        "name": "設定: 並列1・fallback無効",
+        "ok": true,
+        "detail": null
+      },
+      {
+        "name": "copy内EXE=最終buildのEXE",
+        "ok": true,
+        "detail": "66be5df663e333057c5c3cde02180857f930d2433e377f69c2838432d49a19d4"
+      },
+      {
+        "name": "EXE内蔵コード=HEADのソース(pagefolio全モジュール)",
+        "ok": true,
+        "detail": {
+          "compared": 57,
+          "mismatched": [],
+          "not_in_pyz": []
+        }
+      },
+      {
+        "name": "EXE内蔵resolve_local_endpoint(ollama)=合成サーバーURL・モデル",
+        "ok": true,
+        "detail": [
+          "http://127.0.0.1:29499",
+          "pagefolio-uat-fixture"
+        ]
+      },
+      {
+        "name": "lmstudio側URLは合成サーバーではない(旧不具合の経路と区別)",
+        "ok": true,
+        "detail": [
+          "http://localhost:1234",
+          ""
+        ]
+      },
+      {
+        "name": "EXE内蔵OCRDialogがresolve_local_endpointを参照",
+        "ok": true,
+        "detail": null
+      },
+      {
+        "name": "合成サーバーが/v1/modelsに応答",
+        "ok": true,
+        "detail": "{\"object\": \"list\", \"data\": [{\"id\": \"pagefolio-uat-fixture\", \"object\": \"model\"}]}"
+      }
+    ]
+  },
+  "modal_windows_before_peer": [
+    {
+      "hwnd": 3867420,
+      "visible": true,
+      "title": "確認",
+      "class": "#32770",
+      "rect": [
+        719,
+        457,
+        1004,
+        623
+      ]
+    },
+    {
+      "hwnd": 13767152,
+      "visible": true,
+      "title": "OCR",
+      "class": "TkTopLevel",
+      "rect": [
+        267,
+        329,
+        1433,
+        1048
+      ]
+    },
+    {
+      "hwnd": 21434512,
+      "visible": true,
+      "title": "PageFolio",
+      "class": "TkTopLevel",
+      "rect": [
+        234,
+        228,
+        1450,
+        1067
+      ]
+    },
+    {
+      "hwnd": 16584814,
+      "visible": false,
+      "title": "",
+      "class": "WorkerW",
+      "rect": [
+        0,
+        0,
+        136,
+        39
+      ]
+    },
+    {
+      "hwnd": 13373454,
+      "visible": false,
+      "title": "TclNotifier",
+      "class": "TclNotifier",
+      "rect": [
+        0,
+        0,
+        136,
+        39
+      ]
+    },
+    {
+      "hwnd": 16516966,
+      "visible": false,
+      "title": "GDI+ Window (PageFolio.exe)",
+      "class": "GDI+ Hook Window Class",
+      "rect": [
+        0,
+        0,
+        1,
+        1
+      ]
+    },
+    {
+      "hwnd": 21107130,
+      "visible": false,
+      "title": "EmbeddedMenuWindow",
+      "class": "EmbeddedMenuWindowClass",
+      "rect": [
+        0,
+        0,
+        10,
+        10
+      ]
+    },
+    {
+      "hwnd": 21171620,
+      "visible": false,
+      "title": "MenuWindow",
+      "class": "MenuWindowClass",
+      "rect": [
+        0,
+        0,
+        10,
+        10
+      ]
+    },
+    {
+      "hwnd": 17043662,
+      "visible": false,
+      "title": "",
+      "class": "Wtk_TaskbarHandler",
+      "rect": [
+        0,
+        0,
+        1514,
+        969
+      ]
+    },
+    {
+      "hwnd": 5115866,
+      "visible": false,
+      "title": "TtkMonitorWindow",
+      "class": "TtkMonitorClass",
+      "rect": [
+        208,
+        208,
+        1488,
+        943
+      ]
+    },
+    {
+      "hwnd": 4788130,
+      "visible": false,
+      "title": "MSCTFIME UI",
+      "class": "MSCTFIME UI",
+      "rect": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "hwnd": 15470574,
+      "visible": false,
+      "title": "Default IME",
+      "class": "IME",
+      "rect": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "hwnd": 18223388,
+      "visible": false,
+      "title": "Default IME",
+      "class": "IME",
+      "rect": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "hwnd": 30085302,
+      "visible": false,
+      "title": "",
+      "class": "BingIMESysMessageWindow",
+      "rect": [
+        0,
+        0,
+        0,
+        0
+      ]
+    }
+  ],
+  "modal_user_answer": "閉じる確認が表示された。ChatGPTへ切り替えた",
+  "peer": {
+    "record_pid": 29436,
+    "launched_at": "2026-10-28T09:31:42.082072+00:00",
+    "processes": [
+      {
+        "role": "primary",
+        "pid": 28952,
+        "created": 134376534469760952,
+        "identity": "same",
+        "alive": true,
+        "session_id": 1,
+        "elevated": false,
+        "windows": [
+          {
+            "hwnd": 3867420,
+            "visible": true,
+            "title": "確認",
+            "class": "#32770",
+            "rect": [
+              719,
+              457,
+              1004,
+              623
+            ]
+          },
+          {
+            "hwnd": 13767152,
+            "visible": true,
+            "title": "OCR",
+            "class": "TkTopLevel",
+            "rect": [
+              267,
+              329,
+              1433,
+              1048
+            ]
+          },
+          {
+            "hwnd": 21434512,
+            "visible": true,
+            "title": "PageFolio",
+            "class": "TkTopLevel",
+            "rect": [
+              234,
+              228,
+              1450,
+              1067
+            ]
+          },
+          {
+            "hwnd": 16584814,
+            "visible": false,
+            "title": "",
+            "class": "WorkerW",
+            "rect": [
+              0,
+              0,
+              136,
+              39
+            ]
+          },
+          {
+            "hwnd": 13373454,
+            "visible": false,
+            "title": "TclNotifier",
+            "class": "TclNotifier",
+            "rect": [
+              0,
+              0,
+              136,
+              39
+            ]
+          },
+          {
+            "hwnd": 16516966,
+            "visible": false,
+            "title": "GDI+ Window (PageFolio.exe)",
+            "class": "GDI+ Hook Window Class",
+            "rect": [
+              0,
+              0,
+              1,
+              1
+            ]
+          },
+          {
+            "hwnd": 21107130,
+            "visible": false,
+            "title": "EmbeddedMenuWindow",
+            "class": "EmbeddedMenuWindowClass",
+            "rect": [
+              0,
+              0,
+              10,
+              10
+            ]
+          },
+          {
+            "hwnd": 21171620,
+            "visible": false,
+            "title": "MenuWindow",
+            "class": "MenuWindowClass",
+            "rect": [
+              0,
+              0,
+              10,
+              10
+            ]
+          },
+          {
+            "hwnd": 17043662,
+            "visible": false,
+            "title": "",
+            "class": "Wtk_TaskbarHandler",
+            "rect": [
+              0,
+              0,
+              1514,
+              969
+            ]
+          },
+          {
+            "hwnd": 5115866,
+            "visible": false,
+            "title": "TtkMonitorWindow",
+            "class": "TtkMonitorClass",
+            "rect": [
+              208,
+              208,
+              1488,
+              943
+            ]
+          },
+          {
+            "hwnd": 4788130,
+            "visible": false,
+            "title": "MSCTFIME UI",
+            "class": "MSCTFIME UI",
+            "rect": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "hwnd": 15470574,
+            "visible": false,
+            "title": "Default IME",
+            "class": "IME",
+            "rect": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "hwnd": 18223388,
+            "visible": false,
+            "title": "Default IME",
+            "class": "IME",
+            "rect": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "hwnd": 30085302,
+            "visible": false,
+            "title": "",
+            "class": "BingIMESysMessageWindow",
+            "rect": [
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        ]
+      },
+      {
+        "role": "peer",
+        "pid": 29436,
+        "created": 134376535020748559,
+        "identity": "gone",
+        "alive": false,
+        "session_id": null,
+        "elevated": null,
+        "windows": []
+      }
+    ],
+    "foreground": {
+      "hwnd": 3867420,
+      "pid": 28952,
+      "title": "確認",
+      "owned_by": "primary"
+    },
+    "owner_probe": [
+      {
+        "kind": "mutex",
+        "name": "Local\\PageFolio.Startup.Owner",
+        "state": "open"
+      },
+      {
+        "kind": "mapping",
+        "name": "Local\\PageFolio.Startup.State",
+        "state": "open"
+      }
+    ]
+  },
+  "foreground_trace": [
+    {
+      "at": "2026-10-28T09:31:42.011371+00:00",
+      "monotonic_ns": 37557120670200,
+      "hwnd": 396656,
+      "pid": 18044
+    },
+    {
+      "at": "2026-10-28T09:31:42.069086+00:00",
+      "monotonic_ns": 37557178382600,
+      "hwnd": 396656,
+      "pid": 18044
+    },
+    {
+      "at": "2026-10-28T09:31:42.132847+00:00",
+      "monotonic_ns": 37557242146000,
+      "hwnd": 396656,
+      "pid": 18044
+    },
+    {
+      "at": "2026-10-28T09:31:42.189430+00:00",
+      "monotonic_ns": 37557298729800,
+      "hwnd": 396656,
+      "pid": 18044
+    },
+    {
+      "at": "2026-10-28T09:31:42.241453+00:00",
+      "monotonic_ns": 37557350752900,
+      "hwnd": 3867420,
+      "pid": 28952
+    },
+    {
+      "at": "2026-10-28T09:31:42.303939+00:00",
+      "monotonic_ns": 37557413237800,
+      "hwnd": 3867420,
+      "pid": 28952
+    },
+    {
+      "at": "2026-10-28T09:31:42.356382+00:00",
+      "monotonic_ns": 37557465687100,
+      "hwnd": 3867420,
+      "pid": 28952
+    },
+    {
+      "at": "2026-10-28T09:31:42.419352+00:00",
+      "monotonic_ns": 37557528651000,
+      "hwnd": 3867420,
+      "pid": 28952
+    },
+    {
+      "at": "2026-10-28T09:31:42.482860+00:00",
+      "monotonic_ns": 37557592162700,
+      "hwnd": 3867420,
+      "pid": 28952
+    },
+    {
+      "at": "2026-10-28T09:31:42.539939+00:00",
+      "monotonic_ns": 37557649239400,
+      "hwnd": 3867420,
+      "pid": 28952
+    },
+    {
+      "at": "2026-10-28T09:31:42.601436+00:00",
+      "monotonic_ns": 37557710740700,
+      "hwnd": 3867420,
+      "pid": 28952
+    },
+    {
+      "at": "2026-10-28T09:31:42.659520+00:00",
+      "monotonic_ns": 37557768842800,
+      "hwnd": 3867420,
+      "pid": 28952
+    },
+    {
+      "at": "2026-10-28T09:31:42.721116+00:00",
+      "monotonic_ns": 37557830432400,
+      "hwnd": 3867420,
+      "pid": 28952
+    },
+    {
+      "at": "2026-10-28T09:31:42.783892+00:00",
+      "monotonic_ns": 37557893215400,
+      "hwnd": 3867420,
+      "pid": 28952
+    },
+    {
+      "at": "2026-10-28T09:31:42.840682+00:00",
+      "monotonic_ns": 37557949988100,
+      "hwnd": 3867420,
+      "pid": 28952
+    },
+    {
+      "at": "2026-10-28T09:31:42.901349+00:00",
+      "monotonic_ns": 37558010652400,
+      "hwnd": 3867420,
+      "pid": 28952
+    },
+    {
+      "at": "2026-10-28T09:31:42.963533+00:00",
+      "monotonic_ns": 37558072840400,
+      "hwnd": 3867420,
+      "pid": 28952
+    },
+    {
+      "at": "2026-10-28T09:31:43.024539+00:00",
+      "monotonic_ns": 37558133845200,
+      "hwnd": 3867420,
+      "pid": 28952
+    },
+    {
+      "at": "2026-10-28T09:31:43.083719+00:00",
+      "monotonic_ns": 37558193049500,
+      "hwnd": 3867420,
+      "pid": 28952
+    },
+    {
+      "at": "2026-10-28T09:31:43.141281+00:00",
+      "monotonic_ns": 37558250590600,
+      "hwnd": 3867420,
+      "pid": 28952
+    },
+    {
+      "at": "2026-10-28T09:31:43.199768+00:00",
+      "monotonic_ns": 37558309073100,
+      "hwnd": 3867420,
+      "pid": 28952
+    },
+    {
+      "at": "2026-10-28T09:31:43.261505+00:00",
+      "monotonic_ns": 37558370803800,
+      "hwnd": 3867420,
+      "pid": 28952
+    },
+    {
+      "at": "2026-10-28T09:31:43.315442+00:00",
+      "monotonic_ns": 37558424744500,
+      "hwnd": 3867420,
+      "pid": 28952
+    },
+    {
+      "at": "2026-10-28T09:31:43.378178+00:00",
+      "monotonic_ns": 37558487478300,
+      "hwnd": 3867420,
+      "pid": 28952
+    },
+    {
+      "at": "2026-10-28T09:31:43.439293+00:00",
+      "monotonic_ns": 37558548609400,
+      "hwnd": 3867420,
+      "pid": 28952
+    },
+    {
+      "at": "2026-10-28T09:31:43.501162+00:00",
+      "monotonic_ns": 37558610460900,
+      "hwnd": 3867420,
+      "pid": 28952
+    },
+    {
+      "at": "2026-10-28T09:31:43.567038+00:00",
+      "monotonic_ns": 37558676345000,
+      "hwnd": 3867420,
+      "pid": 28952
+    },
+    {
+      "at": "2026-10-28T09:31:43.629337+00:00",
+      "monotonic_ns": 37558738647700,
+      "hwnd": 3867420,
+      "pid": 28952
+    },
+    {
+      "at": "2026-10-28T09:31:43.680283+00:00",
+      "monotonic_ns": 37558789598200,
+      "hwnd": 3867420,
+      "pid": 28952
+    },
+    {
+      "at": "2026-10-28T09:31:43.741801+00:00",
+      "monotonic_ns": 37558851123400,
+      "hwnd": 3867420,
+      "pid": 28952
+    },
+    {
+      "at": "2026-10-28T09:31:43.801706+00:00",
+      "monotonic_ns": 37558911010400,
+      "hwnd": 3867420,
+      "pid": 28952
+    },
+    {
+      "at": "2026-10-28T09:31:43.865832+00:00",
+      "monotonic_ns": 37558975150300,
+      "hwnd": 3867420,
+      "pid": 28952
+    },
+    {
+      "at": "2026-10-28T09:31:43.917000+00:00",
+      "monotonic_ns": 37559026305900,
+      "hwnd": 3867420,
+      "pid": 28952
+    },
+    {
+      "at": "2026-10-28T09:31:43.977891+00:00",
+      "monotonic_ns": 37559087196800,
+      "hwnd": 3867420,
+      "pid": 28952
+    },
+    {
+      "at": "2026-10-28T09:31:44.033566+00:00",
+      "monotonic_ns": 37559142871600,
+      "hwnd": 3867420,
+      "pid": 28952
+    },
+    {
+      "at": "2026-10-28T09:31:44.095783+00:00",
+      "monotonic_ns": 37559205095200,
+      "hwnd": 3867420,
+      "pid": 28952
+    },
+    {
+      "at": "2026-10-28T09:31:44.158439+00:00",
+      "monotonic_ns": 37559267744600,
+      "hwnd": 3867420,
+      "pid": 28952
+    },
+    {
+      "at": "2026-10-28T09:31:44.215011+00:00",
+      "monotonic_ns": 37559324327500,
+      "hwnd": 3867420,
+      "pid": 28952
+    },
+    {
+      "at": "2026-10-28T09:31:44.277646+00:00",
+      "monotonic_ns": 37559386949700,
+      "hwnd": 3867420,
+      "pid": 28952
+    },
+    {
+      "at": "2026-10-28T09:31:44.339396+00:00",
+      "monotonic_ns": 37559448696600,
+      "hwnd": 3867420,
+      "pid": 28952
+    },
+    {
+      "at": "2026-10-28T09:31:44.399681+00:00",
+      "monotonic_ns": 37559508981300,
+      "hwnd": 3867420,
+      "pid": 28952
+    },
+    {
+      "at": "2026-10-28T09:31:44.461308+00:00",
+      "monotonic_ns": 37559570614300,
+      "hwnd": 3867420,
+      "pid": 28952
+    },
+    {
+      "at": "2026-10-28T09:31:44.523267+00:00",
+      "monotonic_ns": 37559632575400,
+      "hwnd": 3867420,
+      "pid": 28952
+    },
+    {
+      "at": "2026-10-28T09:31:44.585823+00:00",
+      "monotonic_ns": 37559695149000,
+      "hwnd": 3867420,
+      "pid": 28952
+    },
+    {
+      "at": "2026-10-28T09:31:44.648309+00:00",
+      "monotonic_ns": 37559757624200,
+      "hwnd": 3867420,
+      "pid": 28952
+    },
+    {
+      "at": "2026-10-28T09:31:44.711188+00:00",
+      "monotonic_ns": 37559820496000,
+      "hwnd": 3867420,
+      "pid": 28952
+    },
+    {
+      "at": "2026-10-28T09:31:44.768469+00:00",
+      "monotonic_ns": 37559877795600,
+      "hwnd": 3867420,
+      "pid": 28952
+    },
+    {
+      "at": "2026-10-28T09:31:44.832592+00:00",
+      "monotonic_ns": 37559941911700,
+      "hwnd": 3867420,
+      "pid": 28952
+    },
+    {
+      "at": "2026-10-28T09:31:44.882802+00:00",
+      "monotonic_ns": 37559992113400,
+      "hwnd": 3867420,
+      "pid": 28952
+    },
+    {
+      "at": "2026-10-28T09:31:44.944582+00:00",
+      "monotonic_ns": 37560053901900,
+      "hwnd": 3867420,
+      "pid": 28952
+    },
+    {
+      "at": "2026-10-28T09:31:44.999092+00:00",
+      "monotonic_ns": 37560108391600,
+      "hwnd": 3867420,
+      "pid": 28952
+    },
+    {
+      "at": "2026-10-28T09:31:45.062355+00:00",
+      "monotonic_ns": 37560171668600,
+      "hwnd": 3867420,
+      "pid": 28952
+    },
+    {
+      "at": "2026-10-28T09:31:45.114196+00:00",
+      "monotonic_ns": 37560223516200,
+      "hwnd": 3867420,
+      "pid": 28952
+    },
+    {
+      "at": "2026-10-28T09:31:45.176770+00:00",
+      "monotonic_ns": 37560286069800,
+      "hwnd": 3867420,
+      "pid": 28952
+    },
+    {
+      "at": "2026-10-28T09:31:45.240049+00:00",
+      "monotonic_ns": 37560349360400,
+      "hwnd": 3867420,
+      "pid": 28952
+    },
+    {
+      "at": "2026-10-28T09:31:45.301845+00:00",
+      "monotonic_ns": 37560411151100,
+      "hwnd": 3867420,
+      "pid": 28952
+    },
+    {
+      "at": "2026-10-28T09:31:45.364502+00:00",
+      "monotonic_ns": 37560473801700,
+      "hwnd": 3867420,
+      "pid": 28952
+    },
+    {
+      "at": "2026-10-28T09:31:45.427336+00:00",
+      "monotonic_ns": 37560536650700,
+      "hwnd": 3867420,
+      "pid": 28952
+    },
+    {
+      "at": "2026-10-28T09:31:45.481106+00:00",
+      "monotonic_ns": 37560590417100,
+      "hwnd": 3867420,
+      "pid": 28952
+    },
+    {
+      "at": "2026-10-28T09:31:45.543830+00:00",
+      "monotonic_ns": 37560653141200,
+      "hwnd": 3867420,
+      "pid": 28952
+    },
+    {
+      "at": "2026-10-28T09:31:45.605079+00:00",
+      "monotonic_ns": 37560714378600,
+      "hwnd": 3867420,
+      "pid": 28952
+    },
+    {
+      "at": "2026-10-28T09:31:45.668198+00:00",
+      "monotonic_ns": 37560777496800,
+      "hwnd": 3867420,
+      "pid": 28952
+    },
+    {
+      "at": "2026-10-28T09:31:45.730965+00:00",
+      "monotonic_ns": 37560840294400,
+      "hwnd": 3867420,
+      "pid": 28952
+    },
+    {
+      "at": "2026-10-28T09:31:45.793219+00:00",
+      "monotonic_ns": 37560902540000,
+      "hwnd": 3867420,
+      "pid": 28952
+    },
+    {
+      "at": "2026-10-28T09:31:45.855138+00:00",
+      "monotonic_ns": 37560964449600,
+      "hwnd": 3867420,
+      "pid": 28952
+    },
+    {
+      "at": "2026-10-28T09:31:45.915354+00:00",
+      "monotonic_ns": 37561024658600,
+      "hwnd": 3867420,
+      "pid": 28952
+    },
+    {
+      "at": "2026-10-28T09:31:45.977126+00:00",
+      "monotonic_ns": 37561086456200,
+      "hwnd": 3867420,
+      "pid": 28952
+    },
+    {
+      "at": "2026-10-28T09:31:46.033133+00:00",
+      "monotonic_ns": 37561142459400,
+      "hwnd": 3867420,
+      "pid": 28952
+    },
+    {
+      "at": "2026-10-28T09:31:46.084523+00:00",
+      "monotonic_ns": 37561193832200,
+      "hwnd": 3867420,
+      "pid": 28952
+    },
+    {
+      "at": "2026-10-28T09:31:46.136117+00:00",
+      "monotonic_ns": 37561245418000,
+      "hwnd": 3867420,
+      "pid": 28952
+    },
+    {
+      "at": "2026-10-28T09:31:46.200080+00:00",
+      "monotonic_ns": 37561309381900,
+      "hwnd": 3867420,
+      "pid": 28952
+    }
+  ],
+  "foreground_trace_errors": [],
+  "foreground_trace_interval_ms": 50,
+  "modal_windows_after_peer": [
+    {
+      "hwnd": 3867420,
+      "visible": true,
+      "title": "確認",
+      "class": "#32770",
+      "rect": [
+        719,
+        457,
+        1004,
+        623
+      ]
+    },
+    {
+      "hwnd": 13767152,
+      "visible": true,
+      "title": "OCR",
+      "class": "TkTopLevel",
+      "rect": [
+        267,
+        329,
+        1433,
+        1048
+      ]
+    },
+    {
+      "hwnd": 21434512,
+      "visible": true,
+      "title": "PageFolio",
+      "class": "TkTopLevel",
+      "rect": [
+        234,
+        228,
+        1450,
+        1067
+      ]
+    },
+    {
+      "hwnd": 16584814,
+      "visible": false,
+      "title": "",
+      "class": "WorkerW",
+      "rect": [
+        0,
+        0,
+        136,
+        39
+      ]
+    },
+    {
+      "hwnd": 13373454,
+      "visible": false,
+      "title": "TclNotifier",
+      "class": "TclNotifier",
+      "rect": [
+        0,
+        0,
+        136,
+        39
+      ]
+    },
+    {
+      "hwnd": 16516966,
+      "visible": false,
+      "title": "GDI+ Window (PageFolio.exe)",
+      "class": "GDI+ Hook Window Class",
+      "rect": [
+        0,
+        0,
+        1,
+        1
+      ]
+    },
+    {
+      "hwnd": 21107130,
+      "visible": false,
+      "title": "EmbeddedMenuWindow",
+      "class": "EmbeddedMenuWindowClass",
+      "rect": [
+        0,
+        0,
+        10,
+        10
+      ]
+    },
+    {
+      "hwnd": 21171620,
+      "visible": false,
+      "title": "MenuWindow",
+      "class": "MenuWindowClass",
+      "rect": [
+        0,
+        0,
+        10,
+        10
+      ]
+    },
+    {
+      "hwnd": 17043662,
+      "visible": false,
+      "title": "",
+      "class": "Wtk_TaskbarHandler",
+      "rect": [
+        0,
+        0,
+        1514,
+        969
+      ]
+    },
+    {
+      "hwnd": 5115866,
+      "visible": false,
+      "title": "TtkMonitorWindow",
+      "class": "TtkMonitorClass",
+      "rect": [
+        208,
+        208,
+        1488,
+        943
+      ]
+    },
+    {
+      "hwnd": 4788130,
+      "visible": false,
+      "title": "MSCTFIME UI",
+      "class": "MSCTFIME UI",
+      "rect": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "hwnd": 15470574,
+      "visible": false,
+      "title": "Default IME",
+      "class": "IME",
+      "rect": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "hwnd": 18223388,
+      "visible": false,
+      "title": "Default IME",
+      "class": "IME",
+      "rect": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "hwnd": 30085302,
+      "visible": false,
+      "title": "",
+      "class": "BingIMESysMessageWindow",
+      "rect": [
+        0,
+        0,
+        0,
+        0
+      ]
+    }
+  ],
+  "foreground_after_peer": {
+    "hwnd": 3867420,
+    "pid": 28952,
+    "title": "確認"
+  },
+  "peer_return_user_answer": "自動で同じ確認画面に戻り、そのまま10秒待った",
+  "no_user_answer": "OCR画面が残り、処理中の表示が続いている",
+  "release_at": "2026-10-28T09:32:37.660478+00:00",
+  "completed_seen": true,
+  "user_answer": "合成OCR結果が表示され、PageFolio を終了した（チャット回答を代理入力）。",
+  "expected_text": "PageFolio UAT 合成OCR結果",
+  "finished_at": "2026-10-28T09:33:16.010413+00:00",
+  "stop": [
+    {
+      "pid": 28952,
+      "result": "already-exited"
+    },
+    {
+      "pid": 29436,
+      "result": "already-exited"
+    }
+  ],
+  "verify_after": {
+    "ok": true,
+    "overlay_changed": [
+      "pagefolio_settings.json"
+    ],
+    "distribution_changed": []
+  },
+  "owner_after": [],
+  "user_inputs": [
+    {
+      "at": "2026-10-28T09:31:42.003834+00:00",
+      "prompt": "確認ダイアログが表示されたら、見えたことを入力して Enter:",
+      "text": "閉じる確認が表示された。ChatGPTへ切り替えた"
+    },
+    {
+      "at": "2026-10-28T09:32:12.083451+00:00",
+      "prompt": "確認ダイアログは消えずに(または同じものが)前面に出ていますか? 見えたことを入力:",
+      "text": "自動で同じ確認画面に戻り、そのまま10秒待った"
+    },
+    {
+      "at": "2026-10-28T09:32:36.452719+00:00",
+      "prompt": "確認ダイアログの『いいえ』を押してください。OCRダイアログが残り、処理が続いていれば、",
+      "text": "OCR画面が残り、処理中の表示が続いている"
+    },
+    {
+      "at": "2026-10-28T09:33:15.464007+00:00",
+      "prompt": "OCRダイアログの結果欄に『PageFolio UAT 合成OCR結果』が表示されましたか? (同じ処理が完了したか)",
+      "text": "合成OCR結果が表示され、PageFolio を終了した（チャット回答を代理入力）。"
+    }
+  ],
+  "steps": [
+    {
+      "at": "2026-10-28T09:30:52.113006+00:00",
+      "step": "started",
+      "windows": {
+        "primary:28952": [
+          {
+            "hwnd": 21434512,
+            "visible": true,
+            "title": "PageFolio",
+            "class": "TkTopLevel",
+            "rect": [
+              234,
+              228,
+              1450,
+              1067
+            ]
+          },
+          {
+            "hwnd": 21107130,
+            "visible": false,
+            "title": "EmbeddedMenuWindow",
+            "class": "EmbeddedMenuWindowClass",
+            "rect": [
+              0,
+              0,
+              10,
+              10
+            ]
+          },
+          {
+            "hwnd": 21171620,
+            "visible": false,
+            "title": "MenuWindow",
+            "class": "MenuWindowClass",
+            "rect": [
+              0,
+              0,
+              10,
+              10
+            ]
+          },
+          {
+            "hwnd": 17043662,
+            "visible": false,
+            "title": "",
+            "class": "Wtk_TaskbarHandler",
+            "rect": [
+              0,
+              0,
+              1514,
+              969
+            ]
+          },
+          {
+            "hwnd": 5115866,
+            "visible": false,
+            "title": "TtkMonitorWindow",
+            "class": "TtkMonitorClass",
+            "rect": [
+              208,
+              208,
+              1488,
+              943
+            ]
+          },
+          {
+            "hwnd": 15470574,
+            "visible": false,
+            "title": "Default IME",
+            "class": "IME",
+            "rect": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "hwnd": 4788130,
+            "visible": false,
+            "title": "MSCTFIME UI",
+            "class": "MSCTFIME UI",
+            "rect": [
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        ]
+      },
+      "foreground": {
+        "hwnd": 9441046,
+        "pid": 17936,
+        "title": "DeNA、佐野恵太が初回に先制2ラン！ 崖っぷちの第4戦で豪快弾…ソフトバンク相手に反撃開始【日本シリーズ】（ベースボールチャンネル）のコメント一覧 - Yahoo!ニュース - Google Chrome"
+      }
+    },
+    {
+      "at": "2026-10-28T09:31:21.800793+00:00",
+      "step": "received",
+      "windows": {
+        "primary:28952": [
+          {
+            "hwnd": 13767152,
+            "visible": true,
+            "title": "OCR",
+            "class": "TkTopLevel",
+            "rect": [
+              267,
+              329,
+              1433,
+              1048
+            ]
+          },
+          {
+            "hwnd": 21434512,
+            "visible": true,
+            "title": "PageFolio",
+            "class": "TkTopLevel",
+            "rect": [
+              234,
+              228,
+              1450,
+              1067
+            ]
+          },
+          {
+            "hwnd": 16584814,
+            "visible": false,
+            "title": "",
+            "class": "WorkerW",
+            "rect": [
+              0,
+              0,
+              136,
+              39
+            ]
+          },
+          {
+            "hwnd": 13373454,
+            "visible": false,
+            "title": "TclNotifier",
+            "class": "TclNotifier",
+            "rect": [
+              0,
+              0,
+              136,
+              39
+            ]
+          },
+          {
+            "hwnd": 16516966,
+            "visible": false,
+            "title": "GDI+ Window (PageFolio.exe)",
+            "class": "GDI+ Hook Window Class",
+            "rect": [
+              0,
+              0,
+              1,
+              1
+            ]
+          },
+          {
+            "hwnd": 21107130,
+            "visible": false,
+            "title": "EmbeddedMenuWindow",
+            "class": "EmbeddedMenuWindowClass",
+            "rect": [
+              0,
+              0,
+              10,
+              10
+            ]
+          },
+          {
+            "hwnd": 21171620,
+            "visible": false,
+            "title": "MenuWindow",
+            "class": "MenuWindowClass",
+            "rect": [
+              0,
+              0,
+              10,
+              10
+            ]
+          },
+          {
+            "hwnd": 17043662,
+            "visible": false,
+            "title": "",
+            "class": "Wtk_TaskbarHandler",
+            "rect": [
+              0,
+              0,
+              1514,
+              969
+            ]
+          },
+          {
+            "hwnd": 5115866,
+            "visible": false,
+            "title": "TtkMonitorWindow",
+            "class": "TtkMonitorClass",
+            "rect": [
+              208,
+              208,
+              1488,
+              943
+            ]
+          },
+          {
+            "hwnd": 4788130,
+            "visible": false,
+            "title": "MSCTFIME UI",
+            "class": "MSCTFIME UI",
+            "rect": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "hwnd": 15470574,
+            "visible": false,
+            "title": "Default IME",
+            "class": "IME",
+            "rect": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "hwnd": 18223388,
+            "visible": false,
+            "title": "Default IME",
+            "class": "IME",
+            "rect": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "hwnd": 30085302,
+            "visible": false,
+            "title": "",
+            "class": "BingIMESysMessageWindow",
+            "rect": [
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        ]
+      },
+      "foreground": {
+        "hwnd": 13767152,
+        "pid": 28952,
+        "title": "OCR"
+      }
+    },
+    {
+      "at": "2026-10-28T09:31:42.010849+00:00",
+      "step": "modal-up",
+      "windows": {
+        "primary:28952": [
+          {
+            "hwnd": 3867420,
+            "visible": true,
+            "title": "確認",
+            "class": "#32770",
+            "rect": [
+              719,
+              457,
+              1004,
+              623
+            ]
+          },
+          {
+            "hwnd": 13767152,
+            "visible": true,
+            "title": "OCR",
+            "class": "TkTopLevel",
+            "rect": [
+              267,
+              329,
+              1433,
+              1048
+            ]
+          },
+          {
+            "hwnd": 21434512,
+            "visible": true,
+            "title": "PageFolio",
+            "class": "TkTopLevel",
+            "rect": [
+              234,
+              228,
+              1450,
+              1067
+            ]
+          },
+          {
+            "hwnd": 16584814,
+            "visible": false,
+            "title": "",
+            "class": "WorkerW",
+            "rect": [
+              0,
+              0,
+              136,
+              39
+            ]
+          },
+          {
+            "hwnd": 13373454,
+            "visible": false,
+            "title": "TclNotifier",
+            "class": "TclNotifier",
+            "rect": [
+              0,
+              0,
+              136,
+              39
+            ]
+          },
+          {
+            "hwnd": 16516966,
+            "visible": false,
+            "title": "GDI+ Window (PageFolio.exe)",
+            "class": "GDI+ Hook Window Class",
+            "rect": [
+              0,
+              0,
+              1,
+              1
+            ]
+          },
+          {
+            "hwnd": 21107130,
+            "visible": false,
+            "title": "EmbeddedMenuWindow",
+            "class": "EmbeddedMenuWindowClass",
+            "rect": [
+              0,
+              0,
+              10,
+              10
+            ]
+          },
+          {
+            "hwnd": 21171620,
+            "visible": false,
+            "title": "MenuWindow",
+            "class": "MenuWindowClass",
+            "rect": [
+              0,
+              0,
+              10,
+              10
+            ]
+          },
+          {
+            "hwnd": 17043662,
+            "visible": false,
+            "title": "",
+            "class": "Wtk_TaskbarHandler",
+            "rect": [
+              0,
+              0,
+              1514,
+              969
+            ]
+          },
+          {
+            "hwnd": 5115866,
+            "visible": false,
+            "title": "TtkMonitorWindow",
+            "class": "TtkMonitorClass",
+            "rect": [
+              208,
+              208,
+              1488,
+              943
+            ]
+          },
+          {
+            "hwnd": 4788130,
+            "visible": false,
+            "title": "MSCTFIME UI",
+            "class": "MSCTFIME UI",
+            "rect": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "hwnd": 15470574,
+            "visible": false,
+            "title": "Default IME",
+            "class": "IME",
+            "rect": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "hwnd": 18223388,
+            "visible": false,
+            "title": "Default IME",
+            "class": "IME",
+            "rect": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "hwnd": 30085302,
+            "visible": false,
+            "title": "",
+            "class": "BingIMESysMessageWindow",
+            "rect": [
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        ]
+      },
+      "foreground": {
+        "hwnd": 396656,
+        "pid": 18044,
+        "title": "⠋ 出荷停止状態を解消 | PageFolio"
+      }
+    },
+    {
+      "at": "2026-10-28T09:31:46.208153+00:00",
+      "step": "peer",
+      "windows": {
+        "primary:28952": [
+          {
+            "hwnd": 3867420,
+            "visible": true,
+            "title": "確認",
+            "class": "#32770",
+            "rect": [
+              719,
+              457,
+              1004,
+              623
+            ]
+          },
+          {
+            "hwnd": 13767152,
+            "visible": true,
+            "title": "OCR",
+            "class": "TkTopLevel",
+            "rect": [
+              267,
+              329,
+              1433,
+              1048
+            ]
+          },
+          {
+            "hwnd": 21434512,
+            "visible": true,
+            "title": "PageFolio",
+            "class": "TkTopLevel",
+            "rect": [
+              234,
+              228,
+              1450,
+              1067
+            ]
+          },
+          {
+            "hwnd": 16584814,
+            "visible": false,
+            "title": "",
+            "class": "WorkerW",
+            "rect": [
+              0,
+              0,
+              136,
+              39
+            ]
+          },
+          {
+            "hwnd": 13373454,
+            "visible": false,
+            "title": "TclNotifier",
+            "class": "TclNotifier",
+            "rect": [
+              0,
+              0,
+              136,
+              39
+            ]
+          },
+          {
+            "hwnd": 16516966,
+            "visible": false,
+            "title": "GDI+ Window (PageFolio.exe)",
+            "class": "GDI+ Hook Window Class",
+            "rect": [
+              0,
+              0,
+              1,
+              1
+            ]
+          },
+          {
+            "hwnd": 21107130,
+            "visible": false,
+            "title": "EmbeddedMenuWindow",
+            "class": "EmbeddedMenuWindowClass",
+            "rect": [
+              0,
+              0,
+              10,
+              10
+            ]
+          },
+          {
+            "hwnd": 21171620,
+            "visible": false,
+            "title": "MenuWindow",
+            "class": "MenuWindowClass",
+            "rect": [
+              0,
+              0,
+              10,
+              10
+            ]
+          },
+          {
+            "hwnd": 17043662,
+            "visible": false,
+            "title": "",
+            "class": "Wtk_TaskbarHandler",
+            "rect": [
+              0,
+              0,
+              1514,
+              969
+            ]
+          },
+          {
+            "hwnd": 5115866,
+            "visible": false,
+            "title": "TtkMonitorWindow",
+            "class": "TtkMonitorClass",
+            "rect": [
+              208,
+              208,
+              1488,
+              943
+            ]
+          },
+          {
+            "hwnd": 4788130,
+            "visible": false,
+            "title": "MSCTFIME UI",
+            "class": "MSCTFIME UI",
+            "rect": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "hwnd": 15470574,
+            "visible": false,
+            "title": "Default IME",
+            "class": "IME",
+            "rect": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "hwnd": 18223388,
+            "visible": false,
+            "title": "Default IME",
+            "class": "IME",
+            "rect": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "hwnd": 30085302,
+            "visible": false,
+            "title": "",
+            "class": "BingIMESysMessageWindow",
+            "rect": [
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        ],
+        "peer:29436": []
+      },
+      "foreground": {
+        "hwnd": 3867420,
+        "pid": 28952,
+        "title": "確認",
+        "owned_by": "primary"
+      }
+    },
+    {
+      "at": "2026-10-28T09:32:36.456077+00:00",
+      "step": "answered-no",
+      "windows": {
+        "primary:28952": [
+          {
+            "hwnd": 13767152,
+            "visible": true,
+            "title": "OCR",
+            "class": "TkTopLevel",
+            "rect": [
+              267,
+              329,
+              1433,
+              1048
+            ]
+          },
+          {
+            "hwnd": 21434512,
+            "visible": true,
+            "title": "PageFolio",
+            "class": "TkTopLevel",
+            "rect": [
+              234,
+              228,
+              1450,
+              1067
+            ]
+          },
+          {
+            "hwnd": 16584814,
+            "visible": false,
+            "title": "",
+            "class": "WorkerW",
+            "rect": [
+              0,
+              0,
+              136,
+              39
+            ]
+          },
+          {
+            "hwnd": 13373454,
+            "visible": false,
+            "title": "TclNotifier",
+            "class": "TclNotifier",
+            "rect": [
+              0,
+              0,
+              136,
+              39
+            ]
+          },
+          {
+            "hwnd": 16516966,
+            "visible": false,
+            "title": "GDI+ Window (PageFolio.exe)",
+            "class": "GDI+ Hook Window Class",
+            "rect": [
+              0,
+              0,
+              1,
+              1
+            ]
+          },
+          {
+            "hwnd": 21107130,
+            "visible": false,
+            "title": "EmbeddedMenuWindow",
+            "class": "EmbeddedMenuWindowClass",
+            "rect": [
+              0,
+              0,
+              10,
+              10
+            ]
+          },
+          {
+            "hwnd": 21171620,
+            "visible": false,
+            "title": "MenuWindow",
+            "class": "MenuWindowClass",
+            "rect": [
+              0,
+              0,
+              10,
+              10
+            ]
+          },
+          {
+            "hwnd": 17043662,
+            "visible": false,
+            "title": "",
+            "class": "Wtk_TaskbarHandler",
+            "rect": [
+              0,
+              0,
+              1514,
+              969
+            ]
+          },
+          {
+            "hwnd": 5115866,
+            "visible": false,
+            "title": "TtkMonitorWindow",
+            "class": "TtkMonitorClass",
+            "rect": [
+              208,
+              208,
+              1488,
+              943
+            ]
+          },
+          {
+            "hwnd": 4788130,
+            "visible": false,
+            "title": "MSCTFIME UI",
+            "class": "MSCTFIME UI",
+            "rect": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "hwnd": 15470574,
+            "visible": false,
+            "title": "Default IME",
+            "class": "IME",
+            "rect": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "hwnd": 18223388,
+            "visible": false,
+            "title": "Default IME",
+            "class": "IME",
+            "rect": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "hwnd": 30085302,
+            "visible": false,
+            "title": "",
+            "class": "BingIMESysMessageWindow",
+            "rect": [
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        ],
+        "peer:29436": []
+      }
+    }
+  ],
+  "server_summary": {
+    "posts": 1,
+    "rejected": [],
+    "attempts_by_image": {
+      "6ee70ff9d65d47b460369fa68eadc0761b160b81b96945dc27308885471e1751": 1
+    },
+    "retransmissions": [],
+    "completed": [
+      "6ee70ff9d65d-1"
+    ],
+    "released": [
+      "6ee70ff9d65d-1"
+    ],
+    "expired": [],
+    "events": [
+      {
+        "seq": 1,
+        "event": "models",
+        "time": "2026-10-28T09:30:46.412380+00:00",
+        "monotonic": 37501.5216762,
+        "run_id": "af629ccbe3514294a7814e1de2e98463",
+        "mode": "hold",
+        "path": "/v1/models"
+      },
+      {
+        "seq": 2,
+        "event": "received",
+        "time": "2026-10-28T09:31:21.774745+00:00",
+        "monotonic": 37536.8840399,
+        "run_id": "af629ccbe3514294a7814e1de2e98463",
+        "mode": "hold",
+        "request_id": "e07144c912fe488fa448fb565285b200",
+        "attempt_id": "6ee70ff9d65d-1",
+        "image_sha256": "6ee70ff9d65d47b460369fa68eadc0761b160b81b96945dc27308885471e1751",
+        "page_id": "p1"
+      },
+      {
+        "seq": 3,
+        "event": "released",
+        "time": "2026-10-28T09:32:37.470595+00:00",
+        "monotonic": 37612.5798948,
+        "run_id": "af629ccbe3514294a7814e1de2e98463",
+        "mode": "hold",
+        "request_id": "e07144c912fe488fa448fb565285b200",
+        "attempt_id": "6ee70ff9d65d-1",
+        "image_sha256": "6ee70ff9d65d47b460369fa68eadc0761b160b81b96945dc27308885471e1751",
+        "page_id": "p1"
+      },
+      {
+        "seq": 4,
+        "event": "completed",
+        "time": "2026-10-28T09:32:37.472552+00:00",
+        "monotonic": 37612.5818519,
+        "run_id": "af629ccbe3514294a7814e1de2e98463",
+        "mode": "hold",
+        "status": 200,
+        "request_id": "e07144c912fe488fa448fb565285b200",
+        "attempt_id": "6ee70ff9d65d-1",
+        "image_sha256": "6ee70ff9d65d47b460369fa68eadc0761b160b81b96945dc27308885471e1751",
+        "page_id": "p1"
+      }
+    ]
+  }
+}

@@ -1,0 +1,3 @@
+normal True [{'pid': 30336, 'result': 'closed'}]
+corrupt True [{'pid': 30660, 'result': 'closed'}]
+unreadable True [{'pid': 33904, 'result': 'closed'}]

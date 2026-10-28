@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "scope_id": "single-login-session",
+  "approval_id": "W11-B-20261028",
+  "approved": true,
+  "approval_path": ".planning/phases/06-release-validation/06-W11-SCOPE-APPROVAL.md",
+  "approval_sha256": "95b1fda6a2742991f2e3c19b870754b46396aba4d11eb03980b9c57dd034e278",
+  "case_count": 31,
+  "total_subrows": 110,
+  "required_subrows": 108,
+  "deferred_subrows": 2,
+  "deferred_cards": [
+    "W11/other-session@script",
+    "W11/other-session@production-exe"
+  ]
+}

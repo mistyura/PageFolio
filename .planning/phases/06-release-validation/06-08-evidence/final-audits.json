@@ -1,0 +1,88 @@
+[
+  {
+    "argv": [
+      "tests/release_uat_support.py",
+      "audit",
+      "--phase-dir",
+      ".planning/phases/06-release-validation",
+      "--build-only"
+    ],
+    "exit": 0,
+    "result": {
+      "mode": "build-only",
+      "ok": true,
+      "exit_code": 0,
+      "reasons": [],
+      "phase_complete": false,
+      "release_allowed": false,
+      "scope_id": "single-login-session",
+      "approval_id": "W11-B-20261028",
+      "total": 110,
+      "required": 108,
+      "deferred": 2,
+      "required_pass": 0,
+      "required_not_run": 108,
+      "required_fail": 0,
+      "required_blocked": 0
+    },
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "tests/release_uat_support.py",
+      "audit",
+      "--phase-dir",
+      ".planning/phases/06-release-validation",
+      "--preparation-only"
+    ],
+    "exit": 0,
+    "result": {
+      "mode": "preparation-only",
+      "ok": true,
+      "exit_code": 0,
+      "reasons": [],
+      "phase_complete": false,
+      "release_allowed": false,
+      "scope_id": "single-login-session",
+      "approval_id": "W11-B-20261028",
+      "total": 110,
+      "required": 108,
+      "deferred": 2,
+      "required_pass": 0,
+      "required_not_run": 108,
+      "required_fail": 0,
+      "required_blocked": 0
+    },
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "tests/release_uat_support.py",
+      "audit",
+      "--phase-dir",
+      ".planning/phases/06-release-validation",
+      "--allow-pending"
+    ],
+    "exit": 0,
+    "result": {
+      "mode": "allow-pending",
+      "ok": true,
+      "exit_code": 0,
+      "reasons": [],
+      "phase_complete": false,
+      "release_allowed": false,
+      "scope_id": "single-login-session",
+      "approval_id": "W11-B-20261028",
+      "total": 110,
+      "required": 108,
+      "deferred": 2,
+      "required_pass": 0,
+      "required_not_run": 108,
+      "required_fail": 0,
+      "required_blocked": 0,
+      "structural_only": true,
+      "task_ready": false
+    },
+    "stderr": ""
+  }
+]

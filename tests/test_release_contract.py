@@ -122,6 +122,28 @@ class TestVersionAndDocs:
         assert not re.search(r"""["']v\d+\.\d+\.\d+["']""", source)
 
 
+class TestReleaseScopeDocs:
+    def test_distribution_docs_state_single_session_and_unverified_behavior(self):
+        texts = {
+            "README.md": section(read("README.md"), "## 配布版（EXE）の使い方"),
+            "distribution/はじめに.md": read("distribution/はじめに.md"),
+            "開発履歴.md": section(read("開発履歴.md"), f"## {app_version()}"),
+        }
+        for name, body in texts.items():
+            for term in (
+                "単一ログインセッション",
+                "複数ログインセッション",
+                "保証対象外",
+                "別セッション各1画面",
+                "同セッションへの復帰",
+                "元状態維持",
+                "未確認",
+            ):
+                assert term in body, (name, term)
+            assert not FALSE_PASS.search(body), name
+        assert "108" in texts["開発履歴.md"] and "W11" in texts["開発履歴.md"]
+
+
 class TestSampleSources:
     def test_sources_match_original_sha256(self):
         for name in SAMPLES:

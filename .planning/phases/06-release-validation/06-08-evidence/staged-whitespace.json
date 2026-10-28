@@ -1,0 +1,10 @@
+{
+  "git_exit": 2,
+  "cr_at_eol": true,
+  "raw_evidence_findings": [
+    ".planning/phases/06-release-validation/06-08-preserved-06-UAT.md:3060: new blank line at EOF."
+  ],
+  "unexpected": [],
+  "stderr": "warning: unable to access 'C:\\Users\\shdwf/.config/git/ignore': Permission denied\n",
+  "note": "保存した原記録の空白と改行を変更せず、通常の編集ファイルでは全whitespace検査を維持する。"
+}

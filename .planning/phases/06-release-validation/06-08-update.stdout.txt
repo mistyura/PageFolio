@@ -1,0 +1,2 @@
+collision {'stopped_before_choice': True, 'collisions': ['pagefolio_settings.json'], 'copied': []}
+no_collision {'stopped_before_choice': False, 'collisions': [], 'copied': ['ocr_custom_prompt.md', 'pagefolio_settings.json', 'ocr_summary_prompt.md']}

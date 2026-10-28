@@ -1,0 +1,6 @@
+X01 [True] [{'pid': 34640, 'result': 'closed'}] []
+X02 [True] [{'pid': 15812, 'result': 'closed'}] []
+X03 [True] [{'pid': 1960, 'result': 'closed'}] []
+X04-write [True] [{'pid': 324, 'result': 'terminated'}] ['stop-diagnostics-324.json']
+X04-replace [True] [{'pid': 23496, 'result': 'terminated'}] ['stop-diagnostics-23496.json']
+X05 [True, True] [{'pid': 29436, 'result': 'closed'}] []

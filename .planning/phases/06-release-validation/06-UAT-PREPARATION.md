@@ -1,7 +1,7 @@
 ---
 phase: 06-release-validation
 document: uat-preparation
-status: preparation-partial-pending-human-check
+status: preparation-established-generation5
 created: 2026-10-24
 ---
 
@@ -11,7 +11,39 @@ created: 2026-10-24
 Phase 完了は別の状態であり、本書のどの記述も受入合格・出荷承認を意味しない。実配布 EXE に対する
 実接続・native modal・lock 成立は本書では未実証で、06-04-02 で別に実証する（下表「実EXEでの未実証点」）。
 
-## 状態（06-04 世代2 時点）
+## 現行状態（06-08 世代5・2026-10-28）
+
+単一ログインセッション保証の文書を同梱したv1.10.2。文書反映後の単一全件2232 passed、実初回/再build各1回成功。
+最終EXE 66be5df663e333057c5c3cde02180857f930d2433e377f69c2838432d49a19d4。保護3名・起動時保持3条件・更新衝突/非衝突・X01〜X05外部条件は06-08-t2-result.json。
+X04の初回保存失敗後の画面保持と強制回収は観測のまま保持し、人手合否にしない。
+実EXEのocr-single/W05b接続2件を実測。W05bはChatGPTから同確認HWNDへ自動復帰し、いいえで処理維持、同1POST完了を利用者回答と50ms観測で照合。両runは利用者が通常終了し残存ownerなし。原記録は06-08-session-*.json。必須108行not-run、W11対象外2行not-run、Phase06未完了・出荷未承認。
+以下の世代4は履歴。
+
+## 過去の状態（06-04 世代4・2026-10-28）
+
+CR-03修正後のv1.10.2。全件2083 passed、Phase04/05 fresh passed、新入力で初回/再build各1回成功、build-only exit0。
+最終EXE 6a0bd182d0ab717f45ddf2f36fd23aaad8aacdc83c264843fbcaab40ced20d3d。保護3名・起動時保持3条件・更新衝突/非衝突・X01〜X05外部条件の記録は 06-04g4-t2-result.json。
+X04 write/replaceは初回WM_CLOSE後12秒で終了せず、所有handleで回収した。追加guardがこれを一律失敗扱いして停止した原記録も保持。D19の画面維持仕様を確認し、未実施replace/X05のみ続行した。通知・次の終了操作の人手合否は未判定。
+実EXEのocr-single/W05b接続2件は成立。W05bはChatGPTから同確認HWND10686146へ自動復帰し、いいえで処理維持、同1POST完了を利用者回答と50ms観測で照合。両runは利用者が通常終了し残存ownerなし。準備監査exit0（phase_complete=false/release_allowed=false）。sourceの「isolated OCR」確認画面が自動復帰したとの回答は診断証拠で、実EXEや本受入のpassには転記しない。110行not-run、Phase06未完了、出荷未承認。
+以下の世代3停止は履歴。現在の再開は利用者の「出荷停止状態を解消して」に基づく。
+
+## 過去の状態（06-04 世代3・2026-10-28）
+
+**W05b接続実証で停止:** `06-CONNECTION-STOP-20261028.md`を優先する。世代3の実操作2runは記録済みだがW05b自動復帰は未実証。peer前後で同modal HWND6753582がある一方、実foregroundはChatGPT側PID18044。利用者補足は「自分で PageFolio に切り替えて確認した」。元回答を保持し、自動復帰成功の解釈を取り下げた。`peer_returned_to_modal=false`、準備監査exit1で06-05/06・出荷停止。次は`$gsd-debug phase06-w05b-manual-switch`、再試行しない。原因/製品関与を断定せず、チャット回答手順の影響を切り分ける。
+
+**品質停止解除後の再開照合済み:** 最新正本は `.planning/debug/quality-gate-unblock.md`（resolved）と同証拠dirの単一全件2071 passed / 2 warnings / 480.86秒 / exit0。旧1846 passed / 1 failedと`06-04g3-QUALITY-STOP.md`は履歴のまま保持。今回の読取照合は`06-RESUME-CHECK-20261028.json`で、実build入力65/65・品質Python137/137・依存環境が一致し、build-only exit0・監査前後tree/hash/mtime不変、追加build不要。親の独立Phase04再検証はpassed、現行digestは`v4:sha256:b6d4189f833dd62188a4105334e54ad44c663753825eea431e072f1c4030a145`。本照合を人手passにしない。
+
+- v1.10.1の初回/再buildがともに成功し、`audit --build-only` はexit 0。最終EXEは `9b3ebbce390c3b9f1752a97820a5ef81a0c39b7e148b93717b86bb47f9f5f73b`。配布元は直接起動しない。
+- 保護3名のbuild前停止、更新/衝突時の保持、normal/corrupt/unreadableの起動時保持、X01〜X05の外部障害成立を新EXEで実測。生記録は `06-04g3-t2-result.json`。X04の通常終了不成立と所有PIDの強制回収は診断付き観測として保持し、人手passと扱わない。
+- unreadableの初回試行は利用者の手動終了が介在。`06-04g3-STOP.json` と `06-04g3-t2-first-attempt.json` に原本と利用者原文を保持。操作を止める案内後の新runでは安定時生存・hash保持・通常終了・owner回収を確認した。旧試行はpassへ書き換えない。
+- 接続事前照合は10項目成功（実EXE内蔵コード・隔離設定・loopbackモデル一覧）。`--check-routing-only` はEXEを起動せず、本接続・人手受入の代用ではない。
+- ocr-single `0d73a0cdf5b8465f9970b3702c2653e7`とw05b-modal `cf52cf1df4db42a3b384db6f13a6c103`の実操作/原文を記録。両方同1POSTを完了したが、後者は自動復帰未実証。ocr-singleのprimary terminated/stop診断、W05bのprimary closedをそのまま保持。`--preparation-only` 合格前に06-05へ進まない。全110受入は世代3のnot-run、Phase未完了・出荷停止。
+- rootは`C:/Users/shdwf/AppData/Local/Temp/pf06_t2_g3_unreadable_8433fc4ee5324234931fb80ac0f310d1`。sandbox不可視runも原本保持しpassにしない。現在は全ownerを回収済みで重複/再試行しない。原本copy/hashと補足は`06-CONNECTION-STOP-20261028-evidence/`。
+- 旧世代16 runの参照不足は、入れ子の世代1証拠と`06-04-t2-result.json`原本（SHA256 `7f2590850e4b6937b9b12d83a3f33067861ade549c09b14334e77c80729ceb5a`）に全IDが存在することを確認し、下表へ履歴として補った。世代3へ昇格させず、接続不足によるpreparation-only未合格は維持する。
+
+## 過去の状態（06-04 世代2 時点・現行EXEには適用しない）
+
+世代2の元台帳は `06-04g2-preserved-20261028-06-BUILD-EVIDENCE.json` と `06-04g2-preserved-20261028-06-PROTECTION-EVIDENCE.json` に保持。以下の合格は当時のv1.10.0だけを対象とする。
 
 | 項目 | 状態 |
 |---|---|
@@ -35,40 +67,96 @@ run 参照（`run-ref: <32桁hex>` 形式の行）は下記の生成ブロック
 
 | run-ref | 用途 |
 |---|---|
-| run-ref: 034da46ced8d4c02b001c1350ad4cfbf | [世代1 superseded] 保護停止 ocr_custom_prompt.md |
-| run-ref: 5787245f4ffc41ad8142f14f7fb7eebd | [世代1 superseded] 保護停止 pagefolio_settings.json |
-| run-ref: f597309fe4ac4f958994fc9000bef612 | [世代1 superseded] 保護停止 ocr_summary_prompt.md |
-| run-ref: 0c289c364a25402e9aa514b5be8fe2c2 | [世代1 superseded] 起動時保持 normal |
-| run-ref: f7a78d95a4cc442b815d8e79c001d488 | [世代1 superseded] 起動時保持 corrupt |
-| run-ref: 2b7a53f82f014af294721a2c96ee6f2a | [世代1 superseded] 起動時保持 unreadable |
-| run-ref: 65468902bf4f4efeb4f880f83f302acc | [世代1 superseded] 更新 collision old(initial run tree) |
-| run-ref: eea9ec4a38e044f989f27d52a9a185de | [世代1 superseded] 更新 collision new(final) |
-| run-ref: 64058e97276540f38e6ae5c6f4052f5d | [世代1 superseded] 更新 no_collision old(initial run tree) |
-| run-ref: db2f16a9041546caaf9bc9d5eb015683 | [世代1 superseded] 更新 no_collision new(final) |
-| run-ref: 2354dd0e4c934de6a44fc624f62e01da | [世代1 superseded] 障害 X01 |
-| run-ref: ca66fbc00cdf49958d7d0f801949d934 | [世代1 superseded] 障害 X02 |
-| run-ref: bbe088a0fd8344a688d81ec4eaa66d89 | [世代1 superseded] 障害 X03 |
-| run-ref: efbcd9bebc234e5ba8b4029d2d1a8b97 | [世代1 superseded] 障害 X04-write |
-| run-ref: d04fea5666194452b2cd65aa4a5ce20e | [世代1 superseded] 障害 X04-replace |
-| run-ref: 2680bdf5bd9943cbb99c3a7e63e78e97 | [世代1 superseded] 障害 X05 |
-| run-ref: 3a60a10440724b72a6c5e6274cf531c5 | 保護停止 ocr_custom_prompt.md |
-| run-ref: 222e3a0876394942a376f7f1dcb7fcdf | 保護停止 pagefolio_settings.json |
-| run-ref: c6f94beab4e64cf596209cc22a6b656b | 保護停止 ocr_summary_prompt.md |
-| run-ref: eed85c78bb854616b87140ee8d57ae6f | 起動時保持 normal |
-| run-ref: 5021b5ccbaf348bb96411745ed4f5630 | 起動時保持 corrupt |
-| run-ref: 27332ac0db33443dbf48cc8b53237baa | 起動時保持 unreadable |
-| run-ref: 4b2a6810ce074698b2a83c7264c961b2 | 更新 collision old(initial run tree) |
-| run-ref: baf05b8dc25a41078ad50ae4fd6e7d0a | 更新 collision new(final) |
-| run-ref: f7315188f0954ecabc9c8d5ff2447af3 | 更新 no_collision old(initial run tree) |
-| run-ref: 407c0a66363649389729d81b22ba79bb | 更新 no_collision new(final) |
-| run-ref: cd4dc81af699415abcb3be8ad2cb44aa | 接続実証 ocr-single |
-| run-ref: 9cea65811a8c4db998d9dfcf54e849e6 | 接続実証 w05b-modal |
-| run-ref: 4ef38ba7f7df48bda95d3491925bb026 | 障害 X01 |
-| run-ref: c60fc8eba2a449a18df2fbc6bb105a50 | 障害 X02 |
-| run-ref: cb067afb49e04824b36c8e4a0e49c5a2 | 障害 X03 |
-| run-ref: bbcfc78b50294e0e86d15010ea69f840 | 障害 X04-write |
-| run-ref: be21694e38a443bf8d229414d8957e69 | 障害 X04-replace |
-| run-ref: c25f8a7004794159810f91752d1898cc | 障害 X05 |
+| run-ref: 3a60a10440724b72a6c5e6274cf531c5 | [世代2 superseded] 保護停止 ocr_custom_prompt.md |
+| run-ref: 222e3a0876394942a376f7f1dcb7fcdf | [世代2 superseded] 保護停止 pagefolio_settings.json |
+| run-ref: c6f94beab4e64cf596209cc22a6b656b | [世代2 superseded] 保護停止 ocr_summary_prompt.md |
+| run-ref: eed85c78bb854616b87140ee8d57ae6f | [世代2 superseded] 起動時保持 normal |
+| run-ref: 5021b5ccbaf348bb96411745ed4f5630 | [世代2 superseded] 起動時保持 corrupt |
+| run-ref: 27332ac0db33443dbf48cc8b53237baa | [世代2 superseded] 起動時保持 unreadable |
+| run-ref: 4b2a6810ce074698b2a83c7264c961b2 | [世代2 superseded] 更新 collision old(initial run tree) |
+| run-ref: baf05b8dc25a41078ad50ae4fd6e7d0a | [世代2 superseded] 更新 collision new(final) |
+| run-ref: f7315188f0954ecabc9c8d5ff2447af3 | [世代2 superseded] 更新 no_collision old(initial run tree) |
+| run-ref: 407c0a66363649389729d81b22ba79bb | [世代2 superseded] 更新 no_collision new(final) |
+| run-ref: cd4dc81af699415abcb3be8ad2cb44aa | [世代2 superseded] 接続実証 ocr-single |
+| run-ref: 9cea65811a8c4db998d9dfcf54e849e6 | [世代2 superseded] 接続実証 w05b-modal |
+| run-ref: 4ef38ba7f7df48bda95d3491925bb026 | [世代2 superseded] 障害 X01 |
+| run-ref: c60fc8eba2a449a18df2fbc6bb105a50 | [世代2 superseded] 障害 X02 |
+| run-ref: cb067afb49e04824b36c8e4a0e49c5a2 | [世代2 superseded] 障害 X03 |
+| run-ref: bbcfc78b50294e0e86d15010ea69f840 | [世代2 superseded] 障害 X04-write |
+| run-ref: be21694e38a443bf8d229414d8957e69 | [世代2 superseded] 障害 X04-replace |
+| run-ref: c25f8a7004794159810f91752d1898cc | [世代2 superseded] 障害 X05 |
+| run-ref: 25f54397fd024c9e88e0e1f6f17fead7 | [世代3 superseded] 保護停止 ocr_custom_prompt.md |
+| run-ref: 1204059f0d3142a183b10c384ff1d96f | [世代3 superseded] 保護停止 pagefolio_settings.json |
+| run-ref: 2e0441fcc32a46e4ba321e0a33037966 | [世代3 superseded] 保護停止 ocr_summary_prompt.md |
+| run-ref: a595886789f040579d5c3f241623b745 | [世代3 superseded] 起動時保持 normal |
+| run-ref: a0ca066b3aa54cb28b6f38301efffc95 | [世代3 superseded] 起動時保持 corrupt |
+| run-ref: 58ff032e11a841c6a59a7a1c0616a60d | [世代3 superseded] 起動時保持 unreadable |
+| run-ref: e02363d89ba84303b29ff60095f77f7d | [世代3 superseded] 更新 collision old(initial run tree) |
+| run-ref: db35587c8f33453e9a51878d7e2cb212 | [世代3 superseded] 更新 collision new(final) |
+| run-ref: 5654df8b2e7440cd947501059a95707f | [世代3 superseded] 更新 no_collision old(initial run tree) |
+| run-ref: 37ec71257ac448bd8e87eaab1ba4a668 | [世代3 superseded] 更新 no_collision new(final) |
+| run-ref: 0d73a0cdf5b8465f9970b3702c2653e7 | [世代3 superseded] 接続実証 ocr-single |
+| run-ref: cf52cf1df4db42a3b384db6f13a6c103 | [世代3 superseded] 接続実証 w05b-modal |
+| run-ref: a7614753199f4b4e98b34fe2e595d25b | [世代3 superseded] 障害 X01 |
+| run-ref: c89865557c764799a7dfd9fd8f3f1e61 | [世代3 superseded] 障害 X02 |
+| run-ref: f1ca0ebc157a420d9b5261893f5f69a9 | [世代3 superseded] 障害 X03 |
+| run-ref: fe3add65702a40c98798a0970e09f58c | [世代3 superseded] 障害 X04-write |
+| run-ref: 56338ac54a164624a41e93c16e6682b1 | [世代3 superseded] 障害 X04-replace |
+| run-ref: 387b095a12db4f4e82d299061686e5c6 | [世代3 superseded] 障害 X05 |
+| run-ref: b26038b9f2b8416c973999963d00ae34 | [世代4 superseded] 保護停止 ocr_custom_prompt.md |
+| run-ref: a629a1461d59476194d2e4cbe827fd73 | [世代4 superseded] 保護停止 pagefolio_settings.json |
+| run-ref: 6c5d3d9975de4f1cbe66da9ea0ec8ee8 | [世代4 superseded] 保護停止 ocr_summary_prompt.md |
+| run-ref: d5920b826931450790e37505c22ef9a8 | [世代4 superseded] 起動時保持 normal |
+| run-ref: e5482609351a4315911f49fcf32c9551 | [世代4 superseded] 起動時保持 corrupt |
+| run-ref: e4cd696760d144a1b6919d216a9caf3f | [世代4 superseded] 起動時保持 unreadable |
+| run-ref: 587de1d767ae48d08249c15e31351acd | [世代4 superseded] 更新 collision old(initial run tree) |
+| run-ref: 72430bf00e444418aad97b98a86a9269 | [世代4 superseded] 更新 collision new(final) |
+| run-ref: 92d5de34749f4021b17de797023ebb52 | [世代4 superseded] 更新 no_collision old(initial run tree) |
+| run-ref: f97103c7354440659c886e604f6877d2 | [世代4 superseded] 更新 no_collision new(final) |
+| run-ref: 6dd0b4d0997b4b8eb0ccb665ab067123 | [世代4 superseded] 接続実証 ocr-single |
+| run-ref: 1125b7a0cfad4a4ab00a08b522e5aab1 | [世代4 superseded] 接続実証 w05b-modal |
+| run-ref: d390155a909548a0b6173ea8c36af9e3 | [世代4 superseded] 障害 X01 |
+| run-ref: 07ac51ea8e0e4a9694cc2a4396272e14 | [世代4 superseded] 障害 X02 |
+| run-ref: 07375ba737604156b77ba5fa6f0daf6b | [世代4 superseded] 障害 X03 |
+| run-ref: 8729b769b9ab45648a63714b79b1fce7 | [世代4 superseded] 障害 X04-write |
+| run-ref: 9dde180c8c62403eac3e42dd6f274e12 | [世代4 superseded] 障害 X04-replace |
+| run-ref: 86e97d624b3147bca01e0207f0fcfe36 | [世代4 superseded] 障害 X05 |
+| run-ref: b6ed08acd2454654879b4a0952c2ebdb | 保護停止 ocr_custom_prompt.md |
+| run-ref: eab75034974748a4bc444f9ea6738658 | 保護停止 pagefolio_settings.json |
+| run-ref: b0571384b9ef462b8ce43056e9d6db79 | 保護停止 ocr_summary_prompt.md |
+| run-ref: 13658902ed544768be2107ff590520f7 | 起動時保持 normal |
+| run-ref: d9f602adb6524bb5b6b807058d3ebef5 | 起動時保持 corrupt |
+| run-ref: 6ff7eb51b41a452188ad7b425c9bfed1 | 起動時保持 unreadable |
+| run-ref: 916bee37088249eebd9ba8b8e11e287e | 更新 collision old(initial run tree) |
+| run-ref: 8b7f10e2a8d6482786a1d9fd428b6dc5 | 更新 collision new(final) |
+| run-ref: caaa1bc305344ca4a3f4f0c72f0d64a6 | 更新 no_collision old(initial run tree) |
+| run-ref: 1b1098e4c7604e41ab192522cc4dc97d | 更新 no_collision new(final) |
+| run-ref: 18986e4dd7b341bd81d4a6d4b0da8afd | 接続実証 ocr-single |
+| run-ref: af629ccbe3514294a7814e1de2e98463 | 接続実証 w05b-modal |
+| run-ref: 4f1fc4d6a3dd456c8249f2a4fdbdfe9e | 障害 X01 |
+| run-ref: 808b12639c5c41b7bd277400ebd74b2a | 障害 X02 |
+| run-ref: e9e4c74dc45a46019bcdb0c27190d6df | 障害 X03 |
+| run-ref: b1d878ffa5f54c6f844b0ff307427edb | 障害 X04-write |
+| run-ref: 9bd9794377574f20ac467083af67df51 | 障害 X04-replace |
+| run-ref: c9c52a77b9084ebb8c6f829abcebc6c9 | 障害 X05 |
+| run-ref: 034da46ced8d4c02b001c1350ad4cfbf | 過去世代を含む原記録（現行受入への昇格なし） |
+| run-ref: 5787245f4ffc41ad8142f14f7fb7eebd | 過去世代を含む原記録（現行受入への昇格なし） |
+| run-ref: f597309fe4ac4f958994fc9000bef612 | 過去世代を含む原記録（現行受入への昇格なし） |
+| run-ref: 0c289c364a25402e9aa514b5be8fe2c2 | 過去世代を含む原記録（現行受入への昇格なし） |
+| run-ref: f7a78d95a4cc442b815d8e79c001d488 | 過去世代を含む原記録（現行受入への昇格なし） |
+| run-ref: 2b7a53f82f014af294721a2c96ee6f2a | 過去世代を含む原記録（現行受入への昇格なし） |
+| run-ref: 65468902bf4f4efeb4f880f83f302acc | 過去世代を含む原記録（現行受入への昇格なし） |
+| run-ref: eea9ec4a38e044f989f27d52a9a185de | 過去世代を含む原記録（現行受入への昇格なし） |
+| run-ref: 64058e97276540f38e6ae5c6f4052f5d | 過去世代を含む原記録（現行受入への昇格なし） |
+| run-ref: db2f16a9041546caaf9bc9d5eb015683 | 過去世代を含む原記録（現行受入への昇格なし） |
+| run-ref: 2354dd0e4c934de6a44fc624f62e01da | 過去世代を含む原記録（現行受入への昇格なし） |
+| run-ref: ca66fbc00cdf49958d7d0f801949d934 | 過去世代を含む原記録（現行受入への昇格なし） |
+| run-ref: bbe088a0fd8344a688d81ec4eaa66d89 | 過去世代を含む原記録（現行受入への昇格なし） |
+| run-ref: efbcd9bebc234e5ba8b4029d2d1a8b97 | 過去世代を含む原記録（現行受入への昇格なし） |
+| run-ref: d04fea5666194452b2cd65aa4a5ce20e | 過去世代を含む原記録（現行受入への昇格なし） |
+| run-ref: 2680bdf5bd9943cbb99c3a7e63e78e97 | 過去世代を含む原記録（現行受入への昇格なし） |
+| run-ref: d04061c65a42406c90736c4a3e183368 | 過去世代を含む原記録（現行受入への昇格なし） |
+| run-ref: 31d4388e2cbb4f80944a015b67bc3234 | 過去世代を含む原記録（現行受入への昇格なし） |
 
 <!-- run-refs:end -->
 
