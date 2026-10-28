@@ -68,8 +68,8 @@ def relative_links(text):
 
 
 class TestVersionAndDocs:
-    def test_app_version_is_v1_10_0(self):
-        assert app_version() == "v1.10.0"
+    def test_app_version_is_v1_10_2(self):
+        assert app_version() == "v1.10.2"
 
     def test_readme_badge_matches_app_version(self):
         assert f"badge/version-{app_version()}-blue" in read("README.md")

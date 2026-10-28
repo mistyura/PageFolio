@@ -19,6 +19,7 @@ _provider_display_name / _provider_model_name を通して「表示される値�
 """
 
 import types
+from unittest.mock import Mock
 
 import pytest
 
@@ -243,3 +244,71 @@ class TestApplyLlmSettingsRefreshesDisplay:
 
         assert calls == [1]
         assert d.progress_var.get()  # 失敗通知（ocr_provider_rebuild_error）が出ている
+
+
+@pytest.fixture(params=["lmstudio", "claude", "gemini"])
+def dialog_with_results(request):
+    """完了済み本文を保持したまま設定を切り替える実経路。"""
+    from pagefolio.ocr import build_provider
+    from pagefolio.ocr_dialog import OCRDialog
+
+    settings = _base_settings(request.param)
+    d = _make_dialog(settings, build_provider(settings, api_key="test"), dict(settings))
+    d.results = {0: "送信してはいけない既存の本文"}
+    d.summary_result = "既存サマリ"
+    d._started = True
+    d._done = True
+    d._summary_running = False
+    d.summary_btn = Mock()
+    d._update_summary_btn_state = types.MethodType(
+        OCRDialog._update_summary_btn_state, d
+    )
+    return d
+
+
+def test_off_disables_summary_and_clears_provider_display(dialog_with_results):
+    d = dialog_with_results
+    d._apply_llm_settings({"ocr_provider": "off"})
+
+    d.summary_btn.state.assert_called_with(["disabled"])
+    assert d._provider_value_label.text == "off"
+    assert d._model_value_label.text == ""
+    assert d.results == {0: "送信してはいけない既存の本文"}
+    assert d.summary_result == "既存サマリ"
+
+
+@pytest.mark.parametrize("explicit_off", [False, True])
+def test_off_summary_entry_rejects_before_reading_text(
+    dialog_with_results, monkeypatch, explicit_off
+):
+    d = dialog_with_results
+    if not explicit_off:
+        d._apply_llm_settings({"ocr_provider": "off"})
+    # 直接呼出しでも本文構築・キー照会・確認・worker起動に入ってはいけない。
+    d._format_pages_text = Mock(side_effect=AssertionError("本文構築に到達"))
+    d._check_cloud_api_key = Mock()
+    d._summary_worker = Mock()
+    showerror = Mock()
+    monkeypatch.setattr("pagefolio.ocr_dialog.messagebox.showerror", showerror)
+    snapshot_before = d._active_ocr_settings
+
+    d._on_summary(settings={"ocr_provider": "off"} if explicit_off else None)
+
+    d._format_pages_text.assert_not_called()
+    d._check_cloud_api_key.assert_not_called()
+    d._summary_worker.assert_not_called()
+    showerror.assert_not_called()
+    assert d._active_ocr_settings is snapshot_before
+    assert not d._summary_running
+    assert d.results == {0: "送信してはいけない既存の本文"}
+    assert d.summary_result == "既存サマリ"
+
+
+def test_summary_reenabled_after_off_keeps_results(dialog_with_results):
+    d = dialog_with_results
+    d._apply_llm_settings({"ocr_provider": "off"})
+    d._apply_llm_settings({"ocr_provider": "lmstudio"})
+
+    d.summary_btn.state.assert_called_with(["!disabled"])
+    assert d._provider_value_label.text == L["ocr_provider_name_lmstudio"]
+    assert d.results == {0: "送信してはいけない既存の本文"}

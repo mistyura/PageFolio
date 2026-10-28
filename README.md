@@ -4,7 +4,7 @@
 **PDF ページ整理ツール** — Python + Tkinter 製の Windows 11 向け GUI アプリケーション。
 テキスト編集や注釈追加は行わず、**ページ単位の操作**（回転・削除・トリミング・結合・分割・OCR など）に特化しています。
 
-![Version](https://img.shields.io/badge/version-v1.10.0-blue)
+![Version](https://img.shields.io/badge/version-v1.10.2-blue)
 ![Stable](https://img.shields.io/badge/status-stable-green)
 ![License](https://img.shields.io/badge/license-MIT-lightgrey)
 
@@ -50,7 +50,7 @@ python pagefolio.py
 
 ## 配布版（EXE）の使い方
 
-配布物は版番号付きのフォルダー（標準の展開先は `PageFolio-v1.10.0`）です。配布元を直接起動せず、フォルダー全体を作業用の別フォルダーへコピーしてから `PageFolio.exe` を実行してください。`PageFolio.exe` と `_internal/` は同じ階層に置いたままにします。同梱の [はじめに.md](distribution/はじめに.md) に最短の手順があり、詳細は [設定リファレンス](docs/CONFIGURATION.md) を参照してください。
+配布物は版番号付きのフォルダー（展開先の例: `PageFolio-v1.10.2`）です。配布元を直接起動せず、フォルダー全体を作業用の別フォルダーへコピーしてから `PageFolio.exe` を実行してください。`PageFolio.exe` と `_internal/` は同じ階層に置いたままにします。同梱の [はじめに.md](distribution/はじめに.md) に最短の手順があり、詳細は [設定リファレンス](docs/CONFIGURATION.md) を参照してください。
 
 ### プロンプトのサンプル
 
@@ -65,7 +65,7 @@ OCR 用とサマリ用は別々に用意されています。必要な方だけ�
 
 ### 新しい版への更新
 
-1. 新しい版を、旧フォルダーとは別のフォルダー（例: `PageFolio-v1.10.0`）へ展開します。旧フォルダーは削除せず残します。
+1. 新しい版を、旧フォルダーとは別のフォルダー（例: `PageFolio-v1.10.2`）へ展開します。旧フォルダーは削除せず残します。
 2. 引き継ぎたい `pagefolio_settings.json` と、実利用のプロンプト（`ocr_custom_prompt.md` / `ocr_summary_prompt.md`）だけを新しいフォルダーへコピーします。新しいフォルダーに同名ファイルが既にある場合はコピーを止め、内容を確認して選びます。上書きしない運用です。
 3. プラグインは自動では移行されません。旧フォルダーを残したまま、[プラグイン開発ガイド](docs/PLUGINS.md) の導入手順で新しいフォルダーへ入れ直してください。
 4. 問題が起きた場合は、旧フォルダーの `PageFolio.exe` を起動すれば元の版へ戻れます。

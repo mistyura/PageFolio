@@ -818,7 +818,8 @@ class OCRDialog(tk.Toplevel):
         プロバイダは構造的に無効のまま・三重ガードの 1 段目）。
         """
         ok = (
-            bool(self.results)
+            self.app.settings.get("ocr_provider") != "off"
+            and bool(self.results)
             and not self._summary_running
             and getattr(self.provider, "supports_text_prompt", False)
         )
@@ -888,6 +889,8 @@ class OCRDialog(tk.Toplevel):
         # getattr で未設定（テスト用の素の fake オブジェクト等）にも対応する。
         settings = getattr(self, "_active_ocr_settings", None) or self.app.settings
         name = settings.get("ocr_provider", "")
+        if name == "off":
+            return name
         if isinstance(self.provider, ClaudeProvider):
             return self._L["ocr_provider_name_claude"]
         if isinstance(self.provider, GeminiProvider):
@@ -912,12 +915,9 @@ class OCRDialog(tk.Toplevel):
             return settings.get("claude_model", "claude-sonnet-4-6")
         if name == "gemini":
             return settings.get("gemini_model", "gemini-2.5-flash")
-        if name == "tesseract":
+        if name in ("tesseract", "off"):
             return ""
-        # 表示専用（プロバイダを生成しない）ため、"off" もここでは変更しない
-        # （V190-SAFE-03 の対象は provider を生成/差し替える経路のみ・RESEARCH.md
-        # Pitfall 2）。model_var のライブ値をそのまま表示する。
-        if name in ("lmstudio", "", "off"):
+        if name in ("lmstudio", ""):
             try:
                 return self.model_var.get().strip()
             except tk.TclError:
@@ -2219,6 +2219,14 @@ class OCRDialog(tk.Toplevel):
             return
         if not self.results:
             return
+        # off では旧 provider を保持するため、その能力だけで実行を許可しない。
+        # フォールバック候補も本文構築・キー照会・状態変更より前に確認する。
+        s = settings if settings is not None else dict(self.app.settings)
+        if (
+            self.app.settings.get("ocr_provider") == "off"
+            or s.get("ocr_provider") == "off"
+        ):
+            return
         # 三重ガードの 2 段目（1 段目はボタン無効化・3 段目は NotImplementedError）
         if not getattr(self.provider, "supports_text_prompt", False):
             messagebox.showerror(
@@ -2240,7 +2248,6 @@ class OCRDialog(tk.Toplevel):
         # 02-REVIEW WR-02 修正: _on_run と同様、settings 省略時は self.app.settings
         # を直接エイリアスせず dict() でコピーする。「self.app.settings は一切
         # 書き換えない」不変条件（Pitfall 4）の防御的コピーを _on_run と揃える。
-        s = settings if settings is not None else dict(self.app.settings)
         self._active_ocr_settings = s
         name = s.get("ocr_provider", "")
         # V174-2: 外部 md ファイル（exe と同階層）があれば設定欄より優先

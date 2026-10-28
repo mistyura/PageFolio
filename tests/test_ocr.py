@@ -2932,6 +2932,7 @@ class TestUpdateSummaryBtnState:
 
         recorded = {}
         fake = types.SimpleNamespace(
+            app=types.SimpleNamespace(settings={"ocr_provider": "lmstudio"}),
             results=results,
             provider=provider,
             _summary_running=summary_running,
