@@ -1,10 +1,10 @@
 ---
 phase: 05-config-notification
-verified: 2026-10-24T11:47:08Z
+verified: 2026-10-28T06:10:34Z
 status: passed
 score: 23/23 must-haves verified
-covered_files: [".planning/phases/05-config-notification/05-01-PLAN.md",".planning/phases/05-config-notification/05-01-SUMMARY.md",".planning/phases/05-config-notification/05-02-PLAN.md",".planning/phases/05-config-notification/05-02-SUMMARY.md",".planning/phases/05-config-notification/05-03-PLAN.md",".planning/phases/05-config-notification/05-03-SUMMARY.md",".planning/phases/05-config-notification/05-04-PLAN.md",".planning/phases/05-config-notification/05-04-SUMMARY.md",".planning/phases/05-config-notification/05-EVIDENCE.json",".planning/phases/05-config-notification/05-REVIEW-DISPOSITION.md",".planning/phases/05-config-notification/05-REVIEW.md",".planning/phases/05-config-notification/05-SECURITY.md",".planning/phases/05-config-notification/05-UAT.md",".planning/phases/05-config-notification/05-VALIDATION.md",".planning/phases/05-config-notification/05-focus-proof-final/pytest.txt",".planning/phases/05-config-notification/05-focus-proof-final/status.json",".planning/phases/05-config-notification/05-focus-proof-inputs.json","docs/CONFIGURATION.md","pagefolio.py","pagefolio/__init__.py","pagefolio/__main__.py","pagefolio/app.py","pagefolio/batch_ocr_state.py","pagefolio/constants.py","pagefolio/dialogs/__init__.py","pagefolio/dialogs/about.py","pagefolio/dialogs/batch_ocr.py","pagefolio/dialogs/export_images.py","pagefolio/dialogs/llm_config/__init__.py","pagefolio/dialogs/llm_config/dialog.py","pagefolio/dialogs/llm_config/model_fetch.py","pagefolio/dialogs/llm_config/sections.py","pagefolio/dialogs/merge.py","pagefolio/dialogs/password.py","pagefolio/dialogs/plugin.py","pagefolio/dialogs/settings.py","pagefolio/dialogs/shortcuts.py","pagefolio/dnd.py","pagefolio/file_drop.py","pagefolio/file_ops.py","pagefolio/lang.py","pagefolio/md_render.py","pagefolio/ocr.py","pagefolio/ocr_dialog.py","pagefolio/ocr_engine.py","pagefolio/ocr_fallback.py","pagefolio/ocr_pipeline.py","pagefolio/ocr_providers/__init__.py","pagefolio/ocr_providers/base.py","pagefolio/ocr_providers/catalog.py","pagefolio/ocr_providers/claude.py","pagefolio/ocr_providers/errors.py","pagefolio/ocr_providers/gemini.py","pagefolio/ocr_providers/lmstudio.py","pagefolio/ocr_providers/ollama.py","pagefolio/ocr_providers/openai_provider.py","pagefolio/ocr_providers/registry.py","pagefolio/ocr_providers/runpod.py","pagefolio/ocr_providers/tesseract.py","pagefolio/page_ops.py","pagefolio/pagination.py","pagefolio/plugins.py","pagefolio/print_ops.py","pagefolio/redact_ops.py","pagefolio/settings.py","pagefolio/startup_control.py","pagefolio/startup_focus.py","pagefolio/startup_notice.py","pagefolio/startup_win32.py","pagefolio/themes.py","pagefolio/thumb_cache.py","pagefolio/toast.py","pagefolio/ui_builder.py","pagefolio/undo_store.py","pagefolio/viewer.py","plugins/page_info.py","pyproject.toml","requirements.txt","tests/__init__.py","tests/config_notice_support.py","tests/conftest.py","tests/test_batch_ocr_dialog.py","tests/test_batch_ocr_state.py","tests/test_config_notification.py","tests/test_export_images.py","tests/test_font_hardcode_guard.py","tests/test_gsd_dod.py","tests/test_imports.py","tests/test_lang_parity.py","tests/test_md_render.py","tests/test_ocr.py","tests/test_ocr_dialog_center.py","tests/test_ocr_engine.py","tests/test_ocr_fallback.py","tests/test_ocr_pipeline.py","tests/test_ocr_provider_catalog.py","tests/test_ocr_providers.py","tests/test_page_polish.py","tests/test_pagination.py","tests/test_password.py","tests/test_pdf_ops.py","tests/test_plugin_dialog_wheel.py","tests/test_plugins.py","tests/test_print.py","tests/test_prompt_templates.py","tests/test_provider_ui.py","tests/test_save_overwrite.py","tests/test_selection_invariant.py","tests/test_settings_keyguard.py","tests/test_shortcuts_dialog.py","tests/test_source_keyguard.py","tests/test_startup_control.py","tests/test_startup_focus.py","tests/test_startup_notice.py","tests/test_startup_windows.py","tests/test_thumb_cache.py","tests/test_toast.py","tests/test_undo_stress.py","tests/test_utils.py","tests/test_v150_regression.py","tests/test_viewer.py","開発履歴.md"]
-covered_digest: "v3:sha256:5e1b3d4ce8b5f5eeed41dcf971459d5fc51edf2105dbbae328e9d52614470d31"
+covered_files: [".planning/debug/quality-gate-unblock-20261028/environment.json",".planning/debug/quality-gate-unblock-20261028/full-0.stdout.txt",".planning/debug/quality-gate-unblock-20261028/full.json",".planning/debug/quality-gate-unblock-20261028/full.xml",".planning/phases/05-config-notification/05-01-PLAN.md",".planning/phases/05-config-notification/05-01-SUMMARY.md",".planning/phases/05-config-notification/05-02-PLAN.md",".planning/phases/05-config-notification/05-02-SUMMARY.md",".planning/phases/05-config-notification/05-03-PLAN.md",".planning/phases/05-config-notification/05-03-SUMMARY.md",".planning/phases/05-config-notification/05-04-PLAN.md",".planning/phases/05-config-notification/05-04-SUMMARY.md",".planning/phases/05-config-notification/05-EVIDENCE.json",".planning/phases/05-config-notification/05-REVIEW-DISPOSITION.md",".planning/phases/05-config-notification/05-REVIEW.md",".planning/phases/05-config-notification/05-SECURITY.md",".planning/phases/05-config-notification/05-UAT.md",".planning/phases/05-config-notification/05-UI-REVIEW.md",".planning/phases/05-config-notification/05-VALIDATION.md",".planning/phases/05-config-notification/05-focus-proof-final/pytest.txt",".planning/phases/05-config-notification/05-focus-proof-final/status.json",".planning/phases/05-config-notification/05-focus-proof-inputs.json","docs/CONFIGURATION.md","pagefolio.py","pagefolio/__init__.py","pagefolio/__main__.py","pagefolio/app.py","pagefolio/batch_ocr_state.py","pagefolio/constants.py","pagefolio/dialogs/__init__.py","pagefolio/dialogs/about.py","pagefolio/dialogs/batch_ocr.py","pagefolio/dialogs/export_images.py","pagefolio/dialogs/llm_config/__init__.py","pagefolio/dialogs/llm_config/dialog.py","pagefolio/dialogs/llm_config/model_fetch.py","pagefolio/dialogs/llm_config/sections.py","pagefolio/dialogs/merge.py","pagefolio/dialogs/password.py","pagefolio/dialogs/plugin.py","pagefolio/dialogs/settings.py","pagefolio/dialogs/shortcuts.py","pagefolio/dnd.py","pagefolio/file_drop.py","pagefolio/file_ops.py","pagefolio/lang.py","pagefolio/md_render.py","pagefolio/ocr.py","pagefolio/ocr_dialog.py","pagefolio/ocr_engine.py","pagefolio/ocr_fallback.py","pagefolio/ocr_pipeline.py","pagefolio/ocr_providers/__init__.py","pagefolio/ocr_providers/base.py","pagefolio/ocr_providers/catalog.py","pagefolio/ocr_providers/claude.py","pagefolio/ocr_providers/errors.py","pagefolio/ocr_providers/gemini.py","pagefolio/ocr_providers/lmstudio.py","pagefolio/ocr_providers/ollama.py","pagefolio/ocr_providers/openai_provider.py","pagefolio/ocr_providers/registry.py","pagefolio/ocr_providers/runpod.py","pagefolio/ocr_providers/tesseract.py","pagefolio/page_ops.py","pagefolio/pagination.py","pagefolio/plugins.py","pagefolio/print_ops.py","pagefolio/redact_ops.py","pagefolio/settings.py","pagefolio/startup_control.py","pagefolio/startup_focus.py","pagefolio/startup_notice.py","pagefolio/startup_win32.py","pagefolio/themes.py","pagefolio/thumb_cache.py","pagefolio/toast.py","pagefolio/ui_builder.py","pagefolio/undo_store.py","pagefolio/viewer.py","plugins/page_info.py","pyproject.toml","requirements.txt","tests/__init__.py","tests/config_notice_support.py","tests/conftest.py","tests/test_batch_ocr_dialog.py","tests/test_batch_ocr_state.py","tests/test_config_notification.py","tests/test_export_images.py","tests/test_font_hardcode_guard.py","tests/test_gsd_dod.py","tests/test_imports.py","tests/test_lang_parity.py","tests/test_md_render.py","tests/test_ocr.py","tests/test_ocr_dialog_center.py","tests/test_ocr_engine.py","tests/test_ocr_fallback.py","tests/test_ocr_pipeline.py","tests/test_ocr_provider_catalog.py","tests/test_ocr_providers.py","tests/test_page_polish.py","tests/test_pagination.py","tests/test_password.py","tests/test_pdf_ops.py","tests/test_plugin_dialog_wheel.py","tests/test_plugins.py","tests/test_print.py","tests/test_prompt_templates.py","tests/test_provider_ui.py","tests/test_save_overwrite.py","tests/test_selection_invariant.py","tests/test_settings_keyguard.py","tests/test_shortcuts_dialog.py","tests/test_source_keyguard.py","tests/test_startup_control.py","tests/test_startup_focus.py","tests/test_startup_notice.py","tests/test_startup_windows.py","tests/test_thumb_cache.py","tests/test_toast.py","tests/test_undo_stress.py","tests/test_utils.py","tests/test_v150_regression.py","tests/test_viewer.py","開発履歴.md"]
+covered_digest: "v4:sha256:d027af6f52ce03646fecda0710cdbe4ecb15c1c201e15950dc5b893c675fe6be"
 behavior_unverified: 0
 overrides_applied: 0
 flagged_prohibitions: 0
@@ -15,6 +15,8 @@ re_verification:
   gaps_closed: []
   gaps_remaining: []
   regressions: []
+review_open: 1
+release_ready: false
 decision_coverage:
   honored: 21
   total: 22
@@ -38,6 +40,81 @@ deferred:
 ---
 
 # Phase 5: 設定読込・保存失敗の通知 検証報告
+
+## 2026-10-28 再検証（現行判定）
+
+**Phase Goal:** 利用者が設定の読込・保存失敗を正しく把握でき、元の設定ファイルと編集操作を失わない。
+**Verified:** 2026-10-28T06:10:34Z
+**Status:** passed、23/23 must-haves verified、behavior_unverified 0、overrides 0。これは Phase 05 の設定 I/O・通知契約に対する判定であり、コードレビューの CR-03 解消、Phase 06 の受入、出荷承認を意味しない。
+
+前回報告は `verification.status` が `stale` を返した。対象の製品・試験等6件（`pagefolio/__main__.py`、`pagefolio/constants.py`、`pagefolio/startup_win32.py`、`requirements.txt`、`tests/test_startup_windows.py`、`開発履歴.md`）に加え、REVIEW・DISPOSITION・SECURITY・VALIDATION の証拠4件が更新された。下記は23件を現行実装と照合した結果である。後続の「2026-10-24検証履歴」は削除せず残すが、そこでの「最新2014件」「review clean」「v1.10.0」等の時点表現を現況へ転用しない。
+
+### Observable Truths（ROADMAP 4件＋PLAN 19件）
+
+| # | Must-have | 判定 | 現行の根拠 |
+|---|---|---|---|
+| 1 | SC1 読込分類と画面構築後通知 | VERIFIED | `settings.py:261` の実open・分類、`app.py` のUI後通知、`test_config_notification.py` の実App/ToastとH01〜03 |
+| 2 | SC2 全保存画面の失敗通知と偽成功抑止 | VERIFIED | `app.py:683` の保存bool消費と固定通知、各保存元の共通呼出し、H02/04/05/11 |
+| 3 | SC3 読込失敗・保存途中失敗で原本保護 | VERIFIED | `app.py` の自動保存抑止、`settings.py:352` の排他的tmp→replace、原本bytes・tmp試験 |
+| 4 | SC4 FIFO・再構築・編集継続 | VERIFIED | `app.py:521` 以降のqueue/event/generation/可視時間、`toast.py`、100件FIFO試験とH04/06〜08/13/14 |
+| 5 | DEP-05条件付き実行と再発時停止 | VERIFIED | ROADMAP実行依存、05-02-CHECKPOINT、05-VALIDATION。原因解決・出荷承認との混同なし |
+| 6 | 破損起動後の非モーダル通知と編集継続 | VERIFIED | `app.py:627` のToast、実PDF回転/Undo/Redo試験、H01 |
+| 7 | 不存在・JSON・UTF-8・形状・OSError分類 | VERIFIED | `settings.py:308` 以降と分類試験。不存在はmissing、破損はcorrupt、読取例外はunreadable |
+| 8 | 読込イベントはセッションで一つ | VERIFIED | `app.py:521` の登録済flagと再表示試験 |
+| 9 | 読込失敗中の終了自動保存抑止・退避なし | VERIFIED | `app.py` の保護状態と終了確認、原本bytes・bak不在試験 |
+| 10 | 一般設定失敗のメモリ保持・通知・偽成功なし | VERIFIED | `app.py:873` 付近の反映→保存結果→再構築、実replace失敗試験とH04/05 |
+| 11 | 原本/tmp保護、corrupt解除、unreadable抑止 | VERIFIED | `settings.py:352`、`app.py:683`、同セッション権限回復・再起動試験 |
+| 12 | 終了No/Yesと初回失敗後の終了保留 | VERIFIED | `app.py` の確認先行、保存失敗flag、終了状態列試験とH09/10 |
+| 13 | 失敗ごと独立event、同文言を黙殺しない | VERIFIED | `app.py:521` のseq/append、100件順序・消化試験 |
+| 14 | 再構築・言語・カテゴリ競合で未消化維持 | VERIFIED | `app.py:603`、`ui_builder.py:188`、`toast.py` と可視時間/旧callback/実Tk試験 |
+| 15 | 全保存元の共通失敗通知とメモリ値保持 | VERIFIED | app・OCR・Plugin・Shortcuts・Redact・Viewer の `_persist_settings` 実呼出し、全caller棚卸し試験 |
+| 16 | corrupt明示保存とunreadable明示抑止 | VERIFIED | `app.py:683` の分岐、各入口の低層I/O回数・通知試験 |
+| 17 | Plugin開閉・無変更rescan無保存、同値Apply再試行 | VERIFIED | `dialogs/plugin.py` の差分判定とclose、操作試験、H12 |
+| 18 | 一操作一保存・一失敗一event・再構築後表示 | VERIFIED | 共通ownerとqueue、保存回数試験、H04/07/13 |
+| 19 | 内側LLM Apply独立・JSON一回書込 | VERIFIED | `dialogs/settings.py:224` の専用callback、`app.py:862`、二重保存回帰試験 |
+| 20 | 隔離シナリオが実設定/PDF/prompt/pluginsを保護 | VERIFIED（自動隔離範囲） | `tests/config_notice_support.py` のresolver差替えとhash検査、実PDFはメモリ内。手動6起動の終了hashは未確認 |
+| 21 | 読込→保存失敗→再構築→回復→終了の状態列 | VERIFIED | `TestConfigAcceptance` の原本bytes、値、4event、Document/Undo/Redo identity |
+| 22 | PDF保存/印刷retryとDocument同一性 | VERIFIED | `test_toast.py` と `test_pdf_ops.py` の既存retry/閉鎖後安全条件を現行全件で実行 |
+| 23 | 実測・未実施・probeを区別し全件/Nyquist前に完了させない | VERIFIED | 05-VALIDATIONの4/4要件・9/9タスク・gap0、今回全件入力照合。Phase 06人手/出荷は未実施と区別 |
+
+**Score:** 23/23。各状態遷移は該当する既存試験のassertと、今回入力の全件実行結果を組み合わせて判定した。新規pytest/GUIは実行していない。前回の禁止事項2件は05-UAT Test 1/2の利用者による項目別passを保持し、H01〜H14の14 passも再実施扱いにはしない。新たな人手必須項目は0。
+
+### 実装・配線・データ流
+
+`query verify.artifacts` は各PLANで4/4、4/4、3/3、5/5（宣言16/16、すべてexit0）。`query verify.key-links` は2/2、2/2、3/3、2/2（計9/9、すべてexit0）。CLIのpattern一致だけに依存せず、読込 `open/json.load → SettingsLoadResult.status → App queue → ToastManager.show`、保存 `UI handler → app._persist_settings → settings._save_settings → bool → 通知`、再構築 `App deque → UIBuilder.on_idle → 新Toast` を現行コードで追った。画面に出る固定文言は `lang.py` の日英4キーで、実I/O結果が選択する。空の初期queueはイベント追加で埋まるためstubではない。キー値や例外本文を通知へ補間する経路は見つからない。
+
+### 自動試験・品質ゲート
+
+今回のverifierが `.planning/debug/quality-gate-unblock-20261028/full.json`、`full.xml`、`full-0.stdout.txt`、`environment.json` を読んだ。2026-10-28T04:08:28Z開始の単一pytestはexit 0、**2071 passed / 2 warnings / 480.86秒**、失敗0・error0・skip0。JSONはbefore/after変更0。verifier独立のSHA-256再照合では `pagefolio/`・`tests/`・依存定義115入力に不一致0。05-VALIDATIONが記録した全146入力の差分は `.gitignore`、`docs/DEVELOPMENT.md`、`CONTRIBUTING.md`、`開発履歴.md` のみで、製品・試験・依存は一致。現行JUnitで `test_config_notification.py` 143件、`test_settings_keyguard.py` 26件、`test_toast.py` 38件、`test_provider_ui.py` 236件、`test_ocr.py` 165件、`test_pagination.py` 84件は各failure/error/skip 0。変更6件のdiffは起動wake・Win32監査・版番号v1.10.1・試験監査・履歴に限り、設定I/O・Toast・全保存ownerの実装を変更していない。既存の2071件成功はCR-03の解消根拠ではない。
+
+結び付く試験のdisabled/xfail、循環oracle、未参照のTBD/FIXME/XXX債務を調べ、Phase 05 must-haveを失効させるものは検出しなかった。`return None` 等の一致は既存の分岐戻り値であり空実装ではない。05-04 PLANのhuman-checkは05-UATのH01〜H14で受入済み。scriptsの実行対象`probe-*.sh`宣言はなく、descriptor不明2件・未分類edge4件は実行PASSと解釈しない。UIは利用者が今回既存の静的22/24評価再利用を選択し、追加GUIは行っていない。H01〜H14と禁止事項の意味評価2件は既存の人手passとして保持する。静的UI点数を実画面・高DPI・実EXEの独立合格と呼ばない。
+
+### 要件と CR-03 の境界
+
+| 要件 | 判定 | 対応truth | CR-03との関係 |
+|---|---|---|---|
+| V110-CFG-01 | SATISFIED | 1、6〜9 | 読込失敗分類・起動後通知。CR-03はOCR結果取得後の`off`切替で、読込失敗を扱わない |
+| V110-CFG-02 | SATISFIED | 2、10、12、15〜19 | 各保存元の**保存失敗**通知・非永続・偽成功抑止。CR-03の`_apply_llm_settings`は`app._persist_settings`を呼び、その成否通知経路は残る。サマリ実行可否はこの要件に規定されない |
+| V110-CFG-03 | SATISFIED | 3、9、11、16、20、21 | 原本・tmp・自動保存保護。CR-03は設定JSONの上書きやPDF編集内容の喪失を起こす経路ではない |
+| V110-CFG-04 | SATISFIED | 4、8、13、14、18、21、22 | 設定エラー通知のFIFO・モーダル/再構築下の編集継続。CR-03は設定エラー通知を連打/消失させる指摘ではない |
+
+PLANの和集合とREQUIREMENTSのPhase 05割当はこの4IDで一致し、孤立要件0。CR-03は**実在する未修正のcritical**である。`ocr_dialog.py:1193`の`off`分岐は旧providerを保持し、`:813`のsummaryボタン判定と`:2204`の入口に`off`判定がない。旧local providerなら`:2379`から`complete_text_ex(full_text, prompt)`へ進める。05-REVIEWのheadless実メソッド確認は有効表示とcloud false・worker経路までで、実ネット送信はしていない。**Phase 05の4成功基準・19追加truth・2禁止事項のどれにも「OCR無効化後のサマリ禁止」はなく、CR-03をPhase 05のFAILEDへ付け替えない。** 一方、製品修正・回帰・再レビュー待ちの未解決欠陥であり、review clean、リリース可能、CR-03解消の主張はしない。レビューは `critical 1 / open 1` のまま。
+
+### 決定・延期・残存制約
+
+`check.decision-coverage-verify` はhonored 21/22、D-22のみ未検出、blocking=false。D-22の条件付き再開承認・再発停止は05-02-CHECKPOINTとROADMAP実行依存で別途追えるが、heuristicの結果を22/22へ改変しない。Nyquistは4/4要件・9/9タスク・新規gap0。Securityは計画済み14脅威closed/open0（ASVS L1）。旧 `status: passed` と23/23の履歴、禁止事項2件の項目別解決、未分類edge4件を保持する。
+
+Phase 06のW05b自動復帰は未実証で停止し、06-05/06の全110件は`not-run`。実EXE・各Python入口・DPI/UAC・版情報同期の最終受入はROADMAP Phase 06（V110-QA-02/03）にあり、本Phaseでdeferredとする。`DEP-05-REGRESSION`、`owner_missing`、通知前景不一致の原因は未解除で、条件付き再開・同種再発時停止と出荷不可を維持する。CR-03も未解決の製品修正対象として次工程へ明示的に渡す。
+
+### Advisory (New Scope, Unevidenced)
+
+なし。CR-03はコード配線とheadless確認がある未修正のレビュー指摘であり、根拠のないadvisoryへ格下げしない。Phase 05契約への非該当を上記で個別判定した。
+
+### Fingerprint
+
+`query verification.fingerprint` のv4出力をfrontmatterへそのまま反映した。旧covered集合に今回の全件生証拠4ファイルとUI静的評価を加え、PLAN/SUMMARYはCLIが自動追加。報告自身は対象外。編集したのは本VERIFICATIONのみで、製品・試験・他Phase・STATE・ROADMAP・commit・GUI・ネット送信・新規pytestは実施していない。
+
+## 2026-10-24 検証履歴（以下の時点表現は当時の記録）
 
 **Phase Goal:** 利用者が設定の読込・保存失敗を正しく把握でき、元の設定ファイルと編集操作を失わない。  
 **Verified:** 2026-10-24T11:47:08Z（2026-10-24 20:47 JST）

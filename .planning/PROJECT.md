@@ -22,6 +22,8 @@ PageFolio の既存コードベースに対する最適化プロジェクト。
 
 ## Current Milestone: v1.10.0 多重起動防止・起動操作の改善
 
+**2026-10-28 Phase 05再検証:** 設定I/O失敗通知・原本保護の4要件/23 must-haveは現行入力でpassed、staleを解消。既存全件2071 passedの入力・環境一致を照合して再利用した。別契約の重大指摘CR-03（OCRをoffにした後の旧providerによるサマリ送信）はopenで、製品修正・回帰・再レビューまで出荷停止。Phase 06のW05b自動復帰未実証と限定debug再開点も維持する。詳細は `phases/05-config-notification/05-REVIEW.md` と `05-VERIFICATION.md`。
+
 **Goal:** 多重起動による作業の分散を防ぎ、起動済み画面への復帰・設定失敗の把握・配布内容の再現性を改善する。
 
 **Target features（2026-10-21 ユーザー選択「1」で採用）:**

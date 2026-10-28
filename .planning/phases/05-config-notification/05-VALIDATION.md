@@ -134,10 +134,28 @@ SPECなしの edge-probe は V110-CFG-01/02/03/04 全4行が `unclassified` / `u
 | Resolved | 0 |
 | Escalated | 0 |
 
+## 再検証 2026-10-28（Nyquist）
+
+本節は上記の2026-10-24実測・過去の監査行を履歴として保持したまま、現行入力に対する再照合を記録する。`05-VERIFICATION.md` の前回 `passed` は covered files 6件（`pagefolio/__main__.py`、`pagefolio/constants.py`、`pagefolio/startup_win32.py`、`requirements.txt`、`tests/test_startup_windows.py`、`開発履歴.md`）の変更により stale であり、本節は独立のgoal-backward再検証を代替しない。
+
+05-01〜04の全PLAN/SUMMARYを照合し、要件は `V110-CFG-01/02/03/04` の4件、タスクは05-01-01〜05-04-02の9件。上表の9行すべてに実行可能な自動コマンドと対応テストがある。`tests/test_config_notification.py` の12クラス（LoadTracer、LoadBoundaries、LoadProtection、SaveFlow、ExitSaveFailure、NotificationLifecycle、AppSaveOrigins、LlmSaveOrigins、ToolSaveOrigins、SaveOriginCoverage、ConfigAcceptance、ScenarioIsolation）を確認した。読込分類・実App/Toast/PDF編集、原子的保存と原本保護、全保存元の失敗通知、FIFO/再構築/モーダル/可視時間をそれぞれ観測する。4/4要件COVERED、9/9タスク自動検証、今回追加すべき具体的なNyquist gapは0。H01〜H14の14 passと禁止事項の意味評価2 passは`05-UAT.md`の人手履歴として維持し、自動試験に算入しない。
+
+既存全件の正本は `.planning/debug/quality-gate-unblock-20261028/full.json`、`full.xml`、`full-0.stdout.txt`、`environment.json`。2026-10-28 13:08 JST開始の単一pytestは selector/skipなしで2071 tests、failures 0、errors 0、skipped 0、**2071 passed / 2 warnings / 480.86秒 / exit 0**。`full.json` のbefore/afterは同一。現行ファイルとのSHA256再照合では146入力中、製品ソース0不一致、テスト0不一致、依存定義（`requirements.txt`、`pyproject.toml`、`.ruff.toml`）0不一致。その他4不一致は`.gitignore`、`docs/DEVELOPMENT.md`、`CONTRIBUTING.md`、`開発履歴.md`で、検証対象の製品・テスト・依存コードではない。`environment.json` のPython 3.15.2実行体パス・SHA256、Windows platform、pytest 9.1.1、ruff 0.17.1、PyMuPDF 1.28.2、Pillow 13.0.0、tkinterdnd2 0.6.4も現行一致。したがって当該入力の全件成功を再利用できる。今回pytest/GUI/buildは新規実行していない。本文書更新後の局所DoDは別ゲートであり、上記の全件成功へ遡及して含めない。
+
+`DEP-05-REGRESSION`、`owner_missing`、通知前景不一致、descriptor不明2件、未分類edge probe4件は未解除。Phase 06のW05b自動復帰も未実証で停止しており、Phase完了・出荷承認へ読み替えない。
+
 ## Validation Audit 2026-10-23
 
 | Metric | Count |
 |---|---|
 | Gaps found | 2 |
 | Resolved | 2 |
+| Escalated | 0 |
+
+## Validation Audit 2026-10-28
+
+| Metric | Count |
+|---|---|
+| Gaps found | 0 |
+| Resolved | 0 |
 | Escalated | 0 |

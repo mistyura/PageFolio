@@ -1,75 +1,97 @@
 ---
 phase: 05-config-notification
-reviewed: 2026-10-23T17:19:55Z
+reviewed: 2026-10-28T06:01:09Z
 depth: standard
-files_reviewed: 21
+files_reviewed: 34
 files_reviewed_list:
+  - .gitattributes
+  - README.md
+  - distribution/samples/ocr_custom_prompt_sample.md
+  - distribution/samples/ocr_summary_prompt_sample.md
+  - distribution/はじめに.md
   - docs/CONFIGURATION.md
-  - pagefolio/app.py
-  - pagefolio/dialogs/plugin.py
-  - pagefolio/dialogs/settings.py
-  - pagefolio/dialogs/shortcuts.py
+  - docs/DEVELOPMENT.md
+  - pagefolio/constants.py
   - pagefolio/lang.py
+  - pagefolio/ocr.py
   - pagefolio/ocr_dialog.py
-  - pagefolio/redact_ops.py
-  - pagefolio/settings.py
-  - pagefolio/toast.py
-  - pagefolio/ui_builder.py
-  - pagefolio/viewer.py
+  - requirements.txt
   - tests/config_notice_support.py
+  - tests/conftest.py
+  - tests/release_fake_ocr.py
+  - tests/release_uat_support.py
   - tests/test_config_notification.py
+  - tests/test_gc_barrier_guard.py
   - tests/test_ocr.py
-  - tests/test_pagination.py
-  - tests/test_provider_ui.py
-  - tests/test_settings_keyguard.py
+  - tests/test_ocr_dialog_provider_refresh.py
+  - tests/test_ocr_local_endpoint.py
+  - tests/test_release_build.py
+  - tests/test_release_contract.py
+  - tests/test_release_uat_support.py
   - tests/test_startup_windows.py
-  - tests/test_toast.py
+  - tools/build_release.py
   - 開発履歴.md
+  - pagefolio/__main__.py
+  - pagefolio/startup_win32.py
+  - pagefolio/startup_wake.py
+  - tests/startup_foreground_audit.py
+  - tests/startup_wake_child.py
+  - tests/test_startup_foreground_audit.py
+  - tests/test_startup_wake.py
 findings:
-  critical: 0
+  critical: 1
   warning: 0
   info: 0
-  total: 0
-status: clean
+  total: 1
+status: issues_found
 ---
 
-# Phase 5: コードレビュー報告
+# Phase 05: コードレビュー報告
 
-**レビュー日時:** 2026-10-23T17:19:55Z（2026-10-24 JST）
+**レビュー日時:** 2026-10-28T06:01:09Z
 **深度:** standard
-**対象ファイル:** 21
-**状態:** clean
+**対象ファイル:** 34
+**状態:** issues_found
 
 ## Summary
 
-前回のWR-01を修正コミット `2654882b7dc8abc3c8a78f802e27175845b7c8c8` の8行差分で再確認し、解消と判定した。CR-01/CR-02は前回確認した `7bbb06ce7f409b8ed090eb73d7a812ec9293926f` の製品修正を再利用し、修正後の利用者確認H13/H14も照合した。未解決のコード指摘はなく、BLOCKER・WARNING・INFOはいずれも0件、statusはclean。
+前回レビューの CR-01・CR-02・WR-01 は修正済みの記録と現行の該当経路を照合し、fixed を維持した。追加の設定切替経路に、OCR を `off` にした後もサマリ作成が有効表示になる欠陥を1件検出した。今回の未解決指摘は BLOCKER 1件、WARNING 0件、INFO 0件。
 
-指定21ファイルの既読レビュー結果を引き継ぎ、今回の追加確認は `tests/test_config_notification.py` の8行と `05-UAT.md` のH13/H14に限定した。全ソースの再調査や試験の再実行はしていない。構造プリパスと外部レビューレーンの指定はない。前回報告は `05-REVIEW.iter2.md` に保存され、更新前の本書とのSHA256一致を確認した。初回報告は `05-REVIEW.iter1.md` に残る。
+`check evaluation-scope --phase 05 --since 172e993ea61a3b31ffb5a533964481a4dfdb6240 --raw` は `status: degraded`、`reason: no-task-commits-since`、`source: phase-range` を返した。そのため Phase 6 の配布・試験関連まで広がった27ファイルを対象に含め、未コミットで Phase 5 の通知や版記録へ影響する起動経路と試験補助の7ファイルも追加した。前回の21ファイルに関する判定は既存レビューを継承し、現行差分・関連呼出先を重点的に確認した。構造プリパスと外部レビューレーンの指定はない。
 
 ## Narrative Findings (AI reviewer)
 
-未解決の指摘なし。今回の修正差分から新しい具体的欠陥は検出しなかった。
+### CR-03 — BLOCKER: OCR を無効にしても旧プロバイダでサマリを送信できる
 
-## 前回指摘の解決判定
+**File:** `C:\Users\shdwf\work\project\PageFolio\pagefolio\ocr_dialog.py:1193-1201`、`C:\Users\shdwf\work\project\PageFolio\pagefolio\ocr_dialog.py:813-825`、`C:\Users\shdwf\work\project\PageFolio\pagefolio\ocr_dialog.py:2218-2253`、`C:\Users\shdwf\work\project\PageFolio\pagefolio\ocr_dialog.py:2375-2379`
+**Issue:** OCR 完了後、開いたままのダイアログで LLM 設定を `off` にすると、`_apply_llm_settings` は旧 `provider` を保持する。一方、`_update_summary_btn_state` は設定値を確認せず、既存結果と旧 `provider.supports_text_prompt` でサマリボタンを有効にする。`_on_summary` にも `off` の入口ガードがない。旧 LM Studio provider の headless 実メソッド確認では `ocr_provider='off'` でもボタンが `['!disabled']`、cloud 判定が `False` となる。この場合キー確認を通過し、`_summary_worker` が旧 provider の `complete_text_ex(full_text, prompt)` を呼ぶため、無効設定後も OCR 本文を旧接続先へ送信できる。旧 Claude provider ではボタンが有効で表示名も旧 Claude のまま残り、クリック後に `off` の API キー欠落という誤通知を出す。
+**Fix:** ボタン状態とサマリ入口の両方で有効設定の `ocr_provider == 'off'` を拒否し、無効時の表示名も設定値を優先する。旧 provider を保持する設計を続ける場合は、無効時にその能力・型を実行可否判定へ使わない。ローカル/クラウド両方で OCR 結果を得てから `off` に切り替える回帰を追加する。
 
-| 元ID | 判定 | 現行ソース・回帰の根拠 |
+```python
+if self.app.settings.get("ocr_provider") == "off":
+    self.summary_btn.state(["disabled"])
+    return  # _update_summary_btn_state の冒頭
+
+# _on_summary の状態変更・キー確認より前にも同じ off ガードを置く。
+```
+
+## 前回指摘の対応継承
+
+| ID | 判定 | 根拠 |
 |---|---|---|
-| CR-01（元BLOCKER） | 解消、利用者確認H13 pass | 修正 `7bbb06ce7f409b8ed090eb73d7a812ec9293926f`。`dialogs/settings.py:286-296` は内側Shortcuts自身のDestroyに限定し、生存する外側へgrabを復元する。実save/cancel/wm 3経路、子widget破棄、外側12秒保持、閉鎖後の通知開始は前回のコード・自動回帰確認を再利用した。H13は利用者が2026-10-24 JSTに修正7bbb06cで保存失敗→Settings→Shortcuts開閉→外側10秒以上保持後の通知保持を確認し、「2項目とも確認できた」と明示回答した。 |
-| CR-02（元BLOCKER） | 解消、利用者確認H14 pass | 修正 `7bbb06ce7f409b8ed090eb73d7a812ec9293926f`。root Map/Unmap、表示開始・監視・期限時の可視性再検査、非消化中断、同event_idの残時間復帰、旧callback拒否とFIFOは前回のコード・自動回帰確認を再利用した。H14は利用者が2026-10-24 JSTに修正7bbb06cで約4秒表示→10秒以上最小化→復元後に残り約6秒を確認し、「2項目とも確認できた」と明示回答した。 |
-| WR-01（元WARNING） | 解消 | 修正 `2654882b7dc8abc3c8a78f802e27175845b7c8c8`。`tests/test_config_notification.py:1514-1529` は通常の `entry.focus_set()` 後に観測し、非Noneの一般widget同一性を `widget_focus_check` へ別記する。`focus_check=verified` は `focused is entry` の場合だけとなり、Noneと非入力widgetはそれぞれ理由付きunverifiedへ分岐する。前景の強制取得は追加されていない。 |
+| CR-01（BLOCKER） | fixed | `7bbb06c` の内側 Shortcuts 終了時の grab 復元、実 Tk の save/cancel/wm 回帰、利用者 H13 pass。 |
+| CR-02（BLOCKER） | fixed | `7bbb06c` の可視時間・FIFO・最小化復帰、利用者 H14 pass。 |
+| WR-01（WARNING） | fixed | `2654882` の入力先同一性判定。Entry 以外と None を verified と記録しない。 |
 
-H13/H14の人手根拠は `05-UAT.md` の追加受入表（起動PID18164）。前回報告時の `fixed: requires human verification` はこの利用者確認で充足した。今回の最終差分はテスト記録のみで、7bbb06cの製品実装を変更しない。H01〜H12の12 passは引き続き修正前の証拠として区別する。
+## 検証と限界
 
-## レビューの証拠と限界
-
-- 製品修正時の局所288 passed / 1 warning / 15.35秒、全件1797 passed / 1 warning / 266.50秒、Ruff/format109/ASTと追加8回帰のコード照合は前回結果を再利用した。
-- 最終テスト修正後は `05-focus-proof-final/status.json` のexit0と `pytest.txt` の1797 passed / 1 warning / 266.81秒を読み、現行差分に未コミット変更がないことを確認した。Ruff/format109/AST成功、`05-focus-proof-inputs.json` の入力103件と診断423件の現行hash一致は親の提出済み照合結果を参照する。レビュー中の新規試験・GUI実行はなく、これらを自分の再実行結果とは表記しない。
-- 人手確認は利用者のH13/H14の観測と明示回答に基づく。レビュー担当自身による独立目視ではない。H01〜H12との実施時点を分け、自動試験から人手合格を推測していない。
-- DEP-05/owner_missing/通知前景不一致/Tcl解放警告、descriptor不明の禁止2件、未分類edge4件は未解除。今回のコード判定は出荷承認・Phase正式完了ではなく、同種再発時停止を維持する。既報UI advisoryを新規指摘へ重複計上しない。
-- 実装・テスト・共有文書は変更していない。出力は本レビューのみで、commitは行っていない。
+- 今回はコード・既存証拠の照合と上記 headless 実メソッド確認を行った。GUI と `pytest` は新規実行していない。
+- 親の入力ハッシュ照合で再利用可能と確認された既存の全件試験は `2071 passed / 2 warnings / 480.86s / exit 0`（`.planning/debug/quality-gate-unblock-20261028/full.json`、`full.xml`、`environment.json`）。CR-03 の条件は既存試験で検出されていないため、全件成功を本指摘の解消根拠にはしない。
+- 前回の H13/H14 は既存 CR-01/CR-02 の解消根拠であり、新規 CR-03 の確認ではない。Phase 6 の W05b 自動復帰、DEP-05/owner_missing などの未解決条件と出荷停止は本レビューでは解除しない。
+- 製品・試験・版・共有状態は変更していない。レビュー記録だけを更新し、commit は行っていない。
 
 ---
 
-_Reviewed: 2026-10-23T17:19:55Z_
+_Reviewed: 2026-10-28T06:01:09Z_
 _Reviewer: gsd-code-reviewer_
 _Depth: standard_

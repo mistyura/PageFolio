@@ -66,3 +66,21 @@ created: "2026-10-24"
 - [x] status: verified
 
 **Approval:** verified 2026-10-24
+
+## 再照合 2026-10-28
+
+Phase 05 の再検証ゲートで、4 PLAN の計画時 STRIDE 登録（T-05-01〜13 と共有 T-05-SC）と現行実装・試験を ASVS L1 の深さで再照合した。14 closed / open 0 を維持する。計画時登録あり・L1・open 0 のため、secure-phase の短絡条件に従い追加の深掘り監査は行わない。
+
+読込分類と例外本文を出さないログ（settings.py:308）、機密除外コピー・排他的 tmp・close 後の replace・所有 tmp だけの削除（settings.py:352）、読込不能時の書込抑止と保存結果の通知（app.py:683）、保存失敗時の終了保留（app.py:668）、通知の event/generation と可視寿命（app.py:523〜、toast.py:116〜）を確認した。ネスト設定の単一保存と session 辞書保持は dialogs/settings.py:224 と TestLlmSaveOrigins、保存入口の棚卸しは TestSaveOriginCoverage、隔離と原本 hash は tests/config_notice_support.py:57/165 と TestScenarioIsolation が引き続き対応する。
+
+05-VALIDATION.md の今回の入力・環境照合により、既存単一全件 2071 passed / 2 warnings / exit 0 を再利用する。今回の Phase 05 再検証では依存定義変更・パッケージ導入・製品編集を行っていない。T-05-SC の旧記述は当時の Phase 実装についての記録であり、前回 verification 以降の requirements.txt の変更が存在しないという意味ではない。今回の依存定義は再利用した全件証拠と一致している。
+
+人手受入と未実施事項を分離し、過去の失敗原本と未解除事項を保持する。Phase 06 の W05b 自動復帰未実証と出荷停止は、本監査では解除しない。
+
+## Security Audit 2026-10-28
+
+| Metric | Count |
+|---|---|
+| Threats found | 14 |
+| Closed | 14 |
+| Open | 0 |

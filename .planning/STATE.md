@@ -28,6 +28,8 @@ See: .planning/PROJECT.md (updated 2026-10-24)
 **Core value:** 大きな PDF でも Undo/Redo が正しく・速く動作し、コードが読みやすく保守しやすい状態にする
 **Current focus:** Phase 06 — サンプル配布とリリース検証
 
+**Phase 05 再検証（2026-10-28）:** `$gsd-execute-phase 05` で全4計画の既存完了を確認し、staleだった独立検証を現行入力で23/23 passedへ更新した。Nyquistは4要件/9タスク・追加gap0、登録済みSecurity14 closed/open0、UIは利用者指定で既存静的22/24を再利用。製品/試験/依存/環境一致の全件2071 passed証拠を再利用した。新規CR-03（OCR無効化後も旧providerでサマリを送信できる）は重大・openのまま、Phase 05の設定I/O通知/原本保護とは別契約として追跡する。出荷停止を維持し、修正・回帰・再レビューを要する。Phase 06のW05b初回停止・限定debug再開点は変更しない。正本は `phases/05-config-notification/05-VERIFICATION.md` と `05-REVIEW.md`。
+
 ## Shipped Milestone: v1.9.0（2026-08-11・verified_closeout）
 
 3 フェーズ / 15 プラン / 48 タスク。V190-* 全 27 要件 Complete（被覆 27/27）。
