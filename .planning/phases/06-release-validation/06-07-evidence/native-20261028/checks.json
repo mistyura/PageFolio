@@ -1,0 +1,24 @@
+[
+  {
+    "argv": [
+      "C:\\Users\\shdwf\\work\\project\\PageFolio\\.venv\\Scripts\\ruff.exe",
+      "check",
+      ".",
+      "--no-cache"
+    ],
+    "exit": 0,
+    "stdout": "All checks passed!\n",
+    "stderr": "warning: Encountered error: アクセスが拒否されました。 (os error 5)\n"
+  },
+  {
+    "argv": [
+      "C:\\Users\\shdwf\\work\\project\\PageFolio\\.venv\\Scripts\\ruff.exe",
+      "format",
+      ".",
+      "--no-cache"
+    ],
+    "exit": 2,
+    "stdout": "140 files left unchanged\n",
+    "stderr": "error: Encountered error: アクセスが拒否されました。 (os error 5)\n"
+  }
+]
