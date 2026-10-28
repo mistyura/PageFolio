@@ -224,7 +224,8 @@
           "observed_at": "",
           "environment": {},
           "binary_sha256": "",
-          "input_manifest_sha256": ""
+          "input_manifest_sha256": "",
+          "release_requirement": "required"
         },
         {
           "subrow": "normal@module",
@@ -256,7 +257,8 @@
           "observed_at": "",
           "environment": {},
           "binary_sha256": "",
-          "input_manifest_sha256": ""
+          "input_manifest_sha256": "",
+          "release_requirement": "required"
         },
         {
           "subrow": "normal@production-exe",
@@ -292,7 +294,8 @@
           "environment": {},
           "binary_sha256": "",
           "input_manifest_sha256": "",
-          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17"
+          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17",
+          "release_requirement": "required"
         },
         {
           "subrow": "zoomed@script",
@@ -326,7 +329,8 @@
           "observed_at": "",
           "environment": {},
           "binary_sha256": "",
-          "input_manifest_sha256": ""
+          "input_manifest_sha256": "",
+          "release_requirement": "required"
         },
         {
           "subrow": "zoomed@module",
@@ -358,7 +362,8 @@
           "observed_at": "",
           "environment": {},
           "binary_sha256": "",
-          "input_manifest_sha256": ""
+          "input_manifest_sha256": "",
+          "release_requirement": "required"
         },
         {
           "subrow": "zoomed@production-exe",
@@ -395,7 +400,8 @@
           "environment": {},
           "binary_sha256": "",
           "input_manifest_sha256": "",
-          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17"
+          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17",
+          "release_requirement": "required"
         }
       ]
     },
@@ -438,7 +444,8 @@
           "observed_at": "",
           "environment": {},
           "binary_sha256": "",
-          "input_manifest_sha256": ""
+          "input_manifest_sha256": "",
+          "release_requirement": "required"
         },
         {
           "subrow": "settings@module",
@@ -470,7 +477,8 @@
           "observed_at": "",
           "environment": {},
           "binary_sha256": "",
-          "input_manifest_sha256": ""
+          "input_manifest_sha256": "",
+          "release_requirement": "required"
         },
         {
           "subrow": "settings@production-exe",
@@ -503,7 +511,8 @@
           "environment": {},
           "binary_sha256": "",
           "input_manifest_sha256": "",
-          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17"
+          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17",
+          "release_requirement": "required"
         },
         {
           "subrow": "thumb@script",
@@ -556,7 +565,8 @@
               },
               "note": "ファイルは保持。このsubrowは再実施までnot-runのまま(passに数えない)"
             }
-          ]
+          ],
+          "release_requirement": "required"
         },
         {
           "subrow": "thumb@module",
@@ -589,7 +599,8 @@
           "environment": {},
           "binary_sha256": "",
           "input_manifest_sha256": "",
-          "observation_procedure": "F5(閲覧/編集モード切替)を2回押して表示の変化と復帰を見る。文字キー(x)はCanvasが受けないため使わない。入力先がCanvasのままだったことは自動harnessのfocus-result(focus_correct/settled_focus)が証拠(EXEは外部foreground観測のみ)"
+          "observation_procedure": "F5(閲覧/編集モード切替)を2回押して表示の変化と復帰を見る。文字キー(x)はCanvasが受けないため使わない。入力先がCanvasのままだったことは自動harnessのfocus-result(focus_correct/settled_focus)が証拠(EXEは外部foreground観測のみ)",
+          "release_requirement": "required"
         },
         {
           "subrow": "thumb@production-exe",
@@ -624,7 +635,8 @@
           "binary_sha256": "",
           "input_manifest_sha256": "",
           "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17",
-          "observation_procedure": "F5(閲覧/編集モード切替)を2回押して表示の変化と復帰を見る。文字キー(x)はCanvasが受けないため使わない。入力先がCanvasのままだったことは自動harnessのfocus-result(focus_correct/settled_focus)が証拠(EXEは外部foreground観測のみ)"
+          "observation_procedure": "F5(閲覧/編集モード切替)を2回押して表示の変化と復帰を見る。文字キー(x)はCanvasが受けないため使わない。入力先がCanvasのままだったことは自動harnessのfocus-result(focus_correct/settled_focus)が証拠(EXEは外部foreground観測のみ)",
+          "release_requirement": "required"
         },
         {
           "subrow": "preview@script",
@@ -657,7 +669,8 @@
           "environment": {},
           "binary_sha256": "",
           "input_manifest_sha256": "",
-          "observation_procedure": "F5(閲覧/編集モード切替)を2回押して表示の変化と復帰を見る。文字キー(x)はCanvasが受けないため使わない。入力先がCanvasのままだったことは自動harnessのfocus-result(focus_correct/settled_focus)が証拠(EXEは外部foreground観測のみ)"
+          "observation_procedure": "F5(閲覧/編集モード切替)を2回押して表示の変化と復帰を見る。文字キー(x)はCanvasが受けないため使わない。入力先がCanvasのままだったことは自動harnessのfocus-result(focus_correct/settled_focus)が証拠(EXEは外部foreground観測のみ)",
+          "release_requirement": "required"
         },
         {
           "subrow": "preview@module",
@@ -690,7 +703,8 @@
           "environment": {},
           "binary_sha256": "",
           "input_manifest_sha256": "",
-          "observation_procedure": "F5(閲覧/編集モード切替)を2回押して表示の変化と復帰を見る。文字キー(x)はCanvasが受けないため使わない。入力先がCanvasのままだったことは自動harnessのfocus-result(focus_correct/settled_focus)が証拠(EXEは外部foreground観測のみ)"
+          "observation_procedure": "F5(閲覧/編集モード切替)を2回押して表示の変化と復帰を見る。文字キー(x)はCanvasが受けないため使わない。入力先がCanvasのままだったことは自動harnessのfocus-result(focus_correct/settled_focus)が証拠(EXEは外部foreground観測のみ)",
+          "release_requirement": "required"
         },
         {
           "subrow": "preview@production-exe",
@@ -725,7 +739,8 @@
           "binary_sha256": "",
           "input_manifest_sha256": "",
           "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17",
-          "observation_procedure": "F5(閲覧/編集モード切替)を2回押して表示の変化と復帰を見る。文字キー(x)はCanvasが受けないため使わない。入力先がCanvasのままだったことは自動harnessのfocus-result(focus_correct/settled_focus)が証拠(EXEは外部foreground観測のみ)"
+          "observation_procedure": "F5(閲覧/編集モード切替)を2回押して表示の変化と復帰を見る。文字キー(x)はCanvasが受けないため使わない。入力先がCanvasのままだったことは自動harnessのfocus-result(focus_correct/settled_focus)が証拠(EXEは外部foreground観測のみ)",
+          "release_requirement": "required"
         }
       ]
     },
@@ -762,7 +777,8 @@
           "observed_at": "",
           "environment": {},
           "binary_sha256": "",
-          "input_manifest_sha256": ""
+          "input_manifest_sha256": "",
+          "release_requirement": "required"
         },
         {
           "subrow": "pdf-3page@module",
@@ -790,7 +806,8 @@
           "observed_at": "",
           "environment": {},
           "binary_sha256": "",
-          "input_manifest_sha256": ""
+          "input_manifest_sha256": "",
+          "release_requirement": "required"
         },
         {
           "subrow": "pdf-3page@production-exe",
@@ -820,7 +837,8 @@
           "environment": {},
           "binary_sha256": "",
           "input_manifest_sha256": "",
-          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17"
+          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17",
+          "release_requirement": "required"
         }
       ]
     },
@@ -856,7 +874,8 @@
           "observed_at": "",
           "environment": {},
           "binary_sha256": "",
-          "input_manifest_sha256": ""
+          "input_manifest_sha256": "",
+          "release_requirement": "required"
         },
         {
           "subrow": "ocr-1page@module",
@@ -883,7 +902,8 @@
           "observed_at": "",
           "environment": {},
           "binary_sha256": "",
-          "input_manifest_sha256": ""
+          "input_manifest_sha256": "",
+          "release_requirement": "required"
         },
         {
           "subrow": "ocr-1page@production-exe",
@@ -912,7 +932,8 @@
           "environment": {},
           "binary_sha256": "",
           "input_manifest_sha256": "",
-          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17"
+          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17",
+          "release_requirement": "required"
         }
       ]
     },
@@ -946,7 +967,8 @@
           "observed_at": "",
           "environment": {},
           "binary_sha256": "",
-          "input_manifest_sha256": ""
+          "input_manifest_sha256": "",
+          "release_requirement": "required"
         },
         {
           "subrow": "nested-settings@module",
@@ -971,7 +993,8 @@
           "observed_at": "",
           "environment": {},
           "binary_sha256": "",
-          "input_manifest_sha256": ""
+          "input_manifest_sha256": "",
+          "release_requirement": "required"
         },
         {
           "subrow": "nested-settings@production-exe",
@@ -998,7 +1021,8 @@
           "environment": {},
           "binary_sha256": "",
           "input_manifest_sha256": "",
-          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17"
+          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17",
+          "release_requirement": "required"
         }
       ]
     },
@@ -1035,7 +1059,8 @@
           "observed_at": "",
           "environment": {},
           "binary_sha256": "",
-          "input_manifest_sha256": ""
+          "input_manifest_sha256": "",
+          "release_requirement": "required"
         },
         {
           "subrow": "ocr-close-confirm@module",
@@ -1063,7 +1088,8 @@
           "observed_at": "",
           "environment": {},
           "binary_sha256": "",
-          "input_manifest_sha256": ""
+          "input_manifest_sha256": "",
+          "release_requirement": "required"
         },
         {
           "subrow": "ocr-close-confirm@production-exe",
@@ -1094,7 +1120,8 @@
           "binary_sha256": "",
           "input_manifest_sha256": "",
           "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17",
-          "carryover_from_06_04": "実ダブルクリックでの前景挙動は未確認だった(06-04-SUMMARY Known Gaps 1)"
+          "carryover_from_06_04": "実ダブルクリックでの前景挙動は未確認だった(06-04-SUMMARY Known Gaps 1)",
+          "release_requirement": "required"
         }
       ]
     },
@@ -1129,7 +1156,8 @@
           "observed_at": "",
           "environment": {},
           "binary_sha256": "",
-          "input_manifest_sha256": ""
+          "input_manifest_sha256": "",
+          "release_requirement": "required"
         },
         {
           "subrow": "quit-no@module",
@@ -1155,7 +1183,8 @@
           "observed_at": "",
           "environment": {},
           "binary_sha256": "",
-          "input_manifest_sha256": ""
+          "input_manifest_sha256": "",
+          "release_requirement": "required"
         },
         {
           "subrow": "quit-no@production-exe",
@@ -1184,7 +1213,8 @@
           "environment": {},
           "binary_sha256": "",
           "input_manifest_sha256": "",
-          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17"
+          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17",
+          "release_requirement": "required"
         }
       ]
     },
@@ -1220,7 +1250,8 @@
           "observed_at": "",
           "environment": {},
           "binary_sha256": "",
-          "input_manifest_sha256": ""
+          "input_manifest_sha256": "",
+          "release_requirement": "required"
         },
         {
           "subrow": "script-module@script",
@@ -1247,7 +1278,8 @@
           "observed_at": "",
           "environment": {},
           "binary_sha256": "",
-          "input_manifest_sha256": ""
+          "input_manifest_sha256": "",
+          "release_requirement": "required"
         },
         {
           "subrow": "script-relocated@script",
@@ -1274,7 +1306,8 @@
           "observed_at": "",
           "environment": {},
           "binary_sha256": "",
-          "input_manifest_sha256": ""
+          "input_manifest_sha256": "",
+          "release_requirement": "required"
         },
         {
           "subrow": "module-script@module",
@@ -1301,7 +1334,8 @@
           "observed_at": "",
           "environment": {},
           "binary_sha256": "",
-          "input_manifest_sha256": ""
+          "input_manifest_sha256": "",
+          "release_requirement": "required"
         },
         {
           "subrow": "module-module@module",
@@ -1328,7 +1362,8 @@
           "observed_at": "",
           "environment": {},
           "binary_sha256": "",
-          "input_manifest_sha256": ""
+          "input_manifest_sha256": "",
+          "release_requirement": "required"
         },
         {
           "subrow": "module-relocated@module",
@@ -1355,7 +1390,8 @@
           "observed_at": "",
           "environment": {},
           "binary_sha256": "",
-          "input_manifest_sha256": ""
+          "input_manifest_sha256": "",
+          "release_requirement": "required"
         },
         {
           "subrow": "relocated-script@relocated",
@@ -1382,7 +1418,8 @@
           "observed_at": "",
           "environment": {},
           "binary_sha256": "",
-          "input_manifest_sha256": ""
+          "input_manifest_sha256": "",
+          "release_requirement": "required"
         },
         {
           "subrow": "relocated-module@relocated",
@@ -1409,7 +1446,8 @@
           "observed_at": "",
           "environment": {},
           "binary_sha256": "",
-          "input_manifest_sha256": ""
+          "input_manifest_sha256": "",
+          "release_requirement": "required"
         },
         {
           "subrow": "relocated-relocated@relocated",
@@ -1436,7 +1474,8 @@
           "observed_at": "",
           "environment": {},
           "binary_sha256": "",
-          "input_manifest_sha256": ""
+          "input_manifest_sha256": "",
+          "release_requirement": "required"
         }
       ]
     },
@@ -1487,7 +1526,8 @@
             "claims_other_version": false,
             "note": "同版copyは別配置の根拠だけ。別版互換の根拠にしない"
           },
-          "direction": "一次=最終EXE→二次=同版の別配置copy"
+          "direction": "一次=最終EXE→二次=同版の別配置copy",
+          "release_requirement": "required"
         },
         {
           "subrow": "exe-script@production-exe",
@@ -1526,7 +1566,8 @@
             "role": "python-entry",
             "entry": "script"
           },
-          "direction": "一次=最終EXE→二次=Python直接起動"
+          "direction": "一次=最終EXE→二次=Python直接起動",
+          "release_requirement": "required"
         },
         {
           "subrow": "script-exe@script",
@@ -1564,7 +1605,8 @@
             "role": "python-entry",
             "entry": "script"
           },
-          "direction": "一次=Python直接起動→二次=最終EXE"
+          "direction": "一次=Python直接起動→二次=最終EXE",
+          "release_requirement": "required"
         },
         {
           "subrow": "exe-module@production-exe",
@@ -1603,7 +1645,8 @@
             "role": "python-entry",
             "entry": "module"
           },
-          "direction": "一次=最終EXE→二次=Python -m"
+          "direction": "一次=最終EXE→二次=Python -m",
+          "release_requirement": "required"
         },
         {
           "subrow": "module-exe@module",
@@ -1641,7 +1684,8 @@
             "role": "python-entry",
             "entry": "module"
           },
-          "direction": "一次=Python -m→二次=最終EXE"
+          "direction": "一次=Python -m→二次=最終EXE",
+          "release_requirement": "required"
         },
         {
           "subrow": "exe-tracer@production-exe",
@@ -1693,7 +1737,8 @@
               "correspondence_check": "pending(G4): 起動排他/固定namespace/protocolを持つ実装であることをsource manifestと同世代の自動証拠に照合してから使用。照合できなければこのpeerの行はnot-runのまま"
             }
           },
-          "direction": "一次=最終EXE→二次=06-01技術tracer(v1.9.1実EXE)"
+          "direction": "一次=最終EXE→二次=06-01技術tracer(v1.9.1実EXE)",
+          "release_requirement": "required"
         },
         {
           "subrow": "tracer-exe@tracer",
@@ -1744,7 +1789,8 @@
               "correspondence_check": "pending(G4): 起動排他/固定namespace/protocolを持つ実装であることをsource manifestと同世代の自動証拠に照合してから使用。照合できなければこのpeerの行はnot-runのまま"
             }
           },
-          "direction": "一次=06-01技術tracer→二次=最終EXE"
+          "direction": "一次=06-01技術tracer→二次=最終EXE",
+          "release_requirement": "required"
         },
         {
           "subrow": "exe-relocated-copy@production-exe",
@@ -1786,7 +1832,8 @@
             "claims_other_version": false,
             "note": "同版copyは別配置の根拠だけ。別版互換の根拠にしない"
           },
-          "direction": "一次=最終EXE→二次=別配置の同版copy"
+          "direction": "一次=最終EXE→二次=別配置の同版copy",
+          "release_requirement": "required"
         },
         {
           "subrow": "relocated-copy-exe@relocated-copy",
@@ -1827,7 +1874,8 @@
             "claims_other_version": false,
             "note": "同版copyは別配置の根拠だけ。別版互換の根拠にしない"
           },
-          "direction": "一次=別配置の同版copy→二次=最終EXE"
+          "direction": "一次=別配置の同版copy→二次=最終EXE",
+          "release_requirement": "required"
         }
       ]
     },
@@ -1862,7 +1910,8 @@
           "observed_at": "",
           "environment": {},
           "binary_sha256": "",
-          "input_manifest_sha256": ""
+          "input_manifest_sha256": "",
+          "release_requirement": "required"
         },
         {
           "subrow": "terminal-python@script",
@@ -1888,7 +1937,8 @@
           "observed_at": "",
           "environment": {},
           "binary_sha256": "",
-          "input_manifest_sha256": ""
+          "input_manifest_sha256": "",
+          "release_requirement": "required"
         },
         {
           "subrow": "explorer-exe@production-exe",
@@ -1915,7 +1965,8 @@
           "environment": {},
           "binary_sha256": "",
           "input_manifest_sha256": "",
-          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17"
+          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17",
+          "release_requirement": "required"
         },
         {
           "subrow": "terminal-exe@production-exe",
@@ -1942,7 +1993,8 @@
           "environment": {},
           "binary_sha256": "",
           "input_manifest_sha256": "",
-          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17"
+          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17",
+          "release_requirement": "required"
         }
       ]
     },
@@ -1978,7 +2030,8 @@
           "environment": {},
           "binary_sha256": "",
           "input_manifest_sha256": "",
-          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17"
+          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17",
+          "release_requirement": "required"
         }
       ]
     },
@@ -2014,7 +2067,8 @@
           "environment": {},
           "binary_sha256": "",
           "input_manifest_sha256": "",
-          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17"
+          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17",
+          "release_requirement": "required"
         }
       ]
     },
@@ -2050,7 +2104,8 @@
           "environment": {},
           "binary_sha256": "",
           "input_manifest_sha256": "",
-          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17"
+          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17",
+          "release_requirement": "required"
         }
       ]
     },
@@ -2087,7 +2142,8 @@
           "environment": {},
           "binary_sha256": "",
           "input_manifest_sha256": "",
-          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17"
+          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17",
+          "release_requirement": "required"
         },
         {
           "subrow": "llm-or-external-prompt@production-exe",
@@ -2115,7 +2171,8 @@
           "environment": {},
           "binary_sha256": "",
           "input_manifest_sha256": "",
-          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17"
+          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17",
+          "release_requirement": "required"
         },
         {
           "subrow": "shortcut@production-exe",
@@ -2143,7 +2200,8 @@
           "environment": {},
           "binary_sha256": "",
           "input_manifest_sha256": "",
-          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17"
+          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17",
+          "release_requirement": "required"
         },
         {
           "subrow": "plugin-change@production-exe",
@@ -2171,7 +2229,8 @@
           "environment": {},
           "binary_sha256": "",
           "input_manifest_sha256": "",
-          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17"
+          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17",
+          "release_requirement": "required"
         },
         {
           "subrow": "ocr-conditions@production-exe",
@@ -2199,7 +2258,8 @@
           "environment": {},
           "binary_sha256": "",
           "input_manifest_sha256": "",
-          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17"
+          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17",
+          "release_requirement": "required"
         },
         {
           "subrow": "tool-settings@production-exe",
@@ -2227,7 +2287,8 @@
           "environment": {},
           "binary_sha256": "",
           "input_manifest_sha256": "",
-          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17"
+          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17",
+          "release_requirement": "required"
         },
         {
           "subrow": "window-exit@production-exe",
@@ -2255,7 +2316,8 @@
           "environment": {},
           "binary_sha256": "",
           "input_manifest_sha256": "",
-          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17"
+          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17",
+          "release_requirement": "required"
         },
         {
           "subrow": "replace-notification@production-exe",
@@ -2283,7 +2345,8 @@
           "environment": {},
           "binary_sha256": "",
           "input_manifest_sha256": "",
-          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17"
+          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17",
+          "release_requirement": "required"
         }
       ]
     },
@@ -2320,7 +2383,8 @@
           "environment": {},
           "binary_sha256": "",
           "input_manifest_sha256": "",
-          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17"
+          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17",
+          "release_requirement": "required"
         },
         {
           "subrow": "rebuild-remaining-time@production-exe",
@@ -2347,7 +2411,8 @@
           "environment": {},
           "binary_sha256": "",
           "input_manifest_sha256": "",
-          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17"
+          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17",
+          "release_requirement": "required"
         },
         {
           "subrow": "exit-no-first-fail-second-exit@production-exe",
@@ -2375,7 +2440,8 @@
           "environment": {},
           "binary_sha256": "",
           "input_manifest_sha256": "",
-          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17"
+          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17",
+          "release_requirement": "required"
         },
         {
           "subrow": "unreadable-save-suppressed@production-exe",
@@ -2403,7 +2469,8 @@
           "environment": {},
           "binary_sha256": "",
           "input_manifest_sha256": "",
-          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17"
+          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17",
+          "release_requirement": "required"
         }
       ]
     },
@@ -2437,7 +2504,8 @@
           "environment": {},
           "binary_sha256": "",
           "input_manifest_sha256": "",
-          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17"
+          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17",
+          "release_requirement": "required"
         },
         {
           "subrow": "sample-ocr-actual-read@production-exe",
@@ -2462,7 +2530,8 @@
           "environment": {},
           "binary_sha256": "",
           "input_manifest_sha256": "",
-          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17"
+          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17",
+          "release_requirement": "required"
         },
         {
           "subrow": "name-collision-stops@production-exe",
@@ -2487,7 +2556,8 @@
           "environment": {},
           "binary_sha256": "",
           "input_manifest_sha256": "",
-          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17"
+          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17",
+          "release_requirement": "required"
         },
         {
           "subrow": "guide-update-steps@production-exe",
@@ -2512,7 +2582,8 @@
           "environment": {},
           "binary_sha256": "",
           "input_manifest_sha256": "",
-          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17"
+          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17",
+          "release_requirement": "required"
         },
         {
           "subrow": "about-version-match@production-exe",
@@ -2538,7 +2609,8 @@
           "environment": {},
           "binary_sha256": "",
           "input_manifest_sha256": "",
-          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17"
+          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17",
+          "release_requirement": "required"
         }
       ]
     },
@@ -2573,7 +2645,8 @@
           "observed_at": "",
           "environment": {},
           "binary_sha256": "",
-          "input_manifest_sha256": ""
+          "input_manifest_sha256": "",
+          "release_requirement": "required"
         },
         {
           "subrow": "foreground-denied@module",
@@ -2599,7 +2672,8 @@
           "observed_at": "",
           "environment": {},
           "binary_sha256": "",
-          "input_manifest_sha256": ""
+          "input_manifest_sha256": "",
+          "release_requirement": "required"
         },
         {
           "subrow": "foreground-denied@production-exe",
@@ -2627,7 +2701,8 @@
           "environment": {},
           "binary_sha256": "",
           "input_manifest_sha256": "",
-          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17"
+          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17",
+          "release_requirement": "required"
         }
       ]
     },
@@ -2662,7 +2737,8 @@
           "observed_at": "",
           "environment": {},
           "binary_sha256": "",
-          "input_manifest_sha256": ""
+          "input_manifest_sha256": "",
+          "release_requirement": "required"
         },
         {
           "subrow": "cold-start-double-launch@production-exe",
@@ -2688,7 +2764,8 @@
           "environment": {},
           "binary_sha256": "",
           "input_manifest_sha256": "",
-          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17"
+          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17",
+          "release_requirement": "required"
         }
       ]
     },
@@ -2722,7 +2799,8 @@
           "observed_at": "",
           "environment": {},
           "binary_sha256": "",
-          "input_manifest_sha256": ""
+          "input_manifest_sha256": "",
+          "release_requirement": "required"
         },
         {
           "subrow": "natural-busy@production-exe",
@@ -2748,7 +2826,8 @@
           "environment": {},
           "binary_sha256": "",
           "input_manifest_sha256": "",
-          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17"
+          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17",
+          "release_requirement": "required"
         }
       ]
     },
@@ -2782,7 +2861,8 @@
           "observed_at": "",
           "environment": {},
           "binary_sha256": "",
-          "input_manifest_sha256": ""
+          "input_manifest_sha256": "",
+          "release_requirement": "required"
         },
         {
           "subrow": "simultaneous-launch-and-takeover@production-exe",
@@ -2808,7 +2888,8 @@
           "environment": {},
           "binary_sha256": "",
           "input_manifest_sha256": "",
-          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17"
+          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17",
+          "release_requirement": "required"
         }
       ]
     },
@@ -2841,7 +2922,8 @@
           "observed_at": "",
           "environment": {},
           "binary_sha256": "",
-          "input_manifest_sha256": ""
+          "input_manifest_sha256": "",
+          "release_requirement": "required"
         },
         {
           "subrow": "normal-exit-relaunch@production-exe",
@@ -2867,7 +2949,8 @@
           "environment": {},
           "binary_sha256": "",
           "input_manifest_sha256": "",
-          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17"
+          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17",
+          "release_requirement": "required"
         },
         {
           "subrow": "forced-kill-relaunch@production-exe",
@@ -2893,7 +2976,8 @@
           "environment": {},
           "binary_sha256": "",
           "input_manifest_sha256": "",
-          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17"
+          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17",
+          "release_requirement": "required"
         }
       ]
     },
@@ -2927,7 +3011,8 @@
           "observed_at": "",
           "environment": {},
           "binary_sha256": "",
-          "input_manifest_sha256": ""
+          "input_manifest_sha256": "",
+          "release_requirement": "required"
         },
         {
           "subrow": "quit-no-then-yes@production-exe",
@@ -2954,7 +3039,8 @@
           "environment": {},
           "binary_sha256": "",
           "input_manifest_sha256": "",
-          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17"
+          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17",
+          "release_requirement": "required"
         }
       ]
     },
@@ -2987,7 +3073,8 @@
           "observed_at": "",
           "environment": {},
           "binary_sha256": "",
-          "input_manifest_sha256": ""
+          "input_manifest_sha256": "",
+          "release_requirement": "required"
         },
         {
           "subrow": "worker-alive@script",
@@ -3011,7 +3098,8 @@
           "observed_at": "",
           "environment": {},
           "binary_sha256": "",
-          "input_manifest_sha256": ""
+          "input_manifest_sha256": "",
+          "release_requirement": "required"
         },
         {
           "subrow": "released-mapping@script",
@@ -3035,7 +3123,8 @@
           "observed_at": "",
           "environment": {},
           "binary_sha256": "",
-          "input_manifest_sha256": ""
+          "input_manifest_sha256": "",
+          "release_requirement": "required"
         },
         {
           "subrow": "stale-mapping@script",
@@ -3059,7 +3148,8 @@
           "observed_at": "",
           "environment": {},
           "binary_sha256": "",
-          "input_manifest_sha256": ""
+          "input_manifest_sha256": "",
+          "release_requirement": "required"
         },
         {
           "subrow": "simultaneous-claim@script",
@@ -3083,7 +3173,8 @@
           "observed_at": "",
           "environment": {},
           "binary_sha256": "",
-          "input_manifest_sha256": ""
+          "input_manifest_sha256": "",
+          "release_requirement": "required"
         },
         {
           "subrow": "os-death@script",
@@ -3107,7 +3198,8 @@
           "observed_at": "",
           "environment": {},
           "binary_sha256": "",
-          "input_manifest_sha256": ""
+          "input_manifest_sha256": "",
+          "release_requirement": "required"
         },
         {
           "subrow": "os-death-forced-kill@production-exe",
@@ -3133,7 +3225,8 @@
           "environment": {},
           "binary_sha256": "",
           "input_manifest_sha256": "",
-          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17"
+          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17",
+          "release_requirement": "required"
         }
       ]
     },
@@ -3169,7 +3262,8 @@
           "observed_at": "",
           "environment": {},
           "binary_sha256": "",
-          "input_manifest_sha256": ""
+          "input_manifest_sha256": "",
+          "release_requirement": "required"
         },
         {
           "subrow": "suspended-primary-notice@production-exe",
@@ -3198,7 +3292,8 @@
           "environment": {},
           "binary_sha256": "",
           "input_manifest_sha256": "",
-          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17"
+          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17",
+          "release_requirement": "required"
         }
       ]
     },
@@ -3233,7 +3328,8 @@
           "observed_at": "",
           "environment": {},
           "binary_sha256": "",
-          "input_manifest_sha256": ""
+          "input_manifest_sha256": "",
+          "release_requirement": "required"
         },
         {
           "subrow": "dpi-100@production-exe",
@@ -3261,7 +3357,8 @@
           "environment": {},
           "binary_sha256": "",
           "input_manifest_sha256": "",
-          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17"
+          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17",
+          "release_requirement": "required"
         }
       ]
     },
@@ -3296,7 +3393,8 @@
           "observed_at": "",
           "environment": {},
           "binary_sha256": "",
-          "input_manifest_sha256": ""
+          "input_manifest_sha256": "",
+          "release_requirement": "required"
         },
         {
           "subrow": "dpi-150@production-exe",
@@ -3324,7 +3422,8 @@
           "environment": {},
           "binary_sha256": "",
           "input_manifest_sha256": "",
-          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17"
+          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17",
+          "release_requirement": "required"
         }
       ]
     },
@@ -3359,7 +3458,8 @@
           "observed_at": "",
           "environment": {},
           "binary_sha256": "",
-          "input_manifest_sha256": ""
+          "input_manifest_sha256": "",
+          "release_requirement": "required"
         },
         {
           "subrow": "dpi-200@production-exe",
@@ -3387,7 +3487,8 @@
           "environment": {},
           "binary_sha256": "",
           "input_manifest_sha256": "",
-          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17"
+          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17",
+          "release_requirement": "required"
         }
       ]
     },
@@ -3421,7 +3522,8 @@
           "observed_at": "",
           "environment": {},
           "binary_sha256": "",
-          "input_manifest_sha256": ""
+          "input_manifest_sha256": "",
+          "release_requirement": "required"
         },
         {
           "subrow": "medium→elevated@production-exe",
@@ -3448,7 +3550,8 @@
           "environment": {},
           "binary_sha256": "",
           "input_manifest_sha256": "",
-          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17"
+          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17",
+          "release_requirement": "required"
         }
       ]
     },
@@ -3482,7 +3585,8 @@
           "observed_at": "",
           "environment": {},
           "binary_sha256": "",
-          "input_manifest_sha256": ""
+          "input_manifest_sha256": "",
+          "release_requirement": "required"
         },
         {
           "subrow": "elevated→medium@production-exe",
@@ -3509,7 +3613,8 @@
           "environment": {},
           "binary_sha256": "",
           "input_manifest_sha256": "",
-          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17"
+          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17",
+          "release_requirement": "required"
         }
       ]
     },
@@ -3544,7 +3649,10 @@
           "observed_at": "",
           "environment": {},
           "binary_sha256": "",
-          "input_manifest_sha256": ""
+          "input_manifest_sha256": "",
+          "release_requirement": "deferred",
+          "approval_id": "W11-B-20261028",
+          "deferred_reason": "Approved single-login-session scope; other-session behavior remains unverified."
         },
         {
           "subrow": "other-session@production-exe",
@@ -3572,7 +3680,10 @@
           "environment": {},
           "binary_sha256": "",
           "input_manifest_sha256": "",
-          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17"
+          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17",
+          "release_requirement": "deferred",
+          "approval_id": "W11-B-20261028",
+          "deferred_reason": "Approved single-login-session scope; other-session behavior remains unverified."
         }
       ]
     },
@@ -3605,7 +3716,8 @@
           "observed_at": "",
           "environment": {},
           "binary_sha256": "",
-          "input_manifest_sha256": ""
+          "input_manifest_sha256": "",
+          "release_requirement": "required"
         },
         {
           "subrow": "rerun-same-load@module",
@@ -3629,7 +3741,8 @@
           "observed_at": "",
           "environment": {},
           "binary_sha256": "",
-          "input_manifest_sha256": ""
+          "input_manifest_sha256": "",
+          "release_requirement": "required"
         },
         {
           "subrow": "exe-second-launch-elapsed@production-exe",
@@ -3655,9 +3768,16 @@
           "environment": {},
           "binary_sha256": "",
           "input_manifest_sha256": "",
-          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17"
+          "expected_binary_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17",
+          "release_requirement": "required"
         }
       ]
     }
-  ]
+  ],
+  "release_scope": {
+    "path": ".planning/phases/06-release-validation/06-RELEASE-SCOPE.json",
+    "sha256": "85c15942e7cc55c386c9a4dc4bbe55c625cd337723d383e4f68dd72b308e8559",
+    "scope_id": "single-login-session",
+    "approval_id": "W11-B-20261028"
+  }
 }

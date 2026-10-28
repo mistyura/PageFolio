@@ -76,6 +76,134 @@ PREPARATION = "06-UAT-PREPARATION.md"
 QUALITY = "06-EVIDENCE.json"
 GATE = "06-RELEASE-GATE.md"
 RESUME = "06-RESUME-STATE.json"
+RELEASE_SCOPE = "06-RELEASE-SCOPE.json"
+SCOPE_ID = "single-login-session"
+SCOPE_APPROVAL_ID = "W11-B-20261028"
+SCOPE_PREFIX = ".planning/phases/06-release-validation/"
+SCOPE_APPROVAL = "06-W11-SCOPE-APPROVAL.md"
+DEFERRED_CARDS = frozenset(
+    ("W11/other-session@script", "W11/other-session@production-exe")
+)
+# 承認時の全カードをコードで固定する。実台帳から免除集合を生成しない。
+CANONICAL_ROWS = {
+    **{
+        case: tuple(
+            f"{condition}@{entry}"
+            for condition in conditions
+            for entry in ("script", "module", "production-exe")
+        )
+        for case, conditions in {
+            "W01": ("normal", "zoomed"),
+            "W02": ("settings", "thumb", "preview"),
+            "W03": ("pdf-3page",),
+            "W04": ("ocr-1page",),
+            "W05a": ("nested-settings",),
+            "W05b": ("ocr-close-confirm",),
+            "W05c": ("quit-no",),
+            "W06": ("foreground-denied",),
+        }.items()
+    },
+    "W12a": tuple(
+        f"{a}-{b}@{a}"
+        for a in ("script", "module", "relocated")
+        for b in ("script", "module", "relocated")
+    ),
+    "W12b": (
+        "exe-exe-samecopy@production-exe",
+        "exe-script@production-exe",
+        "script-exe@script",
+        "exe-module@production-exe",
+        "module-exe@module",
+        "exe-tracer@production-exe",
+        "tracer-exe@tracer",
+        "exe-relocated-copy@production-exe",
+        "relocated-copy-exe@relocated-copy",
+    ),
+    "W12c": (
+        "explorer-python@script",
+        "terminal-python@script",
+        "explorer-exe@production-exe",
+        "terminal-exe@production-exe",
+    ),
+    **{
+        case: tuple(f"{c}@production-exe" for c in conditions)
+        for case, conditions in {
+            "X01": ("missing",),
+            "X02": ("corrupt",),
+            "X03": ("unreadable",),
+            "X04": (
+                "general-settings",
+                "llm-or-external-prompt",
+                "shortcut",
+                "plugin-change",
+                "ocr-conditions",
+                "tool-settings",
+                "window-exit",
+                "replace-notification",
+            ),
+            "X05": (
+                "fifo-10s",
+                "rebuild-remaining-time",
+                "exit-no-first-fail-second-exit",
+                "unreadable-save-suppressed",
+            ),
+            "X06": (
+                "sample-llm-ui-read",
+                "sample-ocr-actual-read",
+                "name-collision-stops",
+                "guide-update-steps",
+                "about-version-match",
+            ),
+        }.items()
+    },
+    "W07a": ("slowready@script", "cold-start-double-launch@production-exe"),
+    "W07b": ("busy@module", "natural-busy@production-exe"),
+    "W08a": (
+        "init-death-simultaneous-claim@script",
+        "simultaneous-launch-and-takeover@production-exe",
+    ),
+    "W08b": (
+        "lifecycle-exit-modes@script",
+        "normal-exit-relaunch@production-exe",
+        "forced-kill-relaunch@production-exe",
+    ),
+    "W08c": ("quit-no-then-yes@script", "quit-no-then-yes@production-exe"),
+    "W08d": tuple(
+        f"{c}@script"
+        for c in (
+            "root-missing",
+            "worker-alive",
+            "released-mapping",
+            "stale-mapping",
+            "simultaneous-claim",
+            "os-death",
+        )
+    )
+    + ("os-death-forced-kill@production-exe",),
+    "W09a": (
+        "notice-click-input-10s-aggregate@script",
+        "suspended-primary-notice@production-exe",
+    ),
+    **{
+        case: tuple(f"{condition}@{entry}" for entry in ("script", "production-exe"))
+        for case, condition in {
+            "W09b": "dpi-100",
+            "W09c": "dpi-150",
+            "W09d": "dpi-200",
+            "W10a": "medium→elevated",
+            "W10b": "elevated→medium",
+            "W11": "other-session",
+        }.items()
+    },
+    "WR-01": (
+        "retained-15609-15140@script",
+        "rerun-same-load@module",
+        "exe-second-launch-elapsed@production-exe",
+    ),
+}
+CANONICAL_CARDS = frozenset(
+    f"{case}/{row}" for case, rows in CANONICAL_ROWS.items() for row in rows
+)
 
 TASK_IDS = {
     "06-05-02": (
@@ -101,7 +229,7 @@ REQUIRED_UNRESOLVED = (
     "tcl-warning",
     "edge-unclassified",
 )
-REQUIRED_THREATS = tuple(f"T-06-{n:02d}" for n in range(1, 15))
+REQUIRED_THREATS = tuple(f"T-06-{n:02d}" for n in range(1, 17))
 FAULT_IDS = ("X01", "X02", "X03", "X04", "X05")
 
 
@@ -1606,10 +1734,138 @@ def _active(case):
     return [s for s in case.get("subrows", []) if not s.get("superseded_by")]
 
 
+def _scope_counts(manual, audit, deferred, ids=None):
+    rows = [
+        (f"{c.get('id')}/{s.get('subrow')}", s)
+        for c in manual.get("cases", [])
+        if ids is None or c.get("id") in ids
+        for s in _active(c)
+    ]
+    required = [s for card, s in rows if card not in deferred]
+    audit.extra.update(
+        total=len(rows),
+        required=len(required),
+        deferred=len(rows) - len(required),
+        required_pass=sum(s.get("status") == "pass" for s in required),
+        required_not_run=sum(s.get("status") == "not-run" for s in required),
+        required_fail=sum(s.get("status") == "fail" for s in required),
+        required_blocked=sum(s.get("status") == "blocked" for s in required),
+    )
+
+
+def validate_release_scope(phase_dir, audit, manual=None):
+    """承認された固定2行だけを分離する。すべて読取専用、部分移行は拒否。"""
+    if hasattr(audit, "_scope_deferred"):
+        return audit._scope_deferred
+    audit._scope_deferred = frozenset()
+    if manual is None:
+        manual_path = Path(phase_dir) / MANUAL
+        manual = read_json(manual_path) if manual_path.is_file() else {}
+    path = Path(phase_dir) / RELEASE_SCOPE
+    marker = "release_scope" in manual or any(
+        "release_requirement" in sub
+        for case in manual.get("cases", [])
+        for sub in case.get("subrows", [])
+    )
+    if not path.exists() and not marker:
+        _scope_counts(manual, audit, frozenset())
+        return frozenset()  # 旧形式は全行必須。
+    before = len(audit.reasons)
+    scope = _need(audit, phase_dir, RELEASE_SCOPE)
+    if not isinstance(scope, dict):
+        audit.fail("release scope: 正規scope JSONがありません")
+        return frozenset()
+    fixed = {
+        "schema_version": 1,
+        "scope_id": SCOPE_ID,
+        "approval_id": SCOPE_APPROVAL_ID,
+        "approved": True,
+        "approval_path": SCOPE_PREFIX + SCOPE_APPROVAL,
+        "case_count": 31,
+        "total_subrows": 110,
+        "required_subrows": 108,
+        "deferred_subrows": 2,
+    }
+    for key, value in fixed.items():
+        if type(scope.get(key)) is not type(value) or scope.get(key) != value:
+            audit.fail(f"release scope: {key}が固定承認と一致しません")
+    if set(scope) != set(fixed) | {"approval_sha256", "deferred_cards"}:
+        audit.fail("release scope: schemaの欄が不足または余分です")
+    cards = scope.get("deferred_cards")
+    if not isinstance(cards, list) or len(cards) != 2 or set(cards) != DEFERRED_CARDS:
+        audit.fail("release scope: deferred_cardsが承認された2キーと一致しません")
+    approval_path = Path(phase_dir) / SCOPE_APPROVAL
+    if not _hash_matches(approval_path, scope.get("approval_sha256")):
+        audit.fail("release scope: 承認文書hashが一致しません")
+    else:
+        approval = approval_path.read_text("utf-8")
+        for token in (
+            "status: approved",
+            f"approval_id: {SCOPE_APPROVAL_ID}",
+            f"scope_id: {SCOPE_ID}",
+            "案B：単一ログインセッション利用に限定して再計画を承認する",
+            *sorted(DEFERRED_CARDS),
+        ):
+            if token not in approval:
+                audit.fail(f"release scope: 承認文書の必須記録がありません: {token}")
+    reference = manual.get("release_scope")
+    if reference != {
+        "path": SCOPE_PREFIX + RELEASE_SCOPE,
+        "sha256": sha_file(path),
+        "scope_id": SCOPE_ID,
+        "approval_id": SCOPE_APPROVAL_ID,
+    }:
+        audit.fail("release scope: 台帳のscope参照が一致しません")
+    cases = manual.get("cases", [])
+    case_ids = [c.get("id") for c in cases]
+    if len(case_ids) != 31 or set(case_ids) != set(CANONICAL_ROWS):
+        audit.fail("release scope: 31ケースの欠落/重複/余分があります")
+    active_cards = []
+    for case in cases:
+        for sub in case.get("subrows", []):
+            card = f"{case.get('id')}/{sub.get('subrow')}"
+            if card not in CANONICAL_CARDS or sub.get("card") != card:
+                audit.fail(f"release scope: 正規cardと一致しません: {card}")
+            if sub.get("superseded_by"):
+                if not _text(sub.get("supersede_reason")):
+                    audit.fail(f"release scope: superseded理由がありません: {card}")
+                continue
+            active_cards.append(card)
+            if sub.get("subrow") != f"{sub.get('condition')}@{sub.get('entry')}":
+                audit.fail(
+                    f"release scope: condition/entryがcardと一致しません: {card}"
+                )
+            expected = "deferred" if card in DEFERRED_CARDS else "required"
+            if sub.get("release_requirement") != expected:
+                audit.fail(f"release scope: 必須/対象外の範囲違い: {card}")
+            if expected == "deferred" and (
+                sub.get("status") != "not-run"
+                or sub.get("answer") != ""
+                or sub.get("observations") != {}
+                or sub.get("run_id")
+                or sub.get("observed_at")
+                or sub.get("binary_sha256")
+                or sub.get("approval_id") != SCOPE_APPROVAL_ID
+                or not _text(sub.get("deferred_reason"))
+            ):
+                audit.fail(
+                    f"release scope: deferredを実測/passへ変換できません: {card}"
+                )
+    if len(active_cards) != 110 or set(active_cards) != CANONICAL_CARDS:
+        audit.fail("release scope: active 110カードの欠落/重複/余分があります")
+    if len(audit.reasons) == before:
+        audit._scope_deferred = DEFERRED_CARDS
+        audit.extra.update(scope_id=SCOPE_ID, approval_id=SCOPE_APPROVAL_ID)
+    _scope_counts(manual, audit, audit._scope_deferred)
+    return audit._scope_deferred
+
+
 def check_manual(phase_dir, ids, audit, *, strict, target):
     manual = _need(audit, phase_dir, MANUAL)
     if manual is None:
         return
+    deferred = validate_release_scope(phase_dir, audit, manual)
+    _scope_counts(manual, audit, deferred, ids)
     cases = {c.get("id"): c for c in manual.get("cases", []) if isinstance(c, dict)}
     for case_id in ids:
         case = cases.get(case_id)
@@ -1636,7 +1892,13 @@ def check_manual(phase_dir, ids, audit, *, strict, target):
         if spec.get("subject") and any(not s.get("subject") for s in rows):
             audit.fail(f"{case_id}: 主対象が欠落したsubrowがあります")
         for sub in rows:
-            _check_subrow(case_id, sub, target, audit, strict=strict)
+            _check_subrow(
+                case_id,
+                sub,
+                target,
+                audit,
+                strict=strict and f"{case_id}/{sub.get('subrow')}" not in deferred,
+            )
 
 
 def _hash_matches(path, expected):
@@ -2094,6 +2356,7 @@ def _check_gate_report(gid, item, digest, audit):
 
 
 def audit_handoff(phase_dir, repo, audit, *, final):
+    validate_release_scope(phase_dir, audit)
     build = check_build(phase_dir, repo, audit)
     check_preparation(phase_dir, repo, audit)
     check_manual(phase_dir, ALL_IDS, audit, strict=True, target=build)
@@ -2125,6 +2388,7 @@ def run_audit(phase_dir, *, mode, repo=None, require=None):
 
 
 def _run_audit(audit, phase_dir, mode, repo, require):
+    validate_release_scope(phase_dir, audit)
     if mode == "allow-pending":
         target = load_target(phase_dir, Audit("target"))
         check_manual(phase_dir, ALL_IDS, audit, strict=False, target=target)

@@ -438,6 +438,31 @@ def carryover_ids():
 
 
 class TestCaseCoverage:
+    def test_approved_scope_keeps_110_cards_and_only_two_deferred(self):
+        data = ledger()
+        active = [(c, s) for c in data["cases"] for s in sup._active(c)]
+        assert len(data["cases"]) == 31
+        assert len(active) == len(sup.CANONICAL_CARDS) == 110
+        assert {f"{c['id']}/{s['subrow']}" for c, s in active} == sup.CANONICAL_CARDS
+        deferred = [(c, s) for c, s in active if s["release_requirement"] == "deferred"]
+        assert {s["card"] for _, s in deferred} == {
+            "W11/other-session@script",
+            "W11/other-session@production-exe",
+        }
+        assert len(deferred) == 2
+        assert sum(s["release_requirement"] == "required" for _, s in active) == 108
+        for _, sub in deferred:
+            assert (
+                sub["status"] == "not-run"
+                and sub["observations"] == {}
+                and sub["answer"] == ""
+            )
+            assert sub["approval_id"] == "W11-B-20261028"
+            assert "今回の保証対象外" in cards()[sub["card"]]
+        audit = sup.run_audit(PHASE_DIR, mode="allow-pending")
+        assert audit.ok, audit.reasons
+        assert audit.extra["required"] == 108 and audit.extra["deferred"] == 2
+
     def test_all_carryover_cases_and_fault_cases_are_declared_once(self):
         ids = [case["id"] for case in ledger()["cases"]]
         assert len(ids) == len(set(ids)), "ケースIDが重複しています"
@@ -580,7 +605,12 @@ class TestCaseCoverage:
             assert by[name]["peer"] == {"role": "python-entry", "entry": "module"}
 
     def test_structure_audit_accepts_ledger_and_rejects_false_pass(self, tmp_path):
-        for name in ("06-BUILD-EVIDENCE.json", "06-MANUAL-EVIDENCE.json"):
+        for name in (
+            "06-BUILD-EVIDENCE.json",
+            "06-MANUAL-EVIDENCE.json",
+            "06-RELEASE-SCOPE.json",
+            "06-W11-SCOPE-APPROVAL.md",
+        ):
             shutil.copyfile(PHASE_DIR / name, tmp_path / name)
         audit = sup.run_audit(tmp_path, mode="allow-pending")
         assert audit.ok, audit.reasons

@@ -11,6 +11,10 @@ created: 2026-10-24
 本書は人手受入の**操作カードと回答欄の正本**。結果の機械可読な正本は [06-MANUAL-EVIDENCE.json](06-MANUAL-EVIDENCE.json)。
 準備完了・build成功・人手pass・Phase完了は別の状態であり、本書のカード記載は合格・出荷承認を意味しない。全subrowは not-run から始まる。
 
+## 承認済みの保証範囲
+
+案B（W11-B-20261028）によりWindowsの単一ログインセッション利用に限定する。31ケース/110行を保持し、W11の別セッション2行はnot-run/deferred、他108行と品質・安全条件は必須。承認記録は06-W11-SCOPE-APPROVAL.md、機械契約は06-RELEASE-SCOPE.json。未実施を合格へ換算しない。
+
 ## 受入対象と進め方
 
 | 項目 | 内容 |
@@ -2933,6 +2937,8 @@ created: 2026-10-24
 
 ### W11/other-session@script
 
+今回の保証対象外（release_requirement=deferred、承認W11-B-20261028）。status=not-runのまま保持する。別セッションの動作は未確認で、下記は将来保証を拡大する際の受入条件。今回のpassへ換算しない。
+
 **W11 / 別session / Python直接起動(python pagefolio.py)**(証拠種別: `python-real`)
 
 - **状態**: not-run / 準備: 未準備(別フィールド)
@@ -2956,6 +2962,8 @@ created: 2026-10-24
 - **出典**: 04-WINDOWS-UAT W11(準備不能)
 
 ### W11/other-session@production-exe
+
+今回の保証対象外（release_requirement=deferred、承認W11-B-20261028）。status=not-runのまま保持する。別セッションの動作は未確認で、下記は将来保証を拡大する際の受入条件。今回のpassへ換算しない。
 
 **W11 / 別session / 実配布EXE(隔離copy。最終v1.10.0)**(証拠種別: `production-exe`)
 

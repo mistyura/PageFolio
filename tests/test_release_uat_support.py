@@ -1284,6 +1284,302 @@ def assert_fails(audit, needle):
     assert any(needle in reason for reason in audit.reasons), audit.reasons
 
 
+@pytest.fixture
+def scoped_phase(phase):
+    """実カードの宣言だけを使い、tmp_path内に合成観測を作る。"""
+    source = (
+        Path(__file__).resolve().parents[1] / ".planning/phases/06-release-validation"
+    )
+    manual = json.loads((source / sup.MANUAL).read_text("utf-8"))
+    cases = []
+    deferred = ["W11/other-session@script", "W11/other-session@production-exe"]
+    for case in manual["cases"]:
+        rows = []
+        for declaration in sup._active(case):
+            card = f"{case['id']}/{declaration['subrow']}"
+            row = phase.row(
+                case["id"],
+                declaration["subrow"],
+                entry=declaration["entry"],
+                condition=declaration["condition"],
+                card=card,
+                release_requirement="deferred" if card in deferred else "required",
+            )
+            if case["id"] == "W12b":
+                row.update(
+                    subject=phase.subject(),
+                    peer={
+                        "role": "same-version-copy",
+                        "binary_sha256": phase.target["exe_sha256"],
+                        "version": VERSION,
+                    },
+                )
+            if card in deferred:
+                row.update(
+                    status="not-run",
+                    observations={},
+                    answer="",
+                    run_id="",
+                    observed_at="",
+                    binary_sha256="",
+                    approval_id="W11-B-20261028",
+                    deferred_reason="別ログインセッションは今回の保証対象外・未確認",
+                )
+            rows.append(row)
+        cases.append({"id": case["id"], "subrows": rows})
+    approval = "06-W11-SCOPE-APPROVAL.md"
+    (phase.phase / approval).write_bytes((source / approval).read_bytes())
+    scope = {
+        "schema_version": 1,
+        "scope_id": "single-login-session",
+        "approval_id": "W11-B-20261028",
+        "approved": True,
+        "approval_path": f".planning/phases/06-release-validation/{approval}",
+        "approval_sha256": sup.sha_file(phase.phase / approval),
+        "case_count": 31,
+        "total_subrows": 110,
+        "required_subrows": 108,
+        "deferred_subrows": 2,
+        "deferred_cards": deferred,
+    }
+    scope_path = phase.phase / "06-RELEASE-SCOPE.json"
+    sup.write_json(scope_path, scope)
+    phase.manual = {
+        "schema_version": 1,
+        "cases": cases,
+        "release_scope": {
+            "path": ".planning/phases/06-release-validation/06-RELEASE-SCOPE.json",
+            "sha256": sup.sha_file(scope_path),
+            "scope_id": scope["scope_id"],
+            "approval_id": scope["approval_id"],
+        },
+    }
+    phase.finalize()
+    return phase
+
+
+class TestReleaseScope:
+    MODES = (
+        "allow-pending",
+        "require-pass",
+        "build-only",
+        "preparation-only",
+        "for-handoff",
+        "final",
+    )
+
+    @pytest.mark.parametrize("mode", MODES)
+    def test_all_modes_read_only_and_count_scope(self, scoped_phase, mode):
+        phase = scoped_phase
+        before = {p: p.read_bytes() for p in phase.phase.iterdir()}
+        result = phase.audit(mode, require=",".join(sup.ALL_IDS))
+        assert result.ok, result.reasons
+        assert result.extra["required"] == 108
+        assert result.extra["deferred"] == 2
+        assert result.extra["required_pass"] == 108
+        assert before == {p: p.read_bytes() for p in phase.phase.iterdir()}
+
+    @pytest.mark.parametrize("mode", MODES)
+    @pytest.mark.parametrize(
+        "invalid",
+        [
+            "other-deferred",
+            "missing",
+            "duplicate",
+            "extra",
+            "case-duplicate",
+            "hidden-required",
+            "card-mismatch",
+            "scope-id",
+            "approval-id",
+            "unapproved",
+            "approval-hash",
+            "approval-text",
+            "count",
+            "w11-pass",
+            "w11-answer",
+            "w11-observation",
+            "missing-scope",
+            "missing-ref",
+            "ref-hash",
+            "condition",
+            "unknown-field",
+        ],
+    )
+    def test_all_modes_reject_scope_and_catalog_tampering(
+        self, scoped_phase, mode, invalid
+    ):
+        phase = scoped_phase
+        scope_path = phase.phase / "06-RELEASE-SCOPE.json"
+        scope = json.loads(scope_path.read_text("utf-8"))
+        first = phase.case("W01")["subrows"][0]
+        w11 = phase.case("W11")["subrows"][0]
+        if invalid == "other-deferred":
+            first["release_requirement"] = "deferred"
+        elif invalid == "missing":
+            phase.case("W01")["subrows"].pop()
+        elif invalid == "duplicate":
+            phase.case("W01")["subrows"].append(copy.deepcopy(first))
+        elif invalid == "extra":
+            phase.case("W01")["subrows"].append({**first, "subrow": "unknown@script"})
+        elif invalid == "case-duplicate":
+            phase.manual["cases"].append(copy.deepcopy(phase.case("W01")))
+        elif invalid == "hidden-required":
+            first.update(superseded_by="later", supersede_reason="履歴へ隠す")
+        elif invalid == "card-mismatch":
+            first["card"] = "W11/other-session@script"
+        elif invalid in ("scope-id", "approval-id", "approval-hash"):
+            field = {
+                "scope-id": "scope_id",
+                "approval-id": "approval_id",
+                "approval-hash": "approval_sha256",
+            }[invalid]
+            scope[field] = "invalid"
+        elif invalid == "unapproved":
+            scope["approved"] = False
+        elif invalid == "approval-text":
+            ap = phase.phase / "06-W11-SCOPE-APPROVAL.md"
+            ap.write_text(
+                ap.read_text("utf-8").replace("status: approved", "status: pending"),
+                encoding="utf-8",
+            )
+            scope["approval_sha256"] = sup.sha_file(ap)
+        elif invalid == "count":
+            scope["required_subrows"] = 107
+        elif invalid == "w11-pass":
+            w11["status"] = "pass"
+        elif invalid == "w11-answer":
+            w11["answer"] = "未確認だが合格"
+        elif invalid == "w11-observation":
+            w11["observations"] = {"state": "観測したことにする"}
+        elif invalid == "condition":
+            first["condition"] = "changed"
+        elif invalid == "unknown-field":
+            scope["skip"] = ["W06"]
+        sup.write_json(scope_path, scope)
+        phase.manual["release_scope"]["sha256"] = sup.sha_file(scope_path)
+        if invalid == "missing-scope":
+            scope_path.unlink()
+        elif invalid == "missing-ref":
+            phase.manual.pop("release_scope")
+        elif invalid == "ref-hash":
+            phase.manual["release_scope"]["sha256"] = "bad"
+        phase.write_all()
+        assert_fails(phase.audit(mode, require="W11"), "release scope")
+
+    @pytest.mark.parametrize("status", ["not-run", "fail"])
+    def test_each_required_row_remains_mandatory(self, scoped_phase, status):
+        phase = scoped_phase
+        required = [
+            (c["id"], s)
+            for c in phase.manual["cases"]
+            for s in c["subrows"]
+            if s["release_requirement"] == "required"
+        ]
+        assert len(required) == 108
+        for case_id, row in required:
+            row["status"] = status
+            phase.write_all()
+            assert_fails(
+                phase.audit("require-pass", require=case_id),
+                f"{case_id}/{row['subrow']}",
+            )
+            row["status"] = "pass"
+
+    def test_explicit_w11_reports_no_required_pass(self, scoped_phase):
+        result = scoped_phase.audit("require-pass", require="W11")
+        assert result.ok, result.reasons
+        assert result.extra["total"] == result.extra["deferred"] == 2
+        assert result.extra["required"] == result.extra["required_pass"] == 0
+
+    def test_only_parent_pending_is_allowed_for_handoff(self, scoped_phase):
+        phase = scoped_phase
+        for gate in phase.gate["parent_gates"]:
+            gate["status"] = "pending"
+        phase.write_all()
+        result = phase.audit("for-handoff")
+        assert result.ok, result.reasons
+        assert not phase.audit("final").ok
+
+    @pytest.mark.parametrize(
+        "invalid", ["quality", "stale", "high", "w06-observation", "uac", "dpi", "wr01"]
+    )
+    def test_scope_does_not_waive_quality_or_safety(self, scoped_phase, invalid):
+        phase = scoped_phase
+        if invalid == "quality":
+            phase.quality["quality"]["pytest"]["exit"] = 1
+        elif invalid == "stale":
+            phase.quality["phase4"]["fresh"] = False
+        elif invalid == "high":
+            phase.gate["threats"][0]["status"] = "open"
+        else:
+            case = {
+                "w06-observation": "W06",
+                "uac": "W10b",
+                "dpi": "W09d",
+                "wr01": "WR-01",
+            }[invalid]
+            phase.case(case)["subrows"][0]["observations"] = {}
+        phase.write_all()
+        assert not phase.audit("for-handoff").ok
+        assert not phase.audit("final").ok
+
+    def test_approved_cli_final_keeps_deferred_separate(self, scoped_phase, capsys):
+        phase = scoped_phase
+        before = {p: p.read_bytes() for p in phase.phase.iterdir()}
+        result = sup.main(
+            ["audit", "--phase-dir", str(phase.phase), "--repo", str(phase.root)]
+        )
+        report = json.loads(capsys.readouterr().out)
+        assert result == 0, report["reasons"]
+        assert {
+            k: report[k]
+            for k in (
+                "total",
+                "required",
+                "deferred",
+                "required_pass",
+                "required_not_run",
+                "required_fail",
+            )
+        } == dict(
+            total=110,
+            required=108,
+            deferred=2,
+            required_pass=108,
+            required_not_run=0,
+            required_fail=0,
+        )
+        assert not report["phase_complete"] and not report["release_allowed"]
+        assert before == {p: p.read_bytes() for p in phase.phase.iterdir()}
+
+    @pytest.mark.parametrize("invalid", ["absent", "unapproved", "approval-hash"])
+    def test_cli_rejects_without_valid_approval(self, scoped_phase, invalid, capsys):
+        phase = scoped_phase
+        path = phase.phase / "06-RELEASE-SCOPE.json"
+        if invalid == "absent":
+            path.unlink()
+            phase.manual.pop("release_scope")
+            for case in phase.manual["cases"]:
+                for row in case["subrows"]:
+                    row.pop("release_requirement")
+        else:
+            scope = json.loads(path.read_text("utf-8"))
+            scope["approved" if invalid == "unapproved" else "approval_sha256"] = (
+                False if invalid == "unapproved" else "0" * 64
+            )
+            sup.write_json(path, scope)
+            phase.manual["release_scope"]["sha256"] = sup.sha_file(path)
+        phase.write_all()
+        assert (
+            sup.main(
+                ["audit", "--phase-dir", str(phase.phase), "--repo", str(phase.root)]
+            )
+            == 1
+        )
+        assert json.loads(capsys.readouterr().out)["reasons"]
+
+
 class TestEvidenceAudit:
     # -- モードと出力 ----------------------------------------------------
     def test_modes_are_mutually_exclusive(self, phase, capsys):
