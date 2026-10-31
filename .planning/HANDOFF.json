@@ -1,145 +1,150 @@
 {
-    "version":  "1.0",
-    "timestamp":  "2026-10-28T15:33:06.626Z",
-    "phase":  "06",
-    "phase_name":  "サンプル配布とリリース検証",
-    "phase_dir":  ".planning/phases/06-release-validation",
-    "plan":  5,
-    "task":  2,
-    "total_tasks":  2,
-    "status":  "paused",
-    "completed_tasks":  [
-                            {
-                                "id":  1,
-                                "name":  "06-05-01 ケースと証拠台帳",
-                                "status":  "done"
-                            },
-                            {
-                                "id":  2,
-                                "name":  "06-05-02 状態維持・混在入口・通知",
-                                "status":  "in_progress",
-                                "progress":  "G1/G2/W05a計24pass。W05b実確認harness対象6passed。正式W05b未着手。"
-                            }
-                        ],
-    "remaining_tasks":  [
-                            {
-                                "id":  "06-05-02",
-                                "name":  "W05b driver/記録helper、W05b/W05c/W12/X01〜X06、品質",
-                                "status":  "in_progress"
-                            },
-                            {
-                                "id":  "06-06",
-                                "name":  "OS拒否/UAC/DPI/WR-01と最終ゲート",
-                                "status":  "not_started"
-                            }
-                        ],
-    "blockers":  [
-                     {
-                         "description":  "必須84行が未確認。G3変更後の全件品質未実施。",
-                         "type":  "human_action",
-                         "workaround":  "再開後に準備を完成し、利用者確認を1行ずつ行う。"
-                     }
-                 ],
-    "async_jobs":  [
-
-                   ],
-    "human_actions_pending":  [
-                                  {
-                                      "action":  "再開時の画面確認可能時間の確認",
-                                      "context":  "現在の回答待ちはない。W05b準備完了後に依頼する。",
-                                      "blocking":  false
-                                  }
-                              ],
-    "decisions":  [
-                      {
-                          "decision":  "単一ログインセッション保証、W11正確2行だけdeferred/not-run",
-                          "rationale":  "利用者の明示承認W11-B-20261028。他108必須を維持。",
-                          "phase":  "06"
-                      },
-                      {
-                          "decision":  "pauseでは引き継ぎ2文書のみcommit",
-                          "rationale":  "既存dirtyを保持し、製品/受入変更をまとめてcommitしない。",
-                          "phase":  "06"
-                      }
-                  ],
-    "uncommitted_files":  [
-                              " M .gitignore",
-                              " M .planning/PROJECT.md",
-                              " M .planning/REQUIREMENTS.md",
-                              " M .planning/ROADMAP.md",
-                              " M .planning/STATE.md",
-                              " M .planning/debug/preview-focus-not-restored-evidence/diag_btn_press.py",
-                              " M .planning/debug/simultaneous-owner-missing.md",
-                              " M .planning/phases/04-startup-control/04-REVIEW-DISPOSITION.md",
-                              " M .planning/phases/04-startup-control/04-REVIEW.md",
-                              " M .planning/phases/04-startup-control/04-SECURITY.md",
-                              " M .planning/phases/04-startup-control/04-UI-REVIEW.md",
-                              " M .planning/phases/04-startup-control/04-VALIDATION.md",
-                              " M .planning/phases/04-startup-control/04-VERIFICATION.md",
-                              " M .planning/phases/05-config-notification/05-REVIEW-DISPOSITION.md",
-                              " M .planning/phases/05-config-notification/05-REVIEW.md",
-                              " M .planning/phases/05-config-notification/05-SECURITY.md",
-                              " M .planning/phases/05-config-notification/05-UI-REVIEW.md",
-                              " M .planning/phases/05-config-notification/05-VALIDATION.md",
-                              " M .planning/phases/05-config-notification/05-VERIFICATION.md",
-                              " M .planning/phases/06-release-validation/06-05-PLAN.md",
-                              " M .planning/phases/06-release-validation/06-05-drivers/uat_row.py",
-                              " M .planning/phases/06-release-validation/06-06-PLAN.md",
-                              " M .planning/phases/06-release-validation/06-07-quality.cjs",
-                              " M .planning/phases/06-release-validation/06-CONTEXT.md",
-                              " M .planning/phases/06-release-validation/06-MANUAL-EVIDENCE.json",
-                              " M .planning/phases/06-release-validation/06-UAT-CARRYOVER.md",
-                              " M .planning/phases/06-release-validation/06-UAT.md",
-                              " M .planning/phases/06-release-validation/06-VALIDATION.md",
-                              " M .planning/state.json",
-                              " M CONTRIBUTING.md",
-                              " M docs/DEVELOPMENT.md",
-                              " M pagefolio/__main__.py",
-                              " M pagefolio/startup_win32.py",
-                              " M tests/test_release_contract.py",
-                              " M tests/test_release_uat_support.py",
-                              " M tests/test_startup_windows.py",
-                              " M 開発履歴.md",
-                              "?? .planning/HANDOFF.json",
-                              "?? .planning/debug/g1-uat-audit-scope.md",
-                              "?? .planning/debug/knowledge-base.md",
-                              "?? .planning/debug/ocr-off-summary-check.cjs",
-                              "?? .planning/debug/ocr-off-summary-evidence/",
-                              "?? .planning/debug/ocr-off-summary-ocr.txt",
-                              "?? .planning/debug/ocr-off-summary-red.txt",
-                              "?? .planning/debug/ocr-off-summary-ruff-verbose.txt",
-                              "?? .planning/debug/ocr-off-summary-targeted.txt",
-                              "?? .planning/debug/ocr-off-summary.md",
-                              "?? .planning/debug/phase06-w05b-manual-switch.md",
-                              "?? .planning/debug/quality-gate-unblock-20261028/",
-                              "?? .planning/debug/quality-gate-unblock.md"
-                          ],
-    "next_action":  "W05bの未実装driver/記録helperを準備。詳細はphase .continue-here.md。",
-    "context_notes":  "利用者の明示pause。GUI/テスト/server/質問待ちなし。G2全件2242passはG3変更後へ流用しない。",
-    "validation":  {
-                       "required_pass":  24,
-                       "required_not_run":  84,
-                       "deferred_not_run":  2,
-                       "w05a_audit":  "3/3 pass",
-                       "latest_targeted":  "w05b-real-close-20261029.xml: 6 passed/31.04s",
-                       "full_after_g3":  "not-run",
-                       "release_allowed":  false
-                   },
-    "background_processes":  [
-
-                             ],
-    "blocking_constraints":  [
-                                 {
-                                     "severity":  "blocking",
-                                     "constraint":  "手動切替/機械成功を人手自動復帰passにしない",
-                                     "mitigation":  "同一HWND/PID実前景、無操作、直接回答を照合"
-                                 },
-                                 {
-                                     "severity":  "blocking",
-                                     "constraint":  "全件品質実行中は入力を変更しない",
-                                     "mitigation":  "manifestを固定し人手GUIを重ねない"
-                                 }
-                             ],
-    "uncommitted_file_count":  327,
-    "uncommitted_files_elided":  277
+  "version": "1.0",
+  "timestamp": "2026-10-31T00:47:37.854Z",
+  "phase": "06",
+  "phase_name": "サンプル配布とリリース検証",
+  "phase_dir": ".planning/phases/06-release-validation",
+  "plan": 5,
+  "task": 2,
+  "total_tasks": 2,
+  "status": "paused",
+  "completed_tasks": [
+    {
+      "id": 1,
+      "name": "06-05-01 ケースと証拠台帳",
+      "status": "done"
+    },
+    {
+      "id": 2,
+      "name": "06-05-02 状態維持・混在入口・通知",
+      "status": "in_progress",
+      "progress": "W01/W02/W03/W04/W05a/W05b計27pass。W05c以降未着手。"
+    }
+  ],
+  "remaining_tasks": [
+    {
+      "id": "06-05-02",
+      "name": "W05c、G3全件品質、W12、X01〜X06",
+      "status": "in_progress"
+    },
+    {
+      "id": "06-06",
+      "name": "OS拒否/UAC/DPI/WR-01と最終ゲート",
+      "status": "not_started"
+    }
+  ],
+  "blockers": [
+    {
+      "description": "必須81行が未確認。G3変更後の全件品質未実施。",
+      "type": "human_action",
+      "workaround": "再開後にW05cを準備し、利用者確認を1行ずつ行う。"
+    }
+  ],
+  "async_jobs": [],
+  "human_actions_pending": [
+    {
+      "action": "W05c人手受入の画面確認時間の確認",
+      "context": "現在の回答待ちはない。W05c準備完了後に依頼する。",
+      "blocking": false
+    },
+    {
+      "action": "要注意の既存pass2行(W03/pdf-3page@production-exe, W02/settings@production-exe)の扱い判断",
+      "context": "Alt+Tab未捕捉の影響調査で注記。台帳は不変。",
+      "blocking": false
+    }
+  ],
+  "decisions": [
+    {
+      "decision": "配布版EXEのW05b判定は外部観測の連鎖(W04 EXE同水準)で可",
+      "rationale": "利用者承認2026-10-31",
+      "phase": "06"
+    },
+    {
+      "decision": "無効回は専用attempt helperで台帳記録",
+      "rationale": "利用者承認2026-10-31",
+      "phase": "06"
+    },
+    {
+      "decision": "pauseでは引き継ぎ2文書のみcommit",
+      "rationale": "既存dirtyを保持し、製品/受入変更をまとめてcommitしない。",
+      "phase": "06"
+    }
+  ],
+  "uncommitted_files": [
+    " M .gitignore",
+    "D  .planning/HANDOFF.json",
+    " M .planning/PROJECT.md",
+    " M .planning/REQUIREMENTS.md",
+    " M .planning/ROADMAP.md",
+    " M .planning/STATE.md",
+    " M .planning/debug/preview-focus-not-restored-evidence/diag_btn_press.py",
+    " M .planning/debug/simultaneous-owner-missing.md",
+    " M .planning/phases/04-startup-control/04-REVIEW-DISPOSITION.md",
+    " M .planning/phases/04-startup-control/04-REVIEW.md",
+    " M .planning/phases/04-startup-control/04-SECURITY.md",
+    " M .planning/phases/04-startup-control/04-UI-REVIEW.md",
+    " M .planning/phases/04-startup-control/04-VALIDATION.md",
+    " M .planning/phases/04-startup-control/04-VERIFICATION.md",
+    " M .planning/phases/05-config-notification/05-REVIEW-DISPOSITION.md",
+    " M .planning/phases/05-config-notification/05-REVIEW.md",
+    " M .planning/phases/05-config-notification/05-SECURITY.md",
+    " M .planning/phases/05-config-notification/05-UI-REVIEW.md",
+    " M .planning/phases/05-config-notification/05-VALIDATION.md",
+    " M .planning/phases/05-config-notification/05-VERIFICATION.md",
+    " M .planning/phases/06-release-validation/.continue-here.md",
+    " M .planning/phases/06-release-validation/06-05-PLAN.md",
+    " M .planning/phases/06-release-validation/06-05-drivers/uat_row.py",
+    " M .planning/phases/06-release-validation/06-06-PLAN.md",
+    " M .planning/phases/06-release-validation/06-07-quality.cjs",
+    " M .planning/phases/06-release-validation/06-CONTEXT.md",
+    " M .planning/phases/06-release-validation/06-MANUAL-EVIDENCE.json",
+    " M .planning/phases/06-release-validation/06-UAT-CARRYOVER.md",
+    " M .planning/phases/06-release-validation/06-UAT.md",
+    " M .planning/phases/06-release-validation/06-VALIDATION.md",
+    " M .planning/state.json",
+    " M CONTRIBUTING.md",
+    " M docs/DEVELOPMENT.md",
+    " M pagefolio/__main__.py",
+    " M pagefolio/startup_win32.py",
+    " M tests/test_release_contract.py",
+    " M tests/test_release_uat_support.py",
+    " M tests/test_startup_windows.py",
+    " M 開発履歴.md",
+    "?? .planning/debug/g1-uat-audit-scope.md",
+    "?? .planning/debug/knowledge-base.md",
+    "?? .planning/debug/ocr-off-summary-check.cjs",
+    "?? .planning/debug/ocr-off-summary-evidence/",
+    "?? .planning/debug/ocr-off-summary-ocr.txt",
+    "?? .planning/debug/ocr-off-summary-red.txt",
+    "?? .planning/debug/ocr-off-summary-ruff-verbose.txt",
+    "?? .planning/debug/ocr-off-summary-targeted.txt",
+    "?? .planning/debug/ocr-off-summary.md",
+    "?? .planning/debug/phase06-w05b-alttab-blindspot.md",
+    "?? .planning/debug/phase06-w05b-manual-switch.md"
+  ],
+  "uncommitted_file_count": 351,
+  "uncommitted_files_elided": 301,
+  "next_action": "W05cのdriver/記録helperを準備。詳細はphase .continue-here.md。",
+  "context_notes": "利用者の明示pause。GUI/テスト/server/質問待ちなし。debug phase06-w05b-alttab-blindspot resolved。",
+  "validation": {
+    "required_pass": 27,
+    "required_not_run": 81,
+    "deferred_not_run": 2,
+    "w05b": "3/3 pass",
+    "full_after_g3": "not-run",
+    "release_allowed": false
+  },
+  "background_processes": [],
+  "blocking_constraints": [
+    {
+      "severity": "blocking",
+      "constraint": "手動切替/機械成功を人手自動復帰passにしない",
+      "mitigation": "同一HWND/PID直接遷移・タスク切替UI非経由・switch_key_events無・無操作・直接回答を照合"
+    },
+    {
+      "severity": "blocking",
+      "constraint": "全件品質実行中は入力を変更しない",
+      "mitigation": "manifestを固定し人手GUIを重ねない"
+    }
+  ]
 }
