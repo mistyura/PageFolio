@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "timestamp": "2026-10-31T00:47:37.854Z",
+  "timestamp": "2026-10-31T08:53:54.464Z",
   "phase": "06",
   "phase_name": "サンプル配布とリリース検証",
   "phase_dir": ".planning/phases/06-release-validation",
@@ -35,21 +35,21 @@
   ],
   "blockers": [
     {
-      "description": "必須81行が未確認。G3変更後の全件品質未実施。",
-      "type": "human_action",
-      "workaround": "再開後にW05cを準備し、利用者確認を1行ずつ行う。"
+      "description": "W05c 配布 EXE は起動時に Unhandled exception in script。本文・原因未確認。",
+      "type": "technical",
+      "workaround": "生の inspect を保持し、例外本文の安全な取得方法を先に検討する。"
+    },
+    {
+      "description": "W05c は正式記録 helper・証拠監査が未準備で3行とも not-run。",
+      "type": "technical",
+      "workaround": "利用者回答と機械観測を分離し、採用可否と不足を評価する。"
     }
   ],
   "async_jobs": [],
   "human_actions_pending": [
     {
-      "action": "W05c人手受入の画面確認時間の確認",
-      "context": "現在の回答待ちはない。W05c準備完了後に依頼する。",
-      "blocking": false
-    },
-    {
-      "action": "要注意の既存pass2行(W03/pdf-3page@production-exe, W02/settings@production-exe)の扱い判断",
-      "context": "Alt+Tab未捕捉の影響調査で注記。台帳は不変。",
+      "action": "今後の W05c 正式受入に必要な画面確認",
+      "context": "実施方法と証拠の採用可否を整理後、必要な場合のみ依頼する。",
       "blocking": false
     }
   ],
@@ -72,7 +72,7 @@
   ],
   "uncommitted_files": [
     " M .gitignore",
-    "D  .planning/HANDOFF.json",
+    " M .planning/HANDOFF.json",
     " M .planning/PROJECT.md",
     " M .planning/REQUIREMENTS.md",
     " M .planning/ROADMAP.md",
@@ -124,8 +124,8 @@
   ],
   "uncommitted_file_count": 351,
   "uncommitted_files_elided": 301,
-  "next_action": "W05cのdriver/記録helperを準備。詳細はphase .continue-here.md。",
-  "context_notes": "利用者の明示pause。GUI/テスト/server/質問待ちなし。debug phase06-w05b-alttab-blindspot resolved。",
+  "next_action": "W05c の今回の試行と生証拠を確認し、配布 EXE の起動例外本文を安全に取得する方法を検討する。正式台帳への採用は証拠監査後。",
+  "context_notes": "W05c script は編集内容の具体的確認が不足。module は利用者の画面回答と外部観測を取得したが正式記録 helper と監査が未準備。配布 EXE は Unhandled exception in script で通常画面未到達、本文・原因不明。詳細は phase .continue-here.md。",
   "validation": {
     "required_pass": 27,
     "required_not_run": 81,
@@ -145,6 +145,11 @@
       "severity": "blocking",
       "constraint": "全件品質実行中は入力を変更しない",
       "mitigation": "manifestを固定し人手GUIを重ねない"
+    },
+    {
+      "severity": "blocking",
+      "constraint": "正式記録・証拠監査を経ずに暫定観測を受入 pass としない。",
+      "mitigation": "回答原文、生観測、対象入口、編集維持と排他の証拠を照合し、台帳契約の不足を明示する。"
     }
   ]
 }
