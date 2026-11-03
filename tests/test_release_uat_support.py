@@ -513,6 +513,51 @@ class TestOwnership:
         env = sup.collect_environment()
         assert env["session_id"] is not None and "observer_python" in env
 
+    @windows_only
+    def test_dialog_controls_are_read_from_other_process(self):
+        # 非表示の#32770にStatic/Edit本文を持たせ、外部から読取だけで回収できること
+        script = (
+            "import ctypes, sys, time\n"
+            "from ctypes import wintypes as wt\n"
+            "u = ctypes.WinDLL('user32')\n"
+            "u.CreateWindowExW.restype = wt.HWND\n"
+            "u.CreateWindowExW.argtypes = [wt.DWORD, wt.LPCWSTR, wt.LPCWSTR,"
+            " wt.DWORD, ctypes.c_int, ctypes.c_int, ctypes.c_int, ctypes.c_int,"
+            " wt.HWND, wt.HMENU, wt.HINSTANCE, wt.LPVOID]\n"
+            "d = u.CreateWindowExW(0, '#32770', 'PF dialog', 0x80000000,"
+            " 0, 0, 200, 100, None, None, None, None)\n"
+            "u.CreateWindowExW(0, 'Static', 'PF-STATIC-TEXT', 0x40000000,"
+            " 0, 0, 100, 20, d, None, None, None)\n"
+            "u.CreateWindowExW(0, 'Edit', 'Traceback\\r\\nPF-EDIT-TEXT', 0x40000004,"
+            " 0, 30, 100, 20, d, None, None, None)\n"
+            "print('ready', flush=True)\n"
+            "msg = wt.MSG()\n"
+            "end = time.monotonic() + 30\n"
+            "while time.monotonic() < end:\n"
+            "    while u.PeekMessageW(ctypes.byref(msg), None, 0, 0, 1):\n"
+            "        u.TranslateMessage(ctypes.byref(msg))\n"
+            "        u.DispatchMessageW(ctypes.byref(msg))\n"
+            "    time.sleep(0.01)\n"
+        )
+        # venvのpython.exeはランチャーで窓を持つPIDが別になるため本体を使う
+        python = getattr(sys, "_base_executable", sys.executable)
+        child = subprocess.Popen(  # noqa: S603
+            [python, "-c", script], stdout=subprocess.PIPE, text=True
+        )
+        try:
+            assert child.stdout.readline().strip() == "ready"
+            dialogs = [
+                w for w in sup.windows_of(child.pid) if w["class"] == sup.DIALOG_CLASS
+            ]
+            assert len(dialogs) == 1
+            texts = {c["class"]: c["text"] for c in dialogs[0]["dialog_controls"]}
+            assert texts["Static"] == "PF-STATIC-TEXT"
+            assert texts["Edit"] == "Traceback\r\nPF-EDIT-TEXT"
+            assert child.poll() is None  # 読取で閉じていない
+        finally:
+            child.kill()
+            child.wait(timeout=10)
+
 
 # ---------------------------------------------------------------------------
 def png_b64(color="white"):
@@ -1841,6 +1886,94 @@ class TestEvidenceAudit:
         assert phase.audit("build-only").ok
         shutil.move(history, phase.tmp / "moved")
         assert_fails(phase.audit("build-only"), "history")
+
+    @staticmethod
+    def lose_and_restore(phase):
+        """配布元(output-root)が消え、最終treeだけ別所へ復元された状態を作る。"""
+        final_rec = phase.build["final_release"]
+        runs = {r["order"]: r for r in final_rec["runs"]}
+        restored = phase.tmp / "restored" / f"PageFolio-{VERSION}"
+        shutil.copytree(final_rec["final_dir"], restored)
+        shutil.rmtree(phase.out)
+        final_rec["loss_incident"] = {
+            "id": "BUILD-LOSS-TEST",
+            "approved_by": "利用者",
+            "approved_at": "2026-11-03",
+            "detected_at": "2026-11-03T09:00:00+00:00",
+            "cause": "一時領域の自動削除(推定)",
+            "restored_final_dir": str(restored),
+            "restored_from": "run copy",
+            "lost": {
+                "output_root": final_rec["output_root"],
+                "final_dir": final_rec["final_dir"],
+                "history_tree_sha256": runs["initial"]["tree_sha256"],
+                "external_reports": {
+                    k: runs[k]["report_sha256"] for k in ("initial", "rebuild")
+                },
+            },
+        }
+        phase.write_all()
+        return restored
+
+    def test_build_only_fails_when_source_lost_without_incident(self, phase):
+        shutil.rmtree(phase.out)
+        assert_fails(phase.audit("build-only"), "最終先が存在しません")
+
+    def test_build_only_accepts_approved_restoration_and_reports_loss(self, phase):
+        self.lose_and_restore(phase)
+        audit = phase.audit("build-only")
+        assert audit.ok, audit.reasons
+        shown = audit.extra["build_loss_incident"]
+        assert shown["id"] == "BUILD-LOSS-TEST"
+        assert set(shown["unverifiable"]) == {
+            "external_report:initial",
+            "external_report:rebuild",
+            "release_history:initial_tree",
+        }
+
+    def test_build_only_restoration_still_checks_what_survives(self, phase):
+        restored = self.lose_and_restore(phase)
+        (restored / "PageFolio.exe").write_bytes(b"tampered")
+        assert_fails(phase.audit("build-only"), "tree/EXE hash")
+        shutil.rmtree(restored)
+        assert_fails(phase.audit("build-only"), "復元先")
+
+    def test_build_only_restoration_keeps_recorded_run_checks(self, phase):
+        self.lose_and_restore(phase)
+        phase.build["final_release"]["runs"][0]["pyinstaller_exit"] = 1
+        phase.write_all()
+        assert_fails(phase.audit("build-only"), "PyInstaller")
+
+    def test_build_only_rejects_incomplete_or_mismatched_incident(self, phase):
+        self.lose_and_restore(phase)
+        loss = phase.build["final_release"]["loss_incident"]
+        loss["lost"]["external_reports"]["rebuild"] = sha("other")
+        phase.write_all()
+        assert_fails(phase.audit("build-only"), "消失物")
+        loss["lost"]["external_reports"]["rebuild"] = phase.build["final_release"][
+            "runs"
+        ][1]["report_sha256"]
+        loss["approved_by"] = ""
+        phase.write_all()
+        assert_fails(phase.audit("build-only"), "必須欄")
+        loss["approved_by"] = "利用者"
+        loss["restored_final_dir"] = phase.build["final_release"]["final_dir"]
+        phase.write_all()
+        assert_fails(phase.audit("build-only"), "復元先が元の配布先")
+
+    def test_build_only_rejects_incident_without_required_fields(self, phase):
+        phase.build["final_release"]["loss_incident"] = {"id": "x"}
+        phase.write_all()
+        assert_fails(phase.audit("build-only"), "必須欄")
+
+    def test_build_only_ignores_incident_while_original_exists(self, phase):
+        restored = self.lose_and_restore(phase)
+        shutil.copytree(restored, phase.build["final_release"]["final_dir"])
+        # 元の配布先が戻れば通常照合となり、消えたreport/historyを見逃さない
+        audit = phase.audit("build-only")
+        assert_fails(audit, "history")
+        assert_fails(audit, "外部report")
+        assert "build_loss_incident" not in audit.extra
 
     def test_build_only_requires_not_run_uat_and_release_blocked(self, phase):
         phase.build["release_allowed"] = True

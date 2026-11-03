@@ -417,6 +417,12 @@ SYNCHRONIZE = 0x00100000
 FILE_MAP_READ = 0x0004
 STILL_ACTIVE = 259
 WM_CLOSE = 0x0010
+WM_GETTEXT = 0x000D
+WM_GETTEXTLENGTH = 0x000E
+SMTO_ABORTIFHUNG = 0x0002
+DIALOG_CLASS = "#32770"
+DIALOG_TEXT_LIMIT = 32768
+DIALOG_TEXT_TIMEOUT_MS = 1000
 ERROR_FILE_NOT_FOUND = 2
 ERROR_ACCESS_DENIED = 5
 ERROR_SHARING_VIOLATION = 32
@@ -508,6 +514,18 @@ def _api():
     u.GetWindowRect.restype = wt.BOOL
     u.PostMessageW.argtypes = [wt.HWND, wt.UINT, wt.WPARAM, wt.LPARAM]
     u.PostMessageW.restype = wt.BOOL
+    u.EnumChildWindows.argtypes = [wt.HWND, api.enum_proc, wt.LPARAM]
+    u.EnumChildWindows.restype = wt.BOOL
+    u.SendMessageTimeoutW.argtypes = [
+        wt.HWND,
+        wt.UINT,
+        wt.WPARAM,
+        ctypes.c_void_p,
+        wt.UINT,
+        wt.UINT,
+        ctypes.POINTER(ctypes.c_size_t),
+    ]
+    u.SendMessageTimeoutW.restype = ctypes.c_size_t
     api.k, api.u, api.a = k, u, a
     _API = api
     return api
@@ -595,6 +613,53 @@ def same_process(record, identity):
     )
 
 
+def _control_text(hwnd):
+    """WM_GETTEXTで他processのcontrol本文を読む。読取専用で、応答しなければ諦める。"""
+    api = _api()
+    length = ctypes.c_size_t()
+    if not api.u.SendMessageTimeoutW(
+        hwnd,
+        WM_GETTEXTLENGTH,
+        0,
+        None,
+        SMTO_ABORTIFHUNG,
+        DIALOG_TEXT_TIMEOUT_MS,
+        ctypes.byref(length),
+    ):
+        return {"text": None, "error": "no-response"}
+    size = min(length.value, DIALOG_TEXT_LIMIT)
+    buffer = ctypes.create_unicode_buffer(size + 1)
+    copied = ctypes.c_size_t()
+    if not api.u.SendMessageTimeoutW(
+        hwnd,
+        WM_GETTEXT,
+        size + 1,
+        ctypes.cast(buffer, ctypes.c_void_p),
+        SMTO_ABORTIFHUNG,
+        DIALOG_TEXT_TIMEOUT_MS,
+        ctypes.byref(copied),
+    ):
+        return {"text": None, "error": "no-response"}
+    return {"text": buffer.value, "truncated": length.value > DIALOG_TEXT_LIMIT}
+
+
+def dialog_text(hwnd):
+    """ダイアログの子controlの種別と本文を列挙する(クリック・入力・閉じる操作はしない)。"""
+    api = _api()
+    controls = []
+
+    def callback(child, _):
+        cls = ctypes.create_unicode_buffer(128)
+        api.u.GetClassNameW(child, cls, 128)
+        item = {"hwnd": int(child or 0), "class": cls.value}
+        item.update(_control_text(child))
+        controls.append(item)
+        return True
+
+    api.u.EnumChildWindows(hwnd, api.enum_proc(callback), 0)
+    return controls
+
+
 def windows_of(pid):
     api = _api()
     found = []
@@ -609,15 +674,16 @@ def windows_of(pid):
             api.u.GetClassNameW(hwnd, cls, 128)
             rect = wt.RECT()
             api.u.GetWindowRect(hwnd, ctypes.byref(rect))
-            found.append(
-                {
-                    "hwnd": int(hwnd or 0),
-                    "visible": bool(api.u.IsWindowVisible(hwnd)),
-                    "title": title.value,
-                    "class": cls.value,
-                    "rect": [rect.left, rect.top, rect.right, rect.bottom],
-                }
-            )
+            item = {
+                "hwnd": int(hwnd or 0),
+                "visible": bool(api.u.IsWindowVisible(hwnd)),
+                "title": title.value,
+                "class": cls.value,
+                "rect": [rect.left, rect.top, rect.right, rect.bottom],
+            }
+            if cls.value == DIALOG_CLASS:
+                item["dialog_controls"] = dialog_text(hwnd)
+            found.append(item)
         return True
 
     api.u.EnumWindows(api.enum_proc(callback), 0)
@@ -1228,7 +1294,14 @@ def stop(run, *, timeout=10.0, force=True):
             record["exit"] = "identity-mismatch-untouched"
             results.append({"pid": record["pid"], "result": "identity-mismatch"})
             continue
-        for window in windows_of(record["pid"]):
+        before_close = windows_of(record["pid"])
+        if any(w["class"] == DIALOG_CLASS for w in before_close):
+            # WM_CLOSEで消える前にダイアログ本文を残す(例外ダイアログ等の一次証拠)
+            write_json(
+                Path(run) / "evidence" / f"stop-dialogs-{record['pid']}.json",
+                {"at": _now(), "record": record, "windows": before_close},
+            )
+        for window in before_close:
             api.u.PostMessageW(window["hwnd"], WM_CLOSE, 0, 0)
         deadline = time.monotonic() + timeout
         outcome = None
@@ -1943,7 +2016,13 @@ def check_build(phase_dir, repo, audit):
     first, second = by_order["initial"], by_order["rebuild"]
     output_root = Path(final.get("output_root", ""))
     final_dir = Path(final.get("final_dir", ""))
-    if not output_root.is_dir() or not final_dir.is_dir():
+    loss = _loss_incident(final, first, second, audit)
+    if loss is not None:
+        final_dir = Path(loss["restored_final_dir"])
+        if not final_dir.is_dir():
+            audit.fail("復元先の最終配布が存在しません")
+            return None
+    elif not output_root.is_dir() or not final_dir.is_dir():
         audit.fail("output-root/最終先が存在しません")
         return None
     if first.get("cli_argv") != second.get("cli_argv") or not first.get("cli_argv"):
@@ -1959,6 +2038,8 @@ def check_build(phase_dir, repo, audit):
             or run.get("pyinstaller_executed") is not True
         ):
             audit.fail(f"{label}: 実PyInstaller成功の記録がありません")
+        if loss is not None:
+            continue  # 外部reportは消失記録に照合済み。実物は照合できない
         report_path = output_root / ".release-work" / str(run["run_id"]) / "report.json"
         if _norm_path(run.get("report_path")) != _norm_path(report_path):
             audit.fail(f"{label}: 記録時と現在のreport pathが一致しません")
@@ -1998,7 +2079,9 @@ def check_build(phase_dir, repo, audit):
     ) != files.get("release-report.json"):
         audit.fail("同梱reportのhashが外部reportの記録と一致しません")
     history = output_root / ".release-history" / str(second["run_id"])
-    if not history.is_dir():
+    if loss is not None:
+        pass  # 初回treeは消失記録に照合済み。実物は照合できない
+    elif not history.is_dir():
         audit.fail("旧tree(history)が保持されていません")
     else:
         h_files, h_dirs = walk_tree(history)
@@ -2031,7 +2114,66 @@ def check_build(phase_dir, repo, audit):
         "version": version,
         "input_manifest_sha256": final.get("input_manifest_sha256"),
         "final_run_id": second["run_id"],
+        "loss_incident": loss,
     }
+
+
+LOSS_REQUIRED = (
+    "id",
+    "approved_by",
+    "approved_at",
+    "detected_at",
+    "cause",
+    "restored_final_dir",
+    "restored_from",
+)
+
+
+def _loss_incident(final, first, second, audit):
+    """承認済みの配布元消失・復元記録を照合する。記録がなければNone(通常照合)。
+
+    記録があっても、元の配布先が実在する場合は通常照合に戻す。記録した消失物の
+    hashがbuild runの記録と一致しない、承認欄が欠けている等は不合格にする。
+    照合できない消失物は監査結果の build_loss_incident に必ず表示する。
+    """
+    loss = final.get("loss_incident")
+    if loss is None:
+        return None
+    if not isinstance(loss, dict) or not all(_text(loss.get(k)) for k in LOSS_REQUIRED):
+        audit.fail("配布元消失記録の必須欄(承認・原因・復元元/先)が欠けています")
+        return None
+    if Path(final.get("final_dir", "")).joinpath("PageFolio.exe").is_file():
+        return None
+    lost = loss.get("lost") or {}
+    reports = lost.get("external_reports") or {}
+    expected = {
+        "output_root": final.get("output_root"),
+        "final_dir": final.get("final_dir"),
+        "history_tree_sha256": first.get("tree_sha256"),
+    }
+    if (
+        any(lost.get(k) != v for k, v in expected.items())
+        or reports.get("initial") != first.get("report_sha256")
+        or reports.get("rebuild") != second.get("report_sha256")
+    ):
+        audit.fail("配布元消失記録の消失物がbuild runの記録と一致しません")
+        return None
+    if _norm_path(loss["restored_final_dir"]) == _norm_path(final.get("final_dir")):
+        audit.fail("復元先が元の配布先と同じです")
+        return None
+    summary = {
+        "id": loss["id"],
+        "approved_by": loss["approved_by"],
+        "approved_at": loss["approved_at"],
+        "restored_final_dir": loss["restored_final_dir"],
+        "unverifiable": [
+            "external_report:initial",
+            "external_report:rebuild",
+            "release_history:initial_tree",
+        ],
+    }
+    audit.extra["build_loss_incident"] = summary
+    return {**summary, "restored_final_dir": loss["restored_final_dir"]}
 
 
 def _check_protected_absent(files, protected, audit, label):

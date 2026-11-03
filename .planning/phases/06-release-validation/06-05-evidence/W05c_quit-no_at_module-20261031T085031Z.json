@@ -1,0 +1,22 @@
+{
+  "case": "W05c",
+  "condition": "quit-no",
+  "entry": "module",
+  "row": "W05c/quit-no@module",
+  "run": ".planning/tmp/pagefolio-uat-idqe4ma0",
+  "harness": "tests/test_startup_windows.py --uat start --case native-quit / peer --entry module ×2 / inspect / stop",
+  "answer_original": "いいえを押し、1・2ページが横向きで3ページが縦向き",
+  "answer_source": "2026-10-31 のセッションで、担当がマウスでの操作を依頼し、利用者がチャットで回答。担当が原文を run 内 observation-20261031.md に記録した。可視 PowerShell への直接入力ではない。",
+  "observation_record": ".planning/tmp/pagefolio-uat-idqe4ma0/observation-20261031.md",
+  "observation_record_sha256": "47bfdf3166f3ff7fd04d64e8980184651c04224ef5c7b712416aa8b403dd0488",
+  "adoption": {
+    "approved_by": "利用者",
+    "approved_at": "2026-11-03",
+    "decision": "module 試行は正式記録 helper で台帳に載せる方向でよい（2026-11-03 セッションの回答）",
+    "recorded_post_hoc": true
+  },
+  "peers": {
+    "during_confirm": "peer-8e43883f57744d22861ebdd668cccbe5",
+    "after_answer": "peer-a19889ae5fb545b5b72f32cc4880e7d4"
+  }
+}

@@ -233,6 +233,34 @@
       "rebuild_exe_sha256": "66be5df663e333057c5c3cde02180857f930d2433e377f69c2838432d49a19d4",
       "equal": false,
       "required": false
+    },
+    "loss_incident": {
+      "id": "BUILD-LOSS-20261103",
+      "approved_by": "利用者(2026-11-03 セッションで『監査の見直し』を選択)",
+      "approved_at": "2026-11-03",
+      "detected_at": "2026-11-03T09:15:00+00:00",
+      "cause": "output_root配下のファイルが2026-11-03 01:36(JST)に全消失しディレクトリのみ残存。%TEMP%の自動削除(ストレージセンサー等)と推定するが未確定。",
+      "lost": {
+        "output_root": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf06_final_3f96a37a7cef4ee1ab3a1c1b2f2c435f\\out",
+        "final_dir": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf06_final_3f96a37a7cef4ee1ab3a1c1b2f2c435f\\out\\PageFolio-v1.10.2",
+        "history_tree_sha256": "ce205421a02fb0c2b71fb89b0749dbeebea6d3e15e82846f49b386556e539440",
+        "external_reports": {
+          "initial": "9d02d8fb7a82f6f262ef51670f57c573ddcc5edb5010727b090b72484ea0efac",
+          "rebuild": "991a44b0f6d057dbea8b193ac66ac77121ff11d13c5849872b875fc13b7aff24"
+        },
+        "note": "外部report2件と初回tree(history)はリポジトリ内に写しがなく、実物では照合できない。記録hashとの対応のみ照合する。"
+      },
+      "restored_final_dir": "C:\\Users\\shdwf\\AppData\\Local\\PageFolio-release\\pf06_final_3f96a37a7cef4ee1ab3a1c1b2f2c435f\\PageFolio-v1.10.2",
+      "restored_from": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\release-uat-f85068da94524c558c82a9484a658cbc\\dist",
+      "restoration_verification": {
+        "source_run_verify_copy_ok": true,
+        "read_distribution": "同梱release-report.jsonのmanifestと全名/全hash一致",
+        "tree_sha256": "b1e55ca6efa3a7bafb4dec9ea9fa2c715dfca6f538ba906632058f912f575d85",
+        "exe_sha256": "66be5df663e333057c5c3cde02180857f930d2433e377f69c2838432d49a19d4",
+        "embedded_report_run_id": "c04825cf60054565970f9a6a997523d3",
+        "verified_at": "2026-11-03T09:28:24.720029+00:00"
+      },
+      "not_changed": "output_root/final_dirの記録値は当時のまま保持する。再buildは行っていない。"
     }
   },
   "old_dist": {

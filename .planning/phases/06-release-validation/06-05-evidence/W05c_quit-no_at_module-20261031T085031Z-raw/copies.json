@@ -1,0 +1,127 @@
+[
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-idqe4ma0\\manifest.json",
+    "target": "06-05-evidence/W05c_quit-no_at_module-20261031T085031Z-raw/run-manifest.json",
+    "sha256": "427b5fb5ac79a26a5edf5034ebd0e04836196e8bba0ab02ef670d39b6ff1b6c4"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-idqe4ma0\\inspection.json",
+    "target": "06-05-evidence/W05c_quit-no_at_module-20261031T085031Z-raw/run-inspection.json",
+    "sha256": "24e9a297573db8c533c1c2f77dd976bcc50e27271211f813a3439687815be868"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-idqe4ma0\\observation-20261031.md",
+    "target": "06-05-evidence/W05c_quit-no_at_module-20261031T085031Z-raw/run-observation-20261031.md",
+    "sha256": "47bfdf3166f3ff7fd04d64e8980184651c04224ef5c7b712416aa8b403dd0488"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-idqe4ma0\\uat-owner-native-quit\\result.json",
+    "target": "06-05-evidence/W05c_quit-no_at_module-20261031T085031Z-raw/primary-result.json",
+    "sha256": "1e8506192ff3cda69e7b101cc395d99f3862a3ee1a3c5c631d2e518c373c81cd"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-idqe4ma0\\uat-owner-native-quit\\focus-result.json",
+    "target": "06-05-evidence/W05c_quit-no_at_module-20261031T085031Z-raw/primary-focus-result.json",
+    "sha256": "8985410ad2a07d821057001dc2c3ae362437cb5529b17e200d9d71862115a709"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-idqe4ma0\\uat-owner-native-quit\\resource-audit.json",
+    "target": "06-05-evidence/W05c_quit-no_at_module-20261031T085031Z-raw/primary-resource-audit.json",
+    "sha256": "284ce54384d14f5b7ae3ee48eb643acce0061614beb327964003bb5bf3a8e1a8"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-idqe4ma0\\uat-owner-native-quit\\initializing.json",
+    "target": "06-05-evidence/W05c_quit-no_at_module-20261031T085031Z-raw/primary-initializing.json",
+    "sha256": "55ab0cf233aba5fd2a96b3e02f5b71d5e07d2eba54de9da740177de7d4918a6c"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-idqe4ma0\\uat-owner-native-quit\\ready",
+    "target": "06-05-evidence/W05c_quit-no_at_module-20261031T085031Z-raw/primary-ready",
+    "sha256": "284ce54384d14f5b7ae3ee48eb643acce0061614beb327964003bb5bf3a8e1a8"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-idqe4ma0\\uat-owner-native-quit\\focus-ready",
+    "target": "06-05-evidence/W05c_quit-no_at_module-20261031T085031Z-raw/primary-focus-ready",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-idqe4ma0\\uat-owner-native-quit\\quit-cancelled",
+    "target": "06-05-evidence/W05c_quit-no_at_module-20261031T085031Z-raw/primary-quit-cancelled",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-idqe4ma0\\uat-owner-native-quit\\stderr.log",
+    "target": "06-05-evidence/W05c_quit-no_at_module-20261031T085031Z-raw/primary-stderr.log",
+    "sha256": "61ca099d7fe7e016bba5d0022cfb7be1e7fd83c3df138790c93fa5d4349aa74e"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-idqe4ma0\\uat-owner-native-quit\\stdout.log",
+    "target": "06-05-evidence/W05c_quit-no_at_module-20261031T085031Z-raw/primary-stdout.log",
+    "sha256": "106c2dbcfe415dd1f684200f0ee002479230f276ba0cd53d2d23630291dea614"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-idqe4ma0\\uat-owner-native-quit\\traceback.log",
+    "target": "06-05-evidence/W05c_quit-no_at_module-20261031T085031Z-raw/primary-traceback.log",
+    "sha256": "78f3d76afd0467b99d05f5b678b457f85c8ba92e7a7fbc6f866e936fe42df120"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-idqe4ma0\\peer-8e43883f57744d22861ebdd668cccbe5\\result.json",
+    "target": "06-05-evidence/W05c_quit-no_at_module-20261031T085031Z-raw/peer-during_confirm-result.json",
+    "sha256": "6a562bbf47fde6f823e596422764116f88c28c49b8d6d0b2bab693d09315a527"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-idqe4ma0\\peer-8e43883f57744d22861ebdd668cccbe5\\expected-owner.json",
+    "target": "06-05-evidence/W05c_quit-no_at_module-20261031T085031Z-raw/peer-during_confirm-expected-owner.json",
+    "sha256": "01f5e0b7c9a0ba78a69567c48c1b76960972214f38f7af66193e29e0f751891e"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-idqe4ma0\\peer-8e43883f57744d22861ebdd668cccbe5\\resource-audit.json",
+    "target": "06-05-evidence/W05c_quit-no_at_module-20261031T085031Z-raw/peer-during_confirm-resource-audit.json",
+    "sha256": "28d73eff2af5e4a9e9aea77603d8f2d61757e88d6897b804dae2b7eaf891a3c5"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-idqe4ma0\\peer-8e43883f57744d22861ebdd668cccbe5\\stderr.log",
+    "target": "06-05-evidence/W05c_quit-no_at_module-20261031T085031Z-raw/peer-during_confirm-stderr.log",
+    "sha256": "4cc16f2e489eddba67973dfdf2721e2e1b4d6f1ecb6f3176c3e8a9d3b50dcb05"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-idqe4ma0\\peer-8e43883f57744d22861ebdd668cccbe5\\stdout.log",
+    "target": "06-05-evidence/W05c_quit-no_at_module-20261031T085031Z-raw/peer-during_confirm-stdout.log",
+    "sha256": "6a1976d5acbc1184d90fdd47fd633ecefbd9a7325f7a30e8a377e8e82d27df88"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-idqe4ma0\\peer-8e43883f57744d22861ebdd668cccbe5\\traceback.log",
+    "target": "06-05-evidence/W05c_quit-no_at_module-20261031T085031Z-raw/peer-during_confirm-traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-idqe4ma0\\peer-a19889ae5fb545b5b72f32cc4880e7d4\\result.json",
+    "target": "06-05-evidence/W05c_quit-no_at_module-20261031T085031Z-raw/peer-after_answer-result.json",
+    "sha256": "a5646a4b521de9e86b314d3ccb2935b2a4e78e9bde9490b9eaf02c7a0051004d"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-idqe4ma0\\peer-a19889ae5fb545b5b72f32cc4880e7d4\\expected-owner.json",
+    "target": "06-05-evidence/W05c_quit-no_at_module-20261031T085031Z-raw/peer-after_answer-expected-owner.json",
+    "sha256": "01f5e0b7c9a0ba78a69567c48c1b76960972214f38f7af66193e29e0f751891e"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-idqe4ma0\\peer-a19889ae5fb545b5b72f32cc4880e7d4\\resource-audit.json",
+    "target": "06-05-evidence/W05c_quit-no_at_module-20261031T085031Z-raw/peer-after_answer-resource-audit.json",
+    "sha256": "94d59fd3ea99298ab663f524761b54f8c71c9e2c51e139641f3a2017fe0d0375"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-idqe4ma0\\peer-a19889ae5fb545b5b72f32cc4880e7d4\\stderr.log",
+    "target": "06-05-evidence/W05c_quit-no_at_module-20261031T085031Z-raw/peer-after_answer-stderr.log",
+    "sha256": "352f49d4f104655682fea33cfebb5061cd555978b7124fed5c6fb68d51fd7b50"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-idqe4ma0\\peer-a19889ae5fb545b5b72f32cc4880e7d4\\stdout.log",
+    "target": "06-05-evidence/W05c_quit-no_at_module-20261031T085031Z-raw/peer-after_answer-stdout.log",
+    "sha256": "7bfdb004330f38a8ea0413ba237fdc375002162e7f88a1ce2ef8d3fc18fba24a"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-idqe4ma0\\peer-a19889ae5fb545b5b72f32cc4880e7d4\\traceback.log",
+    "target": "06-05-evidence/W05c_quit-no_at_module-20261031T085031Z-raw/peer-after_answer-traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }
+]
