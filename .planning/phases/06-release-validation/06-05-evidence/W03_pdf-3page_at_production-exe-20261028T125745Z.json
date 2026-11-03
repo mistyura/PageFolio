@@ -1,0 +1,286 @@
+{
+  "row": "W03/pdf-3page@production-exe",
+  "case": "W03",
+  "condition": "pdf-3page",
+  "entry": "production-exe",
+  "selftest": false,
+  "started_at": "2026-10-28T12:54:37.555303+00:00",
+  "target_exe_sha256": "66be5df663e333057c5c3cde02180857f930d2433e377f69c2838432d49a19d4",
+  "steps": [
+    {
+      "at": "2026-10-28T12:54:47.272232+00:00",
+      "step": "started",
+      "windows": [
+        {
+          "hwnd": 14552518,
+          "pid": 11652,
+          "title": "PageFolio",
+          "class": "TkTopLevel",
+          "visible": true,
+          "iconic": false,
+          "zoomed": false,
+          "rect": [
+            234,
+            228,
+            1450,
+            1067
+          ]
+        }
+      ],
+      "foreground": {
+        "hwnd": 14552518,
+        "pid": 11652,
+        "title": "PageFolio"
+      }
+    },
+    {
+      "at": "2026-10-28T12:56:38.814637+00:00",
+      "step": "target-ready",
+      "windows": [
+        {
+          "hwnd": 14552518,
+          "pid": 11652,
+          "title": "PageFolio",
+          "class": "TkTopLevel",
+          "visible": true,
+          "iconic": false,
+          "zoomed": false,
+          "rect": [
+            234,
+            228,
+            1450,
+            1067
+          ]
+        }
+      ],
+      "foreground": {
+        "hwnd": 21303400,
+        "pid": 18044,
+        "title": "Windows PowerShell"
+      }
+    },
+    {
+      "at": "2026-10-28T12:56:39.217219+00:00",
+      "step": "after-peer",
+      "windows": [
+        {
+          "hwnd": 14552518,
+          "pid": 11652,
+          "title": "PageFolio",
+          "class": "TkTopLevel",
+          "visible": true,
+          "iconic": false,
+          "zoomed": false,
+          "rect": [
+            234,
+            228,
+            1450,
+            1067
+          ]
+        }
+      ],
+      "foreground": {
+        "hwnd": 14552518,
+        "pid": 11652,
+        "title": "PageFolio",
+        "owned_by": "primary"
+      },
+      "owner_probe": [
+        {
+          "kind": "mutex",
+          "name": "Local\\PageFolio.Startup.Owner",
+          "state": "open"
+        },
+        {
+          "kind": "mapping",
+          "name": "Local\\PageFolio.Startup.State",
+          "state": "open"
+        }
+      ],
+      "foreground_before_peer": {
+        "hwnd": 21303400,
+        "pid": 18044,
+        "title": "Windows PowerShell"
+      }
+    }
+  ],
+  "input_monitor": {
+    "enabled": true,
+    "method": "read-only polling: GetAsyncKeyState/GetCursorPos/WindowFromPoint/GetAncestor/GetForegroundWindow (no SendInput/SetCursorPos/SetForegroundWindow)",
+    "interval_s": 0.008,
+    "samples": 48,
+    "max_gap_s": 0.016,
+    "errors": [],
+    "truncated": false,
+    "started_at": "2026-10-28T12:56:38.814671+00:00",
+    "stopped_at": "2026-10-28T12:56:39.220129+00:00",
+    "owned_pids": [
+      11652
+    ],
+    "contaminating_phases": [
+      "start-harness",
+      "awaiting-enter",
+      "peer"
+    ],
+    "phase_log": [
+      {
+        "t": "2026-10-28T12:56:38.814668+00:00",
+        "phase": "peer"
+      }
+    ],
+    "mouse_events": [],
+    "foreground_transitions": [
+      {
+        "seq": 1,
+        "t": "2026-10-28T12:56:39.067130+00:00",
+        "elapsed_s": 0.252,
+        "phase": "peer",
+        "from": {
+          "hwnd": 21303400,
+          "pid": 18044,
+          "title": "Windows PowerShell",
+          "class": "CASCADIA_HOSTING_WINDOW_CLASS"
+        },
+        "to": {
+          "hwnd": 14552518,
+          "pid": 11652,
+          "title": "PageFolio",
+          "class": "TkTopLevel"
+        }
+      }
+    ],
+    "key_events": []
+  },
+  "procedure_verdict": "clean",
+  "run": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\release-uat-0f65de6bbe18444fa60c27960a4537a7",
+  "run_id": "0f65de6bbe18444fa60c27960a4537a7",
+  "binary_sha256": "66be5df663e333057c5c3cde02180857f930d2433e377f69c2838432d49a19d4",
+  "tree_sha256": "b1e55ca6efa3a7bafb4dec9ea9fa2c715dfca6f538ba906632058f912f575d85",
+  "environment": {
+    "os": "Windows-11-10.0.26300-SP0",
+    "observer_python": "3.15.2 (tags/v3.15.2:5e58eaa, Oct 25 2026, 17:27:03) [MSC v.1951 64 bit (AMD64)]",
+    "observer_tk": "9.0",
+    "elevated": false,
+    "session_id": 1
+  },
+  "fixture_pdf": {
+    "path": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\release-uat-0f65de6bbe18444fa60c27960a4537a7\\fixtures\\edit-three-page.pdf",
+    "pages": 3,
+    "has_embedded_text": true,
+    "images_on_first_page": 0,
+    "sha256": "9f486ebc313508e2bcd0a951ed87dfdf2fb5500a13863a11a1fa536738c64f8f"
+  },
+  "primary": {
+    "pid": 11652,
+    "created": 134376656821531154,
+    "image": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\release-uat-0f65de6bbe18444fa60c27960a4537a7\\dist\\PageFolio.exe"
+  },
+  "peer": {
+    "pid": 28296,
+    "created": 134376657989074135,
+    "image": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\release-uat-0f65de6bbe18444fa60c27960a4537a7\\dist\\PageFolio.exe"
+  },
+  "peer_exit": {
+    "at": "2026-10-28T12:56:39.117734+00:00",
+    "returncode": 0
+  },
+  "procedure_assessment": {
+    "procedure_verdict": "clean",
+    "rerun_required": false,
+    "reason": "peer完了までの間にPageFolio上のボタン押下・キー押下は検出されなかった",
+    "pagefolio_presses_before_peer_done": [],
+    "pagefolio_keys_before_peer_done": [],
+    "focus_correct_as_recorded": true,
+    "focus_attribution": "product-focus-ok",
+    "all_window_presses_during_observation": []
+  },
+  "answers": {
+    "page_counts": "3 3 3 3",
+    "orientations": "全て横",
+    "edit_visible_after_restore": "はい",
+    "original_pdf_untouched": "合成のみ",
+    "note": "なし"
+  },
+  "outcome": "answered",
+  "user_close": {
+    "requested_at": "2026-10-28T12:57:25.913058+00:00",
+    "observed_at": "2026-10-28T12:57:37.638478+00:00",
+    "closed": false,
+    "pid": 11652
+  },
+  "stop": [
+    {
+      "pid": 11652,
+      "result": "closed"
+    },
+    {
+      "pid": 28296,
+      "result": "already-exited"
+    }
+  ],
+  "verify_after": {
+    "ok": true,
+    "overlay_changed": [
+      "pagefolio_settings.json"
+    ],
+    "distribution_changed": [],
+    "undeclared": [],
+    "extra_dirs": [],
+    "missing_dirs": [],
+    "exe_sha256": "66be5df663e333057c5c3cde02180857f930d2433e377f69c2838432d49a19d4",
+    "tree_sha256": "4b3fb84021a6ef35df0681aa95707eb6786ad46f72753c46dff3a5319d0cac6f"
+  },
+  "source_distribution_unchanged": true,
+  "owner_after": [],
+  "finished_at": "2026-10-28T12:57:45.293643+00:00",
+  "raw_inputs": [
+    {
+      "at": "2026-10-28T12:56:38.813314+00:00",
+      "key": "enter",
+      "text": "",
+      "role": "continue"
+    },
+    {
+      "at": "2026-10-28T12:57:10.105521+00:00",
+      "key": "page_counts",
+      "attempt": 1,
+      "text": "3 3 3 3",
+      "rejected": null
+    },
+    {
+      "at": "2026-10-28T12:57:16.030847+00:00",
+      "key": "orientations",
+      "attempt": 1,
+      "text": "全て横",
+      "rejected": null
+    },
+    {
+      "at": "2026-10-28T12:57:19.094676+00:00",
+      "key": "edit_visible_after_restore",
+      "attempt": 1,
+      "text": "はい",
+      "rejected": null
+    },
+    {
+      "at": "2026-10-28T12:57:23.645056+00:00",
+      "key": "original_pdf_untouched",
+      "attempt": 1,
+      "text": "合成のみ",
+      "rejected": null
+    },
+    {
+      "at": "2026-10-28T12:57:25.913036+00:00",
+      "key": "note",
+      "attempt": 1,
+      "text": "なし",
+      "rejected": null
+    },
+    {
+      "at": "2026-10-28T12:57:37.638254+00:00",
+      "key": "enter",
+      "text": "",
+      "role": "continue"
+    }
+  ],
+  "composed_answer": "W03 pdf-3page production-exe：page_counts=3 3 3 3・orientations=全て横・edit_visible_after_restore=はい・original_pdf_untouched=合成のみ（メモ: なし）"
+}

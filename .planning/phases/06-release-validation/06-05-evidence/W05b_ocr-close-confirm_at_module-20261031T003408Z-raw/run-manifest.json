@@ -1,0 +1,47 @@
+{
+  "run": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-qikwllb6",
+  "namespace": "c83fa8f8cce545d58c2be9f9eda275e1",
+  "case": "native-ocr",
+  "role": "uat-owner-native-ocr",
+  "fixture": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-qikwllb6\\uat-owner-native-ocr",
+  "launcher_pid": 8412,
+  "environment": {
+    "os": "sys.getwindowsversion(major=10, minor=0, build=26300, platform=2, service_pack='')",
+    "python": "3.15.2 (tags/v3.15.2:5e58eaa, Oct 25 2026, 17:27:03) [MSC v.1951 64 bit (AMD64)]",
+    "pointer_bits": 64,
+    "session_id": 1,
+    "sid": "S-1-5-5-0-372181",
+    "authentication_luid": 376855,
+    "foreground": 1510328,
+    "is_admin": false,
+    "tcl": "9.0.4",
+    "tk": 9.0
+  },
+  "originals_before": {
+    "pagefolio_settings.json": null,
+    "ocr_custom_prompt.md": null,
+    "ocr_summary_prompt.md": null
+  },
+  "source_commit": "5a7f60e6d672af2b2e866f01517a60b04994e291",
+  "expected_owner": {
+    "sid": "S-1-5-5-0-372181",
+    "authentication_luid": 376855,
+    "session_id": 1,
+    "pid": 22364,
+    "process_created": 134378803733658399,
+    "started_tick": 4978968,
+    "owner_result": "acquired",
+    "snapshot": {
+      "protocol": 1,
+      "generation": "fd440c427ea84c9ab1e1ac57cfd7d865",
+      "pid": 22364,
+      "process_created": 134378803733658399,
+      "session_id": 1,
+      "state": "ready",
+      "ready": true,
+      "release_generation": null
+    },
+    "ready_tick": 4981781,
+    "manual": true
+  }
+}

@@ -1,0 +1,42 @@
+[
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-1warmump\\manifest.json",
+    "target": "06-05-evidence/W02_settings_at_script-20261028T111048Z-raw/run-manifest.json",
+    "sha256": "3111a59f5e6f62352da50a7afb21782e58da6050455ea30cf8d6fa5d3467b873"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-1warmump\\uat-owner-settings\\result.json",
+    "target": "06-05-evidence/W02_settings_at_script-20261028T111048Z-raw/primary-result.json",
+    "sha256": "39e0e22c9210d2fc80fcbba9d2c531a77861e585bf34cc4892fab11a0e9a38b1"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-1warmump\\uat-owner-settings\\focus-result.json",
+    "target": "06-05-evidence/W02_settings_at_script-20261028T111048Z-raw/primary-focus-result.json",
+    "sha256": "3bff87a55316d9a0e8469ade3df424b131e50c1c4099b1ea19b5e33c9d3bef3e"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-1warmump\\uat-owner-settings\\resource-audit.json",
+    "target": "06-05-evidence/W02_settings_at_script-20261028T111048Z-raw/primary-resource-audit.json",
+    "sha256": "319bc04ce548c13f76230b5d175383cf83b46abd0d87d42279f2f38d3150e1de"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-1warmump\\uat-owner-settings\\ready",
+    "target": "06-05-evidence/W02_settings_at_script-20261028T111048Z-raw/primary-ready",
+    "sha256": "319bc04ce548c13f76230b5d175383cf83b46abd0d87d42279f2f38d3150e1de"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-1warmump\\uat-owner-settings\\stderr.log",
+    "target": "06-05-evidence/W02_settings_at_script-20261028T111048Z-raw/primary-stderr.log",
+    "sha256": "d5a7f7b3254fce77930cdd1f597931ec6afc8a175418fbb7605912b6fa6a30a4"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-1warmump\\uat-owner-settings\\stdout.log",
+    "target": "06-05-evidence/W02_settings_at_script-20261028T111048Z-raw/primary-stdout.log",
+    "sha256": "7d51974ff4a0a0dfe6633c5d7fac3444a4b4dc7afc002342c72f356974819f58"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-1warmump\\uat-owner-settings\\traceback.log",
+    "target": "06-05-evidence/W02_settings_at_script-20261028T111048Z-raw/primary-traceback.log",
+    "sha256": "15af8eb03cf131fbd5683e2556e9c8750c0e0b509749b376bc71fd9bfbfa518b"
+  }
+]

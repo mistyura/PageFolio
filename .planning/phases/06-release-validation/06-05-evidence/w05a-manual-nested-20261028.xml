@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="1" time="5.087" timestamp="2026-10-28T23:56:29.425060+09:00" hostname="nullaze-z240"><testcase classname="tests.test_startup_windows" name="test_focus_restore_real_main_windows[nested-True-entry-script]" time="4.776"><failure message="FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\shdwf\\AppData\\Local\\Temp\\pytest-of-shdwf\\pytest-101\\test_focus_restore_real_main_w0\\uat-owner-nested\\manual-nested-closed.json'">tmp_path = WindowsPath('C:/Users/shdwf/AppData/Local/Temp/pytest-of-shdwf/pytest-101/test_focus_restore_real_main_w0')
+entry = 'entry-script', case = 'nested', manual = True
+
+    @pytest.mark.parametrize("entry", ["entry-script", "entry-module"])
+    @pytest.mark.parametrize(
+        "case,manual",
+        [
+            (case, False)
+            for case in (
+                "thumb",
+                "preview",
+                "settings",
+                "nested",
+                "native-ocr",
+                "native-quit",
+                "rebuild",
+                "normal",
+                "zoomed",
+            )
+        ]
+        + [
+            ("thumb", True),
+            ("preview", True),
+            ("pdf", True),
+            ("ocr", True),
+            ("nested", True),
+        ],
+    )
+    def test_focus_restore_real_main_windows(tmp_path, entry, case, manual):
+        namespace = uuid4().hex
+        role = "uat-owner" if manual else "focus-owner"
+        owner, fixture = _spawn(tmp_path, namespace, f"{role}-{case}")
+        children = [owner]
+        try:
+            _wait_file(owner, fixture / "focus-ready")
+            child, _ = _spawn(tmp_path, namespace, entry)
+            children.append(child)
+            result = _finish(child)
+            assert result["constructed"] == 0
+            assert result["result"] in {"completed", "foreground_denied"}
+            _wait_file(owner, fixture / "focus-result.json")
+            measured = json.loads((fixture / "focus-result.json").read_text())
+            assert measured["state_preserved"]
+            assert measured["target_correct"]
+            assert measured["focus_correct"], measured
+            if manual and case != "nested":
+                assert measured["document_pages"] == (1 if case == "ocr" else 3)
+                assert measured["selected_pages"]
+                assert all(0 &lt;= p &lt; 3 for p in measured["selected_pages"])
+                assert 0 &lt;= measured["current_page"] &lt; 3
+            if manual and case == "pdf":
+                _wait_file(owner, fixture / "manual-pdf-ready.json")
+                prepared = json.loads((fixture / "manual-pdf-ready.json").read_text())
+                assert prepared == {
+                    "pages": 3,
+                    "rotations": [90, 0, 0],
+                    "undo": 3,
+                    "redo": 0,
+                }
+                assert not (fixture / "continued").exists()
+                trace = json.loads((fixture / "manual-pdf-trace.json").read_text())
+                assert len(trace) == 1 and trace[0]["state"] == prepared
+            if manual and case == "ocr":
+                prepared = json.loads((fixture / "manual-ocr-running.json").read_text())
+                resumed = json.loads((fixture / "manual-ocr-after-peer.json").read_text())
+                identity_keys = ("dialog_id", "run_gen", "engine_id", "worker_ids")
+                assert all(prepared[k] == resumed[k] for k in identity_keys)
+                assert not resumed["done"]
+                assert resumed["server"]["posts"] == 1
+                assert not resumed["server"]["completed"]
+                assert not resumed["pdf"]["has_embedded_text"]
+                assert resumed["pdf"]["pages"] == 1
+                assert resumed["concurrency"] == 1
+                assert not resumed["summary_executed"]
+                (fixture / "manual-ocr-release").touch()
+                _wait_file(owner, fixture / "manual-ocr-completed.json")
+                completed = json.loads(
+                    (fixture / "manual-ocr-completed.json").read_text(encoding="utf-8")
+                )
+                assert all(prepared[k] == completed[k] for k in identity_keys)
+                assert completed["results"] == {"0": "PageFolio UAT 合成OCR結果"}
+                assert not completed["errors"]
+                summary = completed["server"]
+                assert summary["posts"] == 1
+                assert not summary["expired"] and not summary["retransmissions"]
+                assert summary["completed"] == summary["released"]
+                assert len(summary["completed"]) == 1
+            if manual and case == "nested":
+&gt;               nested = json.loads((fixture / "manual-nested-closed.json").read_text())
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_startup_windows.py:1701: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+..\..\..\AppData\Local\Programs\Python\Python315\Lib\pathlib\__init__.py:986: in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors, newline=newline) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = WindowsPath('C:/Users/shdwf/AppData/Local/Temp/pytest-of-shdwf/pytest-101/test_focus_restore_real_main_w0/uat-owner-nested/manual-nested-closed.json')
+mode = 'r', buffering = -1, encoding = 'utf-8', errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed to by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+&gt;       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\shdwf\\AppData\\Local\\Temp\\pytest-of-shdwf\\pytest-101\\test_focus_restore_real_main_w0\\uat-owner-nested\\manual-nested-closed.json'
+
+..\..\..\AppData\Local\Programs\Python\Python315\Lib\pathlib\__init__.py:970: FileNotFoundError</failure></testcase></testsuite></testsuites>

@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="19" time="82.300" timestamp="2026-10-28T20:27:03.824306+09:00" hostname="nullaze-z240"><testcase classname="tests.test_startup_windows" name="test_focus_restore_real_main_windows[thumb-False-entry-script]" time="4.189" /><testcase classname="tests.test_startup_windows" name="test_focus_restore_real_main_windows[thumb-False-entry-module]" time="4.320" /><testcase classname="tests.test_startup_windows" name="test_focus_restore_real_main_windows[preview-False-entry-script]" time="4.108" /><testcase classname="tests.test_startup_windows" name="test_focus_restore_real_main_windows[preview-False-entry-module]" time="4.018" /><testcase classname="tests.test_startup_windows" name="test_focus_restore_real_main_windows[settings-False-entry-script]" time="4.628" /><testcase classname="tests.test_startup_windows" name="test_focus_restore_real_main_windows[settings-False-entry-module]" time="4.199" /><testcase classname="tests.test_startup_windows" name="test_focus_restore_real_main_windows[nested-False-entry-script]" time="4.474" /><testcase classname="tests.test_startup_windows" name="test_focus_restore_real_main_windows[nested-False-entry-module]" time="4.384" /><testcase classname="tests.test_startup_windows" name="test_focus_restore_real_main_windows[native-ocr-False-entry-script]" time="4.851" /><testcase classname="tests.test_startup_windows" name="test_focus_restore_real_main_windows[native-ocr-False-entry-module]" time="4.893" /><testcase classname="tests.test_startup_windows" name="test_focus_restore_real_main_windows[native-quit-False-entry-script]" time="4.114" /><testcase classname="tests.test_startup_windows" name="test_focus_restore_real_main_windows[native-quit-False-entry-module]" time="4.339" /><testcase classname="tests.test_startup_windows" name="test_focus_restore_real_main_windows[rebuild-False-entry-script]" time="4.453" /><testcase classname="tests.test_startup_windows" name="test_focus_restore_real_main_windows[rebuild-False-entry-module]" time="4.526" /><testcase classname="tests.test_startup_windows" name="test_focus_restore_real_main_windows[normal-False-entry-script]" time="4.012" /><testcase classname="tests.test_startup_windows" name="test_focus_restore_real_main_windows[normal-False-entry-module]" time="4.286" /><testcase classname="tests.test_startup_windows" name="test_focus_restore_real_main_windows[zoomed-False-entry-script]" time="4.316" /><testcase classname="tests.test_startup_windows" name="test_focus_restore_real_main_windows[zoomed-False-entry-module]" time="4.107" /><testcase classname="tests.test_startup_windows" name="test_focus_restore_real_main_windows[thumb-True-entry-script]" time="3.793"><failure message="assert []">tmp_path = WindowsPath('C:/Users/shdwf/work/project/PageFolio/.planning/tmp/w02-pdf-prep-tests-20261028/test_focus_restore_real_main_w18')
+entry = 'entry-script', case = 'thumb', manual = True
+
+    @pytest.mark.parametrize("entry", ["entry-script", "entry-module"])
+    @pytest.mark.parametrize(
+        "case,manual",
+        [
+            (case, False)
+            for case in (
+                "thumb",
+                "preview",
+                "settings",
+                "nested",
+                "native-ocr",
+                "native-quit",
+                "rebuild",
+                "normal",
+                "zoomed",
+            )
+        ]
+        + [("thumb", True), ("preview", True)],
+    )
+    def test_focus_restore_real_main_windows(tmp_path, entry, case, manual):
+        namespace = uuid4().hex
+        role = "uat-owner" if manual else "focus-owner"
+        owner, fixture = _spawn(tmp_path, namespace, f"{role}-{case}")
+        children = [owner]
+        try:
+            _wait_file(owner, fixture / "focus-ready")
+            child, _ = _spawn(tmp_path, namespace, entry)
+            children.append(child)
+            result = _finish(child)
+            assert result["constructed"] == 0
+            assert result["result"] in {"completed", "foreground_denied"}
+            _wait_file(owner, fixture / "focus-result.json")
+            measured = json.loads((fixture / "focus-result.json").read_text())
+            assert measured["state_preserved"]
+            assert measured["target_correct"]
+            assert measured["focus_correct"], measured
+            if manual:
+                assert measured["document_pages"] == 3
+&gt;               assert measured["selected_pages"]
+E               assert []
+
+tests\test_startup_windows.py:1654: AssertionError</failure></testcase></testsuite></testsuites>

@@ -1,0 +1,32 @@
+[
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\release-uat-34338c8984bb4cc2bfe8842cfbf80caa\\manifest.json",
+    "target": "06-05-evidence/W04_ocr-1page_at_production-exe-20261028T143434Z-raw/run-manifest.json",
+    "sha256": "96d6c0e121151fe8166c26b22a483bcc643d4231425215447aa8fc8058f8330b"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\release-uat-34338c8984bb4cc2bfe8842cfbf80caa\\evidence\\inspect-001.json",
+    "target": "06-05-evidence/W04_ocr-1page_at_production-exe-20261028T143434Z-raw/run-evidence-inspect-001.json",
+    "sha256": "3b2225f431c2b541d5a9bfdd6f301b1bff6d2f47696addb2358efe27ec17cec2"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\release-uat-34338c8984bb4cc2bfe8842cfbf80caa\\evidence\\inspect-002.json",
+    "target": "06-05-evidence/W04_ocr-1page_at_production-exe-20261028T143434Z-raw/run-evidence-inspect-002.json",
+    "sha256": "4f253bac454c7813273738331b20987779783ce6dbfd637b469874dfe542e371"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\release-uat-34338c8984bb4cc2bfe8842cfbf80caa\\evidence\\w04-server.jsonl",
+    "target": "06-05-evidence/W04_ocr-1page_at_production-exe-20261028T143434Z-raw/run-evidence-w04-server.jsonl",
+    "sha256": "4b700b0d9633abf3a00577bdeb6861092922641fbd936bd184e7bba3858a0129"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\release-uat-34338c8984bb4cc2bfe8842cfbf80caa\\fixtures\\ocr-one-page.pdf",
+    "target": "06-05-evidence/W04_ocr-1page_at_production-exe-20261028T143434Z-raw/run-fixtures-ocr-one-page.pdf",
+    "sha256": "1fcce6f42b54d8bd5881f9194557e3cf775564ef1b8fab9595514c3b4eb213c7"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\release-uat-34338c8984bb4cc2bfe8842cfbf80caa\\dist\\pagefolio_settings.json",
+    "target": "06-05-evidence/W04_ocr-1page_at_production-exe-20261028T143434Z-raw/run-dist-pagefolio_settings.json",
+    "sha256": "49bde575398d8bfeb6d04015120eacd1df30d3344690dbfffdc551caec7e2783"
+  }
+]

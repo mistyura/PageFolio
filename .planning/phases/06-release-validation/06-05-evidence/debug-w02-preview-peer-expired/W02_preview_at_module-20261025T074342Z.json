@@ -1,0 +1,946 @@
+{
+  "row": "W02/preview@module",
+  "case": "W02",
+  "condition": "preview",
+  "entry": "module",
+  "selftest": false,
+  "started_at": "2026-10-25T07:43:09.162161+00:00",
+  "target_exe_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17",
+  "steps": [
+    {
+      "at": "2026-10-25T07:43:09.165907+00:00",
+      "step": "start-harness"
+    },
+    {
+      "at": "2026-10-25T07:43:14.037401+00:00",
+      "step": "ui-probe-started",
+      "pid": 36044,
+      "wm_null": true
+    },
+    {
+      "at": "2026-10-25T07:43:14.038204+00:00",
+      "step": "prepared",
+      "windows": [
+        {
+          "hwnd": 5312666,
+          "pid": 36044,
+          "title": "PageFolio",
+          "class": "TkTopLevel",
+          "visible": true,
+          "iconic": false,
+          "zoomed": false,
+          "rect": [
+            26,
+            26,
+            1242,
+            865
+          ]
+        }
+      ],
+      "foreground": {
+        "hwnd": 5312666,
+        "pid": 36044,
+        "title": "PageFolio"
+      },
+      "pids": [
+        2164,
+        32344,
+        36044
+      ]
+    },
+    {
+      "at": "2026-10-25T07:43:18.287364+00:00",
+      "step": "peer"
+    },
+    {
+      "at": "2026-10-25T07:43:20.582107+00:00",
+      "step": "after-peer",
+      "windows": [
+        {
+          "hwnd": 5312666,
+          "pid": 36044,
+          "title": "PageFolio",
+          "class": "TkTopLevel",
+          "visible": true,
+          "iconic": false,
+          "zoomed": false,
+          "rect": [
+            26,
+            26,
+            1242,
+            865
+          ]
+        }
+      ],
+      "foreground": {
+        "hwnd": 5312666,
+        "pid": 36044,
+        "title": "PageFolio"
+      }
+    },
+    {
+      "at": "2026-10-25T07:43:20.582413+00:00",
+      "step": "key-probe-instructed",
+      "key": "F5",
+      "presses": 2
+    }
+  ],
+  "purpose": "debug-frequency",
+  "acceptance": false,
+  "debug_session": "w02-preview-peer-expired",
+  "diagnostics": {
+    "ui_thread": true,
+    "wm_null_probe": true,
+    "interval_ms": 100,
+    "run_index": 4,
+    "run_total": 8,
+    "hold_s": 30.0,
+    "driver_sha256": "f10d92d93ba1cde7ba7ef7a3e982e29dcae6ac2e82e1ed22009f2934d50d845d",
+    "probe_sha256": "740a0bf709cbe19d91f7514f5e49ddfc5d4a69f40694180c5ee6a1354981eb8b",
+    "note": "発生頻度の確認用の診断実行。受入証拠ではない。製品コードは変更していない。"
+  },
+  "harness_start": {
+    "returncode": 0,
+    "stderr_tail": ""
+  },
+  "run": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-o7aggxbw",
+  "harness_manifest": {
+    "run": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-o7aggxbw",
+    "namespace": "69d13263fdfe4a35b7bd286aa5c6f0de",
+    "case": "preview",
+    "launcher_pid": 32344,
+    "source_commit": "36909a82155c79d84a204d4c426d384336ed9383"
+  },
+  "owned_pids": [
+    {
+      "pid": 32344,
+      "created": 134373877895001353,
+      "image": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.venv\\Scripts\\python.exe"
+    },
+    {
+      "pid": 36044,
+      "created": 134373877895342702,
+      "image": "C:\\Users\\shdwf\\AppData\\Local\\Programs\\Python\\Python315\\python.exe"
+    }
+  ],
+  "harness_start_fixture": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-o7aggxbw\\uat-owner-preview",
+  "harness_peer": {
+    "returncode": 0,
+    "stderr_tail": "",
+    "json": {
+      "fixture": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-o7aggxbw\\peer-22ece3aa78ba4074ad21881938bdf4f2",
+      "result": {
+        "constructed": 0,
+        "restored": 0,
+        "status_preserved": true,
+        "result": "completed",
+        "elapsed": 94
+      }
+    }
+  },
+  "answers": {
+    "foreground": "出た",
+    "key_reached": "変わった",
+    "restored": "戻った",
+    "kept": "PDFなし",
+    "single": "１つ",
+    "note": "なし"
+  },
+  "harness_inspect": {
+    "returncode": 0,
+    "stderr_tail": "",
+    "json": {
+      "manifest": {
+        "run": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-o7aggxbw",
+        "namespace": "69d13263fdfe4a35b7bd286aa5c6f0de",
+        "case": "preview",
+        "role": "uat-owner-preview",
+        "fixture": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-o7aggxbw\\uat-owner-preview",
+        "launcher_pid": 32344,
+        "environment": {
+          "os": "sys.getwindowsversion(major=10, minor=0, build=26300, platform=2, service_pack='')",
+          "python": "3.15.1 (tags/v3.15.1:c37e74c, Oct 21 2026, 06:24:08) [MSC v.1951 64 bit (AMD64)]",
+          "pointer_bits": 64,
+          "session_id": 1,
+          "sid": "S-1-5-5-0-202261",
+          "authentication_luid": 206356,
+          "foreground": 660062,
+          "is_admin": false,
+          "tcl": "9.0.4",
+          "tk": 9.0
+        },
+        "originals_before": {
+          "pagefolio_settings.json": null,
+          "ocr_custom_prompt.md": null,
+          "ocr_summary_prompt.md": null
+        },
+        "source_commit": "36909a82155c79d84a204d4c426d384336ed9383",
+        "expected_owner": {
+          "sid": "S-1-5-5-0-202261",
+          "authentication_luid": 206356,
+          "session_id": 1,
+          "pid": 36044,
+          "process_created": 134373877895342702,
+          "started_tick": 33560531,
+          "owner_result": "acquired",
+          "snapshot": {
+            "protocol": 1,
+            "generation": "b8afb0b9055d458cb954a170f36e8ebf",
+            "pid": 36044,
+            "process_created": 134373877895342702,
+            "session_id": 1,
+            "state": "ready",
+            "ready": true,
+            "release_generation": null
+          },
+          "ready_tick": 33563453,
+          "manual": true
+        }
+      },
+      "originals_unchanged": true,
+      "ready": {
+        "sid": "S-1-5-5-0-202261",
+        "authentication_luid": 206356,
+        "session_id": 1,
+        "pid": 36044,
+        "process_created": 134373877895342702,
+        "started_tick": 33560531,
+        "owner_result": "acquired",
+        "snapshot": {
+          "protocol": 1,
+          "generation": "b8afb0b9055d458cb954a170f36e8ebf",
+          "pid": 36044,
+          "process_created": 134373877895342702,
+          "session_id": 1,
+          "state": "ready",
+          "ready": true,
+          "release_generation": null
+        },
+        "ready_tick": 33563453
+      },
+      "focus-result.json": {
+        "state_preserved": true,
+        "target_correct": true,
+        "result": "completed",
+        "activated": 5312666,
+        "expected_tk": 5312666,
+        "native": null,
+        "placement": "normal",
+        "expected_focus": ".!panedwindow.!frame2.!frame2.!canvas",
+        "immediate_focus": "None",
+        "focus_correct": true,
+        "settled_focus": ".!panedwindow.!frame2.!frame2.!canvas"
+      }
+    }
+  },
+  "outcome": "answered",
+  "harness_stop": {
+    "returncode": 0,
+    "stderr_tail": ""
+  },
+  "cleanup": {
+    "left_after_harness_stop": [],
+    "terminated_owned": [],
+    "alive_after": []
+  },
+  "input_monitor": {
+    "enabled": true,
+    "method": "read-only polling: GetAsyncKeyState/GetCursorPos/WindowFromPoint/GetAncestor/GetForegroundWindow (no SendInput/SetCursorPos/SetForegroundWindow)",
+    "interval_s": 0.008,
+    "samples": 3885,
+    "max_gap_s": 0.026,
+    "errors": [],
+    "truncated": false,
+    "started_at": "2026-10-25T07:43:09.165009+00:00",
+    "stopped_at": "2026-10-25T07:43:42.002080+00:00",
+    "owned_pids": [
+      2164,
+      32344,
+      36044
+    ],
+    "contaminating_phases": [
+      "start-harness",
+      "awaiting-enter",
+      "peer"
+    ],
+    "phase_log": [
+      {
+        "t": "2026-10-25T07:43:09.165003+00:00",
+        "phase": "start-harness"
+      },
+      {
+        "t": "2026-10-25T07:43:14.038393+00:00",
+        "phase": "awaiting-enter"
+      },
+      {
+        "t": "2026-10-25T07:43:18.287361+00:00",
+        "phase": "peer"
+      },
+      {
+        "t": "2026-10-25T07:43:20.582116+00:00",
+        "phase": "post-peer"
+      }
+    ],
+    "mouse_events": [
+      {
+        "seq": 2,
+        "t": "2026-10-25T07:43:15.969500+00:00",
+        "elapsed_s": 6.804,
+        "phase": "awaiting-enter",
+        "kind": "down",
+        "button": "left",
+        "pos": [
+          1417,
+          435
+        ],
+        "under": {
+          "hwnd": 660062,
+          "pid": 31144,
+          "title": "Windows PowerShell",
+          "class": "CASCADIA_HOSTING_WINDOW_CLASS",
+          "child_hwnd": 660062
+        },
+        "foreground": {
+          "hwnd": 5312666,
+          "pid": 36044,
+          "title": "PageFolio",
+          "class": "TkTopLevel"
+        },
+        "on_pagefolio": false
+      },
+      {
+        "seq": 4,
+        "t": "2026-10-25T07:43:16.060317+00:00",
+        "elapsed_s": 6.895,
+        "phase": "awaiting-enter",
+        "kind": "up",
+        "button": "left",
+        "pos": [
+          1417,
+          435
+        ],
+        "under": {
+          "hwnd": 660062,
+          "pid": 31144,
+          "title": "Windows PowerShell",
+          "class": "CASCADIA_HOSTING_WINDOW_CLASS",
+          "child_hwnd": 660062
+        },
+        "foreground": {
+          "hwnd": 660062,
+          "pid": 31144,
+          "title": "Windows PowerShell",
+          "class": "CASCADIA_HOSTING_WINDOW_CLASS"
+        },
+        "on_pagefolio": false
+      },
+      {
+        "seq": 6,
+        "t": "2026-10-25T07:43:21.541565+00:00",
+        "elapsed_s": 12.376,
+        "phase": "post-peer",
+        "kind": "down",
+        "button": "left",
+        "pos": [
+          1427,
+          293
+        ],
+        "under": {
+          "hwnd": 660062,
+          "pid": 31144,
+          "title": "Windows PowerShell",
+          "class": "CASCADIA_HOSTING_WINDOW_CLASS",
+          "child_hwnd": 660062
+        },
+        "foreground": {
+          "hwnd": 5312666,
+          "pid": 36044,
+          "title": "PageFolio",
+          "class": "TkTopLevel"
+        },
+        "on_pagefolio": false
+      },
+      {
+        "seq": 8,
+        "t": "2026-10-25T07:43:21.682902+00:00",
+        "elapsed_s": 12.518,
+        "phase": "post-peer",
+        "kind": "up",
+        "button": "left",
+        "pos": [
+          1427,
+          293
+        ],
+        "under": {
+          "hwnd": 660062,
+          "pid": 31144,
+          "title": "Windows PowerShell",
+          "class": "CASCADIA_HOSTING_WINDOW_CLASS",
+          "child_hwnd": 660062
+        },
+        "foreground": {
+          "hwnd": 660062,
+          "pid": 31144,
+          "title": "Windows PowerShell",
+          "class": "CASCADIA_HOSTING_WINDOW_CLASS"
+        },
+        "on_pagefolio": false
+      }
+    ],
+    "foreground_transitions": [
+      {
+        "seq": 1,
+        "t": "2026-10-25T07:43:12.933391+00:00",
+        "elapsed_s": 3.768,
+        "phase": "start-harness",
+        "from": {
+          "hwnd": 660062,
+          "pid": 31144,
+          "title": "Windows PowerShell",
+          "class": "CASCADIA_HOSTING_WINDOW_CLASS"
+        },
+        "to": {
+          "hwnd": 5312666,
+          "pid": 36044,
+          "title": "PageFolio",
+          "class": "TkTopLevel"
+        }
+      },
+      {
+        "seq": 3,
+        "t": "2026-10-25T07:43:15.969613+00:00",
+        "elapsed_s": 6.804,
+        "phase": "awaiting-enter",
+        "from": {
+          "hwnd": 5312666,
+          "pid": 36044,
+          "title": "PageFolio",
+          "class": "TkTopLevel"
+        },
+        "to": {
+          "hwnd": 660062,
+          "pid": 31144,
+          "title": "Windows PowerShell",
+          "class": "CASCADIA_HOSTING_WINDOW_CLASS"
+        }
+      },
+      {
+        "seq": 5,
+        "t": "2026-10-25T07:43:19.014571+00:00",
+        "elapsed_s": 9.849,
+        "phase": "peer",
+        "from": {
+          "hwnd": 660062,
+          "pid": 31144,
+          "title": "Windows PowerShell",
+          "class": "CASCADIA_HOSTING_WINDOW_CLASS"
+        },
+        "to": {
+          "hwnd": 5312666,
+          "pid": 36044,
+          "title": "PageFolio",
+          "class": "TkTopLevel"
+        }
+      },
+      {
+        "seq": 7,
+        "t": "2026-10-25T07:43:21.542573+00:00",
+        "elapsed_s": 12.376,
+        "phase": "post-peer",
+        "from": {
+          "hwnd": 5312666,
+          "pid": 36044,
+          "title": "PageFolio",
+          "class": "TkTopLevel"
+        },
+        "to": {
+          "hwnd": 660062,
+          "pid": 31144,
+          "title": "Windows PowerShell",
+          "class": "CASCADIA_HOSTING_WINDOW_CLASS"
+        }
+      }
+    ],
+    "key_events": []
+  },
+  "procedure_assessment": {
+    "procedure_verdict": "clean",
+    "rerun_required": false,
+    "reason": "peer完了までの間にPageFolio上のボタン押下・キー押下は検出されなかった",
+    "pagefolio_presses_before_peer_done": [],
+    "pagefolio_keys_before_peer_done": [],
+    "focus_correct_as_recorded": true,
+    "focus_attribution": "product-focus-ok"
+  },
+  "procedure_verdict": "clean",
+  "focus_attribution": "product-focus-ok",
+  "ui_thread_diag": {
+    "enabled": true,
+    "purpose": "debug-frequency",
+    "acceptance": false,
+    "method": "read-only external sampling: GetGUIThreadInfo / GetThreadTimes / QueryThreadCycleTime / NtQuerySystemInformation(SystemProcessInformation) / K32GetProcessMemoryInfo / IsHungAppWindow / EnumWindows+GetClassNameW / GetTickCount64 (OpenProcess=PROCESS_QUERY_LIMITED_INFORMATION, OpenThread=THREAD_QUERY_LIMITED_INFORMATION; no SendInput/SetForegroundWindow/SetCursorPos/keybd_event/mouse_event/SuspendThread/DebugActiveProcess)",
+    "interval_s": 0.1,
+    "options": {
+      "wm_null_probe": true,
+      "wm_null_interval_s": 0.5,
+      "wm_null_timeout_ms": 200,
+      "wm_null_phases": [
+        "awaiting-enter",
+        "peer",
+        "diag-hold",
+        "post-peer"
+      ]
+    },
+    "target": {
+      "pid": 36044,
+      "expected_created": 134373877895342702,
+      "created": 134373877895342702,
+      "identity_verified": true
+    },
+    "open_failures": [],
+    "errors": [],
+    "error_counts": {},
+    "ui_thread_log": [
+      {
+        "t": "2026-10-25T07:43:14.032143+00:00",
+        "tick_ms": 33564562,
+        "tid": 20904,
+        "hwnd": 5312666,
+        "class": "TkTopLevel",
+        "visible": true,
+        "source": "window"
+      }
+    ],
+    "anchors": [
+      {
+        "tick_ms": 33564562,
+        "t": "2026-10-25T07:43:14.032112+00:00",
+        "mono": 33564.5948983
+      },
+      {
+        "tick_ms": 33591578,
+        "t": "2026-10-25T07:43:41.038608+00:00",
+        "mono": 33591.601395
+      }
+    ],
+    "started_at": "2026-10-25T07:43:14.032091+00:00",
+    "stopped_at": "2026-10-25T07:43:41.038791+00:00",
+    "gone_at": null,
+    "gone_rows_dropped": 0,
+    "truncated": false,
+    "samples": 271,
+    "max_gap_s": 0.113,
+    "cost_ms": {
+      "avg": 5.52,
+      "max": 21.24
+    },
+    "wm_null": {
+      "count": 53,
+      "by_result": {
+        "ok": 53
+      },
+      "max_elapsed_ms": 2.8
+    },
+    "log_events_seen_live": [
+      {
+        "kind": "terminal",
+        "id": "dd31d0266eff4ee4b175cc0365d749be",
+        "result": "completed",
+        "deadline_tick": 33574500,
+        "tick_ms": 33569546,
+        "seen_t": "2026-10-25T07:43:19.051533+00:00",
+        "seen_tick_ms": 33569593
+      }
+    ],
+    "phase_stats": {
+      "start-harness": {
+        "rows": 2,
+        "first": {
+          "t": "2026-10-25T07:43:14.032143+00:00",
+          "tick_ms": 33564562
+        },
+        "last": {
+          "t": "2026-10-25T07:43:14.037119+00:00",
+          "tick_ms": 33564578
+        },
+        "duration_s": 0.005,
+        "ctx_switch_delta": 0,
+        "ctx_per_s": 0.0,
+        "cpu_ms_delta": 0.0,
+        "cpu_share": 0.0,
+        "cycles_m_delta": 0.0,
+        "others_cpu_ms_delta": 0.0,
+        "others_cpu_share": 0.0,
+        "busy_other_threads_max": 0,
+        "page_fault_delta": 0,
+        "hard_fault_delta": 0,
+        "working_set_kb": {
+          "min": 121652,
+          "max": 121652
+        },
+        "states": {
+          "Waiting": 2
+        },
+        "wait_reasons": {
+          "UserRequest": 2
+        },
+        "gui_flags_rows": {
+          "none": 2
+        },
+        "modal_rows": 0,
+        "hung_rows": 0,
+        "tids": [
+          20904
+        ],
+        "max_cost_ms": 4.81,
+        "wm_null": {
+          "count": 0,
+          "by_result": {},
+          "max_elapsed_ms": null
+        }
+      },
+      "awaiting-enter": {
+        "rows": 42,
+        "first": {
+          "t": "2026-10-25T07:43:14.150404+00:00",
+          "tick_ms": 33564687
+        },
+        "last": {
+          "t": "2026-10-25T07:43:18.243304+00:00",
+          "tick_ms": 33568781
+        },
+        "duration_s": 4.093,
+        "ctx_switch_delta": 221,
+        "ctx_per_s": 53.99,
+        "cpu_ms_delta": 109.4,
+        "cpu_share": 0.027,
+        "cycles_m_delta": 286.668,
+        "others_cpu_ms_delta": 62.5,
+        "others_cpu_share": 0.015,
+        "busy_other_threads_max": 0,
+        "page_fault_delta": 406,
+        "hard_fault_delta": 0,
+        "working_set_kb": {
+          "min": 121872,
+          "max": 123412
+        },
+        "states": {
+          "Waiting": 42
+        },
+        "wait_reasons": {
+          "UserRequest": 42
+        },
+        "gui_flags_rows": {
+          "none": 42
+        },
+        "modal_rows": 0,
+        "hung_rows": 0,
+        "tids": [
+          20904
+        ],
+        "max_cost_ms": 10.21,
+        "wm_null": {
+          "count": 8,
+          "by_result": {
+            "ok": 8
+          },
+          "max_elapsed_ms": 0.6
+        }
+      },
+      "peer": {
+        "rows": 23,
+        "first": {
+          "t": "2026-10-25T07:43:18.338910+00:00",
+          "tick_ms": 33568875
+        },
+        "last": {
+          "t": "2026-10-25T07:43:20.546842+00:00",
+          "tick_ms": 33571078
+        },
+        "duration_s": 2.208,
+        "ctx_switch_delta": 229,
+        "ctx_per_s": 103.71,
+        "cpu_ms_delta": 78.1,
+        "cpu_share": 0.035,
+        "cycles_m_delta": 142.612,
+        "others_cpu_ms_delta": 0.0,
+        "others_cpu_share": 0.0,
+        "busy_other_threads_max": 1,
+        "page_fault_delta": 21,
+        "hard_fault_delta": 0,
+        "working_set_kb": {
+          "min": 123412,
+          "max": 123496
+        },
+        "states": {
+          "Waiting": 23
+        },
+        "wait_reasons": {
+          "UserRequest": 23
+        },
+        "gui_flags_rows": {
+          "none": 23
+        },
+        "modal_rows": 0,
+        "hung_rows": 0,
+        "tids": [
+          20904
+        ],
+        "max_cost_ms": 21.24,
+        "wm_null": {
+          "count": 4,
+          "by_result": {
+            "ok": 4
+          },
+          "max_elapsed_ms": 1.7
+        }
+      },
+      "post-peer": {
+        "rows": 204,
+        "first": {
+          "t": "2026-10-25T07:43:20.641346+00:00",
+          "tick_ms": 33571171
+        },
+        "last": {
+          "t": "2026-10-25T07:43:40.943594+00:00",
+          "tick_ms": 33591484
+        },
+        "duration_s": 20.303,
+        "ctx_switch_delta": 963,
+        "ctx_per_s": 47.43,
+        "cpu_ms_delta": 375.0,
+        "cpu_share": 0.018,
+        "cycles_m_delta": 1289.854,
+        "others_cpu_ms_delta": 78.2,
+        "others_cpu_share": 0.004,
+        "busy_other_threads_max": 0,
+        "page_fault_delta": 3,
+        "hard_fault_delta": 0,
+        "working_set_kb": {
+          "min": 123480,
+          "max": 123508
+        },
+        "states": {
+          "Waiting": 203,
+          "Ready": 1
+        },
+        "wait_reasons": {
+          "UserRequest": 204
+        },
+        "gui_flags_rows": {
+          "none": 204
+        },
+        "modal_rows": 0,
+        "hung_rows": 0,
+        "tids": [
+          20904
+        ],
+        "max_cost_ms": 12.48,
+        "wm_null": {
+          "count": 40,
+          "by_result": {
+            "ok": 40
+          },
+          "max_elapsed_ms": 2.8
+        }
+      }
+    },
+    "stall_episodes": [],
+    "request_timeline": {
+      "requests": [
+        {
+          "request_id": "dd31d0266eff4ee4b175cc0365d749be",
+          "deadline_tick": 33574500,
+          "request_started_tick_derived": 33569500,
+          "request_started_derivation": "deadline_tick - 5000 (startup_win32.request_activation)",
+          "accepted_tick_note": "一次が要求を受理(accepted返信)したtickはstderrに出ない。通常行ではpeer elapsedが63〜94msなので、開始tickから約0.1秒以内と推定される(推定)",
+          "peer_accepted_logged": true,
+          "primary_terminal_result": "completed",
+          "primary_terminal_tick": 33569546,
+          "primary_lateness_ms": -4954,
+          "primary_processed_before_deadline": true,
+          "wall": {
+            "request_started": "2026-10-25T07:43:18.970112+00:00",
+            "deadline": "2026-10-25T07:43:23.970112+00:00",
+            "primary_terminal": "2026-10-25T07:43:19.016112+00:00"
+          },
+          "terminal_first_seen_by_driver": {
+            "t": "2026-10-25T07:43:19.051533+00:00",
+            "tick_ms": 33569593,
+            "lag_ms_after_logged_tick": 47
+          }
+        }
+      ],
+      "peer_os_errors": [],
+      "peer_result": {
+        "constructed": 0,
+        "restored": 0,
+        "status_preserved": true,
+        "result": "completed",
+        "elapsed": 94
+      },
+      "anchors": [
+        {
+          "tick_ms": 33564562,
+          "t": "2026-10-25T07:43:14.032112+00:00",
+          "mono": 33564.5948983
+        },
+        {
+          "tick_ms": 33591578,
+          "t": "2026-10-25T07:43:41.038608+00:00",
+          "mono": 33591.601395
+        }
+      ],
+      "tick_wall_drift_ms_between_anchors": -9.5,
+      "late": false
+    },
+    "request_window_analysis": [
+      {
+        "request_id": "dd31d0266eff4ee4b175cc0365d749be",
+        "window_tick_ms": [
+          33569500,
+          33569546
+        ],
+        "late": false,
+        "aggregate": {
+          "rows": 0
+        },
+        "tags": [],
+        "rows_at": {
+          "request_started": {
+            "t": "2026-10-25T07:43:18.941090+00:00",
+            "tick_ms": 33569468,
+            "phase": "peer",
+            "gui_flags": 0,
+            "state": "Waiting",
+            "wait_reason": "UserRequest",
+            "ctx_switches": 18774,
+            "cpu_kernel_ms": 765.6,
+            "cpu_user_ms": 500.0,
+            "others_cpu_ms": 140.6,
+            "hung": false,
+            "offset_ms": -32
+          },
+          "deadline": {
+            "t": "2026-10-25T07:43:23.942258+00:00",
+            "tick_ms": 33574484,
+            "phase": "post-peer",
+            "gui_flags": 0,
+            "state": "Waiting",
+            "wait_reason": "UserRequest",
+            "ctx_switches": 19186,
+            "cpu_kernel_ms": 765.6,
+            "cpu_user_ms": 562.5,
+            "others_cpu_ms": 140.6,
+            "hung": false,
+            "offset_ms": -16
+          },
+          "primary_terminal": {
+            "t": "2026-10-25T07:43:19.051533+00:00",
+            "tick_ms": 33569593,
+            "phase": "peer",
+            "gui_flags": 0,
+            "state": "Waiting",
+            "wait_reason": "UserRequest",
+            "ctx_switches": 18928,
+            "cpu_kernel_ms": 765.6,
+            "cpu_user_ms": 500.0,
+            "others_cpu_ms": 140.6,
+            "hung": false,
+            "offset_ms": 47
+          }
+        }
+      }
+    ],
+    "frequency_record": {
+      "peer_result": "completed",
+      "peer_elapsed_ms": 94,
+      "primary_late": false,
+      "stall_episodes": 0,
+      "longest_stall_s": 0,
+      "wm_null_probe": true
+    },
+    "samples_file": {
+      "file": "W02_preview_at_module-20261025T074342Z.ui-samples.jsonl",
+      "rows": 271,
+      "wm_null_rows": 53,
+      "sha256": "0b1803db312135310baafdf5803b698499c43616d5440c8df6556e9f5e3e494e",
+      "format": "JSON Lines: 1行目=header(columns)、続く行=サンプル配列(columns順)、kind=wm_null の行=WM_NULL応答"
+    }
+  },
+  "finished_at": "2026-10-25T07:43:42.026979+00:00",
+  "raw_inputs": [
+    {
+      "at": "2026-10-25T07:43:18.287347+00:00",
+      "key": "enter",
+      "text": "",
+      "role": "continue"
+    },
+    {
+      "at": "2026-10-25T07:43:23.494267+00:00",
+      "key": "enter",
+      "text": "",
+      "role": "continue"
+    },
+    {
+      "at": "2026-10-25T07:43:26.162874+00:00",
+      "key": "foreground",
+      "attempt": 1,
+      "text": "出た",
+      "rejected": null
+    },
+    {
+      "at": "2026-10-25T07:43:29.355201+00:00",
+      "key": "key_reached",
+      "attempt": 1,
+      "text": "変わった",
+      "rejected": null
+    },
+    {
+      "at": "2026-10-25T07:43:32.243937+00:00",
+      "key": "restored",
+      "attempt": 1,
+      "text": "戻った",
+      "rejected": null
+    },
+    {
+      "at": "2026-10-25T07:43:36.551344+00:00",
+      "key": "kept",
+      "attempt": 1,
+      "text": "PDFなし",
+      "rejected": null
+    },
+    {
+      "at": "2026-10-25T07:43:38.821797+00:00",
+      "key": "single",
+      "attempt": 1,
+      "text": "１つ",
+      "rejected": null
+    },
+    {
+      "at": "2026-10-25T07:43:40.723884+00:00",
+      "key": "note",
+      "attempt": 1,
+      "text": "なし",
+      "rejected": null
+    }
+  ],
+  "composed_answer": "W02 preview module：foreground=出た・key_reached=変わった・restored=戻った・kept=PDFなし・single=１つ（メモ: なし）",
+  "run_logs_copy": {
+    "directory": "W02_preview_at_module-20261025T074342Z-run-logs",
+    "files": [
+      "primary-stderr.log",
+      "primary-stdout.log",
+      "primary-traceback.log",
+      "primary-result.json",
+      "primary-focus-result.json",
+      "primary-resource-audit.json",
+      "peer-stderr.log",
+      "peer-stdout.log",
+      "peer-traceback.log",
+      "peer-result.json",
+      "peer-resource-audit.json"
+    ],
+    "note": "隔離runの原本は .planning/tmp/ にも残る。ここはその写し(診断実行ごとに別ディレクトリ)"
+  }
+}

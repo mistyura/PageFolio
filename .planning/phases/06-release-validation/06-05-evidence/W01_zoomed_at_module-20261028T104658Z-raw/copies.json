@@ -1,0 +1,42 @@
+[
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-7jhhhzlk\\manifest.json",
+    "target": "06-05-evidence/W01_zoomed_at_module-20261028T104658Z-raw/run-manifest.json",
+    "sha256": "afd931b3dfa6ba6c12355fb26305c22a1d7a732e2369a3c9f7f75cb3afb01491"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-7jhhhzlk\\uat-owner-zoomed\\result.json",
+    "target": "06-05-evidence/W01_zoomed_at_module-20261028T104658Z-raw/primary-result.json",
+    "sha256": "7ef9df3901439928ce8043631fed37f7ac60ead7ce43014feceaa9d20965bfab"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-7jhhhzlk\\uat-owner-zoomed\\focus-result.json",
+    "target": "06-05-evidence/W01_zoomed_at_module-20261028T104658Z-raw/primary-focus-result.json",
+    "sha256": "f56697fcb7e150ba4a97942feebd54e2c7ee11d1654a1f76c22b634007bd0697"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-7jhhhzlk\\uat-owner-zoomed\\resource-audit.json",
+    "target": "06-05-evidence/W01_zoomed_at_module-20261028T104658Z-raw/primary-resource-audit.json",
+    "sha256": "e73f4a9371f4949392880e389ad429359c64bd56b15a39c913b3b046807e5985"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-7jhhhzlk\\uat-owner-zoomed\\ready",
+    "target": "06-05-evidence/W01_zoomed_at_module-20261028T104658Z-raw/primary-ready",
+    "sha256": "e73f4a9371f4949392880e389ad429359c64bd56b15a39c913b3b046807e5985"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-7jhhhzlk\\uat-owner-zoomed\\stderr.log",
+    "target": "06-05-evidence/W01_zoomed_at_module-20261028T104658Z-raw/primary-stderr.log",
+    "sha256": "8579e10f50c545b882c477030d5055b0de6796e33416fe36b9d77458f2d98554"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-7jhhhzlk\\uat-owner-zoomed\\stdout.log",
+    "target": "06-05-evidence/W01_zoomed_at_module-20261028T104658Z-raw/primary-stdout.log",
+    "sha256": "2620144708ade6a2264479797f16fb0fac3080cf5a6486e22e4a85a82dfd9d71"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-7jhhhzlk\\uat-owner-zoomed\\traceback.log",
+    "target": "06-05-evidence/W01_zoomed_at_module-20261028T104658Z-raw/primary-traceback.log",
+    "sha256": "ee2e9bd709081bb2488a60e6984d9086184f6f9cfe10f69cc250ba291e6dc956"
+  }
+]

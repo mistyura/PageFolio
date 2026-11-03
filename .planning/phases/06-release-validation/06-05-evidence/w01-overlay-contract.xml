@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="24" time="2.776" timestamp="2026-10-28T19:15:49.587727+09:00" hostname="nullaze-z240"><testcase classname="tests.test_release_uat_support.TestIsolation" name="test_support_never_imports_the_product" time="0.041" /><testcase classname="tests.test_release_uat_support.TestIsolation" name="test_prepare_copies_whole_tree_and_pins_hashes" time="0.208" /><testcase classname="tests.test_release_uat_support.TestIsolation" name="test_prepare_rejects_tree_not_matching_report[extra]" time="0.058" /><testcase classname="tests.test_release_uat_support.TestIsolation" name="test_prepare_rejects_tree_not_matching_report[modified]" time="0.051" /><testcase classname="tests.test_release_uat_support.TestIsolation" name="test_prepare_rejects_tree_not_matching_report[missing]" time="0.064" /><testcase classname="tests.test_release_uat_support.TestIsolation" name="test_prepare_rejects_unverified_report_and_bad_arguments" time="0.101" /><testcase classname="tests.test_release_uat_support.TestIsolation" name="test_prepare_rejects_links" time="0.078" /><testcase classname="tests.test_release_uat_support.TestIsolation" name="test_cli_prepare_builds_run_and_fixture_pdf" time="0.297" /><testcase classname="tests.test_release_uat_support.TestIsolation" name="test_overlay_is_separate_from_distribution_manifest" time="0.193" /><testcase classname="tests.test_release_uat_support.TestIsolation" name="test_absent_settings_creation_is_an_overlay_change" time="0.198" /><testcase classname="tests.test_release_uat_support.TestIsolation" name="test_undeclared_overlay_and_distribution_diffs_are_rejected" time="0.126" /><testcase classname="tests.test_release_uat_support.TestIsolation" name="test_start_refuses_dirty_copy_before_launching" time="0.106" /><testcase classname="tests.test_release_uat_support.TestIsolation" name="test_reset_for_case_restores_overlay_or_demands_fresh_copy" time="0.178" /><testcase classname="tests.test_release_uat_support.TestIsolation" name="test_snapshots_keep_original_user_files_unchanged" time="0.135" /><testcase classname="tests.test_release_uat_support.TestIsolation" name="test_fixture_pdfs_are_separate_and_match_card_contract" time="0.260" /><testcase classname="tests.test_release_uat_support.TestLockedOverlayVerification" name="test_held_overlay_is_reported_not_fatal_and_verified_after_release" time="0.122" /><testcase classname="tests.test_release_uat_support.TestLockedOverlayVerification" name="test_held_distribution_file_still_fails_closed" time="0.069" /><testcase classname="tests.test_release_uat_support.TestLockedOverlayVerification" name="test_held_overlay_declared_absent_is_flagged_as_changed" time="0.095" /><testcase classname="tests.test_release_contract.TestCaseCoverage" name="test_approved_scope_keeps_110_cards_and_only_two_deferred" time="0.068" /><testcase classname="tests.test_release_contract.TestCaseCoverage" name="test_all_carryover_cases_and_fault_cases_are_declared_once" time="0.018" /><testcase classname="tests.test_release_contract.TestCaseCoverage" name="test_groups_and_tasks_follow_the_validation_table" time="0.016" /><testcase classname="tests.test_release_contract.TestCaseCoverage" name="test_subrows_expand_by_entry_and_condition" time="0.015" /><testcase classname="tests.test_release_contract.TestCaseCoverage" name="test_python_injection_and_exe_common_behavior_are_separate_rows" time="0.015" /><testcase classname="tests.test_release_contract.TestCaseCoverage" name="test_every_subrow_is_fully_declared_and_not_prematurely_passed" time="0.017"><failure message="AssertionError: W01/normal@script&#10;assert 'established' in ('not-prepared', 'driver-ready', 'prepared')">self = &lt;tests.test_release_contract.TestCaseCoverage object at 0x000001DBCC774F30&gt;
+
+    def test_every_subrow_is_fully_declared_and_not_prematurely_passed(self):
+        target = json.loads((PHASE_DIR / "06-BUILD-EVIDENCE.json").read_text("utf-8"))
+        exe = target["final_release"]["exe_sha256"]
+        seen = set()
+        for case, sub in rows():
+            where = f"{case['id']}/{sub['subrow']}"
+            assert where not in seen, where
+            seen.add(where)
+            assert sub["status"] in STATUSES, where
+            assert sub["evidence_kind"] in sup.EVIDENCE_KINDS, where
+            assert sub["required_observations"], where
+            assert len(set(sub["required_observations"])) == len(
+                sub["required_observations"]
+            ), where
+            assert sub["card"] == where, where
+            # 準備(担当が用意した)と実機passは別フィールド
+&gt;           assert sub["preparation"]["status"] in (
+                "not-prepared",
+                "driver-ready",
+                "prepared",
+            ), where
+E           AssertionError: W01/normal@script
+E           assert 'established' in ('not-prepared', 'driver-ready', 'prepared')
+
+tests\test_release_contract.py:550: AssertionError</failure></testcase></testsuite></testsuites>

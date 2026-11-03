@@ -1,0 +1,67 @@
+[
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-hp3zleme\\manifest.json",
+    "target": "06-05-evidence/W04_ocr-1page_at_script-20261028T142948Z-raw/run-manifest.json",
+    "sha256": "d914aef5dce7d30126a82be1c9f2a80b364071cbe0f2f68bf2c3e1b1fe636b46"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-hp3zleme\\uat-owner-ocr\\result.json",
+    "target": "06-05-evidence/W04_ocr-1page_at_script-20261028T142948Z-raw/primary-result.json",
+    "sha256": "4b4f64018635f332f3fba6f90953b8ecf90092d68a6cda93bf381d3e6097edf4"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-hp3zleme\\uat-owner-ocr\\focus-result.json",
+    "target": "06-05-evidence/W04_ocr-1page_at_script-20261028T142948Z-raw/primary-focus-result.json",
+    "sha256": "73b45343a3df151c4471342a828df9a2cb342a3b80a3051ff79e8521962289f4"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-hp3zleme\\uat-owner-ocr\\ready",
+    "target": "06-05-evidence/W04_ocr-1page_at_script-20261028T142948Z-raw/primary-ready",
+    "sha256": "a454855d10f25ebd98833b051a7d3a23eb3b8bca843ec91f94325507ca8ac43a"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-hp3zleme\\uat-owner-ocr\\stdout.log",
+    "target": "06-05-evidence/W04_ocr-1page_at_script-20261028T142948Z-raw/primary-stdout.log",
+    "sha256": "de01670a918cef2fb833a8a10b22ef398b9573dce103ace39083220381327da1"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-hp3zleme\\uat-owner-ocr\\stderr.log",
+    "target": "06-05-evidence/W04_ocr-1page_at_script-20261028T142948Z-raw/primary-stderr.log",
+    "sha256": "4d228daae2efa7f9f5aa21ca7b4ea2be475ff9a475069f49435351d3344b08b9"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-hp3zleme\\uat-owner-ocr\\traceback.log",
+    "target": "06-05-evidence/W04_ocr-1page_at_script-20261028T142948Z-raw/primary-traceback.log",
+    "sha256": "f1bfc571c7f21fe91718c7c0526ee9ebcbf59b2dbb1470cafbcd9da10587f899"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-hp3zleme\\uat-owner-ocr\\manual-ocr-running.json",
+    "target": "06-05-evidence/W04_ocr-1page_at_script-20261028T142948Z-raw/primary-manual-ocr-running.json",
+    "sha256": "0d4ea7e4f1b7d74357779323b657eab6160434dd1e3e68b28be80520246197ca"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-hp3zleme\\uat-owner-ocr\\manual-ocr-after-peer.json",
+    "target": "06-05-evidence/W04_ocr-1page_at_script-20261028T142948Z-raw/primary-manual-ocr-after-peer.json",
+    "sha256": "0d4ea7e4f1b7d74357779323b657eab6160434dd1e3e68b28be80520246197ca"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-hp3zleme\\uat-owner-ocr\\manual-ocr-completed.json",
+    "target": "06-05-evidence/W04_ocr-1page_at_script-20261028T142948Z-raw/primary-manual-ocr-completed.json",
+    "sha256": "702676e6d7e097e28f85c6cd8e53d3b487bdc7cf1615c69302fa6c9f2b503b9a"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-hp3zleme\\uat-owner-ocr\\manual-ocr-final.json",
+    "target": "06-05-evidence/W04_ocr-1page_at_script-20261028T142948Z-raw/primary-manual-ocr-final.json",
+    "sha256": "27f1d10af75a70efd55a8cc0070b57ed7c493aa9549e7b88efb242cdf083470c"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-hp3zleme\\uat-owner-ocr\\manual-ocr-server.jsonl",
+    "target": "06-05-evidence/W04_ocr-1page_at_script-20261028T142948Z-raw/primary-manual-ocr-server.jsonl",
+    "sha256": "6e35fd2a799043bd543e4dd26f9d4fea8cdc72749ae65fbc37341980c8882c6b"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-hp3zleme\\uat-owner-ocr\\ocr-one-page.pdf",
+    "target": "06-05-evidence/W04_ocr-1page_at_script-20261028T142948Z-raw/primary-ocr-one-page.pdf",
+    "sha256": "f77f9540f2e3cdc1daa9e9c8ed386b67431fc7e3ba5fd75628fa9144dac6fb3c"
+  }
+]

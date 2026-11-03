@@ -1,0 +1,307 @@
+{
+  "row": "W02/thumb@production-exe",
+  "case": "W02",
+  "condition": "thumb",
+  "entry": "production-exe",
+  "selftest": false,
+  "started_at": "2026-10-28T11:40:51.764800+00:00",
+  "target_exe_sha256": "66be5df663e333057c5c3cde02180857f930d2433e377f69c2838432d49a19d4",
+  "steps": [
+    {
+      "at": "2026-10-28T11:41:01.523920+00:00",
+      "step": "started",
+      "windows": [
+        {
+          "hwnd": 4984276,
+          "pid": 33096,
+          "title": "PageFolio",
+          "class": "TkTopLevel",
+          "visible": true,
+          "iconic": false,
+          "zoomed": false,
+          "rect": [
+            208,
+            208,
+            1424,
+            1047
+          ]
+        }
+      ],
+      "foreground": {
+        "hwnd": 4984276,
+        "pid": 33096,
+        "title": "PageFolio"
+      }
+    },
+    {
+      "at": "2026-10-28T11:41:28.827133+00:00",
+      "step": "target-ready",
+      "windows": [
+        {
+          "hwnd": 4984276,
+          "pid": 33096,
+          "title": "PageFolio",
+          "class": "TkTopLevel",
+          "visible": true,
+          "iconic": false,
+          "zoomed": false,
+          "rect": [
+            208,
+            208,
+            1424,
+            1047
+          ]
+        }
+      ],
+      "foreground": {
+        "hwnd": 18678372,
+        "pid": 18044,
+        "title": "Windows PowerShell"
+      }
+    },
+    {
+      "at": "2026-10-28T11:41:29.184216+00:00",
+      "step": "after-peer",
+      "windows": [
+        {
+          "hwnd": 4984276,
+          "pid": 33096,
+          "title": "PageFolio",
+          "class": "TkTopLevel",
+          "visible": true,
+          "iconic": false,
+          "zoomed": false,
+          "rect": [
+            208,
+            208,
+            1424,
+            1047
+          ]
+        }
+      ],
+      "foreground": {
+        "hwnd": 4984276,
+        "pid": 33096,
+        "title": "PageFolio",
+        "owned_by": "primary"
+      },
+      "owner_probe": [
+        {
+          "kind": "mutex",
+          "name": "Local\\PageFolio.Startup.Owner",
+          "state": "open"
+        },
+        {
+          "kind": "mapping",
+          "name": "Local\\PageFolio.Startup.State",
+          "state": "open"
+        }
+      ],
+      "foreground_before_peer": {
+        "hwnd": 18678372,
+        "pid": 18044,
+        "title": "Windows PowerShell"
+      }
+    },
+    {
+      "at": "2026-10-28T11:41:29.553686+00:00",
+      "step": "key-probe-instructed",
+      "key": "F5",
+      "presses": 2
+    }
+  ],
+  "input_monitor": {
+    "enabled": true,
+    "method": "read-only polling: GetAsyncKeyState/GetCursorPos/WindowFromPoint/GetAncestor/GetForegroundWindow (no SendInput/SetCursorPos/SetForegroundWindow)",
+    "interval_s": 0.008,
+    "samples": 43,
+    "max_gap_s": 0.01,
+    "errors": [],
+    "truncated": false,
+    "started_at": "2026-10-28T11:41:28.827184+00:00",
+    "stopped_at": "2026-10-28T11:41:29.187539+00:00",
+    "owned_pids": [
+      33096
+    ],
+    "contaminating_phases": [
+      "start-harness",
+      "awaiting-enter",
+      "peer"
+    ],
+    "phase_log": [
+      {
+        "t": "2026-10-28T11:41:28.827180+00:00",
+        "phase": "peer"
+      }
+    ],
+    "mouse_events": [],
+    "foreground_transitions": [
+      {
+        "seq": 1,
+        "t": "2026-10-28T11:41:29.065768+00:00",
+        "elapsed_s": 0.238,
+        "phase": "peer",
+        "from": {
+          "hwnd": 18678372,
+          "pid": 18044,
+          "title": "Windows PowerShell",
+          "class": "CASCADIA_HOSTING_WINDOW_CLASS"
+        },
+        "to": {
+          "hwnd": 4984276,
+          "pid": 33096,
+          "title": "PageFolio",
+          "class": "TkTopLevel"
+        }
+      }
+    ],
+    "key_events": []
+  },
+  "procedure_verdict": "clean",
+  "run": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\release-uat-76b1fbb27a9a4469a8d81cd875d37c09",
+  "run_id": "76b1fbb27a9a4469a8d81cd875d37c09",
+  "binary_sha256": "66be5df663e333057c5c3cde02180857f930d2433e377f69c2838432d49a19d4",
+  "tree_sha256": "b1e55ca6efa3a7bafb4dec9ea9fa2c715dfca6f538ba906632058f912f575d85",
+  "environment": {
+    "os": "Windows-11-10.0.26300-SP0",
+    "observer_python": "3.15.2 (tags/v3.15.2:5e58eaa, Oct 25 2026, 17:27:03) [MSC v.1951 64 bit (AMD64)]",
+    "observer_tk": "9.0",
+    "elevated": false,
+    "session_id": 1
+  },
+  "fixture_pdf": {
+    "path": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\release-uat-76b1fbb27a9a4469a8d81cd875d37c09\\fixtures\\edit-three-page.pdf",
+    "pages": 3,
+    "has_embedded_text": true,
+    "images_on_first_page": 0,
+    "sha256": "3963bd4b84018fceab20aa0a3cb01fbbde65f42e248a925933a575c934cc1cd3"
+  },
+  "primary": {
+    "pid": 33096,
+    "created": 134376612563935565,
+    "image": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\release-uat-76b1fbb27a9a4469a8d81cd875d37c09\\dist\\PageFolio.exe"
+  },
+  "peer": {
+    "pid": 33572,
+    "created": 134376612889172636,
+    "image": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\release-uat-76b1fbb27a9a4469a8d81cd875d37c09\\dist\\PageFolio.exe"
+  },
+  "peer_exit": {
+    "at": "2026-10-28T11:41:29.091319+00:00",
+    "returncode": 0
+  },
+  "procedure_assessment": {
+    "procedure_verdict": "clean",
+    "rerun_required": false,
+    "reason": "peer完了までの間にPageFolio上のボタン押下・キー押下は検出されなかった",
+    "pagefolio_presses_before_peer_done": [],
+    "pagefolio_keys_before_peer_done": [],
+    "focus_correct_as_recorded": true,
+    "focus_attribution": "product-focus-ok",
+    "all_window_presses_during_observation": []
+  },
+  "answers": {
+    "foreground": "出た",
+    "key_reached": "変わった",
+    "restored": "戻った",
+    "kept": "保たれた",
+    "single": "１つ",
+    "note": "なし"
+  },
+  "outcome": "error",
+  "user_close": {
+    "requested_at": "2026-10-28T11:42:17.286122+00:00",
+    "observed_at": "2026-10-28T11:42:18.663165+00:00",
+    "closed": false,
+    "pid": 33096
+  },
+  "stop": [
+    {
+      "pid": 33096,
+      "result": "closed"
+    },
+    {
+      "pid": 33572,
+      "result": "already-exited"
+    }
+  ],
+  "verify_after": {
+    "ok": true,
+    "overlay_changed": [
+      "pagefolio_settings.json"
+    ],
+    "distribution_changed": [],
+    "undeclared": [],
+    "extra_dirs": [],
+    "missing_dirs": [],
+    "exe_sha256": "66be5df663e333057c5c3cde02180857f930d2433e377f69c2838432d49a19d4",
+    "tree_sha256": "a221613e05d63856cd470892e8b55379b0f5e05d662513b902539d15bc18d247"
+  },
+  "source_distribution_unchanged": true,
+  "owner_after": [],
+  "error": "NotEstablished('PageFolioの通常終了を確認できませんでした')",
+  "finished_at": "2026-10-28T11:42:27.441222+00:00",
+  "raw_inputs": [
+    {
+      "at": "2026-10-28T11:41:28.825809+00:00",
+      "key": "enter",
+      "text": "",
+      "role": "continue"
+    },
+    {
+      "at": "2026-10-28T11:41:54.834015+00:00",
+      "key": "enter",
+      "text": "",
+      "role": "continue"
+    },
+    {
+      "at": "2026-10-28T11:41:57.872290+00:00",
+      "key": "foreground",
+      "attempt": 1,
+      "text": "出た",
+      "rejected": null
+    },
+    {
+      "at": "2026-10-28T11:42:01.164574+00:00",
+      "key": "key_reached",
+      "attempt": 1,
+      "text": "変わった",
+      "rejected": null
+    },
+    {
+      "at": "2026-10-28T11:42:04.030247+00:00",
+      "key": "restored",
+      "attempt": 1,
+      "text": "戻った",
+      "rejected": null
+    },
+    {
+      "at": "2026-10-28T11:42:12.093060+00:00",
+      "key": "kept",
+      "attempt": 1,
+      "text": "保たれた",
+      "rejected": null
+    },
+    {
+      "at": "2026-10-28T11:42:14.977950+00:00",
+      "key": "single",
+      "attempt": 1,
+      "text": "１つ",
+      "rejected": null
+    },
+    {
+      "at": "2026-10-28T11:42:17.286096+00:00",
+      "key": "note",
+      "attempt": 1,
+      "text": "なし",
+      "rejected": null
+    },
+    {
+      "at": "2026-10-28T11:42:18.662896+00:00",
+      "key": "enter",
+      "text": "",
+      "role": "continue"
+    }
+  ],
+  "composed_answer": "W02 thumb production-exe：foreground=出た・key_reached=変わった・restored=戻った・kept=保たれた・single=１つ（メモ: なし）"
+}

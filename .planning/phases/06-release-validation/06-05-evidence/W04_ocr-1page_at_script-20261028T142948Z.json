@@ -1,0 +1,861 @@
+{
+  "row": "W04/ocr-1page@script",
+  "case": "W04",
+  "condition": "ocr-1page",
+  "entry": "script",
+  "selftest": false,
+  "started_at": "2026-10-28T14:28:53.698755+00:00",
+  "target_exe_sha256": "66be5df663e333057c5c3cde02180857f930d2433e377f69c2838432d49a19d4",
+  "steps": [
+    {
+      "at": "2026-10-28T14:28:53.699602+00:00",
+      "step": "start-harness"
+    },
+    {
+      "at": "2026-10-28T14:28:58.789991+00:00",
+      "step": "prepared",
+      "windows": [
+        {
+          "hwnd": 10817902,
+          "pid": 12324,
+          "title": "OCR",
+          "class": "TkTopLevel",
+          "visible": true,
+          "iconic": false,
+          "zoomed": false,
+          "rect": [
+            215,
+            283,
+            1381,
+            1002
+          ]
+        },
+        {
+          "hwnd": 36900526,
+          "pid": 12324,
+          "title": "PageFolio",
+          "class": "TkTopLevel",
+          "visible": true,
+          "iconic": false,
+          "zoomed": false,
+          "rect": [
+            182,
+            182,
+            1398,
+            1021
+          ]
+        }
+      ],
+      "foreground": {
+        "hwnd": 36900526,
+        "pid": 12324,
+        "title": "PageFolio"
+      },
+      "pids": [
+        240,
+        12324,
+        15400
+      ]
+    },
+    {
+      "at": "2026-10-28T14:29:13.150988+00:00",
+      "step": "peer"
+    },
+    {
+      "at": "2026-10-28T14:29:15.475133+00:00",
+      "step": "after-peer",
+      "windows": [
+        {
+          "hwnd": 10817902,
+          "pid": 12324,
+          "title": "OCR",
+          "class": "TkTopLevel",
+          "visible": true,
+          "iconic": false,
+          "zoomed": false,
+          "rect": [
+            215,
+            283,
+            1381,
+            1002
+          ]
+        },
+        {
+          "hwnd": 36900526,
+          "pid": 12324,
+          "title": "PageFolio",
+          "class": "TkTopLevel",
+          "visible": true,
+          "iconic": false,
+          "zoomed": false,
+          "rect": [
+            182,
+            182,
+            1398,
+            1021
+          ]
+        }
+      ],
+      "foreground": {
+        "hwnd": 10817902,
+        "pid": 12324,
+        "title": "OCR"
+      }
+    },
+    {
+      "at": "2026-10-28T14:29:23.520066+00:00",
+      "step": "ocr-release"
+    },
+    {
+      "at": "2026-10-28T14:29:23.690336+00:00",
+      "step": "ocr-completed"
+    }
+  ],
+  "harness_start": {
+    "returncode": 0,
+    "stderr_tail": ""
+  },
+  "run": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-hp3zleme",
+  "harness_manifest": {
+    "run": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-hp3zleme",
+    "namespace": "5264bac3b0434a12aed88e06190ff19a",
+    "case": "ocr",
+    "launcher_pid": 15400,
+    "source_commit": "4f90cdee39adf8575cd9e71fb53258bcfaa991e9"
+  },
+  "owned_pids": [
+    {
+      "pid": 12324,
+      "created": 134376713340413230,
+      "image": "C:\\Users\\shdwf\\AppData\\Local\\Programs\\Python\\Python315\\python.exe"
+    },
+    {
+      "pid": 15400,
+      "created": 134376713340104875,
+      "image": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.venv\\Scripts\\python.exe"
+    }
+  ],
+  "harness_peer": {
+    "returncode": 0,
+    "stderr_tail": "",
+    "json": {
+      "fixture": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-hp3zleme\\peer-8177aa735c1f4e1bbd301d11df8930f1",
+      "result": {
+        "constructed": 0,
+        "restored": 0,
+        "status_preserved": true,
+        "result": "completed",
+        "elapsed": 109
+      }
+    }
+  },
+  "ocr_before": {
+    "dialog_id": 2497988802752,
+    "run_gen": 1,
+    "engine_id": 2497988802416,
+    "worker_ids": [
+      2498020404800
+    ],
+    "done": false,
+    "results": {},
+    "errors": {},
+    "server": {
+      "posts": 1,
+      "rejected": [],
+      "attempts_by_image": {
+        "ff81b58eb8abe98bddbbb0317ab4ea26f18a8923e8dfef4c3348bff0baee35f6": 1
+      },
+      "retransmissions": [],
+      "completed": [],
+      "released": [],
+      "expired": [],
+      "events": [
+        {
+          "seq": 1,
+          "event": "received",
+          "time": "2026-10-28T14:28:57.877628+00:00",
+          "monotonic": 55392.9869236,
+          "run_id": "pagefolio-uat-hp3zleme",
+          "mode": "hold",
+          "request_id": "0819ab38c9944685b24b0cecf68f3158",
+          "attempt_id": "ff81b58eb8ab-1",
+          "image_sha256": "ff81b58eb8abe98bddbbb0317ab4ea26f18a8923e8dfef4c3348bff0baee35f6",
+          "page_id": "p1"
+        }
+      ]
+    },
+    "pdf": {
+      "pages": 1,
+      "has_embedded_text": false,
+      "images_on_first_page": 1,
+      "sha256": "f77f9540f2e3cdc1daa9e9c8ed386b67431fc7e3ba5fd75628fa9144dac6fb3c"
+    },
+    "concurrency": 1,
+    "summary_executed": false
+  },
+  "ocr_after_peer": {
+    "dialog_id": 2497988802752,
+    "run_gen": 1,
+    "engine_id": 2497988802416,
+    "worker_ids": [
+      2498020404800
+    ],
+    "done": false,
+    "results": {},
+    "errors": {},
+    "server": {
+      "posts": 1,
+      "rejected": [],
+      "attempts_by_image": {
+        "ff81b58eb8abe98bddbbb0317ab4ea26f18a8923e8dfef4c3348bff0baee35f6": 1
+      },
+      "retransmissions": [],
+      "completed": [],
+      "released": [],
+      "expired": [],
+      "events": [
+        {
+          "seq": 1,
+          "event": "received",
+          "time": "2026-10-28T14:28:57.877628+00:00",
+          "monotonic": 55392.9869236,
+          "run_id": "pagefolio-uat-hp3zleme",
+          "mode": "hold",
+          "request_id": "0819ab38c9944685b24b0cecf68f3158",
+          "attempt_id": "ff81b58eb8ab-1",
+          "image_sha256": "ff81b58eb8abe98bddbbb0317ab4ea26f18a8923e8dfef4c3348bff0baee35f6",
+          "page_id": "p1"
+        }
+      ]
+    },
+    "pdf": {
+      "pages": 1,
+      "has_embedded_text": false,
+      "images_on_first_page": 1,
+      "sha256": "f77f9540f2e3cdc1daa9e9c8ed386b67431fc7e3ba5fd75628fa9144dac6fb3c"
+    },
+    "concurrency": 1,
+    "summary_executed": false
+  },
+  "ocr_completed": {
+    "dialog_id": 2497988802752,
+    "run_gen": 1,
+    "engine_id": 2497988802416,
+    "worker_ids": [
+      2498020404800
+    ],
+    "done": true,
+    "results": {
+      "0": "PageFolio UAT 合成OCR結果"
+    },
+    "errors": {},
+    "server": {
+      "posts": 1,
+      "rejected": [],
+      "attempts_by_image": {
+        "ff81b58eb8abe98bddbbb0317ab4ea26f18a8923e8dfef4c3348bff0baee35f6": 1
+      },
+      "retransmissions": [],
+      "completed": [
+        "ff81b58eb8ab-1"
+      ],
+      "released": [
+        "ff81b58eb8ab-1"
+      ],
+      "expired": [],
+      "events": [
+        {
+          "seq": 1,
+          "event": "received",
+          "time": "2026-10-28T14:28:57.877628+00:00",
+          "monotonic": 55392.9869236,
+          "run_id": "pagefolio-uat-hp3zleme",
+          "mode": "hold",
+          "request_id": "0819ab38c9944685b24b0cecf68f3158",
+          "attempt_id": "ff81b58eb8ab-1",
+          "image_sha256": "ff81b58eb8abe98bddbbb0317ab4ea26f18a8923e8dfef4c3348bff0baee35f6",
+          "page_id": "p1"
+        },
+        {
+          "seq": 2,
+          "event": "released",
+          "time": "2026-10-28T14:29:23.593656+00:00",
+          "monotonic": 55418.7029867,
+          "run_id": "pagefolio-uat-hp3zleme",
+          "mode": "hold",
+          "request_id": "0819ab38c9944685b24b0cecf68f3158",
+          "attempt_id": "ff81b58eb8ab-1",
+          "image_sha256": "ff81b58eb8abe98bddbbb0317ab4ea26f18a8923e8dfef4c3348bff0baee35f6",
+          "page_id": "p1"
+        },
+        {
+          "seq": 3,
+          "event": "completed",
+          "time": "2026-10-28T14:29:23.596679+00:00",
+          "monotonic": 55418.7059913,
+          "run_id": "pagefolio-uat-hp3zleme",
+          "mode": "hold",
+          "status": 200,
+          "request_id": "0819ab38c9944685b24b0cecf68f3158",
+          "attempt_id": "ff81b58eb8ab-1",
+          "image_sha256": "ff81b58eb8abe98bddbbb0317ab4ea26f18a8923e8dfef4c3348bff0baee35f6",
+          "page_id": "p1"
+        }
+      ]
+    },
+    "pdf": {
+      "pages": 1,
+      "has_embedded_text": false,
+      "images_on_first_page": 1,
+      "sha256": "f77f9540f2e3cdc1daa9e9c8ed386b67431fc7e3ba5fd75628fa9144dac6fb3c"
+    },
+    "concurrency": 1,
+    "summary_executed": false
+  },
+  "answers": {
+    "progress_shown": "はい",
+    "completed_shown": "見えた",
+    "summary_not_run": "していない",
+    "note": "なし"
+  },
+  "harness_inspect": {
+    "returncode": 0,
+    "stderr_tail": "",
+    "json": {
+      "manifest": {
+        "run": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-hp3zleme",
+        "namespace": "5264bac3b0434a12aed88e06190ff19a",
+        "case": "ocr",
+        "role": "uat-owner-ocr",
+        "fixture": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-hp3zleme\\uat-owner-ocr",
+        "launcher_pid": 15400,
+        "environment": {
+          "os": "sys.getwindowsversion(major=10, minor=0, build=26300, platform=2, service_pack='')",
+          "python": "3.15.2 (tags/v3.15.2:5e58eaa, Oct 25 2026, 17:27:03) [MSC v.1951 64 bit (AMD64)]",
+          "pointer_bits": 64,
+          "session_id": 1,
+          "sid": "S-1-5-5-0-203868",
+          "authentication_luid": 208244,
+          "foreground": 20844916,
+          "is_admin": false,
+          "tcl": "9.0.4",
+          "tk": 9.0
+        },
+        "originals_before": {
+          "pagefolio_settings.json": null,
+          "ocr_custom_prompt.md": null,
+          "ocr_summary_prompt.md": null
+        },
+        "source_commit": "4f90cdee39adf8575cd9e71fb53258bcfaa991e9",
+        "expected_owner": {
+          "sid": "S-1-5-5-0-203868",
+          "authentication_luid": 208244,
+          "session_id": 1,
+          "pid": 12324,
+          "process_created": 134376713340413230,
+          "started_tick": 55389578,
+          "owner_result": "acquired",
+          "snapshot": {
+            "protocol": 1,
+            "generation": "4c3b019c116c4977aaf18e3e03ab3863",
+            "pid": 12324,
+            "process_created": 134376713340413230,
+            "session_id": 1,
+            "state": "ready",
+            "ready": true,
+            "release_generation": null
+          },
+          "ready_tick": 55392437,
+          "manual": true
+        }
+      },
+      "originals_unchanged": true,
+      "ready": {
+        "sid": "S-1-5-5-0-203868",
+        "authentication_luid": 208244,
+        "session_id": 1,
+        "pid": 12324,
+        "process_created": 134376713340413230,
+        "started_tick": 55389578,
+        "owner_result": "acquired",
+        "snapshot": {
+          "protocol": 1,
+          "generation": "4c3b019c116c4977aaf18e3e03ab3863",
+          "pid": 12324,
+          "process_created": 134376713340413230,
+          "session_id": 1,
+          "state": "ready",
+          "ready": true,
+          "release_generation": null
+        },
+        "ready_tick": 55392437
+      },
+      "focus-result.json": {
+        "state_preserved": true,
+        "target_correct": true,
+        "result": "completed",
+        "activated": 10817902,
+        "expected_tk": 10817902,
+        "native": null,
+        "placement": "normal",
+        "expected_focus": "None",
+        "immediate_focus": ".!ocrdialog",
+        "document_pages": 1,
+        "page_rotations": [
+          0
+        ],
+        "selected_pages": [
+          0
+        ],
+        "current_page": 0,
+        "focus_correct": true,
+        "settled_focus": ".!ocrdialog"
+      },
+      "manual-ocr-running.json": {
+        "dialog_id": 2497988802752,
+        "run_gen": 1,
+        "engine_id": 2497988802416,
+        "worker_ids": [
+          2498020404800
+        ],
+        "done": false,
+        "results": {},
+        "errors": {},
+        "server": {
+          "posts": 1,
+          "rejected": [],
+          "attempts_by_image": {
+            "ff81b58eb8abe98bddbbb0317ab4ea26f18a8923e8dfef4c3348bff0baee35f6": 1
+          },
+          "retransmissions": [],
+          "completed": [],
+          "released": [],
+          "expired": [],
+          "events": [
+            {
+              "seq": 1,
+              "event": "received",
+              "time": "2026-10-28T14:28:57.877628+00:00",
+              "monotonic": 55392.9869236,
+              "run_id": "pagefolio-uat-hp3zleme",
+              "mode": "hold",
+              "request_id": "0819ab38c9944685b24b0cecf68f3158",
+              "attempt_id": "ff81b58eb8ab-1",
+              "image_sha256": "ff81b58eb8abe98bddbbb0317ab4ea26f18a8923e8dfef4c3348bff0baee35f6",
+              "page_id": "p1"
+            }
+          ]
+        },
+        "pdf": {
+          "pages": 1,
+          "has_embedded_text": false,
+          "images_on_first_page": 1,
+          "sha256": "f77f9540f2e3cdc1daa9e9c8ed386b67431fc7e3ba5fd75628fa9144dac6fb3c"
+        },
+        "concurrency": 1,
+        "summary_executed": false
+      },
+      "manual-ocr-after-peer.json": {
+        "dialog_id": 2497988802752,
+        "run_gen": 1,
+        "engine_id": 2497988802416,
+        "worker_ids": [
+          2498020404800
+        ],
+        "done": false,
+        "results": {},
+        "errors": {},
+        "server": {
+          "posts": 1,
+          "rejected": [],
+          "attempts_by_image": {
+            "ff81b58eb8abe98bddbbb0317ab4ea26f18a8923e8dfef4c3348bff0baee35f6": 1
+          },
+          "retransmissions": [],
+          "completed": [],
+          "released": [],
+          "expired": [],
+          "events": [
+            {
+              "seq": 1,
+              "event": "received",
+              "time": "2026-10-28T14:28:57.877628+00:00",
+              "monotonic": 55392.9869236,
+              "run_id": "pagefolio-uat-hp3zleme",
+              "mode": "hold",
+              "request_id": "0819ab38c9944685b24b0cecf68f3158",
+              "attempt_id": "ff81b58eb8ab-1",
+              "image_sha256": "ff81b58eb8abe98bddbbb0317ab4ea26f18a8923e8dfef4c3348bff0baee35f6",
+              "page_id": "p1"
+            }
+          ]
+        },
+        "pdf": {
+          "pages": 1,
+          "has_embedded_text": false,
+          "images_on_first_page": 1,
+          "sha256": "f77f9540f2e3cdc1daa9e9c8ed386b67431fc7e3ba5fd75628fa9144dac6fb3c"
+        },
+        "concurrency": 1,
+        "summary_executed": false
+      },
+      "manual-ocr-completed.json": {
+        "dialog_id": 2497988802752,
+        "run_gen": 1,
+        "engine_id": 2497988802416,
+        "worker_ids": [
+          2498020404800
+        ],
+        "done": true,
+        "results": {
+          "0": "PageFolio UAT 合成OCR結果"
+        },
+        "errors": {},
+        "server": {
+          "posts": 1,
+          "rejected": [],
+          "attempts_by_image": {
+            "ff81b58eb8abe98bddbbb0317ab4ea26f18a8923e8dfef4c3348bff0baee35f6": 1
+          },
+          "retransmissions": [],
+          "completed": [
+            "ff81b58eb8ab-1"
+          ],
+          "released": [
+            "ff81b58eb8ab-1"
+          ],
+          "expired": [],
+          "events": [
+            {
+              "seq": 1,
+              "event": "received",
+              "time": "2026-10-28T14:28:57.877628+00:00",
+              "monotonic": 55392.9869236,
+              "run_id": "pagefolio-uat-hp3zleme",
+              "mode": "hold",
+              "request_id": "0819ab38c9944685b24b0cecf68f3158",
+              "attempt_id": "ff81b58eb8ab-1",
+              "image_sha256": "ff81b58eb8abe98bddbbb0317ab4ea26f18a8923e8dfef4c3348bff0baee35f6",
+              "page_id": "p1"
+            },
+            {
+              "seq": 2,
+              "event": "released",
+              "time": "2026-10-28T14:29:23.593656+00:00",
+              "monotonic": 55418.7029867,
+              "run_id": "pagefolio-uat-hp3zleme",
+              "mode": "hold",
+              "request_id": "0819ab38c9944685b24b0cecf68f3158",
+              "attempt_id": "ff81b58eb8ab-1",
+              "image_sha256": "ff81b58eb8abe98bddbbb0317ab4ea26f18a8923e8dfef4c3348bff0baee35f6",
+              "page_id": "p1"
+            },
+            {
+              "seq": 3,
+              "event": "completed",
+              "time": "2026-10-28T14:29:23.596679+00:00",
+              "monotonic": 55418.7059913,
+              "run_id": "pagefolio-uat-hp3zleme",
+              "mode": "hold",
+              "status": 200,
+              "request_id": "0819ab38c9944685b24b0cecf68f3158",
+              "attempt_id": "ff81b58eb8ab-1",
+              "image_sha256": "ff81b58eb8abe98bddbbb0317ab4ea26f18a8923e8dfef4c3348bff0baee35f6",
+              "page_id": "p1"
+            }
+          ]
+        },
+        "pdf": {
+          "pages": 1,
+          "has_embedded_text": false,
+          "images_on_first_page": 1,
+          "sha256": "f77f9540f2e3cdc1daa9e9c8ed386b67431fc7e3ba5fd75628fa9144dac6fb3c"
+        },
+        "concurrency": 1,
+        "summary_executed": false
+      }
+    }
+  },
+  "outcome": "answered",
+  "harness_stop": {
+    "returncode": 0,
+    "stderr_tail": ""
+  },
+  "cleanup": {
+    "left_after_harness_stop": [],
+    "terminated_owned": [],
+    "alive_after": []
+  },
+  "input_monitor": {
+    "enabled": true,
+    "method": "read-only polling: GetAsyncKeyState/GetCursorPos/WindowFromPoint/GetAncestor/GetForegroundWindow (no SendInput/SetCursorPos/SetForegroundWindow)",
+    "interval_s": 0.008,
+    "samples": 6396,
+    "max_gap_s": 0.016,
+    "errors": [],
+    "truncated": false,
+    "started_at": "2026-10-28T14:28:53.698780+00:00",
+    "stopped_at": "2026-10-28T14:29:48.363375+00:00",
+    "owned_pids": [
+      240,
+      12324,
+      15400
+    ],
+    "contaminating_phases": [
+      "start-harness",
+      "awaiting-enter",
+      "peer"
+    ],
+    "phase_log": [
+      {
+        "t": "2026-10-28T14:28:53.698777+00:00",
+        "phase": "w03-preparation"
+      },
+      {
+        "t": "2026-10-28T14:28:58.790904+00:00",
+        "phase": "w03-preparation"
+      },
+      {
+        "t": "2026-10-28T14:29:13.150984+00:00",
+        "phase": "peer"
+      },
+      {
+        "t": "2026-10-28T14:29:15.475153+00:00",
+        "phase": "post-peer"
+      }
+    ],
+    "mouse_events": [],
+    "foreground_transitions": [
+      {
+        "seq": 1,
+        "t": "2026-10-28T14:28:57.374442+00:00",
+        "elapsed_s": 3.675,
+        "phase": "w03-preparation",
+        "from": {
+          "hwnd": 20844916,
+          "pid": 18044,
+          "title": "Windows PowerShell",
+          "class": "CASCADIA_HOSTING_WINDOW_CLASS"
+        },
+        "to": {
+          "hwnd": 36900526,
+          "pid": 12324,
+          "title": "PageFolio",
+          "class": "TkTopLevel"
+        }
+      },
+      {
+        "seq": 2,
+        "t": "2026-10-28T14:29:02.440751+00:00",
+        "elapsed_s": 8.742,
+        "phase": "w03-preparation",
+        "from": {
+          "hwnd": 36900526,
+          "pid": 12324,
+          "title": "PageFolio",
+          "class": "TkTopLevel"
+        },
+        "to": {
+          "hwnd": 66060,
+          "pid": 7912,
+          "title": "",
+          "class": "ForegroundStaging"
+        }
+      },
+      {
+        "seq": 3,
+        "t": "2026-10-28T14:29:02.449494+00:00",
+        "elapsed_s": 8.751,
+        "phase": "w03-preparation",
+        "from": {
+          "hwnd": 66060,
+          "pid": 7912,
+          "title": "",
+          "class": "ForegroundStaging"
+        },
+        "to": {
+          "hwnd": 200428,
+          "pid": 7912,
+          "title": "タスクの切り替え",
+          "class": "XamlExplorerHostIslandWindow"
+        }
+      },
+      {
+        "seq": 4,
+        "t": "2026-10-28T14:29:03.319366+00:00",
+        "elapsed_s": 9.62,
+        "phase": "w03-preparation",
+        "from": {
+          "hwnd": 200428,
+          "pid": 7912,
+          "title": "タスクの切り替え",
+          "class": "XamlExplorerHostIslandWindow"
+        },
+        "to": {
+          "hwnd": 131648,
+          "pid": 7912,
+          "title": "",
+          "class": "ForegroundStaging"
+        }
+      },
+      {
+        "seq": 5,
+        "t": "2026-10-28T14:29:03.327930+00:00",
+        "elapsed_s": 9.629,
+        "phase": "w03-preparation",
+        "from": {
+          "hwnd": 131648,
+          "pid": 7912,
+          "title": "",
+          "class": "ForegroundStaging"
+        },
+        "to": {
+          "hwnd": 20844916,
+          "pid": 18044,
+          "title": "Windows PowerShell",
+          "class": "CASCADIA_HOSTING_WINDOW_CLASS"
+        }
+      },
+      {
+        "seq": 6,
+        "t": "2026-10-28T14:29:13.898414+00:00",
+        "elapsed_s": 20.2,
+        "phase": "peer",
+        "from": {
+          "hwnd": 20844916,
+          "pid": 18044,
+          "title": "Windows PowerShell",
+          "class": "CASCADIA_HOSTING_WINDOW_CLASS"
+        },
+        "to": {
+          "hwnd": 10817902,
+          "pid": 12324,
+          "title": "OCR",
+          "class": "TkTopLevel"
+        }
+      },
+      {
+        "seq": 7,
+        "t": "2026-10-28T14:29:28.014886+00:00",
+        "elapsed_s": 34.316,
+        "phase": "post-peer",
+        "from": {
+          "hwnd": 10817902,
+          "pid": 12324,
+          "title": "OCR",
+          "class": "TkTopLevel"
+        },
+        "to": {
+          "hwnd": 66060,
+          "pid": 7912,
+          "title": "",
+          "class": "ForegroundStaging"
+        }
+      },
+      {
+        "seq": 8,
+        "t": "2026-10-28T14:29:28.023336+00:00",
+        "elapsed_s": 34.324,
+        "phase": "post-peer",
+        "from": {
+          "hwnd": 66060,
+          "pid": 7912,
+          "title": "",
+          "class": "ForegroundStaging"
+        },
+        "to": {
+          "hwnd": 200428,
+          "pid": 7912,
+          "title": "タスクの切り替え",
+          "class": "XamlExplorerHostIslandWindow"
+        }
+      },
+      {
+        "seq": 9,
+        "t": "2026-10-28T14:29:28.781104+00:00",
+        "elapsed_s": 35.082,
+        "phase": "post-peer",
+        "from": {
+          "hwnd": 200428,
+          "pid": 7912,
+          "title": "タスクの切り替え",
+          "class": "XamlExplorerHostIslandWindow"
+        },
+        "to": {
+          "hwnd": 131648,
+          "pid": 7912,
+          "title": "",
+          "class": "ForegroundStaging"
+        }
+      },
+      {
+        "seq": 10,
+        "t": "2026-10-28T14:29:28.789458+00:00",
+        "elapsed_s": 35.091,
+        "phase": "post-peer",
+        "from": {
+          "hwnd": 131648,
+          "pid": 7912,
+          "title": "",
+          "class": "ForegroundStaging"
+        },
+        "to": {
+          "hwnd": 20844916,
+          "pid": 18044,
+          "title": "Windows PowerShell",
+          "class": "CASCADIA_HOSTING_WINDOW_CLASS"
+        }
+      }
+    ],
+    "key_events": []
+  },
+  "procedure_assessment": {
+    "procedure_verdict": "clean",
+    "rerun_required": false,
+    "reason": "peer完了までの間にPageFolio上のボタン押下・キー押下は検出されなかった",
+    "pagefolio_presses_before_peer_done": [],
+    "pagefolio_keys_before_peer_done": [],
+    "focus_correct_as_recorded": true,
+    "focus_attribution": "product-focus-ok"
+  },
+  "procedure_verdict": "clean",
+  "focus_attribution": "product-focus-ok",
+  "finished_at": "2026-10-28T14:29:48.363719+00:00",
+  "raw_inputs": [
+    {
+      "at": "2026-10-28T14:29:13.150966+00:00",
+      "key": "enter",
+      "text": "",
+      "role": "continue"
+    },
+    {
+      "at": "2026-10-28T14:29:33.690584+00:00",
+      "key": "progress_shown",
+      "attempt": 1,
+      "text": "はい",
+      "rejected": null
+    },
+    {
+      "at": "2026-10-28T14:29:39.547650+00:00",
+      "key": "completed_shown",
+      "attempt": 1,
+      "text": "見えた",
+      "rejected": null
+    },
+    {
+      "at": "2026-10-28T14:29:44.173108+00:00",
+      "key": "summary_not_run",
+      "attempt": 1,
+      "text": "していない",
+      "rejected": null
+    },
+    {
+      "at": "2026-10-28T14:29:46.899431+00:00",
+      "key": "note",
+      "attempt": 1,
+      "text": "なし",
+      "rejected": null
+    }
+  ],
+  "composed_answer": "W04 ocr-1page script：progress_shown=はい・completed_shown=見えた・summary_not_run=していない（メモ: なし）"
+}

@@ -1,0 +1,27 @@
+[
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\release-uat-0f65de6bbe18444fa60c27960a4537a7\\manifest.json",
+    "target": "06-05-evidence/W03_pdf-3page_at_production-exe-20261028T125745Z-raw/manifest.json",
+    "sha256": "01ee170fdc6c0502450c1755b8866c84e40b29bf499c9c671d818d81f66b6be5"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\release-uat-0f65de6bbe18444fa60c27960a4537a7\\evidence\\inspect-001.json",
+    "target": "06-05-evidence/W03_pdf-3page_at_production-exe-20261028T125745Z-raw/evidence-inspect-001.json",
+    "sha256": "410ed7b0cec32f2d2aa5ce86e7bd7fa2e29504b714e4ebb44eb3c415881b13a5"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\release-uat-0f65de6bbe18444fa60c27960a4537a7\\evidence\\inspect-002.json",
+    "target": "06-05-evidence/W03_pdf-3page_at_production-exe-20261028T125745Z-raw/evidence-inspect-002.json",
+    "sha256": "427929426f9dc0d9e289321ded11c43af148b620efd407534f41c953e296b48a"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\release-uat-0f65de6bbe18444fa60c27960a4537a7\\fixtures\\edit-three-page.pdf",
+    "target": "06-05-evidence/W03_pdf-3page_at_production-exe-20261028T125745Z-raw/fixtures-edit-three-page.pdf",
+    "sha256": "9f486ebc313508e2bcd0a951ed87dfdf2fb5500a13863a11a1fa536738c64f8f"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\release-uat-0f65de6bbe18444fa60c27960a4537a7\\dist\\pagefolio_settings.json",
+    "target": "06-05-evidence/W03_pdf-3page_at_production-exe-20261028T125745Z-raw/dist-pagefolio_settings.json",
+    "sha256": "5523772349b0e63d0a337e3eba01d6592e8e016efbea275094c1943b897de087"
+  }
+]

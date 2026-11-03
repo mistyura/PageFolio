@@ -1,0 +1,643 @@
+{
+  "schema_version": 1,
+  "run_id": "d08b90ff466a49d1b86d373b1e6d5801",
+  "run": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\release-uat-d08b90ff466a49d1b86d373b1e6d5801",
+  "case": "W02",
+  "entry": "production-exe",
+  "evidence_kind": "production-exe",
+  "role": "final-release-candidate",
+  "status": "stopped",
+  "created_at": "2026-10-28T11:33:58.734333+00:00",
+  "environment": {
+    "os": "Windows-11-10.0.26300-SP0",
+    "observer_python": "3.15.2 (tags/v3.15.2:5e58eaa, Oct 25 2026, 17:27:03) [MSC v.1951 64 bit (AMD64)]",
+    "observer_tk": "9.0",
+    "elevated": false,
+    "session_id": 1
+  },
+  "source": {
+    "distribution": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf06_final_3f96a37a7cef4ee1ab3a1c1b2f2c435f\\out\\PageFolio-v1.10.2",
+    "version": "v1.10.2",
+    "exe_sha256": "66be5df663e333057c5c3cde02180857f930d2433e377f69c2838432d49a19d4",
+    "tree_sha256": "b1e55ca6efa3a7bafb4dec9ea9fa2c715dfca6f538ba906632058f912f575d85",
+    "report_run_id": "c04825cf60054565970f9a6a997523d3",
+    "app_version_in_repo": "v1.10.2",
+    "embedded": {
+      "python": "3.15.2 (tags/v3.15.2:5e58eaa, Oct 25 2026, 17:27:03) [MSC v.1951 64 bit (AMD64)]",
+      "dependencies": {
+        "PyInstaller": "6.22.3",
+        "pyinstaller-hooks-contrib": "2026.9",
+        "PyMuPDF": "1.28.2",
+        "Pillow": "13.0.0",
+        "tkinterdnd2": "0.6.4"
+      }
+    }
+  },
+  "copy": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\release-uat-d08b90ff466a49d1b86d373b1e6d5801\\dist",
+  "distribution_manifest": {
+    "PageFolio.exe": "66be5df663e333057c5c3cde02180857f930d2433e377f69c2838432d49a19d4",
+    "_internal/MSVCP140.dll": "7c26614e1d733892c2deac7e245ce115504b1d80592dd0a01b08e3e5a55f89ca",
+    "_internal/PIL/_avif.cp315-win_amd64.pyd": "4755f7f315c4e01cae29743755ce10886a6dbe3324f393f7dc0208ce502582f8",
+    "_internal/PIL/_imaging.cp315-win_amd64.pyd": "c01521704ce6cb263f4dfe468c5d3971ad8529582f0b49504384b86558232d37",
+    "_internal/PIL/_imagingcms.cp315-win_amd64.pyd": "51d17cd085006ee9d99875b2e7267486367a678a79130fd5a8af042433048cd4",
+    "_internal/PIL/_imagingtk.cp315-win_amd64.pyd": "5a66d631e2d4e1fcdffc83b39fd8d95cc9ffa0951016f6e8742b81748b639f96",
+    "_internal/PIL/_webp.cp315-win_amd64.pyd": "e95e28961248d258f6840d6c3d56e277548e84b3a8638036a7dc3f205734e2e4",
+    "_internal/VCRUNTIME140.dll": "d1f4225df2cd877dbf130d5668a021dce3f94118455ff5ec952061c30afc9ce7",
+    "_internal/VCRUNTIME140_1.dll": "a7146c08f89fe5b04541ab507cdb59ff7b44534d4ba3c668a426c6450a03434e",
+    "_internal/_bz2.pyd": "2ae45b2ff932dc8a864c862d8150eb3f5b55e60e3e74ec554c4f52c4f1ad81e0",
+    "_internal/_ctypes.pyd": "8bb22628ae859877b1cf55381c1a8cf54bb0aa70c56295053bc3303262e21c87",
+    "_internal/_decimal.pyd": "93360ba1650bf5f1a673aac22d444ad2d33a039550926f325ad19dafd950e04c",
+    "_internal/_elementtree.pyd": "7176037f79c25da745403e0f9db184f0d2046eef84ce976c790ff684a202e610",
+    "_internal/_hashlib.pyd": "3cfb95355576805d6362b878d2207e254125887fce12ff8199becab34beb0694",
+    "_internal/_lzma.pyd": "d9033e94387aa70777d23514263d342486899256ffc14478be6bb1e6a0b05683",
+    "_internal/_multiprocessing.pyd": "df1c1a1226a481db6536b6ed697150bc6a34052e4c2cc2ddde59ebda84a68fd6",
+    "_internal/_queue.pyd": "00206e5ea1be8b648ca07d1e68ee244a8d0ee1f4126661187dbe3551c68f6e3b",
+    "_internal/_socket.pyd": "ba52c110c0cbc429add306acccf86dd2f77c777a9db68df7cddfc4489e91bce7",
+    "_internal/_ssl.pyd": "a9c54ec4d115597880e0e44ff26b740328d0388a777dfb613d3aa2eb66b31e49",
+    "_internal/_tkinter.pyd": "3b4e3ba215fef3521fc72293afe52aa209e981c32e55ee94427032dcaecc26b7",
+    "_internal/_uuid.pyd": "a3380826957922fae7350f5ea64fface688bf55c79e086823a4b1d50455a9bfa",
+    "_internal/_wmi.pyd": "0650bf237b3f556ba844ba372fef6de1b65d618a608014405360aef83f8a4e34",
+    "_internal/_zstd.pyd": "a977471edf7b6712a9e89ada98b79b1973c79740632f820b67365f242b5e05cc",
+    "_internal/base_library.zip": "edf75eba584a329884fd76784b6a3c900d7df68066c39d23dd26123bd535452e",
+    "_internal/libcrypto-3.dll": "75495fe0e079ab00d49be740d3c710a0b94e3f74f9648cb7cc9f768fc7f52319",
+    "_internal/libffi-8.dll": "eff52743773eb550fcc6ce3efc37c85724502233b6b002a35496d828bd7b280a",
+    "_internal/libssl-3.dll": "8957182a9c385bfd9f3f790921de2ddc614cf91f99edbed4e9e5446a46504e32",
+    "_internal/libtommath.dll": "2d760fefb452665b6af8c8d9d29f3a8378f10fc0847cdd9938ea0cb5edf1d573",
+    "_internal/pyexpat.pyd": "2970cef7642e14721b4791bf40720d25f5c9fb8df4d78c725bd859391d6dec51",
+    "_internal/pymupdf/_extra.pyd": "43292c50f18dafa1d92dec67e076d2340a361a24e510edb6ccfe8de7364b6b10",
+    "_internal/pymupdf/_mupdf.pyd": "8b0a0a990523eaecf695ec7f9bb5660047b11948649a7e89369141c03dc589d9",
+    "_internal/pymupdf/mupdfcpp64.dll": "998184dce298f24a4c2b080a9173594c96c6f78796732bdd8e95ca0e557557cb",
+    "_internal/python3.dll": "e394c32bb9e2f0d813f4ed5b858ba717e54e3e6547cd36a8d8aaee66b9ca347f",
+    "_internal/python315.dll": "9862572fd449f32a62c1eaec2c6750a9c9fa512f4c9c2ea0e66776cf9212b7c2",
+    "_internal/select.pyd": "d39e00967809d2d2cf8aea78f6fd39923cfb4ad426ccd19bbfe7163020dafffe",
+    "_internal/tcl90.dll": "a1fb45f963b05cb083a97df1449c2023b484eb921d40a463da7501b0f60e0f70",
+    "_internal/tcl9tk90.dll": "31f625c52e65d29d126e710ed8bab2ec964cb770e4fc59bc329dfff02cb6ddcf",
+    "_internal/tkinterdnd2/tkdnd/win-x64-tcl9/libtkdnd2.10.3.dll": "22dc45335018f291b98620d9d7fb2c398139306f555ce29a5032d275ca5de38a",
+    "_internal/tkinterdnd2/tkdnd/win-x64-tcl9/pkgIndex.tcl": "74937780012f60c3aea8830f318a05e9bb0a116bff1b0040ca2c772a958659f7",
+    "_internal/tkinterdnd2/tkdnd/win-x64-tcl9/tkdnd.tcl": "0d857154d6a11a0a94a6ea7c480172fe81a3d6538acb821260fdc38f48b8ba44",
+    "_internal/tkinterdnd2/tkdnd/win-x64-tcl9/tkdnd_compat.tcl": "87ce43002f60fb7c22c8ca6c17ed13151d21e48175048254c448ac774937b580",
+    "_internal/tkinterdnd2/tkdnd/win-x64-tcl9/tkdnd_generic.tcl": "78a606df6864e72f1ff19aacbcee2c2559983f1a2aacad5cf21cce51ba7ec5db",
+    "_internal/tkinterdnd2/tkdnd/win-x64-tcl9/tkdnd_macosx.tcl": "a102102f7fc23f8c401efad0c2877f1654b74365d11c3512721a79119b1071c2",
+    "_internal/tkinterdnd2/tkdnd/win-x64-tcl9/tkdnd_unix.tcl": "cb30c5e4db20b2fc57e33b1fb02902ccde8136a28ed16017f7ff66ab7ad76f3f",
+    "_internal/tkinterdnd2/tkdnd/win-x64-tcl9/tkdnd_utils.tcl": "5269a7682f3a9c4a78410844d614277b21e63ac69cd30d18d666ddc7191c74c7",
+    "_internal/tkinterdnd2/tkdnd/win-x64-tcl9/tkdnd_windows.tcl": "5774188ca4b626a8ba243e860b04b198c12bbb61efa1896bfcf4eddc07399fe4",
+    "_internal/unicodedata.pyd": "ba69f643918cc520331c6a13d489d642131be23dd649d05e0cd1068fae92e76d",
+    "_internal/zlib1.dll": "f07195206534ebb1fe75093d4ec6c54a7a9227281b0c09d2113465b71da9e900",
+    "docs/CONFIGURATION.md": "0234ed54994c9877986248d1674fcfba9de2dbcca60e594397261d73da1f2067",
+    "ocr_custom_prompt_sample.md": "03ec2d06b184282974d32be00f228bc37126c79b58aa9ec6e5fc38633e648e5d",
+    "ocr_summary_prompt_sample.md": "6960cb29b8b65b9823a2c48011316ae83dbec32331d2ab63260f910ce2c08b55",
+    "release-report.json": "3459ef241bb939f7d163ccf7159631e2ac96f9a5bddbf75b2a5ed4d5de8d94cd",
+    "はじめに.md": "d539e5d01cc2d4e3d7bbfa58fecb5c6fe8d32c85bbf50cc41c06b96ee5b9d638"
+  },
+  "distribution_dirs": [
+    "_internal",
+    "_internal/PIL",
+    "_internal/pymupdf",
+    "_internal/tkinterdnd2",
+    "_internal/tkinterdnd2/tkdnd",
+    "_internal/tkinterdnd2/tkdnd/win-x64-tcl9",
+    "docs"
+  ],
+  "overlay": {
+    "pagefolio_settings.json": null
+  },
+  "overlay_log": [
+    {
+      "at": "2026-10-28T11:34:02.424768+00:00",
+      "name": "pagefolio_settings.json",
+      "sha256": null,
+      "reason": "prepare時の明示fixture"
+    }
+  ],
+  "fixtures": {
+    "edit-three-page": {
+      "path": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\release-uat-d08b90ff466a49d1b86d373b1e6d5801\\fixtures\\edit-three-page.pdf",
+      "pages": 3,
+      "has_embedded_text": true,
+      "images_on_first_page": 0,
+      "sha256": "cb2a10b50f38428dc28da7a1e7ed087886c08dd5837e0c5c15622132bf6f2e46"
+    }
+  },
+  "processes": [
+    {
+      "role": "primary",
+      "pid": 12152,
+      "created": 134376608431184282,
+      "created_iso": "2026-10-28T11:34:03.118428+00:00",
+      "image": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\release-uat-d08b90ff466a49d1b86d373b1e6d5801\\dist\\PageFolio.exe",
+      "session_id": 1,
+      "elevated": false,
+      "exe_sha256": "66be5df663e333057c5c3cde02180857f930d2433e377f69c2838432d49a19d4",
+      "argv": [
+        "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\release-uat-d08b90ff466a49d1b86d373b1e6d5801\\dist\\PageFolio.exe"
+      ],
+      "started_at": "2026-10-28T11:34:03.148542+00:00",
+      "parent_pid": 22200,
+      "exit": "terminated",
+      "foreground_before": {
+        "hwnd": 34344978,
+        "pid": 18044,
+        "title": "Windows PowerShell"
+      }
+    },
+    {
+      "role": "peer",
+      "pid": 29588,
+      "created": 134376608813759062,
+      "created_iso": "2026-10-28T11:34:41.375906+00:00",
+      "image": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\release-uat-d08b90ff466a49d1b86d373b1e6d5801\\dist\\PageFolio.exe",
+      "session_id": 1,
+      "elevated": false,
+      "exe_sha256": "66be5df663e333057c5c3cde02180857f930d2433e377f69c2838432d49a19d4",
+      "argv": [
+        "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\release-uat-d08b90ff466a49d1b86d373b1e6d5801\\dist\\PageFolio.exe"
+      ],
+      "started_at": "2026-10-28T11:34:41.385338+00:00",
+      "parent_pid": 22200,
+      "exit": "already-exited",
+      "peer_source": {
+        "run_id": "d08b90ff466a49d1b86d373b1e6d5801",
+        "role": "final-release-candidate",
+        "version": "v1.10.2",
+        "exe_sha256": "66be5df663e333057c5c3cde02180857f930d2433e377f69c2838432d49a19d4"
+      }
+    }
+  ],
+  "observations": [
+    {
+      "label": "after-start",
+      "at": "2026-10-28T11:34:08.184590+00:00",
+      "monotonic": 44903.2938882,
+      "processes": [
+        {
+          "role": "primary",
+          "pid": 12152,
+          "created": 134376608431184282,
+          "identity": "same",
+          "alive": true,
+          "session_id": 1,
+          "elevated": false,
+          "windows": [
+            {
+              "hwnd": 34476100,
+              "visible": false,
+              "title": "GDI+ Window (PageFolio.exe)",
+              "class": "GDI+ Hook Window Class",
+              "rect": [
+                0,
+                0,
+                1,
+                1
+              ]
+            },
+            {
+              "hwnd": 18154084,
+              "visible": true,
+              "title": "PageFolio",
+              "class": "TkTopLevel",
+              "rect": [
+                130,
+                130,
+                1346,
+                969
+              ]
+            },
+            {
+              "hwnd": 19534214,
+              "visible": false,
+              "title": "EmbeddedMenuWindow",
+              "class": "EmbeddedMenuWindowClass",
+              "rect": [
+                0,
+                0,
+                10,
+                10
+              ]
+            },
+            {
+              "hwnd": 25039210,
+              "visible": false,
+              "title": "MenuWindow",
+              "class": "MenuWindowClass",
+              "rect": [
+                0,
+                0,
+                10,
+                10
+              ]
+            },
+            {
+              "hwnd": 36048824,
+              "visible": false,
+              "title": "",
+              "class": "Wtk_TaskbarHandler",
+              "rect": [
+                0,
+                0,
+                1410,
+                865
+              ]
+            },
+            {
+              "hwnd": 14225028,
+              "visible": false,
+              "title": "TtkMonitorWindow",
+              "class": "TtkMonitorClass",
+              "rect": [
+                104,
+                104,
+                1384,
+                839
+              ]
+            },
+            {
+              "hwnd": 27333280,
+              "visible": false,
+              "title": "MSCTFIME UI",
+              "class": "MSCTFIME UI",
+              "rect": [
+                0,
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "hwnd": 13635262,
+              "visible": false,
+              "title": "Default IME",
+              "class": "IME",
+              "rect": [
+                0,
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "hwnd": 14618722,
+              "visible": false,
+              "title": "",
+              "class": "BingIMESysMessageWindow",
+              "rect": [
+                0,
+                0,
+                0,
+                0
+              ]
+            }
+          ]
+        }
+      ],
+      "foreground": {
+        "hwnd": 18154084,
+        "pid": 12152,
+        "title": "PageFolio",
+        "owned_by": "primary"
+      },
+      "owner_probe": [
+        {
+          "kind": "mutex",
+          "name": "Local\\PageFolio.Startup.Owner",
+          "state": "open"
+        },
+        {
+          "kind": "mapping",
+          "name": "Local\\PageFolio.Startup.State",
+          "state": "open"
+        }
+      ],
+      "observer": {
+        "python": "3.15.2 (tags/v3.15.2:5e58eaa, Oct 25 2026, 17:27:03) [MSC v.1951 64 bit (AMD64)]",
+        "tk": "9.0"
+      },
+      "exe_embedded": {
+        "python": "3.15.2 (tags/v3.15.2:5e58eaa, Oct 25 2026, 17:27:03) [MSC v.1951 64 bit (AMD64)]",
+        "dependencies": {
+          "PyInstaller": "6.22.3",
+          "pyinstaller-hooks-contrib": "2026.9",
+          "PyMuPDF": "1.28.2",
+          "Pillow": "13.0.0",
+          "tkinterdnd2": "0.6.4"
+        }
+      },
+      "copy": {
+        "ok": true,
+        "distribution_changed": [],
+        "missing_dirs": [],
+        "extra_dirs": [],
+        "undeclared": [],
+        "overlay_changed": [],
+        "locked_unverified": [],
+        "tree_sha256": "b1e55ca6efa3a7bafb4dec9ea9fa2c715dfca6f538ba906632058f912f575d85",
+        "exe_sha256": "66be5df663e333057c5c3cde02180857f930d2433e377f69c2838432d49a19d4"
+      }
+    },
+    {
+      "label": "after-peer",
+      "at": "2026-10-28T11:34:45.402327+00:00",
+      "monotonic": 44940.511622,
+      "processes": [
+        {
+          "role": "primary",
+          "pid": 12152,
+          "created": 134376608431184282,
+          "identity": "same",
+          "alive": true,
+          "session_id": 1,
+          "elevated": false,
+          "windows": [
+            {
+              "hwnd": 18154084,
+              "visible": true,
+              "title": "PageFolio",
+              "class": "TkTopLevel",
+              "rect": [
+                130,
+                130,
+                1346,
+                969
+              ]
+            },
+            {
+              "hwnd": 28249740,
+              "visible": false,
+              "title": "",
+              "class": "WorkerW",
+              "rect": [
+                0,
+                0,
+                136,
+                39
+              ]
+            },
+            {
+              "hwnd": 25170252,
+              "visible": false,
+              "title": "TclNotifier",
+              "class": "TclNotifier",
+              "rect": [
+                0,
+                0,
+                136,
+                39
+              ]
+            },
+            {
+              "hwnd": 34476100,
+              "visible": false,
+              "title": "GDI+ Window (PageFolio.exe)",
+              "class": "GDI+ Hook Window Class",
+              "rect": [
+                0,
+                0,
+                1,
+                1
+              ]
+            },
+            {
+              "hwnd": 19534214,
+              "visible": false,
+              "title": "EmbeddedMenuWindow",
+              "class": "EmbeddedMenuWindowClass",
+              "rect": [
+                0,
+                0,
+                10,
+                10
+              ]
+            },
+            {
+              "hwnd": 25039210,
+              "visible": false,
+              "title": "MenuWindow",
+              "class": "MenuWindowClass",
+              "rect": [
+                0,
+                0,
+                10,
+                10
+              ]
+            },
+            {
+              "hwnd": 36048824,
+              "visible": false,
+              "title": "",
+              "class": "Wtk_TaskbarHandler",
+              "rect": [
+                0,
+                0,
+                1410,
+                865
+              ]
+            },
+            {
+              "hwnd": 14225028,
+              "visible": false,
+              "title": "TtkMonitorWindow",
+              "class": "TtkMonitorClass",
+              "rect": [
+                104,
+                104,
+                1384,
+                839
+              ]
+            },
+            {
+              "hwnd": 27333280,
+              "visible": false,
+              "title": "MSCTFIME UI",
+              "class": "MSCTFIME UI",
+              "rect": [
+                0,
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "hwnd": 13635262,
+              "visible": false,
+              "title": "Default IME",
+              "class": "IME",
+              "rect": [
+                0,
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "hwnd": 25758866,
+              "visible": false,
+              "title": "Default IME",
+              "class": "IME",
+              "rect": [
+                0,
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "hwnd": 14618722,
+              "visible": false,
+              "title": "",
+              "class": "BingIMESysMessageWindow",
+              "rect": [
+                0,
+                0,
+                0,
+                0
+              ]
+            }
+          ]
+        },
+        {
+          "role": "peer",
+          "pid": 29588,
+          "created": 134376608813759062,
+          "identity": "gone",
+          "alive": false,
+          "session_id": null,
+          "elevated": null,
+          "windows": []
+        }
+      ],
+      "foreground": {
+        "hwnd": 34344978,
+        "pid": 18044,
+        "title": "Windows PowerShell",
+        "owned_by": null
+      },
+      "owner_probe": [
+        {
+          "kind": "mutex",
+          "name": "Local\\PageFolio.Startup.Owner",
+          "state": "open"
+        },
+        {
+          "kind": "mapping",
+          "name": "Local\\PageFolio.Startup.State",
+          "state": "open"
+        }
+      ],
+      "observer": {
+        "python": "3.15.2 (tags/v3.15.2:5e58eaa, Oct 25 2026, 17:27:03) [MSC v.1951 64 bit (AMD64)]",
+        "tk": "9.0"
+      },
+      "exe_embedded": {
+        "python": "3.15.2 (tags/v3.15.2:5e58eaa, Oct 25 2026, 17:27:03) [MSC v.1951 64 bit (AMD64)]",
+        "dependencies": {
+          "PyInstaller": "6.22.3",
+          "pyinstaller-hooks-contrib": "2026.9",
+          "PyMuPDF": "1.28.2",
+          "Pillow": "13.0.0",
+          "tkinterdnd2": "0.6.4"
+        }
+      },
+      "copy": {
+        "ok": true,
+        "distribution_changed": [],
+        "missing_dirs": [],
+        "extra_dirs": [],
+        "undeclared": [],
+        "overlay_changed": [],
+        "locked_unverified": [],
+        "tree_sha256": "b1e55ca6efa3a7bafb4dec9ea9fa2c715dfca6f538ba906632058f912f575d85",
+        "exe_sha256": "66be5df663e333057c5c3cde02180857f930d2433e377f69c2838432d49a19d4"
+      }
+    }
+  ],
+  "snapshots": [
+    {
+      "label": "before-start",
+      "at": "2026-10-28T11:34:02.690998+00:00",
+      "copy": {
+        "ok": true,
+        "distribution_changed": [],
+        "missing_dirs": [],
+        "extra_dirs": [],
+        "undeclared": [],
+        "overlay_changed": [],
+        "locked_unverified": [],
+        "tree_sha256": "b1e55ca6efa3a7bafb4dec9ea9fa2c715dfca6f538ba906632058f912f575d85",
+        "exe_sha256": "66be5df663e333057c5c3cde02180857f930d2433e377f69c2838432d49a19d4"
+      },
+      "source_distribution_tree_sha256": "b1e55ca6efa3a7bafb4dec9ea9fa2c715dfca6f538ba906632058f912f575d85",
+      "source_unchanged": true,
+      "originals": {
+        "ocr_custom_prompt.md": {
+          "exists": false,
+          "sha256": null
+        },
+        "pagefolio_settings.json": {
+          "exists": false,
+          "sha256": null
+        },
+        "ocr_summary_prompt.md": {
+          "exists": false,
+          "sha256": null
+        },
+        "plugins": {
+          "__pycache__/page_info.cpython-315.pyc": "27a73182395e0a1b8572063eb452adcfcbe8ffd24e538e00f31e1952da468bf3",
+          "page_info.py": "a481b6cac734251aae3a76e9df064e208713eb572401ee1bccbacf49b53b3a8f"
+        }
+      }
+    },
+    {
+      "label": "after-stop",
+      "at": "2026-10-28T11:35:26.369975+00:00",
+      "copy": {
+        "ok": true,
+        "distribution_changed": [],
+        "missing_dirs": [],
+        "extra_dirs": [],
+        "undeclared": [],
+        "overlay_changed": [],
+        "locked_unverified": [],
+        "tree_sha256": "b1e55ca6efa3a7bafb4dec9ea9fa2c715dfca6f538ba906632058f912f575d85",
+        "exe_sha256": "66be5df663e333057c5c3cde02180857f930d2433e377f69c2838432d49a19d4"
+      },
+      "source_distribution_tree_sha256": "b1e55ca6efa3a7bafb4dec9ea9fa2c715dfca6f538ba906632058f912f575d85",
+      "source_unchanged": true,
+      "originals": {
+        "ocr_custom_prompt.md": {
+          "exists": false,
+          "sha256": null
+        },
+        "pagefolio_settings.json": {
+          "exists": false,
+          "sha256": null
+        },
+        "ocr_summary_prompt.md": {
+          "exists": false,
+          "sha256": null
+        },
+        "plugins": {
+          "__pycache__/page_info.cpython-315.pyc": "27a73182395e0a1b8572063eb452adcfcbe8ffd24e538e00f31e1952da468bf3",
+          "page_info.py": "a481b6cac734251aae3a76e9df064e208713eb572401ee1bccbacf49b53b3a8f"
+        }
+      }
+    }
+  ],
+  "case_history": [],
+  "generation": 1,
+  "protected_names": [
+    "ocr_custom_prompt.md",
+    "pagefolio_settings.json",
+    "ocr_summary_prompt.md"
+  ],
+  "repo": "C:\\Users\\shdwf\\work\\project\\PageFolio",
+  "subject": {
+    "role": "final-release-candidate",
+    "version": "v1.10.2",
+    "exe_sha256": "66be5df663e333057c5c3cde02180857f930d2433e377f69c2838432d49a19d4"
+  },
+  "peer": {
+    "run_id": "d08b90ff466a49d1b86d373b1e6d5801",
+    "role": "final-release-candidate",
+    "version": "v1.10.2",
+    "exe_sha256": "66be5df663e333057c5c3cde02180857f930d2433e377f69c2838432d49a19d4"
+  }
+}

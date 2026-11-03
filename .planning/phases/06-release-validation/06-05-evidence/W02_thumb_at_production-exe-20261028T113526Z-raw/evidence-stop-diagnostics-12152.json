@@ -1,0 +1,66 @@
+{
+  "at": "2026-10-28T11:35:26.237945+00:00",
+  "record": {
+    "role": "primary",
+    "pid": 12152,
+    "created": 134376608431184282,
+    "created_iso": "2026-10-28T11:34:03.118428+00:00",
+    "image": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\release-uat-d08b90ff466a49d1b86d373b1e6d5801\\dist\\PageFolio.exe",
+    "session_id": 1,
+    "elevated": false,
+    "exe_sha256": "66be5df663e333057c5c3cde02180857f930d2433e377f69c2838432d49a19d4",
+    "argv": [
+      "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\release-uat-d08b90ff466a49d1b86d373b1e6d5801\\dist\\PageFolio.exe"
+    ],
+    "started_at": "2026-10-28T11:34:03.148542+00:00",
+    "parent_pid": 22200,
+    "exit": null,
+    "foreground_before": {
+      "hwnd": 34344978,
+      "pid": 18044,
+      "title": "Windows PowerShell"
+    }
+  },
+  "windows": [
+    {
+      "hwnd": 28315276,
+      "visible": true,
+      "title": "確認",
+      "class": "#32770",
+      "rect": [
+        737,
+        462,
+        987,
+        621
+      ]
+    },
+    {
+      "hwnd": 18154084,
+      "visible": true,
+      "title": "PageFolio",
+      "class": "TkTopLevel",
+      "rect": [
+        130,
+        130,
+        1346,
+        969
+      ]
+    }
+  ],
+  "foreground": {
+    "hwnd": 34344978,
+    "pid": 18044,
+    "title": "Windows PowerShell"
+  },
+  "copy": {
+    "ok": true,
+    "distribution_changed": [],
+    "missing_dirs": [],
+    "extra_dirs": [],
+    "undeclared": [],
+    "overlay_changed": [],
+    "locked_unverified": [],
+    "tree_sha256": "b1e55ca6efa3a7bafb4dec9ea9fa2c715dfca6f538ba906632058f912f575d85",
+    "exe_sha256": "66be5df663e333057c5c3cde02180857f930d2433e377f69c2838432d49a19d4"
+  }
+}

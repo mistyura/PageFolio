@@ -1,0 +1,245 @@
+{
+  "row": "W01/normal@production-exe",
+  "case": "W01",
+  "condition": "normal",
+  "entry": "production-exe",
+  "selftest": false,
+  "started_at": "2026-10-28T10:20:34.784230+00:00",
+  "target_exe_sha256": "66be5df663e333057c5c3cde02180857f930d2433e377f69c2838432d49a19d4",
+  "steps": [
+    {
+      "at": "2026-10-28T10:20:44.101281+00:00",
+      "step": "started",
+      "windows": [
+        {
+          "hwnd": 13307238,
+          "pid": 27688,
+          "title": "PageFolio",
+          "class": "TkTopLevel",
+          "visible": true,
+          "iconic": false,
+          "zoomed": false,
+          "rect": [
+            234,
+            228,
+            1450,
+            1067
+          ]
+        }
+      ],
+      "foreground": {
+        "hwnd": 789312,
+        "pid": 4080,
+        "title": "Visual Studio Code"
+      }
+    },
+    {
+      "at": "2026-10-28T10:21:45.644864+00:00",
+      "step": "before-minimize",
+      "windows": [
+        {
+          "hwnd": 13307238,
+          "pid": 27688,
+          "title": "PageFolio",
+          "class": "TkTopLevel",
+          "visible": true,
+          "iconic": true,
+          "zoomed": false,
+          "rect": [
+            -32000,
+            -32000,
+            -31763,
+            -31961
+          ]
+        }
+      ],
+      "foreground": {
+        "hwnd": 37683358,
+        "pid": 18044,
+        "title": "Windows PowerShell"
+      }
+    },
+    {
+      "at": "2026-10-28T10:21:50.954920+00:00",
+      "step": "minimized",
+      "windows": [
+        {
+          "hwnd": 13307238,
+          "pid": 27688,
+          "title": "PageFolio",
+          "class": "TkTopLevel",
+          "visible": true,
+          "iconic": true,
+          "zoomed": false,
+          "rect": [
+            -32000,
+            -32000,
+            -31763,
+            -31961
+          ]
+        }
+      ]
+    },
+    {
+      "at": "2026-10-28T10:21:55.156674+00:00",
+      "step": "after-peer",
+      "windows": [
+        {
+          "hwnd": 13307238,
+          "pid": 27688,
+          "title": "PageFolio",
+          "class": "TkTopLevel",
+          "visible": true,
+          "iconic": false,
+          "zoomed": false,
+          "rect": [
+            234,
+            228,
+            1450,
+            1067
+          ]
+        }
+      ],
+      "foreground": {
+        "hwnd": 37683358,
+        "pid": 18044,
+        "title": "Windows PowerShell",
+        "owned_by": null
+      },
+      "owner_probe": [
+        {
+          "kind": "mutex",
+          "name": "Local\\PageFolio.Startup.Owner",
+          "state": "open"
+        },
+        {
+          "kind": "mapping",
+          "name": "Local\\PageFolio.Startup.State",
+          "state": "open"
+        }
+      ],
+      "foreground_before_peer": {
+        "hwnd": 37683358,
+        "pid": 18044,
+        "title": "Windows PowerShell"
+      }
+    }
+  ],
+  "input_monitor": {
+    "enabled": false,
+    "reason": "実EXE行は利用者がPageFolio内を操作する手順のため監視しない"
+  },
+  "procedure_verdict": "not-monitored",
+  "run": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\release-uat-d79a2d088f504e288de0cb4de5e5eca0",
+  "run_id": "d79a2d088f504e288de0cb4de5e5eca0",
+  "binary_sha256": "66be5df663e333057c5c3cde02180857f930d2433e377f69c2838432d49a19d4",
+  "tree_sha256": "b1e55ca6efa3a7bafb4dec9ea9fa2c715dfca6f538ba906632058f912f575d85",
+  "environment": {
+    "os": "Windows-11-10.0.26300-SP0",
+    "observer_python": "3.15.2 (tags/v3.15.2:5e58eaa, Oct 25 2026, 17:27:03) [MSC v.1951 64 bit (AMD64)]",
+    "observer_tk": "9.0",
+    "elevated": false,
+    "session_id": 1
+  },
+  "primary": {
+    "pid": 27688,
+    "created": 134376564389885522,
+    "image": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\release-uat-d79a2d088f504e288de0cb4de5e5eca0\\dist\\PageFolio.exe"
+  },
+  "peer": {
+    "pid": 33604,
+    "created": 134376565110565536,
+    "image": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\release-uat-d79a2d088f504e288de0cb4de5e5eca0\\dist\\PageFolio.exe"
+  },
+  "answers": {
+    "state_after": "通常",
+    "geometry": "同じ",
+    "single": "１つ",
+    "status": "見える",
+    "status_kept": "尾内",
+    "note": "なし"
+  },
+  "outcome": "answered",
+  "stop": [
+    {
+      "pid": 27688,
+      "result": "closed"
+    },
+    {
+      "pid": 33604,
+      "result": "already-exited"
+    }
+  ],
+  "verify_after": {
+    "ok": true,
+    "overlay_changed": [
+      "pagefolio_settings.json"
+    ],
+    "distribution_changed": [],
+    "undeclared": [],
+    "extra_dirs": [],
+    "missing_dirs": [],
+    "exe_sha256": "66be5df663e333057c5c3cde02180857f930d2433e377f69c2838432d49a19d4",
+    "tree_sha256": "4b3fb84021a6ef35df0681aa95707eb6786ad46f72753c46dff3a5319d0cac6f"
+  },
+  "source_distribution_unchanged": true,
+  "owner_after": [],
+  "finished_at": "2026-10-28T10:22:21.021595+00:00",
+  "raw_inputs": [
+    {
+      "at": "2026-10-28T10:21:45.643296+00:00",
+      "key": "enter",
+      "text": "..",
+      "role": "continue"
+    },
+    {
+      "at": "2026-10-28T10:21:50.953361+00:00",
+      "key": "enter",
+      "text": "",
+      "role": "continue"
+    },
+    {
+      "at": "2026-10-28T10:22:07.273317+00:00",
+      "key": "state_after",
+      "attempt": 1,
+      "text": "通常",
+      "rejected": null
+    },
+    {
+      "at": "2026-10-28T10:22:09.694849+00:00",
+      "key": "geometry",
+      "attempt": 1,
+      "text": "同じ",
+      "rejected": null
+    },
+    {
+      "at": "2026-10-28T10:22:11.856145+00:00",
+      "key": "single",
+      "attempt": 1,
+      "text": "１つ",
+      "rejected": null
+    },
+    {
+      "at": "2026-10-28T10:22:15.332119+00:00",
+      "key": "status",
+      "attempt": 1,
+      "text": "見える",
+      "rejected": null
+    },
+    {
+      "at": "2026-10-28T10:22:17.698545+00:00",
+      "key": "status_kept",
+      "attempt": 1,
+      "text": "尾内",
+      "rejected": null
+    },
+    {
+      "at": "2026-10-28T10:22:20.500392+00:00",
+      "key": "note",
+      "attempt": 1,
+      "text": "なし",
+      "rejected": null
+    }
+  ],
+  "composed_answer": "W01 normal production-exe：state_after=通常・geometry=同じ・single=１つ・status=見える・status_kept=尾内（メモ: なし）"
+}

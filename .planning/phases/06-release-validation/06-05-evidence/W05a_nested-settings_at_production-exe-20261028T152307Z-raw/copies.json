@@ -1,0 +1,22 @@
+[
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\release-uat-1865104388754612ac38fd00d8f8f2d7\\manifest.json",
+    "target": "06-05-evidence/W05a_nested-settings_at_production-exe-20261028T152307Z-raw/manifest.json",
+    "sha256": "939b6b5c13e7a4a96e208acb56a055417f33259d996e420ba79e8cb8fa7d2a1b"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\release-uat-1865104388754612ac38fd00d8f8f2d7\\evidence\\inspect-001.json",
+    "target": "06-05-evidence/W05a_nested-settings_at_production-exe-20261028T152307Z-raw/evidence-inspect-001.json",
+    "sha256": "3d7630e7330795cdac1d377600bb87966ec63d1c3159fac19824eb36a88d580f"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\release-uat-1865104388754612ac38fd00d8f8f2d7\\evidence\\inspect-002.json",
+    "target": "06-05-evidence/W05a_nested-settings_at_production-exe-20261028T152307Z-raw/evidence-inspect-002.json",
+    "sha256": "ddab4ba3ecb6fb840bb943f263de58307f855039e23b5894f91cfdb07ea46c77"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\release-uat-1865104388754612ac38fd00d8f8f2d7\\dist\\pagefolio_settings.json",
+    "target": "06-05-evidence/W05a_nested-settings_at_production-exe-20261028T152307Z-raw/dist-pagefolio_settings.json",
+    "sha256": "da74d66ae5793f7cfed992879d5f64f3fe0b0e58af688165297a3a53c02ca21d"
+  }
+]

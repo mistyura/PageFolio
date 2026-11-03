@@ -1,0 +1,79 @@
+{
+  "copies": [
+    {
+      "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-vph3nu8u\\manifest.json",
+      "target": "06-05-evidence/W05b_ocr-close-confirm_at_script-20261031T000340Z-raw/run-manifest.json",
+      "sha256": "b6961770a08b0a8e771d38f16db1c506715d00379ea39da276e84df2b64158c3"
+    },
+    {
+      "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-vph3nu8u\\uat-owner-native-ocr\\result.json",
+      "target": "06-05-evidence/W05b_ocr-close-confirm_at_script-20261031T000340Z-raw/primary-result.json",
+      "sha256": "aa7ae3e4a4ae2ba1a6b22d7047d829d2a7bbd1c480548a0b7aa8ea558c721676"
+    },
+    {
+      "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-vph3nu8u\\uat-owner-native-ocr\\focus-result.json",
+      "target": "06-05-evidence/W05b_ocr-close-confirm_at_script-20261031T000340Z-raw/primary-focus-result.json",
+      "sha256": "85dbb8839bf282f13395cfda3427525ffd983a614e13ea8c86ec7ec2b7e932dc"
+    },
+    {
+      "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-vph3nu8u\\uat-owner-native-ocr\\resource-audit.json",
+      "target": "06-05-evidence/W05b_ocr-close-confirm_at_script-20261031T000340Z-raw/primary-resource-audit.json",
+      "sha256": "5a4374b388fe4ab87d28ae135d19544043f3c95ec46a67554d9145bfe9506381"
+    },
+    {
+      "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-vph3nu8u\\uat-owner-native-ocr\\ready",
+      "target": "06-05-evidence/W05b_ocr-close-confirm_at_script-20261031T000340Z-raw/primary-ready",
+      "sha256": "5a4374b388fe4ab87d28ae135d19544043f3c95ec46a67554d9145bfe9506381"
+    },
+    {
+      "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-vph3nu8u\\uat-owner-native-ocr\\stdout.log",
+      "target": "06-05-evidence/W05b_ocr-close-confirm_at_script-20261031T000340Z-raw/primary-stdout.log",
+      "sha256": "65943acc894af9c5978ebbe2a683be957a0ddc534ee3674e5bf48cb2e65ae1e2"
+    },
+    {
+      "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-vph3nu8u\\uat-owner-native-ocr\\stderr.log",
+      "target": "06-05-evidence/W05b_ocr-close-confirm_at_script-20261031T000340Z-raw/primary-stderr.log",
+      "sha256": "31882b6bab44042462a87d440eb560b3304ec0d0262365f1652cb87c7026443c"
+    },
+    {
+      "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-vph3nu8u\\uat-owner-native-ocr\\traceback.log",
+      "target": "06-05-evidence/W05b_ocr-close-confirm_at_script-20261031T000340Z-raw/primary-traceback.log",
+      "sha256": "f046254903b0c2bd6a7f606b6affe85c44ecc04bc7bda32a6627fd24d4e5fe18"
+    },
+    {
+      "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-vph3nu8u\\uat-owner-native-ocr\\manual-ocr-running.json",
+      "target": "06-05-evidence/W05b_ocr-close-confirm_at_script-20261031T000340Z-raw/primary-manual-ocr-running.json",
+      "sha256": "8ec94f4c15c683bc7c81bcd1f32c68b834758f2d3ed9bce2c71c7f7fab32bb9a"
+    },
+    {
+      "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-vph3nu8u\\uat-owner-native-ocr\\manual-ocr-close-start.json",
+      "target": "06-05-evidence/W05b_ocr-close-confirm_at_script-20261031T000340Z-raw/primary-manual-ocr-close-start.json",
+      "sha256": "8ec94f4c15c683bc7c81bcd1f32c68b834758f2d3ed9bce2c71c7f7fab32bb9a"
+    },
+    {
+      "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-vph3nu8u\\uat-owner-native-ocr\\manual-ocr-after-peer.json",
+      "target": "06-05-evidence/W05b_ocr-close-confirm_at_script-20261031T000340Z-raw/primary-manual-ocr-after-peer.json",
+      "sha256": "8ec94f4c15c683bc7c81bcd1f32c68b834758f2d3ed9bce2c71c7f7fab32bb9a"
+    },
+    {
+      "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-vph3nu8u\\uat-owner-native-ocr\\manual-ocr-final.json",
+      "target": "06-05-evidence/W05b_ocr-close-confirm_at_script-20261031T000340Z-raw/primary-manual-ocr-final.json",
+      "sha256": "dbc4693a5ec34695cdaef9b5c429f165955715cf4fba937fffdd9d412b05e7e4"
+    },
+    {
+      "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-vph3nu8u\\uat-owner-native-ocr\\manual-ocr-server.jsonl",
+      "target": "06-05-evidence/W05b_ocr-close-confirm_at_script-20261031T000340Z-raw/primary-manual-ocr-server.jsonl",
+      "sha256": "4a2a37ed781920ef8c16032c639bd5aa220db02528d28529f4186ac44b87ec42"
+    },
+    {
+      "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-vph3nu8u\\uat-owner-native-ocr\\ocr-one-page.pdf",
+      "target": "06-05-evidence/W05b_ocr-close-confirm_at_script-20261031T000340Z-raw/primary-ocr-one-page.pdf",
+      "sha256": "02d7bb7ac634c9635f5fee12d7756a6ab3bbc2d9210cd2841b443cf6cf9bc215"
+    }
+  ],
+  "missing": [
+    ".planning/tmp/pagefolio-uat-vph3nu8u/uat-owner-native-ocr/manual-ocr-close-no.json",
+    ".planning/tmp/pagefolio-uat-vph3nu8u/uat-owner-native-ocr/manual-ocr-completed.json",
+    ".planning/tmp/pagefolio-uat-vph3nu8u/uat-owner-native-ocr/manual-deadline"
+  ]
+}

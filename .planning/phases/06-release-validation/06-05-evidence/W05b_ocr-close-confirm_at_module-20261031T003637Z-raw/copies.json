@@ -1,0 +1,87 @@
+{
+  "copies": [
+    {
+      "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-lepyvak3\\manifest.json",
+      "target": "06-05-evidence/W05b_ocr-close-confirm_at_module-20261031T003637Z-raw/run-manifest.json",
+      "sha256": "874969eb207b95d5020dce767653b5d4caf8e56e6a7a03405b887ff1c9508a96"
+    },
+    {
+      "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-lepyvak3\\uat-owner-native-ocr\\result.json",
+      "target": "06-05-evidence/W05b_ocr-close-confirm_at_module-20261031T003637Z-raw/primary-result.json",
+      "sha256": "ee49fe2132eca34cdf1974653aaa5db19d82c8b614b3913d6be8864dfbb65911"
+    },
+    {
+      "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-lepyvak3\\uat-owner-native-ocr\\focus-result.json",
+      "target": "06-05-evidence/W05b_ocr-close-confirm_at_module-20261031T003637Z-raw/primary-focus-result.json",
+      "sha256": "1d75a8032e6d20497b383ccdbf3994c050d4e8f7568055fec5a97a07b1aef44b"
+    },
+    {
+      "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-lepyvak3\\uat-owner-native-ocr\\resource-audit.json",
+      "target": "06-05-evidence/W05b_ocr-close-confirm_at_module-20261031T003637Z-raw/primary-resource-audit.json",
+      "sha256": "7ca48c83f3caee6034665e48a6bd0dbae47b312d0919caadd2785181682800ce"
+    },
+    {
+      "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-lepyvak3\\uat-owner-native-ocr\\ready",
+      "target": "06-05-evidence/W05b_ocr-close-confirm_at_module-20261031T003637Z-raw/primary-ready",
+      "sha256": "7ca48c83f3caee6034665e48a6bd0dbae47b312d0919caadd2785181682800ce"
+    },
+    {
+      "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-lepyvak3\\uat-owner-native-ocr\\stdout.log",
+      "target": "06-05-evidence/W05b_ocr-close-confirm_at_module-20261031T003637Z-raw/primary-stdout.log",
+      "sha256": "a2ee8eced38de1f07e0ea404a5ac2720731d0929d145e69c7706cec6754249e2"
+    },
+    {
+      "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-lepyvak3\\uat-owner-native-ocr\\stderr.log",
+      "target": "06-05-evidence/W05b_ocr-close-confirm_at_module-20261031T003637Z-raw/primary-stderr.log",
+      "sha256": "e6e72f7c8cb36a0273e26107451747c2c4d5fdf6ad67432e7b77d1c7e3647278"
+    },
+    {
+      "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-lepyvak3\\uat-owner-native-ocr\\traceback.log",
+      "target": "06-05-evidence/W05b_ocr-close-confirm_at_module-20261031T003637Z-raw/primary-traceback.log",
+      "sha256": "e0e67e11526b80048bf561c966adfc11cbe4f8244da7f58272d93f3139fb572d"
+    },
+    {
+      "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-lepyvak3\\uat-owner-native-ocr\\manual-ocr-running.json",
+      "target": "06-05-evidence/W05b_ocr-close-confirm_at_module-20261031T003637Z-raw/primary-manual-ocr-running.json",
+      "sha256": "f390d724606f432691dd6e4ed9714a52c05ec02d762d4ca0844da52f4879a80c"
+    },
+    {
+      "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-lepyvak3\\uat-owner-native-ocr\\manual-ocr-close-start.json",
+      "target": "06-05-evidence/W05b_ocr-close-confirm_at_module-20261031T003637Z-raw/primary-manual-ocr-close-start.json",
+      "sha256": "f390d724606f432691dd6e4ed9714a52c05ec02d762d4ca0844da52f4879a80c"
+    },
+    {
+      "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-lepyvak3\\uat-owner-native-ocr\\manual-ocr-after-peer.json",
+      "target": "06-05-evidence/W05b_ocr-close-confirm_at_module-20261031T003637Z-raw/primary-manual-ocr-after-peer.json",
+      "sha256": "f390d724606f432691dd6e4ed9714a52c05ec02d762d4ca0844da52f4879a80c"
+    },
+    {
+      "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-lepyvak3\\uat-owner-native-ocr\\manual-ocr-close-no.json",
+      "target": "06-05-evidence/W05b_ocr-close-confirm_at_module-20261031T003637Z-raw/primary-manual-ocr-close-no.json",
+      "sha256": "11336fd3604ae908bbdb3fec5a701fd9e940f1f4536ce3558c2f354833952004"
+    },
+    {
+      "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-lepyvak3\\uat-owner-native-ocr\\manual-ocr-completed.json",
+      "target": "06-05-evidence/W05b_ocr-close-confirm_at_module-20261031T003637Z-raw/primary-manual-ocr-completed.json",
+      "sha256": "a243b3b8e7a1eec695660e7acb4ac4636d480fbd85b85828a9ff9ee2b1e136bc"
+    },
+    {
+      "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-lepyvak3\\uat-owner-native-ocr\\manual-ocr-final.json",
+      "target": "06-05-evidence/W05b_ocr-close-confirm_at_module-20261031T003637Z-raw/primary-manual-ocr-final.json",
+      "sha256": "1a1431e3e1c87c292afe739fd9f84d7f19be67f4fbe229746ff035240b6edc1e"
+    },
+    {
+      "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-lepyvak3\\uat-owner-native-ocr\\manual-ocr-server.jsonl",
+      "target": "06-05-evidence/W05b_ocr-close-confirm_at_module-20261031T003637Z-raw/primary-manual-ocr-server.jsonl",
+      "sha256": "896f41352557d10cbc62d423e371bd7bc2de0c93d8e379d388cadce0897b30c5"
+    },
+    {
+      "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-lepyvak3\\uat-owner-native-ocr\\ocr-one-page.pdf",
+      "target": "06-05-evidence/W05b_ocr-close-confirm_at_module-20261031T003637Z-raw/primary-ocr-one-page.pdf",
+      "sha256": "1d2813b9eee79e4b6e500db5ab6eab78939e62ef49673abdc43180031071670d"
+    }
+  ],
+  "missing": [
+    ".planning/tmp/pagefolio-uat-lepyvak3/uat-owner-native-ocr/manual-deadline"
+  ]
+}

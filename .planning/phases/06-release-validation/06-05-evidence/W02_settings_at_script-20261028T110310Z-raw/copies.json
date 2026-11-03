@@ -1,0 +1,42 @@
+[
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-ufectf_9\\manifest.json",
+    "target": "06-05-evidence/W02_settings_at_script-20261028T110310Z-raw/run-manifest.json",
+    "sha256": "9941d36ca9f93b85d5828fd3f575d19695b24eeb51d17c3a9672f6e647511e78"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-ufectf_9\\uat-owner-settings\\result.json",
+    "target": "06-05-evidence/W02_settings_at_script-20261028T110310Z-raw/primary-result.json",
+    "sha256": "e4b5851d1f5abca802face2dead0bb5407a82fd911d8723f1f5f007e74d48a80"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-ufectf_9\\uat-owner-settings\\focus-result.json",
+    "target": "06-05-evidence/W02_settings_at_script-20261028T110310Z-raw/primary-focus-result.json",
+    "sha256": "b353f83acbcd6ea59b4f3e94bee3a46369da17fd9729f1a22972825a070f4c47"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-ufectf_9\\uat-owner-settings\\resource-audit.json",
+    "target": "06-05-evidence/W02_settings_at_script-20261028T110310Z-raw/primary-resource-audit.json",
+    "sha256": "318e676767f90206a92ec71ab4ae86f8d35d9d39d233f305684f80479815e186"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-ufectf_9\\uat-owner-settings\\ready",
+    "target": "06-05-evidence/W02_settings_at_script-20261028T110310Z-raw/primary-ready",
+    "sha256": "318e676767f90206a92ec71ab4ae86f8d35d9d39d233f305684f80479815e186"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-ufectf_9\\uat-owner-settings\\stderr.log",
+    "target": "06-05-evidence/W02_settings_at_script-20261028T110310Z-raw/primary-stderr.log",
+    "sha256": "57721cf716a024019d62356f72b72e92509347e354476730876e4a5ace264c41"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-ufectf_9\\uat-owner-settings\\stdout.log",
+    "target": "06-05-evidence/W02_settings_at_script-20261028T110310Z-raw/primary-stdout.log",
+    "sha256": "d1ebed015ff5f80d258e0cf983fdda73507b03d13f9583adeebb7d84c7da4d33"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-ufectf_9\\uat-owner-settings\\traceback.log",
+    "target": "06-05-evidence/W02_settings_at_script-20261028T110310Z-raw/primary-traceback.log",
+    "sha256": "814c081e65f908ff169bceb9df8bdaf6521537f430aaba2608e3dbee901e9d83"
+  }
+]

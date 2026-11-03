@@ -1,0 +1,22 @@
+[
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\release-uat-d79a2d088f504e288de0cb4de5e5eca0\\manifest.json",
+    "target": "06-05-evidence/W01_normal_at_production-exe-20261028T102221Z-raw/manifest.json",
+    "sha256": "6aa5fa9ce34c4aaba08e9a0009c7775bc961afcbfc9a535ec3895e1f3725de69"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\release-uat-d79a2d088f504e288de0cb4de5e5eca0\\evidence\\inspect-001.json",
+    "target": "06-05-evidence/W01_normal_at_production-exe-20261028T102221Z-raw/evidence-inspect-001.json",
+    "sha256": "a988aaf34688362be82a03e4481a0006b7543a7c02f029d53fe1a295f6d4514d"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\release-uat-d79a2d088f504e288de0cb4de5e5eca0\\evidence\\inspect-002.json",
+    "target": "06-05-evidence/W01_normal_at_production-exe-20261028T102221Z-raw/evidence-inspect-002.json",
+    "sha256": "94b034d857e7ebcbc546de89fbfd55df043c027ea144b264e1cdd778d5c1f9e1"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\release-uat-d79a2d088f504e288de0cb4de5e5eca0\\dist\\pagefolio_settings.json",
+    "target": "06-05-evidence/W01_normal_at_production-exe-20261028T102221Z-raw/dist-pagefolio_settings.json",
+    "sha256": "5523772349b0e63d0a337e3eba01d6592e8e016efbea275094c1943b897de087"
+  }
+]

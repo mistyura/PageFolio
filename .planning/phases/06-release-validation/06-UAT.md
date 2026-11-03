@@ -13,7 +13,7 @@ created: 2026-10-24
 
 ## 現行の観測と未達
 
-世代5の実初回/再build、保護・接続準備が完了し、準備監査exit0。ocr-single/W05bは利用者の結果目視・通常終了と機械観測を照合した。観測中の手動切替が入ったW05b初回は原記録を保持し、無操作手順を明確化した別runのみ成立。本受入は必須108行not-run・W11対象外2行not-run。以下の世代4記録は履歴。
+世代5の実初回/再build、保護・接続準備が完了し、準備監査exit0。ocr-single/W05bは利用者の結果目視・通常終了と機械観測を照合した。観測中の手動切替が入ったW05b初回は原記録を保持し、無操作手順を明確化した別runのみ成立。本受入は必須108行中28行pass・80行not-run・W11対象外2行not-run。以下の世代4記録は履歴。
 
 世代4の接続準備監査は合格。W01/normal@scriptの回答・生観測1件は記録したが、本受入判定は保留しnot-runを維持する。全110行の人手passは0。2026-10-28の案B承認（`W11-B-20261028`）により、W11の別セッション2行だけを未確認のまま `not-run/deferred` とする。今回の保証はWindowsの単一ログインセッション利用に限定する。必須108行は全てnot-runであり、品質・安全条件も継続する。正本は `06-W11-SCOPE-APPROVAL.md` と `06-RELEASE-SCOPE.json`。文書変更後の新世代build/保護/接続を06-08で実施してから本受入へ進む。世代4までの観測履歴は06-04g4-CHECKPOINT.mdに保持する。
 
@@ -23,7 +23,8 @@ created: 2026-10-24
 |---|---|
 | 主対象(final-release-candidate) | 実配布EXE v1.10.2 / EXE sha256 `66be5df663e333057c5c3cde02180857f930d2433e377f69c2838432d49a19d4` |
 | tree sha256 | `b1e55ca6efa3a7bafb4dec9ea9fa2c715dfca6f538ba906632058f912f575d85` |
-| 隔離元(直接起動しない) | `C:\Users\shdwf\AppData\Local\Temp\pf06_final_3f96a37a7cef4ee1ab3a1c1b2f2c435f\out\PageFolio-v1.10.2` |
+| 隔離元(直接起動しない) | `C:\Users\shdwf\AppData\Local\PageFolio-release\pf06_final_3f96a37a7cef4ee1ab3a1c1b2f2c435f\PageFolio-v1.10.2` |
+| 隔離元の復元(BUILD-LOSS-20261103) | 元の `%TEMP%\pf06_final_…\out\PageFolio-v1.10.2` は2026-11-03に消失。同一tree `b1e55ca6…` を `.planning/tmp/release-uat-f85068da…/dist` から上記へ復元(06-BUILD-EVIDENCE `final_release.loss_incident`) |
 | 相手側tracer(technical-tracer-real-exe) | 06-01の実PyInstaller成果物 v1.9.1 / EXE sha256 `c082f6f4c35af75f07e574f2ef30f41c25e41965f7f9f17a8b65ac71e9183ba7` / run `2db21a6b3e8b4aed80d92adc3a521668`。公式旧版でも最終EXE受入済みでもない |
 | 移管正本 | [06-UAT-CARRYOVER.md](06-UAT-CARRYOVER.md) / [04-WINDOWS-UAT.md](../04-startup-control/04-WINDOWS-UAT.md) |
 | Phase5再利用 | [05-UAT.md](../05-config-notification/05-UAT.md) のH01〜H14と意味評価2件は参照のみ(再実施しない) |
@@ -76,7 +77,8 @@ created: 2026-10-24
 
 **W01 / 通常の大きさ / Python直接起動(python pagefolio.py)**(証拠種別: `python-real`)
 
-- **状態**: not-run / 準備: driver準備済み(隔離runは未準備・別フィールド。準備済みはpassではない)
+- **状態**: pass / 利用者直接入力・機械観測一致。根拠: 06-05-evidence/W01_normal_at_script-20261028T100202Z.json
+- **回答原文**: W01 normal script：state_after=通常・geometry=はい・single=１つ・status=見える（メモ: なし）
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
   ```powershell
   $uat = .venv/Scripts/python.exe tests/test_startup_windows.py --uat start --case normal | ConvertFrom-Json
@@ -103,7 +105,8 @@ created: 2026-10-24
 
 **W01 / 通常の大きさ / Python -m pagefolio**(証拠種別: `python-real`)
 
-- **状態**: not-run / 準備: driver準備済み(隔離runは未準備・別フィールド。準備済みはpassではない)
+- **状態**: pass / 利用者直接入力・機械観測一致。根拠: 06-05-evidence/W01_normal_at_module-20261028T100652Z.json
+- **回答原文**: W01 normal module：state_after=通常・geometry=はい・single=１つ・status=見える（メモ: なし）
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
   ```powershell
   $uat = .venv/Scripts/python.exe tests/test_startup_windows.py --uat start --case normal | ConvertFrom-Json
@@ -130,10 +133,11 @@ created: 2026-10-24
 
 **W01 / 通常の大きさ / 実配布EXE(隔離copy。最終v1.10.2)**(証拠種別: `production-exe`)
 
-- **状態**: not-run / 準備: driver準備済み(隔離runは未準備・別フィールド。準備済みはpassではない)
+- **状態**: pass / 利用者直接入力・外部観測・配布物保護が一致。根拠: 06-05-evidence/W01_normal_at_production-exe-20261028T104332Z.json
+- **回答原文**: W01 normal production-exe：state_after=通常・geometry=同じ・single=１つ・status=見える・status_kept=同じ（メモ: なし）
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
   ```powershell
-  $run = (.venv/Scripts/python.exe tests/release_uat_support.py prepare --distribution "C:\Users\shdwf\AppData\Local\Temp\pf06_final_07447e7e5cfc42988b80fb84c58293ae\out\PageFolio-v1.10.2" --case W01).run  # 完全copy・hash固定
+  $run = (.venv/Scripts/python.exe tests/release_uat_support.py prepare --distribution "C:\Users\shdwf\AppData\Local\PageFolio-release\pf06_final_3f96a37a7cef4ee1ab3a1c1b2f2c435f\PageFolio-v1.10.2" --case W01).run  # 完全copy・hash固定
   .venv/Scripts/python.exe tests/release_uat_support.py start --run $run
   .venv/Scripts/python.exe tests/release_uat_support.py peer --run $run     # 二次起動(必要なカードのみ)
   .venv/Scripts/python.exe tests/release_uat_support.py inspect --run $run
@@ -161,7 +165,8 @@ created: 2026-10-24
 
 **W01 / 最大化 / Python直接起動(python pagefolio.py)**(証拠種別: `python-real`)
 
-- **状態**: not-run / 準備: driver準備済み(隔離runは未準備・別フィールド。準備済みはpassではない)
+- **状態**: pass / 利用者直接入力・機械観測一致。根拠: 06-05-evidence/W01_zoomed_at_script-20261028T104539Z.json
+- **回答原文**: W01 zoomed script：state_after=最大化・geometry=はい・single=１つ・status=見える（メモ: なし）
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
   ```powershell
   $uat = .venv/Scripts/python.exe tests/test_startup_windows.py --uat start --case zoomed | ConvertFrom-Json
@@ -188,7 +193,8 @@ created: 2026-10-24
 
 **W01 / 最大化 / Python -m pagefolio**(証拠種別: `python-real`)
 
-- **状態**: not-run / 準備: driver準備済み(隔離runは未準備・別フィールド。準備済みはpassではない)
+- **状態**: pass / 利用者直接入力・機械観測一致。根拠: 06-05-evidence/W01_zoomed_at_module-20261028T104658Z.json
+- **回答原文**: W01 zoomed module：state_after=最大化・geometry=はい・single=１つ・status=見える（メモ: なし）
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
   ```powershell
   $uat = .venv/Scripts/python.exe tests/test_startup_windows.py --uat start --case zoomed | ConvertFrom-Json
@@ -215,10 +221,11 @@ created: 2026-10-24
 
 **W01 / 最大化 / 実配布EXE(隔離copy。最終v1.10.2)**(証拠種別: `production-exe`)
 
-- **状態**: not-run / 準備: driver準備済み(隔離runは未準備・別フィールド。準備済みはpassではない)
+- **状態**: pass / 利用者直接入力・外部観測・配布物保護が一致。根拠: 06-05-evidence/W01_zoomed_at_production-exe-20261028T104946Z.json
+- **回答原文**: W01 zoomed production-exe：state_after=最大化・geometry=同じ・single=１つ・status=見える・status_kept=同じ（メモ: なし）
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
   ```powershell
-  $run = (.venv/Scripts/python.exe tests/release_uat_support.py prepare --distribution "C:\Users\shdwf\AppData\Local\Temp\pf06_final_07447e7e5cfc42988b80fb84c58293ae\out\PageFolio-v1.10.2" --case W01).run  # 完全copy・hash固定
+  $run = (.venv/Scripts/python.exe tests/release_uat_support.py prepare --distribution "C:\Users\shdwf\AppData\Local\PageFolio-release\pf06_final_3f96a37a7cef4ee1ab3a1c1b2f2c435f\PageFolio-v1.10.2" --case W01).run  # 完全copy・hash固定
   .venv/Scripts/python.exe tests/release_uat_support.py start --run $run
   .venv/Scripts/python.exe tests/release_uat_support.py peer --run $run     # 二次起動(必要なカードのみ)
   .venv/Scripts/python.exe tests/release_uat_support.py inspect --run $run
@@ -251,7 +258,8 @@ created: 2026-10-24
 
 **W02 / 設定ダイアログの入力欄 / Python直接起動(python pagefolio.py)**(証拠種別: `python-real`)
 
-- **状態**: not-run / 準備: driver準備済み(隔離runは未準備・別フィールド。準備済みはpassではない)
+- **状態**: pass / 利用者直接入力・機械観測一致。根拠: 06-05-evidence/W02_settings_at_script-20261028T111048Z.json
+- **回答原文**: W02 settings script：foreground=出た・input=入った・kept=保たれた・single=１つ（メモ: なし）
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
   ```powershell
   $uat = .venv/Scripts/python.exe tests/test_startup_windows.py --uat start --case settings | ConvertFrom-Json
@@ -278,7 +286,8 @@ created: 2026-10-24
 
 **W02 / 設定ダイアログの入力欄 / Python -m pagefolio**(証拠種別: `python-real`)
 
-- **状態**: not-run / 準備: driver準備済み(隔離runは未準備・別フィールド。準備済みはpassではない)
+- **状態**: pass / 利用者直接入力・機械観測一致。根拠: 06-05-evidence/W02_settings_at_module-20261028T111310Z.json
+- **回答原文**: W02 settings module：foreground=出た・input=入った・kept=保たれた・single=１つ（メモ: なし）
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
   ```powershell
   $uat = .venv/Scripts/python.exe tests/test_startup_windows.py --uat start --case settings | ConvertFrom-Json
@@ -305,10 +314,11 @@ created: 2026-10-24
 
 **W02 / 設定ダイアログの入力欄 / 実配布EXE(隔離copy。最終v1.10.2)**(証拠種別: `production-exe`)
 
-- **状態**: not-run / 準備: driver準備済み(隔離runは未準備・別フィールド。準備済みはpassではない)
+- **状態**: pass / 利用者直接入力・外部観測・配布物保護が一致。根拠: 06-05-evidence/W02_settings_at_production-exe-20261028T112115Z.json
+- **回答原文**: W02 settings production-exe：foreground=出た・input=入った・kept=保たれた・single=１つ（メモ: なし）
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
   ```powershell
-  $run = (.venv/Scripts/python.exe tests/release_uat_support.py prepare --distribution "C:\Users\shdwf\AppData\Local\Temp\pf06_final_07447e7e5cfc42988b80fb84c58293ae\out\PageFolio-v1.10.2" --case W02).run
+  $run = (.venv/Scripts/python.exe tests/release_uat_support.py prepare --distribution "C:\Users\shdwf\AppData\Local\PageFolio-release\pf06_final_3f96a37a7cef4ee1ab3a1c1b2f2c435f\PageFolio-v1.10.2" --case W02).run
   .venv/Scripts/python.exe tests/release_uat_support.py start --run $run
   .venv/Scripts/python.exe tests/release_uat_support.py peer --run $run
   .venv/Scripts/python.exe tests/release_uat_support.py inspect --run $run
@@ -317,9 +327,9 @@ created: 2026-10-24
 - **利用者が実行するdriver**: `.venv/Scripts/python.exe .planning/phases/06-release-validation/06-05-drivers/uat_row.py --row W02/settings@production-exe`(質問に短く答える。機構確認のみ済みで証拠ではない)
 - **利用者操作**:
   1. 実行担当: 隔離copyを `start` で起動する(EXEへ状態は注入できない。状態は利用者が作る)。
-  2. 利用者: 「⚙ 設定」を開き、入力欄の1つに文字を入れ、一部を選択してカーソルを置く(LLM設定は開かない)。
+  2. 利用者: 「⚙ 設定」の「フォントサイズ」を13にし、End→Shift+左矢印1回で末尾3だけ選択する。適用は押さず、Alt+TabでPowerShellへ戻ってEnter。
   3. 実行担当: 同じ配布copyから `peer` で二次起動し、API戻り・OS error・foregroundを外部観測する。
-  4. 利用者: キーボードで1文字入力し、設定ダイアログの入力欄に入るか、選択・カーソルが保たれているかを答える。
+  4. 利用者: 自動復帰後、13と末尾3の選択が保たれているかを見る。観測終了の音まで操作せず、音の後マウスを使わず2を1回入力し、同じ欄が12になるか確認してからPowerShellへ戻って答える（既存passのrunは旧5秒案内の証拠をそのまま保持）。
 - **期待**: 実EXEで設定ダイアログの入力欄の入力・選択・カーソルが保たれ、実キー入力が同じ入力先へ入る。
 - **必須観測**:
   - `typed_text_kept`: 入力済みの文字が残っている
@@ -334,7 +344,8 @@ created: 2026-10-24
 
 **W02 / 左ペインのサムネイル欄 / Python直接起動(python pagefolio.py)**(証拠種別: `python-real`)
 
-- **状態**: not-run / 準備: driver準備済み(隔離runは未準備・別フィールド。準備済みはpassではない)
+- **状態**: pass / 利用者直接入力・機械観測一致。根拠: 06-05-evidence/W02_thumb_at_script-20261028T113122Z.json
+- **回答原文**: W02 thumb script：foreground=出た・key_reached=変わった・restored=戻った・kept=保たれた・single=１つ（メモ: なし）
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
   ```powershell
   $uat = .venv/Scripts/python.exe tests/test_startup_windows.py --uat start --case thumb | ConvertFrom-Json
@@ -363,7 +374,8 @@ created: 2026-10-24
 
 **W02 / 左ペインのサムネイル欄 / Python -m pagefolio**(証拠種別: `python-real`)
 
-- **状態**: not-run / 準備: driver準備済み(隔離runは未準備・別フィールド。準備済みはpassではない)
+- **状態**: pass / 利用者直接入力・機械観測一致。根拠: 06-05-evidence/W02_thumb_at_module-20261028T113300Z.json
+- **回答原文**: W02 thumb module：foreground=出た・key_reached=変わった・restored=戻った・kept=保たれた・single=１つ（メモ: なし）
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
   ```powershell
   $uat = .venv/Scripts/python.exe tests/test_startup_windows.py --uat start --case thumb | ConvertFrom-Json
@@ -391,10 +403,12 @@ created: 2026-10-24
 
 **W02 / 左ペインのサムネイル欄 / 実配布EXE(隔離copy。最終v1.10.2)**(証拠種別: `production-exe`)
 
-- **状態**: not-run / 準備: driver準備済み(隔離runは未準備・別フィールド。準備済みはpassではない)
+- **状態**: pass / 利用者直接入力・外部観測・配布物保護が一致。根拠: 06-05-evidence/W02_thumb_at_production-exe-20261028T114227Z.json
+- **検証側の注記**: 終了前の瞬間観測でdriverがerrorを記録したが、同runの後続回収は強制終了せずclosed。利用者の「Enter後に終了確認はい」補足と一致。元エラーを保持し、詳細判断は台帳のcleanup_reviewとdebug/w02-exe-observation-cleanup.mdを参照。
+- **回答原文**: W02 thumb production-exe：foreground=出た・key_reached=変わった・restored=戻った・kept=保たれた・single=１つ（メモ: なし）
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
   ```powershell
-  $run = (.venv/Scripts/python.exe tests/release_uat_support.py prepare --distribution "C:\Users\shdwf\AppData\Local\Temp\pf06_final_07447e7e5cfc42988b80fb84c58293ae\out\PageFolio-v1.10.2" --case W02 --pdf edit-three-page).run
+  $run = (.venv/Scripts/python.exe tests/release_uat_support.py prepare --distribution "C:\Users\shdwf\AppData\Local\PageFolio-release\pf06_final_3f96a37a7cef4ee1ab3a1c1b2f2c435f\PageFolio-v1.10.2" --case W02 --pdf edit-three-page).run
   .venv/Scripts/python.exe tests/release_uat_support.py start --run $run
   .venv/Scripts/python.exe tests/release_uat_support.py peer --run $run
   .venv/Scripts/python.exe tests/release_uat_support.py inspect --run $run
@@ -406,6 +420,7 @@ created: 2026-10-24
   2. 利用者: 実行担当が用意した3ページPDFを開き、左ペインのサムネイルでページを1つ選択する。
   3. 実行担当: 同じ配布copyから `peer` で二次起動し、API戻り・OS error・foregroundを外部観測する。
   4. 利用者: PageFolioが前面に出ていたら、キーボードで F5 を1回だけ押す(閲覧/編集モード切替。ヘッダーのモード表示ボタン「👁 閲覧モード」「📝 編集モード」の文字が変わる。マウスは使わない)。変わったのを見たらF5をもう1回押して元に戻し、戻ったか・選択中のサムネイル/表示ページが保たれたかを答える。文字キー(x)はCanvasが受けないため使わない。
+- **観測と終了の順序**: PDF/選択を準備してからPowerShellでEnter。二次起動の実終了と実前景の観測が終わった音まで操作しない。音の後にF5往復→PowerShellの直接回答→PageFolioの×と終了確認「はい」→PowerShellでEnter。担当は実PID終了・owner解放を記録する。
 - **期待**: 実EXEで二次起動後にPageFolioが前面に出て、F5がPageFolioに届いてモード表示が変わり、もう1回で元に戻る。選択中のサムネイル/表示ページ(左ペインのサムネイル欄)が保たれる。
 - **必須観測**:
   - `foreground_result`: 許可APIの戻りと実foregroundを別記
@@ -419,7 +434,8 @@ created: 2026-10-24
 
 **W02 / 中央のプレビュー / Python直接起動(python pagefolio.py)**(証拠種別: `python-real`)
 
-- **状態**: not-run / 準備: driver準備済み(隔離runは未準備・別フィールド。準備済みはpassではない)
+- **状態**: pass / 利用者直接入力・機械観測一致。根拠: 06-05-evidence/W02_preview_at_script-20261028T115040Z.json
+- **回答原文**: W02 preview script：foreground=出た・key_reached=変わった・restored=戻った・kept=保たれた・single=１つ（メモ: なし）
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
   ```powershell
   $uat = .venv/Scripts/python.exe tests/test_startup_windows.py --uat start --case preview | ConvertFrom-Json
@@ -447,7 +463,8 @@ created: 2026-10-24
 
 **W02 / 中央のプレビュー / Python -m pagefolio**(証拠種別: `python-real`)
 
-- **状態**: not-run / 準備: driver準備済み(隔離runは未準備・別フィールド。準備済みはpassではない)
+- **状態**: pass / 利用者直接入力・機械観測一致。根拠: 06-05-evidence/W02_preview_at_module-20261028T115223Z.json
+- **回答原文**: W02 preview module：foreground=出た・key_reached=変わった・restored=戻った・kept=保たれた・single=１つ（メモ: なし）
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
   ```powershell
   $uat = .venv/Scripts/python.exe tests/test_startup_windows.py --uat start --case preview | ConvertFrom-Json
@@ -475,10 +492,11 @@ created: 2026-10-24
 
 **W02 / 中央のプレビュー / 実配布EXE(隔離copy。最終v1.10.2)**(証拠種別: `production-exe`)
 
-- **状態**: not-run / 準備: driver準備済み(隔離runは未準備・別フィールド。準備済みはpassではない)
+- **状態**: pass / 利用者直接入力・外部観測・配布物保護が一致。根拠: 06-05-evidence/W02_preview_at_production-exe-20261028T115433Z.json
+- **回答原文**: W02 preview production-exe：foreground=出た・key_reached=変わった・restored=戻った・kept=保たれた・single=１つ（メモ: なし）
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
   ```powershell
-  $run = (.venv/Scripts/python.exe tests/release_uat_support.py prepare --distribution "C:\Users\shdwf\AppData\Local\Temp\pf06_final_07447e7e5cfc42988b80fb84c58293ae\out\PageFolio-v1.10.2" --case W02 --pdf edit-three-page).run
+  $run = (.venv/Scripts/python.exe tests/release_uat_support.py prepare --distribution "C:\Users\shdwf\AppData\Local\PageFolio-release\pf06_final_3f96a37a7cef4ee1ab3a1c1b2f2c435f\PageFolio-v1.10.2" --case W02 --pdf edit-three-page).run
   .venv/Scripts/python.exe tests/release_uat_support.py start --run $run
   .venv/Scripts/python.exe tests/release_uat_support.py peer --run $run
   .venv/Scripts/python.exe tests/release_uat_support.py inspect --run $run
@@ -490,6 +508,7 @@ created: 2026-10-24
   2. 利用者: 実行担当が用意した3ページPDFを開き、中央のプレビューをクリックして操作先にする。
   3. 実行担当: 同じ配布copyから `peer` で二次起動し、API戻り・OS error・foregroundを外部観測する。
   4. 利用者: PageFolioが前面に出ていたら、キーボードで F5 を1回だけ押す(閲覧/編集モード切替。ヘッダーのモード表示ボタン「👁 閲覧モード」「📝 編集モード」の文字が変わる。マウスは使わない)。変わったのを見たらF5をもう1回押して元に戻し、戻ったか・選択中のサムネイル/表示ページが保たれたかを答える。文字キー(x)はCanvasが受けないため使わない。
+- **観測と終了の順序**: PDF/プレビューの入力先を準備してからPowerShellでEnter。二次起動の実終了と実前景の観測が終わった音まで操作しない。音の後にF5往復→PowerShellの直接回答→PageFolioの×と終了確認「はい」→PowerShellでEnter。担当は実PID終了・owner解放を記録する。
 - **期待**: 実EXEで二次起動後にPageFolioが前面に出て、F5がPageFolioに届いてモード表示が変わり、もう1回で元に戻る。選択中のサムネイル/表示ページ(中央のプレビュー)が保たれる。
 - **必須観測**:
   - `foreground_result`: 許可APIの戻りと実foregroundを別記
@@ -508,7 +527,8 @@ created: 2026-10-24
 
 **W03 / 未保存3頁PDF / Python直接起動(python pagefolio.py)**(証拠種別: `python-real`)
 
-- **状態**: not-run / 準備: 未準備(別フィールド)
+- **状態**: pass / 利用者直接入力・機械観測一致。根拠: 06-05-evidence/W03_pdf-3page_at_script-20261028T124500Z.json
+- **回答原文**: W03 pdf-3page script：page_counts=4 3 4 3・orientations=全て横・edit_visible_after_restore=分からない・original_pdf_untouched=合成のみ（メモ: なし） / 追加回答: 3ページで1ページ目が横向きだった
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
   ```powershell
   $uat = .venv/Scripts/python.exe tests/test_startup_windows.py --uat start --case pdf | ConvertFrom-Json
@@ -535,7 +555,8 @@ created: 2026-10-24
 
 **W03 / 未保存3頁PDF / Python -m pagefolio**(証拠種別: `python-real`)
 
-- **状態**: not-run / 準備: 未準備(別フィールド)
+- **状態**: pass / 利用者直接入力・機械観測一致。根拠: 06-05-evidence/W03_pdf-3page_at_module-20261028T125331Z.json
+- **回答原文**: W03 pdf-3page module：page_counts=4 3 4 3・orientations=全て横・edit_visible_after_restore=はい・original_pdf_untouched=合成のみ（メモ: なし）
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
   ```powershell
   $uat = .venv/Scripts/python.exe tests/test_startup_windows.py --uat start --case pdf | ConvertFrom-Json
@@ -562,10 +583,11 @@ created: 2026-10-24
 
 **W03 / 未保存3頁PDF / 実配布EXE(隔離copy。最終v1.10.2)**(証拠種別: `production-exe`)
 
-- **状態**: not-run / 準備: 未準備(別フィールド)
+- **状態**: pass / 利用者直接入力・外部観測・配布物保護が一致。根拠: 06-05-evidence/W03_pdf-3page_at_production-exe-20261028T140922Z.json
+- **回答原文**: W03 pdf-3page production-exe：page_counts=4 3 4 3・orientations=全て横・edit_visible_after_restore=はい・original_pdf_untouched=合成のみ（メモ: なし）
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
   ```powershell
-  $run = (.venv/Scripts/python.exe tests/release_uat_support.py prepare --distribution "C:\Users\shdwf\AppData\Local\Temp\pf06_final_07447e7e5cfc42988b80fb84c58293ae\out\PageFolio-v1.10.2" --case W03 --pdf edit-three-page).run
+  $run = (.venv/Scripts/python.exe tests/release_uat_support.py prepare --distribution "C:\Users\shdwf\AppData\Local\PageFolio-release\pf06_final_3f96a37a7cef4ee1ab3a1c1b2f2c435f\PageFolio-v1.10.2" --case W03 --pdf edit-three-page).run
   .venv/Scripts/python.exe tests/release_uat_support.py start --run $run
   .venv/Scripts/python.exe tests/release_uat_support.py peer --run $run
   .venv/Scripts/python.exe tests/release_uat_support.py inspect --run $run
@@ -597,7 +619,8 @@ created: 2026-10-24
 
 **W04 / 1page画像PDF・並列1 / Python直接起動(python pagefolio.py)**(証拠種別: `python-real`)
 
-- **状態**: not-run / 準備: 未準備(別フィールド)
+- **状態**: pass / 利用者直接回答・同一OCR要求の継続・復帰が一致。根拠: 06-05-evidence/W04_ocr-1page_at_script-20261028T142948Z.json
+- **回答原文**: W04 ocr-1page script：progress_shown=はい・completed_shown=見えた・summary_not_run=していない（メモ: なし）
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
   ```powershell
   $uat = .venv/Scripts/python.exe tests/test_startup_windows.py --uat start --case ocr | ConvertFrom-Json
@@ -624,7 +647,8 @@ created: 2026-10-24
 
 **W04 / 1page画像PDF・並列1 / Python -m pagefolio**(証拠種別: `python-real`)
 
-- **状態**: not-run / 準備: 未準備(別フィールド)
+- **状態**: pass / 利用者直接回答・同一OCR要求の継続・復帰が一致。根拠: 06-05-evidence/W04_ocr-1page_at_module-20261028T143122Z.json
+- **回答原文**: W04 ocr-1page module：progress_shown=はい・completed_shown=見えた・summary_not_run=していない（メモ: なし）
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
   ```powershell
   $uat = .venv/Scripts/python.exe tests/test_startup_windows.py --uat start --case ocr | ConvertFrom-Json
@@ -651,10 +675,11 @@ created: 2026-10-24
 
 **W04 / 1page画像PDF・並列1 / 実配布EXE(隔離copy。最終v1.10.2)**(証拠種別: `production-exe`)
 
-- **状態**: not-run / 準備: 未準備(別フィールド)
+- **状態**: pass / 利用者直接回答・同一OCR要求の継続・復帰が一致。根拠: 06-05-evidence/W04_ocr-1page_at_production-exe-20261028T143434Z.json
+- **回答原文**: W04 ocr-1page production-exe：progress_shown=はい・completed_shown=見えた・summary_not_run=していない（メモ: なし）
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
   ```powershell
-  $run = (.venv/Scripts/python.exe tests/release_uat_support.py prepare --distribution "C:\Users\shdwf\AppData\Local\Temp\pf06_final_07447e7e5cfc42988b80fb84c58293ae\out\PageFolio-v1.10.2" --case W04 --pdf ocr-one-page).run
+  $run = (.venv/Scripts/python.exe tests/release_uat_support.py prepare --distribution "C:\Users\shdwf\AppData\Local\PageFolio-release\pf06_final_3f96a37a7cef4ee1ab3a1c1b2f2c435f\PageFolio-v1.10.2" --case W04 --pdf ocr-one-page).run
   .venv/Scripts/python.exe tests/release_uat_support.py serve-ocr --run $run --mode hold  # loopbackの合成OCR。設定は隔離copyへ書かれる
   .venv/Scripts/python.exe tests/release_uat_support.py start --run $run
   .venv/Scripts/python.exe tests/release_uat_support.py peer --run $run
@@ -687,7 +712,8 @@ created: 2026-10-24
 
 **W05a / 設定→LLM設定を閉じる / Python直接起動(python pagefolio.py)**(証拠種別: `python-real`)
 
-- **状態**: not-run / 準備: 未準備(別フィールド)
+- **状態**: pass / 利用者直接入力・機械観測一致。根拠: 06-05-evidence/W05a_nested-settings_at_script-20261028T150111Z.json
+- **回答原文**: W05a nested-settings script：foreground=出た・input=入った・kept=保たれた・single=１つ（メモ: なし）
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
   ```powershell
   $uat = .venv/Scripts/python.exe tests/test_startup_windows.py --uat start --case nested | ConvertFrom-Json
@@ -711,7 +737,8 @@ created: 2026-10-24
 
 **W05a / 設定→LLM設定を閉じる / Python -m pagefolio**(証拠種別: `python-real`)
 
-- **状態**: not-run / 準備: 未準備(別フィールド)
+- **状態**: pass / 利用者直接入力・機械観測一致。根拠: 06-05-evidence/W05a_nested-settings_at_module-20261028T151926Z.json
+- **回答原文**: W05a nested-settings module：foreground=出た・input=入った・kept=保たれた・single=１つ（メモ: なし）
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
   ```powershell
   $uat = .venv/Scripts/python.exe tests/test_startup_windows.py --uat start --case nested | ConvertFrom-Json
@@ -735,10 +762,11 @@ created: 2026-10-24
 
 **W05a / 設定→LLM設定を閉じる / 実配布EXE(隔離copy。最終v1.10.2)**(証拠種別: `production-exe`)
 
-- **状態**: not-run / 準備: 未準備(別フィールド)
+- **状態**: pass / 利用者直接入力・外部観測・配布物保護が一致。根拠: 06-05-evidence/W05a_nested-settings_at_production-exe-20261028T152307Z.json
+- **回答原文**: W05a nested-settings production-exe：foreground=出た・input=入った・kept=保たれた・single=１つ・inner_closed=はい（メモ: なし）
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
   ```powershell
-  $run = (.venv/Scripts/python.exe tests/release_uat_support.py prepare --distribution "C:\Users\shdwf\AppData\Local\Temp\pf06_final_07447e7e5cfc42988b80fb84c58293ae\out\PageFolio-v1.10.2" --case W05a).run  # 完全copy・hash固定
+  $run = (.venv/Scripts/python.exe tests/release_uat_support.py prepare --distribution "C:\Users\shdwf\AppData\Local\PageFolio-release\pf06_final_3f96a37a7cef4ee1ab3a1c1b2f2c435f\PageFolio-v1.10.2" --case W05a).run  # 完全copy・hash固定
   .venv/Scripts/python.exe tests/release_uat_support.py start --run $run
   .venv/Scripts/python.exe tests/release_uat_support.py peer --run $run     # 二次起動(必要なカードのみ)
   .venv/Scripts/python.exe tests/release_uat_support.py inspect --run $run
@@ -767,7 +795,8 @@ created: 2026-10-24
 
 **W05b / OCRDialog閉じる確認 / Python直接起動(python pagefolio.py)**(証拠種別: `python-real`)
 
-- **状態**: not-run / 準備: 未準備(別フィールド)
+- **状態**: pass / 利用者直接回答・無操作の自動復帰・同じ要求の完了が一致。根拠: 06-05-evidence/W05b_ocr-close-confirm_at_script-20261031T003108Z.json
+- **回答原文**: W05b ocr-close-confirm script：result_shown=見えた・auto_return=自動で出た・manual_switch=していない・answered_no=いいえを押した・process_kept=続いていた・summary_not_run=していない（メモ: なし）
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
   ```powershell
   $uat = .venv/Scripts/python.exe tests/test_startup_windows.py --uat start --case native-ocr | ConvertFrom-Json
@@ -794,7 +823,8 @@ created: 2026-10-24
 
 **W05b / OCRDialog閉じる確認 / Python -m pagefolio**(証拠種別: `python-real`)
 
-- **状態**: not-run / 準備: 未準備(別フィールド)
+- **状態**: pass / 利用者直接回答・無操作の自動復帰・同じ要求の完了が一致。根拠: 06-05-evidence/W05b_ocr-close-confirm_at_module-20261031T003956Z.json
+- **回答原文**: W05b ocr-close-confirm module：result_shown=見えた・auto_return=自動で出た・manual_switch=していない・answered_no=いいえを押した・process_kept=続いていた・summary_not_run=していない（メモ: なし）
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
   ```powershell
   $uat = .venv/Scripts/python.exe tests/test_startup_windows.py --uat start --case native-ocr | ConvertFrom-Json
@@ -821,10 +851,11 @@ created: 2026-10-24
 
 **W05b / OCRDialog閉じる確認(実ダブルクリック) / 実配布EXE(隔離copy。最終v1.10.2)**(証拠種別: `production-exe`)
 
-- **状態**: not-run / 準備: 未準備(別フィールド)
+- **状態**: pass / 利用者直接回答・無操作の自動復帰・同じ要求の完了が一致。根拠: 06-05-evidence/W05b_ocr-close-confirm_at_production-exe-20261031T004536Z.json
+- **回答原文**: W05b ocr-close-confirm production-exe：result_shown=見えた・auto_return=自動で出た・manual_switch=していない・answered_no=いいえを押した・process_kept=続いていた・real_double_click=ダブルクリックした・summary_not_run=していない（メモ: なし）
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
   ```powershell
-  $run = (.venv/Scripts/python.exe tests/release_uat_support.py prepare --distribution "C:\Users\shdwf\AppData\Local\Temp\pf06_final_07447e7e5cfc42988b80fb84c58293ae\out\PageFolio-v1.10.2" --case W05b --pdf ocr-one-page).run
+  $run = (.venv/Scripts/python.exe tests/release_uat_support.py prepare --distribution "C:\Users\shdwf\AppData\Local\PageFolio-release\pf06_final_3f96a37a7cef4ee1ab3a1c1b2f2c435f\PageFolio-v1.10.2" --case W05b --pdf ocr-one-page).run
   .venv/Scripts/python.exe tests/release_uat_support.py serve-ocr --run $run --mode hold
   .venv/Scripts/python.exe tests/release_uat_support.py start --run $run
   (二次起動は利用者がExplorerで隔離copyのPageFolio.exeをダブルクリック。peerコマンドは使わない)
@@ -884,7 +915,8 @@ created: 2026-10-24
 
 **W05c / 終了確認でNo / Python -m pagefolio**(証拠種別: `python-real`)
 
-- **状態**: not-run / 準備: 未準備(別フィールド)
+- **状態**: pass / 利用者回答(チャット・事後採用)と機械観測が一致。根拠: 06-05-evidence/W05c_quit-no_at_module-20261031T085031Z.json
+- **回答原文**: W05c quit-no module：いいえを押し、1・2ページが横向きで3ページが縦向き
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
   ```powershell
   $uat = .venv/Scripts/python.exe tests/test_startup_windows.py --uat start --case native-quit | ConvertFrom-Json
@@ -912,7 +944,7 @@ created: 2026-10-24
 - **状態**: not-run / 準備: 未準備(別フィールド)
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
   ```powershell
-  $run = (.venv/Scripts/python.exe tests/release_uat_support.py prepare --distribution "C:\Users\shdwf\AppData\Local\Temp\pf06_final_07447e7e5cfc42988b80fb84c58293ae\out\PageFolio-v1.10.2" --case W05c).run  # 完全copy・hash固定
+  $run = (.venv/Scripts/python.exe tests/release_uat_support.py prepare --distribution "C:\Users\shdwf\AppData\Local\PageFolio-release\pf06_final_3f96a37a7cef4ee1ab3a1c1b2f2c435f\PageFolio-v1.10.2" --case W05c).run  # 完全copy・hash固定
   .venv/Scripts/python.exe tests/release_uat_support.py start --run $run
   .venv/Scripts/python.exe tests/release_uat_support.py peer --run $run     # 二次起動(必要なカードのみ)
   .venv/Scripts/python.exe tests/release_uat_support.py inspect --run $run
@@ -1186,7 +1218,7 @@ created: 2026-10-24
 - **状態**: not-run / 準備: 未準備(別フィールド)
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
   ```powershell
-  .venv/Scripts/python.exe tests/release_uat_support.py prepare --distribution "C:\Users\shdwf\AppData\Local\Temp\pf06_final_07447e7e5cfc42988b80fb84c58293ae\out\PageFolio-v1.10.2" --case W12b --role final-release-candidate  # 主対象(最終EXE)
+  .venv/Scripts/python.exe tests/release_uat_support.py prepare --distribution "C:\Users\shdwf\AppData\Local\PageFolio-release\pf06_final_3f96a37a7cef4ee1ab3a1c1b2f2c435f\PageFolio-v1.10.2" --case W12b --role final-release-candidate  # 主対象(最終EXE)
   (相手側) prepare --role technical-tracer-real-exe / 同版copyの別run、またはPython入口を別runで用意
   .venv/Scripts/python.exe tests/release_uat_support.py start --run <一次のrun>
   .venv/Scripts/python.exe tests/release_uat_support.py peer --run <一次のrun> --with-run <二次のrun>
@@ -1215,7 +1247,7 @@ created: 2026-10-24
 - **状態**: not-run / 準備: 未準備(別フィールド)
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
   ```powershell
-  .venv/Scripts/python.exe tests/release_uat_support.py prepare --distribution "C:\Users\shdwf\AppData\Local\Temp\pf06_final_07447e7e5cfc42988b80fb84c58293ae\out\PageFolio-v1.10.2" --case W12b --role final-release-candidate  # 主対象(最終EXE)
+  .venv/Scripts/python.exe tests/release_uat_support.py prepare --distribution "C:\Users\shdwf\AppData\Local\PageFolio-release\pf06_final_3f96a37a7cef4ee1ab3a1c1b2f2c435f\PageFolio-v1.10.2" --case W12b --role final-release-candidate  # 主対象(最終EXE)
   (相手側) prepare --role technical-tracer-real-exe / 同版copyの別run、またはPython入口を別runで用意
   .venv/Scripts/python.exe tests/release_uat_support.py start --run <一次のrun>
   .venv/Scripts/python.exe tests/release_uat_support.py peer --run <一次のrun> --with-run <二次のrun>
@@ -1244,7 +1276,7 @@ created: 2026-10-24
 - **状態**: not-run / 準備: 未準備(別フィールド)
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
   ```powershell
-  .venv/Scripts/python.exe tests/release_uat_support.py prepare --distribution "C:\Users\shdwf\AppData\Local\Temp\pf06_final_07447e7e5cfc42988b80fb84c58293ae\out\PageFolio-v1.10.2" --case W12b --role final-release-candidate  # 主対象(最終EXE)
+  .venv/Scripts/python.exe tests/release_uat_support.py prepare --distribution "C:\Users\shdwf\AppData\Local\PageFolio-release\pf06_final_3f96a37a7cef4ee1ab3a1c1b2f2c435f\PageFolio-v1.10.2" --case W12b --role final-release-candidate  # 主対象(最終EXE)
   (相手側) prepare --role technical-tracer-real-exe / 同版copyの別run、またはPython入口を別runで用意
   .venv/Scripts/python.exe tests/release_uat_support.py start --run <一次のrun>
   .venv/Scripts/python.exe tests/release_uat_support.py peer --run <一次のrun> --with-run <二次のrun>
@@ -1273,7 +1305,7 @@ created: 2026-10-24
 - **状態**: not-run / 準備: 未準備(別フィールド)
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
   ```powershell
-  .venv/Scripts/python.exe tests/release_uat_support.py prepare --distribution "C:\Users\shdwf\AppData\Local\Temp\pf06_final_07447e7e5cfc42988b80fb84c58293ae\out\PageFolio-v1.10.2" --case W12b --role final-release-candidate  # 主対象(最終EXE)
+  .venv/Scripts/python.exe tests/release_uat_support.py prepare --distribution "C:\Users\shdwf\AppData\Local\PageFolio-release\pf06_final_3f96a37a7cef4ee1ab3a1c1b2f2c435f\PageFolio-v1.10.2" --case W12b --role final-release-candidate  # 主対象(最終EXE)
   (相手側) prepare --role technical-tracer-real-exe / 同版copyの別run、またはPython入口を別runで用意
   .venv/Scripts/python.exe tests/release_uat_support.py start --run <一次のrun>
   .venv/Scripts/python.exe tests/release_uat_support.py peer --run <一次のrun> --with-run <二次のrun>
@@ -1302,7 +1334,7 @@ created: 2026-10-24
 - **状態**: not-run / 準備: 未準備(別フィールド)
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
   ```powershell
-  .venv/Scripts/python.exe tests/release_uat_support.py prepare --distribution "C:\Users\shdwf\AppData\Local\Temp\pf06_final_07447e7e5cfc42988b80fb84c58293ae\out\PageFolio-v1.10.2" --case W12b --role final-release-candidate  # 主対象(最終EXE)
+  .venv/Scripts/python.exe tests/release_uat_support.py prepare --distribution "C:\Users\shdwf\AppData\Local\PageFolio-release\pf06_final_3f96a37a7cef4ee1ab3a1c1b2f2c435f\PageFolio-v1.10.2" --case W12b --role final-release-candidate  # 主対象(最終EXE)
   (相手側) prepare --role technical-tracer-real-exe / 同版copyの別run、またはPython入口を別runで用意
   .venv/Scripts/python.exe tests/release_uat_support.py start --run <一次のrun>
   .venv/Scripts/python.exe tests/release_uat_support.py peer --run <一次のrun> --with-run <二次のrun>
@@ -1331,7 +1363,7 @@ created: 2026-10-24
 - **状態**: not-run / 準備: 未準備(別フィールド)
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
   ```powershell
-  .venv/Scripts/python.exe tests/release_uat_support.py prepare --distribution "C:\Users\shdwf\AppData\Local\Temp\pf06_final_07447e7e5cfc42988b80fb84c58293ae\out\PageFolio-v1.10.2" --case W12b --role final-release-candidate  # 主対象(最終EXE)
+  .venv/Scripts/python.exe tests/release_uat_support.py prepare --distribution "C:\Users\shdwf\AppData\Local\PageFolio-release\pf06_final_3f96a37a7cef4ee1ab3a1c1b2f2c435f\PageFolio-v1.10.2" --case W12b --role final-release-candidate  # 主対象(最終EXE)
   (相手側) prepare --role technical-tracer-real-exe / 同版copyの別run、またはPython入口を別runで用意
   .venv/Scripts/python.exe tests/release_uat_support.py start --run <一次のrun>
   .venv/Scripts/python.exe tests/release_uat_support.py peer --run <一次のrun> --with-run <二次のrun>
@@ -1360,7 +1392,7 @@ created: 2026-10-24
 - **状態**: not-run / 準備: 未準備(別フィールド)
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
   ```powershell
-  .venv/Scripts/python.exe tests/release_uat_support.py prepare --distribution "C:\Users\shdwf\AppData\Local\Temp\pf06_final_07447e7e5cfc42988b80fb84c58293ae\out\PageFolio-v1.10.2" --case W12b --role final-release-candidate  # 主対象(最終EXE)
+  .venv/Scripts/python.exe tests/release_uat_support.py prepare --distribution "C:\Users\shdwf\AppData\Local\PageFolio-release\pf06_final_3f96a37a7cef4ee1ab3a1c1b2f2c435f\PageFolio-v1.10.2" --case W12b --role final-release-candidate  # 主対象(最終EXE)
   (相手側) prepare --role technical-tracer-real-exe / 同版copyの別run、またはPython入口を別runで用意
   .venv/Scripts/python.exe tests/release_uat_support.py start --run <一次のrun>
   .venv/Scripts/python.exe tests/release_uat_support.py peer --run <一次のrun> --with-run <二次のrun>
@@ -1389,7 +1421,7 @@ created: 2026-10-24
 - **状態**: not-run / 準備: 未準備(別フィールド)
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
   ```powershell
-  .venv/Scripts/python.exe tests/release_uat_support.py prepare --distribution "C:\Users\shdwf\AppData\Local\Temp\pf06_final_07447e7e5cfc42988b80fb84c58293ae\out\PageFolio-v1.10.2" --case W12b --role final-release-candidate  # 主対象(最終EXE)
+  .venv/Scripts/python.exe tests/release_uat_support.py prepare --distribution "C:\Users\shdwf\AppData\Local\PageFolio-release\pf06_final_3f96a37a7cef4ee1ab3a1c1b2f2c435f\PageFolio-v1.10.2" --case W12b --role final-release-candidate  # 主対象(最終EXE)
   (相手側) prepare --role technical-tracer-real-exe / 同版copyの別run、またはPython入口を別runで用意
   .venv/Scripts/python.exe tests/release_uat_support.py start --run <一次のrun>
   .venv/Scripts/python.exe tests/release_uat_support.py peer --run <一次のrun> --with-run <二次のrun>
@@ -1418,7 +1450,7 @@ created: 2026-10-24
 - **状態**: not-run / 準備: 未準備(別フィールド)
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
   ```powershell
-  .venv/Scripts/python.exe tests/release_uat_support.py prepare --distribution "C:\Users\shdwf\AppData\Local\Temp\pf06_final_07447e7e5cfc42988b80fb84c58293ae\out\PageFolio-v1.10.2" --case W12b --role final-release-candidate  # 主対象(最終EXE)
+  .venv/Scripts/python.exe tests/release_uat_support.py prepare --distribution "C:\Users\shdwf\AppData\Local\PageFolio-release\pf06_final_3f96a37a7cef4ee1ab3a1c1b2f2c435f\PageFolio-v1.10.2" --case W12b --role final-release-candidate  # 主対象(最終EXE)
   (相手側) prepare --role technical-tracer-real-exe / 同版copyの別run、またはPython入口を別runで用意
   .venv/Scripts/python.exe tests/release_uat_support.py start --run <一次のrun>
   .venv/Scripts/python.exe tests/release_uat_support.py peer --run <一次のrun> --with-run <二次のrun>
@@ -1553,7 +1585,7 @@ created: 2026-10-24
 - **状態**: not-run / 準備: 未準備(別フィールド)
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
   ```powershell
-  $run = (.venv/Scripts/python.exe tests/release_uat_support.py prepare --distribution "C:\Users\shdwf\AppData\Local\Temp\pf06_final_07447e7e5cfc42988b80fb84c58293ae\out\PageFolio-v1.10.2" --case X ).run
+  $run = (.venv/Scripts/python.exe tests/release_uat_support.py prepare --distribution "C:\Users\shdwf\AppData\Local\PageFolio-release\pf06_final_3f96a37a7cef4ee1ab3a1c1b2f2c435f\PageFolio-v1.10.2" --case X ).run
   .venv/Scripts/python.exe tests/release_uat_support.py fault --run $run --kind missing  # 外部handle/tmp衝突を保持。成立しなければexit 3(not-run)
   .venv/Scripts/python.exe tests/release_uat_support.py start --run $run
   .venv/Scripts/python.exe tests/release_uat_support.py inspect --run $run
@@ -1585,7 +1617,7 @@ created: 2026-10-24
 - **状態**: not-run / 準備: 未準備(別フィールド)
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
   ```powershell
-  $run = (.venv/Scripts/python.exe tests/release_uat_support.py prepare --distribution "C:\Users\shdwf\AppData\Local\Temp\pf06_final_07447e7e5cfc42988b80fb84c58293ae\out\PageFolio-v1.10.2" --case X ).run
+  $run = (.venv/Scripts/python.exe tests/release_uat_support.py prepare --distribution "C:\Users\shdwf\AppData\Local\PageFolio-release\pf06_final_3f96a37a7cef4ee1ab3a1c1b2f2c435f\PageFolio-v1.10.2" --case X ).run
   .venv/Scripts/python.exe tests/release_uat_support.py fault --run $run --kind corrupt  # 外部handle/tmp衝突を保持。成立しなければexit 3(not-run)
   .venv/Scripts/python.exe tests/release_uat_support.py start --run $run
   .venv/Scripts/python.exe tests/release_uat_support.py inspect --run $run
@@ -1616,7 +1648,7 @@ created: 2026-10-24
 - **状態**: not-run / 準備: 未準備(別フィールド)
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
   ```powershell
-  $run = (.venv/Scripts/python.exe tests/release_uat_support.py prepare --distribution "C:\Users\shdwf\AppData\Local\Temp\pf06_final_07447e7e5cfc42988b80fb84c58293ae\out\PageFolio-v1.10.2" --case X ).run
+  $run = (.venv/Scripts/python.exe tests/release_uat_support.py prepare --distribution "C:\Users\shdwf\AppData\Local\PageFolio-release\pf06_final_3f96a37a7cef4ee1ab3a1c1b2f2c435f\PageFolio-v1.10.2" --case X ).run
   .venv/Scripts/python.exe tests/release_uat_support.py fault --run $run --kind unreadable  # 外部handle/tmp衝突を保持。成立しなければexit 3(not-run)
   .venv/Scripts/python.exe tests/release_uat_support.py start --run $run
   .venv/Scripts/python.exe tests/release_uat_support.py inspect --run $run
@@ -1647,7 +1679,7 @@ created: 2026-10-24
 - **状態**: not-run / 準備: 未準備(別フィールド)
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
   ```powershell
-  $run = (.venv/Scripts/python.exe tests/release_uat_support.py prepare --distribution "C:\Users\shdwf\AppData\Local\Temp\pf06_final_07447e7e5cfc42988b80fb84c58293ae\out\PageFolio-v1.10.2" --case X ).run
+  $run = (.venv/Scripts/python.exe tests/release_uat_support.py prepare --distribution "C:\Users\shdwf\AppData\Local\PageFolio-release\pf06_final_3f96a37a7cef4ee1ab3a1c1b2f2c435f\PageFolio-v1.10.2" --case X ).run
   .venv/Scripts/python.exe tests/release_uat_support.py fault --run $run --kind save-write  # 外部handle/tmp衝突を保持。成立しなければexit 3(not-run)
   .venv/Scripts/python.exe tests/release_uat_support.py start --run $run
   .venv/Scripts/python.exe tests/release_uat_support.py inspect --run $run
@@ -1675,7 +1707,7 @@ created: 2026-10-24
 - **状態**: not-run / 準備: 未準備(別フィールド)
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
   ```powershell
-  $run = (.venv/Scripts/python.exe tests/release_uat_support.py prepare --distribution "C:\Users\shdwf\AppData\Local\Temp\pf06_final_07447e7e5cfc42988b80fb84c58293ae\out\PageFolio-v1.10.2" --case X ).run
+  $run = (.venv/Scripts/python.exe tests/release_uat_support.py prepare --distribution "C:\Users\shdwf\AppData\Local\PageFolio-release\pf06_final_3f96a37a7cef4ee1ab3a1c1b2f2c435f\PageFolio-v1.10.2" --case X ).run
   .venv/Scripts/python.exe tests/release_uat_support.py fault --run $run --kind save-write  # 外部handle/tmp衝突を保持。成立しなければexit 3(not-run)
   .venv/Scripts/python.exe tests/release_uat_support.py start --run $run
   .venv/Scripts/python.exe tests/release_uat_support.py inspect --run $run
@@ -1703,7 +1735,7 @@ created: 2026-10-24
 - **状態**: not-run / 準備: 未準備(別フィールド)
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
   ```powershell
-  $run = (.venv/Scripts/python.exe tests/release_uat_support.py prepare --distribution "C:\Users\shdwf\AppData\Local\Temp\pf06_final_07447e7e5cfc42988b80fb84c58293ae\out\PageFolio-v1.10.2" --case X ).run
+  $run = (.venv/Scripts/python.exe tests/release_uat_support.py prepare --distribution "C:\Users\shdwf\AppData\Local\PageFolio-release\pf06_final_3f96a37a7cef4ee1ab3a1c1b2f2c435f\PageFolio-v1.10.2" --case X ).run
   .venv/Scripts/python.exe tests/release_uat_support.py fault --run $run --kind save-write  # 外部handle/tmp衝突を保持。成立しなければexit 3(not-run)
   .venv/Scripts/python.exe tests/release_uat_support.py start --run $run
   .venv/Scripts/python.exe tests/release_uat_support.py inspect --run $run
@@ -1731,7 +1763,7 @@ created: 2026-10-24
 - **状態**: not-run / 準備: 未準備(別フィールド)
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
   ```powershell
-  $run = (.venv/Scripts/python.exe tests/release_uat_support.py prepare --distribution "C:\Users\shdwf\AppData\Local\Temp\pf06_final_07447e7e5cfc42988b80fb84c58293ae\out\PageFolio-v1.10.2" --case X ).run
+  $run = (.venv/Scripts/python.exe tests/release_uat_support.py prepare --distribution "C:\Users\shdwf\AppData\Local\PageFolio-release\pf06_final_3f96a37a7cef4ee1ab3a1c1b2f2c435f\PageFolio-v1.10.2" --case X ).run
   .venv/Scripts/python.exe tests/release_uat_support.py fault --run $run --kind save-write  # 外部handle/tmp衝突を保持。成立しなければexit 3(not-run)
   .venv/Scripts/python.exe tests/release_uat_support.py start --run $run
   .venv/Scripts/python.exe tests/release_uat_support.py inspect --run $run
@@ -1759,7 +1791,7 @@ created: 2026-10-24
 - **状態**: not-run / 準備: 未準備(別フィールド)
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
   ```powershell
-  $run = (.venv/Scripts/python.exe tests/release_uat_support.py prepare --distribution "C:\Users\shdwf\AppData\Local\Temp\pf06_final_07447e7e5cfc42988b80fb84c58293ae\out\PageFolio-v1.10.2" --case X ).run
+  $run = (.venv/Scripts/python.exe tests/release_uat_support.py prepare --distribution "C:\Users\shdwf\AppData\Local\PageFolio-release\pf06_final_3f96a37a7cef4ee1ab3a1c1b2f2c435f\PageFolio-v1.10.2" --case X ).run
   .venv/Scripts/python.exe tests/release_uat_support.py fault --run $run --kind save-write  # 外部handle/tmp衝突を保持。成立しなければexit 3(not-run)
   .venv/Scripts/python.exe tests/release_uat_support.py start --run $run
   .venv/Scripts/python.exe tests/release_uat_support.py inspect --run $run
@@ -1787,7 +1819,7 @@ created: 2026-10-24
 - **状態**: not-run / 準備: 未準備(別フィールド)
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
   ```powershell
-  $run = (.venv/Scripts/python.exe tests/release_uat_support.py prepare --distribution "C:\Users\shdwf\AppData\Local\Temp\pf06_final_07447e7e5cfc42988b80fb84c58293ae\out\PageFolio-v1.10.2" --case X ).run
+  $run = (.venv/Scripts/python.exe tests/release_uat_support.py prepare --distribution "C:\Users\shdwf\AppData\Local\PageFolio-release\pf06_final_3f96a37a7cef4ee1ab3a1c1b2f2c435f\PageFolio-v1.10.2" --case X ).run
   .venv/Scripts/python.exe tests/release_uat_support.py fault --run $run --kind save-write  # 外部handle/tmp衝突を保持。成立しなければexit 3(not-run)
   .venv/Scripts/python.exe tests/release_uat_support.py start --run $run
   .venv/Scripts/python.exe tests/release_uat_support.py inspect --run $run
@@ -1815,7 +1847,7 @@ created: 2026-10-24
 - **状態**: not-run / 準備: 未準備(別フィールド)
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
   ```powershell
-  $run = (.venv/Scripts/python.exe tests/release_uat_support.py prepare --distribution "C:\Users\shdwf\AppData\Local\Temp\pf06_final_07447e7e5cfc42988b80fb84c58293ae\out\PageFolio-v1.10.2" --case X ).run
+  $run = (.venv/Scripts/python.exe tests/release_uat_support.py prepare --distribution "C:\Users\shdwf\AppData\Local\PageFolio-release\pf06_final_3f96a37a7cef4ee1ab3a1c1b2f2c435f\PageFolio-v1.10.2" --case X ).run
   .venv/Scripts/python.exe tests/release_uat_support.py fault --run $run --kind save-write  # 外部handle/tmp衝突を保持。成立しなければexit 3(not-run)
   .venv/Scripts/python.exe tests/release_uat_support.py start --run $run
   .venv/Scripts/python.exe tests/release_uat_support.py inspect --run $run
@@ -1843,7 +1875,7 @@ created: 2026-10-24
 - **状態**: not-run / 準備: 未準備(別フィールド)
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
   ```powershell
-  $run = (.venv/Scripts/python.exe tests/release_uat_support.py prepare --distribution "C:\Users\shdwf\AppData\Local\Temp\pf06_final_07447e7e5cfc42988b80fb84c58293ae\out\PageFolio-v1.10.2" --case X ).run
+  $run = (.venv/Scripts/python.exe tests/release_uat_support.py prepare --distribution "C:\Users\shdwf\AppData\Local\PageFolio-release\pf06_final_3f96a37a7cef4ee1ab3a1c1b2f2c435f\PageFolio-v1.10.2" --case X ).run
   .venv/Scripts/python.exe tests/release_uat_support.py fault --run $run --kind save-replace  # 外部handle/tmp衝突を保持。成立しなければexit 3(not-run)
   .venv/Scripts/python.exe tests/release_uat_support.py start --run $run
   .venv/Scripts/python.exe tests/release_uat_support.py inspect --run $run
@@ -1876,7 +1908,7 @@ created: 2026-10-24
 - **状態**: not-run / 準備: 未準備(別フィールド)
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
   ```powershell
-  $run = (.venv/Scripts/python.exe tests/release_uat_support.py prepare --distribution "C:\Users\shdwf\AppData\Local\Temp\pf06_final_07447e7e5cfc42988b80fb84c58293ae\out\PageFolio-v1.10.2" --case X ).run
+  $run = (.venv/Scripts/python.exe tests/release_uat_support.py prepare --distribution "C:\Users\shdwf\AppData\Local\PageFolio-release\pf06_final_3f96a37a7cef4ee1ab3a1c1b2f2c435f\PageFolio-v1.10.2" --case X ).run
   .venv/Scripts/python.exe tests/release_uat_support.py fault --run $run --kind save-write  # 外部handle/tmp衝突を保持。成立しなければexit 3(not-run)
   .venv/Scripts/python.exe tests/release_uat_support.py start --run $run
   .venv/Scripts/python.exe tests/release_uat_support.py inspect --run $run
@@ -1903,7 +1935,7 @@ created: 2026-10-24
 - **状態**: not-run / 準備: 未準備(別フィールド)
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
   ```powershell
-  $run = (.venv/Scripts/python.exe tests/release_uat_support.py prepare --distribution "C:\Users\shdwf\AppData\Local\Temp\pf06_final_07447e7e5cfc42988b80fb84c58293ae\out\PageFolio-v1.10.2" --case X ).run
+  $run = (.venv/Scripts/python.exe tests/release_uat_support.py prepare --distribution "C:\Users\shdwf\AppData\Local\PageFolio-release\pf06_final_3f96a37a7cef4ee1ab3a1c1b2f2c435f\PageFolio-v1.10.2" --case X ).run
   .venv/Scripts/python.exe tests/release_uat_support.py fault --run $run --kind save-write  # 外部handle/tmp衝突を保持。成立しなければexit 3(not-run)
   .venv/Scripts/python.exe tests/release_uat_support.py start --run $run
   .venv/Scripts/python.exe tests/release_uat_support.py inspect --run $run
@@ -1929,7 +1961,7 @@ created: 2026-10-24
 - **状態**: not-run / 準備: 未準備(別フィールド)
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
   ```powershell
-  $run = (.venv/Scripts/python.exe tests/release_uat_support.py prepare --distribution "C:\Users\shdwf\AppData\Local\Temp\pf06_final_07447e7e5cfc42988b80fb84c58293ae\out\PageFolio-v1.10.2" --case X ).run
+  $run = (.venv/Scripts/python.exe tests/release_uat_support.py prepare --distribution "C:\Users\shdwf\AppData\Local\PageFolio-release\pf06_final_3f96a37a7cef4ee1ab3a1c1b2f2c435f\PageFolio-v1.10.2" --case X ).run
   .venv/Scripts/python.exe tests/release_uat_support.py fault --run $run --kind save-replace  # 外部handle/tmp衝突を保持。成立しなければexit 3(not-run)
   .venv/Scripts/python.exe tests/release_uat_support.py start --run $run
   .venv/Scripts/python.exe tests/release_uat_support.py inspect --run $run
@@ -1956,7 +1988,7 @@ created: 2026-10-24
 - **状態**: not-run / 準備: 未準備(別フィールド)
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
   ```powershell
-  $run = (.venv/Scripts/python.exe tests/release_uat_support.py prepare --distribution "C:\Users\shdwf\AppData\Local\Temp\pf06_final_07447e7e5cfc42988b80fb84c58293ae\out\PageFolio-v1.10.2" --case X ).run
+  $run = (.venv/Scripts/python.exe tests/release_uat_support.py prepare --distribution "C:\Users\shdwf\AppData\Local\PageFolio-release\pf06_final_3f96a37a7cef4ee1ab3a1c1b2f2c435f\PageFolio-v1.10.2" --case X ).run
   .venv/Scripts/python.exe tests/release_uat_support.py fault --run $run --kind unreadable  # 外部handle/tmp衝突を保持。成立しなければexit 3(not-run)
   .venv/Scripts/python.exe tests/release_uat_support.py start --run $run
   .venv/Scripts/python.exe tests/release_uat_support.py inspect --run $run
@@ -1988,7 +2020,7 @@ created: 2026-10-24
 - **状態**: not-run / 準備: 未準備(別フィールド)
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
   ```powershell
-  $run = (.venv/Scripts/python.exe tests/release_uat_support.py prepare --distribution "C:\Users\shdwf\AppData\Local\Temp\pf06_final_07447e7e5cfc42988b80fb84c58293ae\out\PageFolio-v1.10.2" --case X06 --pdf ocr-one-page).run  # サンプル2種は個別copy
+  $run = (.venv/Scripts/python.exe tests/release_uat_support.py prepare --distribution "C:\Users\shdwf\AppData\Local\PageFolio-release\pf06_final_3f96a37a7cef4ee1ab3a1c1b2f2c435f\PageFolio-v1.10.2" --case X06 --pdf ocr-one-page).run  # サンプル2種は個別copy
   .venv/Scripts/python.exe tests/release_uat_support.py serve-ocr --run $run --mode hold  # OCR行のみ
   .venv/Scripts/python.exe tests/release_uat_support.py start --run $run
   .venv/Scripts/python.exe tests/release_uat_support.py stop --run $run
@@ -2011,7 +2043,7 @@ created: 2026-10-24
 - **状態**: not-run / 準備: 未準備(別フィールド)
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
   ```powershell
-  $run = (.venv/Scripts/python.exe tests/release_uat_support.py prepare --distribution "C:\Users\shdwf\AppData\Local\Temp\pf06_final_07447e7e5cfc42988b80fb84c58293ae\out\PageFolio-v1.10.2" --case X06 --pdf ocr-one-page).run  # サンプル2種は個別copy
+  $run = (.venv/Scripts/python.exe tests/release_uat_support.py prepare --distribution "C:\Users\shdwf\AppData\Local\PageFolio-release\pf06_final_3f96a37a7cef4ee1ab3a1c1b2f2c435f\PageFolio-v1.10.2" --case X06 --pdf ocr-one-page).run  # サンプル2種は個別copy
   .venv/Scripts/python.exe tests/release_uat_support.py serve-ocr --run $run --mode hold  # OCR行のみ
   .venv/Scripts/python.exe tests/release_uat_support.py start --run $run
   .venv/Scripts/python.exe tests/release_uat_support.py stop --run $run
@@ -2034,7 +2066,7 @@ created: 2026-10-24
 - **状態**: not-run / 準備: 未準備(別フィールド)
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
   ```powershell
-  $run = (.venv/Scripts/python.exe tests/release_uat_support.py prepare --distribution "C:\Users\shdwf\AppData\Local\Temp\pf06_final_07447e7e5cfc42988b80fb84c58293ae\out\PageFolio-v1.10.2" --case X06 --pdf ocr-one-page).run  # サンプル2種は個別copy
+  $run = (.venv/Scripts/python.exe tests/release_uat_support.py prepare --distribution "C:\Users\shdwf\AppData\Local\PageFolio-release\pf06_final_3f96a37a7cef4ee1ab3a1c1b2f2c435f\PageFolio-v1.10.2" --case X06 --pdf ocr-one-page).run  # サンプル2種は個別copy
   .venv/Scripts/python.exe tests/release_uat_support.py serve-ocr --run $run --mode hold  # OCR行のみ
   .venv/Scripts/python.exe tests/release_uat_support.py start --run $run
   .venv/Scripts/python.exe tests/release_uat_support.py stop --run $run
@@ -2057,7 +2089,7 @@ created: 2026-10-24
 - **状態**: not-run / 準備: 未準備(別フィールド)
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
   ```powershell
-  $run = (.venv/Scripts/python.exe tests/release_uat_support.py prepare --distribution "C:\Users\shdwf\AppData\Local\Temp\pf06_final_07447e7e5cfc42988b80fb84c58293ae\out\PageFolio-v1.10.2" --case X06 --pdf ocr-one-page).run  # サンプル2種は個別copy
+  $run = (.venv/Scripts/python.exe tests/release_uat_support.py prepare --distribution "C:\Users\shdwf\AppData\Local\PageFolio-release\pf06_final_3f96a37a7cef4ee1ab3a1c1b2f2c435f\PageFolio-v1.10.2" --case X06 --pdf ocr-one-page).run  # サンプル2種は個別copy
   .venv/Scripts/python.exe tests/release_uat_support.py serve-ocr --run $run --mode hold  # OCR行のみ
   .venv/Scripts/python.exe tests/release_uat_support.py start --run $run
   .venv/Scripts/python.exe tests/release_uat_support.py stop --run $run
@@ -2080,7 +2112,7 @@ created: 2026-10-24
 - **状態**: not-run / 準備: 未準備(別フィールド)
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
   ```powershell
-  $run = (.venv/Scripts/python.exe tests/release_uat_support.py prepare --distribution "C:\Users\shdwf\AppData\Local\Temp\pf06_final_07447e7e5cfc42988b80fb84c58293ae\out\PageFolio-v1.10.2" --case X06 --pdf ocr-one-page).run  # サンプル2種は個別copy
+  $run = (.venv/Scripts/python.exe tests/release_uat_support.py prepare --distribution "C:\Users\shdwf\AppData\Local\PageFolio-release\pf06_final_3f96a37a7cef4ee1ab3a1c1b2f2c435f\PageFolio-v1.10.2" --case X06 --pdf ocr-one-page).run  # サンプル2種は個別copy
   .venv/Scripts/python.exe tests/release_uat_support.py serve-ocr --run $run --mode hold  # OCR行のみ
   .venv/Scripts/python.exe tests/release_uat_support.py start --run $run
   .venv/Scripts/python.exe tests/release_uat_support.py stop --run $run
@@ -2159,7 +2191,7 @@ created: 2026-10-24
 - **状態**: not-run / 準備: 未準備(別フィールド)
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
   ```powershell
-  $run = (.venv/Scripts/python.exe tests/release_uat_support.py prepare --distribution "C:\Users\shdwf\AppData\Local\Temp\pf06_final_07447e7e5cfc42988b80fb84c58293ae\out\PageFolio-v1.10.2" --case W06).run  # 完全copy・hash固定
+  $run = (.venv/Scripts/python.exe tests/release_uat_support.py prepare --distribution "C:\Users\shdwf\AppData\Local\PageFolio-release\pf06_final_3f96a37a7cef4ee1ab3a1c1b2f2c435f\PageFolio-v1.10.2" --case W06).run  # 完全copy・hash固定
   .venv/Scripts/python.exe tests/release_uat_support.py start --run $run
   .venv/Scripts/python.exe tests/release_uat_support.py peer --run $run     # 二次起動(必要なカードのみ)
   .venv/Scripts/python.exe tests/release_uat_support.py inspect --run $run
@@ -2216,7 +2248,7 @@ created: 2026-10-24
 - **状態**: not-run / 準備: 未準備(別フィールド)
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
   ```powershell
-  $run = (.venv/Scripts/python.exe tests/release_uat_support.py prepare --distribution "C:\Users\shdwf\AppData\Local\Temp\pf06_final_07447e7e5cfc42988b80fb84c58293ae\out\PageFolio-v1.10.2" --case W07a).run  # 完全copy・hash固定
+  $run = (.venv/Scripts/python.exe tests/release_uat_support.py prepare --distribution "C:\Users\shdwf\AppData\Local\PageFolio-release\pf06_final_3f96a37a7cef4ee1ab3a1c1b2f2c435f\PageFolio-v1.10.2" --case W07a).run  # 完全copy・hash固定
   .venv/Scripts/python.exe tests/release_uat_support.py start --run $run
   .venv/Scripts/python.exe tests/release_uat_support.py peer --run $run     # 二次起動(必要なカードのみ)
   .venv/Scripts/python.exe tests/release_uat_support.py inspect --run $run
@@ -2269,7 +2301,7 @@ created: 2026-10-24
 - **状態**: not-run / 準備: 未準備(別フィールド)
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
   ```powershell
-  $run = (.venv/Scripts/python.exe tests/release_uat_support.py prepare --distribution "C:\Users\shdwf\AppData\Local\Temp\pf06_final_07447e7e5cfc42988b80fb84c58293ae\out\PageFolio-v1.10.2" --case W07b).run  # 完全copy・hash固定
+  $run = (.venv/Scripts/python.exe tests/release_uat_support.py prepare --distribution "C:\Users\shdwf\AppData\Local\PageFolio-release\pf06_final_3f96a37a7cef4ee1ab3a1c1b2f2c435f\PageFolio-v1.10.2" --case W07b).run  # 完全copy・hash固定
   .venv/Scripts/python.exe tests/release_uat_support.py start --run $run
   .venv/Scripts/python.exe tests/release_uat_support.py peer --run $run     # 二次起動(必要なカードのみ)
   .venv/Scripts/python.exe tests/release_uat_support.py inspect --run $run
@@ -2320,7 +2352,7 @@ created: 2026-10-24
 - **状態**: not-run / 準備: 未準備(別フィールド)
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
   ```powershell
-  $run = (.venv/Scripts/python.exe tests/release_uat_support.py prepare --distribution "C:\Users\shdwf\AppData\Local\Temp\pf06_final_07447e7e5cfc42988b80fb84c58293ae\out\PageFolio-v1.10.2" --case W08a).run  # 完全copy・hash固定
+  $run = (.venv/Scripts/python.exe tests/release_uat_support.py prepare --distribution "C:\Users\shdwf\AppData\Local\PageFolio-release\pf06_final_3f96a37a7cef4ee1ab3a1c1b2f2c435f\PageFolio-v1.10.2" --case W08a).run  # 完全copy・hash固定
   .venv/Scripts/python.exe tests/release_uat_support.py start --run $run
   .venv/Scripts/python.exe tests/release_uat_support.py peer --run $run     # 二次起動(必要なカードのみ)
   .venv/Scripts/python.exe tests/release_uat_support.py inspect --run $run
@@ -2370,7 +2402,7 @@ created: 2026-10-24
 - **状態**: not-run / 準備: 未準備(別フィールド)
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
   ```powershell
-  $run = (.venv/Scripts/python.exe tests/release_uat_support.py prepare --distribution "C:\Users\shdwf\AppData\Local\Temp\pf06_final_07447e7e5cfc42988b80fb84c58293ae\out\PageFolio-v1.10.2" --case W08b).run  # 完全copy・hash固定
+  $run = (.venv/Scripts/python.exe tests/release_uat_support.py prepare --distribution "C:\Users\shdwf\AppData\Local\PageFolio-release\pf06_final_3f96a37a7cef4ee1ab3a1c1b2f2c435f\PageFolio-v1.10.2" --case W08b).run  # 完全copy・hash固定
   .venv/Scripts/python.exe tests/release_uat_support.py start --run $run
   .venv/Scripts/python.exe tests/release_uat_support.py peer --run $run     # 二次起動(必要なカードのみ)
   .venv/Scripts/python.exe tests/release_uat_support.py inspect --run $run
@@ -2394,7 +2426,7 @@ created: 2026-10-24
 - **状態**: not-run / 準備: 未準備(別フィールド)
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
   ```powershell
-  $run = (.venv/Scripts/python.exe tests/release_uat_support.py prepare --distribution "C:\Users\shdwf\AppData\Local\Temp\pf06_final_07447e7e5cfc42988b80fb84c58293ae\out\PageFolio-v1.10.2" --case W08b).run  # 完全copy・hash固定
+  $run = (.venv/Scripts/python.exe tests/release_uat_support.py prepare --distribution "C:\Users\shdwf\AppData\Local\PageFolio-release\pf06_final_3f96a37a7cef4ee1ab3a1c1b2f2c435f\PageFolio-v1.10.2" --case W08b).run  # 完全copy・hash固定
   .venv/Scripts/python.exe tests/release_uat_support.py start --run $run
   .venv/Scripts/python.exe tests/release_uat_support.py peer --run $run     # 二次起動(必要なカードのみ)
   .venv/Scripts/python.exe tests/release_uat_support.py inspect --run $run
@@ -2443,7 +2475,7 @@ created: 2026-10-24
 - **状態**: not-run / 準備: 未準備(別フィールド)
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
   ```powershell
-  $run = (.venv/Scripts/python.exe tests/release_uat_support.py prepare --distribution "C:\Users\shdwf\AppData\Local\Temp\pf06_final_07447e7e5cfc42988b80fb84c58293ae\out\PageFolio-v1.10.2" --case W08c).run  # 完全copy・hash固定
+  $run = (.venv/Scripts/python.exe tests/release_uat_support.py prepare --distribution "C:\Users\shdwf\AppData\Local\PageFolio-release\pf06_final_3f96a37a7cef4ee1ab3a1c1b2f2c435f\PageFolio-v1.10.2" --case W08c).run  # 完全copy・hash固定
   .venv/Scripts/python.exe tests/release_uat_support.py start --run $run
   .venv/Scripts/python.exe tests/release_uat_support.py peer --run $run     # 二次起動(必要なカードのみ)
   .venv/Scripts/python.exe tests/release_uat_support.py inspect --run $run
@@ -2593,7 +2625,7 @@ created: 2026-10-24
 - **状態**: not-run / 準備: 未準備(別フィールド)
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
   ```powershell
-  $run = (.venv/Scripts/python.exe tests/release_uat_support.py prepare --distribution "C:\Users\shdwf\AppData\Local\Temp\pf06_final_07447e7e5cfc42988b80fb84c58293ae\out\PageFolio-v1.10.2" --case W08d).run  # 完全copy・hash固定
+  $run = (.venv/Scripts/python.exe tests/release_uat_support.py prepare --distribution "C:\Users\shdwf\AppData\Local\PageFolio-release\pf06_final_3f96a37a7cef4ee1ab3a1c1b2f2c435f\PageFolio-v1.10.2" --case W08d).run  # 完全copy・hash固定
   .venv/Scripts/python.exe tests/release_uat_support.py start --run $run
   .venv/Scripts/python.exe tests/release_uat_support.py peer --run $run     # 二次起動(必要なカードのみ)
   .venv/Scripts/python.exe tests/release_uat_support.py inspect --run $run
@@ -2646,7 +2678,7 @@ created: 2026-10-24
 - **状態**: not-run / 準備: 未準備(別フィールド)
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
   ```powershell
-  $run = (.venv/Scripts/python.exe tests/release_uat_support.py prepare --distribution "C:\Users\shdwf\AppData\Local\Temp\pf06_final_07447e7e5cfc42988b80fb84c58293ae\out\PageFolio-v1.10.2" --case W09a).run  # 完全copy・hash固定
+  $run = (.venv/Scripts/python.exe tests/release_uat_support.py prepare --distribution "C:\Users\shdwf\AppData\Local\PageFolio-release\pf06_final_3f96a37a7cef4ee1ab3a1c1b2f2c435f\PageFolio-v1.10.2" --case W09a).run  # 完全copy・hash固定
   .venv/Scripts/python.exe tests/release_uat_support.py start --run $run
   .venv/Scripts/python.exe tests/release_uat_support.py peer --run $run     # 二次起動(必要なカードのみ)
   .venv/Scripts/python.exe tests/release_uat_support.py inspect --run $run
@@ -2701,7 +2733,7 @@ created: 2026-10-24
 - **状態**: not-run / 準備: 未準備(別フィールド)
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
   ```powershell
-  $run = (.venv/Scripts/python.exe tests/release_uat_support.py prepare --distribution "C:\Users\shdwf\AppData\Local\Temp\pf06_final_07447e7e5cfc42988b80fb84c58293ae\out\PageFolio-v1.10.2" --case W09b).run  # 完全copy・hash固定
+  $run = (.venv/Scripts/python.exe tests/release_uat_support.py prepare --distribution "C:\Users\shdwf\AppData\Local\PageFolio-release\pf06_final_3f96a37a7cef4ee1ab3a1c1b2f2c435f\PageFolio-v1.10.2" --case W09b).run  # 完全copy・hash固定
   .venv/Scripts/python.exe tests/release_uat_support.py start --run $run
   .venv/Scripts/python.exe tests/release_uat_support.py peer --run $run     # 二次起動(必要なカードのみ)
   .venv/Scripts/python.exe tests/release_uat_support.py inspect --run $run
@@ -2755,7 +2787,7 @@ created: 2026-10-24
 - **状態**: not-run / 準備: 未準備(別フィールド)
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
   ```powershell
-  $run = (.venv/Scripts/python.exe tests/release_uat_support.py prepare --distribution "C:\Users\shdwf\AppData\Local\Temp\pf06_final_07447e7e5cfc42988b80fb84c58293ae\out\PageFolio-v1.10.2" --case W09c).run  # 完全copy・hash固定
+  $run = (.venv/Scripts/python.exe tests/release_uat_support.py prepare --distribution "C:\Users\shdwf\AppData\Local\PageFolio-release\pf06_final_3f96a37a7cef4ee1ab3a1c1b2f2c435f\PageFolio-v1.10.2" --case W09c).run  # 完全copy・hash固定
   .venv/Scripts/python.exe tests/release_uat_support.py start --run $run
   .venv/Scripts/python.exe tests/release_uat_support.py peer --run $run     # 二次起動(必要なカードのみ)
   .venv/Scripts/python.exe tests/release_uat_support.py inspect --run $run
@@ -2809,7 +2841,7 @@ created: 2026-10-24
 - **状態**: not-run / 準備: 未準備(別フィールド)
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
   ```powershell
-  $run = (.venv/Scripts/python.exe tests/release_uat_support.py prepare --distribution "C:\Users\shdwf\AppData\Local\Temp\pf06_final_07447e7e5cfc42988b80fb84c58293ae\out\PageFolio-v1.10.2" --case W09d).run  # 完全copy・hash固定
+  $run = (.venv/Scripts/python.exe tests/release_uat_support.py prepare --distribution "C:\Users\shdwf\AppData\Local\PageFolio-release\pf06_final_3f96a37a7cef4ee1ab3a1c1b2f2c435f\PageFolio-v1.10.2" --case W09d).run  # 完全copy・hash固定
   .venv/Scripts/python.exe tests/release_uat_support.py start --run $run
   .venv/Scripts/python.exe tests/release_uat_support.py peer --run $run     # 二次起動(必要なカードのみ)
   .venv/Scripts/python.exe tests/release_uat_support.py inspect --run $run
@@ -2862,7 +2894,7 @@ created: 2026-10-24
 - **状態**: not-run / 準備: 未準備(別フィールド)
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
   ```powershell
-  $run = (.venv/Scripts/python.exe tests/release_uat_support.py prepare --distribution "C:\Users\shdwf\AppData\Local\Temp\pf06_final_07447e7e5cfc42988b80fb84c58293ae\out\PageFolio-v1.10.2" --case W10a).run  # 完全copy・hash固定
+  $run = (.venv/Scripts/python.exe tests/release_uat_support.py prepare --distribution "C:\Users\shdwf\AppData\Local\PageFolio-release\pf06_final_3f96a37a7cef4ee1ab3a1c1b2f2c435f\PageFolio-v1.10.2" --case W10a).run  # 完全copy・hash固定
   .venv/Scripts/python.exe tests/release_uat_support.py start --run $run
   .venv/Scripts/python.exe tests/release_uat_support.py peer --run $run     # 二次起動(必要なカードのみ)
   .venv/Scripts/python.exe tests/release_uat_support.py inspect --run $run
@@ -2914,7 +2946,7 @@ created: 2026-10-24
 - **状態**: not-run / 準備: 未準備(別フィールド)
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
   ```powershell
-  $run = (.venv/Scripts/python.exe tests/release_uat_support.py prepare --distribution "C:\Users\shdwf\AppData\Local\Temp\pf06_final_07447e7e5cfc42988b80fb84c58293ae\out\PageFolio-v1.10.2" --case W10b).run  # 完全copy・hash固定
+  $run = (.venv/Scripts/python.exe tests/release_uat_support.py prepare --distribution "C:\Users\shdwf\AppData\Local\PageFolio-release\pf06_final_3f96a37a7cef4ee1ab3a1c1b2f2c435f\PageFolio-v1.10.2" --case W10b).run  # 完全copy・hash固定
   .venv/Scripts/python.exe tests/release_uat_support.py start --run $run
   .venv/Scripts/python.exe tests/release_uat_support.py peer --run $run     # 二次起動(必要なカードのみ)
   .venv/Scripts/python.exe tests/release_uat_support.py inspect --run $run
@@ -2972,7 +3004,7 @@ created: 2026-10-24
 - **状態**: not-run / 準備: 未準備(別フィールド)
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
   ```powershell
-  $run = (.venv/Scripts/python.exe tests/release_uat_support.py prepare --distribution "C:\Users\shdwf\AppData\Local\Temp\pf06_final_07447e7e5cfc42988b80fb84c58293ae\out\PageFolio-v1.10.2" --case W11).run  # 完全copy・hash固定
+  $run = (.venv/Scripts/python.exe tests/release_uat_support.py prepare --distribution "C:\Users\shdwf\AppData\Local\PageFolio-release\pf06_final_3f96a37a7cef4ee1ab3a1c1b2f2c435f\PageFolio-v1.10.2" --case W11).run  # 完全copy・hash固定
   .venv/Scripts/python.exe tests/release_uat_support.py start --run $run
   .venv/Scripts/python.exe tests/release_uat_support.py peer --run $run     # 二次起動(必要なカードのみ)
   .venv/Scripts/python.exe tests/release_uat_support.py inspect --run $run
@@ -3043,7 +3075,7 @@ created: 2026-10-24
 - **状態**: not-run / 準備: 未準備(別フィールド)
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
   ```powershell
-  $run = (.venv/Scripts/python.exe tests/release_uat_support.py prepare --distribution "C:\Users\shdwf\AppData\Local\Temp\pf06_final_07447e7e5cfc42988b80fb84c58293ae\out\PageFolio-v1.10.2" --case WR-01).run  # 完全copy・hash固定
+  $run = (.venv/Scripts/python.exe tests/release_uat_support.py prepare --distribution "C:\Users\shdwf\AppData\Local\PageFolio-release\pf06_final_3f96a37a7cef4ee1ab3a1c1b2f2c435f\PageFolio-v1.10.2" --case WR-01).run  # 完全copy・hash固定
   .venv/Scripts/python.exe tests/release_uat_support.py start --run $run
   .venv/Scripts/python.exe tests/release_uat_support.py peer --run $run     # 二次起動(必要なカードのみ)
   .venv/Scripts/python.exe tests/release_uat_support.py inspect --run $run

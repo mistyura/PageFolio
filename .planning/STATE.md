@@ -5,17 +5,16 @@ milestone_name: 多重起動防止・起動操作の改善
 current_phase: 06
 current_phase_name: サンプル配布とリリース検証
 current_plan: 5
-status: executing
-stopped_at: Completed 06-04-PLAN.md(準備監査1件不成立を持ち越し)
-last_updated: "2026-10-24T12:44:59.440Z"
-last_activity: 2026-10-24
-last_activity_desc: Phase 06 execution resumed (wave continue)
-state_head: 81e63cd792a5ec0d7b141b136df905b22810ed7c
+status: paused
+stopped_at: 06-05-02を利用者指定で中断。W05a全3入口pass、W05b実OCR確認harness準備・対象6passed。必須24pass/84not-run+対象外2。GUI/テスト/回答待ちなし。
+last_updated: "2026-10-28T15:30:55.145Z"
+last_activity: 利用者のgsd-pause-workで中断。G1/G2とW05a計24pass、必須84not-run・W11対象外2。W05b実確認harnessの対象6件成功、driver/記録helper/人手確認は未実施。
+state_head: 4f90cdee39adf8575cd9e71fb53258bcfaa991e9
 progress:
   total_phases: 3
   completed_phases: 2
-  total_plans: 16
-  completed_plans: 14
+  total_plans: 18
+  completed_plans: 16
   percent: 67
 ---
 
@@ -23,12 +22,12 @@ progress:
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-10-24)
+See: .planning/PROJECT.md (updated 2026-10-28)
 
 **Core value:** 大きな PDF でも Undo/Redo が正しく・速く動作し、コードが読みやすく保守しやすい状態にする
 **Current focus:** Phase 06 — サンプル配布とリリース検証
 
-**Phase 05 再検証（2026-10-28）:** `$gsd-execute-phase 05` で全4計画の既存完了を確認し、staleだった独立検証を現行入力で23/23 passedへ更新した。Nyquistは4要件/9タスク・追加gap0、登録済みSecurity14 closed/open0、UIは利用者指定で既存静的22/24を再利用。製品/試験/依存/環境一致の全件2071 passed証拠を再利用した。新規CR-03（OCR無効化後も旧providerでサマリを送信できる）は重大・openのまま、Phase 05の設定I/O通知/原本保護とは別契約として追跡する。出荷停止を維持し、修正・回帰・再レビューを要する。Phase 06のW05b初回停止・限定debug再開点は変更しない。正本は `phases/05-config-notification/05-VERIFICATION.md` と `05-REVIEW.md`。
+**過去のPhase 05 再検証（CR-03修正前）:** `$gsd-execute-phase 05` で全4計画の既存完了を確認し、staleだった独立検証を現行入力で23/23 passedへ更新した。Nyquistは4要件/9タスク・追加gap0、登録済みSecurity14 closed/open0、UIは利用者指定で既存静的22/24を再利用。製品/試験/依存/環境一致の全件2071 passed証拠を再利用した。新規CR-03（OCR無効化後も旧providerでサマリを送信できる）は重大・openのまま、Phase 05の設定I/O通知/原本保護とは別契約として追跡する。出荷停止を維持し、修正・回帰・再レビューを要する。Phase 06のW05b初回停止・限定debug再開点は変更しない。正本は `phases/05-config-notification/05-VERIFICATION.md` と `05-REVIEW.md`。
 
 ## Shipped Milestone: v1.9.0（2026-08-11・verified_closeout）
 
@@ -46,30 +45,44 @@ See: .planning/PROJECT.md (updated 2026-10-24)
 > 監査であり、その 40 分後に開始した Phase 3 が指摘ギャップ（V190-QA-01/02/03）を全て解消済み。
 > 以上より verified_closeout として確定した。
 
+**2026-10-28 現行再開点:** 案B承認（W11-B-20261028）に基づく06-07/08を完了。CR-03=e13a00b、世代5の配布・実2build・保護/接続準備=8e83658、SUMMARY=4f90cde。Phase04 21/21・Phase05 23/23再検証済み。06-05はG1のW01全6行・W02全9行pass、指定ID監査成功。必須108行中15pass/93not-run、W11対象外2not-run。G1確定入力の全件2237 passed/2 warnings/159入力不変・Ruff/format/AST成功（g1-closeout-diagnostic-20261028）。一度のnative Tcl対照群timeoutは原因未確定・再現なしとして原本と追加診断を保持。G2/W03は自動Undo/Redoをmanual時に行わない準備へ修正し、対象実機26passed・監視機構確認成功。21:30:35 JSTにW03/pdf-3page@scriptの可視PowerShell PID31424を開始し、人手確認中。製品・凍結65入力は不変。Phase06は6/8計画完了・出荷未承認、pushなし。現在の詳細は06-05-CHECKPOINT.md、旧世代は06-08-SUMMARY.md。以下の旧停止記録は当時の判断。
+
 ## Current Position
 
 Phase: 06 (サンプル配布とリリース検証) — EXECUTING
 Current Plan: 5
-Total Plans in Phase: 6
-Plan: 5 of 6
-Status: Ready to execute
-Last activity: 2026-10-24 — Phase 06 execution resumed (wave continue)
+Total Plans in Phase: 8
+Plan: 5 of 8（実行順07→08→05→06。07/08完了、05の本受入へ）
+Status: paused
+Last activity: 利用者のgsd-pause-workで中断。G1/G2とW05a計24pass、必須84not-run・W11対象外2。W05b実確認harnessの対象6件成功、driver/記録helper/人手確認は未実施。
+
+**過去の再開点（世代3 W05b接続実証停止）:** 次は `$gsd-debug phase06-w05b-manual-switch` で、peer後の前景観測とチャット回答/手動切替の影響を限定調査する。再試行・driver/製品修正・追加GUI/build・06-05/06・commitを行わず、最初の現場を保持する。sandbox `d04061c65a42406c90736c4a3e183368` は画面不可視で未成立。native ocr-single `0d73a0cdf5b8465f9970b3702c2653e7` は同1POST完了と合成結果回答を記録したがprimary terminated/診断を保持し正常終了と書換えない。native W05b `cf52cf1df4db42a3b384db6f13a6c103` は同modal HWND6753582/同request完了、peer後前景はChatGPT側PID18044でprimary9920と不一致。利用者補足「自分で PageFolio に切り替えて確認した」により自動復帰成功の解釈を取り下げ、peer_returned_to_modal=false・原因/製品関与未確定とする。準備監査はこのW05b観測不足だけでexit1。原本copy/hash/補足/監査は `phases/06-release-validation/06-CONNECTION-STOP-20261028-evidence/`、停止報告は同 `06-CONNECTION-STOP-20261028.md`。全110行not-run、06-04-02未完了、06-05停止/06-06not-ready、Phase未完了・出荷停止。Phase04fresh/品質停止resolved/2071件成功の既存判定を戻さず、DEP-05/owner_missing等の原因解決とも混同しない。製品/tests/版/既存dirty/index/全失敗原本を保全、commitなし。
+
+**過去の再開点（CR-03修正前の品質停止解除後）:** `$gsd-execute-phase 06` のresume_contractで現行入力・依存検証の鮮度・台帳を照合する。利用者の停止条件解消指示後、過去診断1件の原本を保存してAST不変で整形、全体Ruff137件成功。実OS監査接続/owner＋8 peer試験は各1回成功し、単一全件2071 passed/2 warnings/480.86秒/exit0、失敗0・ERROR0・skip0・入力不変で品質停止を解除した。証拠は `debug/quality-gate-unblock-20261028/`、判断は `debug/quality-gate-unblock.md`。元の1846 passed/1 failedと47原本は保持し、過去の原因/製品関与は未確定のまま。実2回build/build監査/自動準備と旧世代原本を保持し、古い成功hashへ新しい入力を付け替えない。接続人手2条件と全110受入、準備監査の旧世代16 run参照不足、依存検証の鮮度再照合は未実施。Phase06完了・出荷は未承認、DEP-05/owner_missing/WR-01等の過去原因は未解除。Phaseの後続実行・commit・出荷は本修正では行っていない。
+
+**最新のPhase 04再検証（2026-10-28）:** 6/6計画・13タスク・5要件のゲートを順に再監査。Nyquist validated/compliant、Security 22 closed/open 0、UI partialとWR-01 deferredを維持。独立verifierは承認済みPhase 4の自動/Windows subprocess・A1〜A5・証拠照合について21/21 passed、v4指紋を再計算しowner照会もpassedでstaleなし。全件2047 passed/1 warning/427.01秒の生証拠は、監査開始時118/118入力一致を確認して再利用した。VALIDATION更新後のDoDは19 passed。製品・試験・版番号は本再検証で変更なし。禁止事項3件はflagged-unverified、W人手項目はPhase 6でnot-run、リリース停止を維持。初回前景変化の発生原因・DEP-05・owner_missing・WR-01等は未解除。旧停止報告と失敗原本を保持し、本結果で当時の失敗を書き換えない。証拠は`phases/04-startup-control/04-GATES-RESUME-20261028.md`と`04-VERIFICATION.md`。
+
+以下の「今回の調査」「今回の再開結果」は本再検証より前の経過。現行判定と再開点は本段落と下記「現行再開点」を優先する。
+
+**今回の調査（2026-10-28）:** `debug/startup-wake-foreground.md` に試験の偽陽性を実証した正負対照と修正を記録。実前景・待ち解除・worker終了が正常でも、前景観測値への外部変化注入だけで旧assertは失敗した。製品は変更せず、担当2テストで許可API/自スレッドWM_NULL/呼出TID/worker停止を直接検証し、子JSONをassert前に保存。対象23件成功。初回原本の前景変化の原因はデータ欠落で未確定。調査中の全件初回は198 passed / 1 failedでDoDがPhase 04のROADMAP完了表示とVALIDATION draftの不整合を検出したため、過去の6/6 SUMMARYを保持したままPhase 04をIn Progressへ戻した。VALIDATIONや独立verificationを合格へ書換えていない。全件再検証結果は同debug証拠へ追記する。正式なPhase 04/06完了・実機受入・EXE再生成・出荷合格を意味しない。
+
+**今回の再開結果（2026-10-28）:** Phase 06は06-01〜04のSUMMARYあり、06-05/06は未完了。W02デバッグのF1修正と通常操作確認は完了済みだが、現行ソースはv1.10.1、実EXE/台帳はv1.10.0・世代2のため06-03のresume_contractで再検証・新世代buildが必要。先行するPhase 04再検証のnative単一全件は1810 passed / 1 failed / 1 warning / 144.87秒で最初の失敗に停止した。`tests/test_startup_wake.py:216` の `test_native_tcl_getmessage_stall_recovers_with_product_wake[True]` が `foreground_unchanged=False`。原因は未確定で、製品の前景変更と断定しない。113入力の前後hash一致。Ruff全体check・F1関連format確認・AST・対象diff確認は成功。最初のsandbox実行のTcl資源到達エラーも別attemptとして保持。再走・製品修正・commit・EXE再生成は未実施。停止報告は `phases/04-startup-control/04-REVERIFY-GATES-20261028.md`、native初回証拠は同dirの `04-reverify-20261028/native/`。Phase 04はstale、Nyquistはdraft/noncompliant、Phase 06完了・出荷停止を維持する。
 
 **今回のデバッグ完了（2026-10-24）:** Phase06計画は6計画・6wave、独立checker blocker/warning 0・要件6/6・決定16/16。コミット前のnative 2失敗は、通知テストの不要なDnD初期化失敗による残留Tk rootと後続画像のinterpreter不一致という連鎖を故障注入で再現した。当該通知再構築テストだけを通常Tkへ隔離し、実Appの通知検証を維持。修正後native単一全件は1797 passed / 1 warning / 269.43秒 / exit 0、Ruff check/format・ASTも合格し、今回のテスト保留を解除した。証拠は`debug/resolved/config-notice-tk-lifecycle.md`と`debug/config-notice-tk-lifecycle-evidence/RESULTS.md`。最終専用basetempは`C:/Users/shdwf/AppData/Local/Temp/pf_config_notice_full_20261024_1`。元の失敗ログ2件とbasetempは保持。製品コード・版番号は変更なし。外部tkdndの間欠読込失敗の発生条件とDEP-05等の既存原因は未解除。成功結果は既存dirtyの入力を含む作業ツリー上の検証であり、それらの別作業差分を今回commitへ混入させない。
 
-**現行再開点:** `$gsd-execute-phase 06`。Phase 06は6計画・6直列wave・12task、独立計画検証は修正1回後にblocker/warning 0、要件6/6・決定16/16を被覆。製品実装・実build・実機受入は未実施。Phase 05は4/4計画・検証passed（23/23）、操作受入H01〜H14と意味評価Test 1/2の計16件passで正式完了。既存1797 passed / 1 warning / 266.81秒 / exit 0は過去の入力103件hash一致による再利用記録。Nyquist validated、Security14 closed。Phase 04報告はstaleのため `$gsd-execute-phase 04` による再検証をWave3後・06-04の最終ビルド前に行う。DEP-05・owner_missing・通知前景不一致・Tcl警告・未分類edge4件は未解除。再発時停止・Phase 6手動UAT not-run・出荷停止を維持する。
+**前回の再開点（履歴）:** `$gsd-execute-phase 06`。Phase 04のstaleとNyquist未完了による停止は解除済み。06-03のresume_contractで現行v1.10.1と旧EXE/台帳v1.10.0・世代2の差を照合し、06-04の2回build・保護・接続を新世代で再実施して06-05へ戻る。旧EXE観測を新hashへ結び替えず原本を保持する。初回foreground変化の原因は未確定として残す。Phase 05のH01〜H14/意味評価2件の既存完了を維持し、DEP-05・owner_missing・通知前景不一致・Tcl警告・未分類edge等の未解除条件を今回のW02修正と混同しない。
 
 `DEP-05-REGRESSION` は未充足のまま。元のnormal-entry-scriptのcommunicate期限超過は未再現・原因未確定で、Tcl警告との因果も未証明。レビュー時の1 failed / 1634 passedは履歴として保持する。診断強化は `9384268` で独立commit済み、実装前の単一全件は1637 passed / 1 warning / 263.66秒 / exit 0で対象hash一致を確認した。2026-10-23の利用者判断による条件付き実行の下、05-01の実装後単一全件は1660 passed / 1 warning / 234.19秒 / exit 0。上記05-01時点の実装位置は履歴。現行は05-01〜04・Nyquist・人手受入まで完了。今回の成功を原因修復や依存解除とは扱わない。後続の単一全件ゲートで同種失敗が再発したら実装・後続実行・コミットを停止し、最初の失敗出力と専用basetempの診断を保持して `$gsd-debug continue dep-05-regression` で再開する。証拠正本は `debug/dep-05-regression.md`、`05-VALIDATION.md`、`05-01-SUMMARY.md`。
 
-Progress: [███████░░░] 67%（計画10/16完了、Phase 4/5の完了履歴2/3フェーズ。Phase 4検証報告はstaleで再検証が必要。Phase 6は計画済み・実行未着手、必須実機受入と出荷停止を維持する。）
+Progress: [███████░░░] 67%（正式完了はPhase 4/5の2/3フェーズ、計画16/18にSUMMARYあり。Phase 06は6/8計画にSUMMARYあり、06-05/06未完了。必須108行中6pass/102not-run、W11対象外2not-run。必須実機受入と出荷停止を維持する。）
 
 ## v1.10.0 Phase Map（構成承認済み）
 
 | Phase | Name | Requirements | 状態 |
 |-------|------|--------------|------|
-| 4 | 起動制御と既存画面への復帰 | V110-START-01〜03, V110-FOCUS-01/02 | Complete（6/6、検証21/21 passed） |
+| 4 | 起動制御と既存画面への復帰 | V110-START-01〜03, V110-FOCUS-01/02 | Complete（6/6、現行入力のNyquist compliant・独立検証21/21 passed）。人手WはPhase 6へ移管 |
 | 5 | 設定読込・保存失敗の通知 | V110-CFG-01〜04 | Complete（4/4、検証23/23 passed、人手16 pass）。回帰原因未解決・再発時停止を維持 |
-| 6 | サンプル配布とリリース検証 | V110-DIST-01〜03, V110-QA-01〜03 | Planned（6計画・6wave、0/6完了） |
+| 6 | サンプル配布とリリース検証 | V110-DIST-01〜03, V110-QA-01〜03 | W05b接続実証で停止（4/6計画の旧SUMMARYを保持、現行入力・依存照合済み。自動復帰未実証、実機受入・出荷停止） |
 
 Phase 4は自動受入/A1〜A5と証拠照合を行い、未実施人手W項目は承認によりPhase 6へ移管。Phase 5は機能テストと必要な実機確認を行う。Phase 6 は PyInstaller の実ビルド・再ビルドと実 EXE の UAT を含む最終検証。各フェーズ完了時は `/gsd-validate-phase` を実行する。
 
@@ -101,7 +114,7 @@ Phase 4は自動受入/A1〜A5と証拠照合を行い、未実施人手W項目�
 | 01 | 7 | - | - |
 | 02 | 4 | - | - |
 | 03 | 4 | - | - |
-| 4 | 6 | - | - |
+| 04 | 6 | - | - |
 | 05 | 4 | - | - |
 
 *v1.4.0 フェーズ完了後に追記*
@@ -451,10 +464,10 @@ v1.9.0 クローズ時点で次マイルストーンへ引き継ぐ未解決項�
 
 ## Session Continuity
 
-**Resume file:** None
+**Resume file:** .planning/phases/06-release-validation/.continue-here.md
 
-Last session: 2026-10-24T12:44:59.290Z
-Stopped at: Completed 06-04-PLAN.md(準備監査1件不成立を持ち越し)
+Last session: 2026-11-03
+Stopped at: 06-05-02。W05c module を pass として記録（必須28pass/80not-run+対象外2）。配布元消失（BUILD-LOSS-20261103）は復元し、監査を承認つきで見直し済み（build-only ok）。次は W05c script のやり直しと production-exe。tracer v1.9.1 も消失していて未対応（G4）。詳細は 06-release-validation/.continue-here.md の 2026-11-03 追記。
 
 ## Operator Next Steps
 

@@ -1,0 +1,1567 @@
+{
+  "row": "W05b/ocr-close-confirm@module",
+  "case": "W05b",
+  "condition": "ocr-close-confirm",
+  "entry": "module",
+  "selftest": false,
+  "started_at": "2026-10-31T00:35:31.831589+00:00",
+  "target_exe_sha256": "66be5df663e333057c5c3cde02180857f930d2433e377f69c2838432d49a19d4",
+  "steps": [
+    {
+      "at": "2026-10-31T00:35:34.527669+00:00",
+      "step": "start-harness"
+    },
+    {
+      "at": "2026-10-31T00:35:39.534718+00:00",
+      "step": "modal-up",
+      "modal": {
+        "hwnd": 724850,
+        "pid": 20456,
+        "title": "確認",
+        "class": "#32770",
+        "visible": true,
+        "iconic": false,
+        "zoomed": false,
+        "rect": [
+          719,
+          457,
+          1004,
+          623
+        ]
+      },
+      "ocr_window": {
+        "hwnd": 1182916,
+        "pid": 20456,
+        "title": "OCR",
+        "class": "TkTopLevel",
+        "visible": true,
+        "iconic": false,
+        "zoomed": false,
+        "rect": [
+          241,
+          309,
+          1407,
+          1028
+        ]
+      },
+      "foreground": {
+        "hwnd": 724850,
+        "pid": 20456,
+        "title": "確認"
+      }
+    },
+    {
+      "at": "2026-10-31T00:35:51.546439+00:00",
+      "step": "peer",
+      "foreground": {
+        "hwnd": 1510328,
+        "pid": 21768,
+        "title": "Windows PowerShell"
+      }
+    },
+    {
+      "at": "2026-10-31T00:35:52.357730+00:00",
+      "step": "after-peer",
+      "windows": [
+        {
+          "hwnd": 724850,
+          "pid": 20456,
+          "title": "確認",
+          "class": "#32770",
+          "visible": true,
+          "iconic": false,
+          "zoomed": false,
+          "rect": [
+            719,
+            457,
+            1004,
+            623
+          ]
+        },
+        {
+          "hwnd": 1182916,
+          "pid": 20456,
+          "title": "OCR",
+          "class": "TkTopLevel",
+          "visible": true,
+          "iconic": false,
+          "zoomed": false,
+          "rect": [
+            241,
+            309,
+            1407,
+            1028
+          ]
+        },
+        {
+          "hwnd": 1638702,
+          "pid": 20456,
+          "title": "PageFolio",
+          "class": "TkTopLevel",
+          "visible": true,
+          "iconic": false,
+          "zoomed": false,
+          "rect": [
+            208,
+            208,
+            1424,
+            1047
+          ]
+        }
+      ],
+      "foreground": {
+        "hwnd": 724850,
+        "pid": 20456,
+        "title": "確認"
+      }
+    },
+    {
+      "at": "2026-10-31T00:35:55.727022+00:00",
+      "step": "beep-return-verified"
+    },
+    {
+      "at": "2026-10-31T00:35:57.370194+00:00",
+      "step": "answered-no"
+    },
+    {
+      "at": "2026-10-31T00:36:01.375576+00:00",
+      "step": "ocr-release"
+    },
+    {
+      "at": "2026-10-31T00:36:01.506401+00:00",
+      "step": "ocr-completed"
+    }
+  ],
+  "w05b": {
+    "budget": {
+      "hold_limit_s": 90.0,
+      "start_latest_s": 40.0,
+      "exe_launch_latest_s": 55.0,
+      "no_latest_s": 78.0,
+      "release_latest_s": 86.0,
+      "quiet_s": 3.0,
+      "keep_view_s": 4.0,
+      "note": "FakeOcrServerの待機90秒・provider 120秒・harness 120秒は延長していない"
+    },
+    "design": {
+      "claim": "確認ダイアログの同一native HWND/PIDが、無操作のまま実前景へ自動復帰したか",
+      "evidence": "連続監視の前景遷移・入力押下・二次起動直後/観測終端の実前景(assess_w05b_return)",
+      "manual_switch_guard": "復帰後に別窓へ前景が移る/観測中の押下があれば不成立。直接回答でも自己申告を照合",
+      "auto_no": false
+    },
+    "request_received_at": "2026-10-31T00:35:38.507932+00:00",
+    "modal_before": {
+      "hwnd": 724850,
+      "pid": 20456,
+      "title": "確認",
+      "class": "#32770",
+      "visible": true,
+      "iconic": false,
+      "zoomed": false,
+      "rect": [
+        719,
+        457,
+        1004,
+        623
+      ]
+    },
+    "ocr_window_before": {
+      "hwnd": 1182916,
+      "pid": 20456,
+      "title": "OCR",
+      "class": "TkTopLevel",
+      "visible": true,
+      "iconic": false,
+      "zoomed": false,
+      "rect": [
+        241,
+        309,
+        1407,
+        1028
+      ]
+    },
+    "foreground_when_modal_seen": {
+      "hwnd": 724850,
+      "pid": 20456,
+      "title": "確認"
+    },
+    "foreground_before_peer": {
+      "hwnd": 1510328,
+      "pid": 21768,
+      "title": "Windows PowerShell"
+    },
+    "enter_elapsed_s": 13.04,
+    "foreground_peer_done": {
+      "hwnd": 724850,
+      "pid": 20456,
+      "title": "確認"
+    },
+    "foreground_quiet_end": {
+      "hwnd": 724850,
+      "pid": 20456,
+      "title": "確認"
+    },
+    "return_assessment": {
+      "verdict": "clean",
+      "reasons": [],
+      "modal": {
+        "hwnd": 724850,
+        "pid": 20456
+      },
+      "returned_transition": {
+        "seq": 15,
+        "t": "2026-10-31T00:35:52.275336+00:00",
+        "elapsed_s": 20.443,
+        "phase": "peer",
+        "from": {
+          "hwnd": 1510328,
+          "pid": 21768,
+          "title": "Windows PowerShell",
+          "class": "CASCADIA_HOSTING_WINDOW_CLASS"
+        },
+        "to": {
+          "hwnd": 724850,
+          "pid": 20456,
+          "title": "確認",
+          "class": "#32770"
+        }
+      },
+      "returned_at_elapsed_s": 20.443,
+      "observation_end_elapsed_s": 23.527,
+      "unattended_seconds_after_return": 3.084,
+      "mouse_presses_during_observation": [],
+      "launch_presses_excused": [],
+      "key_presses_during_observation": [],
+      "task_switcher_transitions_during_observation": [],
+      "returned_via_task_switcher": false,
+      "switch_key_events_during_observation": [],
+      "switch_key_capture": true,
+      "foreground_before_peer": {
+        "hwnd": 1510328,
+        "pid": 21768,
+        "title": "Windows PowerShell"
+      },
+      "foreground_peer_done": {
+        "hwnd": 724850,
+        "pid": 20456,
+        "title": "確認"
+      },
+      "foreground_quiet_end": {
+        "hwnd": 724850,
+        "pid": 20456,
+        "title": "確認"
+      },
+      "monitor": {
+        "samples": 2734,
+        "max_gap_s": 0.018,
+        "errors": [],
+        "truncated": false
+      },
+      "note": "連続監視の事実のみ。利用者の自己申告(無操作)は別に直接回答で照合する。"
+    },
+    "beep_at": "2026-10-31T00:35:55.726917+00:00",
+    "no_observed_at": "2026-10-31T00:35:57.370169+00:00",
+    "no_elapsed_s": 18.86,
+    "after_no_windows": {
+      "modal": null,
+      "ocr_window": {
+        "hwnd": 1182916,
+        "pid": 20456,
+        "title": "OCR",
+        "class": "TkTopLevel",
+        "visible": true,
+        "iconic": false,
+        "zoomed": false,
+        "rect": [
+          241,
+          309,
+          1407,
+          1028
+        ]
+      }
+    },
+    "ocr_window_before_release": {
+      "hwnd": 1182916,
+      "pid": 20456,
+      "title": "OCR",
+      "class": "TkTopLevel",
+      "visible": true,
+      "iconic": false,
+      "zoomed": false,
+      "rect": [
+        241,
+        309,
+        1407,
+        1028
+      ]
+    },
+    "release_elapsed_s": 22.87
+  },
+  "harness_start": {
+    "returncode": 0,
+    "stderr_tail": ""
+  },
+  "run": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-lepyvak3",
+  "harness_manifest": {
+    "run": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-lepyvak3",
+    "namespace": "ce0b45fd8ce0477ebfc551569c03d467",
+    "case": "native-ocr",
+    "launcher_pid": 3336,
+    "source_commit": "5a7f60e6d672af2b2e866f01517a60b04994e291"
+  },
+  "owned_pids": [
+    {
+      "pid": 3336,
+      "created": 134378805348641026,
+      "image": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.venv\\Scripts\\python.exe"
+    },
+    {
+      "pid": 20456,
+      "created": 134378805348990489,
+      "image": "C:\\Users\\shdwf\\AppData\\Local\\Programs\\Python\\Python315\\python.exe"
+    }
+  ],
+  "ocr_before": {
+    "dialog_id": 2447351314288,
+    "run_gen": 1,
+    "engine_id": 2447351313952,
+    "worker_ids": [
+      2447448796736
+    ],
+    "done": false,
+    "results": {},
+    "errors": {},
+    "server": {
+      "posts": 1,
+      "rejected": [],
+      "attempts_by_image": {
+        "ff81b58eb8abe98bddbbb0317ab4ea26f18a8923e8dfef4c3348bff0baee35f6": 1
+      },
+      "retransmissions": [],
+      "completed": [],
+      "released": [],
+      "expired": [],
+      "events": [
+        {
+          "seq": 1,
+          "event": "received",
+          "time": "2026-10-31T00:35:38.507932+00:00",
+          "monotonic": 5143.6990693,
+          "run_id": "pagefolio-uat-lepyvak3",
+          "mode": "hold",
+          "request_id": "39fb920042aa42668ae20a3daf822e51",
+          "attempt_id": "ff81b58eb8ab-1",
+          "image_sha256": "ff81b58eb8abe98bddbbb0317ab4ea26f18a8923e8dfef4c3348bff0baee35f6",
+          "page_id": "p1"
+        }
+      ]
+    },
+    "pdf": {
+      "pages": 1,
+      "has_embedded_text": false,
+      "images_on_first_page": 1,
+      "sha256": "1d2813b9eee79e4b6e500db5ab6eab78939e62ef49673abdc43180031071670d"
+    },
+    "concurrency": 1,
+    "summary_executed": false
+  },
+  "ocr_close_start": {
+    "dialog_id": 2447351314288,
+    "run_gen": 1,
+    "engine_id": 2447351313952,
+    "worker_ids": [
+      2447448796736
+    ],
+    "done": false,
+    "results": {},
+    "errors": {},
+    "server": {
+      "posts": 1,
+      "rejected": [],
+      "attempts_by_image": {
+        "ff81b58eb8abe98bddbbb0317ab4ea26f18a8923e8dfef4c3348bff0baee35f6": 1
+      },
+      "retransmissions": [],
+      "completed": [],
+      "released": [],
+      "expired": [],
+      "events": [
+        {
+          "seq": 1,
+          "event": "received",
+          "time": "2026-10-31T00:35:38.507932+00:00",
+          "monotonic": 5143.6990693,
+          "run_id": "pagefolio-uat-lepyvak3",
+          "mode": "hold",
+          "request_id": "39fb920042aa42668ae20a3daf822e51",
+          "attempt_id": "ff81b58eb8ab-1",
+          "image_sha256": "ff81b58eb8abe98bddbbb0317ab4ea26f18a8923e8dfef4c3348bff0baee35f6",
+          "page_id": "p1"
+        }
+      ]
+    },
+    "pdf": {
+      "pages": 1,
+      "has_embedded_text": false,
+      "images_on_first_page": 1,
+      "sha256": "1d2813b9eee79e4b6e500db5ab6eab78939e62ef49673abdc43180031071670d"
+    },
+    "concurrency": 1,
+    "summary_executed": false
+  },
+  "harness_peer": {
+    "returncode": 0,
+    "stderr_tail": "",
+    "json": {
+      "fixture": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-lepyvak3\\peer-8aeae0c3e77a438eba3f6ded2fe8b983",
+      "result": {
+        "constructed": 0,
+        "restored": 0,
+        "status_preserved": true,
+        "result": "completed",
+        "elapsed": 62
+      }
+    }
+  },
+  "ocr_after_peer": {
+    "dialog_id": 2447351314288,
+    "run_gen": 1,
+    "engine_id": 2447351313952,
+    "worker_ids": [
+      2447448796736
+    ],
+    "done": false,
+    "results": {},
+    "errors": {},
+    "server": {
+      "posts": 1,
+      "rejected": [],
+      "attempts_by_image": {
+        "ff81b58eb8abe98bddbbb0317ab4ea26f18a8923e8dfef4c3348bff0baee35f6": 1
+      },
+      "retransmissions": [],
+      "completed": [],
+      "released": [],
+      "expired": [],
+      "events": [
+        {
+          "seq": 1,
+          "event": "received",
+          "time": "2026-10-31T00:35:38.507932+00:00",
+          "monotonic": 5143.6990693,
+          "run_id": "pagefolio-uat-lepyvak3",
+          "mode": "hold",
+          "request_id": "39fb920042aa42668ae20a3daf822e51",
+          "attempt_id": "ff81b58eb8ab-1",
+          "image_sha256": "ff81b58eb8abe98bddbbb0317ab4ea26f18a8923e8dfef4c3348bff0baee35f6",
+          "page_id": "p1"
+        }
+      ]
+    },
+    "pdf": {
+      "pages": 1,
+      "has_embedded_text": false,
+      "images_on_first_page": 1,
+      "sha256": "1d2813b9eee79e4b6e500db5ab6eab78939e62ef49673abdc43180031071670d"
+    },
+    "concurrency": 1,
+    "summary_executed": false
+  },
+  "ocr_close_no": {
+    "dialog_id": 2447351314288,
+    "run_gen": 1,
+    "engine_id": 2447351313952,
+    "worker_ids": [
+      2447448796736
+    ],
+    "done": false,
+    "results": {},
+    "errors": {},
+    "server": {
+      "posts": 1,
+      "rejected": [],
+      "attempts_by_image": {
+        "ff81b58eb8abe98bddbbb0317ab4ea26f18a8923e8dfef4c3348bff0baee35f6": 1
+      },
+      "retransmissions": [],
+      "completed": [],
+      "released": [],
+      "expired": [],
+      "events": [
+        {
+          "seq": 1,
+          "event": "received",
+          "time": "2026-10-31T00:35:38.507932+00:00",
+          "monotonic": 5143.6990693,
+          "run_id": "pagefolio-uat-lepyvak3",
+          "mode": "hold",
+          "request_id": "39fb920042aa42668ae20a3daf822e51",
+          "attempt_id": "ff81b58eb8ab-1",
+          "image_sha256": "ff81b58eb8abe98bddbbb0317ab4ea26f18a8923e8dfef4c3348bff0baee35f6",
+          "page_id": "p1"
+        }
+      ]
+    },
+    "pdf": {
+      "pages": 1,
+      "has_embedded_text": false,
+      "images_on_first_page": 1,
+      "sha256": "1d2813b9eee79e4b6e500db5ab6eab78939e62ef49673abdc43180031071670d"
+    },
+    "concurrency": 1,
+    "summary_executed": false,
+    "dialog_exists": true,
+    "cancelled": false
+  },
+  "ocr_completed": {
+    "dialog_id": 2447351314288,
+    "run_gen": 1,
+    "engine_id": 2447351313952,
+    "worker_ids": [
+      2447448796736
+    ],
+    "done": true,
+    "results": {
+      "0": "PageFolio UAT 合成OCR結果"
+    },
+    "errors": {},
+    "server": {
+      "posts": 1,
+      "rejected": [],
+      "attempts_by_image": {
+        "ff81b58eb8abe98bddbbb0317ab4ea26f18a8923e8dfef4c3348bff0baee35f6": 1
+      },
+      "retransmissions": [],
+      "completed": [
+        "ff81b58eb8ab-1"
+      ],
+      "released": [
+        "ff81b58eb8ab-1"
+      ],
+      "expired": [],
+      "events": [
+        {
+          "seq": 1,
+          "event": "received",
+          "time": "2026-10-31T00:35:38.507932+00:00",
+          "monotonic": 5143.6990693,
+          "run_id": "pagefolio-uat-lepyvak3",
+          "mode": "hold",
+          "request_id": "39fb920042aa42668ae20a3daf822e51",
+          "attempt_id": "ff81b58eb8ab-1",
+          "image_sha256": "ff81b58eb8abe98bddbbb0317ab4ea26f18a8923e8dfef4c3348bff0baee35f6",
+          "page_id": "p1"
+        },
+        {
+          "seq": 2,
+          "event": "released",
+          "time": "2026-10-31T00:36:01.429319+00:00",
+          "monotonic": 5166.6204664,
+          "run_id": "pagefolio-uat-lepyvak3",
+          "mode": "hold",
+          "request_id": "39fb920042aa42668ae20a3daf822e51",
+          "attempt_id": "ff81b58eb8ab-1",
+          "image_sha256": "ff81b58eb8abe98bddbbb0317ab4ea26f18a8923e8dfef4c3348bff0baee35f6",
+          "page_id": "p1"
+        },
+        {
+          "seq": 3,
+          "event": "completed",
+          "time": "2026-10-31T00:36:01.430411+00:00",
+          "monotonic": 5166.6215532,
+          "run_id": "pagefolio-uat-lepyvak3",
+          "mode": "hold",
+          "status": 200,
+          "request_id": "39fb920042aa42668ae20a3daf822e51",
+          "attempt_id": "ff81b58eb8ab-1",
+          "image_sha256": "ff81b58eb8abe98bddbbb0317ab4ea26f18a8923e8dfef4c3348bff0baee35f6",
+          "page_id": "p1"
+        }
+      ]
+    },
+    "pdf": {
+      "pages": 1,
+      "has_embedded_text": false,
+      "images_on_first_page": 1,
+      "sha256": "1d2813b9eee79e4b6e500db5ab6eab78939e62ef49673abdc43180031071670d"
+    },
+    "concurrency": 1,
+    "summary_executed": false
+  },
+  "harness_stop_early": {
+    "returncode": 0,
+    "stderr_tail": ""
+  },
+  "harness_inspect": {
+    "returncode": 0,
+    "stderr_tail": "",
+    "json": {
+      "manifest": {
+        "run": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-lepyvak3",
+        "namespace": "ce0b45fd8ce0477ebfc551569c03d467",
+        "case": "native-ocr",
+        "role": "uat-owner-native-ocr",
+        "fixture": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-lepyvak3\\uat-owner-native-ocr",
+        "launcher_pid": 3336,
+        "environment": {
+          "os": "sys.getwindowsversion(major=10, minor=0, build=26300, platform=2, service_pack='')",
+          "python": "3.15.2 (tags/v3.15.2:5e58eaa, Oct 25 2026, 17:27:03) [MSC v.1951 64 bit (AMD64)]",
+          "pointer_bits": 64,
+          "session_id": 1,
+          "sid": "S-1-5-5-0-372181",
+          "authentication_luid": 376855,
+          "foreground": 1510328,
+          "is_admin": false,
+          "tcl": "9.0.4",
+          "tk": 9.0
+        },
+        "originals_before": {
+          "pagefolio_settings.json": null,
+          "ocr_custom_prompt.md": null,
+          "ocr_summary_prompt.md": null
+        },
+        "source_commit": "5a7f60e6d672af2b2e866f01517a60b04994e291",
+        "expected_owner": {
+          "sid": "S-1-5-5-0-372181",
+          "authentication_luid": 376855,
+          "session_id": 1,
+          "pid": 20456,
+          "process_created": 134378805348990489,
+          "started_tick": 5140500,
+          "owner_result": "acquired",
+          "snapshot": {
+            "protocol": 1,
+            "generation": "d85a7a2c52b44ef78f55f8eb0b93af9e",
+            "pid": 20456,
+            "process_created": 134378805348990489,
+            "session_id": 1,
+            "state": "ready",
+            "ready": true,
+            "release_generation": null
+          },
+          "ready_tick": 5143171,
+          "manual": true
+        }
+      },
+      "originals_unchanged": true,
+      "ready": {
+        "sid": "S-1-5-5-0-372181",
+        "authentication_luid": 376855,
+        "session_id": 1,
+        "pid": 20456,
+        "process_created": 134378805348990489,
+        "started_tick": 5140500,
+        "owner_result": "acquired",
+        "snapshot": {
+          "protocol": 1,
+          "generation": "d85a7a2c52b44ef78f55f8eb0b93af9e",
+          "pid": 20456,
+          "process_created": 134378805348990489,
+          "session_id": 1,
+          "state": "ready",
+          "ready": true,
+          "release_generation": null
+        },
+        "ready_tick": 5143171
+      },
+      "resource-audit.json": {
+        "sid": "S-1-5-5-0-372181",
+        "authentication_luid": 376855,
+        "session_id": 1,
+        "pid": 20456,
+        "process_created": 134378805348990489,
+        "started_tick": 5140500,
+        "owner_result": "acquired",
+        "snapshot": {
+          "protocol": 1,
+          "generation": "d85a7a2c52b44ef78f55f8eb0b93af9e",
+          "pid": 20456,
+          "process_created": 134378805348990489,
+          "session_id": 1,
+          "state": "ready",
+          "ready": true,
+          "release_generation": null
+        },
+        "ready_tick": 5143171
+      },
+      "result.json": {
+        "constructed": 1,
+        "restored": 1,
+        "status_preserved": true,
+        "result": "primary",
+        "elapsed": 34750
+      },
+      "focus-result.json": {
+        "state_preserved": true,
+        "target_correct": true,
+        "result": "completed",
+        "activated": 724850,
+        "expected_tk": 1182916,
+        "native": 724850,
+        "placement": "normal",
+        "expected_focus": "None",
+        "immediate_focus": ".",
+        "document_pages": 1,
+        "page_rotations": [
+          0
+        ],
+        "selected_pages": [
+          0
+        ],
+        "current_page": 0,
+        "focus_correct": true,
+        "settled_focus": "."
+      },
+      "manual-ocr-running.json": {
+        "dialog_id": 2447351314288,
+        "run_gen": 1,
+        "engine_id": 2447351313952,
+        "worker_ids": [
+          2447448796736
+        ],
+        "done": false,
+        "results": {},
+        "errors": {},
+        "server": {
+          "posts": 1,
+          "rejected": [],
+          "attempts_by_image": {
+            "ff81b58eb8abe98bddbbb0317ab4ea26f18a8923e8dfef4c3348bff0baee35f6": 1
+          },
+          "retransmissions": [],
+          "completed": [],
+          "released": [],
+          "expired": [],
+          "events": [
+            {
+              "seq": 1,
+              "event": "received",
+              "time": "2026-10-31T00:35:38.507932+00:00",
+              "monotonic": 5143.6990693,
+              "run_id": "pagefolio-uat-lepyvak3",
+              "mode": "hold",
+              "request_id": "39fb920042aa42668ae20a3daf822e51",
+              "attempt_id": "ff81b58eb8ab-1",
+              "image_sha256": "ff81b58eb8abe98bddbbb0317ab4ea26f18a8923e8dfef4c3348bff0baee35f6",
+              "page_id": "p1"
+            }
+          ]
+        },
+        "pdf": {
+          "pages": 1,
+          "has_embedded_text": false,
+          "images_on_first_page": 1,
+          "sha256": "1d2813b9eee79e4b6e500db5ab6eab78939e62ef49673abdc43180031071670d"
+        },
+        "concurrency": 1,
+        "summary_executed": false
+      },
+      "manual-ocr-after-peer.json": {
+        "dialog_id": 2447351314288,
+        "run_gen": 1,
+        "engine_id": 2447351313952,
+        "worker_ids": [
+          2447448796736
+        ],
+        "done": false,
+        "results": {},
+        "errors": {},
+        "server": {
+          "posts": 1,
+          "rejected": [],
+          "attempts_by_image": {
+            "ff81b58eb8abe98bddbbb0317ab4ea26f18a8923e8dfef4c3348bff0baee35f6": 1
+          },
+          "retransmissions": [],
+          "completed": [],
+          "released": [],
+          "expired": [],
+          "events": [
+            {
+              "seq": 1,
+              "event": "received",
+              "time": "2026-10-31T00:35:38.507932+00:00",
+              "monotonic": 5143.6990693,
+              "run_id": "pagefolio-uat-lepyvak3",
+              "mode": "hold",
+              "request_id": "39fb920042aa42668ae20a3daf822e51",
+              "attempt_id": "ff81b58eb8ab-1",
+              "image_sha256": "ff81b58eb8abe98bddbbb0317ab4ea26f18a8923e8dfef4c3348bff0baee35f6",
+              "page_id": "p1"
+            }
+          ]
+        },
+        "pdf": {
+          "pages": 1,
+          "has_embedded_text": false,
+          "images_on_first_page": 1,
+          "sha256": "1d2813b9eee79e4b6e500db5ab6eab78939e62ef49673abdc43180031071670d"
+        },
+        "concurrency": 1,
+        "summary_executed": false
+      },
+      "manual-ocr-completed.json": {
+        "dialog_id": 2447351314288,
+        "run_gen": 1,
+        "engine_id": 2447351313952,
+        "worker_ids": [
+          2447448796736
+        ],
+        "done": true,
+        "results": {
+          "0": "PageFolio UAT 合成OCR結果"
+        },
+        "errors": {},
+        "server": {
+          "posts": 1,
+          "rejected": [],
+          "attempts_by_image": {
+            "ff81b58eb8abe98bddbbb0317ab4ea26f18a8923e8dfef4c3348bff0baee35f6": 1
+          },
+          "retransmissions": [],
+          "completed": [
+            "ff81b58eb8ab-1"
+          ],
+          "released": [
+            "ff81b58eb8ab-1"
+          ],
+          "expired": [],
+          "events": [
+            {
+              "seq": 1,
+              "event": "received",
+              "time": "2026-10-31T00:35:38.507932+00:00",
+              "monotonic": 5143.6990693,
+              "run_id": "pagefolio-uat-lepyvak3",
+              "mode": "hold",
+              "request_id": "39fb920042aa42668ae20a3daf822e51",
+              "attempt_id": "ff81b58eb8ab-1",
+              "image_sha256": "ff81b58eb8abe98bddbbb0317ab4ea26f18a8923e8dfef4c3348bff0baee35f6",
+              "page_id": "p1"
+            },
+            {
+              "seq": 2,
+              "event": "released",
+              "time": "2026-10-31T00:36:01.429319+00:00",
+              "monotonic": 5166.6204664,
+              "run_id": "pagefolio-uat-lepyvak3",
+              "mode": "hold",
+              "request_id": "39fb920042aa42668ae20a3daf822e51",
+              "attempt_id": "ff81b58eb8ab-1",
+              "image_sha256": "ff81b58eb8abe98bddbbb0317ab4ea26f18a8923e8dfef4c3348bff0baee35f6",
+              "page_id": "p1"
+            },
+            {
+              "seq": 3,
+              "event": "completed",
+              "time": "2026-10-31T00:36:01.430411+00:00",
+              "monotonic": 5166.6215532,
+              "run_id": "pagefolio-uat-lepyvak3",
+              "mode": "hold",
+              "status": 200,
+              "request_id": "39fb920042aa42668ae20a3daf822e51",
+              "attempt_id": "ff81b58eb8ab-1",
+              "image_sha256": "ff81b58eb8abe98bddbbb0317ab4ea26f18a8923e8dfef4c3348bff0baee35f6",
+              "page_id": "p1"
+            }
+          ]
+        },
+        "pdf": {
+          "pages": 1,
+          "has_embedded_text": false,
+          "images_on_first_page": 1,
+          "sha256": "1d2813b9eee79e4b6e500db5ab6eab78939e62ef49673abdc43180031071670d"
+        },
+        "concurrency": 1,
+        "summary_executed": false
+      },
+      "manual-ocr-final.json": {
+        "posts": 1,
+        "rejected": [],
+        "attempts_by_image": {
+          "ff81b58eb8abe98bddbbb0317ab4ea26f18a8923e8dfef4c3348bff0baee35f6": 1
+        },
+        "retransmissions": [],
+        "completed": [
+          "ff81b58eb8ab-1"
+        ],
+        "released": [
+          "ff81b58eb8ab-1"
+        ],
+        "expired": [],
+        "events": [
+          {
+            "seq": 1,
+            "event": "received",
+            "time": "2026-10-31T00:35:38.507932+00:00",
+            "monotonic": 5143.6990693,
+            "run_id": "pagefolio-uat-lepyvak3",
+            "mode": "hold",
+            "request_id": "39fb920042aa42668ae20a3daf822e51",
+            "attempt_id": "ff81b58eb8ab-1",
+            "image_sha256": "ff81b58eb8abe98bddbbb0317ab4ea26f18a8923e8dfef4c3348bff0baee35f6",
+            "page_id": "p1"
+          },
+          {
+            "seq": 2,
+            "event": "released",
+            "time": "2026-10-31T00:36:01.429319+00:00",
+            "monotonic": 5166.6204664,
+            "run_id": "pagefolio-uat-lepyvak3",
+            "mode": "hold",
+            "request_id": "39fb920042aa42668ae20a3daf822e51",
+            "attempt_id": "ff81b58eb8ab-1",
+            "image_sha256": "ff81b58eb8abe98bddbbb0317ab4ea26f18a8923e8dfef4c3348bff0baee35f6",
+            "page_id": "p1"
+          },
+          {
+            "seq": 3,
+            "event": "completed",
+            "time": "2026-10-31T00:36:01.430411+00:00",
+            "monotonic": 5166.6215532,
+            "run_id": "pagefolio-uat-lepyvak3",
+            "mode": "hold",
+            "status": 200,
+            "request_id": "39fb920042aa42668ae20a3daf822e51",
+            "attempt_id": "ff81b58eb8ab-1",
+            "image_sha256": "ff81b58eb8abe98bddbbb0317ab4ea26f18a8923e8dfef4c3348bff0baee35f6",
+            "page_id": "p1"
+          }
+        ]
+      },
+      "manual-ocr-close-start.json": {
+        "dialog_id": 2447351314288,
+        "run_gen": 1,
+        "engine_id": 2447351313952,
+        "worker_ids": [
+          2447448796736
+        ],
+        "done": false,
+        "results": {},
+        "errors": {},
+        "server": {
+          "posts": 1,
+          "rejected": [],
+          "attempts_by_image": {
+            "ff81b58eb8abe98bddbbb0317ab4ea26f18a8923e8dfef4c3348bff0baee35f6": 1
+          },
+          "retransmissions": [],
+          "completed": [],
+          "released": [],
+          "expired": [],
+          "events": [
+            {
+              "seq": 1,
+              "event": "received",
+              "time": "2026-10-31T00:35:38.507932+00:00",
+              "monotonic": 5143.6990693,
+              "run_id": "pagefolio-uat-lepyvak3",
+              "mode": "hold",
+              "request_id": "39fb920042aa42668ae20a3daf822e51",
+              "attempt_id": "ff81b58eb8ab-1",
+              "image_sha256": "ff81b58eb8abe98bddbbb0317ab4ea26f18a8923e8dfef4c3348bff0baee35f6",
+              "page_id": "p1"
+            }
+          ]
+        },
+        "pdf": {
+          "pages": 1,
+          "has_embedded_text": false,
+          "images_on_first_page": 1,
+          "sha256": "1d2813b9eee79e4b6e500db5ab6eab78939e62ef49673abdc43180031071670d"
+        },
+        "concurrency": 1,
+        "summary_executed": false
+      },
+      "manual-ocr-close-no.json": {
+        "dialog_id": 2447351314288,
+        "run_gen": 1,
+        "engine_id": 2447351313952,
+        "worker_ids": [
+          2447448796736
+        ],
+        "done": false,
+        "results": {},
+        "errors": {},
+        "server": {
+          "posts": 1,
+          "rejected": [],
+          "attempts_by_image": {
+            "ff81b58eb8abe98bddbbb0317ab4ea26f18a8923e8dfef4c3348bff0baee35f6": 1
+          },
+          "retransmissions": [],
+          "completed": [],
+          "released": [],
+          "expired": [],
+          "events": [
+            {
+              "seq": 1,
+              "event": "received",
+              "time": "2026-10-31T00:35:38.507932+00:00",
+              "monotonic": 5143.6990693,
+              "run_id": "pagefolio-uat-lepyvak3",
+              "mode": "hold",
+              "request_id": "39fb920042aa42668ae20a3daf822e51",
+              "attempt_id": "ff81b58eb8ab-1",
+              "image_sha256": "ff81b58eb8abe98bddbbb0317ab4ea26f18a8923e8dfef4c3348bff0baee35f6",
+              "page_id": "p1"
+            }
+          ]
+        },
+        "pdf": {
+          "pages": 1,
+          "has_embedded_text": false,
+          "images_on_first_page": 1,
+          "sha256": "1d2813b9eee79e4b6e500db5ab6eab78939e62ef49673abdc43180031071670d"
+        },
+        "concurrency": 1,
+        "summary_executed": false,
+        "dialog_exists": true,
+        "cancelled": false
+      }
+    }
+  },
+  "answers": {
+    "result_shown": "見えた",
+    "auto_return": "自動で出た",
+    "manual_switch": "していない",
+    "answered_no": "いいえを押した",
+    "process_kept": "続いていた",
+    "summary_not_run": "していない",
+    "note": "なし"
+  },
+  "outcome": "answered",
+  "harness_stop": {
+    "returncode": 0,
+    "stderr_tail": ""
+  },
+  "cleanup": {
+    "left_after_harness_stop": [],
+    "terminated_owned": [],
+    "alive_after": []
+  },
+  "input_monitor": {
+    "enabled": true,
+    "method": "read-only polling: GetAsyncKeyState/GetCursorPos/WindowFromPoint/GetAncestor/GetForegroundWindow (no SendInput/SetCursorPos/SetForegroundWindow); Alt/Tab/Win edges are watched regardless of the foreground window (switch_key_events)",
+    "interval_s": 0.008,
+    "samples": 7597,
+    "switch_key_capture": true,
+    "switch_key_samples": 7597,
+    "max_gap_s": 0.018,
+    "errors": [],
+    "truncated": false,
+    "started_at": "2026-10-31T00:35:31.831618+00:00",
+    "stopped_at": "2026-10-31T00:36:37.049071+00:00",
+    "owned_pids": [
+      3336,
+      20456,
+      29384
+    ],
+    "contaminating_phases": [
+      "start-harness",
+      "awaiting-enter",
+      "peer"
+    ],
+    "phase_log": [
+      {
+        "t": "2026-10-31T00:35:31.831615+00:00",
+        "phase": "w05b-briefing"
+      },
+      {
+        "t": "2026-10-31T00:35:34.527665+00:00",
+        "phase": "start-harness"
+      },
+      {
+        "t": "2026-10-31T00:35:39.534872+00:00",
+        "phase": "awaiting-enter"
+      },
+      {
+        "t": "2026-10-31T00:35:51.546434+00:00",
+        "phase": "peer"
+      },
+      {
+        "t": "2026-10-31T00:35:52.356568+00:00",
+        "phase": "w05b-quiet"
+      },
+      {
+        "t": "2026-10-31T00:35:55.727017+00:00",
+        "phase": "w05b-answer"
+      }
+    ],
+    "mouse_events": [],
+    "foreground_transitions": [
+      {
+        "seq": 1,
+        "t": "2026-10-31T00:35:38.034806+00:00",
+        "elapsed_s": 6.203,
+        "phase": "start-harness",
+        "from": {
+          "hwnd": 1510328,
+          "pid": 21768,
+          "title": "Windows PowerShell",
+          "class": "CASCADIA_HOSTING_WINDOW_CLASS"
+        },
+        "to": {
+          "hwnd": 1638702,
+          "pid": 20456,
+          "title": "PageFolio",
+          "class": "TkTopLevel"
+        }
+      },
+      {
+        "seq": 2,
+        "t": "2026-10-31T00:35:38.813116+00:00",
+        "elapsed_s": 6.981,
+        "phase": "start-harness",
+        "from": {
+          "hwnd": 1638702,
+          "pid": 20456,
+          "title": "PageFolio",
+          "class": "TkTopLevel"
+        },
+        "to": {
+          "hwnd": 724850,
+          "pid": 20456,
+          "title": "確認",
+          "class": "#32770"
+        }
+      },
+      {
+        "seq": 5,
+        "t": "2026-10-31T00:35:43.826220+00:00",
+        "elapsed_s": 11.994,
+        "phase": "awaiting-enter",
+        "from": {
+          "hwnd": 724850,
+          "pid": 20456,
+          "title": "確認",
+          "class": "#32770"
+        },
+        "to": {
+          "hwnd": 66014,
+          "pid": 9212,
+          "title": "",
+          "class": "ForegroundStaging"
+        }
+      },
+      {
+        "seq": 6,
+        "t": "2026-10-31T00:35:43.834515+00:00",
+        "elapsed_s": 12.003,
+        "phase": "awaiting-enter",
+        "from": {
+          "hwnd": 66014,
+          "pid": 9212,
+          "title": "",
+          "class": "ForegroundStaging"
+        },
+        "to": {
+          "hwnd": 1838738,
+          "pid": 9212,
+          "title": "タスクの切り替え",
+          "class": "XamlExplorerHostIslandWindow"
+        }
+      },
+      {
+        "seq": 14,
+        "t": "2026-10-31T00:35:46.573228+00:00",
+        "elapsed_s": 14.741,
+        "phase": "awaiting-enter",
+        "from": {
+          "hwnd": 1838738,
+          "pid": 9212,
+          "title": "タスクの切り替え",
+          "class": "XamlExplorerHostIslandWindow"
+        },
+        "to": {
+          "hwnd": 1510328,
+          "pid": 21768,
+          "title": "Windows PowerShell",
+          "class": "CASCADIA_HOSTING_WINDOW_CLASS"
+        }
+      },
+      {
+        "seq": 15,
+        "t": "2026-10-31T00:35:52.275336+00:00",
+        "elapsed_s": 20.443,
+        "phase": "peer",
+        "from": {
+          "hwnd": 1510328,
+          "pid": 21768,
+          "title": "Windows PowerShell",
+          "class": "CASCADIA_HOSTING_WINDOW_CLASS"
+        },
+        "to": {
+          "hwnd": 724850,
+          "pid": 20456,
+          "title": "確認",
+          "class": "#32770"
+        }
+      },
+      {
+        "seq": 17,
+        "t": "2026-10-31T00:35:57.335012+00:00",
+        "elapsed_s": 25.503,
+        "phase": "w05b-answer",
+        "from": {
+          "hwnd": 724850,
+          "pid": 20456,
+          "title": "確認",
+          "class": "#32770"
+        },
+        "to": {
+          "hwnd": 1182916,
+          "pid": 20456,
+          "title": "OCR",
+          "class": "TkTopLevel"
+        }
+      },
+      {
+        "seq": 20,
+        "t": "2026-10-31T00:36:02.631335+00:00",
+        "elapsed_s": 30.799,
+        "phase": "w05b-answer",
+        "from": {
+          "hwnd": 1182916,
+          "pid": 20456,
+          "title": "OCR",
+          "class": "TkTopLevel"
+        },
+        "to": {
+          "hwnd": 66014,
+          "pid": 9212,
+          "title": "",
+          "class": "ForegroundStaging"
+        }
+      },
+      {
+        "seq": 21,
+        "t": "2026-10-31T00:36:02.648831+00:00",
+        "elapsed_s": 30.817,
+        "phase": "w05b-answer",
+        "from": {
+          "hwnd": 66014,
+          "pid": 9212,
+          "title": "",
+          "class": "ForegroundStaging"
+        },
+        "to": {
+          "hwnd": 1838738,
+          "pid": 9212,
+          "title": "タスクの切り替え",
+          "class": "XamlExplorerHostIslandWindow"
+        }
+      },
+      {
+        "seq": 22,
+        "t": "2026-10-31T00:36:04.234310+00:00",
+        "elapsed_s": 32.402,
+        "phase": "w05b-answer",
+        "from": {
+          "hwnd": 1838738,
+          "pid": 9212,
+          "title": "タスクの切り替え",
+          "class": "XamlExplorerHostIslandWindow"
+        },
+        "to": {
+          "hwnd": 66088,
+          "pid": 9212,
+          "title": "",
+          "class": "ForegroundStaging"
+        }
+      },
+      {
+        "seq": 23,
+        "t": "2026-10-31T00:36:04.245172+00:00",
+        "elapsed_s": 32.411,
+        "phase": "w05b-answer",
+        "from": {
+          "hwnd": 66088,
+          "pid": 9212,
+          "title": "",
+          "class": "ForegroundStaging"
+        },
+        "to": {
+          "hwnd": 1510328,
+          "pid": 21768,
+          "title": "Windows PowerShell",
+          "class": "CASCADIA_HOSTING_WINDOW_CLASS"
+        }
+      }
+    ],
+    "key_events": [],
+    "switch_key_events": [
+      {
+        "seq": 3,
+        "t": "2026-10-31T00:35:43.632856+00:00",
+        "elapsed_s": 11.801,
+        "phase": "awaiting-enter",
+        "kind": "down",
+        "key": "alt",
+        "combo": "alt",
+        "foreground": {
+          "hwnd": 724850,
+          "pid": 20456,
+          "title": "確認",
+          "class": "#32770"
+        }
+      },
+      {
+        "seq": 4,
+        "t": "2026-10-31T00:35:43.825787+00:00",
+        "elapsed_s": 11.994,
+        "phase": "awaiting-enter",
+        "kind": "down",
+        "key": "tab",
+        "combo": "alt-tab",
+        "foreground": {
+          "hwnd": 724850,
+          "pid": 20456,
+          "title": "確認",
+          "class": "#32770"
+        }
+      },
+      {
+        "seq": 7,
+        "t": "2026-10-31T00:35:44.515025+00:00",
+        "elapsed_s": 12.683,
+        "phase": "awaiting-enter",
+        "kind": "down",
+        "key": "tab",
+        "combo": "alt-tab",
+        "foreground": {
+          "hwnd": 1838738,
+          "pid": 9212,
+          "title": "タスクの切り替え",
+          "class": "XamlExplorerHostIslandWindow"
+        }
+      },
+      {
+        "seq": 8,
+        "t": "2026-10-31T00:35:44.830039+00:00",
+        "elapsed_s": 12.998,
+        "phase": "awaiting-enter",
+        "kind": "down",
+        "key": "tab",
+        "combo": "alt-tab",
+        "foreground": {
+          "hwnd": 1838738,
+          "pid": 9212,
+          "title": "タスクの切り替え",
+          "class": "XamlExplorerHostIslandWindow"
+        }
+      },
+      {
+        "seq": 9,
+        "t": "2026-10-31T00:35:45.170366+00:00",
+        "elapsed_s": 13.339,
+        "phase": "awaiting-enter",
+        "kind": "down",
+        "key": "tab",
+        "combo": "alt-tab",
+        "foreground": {
+          "hwnd": 1838738,
+          "pid": 9212,
+          "title": "タスクの切り替え",
+          "class": "XamlExplorerHostIslandWindow"
+        }
+      },
+      {
+        "seq": 10,
+        "t": "2026-10-31T00:35:45.433288+00:00",
+        "elapsed_s": 13.602,
+        "phase": "awaiting-enter",
+        "kind": "down",
+        "key": "tab",
+        "combo": "alt-tab",
+        "foreground": {
+          "hwnd": 1838738,
+          "pid": 9212,
+          "title": "タスクの切り替え",
+          "class": "XamlExplorerHostIslandWindow"
+        }
+      },
+      {
+        "seq": 11,
+        "t": "2026-10-31T00:35:45.707266+00:00",
+        "elapsed_s": 13.876,
+        "phase": "awaiting-enter",
+        "kind": "down",
+        "key": "tab",
+        "combo": "alt-tab",
+        "foreground": {
+          "hwnd": 1838738,
+          "pid": 9212,
+          "title": "タスクの切り替え",
+          "class": "XamlExplorerHostIslandWindow"
+        }
+      },
+      {
+        "seq": 12,
+        "t": "2026-10-31T00:35:45.987415+00:00",
+        "elapsed_s": 14.156,
+        "phase": "awaiting-enter",
+        "kind": "down",
+        "key": "tab",
+        "combo": "alt-tab",
+        "foreground": {
+          "hwnd": 1838738,
+          "pid": 9212,
+          "title": "タスクの切り替え",
+          "class": "XamlExplorerHostIslandWindow"
+        }
+      },
+      {
+        "seq": 13,
+        "t": "2026-10-31T00:35:46.327180+00:00",
+        "elapsed_s": 14.496,
+        "phase": "awaiting-enter",
+        "kind": "down",
+        "key": "tab",
+        "combo": "alt-tab",
+        "foreground": {
+          "hwnd": 1838738,
+          "pid": 9212,
+          "title": "タスクの切り替え",
+          "class": "XamlExplorerHostIslandWindow"
+        }
+      },
+      {
+        "seq": 16,
+        "t": "2026-10-31T00:35:56.710790+00:00",
+        "elapsed_s": 24.879,
+        "phase": "w05b-answer",
+        "kind": "down",
+        "key": "alt",
+        "combo": "alt",
+        "foreground": {
+          "hwnd": 724850,
+          "pid": 20456,
+          "title": "確認",
+          "class": "#32770"
+        }
+      },
+      {
+        "seq": 18,
+        "t": "2026-10-31T00:36:02.440201+00:00",
+        "elapsed_s": 30.609,
+        "phase": "w05b-answer",
+        "kind": "down",
+        "key": "alt",
+        "combo": "alt",
+        "foreground": {
+          "hwnd": 1182916,
+          "pid": 20456,
+          "title": "OCR",
+          "class": "TkTopLevel"
+        }
+      },
+      {
+        "seq": 19,
+        "t": "2026-10-31T00:36:02.631182+00:00",
+        "elapsed_s": 30.799,
+        "phase": "w05b-answer",
+        "kind": "down",
+        "key": "tab",
+        "combo": "alt-tab",
+        "foreground": {
+          "hwnd": 1182916,
+          "pid": 20456,
+          "title": "OCR",
+          "class": "TkTopLevel"
+        }
+      },
+      {
+        "seq": 24,
+        "t": "2026-10-31T00:36:06.240570+00:00",
+        "elapsed_s": 34.409,
+        "phase": "w05b-answer",
+        "kind": "down",
+        "key": "alt",
+        "combo": "alt",
+        "foreground": {
+          "hwnd": 1510328,
+          "pid": 21768,
+          "title": "Windows PowerShell",
+          "class": "CASCADIA_HOSTING_WINDOW_CLASS"
+        }
+      }
+    ]
+  },
+  "procedure_assessment": {
+    "procedure_verdict": "clean",
+    "rerun_required": false,
+    "reason": "peer完了までの間にPageFolio上のボタン押下・キー押下は検出されなかった",
+    "pagefolio_presses_before_peer_done": [],
+    "pagefolio_keys_before_peer_done": [],
+    "focus_correct_as_recorded": true,
+    "focus_attribution": "product-focus-ok"
+  },
+  "procedure_verdict": "clean",
+  "focus_attribution": "product-focus-ok",
+  "finished_at": "2026-10-31T00:36:37.049227+00:00",
+  "raw_inputs": [
+    {
+      "at": "2026-10-31T00:35:34.527645+00:00",
+      "key": "enter",
+      "text": "",
+      "role": "continue"
+    },
+    {
+      "at": "2026-10-31T00:35:51.545642+00:00",
+      "key": "enter",
+      "text": "",
+      "role": "continue"
+    },
+    {
+      "at": "2026-10-31T00:36:09.267663+00:00",
+      "key": "result_shown",
+      "attempt": 1,
+      "text": "見えた",
+      "rejected": null
+    },
+    {
+      "at": "2026-10-31T00:36:15.110545+00:00",
+      "key": "auto_return",
+      "attempt": 1,
+      "text": "自動で出た",
+      "rejected": null
+    },
+    {
+      "at": "2026-10-31T00:36:19.959643+00:00",
+      "key": "manual_switch",
+      "attempt": 1,
+      "text": "していない",
+      "rejected": null
+    },
+    {
+      "at": "2026-10-31T00:36:26.327800+00:00",
+      "key": "answered_no",
+      "attempt": 1,
+      "text": "いいえを押した",
+      "rejected": null
+    },
+    {
+      "at": "2026-10-31T00:36:30.633235+00:00",
+      "key": "process_kept",
+      "attempt": 1,
+      "text": "続いていた",
+      "rejected": null
+    },
+    {
+      "at": "2026-10-31T00:36:33.994206+00:00",
+      "key": "summary_not_run",
+      "attempt": 1,
+      "text": "していない",
+      "rejected": null
+    },
+    {
+      "at": "2026-10-31T00:36:36.559492+00:00",
+      "key": "note",
+      "attempt": 1,
+      "text": "なし",
+      "rejected": null
+    }
+  ],
+  "composed_answer": "W05b ocr-close-confirm module：result_shown=見えた・auto_return=自動で出た・manual_switch=していない・answered_no=いいえを押した・process_kept=続いていた・summary_not_run=していない（メモ: なし）"
+}

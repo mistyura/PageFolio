@@ -1,0 +1,32 @@
+[
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\release-uat-6a425e5b5b7c4a71a90ecab623107efa\\manifest.json",
+    "target": "06-05-evidence/W05b_ocr-close-confirm_at_production-exe-20261031T004536Z-raw/run-manifest.json",
+    "sha256": "9dc163d70b2b5bd62801ec26f89ab68ab5d530db2a71c01d4b5f52ebd386371d"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\release-uat-6a425e5b5b7c4a71a90ecab623107efa\\evidence\\inspect-001.json",
+    "target": "06-05-evidence/W05b_ocr-close-confirm_at_production-exe-20261031T004536Z-raw/run-evidence-inspect-001.json",
+    "sha256": "096847a383fc24b6093c03807e8646ea9895ad394a9ea5a13af76c0fa3c7e29d"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\release-uat-6a425e5b5b7c4a71a90ecab623107efa\\evidence\\inspect-002.json",
+    "target": "06-05-evidence/W05b_ocr-close-confirm_at_production-exe-20261031T004536Z-raw/run-evidence-inspect-002.json",
+    "sha256": "a44297c7dfc9b9aff7393ceea4f634c69bdc0cb489c4538954f6349a35a2c70d"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\release-uat-6a425e5b5b7c4a71a90ecab623107efa\\evidence\\w05b-server.jsonl",
+    "target": "06-05-evidence/W05b_ocr-close-confirm_at_production-exe-20261031T004536Z-raw/run-evidence-w05b-server.jsonl",
+    "sha256": "8835c84f1e9b0dc82834657e9dc976d9618f818a0255fc527a9404b0c2e8abe1"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\release-uat-6a425e5b5b7c4a71a90ecab623107efa\\fixtures\\ocr-one-page.pdf",
+    "target": "06-05-evidence/W05b_ocr-close-confirm_at_production-exe-20261031T004536Z-raw/run-fixtures-ocr-one-page.pdf",
+    "sha256": "fc7b8c86d324ce59907768abc241aa125707dfcf7639114f7de08bb57d7707ff"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\release-uat-6a425e5b5b7c4a71a90ecab623107efa\\dist\\pagefolio_settings.json",
+    "target": "06-05-evidence/W05b_ocr-close-confirm_at_production-exe-20261031T004536Z-raw/run-dist-pagefolio_settings.json",
+    "sha256": "e0332c76549ce3c8ef98a122e5e43747f95c25afae1671bdde1f9f4b257b29bc"
+  }
+]

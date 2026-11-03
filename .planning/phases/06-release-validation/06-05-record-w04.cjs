@@ -1,0 +1,111 @@
+// W04: 人の進捗/完了回答と、1ページ1要求の継続・復帰・保護を照合する。
+const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto');
+const phase=__dirname,root=path.resolve(phase,'../../..'),name=process.argv[2];
+const assert=(ok,why)=>{if(!ok)throw Error(why);};
+const hash=b=>crypto.createHash('sha256').update(b).digest('hex');
+const equal=(a,b)=>JSON.stringify(a)===JSON.stringify(b);
+assert(/^W04_ocr-1page_at_(script|module|production-exe)-\d{8}T\d{6}Z\.json$/.test(name||''),'unexpected filename');
+const relative='06-05-evidence/'+name,raw=fs.readFileSync(path.join(phase,relative)),s=JSON.parse(raw);
+assert(s.case==='W04'&&s.condition==='ocr-1page'&&s.row===`W04/ocr-1page@${s.entry}`,'row mismatch');
+assert(!s.selftest&&!s.diagnostics&&s.acceptance!==false&&!s.error&&s.outcome==='answered','not a human acceptance run');
+assert(s.procedure_verdict==='clean'&&!s.procedure_assessment.rerun_required,'procedure not clean');
+const a=s.answers;
+assert(a.progress_shown==='はい'&&a.completed_shown==='見えた'&&a.summary_not_run==='していない','human answer is not pass');
+assert(s.raw_inputs.length>0&&s.raw_inputs.every(x=>!x.rejected&&!x.selftest),'synthetic/rejected input');
+for(const key of ['progress_shown','completed_shown','summary_not_run'])assert(s.raw_inputs.some(x=>x.key===key&&x.text.trim()===a[key]),'direct answer missing: '+key);
+const exe=s.entry==='production-exe',run=path.resolve(s.run);
+assert(run.startsWith(path.join(root,'.planning','tmp')+path.sep),'unexpected run root');
+const manifest=JSON.parse(fs.readFileSync(path.join(run,'manifest.json')));
+const pre=s.steps.find(x=>x.step===(exe?'target-ready':'prepared')),post=s.steps.find(x=>x.step==='after-peer');
+assert(pre.windows.length===2&&post.windows.length===2,'main/OCR window count mismatch');
+const before=pre.windows.find(w=>w.title==='OCR'),after=post.windows.find(w=>w.title==='OCR');
+assert(before&&after&&before.hwnd===after.hwnd&&before.pid===after.pid&&!after.iconic&&after.visible,'OCR window changed');
+assert(pre.windows.every(w=>post.windows.some(x=>x.hwnd===w.hwnd&&x.pid===w.pid)),'window identity changed');
+assert(post.foreground.hwnd===after.hwnd&&post.foreground.pid===after.pid,'actual OCR foreground missing');
+const start=exe?s.ocr_before:s.ocr_before.server,resumed=exe?s.ocr_after_peer:s.ocr_after_peer.server,done=exe?s.ocr_completed:s.ocr_completed.server;
+function received(summary){return summary.events.filter(e=>e.event==='received');}
+for(const state of [start,resumed,done]){
+ assert(state.posts===1&&received(state).length===1&&!state.rejected.length&&!state.retransmissions.length&&!state.expired.length,'not one clean request');
+ assert(Object.values(state.attempts_by_image).length===1&&Object.values(state.attempts_by_image)[0]===1,'attempt count mismatch');
+}
+assert(!start.completed.length&&!resumed.completed.length&&!start.released.length&&!resumed.released.length,'OCR already finished before restore');
+assert(equal(received(start),received(resumed))&&equal(received(start),received(done)),'page/request/attempt changed');
+const request=received(start)[0];
+// EXEのrun_idはUUID、Python harnessはrunディレクトリ名を使う。
+const runId=exe?manifest.run_id:path.basename(run);
+if(exe)assert(path.basename(run)==='release-uat-'+runId,'EXE run directory/id mismatch');
+assert(request.page_id==='p1'&&request.mode==='hold'&&request.run_id===runId,'wrong page or run');
+assert(equal(done.completed,[request.attempt_id])&&equal(done.released,[request.attempt_id]),'original attempt did not complete');
+const completedEvent=done.events.find(e=>e.event==='completed'),releasedEvent=done.events.find(e=>e.event==='released');
+assert(completedEvent&&releasedEvent&&completedEvent.status===200&&request.time<post.at&&post.at<releasedEvent.time&&releasedEvent.time<=completedEvent.time,'OCR event ordering mismatch');
+for(const event of [releasedEvent,completedEvent])for(const key of ['request_id','attempt_id','image_sha256','page_id'])assert(event[key]===request[key],'completion identity mismatch');
+const pending=[];
+function collect(label,dir,names){for(const file of names){const source=path.join(dir,file);assert(fs.existsSync(source),'raw missing: '+file);pending.push({source,name:label+'-'+file.replaceAll('/','-'),bytes:fs.readFileSync(source)});}}
+let pdf,environment,sourceCommit,focusResult=null;
+if(exe){
+ assert(s.peer_exit.returncode===0&&s.peer_exit.at<=post.at&&post.foreground.owned_by==='primary','peer did not finish before foreground observation');
+ assert(s.input_monitor.enabled&&!s.input_monitor.errors.length&&!s.input_monitor.truncated&&!s.procedure_assessment.all_window_presses_during_observation.length,'observation interrupted');
+ assert(s.source_distribution_unchanged===true&&!s.owner_after.length,'source/owner protection failed');
+ assert(s.stop.length===2&&s.stop.every(x=>['closed','already-exited'].includes(x.result))&&s.stop.find(x=>x.pid===s.peer.pid)?.result==='already-exited','cleanup not normal');
+ assert(s.user_close?.closed&&s.user_close.pid===s.primary.pid,'user close not established');
+ const v=s.verify_after;
+ assert(v.ok&&!v.distribution_changed.length&&!v.undeclared.length&&!v.extra_dirs.length&&!v.missing_dirs.length&&v.overlay_changed.every(x=>x==='pagefolio_settings.json'),'distribution changed');
+ assert(manifest.status==='stopped'&&manifest.run_id===s.run_id,'unexpected manifest');
+ assert(Object.keys(manifest.overlay).length===1,'unexpected overlay');
+ assert(Object.hasOwn(manifest.overlay,'pagefolio_settings.json')&&manifest.overlay['pagefolio_settings.json']!==null,'OCR settings not declared');
+ assert(manifest.overlay_log.some(x=>x.name==='pagefolio_settings.json'&&x.at<manifest.processes.find(p=>p.role==='primary').started_at),'overlay not declared before start');
+ assert(equal(s.ocr_final,done),'extra OCR request after completion');
+ assert(s.ocr_preparation.ocr_concurrency===1&&s.ocr_preparation.target_pages===1&&s.ocr_preparation.summary_executed===false&&/^http:\/\/127\.0\.0\.1:\d+$/.test(s.ocr_preparation.server_url),'unsafe OCR preparation');
+ pdf=s.fixture_pdf;assert(path.resolve(pdf.path)===path.join(run,'fixtures','ocr-one-page.pdf'),'unexpected PDF path');
+ assert(manifest.fixtures['ocr-one-page'].sha256===pdf.sha256,'PDF manifest mismatch');
+ collect('run',run,['manifest.json','evidence/inspect-001.json','evidence/inspect-002.json','evidence/w04-server.jsonl','fixtures/ocr-one-page.pdf','dist/pagefolio_settings.json']);
+ assert(equal(fs.readFileSync(path.join(run,'evidence/w04-server.jsonl'),'utf8').trim().split(/\r?\n/).map(JSON.parse),done.events),'raw server log mismatch');
+ environment=s.environment;
+}else{
+ assert(s.harness_peer.returncode===0&&s.harness_inspect.returncode===0&&s.harness_stop.returncode===0,'harness error');
+ assert(!s.cleanup.alive_after.length&&!s.cleanup.terminated_owned.length&&!s.cleanup.left_after_harness_stop.length,'cleanup not normal');
+ const i=s.harness_inspect.json,peer=s.harness_peer.json.result;
+ focusResult=i['focus-result.json'];
+ assert(peer.result==='completed'&&peer.constructed===0&&peer.status_preserved,'peer did not restore owner');
+ assert(focusResult.result==='completed'&&focusResult.state_preserved&&focusResult.target_correct&&focusResult.document_pages===1&&focusResult.expected_tk===after.hwnd,'OCR state/target mismatch');
+ for(const key of ['dialog_id','run_gen','engine_id','worker_ids'])assert(equal(s.ocr_before[key],s.ocr_after_peer[key])&&equal(s.ocr_before[key],s.ocr_completed[key]),'engine/worker identity changed');
+ assert(s.ocr_before.worker_ids.length===1&&!s.ocr_before.done&&!s.ocr_after_peer.done&&s.ocr_completed.done,'OCR lifecycle mismatch');
+ assert(equal(s.ocr_completed.results,{'0':'PageFolio UAT 合成OCR結果'})&&!Object.keys(s.ocr_completed.errors).length,'completion result mismatch');
+ for(const state of [s.ocr_before,s.ocr_after_peer,s.ocr_completed])assert(state.concurrency===1&&state.summary_executed===false,'OCR concurrency/summary mismatch');
+ assert(i.originals_unchanged,'originals changed');
+ for(const [file,expected] of Object.entries(manifest.originals_before)){const p=path.join(root,file);assert((fs.existsSync(p)?hash(fs.readFileSync(p)):null)===expected,'original changed after cleanup: '+file);}
+ const fixture=path.join(run,'uat-owner-ocr');
+ assert(path.resolve(manifest.fixture)===fixture&&!fs.existsSync(path.join(fixture,'manual-deadline')),'unexpected fixture or safety deadline');
+ const final=JSON.parse(fs.readFileSync(path.join(fixture,'manual-ocr-final.json')));
+ assert(equal(final,done),'extra OCR request after completion');
+ for(const [file,value] of [['manual-ocr-running.json',s.ocr_before],['manual-ocr-after-peer.json',s.ocr_after_peer],['manual-ocr-completed.json',s.ocr_completed]])assert(equal(JSON.parse(fs.readFileSync(path.join(fixture,file))),value),'raw OCR state mismatch');
+ assert(equal(fs.readFileSync(path.join(fixture,'manual-ocr-server.jsonl'),'utf8').trim().split(/\r?\n/).map(JSON.parse),done.events),'raw server log mismatch');
+ collect('run',run,['manifest.json']);
+ collect('primary',fixture,['result.json','focus-result.json','ready','stdout.log','stderr.log','traceback.log','manual-ocr-running.json','manual-ocr-after-peer.json','manual-ocr-completed.json','manual-ocr-final.json','manual-ocr-server.jsonl','ocr-one-page.pdf']);
+ const primary=JSON.parse(fs.readFileSync(path.join(fixture,'result.json')));
+ assert(primary.result==='primary'&&primary.constructed===1&&primary.restored===1&&primary.status_preserved,'primary abnormal exit');
+ pdf={...s.ocr_before.pdf,path:path.join(fixture,'ocr-one-page.pdf')};
+ environment={...manifest.environment,elevated:manifest.environment.is_admin};sourceCommit=manifest.source_commit;
+}
+assert(pdf.pages===1&&!pdf.has_embedded_text&&pdf.images_on_first_page===1&&hash(fs.readFileSync(pdf.path))===pdf.sha256,'image PDF missing/changed');
+const build=JSON.parse(fs.readFileSync(path.join(phase,'06-BUILD-EVIDENCE.json'))),report=JSON.parse(fs.readFileSync(path.join(build.final_release.final_dir,'release-report.json')));
+assert(build.generation===5&&s.target_exe_sha256===build.final_release.exe_sha256,'wrong generation');
+if(exe)assert(s.binary_sha256===build.final_release.exe_sha256&&s.verify_after.exe_sha256===s.binary_sha256&&s.tree_sha256===build.final_release.tree_sha256,'binary/tree mismatch');
+for(const [file,expected] of Object.entries(report.input_manifest))assert(hash(fs.readFileSync(path.join(root,file)))===expected,'frozen input drift: '+file);
+const ledgerPath=path.join(phase,'06-MANUAL-EVIDENCE.json'),ledger=JSON.parse(fs.readFileSync(ledgerPath)),row=ledger.cases.find(c=>c.id==='W04').subrows.find(r=>r.card===s.row);
+assert(row&&row.status==='not-run'&&row.generation===5&&row.release_requirement==='required','row already judged/wrong generation');
+const uatPath=path.join(phase,'06-UAT.md'),uat=fs.readFileSync(uatPath,'utf8'),marker='### '+s.row+'\n',first=uat.indexOf(marker);assert(first>=0,'card missing');
+const next=uat.indexOf('\n### ',first+marker.length),last=next<0?uat.length:next,card=uat.slice(first,last);assert(card.includes('- **状態**: not-run'),'card already judged');
+const dest=path.join(phase,relative.replace('.json','-raw'));assert(!fs.existsSync(dest),'raw already preserved');
+fs.mkdirSync(dest);const copies=pending.map(p=>{const target=path.join(dest,p.name);fs.writeFileSync(target,p.bytes,{flag:'wx'});return {source:p.source,target:path.relative(phase,target).replaceAll('\\','/'),sha256:hash(p.bytes)};});
+fs.writeFileSync(path.join(dest,'copies.json'),JSON.stringify(copies,null,2)+'\n');
+row.status='pass';row.preparation={status:'prepared',run_id:runId,note:'1ページ画像PDF・並列1・loopback合成OCR。要求待機中の二次起動後に同じ要求を解放。'};
+row.observations={progress_shown:true,same_page_attempt:true,completed_shown:true,post_count_1:true,summary_not_run:true,...(exe?{foreground_after:post.foreground}:{})};
+row.observation_basis={session_file:relative,session_sha256:hash(raw),window:{before,after,foreground:post.foreground},request,server_completed:done,focus_result:focusResult,fixture_pdf:pdf,raw_copy_manifest:path.relative(phase,path.join(dest,'copies.json')).replaceAll('\\','/'),frozen_input_files:Object.keys(report.input_manifest).length,note:exe?'実EXEの内部には注入せず、実前景と人の表示確認、serverの同一要求完了で照合。':'人の表示確認と、同一dialog/engine/worker/run generation・page/attempt保持を照合。'};
+row.answer=s.composed_answer;row.raw_inputs=s.raw_inputs;row.answer_provenance='利用者が可視PowerShellへ直接入力。担当の代理入力なし。';row.run_id=runId;row.observed_at=s.finished_at;row.environment=environment;row.source_commit=sourceCommit;row.input_manifest_sha256=build.final_release.input_manifest_sha256;if(exe)row.binary_sha256=s.binary_sha256;
+const passed=ledger.cases.flatMap(c=>c.subrows).filter(r=>r.release_requirement==='required'&&r.status==='pass').length;
+const updated=card.replace(/- \*\*状態\*\*: not-run[^\n]*/,`- **状態**: pass / 利用者直接回答・同一OCR要求の継続・復帰が一致。根拠: ${relative}\n- **回答原文**: ${row.answer}`);
+let result=uat.slice(0,first)+updated+uat.slice(last);
+result=result.replace(/本受入は必須108行(?:not-run|中\d+行pass・\d+行not-run)・W11対象外2行not-run。/,`本受入は必須108行中${passed}行pass・${108-passed}行not-run・W11対象外2行not-run。`);
+fs.writeFileSync(ledgerPath,JSON.stringify(ledger,null,2)+'\n');fs.writeFileSync(uatPath,result);
+console.log(JSON.stringify({row:s.row,status:'pass',required_pass:passed,required_not_run:108-passed,deferred:2,copied:copies.length}));

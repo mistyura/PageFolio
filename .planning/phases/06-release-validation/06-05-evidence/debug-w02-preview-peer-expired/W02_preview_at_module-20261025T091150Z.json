@@ -1,0 +1,2147 @@
+{
+  "row": "W02/preview@module",
+  "case": "W02",
+  "condition": "preview",
+  "entry": "module",
+  "selftest": false,
+  "started_at": "2026-10-25T09:10:26.590958+00:00",
+  "target_exe_sha256": "b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17",
+  "steps": [
+    {
+      "at": "2026-10-25T09:10:26.595408+00:00",
+      "step": "start-harness"
+    },
+    {
+      "at": "2026-10-25T09:10:31.797999+00:00",
+      "step": "ui-probe-started",
+      "pid": 14824,
+      "wm_null": false
+    },
+    {
+      "at": "2026-10-25T09:10:31.798730+00:00",
+      "step": "prepared",
+      "windows": [
+        {
+          "hwnd": 4001484,
+          "pid": 14824,
+          "title": "PageFolio",
+          "class": "TkTopLevel",
+          "visible": true,
+          "iconic": false,
+          "zoomed": false,
+          "rect": [
+            156,
+            156,
+            1372,
+            995
+          ]
+        }
+      ],
+      "foreground": {
+        "hwnd": 4001484,
+        "pid": 14824,
+        "title": "PageFolio"
+      },
+      "pids": [
+        14824,
+        18828,
+        34780
+      ]
+    },
+    {
+      "at": "2026-10-25T09:11:17.439538+00:00",
+      "step": "peer"
+    },
+    {
+      "at": "2026-10-25T09:11:19.801250+00:00",
+      "step": "after-peer",
+      "windows": [
+        {
+          "hwnd": 4001484,
+          "pid": 14824,
+          "title": "PageFolio",
+          "class": "TkTopLevel",
+          "visible": true,
+          "iconic": false,
+          "zoomed": false,
+          "rect": [
+            156,
+            156,
+            1372,
+            995
+          ]
+        }
+      ],
+      "foreground": {
+        "hwnd": 4001484,
+        "pid": 14824,
+        "title": "PageFolio"
+      }
+    },
+    {
+      "at": "2026-10-25T09:11:19.801506+00:00",
+      "step": "key-probe-instructed",
+      "key": "F5",
+      "presses": 2
+    }
+  ],
+  "purpose": "debug-frequency",
+  "acceptance": false,
+  "debug_session": "w02-preview-peer-expired",
+  "diagnostics": {
+    "ui_thread": true,
+    "wm_null_probe": false,
+    "interval_ms": 100,
+    "run_index": 4,
+    "run_total": 10,
+    "hold_s": 30.0,
+    "syscall_probe": true,
+    "induce": {
+      "requested": true,
+      "variant": "alt-tab-switcher-hold-then-quiet-wait",
+      "switcher_min_s": 0.5,
+      "quiet_wait_s": 20.0,
+      "gate": [
+        {
+          "at": "2026-10-25T09:11:13.211026+00:00",
+          "action": "auto-wait",
+          "seconds": 3.93
+        }
+      ]
+    },
+    "driver_sha256": "80e32e1143a114a55a2fd48157f8f7be18262860a00845a34b584753c6817274",
+    "probe_sha256": "e9a4c9a914a4979a9492c36589c6d46b641ea3c170cc077b8536ff8ffe2e197a",
+    "note": "発生頻度の確認用の診断実行。受入証拠ではない。製品コードは変更していない。"
+  },
+  "harness_start": {
+    "returncode": 0,
+    "stderr_tail": ""
+  },
+  "run": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-w6bvbtvx",
+  "harness_manifest": {
+    "run": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-w6bvbtvx",
+    "namespace": "3db3dd2480e04239bfe4d6527e8cf8da",
+    "case": "preview",
+    "launcher_pid": 34780,
+    "source_commit": "36909a82155c79d84a204d4c426d384336ed9383"
+  },
+  "owned_pids": [
+    {
+      "pid": 14824,
+      "created": 134373930269839498,
+      "image": "C:\\Users\\shdwf\\AppData\\Local\\Programs\\Python\\Python315\\python.exe"
+    },
+    {
+      "pid": 34780,
+      "created": 134373930269371530,
+      "image": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.venv\\Scripts\\python.exe"
+    }
+  ],
+  "harness_start_fixture": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-w6bvbtvx\\uat-owner-preview",
+  "induce_assessment": {
+    "variant": "alt-tab-switcher-hold-then-quiet-wait",
+    "induced": true,
+    "reasons": [],
+    "switcher_visible_s": 4.595,
+    "switcher_titles": [
+      "タスクの切り替え"
+    ],
+    "quiet_s": 20.3,
+    "landing": {
+      "t": "2026-10-25T09:10:57.139079+00:00",
+      "elapsed_s": 30.545,
+      "pid": 31144,
+      "class": "CASCADIA_HOSTING_WINDOW_CLASS",
+      "title": "Windows PowerShell"
+    },
+    "departure_t": "2026-10-25T09:10:52.527361+00:00",
+    "path": [
+      {
+        "t": "2026-10-25T09:10:52.527361+00:00",
+        "elapsed_s": 25.933,
+        "pid": 9312,
+        "class": "ForegroundStaging",
+        "title": ""
+      },
+      {
+        "t": "2026-10-25T09:10:52.535965+00:00",
+        "elapsed_s": 25.941,
+        "pid": 9312,
+        "class": "XamlExplorerHostIslandWindow",
+        "title": "タスクの切り替え"
+      },
+      {
+        "t": "2026-10-25T09:10:57.130582+00:00",
+        "elapsed_s": 30.536,
+        "pid": 9312,
+        "class": "ForegroundStaging",
+        "title": ""
+      },
+      {
+        "t": "2026-10-25T09:10:57.139079+00:00",
+        "elapsed_s": 30.545,
+        "pid": 31144,
+        "class": "CASCADIA_HOSTING_WINDOW_CLASS",
+        "title": "Windows PowerShell"
+      }
+    ],
+    "required": {
+      "switcher_min_s": 0.5,
+      "quiet_wait_s": 20.0
+    }
+  },
+  "harness_peer": {
+    "returncode": 0,
+    "stderr_tail": "",
+    "json": {
+      "fixture": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-w6bvbtvx\\peer-76ce1fd62802475080b2cbb1bc78b3a6",
+      "result": {
+        "constructed": 0,
+        "restored": 0,
+        "status_preserved": true,
+        "result": "completed",
+        "elapsed": 110
+      }
+    }
+  },
+  "answers": {
+    "foreground": "出た",
+    "key_reached": "変わった",
+    "restored": "戻った",
+    "kept": "PDFなし",
+    "single": "1つ",
+    "note": "なし"
+  },
+  "harness_inspect": {
+    "returncode": 0,
+    "stderr_tail": "",
+    "json": {
+      "manifest": {
+        "run": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-w6bvbtvx",
+        "namespace": "3db3dd2480e04239bfe4d6527e8cf8da",
+        "case": "preview",
+        "role": "uat-owner-preview",
+        "fixture": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-w6bvbtvx\\uat-owner-preview",
+        "launcher_pid": 34780,
+        "environment": {
+          "os": "sys.getwindowsversion(major=10, minor=0, build=26300, platform=2, service_pack='')",
+          "python": "3.15.1 (tags/v3.15.1:c37e74c, Oct 21 2026, 06:24:08) [MSC v.1951 64 bit (AMD64)]",
+          "pointer_bits": 64,
+          "session_id": 1,
+          "sid": "S-1-5-5-0-202261",
+          "authentication_luid": 206356,
+          "foreground": 660062,
+          "is_admin": false,
+          "tcl": "9.0.4",
+          "tk": 9.0
+        },
+        "originals_before": {
+          "pagefolio_settings.json": null,
+          "ocr_custom_prompt.md": null,
+          "ocr_summary_prompt.md": null
+        },
+        "source_commit": "36909a82155c79d84a204d4c426d384336ed9383",
+        "expected_owner": {
+          "sid": "S-1-5-5-0-202261",
+          "authentication_luid": 206356,
+          "session_id": 1,
+          "pid": 14824,
+          "process_created": 134373930269839498,
+          "started_tick": 38798093,
+          "owner_result": "acquired",
+          "snapshot": {
+            "protocol": 1,
+            "generation": "67aa7e1b92ab4d6c9402b64073798a0e",
+            "pid": 14824,
+            "process_created": 134373930269839498,
+            "session_id": 1,
+            "state": "ready",
+            "ready": true,
+            "release_generation": null
+          },
+          "ready_tick": 38801187,
+          "manual": true
+        }
+      },
+      "originals_unchanged": true,
+      "ready": {
+        "sid": "S-1-5-5-0-202261",
+        "authentication_luid": 206356,
+        "session_id": 1,
+        "pid": 14824,
+        "process_created": 134373930269839498,
+        "started_tick": 38798093,
+        "owner_result": "acquired",
+        "snapshot": {
+          "protocol": 1,
+          "generation": "67aa7e1b92ab4d6c9402b64073798a0e",
+          "pid": 14824,
+          "process_created": 134373930269839498,
+          "session_id": 1,
+          "state": "ready",
+          "ready": true,
+          "release_generation": null
+        },
+        "ready_tick": 38801187
+      },
+      "focus-result.json": {
+        "state_preserved": true,
+        "target_correct": true,
+        "result": "completed",
+        "activated": 4001484,
+        "expected_tk": 4001484,
+        "native": null,
+        "placement": "normal",
+        "expected_focus": ".!panedwindow.!frame2.!frame2.!canvas",
+        "immediate_focus": "None",
+        "focus_correct": true,
+        "settled_focus": ".!panedwindow.!frame2.!frame2.!canvas"
+      }
+    }
+  },
+  "outcome": "answered",
+  "harness_stop": {
+    "returncode": 0,
+    "stderr_tail": ""
+  },
+  "cleanup": {
+    "left_after_harness_stop": [],
+    "terminated_owned": [],
+    "alive_after": []
+  },
+  "input_monitor": {
+    "enabled": true,
+    "method": "read-only polling: GetAsyncKeyState/GetCursorPos/WindowFromPoint/GetAncestor/GetForegroundWindow (no SendInput/SetCursorPos/SetForegroundWindow)",
+    "interval_s": 0.008,
+    "samples": 9953,
+    "max_gap_s": 0.022,
+    "errors": [],
+    "truncated": false,
+    "started_at": "2026-10-25T09:10:26.594478+00:00",
+    "stopped_at": "2026-10-25T09:11:50.792899+00:00",
+    "owned_pids": [
+      14824,
+      18828,
+      34780
+    ],
+    "contaminating_phases": [
+      "start-harness",
+      "awaiting-enter",
+      "peer"
+    ],
+    "phase_log": [
+      {
+        "t": "2026-10-25T09:10:26.594471+00:00",
+        "phase": "start-harness"
+      },
+      {
+        "t": "2026-10-25T09:10:31.798978+00:00",
+        "phase": "awaiting-enter"
+      },
+      {
+        "t": "2026-10-25T09:11:17.439520+00:00",
+        "phase": "peer"
+      },
+      {
+        "t": "2026-10-25T09:11:19.801260+00:00",
+        "phase": "post-peer"
+      }
+    ],
+    "mouse_events": [],
+    "foreground_transitions": [
+      {
+        "seq": 1,
+        "t": "2026-10-25T09:10:30.670635+00:00",
+        "elapsed_s": 4.076,
+        "phase": "start-harness",
+        "from": {
+          "hwnd": 660062,
+          "pid": 31144,
+          "title": "Windows PowerShell",
+          "class": "CASCADIA_HOSTING_WINDOW_CLASS"
+        },
+        "to": {
+          "hwnd": 4001484,
+          "pid": 14824,
+          "title": "PageFolio",
+          "class": "TkTopLevel"
+        }
+      },
+      {
+        "seq": 2,
+        "t": "2026-10-25T09:10:35.205567+00:00",
+        "elapsed_s": 8.611,
+        "phase": "awaiting-enter",
+        "from": {
+          "hwnd": 4001484,
+          "pid": 14824,
+          "title": "PageFolio",
+          "class": "TkTopLevel"
+        },
+        "to": {
+          "hwnd": 65994,
+          "pid": 9312,
+          "title": "",
+          "class": "ForegroundStaging"
+        }
+      },
+      {
+        "seq": 3,
+        "t": "2026-10-25T09:10:35.215028+00:00",
+        "elapsed_s": 8.62,
+        "phase": "awaiting-enter",
+        "from": {
+          "hwnd": 65994,
+          "pid": 9312,
+          "title": "",
+          "class": "ForegroundStaging"
+        },
+        "to": {
+          "hwnd": 266252,
+          "pid": 9312,
+          "title": "タスクの切り替え",
+          "class": "XamlExplorerHostIslandWindow"
+        }
+      },
+      {
+        "seq": 4,
+        "t": "2026-10-25T09:10:35.743250+00:00",
+        "elapsed_s": 9.149,
+        "phase": "awaiting-enter",
+        "from": {
+          "hwnd": 266252,
+          "pid": 9312,
+          "title": "タスクの切り替え",
+          "class": "XamlExplorerHostIslandWindow"
+        },
+        "to": {
+          "hwnd": 660062,
+          "pid": 31144,
+          "title": "Windows PowerShell",
+          "class": "CASCADIA_HOSTING_WINDOW_CLASS"
+        }
+      },
+      {
+        "seq": 5,
+        "t": "2026-10-25T09:10:50.320666+00:00",
+        "elapsed_s": 23.726,
+        "phase": "awaiting-enter",
+        "from": {
+          "hwnd": 660062,
+          "pid": 31144,
+          "title": "Windows PowerShell",
+          "class": "CASCADIA_HOSTING_WINDOW_CLASS"
+        },
+        "to": {
+          "hwnd": 65994,
+          "pid": 9312,
+          "title": "",
+          "class": "ForegroundStaging"
+        }
+      },
+      {
+        "seq": 6,
+        "t": "2026-10-25T09:10:50.328955+00:00",
+        "elapsed_s": 23.734,
+        "phase": "awaiting-enter",
+        "from": {
+          "hwnd": 65994,
+          "pid": 9312,
+          "title": "",
+          "class": "ForegroundStaging"
+        },
+        "to": {
+          "hwnd": 266252,
+          "pid": 9312,
+          "title": "タスクの切り替え",
+          "class": "XamlExplorerHostIslandWindow"
+        }
+      },
+      {
+        "seq": 7,
+        "t": "2026-10-25T09:10:51.149676+00:00",
+        "elapsed_s": 24.549,
+        "phase": "awaiting-enter",
+        "from": {
+          "hwnd": 266252,
+          "pid": 9312,
+          "title": "タスクの切り替え",
+          "class": "XamlExplorerHostIslandWindow"
+        },
+        "to": {
+          "hwnd": 66068,
+          "pid": 9312,
+          "title": "",
+          "class": "ForegroundStaging"
+        }
+      },
+      {
+        "seq": 8,
+        "t": "2026-10-25T09:10:51.158954+00:00",
+        "elapsed_s": 24.564,
+        "phase": "awaiting-enter",
+        "from": {
+          "hwnd": 66068,
+          "pid": 9312,
+          "title": "",
+          "class": "ForegroundStaging"
+        },
+        "to": {
+          "hwnd": 4001484,
+          "pid": 14824,
+          "title": "PageFolio",
+          "class": "TkTopLevel"
+        }
+      },
+      {
+        "seq": 9,
+        "t": "2026-10-25T09:10:52.527361+00:00",
+        "elapsed_s": 25.933,
+        "phase": "awaiting-enter",
+        "from": {
+          "hwnd": 4001484,
+          "pid": 14824,
+          "title": "PageFolio",
+          "class": "TkTopLevel"
+        },
+        "to": {
+          "hwnd": 65994,
+          "pid": 9312,
+          "title": "",
+          "class": "ForegroundStaging"
+        }
+      },
+      {
+        "seq": 10,
+        "t": "2026-10-25T09:10:52.535965+00:00",
+        "elapsed_s": 25.941,
+        "phase": "awaiting-enter",
+        "from": {
+          "hwnd": 65994,
+          "pid": 9312,
+          "title": "",
+          "class": "ForegroundStaging"
+        },
+        "to": {
+          "hwnd": 266252,
+          "pid": 9312,
+          "title": "タスクの切り替え",
+          "class": "XamlExplorerHostIslandWindow"
+        }
+      },
+      {
+        "seq": 11,
+        "t": "2026-10-25T09:10:57.130582+00:00",
+        "elapsed_s": 30.536,
+        "phase": "awaiting-enter",
+        "from": {
+          "hwnd": 266252,
+          "pid": 9312,
+          "title": "タスクの切り替え",
+          "class": "XamlExplorerHostIslandWindow"
+        },
+        "to": {
+          "hwnd": 66068,
+          "pid": 9312,
+          "title": "",
+          "class": "ForegroundStaging"
+        }
+      },
+      {
+        "seq": 12,
+        "t": "2026-10-25T09:10:57.139079+00:00",
+        "elapsed_s": 30.545,
+        "phase": "awaiting-enter",
+        "from": {
+          "hwnd": 66068,
+          "pid": 9312,
+          "title": "",
+          "class": "ForegroundStaging"
+        },
+        "to": {
+          "hwnd": 660062,
+          "pid": 31144,
+          "title": "Windows PowerShell",
+          "class": "CASCADIA_HOSTING_WINDOW_CLASS"
+        }
+      },
+      {
+        "seq": 13,
+        "t": "2026-10-25T09:11:18.209999+00:00",
+        "elapsed_s": 51.614,
+        "phase": "peer",
+        "from": {
+          "hwnd": 660062,
+          "pid": 31144,
+          "title": "Windows PowerShell",
+          "class": "CASCADIA_HOSTING_WINDOW_CLASS"
+        },
+        "to": {
+          "hwnd": 4001484,
+          "pid": 14824,
+          "title": "PageFolio",
+          "class": "TkTopLevel"
+        }
+      },
+      {
+        "seq": 16,
+        "t": "2026-10-25T09:11:23.817748+00:00",
+        "elapsed_s": 57.223,
+        "phase": "post-peer",
+        "from": {
+          "hwnd": 4001484,
+          "pid": 14824,
+          "title": "PageFolio",
+          "class": "TkTopLevel"
+        },
+        "to": {
+          "hwnd": 65994,
+          "pid": 9312,
+          "title": "",
+          "class": "ForegroundStaging"
+        }
+      },
+      {
+        "seq": 17,
+        "t": "2026-10-25T09:11:23.826389+00:00",
+        "elapsed_s": 57.232,
+        "phase": "post-peer",
+        "from": {
+          "hwnd": 65994,
+          "pid": 9312,
+          "title": "",
+          "class": "ForegroundStaging"
+        },
+        "to": {
+          "hwnd": 266252,
+          "pid": 9312,
+          "title": "タスクの切り替え",
+          "class": "XamlExplorerHostIslandWindow"
+        }
+      },
+      {
+        "seq": 18,
+        "t": "2026-10-25T09:11:24.376430+00:00",
+        "elapsed_s": 57.781,
+        "phase": "post-peer",
+        "from": {
+          "hwnd": 266252,
+          "pid": 9312,
+          "title": "タスクの切り替え",
+          "class": "XamlExplorerHostIslandWindow"
+        },
+        "to": {
+          "hwnd": 660062,
+          "pid": 31144,
+          "title": "Windows PowerShell",
+          "class": "CASCADIA_HOSTING_WINDOW_CLASS"
+        }
+      }
+    ],
+    "key_events": [
+      {
+        "seq": 14,
+        "t": "2026-10-25T09:11:21.576058+00:00",
+        "elapsed_s": 54.981,
+        "phase": "post-peer",
+        "vk": 116,
+        "foreground": {
+          "hwnd": 4001484,
+          "pid": 14824,
+          "title": "PageFolio",
+          "class": "TkTopLevel"
+        },
+        "on_pagefolio": true
+      },
+      {
+        "seq": 15,
+        "t": "2026-10-25T09:11:22.397774+00:00",
+        "elapsed_s": 55.799,
+        "phase": "post-peer",
+        "vk": 116,
+        "foreground": {
+          "hwnd": 4001484,
+          "pid": 14824,
+          "title": "PageFolio",
+          "class": "TkTopLevel"
+        },
+        "on_pagefolio": true
+      }
+    ]
+  },
+  "procedure_assessment": {
+    "procedure_verdict": "clean",
+    "rerun_required": false,
+    "reason": "peer完了までの間にPageFolio上のボタン押下・キー押下は検出されなかった",
+    "pagefolio_presses_before_peer_done": [],
+    "pagefolio_keys_before_peer_done": [],
+    "focus_correct_as_recorded": true,
+    "focus_attribution": "product-focus-ok"
+  },
+  "procedure_verdict": "clean",
+  "focus_attribution": "product-focus-ok",
+  "ui_thread_diag": {
+    "enabled": true,
+    "purpose": "debug-frequency",
+    "acceptance": false,
+    "method": "read-only external sampling: GetGUIThreadInfo / GetThreadTimes / QueryThreadCycleTime / NtQuerySystemInformation(SystemProcessInformation) / K32GetProcessMemoryInfo / IsHungAppWindow / EnumWindows+GetClassNameW / GetTickCount64 / NtQueryInformationThread(ThreadLastSystemCall) / IsWindow / InternalGetWindowText (OpenProcess=PROCESS_QUERY_LIMITED_INFORMATION, OpenThread=THREAD_QUERY_LIMITED_INFORMATION and THREAD_QUERY_INFORMATION|THREAD_GET_CONTEXT; no SendInput/SetForegroundWindow/SetCursorPos/keybd_event/mouse_event/SuspendThread/GetThreadContext/DebugActiveProcess)",
+    "interval_s": 0.1,
+    "options": {
+      "wm_null_probe": false,
+      "wm_null_interval_s": null,
+      "wm_null_timeout_ms": null,
+      "wm_null_phases": null
+    },
+    "target": {
+      "pid": 14824,
+      "expected_created": 134373930269839498,
+      "created": 134373930269839498,
+      "identity_verified": true
+    },
+    "open_failures": [],
+    "errors": [],
+    "error_counts": {},
+    "ui_thread_log": [
+      {
+        "t": "2026-10-25T09:10:31.791638+00:00",
+        "tick_ms": 38802328,
+        "tid": 856,
+        "hwnd": 4001484,
+        "class": "TkTopLevel",
+        "visible": true,
+        "source": "window"
+      }
+    ],
+    "anchors": [
+      {
+        "tick_ms": 38802328,
+        "t": "2026-10-25T09:10:31.791558+00:00",
+        "mono": 38802.3543437
+      },
+      {
+        "tick_ms": 38880375,
+        "t": "2026-10-25T09:11:49.843586+00:00",
+        "mono": 38880.406373
+      }
+    ],
+    "started_at": "2026-10-25T09:10:31.787290+00:00",
+    "stopped_at": "2026-10-25T09:11:49.843802+00:00",
+    "gone_at": null,
+    "gone_rows_dropped": 0,
+    "truncated": false,
+    "samples": 782,
+    "max_gap_s": 0.114,
+    "cost_ms": {
+      "avg": 6.01,
+      "max": 21.9
+    },
+    "wm_null": {
+      "count": 0,
+      "by_result": {},
+      "max_elapsed_ms": null
+    },
+    "log_events_seen_live": [
+      {
+        "kind": "terminal",
+        "id": "1838c736429d497ca8304f2b3adace8a",
+        "result": "completed",
+        "deadline_tick": 38853687,
+        "tick_ms": 38848750,
+        "seen_t": "2026-10-25T09:11:18.298807+00:00",
+        "seen_tick_ms": 38848828
+      }
+    ],
+    "phase_stats": {
+      "start-harness": {
+        "rows": 2,
+        "first": {
+          "t": "2026-10-25T09:10:31.791638+00:00",
+          "tick_ms": 38802328
+        },
+        "last": {
+          "t": "2026-10-25T09:10:31.797956+00:00",
+          "tick_ms": 38802328
+        },
+        "duration_s": 0.006,
+        "ctx_switch_delta": 0,
+        "ctx_per_s": 0.0,
+        "cpu_ms_delta": 0.0,
+        "cpu_share": 0.0,
+        "cycles_m_delta": 0.0,
+        "others_cpu_ms_delta": 0.0,
+        "others_cpu_share": 0.0,
+        "busy_other_threads_max": 0,
+        "page_fault_delta": 0,
+        "hard_fault_delta": 0,
+        "working_set_kb": {
+          "min": 122028,
+          "max": 122028
+        },
+        "states": {
+          "Waiting": 2
+        },
+        "wait_reasons": {
+          "UserRequest": 2
+        },
+        "gui_flags_rows": {
+          "none": 2
+        },
+        "modal_rows": 0,
+        "hung_rows": 0,
+        "tids": [
+          856
+        ],
+        "max_cost_ms": 6.13,
+        "syscalls": {
+          "NtUserMsgWaitForMultipleObjectsEx": 2
+        },
+        "wait_kind": "msgwait",
+        "wm_null": {
+          "count": 0,
+          "by_result": {},
+          "max_elapsed_ms": null
+        }
+      },
+      "awaiting-enter": {
+        "rows": 456,
+        "first": {
+          "t": "2026-10-25T09:10:31.902546+00:00",
+          "tick_ms": 38802437
+        },
+        "last": {
+          "t": "2026-10-25T09:11:17.408645+00:00",
+          "tick_ms": 38847937
+        },
+        "duration_s": 45.506,
+        "ctx_switch_delta": 2401,
+        "ctx_per_s": 52.76,
+        "cpu_ms_delta": 562.5,
+        "cpu_share": 0.012,
+        "cycles_m_delta": 2307.33,
+        "others_cpu_ms_delta": 250.0,
+        "others_cpu_share": 0.005,
+        "busy_other_threads_max": 2,
+        "page_fault_delta": 483,
+        "hard_fault_delta": 0,
+        "working_set_kb": {
+          "min": 122248,
+          "max": 124092
+        },
+        "states": {
+          "Waiting": 456
+        },
+        "wait_reasons": {
+          "UserRequest": 301,
+          "WrUserRequest": 154,
+          "WrResource": 1
+        },
+        "gui_flags_rows": {
+          "none": 456
+        },
+        "modal_rows": 0,
+        "hung_rows": 0,
+        "tids": [
+          856
+        ],
+        "max_cost_ms": 12.67,
+        "syscalls": {
+          "NtUserMsgWaitForMultipleObjectsEx": 301,
+          "NtUserGetMessage": 146,
+          "NtCallbackReturn": 8,
+          "NtUserSetTimer": 1
+        },
+        "wait_kind": "msgwait",
+        "others_ctx_delta": {
+          "32212": 992,
+          "19360": 989,
+          "6192": 986,
+          "23624": 984,
+          "22252": 964,
+          "6200": 960,
+          "1108": 939,
+          "29268": 934
+        },
+        "wm_null": {
+          "count": 0,
+          "by_result": {},
+          "max_elapsed_ms": null
+        }
+      },
+      "peer": {
+        "rows": 23,
+        "first": {
+          "t": "2026-10-25T09:11:17.503160+00:00",
+          "tick_ms": 38848031
+        },
+        "last": {
+          "t": "2026-10-25T09:11:19.709466+00:00",
+          "tick_ms": 38850250
+        },
+        "duration_s": 2.206,
+        "ctx_switch_delta": 289,
+        "ctx_per_s": 131.01,
+        "cpu_ms_delta": 0.0,
+        "cpu_share": 0.0,
+        "cycles_m_delta": 155.893,
+        "others_cpu_ms_delta": 0.0,
+        "others_cpu_share": 0.0,
+        "busy_other_threads_max": 0,
+        "page_fault_delta": 13,
+        "hard_fault_delta": 0,
+        "working_set_kb": {
+          "min": 124032,
+          "max": 124080
+        },
+        "states": {
+          "Waiting": 23
+        },
+        "wait_reasons": {
+          "UserRequest": 22,
+          "WrResource": 1
+        },
+        "gui_flags_rows": {
+          "none": 23
+        },
+        "modal_rows": 0,
+        "hung_rows": 0,
+        "tids": [
+          856
+        ],
+        "max_cost_ms": 21.9,
+        "syscalls": {
+          "NtUserMsgWaitForMultipleObjectsEx": 22,
+          "NtCallbackReturn": 1
+        },
+        "wait_kind": "msgwait",
+        "others_ctx_delta": {
+          "6200": 64,
+          "23624": 62,
+          "1108": 59,
+          "6192": 53,
+          "19360": 53,
+          "32212": 53,
+          "29268": 52,
+          "22252": 51
+        },
+        "wm_null": {
+          "count": 0,
+          "by_result": {},
+          "max_elapsed_ms": null
+        }
+      },
+      "post-peer": {
+        "rows": 301,
+        "first": {
+          "t": "2026-10-25T09:11:19.802081+00:00",
+          "tick_ms": 38850343
+        },
+        "last": {
+          "t": "2026-10-25T09:11:49.811566+00:00",
+          "tick_ms": 38880343
+        },
+        "duration_s": 30.009,
+        "ctx_switch_delta": 1947,
+        "ctx_per_s": 64.88,
+        "cpu_ms_delta": 468.7,
+        "cpu_share": 0.016,
+        "cycles_m_delta": 2197.316,
+        "others_cpu_ms_delta": 78.1,
+        "others_cpu_share": 0.003,
+        "busy_other_threads_max": 1,
+        "page_fault_delta": 91,
+        "hard_fault_delta": 0,
+        "working_set_kb": {
+          "min": 124080,
+          "max": 124444
+        },
+        "states": {
+          "Waiting": 299,
+          "Running": 2
+        },
+        "wait_reasons": {
+          "UserRequest": 300,
+          "WrDispatchInt": 1
+        },
+        "gui_flags_rows": {
+          "none": 301
+        },
+        "modal_rows": 0,
+        "hung_rows": 0,
+        "tids": [
+          856
+        ],
+        "max_cost_ms": 13.62,
+        "syscalls": {
+          "NtUserMsgWaitForMultipleObjectsEx": 299,
+          "NtUserDrainThreadCoreMessagingCompletions2": 1
+        },
+        "wait_targets": [
+          {
+            "syscall": "NtUserDrainThreadCoreMessagingCompletions2",
+            "rows": 1,
+            "first_t": "2026-10-25T09:11:23.810644+00:00",
+            "last_t": "2026-10-25T09:11:23.810644+00:00",
+            "text": "hwnd 0x10f1016 [SystemUserAdapterWindowClass ''] pid 14824/tid 856 python.exe(同一プロセス) 状態=Running/WrDispatchInt ctx=21785 (推定)",
+            "target": {
+              "hwnd": 17764374,
+              "by": "speculative",
+              "valid": true,
+              "pid": 14824,
+              "tid": 856,
+              "class": "SystemUserAdapterWindowClass",
+              "title": "",
+              "visible": false,
+              "hung": false,
+              "same_process": true,
+              "image": "python.exe",
+              "thread": {
+                "state": "Running",
+                "wait_reason": "WrDispatchInt",
+                "ctx": 21785,
+                "wait_since_tick_ms": 38854344,
+                "waited_ms": 0,
+                "cpu_ms": 1703.1
+              }
+            }
+          }
+        ],
+        "wait_kind": "msgwait",
+        "others_ctx_delta": {
+          "23624": 689,
+          "6200": 679,
+          "22252": 678,
+          "19360": 676,
+          "6192": 660,
+          "32212": 658,
+          "1108": 649,
+          "29268": 633
+        },
+        "wm_null": {
+          "count": 0,
+          "by_result": {},
+          "max_elapsed_ms": null
+        }
+      }
+    },
+    "stall_episodes": [
+      {
+        "start_t": "2026-10-25T09:10:35.810020+00:00",
+        "end_t": "2026-10-25T09:10:50.309520+00:00",
+        "start_tick_ms": 38806343,
+        "end_tick_ms": 38820843,
+        "start_elapsed_s": 9.216,
+        "end_elapsed_s": 23.715,
+        "phases": [
+          "awaiting-enter"
+        ],
+        "aggregate": {
+          "rows": 146,
+          "first": {
+            "t": "2026-10-25T09:10:35.810020+00:00",
+            "tick_ms": 38806343
+          },
+          "last": {
+            "t": "2026-10-25T09:10:50.309520+00:00",
+            "tick_ms": 38820843
+          },
+          "duration_s": 14.499,
+          "ctx_switch_delta": 0,
+          "ctx_per_s": 0.0,
+          "cpu_ms_delta": 0.0,
+          "cpu_share": 0.0,
+          "cycles_m_delta": 0.0,
+          "others_cpu_ms_delta": 46.8,
+          "others_cpu_share": 0.003,
+          "busy_other_threads_max": 0,
+          "page_fault_delta": 8,
+          "hard_fault_delta": 0,
+          "working_set_kb": {
+            "min": 123860,
+            "max": 123892
+          },
+          "states": {
+            "Waiting": 146
+          },
+          "wait_reasons": {
+            "WrUserRequest": 146
+          },
+          "gui_flags_rows": {
+            "none": 146
+          },
+          "modal_rows": 0,
+          "hung_rows": 0,
+          "tids": [
+            856
+          ],
+          "max_cost_ms": 12.67,
+          "syscalls": {
+            "NtUserGetMessage": 146
+          },
+          "wait_kind": "message-loop",
+          "others_ctx_delta": {
+            "32212": 290,
+            "19360": 287,
+            "23624": 286,
+            "22252": 284,
+            "1108": 282,
+            "6192": 279,
+            "6200": 278,
+            "29268": 265
+          },
+          "wm_null": {
+            "count": 0,
+            "by_result": {},
+            "max_elapsed_ms": null
+          }
+        },
+        "tags": [
+          {
+            "tag": "A:native-wait",
+            "evidence": "ctx切替 0.0/s(ほぼ起床せず) states={'Waiting': 146} wait_reasons={'WrUserRequest': 146} hung_rows=0/146"
+          },
+          {
+            "tag": "A:message-loop",
+            "evidence": "最後のシステムコール {'NtUserGetMessage': 146}"
+          }
+        ],
+        "wait": {
+          "kind": "message-loop",
+          "syscalls": {
+            "NtUserGetMessage": 146
+          },
+          "targets": [],
+          "others_ctx_delta": {
+            "32212": 290,
+            "19360": 287,
+            "23624": 286,
+            "22252": 284,
+            "1108": 282,
+            "6192": 279,
+            "6200": 278,
+            "29268": 265
+          }
+        }
+      }
+    ],
+    "syscall_probe": {
+      "enabled": true,
+      "thread_access": "THREAD_QUERY_INFORMATION|THREAD_GET_CONTEXT (0x48) 読み取り専用。SuspendThread/GetThreadContext/DebugActiveProcess は使わない",
+      "names": {
+        "source": "ntdll.dll+win32u.dll",
+        "files": [
+          {
+            "file": "ntdll.dll",
+            "stubs": 979
+          },
+          {
+            "file": "win32u.dll",
+            "stubs": 1498
+          }
+        ],
+        "entries": 1987,
+        "error": null
+      },
+      "unavailable_threads": {},
+      "stall_snapshots": [
+        {
+          "t": "2026-10-25T09:10:36.909520+00:00",
+          "tick_ms": 38807437,
+          "phase": "awaiting-enter",
+          "ui_ctx_flat_s": 1.1,
+          "mark_s": 1.0,
+          "gui_flags": 0,
+          "hwnd_active": 0,
+          "hwnd_focus": 0,
+          "threads": [
+            {
+              "tid": 856,
+              "ui": true,
+              "state": "Waiting",
+              "wait_reason": "WrUserRequest",
+              "ctx": 19101,
+              "start_address": "0x0",
+              "syscall": "NtUserGetMessage",
+              "arg": 527036183552,
+              "wait_ms": 1171.9
+            },
+            {
+              "tid": 1108,
+              "ui": false,
+              "state": "Waiting",
+              "wait_reason": "UserRequest",
+              "ctx": 227,
+              "start_address": "0x0",
+              "syscall": "NtWaitForSingleObject",
+              "arg": 828,
+              "wait_ms": 31.2
+            },
+            {
+              "tid": 1616,
+              "ui": false,
+              "state": "Waiting",
+              "wait_reason": "WrQueue",
+              "ctx": 2,
+              "start_address": "0x0",
+              "syscall": "NtWaitForWorkViaWorkerFactory",
+              "arg": 2240,
+              "wait_ms": 5187.5
+            },
+            {
+              "tid": 6192,
+              "ui": false,
+              "state": "Waiting",
+              "wait_reason": "UserRequest",
+              "ctx": 231,
+              "start_address": "0x0",
+              "syscall": "NtWaitForSingleObject",
+              "arg": 768,
+              "wait_ms": 31.2
+            },
+            {
+              "tid": 6200,
+              "ui": false,
+              "state": "Waiting",
+              "wait_reason": "UserRequest",
+              "ctx": 240,
+              "start_address": "0x0",
+              "syscall": "NtWaitForSingleObject",
+              "arg": 772,
+              "wait_ms": 31.2
+            },
+            {
+              "tid": 19360,
+              "ui": false,
+              "state": "Waiting",
+              "wait_reason": "UserRequest",
+              "ctx": 244,
+              "start_address": "0x0",
+              "syscall": "NtWaitForSingleObject",
+              "arg": 788,
+              "wait_ms": 31.2
+            },
+            {
+              "tid": 22252,
+              "ui": false,
+              "state": "Waiting",
+              "wait_reason": "UserRequest",
+              "ctx": 240,
+              "start_address": "0x0",
+              "syscall": "NtWaitForSingleObject",
+              "arg": 812,
+              "wait_ms": 31.2
+            },
+            {
+              "tid": 23624,
+              "ui": false,
+              "state": "Waiting",
+              "wait_reason": "UserRequest",
+              "ctx": 236,
+              "start_address": "0x0",
+              "syscall": "NtWaitForSingleObject",
+              "arg": 820,
+              "wait_ms": 31.2
+            },
+            {
+              "tid": 25072,
+              "ui": false,
+              "state": "Waiting",
+              "wait_reason": "UserRequest",
+              "ctx": 53,
+              "start_address": "0x0",
+              "syscall": "NtWaitForSingleObject",
+              "arg": 1900,
+              "wait_ms": 6171.9
+            },
+            {
+              "tid": 25472,
+              "ui": false,
+              "state": "Waiting",
+              "wait_reason": "UserRequest",
+              "ctx": 2,
+              "start_address": "0x0",
+              "syscall": "NtWaitForMultipleObjects",
+              "arg": 1,
+              "wait_ms": 4500.0
+            },
+            {
+              "tid": 26200,
+              "ui": false,
+              "state": "Waiting",
+              "wait_reason": "UserRequest",
+              "ctx": 3,
+              "start_address": "0x0",
+              "syscall": "NtWaitForMultipleObjects",
+              "arg": 1,
+              "wait_ms": 9578.1
+            },
+            {
+              "tid": 27036,
+              "ui": false,
+              "state": "Waiting",
+              "wait_reason": "WrQueue",
+              "ctx": 162,
+              "start_address": "0x0",
+              "syscall": "NtWaitForWorkViaWorkerFactory",
+              "arg": 164,
+              "wait_ms": 5156.2
+            },
+            {
+              "tid": 27280,
+              "ui": false,
+              "state": "Waiting",
+              "wait_reason": "WrAlertByThreadId",
+              "ctx": 40,
+              "start_address": "0x0",
+              "syscall": "NtWaitForAlertByThreadId",
+              "arg": 2366632502176,
+              "wait_ms": 2281.2
+            },
+            {
+              "tid": 29232,
+              "ui": false,
+              "state": "Waiting",
+              "wait_reason": "WrUserRequest",
+              "ctx": 75,
+              "start_address": "0x0",
+              "syscall": "NtUserGetMessage",
+              "arg": 527078390768,
+              "wait_ms": 6218.8
+            },
+            {
+              "tid": 29268,
+              "ui": false,
+              "state": "Waiting",
+              "wait_reason": "UserRequest",
+              "ctx": 232,
+              "start_address": "0x0",
+              "syscall": "NtWaitForSingleObject",
+              "arg": 836,
+              "wait_ms": 31.2
+            },
+            {
+              "tid": 29404,
+              "ui": false,
+              "state": "Waiting",
+              "wait_reason": "UserRequest",
+              "ctx": 11,
+              "start_address": "0x0",
+              "syscall": "NtWaitForSingleObject",
+              "arg": 852,
+              "wait_ms": 281.2
+            },
+            {
+              "tid": 30108,
+              "ui": false,
+              "state": "Waiting",
+              "wait_reason": "UserRequest",
+              "ctx": 2,
+              "start_address": "0x0",
+              "syscall": "NtWaitForMultipleObjects",
+              "arg": 1,
+              "wait_ms": 9187.5
+            },
+            {
+              "tid": 30388,
+              "ui": false,
+              "state": "Waiting",
+              "wait_reason": "WrQueue",
+              "ctx": 148,
+              "start_address": "0x0",
+              "syscall": "NtWaitForWorkViaWorkerFactory",
+              "arg": 164,
+              "wait_ms": 5156.2
+            },
+            {
+              "tid": 30948,
+              "ui": false,
+              "state": "Waiting",
+              "wait_reason": "WrQueue",
+              "ctx": 2,
+              "start_address": "0x0",
+              "syscall": "NtWaitForWorkViaWorkerFactory",
+              "arg": 1336,
+              "wait_ms": 6234.4
+            },
+            {
+              "tid": 31148,
+              "ui": false,
+              "state": "Waiting",
+              "wait_reason": "WrQueue",
+              "ctx": 238,
+              "start_address": "0x0",
+              "syscall": "NtWaitForWorkViaWorkerFactory",
+              "arg": 40,
+              "wait_ms": 312.5
+            },
+            {
+              "tid": 31680,
+              "ui": false,
+              "state": "Waiting",
+              "wait_reason": "WrQueue",
+              "ctx": 94,
+              "start_address": "0x0",
+              "syscall": "NtWaitForWorkViaWorkerFactory",
+              "arg": 164,
+              "wait_ms": 5156.2
+            },
+            {
+              "tid": 32212,
+              "ui": false,
+              "state": "Waiting",
+              "wait_reason": "UserRequest",
+              "ctx": 235,
+              "start_address": "0x0",
+              "syscall": "NtWaitForSingleObject",
+              "arg": 796,
+              "wait_ms": 31.2
+            },
+            {
+              "tid": 33980,
+              "ui": false,
+              "state": "Waiting",
+              "wait_reason": "WrQueue",
+              "ctx": 34,
+              "start_address": "0x0",
+              "syscall": "NtWaitForWorkViaWorkerFactory",
+              "arg": 40,
+              "wait_ms": 4500.0
+            },
+            {
+              "tid": 34184,
+              "ui": false,
+              "state": "Waiting",
+              "wait_reason": "WrQueue",
+              "ctx": 66,
+              "start_address": "0x0",
+              "syscall": "NtWaitForWorkViaWorkerFactory",
+              "arg": 40,
+              "wait_ms": 6203.1
+            }
+          ],
+          "windows": [
+            {
+              "hwnd": 1052840,
+              "tid": 856,
+              "class": "GDI+ Hook Window Class",
+              "title": "GDI+ Window (python.exe)",
+              "visible": false,
+              "enabled": true,
+              "owner": 0
+            },
+            {
+              "hwnd": 4001484,
+              "tid": 856,
+              "class": "TkTopLevel",
+              "title": "PageFolio",
+              "visible": true,
+              "enabled": true,
+              "owner": 0
+            },
+            {
+              "hwnd": 6754696,
+              "tid": 856,
+              "class": "EmbeddedMenuWindowClass",
+              "title": "EmbeddedMenuWindow",
+              "visible": false,
+              "enabled": true,
+              "owner": 0
+            },
+            {
+              "hwnd": 2887662,
+              "tid": 856,
+              "class": "MenuWindowClass",
+              "title": "MenuWindow",
+              "visible": false,
+              "enabled": true,
+              "owner": 0
+            },
+            {
+              "hwnd": 7933600,
+              "tid": 856,
+              "class": "Wtk_TaskbarHandler",
+              "title": "",
+              "visible": false,
+              "enabled": true,
+              "owner": 0
+            },
+            {
+              "hwnd": 2624636,
+              "tid": 856,
+              "class": "TtkMonitorClass",
+              "title": "TtkMonitorWindow",
+              "visible": false,
+              "enabled": true,
+              "owner": 0
+            },
+            {
+              "hwnd": 1970824,
+              "tid": 856,
+              "class": "MSCTFIME UI",
+              "title": "MSCTFIME UI",
+              "visible": false,
+              "enabled": false,
+              "owner": 2821430
+            },
+            {
+              "hwnd": 2821430,
+              "tid": 856,
+              "class": "IME",
+              "title": "Default IME",
+              "visible": false,
+              "enabled": false,
+              "owner": 4001484
+            },
+            {
+              "hwnd": 17306166,
+              "tid": 856,
+              "class": "BingIMESysMessageWindow",
+              "title": "",
+              "visible": false,
+              "enabled": true,
+              "owner": 0
+            }
+          ]
+        },
+        {
+          "t": "2026-10-25T09:10:40.906649+00:00",
+          "tick_ms": 38811437,
+          "phase": "awaiting-enter",
+          "ui_ctx_flat_s": 5.1,
+          "mark_s": 5.0,
+          "gui_flags": 0,
+          "hwnd_active": 0,
+          "hwnd_focus": 0,
+          "threads": [
+            {
+              "tid": 856,
+              "ui": true,
+              "state": "Waiting",
+              "wait_reason": "WrUserRequest",
+              "ctx": 19101,
+              "start_address": "0x0",
+              "syscall": "NtUserGetMessage",
+              "arg": 527036183552,
+              "wait_ms": 5171.9
+            },
+            {
+              "tid": 1108,
+              "ui": false,
+              "state": "Waiting",
+              "wait_reason": "UserRequest",
+              "ctx": 300,
+              "start_address": "0x0",
+              "syscall": "NtWaitForSingleObject",
+              "arg": 828,
+              "wait_ms": 15.6
+            },
+            {
+              "tid": 1616,
+              "ui": false,
+              "state": "Waiting",
+              "wait_reason": "WrQueue",
+              "ctx": 2,
+              "start_address": "0x0",
+              "syscall": "NtWaitForWorkViaWorkerFactory",
+              "arg": 2240,
+              "wait_ms": 9187.5
+            },
+            {
+              "tid": 6192,
+              "ui": false,
+              "state": "Waiting",
+              "wait_reason": "UserRequest",
+              "ctx": 302,
+              "start_address": "0x0",
+              "syscall": "NtWaitForSingleObject",
+              "arg": 768,
+              "wait_ms": 15.6
+            },
+            {
+              "tid": 6200,
+              "ui": false,
+              "state": "Waiting",
+              "wait_reason": "UserRequest",
+              "ctx": 311,
+              "start_address": "0x0",
+              "syscall": "NtWaitForSingleObject",
+              "arg": 772,
+              "wait_ms": 15.6
+            },
+            {
+              "tid": 19360,
+              "ui": false,
+              "state": "Waiting",
+              "wait_reason": "UserRequest",
+              "ctx": 315,
+              "start_address": "0x0",
+              "syscall": "NtWaitForSingleObject",
+              "arg": 788,
+              "wait_ms": 15.6
+            },
+            {
+              "tid": 22252,
+              "ui": false,
+              "state": "Waiting",
+              "wait_reason": "UserRequest",
+              "ctx": 314,
+              "start_address": "0x0",
+              "syscall": "NtWaitForSingleObject",
+              "arg": 812,
+              "wait_ms": 15.6
+            },
+            {
+              "tid": 23624,
+              "ui": false,
+              "state": "Waiting",
+              "wait_reason": "UserRequest",
+              "ctx": 310,
+              "start_address": "0x0",
+              "syscall": "NtWaitForSingleObject",
+              "arg": 820,
+              "wait_ms": 15.6
+            },
+            {
+              "tid": 25072,
+              "ui": false,
+              "state": "Waiting",
+              "wait_reason": "UserRequest",
+              "ctx": 53,
+              "start_address": "0x0",
+              "syscall": "NtWaitForSingleObject",
+              "arg": 1900,
+              "wait_ms": 10171.9
+            },
+            {
+              "tid": 25472,
+              "ui": false,
+              "state": "Waiting",
+              "wait_reason": "UserRequest",
+              "ctx": 2,
+              "start_address": "0x0",
+              "syscall": "NtWaitForMultipleObjects",
+              "arg": 1,
+              "wait_ms": 8500.0
+            },
+            {
+              "tid": 26200,
+              "ui": false,
+              "state": "Waiting",
+              "wait_reason": "UserRequest",
+              "ctx": 6,
+              "start_address": "0x0",
+              "syscall": "NtWaitForMultipleObjects",
+              "arg": 1,
+              "wait_ms": 3546.9
+            },
+            {
+              "tid": 27036,
+              "ui": false,
+              "state": "Waiting",
+              "wait_reason": "WrQueue",
+              "ctx": 162,
+              "start_address": "0x0",
+              "syscall": "NtWaitForWorkViaWorkerFactory",
+              "arg": 164,
+              "wait_ms": 9156.2
+            },
+            {
+              "tid": 27280,
+              "ui": false,
+              "state": "Waiting",
+              "wait_reason": "WrAlertByThreadId",
+              "ctx": 40,
+              "start_address": "0x0",
+              "syscall": "NtWaitForAlertByThreadId",
+              "arg": 2366632502176,
+              "wait_ms": 6281.2
+            },
+            {
+              "tid": 29232,
+              "ui": false,
+              "state": "Waiting",
+              "wait_reason": "WrUserRequest",
+              "ctx": 75,
+              "start_address": "0x0",
+              "syscall": "NtUserGetMessage",
+              "arg": 527078390768,
+              "wait_ms": 10218.8
+            },
+            {
+              "tid": 29268,
+              "ui": false,
+              "state": "Waiting",
+              "wait_reason": "UserRequest",
+              "ctx": 299,
+              "start_address": "0x0",
+              "syscall": "NtWaitForSingleObject",
+              "arg": 836,
+              "wait_ms": 15.6
+            },
+            {
+              "tid": 29404,
+              "ui": false,
+              "state": "Waiting",
+              "wait_reason": "UserRequest",
+              "ctx": 15,
+              "start_address": "0x0",
+              "syscall": "NtWaitForSingleObject",
+              "arg": 852,
+              "wait_ms": 250.0
+            },
+            {
+              "tid": 30108,
+              "ui": false,
+              "state": "Waiting",
+              "wait_reason": "UserRequest",
+              "ctx": 2,
+              "start_address": "0x0",
+              "syscall": "NtWaitForMultipleObjects",
+              "arg": 1,
+              "wait_ms": 13187.5
+            },
+            {
+              "tid": 30388,
+              "ui": false,
+              "state": "Waiting",
+              "wait_reason": "WrQueue",
+              "ctx": 148,
+              "start_address": "0x0",
+              "syscall": "NtWaitForWorkViaWorkerFactory",
+              "arg": 164,
+              "wait_ms": 9156.2
+            },
+            {
+              "tid": 30948,
+              "ui": false,
+              "state": "Waiting",
+              "wait_reason": "WrQueue",
+              "ctx": 2,
+              "start_address": "0x0",
+              "syscall": "NtWaitForWorkViaWorkerFactory",
+              "arg": 1336,
+              "wait_ms": 10234.4
+            },
+            {
+              "tid": 31148,
+              "ui": false,
+              "state": "Waiting",
+              "wait_reason": "WrQueue",
+              "ctx": 238,
+              "start_address": "0x0",
+              "syscall": "NtWaitForWorkViaWorkerFactory",
+              "arg": 40,
+              "wait_ms": 4312.5
+            },
+            {
+              "tid": 31680,
+              "ui": false,
+              "state": "Waiting",
+              "wait_reason": "WrQueue",
+              "ctx": 94,
+              "start_address": "0x0",
+              "syscall": "NtWaitForWorkViaWorkerFactory",
+              "arg": 164,
+              "wait_ms": 9156.2
+            },
+            {
+              "tid": 32212,
+              "ui": false,
+              "state": "Waiting",
+              "wait_reason": "UserRequest",
+              "ctx": 308,
+              "start_address": "0x0",
+              "syscall": "NtWaitForSingleObject",
+              "arg": 796,
+              "wait_ms": 15.6
+            },
+            {
+              "tid": 33980,
+              "ui": false,
+              "state": "Waiting",
+              "wait_reason": "WrQueue",
+              "ctx": 34,
+              "start_address": "0x0",
+              "syscall": "NtWaitForWorkViaWorkerFactory",
+              "arg": 40,
+              "wait_ms": 8500.0
+            },
+            {
+              "tid": 34184,
+              "ui": false,
+              "state": "Waiting",
+              "wait_reason": "WrQueue",
+              "ctx": 66,
+              "start_address": "0x0",
+              "syscall": "NtWaitForWorkViaWorkerFactory",
+              "arg": 40,
+              "wait_ms": 10203.1
+            }
+          ],
+          "windows": [
+            {
+              "hwnd": 1052840,
+              "tid": 856,
+              "class": "GDI+ Hook Window Class",
+              "title": "GDI+ Window (python.exe)",
+              "visible": false,
+              "enabled": true,
+              "owner": 0
+            },
+            {
+              "hwnd": 4001484,
+              "tid": 856,
+              "class": "TkTopLevel",
+              "title": "PageFolio",
+              "visible": true,
+              "enabled": true,
+              "owner": 0
+            },
+            {
+              "hwnd": 6754696,
+              "tid": 856,
+              "class": "EmbeddedMenuWindowClass",
+              "title": "EmbeddedMenuWindow",
+              "visible": false,
+              "enabled": true,
+              "owner": 0
+            },
+            {
+              "hwnd": 2887662,
+              "tid": 856,
+              "class": "MenuWindowClass",
+              "title": "MenuWindow",
+              "visible": false,
+              "enabled": true,
+              "owner": 0
+            },
+            {
+              "hwnd": 7933600,
+              "tid": 856,
+              "class": "Wtk_TaskbarHandler",
+              "title": "",
+              "visible": false,
+              "enabled": true,
+              "owner": 0
+            },
+            {
+              "hwnd": 2624636,
+              "tid": 856,
+              "class": "TtkMonitorClass",
+              "title": "TtkMonitorWindow",
+              "visible": false,
+              "enabled": true,
+              "owner": 0
+            },
+            {
+              "hwnd": 1970824,
+              "tid": 856,
+              "class": "MSCTFIME UI",
+              "title": "MSCTFIME UI",
+              "visible": false,
+              "enabled": false,
+              "owner": 2821430
+            },
+            {
+              "hwnd": 2821430,
+              "tid": 856,
+              "class": "IME",
+              "title": "Default IME",
+              "visible": false,
+              "enabled": false,
+              "owner": 4001484
+            },
+            {
+              "hwnd": 17306166,
+              "tid": 856,
+              "class": "BingIMESysMessageWindow",
+              "title": "",
+              "visible": false,
+              "enabled": true,
+              "owner": 0
+            }
+          ]
+        }
+      ],
+      "wait_targets_seen": [
+        {
+          "syscall": "NtUserDrainThreadCoreMessagingCompletions2",
+          "rows": 1,
+          "first_t": "2026-10-25T09:11:23.810644+00:00",
+          "last_t": "2026-10-25T09:11:23.810644+00:00",
+          "text": "hwnd 0x10f1016 [SystemUserAdapterWindowClass ''] pid 14824/tid 856 python.exe(同一プロセス) 状態=Running/WrDispatchInt ctx=21785 (推定)",
+          "target": {
+            "hwnd": 17764374,
+            "by": "speculative",
+            "valid": true,
+            "pid": 14824,
+            "tid": 856,
+            "class": "SystemUserAdapterWindowClass",
+            "title": "",
+            "visible": false,
+            "hung": false,
+            "same_process": true,
+            "image": "python.exe",
+            "thread": {
+              "state": "Running",
+              "wait_reason": "WrDispatchInt",
+              "ctx": 21785,
+              "wait_since_tick_ms": 38854344,
+              "waited_ms": 0,
+              "cpu_ms": 1703.1
+            }
+          }
+        }
+      ],
+      "syscall_counts": {
+        "NtUserMsgWaitForMultipleObjectsEx": 624,
+        "NtUserGetMessage": 146,
+        "NtCallbackReturn": 9,
+        "NtUserSetTimer": 1,
+        "NtUserDrainThreadCoreMessagingCompletions2": 1
+      }
+    },
+    "request_timeline": {
+      "requests": [
+        {
+          "request_id": "1838c736429d497ca8304f2b3adace8a",
+          "deadline_tick": 38853687,
+          "request_started_tick_derived": 38848687,
+          "request_started_derivation": "deadline_tick - 5000 (startup_win32.request_activation)",
+          "accepted_tick_note": "一次が要求を受理(accepted返信)したtickはstderrに出ない。通常行ではpeer elapsedが63〜94msなので、開始tickから約0.1秒以内と推定される(推定)",
+          "peer_accepted_logged": true,
+          "primary_terminal_result": "completed",
+          "primary_terminal_tick": 38848750,
+          "primary_lateness_ms": -4937,
+          "primary_processed_before_deadline": true,
+          "wall": {
+            "request_started": "2026-10-25T09:11:18.150558+00:00",
+            "deadline": "2026-10-25T09:11:23.150558+00:00",
+            "primary_terminal": "2026-10-25T09:11:18.213558+00:00"
+          },
+          "terminal_first_seen_by_driver": {
+            "t": "2026-10-25T09:11:18.298807+00:00",
+            "tick_ms": 38848828,
+            "lag_ms_after_logged_tick": 78
+          }
+        }
+      ],
+      "peer_os_errors": [],
+      "peer_result": {
+        "constructed": 0,
+        "restored": 0,
+        "status_preserved": true,
+        "result": "completed",
+        "elapsed": 110
+      },
+      "anchors": [
+        {
+          "tick_ms": 38802328,
+          "t": "2026-10-25T09:10:31.791558+00:00",
+          "mono": 38802.3543437
+        },
+        {
+          "tick_ms": 38880375,
+          "t": "2026-10-25T09:11:49.843586+00:00",
+          "mono": 38880.406373
+        }
+      ],
+      "tick_wall_drift_ms_between_anchors": 5.0,
+      "late": false
+    },
+    "request_window_analysis": [
+      {
+        "request_id": "1838c736429d497ca8304f2b3adace8a",
+        "window_tick_ms": [
+          38848687,
+          38848750
+        ],
+        "late": false,
+        "aggregate": {
+          "rows": 1,
+          "first": {
+            "t": "2026-10-25T09:11:18.204351+00:00",
+            "tick_ms": 38848734
+          },
+          "last": {
+            "t": "2026-10-25T09:11:18.204351+00:00",
+            "tick_ms": 38848734
+          },
+          "duration_s": 0.0,
+          "ctx_switch_delta": 0,
+          "ctx_per_s": null,
+          "cpu_ms_delta": 0.0,
+          "cpu_share": null,
+          "cycles_m_delta": 0.0,
+          "others_cpu_ms_delta": 0.0,
+          "others_cpu_share": null,
+          "busy_other_threads_max": 0,
+          "page_fault_delta": 0,
+          "hard_fault_delta": 0,
+          "working_set_kb": {
+            "min": 124048,
+            "max": 124048
+          },
+          "states": {
+            "Waiting": 1
+          },
+          "wait_reasons": {
+            "WrResource": 1
+          },
+          "gui_flags_rows": {
+            "none": 1
+          },
+          "modal_rows": 0,
+          "hung_rows": 0,
+          "tids": [
+            856
+          ],
+          "max_cost_ms": 7.99,
+          "syscalls": {
+            "NtCallbackReturn": 1
+          },
+          "wait_kind": "other:NtCallbackReturn",
+          "wm_null": {
+            "count": 0,
+            "by_result": {},
+            "max_elapsed_ms": null
+          }
+        },
+        "tags": [],
+        "rows_at": {
+          "request_started": {
+            "t": "2026-10-25T09:11:18.110407+00:00",
+            "tick_ms": 38848640,
+            "phase": "peer",
+            "gui_flags": 0,
+            "state": "Waiting",
+            "wait_reason": "UserRequest",
+            "ctx_switches": 21072,
+            "cpu_kernel_ms": 734.4,
+            "cpu_user_ms": 875.0,
+            "others_cpu_ms": 296.9,
+            "hung": false,
+            "offset_ms": -47
+          },
+          "deadline": {
+            "t": "2026-10-25T09:11:23.113000+00:00",
+            "tick_ms": 38853640,
+            "phase": "post-peer",
+            "gui_flags": 0,
+            "state": "Waiting",
+            "wait_reason": "UserRequest",
+            "ctx_switches": 21689,
+            "cpu_kernel_ms": 750.0,
+            "cpu_user_ms": 890.6,
+            "others_cpu_ms": 296.9,
+            "hung": false,
+            "offset_ms": -47
+          },
+          "primary_terminal": {
+            "t": "2026-10-25T09:11:18.204351+00:00",
+            "tick_ms": 38848734,
+            "phase": "peer",
+            "gui_flags": 0,
+            "state": "Waiting",
+            "wait_reason": "WrResource",
+            "ctx_switches": 21090,
+            "cpu_kernel_ms": 734.4,
+            "cpu_user_ms": 875.0,
+            "others_cpu_ms": 296.9,
+            "hung": false,
+            "offset_ms": -16
+          }
+        }
+      }
+    ],
+    "frequency_record": {
+      "peer_result": "completed",
+      "peer_elapsed_ms": 110,
+      "primary_late": false,
+      "stall_episodes": 1,
+      "longest_stall_s": 14.499,
+      "wm_null_probe": false
+    },
+    "samples_file": {
+      "file": "W02_preview_at_module-20261025T091150Z.ui-samples.jsonl",
+      "rows": 782,
+      "wm_null_rows": 0,
+      "sha256": "174da920482bd66b1e932cb7ef60cef1f68d587bc2ec129ef5c43c5e5e222ad4",
+      "format": "JSON Lines: 1行目=header(columns)、続く行=サンプル配列(columns順)、kind=wm_null の行=WM_NULL応答"
+    }
+  },
+  "finished_at": "2026-10-25T09:11:50.817709+00:00",
+  "raw_inputs": [
+    {
+      "at": "2026-10-25T09:11:13.210969+00:00",
+      "key": "enter",
+      "text": "",
+      "role": "continue"
+    },
+    {
+      "at": "2026-10-25T09:11:26.179286+00:00",
+      "key": "enter",
+      "text": "",
+      "role": "continue"
+    },
+    {
+      "at": "2026-10-25T09:11:32.099775+00:00",
+      "key": "foreground",
+      "attempt": 1,
+      "text": "出た",
+      "rejected": null
+    },
+    {
+      "at": "2026-10-25T09:11:36.408085+00:00",
+      "key": "key_reached",
+      "attempt": 1,
+      "text": "変わった",
+      "rejected": null
+    },
+    {
+      "at": "2026-10-25T09:11:39.650418+00:00",
+      "key": "restored",
+      "attempt": 1,
+      "text": "戻った",
+      "rejected": null
+    },
+    {
+      "at": "2026-10-25T09:11:44.602621+00:00",
+      "key": "kept",
+      "attempt": 1,
+      "text": "PDFなし",
+      "rejected": null
+    },
+    {
+      "at": "2026-10-25T09:11:47.541061+00:00",
+      "key": "single",
+      "attempt": 1,
+      "text": "1つ",
+      "rejected": null
+    },
+    {
+      "at": "2026-10-25T09:11:49.497823+00:00",
+      "key": "note",
+      "attempt": 1,
+      "text": "なし",
+      "rejected": null
+    }
+  ],
+  "composed_answer": "W02 preview module：foreground=出た・key_reached=変わった・restored=戻った・kept=PDFなし・single=1つ（メモ: なし）",
+  "run_logs_copy": {
+    "directory": "W02_preview_at_module-20261025T091150Z-run-logs",
+    "files": [
+      "primary-stderr.log",
+      "primary-stdout.log",
+      "primary-traceback.log",
+      "primary-result.json",
+      "primary-focus-result.json",
+      "primary-resource-audit.json",
+      "peer-stderr.log",
+      "peer-stdout.log",
+      "peer-traceback.log",
+      "peer-result.json",
+      "peer-resource-audit.json"
+    ],
+    "note": "隔離runの原本は .planning/tmp/ にも残る。ここはその写し(診断実行ごとに別ディレクトリ)"
+  }
+}

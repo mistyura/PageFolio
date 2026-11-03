@@ -1,0 +1,674 @@
+{
+  "row": "W05a/nested-settings@module",
+  "case": "W05a",
+  "condition": "nested-settings",
+  "entry": "module",
+  "selftest": false,
+  "started_at": "2026-10-28T15:18:35.452625+00:00",
+  "target_exe_sha256": "66be5df663e333057c5c3cde02180857f930d2433e377f69c2838432d49a19d4",
+  "steps": [
+    {
+      "at": "2026-10-28T15:18:35.453644+00:00",
+      "step": "start-harness"
+    },
+    {
+      "at": "2026-10-28T15:18:41.824468+00:00",
+      "step": "prepared",
+      "windows": [
+        {
+          "hwnd": 16388616,
+          "pid": 33688,
+          "title": "設定",
+          "class": "TkTopLevel",
+          "visible": true,
+          "iconic": false,
+          "zoomed": false,
+          "rect": [
+            404,
+            224,
+            880,
+            749
+          ]
+        },
+        {
+          "hwnd": 16585126,
+          "pid": 33688,
+          "title": "PageFolio",
+          "class": "TkTopLevel",
+          "visible": true,
+          "iconic": false,
+          "zoomed": false,
+          "rect": [
+            26,
+            26,
+            1242,
+            865
+          ]
+        }
+      ],
+      "foreground": {
+        "hwnd": 16388616,
+        "pid": 33688,
+        "title": "設定"
+      },
+      "pids": [
+        32368,
+        32692,
+        33688
+      ]
+    },
+    {
+      "at": "2026-10-28T15:18:50.196647+00:00",
+      "step": "peer"
+    },
+    {
+      "at": "2026-10-28T15:18:52.630829+00:00",
+      "step": "after-peer",
+      "windows": [
+        {
+          "hwnd": 16388616,
+          "pid": 33688,
+          "title": "設定",
+          "class": "TkTopLevel",
+          "visible": true,
+          "iconic": false,
+          "zoomed": false,
+          "rect": [
+            404,
+            224,
+            880,
+            749
+          ]
+        },
+        {
+          "hwnd": 16585126,
+          "pid": 33688,
+          "title": "PageFolio",
+          "class": "TkTopLevel",
+          "visible": true,
+          "iconic": false,
+          "zoomed": false,
+          "rect": [
+            26,
+            26,
+            1242,
+            865
+          ]
+        }
+      ],
+      "foreground": {
+        "hwnd": 16388616,
+        "pid": 33688,
+        "title": "設定"
+      }
+    }
+  ],
+  "harness_start": {
+    "returncode": 0,
+    "stderr_tail": ""
+  },
+  "run": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-k5xylf7o",
+  "harness_manifest": {
+    "run": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-k5xylf7o",
+    "namespace": "5f960d54730c415d8bf37c077aa8881c",
+    "case": "nested",
+    "launcher_pid": 32692,
+    "source_commit": "4f90cdee39adf8575cd9e71fb53258bcfaa991e9"
+  },
+  "owned_pids": [
+    {
+      "pid": 32692,
+      "created": 134376743160633008,
+      "image": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.venv\\Scripts\\python.exe"
+    },
+    {
+      "pid": 33688,
+      "created": 134376743160979438,
+      "image": "C:\\Users\\shdwf\\AppData\\Local\\Programs\\Python\\Python315\\python.exe"
+    }
+  ],
+  "harness_peer": {
+    "returncode": 0,
+    "stderr_tail": "",
+    "json": {
+      "fixture": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-k5xylf7o\\peer-5949dee2e26c4b7f880bc7084c650463",
+      "result": {
+        "constructed": 0,
+        "restored": 0,
+        "status_preserved": true,
+        "result": "completed",
+        "elapsed": 94
+      }
+    }
+  },
+  "answers": {
+    "foreground": "出た",
+    "input": "入った",
+    "kept": "保たれた",
+    "single": "１つ",
+    "note": "なし"
+  },
+  "harness_inspect": {
+    "returncode": 0,
+    "stderr_tail": "",
+    "json": {
+      "manifest": {
+        "run": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-k5xylf7o",
+        "namespace": "5f960d54730c415d8bf37c077aa8881c",
+        "case": "nested",
+        "role": "uat-owner-nested",
+        "fixture": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-k5xylf7o\\uat-owner-nested",
+        "launcher_pid": 32692,
+        "environment": {
+          "os": "sys.getwindowsversion(major=10, minor=0, build=26300, platform=2, service_pack='')",
+          "python": "3.15.2 (tags/v3.15.2:5e58eaa, Oct 25 2026, 17:27:03) [MSC v.1951 64 bit (AMD64)]",
+          "pointer_bits": 64,
+          "session_id": 1,
+          "sid": "S-1-5-5-0-203868",
+          "authentication_luid": 208244,
+          "foreground": 13963530,
+          "is_admin": false,
+          "tcl": "9.0.4",
+          "tk": 9.0
+        },
+        "originals_before": {
+          "pagefolio_settings.json": null,
+          "ocr_custom_prompt.md": null,
+          "ocr_summary_prompt.md": null
+        },
+        "source_commit": "4f90cdee39adf8575cd9e71fb53258bcfaa991e9",
+        "expected_owner": {
+          "sid": "S-1-5-5-0-203868",
+          "authentication_luid": 208244,
+          "session_id": 1,
+          "pid": 33688,
+          "process_created": 134376743160979438,
+          "started_tick": 58371843,
+          "owner_result": "acquired",
+          "snapshot": {
+            "protocol": 1,
+            "generation": "c9fa68baaecf417eb4333ea2b945687d",
+            "pid": 33688,
+            "process_created": 134376743160979438,
+            "session_id": 1,
+            "state": "ready",
+            "ready": true,
+            "release_generation": null
+          },
+          "ready_tick": 58375265,
+          "manual": true
+        }
+      },
+      "originals_unchanged": true,
+      "ready": {
+        "sid": "S-1-5-5-0-203868",
+        "authentication_luid": 208244,
+        "session_id": 1,
+        "pid": 33688,
+        "process_created": 134376743160979438,
+        "started_tick": 58371843,
+        "owner_result": "acquired",
+        "snapshot": {
+          "protocol": 1,
+          "generation": "c9fa68baaecf417eb4333ea2b945687d",
+          "pid": 33688,
+          "process_created": 134376743160979438,
+          "session_id": 1,
+          "state": "ready",
+          "ready": true,
+          "release_generation": null
+        },
+        "ready_tick": 58375265
+      },
+      "focus-result.json": {
+        "state_preserved": true,
+        "target_correct": true,
+        "result": "completed",
+        "activated": 16388616,
+        "expected_tk": 16388616,
+        "native": null,
+        "placement": "normal",
+        "expected_focus": ".!settingsdialog.!entry",
+        "immediate_focus": "None",
+        "document_pages": 0,
+        "page_rotations": [],
+        "selected_pages": [],
+        "current_page": 0,
+        "focus_correct": true,
+        "settled_focus": ".!settingsdialog.!entry"
+      },
+      "manual-nested-closed.json": {
+        "inner_closed": true,
+        "outer": ".!settingsdialog",
+        "grab": ".!settingsdialog",
+        "text": "unsaved input",
+        "selection": [
+          1,
+          7
+        ],
+        "cursor": 5
+      },
+      "manual-nested-input.json": {
+        "text": "ux input",
+        "cursor": 2
+      }
+    }
+  },
+  "outcome": "answered",
+  "harness_stop": {
+    "returncode": 0,
+    "stderr_tail": ""
+  },
+  "cleanup": {
+    "left_after_harness_stop": [],
+    "terminated_owned": [],
+    "alive_after": []
+  },
+  "input_monitor": {
+    "enabled": true,
+    "method": "read-only polling: GetAsyncKeyState/GetCursorPos/WindowFromPoint/GetAncestor/GetForegroundWindow (no SendInput/SetCursorPos/SetForegroundWindow)",
+    "interval_s": 0.008,
+    "samples": 5977,
+    "max_gap_s": 0.031,
+    "errors": [],
+    "truncated": false,
+    "started_at": "2026-10-28T15:18:35.452660+00:00",
+    "stopped_at": "2026-10-28T15:19:26.245216+00:00",
+    "owned_pids": [
+      32368,
+      32692,
+      33688
+    ],
+    "contaminating_phases": [
+      "start-harness",
+      "awaiting-enter",
+      "peer"
+    ],
+    "phase_log": [
+      {
+        "t": "2026-10-28T15:18:35.452653+00:00",
+        "phase": "start-harness"
+      },
+      {
+        "t": "2026-10-28T15:18:41.826625+00:00",
+        "phase": "awaiting-enter"
+      },
+      {
+        "t": "2026-10-28T15:18:50.196634+00:00",
+        "phase": "peer"
+      },
+      {
+        "t": "2026-10-28T15:18:52.630849+00:00",
+        "phase": "post-peer"
+      }
+    ],
+    "mouse_events": [
+      {
+        "seq": 1,
+        "t": "2026-10-28T15:18:35.973242+00:00",
+        "elapsed_s": 0.52,
+        "phase": "start-harness",
+        "kind": "down",
+        "button": "left",
+        "pos": [
+          3420,
+          441
+        ],
+        "under": {
+          "hwnd": 13963530,
+          "pid": 21352,
+          "title": "ITニュース - Yahoo!ニュース - Google Chrome",
+          "class": "Chrome_WidgetWin_1",
+          "child_hwnd": 23400974
+        },
+        "foreground": {
+          "hwnd": 9048468,
+          "pid": 18044,
+          "title": "Windows PowerShell",
+          "class": "CASCADIA_HOSTING_WINDOW_CLASS"
+        },
+        "on_pagefolio": false
+      },
+      {
+        "seq": 3,
+        "t": "2026-10-28T15:18:36.093006+00:00",
+        "elapsed_s": 0.64,
+        "phase": "start-harness",
+        "kind": "up",
+        "button": "left",
+        "pos": [
+          3420,
+          441
+        ],
+        "under": {
+          "hwnd": 13963530,
+          "pid": 21352,
+          "title": "ITニュース - Yahoo!ニュース - Google Chrome",
+          "class": "Chrome_WidgetWin_1",
+          "child_hwnd": 23400974
+        },
+        "foreground": {
+          "hwnd": 13963530,
+          "pid": 21352,
+          "title": "ITニュース - Yahoo!ニュース - Google Chrome",
+          "class": "Chrome_WidgetWin_1"
+        },
+        "on_pagefolio": false
+      }
+    ],
+    "foreground_transitions": [
+      {
+        "seq": 2,
+        "t": "2026-10-28T15:18:35.974118+00:00",
+        "elapsed_s": 0.52,
+        "phase": "start-harness",
+        "from": {
+          "hwnd": 9048468,
+          "pid": 18044,
+          "title": "Windows PowerShell",
+          "class": "CASCADIA_HOSTING_WINDOW_CLASS"
+        },
+        "to": {
+          "hwnd": 13963530,
+          "pid": 21352,
+          "title": "ITニュース - Yahoo!ニュース - Google Chrome",
+          "class": "Chrome_WidgetWin_1"
+        }
+      },
+      {
+        "seq": 4,
+        "t": "2026-10-28T15:18:40.200188+00:00",
+        "elapsed_s": 4.747,
+        "phase": "start-harness",
+        "from": {
+          "hwnd": 13963530,
+          "pid": 21352,
+          "title": "ITニュース - Yahoo!ニュース - Google Chrome",
+          "class": "Chrome_WidgetWin_1"
+        },
+        "to": {
+          "hwnd": 16585126,
+          "pid": 33688,
+          "title": "PageFolio",
+          "class": "TkTopLevel"
+        }
+      },
+      {
+        "seq": 5,
+        "t": "2026-10-28T15:18:40.852935+00:00",
+        "elapsed_s": 5.4,
+        "phase": "start-harness",
+        "from": {
+          "hwnd": 16585126,
+          "pid": 33688,
+          "title": "PageFolio",
+          "class": "TkTopLevel"
+        },
+        "to": {
+          "hwnd": 16388616,
+          "pid": 33688,
+          "title": "設定",
+          "class": "TkTopLevel"
+        }
+      },
+      {
+        "seq": 6,
+        "t": "2026-10-28T15:18:40.861837+00:00",
+        "elapsed_s": 5.409,
+        "phase": "start-harness",
+        "from": {
+          "hwnd": 16388616,
+          "pid": 33688,
+          "title": "設定",
+          "class": "TkTopLevel"
+        },
+        "to": {
+          "hwnd": 30345214,
+          "pid": 33688,
+          "title": "LLM 設定",
+          "class": "TkTopLevel"
+        }
+      },
+      {
+        "seq": 7,
+        "t": "2026-10-28T15:18:41.103564+00:00",
+        "elapsed_s": 5.651,
+        "phase": "start-harness",
+        "from": {
+          "hwnd": 30345214,
+          "pid": 33688,
+          "title": "LLM 設定",
+          "class": "TkTopLevel"
+        },
+        "to": {
+          "hwnd": 16388616,
+          "pid": 33688,
+          "title": "設定",
+          "class": "TkTopLevel"
+        }
+      },
+      {
+        "seq": 8,
+        "t": "2026-10-28T15:18:44.282997+00:00",
+        "elapsed_s": 8.83,
+        "phase": "awaiting-enter",
+        "from": {
+          "hwnd": 16388616,
+          "pid": 33688,
+          "title": "設定",
+          "class": "TkTopLevel"
+        },
+        "to": {
+          "hwnd": 66060,
+          "pid": 7912,
+          "title": "",
+          "class": "ForegroundStaging"
+        }
+      },
+      {
+        "seq": 9,
+        "t": "2026-10-28T15:18:44.291560+00:00",
+        "elapsed_s": 8.839,
+        "phase": "awaiting-enter",
+        "from": {
+          "hwnd": 66060,
+          "pid": 7912,
+          "title": "",
+          "class": "ForegroundStaging"
+        },
+        "to": {
+          "hwnd": 200428,
+          "pid": 7912,
+          "title": "タスクの切り替え",
+          "class": "XamlExplorerHostIslandWindow"
+        }
+      },
+      {
+        "seq": 10,
+        "t": "2026-10-28T15:18:46.774818+00:00",
+        "elapsed_s": 11.322,
+        "phase": "awaiting-enter",
+        "from": {
+          "hwnd": 200428,
+          "pid": 7912,
+          "title": "タスクの切り替え",
+          "class": "XamlExplorerHostIslandWindow"
+        },
+        "to": {
+          "hwnd": 131648,
+          "pid": 7912,
+          "title": "",
+          "class": "ForegroundStaging"
+        }
+      },
+      {
+        "seq": 11,
+        "t": "2026-10-28T15:18:46.784097+00:00",
+        "elapsed_s": 11.33,
+        "phase": "awaiting-enter",
+        "from": {
+          "hwnd": 131648,
+          "pid": 7912,
+          "title": "",
+          "class": "ForegroundStaging"
+        },
+        "to": {
+          "hwnd": 9048468,
+          "pid": 18044,
+          "title": "Windows PowerShell",
+          "class": "CASCADIA_HOSTING_WINDOW_CLASS"
+        }
+      },
+      {
+        "seq": 12,
+        "t": "2026-10-28T15:18:51.014418+00:00",
+        "elapsed_s": 15.561,
+        "phase": "peer",
+        "from": {
+          "hwnd": 9048468,
+          "pid": 18044,
+          "title": "Windows PowerShell",
+          "class": "CASCADIA_HOSTING_WINDOW_CLASS"
+        },
+        "to": {
+          "hwnd": 16388616,
+          "pid": 33688,
+          "title": "設定",
+          "class": "TkTopLevel"
+        }
+      },
+      {
+        "seq": 14,
+        "t": "2026-10-28T15:19:02.041391+00:00",
+        "elapsed_s": 26.589,
+        "phase": "post-peer",
+        "from": {
+          "hwnd": 16388616,
+          "pid": 33688,
+          "title": "設定",
+          "class": "TkTopLevel"
+        },
+        "to": {
+          "hwnd": 66060,
+          "pid": 7912,
+          "title": "",
+          "class": "ForegroundStaging"
+        }
+      },
+      {
+        "seq": 15,
+        "t": "2026-10-28T15:19:02.083835+00:00",
+        "elapsed_s": 26.631,
+        "phase": "post-peer",
+        "from": {
+          "hwnd": 66060,
+          "pid": 7912,
+          "title": "",
+          "class": "ForegroundStaging"
+        },
+        "to": {
+          "hwnd": 200428,
+          "pid": 7912,
+          "title": "タスクの切り替え",
+          "class": "XamlExplorerHostIslandWindow"
+        }
+      },
+      {
+        "seq": 16,
+        "t": "2026-10-28T15:19:02.788930+00:00",
+        "elapsed_s": 27.336,
+        "phase": "post-peer",
+        "from": {
+          "hwnd": 200428,
+          "pid": 7912,
+          "title": "タスクの切り替え",
+          "class": "XamlExplorerHostIslandWindow"
+        },
+        "to": {
+          "hwnd": 9048468,
+          "pid": 18044,
+          "title": "Windows PowerShell",
+          "class": "CASCADIA_HOSTING_WINDOW_CLASS"
+        }
+      }
+    ],
+    "key_events": [
+      {
+        "seq": 13,
+        "t": "2026-10-28T15:18:58.999908+00:00",
+        "elapsed_s": 23.547,
+        "phase": "post-peer",
+        "vk": 88,
+        "foreground": {
+          "hwnd": 16388616,
+          "pid": 33688,
+          "title": "設定",
+          "class": "TkTopLevel"
+        },
+        "on_pagefolio": true
+      }
+    ]
+  },
+  "procedure_assessment": {
+    "procedure_verdict": "clean",
+    "rerun_required": false,
+    "reason": "peer完了までの間にPageFolio上のボタン押下・キー押下は検出されなかった",
+    "pagefolio_presses_before_peer_done": [],
+    "pagefolio_keys_before_peer_done": [],
+    "focus_correct_as_recorded": true,
+    "focus_attribution": "product-focus-ok"
+  },
+  "procedure_verdict": "clean",
+  "focus_attribution": "product-focus-ok",
+  "finished_at": "2026-10-28T15:19:26.245781+00:00",
+  "raw_inputs": [
+    {
+      "at": "2026-10-28T15:18:50.196595+00:00",
+      "key": "enter",
+      "text": "",
+      "role": "continue"
+    },
+    {
+      "at": "2026-10-28T15:19:04.083634+00:00",
+      "key": "enter",
+      "text": "",
+      "role": "continue"
+    },
+    {
+      "at": "2026-10-28T15:19:08.231978+00:00",
+      "key": "foreground",
+      "attempt": 1,
+      "text": "出た",
+      "rejected": null
+    },
+    {
+      "at": "2026-10-28T15:19:11.655563+00:00",
+      "key": "input",
+      "attempt": 1,
+      "text": "入った",
+      "rejected": null
+    },
+    {
+      "at": "2026-10-28T15:19:18.721457+00:00",
+      "key": "kept",
+      "attempt": 1,
+      "text": "保たれた",
+      "rejected": null
+    },
+    {
+      "at": "2026-10-28T15:19:22.472504+00:00",
+      "key": "single",
+      "attempt": 1,
+      "text": "１つ",
+      "rejected": null
+    },
+    {
+      "at": "2026-10-28T15:19:24.872461+00:00",
+      "key": "note",
+      "attempt": 1,
+      "text": "なし",
+      "rejected": null
+    }
+  ],
+  "composed_answer": "W05a nested-settings module：foreground=出た・input=入った・kept=保たれた・single=１つ（メモ: なし）"
+}
