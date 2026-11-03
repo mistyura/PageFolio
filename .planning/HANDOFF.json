@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "timestamp": "2026-10-31T08:53:54.464Z",
+  "timestamp": "2026-11-03T10:06:32.773Z",
   "phase": "06",
   "phase_name": "サンプル配布とリリース検証",
   "phase_dir": ".planning/phases/06-release-validation",
@@ -18,13 +18,14 @@
       "id": 2,
       "name": "06-05-02 状態維持・混在入口・通知",
       "status": "in_progress",
-      "progress": "W01/W02/W03/W04/W05a/W05b計27pass。W05c以降未着手。"
+      "progress": "W01〜W05b全件とW05c moduleの計28 pass。W05c script/production-exe 未実施。",
+      "commit": "7a65491"
     }
   ],
   "remaining_tasks": [
     {
       "id": "06-05-02",
-      "name": "W05c、G3全件品質、W12、X01〜X06",
+      "name": "W05c script再実施・W05c production-exe・G3全件品質・W12・X01〜X06",
       "status": "in_progress"
     },
     {
@@ -35,48 +36,56 @@
   ],
   "blockers": [
     {
-      "description": "W05c 配布 EXE は起動時に Unhandled exception in script。本文・原因未確認。",
-      "type": "technical",
-      "workaround": "生の inspect を保持し、例外本文の安全な取得方法を先に検討する。"
+      "description": "W12bの相手側tracer v1.9.1(sha c082f6f4…)が%TEMP%の自動削除で消失し、写しがない",
+      "type": "human_action",
+      "workaround": "G4の前に再作成するか方針を利用者が決める"
     },
     {
-      "description": "W05c は正式記録 helper・証拠監査が未準備で3行とも not-run。",
+      "description": "前回(10/31)のEXE起動例外の本文・原因は不明。11/3の診断起動では再現せず",
       "type": "technical",
-      "workaround": "利用者回答と機械観測を分離し、採用可否と不足を評価する。"
+      "workaround": "inspect/stopが#32770本文を自動記録する"
+    },
+    {
+      "description": "%LOCALAPPDATA%\\Temp\\pf_pytest_tmp が削除できずbasetempにすると全件ERROR",
+      "type": "technical",
+      "workaround": "新しいbasetempを使う。ゲート前に対処"
     }
   ],
   "async_jobs": [],
   "human_actions_pending": [
     {
-      "action": "今後の W05c 正式受入に必要な画面確認",
-      "context": "実施方法と証拠の採用可否を整理後、必要な場合のみ依頼する。",
+      "action": "W05c scriptの再実施で『いいえ』を押し、ページ数と各ページの向きを答える",
+      "context": "前回は編集内容の回答が不足",
+      "blocking": true
+    },
+    {
+      "action": "tracer v1.9.1の再作成方針を決める",
+      "context": "W12bのexe-tracer/tracer-exe 2行に必要",
       "blocking": false
     }
   ],
   "decisions": [
     {
-      "decision": "配布版EXEのW05b判定は外部観測の連鎖(W04 EXE同水準)で可",
-      "rationale": "利用者承認2026-10-31",
+      "decision": "W05c module試行を事後の正式記録で台帳に採用",
+      "rationale": "利用者承認2026-11-03。原文の完全一致と機械観測で照合",
       "phase": "06"
     },
     {
-      "decision": "無効回は専用attempt helperで台帳記録",
-      "rationale": "利用者承認2026-10-31",
+      "decision": "配布元消失は再buildせず無傷copyから復元し、監査をloss_incident対応に見直す",
+      "rationale": "利用者承認2026-11-03。照合できない項目は隠さず表示",
       "phase": "06"
     },
     {
-      "decision": "pauseでは引き継ぎ2文書のみcommit",
-      "rationale": "既存dirtyを保持し、製品/受入変更をまとめてcommitしない。",
+      "decision": "合成OCR用PDF(約39MB)はcommitしない",
+      "rationale": "利用者承認。hashはcopies.jsonにあり再生成可能",
       "phase": "06"
     }
   ],
   "uncommitted_files": [
     " M .gitignore",
-    " M .planning/HANDOFF.json",
     " M .planning/PROJECT.md",
     " M .planning/REQUIREMENTS.md",
     " M .planning/ROADMAP.md",
-    " M .planning/STATE.md",
     " M .planning/debug/preview-focus-not-restored-evidence/diag_btn_press.py",
     " M .planning/debug/simultaneous-owner-missing.md",
     " M .planning/phases/04-startup-control/04-REVIEW-DISPOSITION.md",
@@ -93,13 +102,10 @@
     " M .planning/phases/05-config-notification/05-VERIFICATION.md",
     " M .planning/phases/06-release-validation/.continue-here.md",
     " M .planning/phases/06-release-validation/06-05-PLAN.md",
-    " M .planning/phases/06-release-validation/06-05-drivers/uat_row.py",
     " M .planning/phases/06-release-validation/06-06-PLAN.md",
     " M .planning/phases/06-release-validation/06-07-quality.cjs",
     " M .planning/phases/06-release-validation/06-CONTEXT.md",
-    " M .planning/phases/06-release-validation/06-MANUAL-EVIDENCE.json",
     " M .planning/phases/06-release-validation/06-UAT-CARRYOVER.md",
-    " M .planning/phases/06-release-validation/06-UAT.md",
     " M .planning/phases/06-release-validation/06-VALIDATION.md",
     " M .planning/state.json",
     " M CONTRIBUTING.md",
@@ -120,36 +126,40 @@
     "?? .planning/debug/ocr-off-summary-targeted.txt",
     "?? .planning/debug/ocr-off-summary.md",
     "?? .planning/debug/phase06-w05b-alttab-blindspot.md",
-    "?? .planning/debug/phase06-w05b-manual-switch.md"
+    "?? .planning/debug/phase06-w05b-manual-switch.md",
+    "?? .planning/debug/quality-gate-unblock-20261028/",
+    "?? .planning/debug/quality-gate-unblock.md",
+    "?? .planning/debug/resolved/ruff-format-source-panic.md",
+    "?? .planning/debug/resolved/startup-wake-foreground.md",
+    "?? .planning/debug/resolved/w02-preview-peer-expired.md"
   ],
-  "uncommitted_file_count": 351,
-  "uncommitted_files_elided": 301,
-  "next_action": "W05c の今回の試行と生証拠を確認し、配布 EXE の起動例外本文を安全に取得する方法を検討する。正式台帳への採用は証拠監査後。",
-  "context_notes": "W05c script は編集内容の具体的確認が不足。module は利用者の画面回答と外部観測を取得したが正式記録 helper と監査が未準備。配布 EXE は Unhandled exception in script で通常画面未到達、本文・原因不明。詳細は phase .continue-here.md。",
+  "uncommitted_file_count": 218,
+  "uncommitted_files_elided": 168,
+  "next_action": "W05c/quit-no@scriptを再実施する(native-quit start→peer script→利用者がいいえ＋ページ数・向きを回答→peer script→inspect→stop)。回答ファイルを作り06-05-record-w05c-python.cjsでdry-run後に記録。",
+  "context_notes": "詳細は.planning/phases/06-release-validation/.continue-here.mdの2026-11-03節。配布元は%LOCALAPPDATA%\\PageFolio-release\\…へ復元済み。build-only監査ok(BUILD-LOSS-20261103表示)。",
   "validation": {
-    "required_pass": 27,
-    "required_not_run": 81,
+    "required_pass": 28,
+    "required_not_run": 80,
     "deferred_not_run": 2,
-    "w05b": "3/3 pass",
-    "full_after_g3": "not-run",
+    "full_suite": "2254 passed(利用者実行)",
     "release_allowed": false
   },
   "background_processes": [],
   "blocking_constraints": [
     {
       "severity": "blocking",
+      "constraint": "正式記録・証拠監査を経ずに暫定観測を受入passとしない",
+      "mitigation": "06-05-record-*.cjsで照合してから台帳を更新"
+    },
+    {
+      "severity": "blocking",
       "constraint": "手動切替/機械成功を人手自動復帰passにしない",
-      "mitigation": "同一HWND/PID直接遷移・タスク切替UI非経由・switch_key_events無・無操作・直接回答を照合"
+      "mitigation": "同一HWND/PID直接遷移・切替UI非経由・無操作・直接回答を照合"
     },
     {
       "severity": "blocking",
-      "constraint": "全件品質実行中は入力を変更しない",
-      "mitigation": "manifestを固定し人手GUIを重ねない"
-    },
-    {
-      "severity": "blocking",
-      "constraint": "正式記録・証拠監査を経ずに暫定観測を受入 pass としない。",
-      "mitigation": "回答原文、生観測、対象入口、編集維持と排他の証拠を照合し、台帳契約の不足を明示する。"
+      "constraint": "成果物を%TEMP%に置かない",
+      "mitigation": "%LOCALAPPDATA%\\PageFolio-release等、自動削除されない場所を使う"
     }
   ]
 }
