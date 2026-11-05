@@ -1,0 +1,47 @@
+{
+  "run": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-p0nxk1im",
+  "namespace": "2fe5ed12fb4b40248a452fb9c6ef8cb0",
+  "case": "native-quit",
+  "role": "uat-owner-native-quit",
+  "fixture": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-p0nxk1im\\uat-owner-native-quit",
+  "launcher_pid": 30256,
+  "environment": {
+    "os": "sys.getwindowsversion(major=10, minor=0, build=26300, platform=2, service_pack='')",
+    "python": "3.15.2 (tags/v3.15.2:5e58eaa, Oct 25 2026, 17:27:03) [MSC v.1951 64 bit (AMD64)]",
+    "pointer_bits": 64,
+    "session_id": 1,
+    "sid": "S-1-5-5-0-347023",
+    "authentication_luid": 352479,
+    "foreground": 2035876,
+    "is_admin": false,
+    "tcl": "9.0.4",
+    "tk": 9.0
+  },
+  "originals_before": {
+    "pagefolio_settings.json": null,
+    "ocr_custom_prompt.md": null,
+    "ocr_summary_prompt.md": null
+  },
+  "source_commit": "ffe89693f922ee62da599304139d7d3579d246b8",
+  "expected_owner": {
+    "sid": "S-1-5-5-0-347023",
+    "authentication_luid": 352479,
+    "session_id": 1,
+    "pid": 29932,
+    "process_created": 134383135890594475,
+    "started_tick": 138933171,
+    "owner_result": "acquired",
+    "snapshot": {
+      "protocol": 1,
+      "generation": "1fe1e10de0ee4c65ae748c10b655755c",
+      "pid": 29932,
+      "process_created": 134383135890594475,
+      "session_id": 1,
+      "state": "ready",
+      "ready": true,
+      "release_generation": null
+    },
+    "ready_tick": 138936031,
+    "manual": true
+  }
+}

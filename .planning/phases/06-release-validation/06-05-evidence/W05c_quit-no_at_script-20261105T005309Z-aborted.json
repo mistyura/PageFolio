@@ -1,0 +1,51 @@
+{
+  "case": "W05c",
+  "row": "W05c/quit-no@script",
+  "entry": "script",
+  "status": "aborted",
+  "acceptance_status": "not-run",
+  "reason": "利用者が観察回答として $gsd-pause-work を指定したため中断。いいえ操作・編集維持・単一画面の直接回答は未取得。",
+  "run": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-p0nxk1im",
+  "owner_pid": 29932,
+  "owner_running": false,
+  "peer_during_confirm": "peer-ed4b1f7c43974c42a669cc289c7f6ea3",
+  "peer_after_answer": null,
+  "originals_unchanged": true,
+  "primary_result": {
+    "constructed": 1,
+    "restored": 1,
+    "status_preserved": true,
+    "result": "primary",
+    "elapsed": 106156
+  },
+  "mechanical_focus_result": {
+    "state_preserved": true,
+    "target_correct": true,
+    "result": "completed",
+    "activated": 6819854,
+    "expected_tk": 4198874,
+    "native": 6819854,
+    "placement": "normal",
+    "expected_focus": "None",
+    "immediate_focus": "None",
+    "document_pages": 3,
+    "page_rotations": [
+      90,
+      90,
+      0
+    ],
+    "selected_pages": [],
+    "current_page": 1,
+    "focus_correct": true,
+    "settled_focus": "None"
+  },
+  "stop": "既存harnessのstop成功。result.jsonあり。",
+  "captured_at": "2026-11-05T00:57:26.9286484Z",
+  "copies_manifest": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\phases\\06-release-validation\\06-05-evidence\\W05c_quit-no_at_script-20261105T005309Z-aborted-raw/copies.json",
+  "counts": {
+    "required_pass": 28,
+    "required_not_run": 80,
+    "deferred_not_run": 2
+  },
+  "release_allowed": false
+}

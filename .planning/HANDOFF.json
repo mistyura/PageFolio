@@ -1,165 +1,179 @@
 {
-  "version": "1.0",
-  "timestamp": "2026-11-03T10:06:32.773Z",
-  "phase": "06",
-  "phase_name": "サンプル配布とリリース検証",
-  "phase_dir": ".planning/phases/06-release-validation",
-  "plan": 5,
-  "task": 2,
-  "total_tasks": 2,
-  "status": "paused",
-  "completed_tasks": [
-    {
-      "id": 1,
-      "name": "06-05-01 ケースと証拠台帳",
-      "status": "done"
-    },
-    {
-      "id": 2,
-      "name": "06-05-02 状態維持・混在入口・通知",
-      "status": "in_progress",
-      "progress": "W01〜W05b全件とW05c moduleの計28 pass。W05c script/production-exe 未実施。",
-      "commit": "7a65491"
-    }
-  ],
-  "remaining_tasks": [
-    {
-      "id": "06-05-02",
-      "name": "W05c script再実施・W05c production-exe・G3全件品質・W12・X01〜X06",
-      "status": "in_progress"
-    },
-    {
-      "id": "06-06",
-      "name": "OS拒否/UAC/DPI/WR-01と最終ゲート",
-      "status": "not_started"
-    }
-  ],
-  "blockers": [
-    {
-      "description": "W12bの相手側tracer v1.9.1(sha c082f6f4…)が%TEMP%の自動削除で消失し、写しがない",
-      "type": "human_action",
-      "workaround": "G4の前に再作成するか方針を利用者が決める"
-    },
-    {
-      "description": "前回(10/31)のEXE起動例外の本文・原因は不明。11/3の診断起動では再現せず",
-      "type": "technical",
-      "workaround": "inspect/stopが#32770本文を自動記録する"
-    },
-    {
-      "description": "%LOCALAPPDATA%\\Temp\\pf_pytest_tmp が削除できずbasetempにすると全件ERROR",
-      "type": "technical",
-      "workaround": "新しいbasetempを使う。ゲート前に対処"
-    }
-  ],
-  "async_jobs": [],
-  "human_actions_pending": [
-    {
-      "action": "W05c scriptの再実施で『いいえ』を押し、ページ数と各ページの向きを答える",
-      "context": "前回は編集内容の回答が不足",
-      "blocking": true
-    },
-    {
-      "action": "tracer v1.9.1の再作成方針を決める",
-      "context": "W12bのexe-tracer/tracer-exe 2行に必要",
-      "blocking": false
-    }
-  ],
-  "decisions": [
-    {
-      "decision": "W05c module試行を事後の正式記録で台帳に採用",
-      "rationale": "利用者承認2026-11-03。原文の完全一致と機械観測で照合",
-      "phase": "06"
-    },
-    {
-      "decision": "配布元消失は再buildせず無傷copyから復元し、監査をloss_incident対応に見直す",
-      "rationale": "利用者承認2026-11-03。照合できない項目は隠さず表示",
-      "phase": "06"
-    },
-    {
-      "decision": "合成OCR用PDF(約39MB)はcommitしない",
-      "rationale": "利用者承認。hashはcopies.jsonにあり再生成可能",
-      "phase": "06"
-    }
-  ],
-  "uncommitted_files": [
-    " M .gitignore",
-    " M .planning/PROJECT.md",
-    " M .planning/REQUIREMENTS.md",
-    " M .planning/ROADMAP.md",
-    " M .planning/debug/preview-focus-not-restored-evidence/diag_btn_press.py",
-    " M .planning/debug/simultaneous-owner-missing.md",
-    " M .planning/phases/04-startup-control/04-REVIEW-DISPOSITION.md",
-    " M .planning/phases/04-startup-control/04-REVIEW.md",
-    " M .planning/phases/04-startup-control/04-SECURITY.md",
-    " M .planning/phases/04-startup-control/04-UI-REVIEW.md",
-    " M .planning/phases/04-startup-control/04-VALIDATION.md",
-    " M .planning/phases/04-startup-control/04-VERIFICATION.md",
-    " M .planning/phases/05-config-notification/05-REVIEW-DISPOSITION.md",
-    " M .planning/phases/05-config-notification/05-REVIEW.md",
-    " M .planning/phases/05-config-notification/05-SECURITY.md",
-    " M .planning/phases/05-config-notification/05-UI-REVIEW.md",
-    " M .planning/phases/05-config-notification/05-VALIDATION.md",
-    " M .planning/phases/05-config-notification/05-VERIFICATION.md",
-    " M .planning/phases/06-release-validation/.continue-here.md",
-    " M .planning/phases/06-release-validation/06-05-PLAN.md",
-    " M .planning/phases/06-release-validation/06-06-PLAN.md",
-    " M .planning/phases/06-release-validation/06-07-quality.cjs",
-    " M .planning/phases/06-release-validation/06-CONTEXT.md",
-    " M .planning/phases/06-release-validation/06-UAT-CARRYOVER.md",
-    " M .planning/phases/06-release-validation/06-VALIDATION.md",
-    " M .planning/state.json",
-    " M CONTRIBUTING.md",
-    " M docs/DEVELOPMENT.md",
-    " M pagefolio/__main__.py",
-    " M pagefolio/startup_win32.py",
-    " M tests/test_release_contract.py",
-    " M tests/test_release_uat_support.py",
-    " M tests/test_startup_windows.py",
-    " M 開発履歴.md",
-    "?? .planning/debug/g1-uat-audit-scope.md",
-    "?? .planning/debug/knowledge-base.md",
-    "?? .planning/debug/ocr-off-summary-check.cjs",
-    "?? .planning/debug/ocr-off-summary-evidence/",
-    "?? .planning/debug/ocr-off-summary-ocr.txt",
-    "?? .planning/debug/ocr-off-summary-red.txt",
-    "?? .planning/debug/ocr-off-summary-ruff-verbose.txt",
-    "?? .planning/debug/ocr-off-summary-targeted.txt",
-    "?? .planning/debug/ocr-off-summary.md",
-    "?? .planning/debug/phase06-w05b-alttab-blindspot.md",
-    "?? .planning/debug/phase06-w05b-manual-switch.md",
-    "?? .planning/debug/quality-gate-unblock-20261028/",
-    "?? .planning/debug/quality-gate-unblock.md",
-    "?? .planning/debug/resolved/ruff-format-source-panic.md",
-    "?? .planning/debug/resolved/startup-wake-foreground.md",
-    "?? .planning/debug/resolved/w02-preview-peer-expired.md"
-  ],
-  "uncommitted_file_count": 218,
-  "uncommitted_files_elided": 168,
-  "next_action": "W05c/quit-no@scriptを再実施する(native-quit start→peer script→利用者がいいえ＋ページ数・向きを回答→peer script→inspect→stop)。回答ファイルを作り06-05-record-w05c-python.cjsでdry-run後に記録。",
-  "context_notes": "詳細は.planning/phases/06-release-validation/.continue-here.mdの2026-11-03節。配布元は%LOCALAPPDATA%\\PageFolio-release\\…へ復元済み。build-only監査ok(BUILD-LOSS-20261103表示)。",
-  "validation": {
-    "required_pass": 28,
-    "required_not_run": 80,
-    "deferred_not_run": 2,
-    "full_suite": "2254 passed(利用者実行)",
-    "release_allowed": false
-  },
-  "background_processes": [],
-  "blocking_constraints": [
-    {
-      "severity": "blocking",
-      "constraint": "正式記録・証拠監査を経ずに暫定観測を受入passとしない",
-      "mitigation": "06-05-record-*.cjsで照合してから台帳を更新"
-    },
-    {
-      "severity": "blocking",
-      "constraint": "手動切替/機械成功を人手自動復帰passにしない",
-      "mitigation": "同一HWND/PID直接遷移・切替UI非経由・無操作・直接回答を照合"
-    },
-    {
-      "severity": "blocking",
-      "constraint": "成果物を%TEMP%に置かない",
-      "mitigation": "%LOCALAPPDATA%\\PageFolio-release等、自動削除されない場所を使う"
-    }
-  ]
+    "version":  "1.0",
+    "timestamp":  "2026-11-05T00:58:46.1725042Z",
+    "phase":  "06",
+    "phase_name":  "サンプル配布とリリース検証",
+    "phase_dir":  ".planning/phases/06-release-validation",
+    "plan":  5,
+    "task":  2,
+    "total_tasks":  2,
+    "status":  "paused",
+    "completed_tasks":  [
+                            {
+                                "id":  1,
+                                "name":  "06-05-01 ケースと証拠台帳",
+                                "status":  "done"
+                            },
+                            {
+                                "id":  2,
+                                "name":  "06-05-02 状態維持・混在入口・通知",
+                                "status":  "in_progress",
+                                "progress":  "W01〜W05b全件とW05c moduleの計28 pass。Phase04/05再検証fresh passed。W05c script再試行は利用者指定で中断、観察回答未取得のためnot-run。",
+                                "commit":  "7a65491"
+                            }
+                        ],
+    "remaining_tasks":  [
+                            {
+                                "id":  "06-05-02",
+                                "name":  "新runのW05c script再実施・W05c production-exe・G3品質照合・W12・X01〜X06",
+                                "status":  "in_progress"
+                            },
+                            {
+                                "id":  "06-06",
+                                "name":  "OS拒否/UAC/DPI/WR-01と最終ゲート",
+                                "status":  "not_started"
+                            }
+                        ],
+    "blockers":  [
+                     {
+                         "description":  "W12bの相手側tracer v1.9.1(sha c082f6f4…)が%TEMP%の自動削除で消失し、写しがない",
+                         "type":  "human_action",
+                         "workaround":  "G4の前に再作成するか方針を利用者が決める"
+                     },
+                     {
+                         "description":  "前回(10/31)のEXE起動例外の本文・原因は不明。11/3の診断起動では再現せず",
+                         "type":  "technical",
+                         "workaround":  "inspect/stopが#32770本文を自動記録する"
+                     },
+                     {
+                         "description":  "%LOCALAPPDATA%\\Temp\\pf_pytest_tmp が削除できずbasetempにすると全件ERROR",
+                         "type":  "technical",
+                         "workaround":  "新しいbasetempを使う。ゲート前に対処"
+                     }
+                 ],
+    "async_jobs":  [
+
+                   ],
+    "human_actions_pending":  [
+                                  {
+                                      "action":  "新runのW05c scriptで「いいえ」を押し、ページ数・各ページの向き・単一画面を直接回答",
+                                      "context":  "2026-11-05の試行は利用者がpauseを指定したため中断。機械観測のみではpass不可。",
+                                      "blocking":  true
+                                  },
+                                  {
+                                      "action":  "W12b用tracer v1.9.1の再作成方針",
+                                      "context":  "G4のexe-tracer/tracer-exeに必要。消失したまま。",
+                                      "blocking":  false
+                                  }
+                              ],
+    "decisions":  [
+                      {
+                          "decision":  "W05c module試行を事後の正式記録で台帳に採用",
+                          "rationale":  "利用者承認2026-11-03。原文の完全一致と機械観測で照合",
+                          "phase":  "06"
+                      },
+                      {
+                          "decision":  "配布元消失は再buildせず無傷copyから復元し、監査をloss_incident対応に見直す",
+                          "rationale":  "利用者承認2026-11-03。照合できない項目は隠さず表示",
+                          "phase":  "06"
+                      },
+                      {
+                          "decision":  "合成OCR用PDF(約39MB)はcommitしない",
+                          "rationale":  "利用者承認。hashはcopies.jsonにあり再生成可能",
+                          "phase":  "06"
+                      }
+                  ],
+    "uncommitted_files":  [
+                              " M .gitignore",
+                              " M .planning/PROJECT.md",
+                              " M .planning/REQUIREMENTS.md",
+                              " M .planning/ROADMAP.md",
+                              " M .planning/STATE.md",
+                              " M .planning/debug/preview-focus-not-restored-evidence/diag_btn_press.py",
+                              " M .planning/debug/simultaneous-owner-missing.md",
+                              " M .planning/phases/04-startup-control/04-REVIEW-DISPOSITION.md",
+                              " M .planning/phases/04-startup-control/04-REVIEW.md",
+                              " M .planning/phases/04-startup-control/04-SECURITY.md",
+                              " M .planning/phases/04-startup-control/04-UI-REVIEW.md",
+                              " M .planning/phases/04-startup-control/04-VALIDATION.md",
+                              " M .planning/phases/04-startup-control/04-VERIFICATION.md",
+                              " M .planning/phases/05-config-notification/05-REVIEW-DISPOSITION.md",
+                              " M .planning/phases/05-config-notification/05-REVIEW.md",
+                              " M .planning/phases/05-config-notification/05-SECURITY.md",
+                              " M .planning/phases/05-config-notification/05-UI-REVIEW.md",
+                              " M .planning/phases/05-config-notification/05-VALIDATION.md",
+                              " M .planning/phases/05-config-notification/05-VERIFICATION.md",
+                              " M .planning/phases/06-release-validation/.continue-here.md",
+                              " M .planning/phases/06-release-validation/06-05-PLAN.md",
+                              " M .planning/phases/06-release-validation/06-06-PLAN.md",
+                              " M .planning/phases/06-release-validation/06-07-quality.cjs",
+                              " M .planning/phases/06-release-validation/06-CONTEXT.md",
+                              " M .planning/phases/06-release-validation/06-UAT-CARRYOVER.md",
+                              " M .planning/phases/06-release-validation/06-VALIDATION.md",
+                              " M .planning/state.json",
+                              " M CONTRIBUTING.md",
+                              " M docs/DEVELOPMENT.md",
+                              " M pagefolio/__main__.py",
+                              " M pagefolio/startup_win32.py",
+                              " M tests/test_release_contract.py",
+                              " M tests/test_release_uat_support.py",
+                              " M tests/test_startup_windows.py",
+                              " M 開発履歴.md",
+                              "?? .planning/debug/g1-uat-audit-scope.md",
+                              "?? .planning/debug/knowledge-base.md",
+                              "?? .planning/debug/ocr-off-summary-check.cjs",
+                              "?? .planning/debug/ocr-off-summary-evidence/",
+                              "?? .planning/debug/ocr-off-summary-ocr.txt",
+                              "?? .planning/debug/ocr-off-summary-red.txt",
+                              "?? .planning/debug/ocr-off-summary-ruff-verbose.txt",
+                              "?? .planning/debug/ocr-off-summary-targeted.txt",
+                              "?? .planning/debug/ocr-off-summary.md",
+                              "?? .planning/debug/phase06-w05b-alttab-blindspot.md",
+                              "?? .planning/debug/phase06-w05b-manual-switch.md",
+                              "?? .planning/debug/quality-gate-unblock-20261028/",
+                              "?? .planning/debug/quality-gate-unblock.md",
+                              "?? .planning/debug/resolved/ruff-format-source-panic.md",
+                              "?? .planning/debug/resolved/startup-wake-foreground.md"
+                          ],
+    "uncommitted_file_count":  227,
+    "uncommitted_files_elided":  177,
+    "next_action":  "gsd-execute-phase 06でresume_contractを照合後、新runのW05c/quit-no@scriptを最初から実施。確認中peer→利用者のいいえ操作とページ数/向き/単一画面の回答→回答後peer→inspect→stop→正式記録helper dry-run→記録。",
+    "context_notes":  "2026-11-05にPhase04/05を正規ゲートでfresh passedへ再検証。全件2254passed/2warnings/571.44秒・118入力前後一致の生証拠は04-reverify-20261105-full、Phase05は再利用。W05c script run pagefolio-uat-p0nxk1im/PID29932はstop済み・owner終了・原本不変。回答はpause指示のみでnot-run、21生ファイル保存。詳細は.continue-here.md冒頭。既存dirtyの再検証報告と新規証拠は作業ツリーに保持。",
+    "validation":  {
+                       "required_pass":  28,
+                       "required_not_run":  80,
+                       "deferred_not_run":  2,
+                       "full_suite":  "2026-11-05 native実走2254 passed / 2 warnings / 571.44秒 / failure,error,skip各0。118入力前後不変。",
+                       "release_allowed":  false
+                   },
+    "background_processes":  [
+
+                             ],
+    "blocking_constraints":  [
+                                 {
+                                     "severity":  "blocking",
+                                     "constraint":  "正式記録・証拠監査を経ずに暫定観測を受入passとしない",
+                                     "mitigation":  "06-05-record-*.cjsで照合してから台帳を更新"
+                                 },
+                                 {
+                                     "severity":  "blocking",
+                                     "constraint":  "手動切替/機械成功を人手自動復帰passにしない",
+                                     "mitigation":  "同一HWND/PID直接遷移・切替UI非経由・無操作・直接回答を照合"
+                                 },
+                                 {
+                                     "severity":  "blocking",
+                                     "constraint":  "成果物を%TEMP%に置かない",
+                                     "mitigation":  "%LOCALAPPDATA%\\PageFolio-release等、自動削除されない場所を使う"
+                                 }
+                             ],
+    "current_session_validation":  {
+                                       "phase4":  "fresh passed",
+                                       "phase5":  "fresh passed",
+                                       "full_evidence":  ".planning/phases/04-startup-control/04-reverify-20261105-full",
+                                       "frozen_inputs":  "65/65一致",
+                                       "build_only":  "ok / BUILD-LOSS-20261103未照合3項目表示維持",
+                                       "w05c_script":  "aborted / acceptance not-run",
+                                       "aborted_evidence":  ".planning/phases/06-release-validation/06-05-evidence/W05c_quit-no_at_script-20261105T005309Z-aborted.json",
+                                       "owner_running":  false
+                                   }
 }

@@ -1,0 +1,107 @@
+[
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-p0nxk1im\\inspection.json",
+    "target": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\phases\\06-release-validation\\06-05-evidence\\W05c_quit-no_at_script-20261105T005309Z-aborted-raw\\run-inspection.json",
+    "sha256": "155b5150d88bb2e6a0046b16d768cd75e30cf6fe13d62d67b86842ee975abfa6"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-p0nxk1im\\manifest.json",
+    "target": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\phases\\06-release-validation\\06-05-evidence\\W05c_quit-no_at_script-20261105T005309Z-aborted-raw\\run-manifest.json",
+    "sha256": "05824b1ed24138edd2e153b2abc08c8ff068387cae36b0e8b0e228fe7ebacb60"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-p0nxk1im\\uat-owner-native-quit\\focus-ready",
+    "target": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\phases\\06-release-validation\\06-05-evidence\\W05c_quit-no_at_script-20261105T005309Z-aborted-raw\\primary-focus-ready",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-p0nxk1im\\uat-owner-native-quit\\focus-result.json",
+    "target": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\phases\\06-release-validation\\06-05-evidence\\W05c_quit-no_at_script-20261105T005309Z-aborted-raw\\primary-focus-result.json",
+    "sha256": "7b64b430027a6037dc32ce75639ac0a812ced58083e98e887762fd95ebe07a88"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-p0nxk1im\\uat-owner-native-quit\\initializing.json",
+    "target": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\phases\\06-release-validation\\06-05-evidence\\W05c_quit-no_at_script-20261105T005309Z-aborted-raw\\primary-initializing.json",
+    "sha256": "7600f534beb17037c8c18f91948a961e068aaf4196d98a6b6681ebb6de662c27"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-p0nxk1im\\uat-owner-native-quit\\pagefolio_settings.json",
+    "target": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\phases\\06-release-validation\\06-05-evidence\\W05c_quit-no_at_script-20261105T005309Z-aborted-raw\\primary-pagefolio_settings.json",
+    "sha256": "af1d7f7c2684964c1f2a222a56f778742495f2b9789af03f7acc82b524111d62"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-p0nxk1im\\uat-owner-native-quit\\quit-cancelled",
+    "target": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\phases\\06-release-validation\\06-05-evidence\\W05c_quit-no_at_script-20261105T005309Z-aborted-raw\\primary-quit-cancelled",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-p0nxk1im\\uat-owner-native-quit\\ready",
+    "target": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\phases\\06-release-validation\\06-05-evidence\\W05c_quit-no_at_script-20261105T005309Z-aborted-raw\\primary-ready",
+    "sha256": "e1705e551c69166e3afc8b3855e6dc5bced05d09f011ace985a496b1969b17d9"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-p0nxk1im\\uat-owner-native-quit\\resource-audit.json",
+    "target": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\phases\\06-release-validation\\06-05-evidence\\W05c_quit-no_at_script-20261105T005309Z-aborted-raw\\primary-resource-audit.json",
+    "sha256": "e1705e551c69166e3afc8b3855e6dc5bced05d09f011ace985a496b1969b17d9"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-p0nxk1im\\uat-owner-native-quit\\result.json",
+    "target": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\phases\\06-release-validation\\06-05-evidence\\W05c_quit-no_at_script-20261105T005309Z-aborted-raw\\primary-result.json",
+    "sha256": "cc9ab315238b2cf18ea5b3408f2a781b2a09a5cfde60496e281e2436fff5d03b"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-p0nxk1im\\uat-owner-native-quit\\stderr.log",
+    "target": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\phases\\06-release-validation\\06-05-evidence\\W05c_quit-no_at_script-20261105T005309Z-aborted-raw\\primary-stderr.log",
+    "sha256": "dde4d02b3f36c808fadb0c446d58359c467522d6ed5028a48073faaccf997b09"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-p0nxk1im\\uat-owner-native-quit\\stdout.log",
+    "target": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\phases\\06-release-validation\\06-05-evidence\\W05c_quit-no_at_script-20261105T005309Z-aborted-raw\\primary-stdout.log",
+    "sha256": "7ee09ec18ac9f2fb9d769d5244475a885a3c638697def8c532c3d20049c837a0"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-p0nxk1im\\uat-owner-native-quit\\stop",
+    "target": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\phases\\06-release-validation\\06-05-evidence\\W05c_quit-no_at_script-20261105T005309Z-aborted-raw\\primary-stop",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-p0nxk1im\\uat-owner-native-quit\\traceback.log",
+    "target": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\phases\\06-release-validation\\06-05-evidence\\W05c_quit-no_at_script-20261105T005309Z-aborted-raw\\primary-traceback.log",
+    "sha256": "559178d3858510afb978db2075078bcf84f3c91941a4a53e1a8a449c245c4ddd"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-p0nxk1im\\peer-ed4b1f7c43974c42a669cc289c7f6ea3\\expected-owner.json",
+    "target": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\phases\\06-release-validation\\06-05-evidence\\W05c_quit-no_at_script-20261105T005309Z-aborted-raw\\peer-during-confirm-expected-owner.json",
+    "sha256": "abed3f6de67ac238d9942eb895be43424a8a22e5e1eebafb30b82df0503988d8"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-p0nxk1im\\peer-ed4b1f7c43974c42a669cc289c7f6ea3\\pagefolio_settings.json",
+    "target": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\phases\\06-release-validation\\06-05-evidence\\W05c_quit-no_at_script-20261105T005309Z-aborted-raw\\peer-during-confirm-pagefolio_settings.json",
+    "sha256": "13b8411ba9565436be62514258c85a210b3d1c7c1cf88af2895fa24f52bfd830"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-p0nxk1im\\peer-ed4b1f7c43974c42a669cc289c7f6ea3\\resource-audit.json",
+    "target": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\phases\\06-release-validation\\06-05-evidence\\W05c_quit-no_at_script-20261105T005309Z-aborted-raw\\peer-during-confirm-resource-audit.json",
+    "sha256": "facc02df0ecd957b2d7ad2c610bbcb02aee87cf7ed2c761de4574cba95f2ae46"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-p0nxk1im\\peer-ed4b1f7c43974c42a669cc289c7f6ea3\\result.json",
+    "target": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\phases\\06-release-validation\\06-05-evidence\\W05c_quit-no_at_script-20261105T005309Z-aborted-raw\\peer-during-confirm-result.json",
+    "sha256": "92687793bf53c9207476d5fcd860350d3f6f6bd055358e650d34ad6dfc63dacc"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-p0nxk1im\\peer-ed4b1f7c43974c42a669cc289c7f6ea3\\stderr.log",
+    "target": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\phases\\06-release-validation\\06-05-evidence\\W05c_quit-no_at_script-20261105T005309Z-aborted-raw\\peer-during-confirm-stderr.log",
+    "sha256": "5e73deb82bef5826f89ce57383432b6e4593ab16dbdb21891ee31d409b8861b1"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-p0nxk1im\\peer-ed4b1f7c43974c42a669cc289c7f6ea3\\stdout.log",
+    "target": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\phases\\06-release-validation\\06-05-evidence\\W05c_quit-no_at_script-20261105T005309Z-aborted-raw\\peer-during-confirm-stdout.log",
+    "sha256": "d0eb3a7159ccdec90453a2b67310c612bc5e7aa1f6f17fcb2652d3fbbe2a1d9b"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-p0nxk1im\\peer-ed4b1f7c43974c42a669cc289c7f6ea3\\traceback.log",
+    "target": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\phases\\06-release-validation\\06-05-evidence\\W05c_quit-no_at_script-20261105T005309Z-aborted-raw\\peer-during-confirm-traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }
+]

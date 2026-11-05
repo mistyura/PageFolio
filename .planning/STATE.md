@@ -6,9 +6,9 @@ current_phase: 06
 current_phase_name: サンプル配布とリリース検証
 current_plan: 5
 status: paused
-stopped_at: 06-05-02を利用者指定で中断。W05a全3入口pass、W05b実OCR確認harness準備・対象6passed。必須24pass/84not-run+対象外2。GUI/テスト/回答待ちなし。
-last_updated: "2026-10-28T15:30:55.145Z"
-last_activity: 利用者のgsd-pause-workで中断。G1/G2とW05a計24pass、必須84not-run・W11対象外2。W05b実確認harnessの対象6件成功、driver/記録helper/人手確認は未実施。
+stopped_at: 06-05-02を利用者指定で中断。Phase04/05をfresh passedへ再検証、単一native全件2254 passed・失敗/ERROR/skip各0・118入力不変。W05c/scriptは観察回答がなく中断、not-run維持。同runはstop済み・owner終了・原本不変、21生ファイルを保存。必須28pass/80not-run+対象外2。GUI/試験/回答待ちなし。次は新runのW05c/script。
+last_updated: "2026-11-05T00:58:46.1725042Z"
+last_activity: 06-05-02を利用者指定で中断。Phase04/05をfresh passedへ再検証、単一native全件2254 passed・失敗/ERROR/skip各0・118入力不変。W05c/scriptは観察回答がなく中断、not-run維持。同runはstop済み・owner終了・原本不変、21生ファイルを保存。必須28pass/80not-run+対象外2。GUI/試験/回答待ちなし。次は新runのW05c/script。
 state_head: 4f90cdee39adf8575cd9e71fb53258bcfaa991e9
 progress:
   total_phases: 3
@@ -54,7 +54,7 @@ Current Plan: 5
 Total Plans in Phase: 8
 Plan: 5 of 8（実行順07→08→05→06。07/08完了、05の本受入へ）
 Status: paused
-Last activity: 利用者のgsd-pause-workで中断。G1/G2とW05a計24pass、必須84not-run・W11対象外2。W05b実確認harnessの対象6件成功、driver/記録helper/人手確認は未実施。
+Last activity: 06-05-02を利用者指定で中断。Phase04/05をfresh passedへ再検証、単一native全件2254 passed・失敗/ERROR/skip各0・118入力不変。W05c/scriptは観察回答がなく中断、not-run維持。同runはstop済み・owner終了・原本不変、21生ファイルを保存。必須28pass/80not-run+対象外2。GUI/試験/回答待ちなし。次は新runのW05c/script。
 
 **過去の再開点（世代3 W05b接続実証停止）:** 次は `$gsd-debug phase06-w05b-manual-switch` で、peer後の前景観測とチャット回答/手動切替の影響を限定調査する。再試行・driver/製品修正・追加GUI/build・06-05/06・commitを行わず、最初の現場を保持する。sandbox `d04061c65a42406c90736c4a3e183368` は画面不可視で未成立。native ocr-single `0d73a0cdf5b8465f9970b3702c2653e7` は同1POST完了と合成結果回答を記録したがprimary terminated/診断を保持し正常終了と書換えない。native W05b `cf52cf1df4db42a3b384db6f13a6c103` は同modal HWND6753582/同request完了、peer後前景はChatGPT側PID18044でprimary9920と不一致。利用者補足「自分で PageFolio に切り替えて確認した」により自動復帰成功の解釈を取り下げ、peer_returned_to_modal=false・原因/製品関与未確定とする。準備監査はこのW05b観測不足だけでexit1。原本copy/hash/補足/監査は `phases/06-release-validation/06-CONNECTION-STOP-20261028-evidence/`、停止報告は同 `06-CONNECTION-STOP-20261028.md`。全110行not-run、06-04-02未完了、06-05停止/06-06not-ready、Phase未完了・出荷停止。Phase04fresh/品質停止resolved/2071件成功の既存判定を戻さず、DEP-05/owner_missing等の原因解決とも混同しない。製品/tests/版/既存dirty/index/全失敗原本を保全、commitなし。
 
@@ -466,8 +466,8 @@ v1.9.0 クローズ時点で次マイルストーンへ引き継ぐ未解決項�
 
 **Resume file:** .planning/phases/06-release-validation/.continue-here.md
 
-Last session: 2026-11-03
-Stopped at: 06-05-02。W05c module を pass として記録（必須28pass/80not-run+対象外2）。配布元消失（BUILD-LOSS-20261103）は復元し、監査を承認つきで見直し済み（build-only ok）。次は W05c script のやり直しと production-exe。tracer v1.9.1 も消失していて未対応（G4）。詳細は 06-release-validation/.continue-here.md の 2026-11-03 追記。
+Last session: 2026-11-05
+Stopped at: 06-05-02を利用者指定で中断。Phase04/05をfresh passedへ再検証、単一native全件2254 passed・失敗/ERROR/skip各0・118入力不変。W05c/scriptは観察回答がなく中断、not-run維持。同runはstop済み・owner終了・原本不変、21生ファイルを保存。必須28pass/80not-run+対象外2。GUI/試験/回答待ちなし。次は新runのW05c/script。
 
 ## Operator Next Steps
 
