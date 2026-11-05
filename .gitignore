@@ -5,6 +5,7 @@ pagefolio_settings.json
 __pycache__/
 *.py[cod]
 *.pyo
+/.planning/phases/05-config-notification/05-closeout-20261028-tmp/
 
 # PyInstaller出力
 dist/*
