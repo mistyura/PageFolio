@@ -1,31 +1,36 @@
 {
   "version": "1.0",
-  "timestamp": "2026-11-05T14:18:29.885Z",
+  "timestamp": "2026-11-06T22:32:40.906Z",
   "phase": "06",
   "phase_name": "サンプル配布とリリース検証",
   "phase_dir": ".planning/phases/06-release-validation",
   "plan": 5,
   "task": 2,
   "total_tasks": 2,
-  "status": "blocked",
+  "status": "paused",
   "w05c_retry_policy": {
     "path": ".planning/phases/06-release-validation/06-W05C-RETRY-POLICY.md",
-    "status": "v3_implemented_integration_blocked",
-    "implementation_status": "validated",
-    "implementation_status_scope": "legacy_v2",
+    "status": "exe_accepted_python_superseded",
+    "implementation_status": "native_integration_and_human_acceptance_completed",
+    "implementation_status_scope": "v3_automated_validation",
     "ready_for_retry": false,
-    "next_action": "全体formatの既存検証tmpアクセス拒否を解消し、新規v3 Windows統合の範囲/許可・実測予算を確定する。再開前に06-03 resume_contractで親ゲート鮮度を照合。新規統合/正式試行/期限延長/正常診断反復/製品推測修正/commitは自動実行しない。",
+    "next_action": "G4 W12a/b/c採取基盤の独立レビュー7指摘は全解消。単一全件2481passed/2warnings、174入力と追加12入力不変、全Ruff/format/AST成功。開発履歴追記のみを別記し、04は21/21・05は23/23で公式fresh passed。新tracer1回build成功/64入力照合、最終EXE不変。現行10pass/98必須not-run/対象外2、release_allowed=false。次はW12a/script-scriptを1行だけ利用者同席で採取。EXE内部API未取得のW12b7/W12c2は正式helper拒否、G5/G6・06-06未完了。",
     "collection_review": ".planning/phases/06-release-validation/06-W05C-COLLECTION-REVIEW.md",
     "collection_implementation_status": "implemented_native_integration_pending",
     "root_cause": "unresolved",
-    "formal_acceptance": "unchanged: 28 pass / 80 not-run / 2 deferred",
+    "formal_acceptance": "10 pass / 98 not-run / 2 deferred",
     "gui_attempts_this_revision": 1,
-    "machine_gates_passed": false,
-    "awaiting": null,
+    "machine_gates_passed": true,
+    "awaiting": "human_availability_for_g4",
     "implementation_report": ".planning/phases/06-release-validation/06-W05C-INSTRUMENTATION.md",
     "collection_implementation_report": ".planning/phases/06-release-validation/06-W05C-COLLECTION-REVIEW.md",
     "existing_automated_gui_tests_authorized": true,
-    "new_v3_native_integration_authorized": false
+    "new_v3_native_integration_authorized": true,
+    "script_accepted": "06-05-evidence/W05c_quit-no_at_script-20261106T104952Z.json",
+    "exe_helper_review": ".planning/phases/06-release-validation/06-W05C-EXE-REVIEW.md",
+    "exe_run": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\release-uat-01ec699d960a4b8da489f7407fa31bfb",
+    "script_accepted_scope": "historical before constructor-source revision; archived in PYTHON-INPUT-SUPERSESSION-20261106.json",
+    "exe_accepted": "06-05-evidence/W05c_quit-no_at_production-exe-20261106T120952Z.json"
   },
   "completed_tasks": [
     {
@@ -37,14 +42,14 @@
       "id": 2,
       "name": "06-05-02 状態維持・混在入口・通知",
       "status": "in_progress",
-      "progress": "v3採取runner/契約を実装し、対象79件・最終全件2333件成功（170入力前後不変）。既存pytest自動GUIのみ利用者許可済み。新規v3 Windows統合は未検証、全体formatは既存tmpアクセス拒否で未通過。元主因未解決、ready_for_retry=false、台帳28pass/80not-run・対象外2、06-06未開始・出荷不可。",
+      "progress": "G4 W12a/b/c採取基盤の独立レビュー7指摘は全解消。単一全件2481passed/2warnings、174入力と追加12入力不変、全Ruff/format/AST成功。開発履歴追記のみを別記し、04は21/21・05は23/23で公式fresh passed。新tracer1回build成功/64入力照合、最終EXE不変。現行10pass/98必須not-run/対象外2、release_allowed=false。次はW12a/script-scriptを1行だけ利用者同席で採取。EXE内部API未取得のW12b7/W12c2は正式helper拒否、G5/G6・06-06未完了。",
       "commit": "7a65491"
     }
   ],
   "remaining_tasks": [
     {
       "id": "06-05-02",
-      "name": "v3実装/自動試験完了。format制限と新規Windows統合・親ゲートが残る。",
+      "name": "G4採取基盤整備・Python20再採取・残G4/G5/G6",
       "status": "in_progress"
     },
     {
@@ -55,42 +60,27 @@
   ],
   "blockers": [
     {
-      "description": "No→False→元マーカーは成立したが、回答後peer/回収前snapshotより前に120秒watchdogが開始した。受入全体は未完了。",
-      "type": "technical",
-      "workaround": "全体formatの既存検証tmpアクセス拒否を解消し、新規v3 Windows統合の範囲/許可・実測予算を確定する。再開前に06-03 resume_contractで親ゲート鮮度を照合。新規統合/正式試行/期限延長/正常診断反復/製品推測修正/commitは自動実行しない。"
+      "description": "W12bのEXE二次7行・W12cのEXE2行は未改変EXE内部の許可API戻り/OS errorを通常ログから取得できない。正式helperは取得済みと扱わず拒否する。",
+      "type": "evidence_capability",
+      "workaround": "新たな観測方法の根拠・検証、または別途承認された計画変更が必要。現在はnot-run。製品/凍結EXEを勝手に変更しない。"
     },
     {
-      "description": "W12bの相手側tracer v1.9.1(sha c082f6f4…)が%TEMP%の自動削除で消失し、写しがない",
+      "description": "Python20の再受入と残G4/G5/G6には利用者の直接操作・観察が必要。",
       "type": "human_action",
-      "workaround": "G4の前に再作成するか方針を利用者が決める"
+      "workaround": "利用者の操作可能回答を待ち、小分けで採取。回答なし/未取得をpassにしない。"
     },
     {
-      "description": "前回(10/31)のEXE起動例外の本文・原因は不明。11/3の診断起動では再現せず",
-      "type": "technical",
-      "workaround": "inspect/stopが#32770本文を自動記録する"
-    },
-    {
-      "description": "%LOCALAPPDATA%\\Temp\\pf_pytest_tmp が削除できずbasetempにすると全件ERROR",
-      "type": "technical",
-      "workaround": "新しいbasetempを使う。ゲート前に対処"
+      "description": "元W05c No不成立の原因・極端な過負荷の別モード/既知のWR-01等は未解除。旧tracer原本の消失は新生成物で復元したとは扱わない。",
+      "type": "historical_risk",
+      "workaround": "保存したdebug/原本/履歴を維持。新規成功を原因解明へ転用しない。"
     }
   ],
   "async_jobs": [],
   "human_actions_pending": [
     {
-      "action": "format制限の解消と新規v3 Windows統合の具体的条件/許可を確定するまで追加のW05c操作を要求しない",
-      "context": "v3採取runner/契約を実装し、対象79件・最終全件2333件成功（170入力前後不変）。既存pytest自動GUIのみ利用者許可済み。新規v3 Windows統合は未検証、全体formatは既存tmpアクセス拒否で未通過。元主因未解決、ready_for_retry=false、台帳28pass/80not-run・対象外2、06-06未開始・出荷不可。",
+      "action": "W12a/script-script@scriptの単発実機操作可能時間",
+      "context": "開始後20秒以内に設定のフォントサイズ欄へ13を入れ数字を選択（適用しない）。続く15秒は一次1画面・前景・値/選択保持を観察。採取・所有回収完了までチャットへ切り替えない。起動はまだしない。",
       "blocking": true
-    },
-    {
-      "action": "W12b用tracer v1.9.1の再作成方針",
-      "context": "G4のexe-tracer/tracer-exeに必要。消失したまま。",
-      "blocking": false
-    },
-    {
-      "action": "Phase04 試験修正(close_native 30秒)のレビューとコミット可否の判断",
-      "context": ".planning/debug/phase04-native-quit-false-entry.md。未コミット",
-      "blocking": false
     }
   ],
   "decisions": [
@@ -143,6 +133,7 @@
     " M .planning/phases/06-release-validation/06-06-PLAN.md",
     " M .planning/phases/06-release-validation/06-07-quality.cjs",
     " M .planning/phases/06-release-validation/06-CONTEXT.md",
+    " M .planning/phases/06-release-validation/06-MANUAL-EVIDENCE.json",
     " M .planning/phases/06-release-validation/06-UAT-CARRYOVER.md",
     " M .planning/phases/06-release-validation/06-UAT.md",
     " M .planning/phases/06-release-validation/06-VALIDATION.md",
@@ -151,31 +142,32 @@
     " M docs/DEVELOPMENT.md",
     " M pagefolio/__main__.py",
     " M pagefolio/startup_win32.py",
+    " M tests/release_uat_support.py",
     " M tests/test_release_contract.py",
     " M tests/test_release_uat_support.py",
     " M tests/test_startup_windows.py",
     " M 開発履歴.md",
+    "?? .planning/debug/constructor-notice-dedup-20261106.md",
+    "?? .planning/debug/constructor-notice-dedup-20261106/",
     "?? .planning/debug/g1-uat-audit-scope.md",
     "?? .planning/debug/knowledge-base.md",
     "?? .planning/debug/ocr-off-summary-check.cjs",
     "?? .planning/debug/ocr-off-summary-evidence/",
     "?? .planning/debug/ocr-off-summary-ocr.txt",
     "?? .planning/debug/ocr-off-summary-red.txt",
-    "?? .planning/debug/ocr-off-summary-ruff-verbose.txt",
-    "?? .planning/debug/ocr-off-summary-targeted.txt",
-    "?? .planning/debug/ocr-off-summary.md",
-    "?? .planning/debug/phase04-native-quit-false-entry.md",
-    "?? .planning/debug/phase06-w05b-alttab-blindspot.md"
+    "?? .planning/debug/ocr-off-summary-ruff-verbose.txt"
   ],
-  "uncommitted_file_count": 258,
-  "uncommitted_files_elided": 208,
-  "next_action": "(1) Phase04 試験修正のレビュー/コミット可否を利用者に確認 → (2) 2333件グリーンを根拠に Phase04 再結合ゲート(Nyquist→Security→UI→Code review/disposition)を再開し 04-REVALIDATION を更新 → (3) その後、従来の Phase06 next_action: 全体formatの既存検証tmpアクセス拒否を解消し、新規v3 Windows統合の範囲/許可・実測予算を確定する。再開前に06-03 resume_contractで親ゲート鮮度を照合。新規統合/正式試行/期限延長/正常診断反復/製品推測修正/commitは自動実行しない。",
-  "context_notes": "v3採取runner/契約を実装し、対象79件・最終全件2333件成功（170入力前後不変）。既存pytest自動GUIのみ利用者許可済み。新規v3 Windows統合は未検証、全体formatは既存tmpアクセス拒否で未通過。元主因未解決、ready_for_retry=false、台帳28pass/80not-run・対象外2、06-06未開始・出荷不可。",
+  "uncommitted_file_count": 311,
+  "uncommitted_files_elided": 261,
+  "next_action": "最新HANDOFFとcontinue-here、06-W12A-COLLECTION.mdを読む。利用者の操作可能回答を得て、開始直前に親鮮度・入力・owner/lock不在を照合し、W12a/script-script@scriptを新run1回だけ採取する。",
+  "context_notes": "2026-11-07のgsd-progressは読取確認のみ。その後、利用者のgsd-pause-work指定で中断。186入力hash一致、既存2481passed/2warningsを参照。人手受入未実施、正式台帳不変。current_stopを優先。",
   "validation": {
-    "required_pass": 28,
-    "required_not_run": 80,
+    "required_pass": 10,
+    "required_not_run": 98,
     "deferred_not_run": 2,
-    "full_suite": "最終native全件2333 passed / 2 warnings / 1274.11秒、170入力前後不変。終了後は開発履歴.mdのみ追記し文書契約検証を別記録。全体format制限は未解消。",
+    "full_suite": "2481 passed / 2 warnings / 705.94秒 / 174入力前後不変、追加12入力一致。事後の開発履歴追記のみを別証拠化。",
+    "phase04": "21/21 fresh passed",
+    "phase05": "23/23 fresh passed",
     "release_allowed": false
   },
   "background_processes": [],
@@ -197,34 +189,46 @@
     }
   ],
   "current_session_validation": {
-    "phase4": "過去fresh passed / 21/21。v3 harness変更後はresume_contractで再確認が必要",
-    "phase5": "過去fresh passed / 23/23。v3変更後はresume_contractで再確認が必要",
-    "full_evidence": ".planning/phases/06-release-validation/06-05-evidence/w05c-v3-final-native-20261105",
-    "frozen_inputs": "65/65一致",
-    "build_only": "ok / BUILD-LOSS-20261103未照合3項目表示維持",
-    "w05c_script": "1 candidate incomplete: No/False/marker succeeded, watchdog before after-answer peer/snapshot; not-run",
-    "aborted_evidence": ".planning/phases/06-release-validation/06-05-evidence/W05c_quit-no_at_script-20261105T005309Z-aborted.json",
-    "owner_running": false,
-    "quality_unique_inputs": 170,
-    "incomplete_evidence": ".planning/phases/06-release-validation/06-05-evidence/W05c_quit-no_at_script-20261105T072535Z-incomplete.json",
-    "new_v3_native_integration": "not-run",
-    "v3_target_tests": "79 passed"
+    "quality": ".planning/phases/04-startup-control/04-QUALITY-G4-20261107.json",
+    "post_output_changes": ".planning/phases/06-release-validation/06-resume-20261107/post-history-inputs.json",
+    "reuse_audit": ".planning/phases/06-release-validation/06-PYTHON-REUSE-AUDIT-20261106.json",
+    "superseded_python_pass": 20,
+    "retained_exe_pass": 10,
+    "release_allowed": false,
+    "w12a": {
+      "review": ".planning/phases/06-release-validation/06-W12A-REVIEW.md",
+      "status": "findings_closed_manual_and_full_suite_pending",
+      "targeted_pass": 30,
+      "ruff": "passed",
+      "format": "passed",
+      "manual_uat": "not-run"
+    },
+    "g4": {
+      "w12a_review": "findings_closed",
+      "w12b_review": "findings_closed",
+      "w12c_review": "findings_closed",
+      "manual_uat": "not-run",
+      "full_suite": "2481 passed / 2 warnings",
+      "run": ".planning/phases/04-startup-control/04-reverify-20261107-g4",
+      "input_count": 174,
+      "extra_input_count": 12,
+      "source_checks": [
+        0,
+        0,
+        0
+      ],
+      "parent04": "fresh passed 21/21",
+      "parent05": "fresh passed 23/23"
+    }
   },
   "current_stop": {
-    "report": ".planning/phases/06-release-validation/06-W05C-CANDIDATE-STOP-20261105.md",
-    "run": ".planning/tmp/pagefolio-uat-73sihnga",
-    "required_pass": 28,
-    "required_not_run": 80,
-    "deferred_not_run": 2,
+    "status": "paused",
+    "point": "利用者指定で中断。G4基盤完了後、W12a/script-scriptの利用者同席待ち",
+    "next_action": "最新HANDOFFとcontinue-here、06-W12A-COLLECTION.mdを読む。利用者の操作可能回答を得て、開始直前に親鮮度・入力・owner/lock不在を照合し、W12a/script-script@scriptを新run1回だけ採取する。",
+    "pending_card": "W12a/script-script@script",
     "owner_running": false,
-    "release_allowed": false,
-    "phase_complete": false,
-    "next_command": "$gsd-debug continue phase06-w05c-no-marker",
-    "next_action": "全体formatの既存検証tmpアクセス拒否を解消し、新規v3 Windows統合の範囲/許可・実測予算を確定する。再開前に06-03 resume_contractで親ゲート鮮度を照合。新規統合/正式試行/期限延長/正常診断反復/製品推測修正/commitは自動実行しない。",
-    "ready_for_retry": false,
-    "machine_gates_passed": false,
-    "formal_candidate_attempts": 1,
-    "collection_report": ".planning/phases/06-release-validation/06-W05C-COLLECTION-REVIEW.md"
+    "pytest_running": false,
+    "release_allowed": false
   },
   "phase04_native_quit_debug": {
     "debug_file": ".planning/debug/phase04-native-quit-false-entry.md",
@@ -235,5 +239,112 @@
     "review_needed": "close_native 期限を指示の5秒でなく30秒にした判断(5秒では負荷下10回中7回失敗)",
     "residual_risk": "極端な過負荷(peer 要求が popup 出現の8秒超後)で12回中3回、PostMessageW(IDNO) 成功でも MessageBox が閉じない未解明モード。原因未特定、未検証コードは未投入",
     "leftovers": "%LOCALAPPDATA%Temppf_pytest_tmp_dbg1_* 29個(失敗 run basetemp、未削除)"
+  },
+  "previous_blockers_before_20261106": [
+    {
+      "description": "No→False→元マーカーは成立したが、回答後peer/回収前snapshotより前に120秒watchdogが開始した。受入全体は未完了。",
+      "type": "technical",
+      "workaround": "全体formatの既存検証tmpアクセス拒否を解消し、新規v3 Windows統合の範囲/許可・実測予算を確定する。再開前に06-03 resume_contractで親ゲート鮮度を照合。新規統合/正式試行/期限延長/正常診断反復/製品推測修正/commitは自動実行しない。"
+    },
+    {
+      "description": "W12bの相手側tracer v1.9.1(sha c082f6f4…)が%TEMP%の自動削除で消失し、写しがない",
+      "type": "human_action",
+      "workaround": "G4の前に再作成するか方針を利用者が決める"
+    },
+    {
+      "description": "前回(10/31)のEXE起動例外の本文・原因は不明。11/3の診断起動では再現せず",
+      "type": "technical",
+      "workaround": "inspect/stopが#32770本文を自動記録する"
+    },
+    {
+      "description": "%LOCALAPPDATA%\\Temp\\pf_pytest_tmp が削除できずbasetempにすると全件ERROR",
+      "type": "technical",
+      "workaround": "新しいbasetempを使う。ゲート前に対処"
+    }
+  ],
+  "validation_before_constructor_sync": {
+    "validation": {
+      "required_pass": 29,
+      "required_not_run": 79,
+      "deferred_not_run": 2,
+      "full_suite": "2361 passed / 2 warnings / 587.24秒 / 170入力前後・現行一致 / stderr空",
+      "release_allowed": false
+    },
+    "current_session_validation": {
+      "phase4": "fresh passed 21/21",
+      "phase5": "fresh passed 23/23。decision coverage21/22、D-22未検出はblocking=false",
+      "full_evidence": ".planning/phases/04-startup-control/04-reverify-20261106-cr02",
+      "resume_preflight": ".planning/phases/06-release-validation/06-resume-20261106",
+      "frozen_inputs": "65/65 current matched",
+      "quality_inputs": "170/170 current matched",
+      "format": "通常権限ruff check/format成功、148ファイル変更不要",
+      "cr02": "strict adoption fixed; 28 denial cases; 107 targeted passed; independent review fixed"
+    },
+    "current_stop": {
+      "report": ".planning/phases/06-release-validation/06-W05C-CANDIDATE-STOP-20261105.md",
+      "run": ".planning/tmp/pagefolio-uat-73sihnga",
+      "required_pass": 28,
+      "required_not_run": 80,
+      "deferred_not_run": 2,
+      "owner_running": false,
+      "release_allowed": false,
+      "phase_complete": false,
+      "next_command": "$gsd-debug continue phase06-w05c-no-marker",
+      "next_action": "全体formatの既存検証tmpアクセス拒否を解消し、新規v3 Windows統合の範囲/許可・実測予算を確定する。再開前に06-03 resume_contractで親ゲート鮮度を照合。新規統合/正式試行/期限延長/正常診断反復/製品推測修正/commitは自動実行しない。",
+      "ready_for_retry": false,
+      "machine_gates_passed": false,
+      "formal_candidate_attempts": 1,
+      "collection_report": ".planning/phases/06-release-validation/06-W05C-COLLECTION-REVIEW.md"
+    }
+  },
+  "constructor_notice_debug": {
+    "status": "resolved",
+    "path": ".planning/debug/constructor-notice-dedup-20261106.md",
+    "product_unchanged": true,
+    "notice_lifetime_ms": 1800
+  },
+  "w12b_new_tracer": {
+    "plan": ".planning/phases/06-release-validation/06-resume-20261106/w12b-tracer-prepared/build-plan.json",
+    "execution": ".planning/phases/06-release-validation/06-resume-20261106/w12b-tracer-prepared/build-execution.json",
+    "approval": {
+      "source_ref": "call_8bf79600b3774dd4a4a9af7d0f0d274b",
+      "text": "新規ビルドと検証相手の変更を承認する"
+    },
+    "status": "verified_build_manual_uat_pending",
+    "old_hash_reproduction": false,
+    "manual_uat": "not-run",
+    "evidence": ".planning\\phases\\06-release-validation\\06-W12B-NEW-TRACER-20261107.json",
+    "run_id": "0ebda2a8b4f3435ca43568e7884489fc",
+    "exe_sha256": "61811aafe0812940596e2c4dadd1e0e8d5c5bd414cd97d7efdc2fec568dc34de",
+    "build_attempts": 1,
+    "final_exe_unchanged": true
+  },
+  "uncommitted_files_measured_at": "2026-11-06T22:32:40.906Z",
+  "uncommitted_files_scope": "handoffコミット前のgit status --porcelain=v1実測",
+  "uncommitted_files_warnings": "warning: unable to access 'C:\\Users\\shdwf/.config/git/ignore': Permission denied\nwarning: unable to access 'C:\\Users\\shdwf/.config/git/ignore': Permission denied\nwarning: could not open directory '.planning/phases/04-startup-control/04-cr02-red-20261106/': Permission denied",
+  "progress_review": {
+    "checked_at": "2026-11-06T22:32:40.906Z",
+    "plans": "16/18",
+    "phase06": "6/8",
+    "phase04_verification": "passed",
+    "phase05_verification": "passed",
+    "phase06_verification": "missing",
+    "required_pass": 10,
+    "required_not_run": 98,
+    "deferred_not_run": 2,
+    "release_allowed": false,
+    "pending_todos": 0,
+    "investigating_debug_sessions": 5,
+    "windows_open": 2,
+    "windows_waived": 0,
+    "audit_uat": "error: archived v1.6.0 03-VERIFICATION-REALAPI.md status draft; debt totals unavailable",
+    "windows_note": "Phase05の古いopen記載は現行passedと不整合。未修正。",
+    "summary_placeholder_check": "偽完了なし。05-03のplaceholder言及は既存描画部品の説明。",
+    "quality_input_hash_check": {
+      "count": 186,
+      "drift": [],
+      "full_suite_rerun": false
+    },
+    "infrastructure": "このセッションでGUI/pytest/background jobは起動していない。async-jobs manifestなし。既存引継ぎのowner/pytest不在は全端末を再実測しておらず、再開前に確認する。"
   }
 }
