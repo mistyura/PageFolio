@@ -1,0 +1,51 @@
+{
+  "label": "stable",
+  "at": "2026-10-28T01:32:47.558104+00:00",
+  "monotonic": 8822.6672476,
+  "processes": [
+    {
+      "role": "primary",
+      "pid": 23380,
+      "created": 134376247594366164,
+      "identity": "gone",
+      "alive": false,
+      "session_id": null,
+      "elevated": null,
+      "windows": []
+    }
+  ],
+  "foreground": {
+    "hwnd": 396656,
+    "pid": 18044,
+    "title": "⠇ Execute phase 06 | PageFolio",
+    "owned_by": null
+  },
+  "owner_probe": [],
+  "observer": {
+    "python": "3.15.2 (tags/v3.15.2:5e58eaa, Oct 25 2026, 17:27:03) [MSC v.1951 64 bit (AMD64)]",
+    "tk": "9.0"
+  },
+  "exe_embedded": {
+    "python": "3.15.2 (tags/v3.15.2:5e58eaa, Oct 25 2026, 17:27:03) [MSC v.1951 64 bit (AMD64)]",
+    "dependencies": {
+      "PyInstaller": "6.22.3",
+      "pyinstaller-hooks-contrib": "2026.9",
+      "PyMuPDF": "1.28.2",
+      "Pillow": "13.0.0",
+      "tkinterdnd2": "0.6.4"
+    }
+  },
+  "copy": {
+    "ok": true,
+    "distribution_changed": [],
+    "missing_dirs": [],
+    "extra_dirs": [],
+    "undeclared": [],
+    "overlay_changed": [],
+    "locked_unverified": [
+      "pagefolio_settings.json"
+    ],
+    "tree_sha256": "342db2673faf33f2283f546a5e6846813db47ce884da09fda5c3915d554bf783",
+    "exe_sha256": "9b3ebbce390c3b9f1752a97820a5ef81a0c39b7e148b93717b86bb47f9f5f73b"
+  }
+}

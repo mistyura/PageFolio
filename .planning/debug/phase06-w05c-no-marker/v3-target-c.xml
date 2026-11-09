@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="13" time="1.041" timestamp="2026-11-05T17:09:27.709644+09:00" hostname="nullaze-z240"><testcase classname="tests.test_w05c_runner" name="test_no_answer_dependency_and_observation_window" time="0.009" /><testcase classname="tests.test_w05c_runner" name="test_early_late_or_absent_no_never_retries[0]" time="0.010" /><testcase classname="tests.test_w05c_runner" name="test_early_late_or_absent_no_never_retries[100]" time="0.010" /><testcase classname="tests.test_w05c_runner" name="test_early_late_or_absent_no_never_retries[inf]" time="0.009" /><testcase classname="tests.test_w05c_runner" name="test_failure_is_not_retried_or_accepted[start]" time="0.008" /><testcase classname="tests.test_w05c_runner" name="test_failure_is_not_retried_or_accepted[peer]" time="0.009" /><testcase classname="tests.test_w05c_runner" name="test_failure_is_not_retried_or_accepted[before_peer]" time="0.009" /><testcase classname="tests.test_w05c_runner" name="test_failure_is_not_retried_or_accepted[before_stop]" time="0.007" /><testcase classname="tests.test_w05c_runner" name="test_failure_is_not_retried_or_accepted[inspect]" time="0.009" /><testcase classname="tests.test_w05c_runner" name="test_failure_is_not_retried_or_accepted[collect]" time="0.009" /><testcase classname="tests.test_w05c_runner" name="test_failure_is_not_retried_or_accepted[seal]" time="0.009" /><testcase classname="tests.test_w05c_runner" name="test_plan_source_drift_and_unprepared_rejected" time="0.027" /><testcase classname="tests.test_w05c_runner" name="test_late_answer_v3_adoption_and_formal_dry_run" time="0.794"><failure message="AssertionError: C:\Users\shdwf\work\project\PageFolio\.planning\tmp\w05c-v3-target-20261105-c\test_late_answer_v3_adoption_a0\repo\.planning\phases\06-release-validation\06-05-record-w05c-python.cjs:9&#10;  const assert = (ok, why) =&gt; { if (!ok) throw Error(why); };&#10;                                         ^&#10;  &#10;  Error: collection input drift: frozen.py&#10;      at assert (C:\Users\shdwf\work\project\PageFolio\.planning\tmp\w05c-v3-target-20261105-c\test_late_answer_v3_adoption_a0\repo\.planning\phases\06-release-validation\06-05-record-w05c-python.cjs:9:46)&#10;      at Object.&lt;anonymous&gt; (C:\Users\shdwf\work\project\PageFolio\.planning\tmp\w05c-v3-target-20261105-c\test_late_answer_v3_adoption_a0\repo\.planning\phases\06-release-validation\06-05-record-w05c-python.cjs:145:5)&#10;      at Module._compile (node:internal/modules/cjs/loader:1968:14)&#10;      at Object..js (node:internal/modules/cjs/loader:2108:10)&#10;      at Module.load (node:internal/modules/cjs/loader:1690:32)&#10;      at Module._load (node:internal/modules/cjs/loader:1480:12)&#10;      at wrapModuleLoad (node:internal/modules/cjs/loader:261:19)&#10;      at Module.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)&#10;      at node:internal/main/run_main_module:33:47&#10;  &#10;  Node.js v26.13.0&#10;  &#10;assert 1 == 0&#10; +  where 1 = CompletedProcess(args=['C:\\Program Files\\nodejs\\node.EXE', 'C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\...unMain] (node:internal/modules/run_main:171:5)\n    at node:internal/main/run_main_module:33:47\n\nNode.js v26.13.0\n').returncode">tmp_path = WindowsPath('C:/Users/shdwf/work/project/PageFolio/.planning/tmp/w05c-v3-target-20261105-c/test_late_answer_v3_adoption_a0')
+
+    def test_late_answer_v3_adoption_and_formal_dry_run(tmp_path):
+        phase, filename, payload = v3_fixture(tmp_path)
+        assert validate(payload).returncode == 0
+        before = {str(p): p.read_bytes() for p in tmp_path.rglob("*") if p.is_file()}
+        result = subprocess.run(  # noqa: S603 — 隔離fixtureの正式helperをdry-runする。
+            [NODE, str(phase / "06-05-record-w05c-python.cjs"), filename, "--dry-run"],
+            text=True,
+            encoding="utf-8",
+            capture_output=True,
+            timeout=5,
+            check=False,
+        )
+&gt;       assert result.returncode == 0, result.stderr
+E       AssertionError: C:\Users\shdwf\work\project\PageFolio\.planning\tmp\w05c-v3-target-20261105-c\test_late_answer_v3_adoption_a0\repo\.planning\phases\06-release-validation\06-05-record-w05c-python.cjs:9
+E         const assert = (ok, why) =&gt; { if (!ok) throw Error(why); };
+E                                                ^
+E         
+E         Error: collection input drift: frozen.py
+E             at assert (C:\Users\shdwf\work\project\PageFolio\.planning\tmp\w05c-v3-target-20261105-c\test_late_answer_v3_adoption_a0\repo\.planning\phases\06-release-validation\06-05-record-w05c-python.cjs:9:46)
+E             at Object.&lt;anonymous&gt; (C:\Users\shdwf\work\project\PageFolio\.planning\tmp\w05c-v3-target-20261105-c\test_late_answer_v3_adoption_a0\repo\.planning\phases\06-release-validation\06-05-record-w05c-python.cjs:145:5)
+E             at Module._compile (node:internal/modules/cjs/loader:1968:14)
+E             at Object..js (node:internal/modules/cjs/loader:2108:10)
+E             at Module.load (node:internal/modules/cjs/loader:1690:32)
+E             at Module._load (node:internal/modules/cjs/loader:1480:12)
+E             at wrapModuleLoad (node:internal/modules/cjs/loader:261:19)
+E             at Module.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)
+E             at node:internal/main/run_main_module:33:47
+E         
+E         Node.js v26.13.0
+E         
+E       assert 1 == 0
+E        +  where 1 = CompletedProcess(args=['C:\\Program Files\\nodejs\\node.EXE', 'C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\...unMain] (node:internal/modules/run_main:171:5)\n    at node:internal/main/run_main_module:33:47\n\nNode.js v26.13.0\n').returncode
+
+tests\test_w05c_runner.py:357: AssertionError</failure></testcase></testsuite></testsuites>

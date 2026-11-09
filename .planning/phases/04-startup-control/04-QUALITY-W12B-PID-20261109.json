@@ -1,0 +1,90 @@
+{
+  "checked_at": "2026-11-09T12:04:36.868Z",
+  "result": {
+    "started": "2026-11-09T11:52:05.628Z",
+    "finished": "2026-11-09T12:04:19.952Z",
+    "argv": [
+      "C:\\Users\\shdwf\\work\\project\\PageFolio\\.venv\\Scripts\\python.exe",
+      "-m",
+      "pytest",
+      "-q",
+      "-rA",
+      "-p",
+      "no:cacheprovider",
+      "--basetemp=C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf04-04-reverify-20261109-w12b-pid",
+      "--junitxml=C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\phases\\04-startup-control\\04-reverify-20261109-w12b-pid\\junit.xml"
+    ],
+    "code": 0,
+    "signal": null,
+    "error": null,
+    "inputCount": 186,
+    "missing": [],
+    "changed": []
+  },
+  "totals": {
+    "tests": 2488,
+    "errors": 0,
+    "failures": 0,
+    "skipped": 0,
+    "time": 732.591
+  },
+  "warnings": 2,
+  "input_count": 186,
+  "current_drift": [],
+  "changes_since_g4_baseline": {
+    "reason": "W12b Python二次のvenv launcher PID不一致修正（.planning/debug/w12b-pid-mismatch.md）",
+    "files": [
+      "tests/test_startup_windows.py",
+      "tests/test_w12b_evidence.py",
+      ".planning/phases/06-release-validation/06-05-record-w12b.cjs"
+    ],
+    "product_changed": false,
+    "frozen_exe_changed": false,
+    "version_changed": false
+  },
+  "checks": [
+    {
+      "argv": [
+        "check",
+        ".",
+        "--no-cache"
+      ],
+      "exit": 0,
+      "stdout": "All checks passed!"
+    },
+    {
+      "argv": [
+        "format",
+        "--check",
+        "--no-cache",
+        "."
+      ],
+      "exit": 0,
+      "stdout": "503 files already formatted"
+    },
+    {
+      "argv": [
+        "-c",
+        "import ast; ast.parse(open('pagefolio.py', encoding='utf-8').read())"
+      ],
+      "exit": 0,
+      "stdout": ""
+    }
+  ],
+  "raw_hashes": {
+    ".planning/phases/04-startup-control/04-reverify-20261109-w12b-pid/checks.json": "b639565056449eeba5211c3ca21b690a6374b5611c556f77cf0b0c7b3f8c9d90",
+    ".planning/phases/04-startup-control/04-reverify-20261109-w12b-pid/environment.txt": "c2edc377a53c20dd3aedbb73517b88048ff15a27ef3034b5da216c7e989b7384",
+    ".planning/phases/04-startup-control/04-reverify-20261109-w12b-pid/inputs-after.json": "ec49347ca625db95fd867d92a889fd0c8da78c0ebaa67d2b871cd64cb3ab15d8",
+    ".planning/phases/04-startup-control/04-reverify-20261109-w12b-pid/inputs-before.json": "ec49347ca625db95fd867d92a889fd0c8da78c0ebaa67d2b871cd64cb3ab15d8",
+    ".planning/phases/04-startup-control/04-reverify-20261109-w12b-pid/junit.xml": "b60e89c903825596d4989b497e2d5039d5d028296a266f279b2d249eaf977024",
+    ".planning/phases/04-startup-control/04-reverify-20261109-w12b-pid/result.json": "878f18d035cc7a6b328dd925c940caa36755754b9c1760751a12e3789be4ff23",
+    ".planning/phases/04-startup-control/04-reverify-20261109-w12b-pid/ruff-discovery.json": "ab2d7891a2c24502797d9912defb41d6de13ee6e361456de8f665e3af0ea7f61",
+    ".planning/phases/04-startup-control/04-reverify-20261109-w12b-pid/stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    ".planning/phases/04-startup-control/04-reverify-20261109-w12b-pid/stdout.txt": "84711fde4d9374a6aa5d6cc6ffbcda57f7107e83a249b55eb478352c26095f17"
+  },
+  "reviews": {
+    "independent": "gsd-code-reviewer 2026-11-09: BL-01/WR-01/WR-02/IN-06を反映後に本全件を実行。記録は06-W12B-REVIEW.mdのCR-02節"
+  },
+  "manual_uat": "未変更。台帳19 pass / 89 not-run / W11対象外2 not-run",
+  "release_allowed": false
+}

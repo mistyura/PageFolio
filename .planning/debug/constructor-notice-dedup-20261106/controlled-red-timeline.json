@@ -1,0 +1,54 @@
+{
+  "owner_lifetime_ms": 1800,
+  "peers": [
+    {
+      "role": "constructor-failure-join-0",
+      "call_after_shown_ms": 594,
+      "call_after_deadline_ms": -1206,
+      "notice_calls": 0,
+      "same_deadline": true
+    },
+    {
+      "role": "constructor-failure-join-2",
+      "call_after_shown_ms": 610,
+      "call_after_deadline_ms": -1190,
+      "notice_calls": 0,
+      "same_deadline": true
+    },
+    {
+      "role": "constructor-failure-join-4",
+      "call_after_shown_ms": 625,
+      "call_after_deadline_ms": -1175,
+      "notice_calls": 0,
+      "same_deadline": true
+    },
+    {
+      "role": "constructor-failure-join-6",
+      "call_after_shown_ms": 2781,
+      "call_after_deadline_ms": 981,
+      "notice_calls": 1,
+      "same_deadline": false
+    },
+    {
+      "role": "constructor-failure-legacy-join-1",
+      "call_after_shown_ms": 594,
+      "call_after_deadline_ms": -1206,
+      "notice_calls": 0,
+      "same_deadline": true
+    },
+    {
+      "role": "constructor-failure-legacy-join-3",
+      "call_after_shown_ms": 625,
+      "call_after_deadline_ms": -1175,
+      "notice_calls": 0,
+      "same_deadline": true
+    },
+    {
+      "role": "constructor-failure-legacy-join-5",
+      "call_after_shown_ms": 656,
+      "call_after_deadline_ms": -1144,
+      "notice_calls": 0,
+      "same_deadline": true
+    }
+  ]
+}

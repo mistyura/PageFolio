@@ -1,0 +1,14 @@
+[
+  {
+    "case": "absolute",
+    "code": 0,
+    "stdout": "137 files already formatted\n",
+    "stderr": ""
+  },
+  {
+    "case": "basename",
+    "code": 0,
+    "stdout": "137 files already formatted\n",
+    "stderr": ""
+  }
+]

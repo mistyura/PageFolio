@@ -1,0 +1,17 @@
+﻿{
+    "reviewed_head":  "2c62789bee83fab51fe6f34731e4ce16e8b285de",
+    "copy_hash_mismatches":  0,
+    "review_scope":  "Phase06 plan review only",
+    "test_input_hash_mismatches":  0,
+    "plan_hash_mismatches":  0,
+    "preserved_at":  "2026-10-23T20:17:51.0193242Z",
+    "copied_files":  10,
+    "new_pytest_run":  false,
+    "plan_coverage":  {
+                          "antigravity":  6,
+                          "grok":  6,
+                          "claude":  6
+                      },
+    "test_evidence":  ".planning/phases/05-config-notification/05-EVIDENCE.json#latest_automated_verification",
+    "reused_test_inputs":  103
+}

@@ -1,0 +1,66 @@
+{
+  "at": "2026-10-28T05:18:20.511200+00:00",
+  "record": {
+    "role": "primary",
+    "pid": 28824,
+    "created": 134376382083857527,
+    "created_iso": "2026-10-28T05:16:48.385752+00:00",
+    "image": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf06_t2_g3_unreadable_8433fc4ee5324234931fb80ac0f310d1\\runs\\release-uat-0d73a0cdf5b8465f9970b3702c2653e7\\dist\\PageFolio.exe",
+    "session_id": 1,
+    "elevated": false,
+    "exe_sha256": "9b3ebbce390c3b9f1752a97820a5ef81a0c39b7e148b93717b86bb47f9f5f73b",
+    "argv": [
+      "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf06_t2_g3_unreadable_8433fc4ee5324234931fb80ac0f310d1\\runs\\release-uat-0d73a0cdf5b8465f9970b3702c2653e7\\dist\\PageFolio.exe"
+    ],
+    "started_at": "2026-10-28T05:16:48.408963+00:00",
+    "parent_pid": 22208,
+    "exit": null,
+    "foreground_before": {
+      "hwnd": 396656,
+      "pid": 18044,
+      "title": "⠼ 実行 フェーズ06 | PageFolio"
+    }
+  },
+  "windows": [
+    {
+      "hwnd": 16126194,
+      "visible": true,
+      "title": "確認",
+      "class": "#32770",
+      "rect": [
+        737,
+        462,
+        987,
+        621
+      ]
+    },
+    {
+      "hwnd": 5705436,
+      "visible": true,
+      "title": "PageFolio",
+      "class": "TkTopLevel",
+      "rect": [
+        78,
+        78,
+        1294,
+        917
+      ]
+    }
+  ],
+  "foreground": {
+    "hwnd": 396656,
+    "pid": 18044,
+    "title": "⠏ 実行 フェーズ06 | PageFolio"
+  },
+  "copy": {
+    "ok": true,
+    "distribution_changed": [],
+    "missing_dirs": [],
+    "extra_dirs": [],
+    "undeclared": [],
+    "overlay_changed": [],
+    "locked_unverified": [],
+    "tree_sha256": "2e0d274cbeabd004ec9665592cec2a294b6f7c23e844167ba3d97700d1e0384f",
+    "exe_sha256": "9b3ebbce390c3b9f1752a97820a5ef81a0c39b7e148b93717b86bb47f9f5f73b"
+  }
+}

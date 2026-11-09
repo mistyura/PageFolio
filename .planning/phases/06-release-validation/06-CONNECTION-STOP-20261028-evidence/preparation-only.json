@@ -1,0 +1,5 @@
+{
+  "exit": 1,
+  "stdout": "{\r\n  \"mode\": \"preparation-only\",\r\n  \"ok\": false,\r\n  \"exit_code\": 1,\r\n  \"reasons\": [\r\n    \"接続(w05b-modal): native modal→peer→いいえ→同処理完了の観測が不足です\"\r\n  ],\r\n  \"phase_complete\": false,\r\n  \"release_allowed\": false\r\n}\r\n",
+  "stderr": ""
+}

@@ -1,0 +1,1038 @@
+{
+  "captured": "2026-10-28T04:49:48.095Z",
+  "root": "C:\\Users\\shdwf\\work\\project\\PageFolio",
+  "node": "v26.12.1",
+  "platform": "win32",
+  "snapshots": {
+    "full": {
+      "file": ".planning/debug/quality-gate-unblock-20261028/full.json",
+      "sha256": "7849ddb583b1cbf44dd80db6c18027332248e016a8a635ca1cfd4f52bbf047db",
+      "passed": true,
+      "records": [
+        {
+          "argv": [
+            "C:\\Users\\shdwf\\work\\project\\PageFolio\\.venv\\Scripts\\python.exe",
+            "-m",
+            "pytest",
+            "-q",
+            "-rA",
+            "-x",
+            "-o",
+            "cache_dir=.planning/debug/quality-gate-unblock-20261028/pytest-cache",
+            "--basetemp=.planning/debug/quality-gate-unblock-20261028/full-tmp",
+            "--junitxml=.planning/debug/quality-gate-unblock-20261028/full.xml"
+          ],
+          "started": "2026-10-28T04:08:28.283Z",
+          "finished": "2026-10-28T04:16:29.941Z",
+          "code": 0
+        }
+      ],
+      "changed_during_run": [],
+      "current_comparison": {
+        "total": 146,
+        "matched": 142,
+        "differences": [
+          {
+            "file": ".gitignore",
+            "expected": "e7c465d440ec9c1ca21251f6283d1161e1dad24ca71d0f4eae9510cd440ac712",
+            "actual": "d3a6282da7fa64f9ca27b8e6bf97285f402d14e5037401460be20fcd0abc68d2",
+            "matches": false
+          },
+          {
+            "file": "docs/DEVELOPMENT.md",
+            "expected": "a226a16ba0651ea5761d51f2052f90d388390d1a8f8a5a28a2c0eeb0bdfeab4d",
+            "actual": "c0d5f066d7cdf95f76687741670cb6858b1d3881d4a1e039ea5821d11893e0b4",
+            "matches": false
+          },
+          {
+            "file": "CONTRIBUTING.md",
+            "expected": "7b5924fec8f77983acf25ac7b1de5137c98b2a9c8ab6ca8bbd0f32bb7bc9ea64",
+            "actual": "1e6666a2df0b661694c51776ea39dc566ddd3f79a19f4ac40ca92ec8c22bb206",
+            "matches": false
+          },
+          {
+            "file": "開発履歴.md",
+            "expected": "d3e124e4e9b74516ce3ca78f80f795879767663246a8e1164076572f636e04cb",
+            "actual": "dbe59f06cbf655c0e3d299b6bbfd140c254f938bd391c0d5217c499bcd988400",
+            "matches": false
+          }
+        ],
+        "python": {
+          "total": 137,
+          "differences": []
+        }
+      }
+    },
+    "native-final": {
+      "file": ".planning/debug/quality-gate-unblock-20261028/native-final.json",
+      "sha256": "7049109c802f8de1eae58ca56d0962fcd0ac9a76fc107b38944dd5c00aa8745b",
+      "passed": true,
+      "records": [
+        {
+          "argv": [
+            "C:\\Users\\shdwf\\work\\project\\PageFolio\\.venv\\Scripts\\ruff.exe",
+            "check",
+            "."
+          ],
+          "started": "2026-10-28T04:37:55.620Z",
+          "finished": "2026-10-28T04:37:55.757Z",
+          "code": 0
+        },
+        {
+          "argv": [
+            "C:\\Users\\shdwf\\work\\project\\PageFolio\\.venv\\Scripts\\ruff.exe",
+            "format",
+            ".",
+            "--no-cache"
+          ],
+          "started": "2026-10-28T04:37:55.757Z",
+          "finished": "2026-10-28T04:37:55.924Z",
+          "code": 0
+        },
+        {
+          "argv": [
+            "C:\\Users\\shdwf\\work\\project\\PageFolio\\.venv\\Scripts\\ruff.exe",
+            "format",
+            ".",
+            "--check",
+            "--no-cache"
+          ],
+          "started": "2026-10-28T04:37:55.924Z",
+          "finished": "2026-10-28T04:37:56.067Z",
+          "code": 0
+        },
+        {
+          "argv": [
+            "C:\\Users\\shdwf\\work\\project\\PageFolio\\.venv\\Scripts\\python.exe",
+            "-c",
+            "import ast,pathlib; [ast.parse(pathlib.Path(p).read_text(encoding=\"utf-8\")) for p in [\"pagefolio.py\", \".planning/debug/preview-focus-not-restored-evidence/diag_btn_press.py\"]]; print(\"AST: OK\")"
+          ],
+          "started": "2026-10-28T04:37:56.068Z",
+          "finished": "2026-10-28T04:37:56.162Z",
+          "code": 0
+        }
+      ],
+      "changed_during_run": [],
+      "current_comparison": {
+        "total": 146,
+        "matched": 143,
+        "differences": [
+          {
+            "file": "docs/DEVELOPMENT.md",
+            "expected": "d813123c0076a9c4b43d9a42e46b6def06b87b2b30b74af81e141a20a83c4684",
+            "actual": "c0d5f066d7cdf95f76687741670cb6858b1d3881d4a1e039ea5821d11893e0b4",
+            "matches": false
+          },
+          {
+            "file": "CONTRIBUTING.md",
+            "expected": "ffcdd4a16c07b6ab4c63d2ff59afc1d500584cc297580fe9a98f113dfae1f7d5",
+            "actual": "1e6666a2df0b661694c51776ea39dc566ddd3f79a19f4ac40ca92ec8c22bb206",
+            "matches": false
+          },
+          {
+            "file": "開発履歴.md",
+            "expected": "26a1d7c9234eda888062a3cbdabb6f4b4c058ac483a440740e46fc3bcb8e1982",
+            "actual": "dbe59f06cbf655c0e3d299b6bbfd140c254f938bd391c0d5217c499bcd988400",
+            "matches": false
+          }
+        ],
+        "python": {
+          "total": 137,
+          "differences": []
+        }
+      }
+    },
+    "documents": {
+      "file": ".planning/debug/quality-gate-unblock-20261028/documents.json",
+      "sha256": "41a36c33ee7571a543ccf214851e67c297b7f123fa2973fe5d8539ba0a6de0e3",
+      "passed": true,
+      "records": [
+        {
+          "argv": [
+            "C:\\Users\\shdwf\\work\\project\\PageFolio\\.venv\\Scripts\\python.exe",
+            "-m",
+            "pytest",
+            "-q",
+            "-rA",
+            "-x",
+            "-o",
+            "cache_dir=.planning/debug/quality-gate-unblock-20261028/pytest-cache",
+            "tests/test_gsd_dod.py",
+            "tests/test_release_contract.py",
+            "--basetemp=.planning/debug/quality-gate-unblock-20261028/documents-tmp"
+          ],
+          "started": "2026-10-28T04:20:15.148Z",
+          "finished": "2026-10-28T04:20:25.262Z",
+          "code": 0
+        }
+      ],
+      "changed_during_run": [],
+      "current_comparison": {
+        "total": 146,
+        "matched": 142,
+        "differences": [
+          {
+            "file": ".gitignore",
+            "expected": "9523997a667ff471a6fa760b0e25e29036b44042a998e8df9c3a8151dfb4addf",
+            "actual": "d3a6282da7fa64f9ca27b8e6bf97285f402d14e5037401460be20fcd0abc68d2",
+            "matches": false
+          },
+          {
+            "file": "docs/DEVELOPMENT.md",
+            "expected": "6888d3952ea3516d78cdb80d966ff906d5ac28584ce7110d3b1369a4a0ecd107",
+            "actual": "c0d5f066d7cdf95f76687741670cb6858b1d3881d4a1e039ea5821d11893e0b4",
+            "matches": false
+          },
+          {
+            "file": "CONTRIBUTING.md",
+            "expected": "ffcdd4a16c07b6ab4c63d2ff59afc1d500584cc297580fe9a98f113dfae1f7d5",
+            "actual": "1e6666a2df0b661694c51776ea39dc566ddd3f79a19f4ac40ca92ec8c22bb206",
+            "matches": false
+          },
+          {
+            "file": "開発履歴.md",
+            "expected": "26a1d7c9234eda888062a3cbdabb6f4b4c058ac483a440740e46fc3bcb8e1982",
+            "actual": "dbe59f06cbf655c0e3d299b6bbfd140c254f938bd391c0d5217c499bcd988400",
+            "matches": false
+          }
+        ],
+        "python": {
+          "total": 137,
+          "differences": []
+        }
+      }
+    },
+    "connection": {
+      "file": ".planning/debug/quality-gate-unblock-20261028/connection.json",
+      "sha256": "bb2fba87a35b2e7e5c3f5219acb69bb343837704a4e0488de294627b44870c58",
+      "passed": true,
+      "records": [
+        {
+          "argv": [
+            "C:\\Users\\shdwf\\work\\project\\PageFolio\\.venv\\Scripts\\python.exe",
+            "-m",
+            "pytest",
+            "-q",
+            "-rA",
+            "-x",
+            "-o",
+            "cache_dir=.planning/debug/quality-gate-unblock-20261028/pytest-cache",
+            "tests/test_startup_windows.py::test_foreground_audit_receives_native_window_event",
+            "--basetemp=.planning/debug/quality-gate-unblock-20261028/connection-tmp",
+            "--junitxml=.planning/debug/quality-gate-unblock-20261028/connection.xml"
+          ],
+          "started": "2026-10-28T04:07:50.073Z",
+          "finished": "2026-10-28T04:07:51.123Z",
+          "code": 0
+        }
+      ],
+      "changed_during_run": [],
+      "current_comparison": {
+        "total": 146,
+        "matched": 142,
+        "differences": [
+          {
+            "file": ".gitignore",
+            "expected": "e7c465d440ec9c1ca21251f6283d1161e1dad24ca71d0f4eae9510cd440ac712",
+            "actual": "d3a6282da7fa64f9ca27b8e6bf97285f402d14e5037401460be20fcd0abc68d2",
+            "matches": false
+          },
+          {
+            "file": "docs/DEVELOPMENT.md",
+            "expected": "a226a16ba0651ea5761d51f2052f90d388390d1a8f8a5a28a2c0eeb0bdfeab4d",
+            "actual": "c0d5f066d7cdf95f76687741670cb6858b1d3881d4a1e039ea5821d11893e0b4",
+            "matches": false
+          },
+          {
+            "file": "CONTRIBUTING.md",
+            "expected": "7b5924fec8f77983acf25ac7b1de5137c98b2a9c8ab6ca8bbd0f32bb7bc9ea64",
+            "actual": "1e6666a2df0b661694c51776ea39dc566ddd3f79a19f4ac40ca92ec8c22bb206",
+            "matches": false
+          },
+          {
+            "file": "開発履歴.md",
+            "expected": "d3e124e4e9b74516ce3ca78f80f795879767663246a8e1164076572f636e04cb",
+            "actual": "dbe59f06cbf655c0e3d299b6bbfd140c254f938bd391c0d5217c499bcd988400",
+            "matches": false
+          }
+        ],
+        "python": {
+          "total": 137,
+          "differences": []
+        }
+      }
+    },
+    "nine": {
+      "file": ".planning/debug/quality-gate-unblock-20261028/nine.json",
+      "sha256": "563c595b2dd9737e7b6310f02bef1637f1fcc1d3c63b002b753f47e14a6f63b7",
+      "passed": true,
+      "records": [
+        {
+          "argv": [
+            "C:\\Users\\shdwf\\work\\project\\PageFolio\\.venv\\Scripts\\python.exe",
+            "-m",
+            "pytest",
+            "-q",
+            "-rA",
+            "-x",
+            "-o",
+            "cache_dir=.planning/debug/quality-gate-unblock-20261028/pytest-cache",
+            "tests/test_startup_windows.py::test_notice_dedup_eight_processes_keep_original_deadline",
+            "--basetemp=.planning/debug/quality-gate-unblock-20261028/nine-tmp",
+            "--junitxml=.planning/debug/quality-gate-unblock-20261028/nine.xml"
+          ],
+          "started": "2026-10-28T04:08:00.335Z",
+          "finished": "2026-10-28T04:08:03.607Z",
+          "code": 0
+        }
+      ],
+      "changed_during_run": [],
+      "current_comparison": {
+        "total": 146,
+        "matched": 142,
+        "differences": [
+          {
+            "file": ".gitignore",
+            "expected": "e7c465d440ec9c1ca21251f6283d1161e1dad24ca71d0f4eae9510cd440ac712",
+            "actual": "d3a6282da7fa64f9ca27b8e6bf97285f402d14e5037401460be20fcd0abc68d2",
+            "matches": false
+          },
+          {
+            "file": "docs/DEVELOPMENT.md",
+            "expected": "a226a16ba0651ea5761d51f2052f90d388390d1a8f8a5a28a2c0eeb0bdfeab4d",
+            "actual": "c0d5f066d7cdf95f76687741670cb6858b1d3881d4a1e039ea5821d11893e0b4",
+            "matches": false
+          },
+          {
+            "file": "CONTRIBUTING.md",
+            "expected": "7b5924fec8f77983acf25ac7b1de5137c98b2a9c8ab6ca8bbd0f32bb7bc9ea64",
+            "actual": "1e6666a2df0b661694c51776ea39dc566ddd3f79a19f4ac40ca92ec8c22bb206",
+            "matches": false
+          },
+          {
+            "file": "開発履歴.md",
+            "expected": "d3e124e4e9b74516ce3ca78f80f795879767663246a8e1164076572f636e04cb",
+            "actual": "dbe59f06cbf655c0e3d299b6bbfd140c254f938bd391c0d5217c499bcd988400",
+            "matches": false
+          }
+        ],
+        "python": {
+          "total": 137,
+          "differences": []
+        }
+      }
+    }
+  },
+  "evidence": {
+    ".planning/debug/quality-gate-unblock-20261028/full.json": "7849ddb583b1cbf44dd80db6c18027332248e016a8a635ca1cfd4f52bbf047db",
+    ".planning/debug/quality-gate-unblock-20261028/full.xml": "8a35848f605a68b2e8014b2b51782c288ce55b40805a212b69c953b563b2a527",
+    ".planning/debug/quality-gate-unblock-20261028/full-0.stdout.txt": "c34b2e154a1361032f0aa6f67f10a3e00ff5915654a58466d4e0c5b78a3ae885",
+    ".planning/debug/quality-gate-unblock-20261028/full-0.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    ".planning/debug/quality-gate-unblock-20261028/native-final.json": "7049109c802f8de1eae58ca56d0962fcd0ac9a76fc107b38944dd5c00aa8745b",
+    ".planning/debug/quality-gate-unblock-20261028/native-final-0.stdout.txt": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18",
+    ".planning/debug/quality-gate-unblock-20261028/native-final-1.stdout.txt": "23f4800df594bd3d8d8e4dd97a71692d19438894912ea8dc7efa1ea6f5d7c9ff",
+    ".planning/debug/quality-gate-unblock-20261028/native-final-2.stdout.txt": "3e363a951eafb2bc4d7b7edadd4f34b1fb2c5ca55e2ed514e89e27827e64b786",
+    ".planning/debug/quality-gate-unblock-20261028/native-final-3.stdout.txt": "7a6bb8655da23ba47d3ea42c4a5f03c0f62c7d82d393ba0657adea5a2fde9f1f",
+    ".planning/debug/quality-gate-unblock-20261028/environment.json": "6baec3f1e67138c2e6f5cedfcdcd530a3307cd8bacfad2c9a82ec94931abe4ab",
+    ".planning/debug/quality-gate-unblock-20261028/final-summary.json": "262753149dfcb16d263691c2b2a379f4888371625a154f4b7eae6198de1dae27",
+    ".planning/debug/quality-gate-unblock-20261028/documents.json": "41a36c33ee7571a543ccf214851e67c297b7f123fa2973fe5d8539ba0a6de0e3",
+    ".planning/debug/quality-gate-unblock-20261028/documents-0.stdout.txt": "d9124236246e3603b8ec36b72c4b9618a08dec1cbd6d4a2df82dc51fd998a019",
+    ".planning/debug/quality-gate-unblock-20261028/connection.json": "bb2fba87a35b2e7e5c3f5219acb69bb343837704a4e0488de294627b44870c58",
+    ".planning/debug/quality-gate-unblock-20261028/connection.xml": "a28631f67eba3513d3c30df2fd970dd7a4e872a20d19420aa0266f37ad36deec",
+    ".planning/debug/quality-gate-unblock-20261028/nine.json": "563c595b2dd9737e7b6310f02bef1637f1fcc1d3c63b002b753f47e14a6f63b7",
+    ".planning/debug/quality-gate-unblock-20261028/nine.xml": "de9fc2b917c600f8b106bcb33ed7bb3b62fe95906ac38dd40b152d9da39062a8"
+  },
+  "full_suite": "<testsuite name=\"pytest\" errors=\"0\" failures=\"0\" skipped=\"0\" tests=\"2071\" time=\"480.396\" timestamp=\"2026-10-28T13:08:28.809625+09:00\" hostname=\"nullaze-z240\">",
+  "named_test_count": 293,
+  "named_tests": [
+    " classname=\"tests.test_font_hardcode_guard\" name=\"test_no_hardcoded_font_sizes\" time=\"0.027\" /",
+    " classname=\"tests.test_font_hardcode_guard\" name=\"test_pattern_matches_only_literals\" time=\"0.016\" /",
+    " classname=\"tests.test_gsd_dod\" name=\"test_completed_phases_are_validated\" time=\"0.031\" /",
+    " classname=\"tests.test_gsd_dod\" name=\"test_legacy_exclusions_match_repository\" time=\"0.020\" /",
+    " classname=\"tests.test_gsd_dod\" name=\"test_dod_gate_detects_unvalidated_phase\" time=\"0.054\" /",
+    " classname=\"tests.test_gsd_dod\" name=\"test_dod_gate_rejects_empty_and_malformed\" time=\"0.035\" /",
+    " classname=\"tests.test_gsd_dod\" name=\"test_status_parser_handles_quotes_and_nesting\" time=\"0.020\" /",
+    " classname=\"tests.test_gsd_dod\" name=\"test_live_incomplete_does_not_require_validation[---\\nstatus: draft\\nnyquist_compliant: true\\n---\\n\\n# Validation\\n]\" time=\"0.035\" /",
+    " classname=\"tests.test_gsd_dod\" name=\"test_live_incomplete_does_not_require_validation[None]\" time=\"0.040\" /",
+    " classname=\"tests.test_gsd_dod\" name=\"test_live_completion_requires_consistent_evidence[True-Complete-1/1-2026-10-21-True-True]\" time=\"0.049\" /",
+    " classname=\"tests.test_gsd_dod\" name=\"test_live_completion_requires_consistent_evidence[False-Complete-1/1-2026-10-21-True-False]\" time=\"0.084\" /",
+    " classname=\"tests.test_gsd_dod\" name=\"test_live_completion_requires_consistent_evidence[False-Complete-1/1-2026-10-21-False-True]\" time=\"0.070\" /",
+    " classname=\"tests.test_gsd_dod\" name=\"test_live_completion_requires_consistent_evidence[False-Complete-0/1-2026-10-21-True-True]\" time=\"0.040\" /",
+    " classname=\"tests.test_gsd_dod\" name=\"test_live_completion_requires_consistent_evidence[False-Complete-1/1-\\u2014-True-True]\" time=\"0.035\" /",
+    " classname=\"tests.test_gsd_dod\" name=\"test_live_completion_requires_consistent_evidence[True-Planned-0/1-\\u2014-False-True]\" time=\"0.032\" /",
+    " classname=\"tests.test_gsd_dod\" name=\"test_live_roadmap_ambiguity_fails_closed[duplicate_phase]\" time=\"0.030\" /",
+    " classname=\"tests.test_gsd_dod\" name=\"test_live_roadmap_ambiguity_fails_closed[duplicate_progress]\" time=\"0.026\" /",
+    " classname=\"tests.test_gsd_dod\" name=\"test_live_roadmap_ambiguity_fails_closed[missing]\" time=\"0.026\" /",
+    " classname=\"tests.test_gsd_dod\" name=\"test_live_roadmap_ambiguity_fails_closed[unknown]\" time=\"0.030\" /",
+    " classname=\"tests.test_gsd_dod\" name=\"test_live_progress_tracks_each_summary_before_validation\" time=\"0.038\" /",
+    " classname=\"tests.test_gsd_dod\" name=\"test_milestone_version_parsing\" time=\"0.020\" /",
+    " classname=\"tests.test_lang_parity\" name=\"test_lang_keys_parity\" time=\"0.020\" /",
+    " classname=\"tests.test_lang_parity\" name=\"test_retry_and_truncated_format_smoke\" time=\"0.019\" /",
+    " classname=\"tests.test_lang_parity\" name=\"test_no_unused_lang_keys\" time=\"0.095\" /",
+    " classname=\"tests.test_page_polish.TestRedactPolish\" name=\"test_mosaic_block_label_lang_parity\" time=\"0.027\" /",
+    " classname=\"tests.test_page_polish.TestRedactPolish\" name=\"test_btn_redact_clear_lang_parity\" time=\"0.023\" /",
+    " classname=\"tests.test_startup_control\" name=\"test_accepted_is_not_terminal_and_eight_requests_restore_once\" time=\"0.046\" /",
+    " classname=\"tests.test_startup_control\" name=\"test_busy_main_thread_discards_expired_request[4999-1]\" time=\"0.035\" /",
+    " classname=\"tests.test_startup_control\" name=\"test_busy_main_thread_discards_expired_request[5000-0]\" time=\"0.037\" /",
+    " classname=\"tests.test_startup_control\" name=\"test_busy_main_thread_discards_expired_request[8000-0]\" time=\"0.038\" /",
+    " classname=\"tests.test_startup_control\" name=\"test_fixed_cooldown_does_not_extend_and_edge_is_independent\" time=\"0.041\" /",
+    " classname=\"tests.test_startup_control\" name=\"test_callback_reentry_and_terminal_last_arrival_coalesce\" time=\"0.040\" /",
+    " classname=\"tests.test_startup_control\" name=\"test_each_batch_member_keeps_own_deadline\" time=\"0.057\" /",
+    " classname=\"tests.test_startup_control\" name=\"test_all_members_expire_before_os_side_effect\" time=\"0.055\" /",
+    " classname=\"tests.test_startup_control\" name=\"test_invalid_requests_never_reach_ui[values0]\" time=\"0.058\" /",
+    " classname=\"tests.test_startup_control\" name=\"test_invalid_requests_never_reach_ui[values1]\" time=\"0.043\" /",
+    " classname=\"tests.test_startup_control\" name=\"test_invalid_requests_never_reach_ui[values2]\" time=\"0.053\" /",
+    " classname=\"tests.test_startup_control\" name=\"test_invalid_requests_never_reach_ui[values3]\" time=\"0.052\" /",
+    " classname=\"tests.test_startup_control\" name=\"test_invalid_requests_never_reach_ui[values4]\" time=\"0.054\" /",
+    " classname=\"tests.test_startup_control\" name=\"test_invalid_requests_never_reach_ui[values5]\" time=\"0.046\" /",
+    " classname=\"tests.test_startup_control\" name=\"test_invalid_requests_never_reach_ui[values6]\" time=\"0.049\" /",
+    " classname=\"tests.test_startup_control\" name=\"test_generation_change_invalidates_queued_requests\" time=\"0.050\" /",
+    " classname=\"tests.test_startup_control\" name=\"test_repeated_id_never_repeats_side_effect_and_modified_id_is_invalid\" time=\"0.046\" /",
+    " classname=\"tests.test_startup_control\" name=\"test_pending_queue_and_terminal_cache_are_bounded\" time=\"0.041\" /",
+    " classname=\"tests.test_startup_control\" name=\"test_late_ack_never_reports_success\" time=\"0.042\" /",
+    " classname=\"tests.test_startup_control\" name=\"test_wire_invalid_json_never_reaches_receiver[{]\" time=\"0.034\" /",
+    " classname=\"tests.test_startup_control\" name=\"test_wire_invalid_json_never_reaches_receiver[[]]\" time=\"0.050\" /",
+    " classname=\"tests.test_startup_control\" name=\"test_wire_invalid_json_never_reaches_receiver[null]\" time=\"0.040\" /",
+    " classname=\"tests.test_startup_control\" name=\"test_wire_invalid_json_never_reaches_receiver[\\xff]\" time=\"0.057\" /",
+    " classname=\"tests.test_startup_control\" name=\"test_oversized_frame_rejected_before_payload[0]\" time=\"0.057\" /",
+    " classname=\"tests.test_startup_control\" name=\"test_oversized_frame_rejected_before_payload[1025]\" time=\"0.037\" /",
+    " classname=\"tests.test_startup_control\" name=\"test_oversized_frame_rejected_before_payload[4294967295]\" time=\"0.060\" /",
+    " classname=\"tests.test_startup_control\" name=\"test_unknown_or_invalid_terminal_is_not_success[changes0]\" time=\"0.067\" /",
+    " classname=\"tests.test_startup_control\" name=\"test_unknown_or_invalid_terminal_is_not_success[changes1]\" time=\"0.048\" /",
+    " classname=\"tests.test_startup_control\" name=\"test_unknown_or_invalid_terminal_is_not_success[changes2]\" time=\"0.042\" /",
+    " classname=\"tests.test_startup_control\" name=\"test_unknown_or_invalid_terminal_is_not_success[changes3]\" time=\"0.059\" /",
+    " classname=\"tests.test_startup_control\" name=\"test_unknown_or_invalid_terminal_is_not_success[changes4]\" time=\"0.042\" /",
+    " classname=\"tests.test_startup_control\" name=\"test_unknown_or_invalid_terminal_is_not_success[changes5]\" time=\"0.047\" /",
+    " classname=\"tests.test_startup_control\" name=\"test_expired_io_never_starts_native_operation[read]\" time=\"0.058\" /",
+    " classname=\"tests.test_startup_control\" name=\"test_expired_io_never_starts_native_operation[write]\" time=\"0.033\" /",
+    " classname=\"tests.test_startup_control\" name=\"test_guard_rechecks_before_foreground_and_flash\" time=\"0.048\" /",
+    " classname=\"tests.test_startup_control\" name=\"test_confirmed_initializing_process_death_claims_only_once\" time=\"0.049\" /",
+    " classname=\"tests.test_startup_control\" name=\"test_unconfirmed_or_noninitializing_death_never_claims[alive]\" time=\"0.043\" /",
+    " classname=\"tests.test_startup_control\" name=\"test_unconfirmed_or_noninitializing_death_never_claims[ready]\" time=\"0.048\" /",
+    " classname=\"tests.test_startup_control\" name=\"test_unconfirmed_or_noninitializing_death_never_claims[closing]\" time=\"0.045\" /",
+    " classname=\"tests.test_startup_control\" name=\"test_unconfirmed_or_noninitializing_death_never_claims[released]\" time=\"0.045\" /",
+    " classname=\"tests.test_startup_control\" name=\"test_unconfirmed_or_noninitializing_death_never_claims[unknown]\" time=\"0.040\" /",
+    " classname=\"tests.test_startup_control\" name=\"test_unconfirmed_or_noninitializing_death_never_claims[no_handle]\" time=\"0.048\" /",
+    " classname=\"tests.test_startup_control\" name=\"test_unconfirmed_or_noninitializing_death_never_claims[deadline]\" time=\"0.037\" /",
+    " classname=\"tests.test_startup_control\" name=\"test_losing_candidate_never_attempts_second_claim\" time=\"0.044\" /",
+    " classname=\"tests.test_startup_control\" name=\"test_close_publishes_release_only_after_root_destroyed\" time=\"0.038\" /",
+    " classname=\"tests.test_startup_control\" name=\"test_identity_validation_failure_never_pins_or_takes_over[failure0]\" time=\"0.047\" /",
+    " classname=\"tests.test_startup_control\" name=\"test_identity_validation_failure_never_pins_or_takes_over[failure1]\" time=\"0.046\" /",
+    " classname=\"tests.test_startup_control\" name=\"test_wait_failed_is_not_death\" time=\"0.052\" /",
+    " classname=\"tests.test_startup_control\" name=\"test_readiness_retries_share_deadline_and_clamp_poll\" time=\"0.053\" /",
+    " classname=\"tests.test_startup_control\" name=\"test_fragmented_transport_always_uses_original_deadline[read]\" time=\"0.046\" /",
+    " classname=\"tests.test_startup_control\" name=\"test_fragmented_transport_always_uses_original_deadline[write]\" time=\"0.037\" /",
+    " classname=\"tests.test_startup_control\" name=\"test_coalesced_terminal_may_precede_new_request_issued_tick\" time=\"0.037\" /",
+    " classname=\"tests.test_startup_focus\" name=\"test_placement_returns_to_last_non_iconic_state[normal]\" time=\"0.058\" /",
+    " classname=\"tests.test_startup_focus\" name=\"test_placement_returns_to_last_non_iconic_state[zoomed]\" time=\"0.049\" /",
+    " classname=\"tests.test_startup_focus\" name=\"test_placement_os_restored_correctly_does_not_rewrite_geometry\" time=\"0.054\" /",
+    " classname=\"tests.test_startup_focus\" name=\"test_placement_corrects_mismatched_normal_geometry_after_os_restore\" time=\"0.047\" /",
+    " classname=\"tests.test_startup_focus\" name=\"test_focus_child_preserved_and_toplevel_focus_does_not_overwrite[False-thumb_canvas]\" time=\"0.043\" /",
+    " classname=\"tests.test_startup_focus\" name=\"test_focus_child_preserved_and_toplevel_focus_does_not_overwrite[False-preview_canvas]\" time=\"0.042\" /",
+    " classname=\"tests.test_startup_focus\" name=\"test_focus_child_preserved_and_toplevel_focus_does_not_overwrite[False-entry]\" time=\"0.044\" /",
+    " classname=\"tests.test_startup_focus\" name=\"test_focus_child_preserved_and_toplevel_focus_does_not_overwrite[True-thumb_canvas]\" time=\"0.039\" /",
+    " classname=\"tests.test_startup_focus\" name=\"test_focus_child_preserved_and_toplevel_focus_does_not_overwrite[True-preview_canvas]\" time=\"0.050\" /",
+    " classname=\"tests.test_startup_focus\" name=\"test_focus_child_preserved_and_toplevel_focus_does_not_overwrite[True-entry]\" time=\"0.037\" /",
+    " classname=\"tests.test_startup_focus\" name=\"test_current_input_wins_over_previously_remembered_input\" time=\"0.036\" /",
+    " classname=\"tests.test_startup_focus\" name=\"test_last_input_used_when_only_toplevel_was_observed\" time=\"0.048\" /",
+    " classname=\"tests.test_startup_focus\" name=\"test_modal_without_grab_returns_to_live_parent_after_nested_close\" time=\"0.041\" /",
+    " classname=\"tests.test_startup_focus\" name=\"test_modal_grab_and_native_popup_preserve_input_focus\" time=\"0.033\" /",
+    " classname=\"tests.test_startup_focus\" name=\"test_rebuild_discards_dead_widget_and_falls_back_to_root\" time=\"0.032\" /",
+    " classname=\"tests.test_startup_focus\" name=\"test_foreground_denied_only_flashes_and_stop_never_retries[False]\" time=\"0.031\" /",
+    " classname=\"tests.test_startup_focus\" name=\"test_foreground_denied_only_flashes_and_stop_never_retries[True]\" time=\"0.032\" /",
+    " classname=\"tests.test_startup_focus\" name=\"test_expired_generation_and_destroyed_stop_are_inert\" time=\"0.032\" /",
+    " classname=\"tests.test_startup_focus\" name=\"test_each_side_effect_rechecks_deadline_and_nested_restore_is_inert\" time=\"0.035\" /",
+    " classname=\"tests.test_startup_focus\" name=\"test_close_removes_only_own_binding_ids\" time=\"0.043\" /",
+    " classname=\"tests.test_startup_focus\" name=\"test_tk_menu_is_not_a_window_activation_target\" time=\"0.048\" /",
+    " classname=\"tests.test_startup_focus\" name=\"test_working_state_real_pdf_history_and_blobs_continue\" time=\"0.098\" /",
+    " classname=\"tests.test_startup_focus\" name=\"test_ocr_same_engine_worker_and_generation_complete_after_restore\" time=\"0.040\" /",
+    " classname=\"tests.test_startup_focus\" name=\"test_modal_native_unverified_owner_never_selected[foreign]\" time=\"0.042\" /",
+    " classname=\"tests.test_startup_focus\" name=\"test_modal_native_unverified_owner_never_selected[unknown]\" time=\"0.040\" /",
+    " classname=\"tests.test_startup_focus\" name=\"test_modal_native_unverified_owner_never_selected[cycle]\" time=\"0.045\" /",
+    " classname=\"tests.test_startup_focus\" name=\"test_modal_native_unverified_owner_never_selected[unowned]\" time=\"0.048\" /",
+    " classname=\"tests.test_startup_focus\" name=\"test_modal_disabled_parent_is_not_activated_without_verified_popup\" time=\"0.041\" /",
+    " classname=\"tests.test_startup_focus\" name=\"test_normalized_hwnd_is_same_process_and_ui_thread[none]\" time=\"0.043\" /",
+    " classname=\"tests.test_startup_focus\" name=\"test_normalized_hwnd_is_same_process_and_ui_thread[pid]\" time=\"0.044\" /",
+    " classname=\"tests.test_startup_focus\" name=\"test_normalized_hwnd_is_same_process_and_ui_thread[thread]\" time=\"0.044\" /",
+    " classname=\"tests.test_startup_focus\" name=\"test_normalized_hwnd_is_same_process_and_ui_thread[dead]\" time=\"0.054\" /",
+    " classname=\"tests.test_startup_foreground_audit\" name=\"test_complete_unchanged_foreground_passes\" time=\"0.049\" /",
+    " classname=\"tests.test_startup_foreground_audit\" name=\"test_transient_notice_activation_fails_even_after_return_to_original\" time=\"0.044\" /",
+    " classname=\"tests.test_startup_foreground_audit\" name=\"test_api_request_rejected_by_os_is_still_violation\" time=\"0.045\" /",
+    " classname=\"tests.test_startup_foreground_audit\" name=\"test_activation_flags_regression_fails[CreateWindowExW-arguments0]\" time=\"0.040\" /",
+    " classname=\"tests.test_startup_foreground_audit\" name=\"test_activation_flags_regression_fails[SetWindowPos-arguments1]\" time=\"0.046\" /",
+    " classname=\"tests.test_startup_foreground_audit\" name=\"test_activation_flags_regression_fails[ShowWindow-arguments2]\" time=\"0.038\" /",
+    " classname=\"tests.test_startup_foreground_audit\" name=\"test_unknown_external_transition_fails_without_claiming_product_cause\" time=\"0.045\" /",
+    " classname=\"tests.test_startup_foreground_audit\" name=\"test_incomplete_observation_never_passes[missing_peer]\" time=\"0.053\" /",
+    " classname=\"tests.test_startup_foreground_audit\" name=\"test_incomplete_observation_never_passes[duplicate_peer]\" time=\"0.053\" /",
+    " classname=\"tests.test_startup_foreground_audit\" name=\"test_incomplete_observation_never_passes[missing_start]\" time=\"0.047\" /",
+    " classname=\"tests.test_startup_foreground_audit\" name=\"test_incomplete_observation_never_passes[missing_finish]\" time=\"0.037\" /",
+    " classname=\"tests.test_startup_foreground_audit\" name=\"test_incomplete_observation_never_passes[missing_return]\" time=\"0.036\" /",
+    " classname=\"tests.test_startup_foreground_audit\" name=\"test_incomplete_observation_never_passes[missing_tick]\" time=\"0.043\" /",
+    " classname=\"tests.test_startup_foreground_audit\" name=\"test_incomplete_observation_never_passes[missing_bind]\" time=\"0.045\" /",
+    " classname=\"tests.test_startup_foreground_audit\" name=\"test_incomplete_observation_never_passes[duplicate_role]\" time=\"0.056\" /",
+    " classname=\"tests.test_startup_foreground_audit\" name=\"test_incomplete_observation_never_passes[callback_error]\" time=\"0.047\" /",
+    " classname=\"tests.test_startup_foreground_audit\" name=\"test_incomplete_observation_never_passes[unhook_failed]\" time=\"0.044\" /",
+    " classname=\"tests.test_startup_foreground_audit\" name=\"test_incomplete_observation_never_passes[event_identity]\" time=\"0.046\" /",
+    " classname=\"tests.test_startup_foreground_audit\" name=\"test_incomplete_observation_never_passes[process_identity]\" time=\"0.046\" /",
+    " classname=\"tests.test_startup_foreground_audit\" name=\"test_incomplete_observation_never_passes[local_value]\" time=\"0.049\" /",
+    " classname=\"tests.test_startup_foreground_audit\" name=\"test_local_change_is_not_silently_accepted\" time=\"0.044\" /",
+    " classname=\"tests.test_startup_foreground_audit\" name=\"test_wrapper_preserves_arguments_return_last_error_and_restores_bind\" time=\"0.061\" /",
+    " classname=\"tests.test_startup_foreground_audit\" name=\"test_exception_restores_bind_and_retains_original_error\" time=\"0.061\" /",
+    " classname=\"tests.test_startup_foreground_audit\" name=\"test_capture_failure_is_recorded_without_changing_api_behavior\" time=\"0.071\" /",
+    " classname=\"tests.test_startup_notice\" name=\"test_claim_failure_is_check_failed_without_owner_assumption\" time=\"0.045\" /",
+    " classname=\"tests.test_startup_notice\" name=\"test_reason_uses_only_verified_facts[check_failed-False-check_failed]\" time=\"0.044\" /",
+    " classname=\"tests.test_startup_notice\" name=\"test_reason_uses_only_verified_facts[connection_failed-False-check_failed]\" time=\"0.038\" /",
+    " classname=\"tests.test_startup_notice\" name=\"test_reason_uses_only_verified_facts[connection_failed-True-contact_failed]\" time=\"0.044\" /",
+    " classname=\"tests.test_startup_notice\" name=\"test_reason_uses_only_verified_facts[expired-False-timeout]\" time=\"0.055\" /",
+    " classname=\"tests.test_startup_notice\" name=\"test_reason_uses_only_verified_facts[expired-True-timeout]\" time=\"0.043\" /",
+    " classname=\"tests.test_startup_notice\" name=\"test_reason_uses_only_verified_facts[completed-True-None]\" time=\"0.036\" /",
+    " classname=\"tests.test_startup_notice\" name=\"test_reason_uses_only_verified_facts[foreground_denied-True-None]\" time=\"0.037\" /",
+    " classname=\"tests.test_startup_notice\" name=\"test_reason_uses_only_verified_facts[primary-False-None]\" time=\"0.048\" /",
+    " classname=\"tests.test_startup_notice\" name=\"test_os_language_without_settings_io[1041-ja]\" time=\"0.032\" /",
+    " classname=\"tests.test_startup_notice\" name=\"test_os_language_without_settings_io[1033-en]\" time=\"0.035\" /",
+    " classname=\"tests.test_startup_notice\" name=\"test_os_language_without_settings_io[2052-en]\" time=\"0.052\" /",
+    " classname=\"tests.test_startup_notice\" name=\"test_notice_text_is_fixed_localized_and_private_data_free\" time=\"0.058\" /",
+    " classname=\"tests.test_startup_notice\" name=\"test_backend_constructor_failure_uses_independent_notice\" time=\"0.062\" /",
+    " classname=\"tests.test_startup_notice\" name=\"test_initialization_notice_factory_failure_is_finite\" time=\"0.050\" /",
+    " classname=\"tests.test_startup_notice\" name=\"test_backend_constructor_partial_cleanup\" time=\"0.060\" /",
+    " classname=\"tests.test_startup_notice\" name=\"test_backend_constructor_stage_failure_releases_acquired[api-expected_release0]\" time=\"0.053\" /",
+    " classname=\"tests.test_startup_notice\" name=\"test_backend_constructor_stage_failure_releases_acquired[token-expected_release1]\" time=\"0.046\" /",
+    " classname=\"tests.test_startup_notice\" name=\"test_backend_constructor_stage_failure_releases_acquired[session-expected_release2]\" time=\"0.041\" /",
+    " classname=\"tests.test_startup_notice\" name=\"test_backend_constructor_stage_failure_releases_acquired[owner-expected_release3]\" time=\"0.052\" /",
+    " classname=\"tests.test_startup_notice\" name=\"test_backend_constructor_stage_failure_releases_acquired[mapping-expected_release4]\" time=\"0.055\" /",
+    " classname=\"tests.test_startup_notice\" name=\"test_backend_constructor_stage_failure_releases_acquired[pipe-expected_release5]\" time=\"0.054\" /",
+    " classname=\"tests.test_startup_notice\" name=\"test_initialization_notice_failure_matrix[factory]\" time=\"0.054\" /",
+    " classname=\"tests.test_startup_notice\" name=\"test_initialization_notice_failure_matrix[lease]\" time=\"0.064\" /",
+    " classname=\"tests.test_startup_notice\" name=\"test_initialization_notice_failure_matrix[lease_release]\" time=\"0.059\" /",
+    " classname=\"tests.test_startup_notice\" name=\"test_initialization_notice_failure_matrix[language]\" time=\"0.061\" /",
+    " classname=\"tests.test_startup_notice\" name=\"test_initialization_notice_failure_matrix[display]\" time=\"0.058\" /",
+    " classname=\"tests.test_startup_notice\" name=\"test_initialization_notice_failure_matrix[close]\" time=\"0.049\" /",
+    " classname=\"tests.test_startup_notice\" name=\"test_initialization_notice_failure_matrix[logger]\" time=\"0.055\" /",
+    " classname=\"tests.test_startup_notice\" name=\"test_initialization_cleanup_continues_after_error\" time=\"0.056\" /",
+    " classname=\"tests.test_startup_notice\" name=\"test_security_descriptor_is_freed_after_partial_conversion\" time=\"0.063\" /",
+    " classname=\"tests.test_startup_notice\" name=\"test_token_information_failure_closes_acquired_handle\" time=\"0.071\" /",
+    " classname=\"tests.test_startup_notice\" name=\"test_success_and_foreground_denial_never_enter_notice_boundary[completed]\" time=\"0.056\" /",
+    " classname=\"tests.test_startup_notice\" name=\"test_success_and_foreground_denial_never_enter_notice_boundary[foreground_denied]\" time=\"0.043\" /",
+    " classname=\"tests.test_startup_notice\" name=\"test_success_and_foreground_denial_never_enter_notice_boundary[primary]\" time=\"0.040\" /",
+    " classname=\"tests.test_startup_notice\" name=\"test_notice_lease_controls_display[True-shown]\" time=\"0.042\" /",
+    " classname=\"tests.test_startup_notice\" name=\"test_notice_lease_controls_display[False-coalesced]\" time=\"0.041\" /",
+    " classname=\"tests.test_startup_notice\" name=\"test_failed_window_is_not_reported_as_shown_and_private_error_is_not_logged\" time=\"0.047\" /",
+    " classname=\"tests.test_startup_notice\" name=\"test_notice_fixed_deadline_9999_10000[100-10000]\" time=\"0.046\" /",
+    " classname=\"tests.test_startup_notice\" name=\"test_notice_fixed_deadline_9999_10000[10099-1]\" time=\"0.046\" /",
+    " classname=\"tests.test_startup_notice\" name=\"test_notice_fixed_deadline_9999_10000[10100-0]\" time=\"0.066\" /",
+    " classname=\"tests.test_startup_notice\" name=\"test_notice_fixed_deadline_9999_10000[10200-0]\" time=\"0.056\" /",
+    " classname=\"tests.test_startup_notice\" name=\"test_mutex_existence_without_published_window_is_not_coalesced\" time=\"0.059\" /",
+    " classname=\"tests.test_startup_notice\" name=\"test_notice_snapshot_separates_visible_closed_dead_and_unknown[shown-True-True-9999-visible]\" time=\"0.058\" /",
+    " classname=\"tests.test_startup_notice\" name=\"test_notice_snapshot_separates_visible_closed_dead_and_unknown[shown-True-True-10000-unknown]\" time=\"0.047\" /",
+    " classname=\"tests.test_startup_notice\" name=\"test_notice_snapshot_separates_visible_closed_dead_and_unknown[shown-True-False-500-unknown]\" time=\"0.055\" /",
+    " classname=\"tests.test_startup_notice\" name=\"test_notice_snapshot_separates_visible_closed_dead_and_unknown[preparing-True-False-500-unknown]\" time=\"0.054\" /",
+    " classname=\"tests.test_startup_notice\" name=\"test_notice_snapshot_separates_visible_closed_dead_and_unknown[closed-True-False-500-closed]\" time=\"0.064\" /",
+    " classname=\"tests.test_startup_notice\" name=\"test_notice_snapshot_separates_visible_closed_dead_and_unknown[shown-False-False-500-dead]\" time=\"0.062\" /",
+    " classname=\"tests.test_startup_notice\" name=\"test_notice_creation_failure_is_finite_and_releases_lease\" time=\"0.048\" /",
+    " classname=\"tests.test_startup_notice\" name=\"test_partial_notice_publication_fails_closed_and_cleans_handles\" time=\"0.062\" /",
+    " classname=\"tests.test_startup_notice\" name=\"test_abandoned_notice_thread_with_live_process_is_not_new_owner\" time=\"0.053\" /",
+    " classname=\"tests.test_startup_notice\" name=\"test_notice_snapshot_corruption_never_authorizes_join[corrupt0]\" time=\"0.050\" /",
+    " classname=\"tests.test_startup_notice\" name=\"test_notice_snapshot_corruption_never_authorizes_join[corrupt1]\" time=\"0.049\" /",
+    " classname=\"tests.test_startup_notice\" name=\"test_notice_snapshot_corruption_never_authorizes_join[corrupt2]\" time=\"0.048\" /",
+    " classname=\"tests.test_startup_notice\" name=\"test_notice_snapshot_corruption_never_authorizes_join[corrupt3]\" time=\"0.082\" /",
+    " classname=\"tests.test_startup_notice\" name=\"test_notice_snapshot_corruption_never_authorizes_join[corrupt4]\" time=\"0.057\" /",
+    " classname=\"tests.test_startup_notice\" name=\"test_notice_snapshot_corruption_never_authorizes_join[corrupt5]\" time=\"0.048\" /",
+    " classname=\"tests.test_startup_notice\" name=\"test_notice_snapshot_corruption_never_authorizes_join[corrupt6]\" time=\"0.051\" /",
+    " classname=\"tests.test_startup_notice\" name=\"test_eight_joiners_do_not_change_first_notice_deadline\" time=\"0.049\" /",
+    " classname=\"tests.test_startup_notice\" name=\"test_owner_cannot_extend_already_shown_deadline\" time=\"0.053\" /",
+    " classname=\"tests.test_startup_wake\" name=\"test_noninterference_accepts_only_allowed_effects_independently_of_foreground[False]\" time=\"0.052\" /",
+    " classname=\"tests.test_startup_wake\" name=\"test_noninterference_accepts_only_allowed_effects_independently_of_foreground[True]\" time=\"0.055\" /",
+    " classname=\"tests.test_startup_wake\" name=\"test_noninterference_rejects_forbidden_effects_even_if_foreground_is_unchanged[foreground-api]\" time=\"0.085\" /",
+    " classname=\"tests.test_startup_wake\" name=\"test_noninterference_rejects_forbidden_effects_even_if_foreground_is_unchanged[ctypes-bypass]\" time=\"0.060\" /",
+    " classname=\"tests.test_startup_wake\" name=\"test_noninterference_rejects_forbidden_effects_even_if_foreground_is_unchanged[other-thread]\" time=\"0.059\" /",
+    " classname=\"tests.test_startup_wake\" name=\"test_noninterference_rejects_forbidden_effects_even_if_foreground_is_unchanged[other-message]\" time=\"0.053\" /",
+    " classname=\"tests.test_startup_wake\" name=\"test_noninterference_rejects_forbidden_effects_even_if_foreground_is_unchanged[owner-call]\" time=\"0.059\" /",
+    " classname=\"tests.test_startup_wake\" name=\"test_api_boundary_records_forbidden_access_even_if_exception_is_caught[SetForegroundWindow]\" time=\"0.061\" /",
+    " classname=\"tests.test_startup_wake\" name=\"test_api_boundary_records_forbidden_access_even_if_exception_is_caught[SendInput]\" time=\"0.057\" /",
+    " classname=\"tests.test_startup_wake\" name=\"test_api_boundary_records_forbidden_access_even_if_exception_is_caught[WinDLL]\" time=\"0.055\" /",
+    " classname=\"tests.test_startup_wake\" name=\"test_posts_only_wm_null_to_creator_and_stops_before_close_returns\" time=\"0.182\" /",
+    " classname=\"tests.test_startup_wake\" name=\"test_close_without_start_and_worker_start_failure\" time=\"0.039\" /",
+    " classname=\"tests.test_startup_wake\" name=\"test_wrong_thread_cannot_start_wake\" time=\"0.038\" /",
+    " classname=\"tests.test_startup_wake\" name=\"test_post_failure_retries_at_120ms_and_logs_once_per_failure_streak\" time=\"0.034\" /",
+    " classname=\"tests.test_startup_wake\" name=\"test_owner_exit_prevents_posting\" time=\"0.035\" /",
+    " classname=\"tests.test_startup_wake\" name=\"test_entry_stops_wake_before_root_destruction[None]\" time=\"0.036\" /",
+    " classname=\"tests.test_startup_wake\" name=\"test_entry_stops_wake_before_root_destruction[root]\" time=\"0.041\" /",
+    " classname=\"tests.test_startup_wake\" name=\"test_entry_stops_wake_before_root_destruction[app]\" time=\"0.040\" /",
+    " classname=\"tests.test_startup_wake\" name=\"test_entry_stops_wake_before_root_destruction[mainloop]\" time=\"0.051\" /",
+    " classname=\"tests.test_startup_wake\" name=\"test_entry_stops_wake_before_root_destruction[wake]\" time=\"0.044\" /",
+    " classname=\"tests.test_startup_wake\" name=\"test_native_tcl_getmessage_stall_recovers_with_product_wake[False-False]\" time=\"1.239\" /",
+    " classname=\"tests.test_startup_wake\" name=\"test_native_tcl_getmessage_stall_recovers_with_product_wake[True-False]\" time=\"1.241\" /",
+    " classname=\"tests.test_startup_wake\" name=\"test_native_tcl_getmessage_stall_recovers_with_product_wake[True-True]\" time=\"1.241\" /",
+    " classname=\"tests.test_startup_windows\" name=\"test_tracer_abi_backend_available\" time=\"0.039\" /",
+    " classname=\"tests.test_startup_windows\" name=\"test_finish_reports_exited_process_whose_pipes_are_held\" time=\"6.358\" /",
+    " classname=\"tests.test_startup_windows\" name=\"test_finish_reports_live_process_as_not_exiting\" time=\"3.381\" /",
+    " classname=\"tests.test_startup_windows\" name=\"test_tracer_abi_64bit_snapshot_and_thread\" time=\"0.046\" /",
+    " classname=\"tests.test_startup_windows\" name=\"test_tracer_io_lifetime_pending_connect_cancel\" time=\"0.143\" /",
+    " classname=\"tests.test_startup_windows\" name=\"test_tracer_e2e_real_main_terminal_ack\" time=\"7.727\" /",
+    " classname=\"tests.test_startup_windows\" name=\"test_tracer_io_lifetime_unresponsive_peer_five_second_deadline\" time=\"6.758\" /",
+    " classname=\"tests.test_startup_windows\" name=\"test_tracer_e2e_initialization_failure_releases_owner\" time=\"6.854\" /",
+    " classname=\"tests.test_startup_windows\" name=\"test_tracer_e2e_api_denial_does_not_construct_app\" time=\"0.671\" /",
+    " classname=\"tests.test_startup_windows\" name=\"test_tracer_notice_real_main_failure_path\" time=\"2.033\" /",
+    " classname=\"tests.test_startup_windows\" name=\"test_constructor_failure_real_main_nonactivate_notice\" time=\"1.109\" /",
+    " classname=\"tests.test_startup_windows\" name=\"test_constructor_failure_descriptor_stage_reaches_native_notice\" time=\"0.945\" /",
+    " classname=\"tests.test_startup_windows\" name=\"test_constructor_failure_manual_close_keeps_foreground\" time=\"0.690\" /",
+    " classname=\"tests.test_startup_windows\" name=\"test_constructor_failure_entry_exit\" time=\"2.769\" /",
+    " classname=\"tests.test_startup_windows\" name=\"test_constructor_failure_notice_dedup[False]\" time=\"2.486\" /",
+    " classname=\"tests.test_startup_windows\" name=\"test_constructor_failure_notice_dedup[True]\" time=\"2.505\" /",
+    " classname=\"tests.test_startup_windows\" name=\"test_constructor_failure_cleanup_allows_restart\" time=\"1.471\" /",
+    " classname=\"tests.test_startup_windows\" name=\"test_tracer_abi_shared_tick_wall_clock_independent\" time=\"0.630\" /",
+    " classname=\"tests.test_startup_windows\" name=\"test_tracer_io_lifetime_quarantine_keeps_native_buffers\" time=\"0.666\" /",
+    " classname=\"tests.test_startup_windows\" name=\"test_tracer_notice_nonactivate_lifetime_and_close[False]\" time=\"0.226\" /",
+    " classname=\"tests.test_startup_windows\" name=\"test_tracer_notice_nonactivate_lifetime_and_close[True]\" time=\"0.049\" /",
+    " classname=\"tests.test_startup_windows\" name=\"test_tracer_notice_timeout_injected_timer\" time=\"0.221\" /",
+    " classname=\"tests.test_startup_windows\" name=\"test_tracer_notice_lease_process_dedup\" time=\"2.525\" /",
+    " classname=\"tests.test_startup_windows\" name=\"test_foreground_audit_receives_native_window_event\" time=\"0.233\" /",
+    " classname=\"tests.test_startup_windows\" name=\"test_notice_dedup_eight_processes_keep_original_deadline\" time=\"2.943\" /",
+    " classname=\"tests.test_startup_windows\" name=\"test_notice_dedup_different_reasons_and_manual_close_allow_new_owner\" time=\"2.485\" /",
+    " classname=\"tests.test_startup_windows\" name=\"test_notice_dedup_owner_crash_with_retained_handles_can_redisplay\" time=\"1.301\" /",
+    " classname=\"tests.test_startup_windows\" name=\"test_notice_dedup_access_denial_checks_same_name_once[True]\" time=\"0.550\" /",
+    " classname=\"tests.test_startup_windows\" name=\"test_notice_dedup_access_denial_checks_same_name_once[False]\" time=\"0.041\" /",
+    " classname=\"tests.test_startup_windows\" name=\"test_simultaneous_real_processes_construct_one_editor[2]\" time=\"6.599\" /",
+    " classname=\"tests.test_startup_windows\" name=\"test_simultaneous_real_processes_construct_one_editor[8]\" time=\"6.853\" /",
+    " classname=\"tests.test_startup_windows\" name=\"test_simultaneous_real_processes_construct_one_editor[slow]\" time=\"14.428\" /",
+    " classname=\"tests.test_startup_windows\" name=\"test_simultaneous_exit_audit_distinguishes_entry[wm]\" time=\"5.600\" /",
+    " classname=\"tests.test_startup_windows\" name=\"test_simultaneous_exit_audit_distinguishes_entry[button]\" time=\"5.280\" /",
+    " classname=\"tests.test_startup_windows\" name=\"test_simultaneous_exit_audit_distinguishes_entry[watchdog]\" time=\"15.225\" /",
+    " classname=\"tests.test_startup_windows\" name=\"test_simultaneous_exit_audit_native_wm_close\" time=\"4.328\" /",
+    " classname=\"tests.test_startup_windows\" name=\"test_takeover_loser_expires_when_winner_initialization_exceeds_deadline\" time=\"11.071\" /",
+    " classname=\"tests.test_startup_windows\" name=\"test_takeover_two_candidates_after_confirmed_initialization_death\" time=\"4.604\" /",
+    " classname=\"tests.test_startup_windows\" name=\"test_lifecycle_cancel_quit_keeps_owner_then_restarts\" time=\"9.320\" /",
+    " classname=\"tests.test_startup_windows\" name=\"test_lifecycle_released_mapping_allows_new_claim_while_old_process_lives\" time=\"8.134\" /",
+    " classname=\"tests.test_startup_windows\" name=\"test_lifecycle_independent_restart_after_forced_owner_exit[ready]\" time=\"8.561\" /",
+    " classname=\"tests.test_startup_windows\" name=\"test_lifecycle_independent_restart_after_forced_owner_exit[initializing]\" time=\"4.920\" /",
+    " classname=\"tests.test_startup_windows\" name=\"test_lifecycle_exception_before_identity_publication_then_restart\" time=\"5.445\" /",
+    " classname=\"tests.test_startup_windows\" name=\"test_lifecycle_both_python_entries_and_relocated_version_share_owner\" time=\"6.198\" /",
+    " classname=\"tests.test_startup_windows\" name=\"test_cross_entry_owner_accepts_both_entries_and_other_location[script]\" time=\"6.236\" /",
+    " classname=\"tests.test_startup_windows\" name=\"test_cross_entry_owner_accepts_both_entries_and_other_location[module]\" time=\"6.161\" /",
+    " classname=\"tests.test_startup_windows\" name=\"test_cross_entry_owner_accepts_both_entries_and_other_location[relocated]\" time=\"7.486\" /",
+    " classname=\"tests.test_startup_windows\" name=\"test_startup_acceptance_product_identity_ignores_version_location_and_frozen\" time=\"0.061\" /",
+    " classname=\"tests.test_startup_windows\" name=\"test_startup_acceptance_guard_never_requests_foreign_or_missing_owner[True]\" time=\"4.456\" /",
+    " classname=\"tests.test_startup_windows\" name=\"test_startup_acceptance_guard_never_requests_foreign_or_missing_owner[False]\" time=\"0.582\" /",
+    " classname=\"tests.test_startup_windows\" name=\"test_lifecycle_partial_mapping_reader_closes_without_takeover\" time=\"0.139\" /",
+    " classname=\"tests.test_startup_windows\" name=\"test_takeover_abandoned_owner_thread_with_live_process_uses_existing_pipe\" time=\"0.045\" /",
+    " classname=\"tests.test_startup_windows\" name=\"test_lifecycle_failed_release_is_closing_until_all_readers_close\" time=\"0.054\" /",
+    " classname=\"tests.test_startup_windows\" name=\"test_lifecycle_release_follows_stop_and_precedes_mutex_release\" time=\"0.045\" /",
+    " classname=\"tests.test_startup_windows\" name=\"test_focus_restore_real_main_windows[thumb-entry-script]\" time=\"4.738\" /",
+    " classname=\"tests.test_startup_windows\" name=\"test_focus_restore_real_main_windows[thumb-entry-module]\" time=\"4.818\" /",
+    " classname=\"tests.test_startup_windows\" name=\"test_focus_restore_real_main_windows[preview-entry-script]\" time=\"5.012\" /",
+    " classname=\"tests.test_startup_windows\" name=\"test_focus_restore_real_main_windows[preview-entry-module]\" time=\"5.009\" /",
+    " classname=\"tests.test_startup_windows\" name=\"test_focus_restore_real_main_windows[settings-entry-script]\" time=\"5.067\" /",
+    " classname=\"tests.test_startup_windows\" name=\"test_focus_restore_real_main_windows[settings-entry-module]\" time=\"5.497\" /",
+    " classname=\"tests.test_startup_windows\" name=\"test_focus_restore_real_main_windows[nested-entry-script]\" time=\"5.434\" /",
+    " classname=\"tests.test_startup_windows\" name=\"test_focus_restore_real_main_windows[nested-entry-module]\" time=\"5.419\" /",
+    " classname=\"tests.test_startup_windows\" name=\"test_focus_restore_real_main_windows[native-ocr-entry-script]\" time=\"5.113\" /",
+    " classname=\"tests.test_startup_windows\" name=\"test_focus_restore_real_main_windows[native-ocr-entry-module]\" time=\"5.134\" /",
+    " classname=\"tests.test_startup_windows\" name=\"test_focus_restore_real_main_windows[native-quit-entry-script]\" time=\"5.184\" /",
+    " classname=\"tests.test_startup_windows\" name=\"test_focus_restore_real_main_windows[native-quit-entry-module]\" time=\"5.286\" /",
+    " classname=\"tests.test_startup_windows\" name=\"test_focus_restore_real_main_windows[rebuild-entry-script]\" time=\"5.353\" /",
+    " classname=\"tests.test_startup_windows\" name=\"test_focus_restore_real_main_windows[rebuild-entry-module]\" time=\"4.726\" /",
+    " classname=\"tests.test_startup_windows\" name=\"test_focus_restore_real_main_windows[normal-entry-script]\" time=\"4.236\" /",
+    " classname=\"tests.test_startup_windows\" name=\"test_focus_restore_real_main_windows[normal-entry-module]\" time=\"4.093\" /",
+    " classname=\"tests.test_startup_windows\" name=\"test_focus_restore_real_main_windows[zoomed-entry-script]\" time=\"4.331\" /",
+    " classname=\"tests.test_startup_windows\" name=\"test_focus_restore_real_main_windows[zoomed-entry-module]\" time=\"4.143\" /",
+    " classname=\"tests.test_startup_windows\" name=\"test_working_state_real_main_continues[pdf]\" time=\"5.065\" /",
+    " classname=\"tests.test_startup_windows\" name=\"test_working_state_real_main_continues[ocr]\" time=\"4.376\" /",
+    " classname=\"tests.test_startup_windows\" name=\"test_lifecycle_released_identity_mismatch_cannot_overwrite_mapping\" time=\"0.037\" /"
+  ],
+  "full_summary": [
+    "============================== warnings summary ===============================",
+    "  C:\\Users\\shdwf\\work\\project\\PageFolio\\.venv\\Lib\\site-packages\\pymupdf\\__init__.py:470: DeprecationWarning: 'typing.ByteString' and 'collections.abc.ByteString' are deprecated and slated for removal in Python 3.17",
+    "  tests\\test_config_notification.py:1470: PytestWarning: record_property is incompatible with junit_family 'xunit2' (use 'legacy' or 'xunit1')",
+    "PASSED tests/test_release_contract.py::TestCaseCoverage::test_every_subrow_is_fully_declared_and_not_prematurely_passed",
+    "2071 passed, 2 warnings in 480.86s (0:08:00)"
+  ],
+  "environment": {
+    "python": "3.15.2 (tags/v3.15.2:5e58eaa, Oct 25 2026, 17:27:03) [MSC v.1951 64 bit (AMD64)]",
+    "executable": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.venv\\Scripts\\python.exe",
+    "platform": "Windows-11-10.0.26300-SP0",
+    "packages": {
+      "pytest": "9.1.1",
+      "ruff": "0.17.1",
+      "PyMuPDF": "1.28.2",
+      "Pillow": "13.0.0",
+      "tkinterdnd2": "0.6.4"
+    },
+    "python_sha256": "f14d10e954b922d758234ff49335ad0e07e567103e06b38ff675c6bc85282865"
+  },
+  "artifacts": [
+    {
+      "file": ".planning/phases/04-startup-control/04-01-PLAN.md",
+      "sha256": "6aad0e40c854592ad14987a9dccc3f6b67fb216957d189fa87d5fe94d88fd2d4",
+      "requirements": [
+        "V110-START-01",
+        "V110-START-02",
+        "V110-START-03",
+        "V110-FOCUS-01",
+        "V110-FOCUS-02"
+      ],
+      "tasks": [
+        {
+          "attributes": "type=\"auto\" tdd=\"true\" id=\"04-01-01\"",
+          "name": "Task 1: 未完了フェーズを区別し、完了フェーズのDoD検知を維持する",
+          "files": "tests/test_gsd_dod.py, .planning/PROJECT.md",
+          "verification": "\n    <automated>.venv/Scripts/python.exe -m pytest -q tests/test_gsd_dod.py</automated>\n    <fails_when>終了コードが0以外、0件収集、または合成負例が違反を検出しない。</fails_when>\n  "
+        },
+        {
+          "attributes": "type=\"tracer\" tdd=\"true\" id=\"04-01-02\"",
+          "name": "Task 2: 二次起動→所有者識別→IPC→既存Tk復帰→完了ACKを通す",
+          "files": "pagefolio/startup_control.py, pagefolio/startup_win32.py, pagefolio/__main__.py, tests/test_startup_windows.py, .planning/phases/04-startup-control/04-TRACER-EVIDENCE.md",
+          "verification": "\n    <automated>.venv/Scripts/python.exe -m pytest -q tests/test_startup_windows.py -k tracer</automated>\n    <fails_when>終了コードが0以外、選択0件、対象Windowsでskip、二次app構築、terminal ACK未確認、または子プロセスが上限を超えて残る。</fails_when>\n  "
+        },
+        {
+          "attributes": "type=\"checkpoint:human-verify\" id=\"04-01-03\" gate=\"blocking-human\"",
+          "name": "Task 3: A1〜A5の方式成立性を実機で確定する",
+          "files": ".planning/phases/04-startup-control/04-TRACER-EVIDENCE.md",
+          "verification": "<automated>.venv/Scripts/python.exe -m pytest -q tests/test_startup_windows.py -k tracer</automated><fails_when>非zero終了、選択0件、対象Windowsでskip、子残留、元ファイル変更。</fails_when><human-check>A3/A4と本番固定名の実機記録にfail/not-runがあれば停止。</human-check>"
+        }
+      ],
+      "threats": [
+        "T-04-01",
+        "T-04-02",
+        "T-04-03",
+        "T-04-04",
+        "T-04-SC"
+      ],
+      "threat_models": [
+        "\n## Trust Boundaries\n| Boundary | Description |\n|---|---|\n| 任意ローカルプロセス→名前付きobject/pipe | owner情報と要求は検証前は信用しない |\n| IPC worker→Tk | GUIはメインスレッドだけが操作する |\n| 計画文書→DoD | 未完了と検証済みを区別する |\n\n## STRIDE Threat Register\n| Threat ID | Category | Component | Severity | Disposition | Mitigation Plan |\n|---|---|---|---|---|---|\n| T-04-01 | Spoofing | startup_win32.py peer照合 | high | mitigate | logon/session/PID/生成時刻とpipe peer PIDを照合、未知peerを拒否 |\n| T-04-02 | Tampering | mutex/mapping/pipe ACL | high | mitigate | 明示DACLとmedium label、READ_CONTROL検証、他セッション/remote拒否、権限差実測 |\n| T-04-03 | Denial of Service | pipe I/O/固定名先取り | high | mitigate | サイズ/queue上限、全I/O期限、cancel、失敗閉鎖。悪意ある同一ユーザーの先取りを正常起動扱いしない |\n| T-04-04 | Tampering | DoD completion parser | medium | mitigate | 現行section限定と重複/矛盾fail、archive義務・空走査ガードを合成負例で固定 |\n| T-04-SC | Tampering | package installs | high | mitigate | 新規installなし。追加が必要ならPackage Legitimacy Auditとblocking-humanゲートへ戻す |\nASVS L1、block_on high。高以上の未緩和を受容して拡張しない。\n"
+      ],
+      "threat_flags": null
+    },
+    {
+      "file": ".planning/phases/04-startup-control/04-01-SUMMARY.md",
+      "sha256": "dfe7c1c15f1ae3338570c647421878a0b428a930fab4fa04675dc8ff049db207",
+      "requirements": [
+        "V110-START-01",
+        "V110-START-02",
+        "V110-START-03",
+        "V110-FOCUS-01",
+        "V110-FOCUS-02"
+      ],
+      "tasks": [],
+      "threats": [],
+      "threat_models": [],
+      "threat_flags": null
+    },
+    {
+      "file": ".planning/phases/04-startup-control/04-02-PLAN.md",
+      "sha256": "8b6091529f43fb79df6cff0533ec7ae53690e4c4c26b4fb5c2daeb831e8fc95b",
+      "requirements": [
+        "V110-START-01",
+        "V110-START-02",
+        "V110-START-03",
+        "V110-FOCUS-01"
+      ],
+      "tasks": [
+        {
+          "attributes": "type=\"auto\" tdd=\"true\" id=\"04-02-01\"",
+          "name": "Task 1: 準備待ち・失効・連打を単一の期限で制御する",
+          "files": "pagefolio/startup_control.py, pagefolio/startup_win32.py, tests/test_startup_control.py",
+          "verification": "\n    <automated>.venv/Scripts/python.exe -m pytest -q tests/test_startup_control.py</automated>\n    <fails_when>終了コードが0以外、選択0件、期限更新/期限後副作用/連打による複数復帰を示すassert失敗。</fails_when>\n  "
+        },
+        {
+          "attributes": "type=\"auto\" tdd=\"true\" id=\"04-02-02\"",
+          "name": "Task 2: 確認できた先行終了から1回だけ引き継ぐ",
+          "files": "pagefolio/startup_control.py, pagefolio/startup_win32.py, pagefolio/__main__.py, tests/test_startup_control.py, tests/test_startup_windows.py",
+          "verification": "\n    <automated>.venv/Scripts/python.exe -m pytest -q tests/test_startup_control.py</automated>\n    <fails_when>終了コードが0以外、0件収集、死亡未確認の引継ぎ、2回目の自動引継ぎ、キャンセル中の排他解除。</fails_when>\n    <automated>.venv/Scripts/python.exe -m pytest -q tests/test_startup_windows.py -k \"lifecycle or simultaneous or takeover\"</automated>\n    <fails_when>終了コードが0以外、選択0件、対象Windowsでskip、編集rootが複数、または管理対象の二次processが16秒を超えて残る。</fails_when>\n  "
+        }
+      ],
+      "threats": [
+        "T-04-05",
+        "T-04-06",
+        "T-04-07",
+        "T-04-08",
+        "T-04-SC"
+      ],
+      "threat_models": [
+        "\n## Trust Boundaries\n| Boundary | Description |\n|---|---|\n| IPC時刻/ID→GUI | 古い・偽の要求によるUI副作用 |\n| OS状態→引継ぎ判断 | 所有thread終了とprocess死亡は別事実 |\n\n## STRIDE Threat Register\n| Threat ID | Category | Component | Severity | Disposition | Mitigation Plan |\n|---|---|---|---|---|---|\n| T-04-05 | Tampering | ActivationRequest validation | high | mitigate | ID/世代/issued/deadline/サイズ/種別と各副作用前期限を検査 |\n| T-04-06 | Denial of Service | IPC queue/ACK待機 | high | mitigate | queue32/cache128、5秒絶対期限、cancel＋500ms cleanup |\n| T-04-07 | Elevation of Privilege | _try_takeover | high | mitigate | process handleと生成時刻の死亡証拠、原子的claim、attempt1回、強制解除禁止 |\n| T-04-08 | Repudiation | 終了・ACK結果 | medium | mitigate | request_id/結果/期限の機密なし診断、acceptedとterminalの別記録 |\n| T-04-SC | Tampering | package installs | high | mitigate | installなし。変更時は監査＋blocking-humanゲート |\nASVS L1、block_on high。\n"
+      ],
+      "threat_flags": null
+    },
+    {
+      "file": ".planning/phases/04-startup-control/04-02-SUMMARY.md",
+      "sha256": "bb3a3282912ec564aba3e8c1786dc7ff3f374725408c9f0d27397c48d707feb4",
+      "requirements": [
+        "V110-START-01",
+        "V110-START-02",
+        "V110-START-03",
+        "V110-FOCUS-01"
+      ],
+      "tasks": [],
+      "threats": [],
+      "threat_models": [],
+      "threat_flags": null
+    },
+    {
+      "file": ".planning/phases/04-startup-control/04-03-PLAN.md",
+      "sha256": "4448e6deb652ba4ca7d5a273aa785740550812e59a2179f6448c9cf50a402c66",
+      "requirements": [
+        "V110-FOCUS-01",
+        "V110-FOCUS-02"
+      ],
+      "tasks": [
+        {
+          "attributes": "type=\"auto\" tdd=\"true\" id=\"04-03-01\"",
+          "name": "Task 1: 最小化前の状態とモーダル/入力先を維持して復帰する",
+          "files": "pagefolio/startup_focus.py, pagefolio/app.py, pagefolio/__main__.py, pagefolio/startup_win32.py, tests/test_startup_focus.py",
+          "verification": "\n    <automated>.venv/Scripts/python.exe -m pytest -q tests/test_startup_focus.py</automated>\n    <fails_when>終了コードが0以外、収集0件、state/focus/grab変更、OS拒否後の前面化再試行、またはstatus/OCR通知の上書き。</fails_when>\n  "
+        },
+        {
+          "attributes": "type=\"auto\" tdd=\"true\" id=\"04-03-02\"",
+          "name": "Task 2: 実際の編集・Undo/Redo・OCR継続を復帰操作で壊さないことを固定する",
+          "files": "tests/test_startup_focus.py, tests/test_startup_windows.py",
+          "verification": "\n    <automated>.venv/Scripts/python.exe -m pytest -q tests/test_startup_focus.py -k \"working_state or modal or ocr\"</automated>\n    <fails_when>終了コードが0以外、選択0件、doc/履歴/worker/入力状態の同一性破壊、またはOCRが完了しない。</fails_when>\n    <automated>.venv/Scripts/python.exe -m pytest -q tests/test_startup_windows.py -k \"focus_restore or working_state\"</automated>\n    <fails_when>終了コードが0以外、選択0件、対象Windowsでskip、追加編集root生成、または生存モーダルが親の背面に隠れる。</fails_when>\n  "
+        }
+      ],
+      "threats": [
+        "T-04-09",
+        "T-04-10",
+        "T-04-11",
+        "T-04-12",
+        "T-04-SC"
+      ],
+      "threat_models": [
+        "\n## Trust Boundaries\n| Boundary | Description |\n|---|---|\n| HWND/ウィジェット参照→UI操作 | 失効・別process・modal親子の照合が必要 |\n| 復帰controller→既存作業 | app/doc/OCRの所有権を維持する |\n\n## STRIDE Threat Register\n| Threat ID | Category | Component | Severity | Disposition | Mitigation Plan |\n|---|---|---|---|---|---|\n| T-04-09 | Spoofing | target HWND | high | mitigate | HWNDのPID/所有関係/生存とrequest世代を照合して自process対象だけを選択 |\n| T-04-10 | Tampering | app/doc/Undo/OCR | high | mitigate | 復帰専用controller、identity/内容/継続試験、保存/履歴操作を復帰経路に入れない |\n| T-04-11 | Denial of Service | foreground/flash | medium | mitigate | 試行1回、点滅3回・250ms、2秒以内STOP、前面化を含む再試行callbackを残さない |\n| T-04-12 | Elevation of Privilege | focus復帰 | medium | mitigate | OS許可の後だけfocus_set、grab維持、強制入力取得APIを使わない |\n| T-04-SC | Tampering | package installs | high | mitigate | installなし。追加時は監査＋blocking-humanゲート |\nASVS L1、block_on high。descriptor-less禁止事項は独立の実機判断に残る。\n"
+      ],
+      "threat_flags": null
+    },
+    {
+      "file": ".planning/phases/04-startup-control/04-03-SUMMARY.md",
+      "sha256": "1f77aff0dc40f8095e40b0bb790bd5c5e270d9691bb378b0982df76b67420807",
+      "requirements": [
+        "V110-FOCUS-01",
+        "V110-FOCUS-02"
+      ],
+      "tasks": [],
+      "threats": [],
+      "threat_models": [],
+      "threat_flags": null
+    },
+    {
+      "file": ".planning/phases/04-startup-control/04-04-PLAN.md",
+      "sha256": "eb2a08dc17bf23dd85b42f70bee6784c7a04781a3a910cf87de553ba36776b6a",
+      "requirements": [
+        "V110-START-03",
+        "V110-FOCUS-01"
+      ],
+      "tasks": [
+        {
+          "attributes": "type=\"auto\" tdd=\"true\" id=\"04-04-01\"",
+          "name": "Task 1: 確認できた失敗を日英の非活性案内で表示する",
+          "files": "pagefolio/startup_notice.py, pagefolio/startup_win32.py, pagefolio/__main__.py, pagefolio/lang.py, tests/test_startup_notice.py",
+          "verification": "\n    <automated>.venv/Scripts/python.exe -m pytest -q tests/test_startup_notice.py tests/test_lang_parity.py tests/test_font_hardcode_guard.py</automated>\n    <fails_when>終了コードが0以外、0件収集、キー不一致/未使用、原因の誤分類、拒否時案内表示、または非活性/10秒の契約違反。</fails_when>\n  "
+        },
+        {
+          "attributes": "type=\"auto\" tdd=\"true\" id=\"04-04-02\"",
+          "name": "Task 2: 連打・権限差・通信不能でも案内を1つに保つ",
+          "files": "pagefolio/startup_notice.py, pagefolio/startup_control.py, pagefolio/startup_win32.py, tests/test_startup_notice.py, tests/test_startup_windows.py",
+          "verification": "\n    <automated>.venv/Scripts/python.exe -m pytest -q tests/test_startup_notice.py</automated>\n    <fails_when>終了コードが0以外、0件収集、同原因の多重表示、10秒期限延長、または通知processの残留。</fails_when>\n    <automated>.venv/Scripts/python.exe -m pytest -q tests/test_startup_windows.py -k \"notice_dedup or notice_timeout or notice_nonactivate\"</automated>\n    <fails_when>終了コードが0以外、選択0件、対象Windowsでskip、案内数が同原因で2以上、前面HWND変更、または二次processが16秒を超えて残る。</fails_when>\n  "
+        }
+      ],
+      "threats": [
+        "T-04-13",
+        "T-04-14",
+        "T-04-15",
+        "T-04-SC"
+      ],
+      "threat_models": [
+        "\n## Trust Boundaries\n| Boundary | Description |\n|---|---|\n| 失敗情報→利用者表示 | 未確認原因・内部情報を表示しない |\n| 独立起動process→通知lease | 同原因の表示数と初回期限を守る |\n\n## STRIDE Threat Register\n| Threat ID | Category | Component | Severity | Disposition | Mitigation Plan |\n|---|---|---|---|---|---|\n| T-04-13 | Information Disclosure | _notice_text/logging | medium | mitigate | 固定i18n文言、reason/error codeのみ診断、機密/全文例外を表示しない |\n| T-04-14 | Denial of Service | NoticeLease/window | high | mitigate | 原因別mutex、0待機、初回10秒固定、finally、500ms cleanup、8process試験 |\n| T-04-15 | Tampering | native notice/focus | medium | mitigate | NOACTIVATEとMA_NOACTIVATE、前面HWND観測、手動/自動閉鎖でもfocus非変更 |\n| T-04-SC | Tampering | package installs | high | mitigate | installなし。追加時は監査＋blocking-humanゲート |\nASVS L1、block_on high。\n"
+      ],
+      "threat_flags": null
+    },
+    {
+      "file": ".planning/phases/04-startup-control/04-04-SUMMARY.md",
+      "sha256": "e49e9129af90a3b8e8904d4f85277fab8082ce2b3fedfcec397e2f36c93a038f",
+      "requirements": [
+        "V110-START-03",
+        "V110-FOCUS-01"
+      ],
+      "tasks": [],
+      "threats": [],
+      "threat_models": [],
+      "threat_flags": null
+    },
+    {
+      "file": ".planning/phases/04-startup-control/04-05-PLAN.md",
+      "sha256": "767457f9dfe2c64af96aff48f273ed5050e1963d7ac3697c89c940be15b33a6e",
+      "requirements": [
+        "V110-START-01",
+        "V110-START-02",
+        "V110-START-03",
+        "V110-FOCUS-01",
+        "V110-FOCUS-02"
+      ],
+      "tasks": [
+        {
+          "attributes": "type=\"auto\" tdd=\"true\" id=\"04-05-01\"",
+          "name": "Task 1: 起動経路を横断する自動受入と実機確認環境を用意する",
+          "files": "tests/test_startup_windows.py, .planning/phases/04-startup-control/04-WINDOWS-UAT.md, .planning/phases/04-startup-control/04-VALIDATION.md",
+          "verification": "\n    <automated>.venv/Scripts/python.exe -m pytest -q tests/test_startup_control.py tests/test_startup_focus.py tests/test_startup_notice.py tests/test_gsd_dod.py</automated>\n    <fails_when>終了コードが0以外、収集0件、failed/ERROR、または対象試験の無断skip。</fails_when>\n    <automated>.venv/Scripts/python.exe -m pytest -q tests/test_startup_windows.py -k \"cross_entry or startup_acceptance\"</automated>\n    <fails_when>終了コードが0以外、選択0件、対象Windowsでskip、追加root生成、期限契約違反、または所有していないprocessへの終了操作。</fails_when>\n  "
+        },
+        {
+          "attributes": "type=\"auto\" id=\"04-05-02\"",
+          "name": "Task 2: 自動受入証拠とPhase 6移管を照合する",
+          "files": ".planning/phases/04-startup-control/04-WINDOWS-UAT.md, .planning/phases/04-startup-control/04-VALIDATION.md, .planning/phases/06-release-validation/06-UAT-CARRYOVER.md",
+          "verification": "<automated>.venv/Scripts/python.exe -m pytest -q tests/test_gsd_dod.py</automated><fails_when>終了コード非0、収集0、移管追跡欠落。</fails_when>"
+        }
+      ],
+      "threats": [
+        "T-04-16",
+        "T-04-17",
+        "T-04-SC",
+        "T-04-01"
+      ],
+      "threat_models": [
+        "\n## Trust Boundaries\n| Boundary | Description |\n|---|---|\n| 試験harness→ユーザー環境 | 実ユーザーのdoc/process/設定を破壊しない |\n| 計測ログ→受入判定 | 自動・mock・実機・未実施を分離する |\n\n## STRIDE Threat Register\n| Threat ID | Category | Component | Severity | Disposition | Mitigation Plan |\n|---|---|---|---|---|---|\n| T-04-16 | Tampering | subprocess fixture/cleanup | high | mitigate | 一時PDF/設定、所有PIDだけ回収、既存PageFolio検出時中断、userファイルhash照合 |\n| T-04-17 | Repudiation | UAT/VALIDATION証拠 | medium | mitigate | ケースID/commit/実測/権限/環境/合否を記録し未実施を別欄へ、実走前validated禁止 |\n| T-04-SC | Tampering | package installs | high | mitigate | installなし。必要なら監査＋blocking-humanゲート |\nASVS L1、block_on high。T-04-01〜17の未解決high以上があればPhase完了を止める。\n"
+      ],
+      "threat_flags": null
+    },
+    {
+      "file": ".planning/phases/04-startup-control/04-05-SUMMARY.md",
+      "sha256": "63c8304733af2f7c6eba9be3b9add6c24d07d592b8c4c0e7e6e18c7b98614809",
+      "requirements": [
+        "V110-START-01",
+        "V110-START-02",
+        "V110-START-03",
+        "V110-FOCUS-01",
+        "V110-FOCUS-02"
+      ],
+      "tasks": [],
+      "threats": [],
+      "threat_models": [],
+      "threat_flags": null
+    },
+    {
+      "file": ".planning/phases/04-startup-control/04-06-PLAN.md",
+      "sha256": "aafeaf7c14ecac7f185734ee02a022924adaf50fc33fdca30350577befae3e6b",
+      "requirements": [
+        "V110-START-02",
+        "V110-START-03",
+        "V110-START-01",
+        "V110-FOCUS-01",
+        "V110-FOCUS-02"
+      ],
+      "tasks": [
+        {
+          "attributes": "type=\"tracer\" tdd=\"true\" id=\"04-06-01\"",
+          "name": "Task 1: backend構築失敗から非活性案内までを実起動入口で接続する",
+          "files": "pagefolio/__main__.py, pagefolio/startup_win32.py, pagefolio/startup_notice.py, tests/test_startup_notice.py, tests/test_startup_windows.py",
+          "verification": "\n    <automated>.venv/Scripts/python.exe -m pytest -q tests/test_startup_notice.py -k \"backend_constructor or initialization_notice or success_and_foreground\"</automated>\n    <fails_when>終了コードが0以外、選択0件、未捕捉例外、通知factoryの重複呼出し、追加編集画面、機密markerの出力、または通常成功/前面拒否時の案内発生。</fails_when>\n    <automated>.venv/Scripts/python.exe -m pytest -q tests/test_startup_windows.py::test_constructor_failure_real_main_nonactivate_notice</automated>\n    <fails_when>終了コードが0以外、対象Windowsでskip、案内数が1以外、check_failed以外、foregroundの前後不一致、または隔離子processのtimeout。</fails_when>\n  "
+        },
+        {
+          "attributes": "type=\"auto\" tdd=\"true\" id=\"04-06-02\"",
+          "name": "Task 2: 部分初期化・通知障害・連打時も安全に終了して再起動できるようにする",
+          "files": "pagefolio/startup_win32.py, pagefolio/startup_notice.py, tests/test_startup_notice.py, tests/test_startup_windows.py, .planning/phases/04-startup-control/04-06-EVIDENCE.json",
+          "verification": "\n    <automated>.venv/Scripts/python.exe -m pytest -q tests/test_startup_notice.py</automated>\n    <fails_when>終了コードが0以外、収集0件、constructor/通知障害matrixの未実行、解放漏れ/二重解放、期限更新、または通知不能をshown/coalescedへ変換するassertion違反。</fails_when>\n    <automated>.venv/Scripts/python.exe -m pytest -q tests/test_startup_windows.py -k \"constructor_failure or notice_dedup or notice_timeout or notice_nonactivate\"</automated>\n    <fails_when>終了コードが0以外、選択0件、対象Windowsでskip、両入口のexit値不一致、多重案内、前面HWND変化、同名再取得不能、所有子processのtimeout、または原本hash変化。</fails_when>\n    <automated>.venv/Scripts/python.exe -m json.tool .planning/phases/04-startup-control/04-06-EVIDENCE.json</automated>\n    <fails_when>終了コードが0以外、ファイル不存在、またはJSONとして解析不能。</fails_when>\n  "
+        }
+      ],
+      "threats": [
+        "T-04-18",
+        "T-04-19",
+        "T-04-20",
+        "T-04-21",
+        "T-04-SC",
+        "T-04-17"
+      ],
+      "threat_models": [
+        "\n## Trust Boundaries\n\n| Boundary | Description |\n|---|---|\n| 起動前のWin32初期化→利用者案内/診断 | 完成backendがない状態で例外を分類し、内部情報を表示しない |\n| 独立通知process→Local通知mutex/mapping | 既存経路と同じidentity/ACL/初回期限で集約する |\n| 部分取得OS資源→後始末/次の起動 | thread所有と有限解放を保ち、残留/二重解放で再起動を妨げない |\n\n## STRIDE Threat Register\n\n| Threat ID | Category | Component | Severity | Disposition | Mitigation Plan |\n|---|---|---|---|---|---|\n| T-04-18 | Information Disclosure | main/initialization notice/logging | high | mitigate | Task1/2で固定check_failed文言と数値OSコード、機密markerとlogger失敗の回帰、例外本文を境界外へ漏らさない |\n| T-04-19 | Denial of Service | constructor/partial cleanup | high | mitigate | Task1/2で取得時登録・同thread逆順解放・一部解放失敗でも継続・500ms cleanup・再起動/残留試験 |\n| T-04-20 | Spoofing | Win32NoticeBackend/NoticeLease | high | mitigate | Task1で正規名/ACL/owner identity/可視window検証を共有、Task2で旧新経路の8process集約と拒否の失敗閉鎖を検査 |\n| T-04-21 | Tampering | native notice/foreground | medium | mitigate | Task1/2で既存NOACTIVATEと手動/自動closeを再利用し、表示/閉鎖の直前直後のforeground HWNDを比較 |\n| T-04-SC | Tampering | package installs | high | mitigate | 新規installなし。追加が必要になればPackage Legitimacy Auditとblocking-humanゲートへ戻す |\n\n既存最大番号T-04-17の次から採番。ASVS L1、block_on high。新規high以上が未解決ならPhase正式完了を止める。\n"
+      ],
+      "threat_flags": null
+    },
+    {
+      "file": ".planning/phases/04-startup-control/04-06-SUMMARY.md",
+      "sha256": "bfda89a0c14440a8061316b7268b8f2037228526b3cf651780746d4419f486a9",
+      "requirements": [
+        "V110-START-02",
+        "V110-START-03"
+      ],
+      "tasks": [],
+      "threats": [],
+      "threat_models": [],
+      "threat_flags": null
+    }
+  ],
+  "before_reports": {
+    ".planning/phases/04-startup-control/04-VALIDATION.md": "9866ed1022ec96060ad3a24037591afa238288e16adfcc774720ca61adf5907d",
+    ".planning/phases/04-startup-control/04-SECURITY.md": "1eeeaefd47c0b1497634e723f2db97105cf106d56da550bf36d92c40b22aa08f",
+    ".planning/phases/04-startup-control/04-UI-REVIEW.md": "f463ac1a089f4174eb4806cceeff438b05c5b84040b5c1655a9413f21f31a558",
+    ".planning/phases/04-startup-control/04-REVIEW.md": "358fae4cc52ef81f05cf6c0a2f6b63de8d8dff75da717bec83e14307ac35f340",
+    ".planning/phases/04-startup-control/04-REVIEW-DISPOSITION.md": "97a10fcd5115a7369b81314832f72736edb8585a212cd69fb87a8f7f595199ee",
+    ".planning/phases/04-startup-control/04-VERIFICATION.md": "480ffdc2da8f8aba62a2354cc30796b2094a2c9366ca180c1e443fb83fcf8fd8"
+  },
+  "unchanged_runtime_files": [
+    {
+      "file": ".venv/pyvenv.cfg",
+      "sha256": "3257a0e90761a57f623b2e619ce88d43c642bc1646d0f0943e54679c64977662"
+    },
+    {
+      "file": ".venv/Scripts/python.exe",
+      "sha256": "f14d10e954b922d758234ff49335ad0e07e567103e06b38ff675c6bc85282865"
+    },
+    {
+      "file": ".venv/Scripts/ruff.exe",
+      "sha256": "a33c117ea0b3a9b4692df9a4d91d190f8402493dc1f967d478c74db8425289eb"
+    }
+  ],
+  "current_review_inputs": [
+    {
+      "file": "pagefolio/__main__.py",
+      "sha256": "efdbc32b2322ee20525fbb9ce5164622109fbacecfd37c36fc41166bfa0e1e06"
+    },
+    {
+      "file": "pagefolio/startup_win32.py",
+      "sha256": "948abe06b494e6907bdec5e2169931e9780eb6dfa23271c5a16e6134546cddae"
+    },
+    {
+      "file": "pagefolio/startup_control.py",
+      "sha256": "39ab94d5ac2ca137e49ba61201a5f32fd942ad23f4b52dda09ec0ecfc8d27ed6"
+    },
+    {
+      "file": "pagefolio/startup_focus.py",
+      "sha256": "b9f605201e394fabc75efd06b6b3cb3f9a4574ce3924fe9565898a1c2fd2b881"
+    },
+    {
+      "file": "pagefolio/startup_notice.py",
+      "sha256": "473c8ea1723a350cc445bcef8649c75bd228ec3e37bea12d81ca5a166a4c0c40"
+    },
+    {
+      "file": "pagefolio/startup_wake.py",
+      "sha256": "0c16a50ba6cc526a3e2ae36a12abbd2336df38712cb4abd2a5bab421a668c7c9"
+    },
+    {
+      "file": "tests/test_startup_windows.py",
+      "sha256": "846ee305e323fed436a2a60741df52135afdb39da35c672ed976d86c123a9b47"
+    },
+    {
+      "file": "tests/startup_foreground_audit.py",
+      "sha256": "1db51b8de1abc1ea8e06daa9e197787d586b0a3272622fe11cd82760082c4f8b"
+    },
+    {
+      "file": "tests/test_startup_foreground_audit.py",
+      "sha256": "e194312c5453b4c5b3734493631cd020b2874a32b502db165f329e28dc144a03"
+    },
+    {
+      "file": "tests/test_startup_wake.py",
+      "sha256": "092147370bbc9e07d234ae56eb65ff328e1a8b0ea2737ce4c37af4203bb43c1c"
+    },
+    {
+      "file": "tests/startup_wake_child.py",
+      "sha256": "5bbbbc9850063a81f66cff914b3000e2e304b3037411db26ce9b5002d5ffc910"
+    }
+  ],
+  "git_diff_check": {
+    "status": 0,
+    "signal": null,
+    "output": [
+      null,
+      "",
+      ""
+    ],
+    "pid": 31980,
+    "stdout": "",
+    "stderr": ""
+  }
+}

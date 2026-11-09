@@ -1,0 +1,6 @@
+{
+  "lint_exit": 0,
+  "format_exit": 0,
+  "restored": [],
+  "scope_note": "全体formatの完走後、今回対象外の既存ファイルはコマンド直前bytesへ戻した。"
+}

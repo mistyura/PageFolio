@@ -1,0 +1,190 @@
+{
+  "integrity": {
+    "quality_input_count": 118,
+    "quality_changed": [],
+    "original_evidence_count": 34,
+    "evidence_changed": [],
+    "formatter_time_changes_outside_basetemp": [],
+    "scan_errors": [
+      {
+        "path": ".pytest_cache",
+        "error": "EPERM"
+      },
+      {
+        "path": "pf_0502_atomic_red",
+        "error": "EPERM"
+      },
+      {
+        "path": "pf_0502_flow_green",
+        "error": "EPERM"
+      },
+      {
+        "path": "pf_0502_flow_red",
+        "error": "EPERM"
+      }
+    ]
+  },
+  "limited_checks": [
+    {
+      "tool": "ruff",
+      "mode": [
+        "check"
+      ],
+      "file_count": 116,
+      "exit_code": 0,
+      "stdout": "All checks passed!\n",
+      "stderr": ""
+    },
+    {
+      "tool": "ruff",
+      "mode": [
+        "format",
+        "--check"
+      ],
+      "file_count": 116,
+      "exit_code": 0,
+      "stdout": "116 files already formatted\n",
+      "stderr": ""
+    }
+  ],
+  "syntax": {
+    "exit_code": 0,
+    "files": [
+      "pagefolio.py",
+      ".planning/debug/phase06-w05c-no-marker/probe.py"
+    ]
+  },
+  "full_pytest": {
+    "rerun": false,
+    "basis": ".planning/phases/04-startup-control/04-reverify-20261105-full/run.json",
+    "previous_passed": 2254,
+    "input_count": 118,
+    "changed_inputs": []
+  },
+  "literal_root_commands": {
+    "check": {
+      "exit_code": 1,
+      "errors": 95,
+      "note": "権限付きruff check .は既存basetempの生成fixtureを対象とし失敗。アクセス拒否の警告もあり。"
+    },
+    "format": {
+      "exit_code": 1,
+      "reformatted_existing_basetemp_files": 153,
+      "note": "既存のinvalid Python fixture bad.pyとアクセス拒否で完走せず。formatter-impact.jsonに意図外変更を記録。"
+    }
+  },
+  "new_evidence_copies": [
+    {
+      "source": ".planning\\tmp\\pagefolio-w05c-probe-331580d77a8d42b883916f102fa72e39\\manifest.json",
+      "dest": "no-click/manifest.json"
+    },
+    {
+      "source": ".planning\\tmp\\pagefolio-w05c-probe-331580d77a8d42b883916f102fa72e39\\inspection.json",
+      "dest": "no-click/inspection.json"
+    },
+    {
+      "source": ".planning\\tmp\\pagefolio-w05c-probe-331580d77a8d42b883916f102fa72e39\\uat-owner-native-quit\\probe.jsonl",
+      "dest": "no-click/uat-owner-native-quit/probe.jsonl"
+    },
+    {
+      "source": ".planning\\tmp\\pagefolio-w05c-probe-331580d77a8d42b883916f102fa72e39\\uat-owner-native-quit\\result.json",
+      "dest": "no-click/uat-owner-native-quit/result.json"
+    },
+    {
+      "source": ".planning\\tmp\\pagefolio-w05c-probe-331580d77a8d42b883916f102fa72e39\\uat-owner-native-quit\\stderr.log",
+      "dest": "no-click/uat-owner-native-quit/stderr.txt"
+    },
+    {
+      "source": ".planning\\tmp\\pagefolio-w05c-probe-331580d77a8d42b883916f102fa72e39\\uat-owner-native-quit\\focus-result.json",
+      "dest": "no-click/uat-owner-native-quit/focus-result.json"
+    },
+    {
+      "source": ".planning\\tmp\\pagefolio-w05c-probe-4f6cdc66239b459fae857a9b291c2111\\manifest.json",
+      "dest": "stop-pending/manifest.json"
+    },
+    {
+      "source": ".planning\\tmp\\pagefolio-w05c-probe-4f6cdc66239b459fae857a9b291c2111\\inspection.json",
+      "dest": "stop-pending/inspection.json"
+    },
+    {
+      "source": ".planning\\tmp\\pagefolio-w05c-probe-4f6cdc66239b459fae857a9b291c2111\\uat-owner-native-quit\\probe.jsonl",
+      "dest": "stop-pending/uat-owner-native-quit/probe.jsonl"
+    },
+    {
+      "source": ".planning\\tmp\\pagefolio-w05c-probe-4f6cdc66239b459fae857a9b291c2111\\uat-owner-native-quit\\result.json",
+      "dest": "stop-pending/uat-owner-native-quit/result.json"
+    },
+    {
+      "source": ".planning\\tmp\\pagefolio-w05c-probe-4f6cdc66239b459fae857a9b291c2111\\uat-owner-native-quit\\stderr.log",
+      "dest": "stop-pending/uat-owner-native-quit/stderr.txt"
+    }
+  ],
+  "human_checkpoint": {
+    "answer_original": "押した・確認が閉じた",
+    "source": "利用者のhuman-action checkpointへの直接回答。親エージェントがDATA_START/DATA_END内の証拠として伝達。",
+    "run": ".planning/tmp/pagefolio-w05c-probe-8ba3b45be3cd4c07b43c2b56fd4588cc",
+    "diagnostic_only": true,
+    "answer_received_near_utc": "2026-11-05T04:40:37Z（親clock呼出し付近、厳密な回答時刻ではない）",
+    "observation": {
+      "no_received": "2026-11-05T04:40:37.750702+00:00",
+      "ask_return": "2026-11-05T04:40:37.836612+00:00",
+      "ask_return_result": false,
+      "no_to_return_ms": 85.9033000015188,
+      "root_state_after_return": {
+        "root_alive": true,
+        "pages": 3,
+        "rotations": [
+          90,
+          90,
+          0
+        ]
+      },
+      "marker_exists": true,
+      "marker_mtime": "2026-11-05T04:40:37.837Z",
+      "cleanup_start": "2026-11-05T04:40:43.763799+00:00",
+      "cleanup_after_return_ms": 5927.191499999026,
+      "callback_errors": 0,
+      "caller": [
+        {
+          "file": "__main__.py",
+          "line": 87,
+          "function": "main"
+        },
+        {
+          "file": "__init__.py",
+          "line": 1649,
+          "function": "mainloop"
+        },
+        {
+          "file": "__init__.py",
+          "line": 2185,
+          "function": "__call__"
+        },
+        {
+          "file": "__init__.py",
+          "line": 895,
+          "function": "callit"
+        },
+        {
+          "file": "test_startup_windows.py",
+          "line": 2859,
+          "function": "watchdog"
+        },
+        {
+          "file": "probe.py",
+          "line": 81,
+          "function": "quit_observed"
+        }
+      ]
+    },
+    "originals_unchanged": true,
+    "process_exited": true,
+    "formal_acceptance_changed": false
+  },
+  "post_checkpoint_validation": {
+    "python_changed": false,
+    "duplicate_gui_runs": 0,
+    "tests_rerun": false,
+    "note": "新規利用者No診断を1件回収。既存の検証・118入力不変条件を維持。追加の全体formatterは実行していない。"
+  }
+}

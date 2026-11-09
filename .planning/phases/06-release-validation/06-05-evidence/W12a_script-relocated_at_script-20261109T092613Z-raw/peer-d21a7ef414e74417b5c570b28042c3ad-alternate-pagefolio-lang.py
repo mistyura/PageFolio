@@ -1,0 +1,1648 @@
+# PageFolio - PDF Page Organizer
+# Copyright (c) 2026 mistyura
+# Released under the MIT License
+# https://github.com/mistyura/PageFolio
+"""言語辞書定義 — LANG（日本語 / 英語）"""
+
+LANG = {
+    "ja": {
+        "config_load_corrupt": (
+            "保存済みの設定が破損しているため、既定値で起動しました。"
+        ),
+        "config_load_unreadable": (
+            "保存済みの設定を読み取れなかったため、既定値で起動しました。"
+        ),
+        "config_save_failed": (
+            "設定の保存に失敗しました。今回の変更は次回起動に残りません。"
+        ),
+        "config_save_blocked_unreadable": (
+            "元の設定を保護するため保存していません。今回の変更は次回起動に残りません。"
+        ),
+        "startup_notice_check_failed": (
+            "PageFolioの起動状態を確認できませんでした。"
+            "タスクバーを確認し、しばらくしてから起動し直してください。"
+        ),
+        "startup_notice_contact_failed": (
+            "起動済みの画面に接続できませんでした。"
+            "タスクバーからPageFolioを確認してください。"
+        ),
+        "startup_notice_timeout": (
+            "PageFolioの応答を5秒以内に確認できませんでした。"
+            "画面を確認してから、必要なら起動し直してください。"
+        ),
+        "startup_notice_close": "閉じる",
+        "startup_notice_title": "PageFolio",
+        # ヘッダー / ステータス
+        "status_initial": "ファイルを開いてください",
+        # サムネイルパネル
+        "panel_pages": "ページ一覧",
+        "dnd_hint": "D&D で並替",
+        "select_all": "全選択",
+        "deselect": "解除",
+        # ページネーション（ナビ/件数フッター）
+        "page_size_label": "表示:",
+        # プレビューツールバー
+        "btn_prev": "◀",
+        "btn_next": "▶",
+        "btn_zoom_in": "＋",
+        "btn_zoom_out": "－",
+        # ページ拡大ポップアップ
+        "popup_page_title": "ページ {i} / {n}",
+        "popup_zoom_out": "🔍 縮小",
+        "popup_zoom_in": "🔍 拡大",
+        "popup_close": "✕ 閉じる",
+        # ツールセクション見出し
+        "sec_settings": "⚙ 設定",
+        "sec_file": "📂 ファイル",
+        "sec_undo": "↩ 元に戻す / やり直す",
+        "sec_page": "📄 ページ操作（選択ページ）",
+        "sec_crop": "✂ トリミング（現在ページ）",
+        "sec_redact": "⬛ ページ編集（黒塗り・モザイク）",
+        "sec_insert": "📎 挿入・結合",
+        "sec_plugin": "🔌 プラグイン",
+        # 設定セクションボタン
+        "btn_settings": "⚙ テーマ・フォント設定…",
+        "btn_about": "ℹ About",
+        "btn_lang": "🌐 English",
+        # ファイルセクションボタン
+        "btn_open": "ファイルを開く (Ctrl+O)",
+        "btn_save": "上書き保存 (Ctrl+S)",
+        "btn_save_as": "名前を付けて保存 (Ctrl+Shift+S)",
+        "btn_close_file": "📕 ファイルを閉じる",
+        "btn_quit": "✕ 終了",
+        # パスワード（暗号化）
+        "sec_security": "🔒 パスワード",
+        "btn_set_password": "🔒 パスワードを設定して保存…",
+        "btn_remove_password": "🔓 パスワードを解除して保存…",
+        "pwd_dialog_title": "パスワードを設定",
+        "pwd_dialog_heading": "パスワードを設定",
+        "pwd_dialog_hint": (
+            "PDF を AES-256 で暗号化します。\n"
+            "設定したパスワードは開く際に必要になります。忘れないでください。"
+        ),
+        "pwd_label": "パスワード:",
+        "pwd_confirm_label": "確認入力:",
+        "pwd_show": "パスワードを表示",
+        "pwd_apply": "✔ 設定して保存…",
+        "pwd_cancel": "キャンセル",
+        "pwd_empty": "パスワードを入力してください。",
+        "pwd_mismatch": "パスワードが一致しません。",
+        "pwd_suffix_protected": "_protected",
+        "pwd_suffix_decrypted": "_decrypted",
+        "open_password_title": "パスワード入力",
+        "open_password_prompt": (
+            "「{name}」はパスワードで保護されています。\nパスワードを入力してください:"
+        ),
+        "err_password_wrong": (
+            "パスワードが違います。\n「{name}」のパスワードを再入力してください:"
+        ),
+        "status_password_cancelled": "パスワード入力をキャンセルしました",
+        "status_password_set": "パスワードを設定して保存しました: {name}",
+        "status_password_removed": "パスワードを解除して保存しました: {name}",
+        "info_no_password": "このファイルにはパスワードが設定されていません。",
+        # 印刷
+        "sec_print": "🖨 印刷",
+        "btn_print": "🖨 印刷… (Ctrl+P)",
+        "status_print_sent": "印刷ジョブを送信しました: {name}",
+        "status_print_opened": (
+            "既定のPDFアプリで開きました。アプリ側で印刷してください: {name}"
+        ),
+        "err_print_title": "印刷エラー",
+        "err_print_msg": "印刷に失敗しました:\n{e}",
+        "err_print_no_handler": (
+            "PDF を開くアプリが見つからないため印刷できませんでした。\n"
+            "PDF の既定アプリ（Adobe Acrobat Reader・Microsoft Edge など）を\n"
+            "設定してから、もう一度お試しください。"
+        ),
+        "info_print_unsupported": (
+            "印刷はこの OS では未対応です（Windows でご利用ください）。"
+        ),
+        # Undo/Redo
+        "btn_undo": "↩ Ctrl+Z",
+        "btn_redo": "↪ Ctrl+Y",
+        # ページ操作
+        "lbl_rotate": "回転:",
+        "btn_rot_left": "↺ 左90°",
+        "btn_rot_right": "↻ 右90°",
+        "btn_rot_180": "↕ 180°",
+        "btn_delete": "🗑 選択ページを削除 (Del)",
+        "btn_duplicate": "📋 現在ページを複製",
+        "btn_insert_blank": "📄 白紙ページを挿入",
+        "btn_watermark": "🔤 透かしを追加…",
+        "btn_watermark_image": "🖼 画像透かしを追加…",
+        "btn_page_number": "🔢 ページ番号を印字…",
+        "status_duplicated": "p.{page} を複製して直後に挿入しました",
+        # トリミング
+        "crop_mode_off": "✂ 範囲選択モード OFF",
+        "crop_mode_on": "🔴 範囲選択モード ON  (クリックで OFF)",
+        "crop_hint": "プレビュー上でドラッグして範囲を指定",
+        "crop_no_sel": "範囲未選択",
+        "btn_crop": "✔ 選択範囲でトリミング",
+        "btn_crop_reset": "✕ 選択範囲をリセット",
+        "btn_crop_margin": "📐 余白指定でトリミング…",
+        "dlg_crop_margin_title": "余白指定トリミング（mm）",
+        "crop_margin_top": "上の余白 (mm):",
+        "crop_margin_bottom": "下の余白 (mm):",
+        "crop_margin_left": "左の余白 (mm):",
+        "crop_margin_right": "右の余白 (mm):",
+        # ページ編集（黒塗り・モザイク）
+        "redact_mode_off": "⬛ 範囲選択モード OFF",
+        "redact_mode_on": "🔴 範囲選択モード ON  (クリックで OFF)",
+        "redact_hint": "プレビュー上でドラッグして範囲を指定",
+        "mosaic_block_label": "モザイク粒度",
+        "btn_apply_redact": "⬛ 選択範囲を黒塗り",
+        "btn_apply_mosaic": "▦ 選択範囲をモザイク",
+        "btn_redact_clear": "🗑 矩形をクリア",
+        # 挿入・結合
+        "btn_insert_head": "先頭に挿入",
+        "btn_insert_tail": "末尾に挿入",
+        "btn_insert_pos": "指定位置に挿入…",
+        "btn_merge": "PDFを末尾に結合",
+        # ページ結合・リサイズ
+        "sec_merge_resize": "📐 ページ結合・リサイズ",
+        "btn_merge_resize": "🧩 選択ページを結合してリサイズ…",
+        "info_merge_resize_min": "結合・リサイズには2ページ以上の選択が必要です",
+        "mr_dialog_title": "ページ結合・リサイズ",
+        "mr_dialog_heading": "ページ結合・リサイズ",
+        "mr_dialog_hint": (
+            "選択中の{count}ページを1枚に結合し、合計サイズの新しいページを作成します。\n"
+            "例: 2枚のA4を横並びで結合 → 1枚のA3"
+        ),
+        "mr_direction": "配置方向:",
+        "mr_horizontal": "横並び（左→右）",
+        "mr_vertical": "縦並び（上→下）",
+        "mr_order_label": "結合順（上から順）:",
+        "mr_size_preview": "出力サイズ: {w}×{h} pt",
+        "mr_apply": "✔ 結合・リサイズ実行",
+        "mr_cancel": "キャンセル",
+        "status_merge_resize": "{count}ページを結合・リサイズしました ({w}×{h} pt)",
+        # 分割
+        "sec_split": "✂ 分割",
+        "btn_split_range": "📄 範囲を指定して分割…",
+        "btn_split_each": "📑 1ページずつ分割…",
+        "dlg_split_range_title": "ページ範囲を指定して分割",
+        "dlg_split_range_msg": (
+            "分割するページ範囲を入力してください。\n\n例:\n"
+            "  1-3      → 1〜3ページ目を1ファイルに\n"
+            "  1-3, 5-8 → 2ファイルに分割\n"
+            "  4        → 4ページ目だけ抽出\n\n"
+            "ページ範囲 (1〜{n}):"
+        ),
+        "dlg_split_save_dir": "分割ファイルの保存先フォルダを選択",
+        "status_split_range": "{count}個のPDFに分割しました → {folder}",
+        "status_split_each": "{count}ページを個別PDFに分割しました → {folder}",
+        "err_split_range": (
+            "ページ範囲の入力が正しくありません。\n\n"
+            "正しい形式: 1-3, 5-8  または  4\n"
+            "ページ番号は 1〜{n} の範囲で指定してください。"
+        ),
+        "err_split_no_range": "ページ範囲を入力してください。",
+        "split_overwrite_title": "上書き確認",
+        "split_overwrite_msg": (
+            "保存先に同名ファイルが存在します:\n\n{files}\n\n上書きしますか？"
+        ),
+        # 縮小保存
+        "btn_save_compressed": "🗜 縮小して保存…",
+        "status_compressed": "縮小保存しました: {name}",
+        "compress_split_confirm_title": "分割時の縮小保存",
+        "compress_split_confirm_msg": (
+            "分割したPDFを縮小最適化して保存しますか？\n"
+            "（garbage収集 + 圧縮を実行します）\n\n"
+            "「はい」を選ぶとファイルサイズが小さくなりますが\n"
+            "処理時間が増加する場合があります。"
+        ),
+        "split_password_warn_title": "パスワード保護が解除されます",
+        "split_password_warn_msg": (
+            "このPDFはパスワードで保護されていますが、分割後の各ファイルは"
+            "パスワード保護されません。\n続行しますか？"
+        ),
+        # 画像エクスポート
+        "sec_export": "🖼 画像変換",
+        "btn_export_images": "🖼 ページを画像に変換…",
+        "export_dialog_title": "ページを画像に変換",
+        "export_heading": "ページを画像に変換",
+        "export_hint": (
+            "ページを画像ファイル（1ページ1ファイル）として保存します。\n"
+            "AI（LLM）にテキストを読み取らせる用途に適しています。"
+        ),
+        "export_scope_label": "対象ページ:",
+        "export_scope_all": "全ページ",
+        "export_scope_selected": "選択ページ（{n}ページ）",
+        "export_scope_range": "範囲指定:",
+        "export_range_hint": "例: 1-3, 5（1〜{n}）",
+        "export_size_label": "長辺ピクセル数:",
+        "export_size_hint": "AI読取の目安: Claude=1568 / Gemini=3072",
+        "export_format_label": "形式:",
+        "export_format_png": "PNG（文字がくっきり）",
+        "export_format_jpg": "JPEG（サイズ小）",
+        "export_quality_label": "JPEG品質:",
+        "export_apply": "✔ 変換実行",
+        "export_cancel": "キャンセル",
+        "export_no_pages": "変換対象のページがありません。",
+        "dlg_export_save_dir": "画像の保存先フォルダを選択",
+        "status_exporting": "画像変換中… {done}/{total}",
+        "status_exported": "{count}ページを画像に変換しました → {folder}",
+        # プラグイン
+        "btn_plugin_mgr": "🔌 プラグイン管理…",
+        # 閲覧/編集モード
+        "mode_view_label": "👁 閲覧モード",
+        "mode_edit_label": "📝 編集モード",
+        # プレビュー空状態
+        "preview_empty1": "📂 ファイルをドラッグ＆ドロップ",
+        "preview_empty2": "または Ctrl+O / メニューから「ファイルを開く」",
+        # 共通ボタン
+        "btn_close": "✕ 閉じる",
+        # ステータスメッセージ
+        "undo_empty": "元に戻す履歴がありません",
+        "redo_empty": "やり直す履歴がありません",
+        "undo_done": "元に戻しました",
+        "redo_done": "やり直しました",
+        "err_undo_restore_failed": (
+            "元に戻す処理に失敗しました。操作前の状態は履歴に保持されています。"
+            "詳細: {e}"
+        ),
+        "err_redo_restore_failed": (
+            "やり直し処理に失敗しました。操作前の状態は履歴に保持されています。"
+            "詳細: {e}"
+        ),
+        "err_undo_restore_failed_partial": (
+            "元に戻す処理が途中で失敗しました。一部のページは既に変更されて"
+            "います。もう一度実行すると残りのページに処理を再試行します。"
+            "詳細: {e}"
+        ),
+        "err_redo_restore_failed_partial": (
+            "やり直し処理が途中で失敗しました。一部のページは既に変更されて"
+            "います。もう一度実行すると残りのページに処理を再試行します。"
+            "詳細: {e}"
+        ),
+        "err_undo_restore_failed_content_at_risk": (
+            "元に戻す処理が途中で失敗し、復旧処理も失敗しました。"
+            "このページが二重化または欠落している可能性があります。"
+            "ファイルを閉じずに内容をご確認ください。詳細: {e}"
+        ),
+        "err_redo_restore_failed_content_at_risk": (
+            "やり直し処理が途中で失敗し、復旧処理も失敗しました。"
+            "このページが二重化または欠落している可能性があります。"
+            "ファイルを閉じずに内容をご確認ください。詳細: {e}"
+        ),
+        "status_settings": "設定を変更しました",
+        # ファイル操作
+        "filetypes_pdf": "PDFファイル",
+        "filetypes_all": "すべて",
+        "filetypes_supported": "サポートファイル",
+        "filetypes_image": "画像ファイル",
+        "status_opened_image": "開きました（画像→PDF変換）: {name}  (1ページ)",
+        "status_image_save_as": (
+            "画像ファイルは PDF で保存します — 保存先を選択してください"
+        ),
+        "info_open_first": "先にファイルを開いてください",
+        "save_confirm_title": "上書き保存の確認",
+        "save_confirm_msg": (
+            "以下のファイルを上書き保存します。\n\n{name}\n\n"
+            "元のファイルは上書きされます。よろしいですか？"
+        ),
+        "status_saved": "保存しました: {name}",
+        "err_save_title": "保存エラー",
+        "err_save_msg": "保存に失敗しました:\n{e}",
+        "status_opened": "開きました: {name}  ({n}ページ)",
+        "close_confirm": ("現在のファイルを閉じますか？\n（未保存の変更は失われます）"),
+        "status_closed": "ファイルを閉じました",
+        "status_merged_open": (
+            "{count}ファイルを結合して開きました ({total}ページ): {names}"
+        ),
+        # ページ操作ステータス
+        "status_rotated": "{count}ページを{deg}°回転しました",
+        "info_no_page_sel": "削除するページを選択してください",
+        "warn_del_all_title": "警告",
+        "warn_del_all": (
+            "すべてのページを削除することはできません。\n"
+            "最低1ページは残す必要があります。"
+        ),
+        "confirm_del": "{count}ページを削除しますか？",
+        "status_deleted": "{count}ページを削除しました",
+        # トリミング
+        "info_crop_drag": "プレビュー上でドラッグしてトリミング範囲を選択してください",
+        "status_cropped": "ページ{page}をトリミングしました",
+        "status_bulk_cropped": "選択{count}ページをトリミングしました",
+        "confirm_bulk_crop": "選択中の{count}ページすべてにトリミングを適用しますか？",
+        "err_crop_small": "範囲が小さすぎます。もう一度ドラッグしてください",
+        "err_crop_title": "トリミングエラー",
+        "err_crop_msg": (
+            "CropBoxの設定に失敗しました。\n範囲を調整して再度お試しください。\n\n{e}"
+        ),
+        # ページ編集（黒塗り・モザイク）
+        "info_redact_drag": "プレビュー上でドラッグして編集範囲を選択してください",
+        "confirm_bulk_redact": (
+            "選択中の{count}ページすべてに適用しますか？\n"
+            "（範囲内のテキスト・画像はファイルから完全に削除されます。"
+            "元に戻すには Undo を使用してください）"
+        ),
+        "status_redacted": "{count}ページに黒塗りを適用しました",
+        "status_mosaic": "{count}ページにモザイクを適用しました",
+        "err_redact_small": "適用できる範囲がありません。もう一度ドラッグしてください",
+        # 挿入・結合ステータス
+        "dlg_insert_title": "挿入するファイルを選択（PDF/画像、複数可）",
+        "dlg_insert_pos_title": "挿入位置",
+        "dlg_insert_pos_msg": (
+            "何ページ目の後ろに挿入しますか？\n"
+            "(0 = 先頭、1〜{n} = そのページの後ろ)\n\n"
+            "例: 3 → 3ページ目の後ろに挿入"
+        ),
+        "status_insert_head": "先頭",
+        "status_insert_tail": "末尾",
+        "status_insert_pos": "{pos}ページ目の後ろ",
+        "status_inserted": "{count}ファイル（計{total}ページ）を{where}に挿入しました",
+        "warn_rollback_title": "巻き戻し失敗",
+        "err_insert_rollback_failed": (
+            "挿入の巻き戻しに失敗しました。{count} ページが挿入されたまま"
+            "残っています。Ctrl+Z で取り消せます。"
+        ),
+        "dlg_merge_title": "結合するPDFを選択（複数可・選択順に結合）",
+        "status_merged": "{count}ファイル（計{total}ページ）を末尾に結合しました",
+        # 終了
+        "quit_confirm": "アプリを終了しますか？\n（未保存の変更は失われます）",
+        # doc 確認
+        "info_no_doc": "先にPDFファイルを開いてください",
+        # D&D ステータス
+        "status_dnd_moved": "p.{src} → p.{dest} に移動しました",
+        "status_bulk_moved": "{count}ページを一括移動しました",
+        # D&D ファイルオープン
+        "dnd_drop_hint": "ここに PDF / 画像をドロップ",
+        "dnd_pdf_only": "PDF または画像ファイル (PNG/JPG/BMP/TIFF) のみ対応しています",
+        "dnd_replace_confirm": (
+            "現在のファイルを閉じて新しいファイルを開きますか？\n"
+            "（未保存の変更は失われます）"
+        ),
+        # About ダイアログ
+        "about_title": "PageFolio について",
+        "about_subtitle": "PDF Page Organizer",
+        "about_ok": "OK",
+        # 設定ダイアログ
+        "settings_title": "設定",
+        "settings_heading": "⚙ 設定",
+        "settings_theme": "テーマ:",
+        "settings_theme_dark": "ダーク",
+        "settings_theme_light": "ライト",
+        "settings_theme_system": "システム設定",
+        "settings_font": "フォントサイズ:",
+        "settings_font_hint": "pt  (8〜16)",
+        "settings_preview_text": "サンプルテキスト  Sample Text  123",
+        "settings_apply": "✔ 適用",
+        "settings_cancel": "キャンセル",
+        # ショートカット設定ダイアログ（V171-UIUX-01・D-01〜D-08）
+        "shortcuts_title": "ショートカット設定",
+        "shortcuts_col_command": "操作",
+        "shortcuts_col_key": "キー",
+        "shortcuts_btn_change": "変更",
+        "shortcuts_btn_clear": "解除",
+        "shortcuts_btn_save": "保存",
+        "shortcuts_btn_reset_all": "既定に戻す",
+        "shortcuts_btn_cancel": "キャンセル",
+        "shortcuts_unassigned": "未割当",
+        "shortcuts_capture_waiting": "キーを押してください…（Escでキャンセル）",
+        "shortcuts_dup_error": (
+            "このキーは既に「{cmd}」に割り当てられています。別のキーを選んでください。"
+        ),
+        "shortcut_cmd_open_file": "ファイルを開く",
+        "shortcut_cmd_save_file": "上書き保存",
+        "shortcut_cmd_undo": "元に戻す",
+        "shortcut_cmd_redo": "やり直す",
+        "shortcut_cmd_save_as": "名前を付けて保存",
+        "shortcut_cmd_delete": "選択ページを削除",
+        "shortcut_cmd_toggle_mode": "閲覧/編集モード切替",
+        "shortcut_cmd_print_pdf": "印刷",
+        "shortcut_cmd_rotate_right": "右へ90°回転",
+        "shortcut_cmd_rotate_left": "左へ90°回転",
+        "shortcut_cmd_rotate_180": "180°回転",
+        # 結合順ダイアログ
+        "merge_title": "結合順の確認・変更",
+        "merge_heading": "結合順の確認・並び替え",
+        "merge_hint": (
+            "ファイルを選択して ▲▼ で順番を変更できます\n"
+            "確定すると現在のPDFの末尾に順番通り結合されます"
+        ),
+        "merge_up": "▲ 上へ",
+        "merge_down": "▼ 下へ",
+        "merge_remove": "✕ 削除",
+        "merge_info": "合計 {count} ファイル  /  {total} ページ",
+        "merge_confirm": "✔ この順番で結合",
+        "merge_cancel": "キャンセル",
+        "merge_no_files": "ファイルがありません",
+        # プラグインダイアログ
+        "plugin_title": "プラグイン管理",
+        "plugin_heading": "🔌 プラグイン管理",
+        "plugin_dir_label": "プラグインフォルダ: {path}",
+        "plugin_empty": (
+            "プラグインが見つかりません\n\n"
+            "「{dir}」フォルダに .py ファイルを\n配置してください"
+        ),
+        "plugin_author": "作者: {author}",
+        "plugin_rescan": "🔄 再検出",
+        "plugin_open_folder": "📁 フォルダを開く",
+        "plugin_close": "✔ 閉じる",
+        # OCR
+        "sec_ocr": "🔍 OCR",
+        "btn_ocr_current": "🔠 現在ページをテキスト抽出",
+        "btn_ocr_selected": "📚 選択ページを一括抽出",
+        "ocr_prompt_label": "プロンプト:",
+        "ocr_preset_text": "通常テキスト",
+        "ocr_preset_table": "表形式",
+        "ocr_preset_markdown": "Markdown",
+        "ocr_dialog_title": "OCR",
+        "ocr_dialog_heading": "🔍 OCR テキスト抽出",
+        "ocr_progress_init": "準備中…",
+        "ocr_progress_ocr": "読み取り完了 ({done}/{total}) — p.{page}",
+        "ocr_cancelling": "キャンセル中…",
+        "ocr_cancelled": "キャンセルしました",
+        "ocr_complete": "完了: {count}/{total} ページ成功",
+        "ocr_complete_with_errors": (
+            "⚠ 完了: {count}/{total} ページ成功・エラー {err}ページ"
+        ),
+        "ocr_failed": "失敗しました",
+        "ocr_page_separator": "--- Page {page} ---",
+        "ocr_page_error": "[エラー] {error}",
+        "ocr_text_skip_notice": "p.{page}: テキスト埋め込み済みのためスキップしました",
+        "ocr_force_vision": "埋め込みテキストを無視して OCR を実行（スキップしない）",
+        "ocr_copy": "📋 クリップボードにコピー",
+        "ocr_copied": "クリップボードにコピーしました",
+        "ocr_save": "💾 テキストファイルに保存…",
+        "ocr_save_dialog_title": "OCR結果の保存先",
+        "ocr_saved": "保存しました: {path}",
+        "ocr_cancel": "✕ キャンセル",
+        "ocr_close_during_run": (
+            "OCR 実行中です。\nウィンドウを閉じると処理は中断されます。\n閉じますか？"
+        ),
+        "ocr_err_connection": (
+            "{provider} に接続できませんでした。\n"
+            "接続先: {url}\n\n"
+            "接続先が起動していること、URL とネットワーク接続が\n"
+            "正しいことを確認してください。\n\n詳細: {error}"
+        ),
+        "ocr_err_timeout": (
+            "OCR がタイムアウトしました ({timeout} 秒)。\n"
+            "モデルが大きい場合は設定でタイムアウトを延ばしてください。\n"
+            "\n詳細: {error}"
+        ),
+        "ocr_err_circuit_breaker": (
+            "⚠ {n}ページ連続でエラーが発生したため中断しました。\n"
+            "サーバ側が不安定な可能性があります。時間を置いてから\n"
+            "「⏯ 続きから再実行」で残りページを再開してください。\n"
+            "\n最後のエラー: {error}"
+        ),
+        "ocr_provider_unsupported": (
+            "未対応の OCR プロバイダが設定されています: {name}\n"
+            "設定を確認してください。"
+        ),
+        "ocr_disabled_msg": (
+            "OCR プロバイダが OFF のため実行できません。"
+            "LLM 設定で OCR プロバイダを選択してください。"
+        ),
+        # Phase 5: Claude Provider / セキュリティ UI 文言（D-06/D-07/D-12/D-15/D-17）
+        "ocr_api_key_missing": (
+            "APIキーが設定されていません（{env_var}）。"
+            "LLM設定ダイアログで APIキーを入力するか、環境変数を設定してください。"
+        ),
+        "ocr_cost_confirm_title": "クラウド送信の確認",
+        "ocr_cost_confirm_msg": (
+            "送信先: {host}\n"
+            "対象: {count} ページ（概算コスト: {cost}）\n\n"
+            "ページ画像が外部 API に送信されます。\n"
+            "従量課金が発生します。\n"
+            "実行しますか？"
+        ),
+        "ocr_waiting_retry": (
+            "p.{page}: レート制限のため待機中（約 {sec} 秒・リトライ {n}/{max}）"
+        ),
+        "ocr_waiting_retry_server": (
+            "p.{page}: サーバエラーのためリトライ中（約 {sec} 秒・{n}/{max}）"
+        ),
+        "ocr_err_truncated": (
+            "p.{page}: 応答が max_tokens で途切れました。"
+            "LLM 設定で max_tokens を増やして再実行してください。"
+        ),
+        "ocr_provider_label": "OCR プロバイダ:",
+        "ocr_provider_name_claude": "Claude (Anthropic)",
+        "ocr_provider_name_lmstudio": "LM Studio",
+        # Phase 6: Gemini Provider 文言（D-06/D-12）
+        "ocr_provider_name_gemini": "Gemini (Google AI)",
+        "ocr_api_key_missing_gemini": (
+            "Gemini APIキーが設定されていません。"
+            "LLM設定ダイアログで APIキーを入力するか、"
+            "環境変数 GEMINI_API_KEY（または GOOGLE_API_KEY）を設定してください。"
+        ),
+        "ocr_api_key_missing_runpod": (
+            "RunPod APIキーが設定されていません。"
+            "LLM設定ダイアログで APIキーを入力するか、"
+            "環境変数 RUNPOD_API_KEY を設定してください。"
+        ),
+        "ocr_scale_tradeoff_hint": ("低=速い/安い・高=精度。低スペック PC は 1.5 推奨"),
+        "ocr_effort_label": "推論強度 (effort):",
+        "ocr_model_refresh": "モデル更新",
+        # Phase 7: Tesseract Provider 文言（D-09）
+        "tesseract_accuracy_warning": (
+            "※ Tesseract の精度は LLM ベースのプロバイダより劣ります"
+        ),
+        "tesseract_not_installed_hint": (
+            "Tesseract がインストールされていません。他のプロバイダを使用してください"
+        ),
+        "tesseract_lang_fallback": (
+            "jpn 言語パックが見つかりません。eng のみで実行します"
+        ),
+        # D-07: OCRDialog 非モーダル注記（段階的縮退フォールバック発生時・1回のみ表示）
+        "ocr_tesseract_lang_fallback_notice": (
+            "⚠ 指定言語 {requested} は利用不可のため {effective} で実行します"
+        ),
+        "ocr_provider_name_tesseract": "Tesseract (ローカル)",
+        # CR-01: RunPod ローカライズ表示名（WR-02）
+        "ocr_provider_name_runpod": "RunPod (Serverless)",
+        # 02-02: OpenAI プロバイダ文言（V190-CAT-01・V190-OAI-04/05）
+        "ocr_provider_name_openai": "OpenAI (ChatGPT)",
+        "ocr_api_key_missing_openai": (
+            "OpenAI APIキーが設定されていません。"
+            "LLM設定ダイアログで APIキーを入力するか、"
+            "環境変数 OPENAI_API_KEY を設定してください。"
+        ),
+        "ocr_host_unknown": "送信先ホストを特定できません（{provider}）。",
+        "ocr_model_vision_unverified": (
+            "※ モデル {model} の画像入力対応は未確認です。"
+        ),
+        # 設定ダイアログ セクション見出し（D-16・3セクション構成）
+        "settings_section_appearance": "外観",
+        "settings_section_operation": "操作",
+        "settings_open_shortcuts": "⌨ ショートカット設定…",
+        # LM Studio 設定
+        "settings_lm_studio_section": "⚙ AI・OCR 設定",
+        "settings_lm_url": "URL:",
+        "settings_lm_model": "モデル:",
+        "settings_lm_model_hint": (
+            "（空欄: LM Studio で読み込み済みのモデルを自動使用）"
+        ),
+        "settings_lm_fetch_models": "📥 モデル一覧を取得",
+        "settings_lm_test": "🔌 接続テスト",
+        "settings_lm_test_ok": "接続OK ({count} モデル利用可能)",
+        "settings_lm_test_fail": "接続失敗: {error}",
+        "settings_lm_testing": "⏳ 接続中… ({url})",
+        "settings_ocr_scale": "OCR 解像度倍率:",
+        "settings_ocr_timeout": "OCR タイムアウト (秒):",
+        "settings_ocr_concurrency": "OCR 並列度:",
+        "settings_ocr_concurrency_hint": (
+            "(1〜8 / 推奨2。LM Studio が並列受付に対応しない場合は1相当)"
+        ),
+        "settings_open_llm_config": "⚙ LLM 設定…",
+        # LLM 設定ダイアログ（OCR と設定で共有）
+        "llm_config_title": "LLM 設定",
+        "llm_config_heading": "⚙ LLM 設定",
+        # D-15: 共通/固有グルーピング見出し
+        "llm_config_provider_section": "選択中プロバイダ固有の設定",
+        "llm_config_common_section": "全プロバイダ共通の設定",
+        "llm_config_apply": "✓ 適用",
+        "llm_config_cancel": "✕ キャンセル",
+        # APIキー入力欄（V171-KEY-01・LLM設定への一元化）
+        "llm_api_key_label": "APIキー:",
+        "llm_key_toggle_show": "👁 表示",
+        "llm_key_toggle_hide": "🙈 隠す",
+        "llm_key_session_note": (
+            "※ セッション限定（アプリ終了で破棄・設定ファイルには保存されません）"
+        ),
+        "llm_key_env_set_note": (
+            "環境変数 {env_var} 設定済み（ここで入力した値が優先されます）"
+        ),
+        # Ollama / RunPod 設定
+        "settings_ollama_url": "Ollama URL:",
+        "settings_ollama_model": "Ollama モデル:",
+        "settings_ollama_model_hint": "（空欄: ollama のデフォルトモデルを使用）",
+        "settings_runpod_url": "RunPod エンドポイントURL:",
+        "settings_runpod_model": "RunPod モデル名 (任意):",
+        "settings_runpod_model_hint": "（RunPod Serverless endpoint 用）",
+        "llm_fetching_runpod_models": (
+            "⏳ RunPod モデル一覧を取得中…（初回起動時は 1 分程度かかることがあります）"
+        ),
+        "llm_env_key_unset_static_runpod": (
+            "APIキー未設定のため推奨モデル一覧を表示中"
+            "（RUNPOD_API_KEY 環境変数または上の入力欄にキーを入力してください）"
+        ),
+        # CR-01: RunPod 送信先プレースホルダ（runpod_url 未設定時）
+        "llm_runpod_host_unset": "（RunPod エンドポイント URL 未設定）",
+        # OCR ダイアログ
+        "ocr_server_label": "サーバ:",
+        "ocr_model_label": "モデル:",
+        "ocr_sec_run": "▶ 実行",
+        "ocr_sec_result": "📋 結果",
+        "ocr_run": "▶ 読み取り実行",
+        "ocr_resume": "⏯ 続きから再実行",
+        "ocr_resume_hint": (
+            "未処理 {n}ページ（p.{first}〜）が残っています。"
+            "「⏯ 続きから再実行」で成功済みの結果を保持したまま再開できます。"
+        ),
+        "ocr_open_llm_config": "⚙ LLM 設定…",
+        "ocr_clear": "🧹 クリア",
+        "ocr_run_first": "「読み取り実行」を押すと開始します",
+        "ocr_params_label": "詳細設定:",
+        "ocr_scale_short": "解像度:",
+        "ocr_timeout_short": "タイムアウト:",
+        "ocr_max_tokens_short": "最大トークン:",
+        "ocr_max_tokens_hint": "(-1: モデル最大値を使用 / 上限 262144)",
+        "ocr_temperature_short": "温度:",
+        "ocr_temperature_hint": "(0.0〜0.2推奨)",
+        "ocr_params_hint": (
+            "ハルシネーション抑制: 温度↓・解像度↑。"
+            "推奨モデル: Qwen2-VL-7B / MiniCPM-V / InternVL2 8B 以上"
+        ),
+        # 全ページ統合サマリ生成
+        "ocr_summary_btn": "📊 サマリ作成",
+        "ocr_summary_separator": "--- Summary ---",
+        "ocr_summary_running": "全ページのサマリを生成中…",
+        "ocr_summary_waiting_retry": (
+            "サマリ生成: 待機中（約 {sec} 秒・リトライ {n}/{max}）"
+        ),
+        "ocr_summary_complete": "サマリ生成が完了しました",
+        "ocr_summary_failed": "サマリ生成に失敗しました: {error}",
+        "ocr_summary_truncated": (
+            "[サマリが max_tokens で途切れました。"
+            "LLM 設定で max_tokens を増やして再実行してください]"
+        ),
+        "ocr_summary_unsupported": (
+            "このプロバイダ ({name}) はサマリ生成に対応していません"
+        ),
+        "ocr_summary_cost_confirm_msg": (
+            "送信先: {host}\n"
+            "対象: 全ページの OCR 結果テキスト（約 {chars} 文字）\n\n"
+            "OCR 結果テキストが外部 API に送信されます。\n"
+            "従量課金が発生します。\n"
+            "実行しますか？"
+        ),
+        "ocr_summary_cancelled": "サマリ生成をキャンセルしました",
+        "ocr_custom_prompt_label": "カスタムプロンプト:",
+        "ocr_custom_prompt_hint": "(空欄でデフォルトのプロンプトを使用)",
+        "ocr_summary_prompt_label": "サマリプロンプト:",
+        "ocr_summary_prompt_hint": "(空欄で既定のサマリ指示を使用)",
+        "ocr_prompt_file_in_use": (
+            "📄 {file} と連動中 — 適用時にこの欄の内容をファイルへ保存します"
+        ),
+        "ocr_preset_custom_note": (
+            "（カスタムプロンプト使用中 — プリセットは表示形式にのみ適用）"
+        ),
+        "ocr_summary_ctx_exceeded": (
+            "サマリ生成に失敗しました: テキストがモデルのコンテキスト長上限を"
+            "超えています。OCR 対象ページ数を減らして再実行してください"
+        ),
+        "ocr_summary_timeout": (
+            "サマリ生成がタイムアウトしました（{sec} 秒）。"
+            "LLM 設定でタイムアウトを延長するか、対象ページ数を減らしてください"
+        ),
+        "ocr_summary_too_long_confirm": (
+            "送信テキストが非常に長いため（約 {chars} 文字）、\n"
+            "モデルのコンテキスト長上限を超えて失敗する可能性があります。\n\n"
+            "このまま実行しますか？"
+        ),
+        "ocr_summary_elapsed": "{msg}（{sec} 秒経過）",
+        # 共通エラー
+        "err_title": "エラー",
+        "info_title": "情報",
+        "confirm_title": "確認",
+        # トースト通知（V180-QA-02）
+        "toast_retry_btn": "再試行",
+        # M-10: 移植ハードコード文言
+        "ocr_cost_estimate": "約 ${cost:.3f} 程度",
+        "ocr_provider_rebuild_error": "プロバイダ再生成エラー: {e}",
+        "llm_fetching_claude_models": "⏳ Claude モデル一覧を取得中…",
+        "llm_fetching_gemini_models": "⏳ Gemini モデル一覧を取得中…",
+        "llm_fetching_openai_models": "⏳ OpenAI モデル一覧を取得中…",
+        "llm_env_key_unset_static": (
+            "APIキー未設定のため推奨モデル一覧を表示中"
+            "（ANTHROPIC_API_KEY 環境変数または上の入力欄にキーを入力してください）"
+        ),
+        "llm_env_key_unset_static_gemini": (
+            "APIキー未設定のため推奨モデル一覧を表示中"
+            "（GEMINI_API_KEY/GOOGLE_API_KEY 環境変数または"
+            "上の入力欄にキーを入力してください）"
+        ),
+        "llm_env_key_unset_static_openai": (
+            "APIキー未設定のため推奨モデル一覧を表示中"
+            "（OPENAI_API_KEY 環境変数または上の入力欄にキーを入力してください）"
+        ),
+        "llm_model_fetch_failed": (
+            "{provider} モデル取得失敗（静的リストへフォールバック）: {e}"
+        ),
+        "llm_openai_model_unverified_note": (
+            "モデル一覧には画像入力への対応が未確認のモデルが含まれる場合が"
+            "あります。推奨モデル（一覧の上部）以外を選ぶ場合はご注意ください。"
+        ),
+        # OpenAI 固有設定欄（detail / reasoning effort / organization・project・
+        # V190-OAI-08〜10・02-04）
+        "llm_openai_detail_label": "画像 detail:",
+        "llm_openai_detail_hint": (
+            "high は読み取り精度優先・low はコスト優先です（既定: high）"
+        ),
+        "llm_openai_effort_label": "Reasoning effort:",
+        "llm_openai_effort_unavailable_hint": (
+            "このモデルでは reasoning effort の値域が未確認のため送信しません"
+        ),
+        "llm_openai_org_label": "Organization ID:",
+        "llm_openai_project_label": "Project ID:",
+        "llm_openai_org_project_hint": (
+            "空欄の場合は該当ヘッダを送信しません（OpenAI-Organization / "
+            "OpenAI-Project）"
+        ),
+        "llm_openai_id_invalid": (
+            "{field} の形式が不正です。制御文字・空白を含まない印字可能な"
+            "半角文字を128文字以内で入力してください。"
+        ),
+        # プロンプトテンプレート管理（v1.8.0 Phase 2・V180-TMPL-01〜05・D-01〜D-08）
+        "tmpl_section_title": "📄 テンプレート:",
+        "tmpl_save_btn": "💾 保存",
+        "tmpl_delete_btn": "🗑 削除",
+        "tmpl_rename_btn": "✏ リネーム",
+        "tmpl_name_prompt": "テンプレート名を入力してください:",
+        "tmpl_dup_error": (
+            "このテンプレート名は既に使用されています。別の名前を選んでください。"
+        ),
+        "tmpl_empty_error": "テンプレート名を入力してください。",
+        "tmpl_switch_discard_confirm": (
+            "未保存の変更が破棄されます。テンプレートを切り替えますか？"
+        ),
+        "tmpl_active_delete_blocked": (
+            "アクティブなテンプレートは削除できません。"
+            "先に別のテンプレートへ切り替えてください。"
+        ),
+        "tmpl_delete_confirm": (
+            "このテンプレートを削除しますか？この操作は元に戻せません。"
+        ),
+        # プロバイダーフォールバック順設定
+        # （v1.8.0 Phase 2・V180-FALL-01〜03・D-13〜D-16）
+        "fallback_section_title": "🔁 フォールバック:",
+        "fallback_enable_toggle": "フォールバックを有効化",
+        "fallback_up_btn": "↑ 上へ",
+        "fallback_down_btn": "↓ 下へ",
+        "fallback_add_btn": "＋ 追加",
+        "fallback_remove_btn": "－ 除外",
+        "fallback_hint": "未設定時はフォールバックしません（安全側既定）。",
+        # フォールバック実行時オーケストレーション（v1.8.0 Phase 2・02-04・
+        # V180-FALL-02/03・D-10/D-11/D-12）
+        "fallback_confirm_title": "フォールバック確認",
+        "fallback_confirm_msg": (
+            "{reason}\n\n"
+            "{candidate}（{host}）へ切り替えて未処理ページを再送信しますか？\n"
+            "承認しない限り自動送信はされません。"
+        ),
+        "fallback_reason_connection": "接続エラーにより処理が停止しました。",
+        "fallback_reason_timeout": "タイムアウトにより処理が停止しました。",
+        "fallback_reason_circuit_breaker": (
+            "連続エラーによりサーキットブレーカーが作動し処理が停止しました。"
+        ),
+        "fallback_reason_api_key_missing": "APIキーが未設定のため処理が停止しました。",
+        "fallback_reason_provider_unavailable": (
+            "プロバイダが利用できません（Tesseract 未インストール等）。"
+        ),
+        "fallback_reason_generic": "エラーにより処理が停止しました。",
+        "fallback_exhausted": (
+            "フォールバック候補を使い切りました。設定を確認し再実行してください。"
+        ),
+        # バッチOCR（v1.8.0 Phase 4・04-02・V180-BATCH-01〜04）
+        "batch_dialog_title": "バッチOCR",
+        "batch_col_file": "ファイル",
+        "batch_col_status": "状態",
+        "batch_col_progress": "進捗",
+        "batch_add_files_btn": "＋ ファイル追加",
+        "batch_remove_btn": "削除",
+        "batch_start_btn": "▶ 実行",
+        "batch_cancel_btn": "■ バッチ中止",
+        "batch_overall_progress": "ファイル {done}/{total}",
+        "batch_status_pending": "待機中",
+        "batch_status_running": "実行中",
+        "batch_status_done": "完了",
+        "batch_status_failed": "失敗",
+        "batch_status_error": "エラー",
+        "batch_scan_error": "読み込みエラー",
+        "batch_scanning_msg": "読み込み中...",
+        "batch_empty_queue_msg": (
+            "実行対象のファイルがありません。ファイルを追加してください。"
+        ),
+        # バッチOCR - ファイル別結果閲覧・統合サマリ（v1.8.0 Phase 4・04-03）
+        "batch_file_select_label": "結果を表示するファイル:",
+        "batch_export_btn": "📤 エクスポート",
+        "batch_summary_btn": "📊 サマリ作成",
+        "batch_summary_file_header": "=== {name} ===",
+        # メニューバー（v1.8.0 Phase 4・04-03・D-01）
+        "batch_menu_tools": "ツール",
+        "batch_menu_item": "バッチOCR",
+        # OCR OFF ガード（v1.9.0 Phase 1・V190-SAFE-03・D-04/D-05）
+        "batch_menu_item_off": "バッチOCR（OCR OFF）",
+    },
+    "en": {
+        "config_load_corrupt": (
+            "Saved settings are invalid. PageFolio started with default settings."
+        ),
+        "config_load_unreadable": (
+            "Saved settings could not be read. PageFolio started with default settings."
+        ),
+        "config_save_failed": (
+            "Settings could not be saved. These changes will not be kept "
+            "the next time you start PageFolio."
+        ),
+        "config_save_blocked_unreadable": (
+            "Settings have not been saved to protect the original file. "
+            "These changes will not be kept the next time you start PageFolio."
+        ),
+        "startup_notice_check_failed": (
+            "PageFolio's startup status could not be checked. Check the taskbar, "
+            "wait a moment, then try opening PageFolio again."
+        ),
+        "startup_notice_contact_failed": (
+            "The running PageFolio window could not be contacted. "
+            "Check PageFolio on the taskbar."
+        ),
+        "startup_notice_timeout": (
+            "PageFolio did not respond within 5 seconds. "
+            "Check the screen, then open PageFolio again if needed."
+        ),
+        "startup_notice_close": "Close",
+        "startup_notice_title": "PageFolio",
+        # Header / status
+        "status_initial": "Open a file to get started",
+        # Thumbnail panel
+        "panel_pages": "Pages",
+        "dnd_hint": "Drag to reorder",
+        "select_all": "Select All",
+        "deselect": "Deselect",
+        # Pagination (nav / page-size footer)
+        "page_size_label": "Show:",
+        # Preview toolbar
+        "btn_prev": "◀",
+        "btn_next": "▶",
+        "btn_zoom_in": "＋",
+        "btn_zoom_out": "－",
+        # Page enlargement popup
+        "popup_page_title": "Page {i} / {n}",
+        "popup_zoom_out": "🔍 Zoom Out",
+        "popup_zoom_in": "🔍 Zoom In",
+        "popup_close": "✕ Close",
+        # Tool section titles
+        "sec_settings": "⚙ Settings",
+        "sec_file": "📂 File",
+        "sec_undo": "↩ Undo / Redo",
+        "sec_page": "📄 Page Operations",
+        "sec_crop": "✂ Crop (Current Page)",
+        "sec_redact": "⬛ Page Edit (Redact / Mosaic)",
+        "sec_insert": "📎 Insert / Merge",
+        "sec_plugin": "🔌 Plugins",
+        # Settings section buttons
+        "btn_settings": "⚙ Theme & Font…",
+        "btn_about": "ℹ About",
+        "btn_lang": "🌐 日本語",
+        # File section buttons
+        "btn_open": "Open File (Ctrl+O)",
+        "btn_save": "Save (Ctrl+S)",
+        "btn_save_as": "Save As (Ctrl+Shift+S)",
+        "btn_close_file": "📕 Close File",
+        "btn_quit": "✕ Quit",
+        # Password (encryption)
+        "sec_security": "🔒 Password",
+        "btn_set_password": "🔒 Set Password & Save…",
+        "btn_remove_password": "🔓 Remove Password & Save…",
+        "pwd_dialog_title": "Set Password",
+        "pwd_dialog_heading": "Set Password",
+        "pwd_dialog_hint": (
+            "Encrypt the PDF with AES-256.\n"
+            "The password will be required to open the file. Don't forget it."
+        ),
+        "pwd_label": "Password:",
+        "pwd_confirm_label": "Confirm:",
+        "pwd_show": "Show password",
+        "pwd_apply": "✔ Set & Save…",
+        "pwd_cancel": "Cancel",
+        "pwd_empty": "Please enter a password.",
+        "pwd_mismatch": "Passwords do not match.",
+        "pwd_suffix_protected": "_protected",
+        "pwd_suffix_decrypted": "_decrypted",
+        "open_password_title": "Enter Password",
+        "open_password_prompt": (
+            '"{name}" is password-protected.\nPlease enter the password:'
+        ),
+        "err_password_wrong": (
+            'Incorrect password.\nRe-enter the password for "{name}":'
+        ),
+        "status_password_cancelled": "Password entry cancelled",
+        "status_password_set": "Saved with password: {name}",
+        "status_password_removed": "Saved with password removed: {name}",
+        "info_no_password": "This file has no password set.",
+        # Print
+        "sec_print": "🖨 Print",
+        "btn_print": "🖨 Print… (Ctrl+P)",
+        "status_print_sent": "Print job sent: {name}",
+        "status_print_opened": (
+            "Opened in the default PDF app. Please print from there: {name}"
+        ),
+        "err_print_title": "Print Error",
+        "err_print_msg": "Failed to print:\n{e}",
+        "err_print_no_handler": (
+            "Could not print because no PDF application was found.\n"
+            "Set a default PDF app (e.g. Adobe Acrobat Reader or Microsoft Edge)\n"
+            "and try again."
+        ),
+        "info_print_unsupported": (
+            "Printing is not supported on this OS (please use Windows)."
+        ),
+        # Undo/Redo
+        "btn_undo": "↩ Ctrl+Z",
+        "btn_redo": "↪ Ctrl+Y",
+        # Page operations
+        "lbl_rotate": "Rotate:",
+        "btn_rot_left": "↺ Left 90°",
+        "btn_rot_right": "↻ Right 90°",
+        "btn_rot_180": "↕ 180°",
+        "btn_delete": "🗑 Delete Selected (Del)",
+        "btn_duplicate": "📋 Duplicate Current Page",
+        "btn_insert_blank": "📄 Insert Blank Page",
+        "btn_watermark": "🔤 Add Watermark...",
+        "btn_watermark_image": "🖼 Add Image Watermark...",
+        "btn_page_number": "🔢 Add Page Numbers...",
+        "status_duplicated": "Duplicated p.{page} and inserted after it",
+        # Crop
+        "crop_mode_off": "✂ Crop Mode OFF",
+        "crop_mode_on": "🔴 Crop Mode ON  (click to OFF)",
+        "crop_hint": "Drag on preview to select crop area",
+        "crop_no_sel": "No selection",
+        "btn_crop": "✔ Crop to Selection",
+        "btn_crop_reset": "✕ Reset Selection",
+        "btn_crop_margin": "📐 Crop by Margin…",
+        "dlg_crop_margin_title": "Crop by Margin (mm)",
+        "crop_margin_top": "Top margin (mm):",
+        "crop_margin_bottom": "Bottom margin (mm):",
+        "crop_margin_left": "Left margin (mm):",
+        "crop_margin_right": "Right margin (mm):",
+        # Page edit (redact / mosaic)
+        "redact_mode_off": "⬛ Select Mode OFF",
+        "redact_mode_on": "🔴 Select Mode ON  (click to OFF)",
+        "redact_hint": "Drag on preview to select the area",
+        "mosaic_block_label": "Mosaic Granularity",
+        "btn_apply_redact": "⬛ Redact Selection",
+        "btn_apply_mosaic": "▦ Mosaic Selection",
+        "btn_redact_clear": "🗑 Clear Rectangles",
+        # Insert/Merge
+        "btn_insert_head": "Insert at Beginning",
+        "btn_insert_tail": "Insert at End",
+        "btn_insert_pos": "Insert at Position…",
+        "btn_merge": "Merge PDF to End",
+        # Page merge & resize
+        "sec_merge_resize": "📐 Merge & Resize",
+        "btn_merge_resize": "🧩 Merge Selected Pages & Resize…",
+        "info_merge_resize_min": "Select 2 or more pages to merge & resize",
+        "mr_dialog_title": "Merge & Resize Pages",
+        "mr_dialog_heading": "Merge & Resize Pages",
+        "mr_dialog_hint": (
+            "Combine {count} selected pages into one page sized to fit them all.\n"
+            "Ex: 2× A4 side by side → 1× A3"
+        ),
+        "mr_direction": "Direction:",
+        "mr_horizontal": "Horizontal (left→right)",
+        "mr_vertical": "Vertical (top→bottom)",
+        "mr_order_label": "Merge order (top to bottom):",
+        "mr_size_preview": "Output size: {w}×{h} pt",
+        "mr_apply": "✔ Apply Merge & Resize",
+        "mr_cancel": "Cancel",
+        "status_merge_resize": "Merged {count} pages → {w}×{h} pt",
+        # Split
+        "sec_split": "✂ Split",
+        "btn_split_range": "📄 Split by Range…",
+        "btn_split_each": "📑 Split Each Page…",
+        "dlg_split_range_title": "Split by Page Range",
+        "dlg_split_range_msg": (
+            "Enter page ranges to split.\n\nExamples:\n"
+            "  1-3      → pages 1–3 as one file\n"
+            "  1-3, 5-8 → two files\n"
+            "  4        → extract page 4 only\n\n"
+            "Page range (1–{n}):"
+        ),
+        "dlg_split_save_dir": "Select folder for split files",
+        "status_split_range": "Split into {count} PDF(s) → {folder}",
+        "status_split_each": "Split {count} pages into individual PDFs → {folder}",
+        "err_split_range": (
+            "Invalid page range.\n\n"
+            "Correct format: 1-3, 5-8  or  4\n"
+            "Page numbers must be between 1 and {n}."
+        ),
+        "err_split_no_range": "Please enter a page range.",
+        "split_overwrite_title": "Confirm Overwrite",
+        "split_overwrite_msg": (
+            "The following file(s) already exist:\n\n{files}\n\nOverwrite?"
+        ),
+        # Compress save
+        "btn_save_compressed": "🗜 Save Compressed…",
+        "status_compressed": "Saved compressed: {name}",
+        "compress_split_confirm_title": "Compress Split Files?",
+        "compress_split_confirm_msg": (
+            "Save split PDFs with size optimization?\n"
+            "(Runs garbage collection + compression)\n\n"
+            "Choosing 'Yes' reduces file size but may\n"
+            "increase processing time."
+        ),
+        "split_password_warn_title": "Password protection will be removed",
+        "split_password_warn_msg": (
+            "This PDF is password-protected, but the split files will not be "
+            "password-protected.\nContinue?"
+        ),
+        # Image export
+        "sec_export": "🖼 Image Export",
+        "btn_export_images": "🖼 Export Pages as Images…",
+        "export_dialog_title": "Export Pages as Images",
+        "export_heading": "Export Pages as Images",
+        "export_hint": (
+            "Save pages as image files (one file per page).\n"
+            "Useful for feeding pages to AI (LLM) for text reading."
+        ),
+        "export_scope_label": "Target pages:",
+        "export_scope_all": "All pages",
+        "export_scope_selected": "Selected pages ({n})",
+        "export_scope_range": "Range:",
+        "export_range_hint": "e.g. 1-3, 5 (1–{n})",
+        "export_size_label": "Long edge (px):",
+        "export_size_hint": "For AI reading: Claude=1568 / Gemini=3072",
+        "export_format_label": "Format:",
+        "export_format_png": "PNG (sharp text)",
+        "export_format_jpg": "JPEG (smaller size)",
+        "export_quality_label": "JPEG quality:",
+        "export_apply": "✔ Export",
+        "export_cancel": "Cancel",
+        "export_no_pages": "No pages to export.",
+        "dlg_export_save_dir": "Select folder for exported images",
+        "status_exporting": "Exporting images… {done}/{total}",
+        "status_exported": "Exported {count} page(s) as images → {folder}",
+        # Plugin
+        "btn_plugin_mgr": "🔌 Manage Plugins…",
+        # View/Edit mode
+        "mode_view_label": "👁 View Mode",
+        "mode_edit_label": "📝 Edit Mode",
+        # Preview empty state
+        "preview_empty1": "📂 Drag & Drop a file here",
+        "preview_empty2": 'or Ctrl+O / use "Open File" from the menu',
+        # Common button
+        "btn_close": "✕ Close",
+        # Status messages
+        "undo_empty": "Nothing to undo",
+        "redo_empty": "Nothing to redo",
+        "undo_done": "Undone",
+        "redo_done": "Redone",
+        "err_undo_restore_failed": (
+            "Failed to undo. The previous state is kept in history. Details: {e}"
+        ),
+        "err_redo_restore_failed": (
+            "Failed to redo. The previous state is kept in history. Details: {e}"
+        ),
+        "err_undo_restore_failed_partial": (
+            "Undo failed partway through. Some pages have already been changed. "
+            "Running it again will retry the remaining pages. Details: {e}"
+        ),
+        "err_redo_restore_failed_partial": (
+            "Redo failed partway through. Some pages have already been changed. "
+            "Running it again will retry the remaining pages. Details: {e}"
+        ),
+        "err_undo_restore_failed_content_at_risk": (
+            "Undo failed partway through, and the recovery attempt also failed. "
+            "This page may now be duplicated or missing. Please check its "
+            "content without closing the file. Details: {e}"
+        ),
+        "err_redo_restore_failed_content_at_risk": (
+            "Redo failed partway through, and the recovery attempt also failed. "
+            "This page may now be duplicated or missing. Please check its "
+            "content without closing the file. Details: {e}"
+        ),
+        "status_settings": "Settings updated",
+        # File operations
+        "filetypes_pdf": "PDF files",
+        "filetypes_all": "All files",
+        "filetypes_supported": "Supported Files",
+        "filetypes_image": "Image Files",
+        "status_opened_image": "Opened (image→PDF): {name}  (1 page)",
+        "status_image_save_as": (
+            "Image file will be saved as PDF — choose save location"
+        ),
+        "info_open_first": "Please open a file first",
+        "save_confirm_title": "Confirm Overwrite",
+        "save_confirm_msg": (
+            "Overwrite the following file?\n\n{name}\n\n"
+            "This cannot be undone. Continue?"
+        ),
+        "status_saved": "Saved: {name}",
+        "err_save_title": "Save Error",
+        "err_save_msg": "Failed to save:\n{e}",
+        "status_opened": "Opened: {name}  ({n} pages)",
+        "close_confirm": ("Close the current file?\n(Unsaved changes will be lost)"),
+        "status_closed": "File closed",
+        "status_merged_open": "Opened {count} files merged ({total} pages): {names}",
+        # Page operations status
+        "status_rotated": "Rotated {count} page(s) by {deg}°",
+        "info_no_page_sel": "Please select pages to delete",
+        "warn_del_all_title": "Warning",
+        "warn_del_all": "Cannot delete all pages.\nAt least one page must remain.",
+        "confirm_del": "Delete {count} page(s)?",
+        "status_deleted": "Deleted {count} page(s)",
+        # Crop
+        "info_crop_drag": "Drag on the preview to select a crop area",
+        "status_cropped": "Cropped page {page}",
+        "status_bulk_cropped": "Trimmed {count} selected page(s)",
+        "confirm_bulk_crop": "Apply crop to all {count} selected page(s)?",
+        "err_crop_small": "Selection too small. Please drag again.",
+        "err_crop_title": "Crop Error",
+        "err_crop_msg": (
+            "Failed to set CropBox.\nAdjust the selection and try again.\n\n{e}"
+        ),
+        # Page edit (redact / mosaic)
+        "info_redact_drag": "Drag on the preview to select an area to edit",
+        "confirm_bulk_redact": (
+            "Apply to all {count} selected page(s)?\n"
+            "(Text and images inside the area are permanently removed "
+            "from the file. Use Undo to revert.)"
+        ),
+        "status_redacted": "Applied redaction to {count} page(s)",
+        "status_mosaic": "Applied mosaic to {count} page(s)",
+        "err_redact_small": "No applicable area. Please drag again.",
+        # Insert/Merge status
+        "dlg_insert_title": "Select file(s) to insert (PDF/image)",
+        "dlg_insert_pos_title": "Insert Position",
+        "dlg_insert_pos_msg": (
+            "Insert after which page?\n"
+            "(0 = beginning, 1–{n} = after that page)\n\n"
+            "Ex: 3 → insert after page 3"
+        ),
+        "status_insert_head": "beginning",
+        "status_insert_tail": "end",
+        "status_insert_pos": "after page {pos}",
+        "status_inserted": "Inserted {count} file(s) ({total} pages) at {where}",
+        "warn_rollback_title": "Rollback failed",
+        "err_insert_rollback_failed": (
+            "Failed to roll back the insertion. {count} page(s) remain "
+            "inserted. You can undo with Ctrl+Z."
+        ),
+        "dlg_merge_title": "Select PDF(s) to Merge",
+        "status_merged": "Merged {count} file(s) ({total} pages) to end",
+        # Quit
+        "quit_confirm": "Quit PageFolio?\n(Unsaved changes will be lost)",
+        # Check doc
+        "info_no_doc": "Please open a PDF file first",
+        # D&D status
+        "status_dnd_moved": "p.{src} → p.{dest} moved",
+        "status_bulk_moved": "Moved {count} page(s)",
+        # D&D file open
+        "dnd_drop_hint": "Drop PDF or image here",
+        "dnd_pdf_only": "Only PDF or image files (PNG/JPG/BMP/TIFF) are supported",
+        "dnd_replace_confirm": (
+            "Close current file and open the new one?\n(Unsaved changes will be lost)"
+        ),
+        # About dialog
+        "about_title": "About PageFolio",
+        "about_subtitle": "PDF Page Organizer",
+        "about_ok": "OK",
+        # Settings dialog
+        "settings_title": "Settings",
+        "settings_heading": "⚙ Settings",
+        "settings_theme": "Theme:",
+        "settings_theme_dark": "Dark",
+        "settings_theme_light": "Light",
+        "settings_theme_system": "System",
+        "settings_font": "Font Size:",
+        "settings_font_hint": "pt  (8–16)",
+        "settings_preview_text": "Sample Text  サンプルテキスト  123",
+        "settings_apply": "✔ Apply",
+        "settings_cancel": "Cancel",
+        # Shortcuts settings dialog (V171-UIUX-01 / D-01 to D-08)
+        "shortcuts_title": "Shortcut Settings",
+        "shortcuts_col_command": "Command",
+        "shortcuts_col_key": "Key",
+        "shortcuts_btn_change": "Change",
+        "shortcuts_btn_clear": "Clear",
+        "shortcuts_btn_save": "Save",
+        "shortcuts_btn_reset_all": "Reset to Defaults",
+        "shortcuts_btn_cancel": "Cancel",
+        "shortcuts_unassigned": "Unassigned",
+        "shortcuts_capture_waiting": "Press a key… (Esc to cancel)",
+        "shortcuts_dup_error": (
+            'This key is already assigned to "{cmd}". Please choose another key.'
+        ),
+        "shortcut_cmd_open_file": "Open File",
+        "shortcut_cmd_save_file": "Save",
+        "shortcut_cmd_undo": "Undo",
+        "shortcut_cmd_redo": "Redo",
+        "shortcut_cmd_save_as": "Save As",
+        "shortcut_cmd_delete": "Delete Selected Pages",
+        "shortcut_cmd_toggle_mode": "Toggle View/Edit Mode",
+        "shortcut_cmd_print_pdf": "Print",
+        "shortcut_cmd_rotate_right": "Rotate Right 90°",
+        "shortcut_cmd_rotate_left": "Rotate Left 90°",
+        "shortcut_cmd_rotate_180": "Rotate 180°",
+        # Merge order dialog
+        "merge_title": "Confirm Merge Order",
+        "merge_heading": "Confirm & Reorder",
+        "merge_hint": (
+            "Select a file and use ▲▼ to reorder\nThe PDFs will be merged in this order"
+        ),
+        "merge_up": "▲ Up",
+        "merge_down": "▼ Down",
+        "merge_remove": "✕ Remove",
+        "merge_info": "Total {count} file(s)  /  {total} pages",
+        "merge_confirm": "✔ Merge in This Order",
+        "merge_cancel": "Cancel",
+        "merge_no_files": "No files",
+        # Plugin dialog
+        "plugin_title": "Plugin Manager",
+        "plugin_heading": "🔌 Plugin Manager",
+        "plugin_dir_label": "Plugin folder: {path}",
+        "plugin_empty": 'No plugins found\n\nPlace .py files in the\n"{dir}" folder',
+        "plugin_author": "Author: {author}",
+        "plugin_rescan": "🔄 Rescan",
+        "plugin_open_folder": "📁 Open Folder",
+        "plugin_close": "✔ Close",
+        # OCR
+        "sec_ocr": "🔍 OCR",
+        "btn_ocr_current": "🔠 Extract Text from Current Page",
+        "btn_ocr_selected": "📚 Extract Text from Selected Pages",
+        "ocr_prompt_label": "Prompt:",
+        "ocr_preset_text": "Plain text",
+        "ocr_preset_table": "Table",
+        "ocr_preset_markdown": "Markdown",
+        "ocr_dialog_title": "OCR",
+        "ocr_dialog_heading": "🔍 OCR Text Extraction",
+        "ocr_progress_init": "Preparing…",
+        "ocr_progress_ocr": "OCR done ({done}/{total}) — p.{page}",
+        "ocr_cancelling": "Cancelling…",
+        "ocr_cancelled": "Cancelled",
+        "ocr_complete": "Done: {count}/{total} page(s) succeeded",
+        "ocr_complete_with_errors": (
+            "⚠ Done: {count}/{total} page(s) succeeded, {err} error page(s)"
+        ),
+        "ocr_failed": "Failed",
+        "ocr_page_separator": "--- Page {page} ---",
+        "ocr_page_error": "[Error] {error}",
+        "ocr_text_skip_notice": "p.{page}: Skipped (embedded text detected)",
+        "ocr_force_vision": "Ignore embedded text and always run OCR (no skip)",
+        "ocr_copy": "📋 Copy to Clipboard",
+        "ocr_copied": "Copied to clipboard",
+        "ocr_save": "💾 Save to Text File…",
+        "ocr_save_dialog_title": "Save OCR Result",
+        "ocr_saved": "Saved: {path}",
+        "ocr_cancel": "✕ Cancel",
+        "ocr_close_during_run": (
+            "OCR is running.\n"
+            "Closing the window will cancel the process.\n"
+            "Close anyway?"
+        ),
+        "ocr_err_connection": (
+            "Failed to connect to {provider}.\n"
+            "Target: {url}\n\n"
+            "Please make sure the server is running\n"
+            "and the URL and network connection are correct.\n\nDetails: {error}"
+        ),
+        "ocr_err_timeout": (
+            "OCR timed out ({timeout}s).\n"
+            "If the model is large, increase the timeout in settings.\n"
+            "\nDetails: {error}"
+        ),
+        "ocr_err_circuit_breaker": (
+            "⚠ Aborted after {n} consecutive page errors.\n"
+            "The server may be unstable. Wait a while, then use\n"
+            "'⏯ Resume' to continue with the remaining pages.\n"
+            "\nLast error: {error}"
+        ),
+        "ocr_provider_unsupported": (
+            "Unsupported OCR provider configured: {name}\nPlease check your settings."
+        ),
+        "ocr_disabled_msg": (
+            "OCR is turned off. Select an OCR provider in LLM settings to run OCR."
+        ),
+        # Phase 5: Claude Provider / security UI messages (D-06/D-07/D-12/D-15/D-17)
+        "ocr_api_key_missing": (
+            "API key is not configured ({env_var}). "
+            "Enter it in the LLM settings dialog, or set the environment variable."
+        ),
+        "ocr_cost_confirm_title": "Confirm Cloud Submission",
+        "ocr_cost_confirm_msg": (
+            "Destination: {host}\n"
+            "Pages: {count} (estimated cost: {cost})\n\n"
+            "Page images will be sent to an external API.\n"
+            "Usage charges will apply.\n"
+            "Proceed?"
+        ),
+        "ocr_waiting_retry": (
+            "p.{page}: Rate-limited, waiting (~{sec}s, retry {n}/{max})"
+        ),
+        "ocr_waiting_retry_server": (
+            "p.{page}: Server error, retrying (~{sec}s, {n}/{max})"
+        ),
+        "ocr_err_truncated": (
+            "p.{page}: Response was truncated at max_tokens. "
+            "Increase max_tokens in LLM settings and retry."
+        ),
+        "ocr_provider_label": "OCR Provider:",
+        "ocr_provider_name_claude": "Claude (Anthropic)",
+        "ocr_provider_name_lmstudio": "LM Studio",
+        # Phase 6: Gemini Provider messages (D-06/D-12)
+        "ocr_provider_name_gemini": "Gemini (Google AI)",
+        "ocr_api_key_missing_gemini": (
+            "Gemini API key is not configured. "
+            "Enter it in the LLM settings dialog, or set the environment "
+            "variable GEMINI_API_KEY (or GOOGLE_API_KEY)."
+        ),
+        "ocr_api_key_missing_runpod": (
+            "RunPod API key is not configured. "
+            "Enter it in the LLM settings dialog, or set the "
+            "RUNPOD_API_KEY environment variable."
+        ),
+        "ocr_scale_tradeoff_hint": (
+            "Low=fast/cheap, High=accuracy. 1.5 recommended for low-spec PCs."
+        ),
+        "ocr_effort_label": "Inference Effort:",
+        "ocr_model_refresh": "Refresh Models",
+        # Phase 7: Tesseract Provider messages (D-09)
+        "tesseract_accuracy_warning": (
+            "Note: Tesseract accuracy is lower than LLM-based providers."
+        ),
+        "tesseract_not_installed_hint": (
+            "Tesseract is not installed. Please use another provider."
+        ),
+        "tesseract_lang_fallback": (
+            "jpn language pack not found. Running with eng only."
+        ),
+        # D-07: OCRDialog non-modal notice (shown once when degraded fallback occurs)
+        "ocr_tesseract_lang_fallback_notice": (
+            "⚠ Requested language {requested} is unavailable; running with {effective}"
+        ),
+        "ocr_provider_name_tesseract": "Tesseract (Local)",
+        # CR-01: RunPod localized display name (WR-02)
+        "ocr_provider_name_runpod": "RunPod (Serverless)",
+        # 02-02: OpenAI provider messages (V190-CAT-01 / V190-OAI-04/05)
+        "ocr_provider_name_openai": "OpenAI (ChatGPT)",
+        "ocr_api_key_missing_openai": (
+            "OpenAI API key is not configured. "
+            "Enter it in the LLM settings dialog, or set the "
+            "OPENAI_API_KEY environment variable."
+        ),
+        "ocr_host_unknown": "Cannot determine the destination host ({provider}).",
+        "ocr_model_vision_unverified": (
+            "Note: image input support for model {model} is unverified."
+        ),
+        # Settings dialog section headings (D-16 — 3-section layout)
+        "settings_section_appearance": "Appearance",
+        "settings_section_operation": "Operation",
+        "settings_open_shortcuts": "⌨ Shortcut Settings…",
+        # LM Studio settings
+        "settings_lm_studio_section": "⚙ AI / OCR Settings",
+        "settings_lm_url": "URL:",
+        "settings_lm_model": "Model:",
+        "settings_lm_model_hint": "(empty = auto-use model loaded in LM Studio)",
+        "settings_lm_fetch_models": "📥 Fetch Models",
+        "settings_lm_test": "🔌 Test Connection",
+        "settings_lm_test_ok": "Connected ({count} model(s) available)",
+        "settings_lm_test_fail": "Connection failed: {error}",
+        "settings_lm_testing": "⏳ Connecting… ({url})",
+        "settings_ocr_scale": "OCR Resolution Scale:",
+        "settings_ocr_timeout": "OCR Timeout (s):",
+        "settings_ocr_concurrency": "OCR Concurrency:",
+        "settings_ocr_concurrency_hint": (
+            "(1-8 / 2 recommended. Effective only if LM Studio serves "
+            "requests in parallel)"
+        ),
+        "settings_open_llm_config": "⚙ LLM Settings…",
+        # LLM config dialog (shared by OCR & Settings)
+        "llm_config_title": "LLM Settings",
+        "llm_config_heading": "⚙ LLM Settings",
+        # D-15: common/provider-specific grouping headings
+        "llm_config_provider_section": "Selected Provider's Settings",
+        "llm_config_common_section": "Common Settings (All Providers)",
+        "llm_config_apply": "✓ Apply",
+        "llm_config_cancel": "✕ Cancel",
+        # API key input row (V171-KEY-01 — unified into LLM settings)
+        "llm_api_key_label": "API Key:",
+        "llm_key_toggle_show": "👁 Show",
+        "llm_key_toggle_hide": "🙈 Hide",
+        "llm_key_session_note": (
+            "* Session only (discarded on app exit — never saved to the settings file)"
+        ),
+        "llm_key_env_set_note": (
+            "Environment variable {env_var} is set (the value entered "
+            "here takes priority)"
+        ),
+        # Ollama / RunPod settings
+        "settings_ollama_url": "Ollama URL:",
+        "settings_ollama_model": "Ollama Model:",
+        "settings_ollama_model_hint": "(empty = use default model in Ollama)",
+        "settings_runpod_url": "RunPod Endpoint URL:",
+        "settings_runpod_model": "RunPod Model Name (Optional):",
+        "settings_runpod_model_hint": "(for RunPod Serverless endpoint)",
+        "llm_fetching_runpod_models": (
+            "⏳ Fetching RunPod models… (cold start may take about a minute)"
+        ),
+        "llm_env_key_unset_static_runpod": (
+            "API key not set — showing recommended models "
+            "(enter a key above or set RUNPOD_API_KEY)"
+        ),
+        # CR-01: RunPod destination placeholder (runpod_url not set)
+        "llm_runpod_host_unset": "(RunPod endpoint URL not set)",
+        # OCR dialog
+        "ocr_server_label": "Server:",
+        "ocr_model_label": "Model:",
+        "ocr_sec_run": "▶ Run",
+        "ocr_sec_result": "📋 Results",
+        "ocr_run": "▶ Run OCR",
+        "ocr_resume": "⏯ Resume",
+        "ocr_resume_hint": (
+            "{n} unprocessed page(s) remaining (from p.{first}). "
+            "Use '⏯ Resume' to continue while keeping completed results."
+        ),
+        "ocr_open_llm_config": "⚙ LLM Settings…",
+        "ocr_clear": "🧹 Clear",
+        "ocr_run_first": 'Press "Run OCR" to start',
+        "ocr_params_label": "Advanced:",
+        "ocr_scale_short": "Scale:",
+        "ocr_timeout_short": "Timeout:",
+        "ocr_max_tokens_short": "Max tokens:",
+        "ocr_max_tokens_hint": "(-1: use model max / cap 262144)",
+        "ocr_temperature_short": "Temp:",
+        "ocr_temperature_hint": "(0.0-0.2 recommended)",
+        "ocr_params_hint": (
+            "To reduce hallucinations: lower temp / raise scale. "
+            "Recommended models: Qwen2-VL-7B / MiniCPM-V / InternVL2 8B+"
+        ),
+        # Multi-page merged summary
+        "ocr_summary_btn": "📊 Create Summary",
+        "ocr_summary_separator": "--- Summary ---",
+        "ocr_summary_running": "Generating summary of all pages…",
+        "ocr_summary_waiting_retry": (
+            "Summary: waiting (about {sec}s, retry {n}/{max})"
+        ),
+        "ocr_summary_complete": "Summary generated",
+        "ocr_summary_failed": "Summary generation failed: {error}",
+        "ocr_summary_truncated": (
+            "[Summary was truncated at max_tokens. "
+            "Increase max_tokens in LLM settings and try again]"
+        ),
+        "ocr_summary_unsupported": (
+            "This provider ({name}) does not support summary generation"
+        ),
+        "ocr_summary_cost_confirm_msg": (
+            "Destination: {host}\n"
+            "Payload: OCR text of all pages (about {chars} chars)\n\n"
+            "The OCR result text will be sent to an external API.\n"
+            "Usage-based charges will apply.\n"
+            "Proceed?"
+        ),
+        "ocr_summary_cancelled": "Summary generation cancelled",
+        "ocr_custom_prompt_label": "Custom prompt:",
+        "ocr_custom_prompt_hint": "(blank: use the default prompt)",
+        "ocr_summary_prompt_label": "Summary prompt:",
+        "ocr_summary_prompt_hint": "(blank: use the default summary instruction)",
+        "ocr_prompt_file_in_use": (
+            "📄 Linked with {file} — this field is saved back to the file on apply"
+        ),
+        "ocr_preset_custom_note": (
+            "(custom prompt in use — preset affects display format only)"
+        ),
+        "ocr_summary_ctx_exceeded": (
+            "Summary generation failed: the text exceeds the model's "
+            "context window. Reduce the number of OCR pages and try again"
+        ),
+        "ocr_summary_timeout": (
+            "Summary generation timed out ({sec}s). "
+            "Increase the timeout in LLM settings or reduce the pages"
+        ),
+        "ocr_summary_too_long_confirm": (
+            "The text to send is very long (about {chars} chars),\n"
+            "and may exceed the model's context window.\n\n"
+            "Proceed anyway?"
+        ),
+        "ocr_summary_elapsed": "{msg} ({sec}s elapsed)",
+        # Common error
+        "err_title": "Error",
+        "info_title": "Info",
+        "confirm_title": "Confirm",
+        # Toast notifications (V180-QA-02)
+        "toast_retry_btn": "Retry",
+        # M-10: migrated hardcoded strings
+        "ocr_cost_estimate": "~${cost:.3f}",
+        "ocr_provider_rebuild_error": "Provider rebuild error: {e}",
+        "llm_fetching_claude_models": "⏳ Fetching Claude model list…",
+        "llm_fetching_gemini_models": "⏳ Fetching Gemini model list…",
+        "llm_fetching_openai_models": "⏳ Fetching OpenAI model list…",
+        "llm_env_key_unset_static": (
+            "API key not set — showing recommended models "
+            "(enter a key above or set ANTHROPIC_API_KEY)"
+        ),
+        "llm_env_key_unset_static_gemini": (
+            "API key not set — showing recommended models "
+            "(enter a key above or set GEMINI_API_KEY/GOOGLE_API_KEY)"
+        ),
+        "llm_env_key_unset_static_openai": (
+            "API key not set — showing recommended models "
+            "(enter a key above or set OPENAI_API_KEY)"
+        ),
+        "llm_model_fetch_failed": (
+            "{provider} model fetch failed (falling back to static list): {e}"
+        ),
+        "llm_openai_model_unverified_note": (
+            "The model list may include models whose image-input support is "
+            "unverified. Please be cautious when choosing a model other than "
+            "the recommended ones (listed first)."
+        ),
+        # OpenAI-specific settings (detail / reasoning effort /
+        # organization & project — V190-OAI-08..10 / 02-04)
+        "llm_openai_detail_label": "Image detail:",
+        "llm_openai_detail_hint": (
+            "high favors read accuracy, low favors cost (default: high)"
+        ),
+        "llm_openai_effort_label": "Reasoning effort:",
+        "llm_openai_effort_unavailable_hint": (
+            "The value range for reasoning effort is unverified for this "
+            "model, so it will not be sent"
+        ),
+        "llm_openai_org_label": "Organization ID:",
+        "llm_openai_project_label": "Project ID:",
+        "llm_openai_org_project_hint": (
+            "When empty, the corresponding header is not sent "
+            "(OpenAI-Organization / OpenAI-Project)"
+        ),
+        "llm_openai_id_invalid": (
+            "{field} is invalid. Enter up to 128 printable characters with "
+            "no control characters or spaces."
+        ),
+        # Prompt template management (v1.8.0 Phase 2 — V180-TMPL-01..05 / D-01..D-08)
+        "tmpl_section_title": "📄 Template:",
+        "tmpl_save_btn": "💾 Save",
+        "tmpl_delete_btn": "🗑 Delete",
+        "tmpl_rename_btn": "✏ Rename",
+        "tmpl_name_prompt": "Enter a template name:",
+        "tmpl_dup_error": (
+            "This template name is already in use. Please choose another name."
+        ),
+        "tmpl_empty_error": "Please enter a template name.",
+        "tmpl_switch_discard_confirm": (
+            "Unsaved changes will be discarded. Switch templates anyway?"
+        ),
+        "tmpl_active_delete_blocked": (
+            "The active template cannot be deleted. "
+            "Please switch to another template first."
+        ),
+        "tmpl_delete_confirm": ("Delete this template? This action cannot be undone."),
+        # Provider fallback order settings
+        # (v1.8.0 Phase 2 — V180-FALL-01..03 / D-13..D-16)
+        "fallback_section_title": "🔁 Fallback:",
+        "fallback_enable_toggle": "Enable fallback",
+        "fallback_up_btn": "↑ Up",
+        "fallback_down_btn": "↓ Down",
+        "fallback_add_btn": "＋ Add",
+        "fallback_remove_btn": "－ Remove",
+        "fallback_hint": "Fallback does not fire unless configured (safe default).",
+        # Runtime fallback orchestration (v1.8.0 Phase 2 - 02-04 -
+        # V180-FALL-02/03 - D-10/D-11/D-12)
+        "fallback_confirm_title": "Fallback Confirmation",
+        "fallback_confirm_msg": (
+            "{reason}\n\n"
+            "Switch to {candidate} ({host}) and resend the unprocessed pages?\n"
+            "Nothing will be sent automatically unless you approve."
+        ),
+        "fallback_reason_connection": "Processing stopped due to a connection error.",
+        "fallback_reason_timeout": "Processing stopped due to a timeout.",
+        "fallback_reason_circuit_breaker": (
+            "Processing stopped because the circuit breaker tripped "
+            "after repeated errors."
+        ),
+        "fallback_reason_api_key_missing": (
+            "Processing stopped because the API key is not configured."
+        ),
+        "fallback_reason_provider_unavailable": (
+            "The provider is unavailable (e.g. Tesseract is not installed)."
+        ),
+        "fallback_reason_generic": "Processing stopped due to an error.",
+        "fallback_exhausted": (
+            "All fallback candidates have been exhausted. "
+            "Please check your settings and try again."
+        ),
+        # Batch OCR (v1.8.0 Phase 4 - 04-02 - V180-BATCH-01 through 04)
+        "batch_dialog_title": "Batch OCR",
+        "batch_col_file": "File",
+        "batch_col_status": "Status",
+        "batch_col_progress": "Progress",
+        "batch_add_files_btn": "+ Add Files",
+        "batch_remove_btn": "Remove",
+        "batch_start_btn": "▶ Start",
+        "batch_cancel_btn": "■ Cancel Batch",
+        "batch_overall_progress": "File {done}/{total}",
+        "batch_status_pending": "Pending",
+        "batch_status_running": "Running",
+        "batch_status_done": "Done",
+        "batch_status_failed": "Failed",
+        "batch_status_error": "Error",
+        "batch_scan_error": "Load error",
+        "batch_scanning_msg": "Loading...",
+        "batch_empty_queue_msg": "No files to process. Please add files first.",
+        # Batch OCR - per-file result viewer / cross-file summary
+        # (v1.8.0 Phase 4 - 04-03 - V180-BATCH-05)
+        "batch_file_select_label": "File to view result:",
+        "batch_export_btn": "📤 Export",
+        "batch_summary_btn": "📊 Create Summary",
+        "batch_summary_file_header": "=== {name} ===",
+        # Menu bar (v1.8.0 Phase 4 - 04-03 - D-01)
+        "batch_menu_tools": "Tools",
+        "batch_menu_item": "Batch OCR",
+        # OCR OFF guard (v1.9.0 Phase 1 - V190-SAFE-03 - D-04/D-05)
+        "batch_menu_item_off": "Batch OCR (OCR off)",
+    },
+}

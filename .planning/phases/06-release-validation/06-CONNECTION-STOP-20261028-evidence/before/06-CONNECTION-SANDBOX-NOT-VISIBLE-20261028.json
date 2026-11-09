@@ -1,0 +1,15 @@
+{
+  "scenario": "ocr-single",
+  "run_id": "d04061c65a42406c90736c4a3e183368",
+  "run": "C:/Users/shdwf/AppData/Local/Temp/pf06_t2_g3_unreadable_8433fc4ee5324234931fb80ac0f310d1/runs/release-uat-d04061c65a42406c90736c4a3e183368",
+  "selftest": false,
+  "user_answer": "PageFolio の画面が見えない",
+  "outcome": "aborted-user-cannot-see-window",
+  "interpretation": "サンドボックス実行で観測者のデスクトップに画面が見えず、接続実証は未成立。製品原因を断定しない。実デスクトップへの切替は環境変更として別runにする。",
+  "primary": {"pid": 30532, "created": 134376380597820104, "cleanup": "release_uat_support.py stop により closed"},
+  "driver": {"pid": 26332, "created_iso": "2026-10-28T05:14:14.926550+00:00", "command_identity_checked": true},
+  "driver_interrupt": "PTYへのCtrl+Cで終了せず、所有EXEを通常回収後に識別済み待機driverのみ回収する。",
+  "connection_pass": false,
+  "phase_complete": false,
+  "release_allowed": false
+}

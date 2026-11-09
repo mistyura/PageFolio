@@ -1,0 +1,51 @@
+[
+  {
+    "case": "baseline",
+    "args": [
+      ".venv/Scripts/ruff.exe",
+      "format",
+      ".",
+      "--check",
+      "--no-cache",
+      "--output-format",
+      "concise"
+    ],
+    "code": 101,
+    "stdout": "",
+    "stderr": "\nerror: Ruff crashed. If you could open an issue at:\n\n    https://github.com/astral-sh/ruff/issues/new?title=%5BPanic%5D\n\n...quoting the executed command, along with the relevant file contents and `pyproject.toml` settings, we'd be very appreciative!\n\n\nthread 'main' (32212) panicked at crates\\ruff_db\\src\\diagnostic\\mod.rs:528:14:\nExpected a ruff source file\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n"
+  },
+  {
+    "case": "exclude-generated",
+    "args": [
+      ".venv/Scripts/ruff.exe",
+      "format",
+      ".",
+      "--check",
+      "--no-cache",
+      "--output-format",
+      "concise",
+      "--extend-exclude",
+      "pf_0502_atomic_red,pf_0502_flow_green,pf_0502_flow_red"
+    ],
+    "code": 1,
+    "stdout": ".planning\\codebase\\CONVENTIONS.md:91:1: unformatted: File would be reformatted\n.planning\\debug\\preview-focus-not-restored-evidence\\diag_btn_press.py:327:1: unformatted: File would be reformatted\n.planning\\milestones\\v1.4.0-phases\\04-provider-abstraction\\04-PATTERNS.md:48:1: unformatted: File would be reformatted\n.planning\\milestones\\v1.4.0-phases\\04-provider-abstraction\\04-REVIEW.md:58:17: unformatted: File would be reformatted\n.planning\\milestones\\v1.4.0-phases\\05-claude-provider-ui\\05-PATTERNS.md:263:1: unformatted: File would be reformatted\n.planning\\milestones\\v1.4.0-phases\\06-gemini-provider\\06-PATTERNS.md:47:30: unformatted: File would be reformatted\n.planning\\milestones\\v1.4.0-phases\\06-gemini-provider\\06-RESEARCH.md:326:1: unformatted: File would be reformatted\n.planning\\milestones\\v1.4.0-phases\\06-gemini-provider\\06-REVIEW.md:69:50: unformatted: File would be reformatted\n.planning\\milestones\\v1.4.0-phases\\06-gemini-provider\\06-VERIFICATION.md:119:1: unformatted: File would be reformatted\n.planning\\milestones\\v1.4.0-phases\\07-tesseract-pluginmanager-qa\\07-RESEARCH.md:202:1: unformatted: File would be reformatted\n.planning\\milestones\\v1.4.0-phases\\07-tesseract-pluginmanager-qa\\PATTERNS.md:55:30: unformatted: File would be reformatted\n.planning\\milestones\\v1.6.0-phases\\01-ui-ocr\\01-PATTERNS.md:37:24: unformatted: File would be reformatted\n.planning\\milestones\\v1.6.0-phases\\01-ui-ocr\\01-REVIEW.md:57:8: unformatted: File would be reformatted\n.planning\\milestones\\v1.6.0-phases\\02-pagination\\02-PATTERNS.md:58:23: unformatted: File would be reformatted\n.planning\\milestones\\v1.6.0-phases\\02-pagination\\02-RESEARCH.md:177:1: unformatted: File would be reformatted\n.planning\\milestones\\v1.6.0-phases\\03-ocr-a\\03-PATTERNS.md:46:57: unformatted: File would be reformatted\n.planning\\milestones\\v1.6.0-phases\\03-ocr-a\\03-RESEARCH.md:149:1: unformatted: File would be reformatted\n.planning\\milestones\\v1.6.0-phases\\04-ai-c\\04-PATTERNS.md:36:34: unformatted: File would be reformatted\n.planning\\milestones\\v1.6.0-phases\\04-ai-c\\04-RESEARCH.md:133:25: unformatted: File would be reformatted\n.planning\\milestones\\v1.6.0-phases\\04-ai-c\\04-REVIEW.md:48:25: unformatted: File would be reformatted\n.planning\\milestones\\v1.7.1-phases\\01-api-llm\\01-PATTERNS.md:32:40: unformatted: File would be reformatted\n.planning\\milestones\\v1.7.1-phases\\01-api-llm\\01-RESEARCH.md:208:20: unformatted: File would be reformatted\n.planning\\milestones\\v1.7.1-phases\\01-api-llm\\01-REVIEW.md:116:5: unformatted: File would be reformatted\n.planning\\milestones\\v1.7.1-phases\\02-ocr\\02-PATTERNS.md:66:55: unformatted: File would be reformatted\n.planning\\milestones\\v1.7.1-phases\\02-ocr\\02-RESEARCH.md:230:1: unformatted: File would be reformatted\n.planning\\milestones\\v1.7.1-phases\\02-ocr\\02-REVIEW.md:59:52: unformatted: File would be reformatted\n.planning\\milestones\\v1.7.1-phases\\03-v1-5-0\\03-PATTERNS.md:116:11: unformatted: File would be reformatted\n.planning\\milestones\\v1.7.1-phases\\03-v1-5-0\\03-RESEARCH.md:139:1: unformatted: File would be reformatted\n.planning\\milestones\\v1.7.1-phases\\04-ui-ux\\04-PATTERNS.md:79:1: unformatted: File would be reformatted\n.planning\\milestones\\v1.7.1-phases\\04-ui-ux\\04-RESEARCH.md:243:29: unformatted: File would be reformatted\n.planning\\milestones\\v1.8.0-phases\\01-foundation-split\\01-PATTERNS.md:165:1: unformatted: File would be reformatted\n.planning\\milestones\\v1.8.0-phases\\01-foundation-split\\01-RESEARCH.md:259:30: unformatted: File would be reformatted\n.planning\\milestones\\v1.8.0-phases\\02-ai\\02-PATTERNS.md:87:22: unformatted: File would be reformatted\n.planning\\milestones\\v1.8.0-phases\\02-ai\\02-RESEARCH.md:223:34: unformatted: File would be reformatted\n.planning\\milestones\\v1.8.0-phases\\02-ai\\02-REVIEW.md:169:13: unformatted: File would be reformatted\n.planning\\milestones\\v1.8.0-phases\\03-ocr-e2e\\03-PATTERNS.md:64:27: unformatted: File would be reformatted\n.planning\\milestones\\v1.8.0-phases\\03-ocr-e2e\\03-RESEARCH.md:184:1: unformatted: File would be reformatted\n.planning\\milestones\\v1.8.0-phases\\03-ocr-e2e\\03-REVIEW.md:95:23: unformatted: File would be reformatted\n.planning\\milestones\\v1.8.0-phases\\03-ocr-e2e\\03-REVIEWS.md:66:1: unformatted: File would be reformatted\n.planning\\milestones\\v1.8.0-phases\\04-ocr\\04-PATTERNS.md:109:10: unformatted: File would be reformatted\n.planning\\milestones\\v1.8.0-phases\\04-ocr\\04-RESEARCH.md:232:34: unformatted: File would be reformatted\n.planning\\milestones\\v1.8.0-phases\\05-blob-shortcutsdialog\\05-PATTERNS.md:97:1: unformatted: File would be reformatted\n.planning\\milestones\\v1.8.0-phases\\05-blob-shortcutsdialog\\05-RESEARCH.md:228:1: unformatted: File would be reformatted\n.planning\\milestones\\v1.8.0-phases\\05-blob-shortcutsdialog\\deferred-items.md:21:14: unformatted: File would be reformatted\n.planning\\milestones\\v1.8.0-phases\\06-ux-ui\\06-PATTERNS.md:35:17: unformatted: File would be reformatted\n.planning\\milestones\\v1.8.0-phases\\06-ux-ui\\06-RESEARCH.md:178:17: unformatted: File would be reformatted\n.planning\\milestones\\v1.8.0-phases\\06-ux-ui\\06-REVIEW.md:95:14: unformatted: File would be reformatted\n.planning\\milestones\\v1.9.0-phases\\01-safety-rollback\\01-PATTERNS.md:54:19: unformatted: File would be reformatted\n.planning\\milestones\\v1.9.0-phases\\01-safety-rollback\\01-RESEARCH.md:122:10: unformatted: File would be reformatted\n.planning\\milestones\\v1.9.0-phases\\02-ocr-openai-chatgpt\\02-PATTERNS.md:40:1: unformatted: File would be reformatted\n.planning\\milestones\\v1.9.0-phases\\02-ocr-openai-chatgpt\\02-RESEARCH.md:226:16: unformatted: File would be reformatted\n.planning\\milestones\\v1.9.0-phases\\02-ocr-openai-chatgpt\\02-REVIEW.md:69:29: unformatted: File would be reformatted\n.planning\\milestones\\v1.9.0-phases\\03-qa-release-gate\\03-PATTERNS.md:65:34: unformatted: File would be reformatted\n.planning\\milestones\\v1.9.0-phases\\03-qa-release-gate\\03-RESEARCH.md:336:31: unformatted: File would be reformatted\n.planning\\milestones\\v1.9.0-phases\\03-qa-release-gate\\03-REVIEW.md:69:1: unformatted: File would be reformatted\n.planning\\milestones\\v1.9.0-research\\ARCHITECTURE.md:72:2: unformatted: File would be reformatted\n.planning\\phases\\06-release-validation\\06-PATTERNS.md:153:1: unformatted: File would be reformatted\n.planning\\phases\\06-release-validation\\06-RESEARCH.md:291:1: unformatted: File would be reformatted\ndocs\\OCR-PROVIDERS.md:51:59: unformatted: File would be reformatted\ndocs\\PLUGINS.md:17:1: unformatted: File would be reformatted\ndocs\\TESTING.md:163:1: unformatted: File would be reformatted\n61 files would be reformatted, 754 files already formatted\n",
+    "stderr": ""
+  },
+  {
+    "case": "exclude-generated-and-markdown",
+    "args": [
+      ".venv/Scripts/ruff.exe",
+      "format",
+      ".",
+      "--check",
+      "--no-cache",
+      "--output-format",
+      "concise",
+      "--extend-exclude",
+      "pf_0502_atomic_red,pf_0502_flow_green,pf_0502_flow_red,*.md"
+    ],
+    "code": 1,
+    "stdout": ".planning\\debug\\preview-focus-not-restored-evidence\\diag_btn_press.py:327:1: unformatted: File would be reformatted\n1 file would be reformatted, 136 files already formatted\n",
+    "stderr": ""
+  }
+]

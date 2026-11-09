@@ -24,13 +24,15 @@ python pagefolio.py
 
 ## コーディング規約
 
-PageFolio は [Ruff](https://docs.astral.sh/ruff/)（バージョン `0.15.20`）でリント・フォーマットを統一しています。設定は `pyproject.toml`（行長 88 文字、`E`/`F`/`W`/`I`/`S`/`B` ルールを適用）です。
+PageFolio は [Ruff](https://docs.astral.sh/ruff/)（バージョン `0.17.1`）でリント・フォーマットを統一しています。ルールの正本は `pyproject.toml`（行長 88 文字、`E`/`F`/`W`/`I`/`S`/`B` ルールを適用）です。`.ruff.toml` がこれを継承し、Markdown内コードの自動整形を防ぎます。
 
 コードを変更したら必ず以下を実行し、通ることを確認してください。
 
 ```bash
-ruff check . && ruff format .
+ruff check . && ruff format . --check
 ```
+
+読取不能な過去のpytest生成物は `.gitignore` で個別除外しています（Ruff 0.17.1の読取拒否時panicへの対策）。品質停止解除の検証用basetempとキャッシュも個別に除外し、原本はリポジトリ外へ保全移動しています。全体確認で差分が出た場合は表示を確認し、対象Pythonだけを整形してください。過去診断コードの原本を保存して書式差を解消した記録と、内部異常・アクセス拒否を成功扱いにしない運用は [開発ガイド](docs/DEVELOPMENT.md#リントフォーマットツール) を参照してください。
 
 - CI ワークフロー（`.github/workflows/`）は現時点で構成されていません。リント・テストはローカルで実行し、結果を PR に記載してください。
 - 裸の `except:` 句は禁止。必ず `except Exception as e:` の形式を使うこと
@@ -67,7 +69,7 @@ docs: CONTRIBUTING.md のブランチ命名規則を更新
 
 ### PR 提出前のチェックリスト
 
-- [ ] `ruff check . && ruff format .` でリント・フォーマットが通ること
+- [ ] `ruff check . && ruff format . --check` でリント・フォーマットが通ること
 - [ ] `pytest` でテストがすべて通ること
 - [ ] 新機能・バグ修正に対応するテストを追加または更新したこと
 - [ ] `開発履歴.md` に変更内容を追記したこと
@@ -77,7 +79,7 @@ docs: CONTRIBUTING.md のブランチ命名規則を更新
 
 1. `main` から機能ブランチ（例: `feature/v1.10.0`）を切り、変更をコミットする
 2. GitHub で `main` を対象に PR を作成し、変更の目的と動作確認方法を日本語で説明する
-3. ローカルで `ruff check . && ruff format .` がパスすることを確認する
+3. ローカルで `ruff check . && ruff format . --check` がパスすることを確認する
 4. `pytest` の結果を PR にコメントまたはログで共有する
 5. レビュワーのフィードバックに対応してから `main` へマージする
 

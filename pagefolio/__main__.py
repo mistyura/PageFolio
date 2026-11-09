@@ -11,6 +11,7 @@ def main(*, backend_factory=None, notice_backend_factory=None):
     backend = None
     root = None
     focus = None
+    wake = None
     try:
         if sys.platform == "win32":
             from pagefolio.startup_control import StartupCoordinator
@@ -69,6 +70,11 @@ def main(*, backend_factory=None, notice_backend_factory=None):
         if coordinator:
             coordinator.root = root
         root.__init__()
+        if coordinator:
+            from pagefolio.startup_wake import UiThreadWake
+
+            wake = UiThreadWake(coordinator.backend.api, coordinator.backend.logger)
+            wake.start()
         app = PDFEditorApp(root)
         _setup_file_drop(app)
         if coordinator:
@@ -81,6 +87,8 @@ def main(*, backend_factory=None, notice_backend_factory=None):
         root.mainloop()
         return "primary"
     finally:
+        if wake is not None:
+            wake.close()
         if focus is not None:
             focus.close()
         if root is not None:

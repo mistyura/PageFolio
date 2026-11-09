@@ -6,12 +6,24 @@ const root = path.resolve(__dirname, '../../..');
 const run = process.argv[2];
 if (!/^[a-z0-9-]+$/.test(run || '')) throw Error('unique run ID required');
 const plan = process.argv[3] || '07';
-if (!['07','08'].includes(plan)) throw Error('unsupported quality plan');
+if (!['05','07','08'].includes(plan)) throw Error('unsupported quality plan');
 const dir = path.join(__dirname, `06-${plan}-evidence`, run);
 fs.mkdirSync(dir, {recursive:true});
 if (fs.readdirSync(dir).length) throw Error('preserve previous evidence');
 const baseline = JSON.parse(fs.readFileSync(path.join(root, '.planning/debug/ocr-off-summary-evidence/native-20261028/before.json')));
 const inputs = [...new Set([...Object.keys(baseline), 'tests/release_uat_support.py', 'tests/test_release_uat_support.py', 'tests/test_release_contract.py', '.ruff.toml', ...['06-RELEASE-SCOPE.json','06-W11-SCOPE-APPROVAL.md','06-MANUAL-EVIDENCE.json','06-UAT.md'].map(n=>'.planning/phases/06-release-validation/'+n)])];
+if (plan === '05') {
+  inputs.push('tests/w05c_evidence.py', 'tests/test_w05c_evidence.py', '.gitignore');
+  inputs.push('tests/w05c_runner.py', 'tests/test_w05c_runner.py', '.planning/phases/06-release-validation/06-05-w05c-v3.cjs');
+  inputs.push(...['06-05-record-w05c-python.cjs', '06-05-w05c-evidence.cjs'].map(n=>'.planning/phases/06-release-validation/'+n));
+  inputs.push('.planning/phases/06-release-validation/06-05-record-w03-python.cjs');
+  inputs.push('.planning/phases/06-release-validation/06-05-record-w04.cjs');
+  inputs.push('.planning/phases/06-release-validation/06-05-record-w05b.cjs');
+  inputs.push('.planning/phases/06-release-validation/06-05-record-w05b-attempt.cjs');
+  for (const file of ['.planning/debug/w01-exe-observe.py', ...['06-07-quality.cjs','06-05-record-w01-python.cjs','06-05-record-w01-exe.cjs','06-05-record-w02-attempt.cjs','06-05-record-w02-settings.cjs','06-05-record-w02-exe.cjs','06-05-record-w02-exe-attempt.cjs','06-05-drivers/uat_row.py'].map(n=>'.planning/phases/06-release-validation/'+n)]) {
+    if (!inputs.includes(file)) inputs.push(file);
+  }
+}
 const hash = data => crypto.createHash('sha256').update(data).digest('hex');
 const hashes = () => Object.fromEntries(inputs.map(p=>[p,hash(fs.readFileSync(path.join(root,p)))]));
 const python = path.join(root,'.venv/Scripts/python.exe');
@@ -21,6 +33,13 @@ const checks = [];
 const discovery = spawnSync(ruff,['check','.','--show-files','--no-cache'],{cwd:root,encoding:'utf8',windowsHide:true});
 const files = discovery.stdout.trim().split(/\r?\n/).filter(p=>p.endsWith('.py')).sort();
 const previousFiles = JSON.parse(fs.readFileSync(path.join(__dirname,'06-07-evidence/ruff-files.json'))).sort();
+if (plan === '05') {
+  previousFiles.push(path.join(root, '.planning/debug/w01-exe-observe.py'));
+  previousFiles.push(path.join(root, '.planning/debug/phase06-w05c-no-marker/probe.py'));
+  previousFiles.push(path.join(root, 'tests/w05c_evidence.py'), path.join(root, 'tests/test_w05c_evidence.py'));
+  previousFiles.push(path.join(root, 'tests/w05c_runner.py'), path.join(root, 'tests/test_w05c_runner.py'));
+  previousFiles.sort();
+}
 fs.writeFileSync(path.join(dir,'ruff-discovery.json'),JSON.stringify({exit:discovery.status,stderr:discovery.stderr,files,previousFiles},null,2));
 if (discovery.status || discovery.stderr || JSON.stringify(files)!==JSON.stringify(previousFiles)) throw Error('Ruff target set changed or incomplete');
 for (const [exe,args] of [[ruff,['check','.','--no-cache']], [ruff,['format','--no-cache',...files]], [ruff,['check','.','--no-cache']], [python,['-c',"import ast; ast.parse(open('pagefolio.py', encoding='utf-8').read())"]]]) {
@@ -37,7 +56,8 @@ const before = hashes();
 fs.writeFileSync(path.join(dir,'before.json'),JSON.stringify(before,null,2),{flag:'wx'});
 const env = spawnSync(python,['-c','import sys,platform; print(sys.version); print(sys.executable); print(platform.platform())'],{cwd:root,encoding:'utf8',windowsHide:true});
 fs.writeFileSync(path.join(dir,'environment.txt'),env.stdout,{flag:'wx'});
-const args = ['-m','pytest','-q','-x','-rA','-p','no:cacheprovider',`--basetemp=${path.join(process.env.LOCALAPPDATA,'Temp','pf06-scope-'+run)}`,`--junitxml=${path.join(dir,'junit.xml')}`];
+const basetemp = plan === '05' ? path.join(root,'.planning','tmp','pf06-scope-'+run) : path.join(process.env.LOCALAPPDATA,'Temp','pf06-scope-'+run);
+const args = ['-m','pytest','-q','-x','-rA','-p','no:cacheprovider',`--basetemp=${basetemp}`,`--junitxml=${path.join(dir,'junit.xml')}`];
 const started = new Date().toISOString();
 const out = fs.openSync(path.join(dir,'stdout.txt'),'wx');
 const err = fs.openSync(path.join(dir,'stderr.txt'),'wx');

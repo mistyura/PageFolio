@@ -1,0 +1,28 @@
+{
+  "contract": "1.0.0",
+  "flavor": "core",
+  "milestone": "v1.10.0 — 多重起動防止・起動操作の改善",
+  "phases": [
+    {
+      "number": "4",
+      "name": "起動制御と既存画面への復帰",
+      "status": "complete"
+    },
+    {
+      "number": "5",
+      "name": "設定読込・保存失敗の通知",
+      "status": "complete"
+    },
+    {
+      "number": "6",
+      "name": "サンプル配布とリリース検証",
+      "status": "in_progress"
+    }
+  ],
+  "next": {
+    "command": "$gsd-execute-phase 06",
+    "label": "06-04-02の実EXE接続確認を利用者操作から再開",
+    "reason": "Phase04独立検証21/21 passed、入力・環境・台帳照合済み、追加build不要。ocr-single実デスクトップrun 0d73a0cdf5b8465f9970b3702c2653e7の操作回答待ち。全110受入not-run・出荷停止"
+  },
+  "updated_at": "2026-10-28T04:20:15.049Z"
+}

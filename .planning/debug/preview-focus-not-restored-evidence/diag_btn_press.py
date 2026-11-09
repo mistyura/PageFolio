@@ -324,6 +324,7 @@ def run_one(intervene, out_dir, deactivate="decoy"):
             )
             if ok:
                 break
+
         def get_geom():
             g = fixture / "geometry.json"
             if g.exists():
@@ -462,9 +463,11 @@ def run_one(intervene, out_dir, deactivate="decoy"):
             session["decoy_stderr"] = d.stderr[-300:]
         except subprocess.TimeoutExpired as exc:
             session["decoy_timeout"] = True
-            session["decoy_exc_stderr"] = (exc.stderr or b"")[-600:].decode(
-                "utf-8", "replace"
-            ) if isinstance(exc.stderr, bytes) else str(exc.stderr)[-600:]
+            session["decoy_exc_stderr"] = (
+                (exc.stderr or b"")[-600:].decode("utf-8", "replace")
+                if isinstance(exc.stderr, bytes)
+                else str(exc.stderr)[-600:]
+            )
         fault = fixture / "decoy.json.fault"
         session["decoy_fault"] = (
             fault.read_text(encoding="utf-8", errors="replace")[-1500:]
@@ -521,7 +524,9 @@ def summarize(session):
     fr = session.get("focus_result")
     if fr:
         print(f"   result={fr.get('result')} immediate={fr.get('immediate_focus')}")
-        print(f"   settled={fr.get('settled_focus')}  focus_correct={fr.get('focus_correct')}")
+        print(
+            f"   settled={fr.get('settled_focus')}  focus_correct={fr.get('focus_correct')}"
+        )
     keep = {
         "FocusIn",
         "FocusOut",
@@ -553,7 +558,9 @@ def summarize(session):
                     for k in ("tk_focus", "lastfor", "record", "last_widget")
                     if k in detail
                 }
-            print(f"   {e['t']:7.3f} {e['kind']:14s} {json.dumps(detail, ensure_ascii=False)[:260]}")
+            print(
+                f"   {e['t']:7.3f} {e['kind']:14s} {json.dumps(detail, ensure_ascii=False)[:260]}"
+            )
 
 
 def main():

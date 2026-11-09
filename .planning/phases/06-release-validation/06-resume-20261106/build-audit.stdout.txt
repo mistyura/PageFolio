@@ -1,0 +1,28 @@
+{
+  "mode": "build-only",
+  "ok": true,
+  "exit_code": 0,
+  "reasons": [],
+  "phase_complete": false,
+  "release_allowed": false,
+  "scope_id": "single-login-session",
+  "approval_id": "W11-B-20261028",
+  "total": 110,
+  "required": 108,
+  "deferred": 2,
+  "required_pass": 28,
+  "required_not_run": 80,
+  "required_fail": 0,
+  "required_blocked": 0,
+  "build_loss_incident": {
+    "id": "BUILD-LOSS-20261103",
+    "approved_by": "利用者(2026-11-03 セッションで『監査の見直し』を選択)",
+    "approved_at": "2026-11-03",
+    "restored_final_dir": "C:\\Users\\shdwf\\AppData\\Local\\PageFolio-release\\pf06_final_3f96a37a7cef4ee1ab3a1c1b2f2c435f\\PageFolio-v1.10.2",
+    "unverifiable": [
+      "external_report:initial",
+      "external_report:rebuild",
+      "release_history:initial_tree"
+    ]
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "checked_at": "2026-11-06T12:02:46.269592+00:00",
+  "production_owner": [],
+  "originals": {
+    "ocr_custom_prompt.md": {
+      "exists": false,
+      "sha256": null
+    },
+    "pagefolio_settings.json": {
+      "exists": false,
+      "sha256": null
+    },
+    "ocr_summary_prompt.md": {
+      "exists": false,
+      "sha256": null
+    },
+    "plugins": {
+      "__pycache__/page_info.cpython-315.pyc": "27a73182395e0a1b8572063eb452adcfcbe8ffd24e538e00f31e1952da468bf3",
+      "page_info.py": "a481b6cac734251aae3a76e9df064e208713eb572401ee1bccbacf49b53b3a8f"
+    }
+  },
+  "distribution": "C:\\Users\\shdwf\\AppData\\Local\\PageFolio-release\\pf06_final_3f96a37a7cef4ee1ab3a1c1b2f2c435f\\PageFolio-v1.10.2",
+  "exe_sha256": "66be5df663e333057c5c3cde02180857f930d2433e377f69c2838432d49a19d4",
+  "tree_sha256": "b1e55ca6efa3a7bafb4dec9ea9fa2c715dfca6f538ba906632058f912f575d85",
+  "loss_incident": "BUILD-LOSS-20261103",
+  "old_temp_location_not_reused": true
+}

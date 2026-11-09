@@ -1,0 +1,32 @@
+[
+  {
+    "file": "exit-audit.jsonl",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_owner_native_pid_20261023\\test_simultaneous_exit_audit_n0\\simultaneous-audit-native-wm\\exit-audit.jsonl",
+    "sha256": "71C4C4CFBA5819A1682012FB69204E2D0FFE77200A8CD103AA4790532E8A2C5D"
+  },
+  {
+    "file": "native-trigger.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_owner_native_pid_20261023\\test_simultaneous_exit_audit_n0\\simultaneous-audit-native-wm\\native-trigger.json",
+    "sha256": "AB0329B20D21258FFB5045ED5A7DBAA101871B34CEDB76CA3303CA0B20F23ADD"
+  },
+  {
+    "file": "ready",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_owner_native_pid_20261023\\test_simultaneous_exit_audit_n0\\simultaneous-audit-native-wm\\ready",
+    "sha256": "AEB133C5ADEE7EE5A73A8BB8011F9CCE7787D9BF5040D97D32EE584694D81261"
+  },
+  {
+    "file": "result.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_owner_native_pid_20261023\\test_simultaneous_exit_audit_n0\\simultaneous-audit-native-wm\\result.json",
+    "sha256": "615F1EA5605E4019E33B68EE93AB276F206BB20DCF0722EAAC04D30EB523542E"
+  },
+  {
+    "file": "resource-audit.json",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_owner_native_pid_20261023\\test_simultaneous_exit_audit_n0\\simultaneous-audit-native-wm\\resource-audit.json",
+    "sha256": "AEB133C5ADEE7EE5A73A8BB8011F9CCE7787D9BF5040D97D32EE584694D81261"
+  },
+  {
+    "file": "traceback.log",
+    "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_owner_native_pid_20261023\\test_simultaneous_exit_audit_n0\\simultaneous-audit-native-wm\\traceback.log",
+    "sha256": "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855"
+  }
+]

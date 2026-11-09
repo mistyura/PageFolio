@@ -1,0 +1,17 @@
+{
+  "checked_at": "2026-11-06T10:45:23.698Z",
+  "parents": {
+    "04-startup-control": {
+      "status": "passed",
+      "next_action": "Verification passed — continue.",
+      "next_command": "",
+      "route": ""
+    },
+    "05-config-notification": {
+      "status": "passed",
+      "next_action": "Verification passed — continue.",
+      "next_command": "",
+      "route": ""
+    }
+  }
+}

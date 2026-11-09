@@ -1,0 +1,135 @@
+{
+  "scenario": "ocr-single",
+  "selftest": false,
+  "run_id": "90a9dc245c8846e68dd37358276e6e24",
+  "run": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf06_t2_g3_unreadable_8433fc4ee5324234931fb80ac0f310d1\\runs\\release-uat-90a9dc245c8846e68dd37358276e6e24",
+  "binary_sha256": "9b3ebbce390c3b9f1752a97820a5ef81a0c39b7e148b93717b86bb47f9f5f73b",
+  "tree_sha256": "cce2fd0a99a6f368ab271f9f0b6a212c3984a6387c7684800074434d5152ccf4",
+  "server_url": "http://127.0.0.1:20065",
+  "hold_limit_seconds": 420,
+  "provider_timeout_seconds": 600,
+  "started_at": "2026-10-28T01:41:31.335503+00:00",
+  "pdf": {
+    "path": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf06_t2_g3_unreadable_8433fc4ee5324234931fb80ac0f310d1\\runs\\release-uat-90a9dc245c8846e68dd37358276e6e24\\fixtures\\ocr-one-page.pdf",
+    "pages": 1,
+    "has_embedded_text": false,
+    "images_on_first_page": 1,
+    "sha256": "ad0117f391d2fd5e94754da2bb670724407cc89c51a35bd4f453c81e098b1163"
+  },
+  "settings_keys": [
+    "lang",
+    "ocr_concurrency",
+    "ocr_fallback_chain",
+    "ocr_fallback_enabled",
+    "ocr_provider",
+    "ocr_timeout",
+    "ollama_model",
+    "ollama_url"
+  ],
+  "routing_selfcheck": {
+    "ok": true,
+    "at": "2026-10-28T01:41:31.959397+00:00",
+    "exe_started": false,
+    "resolved_endpoint": [
+      "http://127.0.0.1:20065",
+      "pagefolio-uat-fixture"
+    ],
+    "server_url": "http://127.0.0.1:20065",
+    "checks": [
+      {
+        "name": "設定: ocr_provider=ollama",
+        "ok": true,
+        "detail": null
+      },
+      {
+        "name": "設定: ollama_url=合成サーバーURL",
+        "ok": true,
+        "detail": {
+          "ollama_url": "http://127.0.0.1:20065",
+          "server": "http://127.0.0.1:20065"
+        }
+      },
+      {
+        "name": "設定: 接続先はloopback(127.0.0.1)",
+        "ok": true,
+        "detail": "http://127.0.0.1:20065"
+      },
+      {
+        "name": "設定: 並列1・fallback無効",
+        "ok": true,
+        "detail": null
+      },
+      {
+        "name": "copy内EXE=最終buildのEXE",
+        "ok": true,
+        "detail": "9b3ebbce390c3b9f1752a97820a5ef81a0c39b7e148b93717b86bb47f9f5f73b"
+      },
+      {
+        "name": "EXE内蔵コード=HEADのソース(pagefolio全モジュール)",
+        "ok": true,
+        "detail": {
+          "compared": 57,
+          "mismatched": [],
+          "not_in_pyz": []
+        }
+      },
+      {
+        "name": "EXE内蔵resolve_local_endpoint(ollama)=合成サーバーURL・モデル",
+        "ok": true,
+        "detail": [
+          "http://127.0.0.1:20065",
+          "pagefolio-uat-fixture"
+        ]
+      },
+      {
+        "name": "lmstudio側URLは合成サーバーではない(旧不具合の経路と区別)",
+        "ok": true,
+        "detail": [
+          "http://localhost:1234",
+          ""
+        ]
+      },
+      {
+        "name": "EXE内蔵OCRDialogがresolve_local_endpointを参照",
+        "ok": true,
+        "detail": null
+      },
+      {
+        "name": "合成サーバーが/v1/modelsに応答",
+        "ok": true,
+        "detail": "{\"object\": \"list\", \"data\": [{\"id\": \"pagefolio-uat-fixture\", \"object\": \"model\"}]}"
+      }
+    ]
+  },
+  "outcome": "routing-check-only",
+  "finished_at": "2026-10-28T01:41:32.470841+00:00",
+  "stop": [],
+  "verify_after": {
+    "ok": true,
+    "overlay_changed": [],
+    "distribution_changed": []
+  },
+  "owner_after": [],
+  "user_inputs": [],
+  "steps": [],
+  "server_summary": {
+    "posts": 0,
+    "rejected": [],
+    "attempts_by_image": {},
+    "retransmissions": [],
+    "completed": [],
+    "released": [],
+    "expired": [],
+    "events": [
+      {
+        "seq": 1,
+        "event": "models",
+        "time": "2026-10-28T01:41:31.958466+00:00",
+        "monotonic": 9347.0676087,
+        "run_id": "90a9dc245c8846e68dd37358276e6e24",
+        "mode": "hold",
+        "path": "/v1/models"
+      }
+    ]
+  }
+}

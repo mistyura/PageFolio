@@ -128,6 +128,7 @@ class _API:
         self.SetForegroundWindow = _bind(self.u, "SetForegroundWindow", b, wt.HWND)
         self.GetAncestor = _bind(self.u, "GetAncestor", wt.HWND, wt.HWND, wt.UINT)
         for name, result, args in [
+            ("PostThreadMessageW", b, [d, wt.UINT, wt.WPARAM, wt.LPARAM]),
             ("IsWindow", b, [wt.HWND]),
             ("IsWindowVisible", b, [wt.HWND]),
             ("IsWindowEnabled", b, [wt.HWND]),

@@ -1,0 +1,2 @@
+ビルド照合成功: C:\Users\shdwf\AppData\Local\PageFolio-validation\w12b-tracer-fbd6aeafa1644ad7814471f68222ad3e\output\PageFolio-v1.9.1
+配布元を直接起動せず完全copy上で実機確認してください。出荷承認・実機合格は未実施です。

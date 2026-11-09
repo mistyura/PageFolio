@@ -1,0 +1,41 @@
+{
+  "changed_inputs": [
+    "tests/startup_wake_child.py",
+    "tests/test_startup_wake.py"
+  ],
+  "original_input_count": 113,
+  "product_inputs_unchanged": true,
+  "original_failure_log_unchanged": true,
+  "original_failure_log_sha256": "8fd685d2e2d9c31e28dfe3e38c99cfc730af8273067115737adff530f73aec07",
+  "dod_sources": [
+    {
+      "path": ".planning/ROADMAP.md",
+      "sha256": "16f61afefd14ec2c7888c4183cdee6820916ef641b7b8e5675950c04ccb77ebc",
+      "mtime_utc": "2026-10-24T12:44:59.943Z"
+    },
+    {
+      "path": ".planning/phases/04-startup-control/04-VALIDATION.md",
+      "sha256": "7e3f6bbea12dd1773e54939b5125038497eb0cabd823dc3cb4a68d2aa7b9fd8a",
+      "mtime_utc": "2026-10-28T00:28:41.353Z"
+    },
+    {
+      "path": "tests/test_gsd_dod.py",
+      "sha256": "a1988ce7802ddb1f020a0a8e706ccb2790bfe9c4fc0e902eb010ec927310d1e1",
+      "mtime_utc": "2026-10-21T12:52:45.436Z"
+    }
+  ],
+  "additional_evidence": [
+    {
+      "path": "red-native/child.json",
+      "sha256": "194411f9c733bbb04881627a721e36fc332b81229d6ac963bf8e12d50b244498"
+    },
+    {
+      "path": "ruff-corrected/ruff-check-native.txt",
+      "sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18"
+    },
+    {
+      "path": "ruff-corrected/ruff-format-native.txt",
+      "sha256": "c9c17082d188d462d2fdaf692963a03ba1a291e7978a22875d3aafccd9105de8"
+    }
+  ]
+}

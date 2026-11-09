@@ -1,0 +1,121 @@
+{
+  "captured": "2026-10-28T04:52:41.854Z",
+  "audits": [
+    {
+      "file": "04-VALIDATION.md",
+      "status": 0,
+      "stdout": "{\n  \"appended\": false\n}",
+      "stderr": ""
+    },
+    {
+      "file": "04-SECURITY.md",
+      "status": 0,
+      "stdout": "{\n  \"appended\": true\n}",
+      "stderr": ""
+    }
+  ],
+  "environment": {
+    "python": "3.15.2 (tags/v3.15.2:5e58eaa, Oct 25 2026, 17:27:03) [MSC v.1951 64 bit (AMD64)]",
+    "executable": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.venv\\Scripts\\python.exe",
+    "platform": "Windows-11-10.0.26300-SP0",
+    "packages": {
+      "pytest": "9.1.1",
+      "ruff": "0.17.1",
+      "PyMuPDF": "1.28.2",
+      "Pillow": "13.0.0",
+      "tkinterdnd2": "0.6.4"
+    }
+  },
+  "environment_matches_recorded": true,
+  "evidence_unchanged": true,
+  "current_full_comparison": {
+    "total": 146,
+    "matched": 142,
+    "differences": [
+      {
+        "file": ".gitignore",
+        "expected": "e7c465d440ec9c1ca21251f6283d1161e1dad24ca71d0f4eae9510cd440ac712",
+        "actual": "d3a6282da7fa64f9ca27b8e6bf97285f402d14e5037401460be20fcd0abc68d2",
+        "matches": false
+      },
+      {
+        "file": "docs/DEVELOPMENT.md",
+        "expected": "a226a16ba0651ea5761d51f2052f90d388390d1a8f8a5a28a2c0eeb0bdfeab4d",
+        "actual": "c0d5f066d7cdf95f76687741670cb6858b1d3881d4a1e039ea5821d11893e0b4",
+        "matches": false
+      },
+      {
+        "file": "CONTRIBUTING.md",
+        "expected": "7b5924fec8f77983acf25ac7b1de5137c98b2a9c8ab6ca8bbd0f32bb7bc9ea64",
+        "actual": "1e6666a2df0b661694c51776ea39dc566ddd3f79a19f4ac40ca92ec8c22bb206",
+        "matches": false
+      },
+      {
+        "file": "開発履歴.md",
+        "expected": "d3e124e4e9b74516ce3ca78f80f795879767663246a8e1164076572f636e04cb",
+        "actual": "dbe59f06cbf655c0e3d299b6bbfd140c254f938bd391c0d5217c499bcd988400",
+        "matches": false
+      }
+    ],
+    "python": {
+      "total": 137,
+      "differences": []
+    }
+  },
+  "old_118_comparison": {
+    "total": 118,
+    "matched": 113,
+    "differences": [
+      {
+        "file": ".planning/ROADMAP.md",
+        "expected": "185373c1a47709d3fc1b508b08d182729c7e84193cdefc4e34a99565f59ee4a3",
+        "actual": "d938c41ea8a591d1ab3aadf4f0b8e082e4d6b83bb9c7b670bf066642527ef9f6",
+        "matches": false
+      },
+      {
+        "file": ".planning/STATE.md",
+        "expected": "6dcd9f9dc08a7aac48d5b59fd8884d87bc1ded52326e819fafbd73117ef567ae",
+        "actual": "e5542345a8ffbc5d5cd0a6c59f706f545d58a1eae4ac4dff711df40de1797077",
+        "matches": false
+      },
+      {
+        "file": ".planning/phases/04-startup-control/04-VALIDATION.md",
+        "expected": "7e3f6bbea12dd1773e54939b5125038497eb0cabd823dc3cb4a68d2aa7b9fd8a",
+        "actual": "cf8570e8820ef642eb63e89db2f3013fecc8558811fb2f8084089dbc42ba99a5",
+        "matches": false
+      },
+      {
+        "file": "tests/test_startup_windows.py",
+        "expected": "4daf99286bae31a6f601f30439bda9458b1939f2947bbc2672ad30432675daa0",
+        "actual": "846ee305e323fed436a2a60741df52135afdb39da35c672ed976d86c123a9b47",
+        "matches": false
+      },
+      {
+        "file": "開発履歴.md",
+        "expected": "6dfe84d6aae32f54155c061c1e4f96ed2c9f861bd4928016c419845de4a56253",
+        "actual": "dbe59f06cbf655c0e3d299b6bbfd140c254f938bd391c0d5217c499bcd988400",
+        "matches": false
+      }
+    ],
+    "python": {
+      "total": 111,
+      "differences": [
+        {
+          "file": "tests/test_startup_windows.py",
+          "expected": "4daf99286bae31a6f601f30439bda9458b1939f2947bbc2672ad30432675daa0",
+          "actual": "846ee305e323fed436a2a60741df52135afdb39da35c672ed976d86c123a9b47",
+          "matches": false
+        }
+      ]
+    }
+  },
+  "reports": {
+    ".planning/phases/04-startup-control/04-VALIDATION.md": "cf8570e8820ef642eb63e89db2f3013fecc8558811fb2f8084089dbc42ba99a5",
+    ".planning/phases/04-startup-control/04-SECURITY.md": "245a06fcd2a6213435dec87b23aa69377a688637337edecc727ff03d3301ef3c",
+    ".planning/phases/04-startup-control/04-UI-REVIEW.md": "714bb2bc1cd98151856cf7a6b7ae49658e7ea8a6ff1883d807f4b83f1df34fa5",
+    ".planning/phases/04-startup-control/04-REVIEW.md": "ed92dc4ac4aa18f0201648d83f777c755c8f6b84abd346050a3567a43542b8df",
+    ".planning/phases/04-startup-control/04-REVIEW-DISPOSITION.md": "9afab79ce5025d6630cab4ece7556b0f3fb36656af1ecb0958dc1519860d1598",
+    ".planning/phases/04-startup-control/04-VERIFICATION.md": "480ffdc2da8f8aba62a2354cc30796b2094a2c9366ca180c1e443fb83fcf8fd8"
+  },
+  "verification_untouched": true
+}

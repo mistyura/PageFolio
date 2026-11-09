@@ -1,0 +1,42 @@
+{
+  "schema": "w05c-v3",
+  "entry": "script",
+  "created_at": "2026-11-06T10:44:35.949Z",
+  "permissions_ready": true,
+  "authorization": "2026-11-05 checkpoint A 再検証→単発採取、および2026-11-06 残作業1-3を実施。起動時のホスト権限許可と利用者同席確認は起動前に完了する。",
+  "budget_evidence": {
+    "reference": "06-MANUAL-EVIDENCE.json W05c/quit-no@module observation_basis.timeline/peers",
+    "historical_during_peer_span_seconds": 5.237,
+    "historical_peer_service_ms": [
+      125,
+      32
+    ],
+    "scope": "既存harness実測。新v3 Windows統合の成功証拠ではない。残りの各数値はrunnerの固定command timeoutで上限化する。",
+    "quality_reference": ".planning/phases/04-startup-control/04-reverify-20261106-cr02/result.json"
+  },
+  "budgets": {
+    "peer": 20,
+    "snapshot": 10,
+    "inspect": 3,
+    "collect": 20,
+    "margin": 5
+  },
+  "observation_seconds": 15,
+  "source_inputs": {
+    "tests/w05c_runner.py": "7c9dd08fc896c040959b1cfb69d8b75c079bd02db6a330a0dade054b2a336cc5",
+    "tests/w05c_evidence.py": "e9a8a70253abc674bb0fe1a8da54b5102c6d90a1e7a4665caf8438ce212d5c6c",
+    "tests/test_startup_windows.py": "16a7b676d972f8d439161d64c1e5d08a0caa19e1f8034c57bf531dcb8e333469",
+    ".planning\\phases\\06-release-validation\\06-05-w05c-v3.cjs": "aca51280caa13db5893094363521293f57770920e3c1cc061bda4fb07f2d288d",
+    ".planning\\phases\\06-release-validation\\06-05-w05c-evidence.cjs": "744c0c294f20f9590dbc596bd219d70aeb5628e47a732b0f31fb6ad490c160f2",
+    ".planning\\phases\\06-release-validation\\06-05-record-w05c-python.cjs": "6f8609010c3960e0ddf0853974ef8981f06797bf605abb1d8d88cde244e1eda2"
+  },
+  "deadline_contract": {
+    "original_watchdog_seconds": 120,
+    "reserve_after_no_seconds": 83,
+    "reserve_before_during_peer_seconds": 103,
+    "latest_no_seconds_after_registration": 37
+  },
+  "human_action": "同席確認と起動権限許可後だけ開始。確認表示後は確認中peerが完了する余裕を取り、約25秒でいいえを1回押す。No後15秒に全3ページ/1・2ページ横向き・3ページ縦向き/1画面を観察。自動回収前の観察結果を後で直接返信する。No前に画面が閉じたら操作せず未成立とする。",
+  "automatic_retries": 0,
+  "release_allowed": false
+}

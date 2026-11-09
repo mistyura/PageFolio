@@ -1,0 +1,10 @@
+{
+  "captured_at": "2026-11-06T11:53:51.375Z",
+  "timing": "during_full_suite_before_W05c_test_section",
+  "before_file_exists": true,
+  "files": {
+    ".planning/phases/06-release-validation/06-05-record-w05c-exe.cjs": "31d25b53edccecb37b43e2100b3f11e9e55a619830a69954975c4643517e6ddb",
+    "tests/test_w05c_exe_evidence.py": "2abfa8da2fd8fefc05c9d8514e31f3580b2e3e332b0d02d5d4d2b8276b63ecd5",
+    ".planning/phases/06-release-validation/06-W05C-EXE-COLLECTION.md": "081948bdfda5acf6eb9f846056f7b65d996ee12f5d149732dd129f47999fdcac"
+  }
+}

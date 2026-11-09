@@ -1,0 +1,37 @@
+{
+    "created_at":  "2026-10-22T12:59:32.004Z",
+    "repo_root":  "C:\\Users\\shdwf\\work\\project\\PageFolio",
+    "phase_dir":  ".planning/phases/05-config-notification",
+    "plans_sha256":  {
+                         "05-01-PLAN.md":  "7402d0b935e729248219eba63ba94f79f830103582f32f52957261760fc2fbf4",
+                         "05-02-PLAN.md":  "d6f90e640177cabed937a97d5e7d579bdf8fb7b63454462c0881af5d387e2497",
+                         "05-03-PLAN.md":  "0314a2b917f8fb337c16f9c52095207d0d6b4b5905d865fa2a7a053946dd3fa3",
+                         "05-04-PLAN.md":  "26a69bdb48600cfdb2bccc2a75a9a5b55aa6fd493579a0929dbd559a4c989bb3"
+                     },
+    "coverage":  {
+                     "claude":  {
+                                    "missing":  [
+
+                                                ],
+                                    "total":  4,
+                                    "source_citations":  true
+                                },
+                     "antigravity":  {
+                                         "missing":  [
+
+                                                     ],
+                                         "total":  4,
+                                         "source_citations":  true
+                                     },
+                     "grok":  {
+                                  "missing":  [
+
+                                              ],
+                                  "total":  4,
+                                  "source_citations":  true
+                              }
+                 },
+    "reviewed_at":  "2026-10-22T13:38:06.3456104Z",
+    "report_sha256":  "cd8a95e3821a801c078116799d9adc69cbfd0c6cf680929e39abc7b6b2eb4218",
+    "grok_evidence_note":  "原文のrepoアクセス宣言が矛盾。総合判定は減重し、重要な個別指摘は親で照合。"
+}

@@ -1,0 +1,138 @@
+diff --git "a/C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\debug\\startup-wake-foreground-evidence\\baseline\\test_startup_wake.py.original" "b/C:\\Users\\shdwf\\work\\project\\PageFolio\\tests\\test_startup_wake.py"
+index ced1fcd..ba827a6 100644
+--- "a/C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\debug\\startup-wake-foreground-evidence\\baseline\\test_startup_wake.py.original"
++++ "b/C:\\Users\\shdwf\\work\\project\\PageFolio\\tests\\test_startup_wake.py"
+@@ -11,6 +11,76 @@ from types import SimpleNamespace
+ import pytest
+ 
+ from pagefolio.startup_wake import UiThreadWake
++from tests.startup_wake_child import WakeApiBoundary
++
++
++def _assert_wake_noninterference(data):
++    """デスクトップの前景値に依存せず、見張りの副作用の境界を検査する。"""
++    assert data["boundary_violations"] == [], data
++    assert all(name == "PostThreadMessageW" for name in data["wake_api_requests"]), data
++    assert all(name == "get_last_error" for name in data["wake_ctypes_requests"]), data
++    assert data["posted"] == len(data["posts"]), data
++    assert all(
++        item["args"] == [data["creator_tid"], 0, 0, 0]
++        and item["caller_tid"] != data["creator_tid"]
++        for item in data["posts"]
++    ), data
++
++
++@pytest.mark.parametrize("foreground_unchanged", [False, True])
++def test_noninterference_accepts_only_allowed_effects_independently_of_foreground(
++    foreground_unchanged,
++):
++    _assert_wake_noninterference(
++        {
++            "foreground_unchanged": foreground_unchanged,
++            "boundary_violations": [],
++            "wake_api_requests": ["PostThreadMessageW"],
++            "wake_ctypes_requests": [],
++            "posted": 1,
++            "creator_tid": 10,
++            "posts": [{"args": [10, 0, 0, 0], "caller_tid": 20}],
++        }
++    )
++
++
++@pytest.mark.parametrize(
++    "violation",
++    ["foreground-api", "ctypes-bypass", "other-thread", "other-message", "owner-call"],
++)
++def test_noninterference_rejects_forbidden_effects_even_if_foreground_is_unchanged(
++    violation,
++):
++    data = {
++        "foreground_unchanged": True,
++        "boundary_violations": [],
++        "wake_api_requests": ["PostThreadMessageW"],
++        "wake_ctypes_requests": [],
++        "posted": 1,
++        "creator_tid": 10,
++        "posts": [{"args": [10, 0, 0, 0], "caller_tid": 20}],
++    }
++    if violation == "foreground-api":
++        data["wake_api_requests"].append("SetForegroundWindow")
++    elif violation == "ctypes-bypass":
++        data["wake_ctypes_requests"].append("WinDLL")
++    elif violation == "other-thread":
++        data["posts"][0]["args"][0] = 99
++    elif violation == "other-message":
++        data["posts"][0]["args"][1] = 0x100
++    else:
++        data["posts"][0]["caller_tid"] = 10
++    with pytest.raises(AssertionError):
++        _assert_wake_noninterference(data)
++
++
++@pytest.mark.parametrize("api_name", ["SetForegroundWindow", "SendInput", "WinDLL"])
++def test_api_boundary_records_forbidden_access_even_if_exception_is_caught(api_name):
++    requests, violations = [], []
++    api = WakeApiBoundary({}, requests, violations)
++    with pytest.raises(RuntimeError, match="許可されていないAPI"):
++        getattr(api, api_name)
++    assert requests == violations == [api_name]
+ 
+ 
+ def test_posts_only_wm_null_to_creator_and_stops_before_close_returns():
+@@ -197,23 +267,51 @@ def test_entry_stops_wake_before_root_destruction(monkeypatch, failure):
+ 
+ 
+ @pytest.mark.skipif(sys.platform != "win32", reason="実 Windows/Tcl を使う回帰試験")
+-@pytest.mark.parametrize("enabled", [False, True])
+-def test_native_tcl_getmessage_stall_recovers_with_product_wake(enabled):
++@pytest.mark.parametrize(
++    "enabled, external_change", [(False, False), (True, False), (True, True)]
++)
++def test_native_tcl_getmessage_stall_recovers_with_product_wake(
++    enabled, external_change, tmp_path
++):
+     helper = Path(__file__).with_name("startup_wake_child.py")
++    command = [sys.executable, str(helper), "wake" if enabled else "control"]
++    if external_change:
++        command.append("--simulate-external-foreground")
+     result = subprocess.run(  # noqa: S603
+-        [sys.executable, str(helper), "wake" if enabled else "control"],
++        command,
+         cwd=helper.parents[1],
+         capture_output=True,
+         text=True,
+         encoding="utf-8",
+         timeout=15,
+         creationflags=subprocess.CREATE_NO_WINDOW,
+-        check=True,
++        check=False,
+     )
++    # assertより先に全出力を保存する。失敗しても子JSONと診断情報を失わない。
++    (tmp_path / "startup-wake-child.json").write_text(
++        json.dumps(
++            {
++                "command": command,
++                "returncode": result.returncode,
++                "stdout": result.stdout,
++                "stderr": result.stderr,
++            },
++            ensure_ascii=False,
++            indent=2,
++        ),
++        encoding="utf-8",
++    )
++    assert result.returncode == 0, result.stdout + result.stderr
+     data = json.loads(result.stdout)
+     assert data["removed"] == 1, result.stdout + result.stderr
+     assert data["posted"] > 0 if enabled else data["posted"] == 0
+-    assert data["foreground_unchanged"]
++    # 前景前後一致は外部操作に依存する診断値。非干渉は別の厳格な境界で保証する。
++    _assert_wake_noninterference(data)
++    assert data["foreground_observation_source"] == (
++        "simulated" if external_change else "native"
++    )
++    if external_change:
++        assert not data["foreground_unchanged"], data
+     assert data["worker_stopped"]
+     if enabled:
+         assert data["first_beat_after_ghost_ms"] < 400, data

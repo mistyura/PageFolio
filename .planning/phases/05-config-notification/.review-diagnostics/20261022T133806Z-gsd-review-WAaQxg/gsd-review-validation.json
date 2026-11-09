@@ -1,0 +1,44 @@
+{
+    "scope":  "Phase 5計画レビュー。製品コード・計画は未変更。",
+    "pytest":  [
+                   {
+                       "environment":  "sandbox",
+                       "command":  ".venv/Scripts/python.exe -m pytest -q --tb=short --basetemp=\"%LOCALAPPDATA%/Temp/pf_phase5_review_20261022_01\"",
+                       "exit_code":  1,
+                       "passed":  1575,
+                       "failed":  36,
+                       "errors":  24,
+                       "warnings":  3,
+                       "duration_seconds":  183.31,
+                       "observed":  "Tcl初期化不可とWindows子プロセス失敗。全失敗の原因を同一と断定しない。"
+                   },
+                   {
+                       "environment":  "sandbox外",
+                       "command":  ".venv/Scripts/python.exe -m pytest -q --tb=short --basetemp=\"%LOCALAPPDATA%/Temp/pf_phase5_review_20261022_02\"",
+                       "exit_code":  1,
+                       "passed":  1634,
+                       "failed":  1,
+                       "errors":  0,
+                       "warnings":  1,
+                       "duration_seconds":  354.41,
+                       "failed_test":  "tests/test_startup_windows.py::test_focus_restore_real_main_windows[normal-entry-script]",
+                       "observed":  "子プロセスが12秒以内に終了しない。原因未確定。",
+                       "log":  "gsd-review-pytest.log"
+                   }
+               ],
+    "commit":  "全件pytest未合格のため保留",
+    "claude_auth_check":  {
+                              "loggedIn":  true,
+                              "authMethod":  "api_key",
+                              "apiKeySource":  "ANTHROPIC_API_KEY"
+                          },
+    "artifact_validation":  {
+                                "conflict_delimiters":  "one pair",
+                                "evidence_copy":  "SHA256 matched",
+                                "plans_sha256":  "unchanged",
+                                "plan_coverage":  "3 reviewers x 4/4",
+                                "model_metadata":  "all 3 reviewers",
+                                "source_citations":  "present; Grok provenance contradiction noted",
+                                "diff_check":  "tracked git diff --check: exit 0; new report no-index --check: exit 1 (file addition), diagnostics empty; EOF corrected"
+                            }
+}

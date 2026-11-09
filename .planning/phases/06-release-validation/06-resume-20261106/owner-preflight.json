@@ -1,0 +1,22 @@
+{
+  "checked_at": "2026-11-06T10:44:35.695047+00:00",
+  "production_owner": [],
+  "originals": {
+    "ocr_custom_prompt.md": {
+      "exists": false,
+      "sha256": null
+    },
+    "pagefolio_settings.json": {
+      "exists": false,
+      "sha256": null
+    },
+    "ocr_summary_prompt.md": {
+      "exists": false,
+      "sha256": null
+    },
+    "plugins": {
+      "__pycache__/page_info.cpython-315.pyc": "27a73182395e0a1b8572063eb452adcfcbe8ffd24e538e00f31e1952da468bf3",
+      "page_info.py": "a481b6cac734251aae3a76e9df064e208713eb572401ee1bccbacf49b53b3a8f"
+    }
+  }
+}

@@ -1,0 +1,3 @@
+{"event": "observer_started", "tick": 8335250, "monotonic": 8335.2722884, "hwnd": 134248, "pid": 27368, "window_thread_id": 20780, "class_name": "Chrome_WidgetWin_1", "identity_available": true, "event_id": 32770}
+{"event": "winevent", "tick": 8335312, "monotonic": 8335.3545252, "hwnd": 14614902, "pid": 20628, "window_thread_id": 31752, "class_name": "PageFolioNotice187ca51ed3cf4885bc0af8ab4f0fa577", "identity_available": true, "event_id": 32770, "event_tick": 8335312, "event_thread_id": 31752, "object_id": 0, "child_id": 0}
+{"event": "observer_stopped", "tick": 8335484, "monotonic": 8335.5092383, "hwnd": 134248, "pid": 27368, "window_thread_id": 20780, "class_name": "Chrome_WidgetWin_1", "identity_available": true, "removed": true, "errors": []}

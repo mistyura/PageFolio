@@ -1,0 +1,42 @@
+[
+  {
+    "args": [
+      ".venv/Scripts/ruff.exe",
+      "check",
+      "."
+    ],
+    "code": 0,
+    "stdout": "All checks passed!\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      ".venv/Scripts/ruff.exe",
+      "format",
+      ".",
+      "--check",
+      "--no-cache",
+      "--output-format",
+      "concise"
+    ],
+    "code": 1,
+    "stdout": ".planning\\debug\\preview-focus-not-restored-evidence\\diag_btn_press.py:327:1: unformatted: File would be reformatted\n1 file would be reformatted, 136 files already formatted\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      ".venv/Scripts/ruff.exe",
+      "format",
+      "pagefolio.py",
+      "pagefolio",
+      "tests",
+      "tools",
+      "plugins",
+      "--check",
+      "--no-cache"
+    ],
+    "code": 0,
+    "stdout": "115 files already formatted\n",
+    "stderr": ""
+  }
+]

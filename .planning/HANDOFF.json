@@ -91,6 +91,11 @@
       "action": "未コミット差分のコミット方針判断",
       "context": "今回のhandoff以外は未コミット",
       "blocking": false
+    },
+    {
+      "action": "凍結解除時に06-05-record-w12c.cjsへelevated出力を追加",
+      "context": "未修正だと同recorderの新規記録が構造監査で再拒否される",
+      "blocking": false
     }
   ],
   "decisions": [
@@ -127,6 +132,11 @@
     {
       "decision": "W12c terminal 3回目は方式B（表示行をドラッグ選択→右クリックでコピー/貼付）で実施、事前入力の自動解決コマンド案は手順逸脱のため不採用",
       "rationale": "利用者選択 2026-11-09。手順書は表示行の本人実行を要求",
+      "phase": "06"
+    },
+    {
+      "decision": "W12c pass2行の台帳environmentにelevated:falseを補正追記（recorder 06-05-record-w12c.cjsは凍結中のため未修正）",
+      "rationale": "利用者承認 案1 2026-11-09。値は各run manifest.environment.is_admin",
       "phase": "06"
     }
   ],
@@ -461,5 +471,11 @@
     "out_of_scope_W11_deferred": 2,
     "ledger": "23 pass / 85 not-run / 対象外2",
     "release_allowed": false
+  },
+  "test_gate_20261109": {
+    "first_run": "3 failed / 2485 passed (945.84s): test_release_contract TestCaseCoverage 2件=W12c pass2行のenvironment.elevated欠落（recorder不備）、test_startup_windows::test_tracer_notice_lease_process_dedup 1件=単体再実行でpass（全件負荷下のみ失敗、原因未調査）",
+    "correction": ".planning/phases/06-release-validation/06-W12C-ENV-CORRECTION-20261109.md（利用者承認 案1: 台帳2行にelevated:falseをmanifest.is_adminから追記）",
+    "second_run": "2488 passed / 0 failed / 0 error (690.46s)",
+    "ruff": "check pass / format --check 503 files formatted"
   }
 }

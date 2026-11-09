@@ -1,0 +1,32 @@
+[
+  {
+    "source": "manifest.json",
+    "target": "06-05-evidence/W05c_quit-no_at_production-exe-20261106T120952Z-raw/manifest.json",
+    "sha256": "232685583de5f790c1a88baac5b56cac7c7378540809c7f7cfd635ef8661d3f3"
+  },
+  {
+    "source": "fixtures/edit-three-page.pdf",
+    "target": "06-05-evidence/W05c_quit-no_at_production-exe-20261106T120952Z-raw/fixtures-edit-three-page.pdf",
+    "sha256": "abee3a71f648e7b83b4d37c5f6167e855cc1907d9afe23127426e8351415bf8e"
+  },
+  {
+    "source": "evidence/inspect-002.json",
+    "target": "06-05-evidence/W05c_quit-no_at_production-exe-20261106T120952Z-raw/evidence-inspect-002.json",
+    "sha256": "cade8f19155077ead8eb2725d287645a06418408c3a57cfb0646af3cd6f85544"
+  },
+  {
+    "source": "evidence/inspect-003.json",
+    "target": "06-05-evidence/W05c_quit-no_at_production-exe-20261106T120952Z-raw/evidence-inspect-003.json",
+    "sha256": "2365180067f2c2a15d624792b0d6825b171ac1f5586389e7b1275eeb350a9d15"
+  },
+  {
+    "source": "evidence/inspect-004.json",
+    "target": "06-05-evidence/W05c_quit-no_at_production-exe-20261106T120952Z-raw/evidence-inspect-004.json",
+    "sha256": "b5f6380a6b71abba0a5a1a760a194b7b1a401de6e4492835af001af3c2adaa7f"
+  },
+  {
+    "source": "evidence/inspect-005.json",
+    "target": "06-05-evidence/W05c_quit-no_at_production-exe-20261106T120952Z-raw/evidence-inspect-005.json",
+    "sha256": "41e374e43618aa8bfebea65a031d9f3d2e88a09a415a79001b40c4b1f6011191"
+  }
+]

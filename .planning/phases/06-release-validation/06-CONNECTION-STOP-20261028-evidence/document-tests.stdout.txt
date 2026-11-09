@@ -1,0 +1,265 @@
+..EE.EEEEEEEEEEEEE.............E.............E.                          [100%]
+=================================== ERRORS ====================================
+__________ ERROR at setup of test_dod_gate_detects_unvalidated_phase __________
+
+self = WindowsPath('C:/Users/shdwf/AppData/Local/Temp/pf06_connection_stop_docs_4216d0ea1f764d3bb595f8c54807b01d/tmp')
+mode = 448, parents = False, exist_ok = False, parent_mode = None
+
+    def mkdir(self, mode=0o777, parents=False, exist_ok=False, *, parent_mode=None):
+        """
+        Create a new directory at this given path.
+        """
+        try:
+>           os.mkdir(self, mode)
+E           FileNotFoundError: [WinError 3] 指定されたパスが見つかりません。: 'C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf06_connection_stop_docs_4216d0ea1f764d3bb595f8c54807b01d\\tmp'
+
+..\..\..\AppData\Local\Programs\Python\Python315\Lib\pathlib\__init__.py:1210: FileNotFoundError
+_________ ERROR at setup of test_dod_gate_rejects_empty_and_malformed _________
+
+self = WindowsPath('C:/Users/shdwf/AppData/Local/Temp/pf06_connection_stop_docs_4216d0ea1f764d3bb595f8c54807b01d/tmp')
+mode = 448, parents = False, exist_ok = False, parent_mode = None
+
+    def mkdir(self, mode=0o777, parents=False, exist_ok=False, *, parent_mode=None):
+        """
+        Create a new directory at this given path.
+        """
+        try:
+>           os.mkdir(self, mode)
+E           FileNotFoundError: [WinError 3] 指定されたパスが見つかりません。: 'C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf06_connection_stop_docs_4216d0ea1f764d3bb595f8c54807b01d\\tmp'
+
+..\..\..\AppData\Local\Programs\Python\Python315\Lib\pathlib\__init__.py:1210: FileNotFoundError
+_ ERROR at setup of test_live_incomplete_does_not_require_validation[---\nstatus: draft\nnyquist_compliant: true\n---\n\n# Validation\n] _
+
+self = WindowsPath('C:/Users/shdwf/AppData/Local/Temp/pf06_connection_stop_docs_4216d0ea1f764d3bb595f8c54807b01d/tmp')
+mode = 448, parents = False, exist_ok = False, parent_mode = None
+
+    def mkdir(self, mode=0o777, parents=False, exist_ok=False, *, parent_mode=None):
+        """
+        Create a new directory at this given path.
+        """
+        try:
+>           os.mkdir(self, mode)
+E           FileNotFoundError: [WinError 3] 指定されたパスが見つかりません。: 'C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf06_connection_stop_docs_4216d0ea1f764d3bb595f8c54807b01d\\tmp'
+
+..\..\..\AppData\Local\Programs\Python\Python315\Lib\pathlib\__init__.py:1210: FileNotFoundError
+__ ERROR at setup of test_live_incomplete_does_not_require_validation[None] ___
+
+self = WindowsPath('C:/Users/shdwf/AppData/Local/Temp/pf06_connection_stop_docs_4216d0ea1f764d3bb595f8c54807b01d/tmp')
+mode = 448, parents = False, exist_ok = False, parent_mode = None
+
+    def mkdir(self, mode=0o777, parents=False, exist_ok=False, *, parent_mode=None):
+        """
+        Create a new directory at this given path.
+        """
+        try:
+>           os.mkdir(self, mode)
+E           FileNotFoundError: [WinError 3] 指定されたパスが見つかりません。: 'C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf06_connection_stop_docs_4216d0ea1f764d3bb595f8c54807b01d\\tmp'
+
+..\..\..\AppData\Local\Programs\Python\Python315\Lib\pathlib\__init__.py:1210: FileNotFoundError
+_ ERROR at setup of test_live_completion_requires_consistent_evidence[True-Complete-1/1-2026-10-21-True-True] _
+
+self = WindowsPath('C:/Users/shdwf/AppData/Local/Temp/pf06_connection_stop_docs_4216d0ea1f764d3bb595f8c54807b01d/tmp')
+mode = 448, parents = False, exist_ok = False, parent_mode = None
+
+    def mkdir(self, mode=0o777, parents=False, exist_ok=False, *, parent_mode=None):
+        """
+        Create a new directory at this given path.
+        """
+        try:
+>           os.mkdir(self, mode)
+E           FileNotFoundError: [WinError 3] 指定されたパスが見つかりません。: 'C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf06_connection_stop_docs_4216d0ea1f764d3bb595f8c54807b01d\\tmp'
+
+..\..\..\AppData\Local\Programs\Python\Python315\Lib\pathlib\__init__.py:1210: FileNotFoundError
+_ ERROR at setup of test_live_completion_requires_consistent_evidence[False-Complete-1/1-2026-10-21-True-False] _
+
+self = WindowsPath('C:/Users/shdwf/AppData/Local/Temp/pf06_connection_stop_docs_4216d0ea1f764d3bb595f8c54807b01d/tmp')
+mode = 448, parents = False, exist_ok = False, parent_mode = None
+
+    def mkdir(self, mode=0o777, parents=False, exist_ok=False, *, parent_mode=None):
+        """
+        Create a new directory at this given path.
+        """
+        try:
+>           os.mkdir(self, mode)
+E           FileNotFoundError: [WinError 3] 指定されたパスが見つかりません。: 'C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf06_connection_stop_docs_4216d0ea1f764d3bb595f8c54807b01d\\tmp'
+
+..\..\..\AppData\Local\Programs\Python\Python315\Lib\pathlib\__init__.py:1210: FileNotFoundError
+_ ERROR at setup of test_live_completion_requires_consistent_evidence[False-Complete-1/1-2026-10-21-False-True] _
+
+self = WindowsPath('C:/Users/shdwf/AppData/Local/Temp/pf06_connection_stop_docs_4216d0ea1f764d3bb595f8c54807b01d/tmp')
+mode = 448, parents = False, exist_ok = False, parent_mode = None
+
+    def mkdir(self, mode=0o777, parents=False, exist_ok=False, *, parent_mode=None):
+        """
+        Create a new directory at this given path.
+        """
+        try:
+>           os.mkdir(self, mode)
+E           FileNotFoundError: [WinError 3] 指定されたパスが見つかりません。: 'C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf06_connection_stop_docs_4216d0ea1f764d3bb595f8c54807b01d\\tmp'
+
+..\..\..\AppData\Local\Programs\Python\Python315\Lib\pathlib\__init__.py:1210: FileNotFoundError
+_ ERROR at setup of test_live_completion_requires_consistent_evidence[False-Complete-0/1-2026-10-21-True-True] _
+
+self = WindowsPath('C:/Users/shdwf/AppData/Local/Temp/pf06_connection_stop_docs_4216d0ea1f764d3bb595f8c54807b01d/tmp')
+mode = 448, parents = False, exist_ok = False, parent_mode = None
+
+    def mkdir(self, mode=0o777, parents=False, exist_ok=False, *, parent_mode=None):
+        """
+        Create a new directory at this given path.
+        """
+        try:
+>           os.mkdir(self, mode)
+E           FileNotFoundError: [WinError 3] 指定されたパスが見つかりません。: 'C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf06_connection_stop_docs_4216d0ea1f764d3bb595f8c54807b01d\\tmp'
+
+..\..\..\AppData\Local\Programs\Python\Python315\Lib\pathlib\__init__.py:1210: FileNotFoundError
+_ ERROR at setup of test_live_completion_requires_consistent_evidence[False-Complete-1/1-\u2014-True-True] _
+
+self = WindowsPath('C:/Users/shdwf/AppData/Local/Temp/pf06_connection_stop_docs_4216d0ea1f764d3bb595f8c54807b01d/tmp')
+mode = 448, parents = False, exist_ok = False, parent_mode = None
+
+    def mkdir(self, mode=0o777, parents=False, exist_ok=False, *, parent_mode=None):
+        """
+        Create a new directory at this given path.
+        """
+        try:
+>           os.mkdir(self, mode)
+E           FileNotFoundError: [WinError 3] 指定されたパスが見つかりません。: 'C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf06_connection_stop_docs_4216d0ea1f764d3bb595f8c54807b01d\\tmp'
+
+..\..\..\AppData\Local\Programs\Python\Python315\Lib\pathlib\__init__.py:1210: FileNotFoundError
+_ ERROR at setup of test_live_completion_requires_consistent_evidence[True-Planned-0/1-\u2014-False-True] _
+
+self = WindowsPath('C:/Users/shdwf/AppData/Local/Temp/pf06_connection_stop_docs_4216d0ea1f764d3bb595f8c54807b01d/tmp')
+mode = 448, parents = False, exist_ok = False, parent_mode = None
+
+    def mkdir(self, mode=0o777, parents=False, exist_ok=False, *, parent_mode=None):
+        """
+        Create a new directory at this given path.
+        """
+        try:
+>           os.mkdir(self, mode)
+E           FileNotFoundError: [WinError 3] 指定されたパスが見つかりません。: 'C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf06_connection_stop_docs_4216d0ea1f764d3bb595f8c54807b01d\\tmp'
+
+..\..\..\AppData\Local\Programs\Python\Python315\Lib\pathlib\__init__.py:1210: FileNotFoundError
+_ ERROR at setup of test_live_roadmap_ambiguity_fails_closed[duplicate_phase] _
+
+self = WindowsPath('C:/Users/shdwf/AppData/Local/Temp/pf06_connection_stop_docs_4216d0ea1f764d3bb595f8c54807b01d/tmp')
+mode = 448, parents = False, exist_ok = False, parent_mode = None
+
+    def mkdir(self, mode=0o777, parents=False, exist_ok=False, *, parent_mode=None):
+        """
+        Create a new directory at this given path.
+        """
+        try:
+>           os.mkdir(self, mode)
+E           FileNotFoundError: [WinError 3] 指定されたパスが見つかりません。: 'C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf06_connection_stop_docs_4216d0ea1f764d3bb595f8c54807b01d\\tmp'
+
+..\..\..\AppData\Local\Programs\Python\Python315\Lib\pathlib\__init__.py:1210: FileNotFoundError
+_ ERROR at setup of test_live_roadmap_ambiguity_fails_closed[duplicate_progress] _
+
+self = WindowsPath('C:/Users/shdwf/AppData/Local/Temp/pf06_connection_stop_docs_4216d0ea1f764d3bb595f8c54807b01d/tmp')
+mode = 448, parents = False, exist_ok = False, parent_mode = None
+
+    def mkdir(self, mode=0o777, parents=False, exist_ok=False, *, parent_mode=None):
+        """
+        Create a new directory at this given path.
+        """
+        try:
+>           os.mkdir(self, mode)
+E           FileNotFoundError: [WinError 3] 指定されたパスが見つかりません。: 'C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf06_connection_stop_docs_4216d0ea1f764d3bb595f8c54807b01d\\tmp'
+
+..\..\..\AppData\Local\Programs\Python\Python315\Lib\pathlib\__init__.py:1210: FileNotFoundError
+_____ ERROR at setup of test_live_roadmap_ambiguity_fails_closed[missing] _____
+
+self = WindowsPath('C:/Users/shdwf/AppData/Local/Temp/pf06_connection_stop_docs_4216d0ea1f764d3bb595f8c54807b01d/tmp')
+mode = 448, parents = False, exist_ok = False, parent_mode = None
+
+    def mkdir(self, mode=0o777, parents=False, exist_ok=False, *, parent_mode=None):
+        """
+        Create a new directory at this given path.
+        """
+        try:
+>           os.mkdir(self, mode)
+E           FileNotFoundError: [WinError 3] 指定されたパスが見つかりません。: 'C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf06_connection_stop_docs_4216d0ea1f764d3bb595f8c54807b01d\\tmp'
+
+..\..\..\AppData\Local\Programs\Python\Python315\Lib\pathlib\__init__.py:1210: FileNotFoundError
+_____ ERROR at setup of test_live_roadmap_ambiguity_fails_closed[unknown] _____
+
+self = WindowsPath('C:/Users/shdwf/AppData/Local/Temp/pf06_connection_stop_docs_4216d0ea1f764d3bb595f8c54807b01d/tmp')
+mode = 448, parents = False, exist_ok = False, parent_mode = None
+
+    def mkdir(self, mode=0o777, parents=False, exist_ok=False, *, parent_mode=None):
+        """
+        Create a new directory at this given path.
+        """
+        try:
+>           os.mkdir(self, mode)
+E           FileNotFoundError: [WinError 3] 指定されたパスが見つかりません。: 'C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf06_connection_stop_docs_4216d0ea1f764d3bb595f8c54807b01d\\tmp'
+
+..\..\..\AppData\Local\Programs\Python\Python315\Lib\pathlib\__init__.py:1210: FileNotFoundError
+_ ERROR at setup of test_live_progress_tracks_each_summary_before_validation __
+
+self = WindowsPath('C:/Users/shdwf/AppData/Local/Temp/pf06_connection_stop_docs_4216d0ea1f764d3bb595f8c54807b01d/tmp')
+mode = 448, parents = False, exist_ok = False, parent_mode = None
+
+    def mkdir(self, mode=0o777, parents=False, exist_ok=False, *, parent_mode=None):
+        """
+        Create a new directory at this given path.
+        """
+        try:
+>           os.mkdir(self, mode)
+E           FileNotFoundError: [WinError 3] 指定されたパスが見つかりません。: 'C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf06_connection_stop_docs_4216d0ea1f764d3bb595f8c54807b01d\\tmp'
+
+..\..\..\AppData\Local\Programs\Python\Python315\Lib\pathlib\__init__.py:1210: FileNotFoundError
+_ ERROR at setup of TestGuideAndWorkflow.test_guide_links_resolve_inside_the_bundle _
+
+self = WindowsPath('C:/Users/shdwf/AppData/Local/Temp/pf06_connection_stop_docs_4216d0ea1f764d3bb595f8c54807b01d/tmp')
+mode = 448, parents = False, exist_ok = False, parent_mode = None
+
+    def mkdir(self, mode=0o777, parents=False, exist_ok=False, *, parent_mode=None):
+        """
+        Create a new directory at this given path.
+        """
+        try:
+>           os.mkdir(self, mode)
+E           FileNotFoundError: [WinError 3] 指定されたパスが見つかりません。: 'C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf06_connection_stop_docs_4216d0ea1f764d3bb595f8c54807b01d\\tmp'
+
+..\..\..\AppData\Local\Programs\Python\Python315\Lib\pathlib\__init__.py:1210: FileNotFoundError
+_ ERROR at setup of TestCaseCoverage.test_structure_audit_accepts_ledger_and_rejects_false_pass _
+
+self = WindowsPath('C:/Users/shdwf/AppData/Local/Temp/pf06_connection_stop_docs_4216d0ea1f764d3bb595f8c54807b01d/tmp')
+mode = 448, parents = False, exist_ok = False, parent_mode = None
+
+    def mkdir(self, mode=0o777, parents=False, exist_ok=False, *, parent_mode=None):
+        """
+        Create a new directory at this given path.
+        """
+        try:
+>           os.mkdir(self, mode)
+E           FileNotFoundError: [WinError 3] 指定されたパスが見つかりません。: 'C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf06_connection_stop_docs_4216d0ea1f764d3bb595f8c54807b01d\\tmp'
+
+..\..\..\AppData\Local\Programs\Python\Python315\Lib\pathlib\__init__.py:1210: FileNotFoundError
+============================== warnings summary ===============================
+.venv\Lib\site-packages\pymupdf\__init__.py:470
+  C:\Users\shdwf\work\project\PageFolio\.venv\Lib\site-packages\pymupdf\__init__.py:470: DeprecationWarning: 'typing.ByteString' and 'collections.abc.ByteString' are deprecated and slated for removal in Python 3.17
+    ByteString = typing.ByteString
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+ERROR tests/test_gsd_dod.py::test_dod_gate_detects_unvalidated_phase - FileNo...
+ERROR tests/test_gsd_dod.py::test_dod_gate_rejects_empty_and_malformed - File...
+ERROR tests/test_gsd_dod.py::test_live_incomplete_does_not_require_validation[---\nstatus: draft\nnyquist_compliant: true\n---\n\n# Validation\n]
+ERROR tests/test_gsd_dod.py::test_live_incomplete_does_not_require_validation[None]
+ERROR tests/test_gsd_dod.py::test_live_completion_requires_consistent_evidence[True-Complete-1/1-2026-10-21-True-True]
+ERROR tests/test_gsd_dod.py::test_live_completion_requires_consistent_evidence[False-Complete-1/1-2026-10-21-True-False]
+ERROR tests/test_gsd_dod.py::test_live_completion_requires_consistent_evidence[False-Complete-1/1-2026-10-21-False-True]
+ERROR tests/test_gsd_dod.py::test_live_completion_requires_consistent_evidence[False-Complete-0/1-2026-10-21-True-True]
+ERROR tests/test_gsd_dod.py::test_live_completion_requires_consistent_evidence[False-Complete-1/1-\u2014-True-True]
+ERROR tests/test_gsd_dod.py::test_live_completion_requires_consistent_evidence[True-Planned-0/1-\u2014-False-True]
+ERROR tests/test_gsd_dod.py::test_live_roadmap_ambiguity_fails_closed[duplicate_phase]
+ERROR tests/test_gsd_dod.py::test_live_roadmap_ambiguity_fails_closed[duplicate_progress]
+ERROR tests/test_gsd_dod.py::test_live_roadmap_ambiguity_fails_closed[missing]
+ERROR tests/test_gsd_dod.py::test_live_roadmap_ambiguity_fails_closed[unknown]
+ERROR tests/test_gsd_dod.py::test_live_progress_tracks_each_summary_before_validation
+ERROR tests/test_release_contract.py::TestGuideAndWorkflow::test_guide_links_resolve_inside_the_bundle
+ERROR tests/test_release_contract.py::TestCaseCoverage::test_structure_audit_accepts_ledger_and_rejects_false_pass
+30 passed, 1 warning, 17 errors in 1.46s

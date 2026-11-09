@@ -1,0 +1,118 @@
+{
+  "manifest": {
+    "run": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-tone_ht2",
+    "namespace": "f3818638403944b99d92bf1ae23442b6",
+    "case": "native-quit",
+    "role": "uat-owner-native-quit",
+    "fixture": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-tone_ht2\\uat-owner-native-quit",
+    "launcher_pid": 6172,
+    "environment": {
+      "os": "sys.getwindowsversion(major=10, minor=0, build=26300, platform=2, service_pack='')",
+      "python": "3.15.2 (tags/v3.15.2:5e58eaa, Oct 25 2026, 17:27:03) [MSC v.1951 64 bit (AMD64)]",
+      "pointer_bits": 64,
+      "session_id": 1,
+      "sid": "S-1-5-5-0-347023",
+      "authentication_luid": 352479,
+      "foreground": 855634,
+      "is_admin": false,
+      "tcl": "9.0.4",
+      "tk": 9.0
+    },
+    "originals_before": {
+      "pagefolio_settings.json": null,
+      "ocr_custom_prompt.md": null,
+      "ocr_summary_prompt.md": null
+    },
+    "source_commit": "3d5e01bd71bb4a1ee8d1c12085dc09d062b9b44c",
+    "expected_owner": {
+      "sid": "S-1-5-5-0-347023",
+      "authentication_luid": 352479,
+      "session_id": 1,
+      "pid": 3220,
+      "process_created": 134383249538666943,
+      "started_tick": 150298250,
+      "owner_result": "acquired",
+      "snapshot": {
+        "protocol": 1,
+        "generation": "bd22aaadc12c45f5ad7110014da38877",
+        "pid": 3220,
+        "process_created": 134383249538666943,
+        "session_id": 1,
+        "state": "ready",
+        "ready": true,
+        "release_generation": null
+      },
+      "ready_tick": 150302984,
+      "manual": true
+    }
+  },
+  "originals_unchanged": true,
+  "ready": {
+    "sid": "S-1-5-5-0-347023",
+    "authentication_luid": 352479,
+    "session_id": 1,
+    "pid": 3220,
+    "process_created": 134383249538666943,
+    "started_tick": 150298250,
+    "owner_result": "acquired",
+    "snapshot": {
+      "protocol": 1,
+      "generation": "bd22aaadc12c45f5ad7110014da38877",
+      "pid": 3220,
+      "process_created": 134383249538666943,
+      "session_id": 1,
+      "state": "ready",
+      "ready": true,
+      "release_generation": null
+    },
+    "ready_tick": 150302984
+  },
+  "resource-audit.json": {
+    "sid": "S-1-5-5-0-347023",
+    "authentication_luid": 352479,
+    "session_id": 1,
+    "pid": 3220,
+    "process_created": 134383249538666943,
+    "started_tick": 150298250,
+    "owner_result": "acquired",
+    "snapshot": {
+      "protocol": 1,
+      "generation": "bd22aaadc12c45f5ad7110014da38877",
+      "pid": 3220,
+      "process_created": 134383249538666943,
+      "session_id": 1,
+      "state": "ready",
+      "ready": true,
+      "release_generation": null
+    },
+    "ready_tick": 150302984
+  },
+  "result.json": {
+    "constructed": 1,
+    "restored": 2,
+    "status_preserved": true,
+    "result": "primary",
+    "elapsed": 53953
+  },
+  "focus-result.json": {
+    "state_preserved": true,
+    "target_correct": true,
+    "result": "foreground_denied",
+    "activated": 11276710,
+    "expected_tk": 6031606,
+    "native": 11276710,
+    "placement": "normal",
+    "expected_focus": "None",
+    "immediate_focus": "None",
+    "document_pages": 3,
+    "page_rotations": [
+      90,
+      90,
+      0
+    ],
+    "selected_pages": [],
+    "current_page": 1,
+    "focus_correct": true,
+    "settled_focus": "None"
+  }
+}

@@ -1,0 +1,227 @@
+{
+  "label": "after-peer",
+  "at": "2026-10-28T05:17:42.135692+00:00",
+  "monotonic": 22317.2448392,
+  "processes": [
+    {
+      "role": "primary",
+      "pid": 28824,
+      "created": 134376382083857527,
+      "identity": "same",
+      "alive": true,
+      "session_id": 1,
+      "elevated": false,
+      "windows": [
+        {
+          "hwnd": 16060658,
+          "visible": true,
+          "title": "OCR",
+          "class": "TkTopLevel",
+          "rect": [
+            111,
+            179,
+            1277,
+            898
+          ]
+        },
+        {
+          "hwnd": 5705436,
+          "visible": true,
+          "title": "PageFolio",
+          "class": "TkTopLevel",
+          "rect": [
+            78,
+            78,
+            1294,
+            917
+          ]
+        },
+        {
+          "hwnd": 5702496,
+          "visible": false,
+          "title": "",
+          "class": "WorkerW",
+          "rect": [
+            0,
+            0,
+            136,
+            39
+          ]
+        },
+        {
+          "hwnd": 13111464,
+          "visible": false,
+          "title": "TclNotifier",
+          "class": "TclNotifier",
+          "rect": [
+            0,
+            0,
+            136,
+            39
+          ]
+        },
+        {
+          "hwnd": 5377730,
+          "visible": false,
+          "title": "GDI+ Window (PageFolio.exe)",
+          "class": "GDI+ Hook Window Class",
+          "rect": [
+            0,
+            0,
+            1,
+            1
+          ]
+        },
+        {
+          "hwnd": 8654990,
+          "visible": false,
+          "title": "EmbeddedMenuWindow",
+          "class": "EmbeddedMenuWindowClass",
+          "rect": [
+            0,
+            0,
+            10,
+            10
+          ]
+        },
+        {
+          "hwnd": 8851768,
+          "visible": false,
+          "title": "MenuWindow",
+          "class": "MenuWindowClass",
+          "rect": [
+            0,
+            0,
+            10,
+            10
+          ]
+        },
+        {
+          "hwnd": 591192,
+          "visible": false,
+          "title": "",
+          "class": "Wtk_TaskbarHandler",
+          "rect": [
+            0,
+            0,
+            1358,
+            813
+          ]
+        },
+        {
+          "hwnd": 6491556,
+          "visible": false,
+          "title": "TtkMonitorWindow",
+          "class": "TtkMonitorClass",
+          "rect": [
+            52,
+            52,
+            1332,
+            787
+          ]
+        },
+        {
+          "hwnd": 14749614,
+          "visible": false,
+          "title": "MSCTFIME UI",
+          "class": "MSCTFIME UI",
+          "rect": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "hwnd": 12062992,
+          "visible": false,
+          "title": "Default IME",
+          "class": "IME",
+          "rect": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "hwnd": 10686400,
+          "visible": false,
+          "title": "Default IME",
+          "class": "IME",
+          "rect": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "hwnd": 4067076,
+          "visible": false,
+          "title": "",
+          "class": "BingIMESysMessageWindow",
+          "rect": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      ]
+    },
+    {
+      "role": "peer",
+      "pid": 28104,
+      "created": 134376382581058182,
+      "identity": "gone",
+      "alive": false,
+      "session_id": null,
+      "elevated": null,
+      "windows": []
+    }
+  ],
+  "foreground": {
+    "hwnd": 16060658,
+    "pid": 28824,
+    "title": "OCR",
+    "owned_by": "primary"
+  },
+  "owner_probe": [
+    {
+      "kind": "mutex",
+      "name": "Local\\PageFolio.Startup.Owner",
+      "state": "open"
+    },
+    {
+      "kind": "mapping",
+      "name": "Local\\PageFolio.Startup.State",
+      "state": "open"
+    }
+  ],
+  "observer": {
+    "python": "3.15.2 (tags/v3.15.2:5e58eaa, Oct 25 2026, 17:27:03) [MSC v.1951 64 bit (AMD64)]",
+    "tk": "9.0"
+  },
+  "exe_embedded": {
+    "python": "3.15.2 (tags/v3.15.2:5e58eaa, Oct 25 2026, 17:27:03) [MSC v.1951 64 bit (AMD64)]",
+    "dependencies": {
+      "PyInstaller": "6.22.3",
+      "pyinstaller-hooks-contrib": "2026.9",
+      "PyMuPDF": "1.28.2",
+      "Pillow": "13.0.0",
+      "tkinterdnd2": "0.6.4"
+    }
+  },
+  "copy": {
+    "ok": true,
+    "distribution_changed": [],
+    "missing_dirs": [],
+    "extra_dirs": [],
+    "undeclared": [],
+    "overlay_changed": [],
+    "locked_unverified": [],
+    "tree_sha256": "2e0d274cbeabd004ec9665592cec2a294b6f7c23e844167ba3d97700d1e0384f",
+    "exe_sha256": "9b3ebbce390c3b9f1752a97820a5ef81a0c39b7e148b93717b86bb47f9f5f73b"
+  }
+}

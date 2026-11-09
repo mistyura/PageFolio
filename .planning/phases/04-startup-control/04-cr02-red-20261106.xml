@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="2" time="0.981" timestamp="2026-11-06T18:15:42.751440+09:00" hostname="nullaze-z240"><testcase classname="tests.test_w05c_runner" name="test_adoption_requires_explicit_acceptance[False-\u4e0d\u63a1\u7528-v2]" time="0.437" /><testcase classname="tests.test_w05c_runner" name="test_adoption_requires_explicit_acceptance[False-\u4e0d\u63a1\u7528-v3]" time="0.384"><failure message="AssertionError: 否認・未知の採用判断を受理した&#10;assert 0 != 0&#10; +  where 0 = CompletedProcess(args=['C:\\Program Files\\nodejs\\node.EXE', 'C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\...3&quot;,&quot;plan_sha256&quot;:&quot;367d1f46ab1f24920ce5e03e7be7d74e3aa722312dd19d58e7609e831829adfc&quot;,&quot;due_monotonic&quot;:120}\n', stderr='').returncode">tmp_path = WindowsPath('C:/Users/shdwf/work/project/PageFolio/.planning/phases/04-startup-control/04-cr02-red-20261106/test_adoption_requires_explici1')
+schema = 'v3', decision = '不採用', dry_run = False
+
+    @pytest.mark.parametrize("schema", ["v2", "v3"])
+    @pytest.mark.parametrize("decision", ["不採用", "deny", "unknown", True, 1, {}, None])
+    @pytest.mark.parametrize("dry_run", [False, True])
+    def test_adoption_requires_explicit_acceptance(tmp_path, schema, decision, dry_run):
+        if schema == "v3":
+            phase, filename, payload = v3_fixture(tmp_path)
+            answer = payload["answer"]
+        else:
+            phase, filename = helper_fixture(tmp_path)
+            answer = json.loads((phase / "06-05-evidence" / filename).read_text())
+        answer["adoption"]["decision"] = decision
+        (phase / "06-05-evidence" / filename).write_text(
+            json.dumps(answer, ensure_ascii=False), encoding="utf-8"
+        )
+        before = {str(p): p.read_bytes() for p in tmp_path.rglob("*") if p.is_file()}
+        if schema == "v3":
+            rejected = validate(payload)
+&gt;           assert rejected.returncode != 0, "否認・未知の採用判断を受理した"
+E           AssertionError: 否認・未知の採用判断を受理した
+E           assert 0 != 0
+E            +  where 0 = CompletedProcess(args=['C:\\Program Files\\nodejs\\node.EXE', 'C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\...3","plan_sha256":"367d1f46ab1f24920ce5e03e7be7d74e3aa722312dd19d58e7609e831829adfc","due_monotonic":120}\n', stderr='').returncode
+
+tests\test_w05c_runner.py:370: AssertionError</failure></testcase></testsuite></testsuites>

@@ -1,0 +1,15 @@
+{
+  "at": "2026-11-06T12:22:31.831428+00:00",
+  "argv": [
+    "C:\\Users\\shdwf\\work\\project\\PageFolio\\.venv\\Scripts\\python.exe",
+    "tests/release_uat_support.py",
+    "audit",
+    "--phase-dir",
+    ".planning\\phases\\06-release-validation",
+    "--require-pass",
+    "W05a,W05b,W05c"
+  ],
+  "exit": 0,
+  "stdout": "{\n  \"mode\": \"require-pass\",\n  \"ok\": true,\n  \"exit_code\": 0,\n  \"reasons\": [],\n  \"phase_complete\": false,\n  \"release_allowed\": false,\n  \"scope_id\": \"single-login-session\",\n  \"approval_id\": \"W11-B-20261028\",\n  \"total\": 9,\n  \"required\": 9,\n  \"deferred\": 0,\n  \"required_pass\": 9,\n  \"required_not_run\": 0,\n  \"required_fail\": 0,\n  \"required_blocked\": 0,\n  \"ids\": [\n    \"W05a\",\n    \"W05b\",\n    \"W05c\"\n  ],\n  \"task_ready\": true\n}\n",
+  "stderr": ""
+}

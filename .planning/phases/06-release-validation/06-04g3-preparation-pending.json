@@ -1,0 +1,26 @@
+{
+  "mode": "preparation-only",
+  "ok": false,
+  "exit_code": 1,
+  "reasons": [
+    "実接続(ocr-single)とnative modal(w05b-modal)の両方が必要です",
+    "06-UAT-PREPARATION.mdに保護証拠のrun参照がありません: 034da46ced8d4c02b001c1350ad4cfbf",
+    "06-UAT-PREPARATION.mdに保護証拠のrun参照がありません: 0c289c364a25402e9aa514b5be8fe2c2",
+    "06-UAT-PREPARATION.mdに保護証拠のrun参照がありません: 2354dd0e4c934de6a44fc624f62e01da",
+    "06-UAT-PREPARATION.mdに保護証拠のrun参照がありません: 2680bdf5bd9943cbb99c3a7e63e78e97",
+    "06-UAT-PREPARATION.mdに保護証拠のrun参照がありません: 2b7a53f82f014af294721a2c96ee6f2a",
+    "06-UAT-PREPARATION.mdに保護証拠のrun参照がありません: 5787245f4ffc41ad8142f14f7fb7eebd",
+    "06-UAT-PREPARATION.mdに保護証拠のrun参照がありません: 64058e97276540f38e6ae5c6f4052f5d",
+    "06-UAT-PREPARATION.mdに保護証拠のrun参照がありません: 65468902bf4f4efeb4f880f83f302acc",
+    "06-UAT-PREPARATION.mdに保護証拠のrun参照がありません: bbe088a0fd8344a688d81ec4eaa66d89",
+    "06-UAT-PREPARATION.mdに保護証拠のrun参照がありません: ca66fbc00cdf49958d7d0f801949d934",
+    "06-UAT-PREPARATION.mdに保護証拠のrun参照がありません: d04fea5666194452b2cd65aa4a5ce20e",
+    "06-UAT-PREPARATION.mdに保護証拠のrun参照がありません: db2f16a9041546caaf9bc9d5eb015683",
+    "06-UAT-PREPARATION.mdに保護証拠のrun参照がありません: eea9ec4a38e044f989f27d52a9a185de",
+    "06-UAT-PREPARATION.mdに保護証拠のrun参照がありません: efbcd9bebc234e5ba8b4029d2d1a8b97",
+    "06-UAT-PREPARATION.mdに保護証拠のrun参照がありません: f597309fe4ac4f958994fc9000bef612",
+    "06-UAT-PREPARATION.mdに保護証拠のrun参照がありません: f7a78d95a4cc442b815d8e79c001d488"
+  ],
+  "phase_complete": false,
+  "release_allowed": false
+}

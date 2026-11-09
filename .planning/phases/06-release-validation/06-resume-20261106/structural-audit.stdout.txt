@@ -1,0 +1,19 @@
+{
+  "mode": "allow-pending",
+  "ok": true,
+  "exit_code": 0,
+  "reasons": [],
+  "phase_complete": false,
+  "release_allowed": false,
+  "scope_id": "single-login-session",
+  "approval_id": "W11-B-20261028",
+  "total": 110,
+  "required": 108,
+  "deferred": 2,
+  "required_pass": 29,
+  "required_not_run": 79,
+  "required_fail": 0,
+  "required_blocked": 0,
+  "structural_only": true,
+  "task_ready": false
+}

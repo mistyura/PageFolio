@@ -1,0 +1,27 @@
+[
+  {
+    "source": "w12b-machine.json",
+    "sha256": "01afa9b614c1e98fc4ea0fc69655817093a86f539099b366c0570f0f2469080e",
+    "target": "06-05-evidence/W12b_exe-module_at_production-exe-20261109T122110Z-raw/w12b-machine.json"
+  },
+  {
+    "source": "manifest.json",
+    "sha256": "8bf1a25e9a3a3cb97c32ff2e5cd33d78f251a4636091211fae3e274d4aab42ca",
+    "target": "06-05-evidence/W12b_exe-module_at_production-exe-20261109T122110Z-raw/manifest.json"
+  },
+  {
+    "source": "peer-7056ec0efb8b4fbcb2a1eb0620f0df39/resource-audit.json",
+    "sha256": "2f926d82762038565902e228388951043ae35d482f871b8ac336a4f7aa89b53f",
+    "target": "06-05-evidence/W12b_exe-module_at_production-exe-20261109T122110Z-raw/peer-7056ec0efb8b4fbcb2a1eb0620f0df39-resource-audit.json"
+  },
+  {
+    "source": "peer-7056ec0efb8b4fbcb2a1eb0620f0df39/result.json",
+    "sha256": "04df8b01c543ca243fba613965c84be2cf13666c6f883f7b95dd7b443c5b4295",
+    "target": "06-05-evidence/W12b_exe-module_at_production-exe-20261109T122110Z-raw/peer-7056ec0efb8b4fbcb2a1eb0620f0df39-result.json"
+  },
+  {
+    "source": "peer-7056ec0efb8b4fbcb2a1eb0620f0df39/expected-owner.json",
+    "sha256": "4dfce23208ce404933ca3c73c0c938b2ba8031fbe6a142eccc967d215a019e6e",
+    "target": "06-05-evidence/W12b_exe-module_at_production-exe-20261109T122110Z-raw/peer-7056ec0efb8b4fbcb2a1eb0620f0df39-expected-owner.json"
+  }
+]

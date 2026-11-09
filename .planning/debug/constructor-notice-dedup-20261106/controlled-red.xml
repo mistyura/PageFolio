@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="1" time="3.932" timestamp="2026-11-06T22:37:16.253914+09:00" hostname="nullaze-z240"><testcase classname="tests.test_startup_windows" name="test_constructor_failure_notice_dedup[2.1-False]" time="3.573"><failure message="assert False&#10; +  where False = all(&lt;generator object test_constructor_failure_notice_dedup.&lt;locals&gt;.&lt;genexpr&gt; at 0x000001F15FC09B60&gt;)">tmp_path = WindowsPath('C:/Users/shdwf/work/project/PageFolio/.planning/tmp/constructor-notice-red-20261106/test_constructor_failure_notic0')
+legacy_owner = False, join_delay = 2.1
+
+    @pytest.mark.parametrize("legacy_owner", [False, True])
+    @pytest.mark.parametrize("join_delay", [0.0, 2.1])
+    def test_constructor_failure_notice_dedup(tmp_path, legacy_owner, join_delay):
+        namespace = uuid4().hex
+        (tmp_path / "constructor-join-delays.json").write_text(
+            json.dumps({"constructor-failure-join-6": join_delay}), encoding="utf-8"
+        )
+        owner_role = (
+            "constructor-failure-legacy-owner"
+            if legacy_owner
+            else "constructor-failure-owner"
+        )
+        owner, fixture = _spawn(tmp_path, namespace, owner_role)
+        children = [owner]
+        try:
+            _wait_file(owner, fixture / "ready")
+            first = json.loads((fixture / "ready").read_text(encoding="utf-8"))
+            for index in range(7):
+                join_type = "legacy-join" if index % 2 else "join"
+                child, _ = _spawn(
+                    tmp_path, namespace, f"constructor-failure-{join_type}-{index}"
+                )
+                children.append(child)
+            joined = [_finish(child) for child in children[1:]]
+            assert all(item["result"] == "check_failed" for item in joined)
+&gt;           assert all(item["notice_calls"] == 0 for item in joined)
+E           assert False
+E            +  where False = all(&lt;generator object test_constructor_failure_notice_dedup.&lt;locals&gt;.&lt;genexpr&gt; at 0x000001F15FC09B60&gt;)
+
+tests\test_startup_windows.py:496: AssertionError</failure></testcase></testsuite></testsuites>

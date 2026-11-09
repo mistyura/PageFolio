@@ -1,0 +1,27 @@
+[
+  {
+    "source": "w12b-machine.json",
+    "sha256": "c9c2c233812e4932ac19466b7d02aff2245f83265cf02ccb3eddad196aa13df6",
+    "target": "06-05-evidence/W12b_exe-script_at_production-exe-20261109T121614Z-raw/w12b-machine.json"
+  },
+  {
+    "source": "manifest.json",
+    "sha256": "5266f24f7069e18695855ab1fb0a5531664596ceb609edcad142d2e801ccc75c",
+    "target": "06-05-evidence/W12b_exe-script_at_production-exe-20261109T121614Z-raw/manifest.json"
+  },
+  {
+    "source": "peer-fe1e461c9be84ad89c1757217d4b699e/resource-audit.json",
+    "sha256": "b6e4e552c4eeb328d5862eac18c1bdbc5912013f3848faa92577797ab78393c6",
+    "target": "06-05-evidence/W12b_exe-script_at_production-exe-20261109T121614Z-raw/peer-fe1e461c9be84ad89c1757217d4b699e-resource-audit.json"
+  },
+  {
+    "source": "peer-fe1e461c9be84ad89c1757217d4b699e/result.json",
+    "sha256": "6e6be579fb513974a47ee48cffb3cb2239088ed80e491e999290cf54e995f4ef",
+    "target": "06-05-evidence/W12b_exe-script_at_production-exe-20261109T121614Z-raw/peer-fe1e461c9be84ad89c1757217d4b699e-result.json"
+  },
+  {
+    "source": "peer-fe1e461c9be84ad89c1757217d4b699e/expected-owner.json",
+    "sha256": "c13e35905c5d8e39cde434d57bee123d3c82e9088e8a6ff7bf912e9fd26bbd3e",
+    "target": "06-05-evidence/W12b_exe-script_at_production-exe-20261109T121614Z-raw/peer-fe1e461c9be84ad89c1757217d4b699e-expected-owner.json"
+  }
+]

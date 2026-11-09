@@ -1,0 +1,376 @@
+{
+  "role": "notice-case-owner",
+  "records": [
+    {
+      "event": "child_started",
+      "utc": "2026-10-28T03:15:27.990485+00:00",
+      "tick": 14983078,
+      "monotonic_ns": 14983098666400,
+      "observer_pid": 26900,
+      "foreground": {
+        "hwnd": 396656,
+        "pid": 18044,
+        "thread_id": 7096,
+        "process_created": 134376167120459276,
+        "image": "C:\\Program Files\\WindowsApps\\Microsoft.WindowsTerminal_1.25.2733.0_x64__8wekyb3d8bbwe\\WindowsTerminal.exe"
+      },
+      "last_input_available": true,
+      "last_input_tick32": 14983046,
+      "role": "notice-case-owner",
+      "capture_duration_ns": 1068100
+    },
+    {
+      "event": "observer_started",
+      "utc": "2026-10-28T03:15:28.129884+00:00",
+      "tick": 14983218,
+      "monotonic_ns": 14983239006800,
+      "observer_pid": 26900,
+      "foreground": {
+        "hwnd": 396656,
+        "pid": 18044,
+        "thread_id": 7096,
+        "process_created": 134376167120459276,
+        "image": "C:\\Program Files\\WindowsApps\\Microsoft.WindowsTerminal_1.25.2733.0_x64__8wekyb3d8bbwe\\WindowsTerminal.exe"
+      },
+      "last_input_available": true,
+      "last_input_tick32": 14983109,
+      "event_hwnd": null,
+      "details": {
+        "event_id": 3
+      },
+      "capture_duration_ns": 162300
+    },
+    {
+      "event": "notice_show_call",
+      "utc": "2026-10-28T03:15:28.130112+00:00",
+      "tick": 14983218,
+      "monotonic_ns": 14983239242400,
+      "observer_pid": 26900,
+      "foreground": {
+        "hwnd": 396656,
+        "pid": 18044,
+        "thread_id": 7096,
+        "process_created": 134376167120459276,
+        "image": "C:\\Program Files\\WindowsApps\\Microsoft.WindowsTerminal_1.25.2733.0_x64__8wekyb3d8bbwe\\WindowsTerminal.exe"
+      },
+      "last_input_available": true,
+      "last_input_tick32": 14983109,
+      "event_hwnd": null,
+      "details": {},
+      "capture_duration_ns": 65500
+    },
+    {
+      "event": "api_enter",
+      "utc": "2026-10-28T03:15:28.145648+00:00",
+      "tick": 14983218,
+      "monotonic_ns": 14983254769600,
+      "observer_pid": 26900,
+      "foreground": {
+        "hwnd": 396656,
+        "pid": 18044,
+        "thread_id": 7096,
+        "process_created": 134376167120459276,
+        "image": "C:\\Program Files\\WindowsApps\\Microsoft.WindowsTerminal_1.25.2733.0_x64__8wekyb3d8bbwe\\WindowsTerminal.exe"
+      },
+      "last_input_available": true,
+      "last_input_tick32": 14983109,
+      "api": "SetWindowPos",
+      "target": 8130834,
+      "arguments": [
+        8130834,
+        null,
+        1131,
+        16,
+        560,
+        95,
+        20
+      ],
+      "stack": [
+        {
+          "file": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\debug\\simultaneous-owner-missing-evidence\\probe_notice_once.py",
+          "line": 315,
+          "function": "<module>"
+        },
+        {
+          "file": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\debug\\simultaneous-owner-missing-evidence\\probe_notice_once.py",
+          "line": 198,
+          "function": "child"
+        },
+        {
+          "file": "C:\\Users\\shdwf\\work\\project\\PageFolio\\tests\\test_startup_windows.py",
+          "line": 2798,
+          "function": "_test_scenario_bootstrap"
+        },
+        {
+          "file": "C:\\Users\\shdwf\\work\\project\\PageFolio\\tests\\test_startup_windows.py",
+          "line": 1997,
+          "function": "_run_scenario"
+        },
+        {
+          "file": "C:\\Users\\shdwf\\work\\project\\PageFolio\\pagefolio\\startup_win32.py",
+          "line": 1883,
+          "function": "show"
+        }
+      ],
+      "close_context": {
+        "remaining_ms": null
+      },
+      "capture_duration_ns": 113300
+    },
+    {
+      "event": "api_return",
+      "utc": "2026-10-28T03:15:28.146112+00:00",
+      "tick": 14983234,
+      "monotonic_ns": 14983255240800,
+      "observer_pid": 26900,
+      "foreground": {
+        "hwnd": 396656,
+        "pid": 18044,
+        "thread_id": 7096,
+        "process_created": 134376167120459276,
+        "image": "C:\\Program Files\\WindowsApps\\Microsoft.WindowsTerminal_1.25.2733.0_x64__8wekyb3d8bbwe\\WindowsTerminal.exe"
+      },
+      "last_input_available": true,
+      "last_input_tick32": 14983109,
+      "api": "SetWindowPos",
+      "result": 1,
+      "last_error": 0,
+      "capture_duration_ns": 82400
+    },
+    {
+      "event": "api_enter",
+      "utc": "2026-10-28T03:15:28.146320+00:00",
+      "tick": 14983234,
+      "monotonic_ns": 14983255449500,
+      "observer_pid": 26900,
+      "foreground": {
+        "hwnd": 396656,
+        "pid": 18044,
+        "thread_id": 7096,
+        "process_created": 134376167120459276,
+        "image": "C:\\Program Files\\WindowsApps\\Microsoft.WindowsTerminal_1.25.2733.0_x64__8wekyb3d8bbwe\\WindowsTerminal.exe"
+      },
+      "last_input_available": true,
+      "last_input_tick32": 14983109,
+      "api": "ShowWindow",
+      "target": 8130834,
+      "arguments": [
+        8130834,
+        4
+      ],
+      "stack": [
+        {
+          "file": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\debug\\simultaneous-owner-missing-evidence\\probe_notice_once.py",
+          "line": 315,
+          "function": "<module>"
+        },
+        {
+          "file": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\debug\\simultaneous-owner-missing-evidence\\probe_notice_once.py",
+          "line": 198,
+          "function": "child"
+        },
+        {
+          "file": "C:\\Users\\shdwf\\work\\project\\PageFolio\\tests\\test_startup_windows.py",
+          "line": 2798,
+          "function": "_test_scenario_bootstrap"
+        },
+        {
+          "file": "C:\\Users\\shdwf\\work\\project\\PageFolio\\tests\\test_startup_windows.py",
+          "line": 1997,
+          "function": "_run_scenario"
+        },
+        {
+          "file": "C:\\Users\\shdwf\\work\\project\\PageFolio\\pagefolio\\startup_win32.py",
+          "line": 1899,
+          "function": "show"
+        }
+      ],
+      "close_context": {
+        "remaining_ms": null
+      },
+      "capture_duration_ns": 63400
+    },
+    {
+      "event": "api_return",
+      "utc": "2026-10-28T03:15:28.148016+00:00",
+      "tick": 14983234,
+      "monotonic_ns": 14983257142800,
+      "observer_pid": 26900,
+      "foreground": {
+        "hwnd": 396656,
+        "pid": 18044,
+        "thread_id": 7096,
+        "process_created": 134376167120459276,
+        "image": "C:\\Program Files\\WindowsApps\\Microsoft.WindowsTerminal_1.25.2733.0_x64__8wekyb3d8bbwe\\WindowsTerminal.exe"
+      },
+      "last_input_available": true,
+      "last_input_tick32": 14983109,
+      "api": "ShowWindow",
+      "result": 0,
+      "last_error": 0,
+      "capture_duration_ns": 92500
+    },
+    {
+      "event": "notice_published",
+      "utc": "2026-10-28T03:15:28.148222+00:00",
+      "tick": 14983234,
+      "monotonic_ns": 14983257353200,
+      "observer_pid": 26900,
+      "foreground": {
+        "hwnd": 396656,
+        "pid": 18044,
+        "thread_id": 7096,
+        "process_created": 134376167120459276,
+        "image": "C:\\Program Files\\WindowsApps\\Microsoft.WindowsTerminal_1.25.2733.0_x64__8wekyb3d8bbwe\\WindowsTerminal.exe"
+      },
+      "last_input_available": true,
+      "last_input_tick32": 14983109,
+      "event_hwnd": 8130834,
+      "details": {},
+      "capture_duration_ns": 57200
+    },
+    {
+      "event": "api_enter",
+      "utc": "2026-10-28T03:15:29.966039+00:00",
+      "tick": 14985046,
+      "monotonic_ns": 14985075140800,
+      "observer_pid": 26900,
+      "foreground": {
+        "hwnd": 396656,
+        "pid": 18044,
+        "thread_id": 7096,
+        "process_created": 134376167120459276,
+        "image": "C:\\Program Files\\WindowsApps\\Microsoft.WindowsTerminal_1.25.2733.0_x64__8wekyb3d8bbwe\\WindowsTerminal.exe"
+      },
+      "last_input_available": true,
+      "last_input_tick32": 14983109,
+      "api": "DestroyWindow",
+      "target": 8130834,
+      "arguments": [
+        8130834
+      ],
+      "stack": [
+        {
+          "file": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\debug\\simultaneous-owner-missing-evidence\\probe_notice_once.py",
+          "line": 315,
+          "function": "<module>"
+        },
+        {
+          "file": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\debug\\simultaneous-owner-missing-evidence\\probe_notice_once.py",
+          "line": 198,
+          "function": "child"
+        },
+        {
+          "file": "C:\\Users\\shdwf\\work\\project\\PageFolio\\tests\\test_startup_windows.py",
+          "line": 2798,
+          "function": "_test_scenario_bootstrap"
+        },
+        {
+          "file": "C:\\Users\\shdwf\\work\\project\\PageFolio\\tests\\test_startup_windows.py",
+          "line": 1997,
+          "function": "_run_scenario"
+        },
+        {
+          "file": "C:\\Users\\shdwf\\work\\project\\PageFolio\\pagefolio\\startup_win32.py",
+          "line": 1913,
+          "function": "show"
+        },
+        {
+          "file": "C:\\Users\\shdwf\\work\\project\\PageFolio\\pagefolio\\startup_win32.py",
+          "line": 1637,
+          "function": "destroy"
+        }
+      ],
+      "close_context": {
+        "remaining_ms": 0
+      },
+      "capture_duration_ns": 322100
+    },
+    {
+      "event": "api_return",
+      "utc": "2026-10-28T03:15:29.975310+00:00",
+      "tick": 14985062,
+      "monotonic_ns": 14985084400900,
+      "observer_pid": 26900,
+      "foreground": {
+        "hwnd": 396656,
+        "pid": 18044,
+        "thread_id": 7096,
+        "process_created": 134376167120459276,
+        "image": "C:\\Program Files\\WindowsApps\\Microsoft.WindowsTerminal_1.25.2733.0_x64__8wekyb3d8bbwe\\WindowsTerminal.exe"
+      },
+      "last_input_available": true,
+      "last_input_tick32": 14983109,
+      "api": "DestroyWindow",
+      "result": 1,
+      "last_error": 0,
+      "capture_duration_ns": 604900
+    },
+    {
+      "event": "notice_returned",
+      "utc": "2026-10-28T03:15:29.978167+00:00",
+      "tick": 14985062,
+      "monotonic_ns": 14985087267500,
+      "observer_pid": 26900,
+      "foreground": {
+        "hwnd": 396656,
+        "pid": 18044,
+        "thread_id": 7096,
+        "process_created": 134376167120459276,
+        "image": "C:\\Program Files\\WindowsApps\\Microsoft.WindowsTerminal_1.25.2733.0_x64__8wekyb3d8bbwe\\WindowsTerminal.exe"
+      },
+      "last_input_available": true,
+      "last_input_tick32": 14983109,
+      "event_hwnd": null,
+      "details": {
+        "foreground_before_show": 396656,
+        "foreground_after_show": 396656,
+        "foreground_before_close": 396656,
+        "foreground_after_close": 396656
+      },
+      "capture_duration_ns": 393200
+    },
+    {
+      "event": "observer_stopped",
+      "utc": "2026-10-28T03:15:29.978865+00:00",
+      "tick": 14985062,
+      "monotonic_ns": 14985087985100,
+      "observer_pid": 26900,
+      "foreground": {
+        "hwnd": 396656,
+        "pid": 18044,
+        "thread_id": 7096,
+        "process_created": 134376167120459276,
+        "image": "C:\\Program Files\\WindowsApps\\Microsoft.WindowsTerminal_1.25.2733.0_x64__8wekyb3d8bbwe\\WindowsTerminal.exe"
+      },
+      "last_input_available": true,
+      "last_input_tick32": 14983109,
+      "event_hwnd": null,
+      "details": {
+        "removed": true,
+        "errors": []
+      },
+      "capture_duration_ns": 236600
+    },
+    {
+      "event": "child_finished",
+      "utc": "2026-10-28T03:15:29.982491+00:00",
+      "tick": 14985062,
+      "monotonic_ns": 14985091591600,
+      "observer_pid": 26900,
+      "foreground": {
+        "hwnd": 396656,
+        "pid": 18044,
+        "thread_id": 7096,
+        "process_created": 134376167120459276,
+        "image": "C:\\Program Files\\WindowsApps\\Microsoft.WindowsTerminal_1.25.2733.0_x64__8wekyb3d8bbwe\\WindowsTerminal.exe"
+      },
+      "last_input_available": true,
+      "last_input_tick32": 14983109,
+      "role": "notice-case-owner",
+      "capture_duration_ns": 221400
+    }
+  ],
+  "errors": [],
+  "limits": "入力時刻だけを観測。入力内容/種別/要求元は取得しない。"
+}

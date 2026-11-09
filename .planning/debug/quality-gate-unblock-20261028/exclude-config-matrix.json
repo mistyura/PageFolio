@@ -1,0 +1,20 @@
+[
+  {
+    "case": "config-basename",
+    "code": 0,
+    "stdout": "137 files already formatted\n",
+    "stderr": ""
+  },
+  {
+    "case": "cli-no-cache",
+    "code": 0,
+    "stdout": "137 files already formatted\n",
+    "stderr": ""
+  },
+  {
+    "case": "config-folder",
+    "code": 0,
+    "stdout": "137 files already formatted\n",
+    "stderr": ""
+  }
+]

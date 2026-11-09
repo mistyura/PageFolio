@@ -1,0 +1,59 @@
+{
+  "checked_at": "2026-11-06T10:13:53.736Z",
+  "result": ".planning/phases/04-startup-control/04-reverify-20261106-cr02/result.json",
+  "single_process": true,
+  "tests": 2361,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0,
+  "input_count": 170,
+  "current_inputs_matched": 170,
+  "changed": [],
+  "checks": [
+    {
+      "argv": [
+        "C:\\Users\\shdwf\\work\\project\\PageFolio\\.venv\\Scripts\\ruff.exe",
+        "check",
+        ".",
+        "--no-cache"
+      ],
+      "exit": 0,
+      "stdout": "All checks passed!\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "C:\\Users\\shdwf\\work\\project\\PageFolio\\.venv\\Scripts\\ruff.exe",
+        "format",
+        "--check",
+        "--no-cache",
+        "<148 files>"
+      ],
+      "exit": 0,
+      "stdout": "148 files already formatted\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "C:\\Users\\shdwf\\work\\project\\PageFolio\\.venv\\Scripts\\python.exe",
+        "-c",
+        "import ast; ast.parse(open('pagefolio.py', encoding='utf-8').read())"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  ],
+  "artifacts": {
+    ".planning/phases/04-startup-control/04-reverify-20261106-cr02/result.json": "7d030a223d3209cb314924f43d36b85096d1f69e82d0e0d8f9f4f6e795391af0",
+    ".planning/phases/04-startup-control/04-reverify-20261106-cr02/inputs-before.json": "3e09d22fb8190e60a60039ba5e613209296faa97feb48ed42a6e72e244d9879e",
+    ".planning/phases/04-startup-control/04-reverify-20261106-cr02/inputs-after.json": "3e09d22fb8190e60a60039ba5e613209296faa97feb48ed42a6e72e244d9879e",
+    ".planning/phases/04-startup-control/04-reverify-20261106-cr02/junit.xml": "ab5df8828c9d9f09a974cadd5ae4c05a62a19315ab757b58a9c9001bab1f9288",
+    ".planning/phases/04-startup-control/04-reverify-20261106-cr02/stdout.txt": "0a13c8ae3d9352fd4ef9c145a1ededc943781fdfa0fbb5c89a914cd4a0df9025",
+    ".planning/phases/04-startup-control/04-reverify-20261106-cr02/stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    ".planning/phases/04-startup-control/04-reverify-20261106-cr02/checks.json": "e4c75de2c0004174deb52555f14d169a8aaa653d46b2172f403c410169cad195",
+    ".planning/phases/04-startup-control/04-reverify-20261106-cr02/environment.txt": "c2edc377a53c20dd3aedbb73517b88048ff15a27ef3034b5da216c7e989b7384",
+    ".planning/phases/04-startup-control/04-reverify-20261106-cr02/ruff-discovery.json": "a762c68b442822f5ecf5ffe3cc9733afba360ba5e675397a607d6d6a4a3f466f"
+  },
+  "release_allowed": false
+}

@@ -1,0 +1,1 @@
+{"sid": "S-1-5-5-0-207308", "authentication_luid": 212341, "session_id": 1, "pid": 18428, "process_created": 134372367156523933, "started_tick": 9051078, "owner_result": "existing", "guard_blocked": "identity_mismatch", "terminal_result": "connection_failed", "elapsed": 15, "notice_reason": "connection_failed"}

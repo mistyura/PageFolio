@@ -8,6 +8,7 @@ import importlib.util
 import json
 import logging
 import os
+import re
 import runpy
 import shutil
 import subprocess
@@ -35,6 +36,7 @@ pytestmark = pytest.mark.skipif(sys.platform != "win32", reason="Windows 実測"
 _ROOT = Path(__file__).resolve().parents[1]
 # Python import・Tk初期化の試験待機。製品の二次起動期限（5秒）とは別。
 _BOOTSTRAP_TIMEOUT = 30
+_W05C_OBSERVERS = []
 _ORIGINALS = (
     "pagefolio_settings.json",
     "ocr_custom_prompt.md",
@@ -51,6 +53,90 @@ def _fingerprints():
     }
 
 
+def _formal_source_inputs(root=_ROOT):
+    """正式Python CLIが使いうるPython入力のbytesを固定する。"""
+    paths = [
+        root / "pagefolio.py",
+        *sorted((root / "pagefolio").rglob("*.py")),
+        *sorted((root / "tests").rglob("*.py")),
+        root / ".planning/phases/06-release-validation/06-05-w12a-driver.py",
+    ]
+    return {
+        path.relative_to(root).as_posix(): hashlib.sha256(path.read_bytes()).hexdigest()
+        for path in paths
+        if path.is_file() and "__pycache__" not in path.parts
+    }
+
+
+def _w12a_helper_sha256(root=_ROOT):
+    helper = root / ".planning/phases/06-release-validation/06-05-record-w12a.cjs"
+    return hashlib.sha256(helper.read_bytes()).hexdigest()
+
+
+def _formal_original_plugins(root=_ROOT):
+    directory = root / "plugins"
+    return {
+        item.relative_to(directory).as_posix(): hashlib.sha256(
+            item.read_bytes()
+        ).hexdigest()
+        for item in sorted(directory.rglob("*"))
+        if item.is_file()
+    }
+
+
+def _formal_parent_gate(root=_ROOT):
+    """通常pytestには触れず、正式CLIの新runだけPhase04 freshを要求する。"""
+    report = root / ".planning/phases/04-startup-control/04-VERIFICATION.md"
+    raw = report.read_bytes()
+    import re
+
+    match = re.search(rb'^covered_digest: "([^"]+)"\r?$', raw, re.M)
+    assert match, "Phase04 covered_digestがない"
+    node = shutil.which("node")
+    cli = Path.home() / ".codex/gsd-core/bin/gsd-tools.cjs"
+    assert node and cli.is_file(), "Phase04 fresh検査CLIがない"
+    checked = subprocess.run(  # noqa: S603 -- 固定されたローカルGSD CLIのみ。
+        [
+            node,
+            str(cli),
+            "query",
+            "verification.status",
+            str(root / ".planning/phases/04-startup-control"),
+            "--raw",
+        ],
+        cwd=root,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        timeout=15,
+        creationflags=subprocess.CREATE_NO_WINDOW if sys.platform == "win32" else 0,
+        check=False,
+    )
+    assert checked.returncode == 0, checked.stderr
+    status = json.loads(checked.stdout)["status"]
+    assert status == "passed", f"Phase04 freshでない: {status}"
+    return {
+        "status": status,
+        "covered_digest": match.group(1).decode("ascii"),
+        "report_sha256": hashlib.sha256(raw).hexdigest(),
+    }
+
+
+def _check_formal_provenance(manifest, root=_ROOT):
+    saved = manifest["formal_provenance"]
+    assert saved["source_inputs"] == _formal_source_inputs(root), (
+        "実行時Python入力が変化"
+    )
+    assert saved["original_plugins"] == _formal_original_plugins(root), (
+        "元pluginsが変化"
+    )
+    assert saved["phase04"] == _formal_parent_gate(root), "Phase04親検証が変化"
+    if "w12a_helper_sha256" in saved:
+        assert saved["w12a_helper_sha256"] == _w12a_helper_sha256(root), (
+            "W12a採用helperが変化"
+        )
+
+
 @pytest.fixture(autouse=True)
 def _unchanged_originals():
     before = _fingerprints()
@@ -59,11 +145,29 @@ def _unchanged_originals():
 
 
 def _spawn(
-    tmp_path, namespace, role, *, fixture_name=None, expected_owner=None, detached=False
+    tmp_path,
+    namespace,
+    role,
+    *,
+    fixture_name=None,
+    expected_owner=None,
+    detached=False,
+    notice_audit=False,
+    w05c_observe=False,
+    w05c_plan=None,
+    w12a_manual=False,
 ):
     fixture = tmp_path / (fixture_name or role)
     fixture.mkdir()
     (fixture / "plugins").mkdir()
+    if notice_audit:
+        (fixture / "notice-audit-enabled").touch()
+    if w05c_observe:
+        (fixture / "w05c-observe").touch()
+    if w05c_plan is not None:
+        (fixture / "w05c-plan.json").write_text(json.dumps(w05c_plan), encoding="utf-8")
+    if w12a_manual:
+        (fixture / "w12a-manual").touch()
     (fixture / "pagefolio_settings.json").write_text(
         '{"lang":"ja","ocr_provider":"off"}', encoding="utf-8"
     )
@@ -453,25 +557,42 @@ def test_constructor_failure_entry_exit(tmp_path):
 
 
 @pytest.mark.parametrize("legacy_owner", [False, True])
-def test_constructor_failure_notice_dedup(tmp_path, legacy_owner):
+@pytest.mark.parametrize("join_delay", [0.0, 2.1])
+def test_constructor_failure_notice_dedup(tmp_path, legacy_owner, join_delay):
     namespace = uuid4().hex
+    (tmp_path / "constructor-join-delays.json").write_text(
+        json.dumps({"constructor-failure-join-6": join_delay}), encoding="utf-8"
+    )
     owner_role = (
         "constructor-failure-legacy-owner"
         if legacy_owner
         else "constructor-failure-owner"
     )
-    owner, fixture = _spawn(tmp_path, namespace, owner_role)
-    children = [owner]
+    children = []
     try:
-        _wait_file(owner, fixture / "ready")
-        first = json.loads((fixture / "ready").read_text(encoding="utf-8"))
+        joiners = []
         for index in range(7):
             join_type = "legacy-join" if index % 2 else "join"
-            child, _ = _spawn(
+            child, path = _spawn(
                 tmp_path, namespace, f"constructor-failure-{join_type}-{index}"
             )
             children.append(child)
-        joined = [_finish(child) for child in children[1:]]
+            joiners.append((child, path))
+        # 期限内の重複呼出が前提。子のimport時間を通知寿命へ混ぜない。
+        for child, path in joiners:
+            _wait_file(child, path / "constructor-join-ready")
+        owner, fixture = _spawn(tmp_path, namespace, owner_role)
+        children.append(owner)
+        _wait_file(owner, fixture / "ready")
+        first = json.loads((fixture / "ready").read_text(encoding="utf-8"))
+        (tmp_path / "constructor-joins-release").touch()
+        joined = [_finish(child) for child, _ in joiners]
+        assert all(
+            first["snapshot"]["shown_tick"]
+            <= item["notice_call_tick"]
+            < first["snapshot"]["deadline_tick"]
+            for item in joined
+        )
         assert all(item["result"] == "check_failed" for item in joined)
         assert all(item["notice_calls"] == 0 for item in joined)
         assert all(
@@ -610,12 +731,13 @@ def test_tracer_notice_lease_process_dedup(tmp_path):
 class _ForegroundAudit:
     """試験スレッドのWinEvent監査。入力・前景・製品の期限は変更しない。"""
 
-    def __init__(self, backend, path, *, event=3):
+    def __init__(self, backend, path, *, event=3, call_audit=None):
         from pagefolio.startup_win32 import _bind
 
         self.backend = backend
         self.event = event
         self.path = path
+        self.call_audit = call_audit
         self.errors = []
         self.hook = None
         self.stream = None
@@ -682,6 +804,8 @@ class _ForegroundAudit:
             "identity_available": bool(thread_id and length),
             **details,
         }
+        if self.call_audit is not None:
+            record["process_created"] = self.call_audit.identity(hwnd).get("created")
         self.stream.write(json.dumps(record) + "\n")
         self.stream.flush()
 
@@ -743,56 +867,94 @@ class _ForegroundAudit:
 def test_foreground_audit_receives_native_window_event(tmp_path):
     """実window表示eventでhookの受信・所有者記録・解除を検証。前景強制なし。"""
     from pagefolio.startup_win32 import NativeNoticeLifetime, Win32Backend
+    from tests.startup_foreground_audit import REQUIRED, NoticeCallAudit
 
-    backend = Win32Backend(uuid4().hex)
     path = tmp_path / "foreground-audit.jsonl"
+    call_path = tmp_path / "notice-call-audit.json"
     shown = []
-    try:
-        # EVENT_OBJECT_SHOWで同じ受信経路を検証。前景不変の製品合否とは別試験。
-        with _ForegroundAudit(backend, path, event=0x8002):
-            notice = NativeNoticeLifetime(backend, "contact_failed")
-            notice.show(lifetime_ms=150, on_show=shown.append)
-        records = [json.loads(line) for line in path.read_text().splitlines()]
-        received = [
-            row
-            for row in records
-            if row["event"] == "winevent" and row["hwnd"] == shown[0]
-        ]
-        assert received, "実windowの表示eventを受信していない"
-        assert all(row["pid"] == os.getpid() for row in received)
-        assert all(row["identity_available"] and row["event_tick"] for row in received)
-        assert records[-1]["removed"] and not records[-1]["errors"]
-    finally:
-        backend.close()
+    from pagefolio import startup_win32 as win
+
+    with NoticeCallAudit(win, call_path, "native-audit-connection") as audit:
+        backend = Win32Backend(uuid4().hex)
+        try:
+            # EVENT_OBJECT_SHOWで同じ受信経路を検証。前景を強制しない。
+            with _ForegroundAudit(backend, path, event=0x8002, call_audit=audit):
+                notice = NativeNoticeLifetime(backend, "contact_failed")
+                notice.show(lifetime_ms=150, on_show=shown.append)
+            records = [json.loads(line) for line in path.read_text().splitlines()]
+            received = [
+                row
+                for row in records
+                if row["event"] == "winevent" and row["hwnd"] == shown[0]
+            ]
+            assert received, "実windowの表示eventを受信していない"
+            assert all(row["pid"] == os.getpid() for row in received)
+            assert all(
+                row["identity_available"] and row["event_tick"] for row in received
+            )
+            assert records[-1]["removed"] and not records[-1]["errors"]
+        finally:
+            backend.close()
+    saved = json.loads(call_path.read_text(encoding="utf-8"))
+    assert not saved["errors"]
+    assert REQUIRED <= {
+        row["api"] for row in saved["records"] if row["kind"] == "api_return"
+    }
+    assert all(row["process_created"] == saved["created"] for row in received)
 
 
 def test_notice_dedup_eight_processes_keep_original_deadline(tmp_path):
+    from tests.startup_foreground_audit import classify_notice_foreground
+
     namespace = uuid4().hex
-    owner, path = _spawn(tmp_path, namespace, "notice-case-owner")
+    owner, path = _spawn(tmp_path, namespace, "notice-case-owner", notice_audit=True)
     children = [owner]
     try:
         _wait_file(owner, path / "ready")
         initial = json.loads((path / "ready").read_text())
-        peers = [
-            _spawn(tmp_path, namespace, f"notice-case-peer-{i}")[0] for i in range(8)
+        peer_fixtures = [
+            _spawn(tmp_path, namespace, f"notice-case-peer-{i}", notice_audit=True)
+            for i in range(8)
         ]
+        peers = [child for child, _ in peer_fixtures]
         children.extend(peers)
         results = [_finish(child) for child in peers]
-        assert all(not result["acquired"] for result in results)
-        assert all(result["snapshot"] == initial["snapshot"] for result in results)
         final = _finish(owner)
-        assert final["foreground_before"] == final["foreground_after"]
-        assert 1700 <= final["elapsed"] < 3000
-        assert final["deadline_tick"] == initial["snapshot"]["deadline_tick"]
         records = [
             json.loads(line)
             for line in (path / "foreground-audit.jsonl").read_text().splitlines()
         ]
-        assert records[0]["event"] == "observer_started"
-        assert records[-1]["removed"] and not records[-1]["errors"]
-        assert {"notice_show_call", "notice_published", "notice_returned"} <= {
-            row["event"] for row in records
+        audits = [
+            json.loads((fixture / "notice-call-audit.json").read_text(encoding="utf-8"))
+            for fixture in [path, *(fixture for _, fixture in peer_fixtures)]
+        ]
+        foreground = classify_notice_foreground(
+            audits,
+            records,
+            final,
+            [result["notice_process"]["pid"] for result in [final, *results]],
+        )
+        checks = {
+            "runtime_identities": all(
+                audit["pid"] == result["notice_process"]["pid"]
+                and audit["created"] == result["notice_process"]["created"]
+                and audit["role"] == result["notice_process"]["role"]
+                for audit, result in zip(audits, [final, *results], strict=True)
+            ),
+            "peers_coalesced": all(not result["acquired"] for result in results),
+            "snapshots_unchanged": all(
+                result["snapshot"] == initial["snapshot"] for result in results
+            ),
+            "lifetime": 1700 <= final["elapsed"] < 3000,
+            "deadline_unchanged": final["deadline_tick"]
+            == initial["snapshot"]["deadline_tick"],
+            "foreground": foreground["verdict"] == "pass",
         }
+        report = {"checks": checks, "foreground": foreground}
+        (tmp_path / "notice-verdict.json").write_text(
+            json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
+        )
+        assert all(checks.values()), json.dumps(report, ensure_ascii=False)
     finally:
         _reclaim(children)
 
@@ -1565,22 +1727,34 @@ def test_lifecycle_release_follows_stop_and_precedes_mutex_release(monkeypatch):
 
 @pytest.mark.parametrize("entry", ["entry-script", "entry-module"])
 @pytest.mark.parametrize(
-    "case",
+    "case,manual",
     [
-        "thumb",
-        "preview",
-        "settings",
-        "nested",
-        "native-ocr",
-        "native-quit",
-        "rebuild",
-        "normal",
-        "zoomed",
+        (case, False)
+        for case in (
+            "thumb",
+            "preview",
+            "settings",
+            "nested",
+            "native-ocr",
+            "native-quit",
+            "rebuild",
+            "normal",
+            "zoomed",
+        )
+    ]
+    + [
+        ("thumb", True),
+        ("preview", True),
+        ("pdf", True),
+        ("ocr", True),
+        ("nested", True),
+        ("native-ocr", True),
     ],
 )
-def test_focus_restore_real_main_windows(tmp_path, entry, case):
+def test_focus_restore_real_main_windows(tmp_path, entry, case, manual):
     namespace = uuid4().hex
-    owner, fixture = _spawn(tmp_path, namespace, f"focus-owner-{case}")
+    role = "uat-owner" if manual else "focus-owner"
+    owner, fixture = _spawn(tmp_path, namespace, f"{role}-{case}")
     children = [owner]
     try:
         _wait_file(owner, fixture / "focus-ready")
@@ -1594,6 +1768,77 @@ def test_focus_restore_real_main_windows(tmp_path, entry, case):
         assert measured["state_preserved"]
         assert measured["target_correct"]
         assert measured["focus_correct"], measured
+        if manual and case != "nested":
+            assert measured["document_pages"] == (1 if "ocr" in case else 3)
+            assert measured["selected_pages"]
+            assert all(0 <= p < 3 for p in measured["selected_pages"])
+            assert 0 <= measured["current_page"] < 3
+        if manual and case == "pdf":
+            _wait_file(owner, fixture / "manual-pdf-ready.json")
+            prepared = json.loads((fixture / "manual-pdf-ready.json").read_text())
+            assert prepared == {
+                "pages": 3,
+                "rotations": [90, 0, 0],
+                "undo": 3,
+                "redo": 0,
+            }
+            assert not (fixture / "continued").exists()
+            trace = json.loads((fixture / "manual-pdf-trace.json").read_text())
+            assert len(trace) == 1 and trace[0]["state"] == prepared
+        if manual and case in {"ocr", "native-ocr"}:
+            prepared = json.loads((fixture / "manual-ocr-running.json").read_text())
+            resumed = json.loads((fixture / "manual-ocr-after-peer.json").read_text())
+            identity_keys = ("dialog_id", "run_gen", "engine_id", "worker_ids")
+            assert all(prepared[k] == resumed[k] for k in identity_keys)
+            assert not resumed["done"]
+            assert resumed["server"]["posts"] == 1
+            assert not resumed["server"]["completed"]
+            assert not resumed["pdf"]["has_embedded_text"]
+            assert resumed["pdf"]["pages"] == 1
+            assert resumed["concurrency"] == 1
+            assert not resumed["summary_executed"]
+            if case == "native-ocr":
+                # 自動回帰だけでNoを送信する。本受入では利用者が実ボタンを押す。
+                from pagefolio.startup_win32 import Win32Backend, _bind
+
+                native = Win32Backend(namespace)
+                try:
+                    post = _bind(
+                        native.api.u,
+                        "PostMessageW",
+                        wt.BOOL,
+                        wt.HWND,
+                        wt.UINT,
+                        wt.WPARAM,
+                        wt.LPARAM,
+                    )
+                    assert post(measured["native"], 0x111, 7, 0)
+                    _wait_file(owner, fixture / "manual-ocr-close-no.json")
+                    no = json.loads((fixture / "manual-ocr-close-no.json").read_text())
+                    assert no["dialog_exists"] and not no["cancelled"]
+                    assert all(prepared[k] == no[k] for k in identity_keys)
+                    assert not no["done"] and not no["server"]["completed"]
+                finally:
+                    native.close()
+            (fixture / "manual-ocr-release").touch()
+            _wait_file(owner, fixture / "manual-ocr-completed.json")
+            completed = json.loads(
+                (fixture / "manual-ocr-completed.json").read_text(encoding="utf-8")
+            )
+            assert all(prepared[k] == completed[k] for k in identity_keys)
+            assert completed["results"] == {"0": "PageFolio UAT 合成OCR結果"}
+            assert not completed["errors"]
+            summary = completed["server"]
+            assert summary["posts"] == 1
+            assert not summary["expired"] and not summary["retransmissions"]
+            assert summary["completed"] == summary["released"]
+            assert len(summary["completed"]) == 1
+        if manual and case == "nested":
+            nested = json.loads((fixture / "manual-nested-closed.json").read_text())
+            assert nested["inner_closed"] and nested["grab"] == nested["outer"]
+            assert nested["text"] == "unsaved input"
+            assert nested["selection"] == [1, 7] and nested["cursor"] == 5
+            assert nested["outer"] == measured["expected_focus"].rsplit(".", 1)[0]
         if case == "native-quit":
             _wait_file(owner, fixture / "quit-cancelled")
         (fixture / "stop").touch()
@@ -1602,7 +1847,7 @@ def test_focus_restore_real_main_windows(tmp_path, entry, case):
         _reclaim(children)
 
 
-@pytest.mark.parametrize("case", ["pdf", "ocr"])
+@pytest.mark.parametrize("case", ["pdf", "pdf-shortcuts", "ocr"])
 def test_working_state_real_main_continues(tmp_path, case):
     namespace = uuid4().hex
     owner, fixture = _spawn(tmp_path, namespace, f"focus-owner-{case}")
@@ -1639,6 +1884,47 @@ def _prepare_focus_case(app, fixture, case, *, manual=False):
     state = {"target": root, "entry": None, "ocr": None, "focus": None}
     release = threading.Event()
     entered = threading.Event()
+    manual_ocr = manual and case in {"ocr", "native-ocr"}
+    server = None
+    if manual_ocr:
+        from tests.release_fake_ocr import (
+            MODEL,
+            RESULT_TEXT,
+            FakeOcrServer,
+            make_one_page_image_pdf,
+        )
+        from tests.release_uat_support import ocr_settings
+
+        facts = make_one_page_image_pdf(fixture / "ocr-one-page.pdf")
+        server = FakeOcrServer(
+            mode="hold",
+            run_id=fixture.parent.name,
+            log_path=fixture / "manual-ocr-server.jsonl",
+            release_flag=fixture / "manual-ocr-release",
+            provider_timeout=120,
+            expected_pages=1,
+        ).start()
+        app.settings.update(ocr_settings(server.url))
+        app.doc = fitz.open(fixture / "ocr-one-page.pdf")
+        app.selected_pages = {0}
+        app.current_page = 0
+        state["ocr_facts"] = facts
+
+    def ocr_record():
+        dialog = state["ocr"]
+        return {
+            "dialog_id": id(dialog),
+            "run_gen": dialog._run_gen,
+            "engine_id": id(dialog._engine),
+            "worker_ids": [id(t) for t in dialog._engine._worker_threads],
+            "done": dialog._done,
+            "results": dialog.results,
+            "errors": dialog.errors,
+            "server": server.summary(),
+            "pdf": state["ocr_facts"],
+            "concurrency": 1,
+            "summary_executed": False,
+        }
 
     class Provider(OCRProvider):
         timeout = 10
@@ -1658,6 +1944,8 @@ def _prepare_focus_case(app, fixture, case, *, manual=False):
             app.doc.new_page().insert_text((50, 50), f"unsaved {i}")
         app.selected_pages = {0}
         app._rotate_selected(90)
+        if manual and case == "pdf":
+            app.current_page = 1
         app._duplicate_page()
         # 本番delete経路でBlobを作り、確認だけ試験内で自動応答する。
         ask = messagebox.askyesno
@@ -1669,6 +1957,8 @@ def _prepare_focus_case(app, fixture, case, *, manual=False):
             messagebox.askyesno = ask
 
     def ocr_dialog():
+        from pagefolio.ocr_providers import OllamaProvider
+
         if not app.doc:
             app.doc = fitz.open()
             app.doc.new_page(width=100, height=100)
@@ -1677,12 +1967,14 @@ def _prepare_focus_case(app, fixture, case, *, manual=False):
             app,
             app.doc,
             [0],
-            "",
-            "isolated",
+            server.url if manual_ocr else "",
+            MODEL if manual_ocr else "isolated",
             "text",
             1,
-            10,
-            provider=Provider(),
+            120 if manual_ocr else 10,
+            provider=OllamaProvider(server.url, MODEL, timeout=120)
+            if manual_ocr
+            else Provider(),
             concurrency=1,
         )
         state.update(target=dialog, ocr=dialog)
@@ -1734,17 +2026,37 @@ def _prepare_focus_case(app, fixture, case, *, manual=False):
         )
 
     def continued():
-        if case == "pdf":
-            for operation in (app._undo, app._redo, app._undo, app._redo):
-                operation()
-            assert len(app.doc) == 3 and app.doc[0].rotation == 90
+        if case in {"pdf", "pdf-shortcuts"}:
+            if case == "pdf-shortcuts":
+                # 自動回帰専用。人手UATの操作・回答には流用しない。
+                root.focus_force()
+                root.update()
+            for index, (operation, key) in enumerate(
+                ((app._undo, "z"), (app._redo, "y"), (app._undo, "z"), (app._redo, "y"))
+            ):
+                if case == "pdf-shortcuts":
+                    root.event_generate(f"<Control-{key}>")
+                else:
+                    operation()
+                assert len(app.doc) == (4 if index % 2 == 0 else 3)
+                assert app.doc[0].rotation == 90
+                assert len(app._undo_stack) == (2 if index % 2 == 0 else 3)
+                assert len(app._redo_stack) == (1 if index % 2 == 0 else 0)
             (fixture / "continued").touch()
-        elif case == "ocr":
+        elif case == "ocr" or (manual_ocr and case == "native-ocr"):
             dialog = state["ocr"]
             if dialog._done:
-                assert dialog.results == {0: "local OCR completed"}
+                assert dialog.results == {
+                    0: RESULT_TEXT if manual_ocr else "local OCR completed"
+                }
                 assert not dialog.errors
                 assert all(not t.is_alive() for t in dialog._engine._worker_threads)
+                if manual_ocr:
+                    ok, reasons = server.single_attempt_ok()
+                    assert ok, reasons
+                    (fixture / "manual-ocr-completed.json").write_text(
+                        json.dumps(ocr_record(), ensure_ascii=False), encoding="utf-8"
+                    )
                 (fixture / "continued").touch()
             else:
                 root.after(30, continued)
@@ -1775,6 +2087,10 @@ def _prepare_focus_case(app, fixture, case, *, manual=False):
             "placement": root.state(),
             "expected_focus": str(state["focus"]),
             "immediate_focus": str(root.focus_get()),
+            "document_pages": len(app.doc) if app.doc else 0,
+            "page_rotations": [page.rotation for page in app.doc] if app.doc else [],
+            "selected_pages": sorted(app.selected_pages),
+            "current_page": app.current_page,
             "focus_correct": result != "completed"
             or state["focus"] is None
             or root.focus_get() is state["focus"],
@@ -1791,12 +2107,39 @@ def _prepare_focus_case(app, fixture, case, *, manual=False):
             (fixture / "focus-result.json").write_text(json.dumps(record))
 
         root.after_idle(settled)
-        release.set()
-        if case in {"pdf", "ocr"}:
+        if manual_ocr:
+            (fixture / "manual-ocr-after-peer.json").write_text(
+                json.dumps(ocr_record(), ensure_ascii=False), encoding="utf-8"
+            )
+        else:
+            release.set()
+        if case == "pdf" and manual:
+            # 本受入のUndo/Redoは利用者が実行する。自動4手で代用しない。
+            def manual_pdf_ready():
+                (fixture / "manual-pdf-ready.json").write_text(
+                    json.dumps(
+                        {
+                            "pages": len(app.doc),
+                            "rotations": [page.rotation for page in app.doc],
+                            "undo": len(app._undo_stack),
+                            "redo": len(app._redo_stack),
+                        }
+                    )
+                )
+
+            root.after(80, manual_pdf_ready)
+        elif case in {"pdf", "pdf-shortcuts", "ocr"} or manual_ocr:
             root.after(30, continued)
 
     def cleanup():
         release.set()
+        if server:
+            server.stop()
+            (fixture / "manual-ocr-final.json").write_text(
+                json.dumps(server.summary(), ensure_ascii=False), encoding="utf-8"
+            )
+        if state.get("pdf_watch"):
+            root.after_cancel(state.pop("pdf_watch"))
         for window in list(root.winfo_children()):
             if isinstance(window, tk.Toplevel):
                 window.destroy()
@@ -1808,16 +2151,62 @@ def _prepare_focus_case(app, fixture, case, *, manual=False):
     app._focus_before, app._focus_after = before, after
     app._focus_state = state
     app._focus_cleanup = cleanup
-    if case == "pdf":
+    if case == "native-quit" and (manual or (fixture / "w05c-observe").exists()):
+        from tests.w05c_evidence import install
+
+        _W05C_OBSERVERS.append(install(app, fixture, backend))
+    if case in {"pdf", "pdf-shortcuts"}:
         pdf()
+        if manual:
+            app.selected_pages = {0}
+            app.current_page = 0
+            app._refresh_all()
+            pdf_trace = []
+
+            def observe_pdf():
+                measured = {
+                    "pages": len(app.doc),
+                    "rotations": [page.rotation for page in app.doc],
+                    "undo": len(app._undo_stack),
+                    "redo": len(app._redo_stack),
+                }
+                if not pdf_trace or measured != pdf_trace[-1]["state"]:
+                    pdf_trace.append(
+                        {"at_monotonic": time.monotonic(), "state": measured}
+                    )
+                    (fixture / "manual-pdf-trace.json").write_text(
+                        json.dumps(pdf_trace)
+                    )
+                state["pdf_watch"] = root.after(50, observe_pdf)
+
+            observe_pdf()
+            pdf_keys = []
+
+            def observe_pdf_key(event):
+                if event.keysym.lower() in {"z", "y"}:
+                    pdf_keys.append(
+                        {
+                            "at_monotonic": time.monotonic(),
+                            "keysym": event.keysym,
+                            "modifiers": event.state,
+                            "widget_class": event.widget.winfo_class(),
+                            "pages_after_handler": len(app.doc),
+                        }
+                    )
+                    (fixture / "manual-pdf-keys.json").write_text(json.dumps(pdf_keys))
+
+            root.bind_all("<KeyPress>", observe_pdf_key, add="+")
     elif case in {"ocr", "native-ocr"}:
         dialog = ocr_dialog()
-        if case == "ocr":
-            import pagefolio.ocr_dialog as module
-
-            module.build_provider = lambda *a, **kw: dialog.provider
+        if case == "ocr" or manual_ocr:
             dialog.force_ocr_var.set(True)
-            dialog._on_run(settings={**app.settings, "ocr_provider": "tesseract"})
+            if manual_ocr:
+                dialog._on_run(settings=app.settings)
+            else:
+                import pagefolio.ocr_dialog as module
+
+                module.build_provider = lambda *a, **kw: dialog.provider
+                dialog._on_run(settings={**app.settings, "ocr_provider": "tesseract"})
     elif case in {"settings", "nested"}:
         app._open_settings()
         dialog = app._settings_dialog
@@ -1835,14 +2224,48 @@ def _prepare_focus_case(app, fixture, case, *, manual=False):
 
             def close_nested():
                 nested.destroy()
-                assert root.grab_current() is None
+                assert root.grab_current() is dialog
                 entry.focus_set()
+                if manual:
+                    (fixture / "manual-nested-closed.json").write_text(
+                        json.dumps(
+                            {
+                                "inner_closed": not bool(nested.winfo_exists()),
+                                "outer": str(dialog),
+                                "grab": str(root.grab_current()),
+                                "text": entry.get(),
+                                "selection": [
+                                    entry.index("sel.first"),
+                                    entry.index("sel.last"),
+                                ],
+                                "cursor": entry.index("insert"),
+                            }
+                        )
+                    )
+
+                    def observe_input(event):
+                        if event.keysym.lower() == "x":
+                            (fixture / "manual-nested-input.json").write_text(
+                                json.dumps(
+                                    {
+                                        "text": entry.get(),
+                                        "cursor": entry.index("insert"),
+                                    }
+                                )
+                            )
+
+                    entry.bind("<KeyRelease>", observe_input, add="+")
 
             root.after(100, close_nested)
     elif case == "rebuild":
         app.preview_canvas.focus_set()
         app._rebuild_ui()
     elif case in {"thumb", "preview"}:
+        if manual:
+            pdf()
+            app.selected_pages = {1}
+            app.current_page = 1
+            app._refresh_all()
         widget = getattr(app, "thumb_canvas" if case == "thumb" else "preview_canvas")
         widget.focus_set()
         state["focus"] = widget
@@ -1851,16 +2274,22 @@ def _prepare_focus_case(app, fixture, case, *, manual=False):
 
     def ready():
         focus.observe()
-        if case == "ocr" and not entered.is_set():
+        if (case == "ocr" or manual_ocr) and not (
+            server.summary()["posts"] == 1 if manual_ocr else entered.is_set()
+        ):
             root.after(20, ready)
             return
+        if manual_ocr:
+            (fixture / "manual-ocr-running.json").write_text(
+                json.dumps(ocr_record(), ensure_ascii=False), encoding="utf-8"
+            )
         if case in {"normal", "zoomed"}:
             focus._remember_window_state()
             state["geometry"] = root.geometry()
             root.iconify()
-        (fixture / "focus-ready").touch()
+        if not case.startswith("native-"):
+            (fixture / "focus-ready").touch()
         if case.startswith("native-"):
-            deadline = time.monotonic() + 5
             post = _bind(
                 backend.api.u,
                 "PostMessageW",
@@ -1871,25 +2300,65 @@ def _prepare_focus_case(app, fixture, case, *, manual=False):
                 wt.LPARAM,
             )
 
-            def close_native():
+            def native_popup():
+                # 復帰処理が前面化対象を決める述語と同じ(可視かつ親が無効化済み)。
+                return backend._owned_popup([backend._top_level_hwnd(state["target"])])
+
+            def close_native(deadline):
                 if (
                     fixture / "focus-result.json"
                 ).exists() or time.monotonic() > deadline:
-                    popup = backend._owned_popup(
-                        [backend._top_level_hwnd(state["target"])]
-                    )
+                    popup = native_popup()
                     if popup:
                         assert post(popup, 0x111, 7 if case == "native-quit" else 1, 0)
                         return
-                root.after(30, close_native)
+                root.after(30, close_native, deadline)
 
-            if not manual:
-                root.after(30, close_native)
+            appear_deadline = time.monotonic() + 20
+
+            def announce_native():
+                # focus-readyは「native確認窓が実在する」ことが前提条件。peerは
+                # focus-readyだけを待って起動するため、窓の生成前に出すと、
+                # tk_messageBox内部のTclタイマー処理で復帰要求が窓の無い状態で
+                # 走り、Tk本体が前面化対象になる(窓生成前の時序競合)。
+                # tk_messageBoxの内部pumpでもafterは動くため、blocking呼出しの
+                # 前に仕掛けたpollで窓の出現を観測する。
+                if native_popup():
+                    (fixture / "focus-ready").touch()
+                    if not manual:
+                        # 自動閉鎖の期限は窓の出現から数える。peerのimport・Tk初期化は
+                        # 高負荷で数秒かかる(試験側の待機は_BOOTSTRAP_TIMEOUT)ため、
+                        # peerが復帰要求を出す前に窓を閉じない長さにする。
+                        deadline = time.monotonic() + _BOOTSTRAP_TIMEOUT
+                        root.after(30, close_native, deadline)
+                    return
+                assert time.monotonic() <= appear_deadline, (
+                    "native確認窓が20秒以内に可視・親無効化済みにならない"
+                )
+                root.after(5, announce_native)
+
+            root.after(5, announce_native)
             if case == "native-quit":
                 pdf()
                 app._quit()
                 assert root.winfo_exists()
                 (fixture / "quit-cancelled").touch()
+                if observer := getattr(app, "_w05c_evidence", None):
+                    observer.emit("marker_created", state=observer.state(app))
+                    observer.flush()
+            elif manual_ocr:
+                (fixture / "manual-ocr-close-start.json").write_text(
+                    json.dumps(ocr_record(), ensure_ascii=False), encoding="utf-8"
+                )
+                state["ocr"]._on_close()
+                no = {
+                    **ocr_record(),
+                    "dialog_exists": bool(state["ocr"].winfo_exists()),
+                    "cancelled": state["ocr"]._cancel_flag.is_set(),
+                }
+                (fixture / "manual-ocr-close-no.json").write_text(
+                    json.dumps(no, ensure_ascii=False), encoding="utf-8"
+                )
             else:
                 messagebox.showinfo(
                     "isolated OCR", "operation continues", parent=state["target"]
@@ -1926,7 +2395,7 @@ def test_lifecycle_released_identity_mismatch_cannot_overwrite_mapping():
         candidate.close()
 
 
-def _run_scenario(fixture, namespace, role):
+def _run_scenario(fixture, namespace, role, *, notice_audit=None):
     """各spawnで初回app import前に設定/プロンプト/pluginsを隔離する。"""
     sys.path.insert(
         0,
@@ -1941,6 +2410,7 @@ def _run_scenario(fixture, namespace, role):
     from pagefolio.startup_win32 import Win32Backend, _tick_ms
 
     backend_namespace = None if namespace == "fixed-production" else namespace
+    w12a_manual = role.startswith("entry-owner-") and (fixture / "w12a-manual").exists()
     if role == "initializing-owner":
         backend = Win32Backend(backend_namespace)
         try:
@@ -1959,6 +2429,12 @@ def _run_scenario(fixture, namespace, role):
         foreground = _bind(backend.api.u, "GetForegroundWindow", wt.HWND)
         started = backend.tick_ms()
         audit = {"foreground_before": foreground()}
+        if notice_audit is not None:
+            audit["notice_process"] = {
+                "pid": os.getpid(),
+                "created": notice_audit.created,
+                "role": role,
+            }
         reason = "timeout" if role == "notice-case-other-reason" else "contact_failed"
         lifetime = 1800 if role == "notice-case-owner" else 150
         if role == "notice-case-production-owner":
@@ -1988,7 +2464,11 @@ def _run_scenario(fixture, namespace, role):
                         )
 
                     with (
-                        _ForegroundAudit(backend, fixture / "foreground-audit.jsonl")
+                        _ForegroundAudit(
+                            backend,
+                            fixture / "foreground-audit.jsonl",
+                            call_audit=notice_audit,
+                        )
                         if role == "notice-case-owner"
                         else nullcontext()
                     ) as observer:
@@ -2120,6 +2600,23 @@ def _run_scenario(fixture, namespace, role):
         audit = {"constructed": 0, "notice_calls": 0}
         unavailable = "unavailable" in role
 
+        def record_notice_call(backend):
+            if "join-" not in role:
+                return
+            delay_path = fixture.parent / "constructor-join-delays.json"
+            if delay_path.exists():
+                delays = json.loads(delay_path.read_text(encoding="utf-8"))
+                time.sleep(delays.get(role, 0))
+                (fixture / "constructor-join-ready").touch()
+                deadline = time.monotonic() + _BOOTSTRAP_TIMEOUT
+                while not (fixture.parent / "constructor-joins-release").exists():
+                    assert time.monotonic() < deadline, "notice join release missing"
+                    time.sleep(0.005)
+            audit["notice_call_tick"] = backend.tick_ms()
+            (fixture / "notice-call.json").write_text(
+                json.dumps(audit), encoding="utf-8"
+            )
+
         if "legacy-" in role:
             from pagefolio.startup_control import StartupOutcome
             from pagefolio.startup_notice import show_startup_failure
@@ -2142,6 +2639,7 @@ def _run_scenario(fixture, namespace, role):
 
                         notice.show(lifetime_ms=1800, on_show=visible)
                 else:
+                    record_notice_call(backend)
                     result = show_startup_failure(
                         StartupOutcome("check_failed"), backend
                     )
@@ -2152,6 +2650,7 @@ def _run_scenario(fixture, namespace, role):
                 audit["result"] = "check_failed"
             finally:
                 backend.close()
+            (fixture / "result.json").write_text(json.dumps(audit), encoding="utf-8")
             print(json.dumps(audit))
             return
 
@@ -2167,6 +2666,7 @@ def _run_scenario(fixture, namespace, role):
             def _create_notice_lease(self, reason):
                 from contextlib import contextmanager
 
+                record_notice_call(self)
                 native = super()._create_notice_lease(reason)
 
                 @contextmanager
@@ -2250,6 +2750,7 @@ def _run_scenario(fixture, namespace, role):
         else:
             audit["result"] = main()
         assert "pagefolio.app" not in sys.modules
+        (fixture / "result.json").write_text(json.dumps(audit), encoding="utf-8")
         print(json.dumps(audit))
         return
 
@@ -2484,6 +2985,8 @@ def _run_scenario(fixture, namespace, role):
                     if (fixture / "stop").exists() or (
                         fixture.parent / "stop-all"
                     ).exists():
+                        if observer := getattr(self, "_w05c_evidence", None):
+                            observer.emit("stop_enter", caller="stop_poll")
                         if role.startswith(("focus-owner-", "uat-owner-")):
                             self._focus_cleanup()
                         self._quit()
@@ -2501,11 +3004,21 @@ def _run_scenario(fixture, namespace, role):
                 root.after(50, stop_poll)
                 delay_ms = (
                     120000
-                    if role == "manual-owner" or role.startswith("uat-")
+                    if role == "manual-owner" or role.startswith("uat-") or w12a_manual
                     else 10000
                 )
 
                 def watchdog():
+                    if observer := getattr(self, "_w05c_evidence", None):
+                        observer.emit("watchdog_enter", caller="watchdog")
+                        (fixture / "manual-deadline").touch()
+                    if role in {
+                        "uat-owner-pdf",
+                        "uat-owner-ocr",
+                        "uat-owner-nested",
+                        "uat-owner-native-ocr",
+                    }:
+                        (fixture / "manual-deadline").touch()
                     self._audit_exit(
                         "entry_fired",
                         entry="watchdog",
@@ -2518,6 +3031,12 @@ def _run_scenario(fixture, namespace, role):
                 registered_tcl_us = int(root.tk.call("clock", "microseconds"))
                 registered_at = time.monotonic()
                 after_id = root.after(delay_ms, watchdog)
+                self._w05c_watchdog = {
+                    "delay_ms": delay_ms,
+                    "registered_monotonic": registered_at,
+                    "due_monotonic": registered_at + delay_ms / 1000,
+                    "clock": time.get_clock_info("monotonic").implementation,
+                }
                 self._audit_exit(
                     "entry_registered",
                     entry="watchdog",
@@ -2542,6 +3061,8 @@ def _run_scenario(fixture, namespace, role):
                 "authentication_luid": self.authentication_luid,
                 "session_id": self.session_id,
                 "pid": self.pid,
+                # venvではPopen.pidがlauncherになるため、親PIDで起動元と紐付ける。
+                "parent_pid": os.getppid(),
                 "process_created": self._created(self.api.GetCurrentProcess()),
                 "started_tick": self.tick_ms(),
             }
@@ -2652,7 +3173,13 @@ def _run_scenario(fixture, namespace, role):
             if ready:
                 self.audit["snapshot"] = self._read_owner()
                 self.audit["ready_tick"] = self.tick_ms()
+                if w12a_manual:
+                    self.audit["manual_deadline"] = self._w12a_deadline(app_reference)
                 (fixture / "ready").write_text(json.dumps(self.audit), encoding="utf-8")
+
+        def _w12a_deadline(self, apps):
+            watchdog = apps[0]._w05c_watchdog
+            return {**watchdog, "ready_monotonic": time.monotonic()}
 
         def restore_window(self, hwnd, is_current=lambda: True):
             counts["restored"] += 1
@@ -2795,8 +3322,21 @@ def _test_scenario_bootstrap(fixture, namespace, role):
     faulthandler.dump_traceback_later(10, repeat=True, file=trace)
     before = _fingerprints()
     try:
-        _run_scenario(fixture, namespace, role)
+        if (fixture / "notice-audit-enabled").exists():
+            sys.path.insert(0, str(_ROOT))
+            from pagefolio import startup_win32 as win
+            from tests.startup_foreground_audit import NoticeCallAudit
+
+            with NoticeCallAudit(
+                win, fixture / "notice-call-audit.json", role
+            ) as audit:
+                _run_scenario(fixture, namespace, role, notice_audit=audit)
+        else:
+            _run_scenario(fixture, namespace, role)
     finally:
+        for observer in _W05C_OBSERVERS:
+            if observer.fixture == fixture:
+                observer.close()
         assert _fingerprints() == before, "元設定/プロンプトが変更された"
 
 
@@ -2805,9 +3345,21 @@ def _uat_harness(argv):
     sys.path.insert(0, str(_ROOT))
     parser = argparse.ArgumentParser(description="隔離済みWindows受入の準備と観測")
     parser.add_argument(
-        "action", choices=["start", "peer", "notice", "inspect", "stop"]
+        "action",
+        choices=[
+            "start",
+            "peer",
+            "notice",
+            "inspect",
+            "stop",
+            "w05c-check",
+            "w05c-machine-check",
+        ],
     )
     parser.add_argument("--run", type=Path)
+    parser.add_argument("--answer-file", type=Path)
+    parser.add_argument("--w05c-plan", type=Path)
+    parser.add_argument("--stage", choices=["before_peer", "before_stop"])
     parser.add_argument(
         "--case",
         default="preview",
@@ -2829,9 +3381,34 @@ def _uat_harness(argv):
     parser.add_argument(
         "--entry", choices=["script", "module", "relocated"], default="module"
     )
+    parser.add_argument("--w12a-primary", choices=["script", "module", "relocated"])
+    parser.add_argument("--w12b-mixed", action="store_true")
     parser.add_argument("--production", action="store_true")
     parser.add_argument("--namespace")
     args = parser.parse_args(argv)
+    if args.w12a_primary:
+        assert args.action == "start" and not args.w05c_plan
+        assert not args.production or args.w12b_mixed
+    if args.w12b_mixed:
+        assert (
+            args.action == "start"
+            and args.production
+            and args.w12a_primary in {"script", "module"}
+        )
+        from tests.release_uat_support import probe_owner
+
+        assert not probe_owner(), "既存production ownerを読取検出。W12bを起動しない"
+    collection_plan = None
+    if args.w05c_plan:
+        from tests.w05c_runner import validate_plan
+
+        assert (
+            args.action == "start"
+            and args.case == "native-quit"
+            and args.entry == "script"
+        )
+        assert not args.production, "v3の未検証採取を本番namespaceへ接続しない"
+        collection_plan = validate_plan(args.w05c_plan, _ROOT)
     before = _fingerprints()
     from pagefolio.startup_win32 import Win32Backend, _bind
 
@@ -2849,11 +3426,20 @@ def _uat_harness(argv):
                 parser.error(
                     "noticeは試験nonceでのみ実行する。既存本番通知へ接続しない"
                 )
-            run = Path(
-                tempfile.mkdtemp(
-                    prefix="pagefolio-uat-", dir=_ROOT / ".planning" / "tmp"
+            if args.run is not None:
+                assert collection_plan is not None or args.w12a_primary, (
+                    "固定run指定はv3/W12a専用"
                 )
-            )
+                run = args.run.resolve()
+                assert run.parent == (_ROOT / ".planning/tmp").resolve()
+                assert run.name.startswith("pagefolio-uat-")
+                run.mkdir()
+            else:
+                run = Path(
+                    tempfile.mkdtemp(
+                        prefix="pagefolio-uat-", dir=_ROOT / ".planning" / "tmp"
+                    )
+                )
             namespace = (
                 "fixed-production" if args.production else args.namespace or uuid4().hex
             )
@@ -2885,9 +3471,32 @@ def _uat_harness(argv):
             role = (
                 "notice-case-production-owner"
                 if args.action == "notice"
+                else f"entry-owner-{args.w12a_primary}"
+                if args.w12a_primary
                 else f"uat-owner-{args.case}"
             )
-            child, fixture = _spawn(run, namespace, role, detached=True)
+            formal_provenance = (
+                {
+                    "source_inputs": _formal_source_inputs(),
+                    "original_plugins": _formal_original_plugins(),
+                    "phase04": _formal_parent_gate(),
+                    **(
+                        {"w12a_helper_sha256": _w12a_helper_sha256()}
+                        if args.w12a_primary
+                        else {}
+                    ),
+                }
+                if args.action == "start"
+                else None
+            )
+            child, fixture = _spawn(
+                run,
+                namespace,
+                role,
+                detached=True,
+                w05c_plan=collection_plan,
+                w12a_manual=bool(args.w12a_primary),
+            )
             git_executable = shutil.which("git")
             assert git_executable
             manifest = {
@@ -2899,13 +3508,35 @@ def _uat_harness(argv):
                 "launcher_pid": child.pid,
                 "environment": environment,
                 "originals_before": before,
+                **(
+                    {"formal_provenance": formal_provenance}
+                    if formal_provenance
+                    else {}
+                ),
+                **(
+                    {"w12a_primary": args.w12a_primary, "w12a_schema": "w12a-v1"}
+                    if args.w12a_primary
+                    else {}
+                ),
                 "source_commit": subprocess.check_output(  # noqa: S603
                     [git_executable, "rev-parse", "HEAD"], cwd=_ROOT, text=True
                 ).strip(),
+                **({"w12b_mixed": True} if args.w12b_mixed else {}),
+                **(
+                    {
+                        "w05c_schema": "w05c-v3",
+                        "entry": "script",
+                        "w05c_plan": collection_plan,
+                    }
+                    if collection_plan
+                    else {}
+                ),
             }
             save(run / "manifest.json", manifest)
             marker = (
-                "scenario-ready"
+                "ready"
+                if args.w12a_primary
+                else "scenario-ready"
                 if args.case in {"busy", "slowready"} and args.action == "start"
                 else "focus-ready"
                 if args.action == "start"
@@ -2931,8 +3562,55 @@ def _uat_harness(argv):
         manifest = read_json(run / "manifest.json")
         fixture = Path(manifest["fixture"]).resolve()
         assert fixture.is_relative_to(run)
-        assert _fingerprints() == manifest["originals_before"], "原本が変化。試験を中断"
+        w12a_stop = args.action == "stop" and manifest.get("w12a_schema") == "w12a-v1"
+        if not w12a_stop:
+            assert _fingerprints() == manifest["originals_before"], (
+                "原本が変化。試験を中断"
+            )
+        if args.action in {"peer", "inspect"} and "formal_provenance" in manifest:
+            _check_formal_provenance(manifest)
+        w05c = (
+            manifest["case"] == "native-quit"
+            and (fixture / "w05c-events.jsonl").exists()
+        )
+        if args.action == "w05c-check":
+            from tests.w05c_evidence import checkpoint
+
+            assert args.answer_file and args.stage, "回答ファイルと段階が必要"
+            assert w05c, "v2観測のあるnative-quit runが必要"
+            assert not manifest.get("w05c_schema"), "v3へv2検査を流用しない"
+            record = checkpoint(run, manifest, args.answer_file, args.stage)
+            print(json.dumps(record, ensure_ascii=False))
+            return
+        if args.action == "w05c-machine-check":
+            from tests.w05c_runner import machine_checkpoint
+
+            assert w05c and args.stage and not args.answer_file
+            print(json.dumps(machine_checkpoint(run, manifest, args.stage)))
+            return
         if args.action == "peer":
+            if manifest.get("w12a_schema"):
+                assert not manifest.get("w12a_peer_entry"), (
+                    "W12aは一次runに一度だけpeer"
+                )
+                assert not (run / "w12a-peer-started").exists(), "W12a peer再試行を禁止"
+                with (run / "w12a-peer-started").open("x", encoding="utf-8") as marker:
+                    marker.write(args.entry)
+                manifest["w12a_peer_entry"] = args.entry
+                save(run / "manifest.json", manifest)
+            w05c_after = w05c and (fixture / "quit-cancelled").exists()
+            if w05c_after:
+                if manifest.get("w05c_schema") == "w05c-v3":
+                    from tests.w05c_runner import guard_after_no_peer
+
+                    guard_after_no_peer(run, manifest)
+                else:
+                    checked = read_json(run / "w05c-check-before_peer.json")
+                    assert checked["ok"] is True and checked["run_id"] == run.name
+                    current_answer = read_json(Path(checked["answer_path"]))
+                    assert {
+                        k: v for k, v in current_answer.items() if k != "peers"
+                    } == checked["answer_record"], "回答が確認後に変更された"
             if manifest["role"].startswith("notice-case-"):
                 role, expected = "notice-case-peer-" + uuid4().hex, None
             else:
@@ -2951,6 +3629,58 @@ def _uat_harness(argv):
                 (path / "stderr.log").write_text(err, encoding="utf-8")
                 assert child.returncode == 0, err
                 result = read_json(path / "result.json")
+                if manifest.get("w12a_schema"):
+                    from pagefolio.startup_win32 import Win32Backend
+
+                    observer = Win32Backend(manifest["namespace"])
+                    try:
+                        with observer._validate_peer(
+                            manifest["expected_owner"]["pid"],
+                            manifest["expected_owner"]["process_created"],
+                        ):
+                            owner_verified = True
+                        hwnd = _bind(observer.api.u, "GetForegroundWindow", wt.HWND)()
+                        pid = wt.DWORD()
+                        _bind(
+                            observer.api.u,
+                            "GetWindowThreadProcessId",
+                            wt.DWORD,
+                            wt.HWND,
+                            ct.POINTER(wt.DWORD),
+                        )(hwnd, ct.byref(pid))
+                    finally:
+                        observer.close()
+                    save(
+                        run / "w12a-after-peer.json",
+                        {
+                            "at_utc": datetime.now().astimezone().isoformat(),
+                            "hwnd": int(hwnd or 0),
+                            "pid": int(pid.value),
+                            "owner_verified": owner_verified,
+                            "entry": args.entry,
+                            "peer_fixture": str(path),
+                        },
+                    )
+                if w05c:
+                    from tests.w05c_evidence import save as evidence_save
+
+                    label = (
+                        ("after_no" if manifest.get("w05c_schema") else "after_answer")
+                        if w05c_after
+                        else "during_confirm"
+                    )
+                    evidence_save(
+                        fixture / f"w05c-peer-{label}.json",
+                        {
+                            "dir": path.name,
+                            "pid": manifest["expected_owner"]["pid"],
+                            "process_created": manifest["expected_owner"][
+                                "process_created"
+                            ],
+                            "constructed": result["constructed"],
+                            "status_preserved": result["status_preserved"],
+                        },
+                    )
                 print(
                     json.dumps(
                         {"fixture": str(path), "result": result}, ensure_ascii=False
@@ -2962,7 +3692,50 @@ def _uat_harness(argv):
             assert not manifest["role"].startswith("notice-case-"), (
                 "通知は実クリックまたは10秒で閉鎖する"
             )
-            (fixture / "stop").touch()
+            if w12a_stop:
+                assert re.fullmatch(r"pagefolio-uat-[0-9a-f]{32}", run.name)
+                assert manifest["run"] == str(run)
+                assert (
+                    manifest["namespace"] != "fixed-production"
+                    or manifest.get("w12b_mixed") is True
+                )
+                assert manifest["role"] == f"entry-owner-{manifest['w12a_primary']}"
+                assert fixture == run / manifest["role"]
+                owner = manifest["expected_owner"]
+                ready = read_json(fixture / "ready")
+                assert owner["pid"] > 0 and owner["process_created"] > 0
+                assert (ready["pid"], ready["process_created"]) == (
+                    owner["pid"],
+                    owner["process_created"],
+                ), "W12a停止対象のPID/FILETIMEが不一致"
+                if not (fixture / "result.json").exists():
+                    backend = Win32Backend(
+                        None
+                        if manifest["namespace"] == "fixed-production"
+                        else manifest["namespace"]
+                    )
+                    try:
+                        with backend._validate_peer(
+                            owner["pid"], owner["process_created"]
+                        ):
+                            pass
+                    finally:
+                        backend.close()
+            if w05c:
+                from tests.w05c_evidence import collect
+
+                collect(run, manifest)
+            else:
+                (fixture / "stop").touch()
+            if "formal_provenance" in manifest:
+                try:
+                    _check_formal_provenance(manifest)
+                    save(run / "provenance-before-stop.json", {"matched": True})
+                except Exception as e:
+                    save(
+                        run / "provenance-before-stop.json",
+                        {"matched": False, "error": str(e)},
+                    )
             deadline = time.monotonic() + 8
             while (
                 not (fixture / "result.json").exists() and time.monotonic() < deadline
@@ -2974,7 +3747,8 @@ def _uat_harness(argv):
         if args.action in {"inspect", "stop"}:
             values = {
                 "manifest": manifest,
-                "originals_unchanged": _fingerprints() == before,
+                "originals_unchanged": _fingerprints()
+                == (manifest["originals_before"] if w12a_stop else before),
             }
             for name in (
                 "ready",
@@ -2982,6 +3756,17 @@ def _uat_harness(argv):
                 "result.json",
                 "focus-result.json",
                 "busy-result.json",
+                "manual-pdf-ready.json",
+                "manual-pdf-trace.json",
+                "manual-pdf-keys.json",
+                "manual-ocr-running.json",
+                "manual-ocr-after-peer.json",
+                "manual-ocr-completed.json",
+                "manual-ocr-final.json",
+                "manual-ocr-close-start.json",
+                "manual-ocr-close-no.json",
+                "manual-nested-closed.json",
+                "manual-nested-input.json",
             ):
                 path = fixture / name
                 if path.exists() and path.stat().st_size:
@@ -2989,7 +3774,8 @@ def _uat_harness(argv):
             save(run / "inspection.json", values)
             print(json.dumps(values, ensure_ascii=False))
     finally:
-        assert _fingerprints() == before, "元設定/プロンプトが変更された"
+        if not (args.action == "stop" and "w12a_stop" in locals() and w12a_stop):
+            assert _fingerprints() == before, "元設定/プロンプトが変更された"
 
 
 if __name__ == "__main__":

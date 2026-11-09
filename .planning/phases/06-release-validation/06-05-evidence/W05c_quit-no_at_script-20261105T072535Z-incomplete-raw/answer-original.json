@@ -1,0 +1,47 @@
+{
+  "case": "W05c",
+  "condition": "quit-no",
+  "row": "W05c/quit-no@script",
+  "entry": "script",
+  "run": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-73sihnga",
+  "peers": {
+    "during_confirm": "peer-34dacfb572184cd9910cb2d215011c67"
+  },
+  "answer_original": "1.確認は閉じた\n2.全3ページ\n3.1-2 横 3 縦\n4 1画面",
+  "answer_source": "同じ確認の「いいえ」を一度押した結果を尋ねた質問への利用者の直接回答",
+  "answer_captured_at": "2026-11-05T07:25:35.5599089Z",
+  "answer_run_id": "pagefolio-uat-73sihnga",
+  "observation_record": ".planning/tmp/pagefolio-uat-73sihnga/observation-w05c.md",
+  "observation_record_sha256": "33fad54dfdedf7d40e10589a2a76d7c763c0a8a91d07442ea18b01d38a7e1b2b",
+  "adoption": {
+    "approved_by": "実行担当（直接回答と同runの実No受信を照合）",
+    "approved_at": "2026-11-05T07:25:35.5599089Z",
+    "decision": "原文を保持して意味対応を記録"
+  },
+  "answer_semantics": {
+    "approved_by": "実行担当（同じNo操作の結果への利用者回答を確認）",
+    "approved_at": "2026-11-05T07:25:35.5599089Z",
+    "answered_no": {
+      "basis": "いいえを一度押した結果という質問文脈。実No受信は別の必須イベントで照合",
+      "quote": "確認は閉じた",
+      "confirmed": true
+    },
+    "confirm_closed": {
+      "quote": "確認は閉じた",
+      "confirmed": true
+    },
+    "three_pages": {
+      "quote": "全3ページ",
+      "confirmed": true
+    },
+    "rotations_kept": {
+      "quote": "1-2 横 3 縦",
+      "confirmed": true
+    },
+    "single_window": {
+      "quote": "1画面",
+      "confirmed": true
+    }
+  },
+  "manual_switch": "未回答。自動復帰の根拠として使用しない"
+}

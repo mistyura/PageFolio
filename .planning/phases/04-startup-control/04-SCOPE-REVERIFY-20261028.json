@@ -1,0 +1,161 @@
+{
+  "captured": "2026-10-28T08:46:05.758Z",
+  "scope": "Phase04承認範囲の限定再検証。W11 2行以外の免除なし。",
+  "prior_verified": "2026-10-28T05:02:09Z",
+  "product": {
+    "total": 19,
+    "matched": 19,
+    "differences": []
+  },
+  "gate_report_comparison": {
+    "total": 5,
+    "matched": 5,
+    "differences": []
+  },
+  "gate_report_hashes": {
+    ".planning/phases/04-startup-control/04-VALIDATION.md": "cf8570e8820ef642eb63e89db2f3013fecc8558811fb2f8084089dbc42ba99a5",
+    ".planning/phases/04-startup-control/04-SECURITY.md": "245a06fcd2a6213435dec87b23aa69377a688637337edecc727ff03d3301ef3c",
+    ".planning/phases/04-startup-control/04-UI-REVIEW.md": "714bb2bc1cd98151856cf7a6b7ae49658e7ea8a6ff1883d807f4b83f1df34fa5",
+    ".planning/phases/04-startup-control/04-REVIEW.md": "ed92dc4ac4aa18f0201648d83f777c755c8f6b84abd346050a3567a43542b8df",
+    ".planning/phases/04-startup-control/04-REVIEW-DISPOSITION.md": "9afab79ce5025d6630cab4ece7556b0f3fb36656af1ecb0958dc1519860d1598"
+  },
+  "full": {
+    "started": "2026-10-28T08:25:52.367Z",
+    "finished": "2026-10-28T08:34:16.429Z",
+    "argv": [
+      "C:\\Users\\shdwf\\work\\project\\PageFolio\\.venv\\Scripts\\python.exe",
+      "-m",
+      "pytest",
+      "-q",
+      "-x",
+      "-rA",
+      "-p",
+      "no:cacheprovider",
+      "--basetemp=C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf06-scope-native-files-20261028",
+      "--junitxml=C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\phases\\06-release-validation\\06-07-evidence\\native-files-20261028\\junit.xml"
+    ],
+    "code": 0,
+    "input_count": 151,
+    "current_inputs": {
+      "total": 151,
+      "matched": 147,
+      "differences": [
+        {
+          "file": "tests/test_release_contract.py",
+          "expected": "ad0daa2b4787f781af0fb6c9654b42c1085ae23922052270b169a9908d11f6ee",
+          "actual": "5e6e199990f9384500d3f29b91a130bb38e7862cd39b001a302f5d9e86a4c385"
+        },
+        {
+          "file": "README.md",
+          "expected": "7e98f00bdd6e7d3a52bf916dfcc6151f8404c7dca278ed580f7b586713602447",
+          "actual": "f1cbfce6db6f80f75edd959d8f29ef150a227bcaea3cad1c7ba148fbbe33f1a3"
+        },
+        {
+          "file": "開発履歴.md",
+          "expected": "a4ce7edd9472d630b6934af1eb00599b9808dd67ab2fe0fe0d825d44b825a892",
+          "actual": "b80e25f1b7f48b77e8ce2a82ab8d35da75c7ad2dd4835c97a000ebbb305d5331"
+        },
+        {
+          "file": "distribution/はじめに.md",
+          "expected": "d0bb4e35e042a419dc34e556496b3f87313334be0104842a5c85cbb05d0ce631",
+          "actual": "d539e5d01cc2d4e3d7bbfa58fecb5c6fe8d32c85bbf50cc41c06b96ee5b9d638"
+        }
+      ]
+    },
+    "junit_suite": "<testsuite name=\"pytest\" errors=\"0\" failures=\"0\" skipped=\"0\" tests=\"2231\" time=\"502.570\" timestamp=\"2026-10-28T17:25:53.045723+09:00\" hostname=\"nullaze-z240\">",
+    "test_count": 2231,
+    "previous_named_count": 286,
+    "missing_named": [],
+    "summary": "2231 passed, 2 warnings in 503.09s (0:08:23)"
+  },
+  "scope_contract": {
+    "schema_version": 1,
+    "scope_id": "single-login-session",
+    "approval_id": "W11-B-20261028",
+    "approved": true,
+    "approval_path": ".planning/phases/06-release-validation/06-W11-SCOPE-APPROVAL.md",
+    "approval_sha256": "95b1fda6a2742991f2e3c19b870754b46396aba4d11eb03980b9c57dd034e278",
+    "case_count": 31,
+    "total_subrows": 110,
+    "required_subrows": 108,
+    "deferred_subrows": 2,
+    "deferred_cards": [
+      "W11/other-session@script",
+      "W11/other-session@production-exe"
+    ]
+  },
+  "manual_evidence_keys": [
+    "schema_version",
+    "generated_at",
+    "plan",
+    "task",
+    "state_semantics",
+    "target",
+    "groups",
+    "carried_observations_from_06_04",
+    "phase5_reuse",
+    "resume_contract",
+    "cases",
+    "previous_generations",
+    "generation",
+    "updated_at",
+    "release_scope"
+  ],
+  "evidence_hashes": {
+    ".planning/phases/06-release-validation/06-07-evidence/native-files-20261028/result.json": "d7dd5df187d5efa47c5883311339bc1ef9ae65b2b0969df59b39156a36874c2e",
+    ".planning/phases/06-release-validation/06-07-evidence/native-files-20261028/before.json": "708099f4dd8f823e78d79f505208915125b1f5cbe5c59087ecdd1ff7bb9a7982",
+    ".planning/phases/06-release-validation/06-07-evidence/native-files-20261028/junit.xml": "e8f6c3b43216977baba85a57cc3ba890c102f44c34803bb7368399b1dd7cb0d7",
+    ".planning/phases/06-release-validation/06-07-evidence/native-files-20261028/stdout.txt": "27c2a36aa78df7470affa3db0bebe190d084c7bdc10a22da60198ddfa57986cb",
+    ".planning/phases/06-release-validation/06-07-evidence/native-files-20261028/checks.json": "078aa4d6beec4df1b00b3dadb609d132e82c63995b2efe4f6a318db77f7df2d0",
+    ".planning/phases/06-release-validation/06-RELEASE-SCOPE.json": "85c15942e7cc55c386c9a4dc4bbe55c625cd337723d383e4f68dd72b308e8559",
+    ".planning/phases/06-release-validation/06-W11-SCOPE-APPROVAL.md": "95b1fda6a2742991f2e3c19b870754b46396aba4d11eb03980b9c57dd034e278",
+    ".planning/phases/06-release-validation/06-UAT-CARRYOVER.md": "98a61ae0e073f321093370c57da6f39a4b024deb3e9ec91289f09ea6e41a3f4d"
+  },
+  "checks": {
+    "original_21_truth_inputs_unchanged": true,
+    "previous_gate_reports_unchanged": true,
+    "full_exit_zero": true,
+    "full_inputs_unchanged": true,
+    "before_file_matches_record": true,
+    "full_junit_2231_passed": true,
+    "previous_named_cases_present": true,
+    "scope_approval_hash_matches": true,
+    "scope_exact": true,
+    "carryover_preserves_limits": true,
+    "approval_not_release": true,
+    "manual_rows_exact": true
+  },
+  "decision_coverage": {
+    "args": [
+      "query",
+      "check.decision-coverage-verify",
+      ".planning/phases/04-startup-control",
+      ".planning/phases/04-startup-control/04-CONTEXT.md"
+    ],
+    "exit": 0,
+    "data": {
+      "skipped": false,
+      "blocking": false,
+      "total": 16,
+      "honored": 16,
+      "not_honored": [],
+      "message": "All trackable CONTEXT.md decisions are honored by shipped artifacts."
+    },
+    "stderr": ""
+  },
+  "roadmap": {
+    "args": [
+      "query",
+      "roadmap.get-phase",
+      "04",
+      "--raw"
+    ],
+    "exit": 0,
+    "data": "### Phase 4: 起動制御と既存画面への復帰\n\n**Goal**: 利用者が2回目に PageFolio を起動しても作業画面が増えず、進行中の作業を保ったまま既存画面へ戻れる。\n**Depends on**: Phase 3（v1.9.0 出荷済み）\n**Requirements**: V110-START-01, V110-START-02, V110-START-03, V110-FOCUS-01, V110-FOCUS-02\n**Success Criteria** (what must be TRUE):\n  1. 同一 Windows ログインセッションで、対応版同士の別版・別配置・Python/EXE 混在を含む連続・同時起動をしても、編集画面は1つだけになる。\n  2. 正常終了・強制終了・起動途中の異常終了後に再起動でき、終了確認をキャンセルした場合は既存画面がそのまま使用できる。\n  3. 排他判定または既存画面への連絡に失敗した場合、利用者は「起動済み」と異なる理由を認識でき、後続起動は追加画面を作らず有限時間で終了する。\n  4. 2回目の起動で最小化した既存画面が復元され、OS が許せば前面に出る。前面化を拒否された場合も視覚通知から既存画面を見つけられる。\n  5. 未保存編集、Undo/Redo、進行中の OCR、開いているモーダル操作を保ったまま既存画面で作業を続けられる。\n\n**受入範囲改訂（2026-10-22）**: Success Criteriaの実装/自動受入はPhase 4、未実施の最終人手受入はPhase 6。移管正本は[06-UAT-CARRYOVER.md](phases/06-release-validation/06-UAT-CARRYOVER.md)。\n\n**Plans**: 6/6 plans complete（04-06 gap closure 実行済み、Phase正式検証待ち）\n**UI hint**: yes\n\nPlans:\n**Wave 1**\n- [x] 04-01-PLAN.md — 品質ゲート前提修正と本番起動tracer（Wave 1）\n\n**Wave 2** *(blocked on Wave 1 completion)*\n- [x] 04-02-PLAN.md — 5秒の要求失効・終了競合・1回引継ぎ（Wave 2、04-01依存）\n\n**Wave 3** *(blocked on Wave 2 completion)*\n- [x] 04-03-PLAN.md — 状態と入力先を保つ既存画面/モーダル復帰（Wave 3、04-02依存）\n\n**Wave 4** *(blocked on Wave 3 completion)*\n- [x] 04-04-PLAN.md — 非活性の10秒案内とプロセス間集約（Wave 4、04-03依存）\n\n**Wave 5** *(blocked on Wave 4 completion)*\n- [x] 04-05-PLAN.md — 自動受入・証拠照合とPhase 6実機受入移管（Wave 5、04-04依存）\n\n**Wave 6** *(blocked on Wave 5 completion)*\n- [x] 04-06-PLAN.md — CR-01: backend構築失敗の独立案内と部分初期化資源の安全な解放（04-05依存）\n\n共有する起動入口・OS境界・Windows試験と「1タスクずつ」の規約により直列実行する。Phase 4の版番号・README・開発履歴同期および実EXE配布統合はPhase 6へ引き継ぐ。",
+    "stderr": ""
+  },
+  "tests_reexecuted": false,
+  "gui_started": false,
+  "build_started": false,
+  "product_modified": false
+}

@@ -1,0 +1,59 @@
+{
+  "checked_at": "2026-11-06T09:07:17.881Z",
+  "result": ".planning/phases/04-startup-control/04-reverify-20261106-native-fix/result.json",
+  "single_process": true,
+  "tests": 2333,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0,
+  "input_count": 170,
+  "current_inputs_matched": 170,
+  "changed": [],
+  "checks": [
+    {
+      "argv": [
+        "C:\\Users\\shdwf\\work\\project\\PageFolio\\.venv\\Scripts\\ruff.exe",
+        "check",
+        ".",
+        "--no-cache"
+      ],
+      "exit": 0,
+      "stdout": "All checks passed!\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "C:\\Users\\shdwf\\work\\project\\PageFolio\\.venv\\Scripts\\ruff.exe",
+        "format",
+        "--check",
+        "--no-cache",
+        "<146 files>"
+      ],
+      "exit": 0,
+      "stdout": "146 files already formatted\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "C:\\Users\\shdwf\\work\\project\\PageFolio\\.venv\\Scripts\\python.exe",
+        "-c",
+        "import ast; ast.parse(open('pagefolio.py', encoding='utf-8').read())"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  ],
+  "artifacts": {
+    ".planning/phases/04-startup-control/04-reverify-20261106-native-fix/result.json": "5166bda91eeb4cba70f0b768b52343a2ae69044e19b701915e8ae3bd258828a9",
+    ".planning/phases/04-startup-control/04-reverify-20261106-native-fix/inputs-before.json": "571b64e22b1a080206207880bd0262511a68ea613c7be4e421d1529516191576",
+    ".planning/phases/04-startup-control/04-reverify-20261106-native-fix/inputs-after.json": "571b64e22b1a080206207880bd0262511a68ea613c7be4e421d1529516191576",
+    ".planning/phases/04-startup-control/04-reverify-20261106-native-fix/junit.xml": "3a409ac5ad0f23d2a568f55e1f1fbbb30bf7fdd71cb99385b85ae5643ff14917",
+    ".planning/phases/04-startup-control/04-reverify-20261106-native-fix/stdout.txt": "f49bb1d35ef4cf14ef17c4c9379d19722fb33f61a0045964928c4a4df0d0f8a2",
+    ".planning/phases/04-startup-control/04-reverify-20261106-native-fix/stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    ".planning/phases/04-startup-control/04-reverify-20261106-native-fix/checks.json": "34a06ca5d5c85506094b11af4a1a3469835e3c08aa170f77ad75094afb05219f",
+    ".planning/phases/04-startup-control/04-reverify-20261106-native-fix/environment.txt": "c2edc377a53c20dd3aedbb73517b88048ff15a27ef3034b5da216c7e989b7384",
+    ".planning/phases/04-startup-control/04-reverify-20261106-native-fix/ruff-discovery.json": "dc496394f34ca03248ef891b3666811c7b3d0d109cd369f2d7d591f270ecf513"
+  },
+  "release_allowed": false
+}

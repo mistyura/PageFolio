@@ -1,0 +1,23 @@
+{
+  "inaccessible": [
+    {
+      "path": ".pytest_cache",
+      "error": "[WinError 5] アクセスが拒否されました。: '.pytest_cache'"
+    },
+    {
+      "path": "pf_0502_atomic_red",
+      "error": "[WinError 5] アクセスが拒否されました。: 'pf_0502_atomic_red'"
+    },
+    {
+      "path": "pf_0502_flow_green",
+      "error": "[WinError 5] アクセスが拒否されました。: 'pf_0502_flow_green'"
+    },
+    {
+      "path": "pf_0502_flow_red",
+      "error": "[WinError 5] アクセスが拒否されました。: 'pf_0502_flow_red'"
+    }
+  ],
+  "code": 0,
+  "stdout": "",
+  "stderr": ""
+}

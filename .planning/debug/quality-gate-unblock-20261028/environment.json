@@ -1,0 +1,13 @@
+{
+  "python": "3.15.2 (tags/v3.15.2:5e58eaa, Oct 25 2026, 17:27:03) [MSC v.1951 64 bit (AMD64)]",
+  "executable": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.venv\\Scripts\\python.exe",
+  "platform": "Windows-11-10.0.26300-SP0",
+  "packages": {
+    "pytest": "9.1.1",
+    "ruff": "0.17.1",
+    "PyMuPDF": "1.28.2",
+    "Pillow": "13.0.0",
+    "tkinterdnd2": "0.6.4"
+  },
+  "python_sha256": "f14d10e954b922d758234ff49335ad0e07e567103e06b38ff675c6bc85282865"
+}

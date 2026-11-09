@@ -1,0 +1,67 @@
+{
+  "schema": "w05c-exe-v1",
+  "case": "W05c",
+  "row": "W05c/quit-no@production-exe",
+  "entry": "production-exe",
+  "condition": "quit-no",
+  "collection_status": "machine_collected_pending_answer",
+  "run": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\release-uat-01ec699d960a4b8da489f7407fa31bfb",
+  "manifest_sha256": "232685583de5f790c1a88baac5b56cac7c7378540809c7f7cfd635ef8661d3f3",
+  "owner_created": "134384402092762310",
+  "peer_created": "134384404899568859",
+  "binary_sha256": "66be5df663e333057c5c3cde02180857f930d2433e377f69c2838432d49a19d4",
+  "fixture_sha256": "abee3a71f648e7b83b4d37c5f6167e855cc1907d9afe23127426e8351415bf8e",
+  "tree_sha256": "b1e55ca6efa3a7bafb4dec9ea9fa2c715dfca6f538ba906632058f912f575d85",
+  "input_manifest_sha256": "ae08f9422ee0010bbc827720aae0c1873552d0dd51b63ddf4960baeba036658d",
+  "inspections": {
+    "before_confirm": {
+      "index": 2,
+      "sha256": "cade8f19155077ead8eb2725d287645a06418408c3a57cfb0646af3cd6f85544"
+    },
+    "during_confirm": {
+      "index": 3,
+      "sha256": "2365180067f2c2a15d624792b0d6825b171ac1f5586389e7b1275eeb350a9d15"
+    },
+    "after_no": {
+      "index": 4,
+      "sha256": "b5f6380a6b71abba0a5a1a760a194b7b1a401de6e4492835af001af3c2adaa7f"
+    },
+    "after_peer": {
+      "index": 5,
+      "sha256": "41e374e43618aa8bfebea65a031d9f3d2e88a09a415a79001b40c4b1f6011191"
+    }
+  },
+  "peer_constructed": 0,
+  "peer_constructed_basis": "external-no-new-primary-window-and-same-owner",
+  "confirm_disappeared_before_collection": true,
+  "confirm_disappeared_basis": "direct-user-observation",
+  "direct_answer": {
+    "source": "user-direct",
+    "source_ref": "request_user_input_async/call_a329fff91723450db0b05dabe27d284a/0",
+    "question": "今回の EXE（run末尾 7fa31bfb）で、①終了確認が表示された ②自分で「いいえ」を押した ③確認が閉じた ④全3ページと編集内容（1・2横向き、3縦向き）が残った ⑤作業画面は1つで二次の別画面が出なかった ⑥「いいえ」直後はPageFolioが前景だった ⑦これらを回収前に観察した、の7点を確認できましたか？",
+    "text": "自分で「いいえ」を押し、7点すべて確認しました",
+    "captured_at": "2026-11-06T12:09:41.799408+00:00",
+    "timestamp_basis": "回答受信後の記録時刻。送信時刻の推測ではない。",
+    "quit_confirm_shown": true,
+    "answered_no": true,
+    "confirm_disappeared": true,
+    "edit_state_kept": true,
+    "owner_kept": true,
+    "foreground_after": true,
+    "observed_before_collection": true
+  },
+  "stop_outcome": "terminated",
+  "stop_observed_at": "2026-11-06T12:09:52.369117+00:00",
+  "originals_sha256": "175a51a5b4150c0893961c97c3741ab368c7ccdc947f9c3ebf2ae4088c4dd452",
+  "adoption": {
+    "decision": "??",
+    "approved_by": "???",
+    "source": "user-direct",
+    "source_ref": "request_user_input_async/call_2239ddca24964e049edaf9ce80771042/0",
+    "question": "???????? W05c/???EXE?run?? 7fa31bfb??????????7?????????????????? pass ?????????????",
+    "text": "??????",
+    "approved_at": "2026-11-06T12:10:57.309614+00:00",
+    "timestamp_basis": "?????????????????????????????????",
+    "answer_sha256": "0381ae0fcd93a57b76db9696fd81cc80de9a4e87701c940d31329ad2f02918c6"
+  }
+}

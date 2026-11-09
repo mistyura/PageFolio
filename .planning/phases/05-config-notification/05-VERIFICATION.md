@@ -1,22 +1,76 @@
 ---
 phase: 05-config-notification
-verified: 2026-10-28T06:10:34Z
+verified: 2026-11-09T12:11:50Z
 status: passed
 score: 23/23 must-haves verified
-covered_files: [".planning/debug/quality-gate-unblock-20261028/environment.json",".planning/debug/quality-gate-unblock-20261028/full-0.stdout.txt",".planning/debug/quality-gate-unblock-20261028/full.json",".planning/debug/quality-gate-unblock-20261028/full.xml",".planning/phases/05-config-notification/05-01-PLAN.md",".planning/phases/05-config-notification/05-01-SUMMARY.md",".planning/phases/05-config-notification/05-02-PLAN.md",".planning/phases/05-config-notification/05-02-SUMMARY.md",".planning/phases/05-config-notification/05-03-PLAN.md",".planning/phases/05-config-notification/05-03-SUMMARY.md",".planning/phases/05-config-notification/05-04-PLAN.md",".planning/phases/05-config-notification/05-04-SUMMARY.md",".planning/phases/05-config-notification/05-EVIDENCE.json",".planning/phases/05-config-notification/05-REVIEW-DISPOSITION.md",".planning/phases/05-config-notification/05-REVIEW.md",".planning/phases/05-config-notification/05-SECURITY.md",".planning/phases/05-config-notification/05-UAT.md",".planning/phases/05-config-notification/05-UI-REVIEW.md",".planning/phases/05-config-notification/05-VALIDATION.md",".planning/phases/05-config-notification/05-focus-proof-final/pytest.txt",".planning/phases/05-config-notification/05-focus-proof-final/status.json",".planning/phases/05-config-notification/05-focus-proof-inputs.json","docs/CONFIGURATION.md","pagefolio.py","pagefolio/__init__.py","pagefolio/__main__.py","pagefolio/app.py","pagefolio/batch_ocr_state.py","pagefolio/constants.py","pagefolio/dialogs/__init__.py","pagefolio/dialogs/about.py","pagefolio/dialogs/batch_ocr.py","pagefolio/dialogs/export_images.py","pagefolio/dialogs/llm_config/__init__.py","pagefolio/dialogs/llm_config/dialog.py","pagefolio/dialogs/llm_config/model_fetch.py","pagefolio/dialogs/llm_config/sections.py","pagefolio/dialogs/merge.py","pagefolio/dialogs/password.py","pagefolio/dialogs/plugin.py","pagefolio/dialogs/settings.py","pagefolio/dialogs/shortcuts.py","pagefolio/dnd.py","pagefolio/file_drop.py","pagefolio/file_ops.py","pagefolio/lang.py","pagefolio/md_render.py","pagefolio/ocr.py","pagefolio/ocr_dialog.py","pagefolio/ocr_engine.py","pagefolio/ocr_fallback.py","pagefolio/ocr_pipeline.py","pagefolio/ocr_providers/__init__.py","pagefolio/ocr_providers/base.py","pagefolio/ocr_providers/catalog.py","pagefolio/ocr_providers/claude.py","pagefolio/ocr_providers/errors.py","pagefolio/ocr_providers/gemini.py","pagefolio/ocr_providers/lmstudio.py","pagefolio/ocr_providers/ollama.py","pagefolio/ocr_providers/openai_provider.py","pagefolio/ocr_providers/registry.py","pagefolio/ocr_providers/runpod.py","pagefolio/ocr_providers/tesseract.py","pagefolio/page_ops.py","pagefolio/pagination.py","pagefolio/plugins.py","pagefolio/print_ops.py","pagefolio/redact_ops.py","pagefolio/settings.py","pagefolio/startup_control.py","pagefolio/startup_focus.py","pagefolio/startup_notice.py","pagefolio/startup_win32.py","pagefolio/themes.py","pagefolio/thumb_cache.py","pagefolio/toast.py","pagefolio/ui_builder.py","pagefolio/undo_store.py","pagefolio/viewer.py","plugins/page_info.py","pyproject.toml","requirements.txt","tests/__init__.py","tests/config_notice_support.py","tests/conftest.py","tests/test_batch_ocr_dialog.py","tests/test_batch_ocr_state.py","tests/test_config_notification.py","tests/test_export_images.py","tests/test_font_hardcode_guard.py","tests/test_gsd_dod.py","tests/test_imports.py","tests/test_lang_parity.py","tests/test_md_render.py","tests/test_ocr.py","tests/test_ocr_dialog_center.py","tests/test_ocr_engine.py","tests/test_ocr_fallback.py","tests/test_ocr_pipeline.py","tests/test_ocr_provider_catalog.py","tests/test_ocr_providers.py","tests/test_page_polish.py","tests/test_pagination.py","tests/test_password.py","tests/test_pdf_ops.py","tests/test_plugin_dialog_wheel.py","tests/test_plugins.py","tests/test_print.py","tests/test_prompt_templates.py","tests/test_provider_ui.py","tests/test_save_overwrite.py","tests/test_selection_invariant.py","tests/test_settings_keyguard.py","tests/test_shortcuts_dialog.py","tests/test_source_keyguard.py","tests/test_startup_control.py","tests/test_startup_focus.py","tests/test_startup_notice.py","tests/test_startup_windows.py","tests/test_thumb_cache.py","tests/test_toast.py","tests/test_undo_stress.py","tests/test_utils.py","tests/test_v150_regression.py","tests/test_viewer.py","開発履歴.md"]
-covered_digest: "v4:sha256:d027af6f52ce03646fecda0710cdbe4ecb15c1c201e15950dc5b893c675fe6be"
+covered_files: [".gitignore",".planning/debug/constructor-notice-dedup-20261106/fix-input-scope.json",".planning/debug/ocr-off-summary-evidence/native-20261028/environment.txt",".planning/debug/ocr-off-summary-evidence/native-20261028/junit.xml",".planning/debug/ocr-off-summary-evidence/native-20261028/result.json",".planning/debug/ocr-off-summary-evidence/native-20261028/stderr.txt",".planning/debug/ocr-off-summary-evidence/native-20261028/stdout.txt",".planning/debug/quality-gate-unblock-20261028/environment.json",".planning/debug/quality-gate-unblock-20261028/full-0.stdout.txt",".planning/debug/quality-gate-unblock-20261028/full.json",".planning/debug/quality-gate-unblock-20261028/full.xml",".planning/phases/04-startup-control/04-QUALITY-CONSTRUCTOR-20261106.json",".planning/phases/04-startup-control/04-QUALITY-CR02-20261106.json",".planning/phases/04-startup-control/04-QUALITY-G4-20261107.json",".planning/phases/04-startup-control/04-QUALITY-RECHECK-W05C-20261105.json",".planning/phases/04-startup-control/04-QUALITY-W12B-PID-20261109.json",".planning/phases/04-startup-control/04-REVALIDATION-20261106.md",".planning/phases/04-startup-control/04-REVALIDATION-CONSTRUCTOR-20261106.md",".planning/phases/04-startup-control/04-REVALIDATION-G4-20261107.md",".planning/phases/04-startup-control/04-REVALIDATION-W05C-20261105.md",".planning/phases/04-startup-control/04-REVALIDATION-W12B-PID-20261109.md",".planning/phases/04-startup-control/04-cr02-green-20261106.xml",".planning/phases/04-startup-control/04-cr02-red-20261106.xml",".planning/phases/04-startup-control/04-reverify-20261105-full/inputs-after.json",".planning/phases/04-startup-control/04-reverify-20261105-full/inputs-before.json",".planning/phases/04-startup-control/04-reverify-20261105-full/junit.xml",".planning/phases/04-startup-control/04-reverify-20261105-full/run.json",".planning/phases/04-startup-control/04-reverify-20261105-full/stderr.txt",".planning/phases/04-startup-control/04-reverify-20261105-full/stdout.txt",".planning/phases/04-startup-control/04-reverify-20261106-constructor-sync/checks.json",".planning/phases/04-startup-control/04-reverify-20261106-constructor-sync/environment.txt",".planning/phases/04-startup-control/04-reverify-20261106-constructor-sync/inputs-after.json",".planning/phases/04-startup-control/04-reverify-20261106-constructor-sync/inputs-before.json",".planning/phases/04-startup-control/04-reverify-20261106-constructor-sync/junit.xml",".planning/phases/04-startup-control/04-reverify-20261106-constructor-sync/result.json",".planning/phases/04-startup-control/04-reverify-20261106-constructor-sync/ruff-discovery.json",".planning/phases/04-startup-control/04-reverify-20261106-constructor-sync/stderr.txt",".planning/phases/04-startup-control/04-reverify-20261106-constructor-sync/stdout.txt",".planning/phases/04-startup-control/04-reverify-20261106-cr02/checks.json",".planning/phases/04-startup-control/04-reverify-20261106-cr02/environment.txt",".planning/phases/04-startup-control/04-reverify-20261106-cr02/inputs-after.json",".planning/phases/04-startup-control/04-reverify-20261106-cr02/inputs-before.json",".planning/phases/04-startup-control/04-reverify-20261106-cr02/junit.xml",".planning/phases/04-startup-control/04-reverify-20261106-cr02/result.json",".planning/phases/04-startup-control/04-reverify-20261106-cr02/ruff-discovery.json",".planning/phases/04-startup-control/04-reverify-20261106-cr02/stderr.txt",".planning/phases/04-startup-control/04-reverify-20261106-cr02/stdout.txt",".planning/phases/04-startup-control/04-reverify-20261107-g4/checks.json",".planning/phases/04-startup-control/04-reverify-20261107-g4/environment.txt",".planning/phases/04-startup-control/04-reverify-20261107-g4/inputs-after.json",".planning/phases/04-startup-control/04-reverify-20261107-g4/inputs-before.json",".planning/phases/04-startup-control/04-reverify-20261107-g4/junit.xml",".planning/phases/04-startup-control/04-reverify-20261107-g4/result.json",".planning/phases/04-startup-control/04-reverify-20261107-g4/ruff-discovery.json",".planning/phases/04-startup-control/04-reverify-20261107-g4/stderr.txt",".planning/phases/04-startup-control/04-reverify-20261107-g4/stdout.txt",".planning/phases/04-startup-control/04-reverify-20261109-w12b-pid/checks.json",".planning/phases/04-startup-control/04-reverify-20261109-w12b-pid/environment.txt",".planning/phases/04-startup-control/04-reverify-20261109-w12b-pid/inputs-after.json",".planning/phases/04-startup-control/04-reverify-20261109-w12b-pid/inputs-before.json",".planning/phases/04-startup-control/04-reverify-20261109-w12b-pid/junit.xml",".planning/phases/04-startup-control/04-reverify-20261109-w12b-pid/result.json",".planning/phases/04-startup-control/04-reverify-20261109-w12b-pid/ruff-discovery.json",".planning/phases/04-startup-control/04-reverify-20261109-w12b-pid/stderr.txt",".planning/phases/04-startup-control/04-reverify-20261109-w12b-pid/stdout.txt",".planning/phases/05-config-notification/05-01-PLAN.md",".planning/phases/05-config-notification/05-01-SUMMARY.md",".planning/phases/05-config-notification/05-02-PLAN.md",".planning/phases/05-config-notification/05-02-SUMMARY.md",".planning/phases/05-config-notification/05-03-PLAN.md",".planning/phases/05-config-notification/05-03-SUMMARY.md",".planning/phases/05-config-notification/05-04-PLAN.md",".planning/phases/05-config-notification/05-04-SUMMARY.md",".planning/phases/05-config-notification/05-EVIDENCE.json",".planning/phases/05-config-notification/05-REVALIDATION-20261105.md",".planning/phases/05-config-notification/05-REVALIDATION-20261106.md",".planning/phases/05-config-notification/05-REVALIDATION-CONSTRUCTOR-20261106.md",".planning/phases/05-config-notification/05-REVALIDATION-G4-20261107.md",".planning/phases/05-config-notification/05-REVALIDATION-W05C-20261105.md",".planning/phases/05-config-notification/05-REVERIFY-20261028.cjs",".planning/phases/05-config-notification/05-REVERIFY-20261028.json",".planning/phases/05-config-notification/05-REVERIFY-SCOPE-20261028.cjs",".planning/phases/05-config-notification/05-REVERIFY-SCOPE-20261028.json",".planning/phases/05-config-notification/05-REVIEW-DISPOSITION.md",".planning/phases/05-config-notification/05-REVIEW.md",".planning/phases/05-config-notification/05-SECURITY.md",".planning/phases/05-config-notification/05-UAT.md",".planning/phases/05-config-notification/05-UI-REVIEW.md",".planning/phases/05-config-notification/05-VALIDATION.md",".planning/phases/05-config-notification/05-focus-proof-final/pytest.txt",".planning/phases/05-config-notification/05-focus-proof-final/status.json",".planning/phases/05-config-notification/05-focus-proof-inputs.json",".planning/phases/06-release-validation/06-05-PLAN.md",".planning/phases/06-release-validation/06-05-evidence/PYTHON-INPUT-SUPERSESSION-20261106.json",".planning/phases/06-release-validation/06-05-evidence/w05c-instrumentation-native-20261105/before.json",".planning/phases/06-release-validation/06-05-evidence/w05c-instrumentation-native-20261105/checks.json",".planning/phases/06-release-validation/06-05-evidence/w05c-instrumentation-native-20261105/environment.txt",".planning/phases/06-release-validation/06-05-evidence/w05c-instrumentation-native-20261105/junit.xml",".planning/phases/06-release-validation/06-05-evidence/w05c-instrumentation-native-20261105/result.json",".planning/phases/06-release-validation/06-05-evidence/w05c-instrumentation-native-20261105/ruff-discovery.json",".planning/phases/06-release-validation/06-05-evidence/w05c-instrumentation-native-20261105/stderr.txt",".planning/phases/06-release-validation/06-05-evidence/w05c-instrumentation-native-20261105/stdout.txt",".planning/phases/06-release-validation/06-05-record-w05c-exe.cjs",".planning/phases/06-release-validation/06-05-record-w05c-python.cjs",".planning/phases/06-release-validation/06-05-record-w12a.cjs",".planning/phases/06-release-validation/06-05-record-w12b.cjs",".planning/phases/06-release-validation/06-05-record-w12c.cjs",".planning/phases/06-release-validation/06-05-w05c-evidence.cjs",".planning/phases/06-release-validation/06-05-w05c-v3.cjs",".planning/phases/06-release-validation/06-05-w12a-driver.py",".planning/phases/06-release-validation/06-05-w12b-driver.py",".planning/phases/06-release-validation/06-05-w12c-driver.py",".planning/phases/06-release-validation/06-07-quality.cjs",".planning/phases/06-release-validation/06-08-evidence/native-docs-20261028/before.json",".planning/phases/06-release-validation/06-08-evidence/native-docs-20261028/checks.json",".planning/phases/06-release-validation/06-08-evidence/native-docs-20261028/environment.txt",".planning/phases/06-release-validation/06-08-evidence/native-docs-20261028/junit.xml",".planning/phases/06-release-validation/06-08-evidence/native-docs-20261028/result.json",".planning/phases/06-release-validation/06-08-evidence/native-docs-20261028/stderr.txt",".planning/phases/06-release-validation/06-08-evidence/native-docs-20261028/stdout.txt",".planning/phases/06-release-validation/06-RELEASE-SCOPE.json",".planning/phases/06-release-validation/06-W11-SCOPE-APPROVAL.md",".planning/phases/06-release-validation/06-W12A-COLLECTION.md",".planning/phases/06-release-validation/06-W12A-REVIEW.md",".planning/phases/06-release-validation/06-W12B-COLLECTION.md",".planning/phases/06-release-validation/06-W12B-NEW-TRACER-20261107.json",".planning/phases/06-release-validation/06-W12B-REVIEW.md",".planning/phases/06-release-validation/06-W12C-COLLECTION.md",".planning/phases/06-release-validation/06-W12C-REVIEW.md",".planning/phases/06-release-validation/06-resume-20261106/post-supersession-quality.json",".planning/phases/06-release-validation/06-resume-20261107/g4-extra-inputs-before.json",".planning/phases/06-release-validation/06-resume-20261107/post-history-inputs.json","README.md","distribution/はじめに.md","docs/CONFIGURATION.md","pagefolio.py","pagefolio/__init__.py","pagefolio/__main__.py","pagefolio/app.py","pagefolio/batch_ocr_state.py","pagefolio/constants.py","pagefolio/dialogs/__init__.py","pagefolio/dialogs/about.py","pagefolio/dialogs/batch_ocr.py","pagefolio/dialogs/export_images.py","pagefolio/dialogs/llm_config/__init__.py","pagefolio/dialogs/llm_config/dialog.py","pagefolio/dialogs/llm_config/model_fetch.py","pagefolio/dialogs/llm_config/sections.py","pagefolio/dialogs/merge.py","pagefolio/dialogs/password.py","pagefolio/dialogs/plugin.py","pagefolio/dialogs/settings.py","pagefolio/dialogs/shortcuts.py","pagefolio/dnd.py","pagefolio/file_drop.py","pagefolio/file_ops.py","pagefolio/lang.py","pagefolio/md_render.py","pagefolio/ocr.py","pagefolio/ocr_dialog.py","pagefolio/ocr_engine.py","pagefolio/ocr_fallback.py","pagefolio/ocr_pipeline.py","pagefolio/ocr_providers/__init__.py","pagefolio/ocr_providers/base.py","pagefolio/ocr_providers/catalog.py","pagefolio/ocr_providers/claude.py","pagefolio/ocr_providers/errors.py","pagefolio/ocr_providers/gemini.py","pagefolio/ocr_providers/lmstudio.py","pagefolio/ocr_providers/ollama.py","pagefolio/ocr_providers/openai_provider.py","pagefolio/ocr_providers/registry.py","pagefolio/ocr_providers/runpod.py","pagefolio/ocr_providers/tesseract.py","pagefolio/page_ops.py","pagefolio/pagination.py","pagefolio/plugins.py","pagefolio/print_ops.py","pagefolio/redact_ops.py","pagefolio/settings.py","pagefolio/startup_control.py","pagefolio/startup_focus.py","pagefolio/startup_notice.py","pagefolio/startup_win32.py","pagefolio/themes.py","pagefolio/thumb_cache.py","pagefolio/toast.py","pagefolio/ui_builder.py","pagefolio/undo_store.py","pagefolio/viewer.py","plugins/page_info.py","pyproject.toml","requirements.txt","tests/__init__.py","tests/config_notice_support.py","tests/conftest.py","tests/release_uat_support.py","tests/test_batch_ocr_dialog.py","tests/test_batch_ocr_state.py","tests/test_config_notification.py","tests/test_export_images.py","tests/test_font_hardcode_guard.py","tests/test_gsd_dod.py","tests/test_imports.py","tests/test_lang_parity.py","tests/test_md_render.py","tests/test_ocr.py","tests/test_ocr_dialog_center.py","tests/test_ocr_dialog_provider_refresh.py","tests/test_ocr_engine.py","tests/test_ocr_fallback.py","tests/test_ocr_pipeline.py","tests/test_ocr_provider_catalog.py","tests/test_ocr_providers.py","tests/test_page_polish.py","tests/test_pagination.py","tests/test_password.py","tests/test_pdf_ops.py","tests/test_plugin_dialog_wheel.py","tests/test_plugins.py","tests/test_print.py","tests/test_prompt_templates.py","tests/test_provider_ui.py","tests/test_release_contract.py","tests/test_release_uat_support.py","tests/test_save_overwrite.py","tests/test_selection_invariant.py","tests/test_settings_keyguard.py","tests/test_shortcuts_dialog.py","tests/test_source_keyguard.py","tests/test_startup_control.py","tests/test_startup_focus.py","tests/test_startup_notice.py","tests/test_startup_windows.py","tests/test_thumb_cache.py","tests/test_toast.py","tests/test_undo_stress.py","tests/test_utils.py","tests/test_v150_regression.py","tests/test_viewer.py","tests/test_w05c_evidence.py","tests/test_w05c_runner.py","tests/test_w12a_evidence.py","tests/test_w12b_evidence.py","tests/test_w12c_evidence.py","tests/w05c_evidence.py","tests/w05c_runner.py","開発履歴.md"]
+covered_digest: "v4:sha256:0c8cddf86d9bcf2c821ae531c9aa2cdc525d09c253feff346521597db3b84271"
 behavior_unverified: 0
 overrides_applied: 0
 flagged_prohibitions: 0
 unclassified_edges: 4
+review_open: 0
+release_approved: false
+current_execution:
+  evidence: .planning/phases/04-startup-control/04-reverify-20261109-w12b-pid/result.json
+  passed: 2488
+  failures: 0
+  errors: 0
+  skipped: 0
+  input_hashes_matched: 186
+  input_hashes_total: 186
+  warnings: 2
+  tests_reexecuted_by_verifier: false
+  quality_recheck: .planning/phases/04-startup-control/04-QUALITY-W12B-PID-20261109.json
+  phase05_named_passed: 499
+  phase04_regression_passed: 301
+  junit_failures_errors_skips: 0
+  stderr_empty: true
+  ruff_check_format_ast: passed
+dependency_verification:
+  phase04_status: passed
+  phase04_score: 21/21
+  phase04_report: .planning/phases/04-startup-control/04-VERIFICATION.md
+  phase04_verified: 2026-11-09T12:11:18Z
+prior_execution_20261107_g4:
+  historical: true
+  evidence: .planning/phases/04-startup-control/04-reverify-20261107-g4/result.json
+  passed: 2481
+  phase05_named_passed: 499
+  phase04_regression_passed: 301
+  input_hashes_matched: 174
+  input_hashes_total: 174
+  extra_input_hashes_matched: 12
+  extra_input_hashes_total: 12
+prior_execution_20261106_constructor_sync:
+  historical: true
+  evidence: .planning/phases/04-startup-control/04-reverify-20261106-constructor-sync/result.json
+  passed: 2401
+  phase05_named_passed: 498
+  phase04_regression_passed: 301
+  input_hashes_matched: 171
+  input_hashes_total: 171
+prior_execution_20261106_cr02:
+  historical: true
+  evidence: .planning/phases/04-startup-control/04-reverify-20261106-cr02/result.json
+  passed: 2361
+  phase05_named_passed: 498
+  phase04_regression_passed: 299
+  input_hashes_matched: 170
+  input_hashes_total: 170
+prior_execution_20261105_w05c:
+  evidence: .planning/phases/06-release-validation/06-05-evidence/w05c-instrumentation-native-20261105/result.json
+  passed: 2293
+  input_hashes: 167
+  status: historical
 re_verification:
   previous_status: passed
   previous_score: 23/23
+  previous_verified: 2026-11-06T20:36:40Z
+  trigger: W12b PID照合修正（試験harness1行・Phase06採取helper・証拠試験）後の新native全件2488件/186入力への再結合
   gaps_closed: []
   gaps_remaining: []
   regressions: []
-review_open: 1
-release_ready: false
 decision_coverage:
   honored: 21
   total: 22
@@ -26,37 +80,105 @@ prohibitions:
     status: resolved
     verdict: VERIFIED
     classification: HUMAN_RESOLVED
-    reason: "05-UAT.md Test 1に利用者の項目別passと記録時刻2026-10-23T18:09:21.4084125Zがある。05-01-PLANの具体的statementへの意味評価として解決。"
+    reason: "05-UAT Test 1 の利用者 pass（2026-10-23T18:09:21.4084125Z）を継承。通知文言は変更なし。"
   - statement: "設定保存失敗を理由に作業中のPDFを捨てる操作や再起動を促さない"
     status: resolved
     verdict: VERIFIED
     classification: HUMAN_RESOLVED
-    reason: "05-UAT.md Test 2に利用者の項目別passと記録時刻2026-10-23T18:09:21.4084125Zがある。05-01-PLANの具体的statementへの意味評価として解決。"
+    reason: "05-UAT Test 2 の利用者 pass（同時刻）を継承。旧投影IDの同一性とは別。"
 human_verification: []
 deferred:
-  - truth: "実配布EXE・Python各入口・DPI/UACを含む最終実機受入と版番号/README/開発履歴のリリース同期"
+  - truth: "実配布EXE・各Python入口・DPI/UACを含む最終実機受入と版情報同期の出荷判定"
     addressed_in: "Phase 6 / V110-QA-02, V110-QA-03"
-    evidence: "ROADMAP Phase 6 SC4/5、06-UAT-CARRYOVER。Phase 5の人手14 passは実EXE受入を代替しない。"
+    evidence: "ROADMAP Phase 6 SC4/5、06-UAT-CARRYOVER。Phase 05自動・既存人手passは108必須行とW11の未確認2行の実機受入を代替しない。"
 ---
 
 # Phase 5: 設定読込・保存失敗の通知 検証報告
 
-## 2026-10-28 再検証（現行判定）
+## 2026-11-09 W12b PID照合修正後の独立goal再検証（現行）
+
+**結論: status passed、score 23/23、behavior_unverified 0、override 0。** stale要因は `tests/test_startup_windows.py`・`tests/test_w12b_evidence.py`・`06-05-record-w12b.cjs`・`06-W12B-REVIEW.md` の4件で、いずれもPhase 05の設定読込・保存・通知・OCR offの実装や試験assertではない。`test_startup_windows.py` のG4基準からの差分は二次Backend auditへの `parent_pid` 追加（コメント含む2行）のみとhash再構成で確定し、残り2件はPhase 06採取支援。`pagefolio/` 57入力・依存・APP_VERSION v1.10.2はG4から不変。Phase 04の独立報告は現行 `verification.status` exit0/passed・21/21。
+
+品質正本 `../04-startup-control/04-reverify-20261109-w12b-pid/` と `../04-startup-control/04-QUALITY-W12B-PID-20261109.json` の単一全件は **2488 passed / 2 warnings / exit0**、JUnit failure/error/skip各0、stderr空、186入力のbefore=after=現行一致、9原本hash一致。Phase 05関連 **499件**（config_notification143、settings_keyguard26、toast38、release_contract30、release_uat_support244ほか）とPhase 04回帰301件はG4と同数でpass、G4比の件数差は `test_w12b_evidence` 26→33のみ。本担当は同試験33件のみ隔離再実行（pass）し、全件/GUI/buildは再実行していない。
+
+Phase 06の現行正式台帳は **19 pass / 89必須not-run / 対象外2 not-run**、`release_allowed=false`。W12b実機再採取は未実施。H01〜H14・禁止2件は既存利用者証拠の継承、decision coverage 21/22（D-22 blocking=false）、edge4件、DEP-05-REGRESSION、owner_missing、通知前景不一致は未解除のまま。Phase 05のpassedを出荷許可へ転用しない。
+
+**以下のG4節とそれ以前は検証履歴。現行数値と判定は本節とfrontmatterを用いる。**
+
+## 2026-11-07 G4採取基盤変更後の独立goal再検証（現行）
+
+**結論: status passed、score 23/23、behavior_unverified 0、override 0。** ROADMAPの4成功条件、V110-CFG-01〜04、4 PLAN / 4 SUMMARY、既存23 truthを縮小せず再照合した。Phase 04の独立報告は現行 `verification.status` exit0/passed・21/21で、同じ単一全件のPhase 04名付き301件も成功。Phase 05の設定読込・保存・通知・OCR offの製品実装、依存、固定最終EXEは前回から不変。既存artifact16/16・key link9/9・保存原本保護・編集操作継続・通知の配線を前回の独立検証から回帰確認した。
+
+品質正本 `../04-startup-control/04-reverify-20261107-g4/` と `../04-startup-control/04-QUALITY-G4-20261107.json` の単一全件は **2481 passed / 2 warnings / 705.94秒 / exit0**、JUnit failure/error/skip各0、stderr空。9原本hashと追加採取12入力の現行hashを再計算して一致し、174入力は実行前後同一。全件後の現行差分は開発履歴1件だけで、`06-resume-20261107/post-history-inputs.json` の現行174 hashは一致。Ruff check、155 Python format check、ASTは全exit0/stderr空。Phase 05関連 **499件**（config_notification143、settings_keyguard26、toast38、provider_refresh18、release_contract30、release_uat_support244）をJUnitから再集計した。本担当でpytest/GUI/buildを再実行していない。
+
+必須ゲートはNyquist 4要件/9タスク gap0→ASVS L1 Security14 closed/open0→既存静的UI22/24 partial（V-01/S-01・新capture未実施）→独立code review/dispositionの既存CR-01/02/03・WR-01 fixed/open0とG4のW12a4・W12b1・W12c2指摘解消→Phase 04現行回帰301件、の順に照合した。H01〜H14と禁止2件の意味評価は既存利用者証拠の継承で、新たな人手実施ではない。decision coverage 21/22、D-22未検出はblocking=false。descriptor不明2件、edge4件、DEP-05-REGRESSION、owner_missing、通知前景不一致も未解除。
+
+Phase 06の現行正式台帳は **10 pass / 98必須not-run / 対象外2 not-run**。旧Python20 passは歴史原本に保全され、現行入力では再採取待ち。新W12b tracerは利用者承認の別版1回buildであり、固定最終v1.10.2 EXEを変更していない。W12b7行/W12c2行は未改変EXE内部API未取得で正式helper拒否/not-run、今回の実機UATは未開始。`ready_for_retry=false`、`release_allowed=false`、06-05未完了・06-06未開始を維持し、Phase 05のpassedを出荷許可へ転用しない。
+
+**以下のconstructor同期節とそれ以前は検証履歴。現行数値と判定は本節とfrontmatterを用いる。**
+
+## 2026-11-06 constructor同期修正後の独立goal再検証（現行）
+
+**結論: status passed、score 23/23、behavior_unverified 0、override 0。** ROADMAPの4成功条件、V110-CFG-01〜04、4 PLAN / 4 SUMMARY、既存23 truthを縮小せず再照合した。Phase 04の独立報告は現行 `verification.status` exit0/passed・21/21で、同じ単一全件のPhase 04名付き301件が成功した。Phase 05の設定読込・保存・通知・OCR offの製品入力は前回と同じで、変更はconstructor試験の同期と開発履歴だけ。既存artifact16/16・key link9/9と製品配線、設定失敗時の原本保護・編集操作継続・通知を前回の独立検証から回帰確認した。
+
+現行の品質正本は `../04-startup-control/04-reverify-20261106-constructor-sync/` と `../04-startup-control/04-QUALITY-CONSTRUCTOR-20261106.json`。単一全件 **2401 passed / 2 warnings / 629.77秒 / exit0**、JUnit failure/error/skip各0、stderr空。171入力は実行前後同一で、原本7ファイルの品質正本hashは再計算一致。回収後の現行差分はPhase 06正式台帳 `06-MANUAL-EVIDENCE.json` と `06-UAT.md` の事後出力2件のみ、他の品質入力は不変。別保存helper3入力も不変。Ruff check・149 Python format check・ASTはいずれもexit0/stderr空。Phase 05関連498件（config_notification143、settings_keyguard26、toast38、provider_refresh18、release_contract30、release_uat_support243）はJUnitで全件成功し、本担当でpytest/GUI/EXEを再実行していない。
+
+必須ゲートはNyquist 4要件/9タスク gap0→ASVS L1 Security14 closed/open0→既存静的UI22/24 partial（V-01/S-01と新captureは未実施）→独立code review/disposition 34ファイル・critical/warning0・CR-01/02/03/WR-01 fixed/open0→Phase 04の現行回帰301件、の順に照合した。H01〜H14と禁止2件の意味評価は既存利用者証拠の継承で、新たな人手実施ではない。旧投影descriptor不明2件、edge4件、DEP-05-REGRESSION、owner_missing、通知前景不一致は未解除。decision coverageは21/22、D-22未検出はblocking=falseのまま。
+
+Phase 06のPython-real旧pass20件はSHA付き `06-05-evidence/PYTHON-INPUT-SUPERSESSION-20261106.json` へ退避し、現行20行は別入力世代not-run・回答/観測/run ID空。固定EXE10 passは維持され、現行正式台帳は **10 pass / 98必須not-run / 対象外2 not-run**、110 card一意。`ready_for_retry=false`、`release_allowed=false`、06-05未完了・06-06未開始を維持し、Phase 05のpassedを出荷許可へ転用しない。
+
+**以下の「現行入力の独立goal再検証」節とそれ以前は当時の検証履歴。現行数値と判定は本節とfrontmatterを用いる。**
+
+## 2026-11-06 現行入力の独立goal再検証
+
+**結論: Phase 05 の23/23 truthをVERIFIED、status passed、behavior_unverified 0、override 0。** ROADMAPの4成功条件、V110-CFG-01〜04、4 PLANの19詳細truthを縮小せず、実装・配線・試験assert・単一全件の生JUnitに照合した。前提Phase 04は公式 verification.status が fresh/passed、21/21であり、同じ全件内の対象299件が成功している。以下の2026-11-05節と旧数値は当時の履歴で、今回の正本ではない。
+
+設定読込は pagefolio/settings.py:261 の実I/Oから missing/corrupt/unreadable を分け、pagefolio/app.py:150-170 が画面構築後の通知と読込失敗時の自動保存抑止へ接続する。pagefolio/settings.py:352 の排他的tmp→os.replaceと所有tmpのみのcleanup、pagefolio/app.py:683 の保存bool/原本保護/明示成功解除、app.py:670 の終了保留が原本と編集中作業を守る。app.py:521-627 のevent/queue/generationと pagefolio/toast.py が連続失敗・再構築時の通知を扱い、各保存元は共通ownerへ接続する。CR-03のOCR off入口・表示回帰は pagefolio/ocr_dialog.py と tests/test_ocr_dialog_provider_refresh.py の実メソッドassertで確認した。宣言artifact16/16、key link9/9は公式queryと呼出し読取で確認し、未参照債務markerや新stub/blockerは検出しなかった。
+
+品質正本は ../04-startup-control/04-reverify-20261106-cr02/ の result.json、JUnit、inputs-before/after、stdout/stderr、checks.json、environment.txt、ruff-discovery.json。新規単一全件2361 passed / 2 warnings / 587.24秒 / exit0、JUnit failure/error/skip各0、stderr空。170入力の前後・現行SHA-256一致を照合した。Phase 05の config_notification143、settings_keyguard26、toast38、provider_refresh18、release_contract30、release_uat_support243の計498件は全件pass。Ruff check、148件format、ASTも成功し、stderr空。148件にはRED fixtureの合成py2件を含む。本verifierはpytest/GUI/EXEを再実行していない。旧2333件や2293件は修正前の履歴で、現行成功へ流用しない。
+
+必須ゲートは05-VALIDATION.mdのNyquist（4要件/9タスク、gap0）→05-SECURITY.mdのASVS L1（14 closed/open0）→05-UI-REVIEW.mdの既存静的22/24継承→05-REVIEW.mdと05-REVIEW-DISPOSITION.mdの独立再照合（34ファイル、critical/warning 0、CR-01/02/03・WR-01 fixed/open0）→Phase04回帰299件の順に成立した。05-REVALIDATION-20261106.mdを今回のゲート索引とする。共有採用helperのCR-02はPhase 04側の指摘で、05側CR-02と混同しない。否認値28例のRED/GREEN証拠と新全件は前提側で確認済み。
+
+H01〜H14と禁止statement 2件の意味評価は05-UAT.mdに記録された既存利用者passを継承したもので、今回の人手再実施ではない。旧投影descriptor不明2件とedge4件は未分類のまま。DEP-05-REGRESSION、owner_missing、通知前景不一致、UIのV-01/S-01も未解除。Phase 06正式台帳は28 pass/80必須not-run/対象外2 not-run、ready_for_retry=false、release_allowed=false、06-06未開始であり、本Phaseのpassedを出荷可へ読み替えない。decision-coverage owner queryは21/22、not_honored D-22、blocking=falseであり、過大な22/22には改めない。
+
+今回の covered_files/digest は公式 verification.fingerprint が返した192件とv4 digestをそのまま採用した。旧集合を維持し、Phase 04 fresh報告・新品質原本・Phase 05の現行ゲート報告・v3採用判断のソース/試験を追加した。自己報告やSTATE/ROADMAPの可変追跡は指紋へ入れない。
+
+## 2026-11-05 W05c計測追加後の独立goal検証
+
+Phase 04を先に必須順序で再検証し、公式`verification.status: passed`を確認した。Phase 05のROADMAP 4成功条件、4要件、4 PLAN、既存23 truthを現行設定/通知実装・試験assert・新native全件JUnitに再結合した。**23/23 verified、behavior_unverified 0、override 0、status passed（Phase 05の承認済み範囲）**。正本は`.planning/phases/06-release-validation/06-05-evidence/w05c-instrumentation-native-20261105/`で、2293 passed / 2 warnings / 1191.69秒 / exit0、JUnit failures/errors/skipped各0、167一意入力の前後・現行SHA-256一致。設定関連のconfig_notification143、settings_keyguard26、toast38、provider_refresh18、release_contract30、release_uat_support243件はpass。新W05c39件は計測対照であり正式人手受入ではない。Nyquist/Securityはpass、UIは静的22/24、Code reviewの新規指摘0。runner事前Ruff checkのアクセス拒否warningを保持し、終了後の現行check/formatはstderr空・144 Python整形済み。詳細は`05-REVALIDATION-W05C-20261105.md`と`../04-startup-control/04-QUALITY-RECHECK-W05C-20261105.json`。既存H01〜H14/禁止事項2件の利用者passは継承であり今回の再実施ではない。Phase 06の正式W05c、DPI/UAC/EXE、DEP-05/owner_missing等の原因未確定、80必須not-run、出荷未承認は解除しない。以下の2254件等は前回履歴である。
+
+## 2026-11-05 現行入力の独立goal検証
+
+Phase 06の`resume_contract`に必要な鮮度を回復するため、完了済み4 PLAN/4 SUMMARYの19 truthとROADMAPの4成功条件を、現行実装・試験本文・新しい単一native全件JUnitへ再照合した。**23/23 verified、behavior_unverified 0、override 0、status passed**。詳細な入力・差分・各ゲート・残存制約は [05-REVALIDATION-20261105.md](05-REVALIDATION-20261105.md)。
+
+新正本は `.planning/phases/04-startup-control/04-reverify-20261105-full/`。2254 passed / 2 warnings / 571.44秒 / exit0、JUnit failure/error/skip各0。118入力の実行前後差分0と現行SHA-256一致を確認し、設定通知143、settings_keyguard26、toast38、OCR provider_refresh18、release_contract30を含む。旧151入力の9件は変化しているため、2026-10-28の2232件を今回の現行全件に転用していない。README・配布文書・Phase 05の設定/通知/OCR off製品コードは旧SHA-256と一致し、改訂されたrelease試験も新2254件で成功している。
+
+必須ゲートはNyquist 4/4要件・9/9タスク・新規gap0、Security 14 closed/open0、UI静的22/24の限定継承、Code review新規0/既存4 fixed、Phase 04の公式fresh passedと同一全件の回帰成功を順に確認した。H01〜H14と禁止事項の意味評価2件は利用者の既存passを継承し、再実施とはしない。`DEP-05-REGRESSION`、`owner_missing`、通知前景不一致、descriptor不明2件、未分類edge4件、UIのV-01/S-01は未解除。Phase 06の現行台帳は28 pass/80必須not-runとW11対象外2 not-runで、実EXE/DPI/UAC受入と出荷判定は未完了、`release_approved: false` を維持する。
+
+以下の2026-10-28の検証本文と数値は当時の履歴として保持する。今回のcovered集合は既存集合を縮小せず、新正本と再検証報告を追加し、公式CLIの`verification.fingerprint`出力から転記した。
 
 **Phase Goal:** 利用者が設定の読込・保存失敗を正しく把握でき、元の設定ファイルと編集操作を失わない。
-**Verified:** 2026-10-28T06:10:34Z
-**Status:** passed、23/23 must-haves verified、behavior_unverified 0、overrides 0。これは Phase 05 の設定 I/O・通知契約に対する判定であり、コードレビューの CR-03 解消、Phase 06 の受入、出荷承認を意味しない。
+**Status:** passed — 23/23、behavior_unverified 0、override 0。
+**Re-verification:** 前回 passed の covered 入力が変わったため独立再評価。SUMMARY の完了記述を証拠にせず、現行コード・配線・試験本文・実走JUnit・入力hashを照合した。
 
-前回報告は `verification.status` が `stale` を返した。対象の製品・試験等6件（`pagefolio/__main__.py`、`pagefolio/constants.py`、`pagefolio/startup_win32.py`、`requirements.txt`、`tests/test_startup_windows.py`、`開発履歴.md`）に加え、REVIEW・DISPOSITION・SECURITY・VALIDATION の証拠4件が更新された。下記は23件を現行実装と照合した結果である。後続の「2026-10-24検証履歴」は削除せず残すが、そこでの「最新2014件」「review clean」「v1.10.0」等の時点表現を現況へ転用しない。
+本判定は Phase 05 の完了契約に限る。CR-03 は今回の独立差分レビューでも fixed としたが、Phase 06 の受入完了・出荷承認ではない。旧報告全体は [05-VERIFICATION-before-scope-reverify.md](05-VERIFICATION-before-scope-reverify.md) に原文保存した。
 
-### Observable Truths（ROADMAP 4件＋PLAN 19件）
+## Goal Achievement
+
+### 今回の限定再検証
+
+前回23/23の製品・主要試験・CR-03回帰は現行入力と不変。ownerが示した4変更（README、配布はじめに、履歴、test_release_contract.py）と関連scope監査の配線を独立照合した。変更後の新しい単一全件2232件と151入力一致を得てからfreshnessを再生成した。旧2231件を変更後文書へ転用していない。案B承認はW11の2行だけをnot-run/deferredとするもので、他108行の品質・安全・実機受入条件やPhase05の4要件を減らさない。
+
+### Observable Truths
+
+ROADMAP 4 SC と PLAN 19 truth を維持し、スコープを縮小していない。表の状態遷移は、該当 named test の assert と、現行入力一致の単一全件内での pass を結合して評価した。実視覚・操作感は既存 H01〜H14 の利用者受入を継承する。
 
 | # | Must-have | 判定 | 現行の根拠 |
 |---|---|---|---|
-| 1 | SC1 読込分類と画面構築後通知 | VERIFIED | `settings.py:261` の実open・分類、`app.py` のUI後通知、`test_config_notification.py` の実App/ToastとH01〜03 |
-| 2 | SC2 全保存画面の失敗通知と偽成功抑止 | VERIFIED | `app.py:683` の保存bool消費と固定通知、各保存元の共通呼出し、H02/04/05/11 |
-| 3 | SC3 読込失敗・保存途中失敗で原本保護 | VERIFIED | `app.py` の自動保存抑止、`settings.py:352` の排他的tmp→replace、原本bytes・tmp試験 |
-| 4 | SC4 FIFO・再構築・編集継続 | VERIFIED | `app.py:521` 以降のqueue/event/generation/可視時間、`toast.py`、100件FIFO試験とH04/06〜08/13/14 |
+| 1 | SC1 `pagefolio_settings.json` の初回不存在なら警告なしで既定値から起動し、破損・読取不能なら画面構築後に失敗を認識できる。 | VERIFIED | `settings.py:261` の実open・分類、`app.py` のUI後通知、`test_config_notification.py` の実App/ToastとH01〜03 |
+| 2 | SC2 設定を保存する各画面で失敗したとき、利用者は変更が次回起動に残らないことを認識でき、成功表示に誤誘導されない。 | VERIFIED | `app.py:683` の保存bool消費と固定通知、各保存元の共通呼出し、H02/04/05/11 |
+| 3 | SC3 読込失敗後の自動処理や保存途中の失敗で、既存設定ファイルが無断で上書き・破壊されない。 | VERIFIED | `app.py` の自動保存抑止、`settings.py:352` の排他的tmp→replace、原本bytes・tmp試験 |
+| 4 | SC4 同じ設定エラーが続いても通知が集約され、ダイアログの連打や画面再構築による通知消失で編集を妨げられない。 | VERIFIED | `app.py:521` 以降のqueue/event/generation/可視時間、`toast.py`、100件FIFO試験とH04/06〜08/13/14 |
 | 5 | DEP-05条件付き実行と再発時停止 | VERIFIED | ROADMAP実行依存、05-02-CHECKPOINT、05-VALIDATION。原因解決・出荷承認との混同なし |
 | 6 | 破損起動後の非モーダル通知と編集継続 | VERIFIED | `app.py:627` のToast、実PDF回転/Undo/Redo試験、H01 |
 | 7 | 不存在・JSON・UTF-8・形状・OSError分類 | VERIFIED | `settings.py:308` 以降と分類試験。不存在はmissing、破損はcorrupt、読取例外はunreadable |
@@ -77,252 +199,145 @@ deferred:
 | 22 | PDF保存/印刷retryとDocument同一性 | VERIFIED | `test_toast.py` と `test_pdf_ops.py` の既存retry/閉鎖後安全条件を現行全件で実行 |
 | 23 | 実測・未実施・probeを区別し全件/Nyquist前に完了させない | VERIFIED | 05-VALIDATIONの4/4要件・9/9タスク・gap0、今回全件入力照合。Phase 06人手/出荷は未実施と区別 |
 
-**Score:** 23/23。各状態遷移は該当する既存試験のassertと、今回入力の全件実行結果を組み合わせて判定した。新規pytest/GUIは実行していない。前回の禁止事項2件は05-UAT Test 1/2の利用者による項目別passを保持し、H01〜H14の14 passも再実施扱いにはしない。新たな人手必須項目は0。
 
-### 実装・配線・データ流
+**Score:** 23/23 truths verified、present-behavior-unverified 0。
 
-`query verify.artifacts` は各PLANで4/4、4/4、3/3、5/5（宣言16/16、すべてexit0）。`query verify.key-links` は2/2、2/2、3/3、2/2（計9/9、すべてexit0）。CLIのpattern一致だけに依存せず、読込 `open/json.load → SettingsLoadResult.status → App queue → ToastManager.show`、保存 `UI handler → app._persist_settings → settings._save_settings → bool → 通知`、再構築 `App deque → UIBuilder.on_idle → 新Toast` を現行コードで追った。画面に出る固定文言は `lang.py` の日英4キーで、実I/O結果が選択する。空の初期queueはイベント追加で埋まるためstubではない。キー値や例外本文を通知へ補間する経路は見つからない。
+### 必須ゲートの順序と結果
 
-### 自動試験・品質ゲート
-
-今回のverifierが `.planning/debug/quality-gate-unblock-20261028/full.json`、`full.xml`、`full-0.stdout.txt`、`environment.json` を読んだ。2026-10-28T04:08:28Z開始の単一pytestはexit 0、**2071 passed / 2 warnings / 480.86秒**、失敗0・error0・skip0。JSONはbefore/after変更0。verifier独立のSHA-256再照合では `pagefolio/`・`tests/`・依存定義115入力に不一致0。05-VALIDATIONが記録した全146入力の差分は `.gitignore`、`docs/DEVELOPMENT.md`、`CONTRIBUTING.md`、`開発履歴.md` のみで、製品・試験・依存は一致。現行JUnitで `test_config_notification.py` 143件、`test_settings_keyguard.py` 26件、`test_toast.py` 38件、`test_provider_ui.py` 236件、`test_ocr.py` 165件、`test_pagination.py` 84件は各failure/error/skip 0。変更6件のdiffは起動wake・Win32監査・版番号v1.10.1・試験監査・履歴に限り、設定I/O・Toast・全保存ownerの実装を変更していない。既存の2071件成功はCR-03の解消根拠ではない。
-
-結び付く試験のdisabled/xfail、循環oracle、未参照のTBD/FIXME/XXX債務を調べ、Phase 05 must-haveを失効させるものは検出しなかった。`return None` 等の一致は既存の分岐戻り値であり空実装ではない。05-04 PLANのhuman-checkは05-UATのH01〜H14で受入済み。scriptsの実行対象`probe-*.sh`宣言はなく、descriptor不明2件・未分類edge4件は実行PASSと解釈しない。UIは利用者が今回既存の静的22/24評価再利用を選択し、追加GUIは行っていない。H01〜H14と禁止事項の意味評価2件は既存の人手passとして保持する。静的UI点数を実画面・高DPI・実EXEの独立合格と呼ばない。
-
-### 要件と CR-03 の境界
-
-| 要件 | 判定 | 対応truth | CR-03との関係 |
-|---|---|---|---|
-| V110-CFG-01 | SATISFIED | 1、6〜9 | 読込失敗分類・起動後通知。CR-03はOCR結果取得後の`off`切替で、読込失敗を扱わない |
-| V110-CFG-02 | SATISFIED | 2、10、12、15〜19 | 各保存元の**保存失敗**通知・非永続・偽成功抑止。CR-03の`_apply_llm_settings`は`app._persist_settings`を呼び、その成否通知経路は残る。サマリ実行可否はこの要件に規定されない |
-| V110-CFG-03 | SATISFIED | 3、9、11、16、20、21 | 原本・tmp・自動保存保護。CR-03は設定JSONの上書きやPDF編集内容の喪失を起こす経路ではない |
-| V110-CFG-04 | SATISFIED | 4、8、13、14、18、21、22 | 設定エラー通知のFIFO・モーダル/再構築下の編集継続。CR-03は設定エラー通知を連打/消失させる指摘ではない |
-
-PLANの和集合とREQUIREMENTSのPhase 05割当はこの4IDで一致し、孤立要件0。CR-03は**実在する未修正のcritical**である。`ocr_dialog.py:1193`の`off`分岐は旧providerを保持し、`:813`のsummaryボタン判定と`:2204`の入口に`off`判定がない。旧local providerなら`:2379`から`complete_text_ex(full_text, prompt)`へ進める。05-REVIEWのheadless実メソッド確認は有効表示とcloud false・worker経路までで、実ネット送信はしていない。**Phase 05の4成功基準・19追加truth・2禁止事項のどれにも「OCR無効化後のサマリ禁止」はなく、CR-03をPhase 05のFAILEDへ付け替えない。** 一方、製品修正・回帰・再レビュー待ちの未解決欠陥であり、review clean、リリース可能、CR-03解消の主張はしない。レビューは `critical 1 / open 1` のまま。
-
-### 決定・延期・残存制約
-
-`check.decision-coverage-verify` はhonored 21/22、D-22のみ未検出、blocking=false。D-22の条件付き再開承認・再発停止は05-02-CHECKPOINTとROADMAP実行依存で別途追えるが、heuristicの結果を22/22へ改変しない。Nyquistは4/4要件・9/9タスク・新規gap0。Securityは計画済み14脅威closed/open0（ASVS L1）。旧 `status: passed` と23/23の履歴、禁止事項2件の項目別解決、未分類edge4件を保持する。
-
-Phase 06のW05b自動復帰は未実証で停止し、06-05/06の全110件は`not-run`。実EXE・各Python入口・DPI/UAC・版情報同期の最終受入はROADMAP Phase 06（V110-QA-02/03）にあり、本Phaseでdeferredとする。`DEP-05-REGRESSION`、`owner_missing`、通知前景不一致の原因は未解除で、条件付き再開・同種再発時停止と出荷不可を維持する。CR-03も未解決の製品修正対象として次工程へ明示的に渡す。
-
-### Advisory (New Scope, Unevidenced)
-
-なし。CR-03はコード配線とheadless確認がある未修正のレビュー指摘であり、根拠のないadvisoryへ格下げしない。Phase 05契約への非該当を上記で個別判定した。
-
-### Fingerprint
-
-`query verification.fingerprint` のv4出力をfrontmatterへそのまま反映した。旧covered集合に今回の全件生証拠4ファイルとUI静的評価を加え、PLAN/SUMMARYはCLIが自動追加。報告自身は対象外。編集したのは本VERIFICATIONのみで、製品・試験・他Phase・STATE・ROADMAP・commit・GUI・ネット送信・新規pytestは実施していない。
-
-## 2026-10-24 検証履歴（以下の時点表現は当時の記録）
-
-**Phase Goal:** 利用者が設定の読込・保存失敗を正しく把握でき、元の設定ファイルと編集操作を失わない。  
-**Verified:** 2026-10-24T11:47:08Z（2026-10-24 20:47 JST）
-**Status:** passed
-**Re-verification:** Yes — 2026-10-23T18:14:21Zのpassed報告後、covered files 11件が変更されfingerprintがstaleになったため差分再検証（実装gapなし）。
-
-前回passed報告（2026-10-23T18:14:21Z）以降、covered filesのうち11件（docs/CONFIGURATION.md、pagefolio/constants.py・lang.py・ocr.py・ocr_dialog.py、tests/config_notice_support.py・conftest.py・test_config_notification.py・test_ocr.py・test_startup_windows.py、開発履歴.md）が変更されて`verification status`がstaleとなった。全変更コミットを差分で評価し、Phase 5のmust-have（設定読込・保存失敗の通知、原本保護、`config_*`日英4キー、通知FIFO/寿命）を弱める変更は無いと確認した。肯定的な実装契約23件と実装gap 0件は維持。禁止事項2件のUAT解決（Test 1・2 pass）とH01〜H14の人手受入結果も履歴として維持する。本検証はpytest/GUIを新規実行していない（並行するPhase 4検証との実Tk/OS名前空間競合を避けるため）。現行の製品・試験バイトに対する親session実測の単一プロセス全件 `2014 passed, 1 warning in 710.70s (0:11:50) / exit 0` を引用する。
-
-**禁止事項2件は利用者の明示判断で解決、flagged 0件。** 内容不明のedge4件は未分類・未解決を維持する。DEP-05-REGRESSION・owner_missing・通知前景不一致の原因未解決と出荷不可は解除せず、DEP-05-REGRESSIONは未解決のままである。
-
-## Goal Achievement
-
-### Observable Truths
-
-ROADMAPの4成功基準を先頭に置き、4 PLANの19 truthを具体化として全行照合した。番号5以降は実装上の追加条件を確認する追跡行であり、成功基準を縮小しない。Cは `tests/test_config_notification.py`、Sは `tests/test_settings_keyguard.py`、Tは `tests/test_toast.py` を指す。各挙動の試験は現在入力と同一の最新単一全件で成功したものを再利用する。
-
-| # | Truth | Status | Evidence |
-|---|---|---|---|
-| 1 | SC1: 初回不存在は無警告の既定値、破損・読取不能は画面構築後に認識できる | VERIFIED | settings.py:261のopen正本・4分類、app.py:149の読込とUI構築後のschedule。C:1473実App/Toast/PDF tracer、:1595分類、:1601不存在/競合、:1639初回無通知。利用者H01/H02/H03 pass |
-| 2 | SC2: 各保存画面で失敗と次回非永続を認識し、偽成功に誘導されない | VERIFIED | app.py:683のbool消費・固定通知、:881の成功時だけstatus。各handler→実persistの統合試験C:408/:576/:656/:911。lang.py:9/:833の日英4キー。H02/H04/H05/H11 pass |
-| 3 | SC3: 読込失敗後の自動処理と保存途中の失敗で原本を無断上書きしない | VERIFIED | app.py:766が値収集前に抑止、:683はunreadableのI/O0。settings.py:352の排他的tmp→close→replace・所有tmpだけcleanup。S:16の5障害点と:63既存tmp保持、C:1665終了分岐 |
-| 4 | SC4: 連続通知を同時1件に集約し、再構築や通知で編集を妨げない | VERIFIED | app.py:521/:603/:627のApp所有FIFO・event/generation・可視時間、toast.py:86の旧状態破棄後callback。C:116寿命と:1434の100件FIFO、H04/H06/H07/H08/H13/H14 pass |
-| 5 | 05-01: DEP-05未解除の条件付き実行・同種再発時停止を保持する | VERIFIED | 05-02-CHECKPOINTの2026-10-23T13:50:58Z判断、CONTEXT D-22、VALIDATION、EVIDENCE.dependencyに承認と停止条件。診断9384268と後続成功は修復主張なし。最新raw全件に同種失敗なし |
-| 6 | 05-01 D-01/D-04: 破損起動後、技術詳細なし非モーダル通知で編集継続 | VERIFIED | app.py:627は固定キー→実Toast、messagebox fallbackなし。C:1473で秘密sentinel不在・grabなし・実PDF回転、H01 pass。通知はFrameで新Toplevelなし |
-| 7 | 05-01 D-02/D-03: 不存在/JSON/UTF-8/root不正/OSErrorを分類して既定値起動 | VERIFIED | settings.py:308以降FileNotFoundError→missing、decode→corrupt、他例外→unreadable、必須型検査。C:1578〜1635の具体入力と結果assert |
-| 8 | 05-01 D-05/D-15: 読込イベントはセッション一つ、再表示で増やさない | VERIFIED | app.py:523の登録済flagは消化/再構築でresetしない。C:1711、寿命の再表示/旧callback試験がseqとqueueをassert |
-| 9 | 05-01 D-10/D-11/D-14: 終了自動保存を含め読込失敗中の原本と退避なしを維持 | VERIFIED | app.py:766が自動保存と値収集を抑止。C:1665は確認Yes/No/Documentなし・bytes不変・bakなし、C:1214は収集禁止をassert |
-| 10 | 05-02 D-06/D-07/D-08: 一般設定失敗でもメモリ維持、非モーダル通知、成功表示なし | VERIFIED | app.py:881で反映→persist→rebuild、saved時のみstatus。C:1141は実replace失敗下で値/原本/通知/成功表示0、H04/H05 pass |
-| 11 | 05-02 D-10/D-12/D-13/D-14/D-20: 原本/tmp保護、corruptだけ明示成功解除、unreadableは再起動まで保存禁止 | VERIFIED | settings.py:352、app.py:683/:766。S:16/:63、C:1128/:1165/:1407が実原本・同セッション権限回復後の抑止・正常再起動をassert。H11 pass |
-| 12 | 05-02 D-19: 終了Noは無保存、初回失敗は保持、次の終了は保存省略 | VERIFIED | app.py:669の確認先行→save失敗returnと:766のflag判定。C:1181/:1194/:1364の資源保持・No再確認・明示成功flag解除、H09/H10 pass |
-| 13 | 05-02 D-09/D-16: 失敗ごと別イベント、同文言を合併/破棄しない | VERIFIED | app.py:521がseq増分とappend、成功時clearなし。C:1434が100件のevent_id順と生成/消化一致をassert。D-21の長い待ち列は承認された仕様 |
-| 14 | 05-02 D-17/D-18: 再構築/言語/カテゴリ競合で未消化保持・同時1件・入力先維持 | VERIFIED | app.py:549/:560/:603/:627/:894、ui_builder.py:187のidle配線、toast.py:86/:109。C:116の9999/10000ms・残6秒・期限とgrab同時・旧callback、実Tk可視性回帰。H04/H06/H08/H14 pass |
-| 15 | 05-03 D-06〜09: 言語/plugin/LLM/shortcut/mosaic/thumbnailの全保存元が共通通知とメモリ保持 | VERIFIED | app.py:791/:826/:862、ocr_dialog.py:1044、shortcuts.py:282、redact_ops.py:257、viewer.py:162/:183→persist。C:408/:656/:911の失敗×保護状態、C:1108の非空厳密caller棚卸し |
-| 16 | 05-03 D-13/D-20: corrupt明示保存とunreadable明示抑止を各入口で区別 | VERIFIED | 実persistをstub化せず低層結果を制御するC:408/:576/:911。unreadableは低層call_count0・blocked文言・値保持、corrupt成功だけ保護解除 |
-| 17 | 05-03: plugin開閉/no-op rescanは無保存、同値明示Applyの再試行を許す | VERIFIED | dialogs/plugin.py:219の前後disabled比較、:241のcloseはdestroyのみ。C:454/:481/:497、利用者H12 pass |
-| 18 | 05-03 D-16〜18: 一操作一保存/一失敗一イベント、言語変更/再構築後も表示 | VERIFIED | 共通owner以外の低層callはなし。C:1108のalias/Attribute/re-export監査と各handler回数assert。App queueはwidget破棄の外側に保持。H04/H07/H13 pass |
-| 19 | 05-03: 内側LLM Applyは外側Cancelと独立、JSON書込一回 | VERIFIED | dialogs/settings.py:224がLLM部分のみ専用callback/App ownerへ一回委譲、一般callbackへ迂回しない。C:576/:594/:700、provider_ui/OCRの既存保存・キー非流出回帰 |
-| 20 | 05-04: D-01〜21を隔離再現し実設定/PDF/prompt/pluginsを変更しない | VERIFIED（自動隔離範囲） | config_notice_support.py:57〜139が設定/base/pluginsを初期化前patch、実PDFはメモリ内。C:1239/:1251/:1265/:1291が原本hash一致・plugin load0・例外cleanup。全手動起動の終了hashは別の証拠限界として後掲 |
-| 21 | 05-04: 読込失敗→保存失敗→再構築→保存成功→終了で原本/値/通知が一致 | VERIFIED | C:1309の実App・Document/Undo/Redo identity・原本bytes・4event順・残6秒・正常再読込・Undo/Redo・終了close。別に:1364/:1407/:1434のD-19/20/21状態列 |
-| 22 | 05-04: 既存PDF保存/印刷retryとDocument同一性を維持 | VERIFIED | T:437の確認非反復、:538/:595/:702/:827の閉鎖/差替え後別docへ書かない回帰、印刷retry。現行fullにTとtest_pdf_opsを含む。設定側カテゴリ待機/成功dismissはC:116。H08はToast注入であり実OS印刷とは区別 |
-| 23 | 05-04: 実測/未実施/未分類を分け、全件とNyquist前にPhase完了としない | VERIFIED | 最新raw status/pytestと103hash一致を独立確認。VALIDATIONはvalidated/compliant/wave0=true、REVIEW clean・disposition3fixed、SECURITY14closed。UATは利用者14passと旧metadata/終了ログ限界を区別。共有PhaseはIn Progressで正式完了を先取りしていない |
-
-**Score:** 23/23肯定truth verified、0 present-but-behavior-unverified（前回の独立検証結果を同一入力で再利用）。禁止事項2件は別途UATの項目別passで解決した。本verifierがpytestを新規実行したとの主張はしない。
-
-### Prohibitions — 項目別人手判断済み
-
-| 禁止事項（05-01-PLAN frontmatter原文） | 状態 | 根拠 |
+| 順序 | ゲート | 今回の評価 |
 |---|---|---|
-| 設定障害の通知でPDF編集内容まで失われたと誤認させない | VERIFIED / 人手判断済み | 05-UAT.md Test 1、利用者の明示pass、2026-10-23T18:09:21.4084125Z |
-| 設定保存失敗を理由に作業中のPDFを捨てる操作や再起動を促さない | VERIFIED / 人手判断済み | 05-UAT.md Test 2、利用者の明示pass、同時刻 |
+| 1 | verify:post / Nyquist | 05-VALIDATION を再照合。4/4要件COVERED、9/9タスク自動検証、新規gap0。append-auditは同一行につき appended=false |
+| 2 | verify:post / Security | 計画時14脅威を現行実装・試験へ照合。14 closed、open0、ASVS L1の既存登録短絡条件適用 |
+| 3 | verify:post / UI | 利用者指定で静的22/24再利用。off表示とボタンの差分配線・既存実走を追加照合。新規視覚検査なし |
+| 4 | execute:post / code-review | 文書/契約試験とscope入口の独立差分レビュー、新規0、既存4指摘fixed/open0。追加gate hookなし |
+| 5 | gap-closure parent artifacts | section_manifestで除外。未実行（対象外） |
+| 6 | regression gate | Phase 04参照試験を最新単一全件へ再結合、失敗0。入力一致のため再走なし |
+| 7 | goal verification / fingerprint | 本報告。公式CLI出力のcovered_files/digestをそのまま採用 |
 
-PLANには具体的statementがあり、今回のTest 1・2はそれぞれ同じ意味の項目を明示している。PLAN本文・EVIDENCEが「descriptor-less」と呼ぶ旧投影IDにはdescriptor/verification tierがなく、その同一性は推測で確定しない。既存H01〜H14を禁止事項のresolutionへ読み替えず、追加の項目別回答だけを使用した。tier未指定からwired test enforcementは捏造しない。
+Phase 04 回帰は test_startup_control 52、focus 32、notice 61、windows 75、foreground_audit 24、wake 23、gsd_dod 19 の7ファイル286件が全件JUnitでpass。Phase 04の verification.status は今回の照会でも passed。既存未実施の実EXE・別session等は解消していない。
 
 ### Required Artifacts
 
-CLI `query verify.artifacts <各PLAN>` は各exit0、4/4・4/4・3/3・5/5（宣言枠16/16）。存在判定に加え以下の実内容・使用先を確認した。
+前回独立実行したCLI `query verify.artifacts <各PLAN>` の結果は、4/4・4/4・3/3・5/5、全exit0（宣言16/16）。今回は対象PLAN・製品・主要試験が不変であることを入力照合し、既存の実装内容・使用先検証を維持した。
 
-| Artifact | Expected | Status | Details |
+| Artifact | Expected | Status | 実装・使用の根拠 |
 |---|---|---|---|
-| pagefolio/settings.py | 分類API/互換dict/原子的bool保存 | VERIFIED | 実open/json.load、必須型検査、機密除外、排他的tmpと実os.replace。Appが結果を消費 |
-| pagefolio/app.py | 保存/保護/終了/通知owner | VERIFIED | 実UI初期化と全保存handler、FIFO/世代/可視性/終了へ接続 |
-| pagefolio/toast.py | 任意retry・期限・終了理由・idle | VERIFIED | 実Frame/Label/Buttonとafter、dispose/old callback guard。UIBuilderが生成 |
-| pagefolio/ui_builder.py / lang.py | Toast再配線/日英固定文 | VERIFIED | 毎回新managerへon_idle、4キーとも日英。設定通知はmodal fallback不使用 |
-| pagefolio/dialogs/settings.py | LLM単一owner/外側modal維持 | VERIFIED | 製品open_settingsがownerを注入。LLM/Shortcuts自身のDestroyだけで外側grab復元 |
-| その他6保存元ファイル | 結果共通化/操作継続 | VERIFIED | dialogs/plugin.py・shortcuts.py・ocr_dialog.py・redact_ops.py・viewer.pyとappの該当handlerを追跡 |
-| tests/test_config_notification.py | 読込・保存・寿命・全入口・複合・隔離 | VERIFIED | 13 Testクラス、52 test関数（param展開前）。実App/実Toastと純状態試験を区別 |
-| tests/config_notice_support.py | 恒久隔離/cleanup | VERIFIED | 一時領域・3resolver・限定障害注入・finally原本hash。pytest/harnessの双方が利用 |
-| 05-NOTICE-HARNESS.py | 隔離人手入口 | VERIFIED | 祖先探索→恒久helper、実App/ToastとメモリPDF。製品入口への組込なし |
-| 05-EVIDENCE.json | command/exit/runtime/hash/限界 | VERIFIED（記録範囲） | latest_automated_verificationとraw一致。旧single_full_current/nyquist fieldsは過去snapshotで、最新版と区別 |
-| docs/CONFIGURATION.md / 開発履歴.md | 利用者説明/未リリース記録 | VERIFIED | 読込保護、明示/自動保存、失敗時の値、終了契約、FIFOを記載。版同期はPhase6 |
+| pagefolio/settings.py | 読込分類・互換dict・原子的bool保存 | VERIFIED | open/json.load、型検査、機密除外、排他的tmp、close後replace。Appがstatus/boolを消費 |
+| pagefolio/app.py | 保護状態・通知owner・保存/終了 | VERIFIED | _persist_settings、_quit、_save_window_state。deque/event/generationをUIへ配線 |
+| pagefolio/toast.py | 期限・終了理由・retry/idle | VERIFIED | Frame/Label/Button、after取消、世代guard。UIBuilderで生成 |
+| pagefolio/ui_builder.py / lang.py | 再生成と固定日英文言 | VERIFIED | on_idle=_schedule_config_notice、現在言語のキーを再表示 |
+| pagefolio/dialogs/settings.py | LLM単一owner | VERIFIED | _on_llm_apply→App、内側Destroyの外側grab復元 |
+| OCR/Plugin/Shortcuts/Redact/Viewer保存元 | 共通保存と操作継続 | VERIFIED | 実handler→_persist_settings。OCRはsavedを返す前にUI更新を続行 |
+| tests/test_config_notification.py | 全入口・境界・複合操作 | VERIFIED | 143実ケース。実App/Toast、状態列、原本bytes、Document/Undo identity |
+| tests/config_notice_support.py / 05-NOTICE-HARNESS.py | 原本隔離 | VERIFIED | 一時領域・resolver・限定障害注入・finally cleanup。pytest/手動harnessが利用 |
+| 05-EVIDENCE.json / docs/CONFIGURATION.md | 旧証拠・利用者説明 | VERIFIED | 旧時点を保持。今回の最新実走は別正本を明記。原本保護・終了・FIFO説明とコードが一致 |
+| tests/test_ocr_dialog_provider_refresh.py | CR-03回帰 | VERIFIED | 実メソッドでoff表示/空モデル・入口拒否・結果保持・再有効化、追加12ケース |
 
 ### Key Link Verification
 
-CLI `query verify.key-links <各PLAN>` は各exit0、2/2・2/2・3/3・2/2（9/9）。パターン一致だけでなく呼出しと戻り値・callbackも追跡した。
+前回独立実行したCLI `query verify.key-links <各PLAN>` は2/2・2/2・3/3・2/2、全exit0（9/9）。今回は対象の配線コードが不変であることを確認し、戻り値・呼出順の既存検証を維持した。
 
-| From | To | Via | Status | Details |
-|---|---|---|---|---|
-| app.__init__ | settings._load_settings_result | 結果status/settings | WIRED | 状態初期化後、UI/menubar後にafter_idle |
-| App通知owner | ToastManager | show/on_close | WIRED | event_id+generation一致だけ消化、固定文言 |
-| app._persist_settings | settings._save_settings | bool結果 | WIRED | 失敗event生成、明示成功だけ保護解除 |
-| UIBuilder._build_ui | App queue | on_idle=_schedule_config_notice | WIRED | rebuild前dispose→新manager→queue再表示 |
-| SettingsDialog.on_apply | App._apply_llm_settings_live | _on_llm_apply | WIRED | 外側未適用値と独立した一回保存 |
-| OCRDialog | App | app._persist_settings | WIRED | 成否後もprovider/prompt/UI更新を続行 |
-| ViewerMixin | App | self._persist_settings | WIRED | 倍率/件数の各実handler→再描画 |
-| TestConfigAcceptance | 実App | helper経由の保存/再構築/終了 | WIRED | 隔離原本とDocument/履歴identityをassert |
-| VALIDATION | EVIDENCE | 実測表とlatest後続節 | WIRED | 旧結果を残し修正後1797/14UATを追記 |
+| From | To | Via | Status |
+|---|---|---|---|
+| App初期化 | settings | _load_settings_result→status→UI構築後schedule | WIRED |
+| App通知owner | ToastManager | _show_next_config_notice→show/on_close | WIRED |
+| App保存owner | settings._save_settings | boolの成功/失敗を消費 | WIRED |
+| UIBuilder | App queue | on_idleと新Toast再生成 | WIRED |
+| SettingsDialog | App | _on_llm_apply→_apply_llm_settings_live | WIRED |
+| OCRDialog | App | app._persist_settings、一保存・結果保持 | WIRED |
+| ViewerMixin | App | self._persist_settings後の再描画 | WIRED |
+| TestConfigAcceptance | 実App | 保存/再構築/終了と資源identity | WIRED |
+| VALIDATION | EVIDENCE | 旧実測と現行正本の区別 | WIRED |
 
 ### Data-Flow Trace (Level 4)
 
-| Artifact | Data Variable | Source | Produces Real Data | Status |
-|---|---|---|---|---|
-| 読込通知 | load_result.status→message_key→_msg_var | 実設定open/json.load/例外分類 | yes | FLOWING |
-| 保存通知 | saved→config_save_failed/blocked | 実tmp書込/close/replace、または原本保護状態 | yes | FLOWING |
-| 設定画面/各操作 | app.settingsと各var/binding | UI操作→実handler→共通owner→メモリ反映 | yes | FLOWING |
-| 再表示 | event_id/remaining_ms/現在lang | App deque・monotonic可視経過・grab/root状態 | yes | FLOWING |
-
-LANGの固定通知文は実I/O結果を安全に説明する仕様であり、データソース代替の静的stubではない。未消化deque初期値の空も後続enqueue経路があるためstubではない。API/DBは本Phaseに存在しない。
-
-### Behavioral Spot-Checks
-
-並行するPhase 4検証との競合回避と親の指示に従い、サーバー/GUI/pytestを新規起動しなかった（静的チェックのみ実行）。必要な状態遷移を確認する既存named test本文を読み、含まれる最新fullの生ログと入力hashを照合した。
-
-| Behavior | Command / evidence | Result | Status |
+| Artifact | Variable | 実データ源 | Status |
 |---|---|---|---|
-| 読込→実Toast→PDF編集、保存失敗→原本保持 | C::TestLoadTracer::test_corrupt_settings_show_one_real_toast_and_keep_pdf_editable、S::TestAtomicSettingsWrite::test_failure_preserves_original_and_cleans_owned_tmp | 最新full内で成功。名前だけでなくassertを読取 | PASS（既存実走再利用） |
-| 終了保留/明示回復/再構築/FIFO | C::TestConfigAcceptanceの4状態列、TestNotificationLifecycle | 同上、実資源とfake clockを区別 | PASS（既存実走再利用） |
-| 修正CR-01/02 | C::TestToolSaveOrigins::test_real_shortcuts_close_restores_outer_grab、TestNotificationLifecycle::test_real_root_visibility_suspends_same_event | 現行全件2014件に含まれ成功、H13/H14もpass | PASS（親session実走を引用） |
-| 現行単一全件 | `.venv/Scripts/python.exe -m pytest -x -q --tb=short --basetemp=C:/Users/shdwf/AppData/Local/Temp/pf_focus_proof_final` | raw pytest.txt=1797 passed/1 warning/266.81s、status.json exit0、runner267.655s。selectorなし、100%完走 | PASS |
-| 現行単一全件（再検証時点） | 親sessionの`pytest`単一プロセス全件（生ログ: scratchpad `full_pytest_ab.txt`、最終更新20:39:42 JST） | `2014 passed, 1 warning in 710.70s (0:11:50)` / exit 0。実行開始（約20:28）は最終の製品/試験ファイル更新（20:26:52 JST）より後で、対象ファイルはgit上も未変更（clean）のため現行バイトに対する実走 | PASS（本検証は未実行・引用） |
-| 検証入力同一性 | verifierのpython hashlib照合、05-focus-proof-inputs.json | 103件、missing/hash不一致0 | PASS（本検証で実行） |
-| 品質 | 最新EVIDENCE.review_followupと05-reviewfix-quality.json | Ruff→Python限定format109 unchanged→Ruff→AST→diff成功。修正後検証として提出済み | PASS（既存実走再利用） |
+| 読込通知 | status→message_key→表示 | 設定open/json.loadの成功/例外分類 | FLOWING |
+| 保存通知 | saved→config_save_failed/blocked | tmp書込/replaceの結果、原本保護状態 | FLOWING |
+| 再表示 | remaining_ms/event_id/lang | App deque、可視時間、grab/root状態 | FLOWING |
+| OCR表示・実行可否 | provider名/model/summary state | 設定Apply→app.settings→snapshot破棄→実UI更新 | FLOWING |
 
-最新1797件と修正前1789件/278.95秒、修正直後1797件/266.50秒、runner時間を区別した。診断423件の原本/コピー/manifest一致は親の通常権限照合結果であり、本verifierの独立原本再hashとは称さない。最新copy manifestとstatusの423記録は読取確認した。
+固定の通知文は実I/O結果を説明する仕様。初期空queueはenqueueで埋まり、データ代替stubではない。DB/APIは本Phase対象外。
 
-Phase4は04-VERIFICATIONの21truth/参照ファイルを読み、Appの終了確認と資源保持に関する変更箇所を回帰確認した。最新全件に `test_gsd_dod.py / test_startup_control.py / test_startup_focus.py / test_startup_notice.py / test_startup_windows.py` を含む。これらの現行hashも103一致に含まれる。Phase4の実EXE/別session等not-runは継承し、今回の成功で解除しない。
+### Behavioral Spot-Checks / 実測正本
 
-### 再検証の差分評価（stale 11ファイル）
+変更後の最新正本は `.planning/phases/06-release-validation/06-08-evidence/native-docs-20261028/` の result.json、junit.xml、stdout/stderr、environment、checks、before。開始 2026-10-28T08:43:44.390Z、終了 2026-10-28T08:53:52.537Z、**2232 passed / 2 warnings / 607.00秒 / exit0**。JUnitはfailure/error/skip0、time=606.452秒。Python3.15.2、Windows11、プロジェクト.venv。selectorなし単一全件であり、旧2231件を文書変更後の成功へ置換していない。
 
-前回報告の`verified`（2026-10-23T18:14:21Z = 2026-10-24 03:14 JST）以降のコミットを`git log`/`git diff 98dd70a^ HEAD`で列挙し、covered filesへの変更を全件確認した。`pagefolio/app.py`・`settings.py`・`toast.py`・`ui_builder.py`・`dialogs/*`・`viewer.py`・`redact_ops.py`は変更なし（Phase 5の通知owner・原子的保存・保存元の実装はバイト不変）。
+実command: `.venv/Scripts/python.exe -m pytest -q -x -rA -p no:cacheprovider --basetemp=C:/Users/shdwf/AppData/Local/Temp/pf06-scope-native-docs-20261028 --junitxml=<正本>/junit.xml`。本verifierはpytest/GUI/buildを再実行していない。
 
-| ファイル | 変更コミット | 内容 | Phase 5 must-haveへの影響 |
-|---|---|---|---|
-| pagefolio/lang.py | 52258de/7fb41a2 | `ocr_err_connection`（日英）を`{provider}`/接続先表示のプロバイダ中立文言へ変更。日英キー集合は一致（差分0）、`config_load_corrupt`/`config_load_unreadable`/`config_save_failed`/`config_save_blocked_unreadable`は日英とも非空で不変 | なし（`config_*`4キー不変、パリティ維持） |
-| pagefolio/ocr_dialog.py | 52258de/7fb41a2 | 接続先を有効スナップショットから`resolve_local_endpoint`で解決、LLM適用後に`_active_ocr_settings`を破棄、`_refresh_provider_dependent_ui`をprovider再生成のtry/except外側・後へ移動。`saved = self.app._persist_settings()`は保存直後のまま、失敗しても後続のprovider/prompt/UI更新を続行する構造を維持（Truth 15/19・Key Link「OCRDialog→App」） | なし（保存owner経由と失敗後続行は不変。UI更新順の改善のみ） |
-| pagefolio/ocr.py | 52258de | `DEFAULT_OLLAMA_URL`と`resolve_local_endpoint`の追加、`_start_ocr`の接続先決定の変更 | なし（設定保存/通知経路に触れない） |
-| pagefolio/constants.py | c09baea | `APP_VERSION`を`v1.10.0`へ同期（Phase 6 SC5の範囲） | なし（Phase 5はバージョン同期を明示的にPhase 6へ繰延べ済み） |
-| docs/CONFIGURATION.md | 06-01/06-02 | 配布版サンプルプロンプトの説明を追記 | なし（読込保護・明示/自動保存・終了契約・FIFOの記述は不変） |
-| tests/config_notice_support.py / test_config_notification.py | 98dd70a/07244dc | 設定通知試験の`TkinterDnD.Tk()`を`tk.Tk()`＋`_setup_file_drop`無効化へ置換（ネイティブD&D拡張ロードという無関係な環境要因から分離） | なし（assert・原本hash・FIFO・Document identity等の検証本体は不変。差分は初期化方式のみで、`pagefolio.app._setup_file_drop`はapp.py:16/921に実在。アサート削除なし）。試験内行番号が最大4行ずれたため、前掲Evidenceの`C:`行番号は±4行の目安 |
-| tests/conftest.py | 89582df | `pytest_runtest_teardown`でメインスレッド`gc.collect()`を追加（Tclリーク警告の誤帰属防止） | なし（試験を除外・skipしない。`tests/test_gc_barrier_guard.py`が構造を固定） |
-| tests/test_ocr.py | 52258de | `_on_run`の接続先解決変更に合わせ、`lm_studio_model`をsettingsにも設定 | なし（OCR接続先の試験前提の追従） |
-| tests/test_startup_windows.py | 3925d5f/3e56452 | Phase 4の前景監査診断ハーネス追加と、引継ぎ敗者`expired`を条件付き（5000〜6000ms・勝者ready差≥4500ms）で許容、`takeover-slow`回帰追加 | なし（Phase 4領域。製品コードと5000ms期限契約は不変。Phase 4のnot-run継承は変わらない） |
-| 開発履歴.md | 複数 | 履歴追記 | なし |
+| 行動 | 本文・実走根拠 | 結果 |
+|---|---|---|
+| 設定分類/原本保護/保存失敗/終了/FIFO/再構築 | TestLoadTracer/LoadBoundaries/LoadProtection、SaveFlow/ExitSaveFailure/NotificationLifecycle/ConfigAcceptance | config_notification143、settings_keyguard26、toast38、各pass。前回入力と試験本文不変 |
+| 全保存元とOCR後続処理 | App/Llm/ToolSaveOrigins、provider_ui、ocr、pagination | 236/165/84件を含む全件pass、実owner・値/キー/通知/UI更新を維持 |
+| CR-03 | off表示/入口拒否/再有効化の追加12ケース | provider_refresh18件中すべてpass、製品・回帰本文不変 |
+| 案Bの文書契約 | TestReleaseScopeDocs::test_distribution_docs_state_single_session_and_unverified_behavior | 3文書の保証範囲/未確認語句・FALSE_PASS不在を検証、pass |
+| 固定scopeと台帳 | TestCaseCoverage::test_approved_scope_keeps_110_cards_and_only_two_deferred | 正確な2キー/31/110/108/2・not-run/空観測を検証、pass。release_contract全30件 |
+| 回帰ゲート | Phase04参照7試験ファイル、計286件 | 新全件に含まれpass。前回の実機未確認は未解消 |
+| 独立入力照合（新規実行） | node .planning/phases/05-config-notification/05-REVERIFY-SCOPE-20261028.cjs | exit0、before/after各151入力が現行SHA256一致、run changed=[] |
+| 品質証拠（再利用） | checks.json | Ruff/AST全exit0、format140 unchanged。check .は探索os error5警告あり |
+| 文書DoD（再利用） | test_gsd_dod.py | 変更後単一全件で19件pass。前回局所1passと区別 |
 
-**判定: 回帰・弱体化なし。** 追加された試験（`test_ocr_dialog_provider_refresh.py`・`test_ocr_local_endpoint.py`・`test_release_*`等）は全件に含まれ成功している。`ruff check pagefolio tests`は`All checks passed!`（静的、本検証で実行）。`APP_VERSION`は`v1.10.0`。
-
-**未コミット内容の注記:** coveredに含まれる`開発履歴.md`と`requirements.txt`は作業ツリーで未コミット変更（他作業由来）を含むため、`covered_digest`にはその未コミット内容が含まれる。`05-CONTEXT.md`は他作業でdirtyだがcovered外であり、編集していない。
+独立照合JSONに主要named test217件と正本hashを保存した（[05-REVERIFY-SCOPE-20261028.json](05-REVERIFY-SCOPE-20261028.json)）。基準2083件から変わったのはrelease監査/試験3件と文書3件、製品/依存変更0。旧証拠は保持し、今回の実機合格へ転用しない。checks.jsonのRuff探索警告は隠さず、formatの140ファイル明示実行と区別する。
 
 ### Probe Execution
 
-N/A。scriptsディレクトリとprobe-*.shの宣言はなく、Phaseは設定UI/I/Oでmigration/toolingではない。PLAN/SUMMARYに記載されたedge-probe4件はbehavior/command/descriptorのないメタデータで、実行可能なprobeを特定できない。`unclassified/unresolved`、verification/resolution=nullを維持し、MISSING_PROBEや実行PASSを捏造しない。
+N/A。PLAN/SUMMARYに実行可能なprobe-*.sh宣言なし。設定UI/I/OのPhaseで、migration/toolingのprobe契約もない。内容不明のedge4件はunclassified/unresolved、verification/resolution=nullのまま。実行できない記述をPASSへ置換しない。
 
 ### Requirements Coverage
 
 | Requirement | Source Plan | Description | Status | Evidence |
 |---|---|---|---|---|
-| V110-CFG-01 | 05-01/04 | 不存在無通知、読込失敗を画面構築後認識 | SATISFIED | Truth1/6/7/8、分類と実App tracer、H01/H02/H03 |
-| V110-CFG-02 | 05-02/03/04 | 全保存画面の失敗/次回非永続、偽成功なし | SATISFIED | Truth2/10/12/15〜19、全10操作群の実handler試験、H02/H04/H05/H09/H10/H11 |
-| V110-CFG-03 | 05-01/02/03/04 | 自動上書き/保存途中破壊を防ぐ | SATISFIED | Truth3/9/11/16/20/21、bytes・tmp・I/O0・正常再読込assert |
-| V110-CFG-04 | 05-01/02/03/04 | 通知連打/再構築消失で編集を阻害しない | SATISFIED | Truth4/13/14/18/21/22、FIFO/世代/可視性/外側grab、H04/H06/H07/H08/H13/H14 |
+| V110-CFG-01 | 01/04 | 不存在無通知・画面構築後の読込失敗認識 | SATISFIED | Truth1/6〜9、Load系、H01〜03 |
+| V110-CFG-02 | 02/03/04 | 全保存元の失敗/非永続通知・偽成功なし | SATISFIED | Truth2/10/12/15〜19、Save/Origins系、H04/05/09〜11 |
+| V110-CFG-03 | 01/02/03/04 | 原本保護・自動上書き/途中破壊抑止 | SATISFIED | Truth3/9/11/16/20/21、実bytes/tmp/I/O回数 |
+| V110-CFG-04 | 01/02/03/04 | 連続通知・再構築下の編集継続 | SATISFIED | Truth4/8/13/14/18/21/22、FIFO/世代/実Tk、H06〜08/13/14 |
 
-REQUIREMENTSのPhase5割当は上記4IDのみ、全PLANの和集合と一致しORPHANED=0。禁止事項の明示人手判断は今回のUATで解決した。Phase検証の合格と出荷判断は別である。
+全PLAN和集合とREQUIREMENTSのPhase5割当は4IDで一致、ORPHANED=0。CR-03修正は設定I/O通知を変更せず、旧providerを保持したoff時のサマリ送信を拒否する追加修正。今回この重大指摘は独立レビューでも解消を確認した。
 
 ### Decision Coverage (warning)
 
-CLI実測: total22 / honored21 / not_honored=[D-22]、blocking=false。
+`check.decision-coverage-verify` は21/22、not_honored=[D-22]、blocking=false。「owner_missing・DEP-05未解決でも所定証拠により条件付き実装再開、同種再発時停止」という決定は文字列heuristicで未検出。05-02-CHECKPOINTとROADMAP実行依存で追跡可能だが、CLI実測を22/22へ改変しない。判定への影響なし。
 
-1 decision(s) not found in shipped artifacts: **D-22**（条件付き実装再開）。これはsoft warningで判定を変更しない。手動追跡では05-02-CHECKPOINTの再開承認、EVIDENCE.dependency、SUMMARYの9件×3回/1680件成功/未解除/再発時停止を確認した。文言一致heuristicの結果21/22は改変せず残す。
+### Test Quality Audit / Anti-Patterns
 
-### Test Quality Audit
+今回の変更試験は文書をread-onlyに検査し、元のPhase05履歴・版・偽pass禁止assertを保持する。文書語句の存在だけでは意味を証明しないため、承認原文と3文書の実際の記述も独立に照合した。台帳fixtureへのscope/承認コピーは正規入力供給であり、期待値を被試験関数で生成していない。変更試験にskip/xfail・未参照TBD/FIXME/XXXはない。
 
-| Test File | Linked Req | Active test関数数（param前） | Skipped | Circular | Assertion Level | Verdict |
-|---|---|---:|---|---|---|---|
-| test_config_notification.py | CFG01〜04 | 52 | 0 | 検出なし | 実bytes/値/保存回数/状態列/identity | 十分 |
-| test_settings_keyguard.py | CFG01/03 | 22 | 0 | 検出なし | 故障5点・所有tmp・機密/入力非破壊 | 十分 |
-| test_toast.py | CFG02/04・既存retry | 37 | 最新fullでskip0 | 検出なし | 実widget・timer・callback・bound_doc | 十分 |
-| test_provider_ui.py / test_ocr.py / test_pagination.py | CFG02/03/04 | 223 / 165 / 84 | 0 | 検出なし | 値/呼出回数/OCR状態/選択・再描画 | 十分 |
 
-T冒頭の既存`pytest.importorskip("tkinter")`はTk未導入時の条件分岐で、今回のWindows全件ではskipされていない。skip decoratorなし。原本expected bytesは試験が用意した独立入力であり、被試験関数で生成した期待値ではない。保存用temporary fixture書込も循環oracleではない。外部実装とのparity要件はない。
+既存主要試験と変更差分のdisabled/xfail、循環oracle、債務markerを照合した。config_notificationは状態・原本bytes・実owner・identityを検証し、旧provider表示試験は実メソッドを使う。期待値を被試験関数で生成する循環oracleは検出しなかった。fixtureの設定/結果は実利用者操作でも存在する入力であり、特定のundeclared-precondition/incidental-ordering/fixture-only依存は見つからない。
 
-**反証確認:** 「全入口」は単なる呼出数テストではなく、alias/Attribute/re-exportを解決し期待caller非空をassertしている。「入力先verified」はNoneや非Entryを区別する最終コードを確認し、自動focusの取得不能を人手passへ転用していない。未捕捉error pathとして手動harnessの全終了hashログは実証されておらず、後掲制限に残す。実装を部分充足と断定する追加根拠は検出しなかった。
+| File | Pattern | Severity | 判定 |
+|---|---|---|---|
+| tests/test_provider_ui.py:480 | $X.XXX | Info | 料金表記の説明文字列、債務コメントではない |
+| pagefolio/viewer.py / app queue | 初期空状態 | Info | render/enqueueで後続更新される、stubではない |
+| 05-UI-REVIEW.md | 閉鎖操作説明・固定320px幅 | 既存Advisory | 目視欠陥は未実証、Phase6最終実機確認へ継続 |
+| 今回変更されたOCR経路 | off拒否と表示更新 | 新規Blockerなし | 本文構築/キー/状態/workerより前で拒否し、結果を保持 |
 
-### Anti-Patterns Found
-
-| File | Line / location | Pattern | Severity | Impact |
-|---|---|---|---|---|
-| 05-EVIDENCE.json / 05-VALIDATION.md / 05-UAT.md | 過去snapshot/旧本文 | nyquist draft等の旧値と最新validated/1797が併存 | Info | 時点を区別すれば実測と矛盾しない。古い値を現行合否へ流用しない |
-| tests/test_provider_ui.py | 480 | 文字列中の`$X.XXX` | Info | 料金表示regexの説明であり未参照のXXX債務コメントではない |
-| pagefolio/viewer.py | 遅延描画部 | placeholder/空初期状態 | Info | 実renderが後続で埋める既存表示部品。stub不成立 |
-| 05-UI-REVIEW.md | V-01/S-01 | ✕の説明、固定幅320pxの境界 | Advisory | 静的UI推奨で実クリッピング等の欠陥は未実証。Phase6実画面/DPI確認へ残す |
-
-前回の独立検証では、変更実装と要件リンク試験に未参照TBD/FIXME/XXXの債務コメント、空handler、console-only、ダミーデータ固定を検出しなかった。BLOCKER=0。今回の差分では新たな実装変更や反証を認めず、同一入力の結果を再利用した。UI推奨のAdvisoryは当該監査の性質を示すもので、今回の新規blockerではない。
+反証候補は「off後に旧型が表示/実行へ漏れる」「保存失敗でUI更新が止まる」「候補設定offが入口を抜ける」。いずれも実コードと該当試験で否定。headlessの表示stubは可読性を証明せず、手動harness全終了の原本hashログも未確認として限界に残した。
 
 ### Advisory (New Scope, Unevidenced)
 
-なし。今回の差分再検証で、新たな未証明のStep 7 blockerは見つかっていない。
+新規なし。既存UI推奨と未分類edgeを削除・解消扱いにしない。
 
-### 完了した人手判断（履歴）
+### Human Verification Required
 
-既存H01〜H12は利用者の2026-10-24明示回答による12pass、修正7bbb06c後H13/H14は別の2pass。修正前/後を区別し、その14件を再要求しない。05-04のdeferred human-checkはこの証拠で満たされている。
-
-前回のhuman_neededを生んだ禁止事項1・2は、05-UAT.md末尾のTest 1・2として項目別に利用者がpassを回答した（両記録時刻2026-10-23T18:09:21.4084125Z）。これにより現在のhuman_verificationは空。旧投影IDと内容不明のedge4件に解決済みの意味を付与しない。
+本Phaseの未解決項目は0。05-04のdeferred human-checkは05-UATのH01〜H14、禁止事項2件は同Tests 1/2の利用者による項目別passを継承。通知契約が不変なので同じ人手受入を再要求しない。今回の表示変更はheadlessでのみ検証され、Phase06の実EXE/DPI/UAC最終受入はdeferredのまま。
 
 ### Deferred Items / 残存制約
 
-- 実配布EXE・各起動経路・DPI/UAC・Phase4移管UATはROADMAP Phase6 SC4と06-UAT-CARRYOVER。全必須passまでリリース停止。APP_VERSION/README同期はSC5。
-- Phase5の禁止2件は本Phaseの項目別UATで解決した。Phase4の禁止3件の移管記録をPhase5へ流用していない。
-- DEP-05（DEP-05-REGRESSIONは未解決のまま）・owner_missing・通知前景不一致は原因未確定。同種再発時は実装/後続実行/commit停止と最初の失敗保存を維持。今回の成功を修復や出荷承認としない。
-- Tcl別thread解放RuntimeWarningは05-03-deferred-items.mdのopenを維持。最新warning1件はPyMuPDF ByteString非推奨であり、未観測を原因解決としない。
-- 手動harness全起動の正常終了・原本hash照合結果はstdout/stderrから確認不能。自動TestScenarioIsolationの原本hash/実plugin load0/例外cleanupの証明と区別する。残存processの強制終了や実設定操作は実施していない。
-- UI静的22/24は独立visual合格ではない。固定幅/閉鎖操作の意味・テーマ/DPIはPhase6最終実画面受入に留意。
+- Phase06 SC4/5・V110-QA-02/03の実EXE/各入口/DPI/UAC・版情報/配布同期は後続。承認案BはW11の別session2行だけをnot-run/deferredへ限定し、他108必須行もnot-run。110行は保持、出荷未承認。複数セッション保証は今回対象外。
+- sourceのW05b診断や人工modalでの前景復帰は本Phase受入に転用していない。実OCR保持・配布EXE受入の証明ではない。
+- DEP-05-REGRESSION、owner_missing、過去の通知前景不一致の原因未解決。条件付き再開と同種再発時停止・最初の失敗保存を維持。
+- 旧投影IDのdescriptor同一性とedge4件は未確定。具体的禁止statement2件の意味評価passとは分離。
+- 人手harness全起動の正常終了/原本hashは未確認。自動隔離試験の証明へ混ぜない。
 
-### 判定
+### Gaps Summary / Fingerprint
 
-実装上の具体的な不足を示すgapsは0件、全4要件の肯定的契約23/23は前回の独立検証で実証済み。保留された禁止事項2件は今回の項目別UAT回答で解決し、現在のhuman_verificationは空。よって総合statusは **passed**。旧投影IDとedge4件は内容不明のままであり、この判定によって解決済みとはしない。DEP-05等の停止条件とPhase6の実機受入・出荷停止も維持する。
+Phase05契約のFAILED truth、missing/stub、NOT_WIRED、blockerは0、新規human item0。23/23のため **passed**。CR-03は独立レビューfixed、出荷判定は保留。
 
-covered_files/covered_digestは、前回と同じ122件の集合を入力した `query verification.fingerprint .planning/phases/05-config-notification <既存covered_files>` のexit0出力をそのまま転記した（PLAN/SUMMARY自動追加）。手計算hashや旧digest流用なし。実装/共有文書の編集・commitは行っていない。
+covered_files/digestは公式 `query verification.fingerprint .planning/phases/05-config-notification <既存covered_filesと今回証拠>` のexit0出力をそのまま転記した。既存集合を縮小せず、追加したOCR回帰/版契約/正本と独立照合を含む。PLAN/SUMMARYはCLI自動追加。実装/共有状態の編集・commitなし。
 
----
+2026-11-09 W12b PID照合修正後の更新: stale要因4件を受け、既存covered集合を縮小せず `04-REVALIDATION-W12B-PID-20261109.md`・`04-QUALITY-W12B-PID-20261109.json`・`04-reverify-20261109-w12b-pid/` 9原本（basetempなし）を追加した（G4時の04側正本追加に倣う）。所有CLI `query verification.fingerprint` の返却 covered_files 250件・covered_digest v4:sha256:0c8cddf86d9bcf2c821ae531c9aa2cdc525d09c253feff346521597db3b84271 をそのまま転記した（旧 v4:sha256:b5ca7d01abd8cd3534799766fdd31d75f63b77c1be932312f8c8dc6bc4467ec1）。保存後の `verification.status --raw` で exit0・status passed を確認した。
 
 _Verifier: gsd-verifier_
 

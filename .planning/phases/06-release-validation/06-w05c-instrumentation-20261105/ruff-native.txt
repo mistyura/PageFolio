@@ -1,0 +1,7 @@
+.planning\phases\04-startup-control\04-reverify-20261105-full\basetemp\test_load_invalid_file_returns0\bad.py:1:5: invalid-syntax: Expected an identifier
+.planning\phases\04-startup-control\04-reverify-20261105-full\basetemp\test_load_invalid_file_returns0\bad.py:1:6: invalid-syntax: Expected a parameter or the end of the parameter list
+.planning\phases\04-startup-control\04-reverify-20261105-full\basetemp\test_load_invalid_file_returns0\bad.py:1:7: invalid-syntax: Expected a parameter or the end of the parameter list
+.planning\phases\04-startup-control\04-reverify-20261105-full\basetemp\test_load_invalid_file_returns0\bad.py:1:16: invalid-syntax: Expected `,`, found identifier
+.planning\phases\04-startup-control\04-reverify-20261105-full\basetemp\test_load_invalid_file_returns0\bad.py:1:22: invalid-syntax: Expected `,`, found newline
+.planning\phases\04-startup-control\04-reverify-20261105-full\basetemp\test_load_invalid_file_returns0\bad.py:1:22: W292 No newline at end of file
+Found 6 errors.

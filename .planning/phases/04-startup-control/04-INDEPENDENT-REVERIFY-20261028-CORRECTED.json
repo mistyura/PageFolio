@@ -1,0 +1,2348 @@
+{
+  "captured": "2026-10-28T04:58:38.837Z",
+  "scope": "Phase04独立再検証。既存pass21truthを現行コードと生結果へ再結合。全件再実行なし。",
+  "prior_report": {
+    "sha256": "480ffdc2da8f8aba62a2354cc30796b2094a2c9366ca180c1e443fb83fcf8fd8",
+    "verified": "2026-10-28T01:12:08Z",
+    "status": "passed",
+    "score": "21/21"
+  },
+  "full": {
+    "record": [
+      {
+        "argv": [
+          "C:\\Users\\shdwf\\work\\project\\PageFolio\\.venv\\Scripts\\python.exe",
+          "-m",
+          "pytest",
+          "-q",
+          "-rA",
+          "-x",
+          "-o",
+          "cache_dir=.planning/debug/quality-gate-unblock-20261028/pytest-cache",
+          "--basetemp=.planning/debug/quality-gate-unblock-20261028/full-tmp",
+          "--junitxml=.planning/debug/quality-gate-unblock-20261028/full.xml"
+        ],
+        "started": "2026-10-28T04:08:28.283Z",
+        "finished": "2026-10-28T04:16:29.941Z",
+        "code": 0
+      }
+    ],
+    "before_after_equal": true,
+    "changed": [],
+    "total": 146,
+    "matched": 142,
+    "differences": [
+      {
+        "file": ".gitignore",
+        "expected": "e7c465d440ec9c1ca21251f6283d1161e1dad24ca71d0f4eae9510cd440ac712",
+        "actual": "d3a6282da7fa64f9ca27b8e6bf97285f402d14e5037401460be20fcd0abc68d2"
+      },
+      {
+        "file": "docs/DEVELOPMENT.md",
+        "expected": "a226a16ba0651ea5761d51f2052f90d388390d1a8f8a5a28a2c0eeb0bdfeab4d",
+        "actual": "c0d5f066d7cdf95f76687741670cb6858b1d3881d4a1e039ea5821d11893e0b4"
+      },
+      {
+        "file": "CONTRIBUTING.md",
+        "expected": "7b5924fec8f77983acf25ac7b1de5137c98b2a9c8ab6ca8bbd0f32bb7bc9ea64",
+        "actual": "1e6666a2df0b661694c51776ea39dc566ddd3f79a19f4ac40ca92ec8c22bb206"
+      },
+      {
+        "file": "開発履歴.md",
+        "expected": "d3e124e4e9b74516ce3ca78f80f795879767663246a8e1164076572f636e04cb",
+        "actual": "dbe59f06cbf655c0e3d299b6bbfd140c254f938bd391c0d5217c499bcd988400"
+      }
+    ],
+    "python_total": 137,
+    "python_differences": [],
+    "suite": "<testsuite name=\"pytest\" errors=\"0\" failures=\"0\" skipped=\"0\" tests=\"2071\" time=\"480.396\" timestamp=\"2026-10-28T13:08:28.809625+09:00\" hostname=\"nullaze-z240\">",
+    "summary": [
+      "PASSED tests/test_viewer.py::TestPrioritizedRenderOrderViewerIntegration::test_visible_pages_rendered_before_rest_of_window",
+      "2071 passed, 2 warnings in 480.86s (0:08:00)",
+      ""
+    ],
+    "named_testcases": [
+      {
+        "classname": "tests.test_gsd_dod",
+        "name": "test_completed_phases_are_validated",
+        "time": "0.031"
+      },
+      {
+        "classname": "tests.test_gsd_dod",
+        "name": "test_legacy_exclusions_match_repository",
+        "time": "0.020"
+      },
+      {
+        "classname": "tests.test_gsd_dod",
+        "name": "test_dod_gate_detects_unvalidated_phase",
+        "time": "0.054"
+      },
+      {
+        "classname": "tests.test_gsd_dod",
+        "name": "test_dod_gate_rejects_empty_and_malformed",
+        "time": "0.035"
+      },
+      {
+        "classname": "tests.test_gsd_dod",
+        "name": "test_status_parser_handles_quotes_and_nesting",
+        "time": "0.020"
+      },
+      {
+        "classname": "tests.test_gsd_dod",
+        "name": "test_live_incomplete_does_not_require_validation[---\\nstatus: draft\\nnyquist_compliant: true\\n---\\n\\n# Validation\\n]",
+        "time": "0.035"
+      },
+      {
+        "classname": "tests.test_gsd_dod",
+        "name": "test_live_incomplete_does_not_require_validation[None]",
+        "time": "0.040"
+      },
+      {
+        "classname": "tests.test_gsd_dod",
+        "name": "test_live_completion_requires_consistent_evidence[True-Complete-1/1-2026-10-21-True-True]",
+        "time": "0.049"
+      },
+      {
+        "classname": "tests.test_gsd_dod",
+        "name": "test_live_completion_requires_consistent_evidence[False-Complete-1/1-2026-10-21-True-False]",
+        "time": "0.084"
+      },
+      {
+        "classname": "tests.test_gsd_dod",
+        "name": "test_live_completion_requires_consistent_evidence[False-Complete-1/1-2026-10-21-False-True]",
+        "time": "0.070"
+      },
+      {
+        "classname": "tests.test_gsd_dod",
+        "name": "test_live_completion_requires_consistent_evidence[False-Complete-0/1-2026-10-21-True-True]",
+        "time": "0.040"
+      },
+      {
+        "classname": "tests.test_gsd_dod",
+        "name": "test_live_completion_requires_consistent_evidence[False-Complete-1/1-\\u2014-True-True]",
+        "time": "0.035"
+      },
+      {
+        "classname": "tests.test_gsd_dod",
+        "name": "test_live_completion_requires_consistent_evidence[True-Planned-0/1-\\u2014-False-True]",
+        "time": "0.032"
+      },
+      {
+        "classname": "tests.test_gsd_dod",
+        "name": "test_live_roadmap_ambiguity_fails_closed[duplicate_phase]",
+        "time": "0.030"
+      },
+      {
+        "classname": "tests.test_gsd_dod",
+        "name": "test_live_roadmap_ambiguity_fails_closed[duplicate_progress]",
+        "time": "0.026"
+      },
+      {
+        "classname": "tests.test_gsd_dod",
+        "name": "test_live_roadmap_ambiguity_fails_closed[missing]",
+        "time": "0.026"
+      },
+      {
+        "classname": "tests.test_gsd_dod",
+        "name": "test_live_roadmap_ambiguity_fails_closed[unknown]",
+        "time": "0.030"
+      },
+      {
+        "classname": "tests.test_gsd_dod",
+        "name": "test_live_progress_tracks_each_summary_before_validation",
+        "time": "0.038"
+      },
+      {
+        "classname": "tests.test_gsd_dod",
+        "name": "test_milestone_version_parsing",
+        "time": "0.020"
+      },
+      {
+        "classname": "tests.test_startup_control",
+        "name": "test_accepted_is_not_terminal_and_eight_requests_restore_once",
+        "time": "0.046"
+      },
+      {
+        "classname": "tests.test_startup_control",
+        "name": "test_busy_main_thread_discards_expired_request[4999-1]",
+        "time": "0.035"
+      },
+      {
+        "classname": "tests.test_startup_control",
+        "name": "test_busy_main_thread_discards_expired_request[5000-0]",
+        "time": "0.037"
+      },
+      {
+        "classname": "tests.test_startup_control",
+        "name": "test_busy_main_thread_discards_expired_request[8000-0]",
+        "time": "0.038"
+      },
+      {
+        "classname": "tests.test_startup_control",
+        "name": "test_fixed_cooldown_does_not_extend_and_edge_is_independent",
+        "time": "0.041"
+      },
+      {
+        "classname": "tests.test_startup_control",
+        "name": "test_callback_reentry_and_terminal_last_arrival_coalesce",
+        "time": "0.040"
+      },
+      {
+        "classname": "tests.test_startup_control",
+        "name": "test_each_batch_member_keeps_own_deadline",
+        "time": "0.057"
+      },
+      {
+        "classname": "tests.test_startup_control",
+        "name": "test_all_members_expire_before_os_side_effect",
+        "time": "0.055"
+      },
+      {
+        "classname": "tests.test_startup_control",
+        "name": "test_invalid_requests_never_reach_ui[values0]",
+        "time": "0.058"
+      },
+      {
+        "classname": "tests.test_startup_control",
+        "name": "test_invalid_requests_never_reach_ui[values1]",
+        "time": "0.043"
+      },
+      {
+        "classname": "tests.test_startup_control",
+        "name": "test_invalid_requests_never_reach_ui[values2]",
+        "time": "0.053"
+      },
+      {
+        "classname": "tests.test_startup_control",
+        "name": "test_invalid_requests_never_reach_ui[values3]",
+        "time": "0.052"
+      },
+      {
+        "classname": "tests.test_startup_control",
+        "name": "test_invalid_requests_never_reach_ui[values4]",
+        "time": "0.054"
+      },
+      {
+        "classname": "tests.test_startup_control",
+        "name": "test_invalid_requests_never_reach_ui[values5]",
+        "time": "0.046"
+      },
+      {
+        "classname": "tests.test_startup_control",
+        "name": "test_invalid_requests_never_reach_ui[values6]",
+        "time": "0.049"
+      },
+      {
+        "classname": "tests.test_startup_control",
+        "name": "test_generation_change_invalidates_queued_requests",
+        "time": "0.050"
+      },
+      {
+        "classname": "tests.test_startup_control",
+        "name": "test_repeated_id_never_repeats_side_effect_and_modified_id_is_invalid",
+        "time": "0.046"
+      },
+      {
+        "classname": "tests.test_startup_control",
+        "name": "test_pending_queue_and_terminal_cache_are_bounded",
+        "time": "0.041"
+      },
+      {
+        "classname": "tests.test_startup_control",
+        "name": "test_late_ack_never_reports_success",
+        "time": "0.042"
+      },
+      {
+        "classname": "tests.test_startup_control",
+        "name": "test_wire_invalid_json_never_reaches_receiver[{]",
+        "time": "0.034"
+      },
+      {
+        "classname": "tests.test_startup_control",
+        "name": "test_wire_invalid_json_never_reaches_receiver[[]]",
+        "time": "0.050"
+      },
+      {
+        "classname": "tests.test_startup_control",
+        "name": "test_wire_invalid_json_never_reaches_receiver[null]",
+        "time": "0.040"
+      },
+      {
+        "classname": "tests.test_startup_control",
+        "name": "test_wire_invalid_json_never_reaches_receiver[\\xff]",
+        "time": "0.057"
+      },
+      {
+        "classname": "tests.test_startup_control",
+        "name": "test_oversized_frame_rejected_before_payload[0]",
+        "time": "0.057"
+      },
+      {
+        "classname": "tests.test_startup_control",
+        "name": "test_oversized_frame_rejected_before_payload[1025]",
+        "time": "0.037"
+      },
+      {
+        "classname": "tests.test_startup_control",
+        "name": "test_oversized_frame_rejected_before_payload[4294967295]",
+        "time": "0.060"
+      },
+      {
+        "classname": "tests.test_startup_control",
+        "name": "test_unknown_or_invalid_terminal_is_not_success[changes0]",
+        "time": "0.067"
+      },
+      {
+        "classname": "tests.test_startup_control",
+        "name": "test_unknown_or_invalid_terminal_is_not_success[changes1]",
+        "time": "0.048"
+      },
+      {
+        "classname": "tests.test_startup_control",
+        "name": "test_unknown_or_invalid_terminal_is_not_success[changes2]",
+        "time": "0.042"
+      },
+      {
+        "classname": "tests.test_startup_control",
+        "name": "test_unknown_or_invalid_terminal_is_not_success[changes3]",
+        "time": "0.059"
+      },
+      {
+        "classname": "tests.test_startup_control",
+        "name": "test_unknown_or_invalid_terminal_is_not_success[changes4]",
+        "time": "0.042"
+      },
+      {
+        "classname": "tests.test_startup_control",
+        "name": "test_unknown_or_invalid_terminal_is_not_success[changes5]",
+        "time": "0.047"
+      },
+      {
+        "classname": "tests.test_startup_control",
+        "name": "test_expired_io_never_starts_native_operation[read]",
+        "time": "0.058"
+      },
+      {
+        "classname": "tests.test_startup_control",
+        "name": "test_expired_io_never_starts_native_operation[write]",
+        "time": "0.033"
+      },
+      {
+        "classname": "tests.test_startup_control",
+        "name": "test_guard_rechecks_before_foreground_and_flash",
+        "time": "0.048"
+      },
+      {
+        "classname": "tests.test_startup_control",
+        "name": "test_confirmed_initializing_process_death_claims_only_once",
+        "time": "0.049"
+      },
+      {
+        "classname": "tests.test_startup_control",
+        "name": "test_unconfirmed_or_noninitializing_death_never_claims[alive]",
+        "time": "0.043"
+      },
+      {
+        "classname": "tests.test_startup_control",
+        "name": "test_unconfirmed_or_noninitializing_death_never_claims[ready]",
+        "time": "0.048"
+      },
+      {
+        "classname": "tests.test_startup_control",
+        "name": "test_unconfirmed_or_noninitializing_death_never_claims[closing]",
+        "time": "0.045"
+      },
+      {
+        "classname": "tests.test_startup_control",
+        "name": "test_unconfirmed_or_noninitializing_death_never_claims[released]",
+        "time": "0.045"
+      },
+      {
+        "classname": "tests.test_startup_control",
+        "name": "test_unconfirmed_or_noninitializing_death_never_claims[unknown]",
+        "time": "0.040"
+      },
+      {
+        "classname": "tests.test_startup_control",
+        "name": "test_unconfirmed_or_noninitializing_death_never_claims[no_handle]",
+        "time": "0.048"
+      },
+      {
+        "classname": "tests.test_startup_control",
+        "name": "test_unconfirmed_or_noninitializing_death_never_claims[deadline]",
+        "time": "0.037"
+      },
+      {
+        "classname": "tests.test_startup_control",
+        "name": "test_losing_candidate_never_attempts_second_claim",
+        "time": "0.044"
+      },
+      {
+        "classname": "tests.test_startup_control",
+        "name": "test_close_publishes_release_only_after_root_destroyed",
+        "time": "0.038"
+      },
+      {
+        "classname": "tests.test_startup_control",
+        "name": "test_identity_validation_failure_never_pins_or_takes_over[failure0]",
+        "time": "0.047"
+      },
+      {
+        "classname": "tests.test_startup_control",
+        "name": "test_identity_validation_failure_never_pins_or_takes_over[failure1]",
+        "time": "0.046"
+      },
+      {
+        "classname": "tests.test_startup_control",
+        "name": "test_wait_failed_is_not_death",
+        "time": "0.052"
+      },
+      {
+        "classname": "tests.test_startup_control",
+        "name": "test_readiness_retries_share_deadline_and_clamp_poll",
+        "time": "0.053"
+      },
+      {
+        "classname": "tests.test_startup_control",
+        "name": "test_fragmented_transport_always_uses_original_deadline[read]",
+        "time": "0.046"
+      },
+      {
+        "classname": "tests.test_startup_control",
+        "name": "test_fragmented_transport_always_uses_original_deadline[write]",
+        "time": "0.037"
+      },
+      {
+        "classname": "tests.test_startup_control",
+        "name": "test_coalesced_terminal_may_precede_new_request_issued_tick",
+        "time": "0.037"
+      },
+      {
+        "classname": "tests.test_startup_focus",
+        "name": "test_placement_returns_to_last_non_iconic_state[normal]",
+        "time": "0.058"
+      },
+      {
+        "classname": "tests.test_startup_focus",
+        "name": "test_placement_returns_to_last_non_iconic_state[zoomed]",
+        "time": "0.049"
+      },
+      {
+        "classname": "tests.test_startup_focus",
+        "name": "test_placement_os_restored_correctly_does_not_rewrite_geometry",
+        "time": "0.054"
+      },
+      {
+        "classname": "tests.test_startup_focus",
+        "name": "test_placement_corrects_mismatched_normal_geometry_after_os_restore",
+        "time": "0.047"
+      },
+      {
+        "classname": "tests.test_startup_focus",
+        "name": "test_focus_child_preserved_and_toplevel_focus_does_not_overwrite[False-thumb_canvas]",
+        "time": "0.043"
+      },
+      {
+        "classname": "tests.test_startup_focus",
+        "name": "test_focus_child_preserved_and_toplevel_focus_does_not_overwrite[False-preview_canvas]",
+        "time": "0.042"
+      },
+      {
+        "classname": "tests.test_startup_focus",
+        "name": "test_focus_child_preserved_and_toplevel_focus_does_not_overwrite[False-entry]",
+        "time": "0.044"
+      },
+      {
+        "classname": "tests.test_startup_focus",
+        "name": "test_focus_child_preserved_and_toplevel_focus_does_not_overwrite[True-thumb_canvas]",
+        "time": "0.039"
+      },
+      {
+        "classname": "tests.test_startup_focus",
+        "name": "test_focus_child_preserved_and_toplevel_focus_does_not_overwrite[True-preview_canvas]",
+        "time": "0.050"
+      },
+      {
+        "classname": "tests.test_startup_focus",
+        "name": "test_focus_child_preserved_and_toplevel_focus_does_not_overwrite[True-entry]",
+        "time": "0.037"
+      },
+      {
+        "classname": "tests.test_startup_focus",
+        "name": "test_current_input_wins_over_previously_remembered_input",
+        "time": "0.036"
+      },
+      {
+        "classname": "tests.test_startup_focus",
+        "name": "test_last_input_used_when_only_toplevel_was_observed",
+        "time": "0.048"
+      },
+      {
+        "classname": "tests.test_startup_focus",
+        "name": "test_modal_without_grab_returns_to_live_parent_after_nested_close",
+        "time": "0.041"
+      },
+      {
+        "classname": "tests.test_startup_focus",
+        "name": "test_modal_grab_and_native_popup_preserve_input_focus",
+        "time": "0.033"
+      },
+      {
+        "classname": "tests.test_startup_focus",
+        "name": "test_rebuild_discards_dead_widget_and_falls_back_to_root",
+        "time": "0.032"
+      },
+      {
+        "classname": "tests.test_startup_focus",
+        "name": "test_foreground_denied_only_flashes_and_stop_never_retries[False]",
+        "time": "0.031"
+      },
+      {
+        "classname": "tests.test_startup_focus",
+        "name": "test_foreground_denied_only_flashes_and_stop_never_retries[True]",
+        "time": "0.032"
+      },
+      {
+        "classname": "tests.test_startup_focus",
+        "name": "test_expired_generation_and_destroyed_stop_are_inert",
+        "time": "0.032"
+      },
+      {
+        "classname": "tests.test_startup_focus",
+        "name": "test_each_side_effect_rechecks_deadline_and_nested_restore_is_inert",
+        "time": "0.035"
+      },
+      {
+        "classname": "tests.test_startup_focus",
+        "name": "test_close_removes_only_own_binding_ids",
+        "time": "0.043"
+      },
+      {
+        "classname": "tests.test_startup_focus",
+        "name": "test_tk_menu_is_not_a_window_activation_target",
+        "time": "0.048"
+      },
+      {
+        "classname": "tests.test_startup_focus",
+        "name": "test_working_state_real_pdf_history_and_blobs_continue",
+        "time": "0.098"
+      },
+      {
+        "classname": "tests.test_startup_focus",
+        "name": "test_ocr_same_engine_worker_and_generation_complete_after_restore",
+        "time": "0.040"
+      },
+      {
+        "classname": "tests.test_startup_focus",
+        "name": "test_modal_native_unverified_owner_never_selected[foreign]",
+        "time": "0.042"
+      },
+      {
+        "classname": "tests.test_startup_focus",
+        "name": "test_modal_native_unverified_owner_never_selected[unknown]",
+        "time": "0.040"
+      },
+      {
+        "classname": "tests.test_startup_focus",
+        "name": "test_modal_native_unverified_owner_never_selected[cycle]",
+        "time": "0.045"
+      },
+      {
+        "classname": "tests.test_startup_focus",
+        "name": "test_modal_native_unverified_owner_never_selected[unowned]",
+        "time": "0.048"
+      },
+      {
+        "classname": "tests.test_startup_focus",
+        "name": "test_modal_disabled_parent_is_not_activated_without_verified_popup",
+        "time": "0.041"
+      },
+      {
+        "classname": "tests.test_startup_focus",
+        "name": "test_normalized_hwnd_is_same_process_and_ui_thread[none]",
+        "time": "0.043"
+      },
+      {
+        "classname": "tests.test_startup_focus",
+        "name": "test_normalized_hwnd_is_same_process_and_ui_thread[pid]",
+        "time": "0.044"
+      },
+      {
+        "classname": "tests.test_startup_focus",
+        "name": "test_normalized_hwnd_is_same_process_and_ui_thread[thread]",
+        "time": "0.044"
+      },
+      {
+        "classname": "tests.test_startup_focus",
+        "name": "test_normalized_hwnd_is_same_process_and_ui_thread[dead]",
+        "time": "0.054"
+      },
+      {
+        "classname": "tests.test_startup_foreground_audit",
+        "name": "test_complete_unchanged_foreground_passes",
+        "time": "0.049"
+      },
+      {
+        "classname": "tests.test_startup_foreground_audit",
+        "name": "test_transient_notice_activation_fails_even_after_return_to_original",
+        "time": "0.044"
+      },
+      {
+        "classname": "tests.test_startup_foreground_audit",
+        "name": "test_api_request_rejected_by_os_is_still_violation",
+        "time": "0.045"
+      },
+      {
+        "classname": "tests.test_startup_foreground_audit",
+        "name": "test_activation_flags_regression_fails[CreateWindowExW-arguments0]",
+        "time": "0.040"
+      },
+      {
+        "classname": "tests.test_startup_foreground_audit",
+        "name": "test_activation_flags_regression_fails[SetWindowPos-arguments1]",
+        "time": "0.046"
+      },
+      {
+        "classname": "tests.test_startup_foreground_audit",
+        "name": "test_activation_flags_regression_fails[ShowWindow-arguments2]",
+        "time": "0.038"
+      },
+      {
+        "classname": "tests.test_startup_foreground_audit",
+        "name": "test_unknown_external_transition_fails_without_claiming_product_cause",
+        "time": "0.045"
+      },
+      {
+        "classname": "tests.test_startup_foreground_audit",
+        "name": "test_incomplete_observation_never_passes[missing_peer]",
+        "time": "0.053"
+      },
+      {
+        "classname": "tests.test_startup_foreground_audit",
+        "name": "test_incomplete_observation_never_passes[duplicate_peer]",
+        "time": "0.053"
+      },
+      {
+        "classname": "tests.test_startup_foreground_audit",
+        "name": "test_incomplete_observation_never_passes[missing_start]",
+        "time": "0.047"
+      },
+      {
+        "classname": "tests.test_startup_foreground_audit",
+        "name": "test_incomplete_observation_never_passes[missing_finish]",
+        "time": "0.037"
+      },
+      {
+        "classname": "tests.test_startup_foreground_audit",
+        "name": "test_incomplete_observation_never_passes[missing_return]",
+        "time": "0.036"
+      },
+      {
+        "classname": "tests.test_startup_foreground_audit",
+        "name": "test_incomplete_observation_never_passes[missing_tick]",
+        "time": "0.043"
+      },
+      {
+        "classname": "tests.test_startup_foreground_audit",
+        "name": "test_incomplete_observation_never_passes[missing_bind]",
+        "time": "0.045"
+      },
+      {
+        "classname": "tests.test_startup_foreground_audit",
+        "name": "test_incomplete_observation_never_passes[duplicate_role]",
+        "time": "0.056"
+      },
+      {
+        "classname": "tests.test_startup_foreground_audit",
+        "name": "test_incomplete_observation_never_passes[callback_error]",
+        "time": "0.047"
+      },
+      {
+        "classname": "tests.test_startup_foreground_audit",
+        "name": "test_incomplete_observation_never_passes[unhook_failed]",
+        "time": "0.044"
+      },
+      {
+        "classname": "tests.test_startup_foreground_audit",
+        "name": "test_incomplete_observation_never_passes[event_identity]",
+        "time": "0.046"
+      },
+      {
+        "classname": "tests.test_startup_foreground_audit",
+        "name": "test_incomplete_observation_never_passes[process_identity]",
+        "time": "0.046"
+      },
+      {
+        "classname": "tests.test_startup_foreground_audit",
+        "name": "test_incomplete_observation_never_passes[local_value]",
+        "time": "0.049"
+      },
+      {
+        "classname": "tests.test_startup_foreground_audit",
+        "name": "test_local_change_is_not_silently_accepted",
+        "time": "0.044"
+      },
+      {
+        "classname": "tests.test_startup_foreground_audit",
+        "name": "test_wrapper_preserves_arguments_return_last_error_and_restores_bind",
+        "time": "0.061"
+      },
+      {
+        "classname": "tests.test_startup_foreground_audit",
+        "name": "test_exception_restores_bind_and_retains_original_error",
+        "time": "0.061"
+      },
+      {
+        "classname": "tests.test_startup_foreground_audit",
+        "name": "test_capture_failure_is_recorded_without_changing_api_behavior",
+        "time": "0.071"
+      },
+      {
+        "classname": "tests.test_startup_notice",
+        "name": "test_claim_failure_is_check_failed_without_owner_assumption",
+        "time": "0.045"
+      },
+      {
+        "classname": "tests.test_startup_notice",
+        "name": "test_reason_uses_only_verified_facts[check_failed-False-check_failed]",
+        "time": "0.044"
+      },
+      {
+        "classname": "tests.test_startup_notice",
+        "name": "test_reason_uses_only_verified_facts[connection_failed-False-check_failed]",
+        "time": "0.038"
+      },
+      {
+        "classname": "tests.test_startup_notice",
+        "name": "test_reason_uses_only_verified_facts[connection_failed-True-contact_failed]",
+        "time": "0.044"
+      },
+      {
+        "classname": "tests.test_startup_notice",
+        "name": "test_reason_uses_only_verified_facts[expired-False-timeout]",
+        "time": "0.055"
+      },
+      {
+        "classname": "tests.test_startup_notice",
+        "name": "test_reason_uses_only_verified_facts[expired-True-timeout]",
+        "time": "0.043"
+      },
+      {
+        "classname": "tests.test_startup_notice",
+        "name": "test_reason_uses_only_verified_facts[completed-True-None]",
+        "time": "0.036"
+      },
+      {
+        "classname": "tests.test_startup_notice",
+        "name": "test_reason_uses_only_verified_facts[foreground_denied-True-None]",
+        "time": "0.037"
+      },
+      {
+        "classname": "tests.test_startup_notice",
+        "name": "test_reason_uses_only_verified_facts[primary-False-None]",
+        "time": "0.048"
+      },
+      {
+        "classname": "tests.test_startup_notice",
+        "name": "test_os_language_without_settings_io[1041-ja]",
+        "time": "0.032"
+      },
+      {
+        "classname": "tests.test_startup_notice",
+        "name": "test_os_language_without_settings_io[1033-en]",
+        "time": "0.035"
+      },
+      {
+        "classname": "tests.test_startup_notice",
+        "name": "test_os_language_without_settings_io[2052-en]",
+        "time": "0.052"
+      },
+      {
+        "classname": "tests.test_startup_notice",
+        "name": "test_notice_text_is_fixed_localized_and_private_data_free",
+        "time": "0.058"
+      },
+      {
+        "classname": "tests.test_startup_notice",
+        "name": "test_backend_constructor_failure_uses_independent_notice",
+        "time": "0.062"
+      },
+      {
+        "classname": "tests.test_startup_notice",
+        "name": "test_initialization_notice_factory_failure_is_finite",
+        "time": "0.050"
+      },
+      {
+        "classname": "tests.test_startup_notice",
+        "name": "test_backend_constructor_partial_cleanup",
+        "time": "0.060"
+      },
+      {
+        "classname": "tests.test_startup_notice",
+        "name": "test_backend_constructor_stage_failure_releases_acquired[api-expected_release0]",
+        "time": "0.053"
+      },
+      {
+        "classname": "tests.test_startup_notice",
+        "name": "test_backend_constructor_stage_failure_releases_acquired[token-expected_release1]",
+        "time": "0.046"
+      },
+      {
+        "classname": "tests.test_startup_notice",
+        "name": "test_backend_constructor_stage_failure_releases_acquired[session-expected_release2]",
+        "time": "0.041"
+      },
+      {
+        "classname": "tests.test_startup_notice",
+        "name": "test_backend_constructor_stage_failure_releases_acquired[owner-expected_release3]",
+        "time": "0.052"
+      },
+      {
+        "classname": "tests.test_startup_notice",
+        "name": "test_backend_constructor_stage_failure_releases_acquired[mapping-expected_release4]",
+        "time": "0.055"
+      },
+      {
+        "classname": "tests.test_startup_notice",
+        "name": "test_backend_constructor_stage_failure_releases_acquired[pipe-expected_release5]",
+        "time": "0.054"
+      },
+      {
+        "classname": "tests.test_startup_notice",
+        "name": "test_initialization_notice_failure_matrix[factory]",
+        "time": "0.054"
+      },
+      {
+        "classname": "tests.test_startup_notice",
+        "name": "test_initialization_notice_failure_matrix[lease]",
+        "time": "0.064"
+      },
+      {
+        "classname": "tests.test_startup_notice",
+        "name": "test_initialization_notice_failure_matrix[lease_release]",
+        "time": "0.059"
+      },
+      {
+        "classname": "tests.test_startup_notice",
+        "name": "test_initialization_notice_failure_matrix[language]",
+        "time": "0.061"
+      },
+      {
+        "classname": "tests.test_startup_notice",
+        "name": "test_initialization_notice_failure_matrix[display]",
+        "time": "0.058"
+      },
+      {
+        "classname": "tests.test_startup_notice",
+        "name": "test_initialization_notice_failure_matrix[close]",
+        "time": "0.049"
+      },
+      {
+        "classname": "tests.test_startup_notice",
+        "name": "test_initialization_notice_failure_matrix[logger]",
+        "time": "0.055"
+      },
+      {
+        "classname": "tests.test_startup_notice",
+        "name": "test_initialization_cleanup_continues_after_error",
+        "time": "0.056"
+      },
+      {
+        "classname": "tests.test_startup_notice",
+        "name": "test_security_descriptor_is_freed_after_partial_conversion",
+        "time": "0.063"
+      },
+      {
+        "classname": "tests.test_startup_notice",
+        "name": "test_token_information_failure_closes_acquired_handle",
+        "time": "0.071"
+      },
+      {
+        "classname": "tests.test_startup_notice",
+        "name": "test_success_and_foreground_denial_never_enter_notice_boundary[completed]",
+        "time": "0.056"
+      },
+      {
+        "classname": "tests.test_startup_notice",
+        "name": "test_success_and_foreground_denial_never_enter_notice_boundary[foreground_denied]",
+        "time": "0.043"
+      },
+      {
+        "classname": "tests.test_startup_notice",
+        "name": "test_success_and_foreground_denial_never_enter_notice_boundary[primary]",
+        "time": "0.040"
+      },
+      {
+        "classname": "tests.test_startup_notice",
+        "name": "test_notice_lease_controls_display[True-shown]",
+        "time": "0.042"
+      },
+      {
+        "classname": "tests.test_startup_notice",
+        "name": "test_notice_lease_controls_display[False-coalesced]",
+        "time": "0.041"
+      },
+      {
+        "classname": "tests.test_startup_notice",
+        "name": "test_failed_window_is_not_reported_as_shown_and_private_error_is_not_logged",
+        "time": "0.047"
+      },
+      {
+        "classname": "tests.test_startup_notice",
+        "name": "test_notice_fixed_deadline_9999_10000[100-10000]",
+        "time": "0.046"
+      },
+      {
+        "classname": "tests.test_startup_notice",
+        "name": "test_notice_fixed_deadline_9999_10000[10099-1]",
+        "time": "0.046"
+      },
+      {
+        "classname": "tests.test_startup_notice",
+        "name": "test_notice_fixed_deadline_9999_10000[10100-0]",
+        "time": "0.066"
+      },
+      {
+        "classname": "tests.test_startup_notice",
+        "name": "test_notice_fixed_deadline_9999_10000[10200-0]",
+        "time": "0.056"
+      },
+      {
+        "classname": "tests.test_startup_notice",
+        "name": "test_mutex_existence_without_published_window_is_not_coalesced",
+        "time": "0.059"
+      },
+      {
+        "classname": "tests.test_startup_notice",
+        "name": "test_notice_snapshot_separates_visible_closed_dead_and_unknown[shown-True-True-9999-visible]",
+        "time": "0.058"
+      },
+      {
+        "classname": "tests.test_startup_notice",
+        "name": "test_notice_snapshot_separates_visible_closed_dead_and_unknown[shown-True-True-10000-unknown]",
+        "time": "0.047"
+      },
+      {
+        "classname": "tests.test_startup_notice",
+        "name": "test_notice_snapshot_separates_visible_closed_dead_and_unknown[shown-True-False-500-unknown]",
+        "time": "0.055"
+      },
+      {
+        "classname": "tests.test_startup_notice",
+        "name": "test_notice_snapshot_separates_visible_closed_dead_and_unknown[preparing-True-False-500-unknown]",
+        "time": "0.054"
+      },
+      {
+        "classname": "tests.test_startup_notice",
+        "name": "test_notice_snapshot_separates_visible_closed_dead_and_unknown[closed-True-False-500-closed]",
+        "time": "0.064"
+      },
+      {
+        "classname": "tests.test_startup_notice",
+        "name": "test_notice_snapshot_separates_visible_closed_dead_and_unknown[shown-False-False-500-dead]",
+        "time": "0.062"
+      },
+      {
+        "classname": "tests.test_startup_notice",
+        "name": "test_notice_creation_failure_is_finite_and_releases_lease",
+        "time": "0.048"
+      },
+      {
+        "classname": "tests.test_startup_notice",
+        "name": "test_partial_notice_publication_fails_closed_and_cleans_handles",
+        "time": "0.062"
+      },
+      {
+        "classname": "tests.test_startup_notice",
+        "name": "test_abandoned_notice_thread_with_live_process_is_not_new_owner",
+        "time": "0.053"
+      },
+      {
+        "classname": "tests.test_startup_notice",
+        "name": "test_notice_snapshot_corruption_never_authorizes_join[corrupt0]",
+        "time": "0.050"
+      },
+      {
+        "classname": "tests.test_startup_notice",
+        "name": "test_notice_snapshot_corruption_never_authorizes_join[corrupt1]",
+        "time": "0.049"
+      },
+      {
+        "classname": "tests.test_startup_notice",
+        "name": "test_notice_snapshot_corruption_never_authorizes_join[corrupt2]",
+        "time": "0.048"
+      },
+      {
+        "classname": "tests.test_startup_notice",
+        "name": "test_notice_snapshot_corruption_never_authorizes_join[corrupt3]",
+        "time": "0.082"
+      },
+      {
+        "classname": "tests.test_startup_notice",
+        "name": "test_notice_snapshot_corruption_never_authorizes_join[corrupt4]",
+        "time": "0.057"
+      },
+      {
+        "classname": "tests.test_startup_notice",
+        "name": "test_notice_snapshot_corruption_never_authorizes_join[corrupt5]",
+        "time": "0.048"
+      },
+      {
+        "classname": "tests.test_startup_notice",
+        "name": "test_notice_snapshot_corruption_never_authorizes_join[corrupt6]",
+        "time": "0.051"
+      },
+      {
+        "classname": "tests.test_startup_notice",
+        "name": "test_eight_joiners_do_not_change_first_notice_deadline",
+        "time": "0.049"
+      },
+      {
+        "classname": "tests.test_startup_notice",
+        "name": "test_owner_cannot_extend_already_shown_deadline",
+        "time": "0.053"
+      },
+      {
+        "classname": "tests.test_startup_wake",
+        "name": "test_noninterference_accepts_only_allowed_effects_independently_of_foreground[False]",
+        "time": "0.052"
+      },
+      {
+        "classname": "tests.test_startup_wake",
+        "name": "test_noninterference_accepts_only_allowed_effects_independently_of_foreground[True]",
+        "time": "0.055"
+      },
+      {
+        "classname": "tests.test_startup_wake",
+        "name": "test_noninterference_rejects_forbidden_effects_even_if_foreground_is_unchanged[foreground-api]",
+        "time": "0.085"
+      },
+      {
+        "classname": "tests.test_startup_wake",
+        "name": "test_noninterference_rejects_forbidden_effects_even_if_foreground_is_unchanged[ctypes-bypass]",
+        "time": "0.060"
+      },
+      {
+        "classname": "tests.test_startup_wake",
+        "name": "test_noninterference_rejects_forbidden_effects_even_if_foreground_is_unchanged[other-thread]",
+        "time": "0.059"
+      },
+      {
+        "classname": "tests.test_startup_wake",
+        "name": "test_noninterference_rejects_forbidden_effects_even_if_foreground_is_unchanged[other-message]",
+        "time": "0.053"
+      },
+      {
+        "classname": "tests.test_startup_wake",
+        "name": "test_noninterference_rejects_forbidden_effects_even_if_foreground_is_unchanged[owner-call]",
+        "time": "0.059"
+      },
+      {
+        "classname": "tests.test_startup_wake",
+        "name": "test_api_boundary_records_forbidden_access_even_if_exception_is_caught[SetForegroundWindow]",
+        "time": "0.061"
+      },
+      {
+        "classname": "tests.test_startup_wake",
+        "name": "test_api_boundary_records_forbidden_access_even_if_exception_is_caught[SendInput]",
+        "time": "0.057"
+      },
+      {
+        "classname": "tests.test_startup_wake",
+        "name": "test_api_boundary_records_forbidden_access_even_if_exception_is_caught[WinDLL]",
+        "time": "0.055"
+      },
+      {
+        "classname": "tests.test_startup_wake",
+        "name": "test_posts_only_wm_null_to_creator_and_stops_before_close_returns",
+        "time": "0.182"
+      },
+      {
+        "classname": "tests.test_startup_wake",
+        "name": "test_close_without_start_and_worker_start_failure",
+        "time": "0.039"
+      },
+      {
+        "classname": "tests.test_startup_wake",
+        "name": "test_wrong_thread_cannot_start_wake",
+        "time": "0.038"
+      },
+      {
+        "classname": "tests.test_startup_wake",
+        "name": "test_post_failure_retries_at_120ms_and_logs_once_per_failure_streak",
+        "time": "0.034"
+      },
+      {
+        "classname": "tests.test_startup_wake",
+        "name": "test_owner_exit_prevents_posting",
+        "time": "0.035"
+      },
+      {
+        "classname": "tests.test_startup_wake",
+        "name": "test_entry_stops_wake_before_root_destruction[None]",
+        "time": "0.036"
+      },
+      {
+        "classname": "tests.test_startup_wake",
+        "name": "test_entry_stops_wake_before_root_destruction[root]",
+        "time": "0.041"
+      },
+      {
+        "classname": "tests.test_startup_wake",
+        "name": "test_entry_stops_wake_before_root_destruction[app]",
+        "time": "0.040"
+      },
+      {
+        "classname": "tests.test_startup_wake",
+        "name": "test_entry_stops_wake_before_root_destruction[mainloop]",
+        "time": "0.051"
+      },
+      {
+        "classname": "tests.test_startup_wake",
+        "name": "test_entry_stops_wake_before_root_destruction[wake]",
+        "time": "0.044"
+      },
+      {
+        "classname": "tests.test_startup_wake",
+        "name": "test_native_tcl_getmessage_stall_recovers_with_product_wake[False-False]",
+        "time": "1.239"
+      },
+      {
+        "classname": "tests.test_startup_wake",
+        "name": "test_native_tcl_getmessage_stall_recovers_with_product_wake[True-False]",
+        "time": "1.241"
+      },
+      {
+        "classname": "tests.test_startup_wake",
+        "name": "test_native_tcl_getmessage_stall_recovers_with_product_wake[True-True]",
+        "time": "1.241"
+      },
+      {
+        "classname": "tests.test_startup_windows",
+        "name": "test_tracer_abi_backend_available",
+        "time": "0.039"
+      },
+      {
+        "classname": "tests.test_startup_windows",
+        "name": "test_finish_reports_exited_process_whose_pipes_are_held",
+        "time": "6.358"
+      },
+      {
+        "classname": "tests.test_startup_windows",
+        "name": "test_finish_reports_live_process_as_not_exiting",
+        "time": "3.381"
+      },
+      {
+        "classname": "tests.test_startup_windows",
+        "name": "test_tracer_abi_64bit_snapshot_and_thread",
+        "time": "0.046"
+      },
+      {
+        "classname": "tests.test_startup_windows",
+        "name": "test_tracer_io_lifetime_pending_connect_cancel",
+        "time": "0.143"
+      },
+      {
+        "classname": "tests.test_startup_windows",
+        "name": "test_tracer_e2e_real_main_terminal_ack",
+        "time": "7.727"
+      },
+      {
+        "classname": "tests.test_startup_windows",
+        "name": "test_tracer_io_lifetime_unresponsive_peer_five_second_deadline",
+        "time": "6.758"
+      },
+      {
+        "classname": "tests.test_startup_windows",
+        "name": "test_tracer_e2e_initialization_failure_releases_owner",
+        "time": "6.854"
+      },
+      {
+        "classname": "tests.test_startup_windows",
+        "name": "test_tracer_e2e_api_denial_does_not_construct_app",
+        "time": "0.671"
+      },
+      {
+        "classname": "tests.test_startup_windows",
+        "name": "test_tracer_notice_real_main_failure_path",
+        "time": "2.033"
+      },
+      {
+        "classname": "tests.test_startup_windows",
+        "name": "test_constructor_failure_real_main_nonactivate_notice",
+        "time": "1.109"
+      },
+      {
+        "classname": "tests.test_startup_windows",
+        "name": "test_constructor_failure_descriptor_stage_reaches_native_notice",
+        "time": "0.945"
+      },
+      {
+        "classname": "tests.test_startup_windows",
+        "name": "test_constructor_failure_manual_close_keeps_foreground",
+        "time": "0.690"
+      },
+      {
+        "classname": "tests.test_startup_windows",
+        "name": "test_constructor_failure_entry_exit",
+        "time": "2.769"
+      },
+      {
+        "classname": "tests.test_startup_windows",
+        "name": "test_constructor_failure_notice_dedup[False]",
+        "time": "2.486"
+      },
+      {
+        "classname": "tests.test_startup_windows",
+        "name": "test_constructor_failure_notice_dedup[True]",
+        "time": "2.505"
+      },
+      {
+        "classname": "tests.test_startup_windows",
+        "name": "test_constructor_failure_cleanup_allows_restart",
+        "time": "1.471"
+      },
+      {
+        "classname": "tests.test_startup_windows",
+        "name": "test_tracer_abi_shared_tick_wall_clock_independent",
+        "time": "0.630"
+      },
+      {
+        "classname": "tests.test_startup_windows",
+        "name": "test_tracer_io_lifetime_quarantine_keeps_native_buffers",
+        "time": "0.666"
+      },
+      {
+        "classname": "tests.test_startup_windows",
+        "name": "test_tracer_notice_nonactivate_lifetime_and_close[False]",
+        "time": "0.226"
+      },
+      {
+        "classname": "tests.test_startup_windows",
+        "name": "test_tracer_notice_nonactivate_lifetime_and_close[True]",
+        "time": "0.049"
+      },
+      {
+        "classname": "tests.test_startup_windows",
+        "name": "test_tracer_notice_timeout_injected_timer",
+        "time": "0.221"
+      },
+      {
+        "classname": "tests.test_startup_windows",
+        "name": "test_tracer_notice_lease_process_dedup",
+        "time": "2.525"
+      },
+      {
+        "classname": "tests.test_startup_windows",
+        "name": "test_foreground_audit_receives_native_window_event",
+        "time": "0.233"
+      },
+      {
+        "classname": "tests.test_startup_windows",
+        "name": "test_notice_dedup_eight_processes_keep_original_deadline",
+        "time": "2.943"
+      },
+      {
+        "classname": "tests.test_startup_windows",
+        "name": "test_notice_dedup_different_reasons_and_manual_close_allow_new_owner",
+        "time": "2.485"
+      },
+      {
+        "classname": "tests.test_startup_windows",
+        "name": "test_notice_dedup_owner_crash_with_retained_handles_can_redisplay",
+        "time": "1.301"
+      },
+      {
+        "classname": "tests.test_startup_windows",
+        "name": "test_notice_dedup_access_denial_checks_same_name_once[True]",
+        "time": "0.550"
+      },
+      {
+        "classname": "tests.test_startup_windows",
+        "name": "test_notice_dedup_access_denial_checks_same_name_once[False]",
+        "time": "0.041"
+      },
+      {
+        "classname": "tests.test_startup_windows",
+        "name": "test_simultaneous_real_processes_construct_one_editor[2]",
+        "time": "6.599"
+      },
+      {
+        "classname": "tests.test_startup_windows",
+        "name": "test_simultaneous_real_processes_construct_one_editor[8]",
+        "time": "6.853"
+      },
+      {
+        "classname": "tests.test_startup_windows",
+        "name": "test_simultaneous_real_processes_construct_one_editor[slow]",
+        "time": "14.428"
+      },
+      {
+        "classname": "tests.test_startup_windows",
+        "name": "test_simultaneous_exit_audit_distinguishes_entry[wm]",
+        "time": "5.600"
+      },
+      {
+        "classname": "tests.test_startup_windows",
+        "name": "test_simultaneous_exit_audit_distinguishes_entry[button]",
+        "time": "5.280"
+      },
+      {
+        "classname": "tests.test_startup_windows",
+        "name": "test_simultaneous_exit_audit_distinguishes_entry[watchdog]",
+        "time": "15.225"
+      },
+      {
+        "classname": "tests.test_startup_windows",
+        "name": "test_simultaneous_exit_audit_native_wm_close",
+        "time": "4.328"
+      },
+      {
+        "classname": "tests.test_startup_windows",
+        "name": "test_takeover_loser_expires_when_winner_initialization_exceeds_deadline",
+        "time": "11.071"
+      },
+      {
+        "classname": "tests.test_startup_windows",
+        "name": "test_takeover_two_candidates_after_confirmed_initialization_death",
+        "time": "4.604"
+      },
+      {
+        "classname": "tests.test_startup_windows",
+        "name": "test_lifecycle_cancel_quit_keeps_owner_then_restarts",
+        "time": "9.320"
+      },
+      {
+        "classname": "tests.test_startup_windows",
+        "name": "test_lifecycle_released_mapping_allows_new_claim_while_old_process_lives",
+        "time": "8.134"
+      },
+      {
+        "classname": "tests.test_startup_windows",
+        "name": "test_lifecycle_independent_restart_after_forced_owner_exit[ready]",
+        "time": "8.561"
+      },
+      {
+        "classname": "tests.test_startup_windows",
+        "name": "test_lifecycle_independent_restart_after_forced_owner_exit[initializing]",
+        "time": "4.920"
+      },
+      {
+        "classname": "tests.test_startup_windows",
+        "name": "test_lifecycle_exception_before_identity_publication_then_restart",
+        "time": "5.445"
+      },
+      {
+        "classname": "tests.test_startup_windows",
+        "name": "test_lifecycle_both_python_entries_and_relocated_version_share_owner",
+        "time": "6.198"
+      },
+      {
+        "classname": "tests.test_startup_windows",
+        "name": "test_cross_entry_owner_accepts_both_entries_and_other_location[script]",
+        "time": "6.236"
+      },
+      {
+        "classname": "tests.test_startup_windows",
+        "name": "test_cross_entry_owner_accepts_both_entries_and_other_location[module]",
+        "time": "6.161"
+      },
+      {
+        "classname": "tests.test_startup_windows",
+        "name": "test_cross_entry_owner_accepts_both_entries_and_other_location[relocated]",
+        "time": "7.486"
+      },
+      {
+        "classname": "tests.test_startup_windows",
+        "name": "test_startup_acceptance_product_identity_ignores_version_location_and_frozen",
+        "time": "0.061"
+      },
+      {
+        "classname": "tests.test_startup_windows",
+        "name": "test_startup_acceptance_guard_never_requests_foreign_or_missing_owner[True]",
+        "time": "4.456"
+      },
+      {
+        "classname": "tests.test_startup_windows",
+        "name": "test_startup_acceptance_guard_never_requests_foreign_or_missing_owner[False]",
+        "time": "0.582"
+      },
+      {
+        "classname": "tests.test_startup_windows",
+        "name": "test_lifecycle_partial_mapping_reader_closes_without_takeover",
+        "time": "0.139"
+      },
+      {
+        "classname": "tests.test_startup_windows",
+        "name": "test_takeover_abandoned_owner_thread_with_live_process_uses_existing_pipe",
+        "time": "0.045"
+      },
+      {
+        "classname": "tests.test_startup_windows",
+        "name": "test_lifecycle_failed_release_is_closing_until_all_readers_close",
+        "time": "0.054"
+      },
+      {
+        "classname": "tests.test_startup_windows",
+        "name": "test_lifecycle_release_follows_stop_and_precedes_mutex_release",
+        "time": "0.045"
+      },
+      {
+        "classname": "tests.test_startup_windows",
+        "name": "test_focus_restore_real_main_windows[thumb-entry-script]",
+        "time": "4.738"
+      },
+      {
+        "classname": "tests.test_startup_windows",
+        "name": "test_focus_restore_real_main_windows[thumb-entry-module]",
+        "time": "4.818"
+      },
+      {
+        "classname": "tests.test_startup_windows",
+        "name": "test_focus_restore_real_main_windows[preview-entry-script]",
+        "time": "5.012"
+      },
+      {
+        "classname": "tests.test_startup_windows",
+        "name": "test_focus_restore_real_main_windows[preview-entry-module]",
+        "time": "5.009"
+      },
+      {
+        "classname": "tests.test_startup_windows",
+        "name": "test_focus_restore_real_main_windows[settings-entry-script]",
+        "time": "5.067"
+      },
+      {
+        "classname": "tests.test_startup_windows",
+        "name": "test_focus_restore_real_main_windows[settings-entry-module]",
+        "time": "5.497"
+      },
+      {
+        "classname": "tests.test_startup_windows",
+        "name": "test_focus_restore_real_main_windows[nested-entry-script]",
+        "time": "5.434"
+      },
+      {
+        "classname": "tests.test_startup_windows",
+        "name": "test_focus_restore_real_main_windows[nested-entry-module]",
+        "time": "5.419"
+      },
+      {
+        "classname": "tests.test_startup_windows",
+        "name": "test_focus_restore_real_main_windows[native-ocr-entry-script]",
+        "time": "5.113"
+      },
+      {
+        "classname": "tests.test_startup_windows",
+        "name": "test_focus_restore_real_main_windows[native-ocr-entry-module]",
+        "time": "5.134"
+      },
+      {
+        "classname": "tests.test_startup_windows",
+        "name": "test_focus_restore_real_main_windows[native-quit-entry-script]",
+        "time": "5.184"
+      },
+      {
+        "classname": "tests.test_startup_windows",
+        "name": "test_focus_restore_real_main_windows[native-quit-entry-module]",
+        "time": "5.286"
+      },
+      {
+        "classname": "tests.test_startup_windows",
+        "name": "test_focus_restore_real_main_windows[rebuild-entry-script]",
+        "time": "5.353"
+      },
+      {
+        "classname": "tests.test_startup_windows",
+        "name": "test_focus_restore_real_main_windows[rebuild-entry-module]",
+        "time": "4.726"
+      },
+      {
+        "classname": "tests.test_startup_windows",
+        "name": "test_focus_restore_real_main_windows[normal-entry-script]",
+        "time": "4.236"
+      },
+      {
+        "classname": "tests.test_startup_windows",
+        "name": "test_focus_restore_real_main_windows[normal-entry-module]",
+        "time": "4.093"
+      },
+      {
+        "classname": "tests.test_startup_windows",
+        "name": "test_focus_restore_real_main_windows[zoomed-entry-script]",
+        "time": "4.331"
+      },
+      {
+        "classname": "tests.test_startup_windows",
+        "name": "test_focus_restore_real_main_windows[zoomed-entry-module]",
+        "time": "4.143"
+      },
+      {
+        "classname": "tests.test_startup_windows",
+        "name": "test_working_state_real_main_continues[pdf]",
+        "time": "5.065"
+      },
+      {
+        "classname": "tests.test_startup_windows",
+        "name": "test_working_state_real_main_continues[ocr]",
+        "time": "4.376"
+      },
+      {
+        "classname": "tests.test_startup_windows",
+        "name": "test_lifecycle_released_identity_mismatch_cannot_overwrite_mapping",
+        "time": "0.037"
+      }
+    ]
+  },
+  "gate_evidence": [
+    {
+      "file": ".planning/debug/quality-gate-unblock-20261028/full.json",
+      "expected": "7849ddb583b1cbf44dd80db6c18027332248e016a8a635ca1cfd4f52bbf047db",
+      "actual": "7849ddb583b1cbf44dd80db6c18027332248e016a8a635ca1cfd4f52bbf047db"
+    },
+    {
+      "file": ".planning/debug/quality-gate-unblock-20261028/full.xml",
+      "expected": "8a35848f605a68b2e8014b2b51782c288ce55b40805a212b69c953b563b2a527",
+      "actual": "8a35848f605a68b2e8014b2b51782c288ce55b40805a212b69c953b563b2a527"
+    },
+    {
+      "file": ".planning/debug/quality-gate-unblock-20261028/full-0.stdout.txt",
+      "expected": "c34b2e154a1361032f0aa6f67f10a3e00ff5915654a58466d4e0c5b78a3ae885",
+      "actual": "c34b2e154a1361032f0aa6f67f10a3e00ff5915654a58466d4e0c5b78a3ae885"
+    },
+    {
+      "file": ".planning/debug/quality-gate-unblock-20261028/full-0.stderr.txt",
+      "expected": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "actual": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": ".planning/debug/quality-gate-unblock-20261028/native-final.json",
+      "expected": "7049109c802f8de1eae58ca56d0962fcd0ac9a76fc107b38944dd5c00aa8745b",
+      "actual": "7049109c802f8de1eae58ca56d0962fcd0ac9a76fc107b38944dd5c00aa8745b"
+    },
+    {
+      "file": ".planning/debug/quality-gate-unblock-20261028/native-final-0.stdout.txt",
+      "expected": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18",
+      "actual": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18"
+    },
+    {
+      "file": ".planning/debug/quality-gate-unblock-20261028/native-final-1.stdout.txt",
+      "expected": "23f4800df594bd3d8d8e4dd97a71692d19438894912ea8dc7efa1ea6f5d7c9ff",
+      "actual": "23f4800df594bd3d8d8e4dd97a71692d19438894912ea8dc7efa1ea6f5d7c9ff"
+    },
+    {
+      "file": ".planning/debug/quality-gate-unblock-20261028/native-final-2.stdout.txt",
+      "expected": "3e363a951eafb2bc4d7b7edadd4f34b1fb2c5ca55e2ed514e89e27827e64b786",
+      "actual": "3e363a951eafb2bc4d7b7edadd4f34b1fb2c5ca55e2ed514e89e27827e64b786"
+    },
+    {
+      "file": ".planning/debug/quality-gate-unblock-20261028/native-final-3.stdout.txt",
+      "expected": "7a6bb8655da23ba47d3ea42c4a5f03c0f62c7d82d393ba0657adea5a2fde9f1f",
+      "actual": "7a6bb8655da23ba47d3ea42c4a5f03c0f62c7d82d393ba0657adea5a2fde9f1f"
+    },
+    {
+      "file": ".planning/debug/quality-gate-unblock-20261028/environment.json",
+      "expected": "6baec3f1e67138c2e6f5cedfcdcd530a3307cd8bacfad2c9a82ec94931abe4ab",
+      "actual": "6baec3f1e67138c2e6f5cedfcdcd530a3307cd8bacfad2c9a82ec94931abe4ab"
+    },
+    {
+      "file": ".planning/debug/quality-gate-unblock-20261028/final-summary.json",
+      "expected": "262753149dfcb16d263691c2b2a379f4888371625a154f4b7eae6198de1dae27",
+      "actual": "262753149dfcb16d263691c2b2a379f4888371625a154f4b7eae6198de1dae27"
+    },
+    {
+      "file": ".planning/debug/quality-gate-unblock-20261028/documents.json",
+      "expected": "41a36c33ee7571a543ccf214851e67c297b7f123fa2973fe5d8539ba0a6de0e3",
+      "actual": "41a36c33ee7571a543ccf214851e67c297b7f123fa2973fe5d8539ba0a6de0e3"
+    },
+    {
+      "file": ".planning/debug/quality-gate-unblock-20261028/documents-0.stdout.txt",
+      "expected": "d9124236246e3603b8ec36b72c4b9618a08dec1cbd6d4a2df82dc51fd998a019",
+      "actual": "d9124236246e3603b8ec36b72c4b9618a08dec1cbd6d4a2df82dc51fd998a019"
+    },
+    {
+      "file": ".planning/debug/quality-gate-unblock-20261028/connection.json",
+      "expected": "bb2fba87a35b2e7e5c3f5219acb69bb343837704a4e0488de294627b44870c58",
+      "actual": "bb2fba87a35b2e7e5c3f5219acb69bb343837704a4e0488de294627b44870c58"
+    },
+    {
+      "file": ".planning/debug/quality-gate-unblock-20261028/connection.xml",
+      "expected": "a28631f67eba3513d3c30df2fd970dd7a4e872a20d19420aa0266f37ad36deec",
+      "actual": "a28631f67eba3513d3c30df2fd970dd7a4e872a20d19420aa0266f37ad36deec"
+    },
+    {
+      "file": ".planning/debug/quality-gate-unblock-20261028/nine.json",
+      "expected": "563c595b2dd9737e7b6310f02bef1637f1fcc1d3c63b002b753f47e14a6f63b7",
+      "actual": "563c595b2dd9737e7b6310f02bef1637f1fcc1d3c63b002b753f47e14a6f63b7"
+    },
+    {
+      "file": ".planning/debug/quality-gate-unblock-20261028/nine.xml",
+      "expected": "de9fc2b917c600f8b106bcb33ed7bb3b62fe95906ac38dd40b152d9da39062a8",
+      "actual": "de9fc2b917c600f8b106bcb33ed7bb3b62fe95906ac38dd40b152d9da39062a8"
+    }
+  ],
+  "gate_evidence_unchanged": true,
+  "gate_final_sha256": "00ce5348082dad52ed38dc93994f97021ac2a3e8e66440cf74d2ee3714c79cc5",
+  "gate_report_hashes": [
+    {
+      "file": ".planning/phases/04-startup-control/04-VALIDATION.md",
+      "expected": "cf8570e8820ef642eb63e89db2f3013fecc8558811fb2f8084089dbc42ba99a5",
+      "actual": "cf8570e8820ef642eb63e89db2f3013fecc8558811fb2f8084089dbc42ba99a5"
+    },
+    {
+      "file": ".planning/phases/04-startup-control/04-SECURITY.md",
+      "expected": "245a06fcd2a6213435dec87b23aa69377a688637337edecc727ff03d3301ef3c",
+      "actual": "245a06fcd2a6213435dec87b23aa69377a688637337edecc727ff03d3301ef3c"
+    },
+    {
+      "file": ".planning/phases/04-startup-control/04-UI-REVIEW.md",
+      "expected": "714bb2bc1cd98151856cf7a6b7ae49658e7ea8a6ff1883d807f4b83f1df34fa5",
+      "actual": "714bb2bc1cd98151856cf7a6b7ae49658e7ea8a6ff1883d807f4b83f1df34fa5"
+    },
+    {
+      "file": ".planning/phases/04-startup-control/04-REVIEW.md",
+      "expected": "ed92dc4ac4aa18f0201648d83f777c755c8f6b84abd346050a3567a43542b8df",
+      "actual": "ed92dc4ac4aa18f0201648d83f777c755c8f6b84abd346050a3567a43542b8df"
+    },
+    {
+      "file": ".planning/phases/04-startup-control/04-REVIEW-DISPOSITION.md",
+      "expected": "9afab79ce5025d6630cab4ece7556b0f3fb36656af1ecb0958dc1519860d1598",
+      "actual": "9afab79ce5025d6630cab4ece7556b0f3fb36656af1ecb0958dc1519860d1598"
+    },
+    {
+      "file": ".planning/phases/04-startup-control/04-VERIFICATION.md",
+      "expected": "480ffdc2da8f8aba62a2354cc30796b2094a2c9366ca180c1e443fb83fcf8fd8",
+      "actual": "480ffdc2da8f8aba62a2354cc30796b2094a2c9366ca180c1e443fb83fcf8fd8"
+    }
+  ],
+  "environment": {
+    "python": "3.15.2 (tags/v3.15.2:5e58eaa, Oct 25 2026, 17:27:03) [MSC v.1951 64 bit (AMD64)]",
+    "executable": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.venv\\Scripts\\python.exe",
+    "platform": "Windows-11-10.0.26300-SP0",
+    "packages": {
+      "pytest": "9.1.1",
+      "ruff": "0.17.1",
+      "PyMuPDF": "1.28.2",
+      "Pillow": "13.0.0",
+      "tkinterdnd2": "0.6.4"
+    }
+  },
+  "environment_matches": true,
+  "runtime_sha256": "f14d10e954b922d758234ff49335ad0e07e567103e06b38ff675c6bc85282865",
+  "inputs": [
+    {
+      "file": "pagefolio.py",
+      "sha256": "0c5edcd8dd7dacdcd8dc74f7ebdd274526159d315a1ee022ad6e21dffe2d1635"
+    },
+    {
+      "file": "pagefolio/__init__.py",
+      "sha256": "999925cee2ba4025af59e909e0a6f5dd1328df2302df9b5145b9543640376a30"
+    },
+    {
+      "file": "pagefolio/__main__.py",
+      "sha256": "efdbc32b2322ee20525fbb9ce5164622109fbacecfd37c36fc41166bfa0e1e06"
+    },
+    {
+      "file": "pagefolio/app.py",
+      "sha256": "63048ce92a3f2b412a72d24ec6fdce37544b4d928ec8bf6fe8de49b9b48f9fc1"
+    },
+    {
+      "file": "pagefolio/lang.py",
+      "sha256": "bcad14d4dcd2a233f1cfd1902436ccee7b6db10e5641c3f1bae31afe19784ba4"
+    },
+    {
+      "file": "pagefolio/startup_control.py",
+      "sha256": "39ab94d5ac2ca137e49ba61201a5f32fd942ad23f4b52dda09ec0ecfc8d27ed6"
+    },
+    {
+      "file": "pagefolio/startup_focus.py",
+      "sha256": "b9f605201e394fabc75efd06b6b3cb3f9a4574ce3924fe9565898a1c2fd2b881"
+    },
+    {
+      "file": "pagefolio/startup_notice.py",
+      "sha256": "473c8ea1723a350cc445bcef8649c75bd228ec3e37bea12d81ca5a166a4c0c40"
+    },
+    {
+      "file": "pagefolio/startup_win32.py",
+      "sha256": "948abe06b494e6907bdec5e2169931e9780eb6dfa23271c5a16e6134546cddae"
+    },
+    {
+      "file": "pagefolio/startup_wake.py",
+      "sha256": "0c16a50ba6cc526a3e2ae36a12abbd2336df38712cb4abd2a5bab421a668c7c9"
+    },
+    {
+      "file": "tests/test_gsd_dod.py",
+      "sha256": "a1988ce7802ddb1f020a0a8e706ccb2790bfe9c4fc0e902eb010ec927310d1e1"
+    },
+    {
+      "file": "tests/test_startup_control.py",
+      "sha256": "e88d67156d8b8b9b78c32a1528dc9900ce95aa536c6d0c81300890ed8f3541d3"
+    },
+    {
+      "file": "tests/test_startup_focus.py",
+      "sha256": "8573a40b3b97cc4911ec61592b1ea7b7392ada07dea097a67e0bff903b5348d1"
+    },
+    {
+      "file": "tests/test_startup_notice.py",
+      "sha256": "a4c2e6f93482b160ac5265a225f83074b4b8ea9f926233e31d0e35f80e461b5f"
+    },
+    {
+      "file": "tests/test_startup_windows.py",
+      "sha256": "846ee305e323fed436a2a60741df52135afdb39da35c672ed976d86c123a9b47"
+    },
+    {
+      "file": "tests/test_startup_wake.py",
+      "sha256": "092147370bbc9e07d234ae56eb65ff328e1a8b0ea2737ce4c37af4203bb43c1c"
+    },
+    {
+      "file": "tests/startup_wake_child.py",
+      "sha256": "5bbbbc9850063a81f66cff914b3000e2e304b3037411db26ce9b5002d5ffc910"
+    },
+    {
+      "file": "tests/startup_foreground_audit.py",
+      "sha256": "1db51b8de1abc1ea8e06daa9e197787d586b0a3272622fe11cd82760082c4f8b"
+    },
+    {
+      "file": "tests/test_startup_foreground_audit.py",
+      "sha256": "e194312c5453b4c5b3734493631cd020b2874a32b502db165f329e28dc144a03"
+    }
+  ],
+  "markers": [
+    {
+      "file": "pagefolio/lang.py",
+      "line": 1438,
+      "text": "        # CR-01: RunPod destination placeholder (runpod_url not set)"
+    },
+    {
+      "file": "tests/test_gsd_dod.py",
+      "line": 216,
+      "text": "    if not re.fullmatch(r\"\\d+/(?:\\d+|TBD)\", count) or date != \"—\":"
+    },
+    {
+      "file": "tests/test_gsd_dod.py",
+      "line": 225,
+      "text": "        or (total != \"TBD\" and int(total) != len(plans))"
+    },
+    {
+      "file": "tests/test_startup_notice.py",
+      "line": 96,
+      "text": "@pytest.mark.skipif(sys.platform != \"win32\", reason=\"Windows 起動入口\")"
+    },
+    {
+      "file": "tests/test_startup_notice.py",
+      "line": 127,
+      "text": "@pytest.mark.skipif(sys.platform != \"win32\", reason=\"Windows 起動入口\")"
+    },
+    {
+      "file": "tests/test_startup_notice.py",
+      "line": 155,
+      "text": "@pytest.mark.skipif(sys.platform != \"win32\", reason=\"実Win32初期化の資源解放\")"
+    },
+    {
+      "file": "tests/test_startup_notice.py",
+      "line": 183,
+      "text": "@pytest.mark.skipif(sys.platform != \"win32\", reason=\"実Win32初期化の故障点\")"
+    },
+    {
+      "file": "tests/test_startup_notice.py",
+      "line": 344,
+      "text": "@pytest.mark.skipif(sys.platform != \"win32\", reason=\"Windows token handle\")"
+    },
+    {
+      "file": "tests/test_startup_notice.py",
+      "line": 424,
+      "text": "@pytest.mark.skipif(sys.platform != \"win32\", reason=\"実mutexの所有threadを確認\")"
+    },
+    {
+      "file": "tests/test_startup_notice.py",
+      "line": 517,
+      "text": "@pytest.mark.skipif(sys.platform != \"win32\", reason=\"実Win32の失敗/cleanup境界\")"
+    },
+    {
+      "file": "tests/test_startup_notice.py",
+      "line": 552,
+      "text": "@pytest.mark.skipif(sys.platform != \"win32\", reason=\"実mappingの公開途中を注入\")"
+    },
+    {
+      "file": "tests/test_startup_notice.py",
+      "line": 573,
+      "text": "@pytest.mark.skipif("
+    },
+    {
+      "file": "tests/test_startup_windows.py",
+      "line": 29,
+      "text": "@pytest.mark.skipif(sys.platform != \"win32\", reason=\"Windows API を実測する試験\")"
+    },
+    {
+      "file": "tests/test_startup_wake.py",
+      "line": 269,
+      "text": "@pytest.mark.skipif(sys.platform != \"win32\", reason=\"実 Windows/Tcl を使う回帰試験\")"
+    }
+  ],
+  "checks": [
+    {
+      "plan": "04-01-PLAN.md",
+      "artifacts": {
+        "args": [
+          "verify.artifacts",
+          ".planning/phases/04-startup-control/04-01-PLAN.md"
+        ],
+        "exit": 0,
+        "data": {
+          "all_passed": true,
+          "passed": 4,
+          "total": 4,
+          "artifacts": [
+            {
+              "path": "pagefolio/startup_control.py",
+              "exists": true,
+              "issues": [],
+              "passed": true
+            },
+            {
+              "path": "pagefolio/startup_win32.py",
+              "exists": true,
+              "issues": [],
+              "passed": true
+            },
+            {
+              "path": "tests/test_startup_windows.py",
+              "exists": true,
+              "issues": [],
+              "passed": true
+            },
+            {
+              "path": ".planning/phases/04-startup-control/04-TRACER-EVIDENCE.md",
+              "exists": true,
+              "issues": [],
+              "passed": true
+            }
+          ]
+        },
+        "stderr": ""
+      },
+      "links": {
+        "args": [
+          "verify.key-links",
+          ".planning/phases/04-startup-control/04-01-PLAN.md"
+        ],
+        "exit": 1,
+        "data": {
+          "all_verified": false,
+          "verified": 0,
+          "pending": 0,
+          "total": 3,
+          "links": [
+            {
+              "from": "pagefolio/__main__.py",
+              "to": "pagefolio/startup_control.py",
+              "via": "root生成前のclaim、一次のみapp構築、finallyによる終了",
+              "verified": false,
+              "detail": "Target not referenced in source"
+            },
+            {
+              "from": "pagefolio/startup_control.py",
+              "to": "pagefolio/startup_win32.py",
+              "via": "所有者識別とdeadline付きIPC",
+              "verified": false,
+              "detail": "Target not referenced in source"
+            },
+            {
+              "from": "pagefolio/startup_control.py",
+              "to": "pagefolio/__main__.py",
+              "via": "Tkメインスレッドがqueueをpollして復帰結果をACKへ戻す",
+              "verified": false,
+              "detail": "Target not referenced in source"
+            }
+          ]
+        },
+        "stderr": ""
+      }
+    },
+    {
+      "plan": "04-02-PLAN.md",
+      "artifacts": {
+        "args": [
+          "verify.artifacts",
+          ".planning/phases/04-startup-control/04-02-PLAN.md"
+        ],
+        "exit": 0,
+        "data": {
+          "all_passed": true,
+          "passed": 2,
+          "total": 2,
+          "artifacts": [
+            {
+              "path": "tests/test_startup_control.py",
+              "exists": true,
+              "issues": [],
+              "passed": true
+            },
+            {
+              "path": "tests/test_startup_windows.py",
+              "exists": true,
+              "issues": [],
+              "passed": true
+            }
+          ]
+        },
+        "stderr": ""
+      },
+      "links": {
+        "args": [
+          "verify.key-links",
+          ".planning/phases/04-startup-control/04-02-PLAN.md"
+        ],
+        "exit": 1,
+        "data": {
+          "all_verified": false,
+          "verified": 0,
+          "pending": 0,
+          "total": 3,
+          "links": [
+            {
+              "from": "pagefolio/startup_control.py",
+              "to": "pagefolio/startup_win32.py",
+              "via": "remaining_msを全I/Oとprocess監視へ渡す",
+              "verified": false,
+              "detail": "Target not referenced in source"
+            },
+            {
+              "from": "pagefolio/__main__.py",
+              "to": "pagefolio/startup_control.py",
+              "via": "root終了後のcloseとready遷移",
+              "verified": false,
+              "detail": "Target not referenced in source"
+            },
+            {
+              "from": "pagefolio/startup_control.py",
+              "to": "Tk復帰callback",
+              "via": "generationとdeadlineの二重検査後にだけdispatch",
+              "verified": false,
+              "detail": "Target not referenced in source"
+            }
+          ]
+        },
+        "stderr": ""
+      }
+    },
+    {
+      "plan": "04-03-PLAN.md",
+      "artifacts": {
+        "args": [
+          "verify.artifacts",
+          ".planning/phases/04-startup-control/04-03-PLAN.md"
+        ],
+        "exit": 0,
+        "data": {
+          "all_passed": true,
+          "passed": 2,
+          "total": 2,
+          "artifacts": [
+            {
+              "path": "pagefolio/startup_focus.py",
+              "exists": true,
+              "issues": [],
+              "passed": true
+            },
+            {
+              "path": "tests/test_startup_focus.py",
+              "exists": true,
+              "issues": [],
+              "passed": true
+            }
+          ]
+        },
+        "stderr": ""
+      },
+      "links": {
+        "args": [
+          "verify.key-links",
+          ".planning/phases/04-startup-control/04-03-PLAN.md"
+        ],
+        "exit": 1,
+        "data": {
+          "all_verified": false,
+          "verified": 0,
+          "pending": 0,
+          "total": 3,
+          "links": [
+            {
+              "from": "pagefolio/__main__.py",
+              "to": "pagefolio/startup_focus.py",
+              "via": "FocusRestorerを同じappに結び付けてcoordinatorのcallbackへ登録",
+              "verified": false,
+              "detail": "Target not referenced in source"
+            },
+            {
+              "from": "pagefolio/startup_focus.py",
+              "to": "pagefolio/startup_win32.py",
+              "via": "同一processの最深modal HWNDと復元/前面化/有限点滅",
+              "verified": false,
+              "detail": "Target not referenced in source"
+            },
+            {
+              "from": "pagefolio/app.py",
+              "to": "pagefolio/startup_focus.py",
+              "via": "最後の非最小化状態とFocusIn観測",
+              "verified": false,
+              "detail": "Target not referenced in source"
+            }
+          ]
+        },
+        "stderr": ""
+      }
+    },
+    {
+      "plan": "04-04-PLAN.md",
+      "artifacts": {
+        "args": [
+          "verify.artifacts",
+          ".planning/phases/04-startup-control/04-04-PLAN.md"
+        ],
+        "exit": 0,
+        "data": {
+          "all_passed": true,
+          "passed": 3,
+          "total": 3,
+          "artifacts": [
+            {
+              "path": "pagefolio/startup_notice.py",
+              "exists": true,
+              "issues": [],
+              "passed": true
+            },
+            {
+              "path": "pagefolio/lang.py",
+              "exists": true,
+              "issues": [],
+              "passed": true
+            },
+            {
+              "path": "tests/test_startup_notice.py",
+              "exists": true,
+              "issues": [],
+              "passed": true
+            }
+          ]
+        },
+        "stderr": ""
+      },
+      "links": {
+        "args": [
+          "verify.key-links",
+          ".planning/phases/04-startup-control/04-04-PLAN.md"
+        ],
+        "exit": 1,
+        "data": {
+          "all_verified": false,
+          "verified": 0,
+          "pending": 0,
+          "total": 3,
+          "links": [
+            {
+              "from": "pagefolio/__main__.py",
+              "to": "pagefolio/startup_notice.py",
+              "via": "二次失敗結果だけを編集画面生成前に表示",
+              "verified": false,
+              "detail": "Target not referenced in source"
+            },
+            {
+              "from": "pagefolio/startup_notice.py",
+              "to": "pagefolio/startup_win32.py",
+              "via": "原因ごとのNoticeLeaseと非活性native window",
+              "verified": false,
+              "detail": "Target not referenced in source"
+            },
+            {
+              "from": "pagefolio/startup_notice.py",
+              "to": "pagefolio/lang.py",
+              "via": "確認されたreasonから固定キーを解決",
+              "verified": false,
+              "detail": "Target not referenced in source"
+            }
+          ]
+        },
+        "stderr": ""
+      }
+    },
+    {
+      "plan": "04-05-PLAN.md",
+      "artifacts": {
+        "args": [
+          "verify.artifacts",
+          ".planning/phases/04-startup-control/04-05-PLAN.md"
+        ],
+        "exit": 0,
+        "data": {
+          "all_passed": true,
+          "passed": 2,
+          "total": 2,
+          "artifacts": [
+            {
+              "path": ".planning/phases/04-startup-control/04-WINDOWS-UAT.md",
+              "exists": true,
+              "issues": [],
+              "passed": true
+            },
+            {
+              "path": ".planning/phases/04-startup-control/04-VALIDATION.md",
+              "exists": true,
+              "issues": [],
+              "passed": true
+            }
+          ]
+        },
+        "stderr": ""
+      },
+      "links": {
+        "args": [
+          "verify.key-links",
+          ".planning/phases/04-startup-control/04-05-PLAN.md"
+        ],
+        "exit": 1,
+        "data": {
+          "all_verified": false,
+          "verified": 0,
+          "pending": 0,
+          "total": 2,
+          "links": [
+            {
+              "from": "tests/test_startup_windows.py",
+              "to": "pagefolio/__main__.py",
+              "via": "python pagefolio.py / python -m pagefolioを本番と同じ入口で検査",
+              "verified": false,
+              "detail": "Target not referenced in source"
+            },
+            {
+              "from": ".planning/phases/04-startup-control/04-WINDOWS-UAT.md",
+              "to": ".planning/phases/04-startup-control/04-VALIDATION.md",
+              "via": "ケースIDと実施根拠をリンクしvalidate-phaseへ引き渡す",
+              "verified": false,
+              "detail": "Target not referenced in source"
+            }
+          ]
+        },
+        "stderr": ""
+      }
+    },
+    {
+      "plan": "04-06-PLAN.md",
+      "artifacts": {
+        "args": [
+          "verify.artifacts",
+          ".planning/phases/04-startup-control/04-06-PLAN.md"
+        ],
+        "exit": 0,
+        "data": {
+          "all_passed": true,
+          "passed": 6,
+          "total": 6,
+          "artifacts": [
+            {
+              "path": "pagefolio/__main__.py",
+              "exists": true,
+              "issues": [],
+              "passed": true
+            },
+            {
+              "path": "pagefolio/startup_win32.py",
+              "exists": true,
+              "issues": [],
+              "passed": true
+            },
+            {
+              "path": "pagefolio/startup_notice.py",
+              "exists": true,
+              "issues": [],
+              "passed": true
+            },
+            {
+              "path": "tests/test_startup_notice.py",
+              "exists": true,
+              "issues": [],
+              "passed": true
+            },
+            {
+              "path": "tests/test_startup_windows.py",
+              "exists": true,
+              "issues": [],
+              "passed": true
+            },
+            {
+              "path": ".planning/phases/04-startup-control/04-06-EVIDENCE.json",
+              "exists": true,
+              "issues": [],
+              "passed": true
+            }
+          ]
+        },
+        "stderr": ""
+      },
+      "links": {
+        "args": [
+          "verify.key-links",
+          ".planning/phases/04-startup-control/04-06-PLAN.md"
+        ],
+        "exit": 1,
+        "data": {
+          "all_verified": false,
+          "verified": 0,
+          "pending": 0,
+          "total": 4,
+          "links": [
+            {
+              "from": "pagefolio/__main__.py",
+              "to": "pagefolio/startup_notice.py",
+              "via": "show_startup_initialization_failure",
+              "verified": false,
+              "detail": "Target not referenced in source"
+            },
+            {
+              "from": "pagefolio/startup_notice.py",
+              "to": "pagefolio/startup_win32.py",
+              "via": "Win32NoticeBackend",
+              "verified": false,
+              "detail": "Target not referenced in source"
+            },
+            {
+              "from": "pagefolio/startup_win32.py",
+              "to": "pagefolio/startup_notice.py",
+              "via": "show_startup_failure",
+              "verified": false,
+              "detail": "Target not referenced in source"
+            },
+            {
+              "from": "tests/test_startup_windows.py",
+              "to": "pagefolio/__main__.py",
+              "via": "mainとrunpyによる両Python入口",
+              "verified": false,
+              "detail": "Target not referenced in source"
+            }
+          ]
+        },
+        "stderr": ""
+      }
+    }
+  ],
+  "decision_coverage": {
+    "args": [
+      "check.decision-coverage-verify",
+      ".planning/phases/04-startup-control",
+      ".planning/phases/04-startup-control/04-CONTEXT.md"
+    ],
+    "exit": 0,
+    "data": {
+      "skipped": false,
+      "blocking": false,
+      "total": 16,
+      "honored": 16,
+      "not_honored": [],
+      "message": "All trackable CONTEXT.md decisions are honored by shipped artifacts."
+    },
+    "stderr": ""
+  },
+  "roadmap": {
+    "args": [
+      "roadmap.get-phase",
+      "4",
+      "--raw"
+    ],
+    "exit": 0,
+    "data": "### Phase 4: 起動制御と既存画面への復帰\n\n**Goal**: 利用者が2回目に PageFolio を起動しても作業画面が増えず、進行中の作業を保ったまま既存画面へ戻れる。\n**Depends on**: Phase 3（v1.9.0 出荷済み）\n**Requirements**: V110-START-01, V110-START-02, V110-START-03, V110-FOCUS-01, V110-FOCUS-02\n**Success Criteria** (what must be TRUE):\n  1. 同一 Windows ログインセッションで、対応版同士の別版・別配置・Python/EXE 混在を含む連続・同時起動をしても、編集画面は1つだけになる。\n  2. 正常終了・強制終了・起動途中の異常終了後に再起動でき、終了確認をキャンセルした場合は既存画面がそのまま使用できる。\n  3. 排他判定または既存画面への連絡に失敗した場合、利用者は「起動済み」と異なる理由を認識でき、後続起動は追加画面を作らず有限時間で終了する。\n  4. 2回目の起動で最小化した既存画面が復元され、OS が許せば前面に出る。前面化を拒否された場合も視覚通知から既存画面を見つけられる。\n  5. 未保存編集、Undo/Redo、進行中の OCR、開いているモーダル操作を保ったまま既存画面で作業を続けられる。\n\n**受入範囲改訂（2026-10-22）**: Success Criteriaの実装/自動受入はPhase 4、未実施の最終人手受入はPhase 6。移管正本は[06-UAT-CARRYOVER.md](phases/06-release-validation/06-UAT-CARRYOVER.md)。\n\n**Plans**: 6/6 plans complete（04-06 gap closure 実行済み、Phase正式検証待ち）\n**UI hint**: yes\n\nPlans:\n**Wave 1**\n- [x] 04-01-PLAN.md — 品質ゲート前提修正と本番起動tracer（Wave 1）\n\n**Wave 2** *(blocked on Wave 1 completion)*\n- [x] 04-02-PLAN.md — 5秒の要求失効・終了競合・1回引継ぎ（Wave 2、04-01依存）\n\n**Wave 3** *(blocked on Wave 2 completion)*\n- [x] 04-03-PLAN.md — 状態と入力先を保つ既存画面/モーダル復帰（Wave 3、04-02依存）\n\n**Wave 4** *(blocked on Wave 3 completion)*\n- [x] 04-04-PLAN.md — 非活性の10秒案内とプロセス間集約（Wave 4、04-03依存）\n\n**Wave 5** *(blocked on Wave 4 completion)*\n- [x] 04-05-PLAN.md — 自動受入・証拠照合とPhase 6実機受入移管（Wave 5、04-04依存）\n\n**Wave 6** *(blocked on Wave 5 completion)*\n- [x] 04-06-PLAN.md — CR-01: backend構築失敗の独立案内と部分初期化資源の安全な解放（04-05依存）\n\n共有する起動入口・OS境界・Windows試験と「1タスクずつ」の規約により直列実行する。Phase 4の版番号・README・開発履歴同期および実EXE配布統合はPhase 6へ引き継ぐ。",
+    "stderr": ""
+  },
+  "milestone": {
+    "args": [
+      "roadmap.analyze",
+      "--raw"
+    ],
+    "exit": 0,
+    "data": {
+      "milestones": [
+        {
+          "heading": "📋 v1.10.0 多重起動防止・起動操作の改善",
+          "version": "v1.10.0"
+        }
+      ],
+      "phases": [
+        {
+          "number": "4",
+          "name": "起動制御と既存画面への復帰",
+          "goal": "利用者が2回目に PageFolio を起動しても作業画面が増えず、進行中の作業を保ったまま既存画面へ戻れる。",
+          "mode": null,
+          "depends_on": "Phase 3（v1.9.0 出荷済み）",
+          "plan_count": 6,
+          "summary_count": 6,
+          "has_context": true,
+          "has_research": true,
+          "disk_status": "executed",
+          "roadmap_complete": true,
+          "context_read_error": null,
+          "context_scope": "complete"
+        },
+        {
+          "number": "5",
+          "name": "設定読込・保存失敗の通知",
+          "goal": "利用者が設定の読込・保存失敗を正しく把握でき、元の設定ファイルと編集操作を失わない。",
+          "mode": null,
+          "depends_on": "Phase 4",
+          "plan_count": 4,
+          "summary_count": 4,
+          "has_context": true,
+          "has_research": true,
+          "disk_status": "executed",
+          "roadmap_complete": true,
+          "context_read_error": null,
+          "context_scope": "complete"
+        },
+        {
+          "number": "6",
+          "name": "サンプル配布とリリース検証",
+          "goal": "配布担当者が同じ手順で安全にサンプル付き EXE を再生成でき、利用者と検証担当者が v1.10.0 の受入結果を確認できる。",
+          "mode": null,
+          "depends_on": "Phase 4, Phase 5",
+          "plan_count": 6,
+          "summary_count": 4,
+          "has_context": true,
+          "has_research": true,
+          "disk_status": "partial",
+          "roadmap_complete": false,
+          "context_read_error": null,
+          "context_scope": "complete"
+        }
+      ],
+      "phase_count": 3,
+      "completed_phases": 0,
+      "total_plans": 16,
+      "total_summaries": 14,
+      "progress_percent": 88,
+      "progress_scope": "complete",
+      "current_phase": "4",
+      "next_phase": null,
+      "checkbox_conflict": [
+        {
+          "number": "4",
+          "roadmap_complete": true,
+          "disk_status": "executed",
+          "plan_count": 6,
+          "summary_count": 6
+        },
+        {
+          "number": "5",
+          "roadmap_complete": true,
+          "disk_status": "executed",
+          "plan_count": 4,
+          "summary_count": 4
+        }
+      ],
+      "missing_phase_details": null,
+      "scope": "complete"
+    },
+    "stderr": ""
+  },
+  "probe_declarations": [],
+  "tests_reexecuted": false,
+  "servers_started": false,
+  "product_modified": false
+}

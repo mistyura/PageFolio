@@ -1,0 +1,28 @@
+{
+  "schema": "w12b-answer-v1",
+  "condition": "exe-module@production-exe",
+  "row": "W12b/exe-module@production-exe",
+  "run": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\release-uat-3b5b645cb20e4c14af5b89222580f20c",
+  "machine_sha256": "01afa9b614c1e98fc4ea0fc69655817093a86f539099b366c0570f0f2469080e",
+  "direct_answer": {
+    "source": "user-direct",
+    "row": "W12b/exe-module@production-exe",
+    "text": "W12b/exe-module@production-exe: はい/はい/はい",
+    "source_ref": "PowerShell driver stdin, w12b-machine.json direct_answer_at",
+    "captured_at": "2026-11-09T12:20:22.042528+00:00",
+    "observations": {
+      "single_primary_screen": "はい",
+      "same_session_return": "はい",
+      "primary_state_kept": "はい"
+    }
+  },
+  "adoption": {
+    "decision": "採用",
+    "approved_by": "利用者",
+    "source": "user-direct",
+    "source_ref": "チャットの回収後の別回答「採用」、記録時刻",
+    "text": "採用",
+    "approved_at": "2026-11-09T12:21:10.889790+00:00",
+    "answer_sha256": "25dcf3e54f92595bf3b968123c7db0c3c6139fce6e7ad00d75dd44568c3be0d9"
+  }
+}

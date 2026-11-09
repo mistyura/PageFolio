@@ -1,5 +1,19 @@
 # 06-05 本受入の進行（2026-10-28）
 
+## 2026-11-05 v3実装・自動検証完了（最新、再開不可）
+
+`06-W05C-COLLECTION-REVIEW.md` を現行の実装/検証正本とする。v3採取runner/契約を実装し、対象79件・最終全件2333件成功（170入力前後不変）。既存pytest自動GUIのみ利用者許可済み。新規v3 Windows統合は未検証、全体formatは既存tmpアクセス拒否で未通過。元主因未解決、ready_for_retry=false、台帳28pass/80not-run・対象外2、06-06未開始・出荷不可。全体formatの既存検証tmpアクセス拒否を解消し、新規v3 Windows統合の範囲/許可・実測予算を確定する。再開前に06-03 resume_contractで親ゲート鮮度を照合。新規統合/正式試行/期限延長/正常診断反復/製品推測修正/commitは自動実行しない。
+
+## 2026-11-05 候補1回未完了・debugへ戻す（保存履歴）
+
+`06-W05C-CANDIDATE-STOP-20261105.md` を優先する。新script候補1回でNo/False/元マーカー成立、回答後peer/回収前snapshotの前に120秒watchdog終了。元マーカー欠落は今回再現せず、受入全体はnot-run。原本30ファイル＋回答copyをhash照合保全、owner終了確認済み。追加試行0。次は `$gsd-debug continue phase06-w05c-no-marker`、追加GUI/試行/製品推測修正/commitなし。全件2293成功と親04/05 freshを保持し、台帳28pass/80not-run・対象外2、出荷不可を維持する。
+
+## 2026-11-05 計測実装後のチェックポイント（候補開始前の履歴）
+
+W05c/script v2計測・回収前確認・正式helperと39件の正負/実Windows機構対照を実装。native全件2293passed/2warnings/1191.69秒、167一意入力不変。Phase04/05公式passed/fresh（21/21、23/23）。現在のRuff/144Python format/AST・build-only監査成功。元失敗と開始前Ruffの一過性警告は原本保持し、未知の原因は未解除。
+
+利用者の操作可能時間の回答待ち。新規正式script候補は0回、ready_for_retry=false。次は開始直前のowner/lock/入力再照合後に1回だけ実施する。利用者Noと原文・意味対応を保存→before_peer検査→回答後peer→before_stop検査→inspect→同owner回収→正式helper dry-run→書込→行監査。詳細 `06-W05C-INSTRUMENTATION.md`。既存module passは再走せず、実EXEは専用手順未整備。台帳28pass/80not-run・対象外2、06-06未開始、出荷不可を維持。
+
 ## 現在地（G2完了、G3 W05a確認中）
 
 **利用者指定で中断（2026-10-29 00:28 JST）:** `$gsd-pause-work`。W05a配布版 `W05a_nested-settings_at_production-exe-20261028T152307Z.json` は外側13保持/末尾選択/2入力/内側閉鎖、実前景、正常終了、凍結入力保護を照合しpass（raw4点）。W05a require-pass 3/3成功。全体必須24pass/84not-run+W11対象外2。W05bは `tests/test_startup_windows.py` のmanual native-ocrを実1ページ画像PDF/待機server/実OCRDialog._on_closeへ変更し、No後の同dialog/engine/worker/request完了を記録する段階まで実装。対象6件31.04秒成功（`w05b-real-close-20261029.xml`）、141Python Ruff/format/AST成功。W05b driver・記録helperは未実装、正式人手3行は未実施。G3変更後の全件品質は未実施。中断時に所有検証processなし、実行中テストなし、回答待ちなしを確認。再開は `.continue-here.md` と `.planning/HANDOFF.json` から。

@@ -1,0 +1,21 @@
+{
+  "started": "2026-11-06T13:51:50.797Z",
+  "finished": "2026-11-06T14:02:21.714Z",
+  "argv": [
+    "C:\\Users\\shdwf\\work\\project\\PageFolio\\.venv\\Scripts\\python.exe",
+    "-m",
+    "pytest",
+    "-q",
+    "-rA",
+    "-p",
+    "no:cacheprovider",
+    "--basetemp=C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf04-04-reverify-20261106-constructor-sync",
+    "--junitxml=C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\phases\\04-startup-control\\04-reverify-20261106-constructor-sync\\junit.xml"
+  ],
+  "code": 0,
+  "signal": null,
+  "error": null,
+  "inputCount": 171,
+  "missing": [],
+  "changed": []
+}

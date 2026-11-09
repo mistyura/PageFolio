@@ -1,0 +1,102 @@
+........................................................................ [ 81%]
+................                                                         [100%]
+============================== warnings summary ===============================
+.venv\Lib\site-packages\pymupdf\__init__.py:470
+  C:\Users\shdwf\work\project\PageFolio\.venv\Lib\site-packages\pymupdf\__init__.py:470: DeprecationWarning: 'typing.ByteString' and 'collections.abc.ByteString' are deprecated and slated for removal in Python 3.17
+    ByteString = typing.ByteString
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=================================== PASSES ====================================
+________ test_notice_dedup_access_denial_checks_same_name_once[False] _________
+------------------------------ Captured log call ------------------------------
+WARNING  pagefolio.startup_win32:startup_notice.py:67 notification_unavailable reason=contact_failed os_error=2
+=========================== short test summary info ===========================
+PASSED tests/test_startup_windows.py::test_tracer_abi_backend_available
+PASSED tests/test_startup_windows.py::test_finish_reports_exited_process_whose_pipes_are_held
+PASSED tests/test_startup_windows.py::test_finish_reports_live_process_as_not_exiting
+PASSED tests/test_startup_windows.py::test_tracer_abi_64bit_snapshot_and_thread
+PASSED tests/test_startup_windows.py::test_tracer_io_lifetime_pending_connect_cancel
+PASSED tests/test_startup_windows.py::test_tracer_e2e_real_main_terminal_ack
+PASSED tests/test_startup_windows.py::test_tracer_io_lifetime_unresponsive_peer_five_second_deadline
+PASSED tests/test_startup_windows.py::test_tracer_e2e_initialization_failure_releases_owner
+PASSED tests/test_startup_windows.py::test_tracer_e2e_api_denial_does_not_construct_app
+PASSED tests/test_startup_windows.py::test_tracer_notice_real_main_failure_path
+PASSED tests/test_startup_windows.py::test_constructor_failure_real_main_nonactivate_notice
+PASSED tests/test_startup_windows.py::test_constructor_failure_descriptor_stage_reaches_native_notice
+PASSED tests/test_startup_windows.py::test_constructor_failure_manual_close_keeps_foreground
+PASSED tests/test_startup_windows.py::test_constructor_failure_entry_exit
+PASSED tests/test_startup_windows.py::test_constructor_failure_notice_dedup[False]
+PASSED tests/test_startup_windows.py::test_constructor_failure_notice_dedup[True]
+PASSED tests/test_startup_windows.py::test_constructor_failure_cleanup_allows_restart
+PASSED tests/test_startup_windows.py::test_tracer_abi_shared_tick_wall_clock_independent
+PASSED tests/test_startup_windows.py::test_tracer_io_lifetime_quarantine_keeps_native_buffers
+PASSED tests/test_startup_windows.py::test_tracer_notice_nonactivate_lifetime_and_close[False]
+PASSED tests/test_startup_windows.py::test_tracer_notice_nonactivate_lifetime_and_close[True]
+PASSED tests/test_startup_windows.py::test_tracer_notice_timeout_injected_timer
+PASSED tests/test_startup_windows.py::test_tracer_notice_lease_process_dedup
+PASSED tests/test_startup_windows.py::test_foreground_audit_receives_native_window_event
+PASSED tests/test_startup_windows.py::test_notice_dedup_eight_processes_keep_original_deadline
+PASSED tests/test_startup_windows.py::test_notice_dedup_different_reasons_and_manual_close_allow_new_owner
+PASSED tests/test_startup_windows.py::test_notice_dedup_owner_crash_with_retained_handles_can_redisplay
+PASSED tests/test_startup_windows.py::test_notice_dedup_access_denial_checks_same_name_once[True]
+PASSED tests/test_startup_windows.py::test_notice_dedup_access_denial_checks_same_name_once[False]
+PASSED tests/test_startup_windows.py::test_simultaneous_real_processes_construct_one_editor[2]
+PASSED tests/test_startup_windows.py::test_simultaneous_real_processes_construct_one_editor[8]
+PASSED tests/test_startup_windows.py::test_simultaneous_real_processes_construct_one_editor[slow]
+PASSED tests/test_startup_windows.py::test_simultaneous_exit_audit_distinguishes_entry[wm]
+PASSED tests/test_startup_windows.py::test_simultaneous_exit_audit_distinguishes_entry[button]
+PASSED tests/test_startup_windows.py::test_simultaneous_exit_audit_distinguishes_entry[watchdog]
+PASSED tests/test_startup_windows.py::test_simultaneous_exit_audit_native_wm_close
+PASSED tests/test_startup_windows.py::test_takeover_loser_expires_when_winner_initialization_exceeds_deadline
+PASSED tests/test_startup_windows.py::test_takeover_two_candidates_after_confirmed_initialization_death
+PASSED tests/test_startup_windows.py::test_lifecycle_cancel_quit_keeps_owner_then_restarts
+PASSED tests/test_startup_windows.py::test_lifecycle_released_mapping_allows_new_claim_while_old_process_lives
+PASSED tests/test_startup_windows.py::test_lifecycle_independent_restart_after_forced_owner_exit[ready]
+PASSED tests/test_startup_windows.py::test_lifecycle_independent_restart_after_forced_owner_exit[initializing]
+PASSED tests/test_startup_windows.py::test_lifecycle_exception_before_identity_publication_then_restart
+PASSED tests/test_startup_windows.py::test_lifecycle_both_python_entries_and_relocated_version_share_owner
+PASSED tests/test_startup_windows.py::test_cross_entry_owner_accepts_both_entries_and_other_location[script]
+PASSED tests/test_startup_windows.py::test_cross_entry_owner_accepts_both_entries_and_other_location[module]
+PASSED tests/test_startup_windows.py::test_cross_entry_owner_accepts_both_entries_and_other_location[relocated]
+PASSED tests/test_startup_windows.py::test_startup_acceptance_product_identity_ignores_version_location_and_frozen
+PASSED tests/test_startup_windows.py::test_startup_acceptance_guard_never_requests_foreign_or_missing_owner[True]
+PASSED tests/test_startup_windows.py::test_startup_acceptance_guard_never_requests_foreign_or_missing_owner[False]
+PASSED tests/test_startup_windows.py::test_lifecycle_partial_mapping_reader_closes_without_takeover
+PASSED tests/test_startup_windows.py::test_takeover_abandoned_owner_thread_with_live_process_uses_existing_pipe
+PASSED tests/test_startup_windows.py::test_lifecycle_failed_release_is_closing_until_all_readers_close
+PASSED tests/test_startup_windows.py::test_lifecycle_release_follows_stop_and_precedes_mutex_release
+PASSED tests/test_startup_windows.py::test_focus_restore_real_main_windows[thumb-False-entry-script]
+PASSED tests/test_startup_windows.py::test_focus_restore_real_main_windows[thumb-False-entry-module]
+PASSED tests/test_startup_windows.py::test_focus_restore_real_main_windows[preview-False-entry-script]
+PASSED tests/test_startup_windows.py::test_focus_restore_real_main_windows[preview-False-entry-module]
+PASSED tests/test_startup_windows.py::test_focus_restore_real_main_windows[settings-False-entry-script]
+PASSED tests/test_startup_windows.py::test_focus_restore_real_main_windows[settings-False-entry-module]
+PASSED tests/test_startup_windows.py::test_focus_restore_real_main_windows[nested-False-entry-script]
+PASSED tests/test_startup_windows.py::test_focus_restore_real_main_windows[nested-False-entry-module]
+PASSED tests/test_startup_windows.py::test_focus_restore_real_main_windows[native-ocr-False-entry-script]
+PASSED tests/test_startup_windows.py::test_focus_restore_real_main_windows[native-ocr-False-entry-module]
+PASSED tests/test_startup_windows.py::test_focus_restore_real_main_windows[native-quit-False-entry-script]
+PASSED tests/test_startup_windows.py::test_focus_restore_real_main_windows[native-quit-False-entry-module]
+PASSED tests/test_startup_windows.py::test_focus_restore_real_main_windows[rebuild-False-entry-script]
+PASSED tests/test_startup_windows.py::test_focus_restore_real_main_windows[rebuild-False-entry-module]
+PASSED tests/test_startup_windows.py::test_focus_restore_real_main_windows[normal-False-entry-script]
+PASSED tests/test_startup_windows.py::test_focus_restore_real_main_windows[normal-False-entry-module]
+PASSED tests/test_startup_windows.py::test_focus_restore_real_main_windows[zoomed-False-entry-script]
+PASSED tests/test_startup_windows.py::test_focus_restore_real_main_windows[zoomed-False-entry-module]
+PASSED tests/test_startup_windows.py::test_focus_restore_real_main_windows[thumb-True-entry-script]
+PASSED tests/test_startup_windows.py::test_focus_restore_real_main_windows[thumb-True-entry-module]
+PASSED tests/test_startup_windows.py::test_focus_restore_real_main_windows[preview-True-entry-script]
+PASSED tests/test_startup_windows.py::test_focus_restore_real_main_windows[preview-True-entry-module]
+PASSED tests/test_startup_windows.py::test_focus_restore_real_main_windows[pdf-True-entry-script]
+PASSED tests/test_startup_windows.py::test_focus_restore_real_main_windows[pdf-True-entry-module]
+PASSED tests/test_startup_windows.py::test_focus_restore_real_main_windows[ocr-True-entry-script]
+PASSED tests/test_startup_windows.py::test_focus_restore_real_main_windows[ocr-True-entry-module]
+PASSED tests/test_startup_windows.py::test_focus_restore_real_main_windows[nested-True-entry-script]
+PASSED tests/test_startup_windows.py::test_focus_restore_real_main_windows[nested-True-entry-module]
+PASSED tests/test_startup_windows.py::test_focus_restore_real_main_windows[native-ocr-True-entry-script]
+PASSED tests/test_startup_windows.py::test_focus_restore_real_main_windows[native-ocr-True-entry-module]
+PASSED tests/test_startup_windows.py::test_working_state_real_main_continues[pdf]
+PASSED tests/test_startup_windows.py::test_working_state_real_main_continues[pdf-shortcuts]
+PASSED tests/test_startup_windows.py::test_working_state_real_main_continues[ocr]
+PASSED tests/test_startup_windows.py::test_lifecycle_released_identity_mismatch_cannot_overwrite_mapping
+88 passed, 1 warning in 383.56s (0:06:23)

@@ -1,0 +1,32 @@
+{
+  "run": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\release-uat-01ec699d960a4b8da489f7407fa31bfb",
+  "fixture": {
+    "path": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\release-uat-01ec699d960a4b8da489f7407fa31bfb\\fixtures\\edit-three-page.pdf",
+    "pages": 3,
+    "has_embedded_text": true,
+    "images_on_first_page": 0,
+    "sha256": "abee3a71f648e7b83b4d37c5f6167e855cc1907d9afe23127426e8351415bf8e"
+  },
+  "owner": {
+    "role": "primary",
+    "pid": 13184,
+    "created": 134384402092762310,
+    "created_iso": "2026-11-06T12:03:29.276231+00:00",
+    "image": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\release-uat-01ec699d960a4b8da489f7407fa31bfb\\dist\\PageFolio.exe",
+    "session_id": 1,
+    "elevated": false,
+    "exe_sha256": "66be5df663e333057c5c3cde02180857f930d2433e377f69c2838432d49a19d4",
+    "argv": [
+      "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\release-uat-01ec699d960a4b8da489f7407fa31bfb\\dist\\PageFolio.exe"
+    ],
+    "started_at": "2026-11-06T12:03:29.296995+00:00",
+    "parent_pid": 29596,
+    "exit": null,
+    "foreground_before": {
+      "hwnd": 134572,
+      "pid": 7692,
+      "title": "⠇ 進捗を確認する | PageFolio"
+    }
+  },
+  "status": "running"
+}

@@ -1,0 +1,1 @@
+{"state_preserved": true, "target_correct": false, "result": "foreground_denied", "activated": 5641316, "expected_tk": 5641316, "native": null, "placement": "normal", "expected_focus": "None", "immediate_focus": ".", "document_pages": 3, "page_rotations": [90, 90, 0], "selected_pages": [], "current_page": 1, "focus_correct": true, "settled_focus": "."}

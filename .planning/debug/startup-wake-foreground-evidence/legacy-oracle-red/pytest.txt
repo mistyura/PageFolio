@@ -1,0 +1,61 @@
+F
+================================== FAILURES ===================================
+___ test_native_tcl_getmessage_stall_recovers_with_product_wake[True-True] ____
+
+enabled = True, external_change = True
+tmp_path = WindowsPath('C:/Users/shdwf/AppData/Local/Temp/pf-debug-wake-2a578c03-de13-40a3-b4a2-1b81d197b693/test_native_tcl_getmessage_sta0')
+
+    @pytest.mark.skipif(sys.platform != "win32", reason="実 Windows/Tcl を使う回帰試験")
+    @pytest.mark.parametrize(
+        "enabled, external_change", [(False, False), (True, False), (True, True)]
+    )
+    def test_native_tcl_getmessage_stall_recovers_with_product_wake(
+        enabled, external_change, tmp_path
+    ):
+        helper = Path(__file__).with_name("startup_wake_child.py")
+        command = [sys.executable, str(helper), "wake" if enabled else "control"]
+        if external_change:
+            command.append("--simulate-external-foreground")
+        result = subprocess.run(  # noqa: S603
+            command,
+            cwd=helper.parents[1],
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            timeout=15,
+            creationflags=subprocess.CREATE_NO_WINDOW,
+            check=False,
+        )
+        # assertより先に全出力を保存する。失敗しても子JSONと診断情報を失わない。
+        (tmp_path / "startup-wake-child.json").write_text(
+            json.dumps(
+                {
+                    "command": command,
+                    "returncode": result.returncode,
+                    "stdout": result.stdout,
+                    "stderr": result.stderr,
+                },
+                ensure_ascii=False,
+                indent=2,
+            ),
+            encoding="utf-8",
+        )
+        assert result.returncode == 0, result.stdout + result.stderr
+        data = json.loads(result.stdout)
+        assert data["removed"] == 1, result.stdout + result.stderr
+        assert data["posted"] > 0 if enabled else data["posted"] == 0
+        # 前景前後一致は外部操作に依存する診断値。非干渉は別の厳格な境界で保証する。
+>       assert data["foreground_unchanged"]
+E       assert False
+
+tests\test_startup_wake.py:309: AssertionError
+============================== warnings summary ===============================
+.venv\Lib\site-packages\pymupdf\__init__.py:470
+  C:\Users\shdwf\work\project\PageFolio\.venv\Lib\site-packages\pymupdf\__init__.py:470: DeprecationWarning: 'typing.ByteString' and 'collections.abc.ByteString' are deprecated and slated for removal in Python 3.17
+    ByteString = typing.ByteString
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED tests/test_startup_wake.py::test_native_tcl_getmessage_stall_recovers_with_product_wake[True-True]
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!
+1 failed, 22 deselected, 1 warning in 1.24s

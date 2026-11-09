@@ -1,0 +1,28 @@
+{
+  "errors": [
+    {
+      "path": ".\\.planning\\debug\\simultaneous-owner-missing-evidence\\notice-contract-20261028-implementation\\pytest-cache",
+      "error": "[WinError 5] アクセスが拒否されました。: '.\\\\.planning\\\\debug\\\\simultaneous-owner-missing-evidence\\\\notice-contract-20261028-implementation\\\\pytest-cache'"
+    },
+    {
+      "path": ".\\.planning\\debug\\simultaneous-owner-missing-evidence\\notice-contract-20261028-implementation\\unit-v2-tmp",
+      "error": "[WinError 5] アクセスが拒否されました。: '.\\\\.planning\\\\debug\\\\simultaneous-owner-missing-evidence\\\\notice-contract-20261028-implementation\\\\unit-v2-tmp'"
+    },
+    {
+      "path": ".\\.planning\\debug\\simultaneous-owner-missing-evidence\\notice-contract-20261028-implementation\\unit-v3-tmp",
+      "error": "[WinError 5] アクセスが拒否されました。: '.\\\\.planning\\\\debug\\\\simultaneous-owner-missing-evidence\\\\notice-contract-20261028-implementation\\\\unit-v3-tmp'"
+    },
+    {
+      "path": ".\\.planning\\phases\\04-startup-control\\04-closeout-dod-temp-20261028",
+      "error": "[WinError 5] アクセスが拒否されました。: '.\\\\.planning\\\\phases\\\\04-startup-control\\\\04-closeout-dod-temp-20261028'"
+    },
+    {
+      "path": ".\\.planning\\phases\\04-startup-control\\04-closeout-pytest-cache",
+      "error": "[WinError 5] アクセスが拒否されました。: '.\\\\.planning\\\\phases\\\\04-startup-control\\\\04-closeout-pytest-cache'"
+    },
+    {
+      "path": ".\\.planning\\tmp\\pagefolio-uat-epgkwzhm",
+      "error": "[WinError 5] アクセスが拒否されました。: '.\\\\.planning\\\\tmp\\\\pagefolio-uat-epgkwzhm'"
+    }
+  ]
+}

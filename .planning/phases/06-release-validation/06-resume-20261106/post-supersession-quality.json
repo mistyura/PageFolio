@@ -1,0 +1,14 @@
+{
+  "checked_at": "2026-11-06T14:18:03.985Z",
+  "post_collection_output_changes": [
+    ".planning/phases/06-release-validation/06-MANUAL-EVIDENCE.json",
+    ".planning/phases/06-release-validation/06-UAT.md"
+  ],
+  "code_and_other_quality_inputs_unchanged": true,
+  "metadata_tests": "49 passed / 1 warning / 13.87s",
+  "metadata_xml_sha256": "2bde2a4128594065e6627fe13dfea4159d5d884eaef8bd9690d22fc2e819ac35",
+  "current_required_pass": 10,
+  "current_required_not_run": 98,
+  "deferred": 2,
+  "release_allowed": false
+}

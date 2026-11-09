@@ -1,0 +1,10 @@
+{
+  "checked_at": "2026-11-06T12:15:58.695Z",
+  "required_pass": 30,
+  "required_not_run": 78,
+  "raw_copies_verified": 6,
+  "unrelated_rows_unchanged": true,
+  "raw_answer_unchanged": true,
+  "repair": "Case ID context from the original question added to display answer; raw answer unchanged",
+  "release_allowed": false
+}

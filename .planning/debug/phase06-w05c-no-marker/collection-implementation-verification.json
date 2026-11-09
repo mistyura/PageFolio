@@ -1,0 +1,45 @@
+{
+  "checked_utc": "2026-11-05T09:12:55.675Z",
+  "result": "passed_with_explicit_limits",
+  "post_suite_document_tests": {
+    "passed": 30,
+    "warnings": 1,
+    "seconds": 107.50,
+    "evidence": ".planning/debug/phase06-w05c-no-marker/v3-document-final.xml"
+  },
+  "diff_check": "passed for changed tracked implementation and documentation",
+  "full_suite": {
+    "passed": 2333,
+    "warnings": 2,
+    "seconds": 1274.11,
+    "code": 0,
+    "evidence": ".planning/phases/06-release-validation/06-05-evidence/w05c-v3-final-native-20261105"
+  },
+  "target": {
+    "passed": 79,
+    "evidence": ".planning/debug/phase06-w05c-no-marker/v3-target-final.xml"
+  },
+  "quality_inputs": 170,
+  "changes_during_full_suite": [],
+  "changes_after_full_suite": [
+    "開発履歴.md"
+  ],
+  "post_suite_document_sha256": {
+    "開発履歴.md": "4cc61d9d315658cd0781351f89bb2274affd3b4c6995ba95555d993c694622e0"
+  },
+  "preserved_raw_files": 30,
+  "original_answer_hash_verified": true,
+  "required_pass": 28,
+  "required_not_run": 80,
+  "deferred_not_run": 2,
+  "python_explicit_files": 146,
+  "ast": "passed",
+  "ruff_full_check": "exit0 with access-denied warning",
+  "ruff_full_format": "blocked by existing 05-closeout-20261028-tmp access denial",
+  "new_native_integration": "not-run; not authorized",
+  "formal_trials_this_continuation": 0,
+  "ready_for_retry": false,
+  "release_allowed": false,
+  "root_cause": "unresolved",
+  "commit": false
+}

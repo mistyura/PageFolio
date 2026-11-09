@@ -1,0 +1,18 @@
+{"event": "prepare_return", "utc": "2026-11-05T04:21:03.363431+00:00", "monotonic": 151406.9745258, "stop": false, "state": {"root_alive": true, "pages": 0, "rotations": []}}
+{"event": "state", "utc": "2026-11-05T04:21:03.526576+00:00", "monotonic": 151407.1376705, "stop": false, "native": null, "cancelled": false, "root_alive": true, "pages": 0, "rotations": []}
+{"event": "quit_enter", "utc": "2026-11-05T04:21:03.735658+00:00", "monotonic": 151407.3467534, "stop": false, "state": {"root_alive": true, "pages": 3, "rotations": [90, 90, 0]}}
+{"event": "ask_enter", "utc": "2026-11-05T04:21:03.736287+00:00", "monotonic": 151407.3473784, "stop": false, "args": ["確認", "アプリを終了しますか？\n（未保存の変更は失われます）"], "state": {"root_alive": true, "pages": 3, "rotations": [90, 90, 0]}}
+{"event": "state", "utc": "2026-11-05T04:21:03.741642+00:00", "monotonic": 151407.3527369, "stop": false, "native": null, "cancelled": false, "root_alive": true, "pages": 3, "rotations": [90, 90, 0]}
+{"event": "native_observed", "utc": "2026-11-05T04:21:03.966081+00:00", "monotonic": 151407.5771765, "stop": false, "hwnd": 463290}
+{"event": "state", "utc": "2026-11-05T04:21:03.966727+00:00", "monotonic": 151407.5778185, "stop": false, "native": 463290, "cancelled": false, "root_alive": true, "pages": 3, "rotations": [90, 90, 0]}
+{"event": "native_message", "utc": "2026-11-05T04:21:57.796585+00:00", "monotonic": 151461.4076845, "stop": false, "hwnd": 463290, "message": 273, "wparam": 7, "lparam": 5836630}
+{"event": "native_message", "utc": "2026-11-05T04:21:57.807522+00:00", "monotonic": 151461.4186235, "stop": false, "hwnd": 463290, "message": 2, "wparam": 0, "lparam": 0}
+{"event": "native_message", "utc": "2026-11-05T04:21:57.809631+00:00", "monotonic": 151461.4207248, "stop": false, "hwnd": 463290, "message": 130, "wparam": 0, "lparam": 0}
+{"event": "ask_return", "utc": "2026-11-05T04:21:57.810729+00:00", "monotonic": 151461.4218201, "stop": false, "result": false, "state": {"root_alive": true, "pages": 3, "rotations": [90, 90, 0]}}
+{"event": "quit_return", "utc": "2026-11-05T04:21:57.811325+00:00", "monotonic": 151461.4224192, "stop": false, "state": {"root_alive": true, "pages": 3, "rotations": [90, 90, 0]}}
+{"event": "state", "utc": "2026-11-05T04:21:57.813086+00:00", "monotonic": 151461.4241784, "stop": false, "native": null, "cancelled": true, "root_alive": true, "pages": 3, "rotations": [90, 90, 0]}
+{"event": "cleanup_enter", "utc": "2026-11-05T04:22:38.744219+00:00", "monotonic": 151502.3553159, "stop": true, "state": {"root_alive": true, "pages": 3, "rotations": [90, 90, 0]}}
+{"event": "cleanup_return", "utc": "2026-11-05T04:22:38.744972+00:00", "monotonic": 151502.3560654, "stop": true, "state": {"root_alive": true, "pages": 0, "rotations": []}}
+{"event": "quit_enter", "utc": "2026-11-05T04:22:38.745392+00:00", "monotonic": 151502.3564847, "stop": true, "state": {"root_alive": true, "pages": 0, "rotations": []}}
+{"event": "root_destroy", "utc": "2026-11-05T04:22:38.901309+00:00", "monotonic": 151502.5124059, "stop": true}
+{"event": "quit_return", "utc": "2026-11-05T04:22:38.913630+00:00", "monotonic": 151502.5247301, "stop": true, "state": {"root_alive": false, "pages": 0, "rotations": []}}

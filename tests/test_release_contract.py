@@ -636,11 +636,35 @@ class TestCaseCoverage:
             shutil.copyfile(PHASE_DIR / name, tmp_path / name)
         audit = sup.run_audit(tmp_path, mode="allow-pending")
         assert audit.ok, audit.reasons
-        # 全subrow未実施のままrequire-passは通らない(構造専用allow-pendingとは別)
-        if any(sub["status"] != "pass" for _, sub in rows()):
-            assert not sup.run_audit(
-                tmp_path, mode="require-pass", require="W01,W02"
-            ).ok
+        # require-passの範囲は指定IDだけ。他組やdeferredの未実施はG1を妨げない。
+        g1_ready = all(
+            sub["status"] == "pass"
+            for case, sub in rows()
+            if case["id"] in {"W01", "W02"}
+        )
+        assert (
+            sup.run_audit(tmp_path, mode="require-pass", require="W01,W02").ok
+            == g1_ready
+        )
+        # 実台帳の進捗にかかわらず、指定範囲に未実施が残る場合の拒否を検証する。
+        pending = ledger()
+        pending_sub = next(c for c in pending["cases"] if c["id"] == "W01")["subrows"][
+            0
+        ]
+        pending_sub.update(
+            status="not-run",
+            answer="",
+            raw_inputs=[],
+            observations={},
+            run_id="",
+            observed_at="",
+            environment={},
+            binary_sha256="",
+        )
+        (tmp_path / "06-MANUAL-EVIDENCE.json").write_text(
+            json.dumps(pending, ensure_ascii=False), encoding="utf-8"
+        )
+        assert not sup.run_audit(tmp_path, mode="require-pass", require="W01,W02").ok
 
         def mutate(change):
             data = ledger()
@@ -652,7 +676,7 @@ class TestCaseCoverage:
 
         def passed_without_answer(data):
             sub = next(c for c in data["cases"] if c["id"] == "W03")["subrows"][0]
-            sub["status"] = "pass"
+            sub.update(status="pass", answer="")
 
         def unit_as_pass(data):
             sub = next(c for c in data["cases"] if c["id"] == "W04")["subrows"][0]

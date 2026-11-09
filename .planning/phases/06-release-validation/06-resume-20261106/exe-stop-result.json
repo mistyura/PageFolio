@@ -1,0 +1,13 @@
+{
+  "stop_observed_at": "2026-11-06T12:09:52.369117+00:00",
+  "run": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\release-uat-01ec699d960a4b8da489f7407fa31bfb",
+  "status": "stopped",
+  "owner_exit": "terminated",
+  "peer_exit": "already-exited",
+  "owner_alive": false,
+  "owner_probe": [],
+  "originals_unchanged": true,
+  "source_unchanged": true,
+  "inspections": 5,
+  "manifest_mtime": "2026-11-06T12:09:52.352041+00:00"
+}

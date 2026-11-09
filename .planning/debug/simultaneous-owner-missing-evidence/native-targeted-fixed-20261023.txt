@@ -1,0 +1,18 @@
+F                                                                        [100%]
+================================== FAILURES ===================================
+________________ test_simultaneous_exit_audit_native_wm_close _________________
+tests\test_startup_windows.py:888: in test_simultaneous_exit_audit_native_wm_close
+    assert owner_pid.value == child.pid, "この試験が起動した子のHWNDだけに送る"
+E   AssertionError: この試験が起動した子のHWNDだけに送る
+E   assert 16244 == 28564
+E    +  where 16244 = c_ulong(16244).value
+E    +  and   28564 = <Popen: returncode: None args: ['C:\\Users\\shdwf\\work\\project\\PageFolio\...>.pid
+============================== warnings summary ===============================
+.venv\Lib\site-packages\pymupdf\__init__.py:470
+  C:\Users\shdwf\work\project\PageFolio\.venv\Lib\site-packages\pymupdf\__init__.py:470: DeprecationWarning: 'typing.ByteString' and 'collections.abc.ByteString' are deprecated and slated for removal in Python 3.17
+    ByteString = typing.ByteString
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED tests/test_startup_windows.py::test_simultaneous_exit_audit_native_wm_close
+1 failed, 1 warning in 3.49s

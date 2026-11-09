@@ -1,0 +1,97 @@
+{
+  "label": "after-start",
+  "at": "2026-10-28T05:14:24.850594+00:00",
+  "monotonic": 22119.9597418,
+  "processes": [
+    {
+      "role": "primary",
+      "pid": 30532,
+      "created": 134376380597820104,
+      "identity": "same",
+      "alive": true,
+      "session_id": 1,
+      "elevated": false,
+      "windows": [
+        {
+          "hwnd": 263512,
+          "visible": true,
+          "title": "Unhandled exception in script",
+          "class": "#32770",
+          "rect": [
+            645,
+            321,
+            1061,
+            698
+          ]
+        },
+        {
+          "hwnd": 8916394,
+          "visible": false,
+          "title": "MSCTFIME UI",
+          "class": "MSCTFIME UI",
+          "rect": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "hwnd": 8851704,
+          "visible": false,
+          "title": "Default IME",
+          "class": "IME",
+          "rect": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      ]
+    }
+  ],
+  "foreground": {
+    "hwnd": 0,
+    "pid": null,
+    "title": "",
+    "owned_by": null
+  },
+  "owner_probe": [
+    {
+      "kind": "mutex",
+      "name": "Local\\PageFolio.Startup.Owner",
+      "state": "open"
+    },
+    {
+      "kind": "mapping",
+      "name": "Local\\PageFolio.Startup.State",
+      "state": "open"
+    }
+  ],
+  "observer": {
+    "python": "3.15.2 (tags/v3.15.2:5e58eaa, Oct 25 2026, 17:27:03) [MSC v.1951 64 bit (AMD64)]",
+    "tk": "9.0"
+  },
+  "exe_embedded": {
+    "python": "3.15.2 (tags/v3.15.2:5e58eaa, Oct 25 2026, 17:27:03) [MSC v.1951 64 bit (AMD64)]",
+    "dependencies": {
+      "PyInstaller": "6.22.3",
+      "pyinstaller-hooks-contrib": "2026.9",
+      "PyMuPDF": "1.28.2",
+      "Pillow": "13.0.0",
+      "tkinterdnd2": "0.6.4"
+    }
+  },
+  "copy": {
+    "ok": true,
+    "distribution_changed": [],
+    "missing_dirs": [],
+    "extra_dirs": [],
+    "undeclared": [],
+    "overlay_changed": [],
+    "locked_unverified": [],
+    "tree_sha256": "929930f327cf48bee4a4b1468d09eaebbfd6d64e8b50df7426d0759dace69b42",
+    "exe_sha256": "9b3ebbce390c3b9f1752a97820a5ef81a0c39b7e148b93717b86bb47f9f5f73b"
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "at": "2026-10-28T05:29:22.329Z",
+  "original_run_files": 22,
+  "original_run_changed": [],
+  "copy_changed": [],
+  "old_generations_unchanged": true,
+  "old_protection_sections_unchanged": true,
+  "manual_unchanged": true,
+  "build_unchanged": true,
+  "python_total": 137,
+  "python_changed": [],
+  "protected_changed": [],
+  "pid_check": {
+    "exit": 0,
+    "stdout": "[{\"pid\":30532,\"present\":false},{\"pid\":26332,\"present\":false},{\"pid\":28824,\"present\":false},{\"pid\":28104,\"present\":false},{\"pid\":9920,\"present\":false},{\"pid\":4192,\"present\":false}]\r\n",
+    "stderr": ""
+  },
+  "index": {
+    "exit": 0,
+    "files": []
+  },
+  "tests": {
+    "argv": [
+      "-m",
+      "pytest",
+      "-q",
+      "tests/test_gsd_dod.py",
+      "tests/test_release_contract.py",
+      "-o",
+      "cache_dir=C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf06_connection_stop_docs_bca1340596eb4da2b0c4bc1dc8d13040_cache",
+      "--basetemp=C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf06_connection_stop_docs_bca1340596eb4da2b0c4bc1dc8d13040_tmp"
+    ],
+    "exit": 0,
+    "stdout_log": "document-tests-corrected.stdout.txt",
+    "stderr_log": "document-tests-corrected.stderr.txt",
+    "summary": "47 passed, 1 warning in 10.77s"
+  },
+  "note": "初回preservation.jsonのoriginal_run_files=0はスラッシュ表記比較による集計誤り。copy原本と全SHA一覧は保持。本結果で境界付き正規化pathを使い、原本の再採取・sessionの変更なしで全件を再照合した。",
+  "phase_complete": false,
+  "release_allowed": false,
+  "corrected_attempt": {
+    "previous": "final-verification.json",
+    "cause": "初回ランナーのbasetemp親directory不存在によるWinError3。製品/試験assert failureとは区別。",
+    "change": "既存Temp直下の新規一意basetemp/cacheへ変更。初回原本と専用pathは保持。",
+    "parent_temp_exists": true,
+    "same_conditions_retry": false
+  },
+  "ok": true
+}

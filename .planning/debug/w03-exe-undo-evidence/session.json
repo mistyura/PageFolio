@@ -1,0 +1,33 @@
+{
+  "purpose": "debug-exe-undo",
+  "acceptance": false,
+  "run": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\release-uat-e4af2709849c485c8ab46d1101648598",
+  "pdf": {
+    "path": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\release-uat-e4af2709849c485c8ab46d1101648598\\fixtures\\edit-three-page.pdf",
+    "pages": 3,
+    "has_embedded_text": true,
+    "images_on_first_page": 0,
+    "sha256": "7e246cd6a7680c28c78cef3f5bfb4a14bc67797b31d74c48755a275d11bbbaf5"
+  },
+  "primary": {
+    "role": "primary",
+    "pid": 22540,
+    "created": 134376661300557024,
+    "created_iso": "2026-10-28T13:02:10.055702+00:00",
+    "image": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\release-uat-e4af2709849c485c8ab46d1101648598\\dist\\PageFolio.exe",
+    "session_id": 1,
+    "elevated": false,
+    "exe_sha256": "66be5df663e333057c5c3cde02180857f930d2433e377f69c2838432d49a19d4",
+    "argv": [
+      "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\release-uat-e4af2709849c485c8ab46d1101648598\\dist\\PageFolio.exe"
+    ],
+    "started_at": "2026-10-28T13:02:10.080334+00:00",
+    "parent_pid": 27768,
+    "exit": null,
+    "foreground_before": {
+      "hwnd": 396656,
+      "pid": 18044,
+      "title": "⠇ 出荷停止状態を解消 | PageFolio"
+    }
+  }
+}

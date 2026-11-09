@@ -1,0 +1,4016 @@
+diff --git a/.planning/codebase/CONVENTIONS.md b/.planning/codebase/CONVENTIONS.md
+index d8bfccc..ecf2250 100644
+--- a/.planning/codebase/CONVENTIONS.md
++++ b/.planning/codebase/CONVENTIONS.md
+@@ -88,6 +88,7 @@ except Exception as e:
+ except Exception as e:
+     messagebox.showerror(self._t("error_title"), str(e))
+ 
++
+ # Custom exception definition
+ class PDFPasswordError(Exception):
+     """パスワード付き PDF の認証がキャンセル/失敗したことを表す例外。"""
+diff --git a/.planning/debug/preview-focus-not-restored-evidence/diag_btn_press.py b/.planning/debug/preview-focus-not-restored-evidence/diag_btn_press.py
+index 42dac3e..e5ea63c 100644
+--- a/.planning/debug/preview-focus-not-restored-evidence/diag_btn_press.py
++++ b/.planning/debug/preview-focus-not-restored-evidence/diag_btn_press.py
+@@ -324,6 +324,7 @@ def run_one(intervene, out_dir, deactivate="decoy"):
+             )
+             if ok:
+                 break
++
+         def get_geom():
+             g = fixture / "geometry.json"
+             if g.exists():
+@@ -462,9 +463,11 @@ def run_one(intervene, out_dir, deactivate="decoy"):
+             session["decoy_stderr"] = d.stderr[-300:]
+         except subprocess.TimeoutExpired as exc:
+             session["decoy_timeout"] = True
+-            session["decoy_exc_stderr"] = (exc.stderr or b"")[-600:].decode(
+-                "utf-8", "replace"
+-            ) if isinstance(exc.stderr, bytes) else str(exc.stderr)[-600:]
++            session["decoy_exc_stderr"] = (
++                (exc.stderr or b"")[-600:].decode("utf-8", "replace")
++                if isinstance(exc.stderr, bytes)
++                else str(exc.stderr)[-600:]
++            )
+         fault = fixture / "decoy.json.fault"
+         session["decoy_fault"] = (
+             fault.read_text(encoding="utf-8", errors="replace")[-1500:]
+@@ -521,7 +524,9 @@ def summarize(session):
+     fr = session.get("focus_result")
+     if fr:
+         print(f"   result={fr.get('result')} immediate={fr.get('immediate_focus')}")
+-        print(f"   settled={fr.get('settled_focus')}  focus_correct={fr.get('focus_correct')}")
++        print(
++            f"   settled={fr.get('settled_focus')}  focus_correct={fr.get('focus_correct')}"
++        )
+     keep = {
+         "FocusIn",
+         "FocusOut",
+@@ -553,7 +558,9 @@ def summarize(session):
+                     for k in ("tk_focus", "lastfor", "record", "last_widget")
+                     if k in detail
+                 }
+-            print(f"   {e['t']:7.3f} {e['kind']:14s} {json.dumps(detail, ensure_ascii=False)[:260]}")
++            print(
++                f"   {e['t']:7.3f} {e['kind']:14s} {json.dumps(detail, ensure_ascii=False)[:260]}"
++            )
+ 
+ 
+ def main():
+diff --git a/.planning/milestones/v1.4.0-phases/04-provider-abstraction/04-PATTERNS.md b/.planning/milestones/v1.4.0-phases/04-provider-abstraction/04-PATTERNS.md
+index cc82b1a..44441f7 100644
+--- a/.planning/milestones/v1.4.0-phases/04-provider-abstraction/04-PATTERNS.md
++++ b/.planning/milestones/v1.4.0-phases/04-provider-abstraction/04-PATTERNS.md
+@@ -45,12 +45,14 @@ logger = logging.getLogger(__name__)
+ ```python
+ class PDFEditorPlugin:
+     """プラグイン基底クラス。プラグインはこのクラスを継承して作成する。"""
++
+     name = "Unnamed Plugin"
+     version = "0.0.0"
+ 
+     def on_load(self, app):
+         """プラグインがロードされた時に呼ばれる"""
+         pass
++
+     # ... フックメソッド群（pass で空実装）
+ ```
+ → `OCRProvider` は `abc.ABC` を使う点が異なるが、クラス属性（`default_concurrency`, `max_concurrency`）と抽象メソッド（`ocr_image`, `list_models`）の宣言構造を踏襲する。
+@@ -358,6 +360,7 @@ def _load_settings():
+ # 現行の _save_settings（settings.py lines 58-65）をベースにガードを追加する
+ NEVER_PERSIST_KEYS = {"anthropic_api_key", "gemini_api_key"}  # Phase 5 以降で必要
+ 
++
+ def _save_settings(settings):
+     try:
+         path = _get_settings_path()
+diff --git a/.planning/milestones/v1.4.0-phases/04-provider-abstraction/04-REVIEW.md b/.planning/milestones/v1.4.0-phases/04-provider-abstraction/04-REVIEW.md
+index 384ce07..4054dbb 100644
+--- a/.planning/milestones/v1.4.0-phases/04-provider-abstraction/04-REVIEW.md
++++ b/.planning/milestones/v1.4.0-phases/04-provider-abstraction/04-REVIEW.md
+@@ -55,8 +55,11 @@ from pagefolio.ocr_providers import LMStudioProvider
+ 
+ if self.provider is None or isinstance(self.provider, LMStudioProvider):
+     self.provider = LMStudioProvider(
+-        url=url, model=model, timeout=self._effective_timeout,
+-        max_tokens=max_tokens, temperature=temperature,
++        url=url,
++        model=model,
++        timeout=self._effective_timeout,
++        max_tokens=max_tokens,
++        temperature=temperature,
+     )
+ else:
+     # 非 LMStudio プロバイダの live 値反映方針を別途定義する
+diff --git a/.planning/milestones/v1.4.0-phases/05-claude-provider-ui/05-PATTERNS.md b/.planning/milestones/v1.4.0-phases/05-claude-provider-ui/05-PATTERNS.md
+index f07919f..4fec417 100644
+--- a/.planning/milestones/v1.4.0-phases/05-claude-provider-ui/05-PATTERNS.md
++++ b/.planning/milestones/v1.4.0-phases/05-claude-provider-ui/05-PATTERNS.md
+@@ -260,6 +260,7 @@ def _call(page_idx, b64):
+ ```python
+ def _start_ocr(self, page_indices):
+     from pagefolio.ocr_dialog import OCRDialog
++
+     ...
+     try:
+         provider = build_provider(self.settings)
+@@ -270,11 +271,10 @@ Phase 5 では `build_provider` 呼び出し前に `_resolve_api_key(self.settin
+ 環境変数未設定かつセッション属性にもキーがない場合は `OCRAPIKeyError` を raise させる。
+ セッションキーは `self._session_api_keys`（プロバイダ別 dict、D-01）から取得して `build_provider` に渡す:
+ ```python
+-        api_key = (
+-            os.environ.get("ANTHROPIC_API_KEY")
+-            or self._session_api_keys.get("claude", "")
+-        )
+-        provider = build_provider(self.settings, api_key=api_key)
++api_key = os.environ.get("ANTHROPIC_API_KEY") or self._session_api_keys.get(
++    "claude", ""
++)
++provider = build_provider(self.settings, api_key=api_key)
+ ```
+ 
+ ---
+@@ -296,12 +296,15 @@ def on_progress(done, page_idx, status):
+ ```
+ 「待機中」進捗（D-15）は `status == "waiting"` のとき分岐:
+ ```python
+-    if status == "waiting":
+-        self.after(0, lambda p=page_idx, n=retry_n: self.progress_var.set(
++if status == "waiting":
++    self.after(
++        0,
++        lambda p=page_idx, n=retry_n: self.progress_var.set(
+             self._L["ocr_waiting_retry"].format(page=p + 1, n=n, max=3)
+-        ))
+-    else:
+-        self.after(0, lambda d=...: self.progress_var.set(...))
++        ),
++    )
++else:
++    self.after(0, lambda d=...: self.progress_var.set(...))
+ ```
+ 
+ **コスト確認ダイアログの配置**（_on_run の実行開始前、クラウドプロバイダのみ）:
+@@ -338,6 +341,7 @@ self.api_key_entry = tk.Entry(
+ **_on_run での provider 再生成パターン**（行 481–489、現状 LMStudioProvider 固定）:
+ ```python
+ from pagefolio.ocr_providers import LMStudioProvider
++
+ self.provider = LMStudioProvider(
+     url=url,
+     model=model,
+@@ -370,9 +374,7 @@ tk.Spinbox(
+ `_apply()` での保存（行 394–398）:
+ ```python
+ try:
+-    llm_settings["ocr_scale"] = max(
+-        1.0, min(4.0, float(self.ocr_scale_var.get()))
+-    )
++    llm_settings["ocr_scale"] = max(1.0, min(4.0, float(self.ocr_scale_var.get())))
+ except (tk.TclError, ValueError):
+     llm_settings["ocr_scale"] = 2.0
+ ```
+@@ -453,13 +455,18 @@ Phase 5 では `_save_settings` 内に防御的アサートを追加してキー
+ ```python
+ _SENSITIVE_KEYS = {"claude_api_key", "gemini_api_key", "anthropic_api_key"}
+ 
++
+ def _save_settings(settings):
+     # 防御: 機密キーが settings に混入していないかチェック（D-01 構造的ガード）
+     for k in _SENSITIVE_KEYS:
+         if k in settings:
+-            logger.error("機密キー '%s' が settings に混入しています（保存をスキップ）", k)
++            logger.error(
++                "機密キー '%s' が settings に混入しています（保存をスキップ）", k
++            )
+             # キーを除去してから保存する（最悪ケースへの安全フォールバック）
+-            settings = {key: v for key, v in settings.items() if key not in _SENSITIVE_KEYS}
++            settings = {
++                key: v for key, v in settings.items() if key not in _SENSITIVE_KEYS
++            }
+     ...
+ ```
+ 
+@@ -512,9 +519,9 @@ Phase 5 では `claude_model` / `ocr_effort` キーも defaults に追加する
+ **Source:** `pagefolio/ocr_dialog.py` `_default_font`（行 83–87）
+ **Apply to:** 全ダイアログ
+ ```python
+-font=self._font(0)      # 標準
+-font=self._font(-1)     # 小
+-font=self._font(2, "bold")  # 見出し
++font = self._font(0)  # 標準
++font = self._font(-1)  # 小
++font = self._font(2, "bold")  # 見出し
+ ```
+ 
+ ### モーダル作法
+diff --git a/.planning/milestones/v1.4.0-phases/06-gemini-provider/06-PATTERNS.md b/.planning/milestones/v1.4.0-phases/06-gemini-provider/06-PATTERNS.md
+index 3baa1d4..5b87d29 100644
+--- a/.planning/milestones/v1.4.0-phases/06-gemini-provider/06-PATTERNS.md
++++ b/.planning/milestones/v1.4.0-phases/06-gemini-provider/06-PATTERNS.md
+@@ -44,8 +44,8 @@ logger = logging.getLogger(__name__)
+ **クラス属性・`__init__` パターン**（`ClaudeProvider` line 210-251 を踏襲）:
+ ```python
+ class GeminiProvider(OCRProvider):
+-    default_concurrency = 1   # D-07: Gemini=1（ClaudeProvider は 2）
+-    max_concurrency = 1       # D-07: クラウド並列度制限
++    default_concurrency = 1  # D-07: Gemini=1（ClaudeProvider は 2）
++    max_concurrency = 1  # D-07: クラウド並列度制限
+ 
+     GENERATE_CONTENT_ENDPOINT = (
+         "https://generativelanguage.googleapis.com/v1beta/models/"
+@@ -70,7 +70,7 @@ def _build_payload(self, b64_png, prompt):
+             {
+                 "parts": [
+                     {"inline_data": {"mime_type": "image/png", "data": b64_png}},
+-                    {"text": prompt},   # 画像→テキストの順（公式推奨）
++                    {"text": prompt},  # 画像→テキストの順（公式推奨）
+                 ]
+             }
+         ],
+@@ -142,7 +142,7 @@ def _parse_response(self, body):
+ ```python
+ def list_models(self):
+     if not self.api_key:
+-        return list(self.RECOMMENDED_MODELS)   # キー未設定時は静的リスト（D-08）
++        return list(self.RECOMMENDED_MODELS)  # キー未設定時は静的リスト（D-08）
+     timeout = 10
+     req = urllib.request.Request(  # noqa: S310
+         self.MODELS_ENDPOINT,
+@@ -151,7 +151,9 @@ def list_models(self):
+     )
+     # ... 例外ハンドリングは ClaudeProvider line 406-417 と同一構造 ...
+     return [
+-        m.get("name", "").replace("models/", "")  # "models/gemini-2.5-flash" → "gemini-2.5-flash"
++        m.get("name", "").replace(
++            "models/", ""
++        )  # "models/gemini-2.5-flash" → "gemini-2.5-flash"
+         for m in data.get("models", [])
+         if "generateContent" in m.get("supportedGenerationMethods", [])
+         and m.get("name", "")
+@@ -230,7 +232,10 @@ _cloud_providers = {"claude", "gemini"}
+ ```python
+ import queue  # 標準ライブラリ（新規 pip 依存なし）
+ 
+-def run_with_bounded_buffer(render_fn, ocr_fn, page_indices, maxsize, is_cancelled, on_done):
++
++def run_with_bounded_buffer(
++    render_fn, ocr_fn, page_indices, maxsize, is_cancelled, on_done
++):
+     """Tk 非依存の producer-consumer ループ（D-13: テストで直接呼び出せる）。
+ 
+     render_fn(page_idx) -> b64_png: メインスレッドで呼ぶ前提（テストでは直接呼ぶ）
+@@ -263,13 +268,14 @@ self._images[page_idx] = b64  # ← 全ページを辞書に蓄積
+ ```python
+ import queue  # 標準ライブラリ追加
+ 
++
+ def _on_run(self):
+     ...
+     # バッファ上限 = 並列度 + 1（余裕係数 1 で飢え防止・D-02）
+     self._render_queue = queue.Queue(maxsize=self.concurrency + 1)
+     self._render_idx = 0
+-    self._start_worker_thread()   # worker を先に起動（producer と重なり実行）
+-    self._render_next_page()      # producer 開始
++    self._start_worker_thread()  # worker を先に起動（producer と重なり実行）
++    self._render_next_page()  # producer 開始
+ ```
+ 
+ **改修後の `_render_next_page` パターン**（line 808-850 の改修版）:
+@@ -277,7 +283,7 @@ def _on_run(self):
+ def _render_next_page(self):
+     """メインスレッド（生産者）: 1 ページ render → キューに積む（after(0) 連鎖）"""
+     if self._cancel_flag.is_set():
+-        self._render_queue.put(None)   # キャンセル時は完了シグナルで worker を終わらせる
++        self._render_queue.put(None)  # キャンセル時は完了シグナルで worker を終わらせる
+         self._finish_cancelled()
+         return
+ 
+@@ -316,7 +322,7 @@ def _render_next_page(self):
+         self.errors[page_idx] = f"image conversion error: {e}"
+ 
+     self._render_idx += 1
+-    self.after(0, self._render_next_page)   # 次ページを連鎖（UI フリーズ回避）
++    self.after(0, self._render_next_page)  # 次ページを連鎖（UI フリーズ回避）
+ ```
+ 
+ **改修後の `_worker` パターン**（line 857-923 の改修版）:
+@@ -336,7 +342,7 @@ def _worker(self):
+             continue
+ 
+         if item is None:
+-            break   # 完了シグナル
++            break  # 完了シグナル
+ 
+         page_idx, b64 = item
+         try:
+@@ -347,7 +353,7 @@ def _worker(self):
+             self.errors[page_idx] = str(e)
+             done += 1
+         finally:
+-            del b64   # 送信直後に破棄（D-01 メモリ保証・成功基準2）
++            del b64  # 送信直後に破棄（D-01 メモリ保証・成功基準2）
+             self._render_queue.task_done()
+ 
+         # 進捗通知（after(0) 経由でメインスレッドへ・スレッドセーフ Pitfall 3）
+@@ -369,6 +375,7 @@ def _worker(self):
+ # 既存（line 513-526）:
+ def _is_cloud_provider(self):
+     from pagefolio.ocr_providers import ClaudeProvider
++
+     name = self.app.settings.get("ocr_provider", "")
+     if name == "claude":
+         return True
+@@ -376,9 +383,11 @@ def _is_cloud_provider(self):
+         return True
+     return False
+ 
++
+ # 改修後（gemini 追加）:
+ def _is_cloud_provider(self):
+     from pagefolio.ocr_providers import ClaudeProvider, GeminiProvider
++
+     name = self.app.settings.get("ocr_provider", "")
+     if name in ("claude", "gemini"):
+         return True
+@@ -386,6 +395,7 @@ def _is_cloud_provider(self):
+         return True
+     return False
+ 
++
+ # _needs_session_key も同様に gemini 用 env var を確認する
+ def _needs_session_key(self):
+     if not self._is_cloud_provider():
+@@ -393,7 +403,10 @@ def _needs_session_key(self):
+     name = self.app.settings.get("ocr_provider", "")
+     if name == "gemini":
+         import os
+-        return not bool(os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY"))
++
++        return not bool(
++            os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
++        )
+     return not bool(os.environ.get("ANTHROPIC_API_KEY"))
+ ```
+ 
+@@ -417,7 +430,7 @@ elif name == "gemini":
+ def _clear_text(self):
+     ...
+     # 既存のクリア処理に加えて:
+-    self._render_queue = None   # キュー参照をリセット（再実行時に再生成）
++    self._render_queue = None  # キュー参照をリセット（再実行時に再生成）
+ ```
+ 
+ ---
+@@ -451,10 +464,10 @@ def _clear_text(self):
+ **provider Combobox への gemini 追加**（line 100）:
+ ```python
+ # 既存（line 100）:
+-values=["off", "lmstudio", "claude"],
++values = (["off", "lmstudio", "claude"],)
+ 
+ # 変更後:
+-values=["off", "lmstudio", "claude", "gemini"],
++values = (["off", "lmstudio", "claude", "gemini"],)
+ ```
+ 
+ **Gemini 固有欄（claude_section_frame と同パターンで新規作成）**:
+@@ -493,7 +506,9 @@ elif provider == "gemini":
+     self.gemini_section_frame.pack(fill="x", padx=24, pady=(4, 2))
+     self.claude_section_frame.pack_forget()
+     self.effort_frame.pack_forget()
+-    self.temperature_frame.pack(fill="x", padx=24, pady=2)   # temperature のみ表示（D-09）
++    self.temperature_frame.pack(
++        fill="x", padx=24, pady=2
++    )  # temperature のみ表示（D-09）
+ else:
+     self.claude_section_frame.pack_forget()
+     self.gemini_section_frame.pack_forget()
+@@ -506,7 +521,7 @@ else:
+ # 既存（line 291-306）の scale_row pack 後に追加:
+ tk.Label(
+     scale_row,  # または scale_row の直後の別 Frame
+-    text=self._L["ocr_scale_tradeoff_hint"],   # lang.py に追加するキー（D-12）
++    text=self._L["ocr_scale_tradeoff_hint"],  # lang.py に追加するキー（D-12）
+     bg=C["BG_DARK"],
+     fg=C["TEXT_SUB"],
+     font=self._font(-2),
+@@ -522,9 +537,7 @@ llm_settings["claude_model"] = (
+     self.claude_model_var.get().strip() or "claude-sonnet-4-6"
+ )
+ # 追加（同パターン）:
+-llm_settings["gemini_model"] = (
+-    self.gemini_model_var.get().strip() or "gemini-2.5-flash"
+-)
++llm_settings["gemini_model"] = self.gemini_model_var.get().strip() or "gemini-2.5-flash"
+ ```
+ 
+ ---
+@@ -574,10 +587,17 @@ llm_settings["gemini_model"] = (
+ ```python
+ class _FakeResponse:
+     """既存（test_ocr_providers.py line 100-111）をそのまま再利用"""
++
+     def __init__(self, body): ...
+-    def __enter__(self): return self
+-    def __exit__(self, *_): return False
+-    def read(self): return self._body
++    def __enter__(self):
++        return self
++
++    def __exit__(self, *_):
++        return False
++
++    def read(self):
++        return self._body
++
+ 
+ class TestGeminiProviderBasic:
+     """GeminiProvider の基本属性（TestLMStudioProviderBasic line 115-141 と同パターン）"""
+@@ -585,9 +605,11 @@ class TestGeminiProviderBasic:
+     def test_is_ocr_provider_subclass(self): ...
+     def test_instantiation(self): ...
+     def test_default_concurrency(self):
+-        assert GeminiProvider.default_concurrency == 1   # LMStudio は 2
++        assert GeminiProvider.default_concurrency == 1  # LMStudio は 2
++
+     def test_max_concurrency(self):
+-        assert GeminiProvider.max_concurrency == 1       # LMStudio は 8
++        assert GeminiProvider.max_concurrency == 1  # LMStudio は 8
++
+ 
+ class TestGeminiProviderBuildPayload:
+     """D-14 ①: payload 構築テスト（inline_data・x-goog-api-key・thinkingBudget=0）"""
+@@ -609,11 +631,16 @@ class TestGeminiProviderBuildPayload:
+     def test_x_goog_api_key_header(self, monkeypatch):
+         """x-goog-api-key ヘッダーに api_key が設定される（D-05）"""
+         from pagefolio import ocr_providers
++
+         captured = {}
++
+         def fake_urlopen(req, timeout=None):
+             captured["headers"] = dict(req.headers)
+-            body = json.dumps({"candidates": [{"content": {"parts": [{"text": "ok"}]}}]})
++            body = json.dumps(
++                {"candidates": [{"content": {"parts": [{"text": "ok"}]}}]}
++            )
+             return _FakeResponse(body)
++
+         monkeypatch.setattr(ocr_providers.urllib.request, "urlopen", fake_urlopen)
+         p = ocr_providers.GeminiProvider(api_key="test-key", model="m")
+         p.ocr_image("Zg==", "describe")
+@@ -621,6 +648,7 @@ class TestGeminiProviderBuildPayload:
+         header_keys_lower = {k.lower(): v for k, v in captured["headers"].items()}
+         assert header_keys_lower.get("x-goog-api-key") == "test-key"
+ 
++
+ class TestGeminiProviderOcrImage:
+     """D-14 ②: レスポンス解析テスト（candidates[].content.parts[].text 結合）"""
+ 
+@@ -628,7 +656,11 @@ class TestGeminiProviderOcrImage:
+     def test_empty_candidates_raises_runtime_error(self, monkeypatch):
+         """candidates が空のとき RuntimeError（安全フィルタ・Pitfall-D）"""
+         ...
+-    def test_retryable_429(self, monkeypatch): ...   # TestLMStudioProviderOcrImage と同パターン
++
++    def test_retryable_429(
++        self, monkeypatch
++    ): ...  # TestLMStudioProviderOcrImage と同パターン
++
+ 
+ class TestGeminiProviderListModels:
+     """D-14 ③: list_models（supportedGenerationMethods フィルタ）"""
+@@ -670,6 +702,7 @@ class TestResolveApiKeyGemini:
+         monkeypatch.delenv("GEMINI_API_KEY", raising=False)
+         monkeypatch.delenv("GOOGLE_API_KEY", raising=False)
+         from pagefolio.ocr_providers import OCRAPIKeyError
++
+         with pytest.raises(OCRAPIKeyError) as exc_info:
+             ocr._resolve_api_key("gemini", {})
+         assert exc_info.value.env_var == "GEMINI_API_KEY"
+@@ -700,7 +733,7 @@ class TestProducerConsumerMemory:
+             return f"text-{b64}"
+ 
+         # run_with_bounded_buffer（ocr.py に切り出す Tk 非依存ヘルパー）を直接呼ぶ
+-        page_indices = list(range(20))   # 20 ページ = 100 ページの代替（テスト速度）
++        page_indices = list(range(20))  # 20 ページ = 100 ページの代替（テスト速度）
+         results = {}
+         ocr.run_with_bounded_buffer(
+             render_fn=lambda i: f"b64-page-{i}",
+@@ -747,6 +780,7 @@ self.after(0, lambda d=done: self._on_progress_bar(d))
+ ```python
+ # 既存パターン（line 275）:
+ from pagefolio.ocr_providers import ClaudeProvider
++
+ # Phase 6 追加（同パターン）:
+ from pagefolio.ocr_providers import GeminiProvider
+ ```
+diff --git a/.planning/milestones/v1.4.0-phases/06-gemini-provider/06-RESEARCH.md b/.planning/milestones/v1.4.0-phases/06-gemini-provider/06-RESEARCH.md
+index 71edb85..5581632 100644
+--- a/.planning/milestones/v1.4.0-phases/06-gemini-provider/06-RESEARCH.md
++++ b/.planning/milestones/v1.4.0-phases/06-gemini-provider/06-RESEARCH.md
+@@ -323,6 +323,7 @@ if provider_name == "gemini":
+ 
+ import queue  # 標準ライブラリ
+ 
++
+ def _on_run(self):
+     ...
+     # バッファ: maxsize = 並列度 + 1（余裕係数 1 で飢えを防止・D-02）
+@@ -330,6 +331,7 @@ def _on_run(self):
+     self._render_idx = 0
+     self._render_next_page()  # メインスレッドで逐次生産開始
+ 
++
+ def _render_next_page(self):
+     """メインスレッド（生産者）: 1ページ render → キューに積む（after(0) 連鎖）"""
+     if self._cancel_flag.is_set():
+@@ -372,11 +374,13 @@ def _render_next_page(self):
+     self._render_idx += 1
+     self.after(0, self._render_next_page)  # 次ページを連鎖
+ 
++
+ def _start_worker_thread(self):
+     # _render_next_page が起動直後にワーカーを開始する（重なり実行）
+     self._worker_thread = threading.Thread(target=self._worker, daemon=True)
+     self._worker_thread.start()
+ 
++
+ def _worker(self):
+     """バックグラウンドスレッド（消費者）: キューから取り出して API 送信"""
+     done = 0
+@@ -455,12 +459,12 @@ def _worker(self):
+ ```python
+ # pagefolio/ocr_dialog.py 内またはヘルパー関数として（D-13 裁量）
+ def _run_with_bounded_buffer(
+-    render_fn,      # page_idx -> b64_png str（メインスレッドで呼ぶ前提・テストでは直接呼ぶ）
+-    ocr_fn,         # b64_png -> str（API 呼び出し・テストでは FakeProvider を渡す）
+-    page_indices,   # list[int]
+-    maxsize,        # バッファ上限
+-    is_cancelled,   # () -> bool
+-    on_done,        # (page_idx, text_or_error) -> None
++    render_fn,  # page_idx -> b64_png str（メインスレッドで呼ぶ前提・テストでは直接呼ぶ）
++    ocr_fn,  # b64_png -> str（API 呼び出し・テストでは FakeProvider を渡す）
++    page_indices,  # list[int]
++    maxsize,  # バッファ上限
++    is_cancelled,  # () -> bool
++    on_done,  # (page_idx, text_or_error) -> None
+ ):
+     """Tk 非依存の producer-consumer ループ（テストで直接呼び出せる）"""
+     buf = queue.Queue(maxsize=maxsize)
+diff --git a/.planning/milestones/v1.4.0-phases/06-gemini-provider/06-REVIEW.md b/.planning/milestones/v1.4.0-phases/06-gemini-provider/06-REVIEW.md
+index ec28c2a..8c07839 100644
+--- a/.planning/milestones/v1.4.0-phases/06-gemini-provider/06-REVIEW.md
++++ b/.planning/milestones/v1.4.0-phases/06-gemini-provider/06-REVIEW.md
+@@ -66,9 +66,9 @@ CR-01・CR-02・WR-01・WR-02 の修正内容は概ね正しく実装されて
+ if self._cancel_flag.is_set():
+     for _ in range(self.concurrency):
+         try:
+-            self._render_queue.put_nowait(None)   # Full なら何もしない
++            self._render_queue.put_nowait(None)  # Full なら何もしない
+         except queue.Full:
+-            pass                                   # ← シグナルがドロップされる
++            pass  # ← シグナルがドロップされる
+     self._finish_cancelled()
+     return
+ ```
+@@ -116,9 +116,9 @@ if self._cancel_flag.is_set():
+ ```python
+ # L1008-1010（ワーカースレッド内）
+ text = self.provider.ocr_image(b64, self._ocr_prompt)
+-self.results[page_idx] = text           # Lock なし書き込み
++self.results[page_idx] = text  # Lock なし書き込み
+ ...
+-self.errors[page_idx] = str(e)          # Lock なし書き込み（L1014, L1049, L1055）
++self.errors[page_idx] = str(e)  # Lock なし書き込み（L1014, L1049, L1055）
+ ```
+ 
+ ```python
+@@ -172,7 +172,7 @@ with self._done_lock:
+     has_fatal = self._fatal_msg is not None
+ if self._cancel_flag.is_set() or has_fatal:
+     with self._done_lock:
+-        self._done_count += 1   # スキップ扱いとしてカウント
++        self._done_count += 1  # スキップ扱いとしてカウント
+     continue
+ ```
+ 
+diff --git a/.planning/milestones/v1.4.0-phases/06-gemini-provider/06-VERIFICATION.md b/.planning/milestones/v1.4.0-phases/06-gemini-provider/06-VERIFICATION.md
+index 76b046e..07e08b4 100644
+--- a/.planning/milestones/v1.4.0-phases/06-gemini-provider/06-VERIFICATION.md
++++ b/.planning/milestones/v1.4.0-phases/06-gemini-provider/06-VERIFICATION.md
+@@ -116,10 +116,10 @@ else:
+ `pagefolio/settings.py` の `_SENSITIVE_KEYS`（L17-26）に以下が追加:
+ 
+ ```python
+-"google_api_key",    # WR-03: Gemini フォールバックキー名（小文字）
+-"GEMINI_API_KEY",    # WR-03: 大文字バリアント
+-"GOOGLE_API_KEY",    # WR-03: Gemini フォールバックキー名（大文字・D-06）
+-"ANTHROPIC_API_KEY", # WR-03: 大文字バリアント
++("google_api_key",)  # WR-03: Gemini フォールバックキー名（小文字）
++("GEMINI_API_KEY",)  # WR-03: 大文字バリアント
++("GOOGLE_API_KEY",)  # WR-03: Gemini フォールバックキー名（大文字・D-06）
++("ANTHROPIC_API_KEY",)  # WR-03: 大文字バリアント
+ ```
+ 
+ Gemini の dual env var フォールバックキーが settings に平文保存されないことが構造的に保証される。
+diff --git a/.planning/milestones/v1.4.0-phases/07-tesseract-pluginmanager-qa/07-RESEARCH.md b/.planning/milestones/v1.4.0-phases/07-tesseract-pluginmanager-qa/07-RESEARCH.md
+index 4dfe2d3..bdcd438 100644
+--- a/.planning/milestones/v1.4.0-phases/07-tesseract-pluginmanager-qa/07-RESEARCH.md
++++ b/.planning/milestones/v1.4.0-phases/07-tesseract-pluginmanager-qa/07-RESEARCH.md
+@@ -199,29 +199,28 @@ class TesseractProvider(OCRProvider):
+ ```python
+ import subprocess
+ 
++
+ def _detect_tesseract():
+     """起動時に一度だけ呼ばれる検出関数"""
+     try:
+-        r = subprocess.run(
+-            ["tesseract", "--version"],
+-            capture_output=True, timeout=5
+-        )
++        r = subprocess.run(["tesseract", "--version"], capture_output=True, timeout=5)
+         if r.returncode != 0:
+             return False, frozenset()
+         # --list-langs でインストール済み言語を取得
+         r2 = subprocess.run(
+-            ["tesseract", "--list-langs"],
+-            capture_output=True, timeout=5
++            ["tesseract", "--list-langs"], capture_output=True, timeout=5
+         )
+         lines = r2.stdout.decode(errors="replace").splitlines()
+         langs = frozenset(
+-            line.strip() for line in lines
++            line.strip()
++            for line in lines
+             if line.strip() and not line.startswith("List of")
+         )
+         return True, langs
+     except (FileNotFoundError, OSError, subprocess.TimeoutExpired):
+         return False, frozenset()
+ 
++
+ _TESSERACT_AVAILABLE, _TESSERACT_LANGS = _detect_tesseract()
+ ```
+ 
+@@ -285,6 +284,7 @@ def __init__(self):
+     self._disabled = set()
+     self._provider_registry: dict[str, type] = {}  # OCR プロバイダ登録辞書
+ 
++
+ def register_ocr_provider(self, name: str, cls) -> None:
+     """サードパーティ OCR プロバイダを登録する。
+     プラグインの on_load(app) 内で呼び出すことを想定。
+@@ -316,8 +316,9 @@ self.provider_combo = ttk.Combobox(
+ 
+ ```python
+ base_providers = ["off", "lmstudio", "claude", "gemini", "tesseract"]
+-plugin_providers = list(self._plugin_manager._provider_registry.keys()) \
+-    if self._plugin_manager else []
++plugin_providers = (
++    list(self._plugin_manager._provider_registry.keys()) if self._plugin_manager else []
++)
+ self.provider_combo["values"] = base_providers + plugin_providers
+ ```
+ 
+@@ -378,6 +379,7 @@ if self.provider_var.get() == "tesseract" and not _TESSERACT_AVAILABLE:
+ ```python
+ import subprocess, base64
+ 
++
+ def _run_tesseract(b64_png: str, lang: str = "jpn+eng") -> str:
+     """base64 PNG を stdin 経由で tesseract に送り stdout テキストを返す。
+ 
+@@ -410,9 +412,12 @@ def _run_tesseract(b64_png: str, lang: str = "jpn+eng") -> str:
+ 
+ ```python
+ r = subprocess.run(["tesseract", "--list-langs"], capture_output=True, timeout=5)
+-raw = (r.stdout or r.stderr).decode(errors="replace")  # Windows は stdout、Linux は stderr
++raw = (r.stdout or r.stderr).decode(
++    errors="replace"
++)  # Windows は stdout、Linux は stderr
+ langs = frozenset(
+-    line.strip() for line in raw.splitlines()
++    line.strip()
++    for line in raw.splitlines()
+     if line.strip() and not line.lower().startswith("list of")
+ )
+ ```
+@@ -461,8 +466,13 @@ self.provider_combo["values"] = base + plugin_extras
+ 
+ # values から除外した場合、別途説明ラベルを追加
+ if not _TESSERACT_AVAILABLE:
+-    tk.Label(provider_row, text=self._L["tesseract_not_installed"],
+-             fg=C["TEXT_SUB"], bg=C["BG_DARK"], font=self._font(-2)).pack(...)
++    tk.Label(
++        provider_row,
++        text=self._L["tesseract_not_installed"],
++        fg=C["TEXT_SUB"],
++        bg=C["BG_DARK"],
++        font=self._font(-2),
++    ).pack(...)
+ ```
+ 
+ ---
+@@ -518,11 +528,10 @@ if not _TESSERACT_AVAILABLE:
+ import subprocess
+ import base64
+ 
++
+ def _detect_tesseract():
+     try:
+-        r = subprocess.run(
+-            ["tesseract", "--version"], capture_output=True, timeout=5
+-        )
++        r = subprocess.run(["tesseract", "--version"], capture_output=True, timeout=5)
+         if r.returncode != 0:
+             return False, frozenset()
+         r2 = subprocess.run(
+@@ -530,13 +539,15 @@ def _detect_tesseract():
+         )
+         raw = (r2.stdout or r2.stderr).decode(errors="replace")
+         langs = frozenset(
+-            line.strip() for line in raw.splitlines()
++            line.strip()
++            for line in raw.splitlines()
+             if line.strip() and not line.lower().startswith("list of")
+         )
+         return True, langs
+     except (FileNotFoundError, OSError, subprocess.TimeoutExpired):
+         return False, frozenset()
+ 
++
+ _TESSERACT_AVAILABLE, _TESSERACT_LANGS = _detect_tesseract()
+ 
+ 
+@@ -604,15 +615,18 @@ def build_provider(settings, api_key=None, plugin_manager=None):
+ # Source: dialogs/llm_config.py L97〜108 の構造を踏襲
+ from pagefolio.ocr_providers import _TESSERACT_AVAILABLE
+ 
++
+ # _build() 内で呼ぶ
+ def _build_provider_values(self):
+     base = ["off", "lmstudio", "claude", "gemini", "tesseract"]
+     extras = (
+         list(self._plugin_manager._provider_registry.keys())
+-        if self._plugin_manager else []
++        if self._plugin_manager
++        else []
+     )
+     return base + extras
+ 
++
+ # Combobox 展開後にテスト入力で選択された "tesseract" を検出してリセット
+ def _on_provider_change(self, _event=None):
+     provider = self.provider_var.get()
+diff --git a/.planning/milestones/v1.4.0-phases/07-tesseract-pluginmanager-qa/PATTERNS.md b/.planning/milestones/v1.4.0-phases/07-tesseract-pluginmanager-qa/PATTERNS.md
+index d2a9cf9..565e024 100644
+--- a/.planning/milestones/v1.4.0-phases/07-tesseract-pluginmanager-qa/PATTERNS.md
++++ b/.planning/milestones/v1.4.0-phases/07-tesseract-pluginmanager-qa/PATTERNS.md
+@@ -52,7 +52,7 @@ import subprocess
+ **クラス属性パターン** (`GeminiProvider` l.435–443):
+ ```python
+ class GeminiProvider(OCRProvider):
+-    default_concurrency = 1   # Free Tier の RPM 上限対応
++    default_concurrency = 1  # Free Tier の RPM 上限対応
+     max_concurrency = 1
+ 
+     RECOMMENDED_MODELS = ["gemini-2.5-flash", "gemini-2.5-pro"]
+@@ -85,6 +85,7 @@ urllib 例外を subprocess 例外へ置き換える:
+ ```python
+ def ocr_image(self, b64_png, prompt, **kwargs):
+     import base64, tempfile, os
++
+     # base64 → PNG 一時ファイル → tesseract stdout → テキスト返却
+     png_bytes = base64.b64decode(b64_png)
+     with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as f:
+@@ -93,13 +94,17 @@ def ocr_image(self, b64_png, prompt, **kwargs):
+     try:
+         result = subprocess.run(
+             ["tesseract", tmp_path, "stdout", "-l", self.lang, "--psm", str(self.psm)],
+-            capture_output=True, text=True, timeout=self.timeout,
++            capture_output=True,
++            text=True,
++            timeout=self.timeout,
+         )
+         if result.returncode != 0:
+             raise RuntimeError(f"tesseract 失敗: {result.stderr.strip()}")
+         return result.stdout
+     except FileNotFoundError as e:
+-        raise RuntimeError("tesseract が見つかりません。インストールと PATH 設定を確認してください") from e
++        raise RuntimeError(
++            "tesseract が見つかりません。インストールと PATH 設定を確認してください"
++        ) from e
+     except subprocess.TimeoutExpired as e:
+         raise TimeoutError(f"timed out after {self.timeout}s") from e
+     except Exception as e:
+@@ -122,7 +127,9 @@ def list_models(self):
+     try:
+         result = subprocess.run(
+             ["tesseract", "--list-langs"],
+-            capture_output=True, text=True, timeout=10,
++            capture_output=True,
++            text=True,
++            timeout=10,
+         )
+         lines = result.stderr.splitlines() or result.stdout.splitlines()
+         return [l.strip() for l in lines if l.strip() and "List" not in l]
+@@ -181,9 +188,9 @@ elif name == "tesseract":
+ **既存辞書管理パターン** (`pagefolio/plugins.py` l.83–87):
+ ```python
+ def __init__(self):
+-    self._plugins = {}       # {plugin_id: plugin_instance}
++    self._plugins = {}  # {plugin_id: plugin_instance}
+     self._plugin_modules = {}  # {plugin_id: module}
+-    self._disabled = set()   # 無効化されたプラグインIDのセット
++    self._disabled = set()  # 無効化されたプラグインIDのセット
+ ```
+ 
+ `_provider_registry` は同じ辞書パターンを使い `__init__` に追加:
+@@ -205,8 +212,12 @@ def register_ocr_provider(self, name, provider_class):
+     """
+     from pagefolio.ocr_providers import OCRProvider
+ 
+-    if not (isinstance(provider_class, type) and issubclass(provider_class, OCRProvider)):
+-        raise TypeError(f"{provider_class} は OCRProvider のサブクラスでなければなりません")
++    if not (
++        isinstance(provider_class, type) and issubclass(provider_class, OCRProvider)
++    ):
++        raise TypeError(
++            f"{provider_class} は OCRProvider のサブクラスでなければなりません"
++        )
+     self._provider_registry[name] = provider_class
+     logger.debug("OCR プロバイダ登録: %s -> %s", name, provider_class.__name__)
+ ```
+@@ -221,9 +232,7 @@ def fire_event(self, event_name, *args, **kwargs):
+             try:
+                 method(*args, **kwargs)
+             except Exception as e:
+-                logger.exception(
+-                    "プラグインイベント %s 発火失敗: %s", event_name, e
+-                )
++                logger.exception("プラグインイベント %s 発火失敗: %s", event_name, e)
+ ```
+ 
+ `register_ocr_provider` は `fire_event` の `try/except Exception as e` パターンを踏襲し、
+@@ -326,9 +335,7 @@ tesseract フレームでは `gemini_model_combo` の代わりに言語 Combobox
+ 
+ **`_apply` での設定収集パターン** (l.681–742) — `gemini_model` の取り出し方を踏襲:
+ ```python
+-llm_settings["gemini_model"] = (
+-    self.gemini_model_var.get().strip() or "gemini-2.5-flash"
+-)
++llm_settings["gemini_model"] = self.gemini_model_var.get().strip() or "gemini-2.5-flash"
+ ```
+ 
+ tesseract は:
+@@ -381,19 +388,23 @@ class TestGeminiProviderBasic:
+ 
+     def test_is_ocr_provider_subclass(self):
+         from pagefolio.ocr_providers import GeminiProvider, OCRProvider
++
+         assert issubclass(GeminiProvider, OCRProvider)
+ 
+     def test_instantiation(self):
+         from pagefolio.ocr_providers import GeminiProvider
++
+         p = GeminiProvider(api_key="k", model="gemini-2.5-flash")
+         assert p is not None
+ 
+     def test_default_concurrency(self):
+         from pagefolio.ocr_providers import GeminiProvider
++
+         assert GeminiProvider.default_concurrency == 1
+ 
+     def test_max_concurrency(self):
+         from pagefolio.ocr_providers import GeminiProvider
++
+         assert GeminiProvider.max_concurrency == 1
+ ```
+ 
+@@ -402,19 +413,23 @@ TesseractProvider 向けに同じ構造で置き換える:
+ class TestTesseractProviderBasic:
+     def test_is_ocr_provider_subclass(self):
+         from pagefolio.ocr_providers import OCRProvider, TesseractProvider
++
+         assert issubclass(TesseractProvider, OCRProvider)
+ 
+     def test_instantiation(self):
+         from pagefolio.ocr_providers import TesseractProvider
++
+         p = TesseractProvider()
+         assert p is not None
+ 
+     def test_default_concurrency(self):
+         from pagefolio.ocr_providers import TesseractProvider
++
+         assert TesseractProvider.default_concurrency == 1
+ 
+     def test_recommended_langs_is_list(self):
+         from pagefolio.ocr_providers import TesseractProvider
++
+         assert isinstance(TesseractProvider.RECOMMENDED_LANGS, list)
+ ```
+ 
+@@ -431,6 +446,7 @@ def test_ocr_image_success(self, monkeypatch):
+             returncode = 0
+             stdout = "OCR 結果\n"
+             stderr = ""
++
+         return R()
+ 
+     monkeypatch.setattr(ocr_providers.subprocess, "run", fake_run)
+@@ -443,6 +459,7 @@ GeminiProvider の「キー未設定時に RECOMMENDED_MODELS を返す」テス
+ ```python
+ def test_list_models_tesseract_not_found_returns_recommended(self, monkeypatch):
+     from pagefolio.ocr_providers import TesseractProvider
++
+     monkeypatch.setattr("shutil.which", lambda _: None)
+     p = TesseractProvider()
+     result = p.list_models()
+@@ -463,6 +480,7 @@ def test_timeout_raises_timeout_error(self, monkeypatch):
+     with pytest.raises(TimeoutError):
+         p.ocr_image("Zg==", "describe")
+ 
++
+ def test_tesseract_not_found_raises_runtime_error(self, monkeypatch):
+     from pagefolio import ocr_providers
+ 
+@@ -509,12 +527,12 @@ TesseractProvider では urllib 例外を subprocess 例外に置き換える（
+ **適用先:** tesseract フレームの全ウィジェット
+ 
+ ```python
+-bg=C["BG_DARK"],
+-fg=C["TEXT_MAIN"],
+-fg=C["TEXT_SUB"],   # ヒントテキスト
+-fg=C["SUCCESS"],    # 成功ステータス
+-fg=C["ACCENT"],     # 失敗ステータス
+-fg=C["WARNING"],    # 処理中ステータス
++bg = (C["BG_DARK"],)
++fg = (C["TEXT_MAIN"],)
++fg = (C["TEXT_SUB"],)  # ヒントテキスト
++fg = (C["SUCCESS"],)  # 成功ステータス
++fg = (C["ACCENT"],)  # 失敗ステータス
++fg = (C["WARNING"],)  # 処理中ステータス
+ ```
+ 
+ ### フォント参照 — `self._font(delta)` ヘルパー
+@@ -524,9 +542,9 @@ fg=C["WARNING"],    # 処理中ステータス
+ **適用先:** tesseract フレームの全 Label/Combobox/Entry
+ 
+ ```python
+-font=self._font(-1),   # 通常フォント（-1 delta）
+-font=self._font(-2),   # ヒントテキスト（-2 delta）
+-font=self._font(2, "bold"),  # 見出し
++font = (self._font(-1),)  # 通常フォント（-1 delta）
++font = (self._font(-2),)  # ヒントテキスト（-2 delta）
++font = (self._font(2, "bold"),)  # 見出し
+ ```
+ 
+ ### PluginManager での例外隔離パターン
+diff --git a/.planning/milestones/v1.6.0-phases/01-ui-ocr/01-PATTERNS.md b/.planning/milestones/v1.6.0-phases/01-ui-ocr/01-PATTERNS.md
+index e6f19ff..241aa3a 100644
+--- a/.planning/milestones/v1.6.0-phases/01-ui-ocr/01-PATTERNS.md
++++ b/.planning/milestones/v1.6.0-phases/01-ui-ocr/01-PATTERNS.md
+@@ -34,10 +34,10 @@ tk.Entry(
+     textvariable=self.url_var,
+     font=self._font(-1),
+     bg=C["BG_CARD"],
+-    fg=C["TEXT_SUB"],            # ← グレーアウト（TEXT_MAIN ではなく TEXT_SUB）
++    fg=C["TEXT_SUB"],  # ← グレーアウト（TEXT_MAIN ではなく TEXT_SUB）
+     insertbackground=C["TEXT_MAIN"],
+     relief="flat",
+-    state="readonly",           # ← 読み取り専用化の核
++    state="readonly",  # ← 読み取り専用化の核
+     readonlybackground=C["BG_CARD"],
+ ).pack(side="left", fill="x", expand=True, padx=4)
+ ```
+@@ -126,14 +126,24 @@ if self.on_apply:
+ ```python
+ sel_frame = tk.Frame(parent, bg=C["BG_PANEL"])
+ sel_frame.pack(fill="x", padx=6, pady=2)
+-ttk.Button(sel_frame, text=self._t("select_all"), command=self._select_all).pack(side="left", padx=2)
+-ttk.Button(sel_frame, text=self._t("deselect"), command=self._deselect_all).pack(side="left", padx=2)
++ttk.Button(sel_frame, text=self._t("select_all"), command=self._select_all).pack(
++    side="left", padx=2
++)
++ttk.Button(sel_frame, text=self._t("deselect"), command=self._deselect_all).pack(
++    side="left", padx=2
++)
+ 
+ self.thumb_zoom_var = tk.DoubleVar(value=self.settings.get("thumb_zoom", 1.0))
+ self.thumb_zoom_scale = ttk.Scale(
+-    sel_frame, from_=0.5, to=2.5, variable=self.thumb_zoom_var, orient="horizontal",
++    sel_frame,
++    from_=0.5,
++    to=2.5,
++    variable=self.thumb_zoom_var,
++    orient="horizontal",
+ )
+-self.thumb_zoom_scale.pack(side="right", fill="x", expand=True, padx=(10, 2))  # ← 同一行で幅競合
++self.thumb_zoom_scale.pack(
++    side="right", fill="x", expand=True, padx=(10, 2)
++)  # ← 同一行で幅競合
+ self.thumb_zoom_scale.bind("<ButtonRelease-1>", self._on_thumb_zoom_release)
+ ```
+ 
+@@ -141,15 +151,23 @@ self.thumb_zoom_scale.bind("<ButtonRelease-1>", self._on_thumb_zoom_release)
+ ```python
+ sel_frame = tk.Frame(parent, bg=C["BG_PANEL"])
+ sel_frame.pack(fill="x", padx=6, pady=2)
+-ttk.Button(sel_frame, text=self._t("select_all"), command=self._select_all).pack(side="left", padx=2)
+-ttk.Button(sel_frame, text=self._t("deselect"), command=self._deselect_all).pack(side="left", padx=2)
++ttk.Button(sel_frame, text=self._t("select_all"), command=self._select_all).pack(
++    side="left", padx=2
++)
++ttk.Button(sel_frame, text=self._t("deselect"), command=self._deselect_all).pack(
++    side="left", padx=2
++)
+ 
+ # 新設: スライダー専用の全幅独立行（ボタン行の直後）
+ zoom_frame = tk.Frame(parent, bg=C["BG_PANEL"])
+ zoom_frame.pack(fill="x", padx=6, pady=(0, 4))
+ self.thumb_zoom_var = tk.DoubleVar(value=self.settings.get("thumb_zoom", 1.0))
+ self.thumb_zoom_scale = ttk.Scale(
+-    zoom_frame, from_=0.5, to=2.5, variable=self.thumb_zoom_var, orient="horizontal",
++    zoom_frame,
++    from_=0.5,
++    to=2.5,
++    variable=self.thumb_zoom_var,
++    orient="horizontal",
+ )
+ self.thumb_zoom_scale.pack(fill="x", expand=True, padx=2)  # ← side 指定なし＝全幅
+ self.thumb_zoom_scale.bind("<ButtonRelease-1>", self._on_thumb_zoom_release)
+@@ -169,6 +187,7 @@ def _on_thumb_zoom_release(self, event=None):
+         return
+     self.settings["thumb_zoom"] = self.thumb_zoom_var.get()
+     from pagefolio.settings import _save_settings
++
+     _save_settings(self.settings)
+     self._invalidate_thumb_cache()
+     self._refresh_all()
+diff --git a/.planning/milestones/v1.6.0-phases/01-ui-ocr/01-REVIEW.md b/.planning/milestones/v1.6.0-phases/01-ui-ocr/01-REVIEW.md
+index 9c28281..52daf82 100644
+--- a/.planning/milestones/v1.6.0-phases/01-ui-ocr/01-REVIEW.md
++++ b/.planning/milestones/v1.6.0-phases/01-ui-ocr/01-REVIEW.md
+@@ -54,8 +54,12 @@ LM Studio のモデル取得・選択は `LLMConfigDialog`（独自 `_fetch_mode
+ ```python
+ # 例: 表示専用ラベルへ置換（操作は LLM 設定ダイアログ側に集約）
+ tk.Label(
+-    mf, textvariable=self.model_var, bg=C["BG_DARK"],
+-    fg=C["TEXT_SUB"], font=self._font(-1), anchor="w",
++    mf,
++    textvariable=self.model_var,
++    bg=C["BG_DARK"],
++    fg=C["TEXT_SUB"],
++    font=self._font(-1),
++    anchor="w",
+ ).pack(side="left", fill="x", expand=True, padx=4)
+ ```
+ 
+diff --git a/.planning/milestones/v1.6.0-phases/02-pagination/02-PATTERNS.md b/.planning/milestones/v1.6.0-phases/02-pagination/02-PATTERNS.md
+index c83df9e..f3d7a8e 100644
+--- a/.planning/milestones/v1.6.0-phases/02-pagination/02-PATTERNS.md
++++ b/.planning/milestones/v1.6.0-phases/02-pagination/02-PATTERNS.md
+@@ -55,9 +55,7 @@ def _render_preview_pixmap(self, page_idx, zoom):
+ **1. `_build_thumbnails`（197-225）— 窓範囲のみ描画へ。**
+ 現状の全描画箇所（206-207）:
+ ```python
+-placeholder_labels = [
+-    self._add_thumb_placeholder(i) for i in range(len(self.doc))
+-]
++placeholder_labels = [self._add_thumb_placeholder(i) for i in range(len(self.doc))]
+ ```
+ → `lo, hi = window_bounds(self._page_window_start, self._page_size, len(self.doc))` を取り、`for i in range(lo, hi)` に変更。**`_add_thumb_placeholder(i)` の `i` は全ページ index のまま渡す**（RESEARCH.md Pattern 3 / A2 = src 側変換が不要になる構成）。`render_next` の `placeholder_labels[i]` 添字は窓ローカルへ要対応（リストは窓分のみ生成されるため `placeholder_labels[i - lo]` 等）。`_thumb_gen` 世代ガード（198-199, 210-216）は**そのまま維持**（RESEARCH.md Anti-Pattern「世代ガードを外さない」）。
+ 
+@@ -75,6 +73,7 @@ for i, frame in enumerate(frames):
+ def _on_thumb_zoom_release(self, event=None):
+     self.settings["thumb_zoom"] = self.thumb_zoom_var.get()
+     from pagefolio.settings import _save_settings
++
+     _save_settings(self.settings)
+     self._invalidate_thumb_cache()
+     self._refresh_all()
+@@ -126,8 +125,8 @@ dest = max(0, min(dest, n))
+ → `_dnd_src_idx` は `_add_thumb_placeholder` のクロージャ束縛を全ページ index のまま保つ（viewer.py:242-243 の `idx=i` が `for i in range(lo, hi)` の `i` = 全ページ index）ので **src 変換は不要**。`dest` のみ:
+ ```python
+ lo, hi = window_bounds(self._page_window_start, self._page_size, n)
+-dest = to_global(dest_local, lo)            # D-06: global = local + window_start
+-dest = max(0, min(dest, n))                 # 既存クランプ（100 行）を変換後に適用（Pitfall 4）
++dest = to_global(dest_local, lo)  # D-06: global = local + window_start
++dest = max(0, min(dest, n))  # 既存クランプ（100 行）を変換後に適用（Pitfall 4）
+ ```
+ 以降の `bulk_move`（101-117）/ `move_page`（118-135）は**無改修**。`selected_pages` が全ページ index を保つ限り（D-07）`new_order` 組み立て（103-107）はそのまま正しい（RESEARCH.md Don't Hand-Roll）。
+ 
+diff --git a/.planning/milestones/v1.6.0-phases/02-pagination/02-RESEARCH.md b/.planning/milestones/v1.6.0-phases/02-pagination/02-RESEARCH.md
+index fe9310f..32d9ddf 100644
+--- a/.planning/milestones/v1.6.0-phases/02-pagination/02-RESEARCH.md
++++ b/.planning/milestones/v1.6.0-phases/02-pagination/02-RESEARCH.md
+@@ -174,18 +174,22 @@ def window_bounds(window_start, page_size, n_pages):
+     hi = min(lo + page_size, n_pages)
+     return (lo, hi)
+ 
++
+ def to_global(local_pos, window_start):
+-    return local_pos + window_start          # D-06
++    return local_pos + window_start  # D-06
++
+ 
+ def to_local(global_idx, window_start):
+     return global_idx - window_start
+ 
++
+ def window_for_page(page_idx, page_size):
+     """page_idx を含む窓の start を返す（D-11 追従の基礎）。"""
+     if page_size <= 0:
+         return 0
+     return (page_idx // page_size) * page_size
+ 
++
+ def clamp_window_start(window_start, page_size, n_pages):
+     """削除・件数変更後に window_start を有効範囲へ寄せる。"""
+     if n_pages <= 0 or page_size <= 0:
+@@ -201,14 +205,15 @@ def clamp_window_start(window_start, page_size, n_pages):
+ ```python
+ # Source: viewer.py:146-154 _on_thumb_zoom_release [VERIFIED: codebase]
+ def _on_page_size_change(self):
+-    new_size = self.page_size_var.get()        # 10..100 にクランプ済み前提
++    new_size = self.page_size_var.get()  # 10..100 にクランプ済み前提
+     self.settings["thumb_page_size"] = new_size
+     self._page_size = new_size
+     from pagefolio.settings import _save_settings
++
+     _save_settings(self.settings)
+     # 件数変更で現窓が無効になりうる → current_page を含む窓へ寄せる（D-11）
+     self._page_window_start = window_for_page(self.current_page, new_size)
+-    self._invalidate_thumb_cache()             # 窓が変わると描画対象が変わる
++    self._invalidate_thumb_cache()  # 窓が変わると描画対象が変わる
+     self._refresh_all()
+ ```
+ 
+@@ -219,12 +224,12 @@ def _on_page_size_change(self):
+ ```python
+ # Source: dnd.py:94-135 を窓化対応 [VERIFIED: codebase]
+ def _dnd_drop(self, event):
+-    src = self._dnd_src_idx                       # = 全ページ index（束縛を global に保つ）
+-    local_dest = self._dnd_dest_index(event)      # フレーム位置 = ローカル
++    src = self._dnd_src_idx  # = 全ページ index（束縛を global に保つ）
++    local_dest = self._dnd_dest_index(event)  # フレーム位置 = ローカル
+     if local_dest is None or src is None:
+         return
+     lo, hi = window_bounds(self._page_window_start, self._page_size, len(self.doc))
+-    dest = to_global(local_dest, lo)              # D-06: global = local + window_start
++    dest = to_global(local_dest, lo)  # D-06: global = local + window_start
+     # 窓末尾ドロップ（local_dest == 窓内フレーム数）は hi に対応 → 窓末ページの直後
+     dest = max(0, min(dest, len(self.doc)))
+     # 以降は既存ロジック（bulk_move / move_page）をそのまま。selected_pages は全ページ index（D-07）なので bulk_move は無改修で正しい
+@@ -306,7 +311,9 @@ def window_label(window_start, page_size, n_pages):
+     if n_pages == 0:
+         return "- / -"
+     # lo, hi は 0始まり半開区間 [lo, hi) → 表示は 1始まり lo+1 .. hi
+-    return f"{lo + 1}–{hi} / 全{n_pages}"   # 例 "41–47 / 全47"
++    return f"{lo + 1}–{hi} / 全{n_pages}"  # 例 "41–47 / 全47"
++
++
+ # 文言・区切り記号は LANG(ja/en 同一キー)規約に従い実装裁量（D-01 discretion）
+ ```
+ 
+@@ -319,6 +326,8 @@ def window_nav_state(window_start, page_size, n_pages):
+     prev_enabled = lo > 0
+     next_enabled = hi < n_pages
+     return (prev_enabled, next_enabled)
++
++
+ # 単一窓（n<=size）は両方 False → ボタン disabled だがラベル/行は常に表示（D-09）
+ ```
+ 
+diff --git a/.planning/milestones/v1.6.0-phases/03-ocr-a/03-PATTERNS.md b/.planning/milestones/v1.6.0-phases/03-ocr-a/03-PATTERNS.md
+index eff7359..9e90532 100644
+--- a/.planning/milestones/v1.6.0-phases/03-ocr-a/03-PATTERNS.md
++++ b/.planning/milestones/v1.6.0-phases/03-ocr-a/03-PATTERNS.md
+@@ -43,9 +43,9 @@ def _rotate_selected(self, deg):
+     self._save_undo("rotate", targets=targets)
+     for i in targets:
+         page = self.doc[i]
+-        page.set_rotation((page.rotation + deg) % 360)   # pixmap は即反映（検証済）
+-    self._invalidate_thumb_cache(targets)                # サムネイル即時反映の土台
+-    self._refresh_all()                                  # → _show_preview を内包
++        page.set_rotation((page.rotation + deg) % 360)  # pixmap は即反映（検証済）
++    self._invalidate_thumb_cache(targets)  # サムネイル即時反映の土台
++    self._refresh_all()  # → _show_preview を内包
+     self._set_status(self._t("status_rotated").format(count=len(targets), deg=deg))
+     self.plugin_manager.fire_event("on_page_rotate", self, targets, deg)
+ ```
+@@ -79,12 +79,15 @@ self.preview_canvas.configure(scrollregion=(0, 0, w + pad * 2, h + pad * 2))
+ ```python
+ # 現状: 終了理由を読まず "\n".join(texts) を返す
+ result = json.loads(body)
+-texts = [block.get("text") for block in result.get("content", [])
+-         if block.get("type") == "text" and block.get("text")]
++texts = [
++    block.get("text")
++    for block in result.get("content", [])
++    if block.get("type") == "text" and block.get("text")
++]
+ if not texts:
+     raise RuntimeError(f"Unexpected response format: {body[:500]}")
+ # ↓ 追加（D-05）: truncated は max_tokens 到達。部分テキストは捨てない
+-truncated = result.get("stop_reason") == "max_tokens"   # [A2: 実 API で値確認]
++truncated = result.get("stop_reason") == "max_tokens"  # [A2: 実 API で値確認]
+ ```
+ 
+ **Gemini（`_parse_response` 513-526 を改修）:**
+@@ -94,7 +97,7 @@ if not candidates:
+     reason = body.get("promptFeedback", {}).get("blockReason", "unknown")
+     raise RuntimeError(f"Gemini blocked: {reason}")
+ parts = candidates[0].get("content", {}).get("parts", [])
+-truncated = candidates[0].get("finishReason") == "MAX_TOKENS"   # [A2]
++truncated = candidates[0].get("finishReason") == "MAX_TOKENS"  # [A2]
+ ```
+ 
+ **伝搬設計（要 planner 決定・RESEARCH A1）:** `ocr_image` は現在 `str` 契約。`(text, truncated)` タプル化 → `_worker`（1305）の全呼び出し改修 + `tests/test_ocr_providers.py` の戻り値アサート更新が必要。`str | tuple` 段階導入 or 新メソッドかは planner 判断。**plan 前の locked decision 化が望ましい。**
+@@ -110,12 +113,16 @@ truncated = candidates[0].get("finishReason") == "MAX_TOKENS"   # [A2]
+ **待機文言（D-06）— delay 計算を文言生成の前へ（現状は順序が逆）:**
+ ```python
+ # 現状（1315-1343）: 文言 set（1318-）が先、delay 計算（1342）が後
+-wait_key = self._retry_wait_key(e)        # 429→ocr_waiting_retry / 5xx→_server
+-self.after(0, lambda p=page_idx, _n=n, _k=wait_key:
+-    self.progress_var.set(self._L[_k].format(page=p+1, n=_n, max=MAX_RETRIES)))
++wait_key = self._retry_wait_key(e)  # 429→ocr_waiting_retry / 5xx→_server
++self.after(
++    0,
++    lambda p=page_idx, _n=n, _k=wait_key: self.progress_var.set(
++        self._L[_k].format(page=p + 1, n=_n, max=MAX_RETRIES)
++    ),
++)
+ ...
+ raw_delay = e.retry_after if e.retry_after is not None else 1.0 * (2 ** (attempt - 1))
+-delay = clamp_retry_after(raw_delay)       # ← これを文言生成の前へ移動
++delay = clamp_retry_after(raw_delay)  # ← これを文言生成の前へ移動
+ interruptible_sleep(delay, self._cancel_flag.is_set)
+ ```
+ 改修後は `delay` を先に算出し `_L[_k].format(..., sec=round(delay))` へ渡す。`_retry_wait_key`（698-706）が返す両キー（`ocr_waiting_retry`/`ocr_waiting_retry_server`）の `.format` に `sec=` を追加すること（Pitfall 3）。
+@@ -127,11 +134,13 @@ if kind == "connection":
+ elif kind == "timeout":
+     user_msg = self._L["ocr_err_timeout"].format(...)
+ elif kind == "circuit_breaker":
+-    user_msg = self._L["ocr_err_circuit_breaker"].format(n=CB_CONSECUTIVE_FAILURES, error=msg)
++    user_msg = self._L["ocr_err_circuit_breaker"].format(
++        n=CB_CONSECUTIVE_FAILURES, error=msg
++    )
+ else:
+     user_msg = msg
+-self.text.insert("end", "\n" + user_msg + "\n")   # ← messagebox でなくパネル内（D-04）
+-self._append_resume_hint()                         # 部分成功なら再開導線
++self.text.insert("end", "\n" + user_msg + "\n")  # ← messagebox でなくパネル内（D-04）
++self._append_resume_hint()  # 部分成功なら再開導線
+ ```
+ 途切れ注記（D-05）はこの作法を踏襲し、当該ページ行へ `ocr_err_truncated` を併記。`_append_resume_hint`（1530-1540）の `.format(n=, first=)` パターンが「状況＋次アクション」の手本。
+ 
+@@ -169,9 +178,11 @@ def _make_stub(doc):
+     stub._render_preview_pixmap = ViewerMixin._render_preview_pixmap.__get__(stub)
+     return stub
+ 
++
+ # 新規（RESEARCH VERIFIED: 600x900 → 900x600）
+ def test_rotate_90_swaps_wh():
+-    doc = fitz.open(); doc.new_page(width=400, height=600)
++    doc = fitz.open()
++    doc.new_page(width=400, height=600)
+     s = _make_stub(doc)
+     _, w0, h0 = s._render_preview_pixmap(0, 1.0)
+     doc[0].set_rotation(90)
+@@ -188,12 +199,14 @@ def test_rotate_90_swaps_wh():
+ 
+ ```python
+ def test_save_settings_does_not_log_key_value(tmp_path, monkeypatch, caplog):
+-    monkeypatch.setattr("pagefolio.settings._get_settings_path",
+-                        lambda: str(tmp_path / "s.json"))
++    monkeypatch.setattr(
++        "pagefolio.settings._get_settings_path", lambda: str(tmp_path / "s.json")
++    )
+     import logging
++
+     with caplog.at_level(logging.DEBUG):
+         _save_settings({"theme": "dark", "claude_api_key": "sk-ant-LEAK-XYZ"})
+-    assert "sk-ant-LEAK-XYZ" not in caplog.text   # 値非出力
++    assert "sk-ant-LEAK-XYZ" not in caplog.text  # 値非出力
+     # 注意: _save_settings はキー"名"を logger.error で出す（settings.py 89-91）。
+     #       「キー名が出ない」はアサートしない（Pitfall 4）。
+ ```
+@@ -217,10 +230,15 @@ def test_save_settings_does_not_log_key_value(tmp_path, monkeypatch, caplog):
+ 
+ ```python
+ import re, pathlib
+-PATTERNS = [re.compile(r"sk-ant-[A-Za-z0-9_-]{20,}"),
+-            re.compile(r"AIza[A-Za-z0-9_-]{30,}")]
++
++PATTERNS = [
++    re.compile(r"sk-ant-[A-Za-z0-9_-]{20,}"),
++    re.compile(r"AIza[A-Za-z0-9_-]{30,}"),
++]
++
++
+ def test_no_real_api_keys_in_source():
+-    for p in pathlib.Path("pagefolio").rglob("*.py"):   # tests/ は除外（Pitfall 5）
++    for p in pathlib.Path("pagefolio").rglob("*.py"):  # tests/ は除外（Pitfall 5）
+         text = p.read_text(encoding="utf-8")
+         for pat in PATTERNS:
+             assert not pat.search(text), f"疑わしいキーが {p} に存在"
+@@ -234,8 +252,10 @@ def test_no_real_api_keys_in_source():
+ 既存に無ければ追加（Don't Hand-Roll）:
+ ```python
+ from pagefolio.lang import LANG
++
++
+ def test_lang_keys_parity():
+-    assert set(LANG["ja"]) == set(LANG["en"])   # 現状 290/290
++    assert set(LANG["ja"]) == set(LANG["en"])  # 現状 290/290
+ ```
+ 
+ ---
+diff --git a/.planning/milestones/v1.6.0-phases/03-ocr-a/03-RESEARCH.md b/.planning/milestones/v1.6.0-phases/03-ocr-a/03-RESEARCH.md
+index 1560ca0..392df05 100644
+--- a/.planning/milestones/v1.6.0-phases/03-ocr-a/03-RESEARCH.md
++++ b/.planning/milestones/v1.6.0-phases/03-ocr-a/03-RESEARCH.md
+@@ -146,14 +146,16 @@ python -m pytest --version                          # → pytest 9.0.2 [CITED: C
+ import types, fitz
+ from pagefolio.viewer import ViewerMixin
+ 
++
+ def test_rotation_swaps_dimensions():
+-    doc = fitz.open(); doc.new_page(width=400, height=600)
++    doc = fitz.open()
++    doc.new_page(width=400, height=600)
+     stub = types.SimpleNamespace(doc=doc)
+     stub._render_preview_pixmap = ViewerMixin._render_preview_pixmap.__get__(stub)
+-    _, w0, h0 = stub._render_preview_pixmap(0, 1.0)   # 600 900（zoom*1.5）
++    _, w0, h0 = stub._render_preview_pixmap(0, 1.0)  # 600 900（zoom*1.5）
+     doc[0].set_rotation(90)
+-    _, w1, h1 = stub._render_preview_pixmap(0, 1.0)   # 900 600
+-    assert (w1, h1) == (h0, w0)   # [VERIFIED: ローカル実行で 600x900 → 900x600 確認]
++    _, w1, h1 = stub._render_preview_pixmap(0, 1.0)  # 900 600
++    assert (w1, h1) == (h0, w0)  # [VERIFIED: ローカル実行で 600x900 → 900x600 確認]
+ ```
+ 
+ ### Pattern 2: 途切れ検出はレスポンス抽出箇所の隣で stop_reason/finishReason を読む
+@@ -163,14 +165,17 @@ def test_rotation_swaps_dimensions():
+ ```python
+ # Claude（ocr_providers.py 386-395 の隣・Source: 公式 docs）
+ result = json.loads(body)
+-texts = [b.get("text") for b in result.get("content", [])
+-         if b.get("type") == "text" and b.get("text")]
+-truncated = result.get("stop_reason") == "max_tokens"   # [CITED: docs.anthropic.com]
++texts = [
++    b.get("text")
++    for b in result.get("content", [])
++    if b.get("type") == "text" and b.get("text")
++]
++truncated = result.get("stop_reason") == "max_tokens"  # [CITED: docs.anthropic.com]
+ # 部分テキストは保持して返す（D-05）
+ 
+ # Gemini（ocr_providers.py 518-526 _parse_response の隣・Source: 公式 docs）
+ cand = body.get("candidates", [{}])[0]
+-truncated = cand.get("finishReason") == "MAX_TOKENS"    # [CITED: ai.google.dev]
++truncated = cand.get("finishReason") == "MAX_TOKENS"  # [CITED: ai.google.dev]
+ ```
+ **伝搬設計（要 planner 決定・既存契約との両立）:** `ocr_image` は現在 `str` を返す純粋契約。途切れ情報の運び方は 2 択:
+ 1. **戻り値拡張**（`(text, truncated)` タプル）→ `run_parallel`/`_worker`/`run_with_bounded_buffer` の全呼び出し箇所を改修。後方互換のため `tests/test_ocr_providers.py` の `ocr_image` 戻り値アサートも要更新。
+@@ -183,10 +188,14 @@ truncated = cand.get("finishReason") == "MAX_TOKENS"    # [CITED: ai.google.dev]
+ ```python
+ # Source: ocr_dialog.py _worker（要改修・順序入替）
+ raw_delay = e.retry_after if e.retry_after is not None else 1.0 * (2 ** (attempt - 1))
+-delay = clamp_retry_after(raw_delay)          # ← 先に計算
++delay = clamp_retry_after(raw_delay)  # ← 先に計算
+ wait_key = self._retry_wait_key(e)
+-self.after(0, lambda p=page_idx, _n=attempt, _k=wait_key, _d=delay:
+-    self.progress_var.set(self._L[_k].format(page=p+1, n=_n, max=MAX_RETRIES, sec=round(_d))))
++self.after(
++    0,
++    lambda p=page_idx, _n=attempt, _k=wait_key, _d=delay: self.progress_var.set(
++        self._L[_k].format(page=p + 1, n=_n, max=MAX_RETRIES, sec=round(_d))
++    ),
++)
+ interruptible_sleep(delay, self._cancel_flag.is_set)
+ ```
+ **注意:** `ocr_waiting_retry`/`ocr_waiting_retry_server` の `.format()` 呼び出しは ocr_dialog.py（1321-1325）と ocr.py `run_parallel`（435 は `waiting/{attempt}` 形式で別経路）の両方にある。`{sec}` プレースホルダ追加時は**両方の `.format` 引数と ja/en 両辞書**を同時更新しないと `KeyError`/`IndexError` になる（Pitfall 3）。
+@@ -197,11 +206,14 @@ interruptible_sleep(delay, self._cancel_flag.is_set)
+ ```python
+ # Source: pytest 公式（caplog フィクスチャ）
+ def test_save_settings_does_not_log_key_value(tmp_path, monkeypatch, caplog):
+-    monkeypatch.setattr("pagefolio.settings._get_settings_path", lambda: str(tmp_path/"s.json"))
++    monkeypatch.setattr(
++        "pagefolio.settings._get_settings_path", lambda: str(tmp_path / "s.json")
++    )
+     import logging
++
+     with caplog.at_level(logging.DEBUG):
+         _save_settings({"theme": "dark", "claude_api_key": "sk-ant-LEAK-XYZ"})
+-    assert "sk-ant-LEAK-XYZ" not in caplog.text   # 値が出ない（key 名のみ・line 89-91）
++    assert "sk-ant-LEAK-XYZ" not in caplog.text  # 値が出ない（key 名のみ・line 89-91）
+ ```
+ **注意:** `_save_settings` はキー**名**を `logger.error` で出すため、テストは「キー名が出る」を許容し「キー**値**が出ない」のみをアサートすること（Pitfall 4）。
+ 
+@@ -211,8 +223,13 @@ def test_save_settings_does_not_log_key_value(tmp_path, monkeypatch, caplog):
+ ```python
+ # Source: D-12 設計（パターン・除外は実装裁量）
+ import re, pathlib
+-PATTERNS = [re.compile(r"sk-ant-[A-Za-z0-9_-]{20,}"),
+-            re.compile(r"AIza[A-Za-z0-9_-]{30,}")]
++
++PATTERNS = [
++    re.compile(r"sk-ant-[A-Za-z0-9_-]{20,}"),
++    re.compile(r"AIza[A-Za-z0-9_-]{30,}"),
++]
++
++
+ def test_no_real_api_keys_in_source():
+     for p in pathlib.Path("pagefolio").rglob("*.py"):
+         text = p.read_text(encoding="utf-8")
+@@ -293,21 +310,26 @@ def test_no_real_api_keys_in_source():
+ import types, fitz
+ from pagefolio.viewer import ViewerMixin
+ 
++
+ def _stub(doc):
+     s = types.SimpleNamespace(doc=doc)
+     s._render_preview_pixmap = ViewerMixin._render_preview_pixmap.__get__(s)
+     return s
+ 
++
+ def test_rotate_90_swaps_wh():
+-    doc = fitz.open(); doc.new_page(width=400, height=600)
++    doc = fitz.open()
++    doc.new_page(width=400, height=600)
+     s = _stub(doc)
+     _, w0, h0 = s._render_preview_pixmap(0, 1.0)
+     doc[0].set_rotation(90)
+     _, w1, h1 = s._render_preview_pixmap(0, 1.0)
+     assert (w1, h1) == (h0, w0)
+ 
++
+ def test_rotate_180_keeps_wh():
+-    doc = fitz.open(); doc.new_page(width=400, height=600)
++    doc = fitz.open()
++    doc.new_page(width=400, height=600)
+     s = _stub(doc)
+     _, w0, h0 = s._render_preview_pixmap(0, 1.0)
+     doc[0].set_rotation(180)
+@@ -319,13 +341,16 @@ def test_rotate_180_keeps_wh():
+ ```python
+ # Source: ocr_providers.py 386-395 改修（CITED: docs.anthropic.com Messages API）
+ result = json.loads(body)
+-texts = [b.get("text") for b in result.get("content", [])
+-         if b.get("type") == "text" and b.get("text")]
++texts = [
++    b.get("text")
++    for b in result.get("content", [])
++    if b.get("type") == "text" and b.get("text")
++]
+ if not texts:
+     raise RuntimeError(f"Unexpected response format: {body[:500]}")
+ text = "\n".join(texts)
+ truncated = result.get("stop_reason") == "max_tokens"  # 部分テキストは保持
+-return text, truncated   # ← 戻り値拡張（呼び出し側を一括改修）
++return text, truncated  # ← 戻り値拡張（呼び出し側を一括改修）
+ ```
+ 
+ ### LANG 文言追加（D-05/D-06・ja/en 同一キー）
+diff --git a/.planning/milestones/v1.6.0-phases/04-ai-c/04-PATTERNS.md b/.planning/milestones/v1.6.0-phases/04-ai-c/04-PATTERNS.md
+index 790f28f..9cd67c8 100644
+--- a/.planning/milestones/v1.6.0-phases/04-ai-c/04-PATTERNS.md
++++ b/.planning/milestones/v1.6.0-phases/04-ai-c/04-PATTERNS.md
+@@ -33,7 +33,7 @@ CONTEXT.md は未作成。本マップは 04-RESEARCH.md を正とし、挿入
+ ```python
+ try:
+     n = int(value)
+-except (ValueError, TypeError):   # 裸 except 禁止・CLAUDE.md
++except (ValueError, TypeError):  # 裸 except 禁止・CLAUDE.md
+     return PAGE_SIZE_DEFAULT
+ ```
+ `md_render.py` のパースで例外捕捉が要る場合は `re` 由来の `re.error` / `ValueError` 等を型指定する。RESEARCH の ReDoS 回避（非貪欲 `.+?` ＋文字クラス `[^`+`]+`）方針（04-RESEARCH.md:429）を踏襲。
+diff --git a/.planning/milestones/v1.6.0-phases/04-ai-c/04-RESEARCH.md b/.planning/milestones/v1.6.0-phases/04-ai-c/04-RESEARCH.md
+index 4cacd7d..e47e3c2 100644
+--- a/.planning/milestones/v1.6.0-phases/04-ai-c/04-RESEARCH.md
++++ b/.planning/milestones/v1.6.0-phases/04-ai-c/04-RESEARCH.md
+@@ -130,11 +130,13 @@ tests/
+ self.text.tag_configure("md_h1", font=self._font(4, "bold"), foreground=C["ACCENT"])
+ self.text.tag_configure("md_h2", font=self._font(2, "bold"), foreground=C["ACCENT"])
+ self.text.tag_configure("md_bullet", lmargin1=20, lmargin2=36)
+-self.text.tag_configure("md_code", font=("Consolas", self._font_size()), background=C["BG_PANEL"])
++self.text.tag_configure(
++    "md_code", font=("Consolas", self._font_size()), background=C["BG_PANEL"]
++)
+ self.text.tag_configure("md_bold", font=self._font(-1, "bold"))
+ 
+ # ── 適用（_render_results_ordered から呼ぶ薄いメソッド）──
+-for kind, spans in parse_markdown(self.results[page_idx]):   # ← 純関数の戻り値
++for kind, spans in parse_markdown(self.results[page_idx]):  # ← 純関数の戻り値
+     start = self.text.index("end-1c")
+     for span_text, inline_tag in spans:
+         s = self.text.index("end-1c")
+@@ -142,7 +144,7 @@ for kind, spans in parse_markdown(self.results[page_idx]):   # ← 純関数の
+         if inline_tag:
+             self.text.tag_add(inline_tag, s, "end-1c")
+     self.text.insert("end", "\n")
+-    if kind:                       # 行レベルタグ（md_h1 等）を行全体へ
++    if kind:  # 行レベルタグ（md_h1 等）を行全体へ
+         self.text.tag_add(kind, start, "end-1c")
+ ```
+ **Note:** フォントサイズは `self._font(delta)` ヘルパー経由（CLAUDE.md「ハードコード禁止」）。コードブロックの等幅は `Consolas` を許容するが、`self._font_size()` でサイズは追従させる。
+@@ -176,6 +178,7 @@ PROVIDER_OCR_PROMPTS = {
+     # lmstudio / tesseract は汎用プロンプトのまま（後述 Pitfall 4）
+ }
+ 
++
+ def resolve_ocr_prompt(preset, provider_name, custom_prompt=""):
+     """OCR プロンプトを解決する純関数（Tk/ネットワーク非依存）。
+ 
+@@ -265,6 +268,7 @@ import re
+ _BOLD = re.compile(r"\*\*(.+?)\*\*")
+ _CODE = re.compile(r"`([^`]+)`")
+ 
++
+ def _split_inline(text):
+     """1 行を [(span_text, inline_tag|None), ...] に分解する純関数。
+ 
+@@ -274,13 +278,14 @@ def _split_inline(text):
+     # 簡易: bold を優先抽出（ネストは扱わない＝OCR 出力では稀）
+     for m in _BOLD.finditer(text):
+         if m.start() > pos:
+-            spans.append((text[pos:m.start()], None))
++            spans.append((text[pos : m.start()], None))
+         spans.append((m.group(1), "md_bold"))
+         pos = m.end()
+     if pos < len(text):
+         spans.append((text[pos:], None))
+     return spans or [(text, None)]
+ 
++
+ def parse_markdown(md):
+     """Markdown 文字列を [(line_kind, spans), ...] へ変換する純関数。
+ 
+@@ -312,9 +317,11 @@ def parse_markdown(md):
+ # Source: test_pagination.py / test_provider_ui.py のパターン
+ from pagefolio.md_render import parse_markdown
+ 
++
+ def test_h1_detected():
+     assert parse_markdown("# Title")[0][0] == "md_h1"
+ 
++
+ def test_bullet_and_bold():
+     kind, spans = parse_markdown("- **bold** item")[0]
+     assert kind == "md_bullet"
+@@ -326,12 +333,15 @@ def test_bullet_and_bold():
+ # Source: 既存 _on_run 挙動の純関数化を検証
+ from pagefolio.ocr import resolve_ocr_prompt, OCR_PROMPTS
+ 
++
+ def test_custom_overrides_provider_template():
+     assert resolve_ocr_prompt("markdown", "claude", "MY CUSTOM") == "MY CUSTOM"
+ 
++
+ def test_lmstudio_falls_back_to_generic():
+     assert resolve_ocr_prompt("text", "lmstudio", "") == OCR_PROMPTS["text"]
+ 
++
+ def test_claude_markdown_uses_provider_template():
+     assert resolve_ocr_prompt("markdown", "claude", "") != OCR_PROMPTS["markdown"]
+ ```
+diff --git a/.planning/milestones/v1.6.0-phases/04-ai-c/04-REVIEW.md b/.planning/milestones/v1.6.0-phases/04-ai-c/04-REVIEW.md
+index 26fc121..5e2b488 100644
+--- a/.planning/milestones/v1.6.0-phases/04-ai-c/04-REVIEW.md
++++ b/.planning/milestones/v1.6.0-phases/04-ai-c/04-REVIEW.md
+@@ -45,7 +45,9 @@ Critical/High 該当なし。以下は品質・保守性に関する Warning / I
+ **Fix:** 等幅指定が必須なら、`_font` ヘルパー側に monospace バリアントを足すか、最低限コメントで「等幅必須のため意図的に `_font` を迂回」と明示し規約例外であることを残す。例:
+ ```python
+ # md_code は等幅必須のため意図的に _font を迂回（サイズのみ _font_size で追従）
+-self.text.tag_configure("md_code", background=C["BG_PANEL"], font=("Consolas", self._font_size()))  # noqa: E501
++self.text.tag_configure(
++    "md_code", background=C["BG_PANEL"], font=("Consolas", self._font_size())
++)  # noqa: E501
+ ```
+ 
+ ### WR-02: `_insert_markdown` / `_insert_results_body` の Tk 描画分岐に直接テストが無い
+diff --git a/.planning/milestones/v1.7.1-phases/01-api-llm/01-PATTERNS.md b/.planning/milestones/v1.7.1-phases/01-api-llm/01-PATTERNS.md
+index 836a9ad..120cef9 100644
+--- a/.planning/milestones/v1.7.1-phases/01-api-llm/01-PATTERNS.md
++++ b/.planning/milestones/v1.7.1-phases/01-api-llm/01-PATTERNS.md
+@@ -29,7 +29,7 @@ def _resolve_api_key(provider_name, session_keys):
+ 
+     if provider_name == "claude":
+         env_var = "ANTHROPIC_API_KEY"
+-        key = os.environ.get(env_var)          # 現行: 環境変数が先
++        key = os.environ.get(env_var)  # 現行: 環境変数が先
+         if key:
+             return key
+         key = session_keys.get("claude", "")
+@@ -81,15 +81,20 @@ claude_model_row.pack(fill="x", padx=0, pady=2)
+ tk.Label(
+     claude_model_row,
+     text=self._L["settings_lm_model"],
+-    bg=C["BG_DARK"], fg=C["TEXT_MAIN"], font=self._font(-1),
+-    width=20, anchor="w",
++    bg=C["BG_DARK"],
++    fg=C["TEXT_MAIN"],
++    font=self._font(-1),
++    width=20,
++    anchor="w",
+ ).pack(side="left")
+ self.claude_model_var = tk.StringVar(
+     value=self.current_settings.get("claude_model", "claude-sonnet-4-6"),
+ )
+ self.claude_model_combo = ttk.Combobox(
+-    claude_model_row, textvariable=self.claude_model_var,
+-    font=self._font(-1), values=ClaudeProvider.RECOMMENDED_MODELS,
++    claude_model_row,
++    textvariable=self.claude_model_var,
++    font=self._font(-1),
++    values=ClaudeProvider.RECOMMENDED_MODELS,
+ )
+ self.claude_model_combo.pack(side="left", fill="x", expand=True, padx=4)
+ self.claude_model_combo.bind("<<ComboboxSelected>>", self._on_model_change)
+@@ -97,7 +102,8 @@ self.claude_model_combo.bind("<<ComboboxSelected>>", self._on_model_change)
+ claude_btn_row = tk.Frame(self.claude_section_frame, bg=C["BG_DARK"])
+ claude_btn_row.pack(fill="x", padx=0, pady=(4, 2))
+ ttk.Button(
+-    claude_btn_row, text=self._L["ocr_model_refresh"],
++    claude_btn_row,
++    text=self._L["ocr_model_refresh"],
+     command=self._refresh_claude_models,
+ ).pack(side="left", padx=2)
+ ```
+@@ -110,25 +116,38 @@ self._session_api_keys = session_api_keys if session_api_keys is not None else {
+ claude_key_row = tk.Frame(self.claude_section_frame, bg=C["BG_DARK"])
+ claude_key_row.pack(fill="x", padx=0, pady=2)
+ tk.Label(
+-    claude_key_row, text=self._L["llm_api_key_label"],
+-    bg=C["BG_DARK"], fg=C["TEXT_MAIN"], font=self._font(-1),
+-    width=20, anchor="w",
++    claude_key_row,
++    text=self._L["llm_api_key_label"],
++    bg=C["BG_DARK"],
++    fg=C["TEXT_MAIN"],
++    font=self._font(-1),
++    width=20,
++    anchor="w",
+ ).pack(side="left")
+-self.claude_api_key_var = tk.StringVar(
+-    value=self._session_api_keys.get("claude", "")
+-)
++self.claude_api_key_var = tk.StringVar(value=self._session_api_keys.get("claude", ""))
+ self.claude_api_key_entry = tk.Entry(
+-    claude_key_row, show="*", textvariable=self.claude_api_key_var,
+-    font=self._font(-1), bg=C["BG_CARD"], fg=C["TEXT_MAIN"],
+-    insertbackground=C["TEXT_MAIN"], relief="flat",
++    claude_key_row,
++    show="*",
++    textvariable=self.claude_api_key_var,
++    font=self._font(-1),
++    bg=C["BG_CARD"],
++    fg=C["TEXT_MAIN"],
++    insertbackground=C["TEXT_MAIN"],
++    relief="flat",
+ )
+ self.claude_api_key_entry.pack(side="left", fill="x", expand=True, padx=4)
+ self._claude_key_shown = False
++
++
+ def _toggle_claude_key():
+     self._claude_key_shown = not self._claude_key_shown
+     self.claude_api_key_entry.configure(show="" if self._claude_key_shown else "*")
++
++
+ ttk.Button(
+-    claude_key_row, text=self._L["llm_key_toggle"], width=4,
++    claude_key_row,
++    text=self._L["llm_key_toggle"],
++    width=4,
+     command=_toggle_claude_key,
+ ).pack(side="left", padx=(2, 0))
+ 
+@@ -136,9 +155,13 @@ note = self._L["llm_key_session_note"]
+ if os.environ.get("ANTHROPIC_API_KEY"):
+     note += " " + self._L["llm_key_env_set_note"].format(env_var="ANTHROPIC_API_KEY")
+ tk.Label(
+-    self.claude_section_frame, text=note,
+-    bg=C["BG_DARK"], fg=C["TEXT_SUB"], font=self._font(-2),
+-    wraplength=460, justify="left",
++    self.claude_section_frame,
++    text=note,
++    bg=C["BG_DARK"],
++    fg=C["TEXT_SUB"],
++    font=self._font(-2),
++    wraplength=460,
++    justify="left",
+ ).pack(anchor="w", pady=(0, 2))
+ ```
+ gemini は `GEMINI_API_KEY`（+ `GOOGLE_API_KEY` フォールバック表示は D-07 の対象外＝単一env名表示で可）、runpod は `RUNPOD_API_KEY` に置き換えて同型を複製。
+@@ -269,6 +292,7 @@ def __init__(
+     self.current_settings = dict(current_settings)
+     ...
+ 
++
+ def _open_llm_config(self):
+     """適用時に current_settings を更新する。"""
+     lang = self.current_settings.get("lang", "ja")
+@@ -319,9 +343,16 @@ def _open_llm_config(self):
+ **Apply to:** `llm_config.py` の `_apply()`・`app.py`/`dialogs/settings.py` の設定保存経路すべて
+ ```python
+ _SENSITIVE_KEYS = {
+-    "claude_api_key", "gemini_api_key", "google_api_key", "anthropic_api_key",
+-    "api_key", "GEMINI_API_KEY", "GOOGLE_API_KEY", "ANTHROPIC_API_KEY",
+-    "runpod_api_key", "RUNPOD_API_KEY",
++    "claude_api_key",
++    "gemini_api_key",
++    "google_api_key",
++    "anthropic_api_key",
++    "api_key",
++    "GEMINI_API_KEY",
++    "GOOGLE_API_KEY",
++    "ANTHROPIC_API_KEY",
++    "runpod_api_key",
++    "RUNPOD_API_KEY",
+ }
+ ```
+ 本フェーズはこのセットへの変更不要（`llm_settings` dict に API キーを含めない設計を維持するだけで、この関数は最後の砦として機能する）。
+@@ -340,7 +371,9 @@ UI 層・実行ゲート層はいずれもこの関数を呼ぶのみで、優
+ **Source:** `pagefolio/ocr_dialog.py`（撤去前の `_ensure_cloud_session_key` 内 `messagebox.showerror` 呼び出し）
+ **Apply to:** `_check_cloud_api_key`
+ ```python
+-messagebox.showerror(self._L["err_title"], self._L[msg_key].format(env_var=env_var), parent=self)
++messagebox.showerror(
++    self._L["err_title"], self._L[msg_key].format(env_var=env_var), parent=self
++)
+ ```
+ 
+ ### LANG 追加の作法
+diff --git a/.planning/milestones/v1.7.1-phases/01-api-llm/01-RESEARCH.md b/.planning/milestones/v1.7.1-phases/01-api-llm/01-RESEARCH.md
+index 585952e..236fce5 100644
+--- a/.planning/milestones/v1.7.1-phases/01-api-llm/01-RESEARCH.md
++++ b/.planning/milestones/v1.7.1-phases/01-api-llm/01-RESEARCH.md
+@@ -205,25 +205,40 @@ self._session_api_keys = session_api_keys if session_api_keys is not None else {
+ claude_key_row = tk.Frame(self.claude_section_frame, bg=C["BG_DARK"])
+ claude_key_row.pack(fill="x", padx=0, pady=2)
+ tk.Label(
+-    claude_key_row, text=self._L["llm_api_key_label"],
+-    bg=C["BG_DARK"], fg=C["TEXT_MAIN"], font=self._font(-1),
+-    width=20, anchor="w",
++    claude_key_row,
++    text=self._L["llm_api_key_label"],
++    bg=C["BG_DARK"],
++    fg=C["TEXT_MAIN"],
++    font=self._font(-1),
++    width=20,
++    anchor="w",
+ ).pack(side="left")
+ self.claude_api_key_var = tk.StringVar(
+     value=self._session_api_keys.get("claude", "")  # D-05: プリフィル
+ )
+ self.claude_api_key_entry = tk.Entry(
+-    claude_key_row, show="*", textvariable=self.claude_api_key_var,
+-    font=self._font(-1), bg=C["BG_CARD"], fg=C["TEXT_MAIN"],
+-    insertbackground=C["TEXT_MAIN"], relief="flat",
++    claude_key_row,
++    show="*",
++    textvariable=self.claude_api_key_var,
++    font=self._font(-1),
++    bg=C["BG_CARD"],
++    fg=C["TEXT_MAIN"],
++    insertbackground=C["TEXT_MAIN"],
++    relief="flat",
+ )
+ self.claude_api_key_entry.pack(side="left", fill="x", expand=True, padx=4)
+ self._claude_key_shown = False
++
++
+ def _toggle_claude_key():
+     self._claude_key_shown = not self._claude_key_shown
+     self.claude_api_key_entry.configure(show="" if self._claude_key_shown else "*")
++
++
+ ttk.Button(
+-    claude_key_row, text=self._L["llm_key_toggle"], width=4,
++    claude_key_row,
++    text=self._L["llm_key_toggle"],
++    width=4,
+     command=_toggle_claude_key,
+ ).pack(side="left", padx=(2, 0))
+ 
+@@ -232,9 +247,13 @@ note = self._L["llm_key_session_note"]
+ if os.environ.get("ANTHROPIC_API_KEY"):
+     note += " " + self._L["llm_key_env_set_note"].format(env_var="ANTHROPIC_API_KEY")
+ tk.Label(
+-    self.claude_section_frame, text=note,
+-    bg=C["BG_DARK"], fg=C["TEXT_SUB"], font=self._font(-2),
+-    wraplength=460, justify="left",
++    self.claude_section_frame,
++    text=note,
++    bg=C["BG_DARK"],
++    fg=C["TEXT_SUB"],
++    font=self._font(-2),
++    wraplength=460,
++    justify="left",
+ ).pack(anchor="w", pady=(0, 2))
+ ```
+ 
+@@ -325,7 +344,7 @@ def _resolve_api_key(provider_name, session_keys):
+ 
+     if provider_name == "claude":
+         env_var = "ANTHROPIC_API_KEY"
+-        key = os.environ.get(env_var)          # 現行: 環境変数が先
++        key = os.environ.get(env_var)  # 現行: 環境変数が先
+         if key:
+             return key
+         key = session_keys.get("claude", "")
+@@ -342,6 +361,7 @@ def _needs_session_key(self):
+     """クラウドかつ API キー環境変数が未設定のときに True を返す。"""
+     ...
+ 
++
+ # Source: pagefolio/ocr_dialog.py:1128-1162（撤去対象・置換必要）
+ def _ensure_cloud_session_key(self):
+     """クラウド実行前のセッションキー確認。続行可否を bool で返す。"""
+diff --git a/.planning/milestones/v1.7.1-phases/01-api-llm/01-REVIEW.md b/.planning/milestones/v1.7.1-phases/01-api-llm/01-REVIEW.md
+index 1239faf..fd122c0 100644
+--- a/.planning/milestones/v1.7.1-phases/01-api-llm/01-REVIEW.md
++++ b/.planning/milestones/v1.7.1-phases/01-api-llm/01-REVIEW.md
+@@ -113,11 +113,9 @@ forward).
+ **Issue:**
+ 
+ ```python
+-text=self._L.get("ocr_custom_prompt_label", "カスタムプロンプト:"),
++text = (self._L.get("ocr_custom_prompt_label", "カスタムプロンプト:"),)
+ ...
+-text=self._L.get(
+-    "ocr_custom_prompt_hint", "(空欄でデフォルトのプロンプトを使用)"
+-),
++text = (self._L.get("ocr_custom_prompt_hint", "(空欄でデフォルトのプロンプトを使用)"),)
+ ```
+ 
+ `"ocr_custom_prompt_label"` and `"ocr_custom_prompt_hint"` are not defined
+diff --git a/.planning/milestones/v1.7.1-phases/02-ocr/02-PATTERNS.md b/.planning/milestones/v1.7.1-phases/02-ocr/02-PATTERNS.md
+index 851b6bb..76e0d3a 100644
+--- a/.planning/milestones/v1.7.1-phases/02-ocr/02-PATTERNS.md
++++ b/.planning/milestones/v1.7.1-phases/02-ocr/02-PATTERNS.md
+@@ -63,8 +63,7 @@ for attempt in range(1, MAX_RETRIES + 1):
+             self._record_retryable_failure(page_idx, str(e))
+             break
+         raw_delay = (
+-            e.retry_after if e.retry_after is not None
+-            else 1.0 * (2 ** (attempt - 1))
++            e.retry_after if e.retry_after is not None else 1.0 * (2 ** (attempt - 1))
+         )
+         delay = clamp_retry_after(raw_delay)
+         interruptible_sleep(delay, self._cancel_flag.is_set)
+@@ -209,10 +208,13 @@ RESEARCH.md Pattern 4 の `_require_http_scheme(url)`（`urlsplit(url).scheme` 
+ ```python
+ def register_ocr_provider(self, name: str, cls) -> None:
+     from pagefolio.ocr_providers import OCRProvider
++
+     if not (isinstance(cls, type) and issubclass(cls, OCRProvider)):
+         raise TypeError(f"{cls} は OCRProvider のサブクラスでなければなりません")
+-    self._provider_registry[name] = cls  # ← ここに組み込み名衝突チェック（拒否+warning）
+-                                          #    プラグイン間重複（後勝ち+warning）を追加
++    self._provider_registry[name] = (
++        cls  # ← ここに組み込み名衝突チェック（拒否+warning）
++    )
++    #    プラグイン間重複（後勝ち+warning）を追加
+     logger.debug("OCR プロバイダ登録: %s -> %s", name, cls.__name__)
+ ```
+ 組み込み名リスト: `claude / gemini / lmstudio / tesseract / ollama / runpod / off`（既存コードのどこかに定数化されていなければ本改修で定数化）。name→plugin_id の対応を registry 側で追跡する構造（D-09 の unload 解除に必要）を追加。
+@@ -237,6 +239,7 @@ def get_disabled_ids(self):
+     """無効化されたプラグインIDリストを返す"""
+     return list(self._disabled)
+ 
++
+ # 同型で追加:
+ # def get_ocr_provider(self, name): return self._provider_registry.get(name)
+ # def list_ocr_providers(self): return list(self._provider_registry.keys())
+diff --git a/.planning/milestones/v1.7.1-phases/02-ocr/02-RESEARCH.md b/.planning/milestones/v1.7.1-phases/02-ocr/02-RESEARCH.md
+index 4356830..525961a 100644
+--- a/.planning/milestones/v1.7.1-phases/02-ocr/02-RESEARCH.md
++++ b/.planning/milestones/v1.7.1-phases/02-ocr/02-RESEARCH.md
+@@ -227,8 +227,10 @@ self._consec_err_count = 0
+ # ocr_pipeline.py（新設イメージ）
+ import threading
+ 
++
+ class PipelineState:
+     """producer-consumer 実行中の共有状態（Tk/fitz 非依存）。"""
++
+     def __init__(self, workers):
+         self._lock = threading.Lock()
+         self.done_count = 0
+@@ -303,6 +305,7 @@ from urllib.parse import urlsplit
+ 
+ _ALLOWED_URL_SCHEMES = ("http", "https")
+ 
++
+ def _require_http_scheme(url):
+     """url のスキームが http/https のみであることを検証する（L-6e・D-13）。
+ 
+@@ -324,6 +327,7 @@ endpoint = self.GENERATE_CONTENT_ENDPOINT.format(model=self.model)
+ 
+ # 変更後イメージ
+ from urllib.parse import quote
++
+ endpoint = self.GENERATE_CONTENT_ENDPOINT.format(model=quote(self.model, safe=""))
+ ```
+ 
+@@ -411,8 +415,7 @@ for attempt in range(1, MAX_RETRIES + 1):
+             self._record_retryable_failure(page_idx, str(e))
+             break
+         raw_delay = (
+-            e.retry_after if e.retry_after is not None
+-            else 1.0 * (2 ** (attempt - 1))
++            e.retry_after if e.retry_after is not None else 1.0 * (2 ** (attempt - 1))
+         )
+         delay = clamp_retry_after(raw_delay)
+         interruptible_sleep(delay, self._cancel_flag.is_set)
+diff --git a/.planning/milestones/v1.7.1-phases/02-ocr/02-REVIEW.md b/.planning/milestones/v1.7.1-phases/02-ocr/02-REVIEW.md
+index a0804f9..9b51e3f 100644
+--- a/.planning/milestones/v1.7.1-phases/02-ocr/02-REVIEW.md
++++ b/.planning/milestones/v1.7.1-phases/02-ocr/02-REVIEW.md
+@@ -56,9 +56,7 @@ bookkeeping inconsistency) are lower severity but worth fixing.
+ **File:** `pagefolio/ocr_dialog.py:37`
+ **Issue:**
+ ```python
+-OCR_PRICE_TABLE: dict[str, tuple[float, float]] = {
+-    ...
+-}
++OCR_PRICE_TABLE: dict[str, tuple[float, float]] = {...}
+ ```
+ This is a module-level variable annotation. Without `from __future__ import annotations`
+ (not present in this file), Python evaluates the annotation expression at import time to
+@@ -83,9 +81,7 @@ version-matrix-free CI will miss.
+ 
+ **Fix:**
+ ```python
+-OCR_PRICE_TABLE: "dict[str, tuple[float, float]]" = {
+-    ...
+-}
++OCR_PRICE_TABLE: "dict[str, tuple[float, float]]" = {...}
+ ```
+ (or add `from __future__ import annotations` at the top of the file, which fixes this
+ class of issue file-wide).
+@@ -204,7 +200,9 @@ if self._cancel_flag.is_set():
+     sent = send_sentinels(self._render_queue, self.concurrency)
+     if sent < self.concurrency:
+         g = gen
+-        self.after(50, lambda _g=g, n=self.concurrency - sent: self._retry_sentinels(_g, n))
++        self.after(
++            50, lambda _g=g, n=self.concurrency - sent: self._retry_sentinels(_g, n)
++        )
+     self._finish_cancelled()
+     return
+ ```
+diff --git a/.planning/milestones/v1.7.1-phases/03-v1-5-0/03-PATTERNS.md b/.planning/milestones/v1.7.1-phases/03-v1-5-0/03-PATTERNS.md
+index c7f14ca..d046163 100644
+--- a/.planning/milestones/v1.7.1-phases/03-v1-5-0/03-PATTERNS.md
++++ b/.planning/milestones/v1.7.1-phases/03-v1-5-0/03-PATTERNS.md
+@@ -113,9 +113,9 @@ def _apply_page_edit(self, kind):
+     ...
+     x0_pdf, y0_pdf, x1_pdf, y1_pdf = self._canvas_rect_to_pdf(*self.crop_rect)
+     cur_mb = self.doc[self.current_page].mediabox
+-    rel = (...)
++    rel = ...
+ 
+-    self._save_undo("page_edit", targets=targets)   # ← D-07: 複数矩形でも1回だけ呼ぶ位置
++    self._save_undo("page_edit", targets=targets)  # ← D-07: 複数矩形でも1回だけ呼ぶ位置
+     applied = []
+     for i in targets:
+         page = self.doc[i]
+@@ -126,13 +126,13 @@ def _apply_page_edit(self, kind):
+             if kind == "redact":
+                 self._redact_page(page, rect)
+             else:
+-                self._mosaic_page(page, rect)          # ← D-06: block=self.settings[...] を渡す
++                self._mosaic_page(page, rect)  # ← D-06: block=self.settings[...] を渡す
+             applied.append(i)
+         except Exception as e:
+             logger.error("ページ編集失敗 (kind=%s, page=%s): %s", kind, i, e)
+     ...
+     self.crop_rect = None
+-    self._redact_mode_off()   # ← D-05: この呼び出しのみ削除して連続適用化（相互排他ロジックは不変）
++    self._redact_mode_off()  # ← D-05: この呼び出しのみ削除して連続適用化（相互排他ロジックは不変）
+     ...
+ ```
+ 
+@@ -232,11 +232,7 @@ default_shortcuts = {
+ custom_shortcuts = self.settings.get("shortcuts", {})
+ shortcuts = {**default_shortcuts, **custom_shortcuts}
+ ...
+-if (
+-    keysym.startswith("<Control-")
+-    and len(keysym) == 11
+-    and keysym[-2].islower()
+-):
++if keysym.startswith("<Control-") and len(keysym) == 11 and keysym[-2].islower():
+     ...
+ ```
+ 
+@@ -330,7 +326,7 @@ D-14（内容検証追加）は既存 `test_*_roundtrip` 系メソッドに `get
+ ```python
+ targets = self._get_targets()
+ # ...ユーザー入力/確認...
+-self._save_undo("page_edit", targets=targets)   # 1回だけ、ループの外側
++self._save_undo("page_edit", targets=targets)  # 1回だけ、ループの外側
+ for i in targets:
+     page = self.doc[i]
+     # ページへの破壊的変更
+@@ -363,7 +359,9 @@ except Exception as e:
+ **Apply to:** モザイク粒度スライダー（D-06）
+ ```python
+ self.mosaic_block_var = tk.IntVar(value=self.settings.get("mosaic_block", MOSAIC_BLOCK))
+-self.mosaic_block_scale = ttk.Scale(f3b, from_=4, to=32, variable=self.mosaic_block_var, orient="horizontal")
++self.mosaic_block_scale = ttk.Scale(
++    f3b, from_=4, to=32, variable=self.mosaic_block_var, orient="horizontal"
++)
+ self.mosaic_block_scale.pack(fill="x", expand=True, padx=8, pady=(2, 4))
+ self.mosaic_block_scale.bind("<ButtonRelease-1>", self._on_mosaic_block_release)
+ ```
+diff --git a/.planning/milestones/v1.7.1-phases/03-v1-5-0/03-RESEARCH.md b/.planning/milestones/v1.7.1-phases/03-v1-5-0/03-RESEARCH.md
+index 6e058ab..2dc4d8a 100644
+--- a/.planning/milestones/v1.7.1-phases/03-v1-5-0/03-RESEARCH.md
++++ b/.planning/milestones/v1.7.1-phases/03-v1-5-0/03-RESEARCH.md
+@@ -136,6 +136,7 @@ tests/
+ from PIL import Image
+ import io
+ 
++
+ def _add_watermark_image(self):
+     """選択ページに画像透かしを追加する（D-01〜D-04）。"""
+     if not self._check_doc():
+@@ -172,6 +173,7 @@ def _add_watermark_image(self):
+     self._refresh_all()
+     self._set_status(...)
+ 
++
+ @staticmethod
+ def _watermark_image_rect(page_rect, img_w, img_h):
+     """ページ中央・ページ幅の約50%に収まるよう縮小した配置矩形を返す（D-02）。"""
+@@ -213,8 +215,10 @@ def _derotate_rect(page, x0, y0, x1, y1):
+     p0 = fitz.Point(x0, y0) * dm
+     p1 = fitz.Point(x1, y1) * dm
+     return (
+-        min(p0.x, p1.x), min(p0.y, p1.y),
+-        max(p0.x, p1.x), max(p0.y, p1.y),
++        min(p0.x, p1.x),
++        min(p0.y, p1.y),
++        max(p0.x, p1.x),
++        max(p0.y, p1.y),
+     )
+ ```
+ 
+@@ -241,9 +245,12 @@ self.mosaic_block_scale.bind("<ButtonRelease-1>", self._on_mosaic_block_release)
+ @staticmethod
+ def _mosaic_page(page, rect, block=MOSAIC_BLOCK):
+     ...
+-    small = img.resize((max(1, img.width // block), max(1, img.height // block)), Image.NEAREST)
++    small = img.resize(
++        (max(1, img.width // block), max(1, img.height // block)), Image.NEAREST
++    )
+     ...
+ 
++
+ def _apply_mosaic(self):
+     block = int(self.settings.get("mosaic_block", MOSAIC_BLOCK))
+     self._apply_page_edit("mosaic", block=block)
+@@ -294,14 +301,11 @@ def merge_shortcuts(default_shortcuts, custom_shortcuts):
+     """既定＋ユーザー設定のショートカット辞書をマージする（後勝ち）。"""
+     return {**default_shortcuts, **custom_shortcuts}
+ 
++
+ def shift_variant_keysym(keysym):
+     """Control-小文字 の keysym から Shift 補完用の大文字版 keysym を返す。
+     対象外パターンは None を返す。"""
+-    if (
+-        keysym.startswith("<Control-")
+-        and len(keysym) == 11
+-        and keysym[-2].islower()
+-    ):
++    if keysym.startswith("<Control-") and len(keysym) == 11 and keysym[-2].islower():
+         return keysym[:-2] + keysym[-2].upper() + ">"
+     return None
+ ```
+@@ -368,9 +372,11 @@ def shift_variant_keysym(keysym):
+ # Source: PDF 仕様上の 1pt = 1/72 inch は既定事実（ASSUMED: 一般 PDF 仕様知識）
+ PT_PER_MM = 72 / 25.4  # ≈ 2.8346
+ 
++
+ def pt_to_mm(pt):
+     return pt / PT_PER_MM
+ 
++
+ def mm_to_pt(mm):
+     return mm * PT_PER_MM
+ ```
+@@ -396,8 +402,9 @@ def _format_crop_info(rect_w_pt, rect_h_pt, mb_w_pt, mb_h_pt):
+ # Source: 既存 pagefolio/page_ops.py:349-432 _crop_page の bulk 分岐と同型のクランプロジックを流用
+ # (ASSUMED: mm 入力の基準を「現在の cropbox」とする実装方針。mediabox 基準にする
+ #  場合との差異は Open Questions 参照)
+-def compute_margin_crop_rect(current_cropbox, margin_top_pt, margin_bottom_pt,
+-                              margin_left_pt, margin_right_pt):
++def compute_margin_crop_rect(
++    current_cropbox, margin_top_pt, margin_bottom_pt, margin_left_pt, margin_right_pt
++):
+     """現在の cropbox から四辺の余白(pt)を差し引いた新 cropbox を返す（D-10）。
+     差し引いた結果が幅/高さ 1pt 未満になる場合は None（安全側フォールバック）。
+     """
+diff --git a/.planning/milestones/v1.7.1-phases/04-ui-ux/04-PATTERNS.md b/.planning/milestones/v1.7.1-phases/04-ui-ux/04-PATTERNS.md
+index 13228c2..865c343 100644
+--- a/.planning/milestones/v1.7.1-phases/04-ui-ux/04-PATTERNS.md
++++ b/.planning/milestones/v1.7.1-phases/04-ui-ux/04-PATTERNS.md
+@@ -76,6 +76,7 @@ def _open_llm_config(self):
+         return
+ 
+     from pagefolio.dialogs.llm_config import LLMConfigDialog
++
+     ...
+     self._llm_config_dialog = LLMConfigDialog(...)
+ ```
+@@ -84,10 +85,17 @@ def _open_llm_config(self):
+ **KeyPress キャプチャハンドラ**（RESEARCH.md Architecture Patterns / Code Examples より・新規実装イメージ）:
+ ```python
+ _MODIFIER_KEYSYMS = {
+-    "Control_L", "Control_R", "Alt_L", "Alt_R",
+-    "Shift_L", "Shift_R", "Caps_Lock", "Num_Lock",
++    "Control_L",
++    "Control_R",
++    "Alt_L",
++    "Alt_R",
++    "Shift_L",
++    "Shift_R",
++    "Caps_Lock",
++    "Num_Lock",
+ }
+ 
++
+ def _on_capture_keypress(self, event):
+     if event.keysym in _MODIFIER_KEYSYMS:
+         return  # Pitfall 2: 修飾キー単体では確定しない
+@@ -117,13 +125,16 @@ def shift_variant_keysym(keysym):
+ 
+ **新規純関数の推奨シグネチャ**（D-04/D-07。Tk 非依存を維持しテスト容易性を保つ）:
+ ```python
+-def build_keysym_from_event(state, keysym, shift_mask=0x1, control_mask=0x4, alt_mask=0x20000):
+-    ...
++def build_keysym_from_event(
++    state, keysym, shift_mask=0x1, control_mask=0x4, alt_mask=0x20000
++): ...
++
+ 
+ def find_duplicate_binding(shortcuts, cmd_name, new_keysym):
+     """new_keysym が cmd_name 以外の既存コマンドと重複していないか判定する（D-04）。"""
+     ...
+ 
++
+ def keysym_to_display(keysym):
+     """Tk keysym 文字列を人間可読表記へ変換する（D-07）。例: "<Control-o>" → "Ctrl+O" """
+     ...
+@@ -192,12 +203,17 @@ def _bind_shortcuts(self):
+ sep = tk.Frame(self, bg=C["BG_CARD"], height=1)
+ sep.pack(fill="x", padx=24, pady=(8, 4))
+ tk.Label(
+-    self, text=self._L["settings_lm_studio_section"],
+-    bg=C["BG_DARK"], fg=C["WARNING"], font=self._font(0, "bold"),
++    self,
++    text=self._L["settings_lm_studio_section"],
++    bg=C["BG_DARK"],
++    fg=C["WARNING"],
++    font=self._font(0, "bold"),
+ ).pack(anchor="w", padx=24, pady=(4, 2))
+ 
+ ttk.Button(
+-    self, text=self._L["settings_open_llm_config"], command=self._open_llm_config,
++    self,
++    text=self._L["settings_open_llm_config"],
++    command=self._open_llm_config,
+ ).pack(anchor="w", padx=24, pady=(2, 8))
+ ```
+ D-16 で「外観」「操作（ショートカット）」「AI・OCR」の3見出しに分割。「操作」セクションに D-01 の「⌨ ショートカット設定…」ボタンを、上記と同型の `ttk.Button(..., command=self._open_shortcuts_dialog)` で追加。
+@@ -207,6 +223,7 @@ D-16 で「外観」「操作（ショートカット）」「AI・OCR」の3見
+ def on_apply(llm_settings):
+     self.current_settings.update(llm_settings)
+     from pagefolio.settings import _save_settings
++
+     _save_settings(self.current_settings)
+     # ← ここに apply_callback(dict(self.current_settings)) 相当の呼び出しを追加し
+     #    app.settings（メモリ）・UI 再構築まで即座に反映する（Pattern 3 参照）
+@@ -231,11 +248,11 @@ Open Question の推奨: `SettingsDialog.__init__` の後方互換を壊さな
+ 
+ **修正対象**（`viewer.py:407,494,499,503`）:
+ ```python
+-popup.title(f"ページ {i + 1} / {n}")        # → self._t("...").format(...) 等へ
++popup.title(f"ページ {i + 1} / {n}")  # → self._t("...").format(...) 等へ
+ ...
+-text="🔍 縮小"                                # → self._t("popup_zoom_out") 等へ
+-text="🔍 拡大"                                # → self._t("popup_zoom_in") 等へ
+-text="✕ 閉じる"                               # → self._t("popup_close") 等へ
++text = "🔍 縮小"  # → self._t("popup_zoom_out") 等へ
++text = "🔍 拡大"  # → self._t("popup_zoom_in") 等へ
++text = "✕ 閉じる"  # → self._t("popup_close") 等へ
+ ```
+ 新規 LANG キーを ja/en 両方へ同一キー名で追加（`test_lang_parity.py` の既存キー数一致テストが監視）。
+ 
+@@ -248,7 +265,9 @@ text="✕ 閉じる"                               # → self._t("popup_close")
+ **修正対象と統一先**（`page_ops.py:945-961`）:
+ ```python
+ if not range_str.strip():
+-    messagebox.showinfo(self._t("info_title"), self._t("err_split_no_range"))  # 修正: showerror+err_title へ
++    messagebox.showinfo(
++        self._t("info_title"), self._t("err_split_no_range")
++    )  # 修正: showerror+err_title へ
+     return
+ ranges = self._parse_page_ranges(range_str, n)
+ if ranges is None:
+diff --git a/.planning/milestones/v1.7.1-phases/04-ui-ux/04-RESEARCH.md b/.planning/milestones/v1.7.1-phases/04-ui-ux/04-RESEARCH.md
+index 82f2b0d..850ab78 100644
+--- a/.planning/milestones/v1.7.1-phases/04-ui-ux/04-RESEARCH.md
++++ b/.planning/milestones/v1.7.1-phases/04-ui-ux/04-RESEARCH.md
+@@ -240,7 +240,9 @@ def shift_variant_keysym(keysym):
+ _MOD_ORDER = ("Control", "Alt", "Shift")  # Tk バインド構文の慣例順
+ 
+ 
+-def build_keysym_from_event(state, keysym, shift_mask=0x1, control_mask=0x4, alt_mask=0x20000):
++def build_keysym_from_event(
++    state, keysym, shift_mask=0x1, control_mask=0x4, alt_mask=0x20000
++):
+     """event.state ビットマスクと event.keysym から Tk bind 用の keysym 文字列を組み立てる。
+ 
+     modifier のみの keysym（Control_L 等）は呼び出し側で無視すること
+@@ -360,6 +362,7 @@ def _bind_shortcuts(self):
+ def on_apply(llm_settings):
+     self.current_settings.update(llm_settings)
+     from pagefolio.settings import _save_settings
++
+     _save_settings(self.current_settings)
+     # ← ここで app.settings（メモリ）・UI 再構築が反映されていない
+ ```
+@@ -475,10 +478,17 @@ cmd_map = {
+ ```python
+ # ShortcutsDialog 内のキャプチャハンドラのイメージ
+ _MODIFIER_KEYSYMS = {
+-    "Control_L", "Control_R", "Alt_L", "Alt_R",
+-    "Shift_L", "Shift_R", "Caps_Lock", "Num_Lock",
++    "Control_L",
++    "Control_R",
++    "Alt_L",
++    "Alt_R",
++    "Shift_L",
++    "Shift_R",
++    "Caps_Lock",
++    "Num_Lock",
+ }
+ 
++
+ def _on_capture_keypress(self, event):
+     if event.keysym in _MODIFIER_KEYSYMS:
+         return  # Pitfall 2: 修飾キー単体では確定しない
+@@ -491,7 +501,9 @@ def _on_capture_keypress(self, event):
+ ```python
+ # Source: pagefolio/page_ops.py:945-961（C7 修正対象）
+ if not range_str.strip():
+-    messagebox.showinfo(self._t("info_title"), self._t("err_split_no_range"))  # 修正対象
++    messagebox.showinfo(
++        self._t("info_title"), self._t("err_split_no_range")
++    )  # 修正対象
+     return
+ ranges = self._parse_page_ranges(range_str, n)
+ if ranges is None:
+diff --git a/.planning/milestones/v1.8.0-phases/01-foundation-split/01-PATTERNS.md b/.planning/milestones/v1.8.0-phases/01-foundation-split/01-PATTERNS.md
+index e9c5288..5bb0df4 100644
+--- a/.planning/milestones/v1.8.0-phases/01-foundation-split/01-PATTERNS.md
++++ b/.planning/milestones/v1.8.0-phases/01-foundation-split/01-PATTERNS.md
+@@ -162,6 +162,7 @@ PROVIDER_ENV_KEYS = {
+     "runpod": ("RUNPOD_API_KEY",),
+ }
+ 
++
+ def primary_env_var(provider_name): ...
+ def env_vars_for(provider_name): ...
+ def resolve_env_key(provider_name): ...
+@@ -206,8 +207,7 @@ class PDFEditorApp(
+ ):
+     MAX_UNDO = 20
+ 
+-    def __init__(self, root):
+-        ...
++    def __init__(self, root): ...
+ ```
+ 
+ **このファイルへの適用（tk.Toplevel の MRO 注意・Pitfall 3）:**
+@@ -262,8 +262,14 @@ D-10 によりこれらの import 元パス（`pagefolio.ocr_providers`・`pagef
+ ```python
+ # Source: pagefolio/dialogs/llm_config.py:49-101
+ def __init__(
+-    self, parent, current_settings, on_apply, font_func=None,
+-    lang="ja", plugin_manager=None, session_api_keys=None,
++    self,
++    parent,
++    current_settings,
++    on_apply,
++    font_func=None,
++    lang="ja",
++    plugin_manager=None,
++    session_api_keys=None,
+ ):
+     super().__init__(parent)
+     self._L = LANG[lang]
+@@ -396,16 +402,19 @@ class TestDialogsImports:
+     def test_dialogs_subpackage_about(self):
+         """pagefolio.dialogs から AboutDialog を import できる"""
+         from pagefolio.dialogs import AboutDialog
++
+         assert AboutDialog is not None
+ 
+     def test_individual_module_llm_config(self):
+         """dialogs.llm_config から LLMConfigDialog を import できる"""
+         from pagefolio.dialogs.llm_config import LLMConfigDialog
++
+         assert LLMConfigDialog is not None
+ 
+     def test_llm_config_via_dialogs_subpackage(self):
+         """pagefolio.dialogs 経由でも LLMConfigDialog を import できる"""
+         from pagefolio.dialogs import LLMConfigDialog
++
+         assert LLMConfigDialog is not None
+ ```
+ 
+@@ -422,6 +431,7 @@ class TestDialogsImports:
+ # Source: tests/test_settings_keyguard.py:9-34
+ from pagefolio.settings import _SENSITIVE_KEYS, _load_settings, _save_settings
+ 
++
+ class TestSensitiveKeysConstant:
+     """_SENSITIVE_KEYS 定数の構成テスト"""
+ 
+diff --git a/.planning/milestones/v1.8.0-phases/01-foundation-split/01-RESEARCH.md b/.planning/milestones/v1.8.0-phases/01-foundation-split/01-RESEARCH.md
+index 99f2729..961c75b 100644
+--- a/.planning/milestones/v1.8.0-phases/01-foundation-split/01-RESEARCH.md
++++ b/.planning/milestones/v1.8.0-phases/01-foundation-split/01-RESEARCH.md
+@@ -256,8 +256,7 @@ class PDFEditorApp(
+ ):
+     MAX_UNDO = 20
+ 
+-    def __init__(self, root):
+-        ...
++    def __init__(self, root): ...
+ ```
+ 
+ **本フェーズでの適用（`pagefolio/dialogs/llm_config/__init__.py` 想定）:**
+diff --git a/.planning/milestones/v1.8.0-phases/02-ai/02-PATTERNS.md b/.planning/milestones/v1.8.0-phases/02-ai/02-PATTERNS.md
+index c6b2921..76b2452 100644
+--- a/.planning/milestones/v1.8.0-phases/02-ai/02-PATTERNS.md
++++ b/.planning/milestones/v1.8.0-phases/02-ai/02-PATTERNS.md
+@@ -84,7 +84,9 @@ def load_custom_prompt(settings):
+ leaked = [k for k in _SENSITIVE_KEYS if k in settings]
+ if leaked:
+     for k in leaked:
+-        logger.error("機密キー '%s' が settings に混入しています（保存から除外します）", k)
++        logger.error(
++            "機密キー '%s' が settings に混入しています（保存から除外します）", k
++        )
+     to_save = {k: v for k, v in settings.items() if k not in _SENSITIVE_KEYS}
+ else:
+     to_save = settings
+@@ -141,11 +143,15 @@ def _finish_error(self, msg, kind):
+         return
+     self._done = True
+     if kind == "connection":
+-        user_msg = self._L["ocr_err_connection"].format(url=self.url_var.get(), error=msg)
++        user_msg = self._L["ocr_err_connection"].format(
++            url=self.url_var.get(), error=msg
++        )
+     elif kind == "timeout":
+         ...
+     elif kind == "circuit_breaker":
+-        user_msg = self._L["ocr_err_circuit_breaker"].format(n=CB_CONSECUTIVE_FAILURES, error=msg)
++        user_msg = self._L["ocr_err_circuit_breaker"].format(
++            n=CB_CONSECUTIVE_FAILURES, error=msg
++        )
+     else:
+         user_msg = msg
+     ...
+@@ -225,8 +231,18 @@ def resolve_ocr_prompt(preset, provider_name, custom_prompt=""):
+ **Combobox パターン**（`pagefolio/dialogs/llm_config/sections.py:60-93`）:
+ ```python
+ self.provider_var = tk.StringVar(value=self.current_settings.get("ocr_provider", "off"))
+-_base_providers = ["off", "lmstudio", "ollama", "runpod", "claude", "gemini", "tesseract"]
+-_plugin_extras = self._plugin_manager.list_ocr_providers() if self._plugin_manager else []
++_base_providers = [
++    "off",
++    "lmstudio",
++    "ollama",
++    "runpod",
++    "claude",
++    "gemini",
++    "tesseract",
++]
++_plugin_extras = (
++    self._plugin_manager.list_ocr_providers() if self._plugin_manager else []
++)
+ self.provider_combo = ttk.Combobox(
+     provider_row,
+     textvariable=self.provider_var,
+@@ -272,8 +288,13 @@ self.listbox = tk.Listbox(
+ )
+ 
+ # 上へ/下へボタン（merge.py:108-113）
+-ttk.Button(btn_row, text=self._L["merge_up"], command=self._move_up).pack(side="left", padx=4)
+-ttk.Button(btn_row, text=self._L["merge_down"], command=self._move_down).pack(side="left", padx=4)
++ttk.Button(btn_row, text=self._L["merge_up"], command=self._move_up).pack(
++    side="left", padx=4
++)
++ttk.Button(btn_row, text=self._L["merge_down"], command=self._move_down).pack(
++    side="left", padx=4
++)
++
+ 
+ # 移動ロジック（merge.py:143-157）
+ def _move_up(self):
+@@ -297,6 +318,7 @@ D-13 によりこの Listbox+ボタンの**ウィジェット構成のみ**を
+ def _on_save(self):
+     ...
+     from pagefolio.app import find_duplicate_binding
++
+     for cmd_name, keysym in self._shortcuts.items():
+         dup_cmd = find_duplicate_binding(self._shortcuts, cmd_name, keysym)
+         if dup_cmd is not None:
+@@ -308,6 +330,7 @@ def _on_save(self):
+     ...
+     self._app.settings["shortcuts"] = diff
+     from pagefolio.settings import _save_settings
++
+     _save_settings(self._app.settings)
+     self.destroy()
+ ```
+diff --git a/.planning/milestones/v1.8.0-phases/02-ai/02-RESEARCH.md b/.planning/milestones/v1.8.0-phases/02-ai/02-RESEARCH.md
+index 533b988..1b0f75c 100644
+--- a/.planning/milestones/v1.8.0-phases/02-ai/02-RESEARCH.md
++++ b/.planning/milestones/v1.8.0-phases/02-ai/02-RESEARCH.md
+@@ -220,7 +220,9 @@ CRUD ヘルパーは既存 `load_prompt_file`/`save_prompt_file` と同じ関数
+ 
+ ```python
+ # Source: pagefolio/dialogs/llm_config/sections.py:84-93（provider_combo の既存実装パターン）
+-self.template_var = tk.StringVar(value=self.current_settings.get("prompt_templates", {}).get("active", ""))
++self.template_var = tk.StringVar(
++    value=self.current_settings.get("prompt_templates", {}).get("active", "")
++)
+ self.template_combo = ttk.Combobox(
+     template_row,
+     textvariable=self.template_var,
+@@ -372,7 +374,9 @@ def _propose_fallback(self, kind, msg):
+         ),
+         parent=self,
+     ):
+-        self._fallback_tried.add(candidate)  # 拒否された候補も試行済み扱い（D-10 連鎖継続）
++        self._fallback_tried.add(
++            candidate
++        )  # 拒否された候補も試行済み扱い（D-10 連鎖継続）
+         return
+     self._fallback_tried.add(candidate)
+     self._switch_to_fallback_provider(candidate)  # build_provider 再構築・resume 再実行
+@@ -460,6 +464,7 @@ for cmd_name, keysym in self._shortcuts.items():
+ def env_vars_for(provider_name):
+     return PROVIDER_ENV_KEYS.get(provider_name, ())
+ 
++
+ def primary_env_var(provider_name):
+     env_vars = env_vars_for(provider_name)
+     return env_vars[0] if env_vars else ""
+diff --git a/.planning/milestones/v1.8.0-phases/02-ai/02-REVIEW.md b/.planning/milestones/v1.8.0-phases/02-ai/02-REVIEW.md
+index 717cf3b..f5a098f 100644
+--- a/.planning/milestones/v1.8.0-phases/02-ai/02-REVIEW.md
++++ b/.planning/milestones/v1.8.0-phases/02-ai/02-REVIEW.md
+@@ -166,7 +166,10 @@ def _has_unsaved_template_changes(self, current_custom, current_summary):
+     if not self._active_template_name:
+         # No prior active template: still warn if there is unsaved free-form text
+         return bool(current_custom.strip() or current_summary.strip())
+-    if not (prompt_file_exists(CUSTOM_PROMPT_FILE) or prompt_file_exists(SUMMARY_PROMPT_FILE)):
++    if not (
++        prompt_file_exists(CUSTOM_PROMPT_FILE)
++        or prompt_file_exists(SUMMARY_PROMPT_FILE)
++    ):
+         return False
+     ...
+ ```
+@@ -180,7 +183,7 @@ def _has_unsaved_template_changes(self, current_custom, current_summary):
+ ```python
+ self._L["fallback_confirm_msg"].format(
+     reason=self._L[reason_key],
+-    candidate=candidate,          # e.g. "gemini", "runpod", "tesseract" — not localized
++    candidate=candidate,  # e.g. "gemini", "runpod", "tesseract" — not localized
+     host=self._fallback_candidate_host(candidate),
+ )
+ ```
+diff --git a/.planning/milestones/v1.8.0-phases/03-ocr-e2e/03-PATTERNS.md b/.planning/milestones/v1.8.0-phases/03-ocr-e2e/03-PATTERNS.md
+index dedd386..3c1fbef 100644
+--- a/.planning/milestones/v1.8.0-phases/03-ocr-e2e/03-PATTERNS.md
++++ b/.planning/milestones/v1.8.0-phases/03-ocr-e2e/03-PATTERNS.md
+@@ -61,7 +61,10 @@ while True:
+     page_idx, b64 = item
+     try:
+         consume_one(
+-            self.provider, item, self._ocr_prompt, self._pstate,
++            self.provider,
++            item,
++            self._ocr_prompt,
++            self._pstate,
+             cancel_check=self._cancel_flag.is_set,
+             breaker_threshold=CB_CONSECUTIVE_FAILURES,
+             on_success=lambda p, t, tr: self._record_page_success(p, t, truncated=tr),
+@@ -111,6 +114,7 @@ def _record_page_success(self, page_idx, text, truncated=False):
+     else:
+         self._truncated_pages.discard(page_idx)
+ 
++
+ def _record_page_error(self, page_idx, msg):
+     self.errors[page_idx] = msg
+ ```
+@@ -183,6 +187,7 @@ class FakeProvider(OCRProvider):
+ # 拡張イメージ（Wave 0 Gaps に明記済み）
+ supports_text_prompt = True
+ 
++
+ def complete_text_ex(self, text, prompt, **kwargs):
+     return (f"summary-of-{len(text)}", False)
+ ```
+@@ -191,11 +196,15 @@ def complete_text_ex(self, text, prompt, **kwargs):
+ **実スレッド駆動テストヘルパー（D-13・E2E の高忠実度統合テスト前例）**:
+ ```python
+ # Source: tests/test_ocr_pipeline.py:208-279（_drive_pipeline）
+-def _drive_pipeline(provider, render_fn, page_indices, concurrency, prompt="", is_cancelled=None):
++def _drive_pipeline(
++    provider, render_fn, page_indices, concurrency, prompt="", is_cancelled=None
++):
+     ...
+     producer_thread = threading.Thread(target=_producer, daemon=True)
+     producer_thread.start()
+-    consumer_threads = [threading.Thread(target=_consumer, daemon=True) for _ in range(workers)]
++    consumer_threads = [
++        threading.Thread(target=_consumer, daemon=True) for _ in range(workers)
++    ]
+     for t in consumer_threads:
+         t.start()
+     for t in consumer_threads:
+@@ -215,11 +224,17 @@ def _drive_pipeline(provider, render_fn, page_indices, concurrency, prompt="", i
+ ```python
+ # Source: pagefolio/ocr_pipeline.py:170-181（シグネチャ・変更不要）
+ def consume_one(
+-    provider, item, prompt, state, cancel_check=None,
++    provider,
++    item,
++    prompt,
++    state,
++    cancel_check=None,
+     breaker_threshold=DEFAULT_CIRCUIT_BREAKER_THRESHOLD,
+-    on_success=None, on_page_error=None, on_fatal=None, on_retry_wait=None,
+-):
+-    ...
++    on_success=None,
++    on_page_error=None,
++    on_fatal=None,
++    on_retry_wait=None,
++): ...
+ ```
+ `OCRRunEngine` はこれを「再実装」せず「所有・呼び出す」のみ（Anti-Patterns 節・D-01 根拠）。
+ 
+diff --git a/.planning/milestones/v1.8.0-phases/03-ocr-e2e/03-RESEARCH.md b/.planning/milestones/v1.8.0-phases/03-ocr-e2e/03-RESEARCH.md
+index e877e0e..cc115cf 100644
+--- a/.planning/milestones/v1.8.0-phases/03-ocr-e2e/03-RESEARCH.md
++++ b/.planning/milestones/v1.8.0-phases/03-ocr-e2e/03-RESEARCH.md
+@@ -181,6 +181,7 @@ def _start_worker_thread(self, gen=None):
+         t.start()
+         self._worker_threads.append(t)
+ 
++
+ # 抽出後（イメージ・裁量範囲）:
+ def _start_worker_thread(self, gen=None):
+     self._engine = OCRRunEngine(
+@@ -331,8 +332,7 @@ def consume_one(
+     on_page_error=None,
+     on_fatal=None,
+     on_retry_wait=None,
+-):
+-    ...
++): ...
+ ```
+ 
+ ### 既存 `FakeProvider` パターン（D-14 の再利用元・E2E テストのフェイク基盤）
+@@ -354,6 +354,7 @@ class FakeProvider(OCRProvider):
+     def list_models(self):
+         return ["fake-model"]
+ 
++
+ # サマリ生成カバレッジ（D-15）のため complete_text_ex/supports_text_prompt の
+ # オーバーライドも追加する必要がある（既存 FakeProvider にはまだ実装されていない）:
+ #   supports_text_prompt = True
+diff --git a/.planning/milestones/v1.8.0-phases/03-ocr-e2e/03-REVIEW.md b/.planning/milestones/v1.8.0-phases/03-ocr-e2e/03-REVIEW.md
+index 4f8c9f2..350ed09 100644
+--- a/.planning/milestones/v1.8.0-phases/03-ocr-e2e/03-REVIEW.md
++++ b/.planning/milestones/v1.8.0-phases/03-ocr-e2e/03-REVIEW.md
+@@ -92,7 +92,10 @@ catch-all that treats an unexpected callback exception as a page error
+ page_idx, b64 = item
+ try:
+     consume_one(
+-        self.provider, item, self.prompt, self._pstate,
++        self.provider,
++        item,
++        self.prompt,
++        self._pstate,
+         cancel_check=self.cancel_flag.is_set,
+         breaker_threshold=self._breaker_threshold,
+         on_success=self._handle_success,
+@@ -102,7 +105,9 @@ try:
+     if self._on_progress is not None:
+         self._on_progress(self.progress_count(), page_idx)
+ except Exception:
+-    logger.exception("OCR ワーカーのコールバック処理中に予期しない例外 (p.%d)", page_idx)
++    logger.exception(
++        "OCR ワーカーのコールバック処理中に予期しない例外 (p.%d)", page_idx
++    )
+ finally:
+     del b64
+ ```
+diff --git a/.planning/milestones/v1.8.0-phases/03-ocr-e2e/03-REVIEWS.md b/.planning/milestones/v1.8.0-phases/03-ocr-e2e/03-REVIEWS.md
+index 5471962..513c194 100644
+--- a/.planning/milestones/v1.8.0-phases/03-ocr-e2e/03-REVIEWS.md
++++ b/.planning/milestones/v1.8.0-phases/03-ocr-e2e/03-REVIEWS.md
+@@ -63,6 +63,7 @@ plans_reviewed: [03-01-PLAN.md, 03-02-PLAN.md]
+          except tk.TclError:
+              pass
+ 
++
+      def _safe_finish_complete(self):
+          # メインスレッド内で安全に存在確認を行ってから UI 更新を実行する
+          if not self.winfo_exists():
+diff --git a/.planning/milestones/v1.8.0-phases/04-ocr/04-PATTERNS.md b/.planning/milestones/v1.8.0-phases/04-ocr/04-PATTERNS.md
+index 0b92a86..ca61aff 100644
+--- a/.planning/milestones/v1.8.0-phases/04-ocr/04-PATTERNS.md
++++ b/.planning/milestones/v1.8.0-phases/04-ocr/04-PATTERNS.md
+@@ -106,15 +106,11 @@ D-03（集約コスト確認前のページ数取得）・Open Question 2（壊
+ def _on_dnd_drop(self, event):
+     raw_paths = self.preview_canvas.tk.splitlist(event.data)
+     pdf_paths = [
+-        p
+-        for p in raw_paths
+-        if os.path.splitext(p)[1].lower() in SUPPORTED_EXTENSIONS
++        p for p in raw_paths if os.path.splitext(p)[1].lower() in SUPPORTED_EXTENSIONS
+     ]
+     if not pdf_paths:
+         if raw_paths:
+-            messagebox.showwarning(
+-                self._t("confirm_title"), self._t("dnd_pdf_only")
+-            )
++            messagebox.showwarning(self._t("confirm_title"), self._t("dnd_pdf_only"))
+         return event.action
+     ...
+     return event.action
+@@ -322,7 +318,9 @@ except tk.TclError:
+ **Apply to:** `batch_ocr.py` の複数ファイル投入（D-02）
+ ```python
+ raw_paths = self.preview_canvas.tk.splitlist(event.data)
+-pdf_paths = [p for p in raw_paths if os.path.splitext(p)[1].lower() in SUPPORTED_EXTENSIONS]
++pdf_paths = [
++    p for p in raw_paths if os.path.splitext(p)[1].lower() in SUPPORTED_EXTENSIONS
++]
+ ```
+ 
+ ### 純ロジック層の Lock 保護カウンタ（Tk/fitz 非依存）
+diff --git a/.planning/milestones/v1.8.0-phases/04-ocr/04-RESEARCH.md b/.planning/milestones/v1.8.0-phases/04-ocr/04-RESEARCH.md
+index 3e1e607..44c7a6d 100644
+--- a/.planning/milestones/v1.8.0-phases/04-ocr/04-RESEARCH.md
++++ b/.planning/milestones/v1.8.0-phases/04-ocr/04-RESEARCH.md
+@@ -229,11 +229,11 @@ tests/
+ # バッチ側は「ファイルごとに」この生成パターンを繰り返す（D-11 のファイル単位外挿）
+ def _start_file_engine(self, file_entry, gen=None):
+     self._engine = OCRRunEngine(
+-        provider=self.provider,               # ループ内で毎回 build_provider（既存 _start_ocr パターン）
++        provider=self.provider,  # ループ内で毎回 build_provider（既存 _start_ocr パターン）
+         prompt=self._ocr_prompt,
+-        run_pages=file_entry.page_indices,     # そのファイルの全ページ
++        run_pages=file_entry.page_indices,  # そのファイルの全ページ
+         concurrency=self.concurrency,
+-        cancel_flag=self._file_cancel_flag,    # ファイル内キャンセル（既存 _cancel_flag 相当）
++        cancel_flag=self._file_cancel_flag,  # ファイル内キャンセル（既存 _cancel_flag 相当）
+         on_success=lambda p, t, tr: self._record_page_success(file_entry, p, t, tr),
+         on_page_error=lambda p, m: self._record_page_error(file_entry, p, m),
+         on_complete=lambda: self._on_file_complete(file_entry, gen),
+@@ -242,7 +242,9 @@ def _start_file_engine(self, file_entry, gen=None):
+         breaker_threshold=CB_CONSECUTIVE_FAILURES,
+     )
+     self._engine.start()
+-    self._render_next_page_for(file_entry, gen)  # producer: 既存 _render_next_page と同型
++    self._render_next_page_for(
++        file_entry, gen
++    )  # producer: 既存 _render_next_page と同型
+ ```
+ `on_fatal`/`on_complete`/`on_cancelled` の中で「次ファイルへ進む」判断（バッチ全体キャンセルフラグが立っていなければ次ファイルの `_start_file_engine` を呼ぶ）を行う。これにより既存の producer-consumer 契約を一切変更せずにファイル横断ループを実現できる。
+ 
+@@ -293,8 +295,8 @@ class BatchState:
+ ```python
+ # 「バッチ中止」ボタンのハンドラ（D-10）
+ def _on_batch_cancel(self):
+-    self._batch_cancel_flag.set()   # 次ファイルへ進まない判定に使う
+-    self._file_cancel_flag.set()    # 実行中の OCRRunEngine を即座に停止させる
++    self._batch_cancel_flag.set()  # 次ファイルへ進まない判定に使う
++    self._file_cancel_flag.set()  # 実行中の OCRRunEngine を即座に停止させる
+ ```
+ ファイルループの「次ファイルへ進むか」の判定は、`on_complete`/`on_fatal`/`on_cancelled` コールバック内で必ず `self._batch_cancel_flag.is_set()` をチェックしてから次のファイルの `_start_file_engine` を呼ぶ（呼ばなければバッチはそこで停止する）。ファイル内キャンセル（`_file_cancel_flag`）は次ファイル開始時に必ず `.clear()` してから使う（既存 `_on_run` の `self._cancel_flag.clear()`（1358行）と同型のリセットパターン）。
+ 
+@@ -308,8 +310,7 @@ def _on_batch_cancel(self):
+ def _on_batch_dnd_drop(self, event):
+     raw_paths = self.queue_canvas.tk.splitlist(event.data)
+     pdf_paths = [
+-        p for p in raw_paths
+-        if os.path.splitext(p)[1].lower() in SUPPORTED_EXTENSIONS
++        p for p in raw_paths if os.path.splitext(p)[1].lower() in SUPPORTED_EXTENSIONS
+     ]
+     if not pdf_paths:
+         if raw_paths:
+@@ -334,7 +335,9 @@ for p in paths:
+         d.close()
+     except Exception as e:
+         logger.debug("ページ数取得失敗: %s", e)
+-        page_counts[p] = 0  # 壊れたファイル: キュー上でエラー表示（Claude's Discretion）
++        page_counts[p] = (
++            0  # 壊れたファイル: キュー上でエラー表示（Claude's Discretion）
++        )
+ ```
+ 
+ ### Pattern 6: 集約コスト確認ダイアログ（既存 `_confirm_cost` の拡張）
+@@ -448,23 +451,31 @@ url = self.settings.get("lm_studio_url", DEFAULT_LM_STUDIO_URL)
+ model = self.settings.get("lm_studio_model", "")
+ preset = self.settings.get("ocr_prompt_preset", "text")
+ from pagefolio.settings import load_custom_prompt
++
+ custom_prompt = load_custom_prompt(self.settings)
+ # ... クラウドプロバイダのキー事前解決（成功基準3・D-02/D-03）
+ name = self.settings.get("ocr_provider", "")
+ api_key = None
+ if name in {"claude", "gemini", "runpod"}:
+     from pagefolio.ocr_providers import OCRAPIKeyError
++
+     session_keys = getattr(self, "_session_api_keys", {})
+     try:
+         api_key = _resolve_api_key(name, session_keys)
+     except OCRAPIKeyError:
+         api_key = None
+ provider = build_provider(
+-    self.settings, api_key=api_key,
++    self.settings,
++    api_key=api_key,
+     plugin_manager=getattr(self, "plugin_manager", None),
+ )
+-concurrency = max(1, min(provider.max_concurrency,
+-    int(self.settings.get("ocr_concurrency", DEFAULT_OCR_CONCURRENCY))))
++concurrency = max(
++    1,
++    min(
++        provider.max_concurrency,
++        int(self.settings.get("ocr_concurrency", DEFAULT_OCR_CONCURRENCY)),
++    ),
++)
+ ```
+ バッチは**この provider/concurrency をファイルループの外側で1回だけ構築し、各ファイルの `OCRRunEngine` 生成時に再利用する**（プロバイダ設定はファイル間で共通のため、ファイルごとの再構築は不要 — ただし D-14 のようにフォールバック候補への切替が発生する場合は例外。本フェーズはフォールバック機構自体を対象外とするため単純化できる）。
+ 
+diff --git a/.planning/milestones/v1.8.0-phases/05-blob-shortcutsdialog/05-PATTERNS.md b/.planning/milestones/v1.8.0-phases/05-blob-shortcutsdialog/05-PATTERNS.md
+index 3d3ec25..083617c 100644
+--- a/.planning/milestones/v1.8.0-phases/05-blob-shortcutsdialog/05-PATTERNS.md
++++ b/.planning/milestones/v1.8.0-phases/05-blob-shortcutsdialog/05-PATTERNS.md
+@@ -94,6 +94,7 @@ def _invalidate_thumb_cache(self, pages=None):
+         for p in pages:
+             self.thumb_cache.pop(p, None)
+ 
++
+ def _get_thumb_photo(self, i):
+     if i in self.thumb_cache:
+         return self.thumb_cache[i]
+@@ -266,9 +267,7 @@ def _bind_shortcuts(self):
+                     self.root.bind(variant, lambda e, f=func: f())
+                     bound.append(variant)
+             except Exception as ex:
+-                logger.warning(
+-                    f"Failed to bind shortcut {keysym} for {cmd_name}: {ex}"
+-                )
++                logger.warning(f"Failed to bind shortcut {keysym} for {cmd_name}: {ex}")
+     self._bound_keysyms = bound
+ ```
+ **改修方針（D-09/D-10、RESEARCH.md Open Question 2 の推奨）:** `self.root.bind(keysym, lambda e, f=func: f())` を、`event`（`e`）を実際に使うラムダへ変更しガード判定を挿入する:
+@@ -301,10 +300,12 @@ def _refresh_row(self, cmd_name):
+     if label is not None:
+         label.configure(text=self._display_text(cmd_name))
+ 
++
+ def _refresh_all_rows(self):
+     for cmd_name, _label_key in _CMD_ORDER:
+         self._refresh_row(cmd_name)
+ 
++
+ # ── キャプチャ（変更）──────────────────────────────────────────
+ def _start_capture(self, cmd_name):
+     if self._capturing_cmd is not None:
+@@ -316,6 +317,7 @@ def _start_capture(self, cmd_name):
+     self.bind("<KeyPress>", self._on_capture_keypress)
+     self.focus_set()
+ 
++
+ def _end_capture(self):
+     self._capturing_cmd = None
+     try:
+@@ -329,7 +331,7 @@ def _start_capture(self, cmd_name):
+     if self._capturing_cmd is not None:
+         prev_cmd = self._capturing_cmd
+         self._end_capture()
+-        self._refresh_row(prev_cmd)   # ← WR-01修正: 旧行表示を復元
++        self._refresh_row(prev_cmd)  # ← WR-01修正: 旧行表示を復元
+     self._capturing_cmd = cmd_name
+     label = self._key_labels.get(cmd_name)
+     if label is not None:
+@@ -372,6 +374,7 @@ def _build_thumbnails(self):
+     self._thumb_gen += 1
+     gen = self._thumb_gen
+     ...
++
+     def render_next(i):
+         if self._thumb_gen != gen or not self.doc:
+             return
+@@ -384,7 +387,7 @@ def _build_thumbnails(self):
+ try:
+     ...
+ except Exception as e:
+-    logger.debug("...: %s", e)   # または logger.warning(f"...: {ex}")
++    logger.debug("...: %s", e)  # または logger.warning(f"...: {ex}")
+ ```
+ `__del__` 内の例外握り潰し（Blobリーク検出）もこの規約に従う。RESEARCH.md Pattern 4 のサンプルにある `except Exception: pass`（メッセージなし）はそのまま使わず修正すること。
+ 
+@@ -416,7 +419,9 @@ def _make_stress_app(doc, max_undo=20):
+ 
+         def _invalidate_thumb_cache(self, *a, **kw):
+             pass
++
+         ...
++
+     app = FakeApp(doc)
+     app.plugin_manager = types.SimpleNamespace(fire_event=lambda *a, **kw: None)
+     return app
+diff --git a/.planning/milestones/v1.8.0-phases/05-blob-shortcutsdialog/05-RESEARCH.md b/.planning/milestones/v1.8.0-phases/05-blob-shortcutsdialog/05-RESEARCH.md
+index 54c4576..c829a64 100644
+--- a/.planning/milestones/v1.8.0-phases/05-blob-shortcutsdialog/05-RESEARCH.md
++++ b/.planning/milestones/v1.8.0-phases/05-blob-shortcutsdialog/05-RESEARCH.md
+@@ -225,6 +225,7 @@ def render_next(i):
+     self.thumb_images.append(photo)
+     self.root.after(0, lambda: render_next(i + 1))
+ 
++
+ self.root.after_idle(lambda: render_next(lo))
+ ```
+ 
+@@ -262,6 +263,7 @@ def _dnd_dest_index(self, event):
+ # [CITED: https://docs.python.org/3/library/collections.html]
+ from collections import OrderedDict
+ 
++
+ class LruCache:
+     """汎用 LRU キャッシュ（値は不透明オブジェクトとして扱う・Tk/fitz非依存）。
+ 
+@@ -305,6 +307,7 @@ class LruCache:
+ # Source: 設計方針は D-11/D-12/D-14 に基づく提案実装（既存 undo_store.py の拡張）
+ import sys
+ 
++
+ class FileBlob:
+     __slots__ = ("path", "size", "_released")
+ 
+@@ -411,7 +414,7 @@ def should_suppress_for_focused_input(keysym, focused_widget_class):
+ ```python
+ def _start_capture(self, cmd_name):
+     if self._capturing_cmd is not None:
+-        self._end_capture()          # ← unbind するだけで表示は戻さない
++        self._end_capture()  # ← unbind するだけで表示は戻さない
+     self._capturing_cmd = cmd_name
+     ...
+ ```
+diff --git a/.planning/milestones/v1.8.0-phases/05-blob-shortcutsdialog/deferred-items.md b/.planning/milestones/v1.8.0-phases/05-blob-shortcutsdialog/deferred-items.md
+index ea73668..529ee9b 100644
+--- a/.planning/milestones/v1.8.0-phases/05-blob-shortcutsdialog/deferred-items.md
++++ b/.planning/milestones/v1.8.0-phases/05-blob-shortcutsdialog/deferred-items.md
+@@ -18,9 +18,9 @@
+ app._save_undo("insert", insert_at=1)
+ app.doc.insert_pdf(src, start_at=1)  # 1ページ挿入
+ app._undo_stack[-1]["data"][1] = 1
+-app._undo()   # -> 3ページ（正しい）
+-app._redo()   # -> 4ページ（正しい）
+-app._undo()   # -> 5ページ（バグ: 3ページに戻るべき）
++app._undo()  # -> 3ページ（正しい）
++app._redo()  # -> 4ページ（正しい）
++app._undo()  # -> 5ページ（バグ: 3ページに戻るべき）
+ ```
+ 
+ ### 原因（推定）
+diff --git a/.planning/milestones/v1.8.0-phases/06-ux-ui/06-PATTERNS.md b/.planning/milestones/v1.8.0-phases/06-ux-ui/06-PATTERNS.md
+index 04fb11f..e28edb1 100644
+--- a/.planning/milestones/v1.8.0-phases/06-ux-ui/06-PATTERNS.md
++++ b/.planning/milestones/v1.8.0-phases/06-ux-ui/06-PATTERNS.md
+@@ -32,15 +32,25 @@
+ toast_frame = tk.Frame(self.root, bg=C["BG_CARD"], bd=1, relief="solid")
+ toast_frame.place(relx=1.0, rely=1.0, anchor="se", x=-16, y=-16)
+ tk.Label(
+-    toast_frame, textvariable=msg_var, bg=C["BG_CARD"], fg=C["TEXT_MAIN"],
+-    font=self._font(-1), wraplength=320, justify="left",
++    toast_frame,
++    textvariable=msg_var,
++    bg=C["BG_CARD"],
++    fg=C["TEXT_MAIN"],
++    font=self._font(-1),
++    wraplength=320,
++    justify="left",
+ ).pack(side="left", padx=(12, 4), pady=8)
+ ttk.Button(
+-    toast_frame, text=self._t("toast_retry_btn"), style="Accent.TButton",
++    toast_frame,
++    text=self._t("toast_retry_btn"),
++    style="Accent.TButton",
+     command=retry_cb,
+ ).pack(side="left", padx=4)
+ ttk.Button(
+-    toast_frame, text="✕", width=2, command=dismiss_cb,
++    toast_frame,
++    text="✕",
++    width=2,
++    command=dismiss_cb,
+ ).pack(side="left", padx=(0, 8))
+ ```
+ 
+@@ -179,16 +189,19 @@ D-02 は `_print_pdf`/`_send_to_printer` を明示指定。一貫性のため両
+ def _on_mousewheel(event):
+     canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
+ 
++
+ def _bind_wheel(_event=None):
+     canvas.bind_all("<MouseWheel>", _on_mousewheel)
+     canvas.bind_all("<Button-4>", _on_mousewheel_linux)
+     canvas.bind_all("<Button-5>", _on_mousewheel_linux)
+ 
++
+ def _unbind_wheel(_event=None):
+     canvas.unbind_all("<MouseWheel>")
+     canvas.unbind_all("<Button-4>")
+     canvas.unbind_all("<Button-5>")
+ 
++
+ canvas.bind("<Enter>", _bind_wheel)
+ canvas.bind("<Leave>", _unbind_wheel)
+ ```
+@@ -230,7 +243,7 @@ tk.Label(
+ ```
+ **是正後:**
+ ```python
+-font=self._font(6, "bold"),
++font = (self._font(6, "bold"),)
+ ```
+ （ベースフォント10との組合せで現状16ptを再現する提案値。実装時に `self._font(0)[1]` の実測値で delta を確定する）
+ 
+@@ -247,6 +260,7 @@ import re
+ _FONT_HARDCODE_PATTERN = re.compile(r'font=\(\s*["\']Segoe UI["\']\s*,\s*\d+')
+ _PAGEFOLIO_DIR = pathlib.Path(__file__).resolve().parent.parent / "pagefolio"
+ 
++
+ def test_no_hardcoded_font_sizes():
+     offenders = []
+     for py in _PAGEFOLIO_DIR.rglob("*.py"):
+diff --git a/.planning/milestones/v1.8.0-phases/06-ux-ui/06-RESEARCH.md b/.planning/milestones/v1.8.0-phases/06-ux-ui/06-RESEARCH.md
+index ee6586d..33bf025 100644
+--- a/.planning/milestones/v1.8.0-phases/06-ux-ui/06-RESEARCH.md
++++ b/.planning/milestones/v1.8.0-phases/06-ux-ui/06-RESEARCH.md
+@@ -175,15 +175,25 @@ pagefolio/
+ toast_frame = tk.Frame(self.root, bg=C["BG_CARD"], bd=1, relief="solid")
+ toast_frame.place(relx=1.0, rely=1.0, anchor="se", x=-16, y=-16)
+ tk.Label(
+-    toast_frame, textvariable=msg_var, bg=C["BG_CARD"], fg=C["TEXT_MAIN"],
+-    font=self._font(-1), wraplength=320, justify="left",
++    toast_frame,
++    textvariable=msg_var,
++    bg=C["BG_CARD"],
++    fg=C["TEXT_MAIN"],
++    font=self._font(-1),
++    wraplength=320,
++    justify="left",
+ ).pack(side="left", padx=(12, 4), pady=8)
+ ttk.Button(
+-    toast_frame, text=self._t("toast_retry_btn"), style="Accent.TButton",
++    toast_frame,
++    text=self._t("toast_retry_btn"),
++    style="Accent.TButton",
+     command=retry_cb,
+ ).pack(side="left", padx=4)
+ ttk.Button(
+-    toast_frame, text="✕", width=2, command=dismiss_cb,
++    toast_frame,
++    text="✕",
++    width=2,
++    command=dismiss_cb,
+ ).pack(side="left", padx=(0, 8))
+ ```
+ 
+@@ -196,14 +206,19 @@ ttk.Button(
+ def _on_mousewheel(event):
+     canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
+ 
++
+ def _bind_wheel(_event=None):
+     canvas.bind_all("<MouseWheel>", _on_mousewheel)
+ 
++
+ def _unbind_wheel(_event=None):
+     canvas.unbind_all("<MouseWheel>")
+ 
+-canvas.bind("<Enter>", _bind_wheel)   # マウスがこの Canvas 上にある間だけ束縛
+-canvas.bind("<Leave>", _unbind_wheel)  # 離れたら解除（他ウィジェットのホイールを奪わない）
++
++canvas.bind("<Enter>", _bind_wheel)  # マウスがこの Canvas 上にある間だけ束縛
++canvas.bind(
++    "<Leave>", _unbind_wheel
++)  # 離れたら解除（他ウィジェットのホイールを奪わない）
+ ```
+ 画面高クランプの基準実装:
+ ```python
+@@ -350,6 +365,7 @@ _PAGEFOLIO_DIR = pathlib.Path(__file__).resolve().parent.parent / "pagefolio"
+ # allowlist は現状不要（about.py:42 修正後はゼロ件が期待値）。
+ # 将来 fs 非連動の意図的固定が必要になった場合のみ、理由コメント付きで追加する。
+ 
++
+ def test_no_hardcoded_font_sizes():
+     offenders = []
+     for py in _PAGEFOLIO_DIR.rglob("*.py"):
+diff --git a/.planning/milestones/v1.8.0-phases/06-ux-ui/06-REVIEW.md b/.planning/milestones/v1.8.0-phases/06-ux-ui/06-REVIEW.md
+index 76dd42d..6970c84 100644
+--- a/.planning/milestones/v1.8.0-phases/06-ux-ui/06-REVIEW.md
++++ b/.planning/milestones/v1.8.0-phases/06-ux-ui/06-REVIEW.md
+@@ -92,7 +92,7 @@ off-screen-bottom problem the fix was meant to prevent.
+ I confirmed empirically that `minsize()` overrides a smaller prior `geometry()` height on
+ this environment:
+ ```python
+-top.geometry('300x300+50+50')
++top.geometry("300x300+50+50")
+ top.minsize(960, 620)
+ top.update_idletasks()
+ top.winfo_height()  # -> 620, not 300
+@@ -121,8 +121,8 @@ which include its toplevel's tag — so `self.bind("<Destroy>", ...)` on the `Pl
+ Toplevel fires for **every** widget destroyed inside it, not only when the dialog itself
+ is destroyed. I confirmed this empirically:
+ ```python
+-top.bind('<Destroy>', lambda e: calls.append(e.widget), add='+')
+-child2.destroy()   # -> fires the toplevel-bound handler immediately
++top.bind("<Destroy>", lambda e: calls.append(e.widget), add="+")
++child2.destroy()  # -> fires the toplevel-bound handler immediately
+ ```
+ `_refresh_list()` (plugin.py:133-147) does `for w in self._list_inner.winfo_children():
+ w.destroy()`, which is called from `_rescan()` (plugin.py:211-218). Every time the user
+diff --git a/.planning/milestones/v1.9.0-phases/01-safety-rollback/01-PATTERNS.md b/.planning/milestones/v1.9.0-phases/01-safety-rollback/01-PATTERNS.md
+index a8876bb..8d8081b 100644
+--- a/.planning/milestones/v1.9.0-phases/01-safety-rollback/01-PATTERNS.md
++++ b/.planning/milestones/v1.9.0-phases/01-safety-rollback/01-PATTERNS.md
+@@ -51,9 +51,7 @@ logger = logging.getLogger(__name__)
+ ```python
+ # Source: pagefolio/file_ops.py:666-673
+ try:
+-    self.doc.save(
+-        self.filepath, incremental=True, encryption=fitz.PDF_ENCRYPT_KEEP
+-    )
++    self.doc.save(self.filepath, incremental=True, encryption=fitz.PDF_ENCRYPT_KEEP)
+ except Exception as e:
+     logger.debug("incremental save 失敗、開き直して保存: %s", e)
+     self._overwrite_current_file(self.filepath)  # ← D-02 の修正対象
+@@ -78,7 +76,10 @@ self.doc.save(path, encryption=fitz.PDF_ENCRYPT_KEEP)
+ ```python
+ # Source: pagefolio/file_ops.py:21-33
+ def save_with_password(doc, path, password):
+-    doc.save(path, encryption=fitz.PDF_ENCRYPT_AES_256, owner_pw=password, user_pw=password)
++    doc.save(
++        path, encryption=fitz.PDF_ENCRYPT_AES_256, owner_pw=password, user_pw=password
++    )
++
+ 
+ def save_without_password(doc, path):
+     doc.save(path, encryption=fitz.PDF_ENCRYPT_NONE)
+@@ -140,6 +141,7 @@ def _push_evicting(self, stack, state):
+         self._dispose_state(stack[0])
+     stack.append(state)
+ 
++
+ def _clear_redo_stack(self):
+     for st in self._redo_stack:
+         self._dispose_state(st)
+@@ -256,7 +258,7 @@ def _duplicate_page(self):
+     if not self._check_doc():
+         return
+     pno = self.current_page
+-    self._save_undo("duplicate", pno=pno)   # ← 実処理前（バグ）
++    self._save_undo("duplicate", pno=pno)  # ← 実処理前（バグ）
+     try:
+         tmp = fitz.open()
+         tmp.insert_pdf(self.doc, from_page=pno, to_page=pno)
+@@ -336,7 +338,9 @@ if prompt_file_exists(SUMMARY_PROMPT_FILE):
+ ```python
+ # Source: pagefolio/dialogs/llm_config/dialog.py:445-469
+ llm_settings["ocr_custom_prompt"] = self.ocr_prompt_text.get("1.0", "end").strip()
+-llm_settings["ocr_summary_prompt"] = self.ocr_summary_prompt_text.get("1.0", "end").strip()
++llm_settings["ocr_summary_prompt"] = self.ocr_summary_prompt_text.get(
++    "1.0", "end"
++).strip()
+ if _prompt_file_exists(CUSTOM_PROMPT_FILE):
+     _save_prompt_file(CUSTOM_PROMPT_FILE, llm_settings["ocr_custom_prompt"])
+ if _prompt_file_exists(SUMMARY_PROMPT_FILE):
+diff --git a/.planning/milestones/v1.9.0-phases/01-safety-rollback/01-RESEARCH.md b/.planning/milestones/v1.9.0-phases/01-safety-rollback/01-RESEARCH.md
+index f7185d6..f7ff38c 100644
+--- a/.planning/milestones/v1.9.0-phases/01-safety-rollback/01-RESEARCH.md
++++ b/.planning/milestones/v1.9.0-phases/01-safety-rollback/01-RESEARCH.md
+@@ -119,7 +119,9 @@ V190-SAFE-04/05・V190-UNDO-01/02 は、既存の「op 別逆デルタ + Blob 
+ # 検証1: tobytes() を encryption 引数なしで呼ぶと暗号化が失われる
+ doc = fitz.open()
+ doc.new_page().insert_text((72, 72), "hello")
+-doc.save("enc.pdf", encryption=fitz.PDF_ENCRYPT_AES_256, owner_pw="secret", user_pw="secret")
++doc.save(
++    "enc.pdf", encryption=fitz.PDF_ENCRYPT_AES_256, owner_pw="secret", user_pw="secret"
++)
+ doc.close()
+ 
+ d2 = fitz.open("enc.pdf")
+@@ -133,8 +135,10 @@ print(d3.needs_pass)  # => 0 （平文化した！）
+ 
+ ```python
+ # 検証2: save() も同様。encryption=fitz.PDF_ENCRYPT_KEEP を明示すれば維持される
+-d2.save("out.pdf")                                   # needs_pass => 0（平文化）
+-d2.save("out.pdf", encryption=fitz.PDF_ENCRYPT_KEEP)  # needs_pass => 1（維持・authenticate も成功）
++d2.save("out.pdf")  # needs_pass => 0（平文化）
++d2.save(
++    "out.pdf", encryption=fitz.PDF_ENCRYPT_KEEP
++)  # needs_pass => 1（維持・authenticate も成功）
+ ```
+ 
+ [VERIFIED: ローカル pymupdf 1.28.0 実行時テスト（本セッションで実行・上記スクリプトの出力を確認）]
+@@ -224,7 +228,9 @@ def _do_insert(self, ordered_paths, insert_at):
+         pos = insert_at
+         for path in ordered_paths:
+             src = self._open_path_as_pdf(path)
+-            self.doc.insert_pdf(src, start_at=pos)  # ← ここで例外が出ると src が close() されない
++            self.doc.insert_pdf(
++                src, start_at=pos
++            )  # ← ここで例外が出ると src が close() されない
+             pos += len(src)
+             total += len(src)
+             src.close()
+@@ -293,7 +299,7 @@ def _duplicate_page(self):
+     if not self._check_doc():
+         return
+     pno = self.current_page
+-    self._save_undo("duplicate", pno=pno)   # ← 実処理前に確定（バグ）
++    self._save_undo("duplicate", pno=pno)  # ← 実処理前に確定（バグ）
+     try:
+         tmp = fitz.open()
+         tmp.insert_pdf(self.doc, from_page=pno, to_page=pno)
+@@ -322,7 +328,7 @@ def _undo(self):
+         return
+     state = self._undo_stack.pop()
+     inverse = self._restore_state(state)  # ← ここで例外が出ると state は失われ、
+-                                            #   doc は部分変更のまま残る
++    #   doc は部分変更のまま残る
+     if inverse.get("data") is not state.get("data"):
+         self._dispose_state(state)
+     self._push_evicting(self._redo_stack, inverse)
+@@ -432,9 +438,7 @@ def test_duplicate_undo_redo_undo_roundtrip(self, sample_pdf_doc):
+ ```python
+ # Source: pagefolio/file_ops.py:666-673（インクリメンタル保存本体・既に正しい）
+ try:
+-    self.doc.save(
+-        self.filepath, incremental=True, encryption=fitz.PDF_ENCRYPT_KEEP
+-    )
++    self.doc.save(self.filepath, incremental=True, encryption=fitz.PDF_ENCRYPT_KEEP)
+ except Exception as e:
+     logger.debug("incremental save 失敗、開き直して保存: %s", e)
+     self._overwrite_current_file(self.filepath)  # ← ここが D-02 の修正対象
+@@ -449,6 +453,7 @@ def _push_evicting(self, stack, state):
+         self._dispose_state(stack[0])
+     stack.append(state)
+ 
++
+ def _clear_redo_stack(self):
+     """redo スタックを Blob 解放付きでクリアする。"""
+     for st in self._redo_stack:
+@@ -460,7 +465,9 @@ def _clear_redo_stack(self):
+ ```python
+ # Source: pagefolio/dialogs/llm_config/dialog.py:445-469（_apply メソッド内・既存）
+ llm_settings["ocr_custom_prompt"] = self.ocr_prompt_text.get("1.0", "end").strip()
+-llm_settings["ocr_summary_prompt"] = self.ocr_summary_prompt_text.get("1.0", "end").strip()
++llm_settings["ocr_summary_prompt"] = self.ocr_summary_prompt_text.get(
++    "1.0", "end"
++).strip()
+ # V174-2: ファイル連動モード（外部 md ファイルが既に存在する場合）は
+ # 入力欄の内容をファイルへ書き戻す（画面 ⇄ md の双方向同期）。
+ # ファイルを使わないユーザーには新規作成しない（settings のみで完結）。
+diff --git a/.planning/milestones/v1.9.0-phases/02-ocr-openai-chatgpt/02-PATTERNS.md b/.planning/milestones/v1.9.0-phases/02-ocr-openai-chatgpt/02-PATTERNS.md
+index b2706f9..499c33a 100644
+--- a/.planning/milestones/v1.9.0-phases/02-ocr-openai-chatgpt/02-PATTERNS.md
++++ b/.planning/milestones/v1.9.0-phases/02-ocr-openai-chatgpt/02-PATTERNS.md
+@@ -37,6 +37,7 @@ import しない。これは settings.py 等がこのモジュールを参照す
+ import を構造的に防ぐための制約であり、将来の変更でも内部モジュールへの
+ import 依存を追加してはならない。
+ """
++
+ import os
+ ```
+ `catalog.py` はこの直後に置かれる「軽量データモジュール」として、`registry.py` のみを import する一方向依存を守る（D-06）。`registry.py` 自身は逆方向 import を持たない（`import os` のみ、実測 74 行全体で確認済み）。
+@@ -46,6 +47,7 @@ import os
+ def env_vars_for(provider_name):
+     return PROVIDER_ENV_KEYS.get(provider_name, ())
+ 
++
+ def primary_env_var(provider_name):
+     env_vars = env_vars_for(provider_name)
+     return env_vars[0] if env_vars else ""
+@@ -81,6 +83,7 @@ from pagefolio.ocr_providers import (
+     GeminiProvider,
+     RunPodProvider,
+ )
++
+ s = settings if settings is not None else self.app.settings
+ name = s.get("ocr_provider", "")
+ if name in ("claude", "gemini", "runpod"):
+@@ -130,9 +133,9 @@ def _build_payload(self, b64_png, prompt):
+                 ],
+             }
+         ],
+-        "max_tokens": self.max_tokens,     # ← OpenAI版は max_completion_tokens に置換（D-10）
+-        "temperature": self.temperature,    # ← OpenAI版は推論系モデルなら省略（D-11）
+-        "stream": False,                    # ← OpenAI版は不要（Chat Completions非streaming時は省略可）
++        "max_tokens": self.max_tokens,  # ← OpenAI版は max_completion_tokens に置換（D-10）
++        "temperature": self.temperature,  # ← OpenAI版は推論系モデルなら省略（D-11）
++        "stream": False,  # ← OpenAI版は不要（Chat Completions非streaming時は省略可）
+     }
+ ```
+ `image_url.url` に加え、OpenAI 版は `image_url.detail`（D-16・既定 `"high"`）を追加する必要がある点が LM Studio との差分。
+@@ -185,13 +188,17 @@ OpenAI 版はこの2つを合成した単一判定関数（D-13）を持つ:
+ # openai_provider.py 実装イメージ
+ _REASONING_MODEL_RE = re.compile(r"^o\d")  # D-09: 実キーで /v1/models 確認後に確定
+ 
++
+ def _is_reasoning_model(self):
+     return bool(self._REASONING_MODEL_RE.match(self.model or ""))
+ 
++
+ def _apply_gen_params(self, payload):
+-    payload["max_completion_tokens"] = self.max_tokens  # D-10: 常時 max_completion_tokens
++    payload["max_completion_tokens"] = (
++        self.max_tokens
++    )  # D-10: 常時 max_completion_tokens
+     if not self._is_reasoning_model():
+-        payload["temperature"] = self.temperature        # D-11: 非推論系のみ temperature
++        payload["temperature"] = self.temperature  # D-11: 非推論系のみ temperature
+     elif self.reasoning_effort:
+         payload["reasoning_effort"] = self.reasoning_effort  # D-15: 推論系のみ effort
+     return payload
+@@ -269,6 +276,7 @@ PROVIDER_ENV_KEYS = {
+ ```python
+ # __init__.py:30, 42-45（既存パターン）
+ from pagefolio.ocr_providers.claude import ClaudeProvider  # noqa: F401
++
+ ...
+ from pagefolio.ocr_providers.gemini import GeminiProvider  # noqa: F401
+ from pagefolio.ocr_providers.lmstudio import LMStudioProvider  # noqa: F401
+@@ -394,16 +402,22 @@ self.claude_section_frame = tk.Frame(body, bg=C["BG_DARK"])
+ claude_model_row = tk.Frame(self.claude_section_frame, bg=C["BG_DARK"])
+ claude_model_row.pack(fill="x", padx=0, pady=2)
+ tk.Label(
+-    claude_model_row, text=self._L["settings_lm_model"],
+-    bg=C["BG_DARK"], fg=C["TEXT_MAIN"], font=self._font(-1),
+-    width=20, anchor="w",
++    claude_model_row,
++    text=self._L["settings_lm_model"],
++    bg=C["BG_DARK"],
++    fg=C["TEXT_MAIN"],
++    font=self._font(-1),
++    width=20,
++    anchor="w",
+ ).pack(side="left")
+ self.claude_model_var = tk.StringVar(
+     value=self.current_settings.get("claude_model", "claude-sonnet-4-6"),
+ )
+ self.claude_model_combo = ttk.Combobox(
+-    claude_model_row, textvariable=self.claude_model_var,
+-    font=self._font(-1), values=ClaudeProvider.RECOMMENDED_MODELS,
++    claude_model_row,
++    textvariable=self.claude_model_var,
++    font=self._font(-1),
++    values=ClaudeProvider.RECOMMENDED_MODELS,
+ )
+ self.claude_model_combo.pack(side="left", fill="x", expand=True, padx=4)
+ self.claude_model_combo.bind("<<ComboboxSelected>>", self._on_model_change)
+@@ -413,22 +427,32 @@ claude_key_row = tk.Frame(self.claude_section_frame, bg=C["BG_DARK"])
+ ...
+ self.claude_api_key_var = tk.StringVar(value=self._session_api_keys.get("claude", ""))
+ self.claude_api_key_entry = tk.Entry(
+-    claude_key_row, show="*", textvariable=self.claude_api_key_var,
+-    font=self._font(-1), bg=C["BG_CARD"], fg=C["TEXT_MAIN"],
+-    insertbackground=C["TEXT_MAIN"], relief="flat",
++    claude_key_row,
++    show="*",
++    textvariable=self.claude_api_key_var,
++    font=self._font(-1),
++    bg=C["BG_CARD"],
++    fg=C["TEXT_MAIN"],
++    insertbackground=C["TEXT_MAIN"],
++    relief="flat",
+ )
+ self._claude_key_shown = False
+ 
++
+ def _toggle_claude_key():
+     self._claude_key_shown = not self._claude_key_shown
+     self.claude_api_key_entry.configure(show="" if self._claude_key_shown else "*")
+     claude_key_toggle_btn.configure(
+-        text=self._L["llm_key_toggle_hide"] if self._claude_key_shown
++        text=self._L["llm_key_toggle_hide"]
++        if self._claude_key_shown
+         else self._L["llm_key_toggle_show"]
+     )
+ 
++
+ claude_key_toggle_btn = ttk.Button(
+-    claude_key_row, text=self._L["llm_key_toggle_show"], width=4,
++    claude_key_row,
++    text=self._L["llm_key_toggle_show"],
++    width=4,
+     command=_toggle_claude_key,
+ )
+ claude_key_toggle_btn.pack(side="right", padx=(2, 0))
+@@ -439,15 +463,20 @@ _claude_env_set, _claude_env_var = _configured_env_var("claude")
+ if _claude_env_set:
+     claude_note += " " + self._L["llm_key_env_set_note"].format(env_var=_claude_env_var)
+ tk.Label(
+-    self.claude_section_frame, text=claude_note,
+-    bg=C["BG_DARK"], fg=C["TEXT_SUB"], font=self._font(-2),
+-    wraplength=460, justify="left",
++    self.claude_section_frame,
++    text=claude_note,
++    bg=C["BG_DARK"],
++    fg=C["TEXT_SUB"],
++    font=self._font(-2),
++    wraplength=460,
++    justify="left",
+ ).pack(anchor="w", pady=(0, 2))
+ 
+ claude_btn_row = tk.Frame(self.claude_section_frame, bg=C["BG_DARK"])
+ claude_btn_row.pack(fill="x", padx=0, pady=(4, 2))
+ ttk.Button(
+-    claude_btn_row, text=self._L["ocr_model_refresh"],
++    claude_btn_row,
++    text=self._L["ocr_model_refresh"],
+     command=self._refresh_claude_models,
+ ).pack(side="left", padx=2)
+ ```
+@@ -492,6 +521,7 @@ def _on_model_change(self, _event=None):
+         self.effort_frame.pack_forget()
+     self._resize_to_fit()
+ 
++
+ def _model_supports_effort(self, model):
+     """モデルが effort パラメータ（output_config）に対応しているか判定する。
+     M-3: ocr_providers.ClaudeProvider._supports_effort と同じ判定に揃える。
+@@ -523,9 +553,7 @@ def _refresh_claude_models(self):
+             )
+ 
+     def _on_error(e):
+-        logger.warning(
+-            self._L["llm_model_fetch_failed"].format(provider="Claude", e=e)
+-        )
++        logger.warning(self._L["llm_model_fetch_failed"].format(provider="Claude", e=e))
+         self.claude_model_combo["values"] = ClaudeProvider.RECOMMENDED_MODELS
+         self._set_lm_status(self._L["llm_env_key_unset_static"], kind="info")
+ 
+diff --git a/.planning/milestones/v1.9.0-phases/02-ocr-openai-chatgpt/02-RESEARCH.md b/.planning/milestones/v1.9.0-phases/02-ocr-openai-chatgpt/02-RESEARCH.md
+index 4661174..db3e353 100644
+--- a/.planning/milestones/v1.9.0-phases/02-ocr-openai-chatgpt/02-RESEARCH.md
++++ b/.planning/milestones/v1.9.0-phases/02-ocr-openai-chatgpt/02-RESEARCH.md
+@@ -223,25 +223,83 @@ from dataclasses import dataclass
+ 
+ @dataclass(frozen=True)
+ class ProviderMeta:
+-    name: str                     # settings["ocr_provider"] の値と一致
+-    display_name_key: str         # LANG のキー名
+-    is_cloud: bool                # 外部送信あり = コスト確認/送信先確認/APIキー欄が必要
+-    model_setting_key: str | None # settings 内のモデルキー
+-    default_model: str | None     # モデル未設定時の既定値
+-    host: str | None              # 固定送信先ホスト。ユーザー設定URL依存なら None
+-    fallback_eligible: bool       # フォールバック候補一覧に出すか
++    name: str  # settings["ocr_provider"] の値と一致
++    display_name_key: str  # LANG のキー名
++    is_cloud: bool  # 外部送信あり = コスト確認/送信先確認/APIキー欄が必要
++    model_setting_key: str | None  # settings 内のモデルキー
++    default_model: str | None  # モデル未設定時の既定値
++    host: str | None  # 固定送信先ホスト。ユーザー設定URL依存なら None
++    fallback_eligible: bool  # フォールバック候補一覧に出すか
+     api_key_missing_lang_key: str | None  # D-01: APIキー欠落エラーの LANG キー
+ 
+ 
+ PROVIDERS: "dict[str, ProviderMeta]" = {
+-    "off": ProviderMeta("off", "ocr_provider_name_off", False, None, None, None, False, None),
+-    "lmstudio": ProviderMeta("lmstudio", "ocr_provider_name_lmstudio", False, "lm_studio_model", "", None, True, None),
+-    "ollama": ProviderMeta("ollama", "ocr_provider_name_ollama", False, "ollama_model", "", None, True, None),
+-    "runpod": ProviderMeta("runpod", "ocr_provider_name_runpod", True, "runpod_model", "", None, True, "ocr_api_key_missing_runpod"),
+-    "claude": ProviderMeta("claude", "ocr_provider_name_claude", True, "claude_model", "claude-sonnet-4-6", "api.anthropic.com", True, "ocr_api_key_missing"),
+-    "gemini": ProviderMeta("gemini", "ocr_provider_name_gemini", True, "gemini_model", "gemini-2.5-flash", "generativelanguage.googleapis.com", True, "ocr_api_key_missing_gemini"),
+-    "tesseract": ProviderMeta("tesseract", "ocr_provider_name_tesseract", False, None, None, None, True, None),
+-    "openai": ProviderMeta("openai", "ocr_provider_name_openai", True, "openai_model", "<D-09で実キー確認後に確定>", "api.openai.com", True, "ocr_api_key_missing_openai"),
++    "off": ProviderMeta(
++        "off", "ocr_provider_name_off", False, None, None, None, False, None
++    ),
++    "lmstudio": ProviderMeta(
++        "lmstudio",
++        "ocr_provider_name_lmstudio",
++        False,
++        "lm_studio_model",
++        "",
++        None,
++        True,
++        None,
++    ),
++    "ollama": ProviderMeta(
++        "ollama",
++        "ocr_provider_name_ollama",
++        False,
++        "ollama_model",
++        "",
++        None,
++        True,
++        None,
++    ),
++    "runpod": ProviderMeta(
++        "runpod",
++        "ocr_provider_name_runpod",
++        True,
++        "runpod_model",
++        "",
++        None,
++        True,
++        "ocr_api_key_missing_runpod",
++    ),
++    "claude": ProviderMeta(
++        "claude",
++        "ocr_provider_name_claude",
++        True,
++        "claude_model",
++        "claude-sonnet-4-6",
++        "api.anthropic.com",
++        True,
++        "ocr_api_key_missing",
++    ),
++    "gemini": ProviderMeta(
++        "gemini",
++        "ocr_provider_name_gemini",
++        True,
++        "gemini_model",
++        "gemini-2.5-flash",
++        "generativelanguage.googleapis.com",
++        True,
++        "ocr_api_key_missing_gemini",
++    ),
++    "tesseract": ProviderMeta(
++        "tesseract", "ocr_provider_name_tesseract", False, None, None, None, True, None
++    ),
++    "openai": ProviderMeta(
++        "openai",
++        "ocr_provider_name_openai",
++        True,
++        "openai_model",
++        "<D-09で実キー確認後に確定>",
++        "api.openai.com",
++        True,
++        "ocr_api_key_missing_openai",
++    ),
+ }
+ 
+ 
+@@ -299,10 +357,10 @@ from pagefolio.ocr_providers.errors import _raise_mapped_http_error
+ class OpenAIProvider(OCRProvider):
+     """OpenAI Chat Completions API プロバイダ（urllib 直叩き）。"""
+ 
+-    default_concurrency = 2   # D-14: Claude 相当
+-    max_concurrency = 2       # D-14
++    default_concurrency = 2  # D-14: Claude 相当
++    max_concurrency = 2  # D-14
+     supports_text_prompt = True
+-    model_list_timeout = 30   # クラウド系共通（Claude/Gemini と同値）
++    model_list_timeout = 30  # クラウド系共通（Claude/Gemini と同値）
+ 
+     CHAT_ENDPOINT = "https://api.openai.com/v1/chat/completions"
+     MODELS_ENDPOINT = "https://api.openai.com/v1/models"
+@@ -317,9 +375,16 @@ class OpenAIProvider(OCRProvider):
+         return bool(self._REASONING_MODEL_RE.match(self.model or ""))
+ 
+     def __init__(
+-        self, api_key, model, timeout=120, max_tokens=4096,
+-        temperature=0.1, detail="high", reasoning_effort=None,
+-        organization="", project="",
++        self,
++        api_key,
++        model,
++        timeout=120,
++        max_tokens=4096,
++        temperature=0.1,
++        detail="high",
++        reasoning_effort=None,
++        organization="",
++        project="",
+     ):
+         self.api_key = api_key
+         self.model = model
+@@ -333,7 +398,10 @@ class OpenAIProvider(OCRProvider):
+ 
+     def _headers(self):
+         # D-17: org/project は空なら一切ヘッダを付与しない
+-        h = {"Content-Type": "application/json", "Authorization": f"Bearer {self.api_key}"}
++        h = {
++            "Content-Type": "application/json",
++            "Authorization": f"Bearer {self.api_key}",
++        }
+         if self.organization:
+             h["OpenAI-Organization"] = self.organization
+         if self.project:
+@@ -354,29 +422,37 @@ class OpenAIProvider(OCRProvider):
+     def _build_payload(self, b64_png, prompt):
+         payload = {
+             "model": self.model,
+-            "messages": [{
+-                "role": "user",
+-                "content": [
+-                    {"type": "image_url", "image_url": {
+-                        "url": f"data:image/png;base64,{b64_png}",
+-                        "detail": self.detail,  # D-16: 既定 high
+-                    }},
+-                    {"type": "text", "text": prompt},
+-                ],
+-            }],
++            "messages": [
++                {
++                    "role": "user",
++                    "content": [
++                        {
++                            "type": "image_url",
++                            "image_url": {
++                                "url": f"data:image/png;base64,{b64_png}",
++                                "detail": self.detail,  # D-16: 既定 high
++                            },
++                        },
++                        {"type": "text", "text": prompt},
++                    ],
++                }
++            ],
+         }
+         return self._apply_gen_params(payload)
+ 
+     def _post_chat(self, payload):
+         data = json.dumps(payload).encode("utf-8")
+         req = urllib.request.Request(  # noqa: S310
+-            self.CHAT_ENDPOINT, data=data, headers=self._headers(), method="POST",
++            self.CHAT_ENDPOINT,
++            data=data,
++            headers=self._headers(),
++            method="POST",
+         )
+         try:
+             with urllib.request.urlopen(req, timeout=self.timeout) as resp:  # noqa: S310
+                 return resp.read().decode("utf-8")
+         except urllib.error.HTTPError as e:
+-            _raise_mapped_http_error(e)   # D-12: 既存共通変換をそのまま流用
++            _raise_mapped_http_error(e)  # D-12: 既存共通変換をそのまま流用
+         except socket.timeout as e:
+             raise TimeoutError(f"timed out after {self.timeout}s") from e
+         except urllib.error.URLError as e:
+@@ -395,7 +471,7 @@ class OpenAIProvider(OCRProvider):
+ 
+     def list_models(self):
+         if not self.api_key:
+-            return list(self.RECOMMENDED_MODELS)   # D-08: キー未設定は静的リスト
++            return list(self.RECOMMENDED_MODELS)  # D-08: キー未設定は静的リスト
+         # ... GET /v1/models 呼び出し（claude.py の list_models と同型のHTTP処理）...
+         # D-07: ヒューリスティックフィルタを適用し、0件なら RECOMMENDED_MODELS へ合流（D-08）
+ ```
+@@ -450,9 +526,11 @@ def _refresh_claude_models(self):
+     def _on_success(models):
+         self.claude_model_combo["values"] = models
+         ...
++
+     def _on_error(e):
+         self.claude_model_combo["values"] = ClaudeProvider.RECOMMENDED_MODELS
+         ...
++
+     self._fetch_models_async(provider.list_models, _on_success, _on_error)
+ ```
+ `_env_fallback("openai")` は `registry.env_vars_for("openai")` が `("OPENAI_API_KEY",)` を返すことで自動対応する（D-06/D-18 で `registry.py` へ1行追加するだけで完結）。[VERIFIED: pagefolio/dialogs/llm_config/model_fetch.py:17-32, 206-243 実読]
+diff --git a/.planning/milestones/v1.9.0-phases/02-ocr-openai-chatgpt/02-REVIEW.md b/.planning/milestones/v1.9.0-phases/02-ocr-openai-chatgpt/02-REVIEW.md
+index 21f8d7c..a846ce0 100644
+--- a/.planning/milestones/v1.9.0-phases/02-ocr-openai-chatgpt/02-REVIEW.md
++++ b/.planning/milestones/v1.9.0-phases/02-ocr-openai-chatgpt/02-REVIEW.md
+@@ -66,7 +66,7 @@ interruptible_sleep(delay, self._summary_cancel_flag)
+ def interruptible_sleep(total, is_cancelled, step=0.5):
+     remaining = total
+     while remaining > 0:
+-        if is_cancelled():   # ← Event インスタンスをそのまま呼ぶと TypeError
++        if is_cancelled():  # ← Event インスタンスをそのまま呼ぶと TypeError
+             return
+         ...
+ ```
+@@ -94,8 +94,8 @@ def interruptible_sleep(total, is_cancelled, step=0.5):
+ 
+ ```python
+ # pagefolio/dialogs/batch_ocr.py:1154
+--                interruptible_sleep(delay, self._summary_cancel_flag)
+-+                interruptible_sleep(delay, self._summary_cancel_flag.is_set)
++-interruptible_sleep(delay, self._summary_cancel_flag)
+++interruptible_sleep(delay, self._summary_cancel_flag.is_set)
+ ```
+ 
+ 併せて、同じクラスの divergence バグを構造的に防ぐため、`_batch_summary_worker` のリトライループ全体を try/except で堅牢化する（例: `except OCRRetryableError` ブロック内で `interruptible_sleep` 呼び出し自体が失敗しても外側の `except Exception` が捕捉できるよう包む、または `run_parallel`/`consume_one` と同様の共有リトライヘルパーへ `ocr.py` 側で一本化し、`ocr_dialog.py`/`batch_ocr.py` 双方がそれを呼ぶ形にリファクタする）ことを推奨する。回帰防止のため、`OCRRetryableError` を送出する `complete_text_ex` に対する `_batch_summary_worker` のリトライ待機テストを追加すること。
+diff --git a/.planning/milestones/v1.9.0-phases/03-qa-release-gate/03-PATTERNS.md b/.planning/milestones/v1.9.0-phases/03-qa-release-gate/03-PATTERNS.md
+index a7e707d..a5a69b3 100644
+--- a/.planning/milestones/v1.9.0-phases/03-qa-release-gate/03-PATTERNS.md
++++ b/.planning/milestones/v1.9.0-phases/03-qa-release-gate/03-PATTERNS.md
+@@ -62,7 +62,7 @@ def _save_file(self):
+         self._set_status(self._t("status_image_save_as"))
+         self._save_as()
+         return
+-    if not messagebox.askyesno(              # ← 確認・パス選択層（初回のみ実行すべき）
++    if not messagebox.askyesno(  # ← 確認・パス選択層（初回のみ実行すべき）
+         self._t("save_confirm_title"),
+         self._t("save_confirm_msg").format(name=os.path.basename(self.filepath)),
+     ):
+@@ -86,7 +86,7 @@ def _save_file(self):
+             "save_file",
+             self._t("err_save_title"),
+             self._t("err_save_msg").format(e=e),
+-            self._save_file,   # ← D-11 で「実保存層」の直接呼び出しへ差し替える対象
++            self._save_file,  # ← D-11 で「実保存層」の直接呼び出しへ差し替える対象
+         )
+ ```
+ 
+@@ -145,21 +145,25 @@ def test_save_file_failure_shows_toast_with_retry(self, monkeypatch):
+     category, msg, retry_cb = toast.shown[0]
+     assert category == "save_file"
+     assert "保存に失敗しました" in msg
+-    assert retry_cb == app._save_file          # ← D-11 適用後は破壊されるアサーション（327行）
++    assert retry_cb == app._save_file  # ← D-11 適用後は破壊されるアサーション（327行）
++
+ 
+ def test_save_as_failure_then_success_dismisses(self, monkeypatch, tmp_path):
+     ...
+     app._save_as()  # 1回目: 失敗
+     assert toast.shown[-1][0] == "save_as"
+-    assert toast.shown[-1][2] == app._save_as   # ← 破壊されるアサーション（338行）
++    assert toast.shown[-1][2] == app._save_as  # ← 破壊されるアサーション（338行）
+     app._save_as()  # 2回目: 成功 → dismiss
+     assert toast.dismissed[-1] == "save_as"
+ 
++
+ def test_save_compressed_failure_shows_toast(self, monkeypatch, tmp_path):
+     ...
+     app._save_compressed()
+     assert toast.shown[-1][0] == "save_compressed"
+-    assert toast.shown[-1][2] == app._save_compressed  # ← 破壊されるアサーション（352行）
++    assert (
++        toast.shown[-1][2] == app._save_compressed
++    )  # ← 破壊されるアサーション（352行）
+ ```
+ **推奨改修方針:** `retry_cb == app._save_file` のようなオブジェクト等価性を、「`retry_cb()` を呼んだときに `askyesno`/`asksaveasfilename` が再度呼ばれないこと」を検証するモンキーパッチ済みスパイへ置き換える（`monkeypatch.setattr(fo.messagebox, "askyesno", <呼ばれたら fail するダミー>)` を `retry_cb()` 呼び出し直前に差し替える等）。既存の `_RecordingToast`/`_FakeFileOpsApp`/`_RaisingThenOkDoc` フィクスチャ構造はそのまま流用可能。
+ 
+@@ -174,15 +178,19 @@ def test_save_compressed_failure_shows_toast(self, monkeypatch, tmp_path):
+ @pytest.fixture()
+ def tmp_settings(tmp_path): ...
+ 
++
+ @pytest.fixture()
+ def sample_pdf(tmp_path): ...
+ 
++
+ @pytest.fixture()
+ def sample_pdf_doc(): ...
+ 
++
+ @pytest.fixture()
+ def large_pdf_doc(): ...
+ 
++
+ @pytest.fixture()
+ def multi_pdf_files(tmp_path): ...
+ ```
+diff --git a/.planning/milestones/v1.9.0-phases/03-qa-release-gate/03-RESEARCH.md b/.planning/milestones/v1.9.0-phases/03-qa-release-gate/03-RESEARCH.md
+index 7b56887..388701b 100644
+--- a/.planning/milestones/v1.9.0-phases/03-qa-release-gate/03-RESEARCH.md
++++ b/.planning/milestones/v1.9.0-phases/03-qa-release-gate/03-RESEARCH.md
+@@ -333,7 +333,7 @@ def _save_file(self):
+             "save_file",
+             self._t("err_save_title"),
+             self._t("err_save_msg").format(e=e),
+-            self._save_file,   # ← D-11 で「実保存層」へ差し替える対象
++            self._save_file,  # ← D-11 で「実保存層」へ差し替える対象
+         )
+ ```
+ 
+diff --git a/.planning/milestones/v1.9.0-phases/03-qa-release-gate/03-REVIEW.md b/.planning/milestones/v1.9.0-phases/03-qa-release-gate/03-REVIEW.md
+index 5df3d17..b948e4b 100644
+--- a/.planning/milestones/v1.9.0-phases/03-qa-release-gate/03-REVIEW.md
++++ b/.planning/milestones/v1.9.0-phases/03-qa-release-gate/03-REVIEW.md
+@@ -66,6 +66,7 @@ Phase 3 の実質的な変更は `pagefolio/file_ops.py` の保存3経路（上
+ # pagefolio/toast.py に追加
+ class ToastManager:
+     ...
++
+     def dismiss_all(self):
+         """アクティブなトーストをカテゴリを問わず破棄する（ファイル切替時の安全装置）。"""
+         self._destroy_frame()
+@@ -88,6 +89,7 @@ def _do_save_file(self, path, bound_doc):
+         return
+     ...
+ 
++
+ # 呼び出し側
+ functools.partial(self._do_save_file, path, self.doc)
+ ```
+@@ -113,7 +115,9 @@ def test_save_file_retry_does_not_write_unrelated_doc_after_doc_swapped(
+     toast = _RecordingToast()
+     doc_a = _RaisingThenOkDoc()
+     app = _FakeFileOpsApp(
+-        doc=doc_a, toast=toast, filepath="a.pdf",
++        doc=doc_a,
++        toast=toast,
++        filepath="a.pdf",
+         overwrite_error=OSError("overwrite失敗（一時要因）"),
+     )
+     app._save_file()  # a.pdf の保存失敗 → トースト
+diff --git a/.planning/milestones/v1.9.0-research/ARCHITECTURE.md b/.planning/milestones/v1.9.0-research/ARCHITECTURE.md
+index 1116ea8..93f6e58 100644
+--- a/.planning/milestones/v1.9.0-research/ARCHITECTURE.md
++++ b/.planning/milestones/v1.9.0-research/ARCHITECTURE.md
+@@ -69,7 +69,11 @@
+ 
+ `pagefolio/ocr_dialog.py:1298-1301` と `pagefolio/dialogs/batch_ocr.py:548-551` が全く同じ dict:
+ ```python
+-{"claude": "ocr_api_key_missing", "gemini": "ocr_api_key_missing_gemini", "runpod": "ocr_api_key_missing_runpod"}
++{
++    "claude": "ocr_api_key_missing",
++    "gemini": "ocr_api_key_missing_gemini",
++    "runpod": "ocr_api_key_missing_runpod",
++}
+ ```
+ 
+ ### 1.7 意図的な重複（変更しない方がよいもの）
+@@ -95,23 +99,59 @@ from dataclasses import dataclass
+ 
+ @dataclass(frozen=True)
+ class ProviderMeta:
+-    name: str                     # settings["ocr_provider"] の値と一致（例: "claude"）
+-    display_name_key: str         # LANG のキー名（例: "ocr_provider_name_claude"）
+-    is_cloud: bool                # 外部送信あり = コスト確認/送信先確認/APIキー欄が必要
+-    model_setting_key: str | None # settings 内のモデルキー（例: "claude_model"）。無ければ None
+-    default_model: str | None     # モデル未設定時の既定値（Provider の RECOMMENDED_MODELS[0] 等と同期）
+-    host: str | None              # 固定送信先ホスト（claude/gemini/openai）。ユーザー設定URL依存なら None
+-    fallback_eligible: bool       # フォールバック候補一覧に出すか（off は False）
++    name: str  # settings["ocr_provider"] の値と一致（例: "claude"）
++    display_name_key: str  # LANG のキー名（例: "ocr_provider_name_claude"）
++    is_cloud: bool  # 外部送信あり = コスト確認/送信先確認/APIキー欄が必要
++    model_setting_key: (
++        str | None
++    )  # settings 内のモデルキー（例: "claude_model"）。無ければ None
++    default_model: (
++        str | None
++    )  # モデル未設定時の既定値（Provider の RECOMMENDED_MODELS[0] 等と同期）
++    host: (
++        str | None
++    )  # 固定送信先ホスト（claude/gemini/openai）。ユーザー設定URL依存なら None
++    fallback_eligible: bool  # フォールバック候補一覧に出すか（off は False）
+ 
+ 
+ PROVIDERS: "dict[str, ProviderMeta]" = {
+-    "off":       ProviderMeta("off", "ocr_provider_name_off", False, None, None, None, False),
+-    "lmstudio":  ProviderMeta("lmstudio", "ocr_provider_name_lmstudio", False, "lm_studio_model", "", None, True),
+-    "ollama":    ProviderMeta("ollama", "ocr_provider_name_ollama", False, "ollama_model", "", None, True),
+-    "runpod":    ProviderMeta("runpod", "ocr_provider_name_runpod", True, "runpod_model", "", None, True),  # host は runpod_url 依存
+-    "claude":    ProviderMeta("claude", "ocr_provider_name_claude", True, "claude_model", "claude-sonnet-4-6", "api.anthropic.com", True),
+-    "gemini":    ProviderMeta("gemini", "ocr_provider_name_gemini", True, "gemini_model", "gemini-2.5-flash", "generativelanguage.googleapis.com", True),
+-    "tesseract": ProviderMeta("tesseract", "ocr_provider_name_tesseract", False, None, None, None, True),
++    "off": ProviderMeta("off", "ocr_provider_name_off", False, None, None, None, False),
++    "lmstudio": ProviderMeta(
++        "lmstudio",
++        "ocr_provider_name_lmstudio",
++        False,
++        "lm_studio_model",
++        "",
++        None,
++        True,
++    ),
++    "ollama": ProviderMeta(
++        "ollama", "ocr_provider_name_ollama", False, "ollama_model", "", None, True
++    ),
++    "runpod": ProviderMeta(
++        "runpod", "ocr_provider_name_runpod", True, "runpod_model", "", None, True
++    ),  # host は runpod_url 依存
++    "claude": ProviderMeta(
++        "claude",
++        "ocr_provider_name_claude",
++        True,
++        "claude_model",
++        "claude-sonnet-4-6",
++        "api.anthropic.com",
++        True,
++    ),
++    "gemini": ProviderMeta(
++        "gemini",
++        "ocr_provider_name_gemini",
++        True,
++        "gemini_model",
++        "gemini-2.5-flash",
++        "generativelanguage.googleapis.com",
++        True,
++    ),
++    "tesseract": ProviderMeta(
++        "tesseract", "ocr_provider_name_tesseract", False, None, None, None, True
++    ),
+ }
+ 
+ 
+diff --git a/.planning/phases/06-release-validation/06-PATTERNS.md b/.planning/phases/06-release-validation/06-PATTERNS.md
+index 7787f5e..8081499 100644
+--- a/.planning/phases/06-release-validation/06-PATTERNS.md
++++ b/.planning/phases/06-release-validation/06-PATTERNS.md
+@@ -150,11 +150,7 @@ def _read_validation_status(path: Path) -> str | None:
+ **runと記録**（2801-2804,2842-2855）：
+ 
+ ```python
+-            run = Path(
+-                tempfile.mkdtemp(
+-                    prefix="pagefolio-uat-", dir=_ROOT / ".planning" / "tmp"
+-                )
+-            )
++run = Path(tempfile.mkdtemp(prefix="pagefolio-uat-", dir=_ROOT / ".planning" / "tmp"))
+ ```
+ 
+ ```python
+@@ -232,10 +228,8 @@ existence/hashは観測用。broken linkの衝突検知をこのexists式だけ
+ **Apply to:** build report / EXE UAT manifest
+ 
+ ```python
+-    def save(path, value):
+-        path.write_text(
+-            json.dumps(value, ensure_ascii=False, indent=2), encoding="utf-8"
+-        )
++def save(path, value):
++    path.write_text(json.dumps(value, ensure_ascii=False, indent=2), encoding="utf-8")
+ ```
+ 
+ UTF-8・日本語可読性を再利用。production用レポートでは書込エラーを成功にしない追加制御が必要。設定本文・APIキー・環境全dumpを記録しない。ビルド成功/自動検査/故障注入/実機pass/not-runを別フィールドにする。
+diff --git a/.planning/phases/06-release-validation/06-RESEARCH.md b/.planning/phases/06-release-validation/06-RESEARCH.md
+index dc49b61..243bc4c 100644
+--- a/.planning/phases/06-release-validation/06-RESEARCH.md
++++ b/.planning/phases/06-release-validation/06-RESEARCH.md
+@@ -288,9 +288,11 @@ PyInstallerのonedirでは `sys._MEIPASS` はsupporting files側を指し、`sys
+ import hashlib
+ import subprocess
+ 
++
+ def _sha256(path):
+     return hashlib.sha256(path.read_bytes()).hexdigest()
+ 
++
+ # args は固定オプションと検証済みパスから作った list[str]。
+ # builder の起動前に最終出力先の保護検査を完了させる。
+ completed = subprocess.run(
+diff --git a/docs/OCR-PROVIDERS.md b/docs/OCR-PROVIDERS.md
+index bf3b3cf..eed4f6c 100644
+--- a/docs/OCR-PROVIDERS.md
++++ b/docs/OCR-PROVIDERS.md
+@@ -48,12 +48,10 @@ class OCRProvider(abc.ABC):
+     max_concurrency: int = 8
+ 
+     @abc.abstractmethod
+-    def ocr_image(self, b64_png, prompt, **kwargs) -> str:
+-        ...
++    def ocr_image(self, b64_png, prompt, **kwargs) -> str: ...
+ 
+     @abc.abstractmethod
+-    def list_models(self) -> list:
+-        ...
++    def list_models(self) -> list: ...
+ ```
+ 
+ ### クラス属性
+@@ -191,7 +189,9 @@ API キーは `pagefolio_settings.json` には保存されません。
+ #### コンストラクタ
+ 
+ ```python
+-ClaudeProvider(api_key, model, timeout=120, max_tokens=4096, temperature=0.1, effort="low")
++ClaudeProvider(
++    api_key, model, timeout=120, max_tokens=4096, temperature=0.1, effort="low"
++)
+ ```
+ 
+ | 引数 | 説明 |
+@@ -340,8 +340,15 @@ API キーは `pagefolio_settings.json` には保存されません。
+ 
+ ```python
+ OpenAIProvider(
+-    api_key, model, timeout=120, max_tokens=4096, temperature=0.1,
+-    detail="high", reasoning_effort=None, organization="", project="",
++    api_key,
++    model,
++    timeout=120,
++    max_tokens=4096,
++    temperature=0.1,
++    detail="high",
++    reasoning_effort=None,
++    organization="",
++    project="",
+ )
+ ```
+ 
+@@ -528,8 +535,7 @@ producer-consumer 実行中の共有状態（完了件数・連続失敗数・fa
+ 
+ ```python
+ class PipelineState:
+-    def __init__(self, workers):
+-        ...
++    def __init__(self, workers): ...
+ ```
+ 
+ | メソッド | 説明 |
+diff --git a/docs/PLUGINS.md b/docs/PLUGINS.md
+index d21ce95..8df3ef8 100644
+--- a/docs/PLUGINS.md
++++ b/docs/PLUGINS.md
+@@ -14,11 +14,12 @@ PageFolio はプラグインシステムを備えており、`plugins/` ディ
+ ```python
+ from pagefolio.plugins import PDFEditorPlugin
+ 
++
+ class MyPlugin(PDFEditorPlugin):
+-    name        = "プラグイン名"
+-    version     = "1.0.0"
++    name = "プラグイン名"
++    version = "1.0.0"
+     description = "プラグインの説明"
+-    author      = "作者名"
++    author = "作者名"
+ ```
+ 
+ ### クラス属性
+@@ -182,7 +183,7 @@ class MyOCRProvider(OCRProvider):
+ 
+ 
+ class MyOCRPlugin(PDFEditorPlugin):
+-    name    = "MyOCR プロバイダ"
++    name = "MyOCR プロバイダ"
+     version = "1.0.0"
+ 
+     def on_load(self, app):
+@@ -257,7 +258,7 @@ self._label = tk.Label(parent, bg=C["BG_CARD"], fg=C["TEXT_SUB"])
+ `app._font(delta)` ヘルパーでベースフォントサイズからの相対指定を使います。
+ 
+ ```python
+-font=app._font(-2)  # ベースより 2pt 小さいフォント
++font = app._font(-2)  # ベースより 2pt 小さいフォント
+ ```
+ 
+ **ラベルの更新パターン**
+@@ -268,6 +269,7 @@ font=app._font(-2)  # ベースより 2pt 小さいフォント
+ def on_page_change(self, app, page_index):
+     self._update_info(app)
+ 
++
+ def _update_info(self, app):
+     if not self._label:
+         return
+diff --git a/docs/TESTING.md b/docs/TESTING.md
+index 65d124d..0634109 100644
+--- a/docs/TESTING.md
++++ b/docs/TESTING.md
+@@ -160,6 +160,7 @@ GUI コンポーネントはヘッドレス環境でテストできるよう、T
+ 
+ # OK: クラスシンボルの存在確認のみ
+ from pagefolio.dialogs import SettingsDialog
++
+ assert SettingsDialog is not None
+ ```
+ 
+@@ -170,6 +171,7 @@ Mixin を継承させて呼び出す方法を使います。
+ import collections
+ import pagefolio.file_ops as fo
+ 
++
+ class FakeApp(fo.FileOpsMixin):
+     MAX_UNDO = 20
+ 

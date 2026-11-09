@@ -5,7 +5,29 @@ pagefolio_settings.json
 __pycache__/
 *.py[cod]
 *.pyo
+.pytest_cache/
+
+# 過去のpytest生成物（読取拒否をRuff 0.17.1が診断するとpanicする）
+/pf_0502_atomic_red/
+/pf_0502_flow_green/
+/pf_0502_flow_red/
+
+# 通常権限から読取不能な過去試験の一時領域（ソース・原本ログは対象に残す）
+/.planning/debug/simultaneous-owner-missing-evidence/notice-contract-20261028-implementation/pytest-cache/
+/.planning/debug/simultaneous-owner-missing-evidence/notice-contract-20261028-implementation/unit-v2-tmp/
+/.planning/debug/simultaneous-owner-missing-evidence/notice-contract-20261028-implementation/unit-v3-tmp/
+/.planning/phases/04-startup-control/04-closeout-dod-temp-20261028/
+/.planning/phases/04-startup-control/04-closeout-pytest-cache/
 /.planning/phases/05-config-notification/05-closeout-20261028-tmp/
+# 2026-11-05全件試験の生成fixture。意図的な不正文法・過去の整形事故原本を保持する。
+/.planning/phases/04-startup-control/04-reverify-20261105-full/basetemp/
+
+# 品質停止解除の検証用basetemp（証拠JSON・ログ・整形前原本は保持）
+/.planning/debug/quality-gate-unblock-20261028/connection-tmp/
+/.planning/debug/quality-gate-unblock-20261028/nine-tmp/
+/.planning/debug/quality-gate-unblock-20261028/full-tmp/
+/.planning/debug/quality-gate-unblock-20261028/documents-tmp/
+/.planning/debug/quality-gate-unblock-20261028/pytest-cache/
 
 # PyInstaller出力
 dist/*

@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="68" time="42.277" timestamp="2026-11-05T17:03:46.791798+09:00" hostname="nullaze-z240"><testcase classname="tests.test_w05c_runner" name="test_no_answer_dependency_and_observation_window" time="0.016" /><testcase classname="tests.test_w05c_runner" name="test_early_late_or_absent_no_never_retries[0]" time="0.013" /><testcase classname="tests.test_w05c_runner" name="test_early_late_or_absent_no_never_retries[100]" time="0.012" /><testcase classname="tests.test_w05c_runner" name="test_early_late_or_absent_no_never_retries[inf]" time="0.011" /><testcase classname="tests.test_w05c_runner" name="test_failure_is_not_retried_or_accepted[start]" time="0.015" /><testcase classname="tests.test_w05c_runner" name="test_failure_is_not_retried_or_accepted[peer]" time="0.013" /><testcase classname="tests.test_w05c_runner" name="test_failure_is_not_retried_or_accepted[before_peer]" time="0.010" /><testcase classname="tests.test_w05c_runner" name="test_failure_is_not_retried_or_accepted[before_stop]" time="0.010" /><testcase classname="tests.test_w05c_runner" name="test_failure_is_not_retried_or_accepted[inspect]" time="0.016" /><testcase classname="tests.test_w05c_runner" name="test_failure_is_not_retried_or_accepted[collect]" time="0.013" /><testcase classname="tests.test_w05c_runner" name="test_failure_is_not_retried_or_accepted[seal]" time="0.015" /><testcase classname="tests.test_w05c_runner" name="test_plan_source_drift_and_unprepared_rejected" time="0.066" /><testcase classname="tests.test_w05c_runner" name="test_late_answer_v3_adoption_and_formal_dry_run" time="0.851" /><testcase classname="tests.test_w05c_runner" name="test_v3_rejects_incomplete_or_mixed_evidence[missing_no]" time="0.261" /><testcase classname="tests.test_w05c_runner" name="test_v3_rejects_incomplete_or_mixed_evidence[missing_marker]" time="0.278" /><testcase classname="tests.test_w05c_runner" name="test_v3_rejects_incomplete_or_mixed_evidence[wrong_owner]" time="0.382" /><testcase classname="tests.test_w05c_runner" name="test_v3_rejects_incomplete_or_mixed_evidence[wrong_hwnd]" time="0.615" /><testcase classname="tests.test_w05c_runner" name="test_v3_rejects_incomplete_or_mixed_evidence[watchdog]" time="0.956" /><testcase classname="tests.test_w05c_runner" name="test_v3_rejects_incomplete_or_mixed_evidence[late_stop]" time="0.930" /><testcase classname="tests.test_w05c_runner" name="test_v3_rejects_incomplete_or_mixed_evidence[short_observation]" time="0.754" /><testcase classname="tests.test_w05c_runner" name="test_v3_rejects_incomplete_or_mixed_evidence[v2_mix]" time="0.585" /><testcase classname="tests.test_w05c_runner" name="test_v3_rejects_incomplete_or_mixed_evidence[wrong_plan]" time="0.982" /><testcase classname="tests.test_w05c_runner" name="test_v3_rejects_incomplete_or_mixed_evidence[wrong_run_answer]" time="0.896" /><testcase classname="tests.test_w05c_runner" name="test_v3_rejects_incomplete_or_mixed_evidence[no_answer]" time="0.938" /><testcase classname="tests.test_w05c_runner" name="test_v3_rejects_incomplete_or_mixed_evidence[unconfirmed]" time="0.642" /><testcase classname="tests.test_w05c_runner" name="test_v3_rejects_incomplete_or_mixed_evidence[post_collection_observation]" time="0.565" /><testcase classname="tests.test_w05c_runner" name="test_v3_rejects_incomplete_or_mixed_evidence[unsealed]" time="0.777" /><testcase classname="tests.test_w05c_runner" name="test_v3_machine_accepts_without_answer_but_does_not_adopt" time="0.841" /><testcase classname="tests.test_w05c_runner" name="test_after_no_peer_never_repeats_or_runs_after_cleanup" time="0.113" /><testcase classname="tests.test_w05c_evidence" name="test_complete_evidence_and_original_wording_accepted" time="0.175" /><testcase classname="tests.test_w05c_evidence" name="test_missing_event_rejected[native_no]" time="0.136" /><testcase classname="tests.test_w05c_evidence" name="test_missing_event_rejected[ask_return]" time="0.200" /><testcase classname="tests.test_w05c_evidence" name="test_missing_event_rejected[marker_created]" time="0.237" /><testcase classname="tests.test_w05c_evidence" name="test_missing_event_rejected[peer_during_confirm]" time="0.125" /><testcase classname="tests.test_w05c_evidence" name="test_missing_event_rejected[peer_after_answer]" time="0.097" /><testcase classname="tests.test_w05c_evidence" name="test_missing_event_rejected[pre_collection]" time="0.083" /><testcase classname="tests.test_w05c_evidence" name="test_missing_event_rejected[observer_closed]" time="0.080" /><testcase classname="tests.test_w05c_evidence" name="test_invalid_evidence_rejected_without_mutation[stop_before_no]" time="0.108" /><testcase classname="tests.test_w05c_evidence" name="test_invalid_evidence_rejected_without_mutation[wrong_hwnd]" time="0.146" /><testcase classname="tests.test_w05c_evidence" name="test_invalid_evidence_rejected_without_mutation[wrong_owner]" time="0.245" /><testcase classname="tests.test_w05c_evidence" name="test_invalid_evidence_rejected_without_mutation[wrong_run]" time="0.176" /><testcase classname="tests.test_w05c_evidence" name="test_invalid_evidence_rejected_without_mutation[reverse_clock]" time="0.142" /><testcase classname="tests.test_w05c_evidence" name="test_invalid_evidence_rejected_without_mutation[missing_seq]" time="0.171" /><testcase classname="tests.test_w05c_evidence" name="test_invalid_evidence_rejected_without_mutation[recording_error]" time="0.152" /><testcase classname="tests.test_w05c_evidence" name="test_invalid_evidence_rejected_without_mutation[pending]" time="0.201" /><testcase classname="tests.test_w05c_evidence" name="test_invalid_evidence_rejected_without_mutation[deadline]" time="0.258" /><testcase classname="tests.test_w05c_evidence" name="test_invalid_evidence_rejected_without_mutation[answer_run]" time="0.166" /><testcase classname="tests.test_w05c_evidence" name="test_invalid_evidence_rejected_without_mutation[answer_quote]" time="0.220" /><testcase classname="tests.test_w05c_evidence" name="test_invalid_evidence_rejected_without_mutation[answer_time]" time="0.212" /><testcase classname="tests.test_w05c_evidence" name="test_invalid_evidence_rejected_without_mutation[semantic_missing]" time="0.239" /><testcase classname="tests.test_w05c_evidence" name="test_invalid_evidence_rejected_without_mutation[edited_pages]" time="0.188" /><testcase classname="tests.test_w05c_evidence" name="test_invalid_evidence_rejected_without_mutation[peer_primary]" time="0.216" /><testcase classname="tests.test_w05c_evidence" name="test_invalid_evidence_rejected_without_mutation[diagnostic]" time="0.215" /><testcase classname="tests.test_w05c_evidence" name="test_invalid_evidence_rejected_without_mutation[old_module]" time="0.244" /><testcase classname="tests.test_w05c_evidence" name="test_invalid_evidence_rejected_without_mutation[watchdog]" time="0.325" /><testcase classname="tests.test_w05c_evidence" name="test_invalid_evidence_rejected_without_mutation[tk_error]" time="0.329" /><testcase classname="tests.test_w05c_evidence" name="test_invalid_evidence_rejected_without_mutation[no_false]" time="0.227" /><testcase classname="tests.test_w05c_evidence" name="test_invalid_evidence_rejected_without_mutation[snapshot_stop]" time="0.217" /><testcase classname="tests.test_w05c_evidence" name="test_wrapper_preserves_result_exception_and_edit_state" time="0.082" /><testcase classname="tests.test_w05c_evidence" name="test_flush_and_final_pending_accounting" time="0.161" /><testcase classname="tests.test_w05c_evidence" name="test_flush_error_is_recorded_and_never_success" time="0.359" /><testcase classname="tests.test_w05c_evidence" name="test_native_callback_always_delegates_without_io[False]" time="0.559" /><testcase classname="tests.test_w05c_evidence" name="test_native_callback_always_delegates_without_io[True]" time="0.299" /><testcase classname="tests.test_w05c_evidence" name="test_formal_helper_dry_run_never_writes[None]" time="3.375" /><testcase classname="tests.test_w05c_evidence" name="test_formal_helper_dry_run_never_writes[late_marker]" time="2.862" /><testcase classname="tests.test_w05c_evidence" name="test_formal_helper_dry_run_never_writes[missing_no]" time="0.878" /><testcase classname="tests.test_w05c_evidence" name="test_native_observer_control_preserves_quit_decision[False]" time="9.644" /><testcase classname="tests.test_w05c_evidence" name="test_native_observer_control_preserves_quit_decision[True]" time="5.863"><failure message="PermissionError: [Errno 13] Permission denied: 'C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\w05c-v3-target-20261105-a\\test_native_observer_control_p1\\focus-owner-native-quit\\w05c-pre-collection.json'">tmp_path = WindowsPath('C:/Users/shdwf/work/project/PageFolio/.planning/tmp/w05c-v3-target-20261105-a/test_native_observer_control_p1')
+observed = True
+
+    @pytest.mark.skipif(sys.platform != "win32", reason="Windows native機構の対照")
+    @pytest.mark.parametrize("observed", [False, True])
+    def test_native_observer_control_preserves_quit_decision(tmp_path, observed):
+        from tests import test_startup_windows as h
+    
+        children = []
+        try:
+            namespace = uuid4().hex
+            owner, fixture = h._spawn(
+                tmp_path, namespace, "focus-owner-native-quit", w05c_observe=observed
+            )
+            children.append(owner)
+            h._wait_file(owner, fixture / "focus-ready")
+            peer, _ = h._spawn(tmp_path, namespace, "entry-script")
+            children.append(peer)
+            assert h._finish(peer)["constructed"] == 0
+            h._wait_file(owner, fixture / "quit-cancelled")
+            focus = json.loads((fixture / "focus-result.json").read_text())
+            assert focus["document_pages"] == 3
+            assert focus["page_rotations"] == [90, 90, 0]
+            assert focus["state_preserved"]
+            if observed:
+                from tests.w05c_evidence import save
+    
+                save(
+                    fixture / "w05c-snapshot-request.json",
+                    {"request_id": "control", "stage": "before_stop"},
+                )
+                h._wait_file(owner, fixture / "w05c-pre-collection.json")
+                snapshot = json.loads((fixture / "w05c-pre-collection.json").read_text())
+                prefix = b"".join(
+                    (fixture / "w05c-events.jsonl")
+                    .read_bytes()
+                    .splitlines(keepends=True)[: snapshot["events"]]
+                )
+                assert hashlib.sha256(prefix).hexdigest() == snapshot["log_sha256"]
+                assert snapshot["marker"] and not snapshot["stop"]
+                assert snapshot["state"]["pages"] == 3
+            if observed:
+                from tests.w05c_evidence import collect
+    
+                expected = json.loads((fixture / "ready").read_text())
+&gt;               collect(
+                    tmp_path,
+                    {
+                        "fixture": str(fixture),
+                        "expected_owner": expected,
+                        "namespace": namespace,
+                    },
+                )
+
+tests\test_w05c_evidence.py:614: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\w05c_evidence.py:176: in collect
+    and json.loads(snapshot_path.read_text(encoding="utf-8"))[
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Programs\Python\Python315\Lib\pathlib\__init__.py:986: in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors, newline=newline) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = WindowsPath('C:/Users/shdwf/work/project/PageFolio/.planning/tmp/w05c-v3-target-20261105-a/test_native_observer_control_p1/focus-owner-native-quit/w05c-pre-collection.json')
+mode = 'r', buffering = -1, encoding = 'utf-8', errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed to by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+&gt;       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       PermissionError: [Errno 13] Permission denied: 'C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\w05c-v3-target-20261105-a\\test_native_observer_control_p1\\focus-owner-native-quit\\w05c-pre-collection.json'
+
+..\..\..\AppData\Local\Programs\Python\Python315\Lib\pathlib\__init__.py:970: PermissionError</failure></testcase></testsuite></testsuites>

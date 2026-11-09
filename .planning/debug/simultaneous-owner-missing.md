@@ -2,15 +2,15 @@
 status: investigating
 trigger: "$gsd-debug で独立調査して / restart"
 created: 2026-10-23
-updated: 2026-10-25
+updated: 2026-10-28
 ---
 
 ## Current Focus
 
-hypothesis: 原因未確定。原本時系列で一次の終了はfresh fixture準備後・fresh bootstrap前と判明。通常のstop-all/後続ケースからの停止と時計変更を支持する証拠は無い。初回の終了要求stackが無く、WM/ボタン経由のイベントと異常なwatchdog発火を区別できない。利用者の手動終了は否定済み。
-test: 承認条件の最終再チェックは対象9件×3回連続成功、単一全件1680 passed / 1 warning / 254.81秒 / exit 0。Ruff・Python102ファイルformat・AST成功。途中失敗を保存し、前景環境と診断の時計比較・Tcl再入を修正した。resume-check-20261023.md参照。
-expecting: native_close_receivedにより実WM_CLOSEとTk直接WM呼出しを識別できる。初回の終了要求・未知の送信元PIDの遡及復元はできない。新しい通知試験失敗との因果も未確定。
-next_action: 承認された再開条件を全て満たしたため、$gsd-execute-phase 5で05-02-01の既存差分・検証証拠を照合して実装を条件付き再開可。元のowner_missingとDEP-05は未解決・監視継続、出荷承認ではない。再発時は実装・後続実行・コミットを停止して最初の証拠から調査する。05-02未完了・未コミットは維持。本承認は従来の原因確定まで停止する条件を置き換える。
+hypothesis: 原因未確定。10月28日の通知待機中のWinEventは公開578ms後の別窓で、前景先PID4080は現存Code.exeの作成時刻と先行記録からVS Codeと同定を補強した。ただし記録PIDは窓所有者であり、切替要求元・操作は未採取。元owner_missingは初回終了要求stack欠落により未確定で、両事例の因果も未確定。10月23日の手動終了否定や別試行の手動終了回答を今回へ転用しない。
+test: 過去native全件1846 passed/1 failedと原本を保持。利用者の停止条件解消指示後、診断原本保存・AST一致の整形で全体Ruff137件成功。保留中のnative接続と9プロセス試験は各1回成功し、単一全件2071 passed/2 warnings/480.86秒/exit0、失敗0・ERROR0・skip0・入力不変。監査のviolation/audit_error/transitionは0。証拠はquality-gate-unblock-20261028/。
+expecting: 今回の10月28日10:51:42〜44 JSTごろの操作確認は「覚えていない／不明」と回答済み。同じ質問を再度出さない。保存済みWinEventと回答から操作主体やclose入口は復元できず、環境要因・製品修復済み・元owner_missing解決とは断定しない。
+next_action: 現行入力の品質停止は解除済み。Phase 6のresume_contractに従い、現行入力・依存検証の鮮度・台帳を照合して未実施受入へ戻す。古い成功hashへの付け替えやPhaseの自動完了は行わない。元owner_missing/過去の切替要求元は未確定のまま、再発時は初回証拠を保持して本debugを継続する。未実施の人手受入と出荷承認は別条件。過去の停止記録・47原本は保持する。
 
 ## Symptoms
 
@@ -21,6 +21,46 @@ timeline: 05-02-01の保存・終了制御変更後の初回全件で発生。�
 reproduction: 既存.venvの単一全件pytest、専用basetemp pf_0502_task1_20261023。1674 passed/1 failed、252.25秒。
 
 ## Evidence
+
+- timestamp: 2026-10-28（利用者承認後の品質停止解除）
+  checked: quality-gate-unblock.md、quality-gate-unblock-20261028/の原本・入力manifest・全体Ruff・native接続/9プロセス・全件pytestの各ログとJSON/XML。
+  found: 過去診断1件を原本保存・AST不変で整形。全体Ruff137件成功、native局所各1回成功、全件2071 passed/2 warnings/480.86秒/exit0。失敗/ERROR/skip0、入力不変、監査違反/欠落/未知切替0。警告は既知PyMuPDF廃止予告とJUnit互換性通知でTcl漏洩/スレッド例外なし。
+  implication: 現行の品質停止を解除し、Phase 6の再開前照合へ戻す。以下の元停止記録を当時の事実として保持し、過去失敗をpassへ変更しない。元の原因未確定と未実施受入・出荷未承認は残る。
+
+- timestamp: 2026-10-28（独立したRuff内部異常対策）
+  checked: resolved/ruff-format-source-panic.md、ruff-format-source-panic-matrix.json、ruff-format-source-panic-after.json、ruff-format-source-panic-fixture.json。
+  found: 読取拒否の過去pytest生成物3フォルダーをルートで走査するとRuff 0.17.1がpanic。該当3フォルダーだけを.gitignoreに追加し、.ruff.tomlで既存ルールを継承・Markdownのformatだけ除外。全体lintは警告なしexit0、全体formatはpanicなしで過去diag_btn_press.pyの書式差1件を報告（exit1、136 formatted）。現行Python115件・隔離入力5項目・AST/diff確認成功。
+  implication: 内部異常の対策は完了したが全体formatゲートは未通過。上のCurrent Focusで記録した元のpanicは対策前の記録であり、最新結果は本項と独立debugを参照。原本の書式差を消す/除外して通過扱いにせず、native接続/9process・全件・製品修正・Phase後続・commit・出荷停止を維持する。
+
+- timestamp: 2026-10-28（試験見直し実装・全体format停止）
+  checked: 利用者の「この案で実装と局所検証へ進む」、承認済み手順1〜3、既存132入力/index、試験3ファイル、unit-v3-pytest.txt、static-all.json。
+  found: 記録ベース24 passed/1 warning/0.65秒。初回import収集エラーはtestsパッケージ経路へ修正し原ログ保持。対象lint/format・AST成功。全体lintはアクセス警告5件付きexit0、全体formatは通常権限でも内部panic。実OSの接続/9process試験は起動せず、手順1で停止。証拠正本はsimultaneous-owner-missing-evidence/notice-contract-20261028-implementation/。
+  implication: 試験実装は実OS未検証。元失敗・47原本・未解決原因は維持。製品/版番号/pyproject/indexを変更せず、全件/Phase/commit/出荷停止も維持する。
+
+- timestamp: 2026-10-28（再開・試験見直し設計）
+  checked: 現行D-12、tests/test_startup_windows.pyの前景assert/WinEvent/子経路、NativeNoticeLifetimeの表示/破棄、既存probeのbind監査、Microsoft公式API仕様。
+  found: 待機全体の前後2値比較は、外部切替でも失敗し、一時的な前景奪取後の復帰を単独では検出できない。現資料から要求元を追加同定する方法はなく、原因は未確定。利用者は見直し案の設計と内容確認後の実装を選択した。設計正本はsimultaneous-owner-missing-evidence/notice-test-review-20261028.md。未説明切替/監査不足は失敗停止を維持する案で、期限・重複抑制を緩和しない。
+  implication: 提案内容の確認待ち。今回は設計文書と本記録のみ変更、Python/製品/版番号の変更・追加試験・commitなし。元の全件失敗・原本・未解決原因とPhase/出荷停止を保持する。
+
+- timestamp: 2026-10-28T03:15:30Z（追加診断は一回のみ、未再現）
+  checked: notice-probe-20261028-4186632ffba54d25b37703d6e2db059a/ のrun/pytest、入力128件、保存56ファイル、9 processのnotice-probe.jsonと既存監査、probe_notice_once.py
+  found: 1 passed/1 warning/2.44秒・exit0、入力不変、保存56件hash一致、9 processのprobe.errors空。29観測の前景はTerminal HWND396656で不変、WinEvent0件。ownerはSetWindowPos→ShowWindow→DestroyWindowのみを記録し、show:1913→destroy:1637・remaining_ms=0で期限ループ経由のcloseを実測。SetForegroundWindow/AllowSetForegroundWindow呼出0件。lastinputはobserver開始前に14983046→14983109、その後固定。対象lint/format/AST成功、全体formatはRuff内部panicで未確認。
+  implication: 今回の動作・診断採取を確認したが元失敗の原因は確定しない。追加診断は親の範囲判断で実施済み、反復なし。元47原本・最新全件失敗・DEP-05未解除・Phase停止を保持し、今回許可範囲の独立調査は完了。利用者回答待ちでも停止解除待ちの自動実行でもない。
+
+- timestamp: 2026-10-28（今回時刻への利用者回答）
+  checked: 親が提示した10月28日10:51:42〜44 JSTごろのTerminal→VS Code等への切替・操作の記憶確認
+  found: 利用者回答原文は「覚えていない／不明」。今回時刻への回答としてnotice-recurrence-20261028.mdにDATA_START/DATA_ENDで保存した。操作の実施/不実施はどちらも確定しない。
+  implication: 同じ質問を再度出さず、別試行の回答も代用しない。既存証拠内の調査は完了したが原因は未確定。次は未実施の限定診断案に対する採取範囲の判断であり、回答待ち・解決・実装再開とは扱わない。
+
+- timestamp: 2026-10-28T02:06:32Z（保存原本の限定調査）
+  checked: simultaneous-owner-missing-evidence/notice-recurrence-20261028.md、47原本/保存コピー、127入力manifest、当時hash一致のtests/test_startup_windows.pyとstartup_win32.py、先行normal manifest、現存PID4080のみのprocess情報
+  found: 原本/コピー47件5905bytesの全hash一致。peer8件は非取得・同一snapshot/期限・前景789312で一致、全9子は正常完了。通知公開578ms後にVS Codeのプロセスへ前景変化。現存PID4080はCode.exe、生成時刻00:20:25.945754Zで失敗前から生存。監査pidは窓所有者由来で切替要求元ではない。寿命1859ms/期限差1800msは原本と整合するが、失敗行以後のassertは未到達。close入口・入力・呼出stackは未採取。
+  implication: 前景先と変化区間を絞れたが原因未確定。この観測後に利用者から「覚えていない／不明」と回答を受領した（上記項目）。別時刻の人手回答を転用せず、元owner_missing/DEP-05との因果を保留。製品/試験変更・再実行・commitなし。Phase06と関連する既存停止条件を維持する。
+
+- timestamp: 2026-10-28T01:51:44Z（Phase06世代3の再発、停止）
+  checked: `.planning/phases/06-release-validation/06-04g3-quality-fixed/{run.json,pytest-full.txt,inputs-before.json,inputs-after.json,failure-notice-manifest.json}` と失敗ケース47原本ファイル
+  found: native単一全件1846 passed / 1 failed / 1 warning / 180.20秒。`test_notice_dedup_eight_processes_keep_original_deadline` の前景assertが396656→789312で失敗。127入力の前後hash一致。owner PID16616の表示前後は396656、破棄前後は789312。公開tick9957265から578ms後のWinEventでPID4080/Chrome_WidgetWin_1へ変化、通知HWND3738882とは異なる。observer解除成功・errorなし。9 processのresult/traceback等47ファイル5905bytesをコピーし全SHA256一致。表示/破棄の瞬間以外での前景変化を実測したが、変更を起こした主体・操作・製品関与は未確定。
+  implication: 再発時停止を適用し、再実行・修正・後続・commit・出荷を停止。先行する別の読込拒否試行への「手動で閉じた／終了した」という利用者回答を今回へ転用しない。元owner_missing/DEP-05の原因解決や同一原因と断定しない。詳細停止報告は `06-04g3-QUALITY-STOP.md`。Phase06未完了。
 
 - timestamp: 2026-10-25（再発監視の確認・利用者判断で監視継続）
   checked: Phase 6 の単一全件ログ 15 本（.planning/phases/06-release-validation/*full*.txt・06-preflight/06-reviews-pytest*.txt、2026-10-24 05:54〜22:30）
@@ -84,11 +124,11 @@ reproduction: 既存.venvの単一全件pytest、専用basetemp pf_0502_task1_20
 
 ## Resolution
 
-root_cause: 未確定。初回の呼出stack欠落により、どの終了要求が一次を閉じたかを遡って実証できない。
+root_cause: 未確定。初回の呼出stack欠落により、どの終了要求が一次を閉じたかを遡って実証できない。10月28日の通知待機中の前景変化はVS Codeのプロセスへの変化だが、操作・要求元・製品関与と元owner_missing/DEP-05との因果は未確定。
 fix: 製品修復なし。前景WinEvent監査・一次生存assert・非表示検証runnerを追加。診断の時計比較はTcl時計へ揃え、native callbackからTkを再入呼出ししないよう修正。期限・guard・元の製品合否条件は維持。
-verification: 最終対象9件×3回連続成功、全件1680 passed/1 warning/254.81秒/exit 0。Ruff check、Python対象format（102 files unchanged）、AST3ファイル、diff --check成功。診断711ファイルのSHA256一致。Ruffはアクセス不可のsandbox生成物1ディレクトリだけを走査除外。製品等の既存4ファイルhashは初回失敗時から一致。
-files_changed: tests/test_startup_windows.py、本debug記録・証拠、開発履歴.md。STATE/state.json/05-02-CHECKPOINTに実OS検証結果と全件の別失敗を記録し、先行差分とともに未コミットで保持する。
-disposition: unresolved/monitoring。resolvedへ移動しない。DEP-05-REGRESSIONも未解除。利用者承認の条件を満たしたのでPhase 5実装は条件付きで再開可、出荷は不可。05-02-01は未コミットで、次のexecute-phaseで既存作業を照合する。同種失敗の再発時は再停止する。
+verification: 10月23日の履歴は対象9件×3回・全件1680 passedで、最新合格へ転用しない。最新10月28日native全件は1846 passed/1 failed/1 warning/180.20秒/exit1、原本47件hash一致を保持。追加診断1回は1 passed/1 warning/2.44秒で未再現、128入力不変・保存56件hash一致。対象ラッパーlint/formatとAST成功、全体ruff checkはアクセス警告2件付き成功、全体formatはRuff内部panicで未確認。品質全件・Phase合格にはしない。
+files_changed: 過去調査の既存差分を保持。先行continueでは本debug記録、notice-recurrence-20261028.md、外付けprobeと単発証拠を追加/更新。その後の承認でtests/test_startup_windows.pyを変更し、tests/startup_foreground_audit.pyとtests/test_startup_foreground_audit.pyを追加。設計文書・実装証拠・開発履歴を更新。製品・版番号・pyproject・期限は未変更。試験の前景判定だけを承認済みの保守的な複合判定へ変更。native未検証、commitなし。
+disposition: unresolved/investigating。resolvedへ移動しない。DEP-05-REGRESSION未解除。10月28日の同種再発でPhase実装・後続・接続人手確認・commit・出荷の再停止を維持。今回時刻は「覚えていない／不明」と回答済み、保存原本調査と親が承認した追加診断一回の分析は完了。同じ質問・自動反復は不要。元失敗の因果を確定する新たな再発証拠等が得られるまで未解決として引き継ぐ。
 
 ## 実行commandと証拠hash
 

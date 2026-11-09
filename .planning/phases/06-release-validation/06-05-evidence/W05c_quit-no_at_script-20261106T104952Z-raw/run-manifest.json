@@ -1,0 +1,93 @@
+{
+  "run": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-90219b127fbe491a88e7ed17db1df509",
+  "namespace": "efe93d60a63f42a2b400ef7736bcb29f",
+  "case": "native-quit",
+  "role": "uat-owner-native-quit",
+  "fixture": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-90219b127fbe491a88e7ed17db1df509\\uat-owner-native-quit",
+  "launcher_pid": 7072,
+  "environment": {
+    "os": "sys.getwindowsversion(major=10, minor=0, build=26300, platform=2, service_pack='')",
+    "python": "3.15.2 (tags/v3.15.2:5e58eaa, Oct 25 2026, 17:27:03) [MSC v.1951 64 bit (AMD64)]",
+    "pointer_bits": 64,
+    "session_id": 1,
+    "sid": "S-1-5-5-0-339087",
+    "authentication_luid": 346767,
+    "foreground": 134572,
+    "is_admin": false,
+    "tcl": "9.0.4",
+    "tk": 9.0
+  },
+  "originals_before": {
+    "pagefolio_settings.json": null,
+    "ocr_custom_prompt.md": null,
+    "ocr_summary_prompt.md": null
+  },
+  "source_commit": "53bbfd009ad0f05c95370efed0c975411deaf98c",
+  "w05c_schema": "w05c-v3",
+  "entry": "script",
+  "w05c_plan": {
+    "schema": "w05c-v3",
+    "entry": "script",
+    "created_at": "2026-11-06T10:44:35.949Z",
+    "permissions_ready": true,
+    "authorization": "2026-11-05 checkpoint A 再検証→単発採取、および2026-11-06 残作業1-3を実施。起動時のホスト権限許可と利用者同席確認は起動前に完了する。",
+    "budget_evidence": {
+      "reference": "06-MANUAL-EVIDENCE.json W05c/quit-no@module observation_basis.timeline/peers",
+      "historical_during_peer_span_seconds": 5.237,
+      "historical_peer_service_ms": [
+        125,
+        32
+      ],
+      "scope": "既存harness実測。新v3 Windows統合の成功証拠ではない。残りの各数値はrunnerの固定command timeoutで上限化する。",
+      "quality_reference": ".planning/phases/04-startup-control/04-reverify-20261106-cr02/result.json"
+    },
+    "budgets": {
+      "peer": 20,
+      "snapshot": 10,
+      "inspect": 3,
+      "collect": 20,
+      "margin": 5
+    },
+    "observation_seconds": 15,
+    "source_inputs": {
+      "tests/w05c_runner.py": "7c9dd08fc896c040959b1cfb69d8b75c079bd02db6a330a0dade054b2a336cc5",
+      "tests/w05c_evidence.py": "e9a8a70253abc674bb0fe1a8da54b5102c6d90a1e7a4665caf8438ce212d5c6c",
+      "tests/test_startup_windows.py": "16a7b676d972f8d439161d64c1e5d08a0caa19e1f8034c57bf531dcb8e333469",
+      ".planning\\phases\\06-release-validation\\06-05-w05c-v3.cjs": "aca51280caa13db5893094363521293f57770920e3c1cc061bda4fb07f2d288d",
+      ".planning\\phases\\06-release-validation\\06-05-w05c-evidence.cjs": "744c0c294f20f9590dbc596bd219d70aeb5628e47a732b0f31fb6ad490c160f2",
+      ".planning\\phases\\06-release-validation\\06-05-record-w05c-python.cjs": "6f8609010c3960e0ddf0853974ef8981f06797bf605abb1d8d88cde244e1eda2"
+    },
+    "deadline_contract": {
+      "original_watchdog_seconds": 120,
+      "reserve_after_no_seconds": 83,
+      "reserve_before_during_peer_seconds": 103,
+      "latest_no_seconds_after_registration": 37
+    },
+    "human_action": "同席確認と起動権限許可後だけ開始。確認表示後は確認中peerが完了する余裕を取り、約25秒でいいえを1回押す。No後15秒に全3ページ/1・2ページ横向き・3ページ縦向き/1画面を観察。自動回収前の観察結果を後で直接返信する。No前に画面が閉じたら操作せず未成立とする。",
+    "automatic_retries": 0,
+    "release_allowed": false,
+    "plan_sha256": "d026a8de1efef8d70ea0521319bc2aac949e113448d659caad0510e9f438d561",
+    "original_json": "{\r\n  \"schema\": \"w05c-v3\",\r\n  \"entry\": \"script\",\r\n  \"created_at\": \"2026-11-06T10:44:35.949Z\",\r\n  \"permissions_ready\": true,\r\n  \"authorization\": \"2026-11-05 checkpoint A 再検証→単発採取、および2026-11-06 残作業1-3を実施。起動時のホスト権限許可と利用者同席確認は起動前に完了する。\",\r\n  \"budget_evidence\": {\r\n    \"reference\": \"06-MANUAL-EVIDENCE.json W05c/quit-no@module observation_basis.timeline/peers\",\r\n    \"historical_during_peer_span_seconds\": 5.237,\r\n    \"historical_peer_service_ms\": [\r\n      125,\r\n      32\r\n    ],\r\n    \"scope\": \"既存harness実測。新v3 Windows統合の成功証拠ではない。残りの各数値はrunnerの固定command timeoutで上限化する。\",\r\n    \"quality_reference\": \".planning/phases/04-startup-control/04-reverify-20261106-cr02/result.json\"\r\n  },\r\n  \"budgets\": {\r\n    \"peer\": 20,\r\n    \"snapshot\": 10,\r\n    \"inspect\": 3,\r\n    \"collect\": 20,\r\n    \"margin\": 5\r\n  },\r\n  \"observation_seconds\": 15,\r\n  \"source_inputs\": {\r\n    \"tests/w05c_runner.py\": \"7c9dd08fc896c040959b1cfb69d8b75c079bd02db6a330a0dade054b2a336cc5\",\r\n    \"tests/w05c_evidence.py\": \"e9a8a70253abc674bb0fe1a8da54b5102c6d90a1e7a4665caf8438ce212d5c6c\",\r\n    \"tests/test_startup_windows.py\": \"16a7b676d972f8d439161d64c1e5d08a0caa19e1f8034c57bf531dcb8e333469\",\r\n    \".planning\\\\phases\\\\06-release-validation\\\\06-05-w05c-v3.cjs\": \"aca51280caa13db5893094363521293f57770920e3c1cc061bda4fb07f2d288d\",\r\n    \".planning\\\\phases\\\\06-release-validation\\\\06-05-w05c-evidence.cjs\": \"744c0c294f20f9590dbc596bd219d70aeb5628e47a732b0f31fb6ad490c160f2\",\r\n    \".planning\\\\phases\\\\06-release-validation\\\\06-05-record-w05c-python.cjs\": \"6f8609010c3960e0ddf0853974ef8981f06797bf605abb1d8d88cde244e1eda2\"\r\n  },\r\n  \"deadline_contract\": {\r\n    \"original_watchdog_seconds\": 120,\r\n    \"reserve_after_no_seconds\": 83,\r\n    \"reserve_before_during_peer_seconds\": 103,\r\n    \"latest_no_seconds_after_registration\": 37\r\n  },\r\n  \"human_action\": \"同席確認と起動権限許可後だけ開始。確認表示後は確認中peerが完了する余裕を取り、約25秒でいいえを1回押す。No後15秒に全3ページ/1・2ページ横向き・3ページ縦向き/1画面を観察。自動回収前の観察結果を後で直接返信する。No前に画面が閉じたら操作せず未成立とする。\",\r\n  \"automatic_retries\": 0,\r\n  \"release_allowed\": false\r\n}"
+  },
+  "expected_owner": {
+    "sid": "S-1-5-5-0-339087",
+    "authentication_luid": 346767,
+    "session_id": 1,
+    "pid": 14152,
+    "process_created": 134384357411281398,
+    "started_tick": 7647781,
+    "owner_result": "acquired",
+    "snapshot": {
+      "protocol": 1,
+      "generation": "05f422ed34684d2aa3d0e5483bc4b92f",
+      "pid": 14152,
+      "process_created": 134384357411281398,
+      "session_id": 1,
+      "state": "ready",
+      "ready": true,
+      "release_generation": null
+    },
+    "ready_tick": 7650437,
+    "manual": true
+  }
+}

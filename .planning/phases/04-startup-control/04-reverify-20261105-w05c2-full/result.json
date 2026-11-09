@@ -1,0 +1,21 @@
+{
+  "started": "2026-11-05T09:46:21.212Z",
+  "finished": "2026-11-05T10:02:22.753Z",
+  "argv": [
+    "C:\\Users\\shdwf\\work\\project\\PageFolio\\.venv\\Scripts\\python.exe",
+    "-m",
+    "pytest",
+    "-q",
+    "-rA",
+    "-p",
+    "no:cacheprovider",
+    "--basetemp=C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf04-04-reverify-20261105-w05c2-full",
+    "--junitxml=C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\phases\\04-startup-control\\04-reverify-20261105-w05c2-full\\junit.xml"
+  ],
+  "code": 1,
+  "signal": null,
+  "error": null,
+  "inputCount": 170,
+  "missing": [],
+  "changed": []
+}

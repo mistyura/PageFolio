@@ -1,0 +1,43 @@
+{
+  "role": "notice-case-peer-5",
+  "records": [
+    {
+      "event": "child_started",
+      "utc": "2026-10-28T03:15:28.660841+00:00",
+      "tick": 14983734,
+      "monotonic_ns": 14983769951000,
+      "observer_pid": 10588,
+      "foreground": {
+        "hwnd": 396656,
+        "pid": 18044,
+        "thread_id": 7096,
+        "process_created": 134376167120459276,
+        "image": "C:\\Program Files\\WindowsApps\\Microsoft.WindowsTerminal_1.25.2733.0_x64__8wekyb3d8bbwe\\WindowsTerminal.exe"
+      },
+      "last_input_available": true,
+      "last_input_tick32": 14983109,
+      "role": "notice-case-peer-5",
+      "capture_duration_ns": 213900
+    },
+    {
+      "event": "child_finished",
+      "utc": "2026-10-28T03:15:28.724299+00:00",
+      "tick": 14983812,
+      "monotonic_ns": 14983833422200,
+      "observer_pid": 10588,
+      "foreground": {
+        "hwnd": 396656,
+        "pid": 18044,
+        "thread_id": 7096,
+        "process_created": 134376167120459276,
+        "image": "C:\\Program Files\\WindowsApps\\Microsoft.WindowsTerminal_1.25.2733.0_x64__8wekyb3d8bbwe\\WindowsTerminal.exe"
+      },
+      "last_input_available": true,
+      "last_input_tick32": 14983109,
+      "role": "notice-case-peer-5",
+      "capture_duration_ns": 159500
+    }
+  ],
+  "errors": [],
+  "limits": "入力時刻だけを観測。入力内容/種別/要求元は取得しない。"
+}

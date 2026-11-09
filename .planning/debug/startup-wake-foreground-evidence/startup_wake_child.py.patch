@@ -1,0 +1,160 @@
+diff --git "a/C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\debug\\startup-wake-foreground-evidence\\baseline\\startup_wake_child.py.original" "b/C:\\Users\\shdwf\\work\\project\\PageFolio\\tests\\startup_wake_child.py"
+index f4674ad..a46e995 100644
+--- "a/C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\debug\\startup-wake-foreground-evidence\\baseline\\startup_wake_child.py.original"
++++ "b/C:\\Users\\shdwf\\work\\project\\PageFolio\\tests\\startup_wake_child.py"
+@@ -8,15 +8,31 @@ import threading
+ import time
+ from ctypes import wintypes as wt
+ from pathlib import Path
+-from types import SimpleNamespace
+ 
+ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+ 
++from pagefolio import startup_wake  # noqa: E402
+ from pagefolio.startup_wake import UiThreadWake  # noqa: E402
+ from pagefolio.startup_win32 import _bind  # noqa: E402
+ 
+ 
+-def run(enabled):
++class WakeApiBoundary:
++    """見張りへ渡すAPI以外への接触を、例外が握られても記録する。"""
++
++    def __init__(self, allowed, requests, violations):
++        self._allowed = allowed
++        self._requests = requests
++        self._violations = violations
++
++    def __getattr__(self, name):
++        self._requests.append(name)
++        if name not in self._allowed:
++            self._violations.append(name)
++            raise RuntimeError(f"見張りに許可されていないAPI: {name}")
++        return self._allowed[name]
++
++
++def run(enabled, simulate_external_foreground=False):
+     import tkinter as tk
+ 
+     user = ct.WinDLL("user32", use_last_error=True)
+@@ -48,10 +64,32 @@ def run(enabled):
+         user, "PostThreadMessageW", wt.BOOL, wt.DWORD, wt.UINT, wt.WPARAM, wt.LPARAM
+     )
+     foreground = _bind(user, "GetForegroundWindow", wt.HWND)
++    window_pid = _bind(
++        user, "GetWindowThreadProcessId", wt.DWORD, wt.HWND, ct.POINTER(wt.DWORD)
++    )
++    window_title = _bind(user, "GetWindowTextW", ct.c_int, wt.HWND, wt.LPWSTR, ct.c_int)
++
++    def foreground_snapshot():
++        hwnd = foreground()
++        pid = wt.DWORD()
++        thread_id = window_pid(hwnd, ct.byref(pid)) if hwnd else 0
++        title = ct.create_unicode_buffer(512)
++        if hwnd:
++            window_title(hwnd, title, len(title))
++        return {
++            "hwnd": hwnd,
++            "pid": pid.value,
++            "thread_id": thread_id,
++            "title": title.value,
++        }
++
+     removed = []
+     beats = []
+     posts = []
+     errors = []
++    api_requests = []
++    ctypes_requests = []
++    boundary_violations = []
+     ghost = 0x8007
+     tid = threading.get_native_id()
+     ready = threading.Event()
+@@ -89,19 +127,31 @@ def run(enabled):
+             errors.append("rescue-post-failed")
+ 
+     def counted_post(*args):
+-        posts.append(args)
++        caller = threading.get_native_id()
++        posts.append({"args": args, "caller_tid": caller})
++        if args != (tid, 0, 0, 0) or caller == tid:
++            boundary_violations.append("invalid-thread-message")
++            return False  # 不正な投稿は記録して止め、外部へ実際には送らない。
+         return post(*args)
+ 
+     # Tk 窓への別のメッセージが対照群を偶然起こすことを避け、同じ Tcl
+     # Windows 通知器を使う vwait を直接実行する。Peek でスレッドのキューも作る。
+     root = tk.Tcl()
+     peek(ct.byref(wt.MSG()), None, 0, 0, 0)
+-    initial_foreground = foreground()
++    initial_foreground = foreground_snapshot()
+     hook = set_hook(3, callback, None, tid)  # WH_GETMESSAGE、自スレッドのみ。
+     if not hook:
+         raise ct.WinError(ct.get_last_error())
+     wake = UiThreadWake(
+-        SimpleNamespace(PostThreadMessageW=counted_post), logging.getLogger(__name__)
++        WakeApiBoundary(
++            {"PostThreadMessageW": counted_post}, api_requests, boundary_violations
++        ),
++        logging.getLogger(__name__),
++    )
++    # 注入APIを迂回したctypes利用も、見張りの通常境界外として拒否・記録する。
++    original_ctypes = startup_wake.ct
++    startup_wake.ct = WakeApiBoundary(
++        {"get_last_error": ct.get_last_error}, ctypes_requests, boundary_violations
+     )
+     driver = threading.Thread(target=trigger, daemon=True)
+     try:
+@@ -115,24 +165,39 @@ def run(enabled):
+         wake.close()
+         driver.join(3)
+         unhook(hook)
+-        final_foreground = foreground()
++        startup_wake.ct = original_ctypes
++        final_foreground = foreground_snapshot()
+     if errors:
+         raise RuntimeError(errors)
+     after = [t for t in beats if removed and t > removed[0]]
+-    print(
+-        json.dumps(
+-            {
+-                "removed": len(removed),
+-                "posted": len(posts),
+-                "first_beat_after_ghost_ms": (after[0] - removed[0]) * 1000
+-                if after
+-                else None,
+-                "foreground_unchanged": initial_foreground == final_foreground,
+-                "worker_stopped": wake._worker is None or not wake._worker.is_alive(),
+-            }
+-        )
++    # 前景変更の観測だけを模擬する。実ウィンドウへの前景・入力操作はしない。
++    observed_initial = (
++        -1 if simulate_external_foreground else initial_foreground["hwnd"]
+     )
++    observed_final = -2 if simulate_external_foreground else final_foreground["hwnd"]
++    return {
++        "removed": len(removed),
++        "posted": len(posts),
++        "posts": posts,
++        "creator_tid": tid,
++        "wake_api_requests": api_requests,
++        "wake_ctypes_requests": ctypes_requests,
++        "boundary_violations": boundary_violations,
++        "first_beat_after_ghost_ms": (after[0] - removed[0]) * 1000 if after else None,
++        "foreground_unchanged": observed_initial == observed_final,
++        "foreground_observation_source": "simulated"
++        if simulate_external_foreground
++        else "native",
++        "foreground_observed_handles": [observed_initial, observed_final],
++        "foreground_before": initial_foreground,
++        "foreground_after": final_foreground,
++        "worker_stopped": wake._worker is None or not wake._worker.is_alive(),
++    }
+ 
+ 
+ if __name__ == "__main__":
+-    run(sys.argv[1] == "wake")
++    print(
++        json.dumps(
++            run(sys.argv[1] == "wake", "--simulate-external-foreground" in sys.argv)
++        )
++    )

@@ -1,0 +1,233 @@
+{
+  "version": "v1.10.1",
+  "release_allowed": false,
+  "uat_status": "not-run",
+  "generated_at": "2026-10-28T01:28:27.240462+00:00",
+  "note": "build成功はUAT合格・出荷承認を意味しない。実PyInstaller 2回(初回/再build)の生記録。verifyでは一切buildしない。",
+  "freeze": {
+    "frozen_at": "2026-10-28T01:26:49.841393+00:00",
+    "head": "36909a82155c79d84a204d4c426d384336ed9383",
+    "branch": "feature/v1.10.0",
+    "dirty_tracked": {
+      ".planning/PROJECT.md": "4987a262e5f9a561f33639ca6d765d3051f633f4c5bd185c15ea20334d196eba",
+      ".planning/ROADMAP.md": "14a555984eb2d667fcc020fc9e0715d8526b9ba9d93cec43985c5b1820655ea7",
+      ".planning/STATE.md": "02ef35a2e38bc649f99e19773ebf7280e0a5052a64c1f9b4b98903a316ea2b33",
+      ".planning/phases/04-startup-control/04-REVIEW-DISPOSITION.md": "97a10fcd5115a7369b81314832f72736edb8585a212cd69fb87a8f7f595199ee",
+      ".planning/phases/04-startup-control/04-REVIEW.md": "358fae4cc52ef81f05cf6c0a2f6b63de8d8dff75da717bec83e14307ac35f340",
+      ".planning/phases/04-startup-control/04-SECURITY.md": "1eeeaefd47c0b1497634e723f2db97105cf106d56da550bf36d92c40b22aa08f",
+      ".planning/phases/04-startup-control/04-UI-REVIEW.md": "f463ac1a089f4174eb4806cceeff438b05c5b84040b5c1655a9413f21f31a558",
+      ".planning/phases/04-startup-control/04-VALIDATION.md": "9866ed1022ec96060ad3a24037591afa238288e16adfcc774720ca61adf5907d",
+      ".planning/phases/04-startup-control/04-VERIFICATION.md": "480ffdc2da8f8aba62a2354cc30796b2094a2c9366ca180c1e443fb83fcf8fd8",
+      ".planning/phases/06-release-validation/06-05-drivers/uat_row.py": "d784c62d4259bb91c1671bd39cace4e00e1cc6c01da30d80c3b304b777a3a8d6",
+      ".planning/state.json": "4655aa8218fc5143f79c4388b20176ebd0105fdfc8b19da0b3c0aeb820f72250",
+      "README.md": "235dd676d4ffd023820745894bebaa1519a529aa6182a1224d9db3e03071c1b1",
+      "distribution/はじめに.md": "2b321f9c14b0bd2ae3968ffcf48997ead5c24c5955ccf241eaf29a650453dc92",
+      "pagefolio/__main__.py": "efdbc32b2322ee20525fbb9ce5164622109fbacecfd37c36fc41166bfa0e1e06",
+      "pagefolio/constants.py": "5c6191728ffee995a80e5d18d69ae64caca7a1766a970e4084a7c889d58da066",
+      "pagefolio/startup_win32.py": "948abe06b494e6907bdec5e2169931e9780eb6dfa23271c5a16e6134546cddae",
+      "tests/test_release_contract.py": "8e2897e80eaf34f9110e2b747b7bd87d4a3479e9db368af4287440b636b637a6",
+      "開発履歴.md": "73f70905523b2e1d44c63e03a3159baccd66ed9fc929df85d852bb084f8adf13"
+    },
+    "untracked_count": 63,
+    "dirty_diff_sha256": "ed69129fee7a9221bd5f01957371a544abbc7398afa76e281b08b2bab790dc5e",
+    "input_manifest_sha256": "dfc38fd64e1511625551daf4a50c9b411fd23cf986ed9080081a6eb2f13dc11f",
+    "input_file_count": 65,
+    "dependencies": {
+      "PyInstaller": "6.22.3",
+      "pyinstaller-hooks-contrib": "2026.9",
+      "PyMuPDF": "1.28.2",
+      "Pillow": "13.0.0",
+      "tkinterdnd2": "0.6.4",
+      "pytest": "9.1.1",
+      "ruff": "0.17.1"
+    },
+    "python": "3.15.2 (tags/v3.15.2:5e58eaa, Oct 25 2026, 17:27:03) [MSC v.1951 64 bit (AMD64)]",
+    "source_snapshot": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf06_final_8433fc4ee5324234931fb80ac0f310d1\\freeze\\source-snapshot",
+    "app_version": "v1.10.1",
+    "settings_or_secrets_included": false,
+    "old_dist_before": {
+      "tree_sha256": "45078cbb978ebfcf05440c42eb4b34c8be3563474deb6dac5e4be07dbe397031",
+      "file_count": 975,
+      "exe_sha256": "603d73d5c0f2addf7d90bc0e218216b08ff6a92a1c5fb08f57e01e3db5440a72"
+    }
+  },
+  "final_release": {
+    "output_root": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf06_final_8433fc4ee5324234931fb80ac0f310d1\\out",
+    "final_dir": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf06_final_8433fc4ee5324234931fb80ac0f310d1\\out\\PageFolio-v1.10.1",
+    "exe_sha256": "9b3ebbce390c3b9f1752a97820a5ef81a0c39b7e148b93717b86bb47f9f5f73b",
+    "tree_sha256": "cce2fd0a99a6f368ab271f9f0b6a212c3984a6387c7684800074434d5152ccf4",
+    "input_manifest_sha256": "dfc38fd64e1511625551daf4a50c9b411fd23cf986ed9080081a6eb2f13dc11f",
+    "bundled_sha256": {
+      "ocr_custom_prompt_sample.md": "03ec2d06b184282974d32be00f228bc37126c79b58aa9ec6e5fc38633e648e5d",
+      "ocr_summary_prompt_sample.md": "6960cb29b8b65b9823a2c48011316ae83dbec32331d2ab63260f910ce2c08b55",
+      "はじめに.md": "2b321f9c14b0bd2ae3968ffcf48997ead5c24c5955ccf241eaf29a650453dc92",
+      "docs/CONFIGURATION.md": "0234ed54994c9877986248d1674fcfba9de2dbcca60e594397261d73da1f2067"
+    },
+    "bundled_matches_canonical": {
+      "ocr_custom_prompt_sample.md": true,
+      "ocr_summary_prompt_sample.md": true,
+      "はじめに.md": true,
+      "docs/CONFIGURATION.md": true
+    },
+    "file_count": 53,
+    "runs": [
+      {
+        "role": "final-release",
+        "order": "initial",
+        "run_id": "3efb60fa80064c588ed1805b995d7394",
+        "cli_argv": [
+          "C:\\Users\\shdwf\\work\\project\\PageFolio\\.venv\\Scripts\\python.exe",
+          "C:\\Users\\shdwf\\work\\project\\PageFolio\\tools\\build_release.py",
+          "--output-root",
+          "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf06_final_8433fc4ee5324234931fb80ac0f310d1\\out"
+        ],
+        "started_at": "2026-10-28T01:26:50.781476+00:00",
+        "finished_at": "2026-10-28T01:27:22.955547+00:00",
+        "elapsed_seconds": 32.17318990000058,
+        "cli_exit": 0,
+        "pyinstaller_exit": 0,
+        "pyinstaller_executed": true,
+        "pyinstaller_argv": [
+          "C:\\Users\\shdwf\\work\\project\\PageFolio\\.venv\\Scripts\\python.exe",
+          "-m",
+          "PyInstaller",
+          "--clean",
+          "--onedir",
+          "--noconsole",
+          "--name",
+          "PageFolio",
+          "--icon",
+          "C:\\Users\\shdwf\\work\\project\\PageFolio\\pagefolio.ico",
+          "--specpath",
+          "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf06_final_8433fc4ee5324234931fb80ac0f310d1\\out\\.release-work\\3efb60fa80064c588ed1805b995d7394\\spec",
+          "--workpath",
+          "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf06_final_8433fc4ee5324234931fb80ac0f310d1\\out\\.release-work\\3efb60fa80064c588ed1805b995d7394\\work",
+          "--distpath",
+          "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf06_final_8433fc4ee5324234931fb80ac0f310d1\\out\\.release-work\\3efb60fa80064c588ed1805b995d7394\\dist",
+          "C:\\Users\\shdwf\\work\\project\\PageFolio\\pagefolio.py"
+        ],
+        "pyinstaller_version": "6.22.3",
+        "report_path": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf06_final_8433fc4ee5324234931fb80ac0f310d1\\out\\.release-work\\3efb60fa80064c588ed1805b995d7394\\report.json",
+        "report_sha256": "3328d2165f78e55abc79b599df3a808afd5c2074d55add14f3e9ff0c445c92b2",
+        "input_manifest_sha256": "dfc38fd64e1511625551daf4a50c9b411fd23cf986ed9080081a6eb2f13dc11f",
+        "tree_sha256": "da9b4fd338b636d275b48753fff0da017d9f09925249d0d0fd9dfa30ec6fc494",
+        "exe_sha256": "615becad44da0d5f0b462a12335ab140f8e8d939c77d21f022fc33116edc053a",
+        "file_count": 53,
+        "bundled_sha256": {
+          "ocr_custom_prompt_sample.md": "03ec2d06b184282974d32be00f228bc37126c79b58aa9ec6e5fc38633e648e5d",
+          "ocr_summary_prompt_sample.md": "6960cb29b8b65b9823a2c48011316ae83dbec32331d2ab63260f910ce2c08b55",
+          "はじめに.md": "2b321f9c14b0bd2ae3968ffcf48997ead5c24c5955ccf241eaf29a650453dc92",
+          "docs/CONFIGURATION.md": "0234ed54994c9877986248d1674fcfba9de2dbcca60e594397261d73da1f2067",
+          "release-report.json": "5d27f53fbaaacd7a1d947dd142cd276d5256fa8172f7fdc01783081a26d08f29"
+        },
+        "source_commit": "36909a82155c79d84a204d4c426d384336ed9383",
+        "dirty_sha256": "ed69129fee7a9221bd5f01957371a544abbc7398afa76e281b08b2bab790dc5e",
+        "dependencies": {
+          "PyInstaller": "6.22.3",
+          "pyinstaller-hooks-contrib": "2026.9",
+          "PyMuPDF": "1.28.2",
+          "Pillow": "13.0.0",
+          "tkinterdnd2": "0.6.4"
+        },
+        "stdout_log": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf06_final_8433fc4ee5324234931fb80ac0f310d1\\freeze\\cli-initial.stdout.txt",
+        "stderr_log": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf06_final_8433fc4ee5324234931fb80ac0f310d1\\freeze\\cli-initial.stderr.txt",
+        "build_log": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf06_final_8433fc4ee5324234931fb80ac0f310d1\\out\\.release-work\\3efb60fa80064c588ed1805b995d7394\\build.log"
+      },
+      {
+        "role": "final-release",
+        "order": "rebuild",
+        "run_id": "963ad4cb42694888bf98be93f05d1923",
+        "cli_argv": [
+          "C:\\Users\\shdwf\\work\\project\\PageFolio\\.venv\\Scripts\\python.exe",
+          "C:\\Users\\shdwf\\work\\project\\PageFolio\\tools\\build_release.py",
+          "--output-root",
+          "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf06_final_8433fc4ee5324234931fb80ac0f310d1\\out"
+        ],
+        "started_at": "2026-10-28T01:27:36.176443+00:00",
+        "finished_at": "2026-10-28T01:28:04.634057+00:00",
+        "elapsed_seconds": 28.453965900000185,
+        "cli_exit": 0,
+        "pyinstaller_exit": 0,
+        "pyinstaller_executed": true,
+        "pyinstaller_argv": [
+          "C:\\Users\\shdwf\\work\\project\\PageFolio\\.venv\\Scripts\\python.exe",
+          "-m",
+          "PyInstaller",
+          "--clean",
+          "--onedir",
+          "--noconsole",
+          "--name",
+          "PageFolio",
+          "--icon",
+          "C:\\Users\\shdwf\\work\\project\\PageFolio\\pagefolio.ico",
+          "--specpath",
+          "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf06_final_8433fc4ee5324234931fb80ac0f310d1\\out\\.release-work\\963ad4cb42694888bf98be93f05d1923\\spec",
+          "--workpath",
+          "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf06_final_8433fc4ee5324234931fb80ac0f310d1\\out\\.release-work\\963ad4cb42694888bf98be93f05d1923\\work",
+          "--distpath",
+          "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf06_final_8433fc4ee5324234931fb80ac0f310d1\\out\\.release-work\\963ad4cb42694888bf98be93f05d1923\\dist",
+          "C:\\Users\\shdwf\\work\\project\\PageFolio\\pagefolio.py"
+        ],
+        "pyinstaller_version": "6.22.3",
+        "report_path": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf06_final_8433fc4ee5324234931fb80ac0f310d1\\out\\.release-work\\963ad4cb42694888bf98be93f05d1923\\report.json",
+        "report_sha256": "af93bfdb49f248b28ca0e39e15c8e48516009983e66620606e1e145b1b38c70a",
+        "input_manifest_sha256": "dfc38fd64e1511625551daf4a50c9b411fd23cf986ed9080081a6eb2f13dc11f",
+        "tree_sha256": "cce2fd0a99a6f368ab271f9f0b6a212c3984a6387c7684800074434d5152ccf4",
+        "exe_sha256": "9b3ebbce390c3b9f1752a97820a5ef81a0c39b7e148b93717b86bb47f9f5f73b",
+        "file_count": 53,
+        "bundled_sha256": {
+          "ocr_custom_prompt_sample.md": "03ec2d06b184282974d32be00f228bc37126c79b58aa9ec6e5fc38633e648e5d",
+          "ocr_summary_prompt_sample.md": "6960cb29b8b65b9823a2c48011316ae83dbec32331d2ab63260f910ce2c08b55",
+          "はじめに.md": "2b321f9c14b0bd2ae3968ffcf48997ead5c24c5955ccf241eaf29a650453dc92",
+          "docs/CONFIGURATION.md": "0234ed54994c9877986248d1674fcfba9de2dbcca60e594397261d73da1f2067",
+          "release-report.json": "4e26158e3e83fe36cdeebb9256e579ae31a0c402767f4bff0242051dcdc61481"
+        },
+        "source_commit": "36909a82155c79d84a204d4c426d384336ed9383",
+        "dirty_sha256": "ed69129fee7a9221bd5f01957371a544abbc7398afa76e281b08b2bab790dc5e",
+        "dependencies": {
+          "PyInstaller": "6.22.3",
+          "pyinstaller-hooks-contrib": "2026.9",
+          "PyMuPDF": "1.28.2",
+          "Pillow": "13.0.0",
+          "tkinterdnd2": "0.6.4"
+        },
+        "stdout_log": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf06_final_8433fc4ee5324234931fb80ac0f310d1\\freeze\\cli-rebuild.stdout.txt",
+        "stderr_log": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf06_final_8433fc4ee5324234931fb80ac0f310d1\\freeze\\cli-rebuild.stderr.txt",
+        "build_log": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf06_final_8433fc4ee5324234931fb80ac0f310d1\\out\\.release-work\\963ad4cb42694888bf98be93f05d1923\\build.log"
+      }
+    ],
+    "history_dir": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf06_final_8433fc4ee5324234931fb80ac0f310d1\\out\\.release-history\\963ad4cb42694888bf98be93f05d1923",
+    "history_tree_sha256": "da9b4fd338b636d275b48753fff0da017d9f09925249d0d0fd9dfa30ec6fc494",
+    "history_matches_initial_tree": true,
+    "incomplete_markers": [],
+    "built_exe_auto_launched": false,
+    "exe_bit_reproducibility": {
+      "initial_exe_sha256": "615becad44da0d5f0b462a12335ab140f8e8d939c77d21f022fc33116edc053a",
+      "rebuild_exe_sha256": "9b3ebbce390c3b9f1752a97820a5ef81a0c39b7e148b93717b86bb47f9f5f73b",
+      "equal": false,
+      "required": false
+    }
+  },
+  "old_dist": {
+    "before": {
+      "tree_sha256": "45078cbb978ebfcf05440c42eb4b34c8be3563474deb6dac5e4be07dbe397031",
+      "file_count": 975,
+      "exe_sha256": "603d73d5c0f2addf7d90bc0e218216b08ff6a92a1c5fb08f57e01e3db5440a72"
+    },
+    "after": {
+      "tree_sha256": "45078cbb978ebfcf05440c42eb4b34c8be3563474deb6dac5e4be07dbe397031",
+      "file_count": 975,
+      "exe_sha256": "603d73d5c0f2addf7d90bc0e218216b08ff6a92a1c5fb08f57e01e3db5440a72"
+    },
+    "unchanged": true,
+    "sample_sha256": {
+      "ocr_custom_prompt_sample.md": "03ec2d06b184282974d32be00f228bc37126c79b58aa9ec6e5fc38633e648e5d",
+      "ocr_summary_prompt_sample.md": "6960cb29b8b65b9823a2c48011316ae83dbec32331d2ab63260f910ce2c08b55"
+    },
+    "samples_match_new_canonical": {
+      "ocr_custom_prompt_sample.md": true,
+      "ocr_summary_prompt_sample.md": true
+    }
+  },
+  "tracer_note": "06-01時点のtracer成果物とは別。最終runのbinaryを以後のUAT対象として固定。"
+}

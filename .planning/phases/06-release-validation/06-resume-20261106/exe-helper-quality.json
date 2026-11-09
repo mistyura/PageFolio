@@ -1,0 +1,102 @@
+{
+  "checked_at": "2026-11-06T12:02:22.867Z",
+  "result": {
+    "started": "2026-11-06T11:51:10.075Z",
+    "finished": "2026-11-06T12:01:43.924Z",
+    "argv": [
+      "C:\\Users\\shdwf\\work\\project\\PageFolio\\.venv\\Scripts\\python.exe",
+      "-m",
+      "pytest",
+      "-q",
+      "-rA",
+      "-p",
+      "no:cacheprovider",
+      "--basetemp=C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf04-04-reverify-20261106-exe-helper",
+      "--junitxml=C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\phases\\04-startup-control\\04-reverify-20261106-exe-helper\\junit.xml"
+    ],
+    "code": 0,
+    "signal": null,
+    "error": null,
+    "inputCount": 171,
+    "missing": [],
+    "changed": []
+  },
+  "totals": {
+    "errors": 0,
+    "failures": 0,
+    "skipped": 0,
+    "tests": 2398,
+    "time": 631.796
+  },
+  "input_count": 171,
+  "current_drift": [],
+  "extra_inputs": {
+    ".planning/phases/06-release-validation/06-05-record-w05c-exe.cjs": "31d25b53edccecb37b43e2100b3f11e9e55a619830a69954975c4643517e6ddb",
+    "tests/test_w05c_exe_evidence.py": "2abfa8da2fd8fefc05c9d8514e31f3580b2e3e332b0d02d5d4d2b8276b63ecd5",
+    ".planning/phases/06-release-validation/06-W05C-EXE-COLLECTION.md": "081948bdfda5acf6eb9f846056f7b65d996ee12f5d149732dd129f47999fdcac"
+  },
+  "extra_drift": [],
+  "checks": [
+    {
+      "argv": [
+        "C:\\Users\\shdwf\\work\\project\\PageFolio\\.venv\\Scripts\\ruff.exe",
+        "check",
+        ".",
+        "--no-cache"
+      ],
+      "exit": 0,
+      "stdout": "All checks passed!\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "C:\\Users\\shdwf\\work\\project\\PageFolio\\.venv\\Scripts\\ruff.exe",
+        "format",
+        "--check",
+        "--no-cache",
+        "<149 files>"
+      ],
+      "exit": 0,
+      "stdout": "149 files already formatted\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "C:\\Users\\shdwf\\work\\project\\PageFolio\\.venv\\Scripts\\python.exe",
+        "-c",
+        "import ast; ast.parse(open('pagefolio.py', encoding='utf-8').read())"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  ],
+  "parents": [
+    {
+      "phase": ".planning/phases/04-startup-control",
+      "exit": 0,
+      "status": "passed",
+      "next_action": "Verification passed — continue.",
+      "next_command": "",
+      "route": ""
+    },
+    {
+      "phase": ".planning/phases/05-config-notification",
+      "exit": 0,
+      "status": "passed",
+      "next_action": "Verification passed — continue.",
+      "next_command": "",
+      "route": ""
+    }
+  ],
+  "raw_hashes": {
+    ".planning/phases/04-startup-control/04-reverify-20261106-exe-helper/result.json": "b01a284f39466cecdee90259314852f570499a19c31bcf2c5430f1e5b17c3e0c",
+    ".planning/phases/04-startup-control/04-reverify-20261106-exe-helper/junit.xml": "d123b183964cbc42999de9991877a762bcedb5f292027dd016441ca444e25df4",
+    ".planning/phases/04-startup-control/04-reverify-20261106-exe-helper/inputs-before.json": "b2af66f330a28915c9f6a2700f4906893fedf86bc7c76d0cdf88f4e63c921308",
+    ".planning/phases/04-startup-control/04-reverify-20261106-exe-helper/inputs-after.json": "b2af66f330a28915c9f6a2700f4906893fedf86bc7c76d0cdf88f4e63c921308",
+    ".planning/phases/04-startup-control/04-reverify-20261106-exe-helper/checks.json": "45c88333da0d44e3f5441ddc9e31ff6193fd12c712030a15929623d8bac3a92b",
+    ".planning/phases/04-startup-control/04-reverify-20261106-exe-helper/stdout.txt": "8b5e6e2989fdda43e4bb9da47c6ca55c7e09dbec95ca101b9259642523280526",
+    ".planning/phases/04-startup-control/04-reverify-20261106-exe-helper/stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "release_allowed": false
+}

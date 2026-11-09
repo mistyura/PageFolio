@@ -1,0 +1,15 @@
+{
+  "changed_since_failed_full": [
+    "tests/test_startup_windows.py",
+    "開発履歴.md"
+  ],
+  "product_unchanged": true,
+  "targeted_results": {
+    "controlled": 4,
+    "other_constructor": 5
+  },
+  "ruff_check": "passed",
+  "ruff_format_files": 149,
+  "ast": "passed",
+  "notification_lifetime_ms": 1800
+}

@@ -1,0 +1,28 @@
+{
+  "started": "2026-10-28T00:36:04.146Z",
+  "finished": "2026-10-28T00:36:05.549Z",
+  "executable": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.venv\\Scripts\\python.exe",
+  "executable_sha256": "f14d10e954b922d758234ff49335ad0e07e567103e06b38ff675c6bc85282865",
+  "command": [
+    "-m",
+    "pytest",
+    "-q",
+    "-x",
+    "-s",
+    "tests/test_startup_wake.py",
+    "-k",
+    "True-True",
+    "--basetemp=C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf-debug-wake-9e7eec2c-0d79-4dad-ad75-b01f358fa8b2"
+  ],
+  "basetemp": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf-debug-wake-9e7eec2c-0d79-4dad-ad75-b01f358fa8b2",
+  "code": 1,
+  "signal": null,
+  "environment_exit": 0,
+  "inputs_unchanged": true,
+  "changed_inputs": [],
+  "file_count": 113,
+  "inputs_before_sha256": "a8b72d2ef42b79a3f8d8a162ddae7d47945789d7d549d8740483029589dec1dc",
+  "inputs_after_sha256": "a8b72d2ef42b79a3f8d8a162ddae7d47945789d7d549d8740483029589dec1dc",
+  "environment_sha256": "574d41cd3f6e3c4d440e790319db9db2d8a6dd2531ffccd4cea63be8b97a6bcf",
+  "log_sha256": "7fc84633a782c67f9fbee352044f414d442a929733ab2398da480429691b5f59"
+}

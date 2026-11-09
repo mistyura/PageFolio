@@ -9,7 +9,13 @@ created: "2026-10-24"
 
 # Phase 06 — 検証戦略
 
-6計画・12タスクの検証契約。実装・ビルド・実機受入は未実施。下表は実行担当と依存の割当であり、合格記録ではない。
+8計画・16タスクの検証契約。既存01〜04の完了履歴と世代4準備証拠を保持し、案B追補07/08を05/06より前に実施する。下表のnot-runは計画時の割当であり既存SUMMARYの合格を取り消すものではない。現行実測は各証拠世代を参照し、この計画改訂だけでvalidatedに変更しない。
+
+## 2026-10-28 承認済みscope追補
+
+正本は `06-W11-SCOPE-APPROVAL.md`（D-17〜D-19）。31ケース/110cardを保持し、W11/other-session@script と W11/other-session@production-exe だけをstatus=not-run/release_requirement=deferred、残る108行をrequiredとする。監査契約は旧06-03に06-07のscope_contractを適用する。全modeで承認/固定2キー/31・110・108・2/完全な行集合/偽passを検査する。for-handoffと最終監査は必須108行passを要求し、対象外をpassにしない。品質/鮮度/独立4ゲート/high・W06/UAC両方向/DPI/WR-01は緩めない。
+
+実行順は06-07契約/回帰/台帳 → 06-08配布文書/品質/freeze/新世代実2build/保護/接続 → 06-05 → 06-06 → 親独立4ゲート/最終監査。旧06-03/06-04・RESEARCH/PATTERNS/PLANNING-CHECKSのW11停止記述は当時の履歴として保持し、この2行の現在への適用だけ置換する。
 
 ## Test Infrastructure
 
@@ -41,10 +47,14 @@ created: "2026-10-24"
 | 06-03-02 / 3 | QA-01/02 | TestFakeOcr/TestSettingsFaultPreparationを追加 | T-06-07/08 | not-run |
 | 06-04-01 / 4 | DIST-01/02, QA-01/02/03 | actionで実v1.10.0初回/再build各1回→read-only audit --build-only | T-06-09/10 | not-run |
 | 06-04-02 / 4 | DIST-03, QA-02 | 実保護/起動/更新、1page実EXE接続/native modal＋人手→audit --preparation-only | T-06-09/10 | not-run |
-| 06-05-01 / 5 | QA-02 | TestCaseCoverageを追加、24枝番+WR-01+X6のカード | T-06-11/12 | not-run |
-| 06-05-02 / 5 | QA-02/03, DIST-02/03 | audit --require-pass（担当16ID全subrow）＋G1〜G6の人手結果 | T-06-11/12 | not-run |
-| 06-06-01 / 6 | QA-02 | audit --require-pass（担当15ID全subrow）＋G7〜G14の人手結果/時間契約 | T-06-13 | not-run |
-| 06-06-02 / 6 | QA-01/02/03 | 台帳入力確定→品質全件一度/同一性再利用→証拠記録→read-only audit --for-handoff・全人手pass/Phase4鮮度・親4ゲートの担当/pending引渡し | T-06-14 | not-run |
+| 06-07-01 / 5 | QA-01/02 | TestReleaseScopeを新設、承認→JSON→CLI tracerと未承認scope拒否 | T-06-15 | not-run |
+| 06-07-02 / 5 | QA-01/02 | 全mode負例・TestCaseCoverage・実allow-pending、31/110/108/2を保持 | T-06-15/16 | not-run |
+| 06-08-01 / 6 | DIST-01/02, QA-01/03 | TestReleaseScopeDocs新設→品質/freeze→新世代実2build→read-only build-only | T-06-17 | not-run |
+| 06-08-02 / 6 | DIST-03, QA-02 | 新世代保護/接続/native modal/障害成立→preparation-only、110行の世代保持 | T-06-18 | not-run |
+| 06-05-01 / 7 | QA-02 | TestCaseCoverage、24枝番+WR-01+X6の既存カード照合、履歴保持 | T-06-11/12 | not-run |
+| 06-05-02 / 7 | QA-02/03, DIST-02/03 | audit --require-pass（担当16ID全subrow）＋G1〜G6の人手結果 | T-06-11/12 | not-run |
+| 06-06-01 / 8 | QA-02 | audit --require-pass（W11はdeferred整合、他14ID全subrowpass）＋G7〜G13/時間契約 | T-06-13 | not-run |
+| 06-06-02 / 8 | QA-01/02/03 | 台帳入力確定→品質全件一度/同一性再利用→証拠記録→read-only for-handoff、必須108pass/対象外2not-run/鮮度・親4ゲート引渡し | T-06-14 | not-run |
 
 IDはすべてV110-接頭辞。各PLANのautomated直後にfails_whenを置く。allow-pendingは台帳構造だけを検証し、人手passの代替にはしない。
 
@@ -59,7 +69,7 @@ audit APIは06-03-PLANのaudit_contractを正本とする。--allow-pending（�
 | 3 / 親orchestrator | `$gsd-code-review 06`、`$gsd-secure-phase 06`、`$gsd-validate-phase 06`、独立verifierのgoal-backward verification | 実走して報告path/hash・対象入力・exit・時刻・判定を06-RELEASE-GATEへ反映。VALIDATIONは実測に基づく更新だけ。修正が入れば影響する証拠/品質/実機を再検証する |
 | 4 / 親orchestrator | `.venv/Scripts/python.exe tests/release_uat_support.py audit --phase-dir .planning/phases/06-release-validation` | 4独立ゲート成功、未評価/未解消high threat 0、Nyquist実走合格、全必須人手pass/Phase4 fresh/現行入力一致、未解除リリース条件の根拠付き評価でexit0。pending/not-run/fail/stale/根拠不足があればPhase完了・出荷停止 |
 
-06-06-02のdoneは手順2の引渡し準備まで。手順3〜4は親の担当であり、その結果を手順2の前提にしない。最終監査もPhase完了フラグを前提にせず、親は手順4の成功後に正式完了を判断する。未評価high threatと未実走Nyquistは引渡し時に親担当pendingとして保持するが、最終監査では必ず不合格になる。W11等の人手not-runはこの例外に含まれず、06-06-02はblocked集計までとする。
+06-06-02のdoneは手順2の引渡し準備まで。手順3〜4は親の担当であり、その結果を手順2の前提にしない。最終監査もPhase完了フラグを前提にせず、親は手順4の成功後に正式完了を判断する。未評価high threatと未実走Nyquistは引渡し時に親担当pendingとして保持するが、最終監査では必ず不合格になる。W11だけは正規scopeに一致する2行のnot-run/deferredを許容する。他の必須108行にnot-run/failがあれば06-06-02はblocked集計までとする。
 
 ## Wave 0 Requirements
 
@@ -69,15 +79,15 @@ audit APIは06-03-PLANのaudit_contractを正本とする。--allow-pending（�
 - [ ] 06-03-02でtests/release_fake_ocr.pyを作り、06-04-02で既存Ollama設定を通した実配布EXE接続を実証する。
 - [ ] 06-05-01で06-UAT.md/06-MANUAL-EVIDENCE.jsonへ全カードとnot-run行を作る。テスト専用binary/faultを実配布のpassへ転用しない。
 
-Wave 0は独立した水平実装計画ではなく、各作成taskの先頭に置く試験scaffold。依存順は06-01→02→03→04→05→06。現時点で全scaffold未実装。
+Wave 0は各作成task先頭の試験scaffold。旧01〜04の作成履歴を維持し、追補では06-07-01にTestReleaseScope、06-08-01にTestReleaseScopeDocsを新設する。依存順は06-01→02→03→04→07→08→05→06。
 
 ## Manual-Only Verifications
 
-正本は06-UAT-CARRYOVER.mdおよび04-WINDOWS-UAT.md。必須ケースは W01、W02、W03、W04、W05a、W05b、W05c、W06、W07a、W07b、W08a、W08b、W08c、W08d、W09a、W09b、W09c、W09d、W10a、W10b、W11、W12a、W12b、W12c、WR-01。各枝番を計画・UATに割当し、入口・条件単位の結果を残す。
+正本は06-UAT-CARRYOVER.mdおよび04-WINDOWS-UAT.md。必須ケースは W01、W02、W03、W04、W05a、W05b、W05c、W06、W07a、W07b、W08a、W08b、W08c、W08d、W09a、W09b、W09c、W09d、W10a、W10b、W12a、W12b、W12c、WR-01 と X01〜X06。W11の2行は承認済み対象外の未確認項目として保持する。各枝番を計画・UATに割当し、入口・条件単位の結果を残す。
 
 - 少数ずつPython→EXEの順に案内し、ケースID＋観察結果を受け取ってから次へ進む。
 - 対象commit/差分hash、OS/Python/Tk、権限/session、入口、binary hash、観測時刻、結果、ログと必要な画面記録を保持。
-- 別session未準備はnot-run。新規アカウント・資格情報取得・mockで代替しない。
+- W11の別session2行は承認済みnot-run/deferred。新規アカウント・資格情報取得・mockで代替しない。非W11未実施はrequiredのまま停止する。
 - WR-01の並行負荷15609msと単独15140msを保持し、15.5秒契約の再評価を追跡。
 - Phase5 H01〜H14と意味評価2件のpassは正本の同一性を照合して再利用。EXE固有受入は新規IDで扱う。
 - Phase4 staleの再検証を必須依存として残す。未解除原因を全件成功で解決済みにしない。
@@ -109,7 +119,7 @@ Wave 0は独立した水平実装計画ではなく、各作成taskの先頭に�
 | W09d | G12 | 06-06-01 | 実DPI200% | not-run |
 | W10a | G13 | 06-06-01 | medium→elevated・4資源/UAC | not-run |
 | W10b | G13 | 06-06-01 | elevated→medium・4資源/UAC | not-run |
-| W11 | G14 | 06-06-01 | 既存別session各1画面/復帰/元状態保持、未準備は停止 | not-run |
+| W11 | G14（将来受入追跡） | 06-07-02/06-06-01 scope照合 | 既存別session各1画面/復帰/元状態保持は今回未確認、完全2キー以外に拡張不可 | not-run / deferred |
 | W12a | G4 | 06-05-02 | script/module/relocatedの一次二次3×3 | not-run |
 | W12b | G4 | 06-05-02 | 最終実EXE/Python/来歴固定の実tracer peer/別配置の双方向 | not-run |
 | W12c | G4 | 06-05-02 | Explorer/端末・実入力/foregroundとAPI戻り別記 | not-run |
@@ -123,7 +133,7 @@ Python変更後: `.venv/Scripts/ruff.exe check .` → `.venv/Scripts/ruff.exe fo
 
 コミット前/wave末/人手受入前は上記Fullを単一processで実行。新規GUIDのrepo外basetempを検証してから利用する。前回1797 passed/1 warning/266.81秒は履歴で、103入力manifestだけで新規test/build入力を含む今回の同一性を主張しない。全入力・環境を照合できた場合だけ再利用。再発停止の診断は最初の実測を保持する。
 
-Phase4 staleの再検証は親がWave3終了後かつ06-04-01の最終入力固定前に担当する。$gsd-execute-phase 04の再検証経路を使い、完了済みplanのためverifierが呼ばれなければ親が同workflowの独立verifier/必要なvalidate-phaseを明示実走する。既存W移管は維持しfresh化を人手合格にしない。06-05-02開始前と06-06-02引渡し前にもdigestを照合する。W11がnot-runなら06-06-01未完了。06-06-02はblocked集計までで、Nyquist/Phase完了を偽装しない。
+Phase4/5の報告鮮度は親が現行digestで照合し、対象変更でstaleの場合だけ必要な独立再検証/validate-phaseを実走する。既存W移管は維持しfresh化を人手合格にしない。06-08freeze前、06-05-02開始前、06-06-02引渡し前にもdigestを照合する。W11の正規2行not-run/deferredだけは承認scopeに従う。他の必須未実施は06-06-02のblocked集計までに留め、Nyquist/Phase完了を偽装しない。
 
 Phase6 edge6はunclassified/unresolved、禁止6はdescriptorless flagged-unverified。Phase4禁止3/edge5とPhase5edge4を別集合で保持する。試験計画の存在はprobe解決の証拠ではない。
 
@@ -147,7 +157,7 @@ Phase6 edge6はunclassified/unresolved、禁止6はdescriptorless flagged-unveri
 | 同梱文書/版表示 | 同梱/版/X06/契約試験を更新。EXEhash変更なら全EXE行も再実施 |
 | UAT回答・ケース宣言等、TestCaseCoverageの入力 | 台帳内容確定後に品質ゲートを評価。品質証拠の出力だけを自己参照hashへ含めない |
 | WR-01同負荷再計測が15500ms超 | fail/出荷停止→debugと修正、または利用者の明示承認を得た契約再計画。負荷縮小・期限延長で黙示合格にしない |
-| W11既存別session準備不能 | not-run/出荷停止、親から準備継続か明示承認を要する再計画へ。アカウント新設・mock代替なし |
+| W11既存別session準備不能 | 2026-10-28案B承認により正規2行だけnot-run/deferred。全宣言保持・108必須/品質/安全条件を継続。アカウント新設・mock代替なし |
 
 全件pytestは台帳入力確定後に一度実行するか同一性を検証した成功を再利用し、06-EVIDENCEに記録した後のverifyはread-only for-handoffだけとする。必要な再実行を回避するため入力を証拠出力と偽装しない。
 

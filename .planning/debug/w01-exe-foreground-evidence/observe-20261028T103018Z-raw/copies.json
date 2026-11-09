@@ -1,0 +1,32 @@
+[
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\release-uat-7d3427babd214b939ffc4b99a28fbb63\\manifest.json",
+    "target": ".planning\\debug\\w01-exe-foreground-evidence\\observe-20261028T103018Z-raw\\manifest.json",
+    "sha256": "b529eecd2af2f9bf62f657a5cbb7f2a3fd9df8b91c184afb1f50686f5700eeb2"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\release-uat-7d3427babd214b939ffc4b99a28fbb63\\dist\\pagefolio_settings.json",
+    "target": ".planning\\debug\\w01-exe-foreground-evidence\\observe-20261028T103018Z-raw\\dist-pagefolio_settings.json",
+    "sha256": "18ea2ace6414df612fd7eef688d603df78ef50c4874470c72c47c0864c4da01b"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\release-uat-7d3427babd214b939ffc4b99a28fbb63\\evidence\\inspect-001.json",
+    "target": ".planning\\debug\\w01-exe-foreground-evidence\\observe-20261028T103018Z-raw\\evidence-inspect-001.json",
+    "sha256": "2b33989aaf85a8d3265801eae5642dc84cfe8b9ebe4ac68f7697fa672d9dab5e"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\release-uat-7d3427babd214b939ffc4b99a28fbb63\\evidence\\inspect-002.json",
+    "target": ".planning\\debug\\w01-exe-foreground-evidence\\observe-20261028T103018Z-raw\\evidence-inspect-002.json",
+    "sha256": "6431bd70fbfad937858d805be963453fa53ac594980d4f343dbe71e903619ca0"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\release-uat-7d3427babd214b939ffc4b99a28fbb63\\evidence\\inspect-003.json",
+    "target": ".planning\\debug\\w01-exe-foreground-evidence\\observe-20261028T103018Z-raw\\evidence-inspect-003.json",
+    "sha256": "cb17dd3a6900029fa33a767901c33df45074ff5e678e3525b9f12e2bfc0cf8ee"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\release-uat-7d3427babd214b939ffc4b99a28fbb63\\evidence\\inspect-004.json",
+    "target": ".planning\\debug\\w01-exe-foreground-evidence\\observe-20261028T103018Z-raw\\evidence-inspect-004.json",
+    "sha256": "5ebef88a652394effd98e02681153d879641d401d5955d7e59123f828faadbe8"
+  }
+]

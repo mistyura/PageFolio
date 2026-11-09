@@ -1,0 +1,75 @@
+{
+  "schema": "w12a-driver-v1",
+  "run": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-ee50093f9c054b369d4ac925d4a625af",
+  "primary": "module",
+  "secondary": "relocated",
+  "events": [
+    {
+      "step": "start",
+      "at_utc": "2026-11-09T09:31:03.566097+00:00",
+      "owner": {
+        "sid": "S-1-5-5-0-390037",
+        "authentication_luid": 399699,
+        "session_id": 1,
+        "pid": 28124,
+        "process_created": 134386902595480567,
+        "started_tick": 3120218,
+        "owner_result": "acquired",
+        "snapshot": {
+          "protocol": 1,
+          "generation": "e89a7b810fa847d9af46ee21507ba816",
+          "pid": 28124,
+          "process_created": 134386902595480567,
+          "session_id": 1,
+          "state": "ready",
+          "ready": true,
+          "release_generation": null
+        },
+        "ready_tick": 3123656,
+        "manual_deadline": {
+          "delay_ms": 120000,
+          "registered_monotonic": 3123.6684709,
+          "due_monotonic": 3243.6684709,
+          "clock": "QueryPerformanceCounter()",
+          "ready_monotonic": 3123.687311
+        },
+        "manual": true
+      },
+      "role": "entry-owner-module"
+    },
+    {
+      "step": "peer",
+      "at_utc": "2026-11-09T09:31:25.338986+00:00",
+      "result": {
+        "constructed": 0,
+        "restored": 0,
+        "status_preserved": true,
+        "result": "completed",
+        "elapsed": 94
+      }
+    },
+    {
+      "step": "foreground",
+      "at_utc": "2026-11-09T09:31:25.349174+00:00",
+      "snapshot": {
+        "at_utc": "2026-11-09T18:31:25.318377+09:00",
+        "hwnd": 1773054,
+        "pid": 28124,
+        "owner_verified": true,
+        "entry": "relocated",
+        "peer_fixture": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-ee50093f9c054b369d4ac925d4a625af\\peer-63ae2666970144498d5ffb4388d07cf4"
+      }
+    },
+    {
+      "step": "inspect",
+      "at_utc": "2026-11-09T09:31:41.237231+00:00",
+      "originals_unchanged": true
+    },
+    {
+      "step": "stop",
+      "at_utc": "2026-11-09T09:31:42.131761+00:00",
+      "originals_unchanged": true
+    }
+  ],
+  "finished_at": "2026-11-09T09:31:42.131806+00:00"
+}

@@ -1,0 +1,12 @@
+{
+  "argv": [
+    ".venv/Scripts/python.exe",
+    "tests/release_uat_support.py",
+    "audit",
+    "--phase-dir",
+    ".planning/phases/06-release-validation",
+    "--build-only"
+  ],
+  "code": 0,
+  "at": "2026-11-06T10:41:46.082Z"
+}

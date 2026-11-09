@@ -1,0 +1,112 @@
+{
+  "checked_at": "2026-11-06T20:32:33.378805+00:00",
+  "result": {
+    "started": "2026-11-06T20:19:47.507Z",
+    "finished": "2026-11-06T20:31:34.561Z",
+    "argv": [
+      "C:\\Users\\shdwf\\work\\project\\PageFolio\\.venv\\Scripts\\python.exe",
+      "-m",
+      "pytest",
+      "-q",
+      "-rA",
+      "-p",
+      "no:cacheprovider",
+      "--basetemp=C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf04-04-reverify-20261107-g4",
+      "--junitxml=C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\phases\\04-startup-control\\04-reverify-20261107-g4\\junit.xml"
+    ],
+    "code": 0,
+    "signal": null,
+    "error": null,
+    "inputCount": 174,
+    "missing": [],
+    "changed": []
+  },
+  "totals": {
+    "tests": 2481.0,
+    "errors": 0.0,
+    "failures": 0.0,
+    "skipped": 0.0,
+    "time": 705.249
+  },
+  "warnings": 2,
+  "input_count": 174,
+  "current_drift": [],
+  "extra_inputs": {
+    ".planning/phases/06-release-validation/06-05-PLAN.md": "7ffe503ea6579d07c00427af43531d41143282f9f4b5330e81b0c7a655e5f8ef",
+    ".planning/phases/06-release-validation/06-05-record-w05c-exe.cjs": "c5f92eafba405778d57e6936fcd4ae4f22dc52e5f877306633eabf2da4a74388",
+    ".planning/phases/06-release-validation/06-05-record-w12a.cjs": "a60c25909fb292b1114e1db3ff7e709589cc9b969c1e5177cb1143521e21ed4a",
+    ".planning/phases/06-release-validation/06-05-record-w12b.cjs": "d8b7378feaac6209384fbca899d5c99c4b85a384ef1e3d17c77384179fcd506b",
+    ".planning/phases/06-release-validation/06-05-record-w12c.cjs": "f163ac3da4747e2cbbf430ed16eb77b0315da9d3d5e1def65e8fcd2f0c9c3c5a",
+    ".planning/phases/06-release-validation/06-05-w12a-driver.py": "ed2a199a7516d1374b0fd97ad076602b7183f0f2c2d6f31e6829c697007ba554",
+    ".planning/phases/06-release-validation/06-05-w12b-driver.py": "d16dbba5312161d5e9023ed230df9f08d503301406c69d9127bf7d488b3f38b5",
+    ".planning/phases/06-release-validation/06-05-w12c-driver.py": "ecd37807740c1197eb2706ba5eda098293b1e90a4b68307106b4c48fb9df1765",
+    ".planning/phases/06-release-validation/06-W12A-COLLECTION.md": "3267d921843c6c4549b9360f354330348d3b4c59a93cb8e6f1eefa2314b60b67",
+    ".planning/phases/06-release-validation/06-W12B-COLLECTION.md": "585ba6a37f7ed76ba527c6e5391c47e7ca55611d7208f4f6351ebe7a6cf03243",
+    ".planning/phases/06-release-validation/06-W12B-NEW-TRACER-20261107.json": "3dfbcc318dea89221de29674b7ab64e9b9c5a4ed28f7a44ca03bad90ad4132c2",
+    ".planning/phases/06-release-validation/06-W12C-COLLECTION.md": "9c5035fe2ac711b608c04dbb03f63eb11f99cea5a2b8e434dcd96396ee66aeff"
+  },
+  "extra_drift": [],
+  "changes_since_constructor_baseline": [
+    ".planning/phases/06-release-validation/06-MANUAL-EVIDENCE.json",
+    ".planning/phases/06-release-validation/06-UAT.md",
+    "tests/release_uat_support.py",
+    "tests/test_release_uat_support.py",
+    "tests/test_startup_windows.py",
+    "tests/test_w12a_evidence.py",
+    "tests/test_w12b_evidence.py",
+    "tests/test_w12c_evidence.py"
+  ],
+  "checks": [
+    {
+      "argv": [
+        "C:\\Users\\shdwf\\work\\project\\PageFolio\\.venv\\Scripts\\ruff.exe",
+        "check",
+        ".",
+        "--no-cache"
+      ],
+      "exit": 0,
+      "stdout": "All checks passed!\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "C:\\Users\\shdwf\\work\\project\\PageFolio\\.venv\\Scripts\\ruff.exe",
+        "format",
+        "--check",
+        "--no-cache",
+        "<155 files>"
+      ],
+      "exit": 0,
+      "stdout": "155 files already formatted\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "C:\\Users\\shdwf\\work\\project\\PageFolio\\.venv\\Scripts\\python.exe",
+        "-c",
+        "import ast; ast.parse(open('pagefolio.py', encoding='utf-8').read())"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  ],
+  "raw_hashes": {
+    ".planning/phases/04-startup-control/04-reverify-20261107-g4/result.json": "46af56d98649f87c86e1921683813d8cc098c9e9f2e5ae5064a87963c4837a11",
+    ".planning/phases/04-startup-control/04-reverify-20261107-g4/junit.xml": "3a94b3410d0309ea9ebb02c28e1539f01ddbb8d00eacdd0118ff81ff52f43788",
+    ".planning/phases/04-startup-control/04-reverify-20261107-g4/inputs-before.json": "45d5b1fb5b0e8050d0e20b41fdc81a7a1c6a2252706081541dd61112fa96f24c",
+    ".planning/phases/04-startup-control/04-reverify-20261107-g4/inputs-after.json": "45d5b1fb5b0e8050d0e20b41fdc81a7a1c6a2252706081541dd61112fa96f24c",
+    ".planning/phases/04-startup-control/04-reverify-20261107-g4/checks.json": "aba816eb7f09fd2fb272d8df43a2210b629d63d5c7bfefa80e0fa8d9ef2bdbb8",
+    ".planning/phases/04-startup-control/04-reverify-20261107-g4/ruff-discovery.json": "93a1d81101268dc97f4a361b987cf0e4a2138659cc544879b9e3acbb53d6ba08",
+    ".planning/phases/04-startup-control/04-reverify-20261107-g4/stdout.txt": "396bf872a946b6ba622323ccd60afb9677bc023f7daa1e25bcf5cb8bf0f07590",
+    ".planning/phases/04-startup-control/04-reverify-20261107-g4/stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    ".planning/phases/04-startup-control/04-reverify-20261107-g4/environment.txt": "c2edc377a53c20dd3aedbb73517b88048ff15a27ef3034b5da216c7e989b7384"
+  },
+  "reviews": [
+    "06-W12A-REVIEW.md",
+    "06-W12B-REVIEW.md",
+    "06-W12C-REVIEW.md"
+  ],
+  "manual_uat": "not-run",
+  "release_allowed": false
+}

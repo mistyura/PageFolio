@@ -1,0 +1,145 @@
+{
+  "label": "after-start",
+  "at": "2026-10-28T01:32:24.481499+00:00",
+  "monotonic": 8799.5906625,
+  "processes": [
+    {
+      "role": "primary",
+      "pid": 30908,
+      "created": 134376247364325717,
+      "identity": "same",
+      "alive": true,
+      "session_id": 1,
+      "elevated": false,
+      "windows": [
+        {
+          "hwnd": 4132972,
+          "visible": true,
+          "title": "PageFolio",
+          "class": "TkTopLevel",
+          "rect": [
+            52,
+            52,
+            1268,
+            891
+          ]
+        },
+        {
+          "hwnd": 4329414,
+          "visible": false,
+          "title": "EmbeddedMenuWindow",
+          "class": "EmbeddedMenuWindowClass",
+          "rect": [
+            0,
+            0,
+            10,
+            10
+          ]
+        },
+        {
+          "hwnd": 5049952,
+          "visible": false,
+          "title": "MenuWindow",
+          "class": "MenuWindowClass",
+          "rect": [
+            0,
+            0,
+            10,
+            10
+          ]
+        },
+        {
+          "hwnd": 855426,
+          "visible": false,
+          "title": "",
+          "class": "Wtk_TaskbarHandler",
+          "rect": [
+            0,
+            0,
+            1332,
+            787
+          ]
+        },
+        {
+          "hwnd": 2821926,
+          "visible": false,
+          "title": "TtkMonitorWindow",
+          "class": "TtkMonitorClass",
+          "rect": [
+            26,
+            26,
+            1306,
+            761
+          ]
+        },
+        {
+          "hwnd": 724376,
+          "visible": false,
+          "title": "Default IME",
+          "class": "IME",
+          "rect": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "hwnd": 5967062,
+          "visible": false,
+          "title": "MSCTFIME UI",
+          "class": "MSCTFIME UI",
+          "rect": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      ]
+    }
+  ],
+  "foreground": {
+    "hwnd": 396656,
+    "pid": 18044,
+    "title": "⠇ Execute phase 06 | PageFolio",
+    "owned_by": null
+  },
+  "owner_probe": [
+    {
+      "kind": "mutex",
+      "name": "Local\\PageFolio.Startup.Owner",
+      "state": "open"
+    },
+    {
+      "kind": "mapping",
+      "name": "Local\\PageFolio.Startup.State",
+      "state": "open"
+    }
+  ],
+  "observer": {
+    "python": "3.15.2 (tags/v3.15.2:5e58eaa, Oct 25 2026, 17:27:03) [MSC v.1951 64 bit (AMD64)]",
+    "tk": "9.0"
+  },
+  "exe_embedded": {
+    "python": "3.15.2 (tags/v3.15.2:5e58eaa, Oct 25 2026, 17:27:03) [MSC v.1951 64 bit (AMD64)]",
+    "dependencies": {
+      "PyInstaller": "6.22.3",
+      "pyinstaller-hooks-contrib": "2026.9",
+      "PyMuPDF": "1.28.2",
+      "Pillow": "13.0.0",
+      "tkinterdnd2": "0.6.4"
+    }
+  },
+  "copy": {
+    "ok": true,
+    "distribution_changed": [],
+    "missing_dirs": [],
+    "extra_dirs": [],
+    "undeclared": [],
+    "overlay_changed": [],
+    "locked_unverified": [],
+    "tree_sha256": "342db2673faf33f2283f546a5e6846813db47ce884da09fda5c3915d554bf783",
+    "exe_sha256": "9b3ebbce390c3b9f1752a97820a5ef81a0c39b7e148b93717b86bb47f9f5f73b"
+  }
+}

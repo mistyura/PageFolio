@@ -41,7 +41,7 @@ python pagefolio.py
 | `pyinstaller` | `6.21.0` | 実行依存（配布ビルド用。開発環境にも同梱） |
 | `pytest` | `9.1.1` | 開発依存（テスト） |
 | `pytest-cov` | `7.1.0` | 開発依存（カバレッジ） |
-| `ruff` | `0.15.20` | 開発依存（リント・フォーマット） |
+| `ruff` | `0.17.1` | 開発依存（リント・フォーマット） |
 
 ### 設定ファイルについて
 
@@ -58,8 +58,9 @@ python pagefolio.py
 | `pytest` | テストスイートを実行 |
 | `pytest --cov=pagefolio` | カバレッジ付きでテストを実行 |
 | `ruff check .` | リントチェック |
+| `ruff format . --check` | 書き込まずに全体の整形状態を確認 |
 | `ruff format .` | コードフォーマット |
-| `ruff check . && ruff format .` | リント + フォーマットを一括実行 |
+| `ruff check . && ruff format . --check` | リント + 整形状態を一括確認 |
 | `.venv/Scripts/python.exe tools/build_release.py --output-root <出力先>` | Windows 向け配布フォルダーをビルド（onedir・サンプル同梱・照合。詳細は下記「配布ビルド」） |
 
 ### 配布ビルド（専用CLI）
@@ -114,7 +115,30 @@ preflight が、削除・置換・ビルド開始より前に停止します。`
 
 ### リント・フォーマットツール
 
-**Ruff** を使用します（バージョン `0.15.20`、設定は `pyproject.toml`）。
+**Ruff** を使用します（バージョン `0.17.1`、ルールの正本は `pyproject.toml`）。
+ルートの `.ruff.toml` が正本を継承し、Markdownをフォーマット対象から除外します。
+Ruff 0.17以降はMarkdown内のPythonコードも整形するため、文書・過去の検証証拠を保全する設定です。
+`.gitignore` では過去のpytest生成物3フォルダー（`pf_0502_atomic_red/`・
+`pf_0502_flow_green/`・`pf_0502_flow_red/`）だけをルート直下で除外します。
+これらへの読取拒否でRuff 0.17.1の全体formatが内部panicになることを確認しています。
+通常権限側で読取不能だった過去試験のbasetemp/キャッシュ5個も、実パスを特定して
+`.gitignore` に個別追加しています（通知監査のunit-v2/v3とキャッシュ、Phase 4のDoD用一時領域）。
+製品・テスト・tools・pluginsや`.planning`内のPythonを一括除外する設定ではありません。
+
+全体確認は先に `ruff check .` と `ruff format . --check` を実行してください。
+`format --check` の終了コード1は、通常の書式差分または読取エラーを示します。
+表示内容を確認し、内部panicやアクセス拒否を成功扱いにしないでください。
+過去診断 `.planning/debug/preview-focus-not-restored-evidence/diag_btn_press.py` の
+既存書式差1件は、利用者の修正指示に従い整形前原本を保存し、ASTの一致を確認して解消しました。
+原本と検証結果は `.planning/debug/quality-gate-unblock-20261028/` に保存しています。
+今回検証のbasetempとpytestキャッシュだけも `.gitignore` で除外し、証拠ログや原本は保持します。
+通常権限のpytestが作った一時フォルダーのアクセス権は、その後の走査で読取エラーになることが
+あります。今回生成したbasetempとキャッシュ5個は、削除せずリポジトリ外の専用Tempへ保全移動
+しました。保管先は `preserved-temp-locations.json`、移動前に行った親アクセス権継承の復元記録は
+`temp-acl-repair.json` に保存しています。以後のpytestもリポジトリ外の新規basetempを使用し、
+全体Ruff確認へ試験用一時領域を混ぜないでください。
+全体formatゲートは137ファイルで成功しています。通常の修正でも、先に差分を確認し、
+対象Pythonだけを整形してから全体の `--check` で確認してください。
 
 ```toml
 # pyproject.toml より
@@ -146,7 +170,7 @@ fixable = ["ALL"]
 py ファイルを編集したら必ず以下を確認してください。
 
 ```bash
-ruff check . && ruff format .
+ruff check . && ruff format . --check
 pytest
 ```
 
@@ -183,7 +207,7 @@ build: v1.9.0 の PyInstaller ビルドを反映
 loto / numbers は CI（GitHub Actions）の green をマージ条件にしていますが、**PageFolio には CI ワークフローが存在しない**ため、その項目はローカルのリリースゲートに読み替えて運用します。
 
 1. `main` から機能ブランチを作成する（例: `feature/v1.10.0`）
-2. 変更を実装し、**ローカルで `ruff check . && ruff format .` と `pytest` を通す**
+2. 変更を実装し、**ローカルで `ruff check . && ruff format . --check` と `pytest` を通す**
 3. コミットメッセージは**日本語**で、Conventional Commits 形式を用いる
 4. `main` を対象に PR を作成する。PR タイトル・説明文も**日本語**で記述する
 5. `pytest` の結果を PR にコメントまたはログで共有する（CI がないため、ローカル実行結果がレビューの根拠になる）
@@ -191,7 +215,7 @@ loto / numbers は CI（GitHub Actions）の green をマージ条件にして�
 
 ### PR 提出前チェックリスト
 
-- [ ] `ruff check . && ruff format .` でリント・フォーマットが通ること
+- [ ] `ruff check . && ruff format . --check` でリント・フォーマットが通ること
 - [ ] `python -c "import ast; ast.parse(open('pagefolio.py', encoding='utf-8').read())"` で構文確認
 - [ ] `pytest` でテストがすべて通ること（合格条件の詳細は [../CLAUDE.md](../CLAUDE.md) の「リリースゲート」節を参照）
 - [ ] 新機能・バグ修正に対応するテストを追加または更新したこと

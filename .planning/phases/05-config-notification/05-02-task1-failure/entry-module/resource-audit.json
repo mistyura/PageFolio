@@ -1,0 +1,1 @@
+{"sid": "S-1-5-5-0-207308", "authentication_luid": 212341, "session_id": 1, "pid": 32416, "process_created": 134372293814543629, "started_tick": 1716953, "owner_result": "acquired", "guard_blocked": "owner_missing", "notice_reason": "check_failed"}

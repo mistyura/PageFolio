@@ -1,0 +1,195 @@
+{
+  "status": "blocked",
+  "commands": [
+    {
+      "command": ".venv/Scripts/python.exe -m pytest -q tests/test_release_build.py::TestReleaseTracer --basetemp=\"$env:LOCALAPPDATA\\Temp\\pf06_01_1_$([guid]::NewGuid().ToString('N'))\"",
+      "statement": "fake runnerのargv/境界assert失敗、拒否入力でbuilder起動、元bytes変化、またはpytest非zero。pytestが実PyInstallerを起動しても失敗。",
+      "status": "ok",
+      "severity": "none",
+      "plan": "06-01-PLAN.md",
+      "task": "06-01-01: 単一CLIで正本から実onedir生成・照合・公開まで通す"
+    },
+    {
+      "command": ".venv/Scripts/python.exe tools/build_release.py --output-root \"$env:LOCALAPPDATA\\Temp\\pf06_tracer_$([guid]::NewGuid().ToString('N'))\"",
+      "statement": "局所assert失敗、CLI非zero、実PyInstaller未実行、EXE/同梱/レポート欠落、SHA不一致、予期しない起動・元変更のいずれか。実buildは60秒を超え得る長い統合検証として時間を記録する。",
+      "status": "ok",
+      "severity": "none",
+      "plan": "06-01-PLAN.md",
+      "task": "06-01-01: 単一CLIで正本から実onedir生成・照合・公開まで通す"
+    },
+    {
+      "command": ".venv/Scripts/python.exe -m pytest -q tests/test_release_build.py --basetemp=\"$env:LOCALAPPDATA\\Temp\\pf06_01_2_$([guid]::NewGuid().ToString('N'))\"",
+      "statement": "保護条件でbuilderが呼ばれる、元/旧出力が失われる、失敗物が消える、公開/レポート失敗が成功になる、同時出力が混在する、または試験nonzero。",
+      "status": "ok",
+      "severity": "none",
+      "plan": "06-01-PLAN.md",
+      "task": "06-01-02: 再ビルド・競合・公開失敗でも利用者ファイルと旧成果物を保持する"
+    },
+    {
+      "command": ".venv/Scripts/python.exe -m pytest -q tests/test_release_contract.py::TestVersionAndDocs tests/test_release_contract.py::TestSampleSources --basetemp=\"$env:LOCALAPPDATA\\Temp\\pf06_02_1_$([guid]::NewGuid().ToString('N'))\"",
+      "statement": "版不一致・原本hash不一致・保証範囲欠落・未実施の合格表記、またはpytest非zero。",
+      "status": "ok",
+      "severity": "none",
+      "plan": "06-02-PLAN.md",
+      "task": "06-02-01: APP_VERSIONと利用者向け表示をv1.10.0へ同期する"
+    },
+    {
+      "command": ".venv/Scripts/python.exe -m pytest -q tests/test_release_contract.py --basetemp=\"$env:LOCALAPPDATA\\Temp\\pf06_02_2_$([guid]::NewGuid().ToString('N'))\"",
+      "statement": "配布物から辿れない相対参照、上書き更新手順、二重の版定数、旧dist削除/巨大stage指示、または契約試験非zero。",
+      "status": "ok",
+      "severity": "none",
+      "plan": "06-02-PLAN.md",
+      "task": "06-02-02: 利用ガイドと保守手順を共通CLI・非破壊更新へ統一する"
+    },
+    {
+      "command": ".venv/Scripts/python.exe -m pytest -q tests/test_release_uat_support.py::TestIsolation tests/test_release_uat_support.py::TestOwnership tests/test_release_uat_support.py::TestEvidenceAudit --basetemp=\"$env:LOCALAPPDATA\\Temp\\pf06_03_1_$([guid]::NewGuid().ToString('N'))\"",
+      "statement": "隔離外変更、別ownerへ送信、無関係PID停止、hash不一致受理、not-run/fault証拠をproduction実機passに昇格、親4ゲートpendingだけの引渡しを拒否する循環依存、pendingの最終合格、またはpytest非zero。",
+      "status": "ok",
+      "severity": "none",
+      "plan": "06-03-PLAN.md",
+      "task": "06-03-01: 未改変配布EXEの隔離copy・所有PID・証拠auditを実装する"
+    },
+    {
+      "command": ".venv/Scripts/python.exe -m pytest -q tests/test_release_uat_support.py::TestFakeOcr tests/test_release_uat_support.py::TestSettingsFaultPreparation --basetemp=\"$env:LOCALAPPDATA\\Temp\\pf06_03_2_$([guid]::NewGuid().ToString('N'))\"",
+      "statement": "非loopback listen/転送、合成外入力収集、論理page/attempt同一性不明・通常1pageケースの予期しない再送/未完了、実配布と試験用binaryの混同、障害未成立を受入へ投入、またはpytest非zero。",
+      "status": "ok",
+      "severity": "none",
+      "plan": "06-03-PLAN.md",
+      "task": "06-03-02: 既存Ollama設定経由のfake OCRとEXE設定障害の準備経路を固定する"
+    },
+    {
+      "command": ".venv/Scripts/python.exe -m pytest -q tests/test_release_build.py tests/test_release_contract.py --basetemp=\"$env:LOCALAPPDATA\\Temp\\pf06_04_1_$([guid]::NewGuid().ToString('N'))\"",
+      "statement": "CLI境界/文書契約試験がnonzero。pytestの成功を実build2回の証拠として扱う、またはpytestが実buildを起動しても失敗。",
+      "status": "ok",
+      "severity": "none",
+      "plan": "06-04-PLAN.md",
+      "task": "06-04-01: v1.10.0を同じCLIで初回・再ビルドし同梱を機械照合する"
+    },
+    {
+      "command": ".venv/Scripts/python.exe tests/release_uat_support.py audit --phase-dir .planning/phases/06-release-validation --build-only",
+      "statement": "新規/再buildの実runが片方欠ける、PyInstaller非zero、配布物/原本hash欠落・不一致、保護名混入、または共通ゲート不成立。2回のCLI結果を別runで確認する。audit中のbuild起動・配布tree/hash/mtime変更も失敗。",
+      "status": "ok",
+      "severity": "none",
+      "plan": "06-04-PLAN.md",
+      "task": "06-04-01: v1.10.0を同じCLIで初回・再ビルドし同梱を機械照合する"
+    },
+    {
+      "command": ".venv/Scripts/python.exe -m pytest -q tests/test_release_uat_support.py tests/test_release_build.py::TestPreflight --basetemp=\"$env:LOCALAPPDATA\\Temp\\pf06_04_2_$([guid]::NewGuid().ToString('N'))\"",
+      "statement": "隔離/所有権/監査/HTTP/設定障害準備のfixture assert失敗、拒否条件でfake builder起動、fixture外変更、またはpytest非zero。実EXE接続の合格は次のpreparation-onlyで別に判定する。",
+      "status": "ok",
+      "severity": "none",
+      "plan": "06-04-PLAN.md",
+      "task": "06-04-02: 実ファイルの保護と未改変EXEのfake OCR接続を実証する"
+    },
+    {
+      "command": ".venv/Scripts/python.exe tests/release_uat_support.py audit --phase-dir .planning/phases/06-release-validation --preparation-only",
+      "statement": "保護/接続/native modal/障害成立の必須行にnot-run/fail/回答不足/対象hash不一致が一つでもある。起動/更新の無断変更、build開始後の保護検知、実EXEの同page-attempt完了不足、lock成立の外部証拠不足、単体試験passによる代用も失敗。",
+      "status": "ok",
+      "severity": "none",
+      "plan": "06-04-PLAN.md",
+      "task": "06-04-02: 実ファイルの保護と未改変EXEのfake OCR接続を実証する"
+    },
+    {
+      "command": ".venv/Scripts/python.exe -m pytest -q tests/test_release_contract.py::TestCaseCoverage tests/test_release_uat_support.py::TestEvidenceAudit --basetemp=\"$env:LOCALAPPDATA\\Temp\\pf06_05_1_$([guid]::NewGuid().ToString('N'))\"",
+      "statement": "W枝番/WR-01/入口条件漏れ、空欄補完pass、test EXEやunitを人手証拠に転用、または契約試験非zero。",
+      "status": "ok",
+      "severity": "none",
+      "plan": "06-05-PLAN.md",
+      "task": "06-05-01: 全ケースを入口別カードと証拠台帳へ割り当てる"
+    },
+    {
+      "command": ".venv/Scripts/python.exe tests/release_uat_support.py audit --phase-dir .planning/phases/06-release-validation --require-pass W01,W02,W03,W04,W05a,W05b,W05c,W12a,W12b,W12c,X01,X02,X03,X04,X05,X06",
+      "statement": "担当IDの全入口/条件subrowの欠落・not-run/fail・人手回答/必須観測不足・hash不一致・虚偽passでnonzero。構造専用allow-pending成功はこのverify/doneを満たさない。",
+      "status": "ok",
+      "severity": "none",
+      "plan": "06-05-PLAN.md",
+      "task": "06-05-02: 状態維持・混在入口・設定通知をPythonからEXEへ確認する"
+    },
+    {
+      "command": ".venv/Scripts/python.exe tests/release_uat_support.py audit --phase-dir .planning/phases/06-release-validation --require-pass W06,W07a,W07b,W08a,W08b,W08c,W08d,W09a,W09b,W09c,W09d,W10a,W10b,W11,WR-01",
+      "statement": "自動audit不合格、担当required行の必須計測/回答不足やnot-run/fail、WR-01契約不適合、実OS拒否未観測、scope/承認不一致、W11行欠落または偽pass。コマンド内のW11は正規2行のdeferred整合を検査し、人手passを意味しない。",
+      "status": "ok",
+      "severity": "none",
+      "plan": "06-06-PLAN.md",
+      "task": "06-06-01: OS拒否・時間境界・DPI/UAC両方向の必須観測を消化する"
+    },
+    {
+      "command": ".venv/Scripts/python.exe tests/release_uat_support.py audit --phase-dir .planning/phases/06-release-validation --for-handoff",
+      "statement": "先行品質結果が未記録、必須人手not-run/fail、入力hash/版不一致、Phase4 stale、build/protection不成立、親4ゲート以外の未達、既に失敗/要修正の独立ゲート、ゲート担当/実行手段/期待報告の欠落、未解除条件を成功へ転用、または監査非zero。親4ゲートのみpendingであることは引渡し失敗理由にせず、phase_complete=false/release_allowed=falseを必須とする。",
+      "status": "ok",
+      "severity": "none",
+      "plan": "06-06-PLAN.md",
+      "task": "06-06-02: 品質・Phase4鮮度・全受入を照合し親の独立ゲートへ引き渡す"
+    },
+    {
+      "command": ".venv/Scripts/python.exe -m pytest -q tests/test_release_uat_support.py::TestReleaseScope tests/test_release_uat_support.py::TestEvidenceAudit --basetemp=\"$env:LOCALAPPDATA\\Temp\\pf06_scope_1_$([guid]::NewGuid().ToString('N'))\"",
+      "statement": "新設TestReleaseScope未作成、CLIの正負結果/件数/読取専用性が不一致、未承認W11のnot-runを受理、旧厳密監査の回帰、またはpytest非zero。",
+      "status": "ok",
+      "severity": "none",
+      "plan": "06-07-PLAN.md",
+      "task": "06-07-01: 承認記録からCLI監査まで固定scopeを通す"
+    },
+    {
+      "command": ".venv/Scripts/python.exe -m pytest -q tests/test_release_uat_support.py::TestReleaseScope tests/test_release_uat_support.py::TestEvidenceAudit tests/test_release_contract.py::TestCaseCoverage --basetemp=\"$env:LOCALAPPDATA\\Temp\\pf06_scope_2_$([guid]::NewGuid().ToString('N'))\"",
+      "statement": null,
+      "status": "missing",
+      "severity": "blocker",
+      "plan": "06-07-PLAN.md",
+      "task": "06-07-02: 全modeの負例と110行保持を確定し実台帳へ適用する"
+    },
+    {
+      "command": ".venv/Scripts/python.exe tests/release_uat_support.py audit --phase-dir .planning/phases/06-release-validation --allow-pending",
+      "statement": "pytest/構造監査非zero、110行を108行へ削減、W11偽pass、非W11免除、人数と行数の混同、旧観測の新hash付替え、監査が入力を変更、または準備を人手passへ転用。",
+      "status": "ok",
+      "severity": "none",
+      "plan": "06-07-PLAN.md",
+      "task": "06-07-02: 全modeの負例と110行保持を確定し実台帳へ適用する"
+    },
+    {
+      "command": ".venv/Scripts/python.exe -m pytest -q tests/test_release_contract.py::TestReleaseScopeDocs tests/test_release_contract.py::TestVersionAndDocs tests/test_release_contract.py::TestGuideAndWorkflow tests/test_release_build.py --basetemp=\"$env:LOCALAPPDATA\\Temp\\pf06_scope_build_$([guid]::NewGuid().ToString('N'))\"",
+      "statement": null,
+      "status": "missing",
+      "severity": "blocker",
+      "plan": "06-08-PLAN.md",
+      "task": "06-08-01: 保証説明から新世代の配布物まで同じ入力で通す"
+    },
+    {
+      "command": ".venv/Scripts/python.exe tests/release_uat_support.py audit --phase-dir .planning/phases/06-release-validation --build-only",
+      "statement": "新設文書試験がない/失敗、保証説明欠落・版不整合、freeze後入力変更、現行品質失敗、実2run不足、同梱hash不一致、既存ファイル破壊、旧根拠の付替え、監査がbuild/配布変更を行う場合。",
+      "status": "ok",
+      "severity": "none",
+      "plan": "06-08-PLAN.md",
+      "task": "06-08-01: 保証説明から新世代の配布物まで同じ入力で通す"
+    },
+    {
+      "command": ".venv/Scripts/python.exe -m pytest -q tests/test_release_contract.py::TestCaseCoverage tests/test_release_uat_support.py::TestReleaseScope tests/test_release_uat_support.py::TestEvidenceAudit --basetemp=\"$env:LOCALAPPDATA\\Temp\\pf06_scope_ready_$([guid]::NewGuid().ToString('N'))\"",
+      "statement": null,
+      "status": "missing",
+      "severity": "blocker",
+      "plan": "06-08-PLAN.md",
+      "task": "06-08-02: 新世代の保護・接続を実証し未実施台帳を切り替える"
+    },
+    {
+      "command": ".venv/Scripts/python.exe tests/release_uat_support.py audit --phase-dir .planning/phases/06-release-validation --preparation-only",
+      "statement": null,
+      "status": "missing",
+      "severity": "blocker",
+      "plan": "06-08-PLAN.md",
+      "task": "06-08-02: 新世代の保護・接続を実証し未実施台帳を切り替える"
+    },
+    {
+      "command": ".venv/Scripts/python.exe tests/release_uat_support.py audit --phase-dir .planning/phases/06-release-validation --allow-pending",
+      "statement": "保護/接続/native modal/障害成立に未実施・回答不足・不一致、所有process回収不足、旧証拠破損/付替え、110card欠落、W11以外の免除、または監査非zero。準備だけで108行の本受入を合格にしても失敗。",
+      "status": "ok",
+      "severity": "none",
+      "plan": "06-08-PLAN.md",
+      "task": "06-08-02: 新世代の保護・接続を実証し未実施台帳を切り替える"
+    }
+  ],
+  "counts": {
+    "blocker": 4,
+    "warning": 0,
+    "total": 23
+  },
+  "readError": null
+}

@@ -1,0 +1,59 @@
+[
+  {
+    "case": "clean-with-ignored-generated",
+    "args": [
+      "check",
+      "."
+    ],
+    "code": 0,
+    "stdout": "All checks passed!\n",
+    "stderr": ""
+  },
+  {
+    "case": "markdown-not-formatted",
+    "args": [
+      "format",
+      ".",
+      "--check",
+      "--no-cache"
+    ],
+    "code": 0,
+    "stdout": "2 files already formatted\n",
+    "stderr": ""
+  },
+  {
+    "case": "write-mode-preserves-markdown",
+    "args": [
+      "format",
+      ".",
+      "--no-cache"
+    ],
+    "code": 0,
+    "stdout": "2 files left unchanged\n",
+    "stderr": ""
+  },
+  {
+    "case": "untracked-live-python-included",
+    "args": [
+      "format",
+      ".",
+      "--check",
+      "--no-cache",
+      "--output-format",
+      "concise"
+    ],
+    "code": 1,
+    "stdout": ".planning\\live.py:1:6: unformatted: File would be reformatted\nnested\\pf_0502_atomic_red\\live.py:1:6: unformatted: File would be reformatted\npagefolio\\new.py:1:6: unformatted: File would be reformatted\n3 files would be reformatted, 2 files already formatted\n",
+    "stderr": ""
+  },
+  {
+    "case": "inherited-lint-detects-new-source",
+    "args": [
+      "check",
+      "."
+    ],
+    "code": 1,
+    "stdout": "F821 Undefined name `undefined_name`\n --> pagefolio\\new.py:1:7\n  |\n1 | print(undefined_name)\n  |       ^^^^^^^^^^^^^^\n\nFound 1 error.\n",
+    "stderr": ""
+  }
+]

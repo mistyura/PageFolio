@@ -1,0 +1,113 @@
+{
+  "at": "2026-10-28T05:12:11.153Z",
+  "build_input_count": 65,
+  "recorded_input_count": 65,
+  "differences": [],
+  "exe_sha256": "9b3ebbce390c3b9f1752a97820a5ef81a0c39b7e148b93717b86bb47f9f5f73b",
+  "expected_exe_sha256": "9b3ebbce390c3b9f1752a97820a5ef81a0c39b7e148b93717b86bb47f9f5f73b",
+  "tree_unchanged_during_audit": true,
+  "build_audit": {
+    "exit": 0,
+    "stdout": "{\r\n  \"mode\": \"build-only\",\r\n  \"ok\": true,\r\n  \"exit_code\": 0,\r\n  \"reasons\": [],\r\n  \"phase_complete\": false,\r\n  \"release_allowed\": false\r\n}\r\n",
+    "stderr": ""
+  },
+  "native": {
+    "exit": 0,
+    "stdout": "{\"python\": \"3.15.2 (tags/v3.15.2:5e58eaa, Oct 25 2026, 17:27:03) [MSC v.1951 64 bit (AMD64)]\", \"executable\": \"C:\\\\Users\\\\shdwf\\\\work\\\\project\\\\PageFolio\\\\.venv\\\\Scripts\\\\python.exe\", \"os\": \"Windows-11-10.0.26300-SP0\", \"dependencies\": {\"PyInstaller\": \"6.22.3\", \"pyinstaller-hooks-contrib\": \"2026.9\", \"PyMuPDF\": \"1.28.2\", \"Pillow\": \"13.0.0\", \"tkinterdnd2\": \"0.6.4\", \"pytest\": \"9.1.1\", \"ruff\": \"0.17.1\"}, \"production_owner\": []}\r\n",
+    "stderr": ""
+  },
+  "environment_matches_freeze": true,
+  "build_lock_absent": true,
+  "owned_process_check": {
+    "exit": 0,
+    "stdout": "{\"runs\": 8, \"processes\": [{\"run_id\": \"387b095a12db4f4e82d299061686e5c6\", \"pid\": 23596, \"created\": 134376252169042551, \"current\": null}, {\"run_id\": \"56338ac54a164624a41e93c16e6682b1\", \"pid\": 1788, \"created\": 134376251921078065, \"current\": null}, {\"run_id\": \"58ff032e11a841c6a59a7a1c0616a60d\", \"pid\": 30076, \"created\": 134376250807932820, \"current\": null}, {\"run_id\": \"a7614753199f4b4e98b34fe2e595d25b\", \"pid\": 29156, \"created\": 134376251285966386, \"current\": null}, {\"run_id\": \"c89865557c764799a7dfd9fd8f3f1e61\", \"pid\": 29992, \"created\": 134376251416997194, \"current\": null}, {\"run_id\": \"f1ca0ebc157a420d9b5261893f5f69a9\", \"pid\": 12788, \"created\": 134376251545656091, \"current\": null}, {\"run_id\": \"fe3add65702a40c98798a0970e09f58c\", \"pid\": 22752, \"created\": 134376251674578901, \"current\": null}]}\r\n",
+    "stderr": ""
+  },
+  "quality_reuse": {
+    "passed": true,
+    "records": [
+      {
+        "argv": [
+          "C:\\Users\\shdwf\\work\\project\\PageFolio\\.venv\\Scripts\\python.exe",
+          "-m",
+          "pytest",
+          "-q",
+          "-rA",
+          "-x",
+          "-o",
+          "cache_dir=.planning/debug/quality-gate-unblock-20261028/pytest-cache",
+          "--basetemp=.planning/debug/quality-gate-unblock-20261028/full-tmp",
+          "--junitxml=.planning/debug/quality-gate-unblock-20261028/full.xml"
+        ],
+        "started": "2026-10-28T04:08:28.283Z",
+        "finished": "2026-10-28T04:16:29.941Z",
+        "code": 0
+      }
+    ],
+    "execution_changed": [],
+    "current_differences": [
+      {
+        "path": ".gitignore",
+        "recorded": "e7c465d440ec9c1ca21251f6283d1161e1dad24ca71d0f4eae9510cd440ac712",
+        "current": "d3a6282da7fa64f9ca27b8e6bf97285f402d14e5037401460be20fcd0abc68d2"
+      },
+      {
+        "path": "docs/DEVELOPMENT.md",
+        "recorded": "a226a16ba0651ea5761d51f2052f90d388390d1a8f8a5a28a2c0eeb0bdfeab4d",
+        "current": "c0d5f066d7cdf95f76687741670cb6858b1d3881d4a1e039ea5821d11893e0b4"
+      },
+      {
+        "path": "CONTRIBUTING.md",
+        "recorded": "7b5924fec8f77983acf25ac7b1de5137c98b2a9c8ab6ca8bbd0f32bb7bc9ea64",
+        "current": "1e6666a2df0b661694c51776ea39dc566ddd3f79a19f4ac40ca92ec8c22bb206"
+      },
+      {
+        "path": "開発履歴.md",
+        "recorded": "d3e124e4e9b74516ce3ca78f80f795879767663246a8e1164076572f636e04cb",
+        "current": "dbe59f06cbf655c0e3d299b6bbfd140c254f938bd391c0d5217c499bcd988400"
+      }
+    ],
+    "python_count": 137,
+    "python_differences": []
+  },
+  "previous_phase4_dependency": {
+    "phase4": {
+      "verification_status": "passed",
+      "result": "21/21",
+      "covered_digest": "v4:sha256:8d6d5e2bb6813444d2e0e96eb54098de82c73813869defd7600038bc1eac939f",
+      "verification_report": ".planning/phases/04-startup-control/04-VERIFICATION.md",
+      "verification_report_sha256": "480ffdc2da8f8aba62a2354cc30796b2094a2c9366ca180c1e443fb83fcf8fd8",
+      "status_command": "gsd-tools query verification.status .planning/phases/04-startup-control",
+      "w_human_items": "Phase6移管/not-runを維持",
+      "current_release_dependency_status": "blocked-by-new-native-regression"
+    }
+  },
+  "manual_counts": {
+    "not-run": 110
+  },
+  "missing_preparation_refs": [],
+  "old_generation_reference_check": {
+    "raw_path": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\phases\\06-release-validation\\06-04-t2-result.json",
+    "raw_sha256": "7f2590850e4b6937b9b12d83a3f33067861ade549c09b14334e77c80729ceb5a",
+    "root_exists": true,
+    "unique_run_count": 16,
+    "ids_absent_from_original_raw": []
+  },
+  "release_allowed": false,
+  "phase_complete": false,
+  "current_phase4": {
+    "digest": "v4:sha256:b6d4189f833dd62188a4105334e54ad44c663753825eea431e072f1c4030a145",
+    "report_sha256": "713d8c8002d65b28b509ed97afc6aef1ff994f00de3f7cb89a0a58afdc0eae59",
+    "status_command": {
+      "exit": 0,
+      "stdout": "{\n  \"status\": \"passed\",\n  \"next_action\": \"Verification passed — continue.\",\n  \"next_command\": \"\",\n  \"route\": \"\"\n}",
+      "stderr": ""
+    },
+    "resume_reference_matches": true
+  },
+  "preservation": {
+    "original_build_keys_unchanged": true,
+    "original_protection_keys_unchanged": true
+  },
+  "identity_ready": true
+}

@@ -1,0 +1,2724 @@
+# PageFolio - PDF Page Organizer
+# Copyright (c) 2026 mistyura
+# Released under the MIT License
+"""OCR ダイアログ — 進行表示・キャンセル・結果エクスポート"""
+
+import logging
+import threading
+import time
+import tkinter as tk
+from tkinter import filedialog, messagebox, ttk
+
+from pagefolio.constants import CUSTOM_PROMPT_FILE, LANG, C
+from pagefolio.md_render import parse_markdown
+from pagefolio.ocr import (
+    DEFAULT_OCR_CONCURRENCY,
+    MAX_OCR_CONCURRENCY,
+    MAX_OCR_MAX_TOKENS,
+    MAX_RETRIES,
+    build_provider,
+    has_embedded_text,
+    page_to_png_b64,
+    resolve_local_endpoint,
+    resolve_ocr_prompt,
+    resolve_summary_prompt,
+)
+from pagefolio.ocr_engine import OCRRunEngine
+from pagefolio.ocr_fallback import next_fallback_candidate, next_summary_candidate
+from pagefolio.ocr_pipeline import send_sentinels, try_enqueue
+from pagefolio.settings import (
+    load_custom_prompt,
+    load_prompt_file,
+    load_summary_prompt,
+)
+
+logger = logging.getLogger(__name__)
+
+# M-6: モデル別単価テーブル（$/MTok, 入力, 出力）
+# キーに完全一致しない場合は suffix ルールで判定するフォールバックへ進む
+OCR_PRICE_TABLE: "dict[str, tuple[float, float]]" = {
+    # Gemini
+    "gemini-2.5-flash": (0.30, 2.50),
+    "gemini-2.5-pro": (1.25, 10.0),
+    # Claude
+    "claude-3-haiku": (1.0, 5.0),
+    "claude-3-5-haiku": (1.0, 5.0),
+    "claude-haiku": (1.0, 5.0),
+    "claude-3-sonnet": (3.0, 15.0),
+    "claude-3-5-sonnet": (3.0, 15.0),
+    "claude-3-7-sonnet": (3.0, 15.0),
+    "claude-sonnet": (3.0, 15.0),
+    "claude-3-opus": (5.0, 25.0),
+    "claude-opus": (5.0, 25.0),
+    # OpenAI（02-CAPABILITY-MATRIX.md 導出結果。単位/通貨/出典 URL/参照日は
+    # OPENAI_PRICE_SOURCE 参照・レビュー HIGH-2/MEDIUM-16）。
+    "gpt-5-nano": (0.05, 0.40),
+    "gpt-5-mini": (0.25, 2.00),
+    "gpt-5.1": (1.25, 10.00),
+    "gpt-5.2": (1.75, 14.00),
+    "gpt-4o": (2.50, 10.00),
+}
+# フォールバック単価（不明モデル）
+_PRICE_FALLBACK = (5.0, 25.0)
+
+# OpenAI 単価の一次情報（レビュー HIGH-2）。変更時は 02-CAPABILITY-MATRIX.md と
+# dialogs/batch_ocr.py の同名定数も同時に更新する。
+OPENAI_PRICE_SOURCE: "dict[str, str]" = {
+    "url": "https://developers.openai.com/api/docs/models/all",
+    "retrieved": "2026-08-11",
+    "unit": "per 1M tokens",
+    "currency": "USD",
+}
+
+# サーキットブレーカー: リトライ上限到達がこのページ数連続したら実行を中断する
+# （サーバ側が完全に落ちている時に全ページ × リトライ待機を消化しないための保険）
+CB_CONSECUTIVE_FAILURES = 3
+
+# フォールバック（サマリ経路）: supports_text_prompt=True のプロバイダ名集合
+# （D-12・02-RESEARCH.md Open Question 2・tesseract は非対応のため除外）
+# レビュー MEDIUM-9: この集合はプロバイダ非機密メタデータ（catalog の8フィールド・
+# D-01）ではなく Provider クラスの supports_text_prompt クラス属性の射影であり、
+# 粒度が異なるため catalog には含めない。追記漏れは
+# tests/test_provider_ui.py::TestTextCapableProvidersParity が機械的に検出する。
+_TEXT_CAPABLE_PROVIDERS = frozenset(
+    {"claude", "gemini", "runpod", "lmstudio", "ollama", "openai"}
+)
+
+# サマリ生成専用のタイムアウト下限（秒）。全ページ連結テキストの要約は
+# OCR 1 ページより大幅に長いため、provider.timeout がこれ未満なら実行中のみ
+# 引き上げる（_on_summary で退避 → _summary_ui_reset で復元）
+SUMMARY_TIMEOUT_MIN = 300
+
+# サマリ入力がこの文字数を超えたら追加確認を出す（コンテキスト長超過の事前警告。
+# トークン厳密概算はモデル依存で不可能なため文字数閾値の警告に留める）
+SUMMARY_TOO_LONG_CHARS = 200_000
+
+
+def _lookup_price(model: str) -> tuple[float, float]:
+    """OCR_PRICE_TABLE からモデル単価を取得する（部分一致フォールバック付き）。"""
+    # 完全一致優先
+    for key, prices in OCR_PRICE_TABLE.items():
+        if key in model:
+            return prices
+    return _PRICE_FALLBACK
+
+
+def _set_var_if_changed(var, value):
+    """Tk 変数の値が異なるときだけ書き換える（不要な write トレースを避ける）。
+
+    ウィジェット破棄後などの TclError は表示更新の失敗に過ぎないため握りつぶす
+    （呼び出し元の接続先決定は var ではなく解決済みの値で行われる）。
+    """
+    try:
+        if var.get() != value:
+            var.set(value)
+    except tk.TclError as e:
+        logger.debug("表示変数の更新をスキップ: %s", type(e).__name__)
+
+
+def _resolved_host_text(name, settings, lang_dict):
+    """送信先ホストを確認ダイアログ本文へ埋め込める文字列として解決する
+    （モジュールレベル関数・レビュー MEDIUM-8）。
+
+    解決順: catalog.host_for が真値ならそれを返す。runpod でホストが空なら
+    ユーザー設定 URL 未設定の注記を返す。それ以外で空（catalog 未登録の
+    クラウド継承プラグイン等）なら、プロバイダ表示名だけを出すのではなく
+    「送信先を特定できない」ことを明示する ocr_host_unknown を返す
+    （T-02-17）。self に依存しないモジュール関数のため、Tk 非依存のスタブ
+    テスト（`OCRDialog._confirm_cost(stub)` のような未バインド呼び出し）
+    からも self への追加バインド無しで到達できる。
+    """
+    from pagefolio.ocr_providers import catalog
+
+    host = catalog.host_for(name, settings)
+    if host:
+        return host
+    if name == "runpod":
+        return lang_dict["llm_runpod_host_unset"]
+    lookup_name = "lmstudio" if name == "" else name
+    provider_key = catalog.display_name_key_for(lookup_name)
+    provider_label = lang_dict.get(provider_key, name) if provider_key else name
+    return lang_dict["ocr_host_unknown"].format(provider=provider_label)
+
+
+class OCRDialog(tk.Toplevel):
+    """OCR 実行中の進行表示と結果のスクロール表示を行うダイアログ"""
+
+    def __init__(
+        self,
+        parent,
+        app,
+        doc,
+        page_indices,
+        url,
+        model,
+        preset,
+        scale,
+        timeout,
+        max_tokens=-1,
+        temperature=0.1,
+        concurrency=DEFAULT_OCR_CONCURRENCY,
+        provider=None,
+        lang="ja",
+        font_func=None,
+        custom_prompt="",
+    ):
+        super().__init__(parent)
+        self._L = LANG[lang]
+        self.title(self._L["ocr_dialog_title"])
+        self.configure(bg=C["BG_DARK"])
+        self.grab_set()
+
+        self.app = app
+        self.doc = doc
+        self.page_indices = list(page_indices)
+        self._font = font_func or self._default_font
+
+        self.url_var = tk.StringVar(value=url)
+        self.model_var = tk.StringVar(value=model)
+        self.preset_var = tk.StringVar(value=preset)
+        self.scale_var = tk.DoubleVar(value=float(scale))
+        self.timeout_var = tk.IntVar(value=int(timeout))
+        self.max_tokens_var = tk.IntVar(value=int(max_tokens))
+        self.temperature_var = tk.DoubleVar(value=float(temperature))
+        self.concurrency = max(1, min(MAX_OCR_CONCURRENCY, int(concurrency)))
+        self.provider = provider
+        self.custom_prompt = custom_prompt
+        # 埋め込みテキスト無視オプション（既定 OFF・クラウド課金に直結するため非永続）
+        self.force_ocr_var = tk.BooleanVar(value=False)
+        self._force_ocr = False
+        # OCRProvider インスタンス（D-03: メインスレッド側でのみ使用）
+        self.results = {}  # page_idx -> text
+        self.errors = {}  # page_idx -> message
+        # 埋め込みテキスト検出によりスキップされたページ集合
+        self._skipped_pages = set()
+        # max_tokens 超過で応答が途切れたページ集合（D-05・部分テキストは保持）
+        self._truncated_pages = set()
+        # 今回の実行で処理するページリスト（再開時は未処理ページのみ）
+        self._run_pages = list(self.page_indices)
+        self._cancel_flag = threading.Event()
+        self._done = False
+        self._started = False
+        self._ocr_page_indices = []  # スキップ除外後の Vision OCR 対象ページリスト
+        # D-01〜D-16（03-CONTEXT.md）: producer-consumer の consumer 駆動部
+        # （キュー + ワーカー + PipelineState + 統合進捗計算）は
+        # pagefolio.ocr_engine.OCRRunEngine へ一本化した（D-11: 実行ごとに
+        # 新規生成・_start_worker_thread で構築）。_pstate は Engine 抽出後も
+        # _clear_text/_on_run の「前回実行の残留状態を破棄する」という既存の
+        # 観測可能な後方互換のためだけに保持する（実際の共有状態は
+        # self._engine が所有・後方互換テスト維持のための vestigial 属性）。
+        self._pstate = None
+        self._engine = None  # OCRRunEngine インスタンス（_start_worker_thread で生成）
+        # L-6a: レンダー失敗ページ集合（_skipped_pages と同型で進捗計上に使う）
+        self._render_failed_pages = set()
+        # M-2: 世代カウンタ（ダイアログ破棄後の旧ワーカー after コールバックを無効化）
+        # viewer.py の _preview_gen と同じパターン（世代一致 + winfo_exists）
+        self._run_gen = 0
+        # 全ページ統合サマリ（OCR 完了後に「サマリ作成」で手動トリガー）
+        self.summary_result = None  # str | None（成功時のサマリ本文・raw）
+        self._summary_truncated = False  # サマリ応答が max_tokens で途切れたか
+        self._summary_running = False
+        # OCR 用 _cancel_flag とは分離する。OCR キャンセル直後は旧ワーカーが
+        # queue ループに残留している可能性があり、サマリ開始時に clear() すると
+        # 旧ワーカーがキャンセル確認で抜けられなくなるため共有しない。
+        self._summary_cancel_flag = threading.Event()
+        # サマリ実行中のみ provider.timeout を引き上げるための退避値
+        self._summary_prev_timeout = None
+        # サマリ進捗表示（indeterminate パルス + 経過秒数ティッカー）
+        self._summary_tick_id = None  # after id（ティッカー再スケジュール用）
+        self._summary_base_msg = ""  # ティッカーが合成するベース文言
+        self._summary_started_at = 0.0  # time.monotonic() 開始時刻
+
+        # フォールバック実行時オーケストレーション用状態（V180-FALL-02/03・02-04）。
+        # ダイアログローカル設定スナップショット（Pitfall 4: self.app.settings は
+        # 一切書き換えない）。通常実行時は _on_run/_on_summary 冒頭で確定する。
+        self._active_ocr_settings = None
+        self._fallback_tried = set()
+        self._fallback_resume = False
+
+        self._build()
+        self._center(parent)
+        self.protocol("WM_DELETE_WINDOW", self._on_close)
+
+    # ── ユーティリティ ──
+    @staticmethod
+    def _default_font(delta=0, weight=None):
+        if weight:
+            return ("Segoe UI", max(7, 10 + delta), weight)
+        return ("Segoe UI", max(7, 10 + delta))
+
+    def _font_size(self):
+        try:
+            return int(self._font(0)[1])
+        except Exception:
+            return 12
+
+    def _center(self, parent):
+        self.update_idletasks()
+        fs = self._font_size()
+        # 詳細設定行 + 結果領域 + 右ペイン（縦積みボタン群）が収まる横幅
+        w = max(1150, int(fs * 90))
+        # 設定行(プロンプト/サーバ/モデル/詳細) + 進行表示 + 結果領域/右ペイン
+        h = max(680, int(fs * 56))
+        # D-10: llm_config/dialog.py._compute_dialog_height と同型のクランプ。
+        # 低解像度・大フォント環境で下端が画面外に出ないよう画面高でクランプする。
+        try:
+            # WR-01: フロア値はこのダイアログ自身の minsize(960, 620) の高さと
+            # 一致させる。320 のままだと minsize が geometry() の縮小結果を
+            # 上書きしてクランプが無効化されるため 620 に引き上げる。
+            max_h = max(620, self.winfo_screenheight() - 100)
+            h = min(h, max_h)
+        except tk.TclError:
+            pass
+        px = parent.winfo_rootx() + parent.winfo_width() // 2
+        py = parent.winfo_rooty() + parent.winfo_height() // 2
+        self.geometry(f"{w}x{h}+{px - w // 2}+{py - h // 2}")
+        self.minsize(960, 620)
+
+    # ── UI 構築 ──
+    def _build(self):
+        tk.Label(
+            self,
+            text=self._L["ocr_dialog_heading"],
+            bg=C["BG_DARK"],
+            fg=C["ACCENT"],
+            font=self._font(2, "bold"),
+        ).pack(pady=(12, 6))
+
+        # 実行プロバイダ表示（どのプロバイダで OCR するかを明示）
+        # 左寄せ: プロバイダ名 + モデル名 / 右寄せ: LLM 設定ボタン
+        prov_row = tk.Frame(self, bg=C["BG_DARK"])
+        prov_row.pack(fill="x", padx=16, pady=(0, 2))
+        tk.Label(
+            prov_row,
+            text=self._L["ocr_provider_label"],
+            bg=C["BG_DARK"],
+            fg=C["TEXT_MAIN"],
+            font=self._font(-1),
+        ).pack(side="left")
+        self._provider_value_label = tk.Label(
+            prov_row,
+            text=self._provider_display_name(),
+            bg=C["BG_DARK"],
+            fg=C["ACCENT"],
+            font=self._font(-1, "bold"),
+        )
+        self._provider_value_label.pack(side="left", padx=(6, 0))
+        # 現在選択されているモデル名（クラウド時は LM Studio 欄が消えるため明示する）
+        self._model_value_label = tk.Label(
+            prov_row,
+            text=self._model_display_text(),
+            bg=C["BG_DARK"],
+            fg=C["TEXT_SUB"],
+            font=self._font(-1),
+            anchor="w",
+        )
+        self._model_value_label.pack(side="left", padx=(12, 0))
+        # LLM 設定ボタンは行の右端に配置
+        self._llm_config_btn = ttk.Button(
+            prov_row,
+            text=self._L["ocr_open_llm_config"],
+            command=self._open_llm_config,
+        )
+        self._llm_config_btn.pack(side="right", padx=(10, 0))
+        # LM Studio のモデル変更（Combobox 編集）を表示へ即時反映する
+        self.model_var.trace_add("write", lambda *_a: self._update_model_label())
+
+        # プロンプトプリセット
+        pf = tk.Frame(self, bg=C["BG_DARK"])
+        pf.pack(fill="x", padx=16, pady=4)
+        tk.Label(
+            pf,
+            text=self._L["ocr_prompt_label"],
+            bg=C["BG_DARK"],
+            fg=C["TEXT_MAIN"],
+            font=self._font(0),
+        ).pack(side="left")
+        for value, key in (
+            ("text", "ocr_preset_text"),
+            ("table", "ocr_preset_table"),
+            ("markdown", "ocr_preset_markdown"),
+        ):
+            tk.Radiobutton(
+                pf,
+                text=self._L[key],
+                variable=self.preset_var,
+                value=value,
+                bg=C["BG_DARK"],
+                fg=C["TEXT_MAIN"],
+                selectcolor=C["BG_CARD"],
+                activebackground=C["BG_DARK"],
+                activeforeground=C["TEXT_MAIN"],
+                font=self._font(-1),
+            ).pack(side="left", padx=4)
+        # V174-3: カスタムプロンプト使用中はプリセットが実プロンプトへ反映されず
+        # 「表示形式（Markdown 整形の有無）の選択」としてのみ働くため、
+        # その旨をプリセット横に注記する（Markdown 指定のプリセット一本化）
+        self._preset_note_var = tk.StringVar(value="")
+        tk.Label(
+            pf,
+            textvariable=self._preset_note_var,
+            bg=C["BG_DARK"],
+            fg=C["TEXT_SUB"],
+            font=self._font(-2),
+        ).pack(side="left", padx=8)
+        self._update_preset_note()
+
+        # サーバ（参照のみ・設定メニューの値を表示）
+        # LM Studio 固有欄: クラウドプロバイダ時は表示しない（provider 中立化）
+        show_lmstudio_fields = not self._is_cloud_provider()
+        self._lmstudio_server_frame = tk.Frame(self, bg=C["BG_DARK"])
+        sf = self._lmstudio_server_frame
+        if show_lmstudio_fields:
+            sf.pack(fill="x", padx=16, pady=(6, 2))
+        tk.Label(
+            sf,
+            text=self._L["ocr_server_label"],
+            bg=C["BG_DARK"],
+            fg=C["TEXT_MAIN"],
+            font=self._font(-1),
+            width=8,
+            anchor="w",
+        ).pack(side="left")
+        tk.Entry(
+            sf,
+            textvariable=self.url_var,
+            font=self._font(-1),
+            bg=C["BG_CARD"],
+            fg=C["TEXT_SUB"],
+            insertbackground=C["TEXT_MAIN"],
+            relief="flat",
+            state="readonly",
+            readonlybackground=C["BG_CARD"],
+        ).pack(side="left", fill="x", expand=True, padx=4)
+
+        # モデル選択（LM Studio 固有欄: クラウド時は非表示）
+        self._lmstudio_model_frame = tk.Frame(self, bg=C["BG_DARK"])
+        mf = self._lmstudio_model_frame
+        if show_lmstudio_fields:
+            mf.pack(fill="x", padx=16, pady=2)
+        tk.Label(
+            mf,
+            text=self._L["ocr_model_label"],
+            bg=C["BG_DARK"],
+            fg=C["TEXT_MAIN"],
+            font=self._font(-1),
+            width=8,
+            anchor="w",
+        ).pack(side="left")
+        # 編集導線は LLMConfigDialog へ一元化済みのため、モデル欄は読み取り専用表示。
+        # 4 つの数値 Spinbox と同様、disabled + 暗背景 + 可読色で編集不可にする。
+        self.model_combo = tk.Entry(
+            mf,
+            textvariable=self.model_var,
+            font=self._font(-1),
+            bg=C["BG_CARD"],
+            fg=C["TEXT_SUB"],
+            insertbackground=C["TEXT_MAIN"],
+            relief="flat",
+            state="disabled",
+            disabledbackground=C["BG_CARD"],
+            disabledforeground=C["TEXT_SUB"],
+        )
+        self.model_combo.pack(side="left", fill="x", expand=True, padx=4)
+
+        # 詳細設定行（解像度 / タイムアウト / 最大トークン）
+        # self 属性化: ライブ更新時に LM Studio 欄を before= でこの行の前へ戻す
+        self._params_row = tk.Frame(self, bg=C["BG_DARK"])
+        params_row = self._params_row
+        params_row.pack(fill="x", padx=16, pady=(6, 0))
+        tk.Label(
+            params_row,
+            text=self._L["ocr_params_label"],
+            bg=C["BG_DARK"],
+            fg=C["TEXT_MAIN"],
+            font=self._font(-1),
+            width=8,
+            anchor="w",
+        ).pack(side="left")
+        tk.Label(
+            params_row,
+            text=self._L["ocr_scale_short"],
+            bg=C["BG_DARK"],
+            fg=C["TEXT_MAIN"],
+            font=self._font(-1),
+        ).pack(side="left", padx=(0, 2))
+        tk.Spinbox(
+            params_row,
+            from_=1.0,
+            to=4.0,
+            increment=0.5,
+            textvariable=self.scale_var,
+            width=5,
+            font=self._font(-1),
+            bg=C["BG_CARD"],
+            fg=C["TEXT_SUB"],
+            buttonbackground=C["BG_PANEL"],
+            insertbackground=C["TEXT_MAIN"],
+            disabledbackground=C["BG_CARD"],
+            disabledforeground=C["TEXT_SUB"],
+            state="disabled",
+        ).pack(side="left", padx=(0, 10))
+        tk.Label(
+            params_row,
+            text=self._L["ocr_timeout_short"],
+            bg=C["BG_DARK"],
+            fg=C["TEXT_MAIN"],
+            font=self._font(-1),
+        ).pack(side="left", padx=(0, 2))
+        tk.Spinbox(
+            params_row,
+            from_=10,
+            to=900,
+            increment=10,
+            textvariable=self.timeout_var,
+            width=5,
+            font=self._font(-1),
+            bg=C["BG_CARD"],
+            fg=C["TEXT_SUB"],
+            buttonbackground=C["BG_PANEL"],
+            insertbackground=C["TEXT_MAIN"],
+            disabledbackground=C["BG_CARD"],
+            disabledforeground=C["TEXT_SUB"],
+            state="disabled",
+        ).pack(side="left", padx=(0, 10))
+        tk.Label(
+            params_row,
+            text=self._L["ocr_max_tokens_short"],
+            bg=C["BG_DARK"],
+            fg=C["TEXT_MAIN"],
+            font=self._font(-1),
+        ).pack(side="left", padx=(0, 2))
+        tk.Spinbox(
+            params_row,
+            from_=-1,
+            to=MAX_OCR_MAX_TOKENS,
+            increment=1024,
+            textvariable=self.max_tokens_var,
+            width=8,
+            font=self._font(-1),
+            bg=C["BG_CARD"],
+            fg=C["TEXT_SUB"],
+            buttonbackground=C["BG_PANEL"],
+            insertbackground=C["TEXT_MAIN"],
+            disabledbackground=C["BG_CARD"],
+            disabledforeground=C["TEXT_SUB"],
+            state="disabled",
+        ).pack(side="left", padx=(0, 4))
+        tk.Label(
+            params_row,
+            text=self._L["ocr_max_tokens_hint"],
+            bg=C["BG_DARK"],
+            fg=C["TEXT_SUB"],
+            font=self._font(-2),
+        ).pack(side="left", padx=(0, 10))
+        tk.Label(
+            params_row,
+            text=self._L["ocr_temperature_short"],
+            bg=C["BG_DARK"],
+            fg=C["TEXT_MAIN"],
+            font=self._font(-1),
+        ).pack(side="left", padx=(0, 2))
+        tk.Spinbox(
+            params_row,
+            from_=0.0,
+            to=2.0,
+            increment=0.1,
+            textvariable=self.temperature_var,
+            width=5,
+            font=self._font(-1),
+            bg=C["BG_CARD"],
+            fg=C["TEXT_SUB"],
+            buttonbackground=C["BG_PANEL"],
+            insertbackground=C["TEXT_MAIN"],
+            disabledbackground=C["BG_CARD"],
+            disabledforeground=C["TEXT_SUB"],
+            state="disabled",
+        ).pack(side="left", padx=(0, 4))
+        tk.Label(
+            params_row,
+            text=self._L["ocr_temperature_hint"],
+            bg=C["BG_DARK"],
+            fg=C["TEXT_SUB"],
+            font=self._font(-2),
+        ).pack(side="left")
+
+        tk.Label(
+            self,
+            text=self._L["ocr_params_hint"],
+            bg=C["BG_DARK"],
+            fg=C["TEXT_SUB"],
+            font=self._font(-2),
+        ).pack(anchor="w", padx=16)
+
+        # 埋め込みテキスト無視オプション（低品質な埋め込みを Vision OCR で再読込）
+        tk.Checkbutton(
+            self,
+            text=self._L["ocr_force_vision"],
+            variable=self.force_ocr_var,
+            bg=C["BG_DARK"],
+            fg=C["TEXT_MAIN"],
+            selectcolor=C["BG_CARD"],
+            activebackground=C["BG_DARK"],
+            activeforeground=C["TEXT_MAIN"],
+            font=self._font(-1),
+        ).pack(anchor="w", padx=16, pady=(2, 0))
+
+        # 進行表示
+        # self 属性化: ライブ更新時に各種欄を before= でこのラベルの前へ戻す
+        self.progress_var = tk.StringVar(value=self._L["ocr_run_first"])
+        self._progress_label = tk.Label(
+            self,
+            textvariable=self.progress_var,
+            bg=C["BG_DARK"],
+            fg=C["SUCCESS"],
+            font=self._font(0, "bold"),
+        )
+        self._progress_label.pack(pady=(4, 2))
+
+        # D-07: Tesseract 言語段階的縮退のフォールバック非モーダル注記
+        # （WARNING 色・実行は止めない・OCR 結果 raw には混入させない）。
+        # フォールバック未発生時は空文字のまま非表示（pack しない）。
+        self._lang_fallback_notice_var = tk.StringVar(value="")
+        self._lang_fallback_label = tk.Label(
+            self,
+            textvariable=self._lang_fallback_notice_var,
+            bg=C["BG_DARK"],
+            fg=C["WARNING"],
+            font=self._font(-2),
+            wraplength=460,
+            justify="left",
+        )
+
+        self.progress_bar = ttk.Progressbar(
+            self, mode="determinate", maximum=max(1, len(self.page_indices))
+        )
+        self.progress_bar.pack(fill="x", padx=16, pady=(0, 6))
+
+        # 結果テキスト + 右ペイン（操作ボタン群）
+        # ボタンを下部の横一列に置くと初期ウィンドウ幅次第で右端側のボタンが
+        # クリップされて隠れるため、メイン画面と同じ「セクション見出し +
+        # 縦積みボタン」の右ペイン構成にする（幅不足で隠れる構造を排除）。
+        body = tk.Frame(self, bg=C["BG_DARK"])
+        body.pack(fill="both", expand=True, padx=16, pady=(4, 12))
+
+        side = tk.Frame(body, bg=C["BG_PANEL"])
+        side.pack(side="right", fill="y", padx=(10, 0))
+
+        result_frame = tk.Frame(body, bg=C["BG_PANEL"])
+        result_frame.pack(side="left", fill="both", expand=True)
+        self.text = tk.Text(
+            result_frame,
+            bg=C["BG_CARD"],
+            fg=C["TEXT_MAIN"],
+            insertbackground=C["TEXT_MAIN"],
+            font=self._font(-1),
+            wrap="word",
+            bd=0,
+            highlightthickness=0,
+            height=10,
+        )
+        sb = ttk.Scrollbar(result_frame, orient="vertical", command=self.text.yview)
+        self.text.configure(yscrollcommand=sb.set)
+        sb.pack(side="right", fill="y")
+        self.text.pack(fill="both", expand=True)
+
+        # Markdown 整形タグ定義（色は C[]・フォントは _font・V16-AI-01）。
+        # 受入基準の単一行 grep ゲートを満たすため fmt:off で折返しを抑止。
+        # fmt: off
+        self.text.tag_configure("md_h1", font=self._font(4, "bold"), foreground=C["ACCENT"])  # noqa: E501
+        self.text.tag_configure("md_h2", font=self._font(2, "bold"), foreground=C["ACCENT"])  # noqa: E501
+        self.text.tag_configure("md_bullet", lmargin1=20, lmargin2=36)
+        self.text.tag_configure("md_code", background=C["BG_PANEL"], font=("Consolas", self._font_size()))  # noqa: E501
+        self.text.tag_configure("md_bold", font=self._font(-1, "bold"))
+        # fmt: on
+
+        # V174-4: 右ペインを縦スクロール可能にする（ui_builder の
+        # _build_tools_scrollable と同型）。フォントサイズ大・低解像度環境で
+        # ウィンドウ高さがボタン合計高を下回ってもセクション群へ到達できる。
+        # 「✕ 閉じる」は下で side 直下に side="bottom" で pack される
+        # （スクロール領域外・常時可視）。
+        side_canvas = tk.Canvas(side, bg=C["BG_PANEL"], highlightthickness=0, bd=0)
+        side_sb = ttk.Scrollbar(side, orient="vertical", command=side_canvas.yview)
+        side_canvas.configure(yscrollcommand=side_sb.set)
+
+        side_inner = tk.Frame(side_canvas, bg=C["BG_PANEL"])
+        side_canvas.create_window(
+            (0, 0), window=side_inner, anchor="nw", tags="inner_window"
+        )
+
+        def _on_side_inner_configure(_e):
+            # スクロール範囲を内容全体へ更新しつつ、Canvas 幅を内容の要求幅に
+            # 追随させる（Canvas 経由だと内容幅が親 side へ伝搬しないため）
+            side_canvas.configure(
+                scrollregion=side_canvas.bbox("all"),
+                width=side_inner.winfo_reqwidth(),
+            )
+
+        side_inner.bind("<Configure>", _on_side_inner_configure)
+        side_canvas.bind(
+            "<Configure>",
+            lambda e: side_canvas.itemconfigure("inner_window", width=e.width),
+        )
+
+        def _on_side_wheel(e):
+            side_canvas.yview_scroll(int(-1 * (e.delta / 120)), "units")
+
+        side_canvas.bind("<MouseWheel>", _on_side_wheel)
+
+        def _bind_side_wheel_recursive(widget):
+            widget.bind("<MouseWheel>", _on_side_wheel, add="+")
+            for child in widget.winfo_children():
+                _bind_side_wheel_recursive(child)
+
+        def _after_side_build():
+            # ダイアログが即クローズされた場合に備えた TclError ガード
+            try:
+                _bind_side_wheel_recursive(side_inner)
+                side_canvas.yview_moveto(0)
+            except tk.TclError:
+                pass
+
+        # 右ペインのセクション/ボタン生成ヘルパー（ui_builder._build_tools と同構成。
+        # 親はスクロール領域内の side_inner）
+        def section(title):
+            f = tk.Frame(side_inner, bg=C["BG_CARD"], bd=0)
+            f.pack(fill="x", padx=8, pady=5)
+            tk.Label(
+                f,
+                text=title,
+                bg=C["BG_CARD"],
+                fg=C["WARNING"],
+                font=self._font(-1, "bold"),
+            ).pack(anchor="w", padx=8, pady=(6, 2))
+            return f
+
+        def side_btn(sec, text, cmd, style="TButton"):
+            b = ttk.Button(sec, text=text, command=cmd, style=style)
+            b.pack(fill="x", padx=8, pady=2)
+            return b
+
+        # 閉じるは右ペイン最下部に固定（セクション外・スクロール領域外・誤操作分離）
+        self.close_btn = ttk.Button(
+            side,
+            text=self._L["btn_close"],
+            command=self._on_close,
+        )
+        self.close_btn.pack(side="bottom", fill="x", padx=8, pady=(4, 8))
+
+        # V174-4: 閉じるボタンの上をスクロール領域として確保する
+        # （close_btn を先に side="bottom" で pack して下端を予約 → 残り全域を
+        # スクロールバー + Canvas が占有する）
+        side_sb.pack(side="right", fill="y")
+        side_canvas.pack(side="left", fill="both", expand=True)
+
+        # 実行セクション（読み取り実行 / 続きから再実行 / キャンセル）
+        f_run = section(self._L["ocr_sec_run"])
+        self.run_btn = side_btn(
+            f_run, self._L["ocr_run"], self._on_run, "Accent.TButton"
+        )
+        # 続きから再実行（エラー/未処理ページのみ・成功済み結果は保持）
+        self.resume_btn = side_btn(
+            f_run, self._L["ocr_resume"], lambda: self._on_run(resume=True)
+        )
+        self.resume_btn.state(["disabled"])
+        self.cancel_btn = side_btn(
+            f_run, self._L["ocr_cancel"], self._on_cancel, "Danger.TButton"
+        )
+        self.cancel_btn.state(["disabled"])
+        # セクション最下段ボタンの下余白（見出し〜ボタン列の枠内バランス）
+        tk.Frame(f_run, bg=C["BG_CARD"], height=6).pack(fill="x")
+
+        # 結果セクション（コピー / 保存 / サマリ / クリア）
+        f_result = section(self._L["ocr_sec_result"])
+        self.copy_btn = side_btn(f_result, self._L["ocr_copy"], self._copy_to_clipboard)
+        self.copy_btn.state(["disabled"])
+        self.save_btn = side_btn(f_result, self._L["ocr_save"], self._save_to_file)
+        self.save_btn.state(["disabled"])
+        # 全ページ統合サマリ（OCR 完了後に有効化・supports_text_prompt 必須）
+        self.summary_btn = side_btn(
+            f_result, self._L["ocr_summary_btn"], self._on_summary
+        )
+        self.summary_btn.state(["disabled"])
+        self.clear_btn = side_btn(f_result, self._L["ocr_clear"], self._clear_text)
+        tk.Frame(f_result, bg=C["BG_CARD"], height=6).pack(fill="x")
+
+        # V174-4: 全セクション構築後にホイールバインドを一括適用（ui_builder と
+        # 同じく after で遅延させ、生成直後の winfo_children を確実に拾う）
+        self.after(100, _after_side_build)
+
+    def _clear_text(self):
+        """結果テキストエリア・進行表示・実行状態を初期化する"""
+        # 実行中（OCR / サマリ生成）はクリア不可（キャンセルしてから再度押す想定）
+        if self._started and not self._done:
+            return
+        if self._summary_running:
+            return
+        self.text.delete("1.0", "end")
+        self.results.clear()
+        self.errors.clear()
+        self._skipped_pages.clear()
+        self._engine = None  # Engine 参照をリセット（再実行時に新規生成・D-11）
+        self._ocr_page_indices.clear()
+        self.progress_bar["value"] = 0
+        self.progress_var.set(self._L["ocr_run_first"])
+        self._progress_label.configure(fg=C["SUCCESS"])
+        self.copy_btn.state(["disabled"])
+        self.save_btn.state(["disabled"])
+        self.cancel_btn.state(["disabled"])
+        self.run_btn.state(["!disabled"])
+        self.resume_btn.state(["disabled"])
+        self._llm_config_btn.state(["!disabled"])
+        self._started = False
+        self._done = False
+        self._cancel_flag.clear()
+        # サマリ状態も破棄（旧サマリを新しい実行へ持ち込まない）
+        self.summary_result = None
+        self._summary_truncated = False
+        self._summary_cancel_flag.clear()
+        self.summary_btn.state(["disabled"])
+        # H-6: 前回実行の致命的エラー・完了カウンタを破棄する（PipelineState ごと）。
+        # 残留すると再実行時に全ワーカーが is_fatal()=True で API 呼び出しを
+        # スキップし、旧エラーで即終了してしまう（タイムアウト後の再実行バグ）。
+        self._pstate = None
+        self._render_failed_pages.clear()
+        # M-2: クリア時も旧世代を無効化する（再実行前に旧コールバックを排除）
+        self._run_gen += 1
+
+    # ── 再開（リスタート）判定 ──
+
+    def _pending_pages(self):
+        """結果が得られていないページ（エラー・未処理）の昇順リストを返す"""
+        return [p for p in self.page_indices if p not in self.results]
+
+    def _can_resume(self):
+        """「続きから再実行」が可能か（部分的な結果があり未処理ページが残っている）"""
+        return bool(self.results) and bool(self._pending_pages())
+
+    def _after_run_ui_reset(self):
+        """実行終了後（完了/キャンセル/エラー共通）のボタン状態リセット。
+
+        読み取り実行はクリアを経由せず再実行（リラン）できるよう再有効化し、
+        部分的な結果が残っている場合のみ「続きから再実行」を有効化する。
+        """
+        self._started = False
+        self.run_btn.state(["!disabled"])
+        self._llm_config_btn.state(["!disabled"])
+        if self._can_resume():
+            self.resume_btn.state(["!disabled"])
+        else:
+            self.resume_btn.state(["disabled"])
+        self._update_summary_btn_state()
+
+    def _update_summary_btn_state(self):
+        """サマリ作成ボタンの有効/無効を再評価する。
+
+        OCR 結果があり、サマリ生成中でなく、かつ現在のプロバイダがテキストの
+        み補完に対応している場合のみ有効化する（Tesseract 等の非 LLM
+        プロバイダは構造的に無効のまま・三重ガードの 1 段目）。
+        """
+        ok = (
+            self.app.settings.get("ocr_provider") != "off"
+            and bool(self.results)
+            and not self._summary_running
+            and getattr(self.provider, "supports_text_prompt", False)
+        )
+        self.summary_btn.state(["!disabled"] if ok else ["disabled"])
+
+    # ── ページ結果記録（ワーカースレッドから呼ばれる。GIL + page_idx 排他により
+    #    ロック不要。共有辞書への同一キー同時書込みが発生する変更を今後加える
+    #    場合は要 Lock 追加・WR-03） ──
+
+    def _record_page_success(self, page_idx, text, truncated=False):
+        """ページ成功時の結果辞書ブックキーピング（consume_one の on_success 用）。
+
+        truncated=True のとき当該ページを _truncated_pages に登録する。
+        途切れは「成功＋警告」であり部分テキストは破棄せず results に保持する
+        （D-05）。途切れ通知は _render_results_ordered で当該ページに併記する。
+        done カウンタ/連続失敗カウンタのリセットは ocr_pipeline.consume_one が
+        呼び出し前に PipelineState.record_success() 経由で済ませている
+        （D-01/D-02・二重計上防止のためここでは触らない）。
+        """
+        self.results[page_idx] = text
+        if truncated:
+            self._truncated_pages.add(page_idx)
+        else:
+            self._truncated_pages.discard(page_idx)
+
+    def _record_page_error(self, page_idx, msg):
+        """非致命的ページエラー時の結果辞書ブックキーピング（consume_one の
+        on_page_error コールバック）。
+
+        リトライ上限到達（サーキットブレーカー判定含む）・RuntimeError・
+        その他 Exception のいずれの経路でも呼ばれる。カウンタ更新/サーキット
+        ブレーカー判定は ocr_pipeline.consume_one が呼び出し前に
+        PipelineState.record_retryable_failure()/record_page_error() 経由で
+        済ませている（D-01/D-02・二重計上防止のためここでは触らない）。
+        """
+        self.errors[page_idx] = msg
+
+    def _done_disp(self):
+        """今回実行分の「処理済み」件数（進捗バー/進捗文言表示用）を算出する。
+
+        D-07/D-12: 統合進捗計算は OCRRunEngine が内部で持つため
+        `self._engine.progress_count()` へ委譲する（Vision OCR 完了数 + 今回の
+        新規スキップ数 + 今回の新規レンダー失敗数の合計。D-11 により Engine は
+        実行ごとに新規生成されるためベースライン差分計算は不要）。
+        """
+        return self._engine.progress_count() if self._engine is not None else 0
+
+    # ── クラウドプロバイダ判定・コスト確認・セッションキー ──
+
+    def _provider_display_name(self):
+        """現在の ocr_provider 設定を人間可読なプロバイダ表示名に変換する。
+
+        名前による表示名解決は catalog.display_name_key_for（V190-CAT-01・
+        D-03）を単一情報源とする。claude/gemini の isinstance 判定は D-04 の
+        安全側フォールバックとして維持する（provider インスタンスが settings
+        と食い違っていても対応）。display_name_key が None のプロバイダ
+        （off/ollama/未登録プラグイン）は名前をそのまま返す。空文字は
+        lmstudio として解決する（既存挙動維持）。
+        """
+        from pagefolio.ocr_providers import ClaudeProvider, GeminiProvider, catalog
+
+        # 02-REVIEW WR-01 修正: フォールバック中は self._active_ocr_settings
+        # （ダイアログローカルの切替後スナップショット）を優先する。
+        # self.app.settings のみを見ると、フォールバックで実際の送信先が
+        # 変わっても表示が旧プロバイダのまま残ってしまう
+        # （_active_provider_name() と同じ参照パターンに揃える）。
+        # getattr で未設定（テスト用の素の fake オブジェクト等）にも対応する。
+        settings = getattr(self, "_active_ocr_settings", None) or self.app.settings
+        name = settings.get("ocr_provider", "")
+        if name == "off":
+            return name
+        if isinstance(self.provider, ClaudeProvider):
+            return self._L["ocr_provider_name_claude"]
+        if isinstance(self.provider, GeminiProvider):
+            return self._L["ocr_provider_name_gemini"]
+        lookup_name = "lmstudio" if name == "" else name
+        key = catalog.display_name_key_for(lookup_name)
+        return self._L[key] if key is not None else name
+
+    def _provider_model_name(self):
+        """現在のプロバイダで使用されるモデル名を返す（表示用）。
+
+        claude / gemini は settings の各モデルキー、lmstudio は Combobox のライブ値、
+        tesseract はモデル概念がないため空文字を返す。
+        プラグインプロバイダは provider.model 属性をフォールバックとして参照する。
+        """
+        # 02-REVIEW WR-01 修正: _provider_display_name と同様、フォールバック
+        # 中は self._active_ocr_settings を優先して参照する（getattr で
+        # 未設定の fake オブジェクトにも対応）。
+        settings = getattr(self, "_active_ocr_settings", None) or self.app.settings
+        name = settings.get("ocr_provider", "")
+        if name == "claude":
+            return settings.get("claude_model", "claude-sonnet-4-6")
+        if name == "gemini":
+            return settings.get("gemini_model", "gemini-2.5-flash")
+        if name in ("tesseract", "off"):
+            return ""
+        if name in ("lmstudio", ""):
+            try:
+                return self.model_var.get().strip()
+            except tk.TclError:
+                return ""
+        return getattr(self.provider, "model", "") or ""
+
+    def _model_display_text(self):
+        """プロバイダ表示行に併記するモデル名テキストを返す（モデルなしは空文字）。"""
+        model = self._provider_model_name()
+        if not model:
+            return ""
+        return f"{self._L['ocr_model_label']} {model}"
+
+    def _update_model_label(self):
+        """モデル表示ラベルを現在の選択内容で更新する。"""
+        try:
+            self._model_value_label.configure(text=self._model_display_text())
+        except tk.TclError:
+            pass
+
+    @staticmethod
+    def _retry_wait_key(e):
+        """リトライ待機中の進捗表示に使う LANG キーを例外から決定する。
+
+        HTTP 429 のみ「レート制限」と表示し、5xx や code 不明（プラグイン等）は
+        「サーバエラー」と表示する（500 をレート制限と誤認させない）。
+        """
+        if getattr(e, "code", None) == 429:
+            return "ocr_waiting_retry"
+        return "ocr_waiting_retry_server"
+
+    def _build_retry_wait_message(self, wait_key, page_idx, attempt, delay):
+        """リトライ待機中の進捗表示文言を生成する純粋ヘルパー（Tk 非依存）。
+
+        実 delay（clamp_retry_after でクランプ済の実待機秒）由来の round(delay) を
+        sec として文言へ埋め込む（D-06）。delay を文言生成より前に算出して渡す
+        ことで「表示する待機秒数が実待機値と一致する」順序を回帰テストで担保する
+        （_worker での順序入替が崩れたら直接アサートで落ちる）。
+        external I/O や after は含めず、_retry_wait_key と同じくテスト可能な純度を
+        保つ（self._L 参照のためインスタンスメソッド）。
+        """
+        return self._L[wait_key].format(
+            page=page_idx + 1, n=attempt, max=MAX_RETRIES, sec=round(delay)
+        )
+
+    def _is_cloud_provider(self, settings=None):
+        """現在の ocr_provider 設定がクラウド系か判定する。
+
+        catalog.is_cloud_provider（V190-CAT-01）が名前ベース判定の単一情報源。
+        catalog 未登録のプロバイダは False を返す（D-04）。settings を明示
+        すればそのスナップショットで判定する（フォールバック経路がダイアログ
+        ローカル設定で判定できるようにする一般化・Pitfall 4）。省略時は
+        従来どおり self.app.settings を参照する（後方互換）。
+        """
+        from pagefolio.ocr_providers import (
+            ClaudeProvider,
+            GeminiProvider,
+            OpenAIProvider,
+            RunPodProvider,
+            catalog,
+        )
+
+        s = settings if settings is not None else self.app.settings
+        name = s.get("ocr_provider", "")
+        if catalog.is_cloud_provider(name):
+            return True
+        # isinstance ガード（provider インスタンスが差し替わっていても対応・
+        # catalog 未登録プラグインが既知クラウドクラスを継承した場合の安全側
+        # フォールバック・D-04）。
+        if isinstance(
+            self.provider,
+            (ClaudeProvider, GeminiProvider, RunPodProvider, OpenAIProvider),
+        ):
+            return True
+        return False
+
+    def _estimate_cost(self, model, page_count):
+        """ページ数とモデルから概算コスト文字列を返す（D-10）。
+
+        OCR_PRICE_TABLE からモデル単価を取得する（M-6）。
+        Vision 入力: 1枚あたり最大 1600 トークン相当を仮定。
+        OCR 出力: 1ページあたり平均 500 トークンを想定した粗い見積もり。
+        正確性より「課金が発生する」警告の存在が重要（D-10・Pitfall 8）。
+        """
+        input_price, output_price = _lookup_price(model)
+        # Vision 入力トークン見積もり: 約 1600 tokens/page（Anthropic/Google 参考値）
+        # 出力トークン見積もり: 約 500 tokens/page（OCR 結果テキスト）
+        input_tokens = page_count * 1600
+        output_tokens = page_count * 500
+        cost = (input_tokens * input_price + output_tokens * output_price) / 1_000_000
+        lang = self.app.settings.get("lang", "ja")
+        return LANG[lang]["ocr_cost_estimate"].format(cost=cost)
+
+    # ── LLM 設定ボタン・ライブ更新 ──────────────────────────────────────────
+
+    def _open_llm_config(self):
+        """プロバイダ表示行の「⚙ LLM 設定…」ボタンから LLMConfigDialog を開く。
+
+        実行中（_started かつ未完了、またはサマリ生成中）は即 return して
+        プロバイダ変更を阻止する（T-CCZ-02・スレッド安全確保）。
+        既に開いている場合も二重起動せず既存ウィンドウを前面へ出す。
+        """
+        if self._started and not self._done:
+            return
+        if self._summary_running:
+            return
+        existing = getattr(self, "_llm_config_dialog", None)
+        if existing is not None and existing.winfo_exists():
+            existing.lift()
+            existing.focus_force()
+            return
+        from pagefolio.dialogs.llm_config import LLMConfigDialog
+
+        lang = self.app.settings.get("lang", "ja")
+        self._llm_config_dialog = LLMConfigDialog(
+            self,
+            self.app.settings,
+            on_apply=self._apply_llm_settings,
+            font_func=self._font,
+            lang=lang,
+            plugin_manager=getattr(self.app, "plugin_manager", None),
+            session_api_keys=getattr(self.app, "_session_api_keys", None),
+        )
+        dialog = self._llm_config_dialog
+        bind = getattr(dialog, "bind", None)
+        if callable(bind):
+
+            def restore_outer_grab(event):
+                if event.widget is dialog:
+                    try:
+                        if self.winfo_exists():
+                            self.grab_set()
+                    except tk.TclError as e:
+                        logger.debug("外側OCR grab復元終了: %s", type(e).__name__)
+
+            bind("<Destroy>", restore_outer_grab, add="+")
+
+    def _apply_llm_settings(self, llm_settings):
+        """LLMConfigDialog の on_apply コールバック。設定更新・永続化・ライブ更新。
+
+        llm_settings に api_key 系キーは含まれず T-05-12 ガードは維持される。
+        UI 操作は _refresh_provider_dependent_ui に委譲しテスト容易性を確保する。
+        """
+        # (a) 設定を app.settings に反映
+        self.app.settings.update(llm_settings)
+        # 実行時に確定したダイアログローカルのスナップショット（_on_run/_on_summary/
+        # フォールバックが保存し、_provider_display_name/_provider_model_name/
+        # _active_provider_name が app.settings より優先する）は、ここで破棄する。
+        # 残すと、LLM 設定で切り替えたプロバイダではなく実行時点の旧プロバイダを
+        # 表示し続け、表示と実際の送信先が食い違う（次回 _on_run は app.settings から
+        # 新しいスナップショットを確定し直す）。
+        self._active_ocr_settings = None
+        # (b) App ownerで保存・失敗通知。失敗しても後続のライブ更新を続ける。
+        saved = self.app._persist_settings()
+        # self.custom_prompt は __init__ 時点の値をキャッシュしているだけで
+        # 以降の app.settings 更新が反映されないため、ここで明示的に同期する
+        # （さもないと _on_run が 1 回前のカスタムプロンプトを使い続ける）。
+        # V174-2: 外部 md ファイルがあれば設定欄より優先（load_custom_prompt）
+        self.custom_prompt = load_custom_prompt(self.app.settings)
+        # V174-3: カスタム使用状態の注記を再評価（Tk 生成なしスタブ経由で呼ぶ
+        # 既存テスト経路の安全確保のため callable ガード・L-6j と同型）
+        update_preset_note = getattr(self, "_update_preset_note", None)
+        if callable(update_preset_note):
+            update_preset_note()
+        # (c)〜(g) UI 更新のうち、プロバイダ表示（_refresh_provider_dependent_ui）は
+        # provider 再生成の後（下記 try/except の直後）に行う。_provider_display_name は
+        # isinstance(self.provider, ...) で旧 provider を優先判定するため、再生成前に
+        # 呼ぶと切替後も旧プロバイダ名・旧モデルが表示される。
+        # 全プロバイダ共通: 読み取り専用の数値パラメータ表示を settings 値へ即時同期
+        # (D-03)。LM Studio 専用 (g) ブロックの外で行い claude/gemini でも反映する。
+        self._sync_param_vars_from_settings()
+        # (f) provider インスタンスの再生成
+        name = self.app.settings.get("ocr_provider", "")
+        try:
+            if name == "claude":
+                from pagefolio.ocr import _resolve_api_key, build_provider
+                from pagefolio.ocr_providers import OCRAPIKeyError
+
+                session_keys = getattr(self.app, "_session_api_keys", {})
+                try:
+                    api_key = _resolve_api_key("claude", session_keys)
+                except OCRAPIKeyError:
+                    api_key = ""
+                self.provider = build_provider(
+                    self.app.settings,
+                    api_key=api_key,
+                    plugin_manager=getattr(self.app, "plugin_manager", None),
+                )
+            elif name == "gemini":
+                # Gemini: dual env var → セッションキー → api_key=""（Pitfall-G）
+                from pagefolio.ocr import _resolve_api_key, build_provider
+                from pagefolio.ocr_providers import OCRAPIKeyError
+
+                session_keys = getattr(self.app, "_session_api_keys", {})
+                try:
+                    api_key = _resolve_api_key("gemini", session_keys)
+                except OCRAPIKeyError:
+                    api_key = ""
+                self.provider = build_provider(
+                    self.app.settings,
+                    api_key=api_key,
+                    plugin_manager=getattr(self.app, "plugin_manager", None),
+                )
+            elif name == "openai":
+                # openai: build_provider 経由でキー注入（D-01/D-05・claude/gemini と
+                # 同型。継続タスク回帰修正: 以前は専用 elif が無く末尾の
+                # tesseract/プラグイン専用 else 分岐へ落ち、build_provider が
+                # api_key 引数なしで呼ばれて OpenAIProvider.api_key が空文字に
+                # なっていた（実機で HTTP 401 として顕在化）。
+                from pagefolio.ocr import _resolve_api_key, build_provider
+                from pagefolio.ocr_providers import OCRAPIKeyError
+
+                session_keys = getattr(self.app, "_session_api_keys", {})
+                try:
+                    api_key = _resolve_api_key("openai", session_keys)
+                except OCRAPIKeyError:
+                    api_key = ""
+                self.provider = build_provider(
+                    self.app.settings,
+                    api_key=api_key,
+                    plugin_manager=getattr(self.app, "plugin_manager", None),
+                )
+            elif name == "ollama":
+                from pagefolio.ocr_providers import OllamaProvider
+
+                # 接続先の解決は _start_ocr / _on_run と同じ resolve_local_endpoint に
+                # 一本化（表示欄と実送信先の食い違いを構造的に防ぐ）
+                ollama_url, ollama_model = resolve_local_endpoint(
+                    self.app.settings, "ollama"
+                )
+                self.provider = OllamaProvider(
+                    url=ollama_url,
+                    model=ollama_model,
+                    timeout=int(self.app.settings.get("ocr_timeout", 120)),
+                    max_tokens=int(self.app.settings.get("ocr_max_tokens", -1)),
+                    temperature=float(self.app.settings.get("ocr_temperature", 0.1)),
+                )
+                self.url_var.set(ollama_url)
+                self.model_var.set(ollama_model)
+            elif name == "runpod":
+                from pagefolio.ocr import _resolve_api_key, build_provider
+                from pagefolio.ocr_providers import OCRAPIKeyError
+
+                session_keys = getattr(self.app, "_session_api_keys", {})
+                try:
+                    api_key = _resolve_api_key("runpod", session_keys)
+                except OCRAPIKeyError:
+                    api_key = ""
+                self.provider = build_provider(
+                    self.app.settings,
+                    api_key=api_key,
+                    plugin_manager=getattr(self.app, "plugin_manager", None),
+                )
+                runpod_url, runpod_model = resolve_local_endpoint(
+                    self.app.settings, "runpod"
+                )
+                self.url_var.set(runpod_url)
+                self.model_var.set(runpod_model)
+            elif name in ("lmstudio", ""):
+                from pagefolio.ocr_providers import LMStudioProvider
+
+                lm_url, lm_model = resolve_local_endpoint(self.app.settings, "lmstudio")
+                self.provider = LMStudioProvider(
+                    url=lm_url,
+                    model=lm_model,
+                    timeout=int(self.app.settings.get("ocr_timeout", 120)),
+                    max_tokens=int(self.app.settings.get("ocr_max_tokens", -1)),
+                    temperature=float(self.app.settings.get("ocr_temperature", 0.1)),
+                )
+                # (g) LM Studio 欄の Tk 変数も settings に合わせて更新
+                self.url_var.set(lm_url)
+                self.model_var.set(lm_model)
+            elif name == "off":
+                # V190-SAFE-03・D-06/D-07・T-01-06: OCR ダイアログを開いたまま
+                # LLM 設定で off へ切替えた実在経路。provider は差し替えず
+                # 現在の provider を保持したまま OCR 無効メッセージを表示する
+                # （build_provider を経由しない直接構築だった旧実装の穴を塞ぐ）。
+                # この分岐は build_provider を呼ばないため OCRDisabledError を
+                # 捕捉する必要はない（off はここで文字列比較のみで中断する）。
+                lang = self.app.settings.get("lang", "ja")
+                self.progress_var.set(LANG[lang]["ocr_disabled_msg"])
+            else:
+                # H-2: tesseract / プラグイン登録プロバイダは build_provider で再生成
+                from pagefolio.ocr import build_provider
+
+                self.provider = build_provider(
+                    self.app.settings,
+                    plugin_manager=getattr(self.app, "plugin_manager", None),
+                )
+            # H-3: provider 再生成後に concurrency を max_concurrency 以下に再クランプ
+            self.concurrency = max(
+                1, min(self.provider.max_concurrency, self.concurrency)
+            )
+            # D-07: Tesseract 段階的縮退フォールバックの非モーダル注記を更新
+            self._maybe_show_lang_fallback_notice()
+        except Exception as e:
+            logger.error("provider 再生成に失敗しました: %s", e)
+            lang = self.app.settings.get("lang", "ja")
+            self.progress_var.set(LANG[lang]["ocr_provider_rebuild_error"].format(e=e))
+        # (c)〜(g) プロバイダ依存 UI の再評価。provider 再生成が例外で失敗しても
+        # 必ず実行されるよう try/except の外側に置く。再生成後（self.provider が新
+        # プロバイダ）に呼ぶことで、表示ラベル・モデル名が切替後の値になる。
+        self._refresh_provider_dependent_ui()
+        # L-6j: "off" 切替時にメイン画面ツールバーの OCR ボタン状態を同期する。
+        # provider 再生成が例外で失敗しても必ず実行されるよう try/except の
+        # 外側（Pitfall 6）に置く。app 属性は既存の防御的パターン（getattr
+        # フォールバック）に倣い、SimpleNamespace スタブとの後方互換を保つ。
+        update_ocr_buttons = getattr(self.app, "_update_ocr_buttons_state", None)
+        if callable(update_ocr_buttons):
+            update_ocr_buttons()
+        # provider 差し替えで supports_text_prompt が変わり得るため再評価する
+        self._update_summary_btn_state()
+        return saved
+
+    def _maybe_show_lang_fallback_notice(self):
+        """D-07: TesseractProvider の段階的縮退フォールバックを検知したら
+        非モーダル WARNING 注記を表示する（実行は止めない）。
+
+        フォールバック非発生時（他プロバイダ選択時含む）は注記を消す。
+        OCR 結果テキスト（self.text・raw コピー/保存対象）には一切書き込まない
+        （V16-D-02 のコピー/保存 raw 維持方針と整合）。provider 再生成の都度
+        呼ばれるだけで OCR 実行中（1ページごと）には呼ばれないため、
+        同一実行内で複数ページがあっても注記は実質的に1回のみ更新される。
+        """
+        provider = getattr(self, "provider", None)
+        fallback = bool(
+            provider is not None and getattr(provider, "lang_fallback", False)
+        )
+        if fallback:
+            requested = getattr(provider, "requested_lang", "") or ""
+            effective = getattr(provider, "effective_lang", "") or ""
+            msg = self._L["ocr_tesseract_lang_fallback_notice"].format(
+                requested=requested, effective=effective
+            )
+            self._lang_fallback_notice_var.set(msg)
+            if not self._lang_fallback_label.winfo_ismapped():
+                self._lang_fallback_label.pack(before=self.progress_bar, pady=(0, 4))
+        else:
+            self._lang_fallback_notice_var.set("")
+            if self._lang_fallback_label.winfo_ismapped():
+                self._lang_fallback_label.pack_forget()
+
+    def _update_preset_note(self):
+        """カスタムプロンプト使用状態に応じてプリセット横の注記を更新する。
+
+        V174-3: Markdown 整形表示の指定はプリセットへ一本化した。カスタム
+        プロンプト使用中はプリセットが実プロンプトへ反映されない
+        （resolve_ocr_prompt でカスタム最優先）ため、「表示形式にのみ適用」
+        である旨を表示し、未使用時は注記を消す。_build・_apply_llm_settings・
+        _on_run（外部 md 再読込後）から呼ばれる。
+        """
+        note = self._L["ocr_preset_custom_note"] if self.custom_prompt else ""
+        self._preset_note_var.set(note)
+
+    def _sync_param_vars_from_settings(self):
+        """読み取り専用の数値パラメータ Tk 変数を app.settings の値へ同期する。
+
+        全プロバイダ共通（claude/gemini/lmstudio/off/tesseract）で呼ばれ、
+        読み取り専用 Spinbox の表示を LLM 設定の適用結果へ即時反映する（D-03）。
+        既定値は llm_config 側のフォールバックと整合させる。
+        値はログに出力しない（情報露出回避・T-01-01）。
+        """
+        settings = self.app.settings
+        self.scale_var.set(settings.get("ocr_scale", 1.5))
+        self.timeout_var.set(settings.get("ocr_timeout", 120))
+        self.max_tokens_var.set(settings.get("ocr_max_tokens", -1))
+        self.temperature_var.set(settings.get("ocr_temperature", 0.1))
+
+    def _refresh_provider_dependent_ui(self):
+        """プロバイダ依存 UI（表示ラベル・LM Studio 欄）を再評価する。
+
+        _apply_llm_settings から呼ばれる。テストでは no-op に差し替え可能。
+        """
+        # (c) プロバイダ表示ラベル更新（モデル名併記も再評価）
+        self._provider_value_label.configure(text=self._provider_display_name())
+        self._update_model_label()
+        # (d) LM Studio 欄の可視性再評価
+        # before= で元の位置（詳細設定行の前）へ戻す。素の pack() は
+        # スレーブリスト末尾へ追加されダイアログ最下部に表示されてしまうため。
+        show = not self._is_cloud_provider()
+        if show:
+            self._lmstudio_server_frame.pack(
+                fill="x", padx=16, pady=(6, 2), before=self._params_row
+            )
+            self._lmstudio_model_frame.pack(
+                fill="x", padx=16, pady=2, before=self._params_row
+            )
+        else:
+            self._lmstudio_server_frame.pack_forget()
+            self._lmstudio_model_frame.pack_forget()
+        # (f) 行の増減でボタン行が隠れないよう、必要に応じてウィンドウ高さを拡張
+        self._grow_to_fit()
+
+    def _grow_to_fit(self):
+        """ライブ更新で行が増えた際、ボタン行が画面外へ押し出されないよう高さを拡張する。
+
+        固定高で開いたダイアログに LM Studio 欄を再表示すると content が高さを超え、
+        最下部のボタン行がクリップされるため、必要時のみ高さを広げる（縮小はしない）。
+        """
+        try:
+            self.update_idletasks()
+            req_h = self.winfo_reqheight()
+            cur_h = self.winfo_height()
+            if req_h > cur_h:
+                self.geometry(
+                    f"{self.winfo_width()}x{req_h}+{self.winfo_x()}+{self.winfo_y()}"
+                )
+        except tk.TclError:
+            pass
+
+    def _confirm_cost(self, page_count=None, settings=None):
+        """クラウド送信前のコスト確認ダイアログを表示し、ユーザーの選択を bool で返す。
+
+        毎回表示する（「今後表示しない」は設けない・D-11）。
+        ダイアログ内容（D-12 の3点）:
+          1. 送信先ホスト（catalog が保持する送信先。解決できない場合は
+             送信先不明である旨・レビュー MEDIUM-8）
+          2. 対象ページ数と概算コスト
+          3. 「ページ画像が外部 API に送信されます」「従量課金が発生します」
+        選択中モデルが vision 確認済み集合に無い openai モデルのときは、
+        画像入力が未確認である旨の注記を末尾へ追加する（レビュー HIGH 02-02-2）。
+        OK で True・キャンセルで False を返す（成功基準5）。
+
+        引数:
+          page_count: 今回送信するページ数（None なら全対象ページ数。
+                      再開時は未処理ページ数を渡して過大見積もりを避ける）
+          settings:   判定に使う設定スナップショット（省略時は self.app.settings。
+                      フォールバック再開時はダイアログローカルの候補設定を渡す）
+        """
+        from pagefolio.ocr_providers import OpenAIProvider, catalog
+
+        s = settings if settings is not None else self.app.settings
+        name = s.get("ocr_provider", "")
+        model_key = catalog.model_setting_key_for(name)
+        raw_model = s.get(model_key, "") if model_key else ""
+        model = raw_model or catalog.default_model_for(name)
+        host = _resolved_host_text(name, s, self._L)
+        if page_count is None:
+            page_count = len(self.page_indices)
+        cost = self._estimate_cost(model, page_count)
+        msg = self._L["ocr_cost_confirm_msg"].format(
+            host=host,
+            count=page_count,
+            cost=cost,
+        )
+        if name == "openai" and model not in OpenAIProvider.VERIFIED_VISION_MODELS:
+            note = self._L["ocr_model_vision_unverified"].format(model=model)
+            msg = msg + "\n" + note
+        return messagebox.askyesno(
+            self._L["ocr_cost_confirm_title"],
+            msg,
+            parent=self,
+        )
+
+    def _confirm_summary_cost(self, char_count, settings=None):
+        """サマリ生成前のクラウド送信確認ダイアログを表示し、選択を bool で返す。
+
+        _confirm_cost と同方針で毎回表示する（D-11）。画像ではなく OCR 結果
+        テキストの送信であることと概算文字数を明示する。
+
+        引数:
+          char_count: 送信する全ページ連結テキストの文字数
+          settings:   判定に使う設定スナップショット（省略時は self.app.settings。
+                      フォールバック再開時はダイアログローカルの候補設定を渡す）
+        """
+        s = settings if settings is not None else self.app.settings
+        name = s.get("ocr_provider", "")
+        host = _resolved_host_text(name, s, self._L)
+        msg = self._L["ocr_summary_cost_confirm_msg"].format(
+            host=host,
+            chars=char_count,
+        )
+        return messagebox.askyesno(
+            self._L["ocr_cost_confirm_title"],
+            msg,
+            parent=self,
+        )
+
+    def _check_cloud_api_key(self, settings=None):
+        """クラウド実行前に APIキーが解決可能か確認する（成功基準2・撤去後の代替）。
+
+        入力 UI は LLMConfigDialog に一元化されたため、この関数は値の収集を
+        一切行わず _resolve_api_key の解決可否のみを確認する（値の保持・返却は
+        しない）。未解決なら catalog.api_key_missing_lang_key_for（V190-CAT-01）
+        が解決するプロバイダ別の明示エラーを表示して False を返す。
+        _on_run と _on_summary の共有経路（settings 省略時は self.app.settings。
+        フォールバック経路はダイアログローカルの候補設定を渡す）。
+        """
+        s = settings if settings is not None else self.app.settings
+        if not self._is_cloud_provider(settings=s):
+            return True
+        from pagefolio.ocr import _resolve_api_key
+        from pagefolio.ocr_providers import OCRAPIKeyError, catalog
+        from pagefolio.ocr_providers.registry import primary_env_var
+
+        name = s.get("ocr_provider", "")
+        session_keys = getattr(self.app, "_session_api_keys", {})
+        try:
+            _resolve_api_key(name, session_keys)
+        except OCRAPIKeyError:
+            msg_key = (
+                catalog.api_key_missing_lang_key_for(name) or "ocr_api_key_missing"
+            )
+            # 未知プロバイダは現行 .get(name, "") と同じく空文字へフォールバック
+            # （primary_env_var は未登録プロバイダで "" を返す実装のため素通し）
+            env_var = primary_env_var(name)
+            messagebox.showerror(
+                self._L["err_title"],
+                self._L[msg_key].format(env_var=env_var),
+                parent=self,
+            )
+            return False
+        return True
+
+    # ── ワーカー ──
+    def _on_run(self, resume=False, settings=None):
+        """読み取り実行 / 続きから再実行: OCR を開始する。
+
+        メインスレッドでレンダリング/埋め込み判定後にワーカーを起動する。
+        クラウドプロバイダ時は実行前にコスト確認ゲートを挟む（成功基準5・D-13）。
+
+        引数:
+          resume:   True なら成功済み結果を保持し、エラー/未処理ページのみ
+                    再実行する（リスタート）。False は全ページ再実行（リラン）。
+          settings: ダイアログローカルの設定スナップショット（省略時は
+                    アプリ永続設定のコピーを新規確定）。フォールバック
+                    再開時は _switch_to_fallback_provider が候補設定を渡す
+                    （レビュー HIGH 対応・Pitfall 4: アプリ永続設定自体は
+                    一切書き換えない）。
+        """
+        if self._started or self._summary_running:
+            return
+
+        # 今回の実行対象を決定（再開時は未処理ページのみ）
+        resume = resume and self._can_resume()
+        run_pages = self._pending_pages() if resume else list(self.page_indices)
+        if not run_pages:
+            return
+
+        # ダイアログローカル設定スナップショットを確定する（レビュー HIGH 対応）。
+        # 以降このメソッド内の全設定参照は s（=self._active_ocr_settings）から
+        # 行い、アプリ永続設定を直接読まない（フォールバック先候補が
+        # 正しく反映されるようにするため）。
+        self._active_ocr_settings = (
+            settings if settings is not None else dict(self.app.settings)
+        )
+        s = self._active_ocr_settings
+
+        # V190-SAFE-03・D-06/D-07: off なら実行を開始せず中断する（_started を
+        # True にする前・UI 状態を一切変更する前の早期 return。入口ガード
+        # （メニュー/ボタン disabled 化）をすり抜けた場合の構造的安全網）。
+        if s.get("ocr_provider", "") == "off":
+            messagebox.showinfo(
+                self._L["info_title"], self._L["ocr_disabled_msg"], parent=self
+            )
+            return
+
+        # ── クラウド実行ゲート（_started を True にする前）──
+        if self._is_cloud_provider(settings=s):
+            # APIキー解決確認（成功基準2・T-05-19）
+            if not self._check_cloud_api_key(settings=s):
+                return
+
+            # コスト確認ダイアログ（毎回・D-11・D-12。再開時は未処理ページ数で見積）
+            # フォールバック再開中は確認 askyesno が送信先確認を兼ねるため
+            # 二重表示しない（D-10/D-11）
+            if not getattr(self, "_fallback_resume", False):
+                if not self._confirm_cost(len(run_pages), settings=s):
+                    # キャンセル → OCR を始めない（成功基準5）
+                    return
+
+        self._started = True
+        self._done = False
+        # H-6: 実行開始時に前回実行の致命的エラー・完了カウンタを必ず破棄する
+        # （_clear_text を経由しない再実行経路でも残留状態を持ち込まないため）。
+        # 実際の PipelineState は _start_worker_thread で concurrency 確定後に生成する。
+        self._pstate = None
+        self._cancel_flag.clear()
+        # 再実行で結果セットが変わるため旧サマリは破棄する
+        # （_render_results_ordered は results のみ再描画するため表示からも消える）
+        self.summary_result = None
+        self._summary_truncated = False
+        self._summary_cancel_flag.clear()
+        self.summary_btn.state(["disabled"])
+        if resume:
+            # 再実行対象の旧エラー・旧途切れ状態を破棄（再実行結果で上書きするため）
+            for p in run_pages:
+                self.errors.pop(p, None)
+                self._truncated_pages.discard(p)
+                self._render_failed_pages.discard(p)  # L-6a: 再開対象は再挑戦させる
+        else:
+            # リラン（全体再実行）: 前回の結果・エラー・スキップ・途切れ状態を破棄
+            self.results.clear()
+            self.errors.clear()
+            self._skipped_pages.clear()
+            self._truncated_pages.clear()
+            self._render_failed_pages.clear()
+        self._run_pages = run_pages
+        self.run_btn.state(["disabled"])
+        self.resume_btn.state(["disabled"])
+        self._llm_config_btn.state(["disabled"])
+        self.cancel_btn.state(["!disabled"])
+        self.progress_var.set(self._L["ocr_progress_init"])
+        # 前回エラー完了時の警告色を通常色（SUCCESS）へ戻す
+        self._progress_label.configure(fg=C["SUCCESS"])
+        self.progress_bar.configure(maximum=max(1, len(run_pages)))
+        self.progress_bar["value"] = 0
+        # 結果テキストエリアをクリア（完了時に全ページ分を統合して再描画する）
+        self.text.delete("1.0", "end")
+
+        # UI パラメータをここで取得（メインスレッド）
+        try:
+            self._ocr_scale = max(1.0, min(4.0, float(self.scale_var.get())))
+        except (tk.TclError, ValueError):
+            self._ocr_scale = 1.5  # WR-01: D-11 整合（例外フォールバック統一）
+        try:
+            self._ocr_timeout = max(10, min(900, int(self.timeout_var.get())))
+        except (tk.TclError, ValueError):
+            self._ocr_timeout = 120
+        self._effective_timeout = self._ocr_timeout
+        # provider 名はプロンプト解決の前に無条件取得（下流の再生成分岐と共用）。
+        # レビュー HIGH 対応: s（=self._active_ocr_settings）から取得する
+        # （アプリ永続設定の直参照はフォールバック先候補を無視してしまう）。
+        name = s.get("ocr_provider", "")
+        # V174-2: 外部 md ファイル（exe と同階層）は実行のたびに読み直し、
+        # あればキャッシュ済み custom_prompt より優先する（外部エディタでの
+        # 編集を再起動なしで次回実行へ反映するため）。無ければ従来どおり。
+        _file_prompt = load_prompt_file(CUSTOM_PROMPT_FILE)
+        if _file_prompt:
+            self.custom_prompt = _file_prompt
+            # V174-3: 外部 md 反映後にカスタム使用状態の注記を再評価
+            # （スタブ経路の安全確保のため callable ガード）
+            update_preset_note = getattr(self, "_update_preset_note", None)
+            if callable(update_preset_note):
+                update_preset_note()
+        # プロンプト解決は resolve_ocr_prompt に集約（優先順位は純関数側で担保）。
+        prompt = resolve_ocr_prompt(self.preset_var.get(), name, self.custom_prompt)
+        self._ocr_prompt = prompt
+
+        try:
+            self._force_ocr = bool(self.force_ocr_var.get())
+        except (tk.TclError, ValueError):
+            self._force_ocr = False
+
+        # CR-02（中立化版）: プロバイダ種別に応じて provider を再生成する
+        # lmstudio / ollama / runpod → 有効スナップショット s の接続先設定で再生成
+        # claude → build_provider 経由で ClaudeProvider（api_key は引数注入のみ・D-01）
+        #
+        # 接続先 (url, model) は表示欄（url_var / model_var）ではなく有効スナップ
+        # ショット s から決める。表示欄は _start_ocr が起動時のプロバイダ用に初期化した
+        # 値で、フォールバック（lmstudio -> ollama 等）で s のプロバイダが変わっても
+        # 追随しないため、それを真値にすると ollama でも LM Studio の URL へ送信して
+        # いた。解決した接続先は表示欄へ書き戻し、表示と実送信先を一致させる。
+        endpoint = resolve_local_endpoint(s, name)
+        if endpoint is not None:
+            url, model = endpoint
+            _set_var_if_changed(self.url_var, url)
+            _set_var_if_changed(self.model_var, model)
+        else:
+            # ローカル接続先設定を持たないプロバイダ（クラウド/tesseract/プラグイン
+            # 等）は url/model を送信に使わない。従来どおり表示欄のライブ値を読む。
+            try:
+                url = self.url_var.get().strip()
+            except (tk.TclError, ValueError):
+                url = getattr(self.provider, "url", "") if self.provider else ""
+            try:
+                model = self.model_var.get().strip()
+            except (tk.TclError, ValueError):
+                model = getattr(self.provider, "model", "") if self.provider else ""
+        try:
+            raw_mt = int(self.max_tokens_var.get())
+            max_tokens = max(-1, min(MAX_OCR_MAX_TOKENS, raw_mt))
+        except (tk.TclError, ValueError):
+            _prov = self.provider
+            max_tokens = getattr(_prov, "max_tokens", -1) if _prov else -1
+        try:
+            temperature = max(0.0, min(2.0, float(self.temperature_var.get())))
+        except (tk.TclError, ValueError):
+            _prov = self.provider
+            temperature = getattr(_prov, "temperature", 0.1) if _prov else 0.1
+
+        from pagefolio.ocr import _resolve_api_key
+        from pagefolio.ocr_providers import OCRAPIKeyError
+
+        if name == "claude":
+            # claude: build_provider 経由でキー注入（D-01/D-05）
+            session_keys = getattr(self.app, "_session_api_keys", {})
+            try:
+                api_key = _resolve_api_key("claude", session_keys)
+            except OCRAPIKeyError:
+                api_key = ""
+            self.provider = build_provider(
+                s,
+                api_key=api_key,
+                plugin_manager=getattr(self.app, "plugin_manager", None),
+            )
+        elif name == "gemini":
+            # gemini: build_provider 経由でキー注入（D-01/D-05/T-06-11）
+            session_keys = getattr(self.app, "_session_api_keys", {})
+            try:
+                api_key = _resolve_api_key("gemini", session_keys)
+            except OCRAPIKeyError:
+                api_key = ""
+            self.provider = build_provider(
+                s,
+                api_key=api_key,
+                plugin_manager=getattr(self.app, "plugin_manager", None),
+            )
+        elif name == "openai":
+            # openai: build_provider 経由でキー注入（D-01/D-05・claude/gemini と
+            # 同型）。継続タスク回帰修正: 以前は専用 elif が無く末尾の
+            # tesseract/プラグイン専用 else 分岐へ落ち、build_provider が
+            # api_key 引数なしで呼ばれて OpenAIProvider.api_key が空文字に
+            # なっていた（実機で HTTP 401: "You didn't provide an API key" として
+            # 顕在化。readiness チェック（_check_cloud_api_key）は通るのに
+            # 実行時にキーが空になる食い違いだった）。
+            session_keys = getattr(self.app, "_session_api_keys", {})
+            try:
+                api_key = _resolve_api_key("openai", session_keys)
+            except OCRAPIKeyError:
+                api_key = ""
+            self.provider = build_provider(
+                s,
+                api_key=api_key,
+                plugin_manager=getattr(self.app, "plugin_manager", None),
+            )
+        elif name == "ollama":
+            from pagefolio.ocr_providers import OllamaProvider
+
+            self.provider = OllamaProvider(
+                url=url,
+                model=model,
+                timeout=self._effective_timeout,
+                max_tokens=max_tokens,
+                temperature=temperature,
+            )
+        elif name == "runpod":
+            session_keys = getattr(self.app, "_session_api_keys", {})
+            try:
+                api_key = _resolve_api_key("runpod", session_keys)
+            except OCRAPIKeyError:
+                api_key = ""
+            self.provider = build_provider(
+                s,
+                api_key=api_key,
+                plugin_manager=getattr(self.app, "plugin_manager", None),
+            )
+        elif name in ("lmstudio", "", "off"):
+            # lmstudio: 有効スナップショットの接続先（上で解決済みの url/model）で
+            # 再生成する。off は入口で中断済みのためここには到達しない
+            # （構造的安全網として残す）。
+            from pagefolio.ocr_providers import LMStudioProvider
+
+            self.provider = LMStudioProvider(
+                url=url,
+                model=model,
+                timeout=self._effective_timeout,
+                max_tokens=max_tokens,
+                temperature=temperature,
+            )
+        else:
+            # H-2: tesseract / プラグイン登録プロバイダは build_provider で再生成
+            # （else で LMStudioProvider を生成すると tesseract 選択時に画像が
+            #  LM Studio URL へ送信される重大な誤動作が発生する）
+            self.provider = build_provider(
+                s,
+                plugin_manager=getattr(self.app, "plugin_manager", None),
+            )
+
+        # H-3: provider 再生成後に concurrency を max_concurrency 以下に再クランプ
+        # （lmstudio→gemini 切替時など max_concurrency が変わる場合に対応）
+        self.concurrency = max(1, min(self.provider.max_concurrency, self.concurrency))
+        # D-07: Tesseract 段階的縮退フォールバックの非モーダル注記を更新
+        self._maybe_show_lang_fallback_notice()
+
+        # producer-consumer: consumer（Engine）先行起動 → producer 開始。
+        # キュー/PipelineState は OCRRunEngine.start() が一度だけ生成する
+        # （落とし穴10・T-03-02。producer は self._engine.queue 経由で参照する）。
+        self._render_idx = 0
+        # M-2: 世代カウンタをインクリメントしローカルに捕捉する。
+        # ワーカー起動後に旧世代の after コールバックを無効化するため。
+        self._run_gen += 1
+        gen = self._run_gen
+        # consumer（Engine）を先に起動してから producer（レンダリング）を開始する
+        self._start_worker_thread(gen)
+        self._render_next_page(gen)
+
+    def _render_next_page(self, gen=None):
+        """メインスレッド（生産者）: 1 ページ render → キューに積む（after(0) 連鎖）。
+
+        fitz アクセスはここのみ（D-04 必達）。M-1: try_enqueue で non-blocking。
+        M-2: gen 不一致または winfo_exists() False なら早期 return（世代ガード）。
+        全ページ完了・キャンセル・fatal 確定時に None 終了シグナルで worker を
+        終わらせる（enqueue/sentinel は ocr_pipeline.try_enqueue/send_sentinels
+        経由・D-01/D-02）。キュー参照は self._engine.queue に一本化する
+        （落とし穴10・T-03-02: producer/consumer が同一インスタンスを共有）。
+        """
+        # M-2: 世代ガード（ダイアログ破棄後 / キャンセル→再実行の旧コールバック排除）
+        if gen is not None and gen != self._run_gen:
+            return
+        try:
+            if not self.winfo_exists():
+                return
+        except Exception:
+            return
+
+        if self._cancel_flag.is_set():
+            # キャンセル: 全ワーカー分の終了シグナルを送る（CR-01 Pitfall-E）
+            # WR-01: 部分送出時は残り本数のみを再試行し worker のポーリング残留を防ぐ
+            sent = send_sentinels(self._engine.queue, self.concurrency)
+            if sent < self.concurrency:
+                self._retry_sentinels(gen, self.concurrency - sent)
+            self._finish_cancelled()
+            return
+
+        if self._engine is not None and self._engine.is_fatal():
+            # L-6g: fatal 確定後は producer も残ページの render を継続しない。
+            # 全ワーカー分の終了シグナルを送るのみに留め、終了処理自体は
+            # 最終ワーカー側（Engine の decrement_worker 判定）に委ねる。
+            # ここで直接呼んでも _finish_error の冪等ガードにより二重実行しない。
+            # WR-01: 部分送出時は残り本数のみを再試行し worker のポーリング残留を防ぐ
+            sent = send_sentinels(self._engine.queue, self.concurrency)
+            if sent < self.concurrency:
+                self._retry_sentinels(gen, self.concurrency - sent)
+            self._finish_error(self._engine.fatal_msg, kind=self._engine.fatal_kind)
+            return
+
+        total = len(self._run_pages)
+        idx = self._render_idx
+
+        if idx >= total:
+            # 全ページ完了: 全ワーカー分の終了シグナルを送る（CR-01 Pitfall-E）
+            # M-1: 非ブロッキングで送信。部分送出なら after(100) で残りを再試行。
+            sent = send_sentinels(self._engine.queue, self.concurrency)
+            if sent < self.concurrency:
+                g = gen
+                self.after(100, lambda _g=g: self._render_next_page(_g))
+            return  # _finish_complete は最終ワーカーが呼ぶ
+
+        page_idx = self._run_pages[idx]
+
+        try:
+            page = self.doc[page_idx]
+            # D-05: has_embedded_text / get_text / page_to_png_b64 はメインスレッドのみ
+            # _force_ocr=True なら埋め込みテキストを無視して全ページ Vision OCR する
+            if not self._force_ocr and has_embedded_text(page):
+                # 埋め込みテキストあり: results に直接投入しスキップ（D-03 統合対象）
+                # T-04-09: 抽出テキストをログへ混入させない
+                extracted = page.get_text()
+                self.results[page_idx] = extracted
+                self._skipped_pages.add(page_idx)
+                self._engine.note_skip(page_idx)  # D-07/D-12: Engine 側の統合進捗へ計上
+                # スキップはキューに積まず次ページへ（progress bar を after で更新）
+                done_disp = self._engine.progress_count()
+                total_pages = len(self._run_pages)
+                self.after(
+                    0,
+                    lambda d=done_disp, t=total_pages: self.progress_var.set(
+                        self._L["ocr_progress_ocr"].format(
+                            done=d, total=t, page=page_idx + 1
+                        )
+                    ),
+                )
+                self.after(0, lambda d=done_disp: self._on_progress_bar(d))
+            else:
+                # 埋め込みテキストなし: Vision OCR のためレンダリングしてキューへ積む
+                b64 = page_to_png_b64(page, scale=self._ocr_scale)
+                # M-1: 非ブロッキングで積む。Full なら同一ページを after(100) で
+                # 再スケジュール（_render_idx を進めない）。
+                if not try_enqueue(self._engine.queue, (page_idx, b64)):
+                    g = gen
+                    self.after(100, lambda _g=g: self._render_next_page(_g))
+                    return
+        except Exception as e:
+            logger.exception("ページ処理失敗 (p.%d): %s", page_idx, e)
+            self.errors[page_idx] = f"image conversion error: {e}"
+            # L-6a: レンダー失敗ページも「処理済み」として進捗計上する。
+            # 計上しないと進捗バーが 100% に到達しないまま完了してしまう。
+            self._render_failed_pages.add(page_idx)
+            self._engine.note_render_failed(page_idx)  # D-07/D-12
+            done_disp = self._engine.progress_count()
+            total_pages = len(self._run_pages)
+            self.after(
+                0,
+                lambda d=done_disp, t=total_pages: self.progress_var.set(
+                    self._L["ocr_progress_ocr"].format(
+                        done=d, total=t, page=page_idx + 1
+                    )
+                ),
+            )
+            self.after(0, lambda d=done_disp: self._on_progress_bar(d))
+
+        self._render_idx += 1
+        # 次のページを after(0) で連鎖（UI フリーズ回避）
+        g = gen
+        self.after(0, lambda _g=g: self._render_next_page(_g))
+
+    def _retry_sentinels(self, gen, remaining):
+        """WR-01: キュー満杯で部分送出になった終了シグナルの残り分のみを再試行する。
+
+        cancel / fatal 経路専用のヘルパー。send_sentinels の契約
+        （「戻り値が count 未満なら残り本数のみ再試行」）を守り、
+        既に送信済みの本数を再送しない。世代ガードで旧世代の再試行は無視する。
+        キュー参照は self._engine.queue に一本化する（落とし穴10）。
+        """
+        if gen is not None and gen != self._run_gen:
+            return
+        try:
+            if not self.winfo_exists():
+                return
+        except Exception:
+            return
+        sent = send_sentinels(self._engine.queue, remaining)
+        if sent < remaining:
+            left = remaining - sent
+            self.after(50, lambda _g=gen, n=left: self._retry_sentinels(_g, n))
+
+    def _start_worker_thread(self, gen=None):
+        """consumer（OCRRunEngine）を生成し concurrency 本のワーカーを起動する（D-04）。
+
+        D-11: 実行（run/rerun/resume）ごとに OCRRunEngine を新規生成する
+        （世代ガードと同種の安全性を構造的に得る）。producer 開始前に先行
+        起動する。Engine 内部で queue.Queue/PipelineState を一度だけ生成し
+        （落とし穴10・T-03-02）、producer（_render_next_page）は
+        self._engine.queue 経由でのみ参照する。
+
+        完了理由別コールバック（on_complete/on_cancelled/on_fatal）は
+        Engine のワーカースレッドから同期的に呼ばれるため、Tkinter への
+        ディスパッチ（after(0, ...)）は _on_engine_* アダプタが担う
+        （D-05・REVIEW MEDIUM 対応: winfo_exists() はワーカースレッド側では
+        呼ばず _safe_finish_* 内でのみ呼ぶ）。
+        """
+        self._engine = OCRRunEngine(
+            provider=self.provider,
+            prompt=self._ocr_prompt,
+            run_pages=self._run_pages,
+            concurrency=self.concurrency,
+            cancel_flag=self._cancel_flag,
+            on_success=lambda p, t, tr: self._record_page_success(p, t, truncated=tr),
+            on_page_error=self._record_page_error,
+            on_retry_wait=self._on_retry_wait_for(gen),
+            on_progress=self._on_engine_progress_for(gen),
+            on_complete=lambda: self._on_engine_complete(gen),
+            on_cancelled=lambda: self._on_engine_cancelled(gen),
+            on_fatal=lambda msg, kind: self._on_engine_fatal(gen, msg, kind),
+            breaker_threshold=CB_CONSECUTIVE_FAILURES,
+        )
+        self._engine.start()
+
+    def _on_retry_wait_for(self, gen):
+        """リトライ待機開始時コールバックを生成する（D-06・旧 _worker._on_retry_wait）。
+
+        Engine のワーカースレッドから呼ばれる。世代ガード後にのみ
+        after(0, ...) を投函する（winfo_exists() はここでは呼ばない・
+        REVIEW MEDIUM 対応）。
+        """
+
+        def _on_retry_wait(page_idx, attempt, delay, exc):
+            if gen is None or gen == self._run_gen:
+                wait_key = self._retry_wait_key(exc)
+                msg = self._build_retry_wait_message(wait_key, page_idx, attempt, delay)
+                try:
+                    self.after(0, lambda m=msg: self.progress_var.set(m))
+                except tk.TclError:
+                    pass
+
+        return _on_retry_wait
+
+    def _on_engine_progress_for(self, gen):
+        """統合進捗コールバックを生成する（D-07・旧 _worker の進捗更新部）。
+
+        Engine のワーカースレッドから (done, page_idx) を受け取る。世代
+        ガード後にのみ after(0, ...) を投函する（winfo_exists() 非呼び出し）。
+        """
+        total = len(self._run_pages)
+
+        def _on_progress(done, page_idx):
+            if gen is None or gen == self._run_gen:
+                try:
+                    self.after(
+                        0,
+                        lambda d=done, p=page_idx: self.progress_var.set(
+                            self._L["ocr_progress_ocr"].format(
+                                done=d, total=total, page=p + 1
+                            )
+                        ),
+                    )
+                    self.after(0, lambda d=done: self._on_progress_bar(d))
+                except tk.TclError:
+                    pass
+
+        return _on_progress
+
+    def _on_engine_complete(self, gen):
+        """完了理由別アダプタ（正常完了・D-08）。Engine の最終ワーカーから
+        同期的に呼ばれる。世代ガード評価 + after(0, ...) 投函のみを行い、
+        winfo_exists() はここでは呼ばない（REVIEW MEDIUM 対応・実際の
+        ウィジェット存在チェックと描画は _safe_finish_complete が担う）。
+        """
+        if gen is not None and gen != self._run_gen:
+            return
+        try:
+            self.after(0, self._safe_finish_complete)
+        except tk.TclError:
+            pass
+
+    def _on_engine_cancelled(self, gen):
+        """完了理由別アダプタ（キャンセル・D-08）。_on_engine_complete と同型。"""
+        if gen is not None and gen != self._run_gen:
+            return
+        try:
+            self.after(0, self._safe_finish_cancelled)
+        except tk.TclError:
+            pass
+
+    def _on_engine_fatal(self, gen, msg, kind):
+        """完了理由別アダプタ（fatal・D-08）。_on_engine_complete と同型。"""
+        if gen is not None and gen != self._run_gen:
+            return
+        try:
+            self.after(0, lambda m=msg, k=kind: self._safe_finish_error(m, k))
+        except tk.TclError:
+            pass
+
+    def _safe_finish_complete(self):
+        """メインスレッド finalizer（正常完了・REVIEW MEDIUM 対応）。
+
+        after(0, ...) 経由でメインスレッドから呼ばれる。冒頭で
+        winfo_exists() を確認してから既存の描画/終了処理を呼ぶ（旧 _worker
+        末尾 CR-01 の呼び出し順序をそのまま再現）。
+        """
+        if not self.winfo_exists():
+            return
+        self._render_results_ordered()
+        self._finish_complete()
+
+    def _safe_finish_cancelled(self):
+        """メインスレッド finalizer（キャンセル・REVIEW MEDIUM 対応）。"""
+        if not self.winfo_exists():
+            return
+        self._finish_cancelled()
+
+    def _safe_finish_error(self, msg, kind):
+        """メインスレッド finalizer（fatal・REVIEW MEDIUM 対応）。"""
+        if not self.winfo_exists():
+            return
+        self._finish_error(msg, kind=kind)
+
+    # ── UI 更新（メインスレッド） ──
+    def _on_progress_bar(self, done):
+        """進捗バーの値だけを更新する（テキスト挿入なし）"""
+        self.progress_bar["value"] = done
+
+    def _insert_markdown(self, text):
+        """parse_markdown の戻り値を text へ整形挿入する薄い描画ヘルパー。
+
+        preset == "markdown" の本文のみで呼ばれる（Pitfall 2: text/table や
+        Tesseract/LMStudio 素出力には当てない構造的ガードは呼び出し側）。
+        各 span を insert し inline_tag があれば tag_add、行末で行レベルタグ
+        （kind）を行全体へ tag_add する（04-RESEARCH.md:137-146）。整形は表示
+        専用でコピー/保存（_format_full_text）は raw 維持（Pitfall 5）。
+        """
+        for kind, spans in parse_markdown(text):
+            line_start = self.text.index("end-1c")
+            for span_text, inline_tag in spans:
+                if inline_tag:
+                    self.text.insert("end", span_text, inline_tag)
+                else:
+                    self.text.insert("end", span_text)
+            self.text.insert("end", "\n")
+            if kind:
+                self.text.tag_add(kind, line_start, "end-1c")
+
+    def _render_results_ordered(self):
+        """results / errors をページ順に text へ流し込む（並列実行後の一括描画）"""
+        # preset == "markdown" のときのみ整形描画（Pitfall 2 構造的ガード）。
+        # text/table や Tesseract/LMStudio 素出力には Markdown パーサを当てない。
+        # カスタムプロンプト使用時もプリセットが「表示形式の選択」として働く
+        # （V174-3: Markdown 指定はプリセットへ一本化・_update_preset_note で注記）。
+        markdown = self.preset_var.get() == "markdown"
+        for page_idx in self.page_indices:
+            sep = self._L["ocr_page_separator"].format(page=page_idx + 1)
+            self.text.insert("end", f"\n{sep}\n")
+            if page_idx in self._skipped_pages:
+                # D-08: 埋め込みテキストスキップをスキップ通知と共に表示
+                skip_notice = self._L["ocr_text_skip_notice"].format(page=page_idx + 1)
+                self.text.insert("end", f"[{skip_notice}]\n")
+                if page_idx in self.results:
+                    self._insert_results_body(page_idx, markdown)
+            elif page_idx in self.results:
+                self._insert_results_body(page_idx, markdown)
+                # D-05: max_tokens 途切れページは部分テキストの後に専用文言を併記
+                if page_idx in self._truncated_pages:
+                    notice = self._L["ocr_err_truncated"].format(page=page_idx + 1)
+                    self.text.insert("end", f"[{notice}]\n")
+            elif page_idx in self.errors:
+                self.text.insert(
+                    "end",
+                    self._L["ocr_page_error"].format(error=self.errors[page_idx])
+                    + "\n",
+                )
+        self.text.see("end")
+
+    def _insert_results_body(self, page_idx, markdown):
+        """results 本文の挿入のみを担う。markdown のときだけ整形描画する。
+
+        markdown == False のときは従来の素朴 insert を完全に温存（後方互換）。
+        """
+        if markdown:
+            self._insert_markdown(self.results[page_idx])
+        else:
+            self.text.insert("end", self.results[page_idx] + "\n")
+
+    def _finish_complete(self):
+        if self._done:  # CR-02: 冪等ガード（二重呼び出し防止）
+            return
+        self._done = True
+        if self._cancel_flag.is_set():
+            self.progress_var.set(self._L["ocr_cancelled"])
+        elif self.errors:
+            # エラーページありの完了: 件数を明示し警告色で表示する
+            self.progress_var.set(
+                self._L["ocr_complete_with_errors"].format(
+                    count=len(self.results),
+                    total=len(self.page_indices),
+                    err=len(self.errors),
+                )
+            )
+            self._progress_label.configure(fg=C["WARNING"])
+        else:
+            self.progress_var.set(
+                self._L["ocr_complete"].format(
+                    count=len(self.results), total=len(self.page_indices)
+                )
+            )
+        self.cancel_btn.state(["disabled"])
+        # 一部ページがエラーのまま完了した場合は再開案内を追記する
+        self._append_resume_hint()
+        if self.results:
+            self.copy_btn.state(["!disabled"])
+            self.save_btn.state(["!disabled"])
+        self._after_run_ui_reset()
+
+    def _finish_cancelled(self):
+        if self._done:  # CR-02: 冪等ガード（二重呼び出し防止）
+            return
+        self._done = True
+        self.progress_var.set(self._L["ocr_cancelled"])
+        self.cancel_btn.state(["disabled"])
+        if self.results or self.errors:
+            self._render_results_ordered()
+        self._append_resume_hint()
+        if self.results:
+            self.copy_btn.state(["!disabled"])
+            self.save_btn.state(["!disabled"])
+        self._after_run_ui_reset()
+
+    def _finish_error(self, msg, kind):
+        if self._done:  # CR-02: 冪等ガード（二重呼び出し防止）
+            return
+        self._done = True
+        if kind == "connection":
+            # 接続エラーは全プロバイダが送出するため、LM Studio 固定文言ではなく
+            # 実際に接続できなかったプロバイダ名と接続先を表示する。
+            user_msg = self._L["ocr_err_connection"].format(
+                provider=self._provider_display_name(),
+                url=self._connection_target_text(),
+                error=msg,
+            )
+        elif kind == "timeout":
+            user_msg = self._L["ocr_err_timeout"].format(
+                timeout=getattr(self, "_effective_timeout", self.timeout_var.get()),
+                error=msg,
+            )
+        elif kind == "circuit_breaker":
+            # サーキットブレーカー: 連続失敗による中断（成功済み結果は保持）
+            user_msg = self._L["ocr_err_circuit_breaker"].format(
+                n=CB_CONSECUTIVE_FAILURES, error=msg
+            )
+        else:
+            user_msg = msg
+        self.progress_var.set(self._L["ocr_failed"])
+        self._progress_label.configure(fg=C["WARNING"])
+        if self.results or self.errors:
+            self._render_results_ordered()
+        self.text.insert("end", "\n" + user_msg + "\n")
+        self._append_resume_hint()
+        self.text.see("end")
+        self.cancel_btn.state(["disabled"])
+        if self.results:
+            self.copy_btn.state(["!disabled"])
+            self.save_btn.state(["!disabled"])
+        self._after_run_ui_reset()
+        # V180-FALL-02: フォールバック提案フック（D-11）
+        self._propose_fallback(kind, msg)
+
+    def _connection_target_text(self):
+        """接続エラー文言に表示する「実際に接続しようとした先」を返す。
+
+        優先順: ① 実行中プロバイダの url（LM Studio / Ollama / RunPod では
+        実送信先そのもの）② 有効設定から解決したローカル接続先
+        ③ クラウド等の送信先ホスト
+        （_resolved_host_text。解決不能なら送信先不明の旨）。表示欄 url_var は
+        ローカル系の初期値であり、クラウドプロバイダのときは無関係な LM Studio の値が
+        残り得るため参照しない。
+        """
+        url = getattr(self.provider, "url", "")
+        if isinstance(url, str) and url:
+            return url
+        settings = getattr(self, "_active_ocr_settings", None) or self.app.settings
+        name = settings.get("ocr_provider", "")
+        endpoint = resolve_local_endpoint(settings, name)
+        if endpoint is not None and endpoint[0]:
+            return endpoint[0]
+        return _resolved_host_text(name, settings, self._L)
+
+    def _append_resume_hint(self):
+        """部分的に成功している場合、未処理ページ数と再開案内を結果欄に追記する"""
+        if not self._can_resume():
+            return
+        pending = self._pending_pages()
+        self.text.insert(
+            "end",
+            self._L["ocr_resume_hint"].format(n=len(pending), first=pending[0] + 1)
+            + "\n",
+        )
+        self.text.see("end")
+
+    # ── 操作 ──
+    def _on_cancel(self):
+        # キャンセルボタンは実行中（OCR / サマリ生成）のみ有効
+        self._cancel_flag.set()
+        self._summary_cancel_flag.set()
+        self.cancel_btn.state(["disabled"])
+        self.progress_var.set(self._L["ocr_cancelling"])
+
+    def _on_close(self):
+        # 未開始または完了済み（かつサマリ生成中でない）なら確認なしで閉じる
+        running = (self._started and not self._done) or self._summary_running
+        if not running:
+            # M-2: 閉じる前に世代を無効化し旧ワーカーの after を排除する
+            self._run_gen += 1
+            self.destroy()
+            return
+        ok = messagebox.askyesno(
+            self._L["confirm_title"],
+            self._L["ocr_close_during_run"],
+            parent=self,
+        )
+        if not ok:
+            return
+        self._cancel_flag.set()
+        self._summary_cancel_flag.set()
+        # M-2: 閉じる前に世代を無効化し旧ワーカーの after を排除する
+        self._run_gen += 1
+        self.destroy()
+
+    def _format_pages_text(self):
+        """ページ本文のみをセパレータ付きで連結して返す（サマリは含めない）。
+
+        サマリ生成の LLM 入力と _format_full_text の共有経路。サマリを再生成
+        するとき旧サマリが入力へ混入しないよう、サマリ本文はここに含めない。
+        """
+        parts = []
+        for page_idx in self.page_indices:
+            if page_idx not in self.results:
+                continue
+            sep = self._L["ocr_page_separator"].format(page=page_idx + 1)
+            parts.append(sep)
+            parts.append(self.results[page_idx])
+        return "\n".join(parts)
+
+    def _format_full_text(self):
+        """コピー/保存用の全文（ページ本文 + サマリ・raw 維持）を返す。"""
+        text = self._format_pages_text()
+        if not self.summary_result:
+            return text
+        parts = [text] if text else []
+        parts.append(self._L["ocr_summary_separator"])
+        parts.append(self.summary_result)
+        return "\n".join(parts)
+
+    # ── 全ページ統合サマリ ──
+    def _on_summary(self, settings=None):
+        """サマリ作成: 全ページの OCR 結果テキストを LLM へ送信し統合サマリを生成。
+
+        手動トリガー（クラウドコスト配慮）。OCR 完了後（results あり）のみ実行
+        できる。実行はワーカースレッド 1 本 + _run_gen 世代ガード + サマリ専用
+        キャンセルフラグで制御する。プロンプトは settings["ocr_summary_prompt"]
+        （カスタム）> プロバイダ別 > 既定 の順で解決する（resolve_summary_prompt）。
+
+        引数:
+          settings: ダイアログローカルの設定スナップショット（省略時はアプリ
+                    永続設定を新規参照）。フォールバック再開時は
+                    _switch_to_fallback_provider が候補設定を渡す
+                    （レビュー MEDIUM 対応・D-12）。
+        """
+        if (self._started and not self._done) or self._summary_running:
+            return
+        if not self.results:
+            return
+        # off では旧 provider を保持するため、その能力だけで実行を許可しない。
+        # フォールバック候補も本文構築・キー照会・状態変更より前に確認する。
+        s = settings if settings is not None else dict(self.app.settings)
+        if (
+            self.app.settings.get("ocr_provider") == "off"
+            or s.get("ocr_provider") == "off"
+        ):
+            return
+        # 三重ガードの 2 段目（1 段目はボタン無効化・3 段目は NotImplementedError）
+        if not getattr(self.provider, "supports_text_prompt", False):
+            messagebox.showerror(
+                self._L["err_title"],
+                self._L["ocr_summary_unsupported"].format(
+                    name=self._provider_display_name()
+                ),
+                parent=self,
+            )
+            return
+
+        # メインスレッドで入力を確定（ページ本文のみ・旧サマリは含めない）
+        full_text = self._format_pages_text()
+        if not full_text:
+            return
+        # ダイアログローカル設定スナップショットを確定する（レビュー MEDIUM 対応）。
+        # 以降このメソッド内の全設定参照は s（=self._active_ocr_settings）から
+        # 行う（フォールバック先候補が正しく反映されるようにするため）。
+        # 02-REVIEW WR-02 修正: _on_run と同様、settings 省略時は self.app.settings
+        # を直接エイリアスせず dict() でコピーする。「self.app.settings は一切
+        # 書き換えない」不変条件（Pitfall 4）の防御的コピーを _on_run と揃える。
+        self._active_ocr_settings = s
+        name = s.get("ocr_provider", "")
+        # V174-2: 外部 md ファイル（exe と同階層）があれば設定欄より優先
+        prompt = resolve_summary_prompt(name, load_summary_prompt(s))
+
+        # ── クラウド実行ゲート（OCR 実行時と同方針・毎回確認）──
+        if self._is_cloud_provider(settings=s):
+            if not self._check_cloud_api_key(settings=s):
+                return
+            # フォールバック再開中は確認 askyesno が送信先確認を兼ねるため
+            # 二重表示しない（D-10/D-11）
+            if not getattr(self, "_fallback_resume", False):
+                if not self._confirm_summary_cost(len(full_text), settings=s):
+                    return
+
+        # ── 入力過大の事前警告（コンテキスト長超過しやすい規模・全プロバイダ）──
+        if len(full_text) > SUMMARY_TOO_LONG_CHARS:
+            proceed = messagebox.askyesno(
+                self._L["ocr_cost_confirm_title"],
+                self._L["ocr_summary_too_long_confirm"].format(chars=len(full_text)),
+                parent=self,
+            )
+            if not proceed:
+                return
+
+        # サマリ専用タイムアウト: 全ページ連結テキストは OCR 1 ページより長い
+        # ため、実行中のみ provider.timeout を SUMMARY_TIMEOUT_MIN まで引き上げる
+        # （サマリ中は OCR 実行ボタンが disabled のため provider は共有されない。
+        # _summary_ui_reset で必ず復元する）
+        self._summary_prev_timeout = getattr(self.provider, "timeout", None)
+        if self._summary_prev_timeout is not None:
+            self.provider.timeout = max(self._summary_prev_timeout, SUMMARY_TIMEOUT_MIN)
+
+        # 実行状態へ遷移
+        self._summary_running = True
+        self._summary_cancel_flag.clear()
+        self.summary_result = None
+        self._summary_truncated = False
+        self.run_btn.state(["disabled"])
+        self.resume_btn.state(["disabled"])
+        self.clear_btn.state(["disabled"])
+        self.copy_btn.state(["disabled"])
+        self.save_btn.state(["disabled"])
+        self.summary_btn.state(["disabled"])
+        self._llm_config_btn.state(["disabled"])
+        self.cancel_btn.state(["!disabled"])
+        self.progress_var.set(self._L["ocr_summary_running"])
+        self._progress_label.configure(fg=C["SUCCESS"])
+
+        # 進捗表示: サマリは単発 API 呼び出しのため determinate バーでは
+        # 一切動かない。indeterminate パルス + 経過秒数ティッカーで
+        # 「処理が進行している」ことを可視化する（体感フリーズ防止）
+        self._summary_base_msg = self._L["ocr_summary_running"]
+        self._summary_started_at = time.monotonic()
+        self.progress_bar.configure(mode="indeterminate")
+        self.progress_bar.start(12)
+
+        # M-2: 世代を進めて捕捉する（OCR 完了後のため既存ワーカーへの副作用は
+        # なく、残留していた旧 after があってもここで無効化される）
+        self._run_gen += 1
+        gen = self._run_gen
+        self._summary_tick_id = self.after(1000, lambda: self._summary_tick(gen))
+        threading.Thread(
+            target=self._summary_worker, args=(gen, full_text, prompt), daemon=True
+        ).start()
+
+    def _summary_tick(self, gen):
+        """サマリ実行中の経過秒数を 1 秒間隔で表示する（メインスレッド）。
+
+        世代ガード（gen != _run_gen）または実行終了で自然停止する。
+        リトライ待機文言（_set_summary_base_msg）ともここで合成される。
+        """
+        if gen != self._run_gen or not self._summary_running:
+            return
+        try:
+            sec = int(time.monotonic() - self._summary_started_at)
+            self.progress_var.set(
+                self._L["ocr_summary_elapsed"].format(
+                    msg=self._summary_base_msg, sec=sec
+                )
+            )
+            self._summary_tick_id = self.after(1000, lambda: self._summary_tick(gen))
+        except tk.TclError:
+            # ダイアログ破棄後に発火した場合は静かに停止する
+            self._summary_tick_id = None
+
+    def _set_summary_base_msg(self, msg):
+        """ティッカーのベース文言を更新し、経過表示を即時反映する。
+
+        _summary_worker のリトライ待機通知から after(0) で呼ばれる。
+        progress_var を直接上書きしない（次のティックで消される）ための経路。
+        """
+        self._summary_base_msg = msg
+        sec = int(time.monotonic() - self._summary_started_at)
+        self.progress_var.set(self._L["ocr_summary_elapsed"].format(msg=msg, sec=sec))
+
+    def _summary_progress_stop(self):
+        """サマリ進捗表示の停止: ティッカー解除 + バーを determinate へ復元。
+
+        バーは OCR 完了時の満杯表示（maximum=対象ページ数）に戻す。
+        成功/失敗/キャンセル共通で _summary_ui_reset から呼ばれる。
+        """
+        if self._summary_tick_id is not None:
+            try:
+                self.after_cancel(self._summary_tick_id)
+            except tk.TclError:
+                pass
+            self._summary_tick_id = None
+        try:
+            self.progress_bar.stop()
+            maximum = max(1, len(self.page_indices))
+            self.progress_bar.configure(mode="determinate", maximum=maximum)
+            self.progress_bar["value"] = maximum
+        except tk.TclError:
+            pass
+
+    def _summary_worker(self, gen, full_text, prompt):
+        """バックグラウンドスレッド: complete_text_ex を単発呼び出しする。
+
+        _worker と同じリトライ規約（指数バックオフ + clamp_retry_after +
+        interruptible_sleep）。キャンセル判定はサマリ専用 _summary_cancel_flag
+        のみを見る。終端は世代ガード後に after(0) でメインスレッドへ投函する
+        （M-2 と同パターン・tk.TclError 捕捉）。urlopen の制約上、送信中の
+        1 リクエストは即時中断できない（キャンセルはリトライ待機でのみ反応）。
+        """
+        from pagefolio.ocr import clamp_retry_after, interruptible_sleep
+        from pagefolio.ocr_providers import OCRContextLengthError, OCRRetryableError
+
+        result = None
+        error_msg = None
+        error_kind = None
+        for attempt in range(1, MAX_RETRIES + 1):
+            if self._summary_cancel_flag.is_set():
+                break
+            try:
+                result = self.provider.complete_text_ex(full_text, prompt)
+                break
+            except OCRRetryableError as e:
+                if attempt >= MAX_RETRIES:
+                    error_msg = str(e)
+                    break
+                # D-06: 実待機秒（クランプ後）を文言生成より前に算出する
+                raw_delay = (
+                    e.retry_after
+                    if e.retry_after is not None
+                    else 1.0 * (2 ** (attempt - 1))
+                )
+                delay = clamp_retry_after(raw_delay)
+                if gen is None or gen == self._run_gen:
+                    msg = self._L["ocr_summary_waiting_retry"].format(
+                        n=attempt, max=MAX_RETRIES, sec=round(delay)
+                    )
+                    try:
+                        # progress_var 直接更新ではなくベース文言更新経由
+                        # （経過秒数ティッカーとの表示競合を避ける）
+                        self.after(0, lambda m=msg: self._set_summary_base_msg(m))
+                    except tk.TclError:
+                        pass
+                interruptible_sleep(delay, self._summary_cancel_flag.is_set)
+            except NotImplementedError as e:
+                # 三重ガードの 3 段目（プロバイダ差し替え等のすり抜け対策）
+                error_msg = str(e)
+                break
+            except OCRContextLengthError as e:
+                # 入力（全ページ連結テキスト）がコンテキスト長上限を超過。
+                # リトライしても解消しないため専用ガイダンスで即中断する
+                error_msg = str(e)
+                error_kind = "ctx"
+                break
+            except TimeoutError as e:
+                error_msg = str(e)
+                error_kind = "timeout"
+                break
+            except (ConnectionError, RuntimeError) as e:
+                error_msg = str(e)
+                break
+            except Exception as e:
+                logger.exception("サマリ生成呼び出し失敗: %s", e)
+                error_msg = str(e)
+                break
+
+        # M-2: 世代ガード後にのみ終了処理 after を投函する
+        if gen is not None and gen != self._run_gen:
+            return
+        try:
+            if self._summary_cancel_flag.is_set():
+                self.after(0, self._on_summary_cancelled)
+            elif result is not None:
+                text, truncated = result
+                self.after(0, lambda t=text, tr=truncated: self._on_summary_done(t, tr))
+            else:
+                self.after(
+                    0,
+                    lambda m=error_msg or "", k=error_kind: self._on_summary_error(
+                        m, k
+                    ),
+                )
+        except tk.TclError:
+            pass
+
+    def _on_summary_done(self, text, truncated):
+        """サマリ生成成功（メインスレッド）: 結果保持・末尾へ追記・UI 復帰。
+
+        表示は preset=="markdown" のときのみ整形描画（_insert_results_body と
+        同じ構造的ガード。V174-3: カスタムサマリプロンプト使用時もプリセットが
+        表示形式の選択として働く）。コピー/保存は raw 維持（_format_full_text）。
+        途切れ（truncated）は「成功＋警告」として部分サマリを保持する（D-05）。
+        """
+        self.summary_result = text
+        self._summary_truncated = truncated
+        self.text.insert("end", f"\n{self._L['ocr_summary_separator']}\n")
+        if self.preset_var.get() == "markdown":
+            self._insert_markdown(text)
+        else:
+            self.text.insert("end", text + "\n")
+        if truncated:
+            self.text.insert("end", self._L["ocr_summary_truncated"] + "\n")
+        self.text.see("end")
+        self.progress_var.set(self._L["ocr_summary_complete"])
+        self._progress_label.configure(fg=C["WARNING"] if truncated else C["SUCCESS"])
+        self._summary_ui_reset()
+
+    def _on_summary_error(self, msg, kind=None):
+        """サマリ生成失敗（メインスレッド）: OCR 結果は破壊せず再実行可能に戻す。
+
+        kind に応じて専用ガイダンスを表示する:
+          "ctx"     — コンテキスト長超過（ページ数を減らして再実行の案内）
+          "timeout" — タイムアウト（タイムアウト延長・対象削減の案内）
+          None      — 従来の汎用文言（安全側フォールバック）
+        """
+        if kind == "ctx":
+            display = self._L["ocr_summary_ctx_exceeded"]
+        elif kind == "timeout":
+            # provider.timeout は _summary_ui_reset で復元される前なので
+            # ここではサマリ実行に使われた実タイムアウト値が読める
+            sec = int(getattr(self.provider, "timeout", 0) or 0)
+            display = self._L["ocr_summary_timeout"].format(sec=sec)
+        else:
+            display = self._L["ocr_summary_failed"].format(error=msg)
+        self.progress_var.set(display)
+        self._progress_label.configure(fg=C["WARNING"])
+        self._summary_ui_reset()
+        # V180-FALL-02/D-12: フォールバック提案フック（サマリ経路）
+        self._propose_fallback(kind or "generic", msg, summary=True)
+
+    # ── プロバイダーフォールバック（V180-FALL-02/03） ──
+
+    def _active_provider_name(self):
+        """現在アクティブな（フォールバック考慮後の）プロバイダ名を返す。"""
+        settings = self._active_ocr_settings or self.app.settings
+        return settings.get("ocr_provider", "")
+
+    def _provider_key_to_display_name(self, name):
+        """内部プロバイダキー（設定値・フォールバック候補名）を人間可読な
+        表示名へ変換する（02-REVIEW WR-04 修正）。
+
+        _provider_display_name() が持つ「キー→表示名」対応を、実行中の
+        self.provider に対する isinstance 判定を伴わない「文字列のみ」版
+        として切り出したもの。フォールバック確認ダイアログの候補名のように、
+        まだ build されていない（＝ self.provider が対応する型に差し替わって
+        いない）候補の表示にも使える。catalog.display_name_key_for
+        （V190-CAT-01）を単一情報源とする。未知のキーはそのまま返す（フォール
+        バック・_provider_display_name と同じ挙動）。空文字は lmstudio として
+        解決する。
+        """
+        from pagefolio.ocr_providers import catalog
+
+        lookup_name = "lmstudio" if name == "" else name
+        lang_key = catalog.display_name_key_for(lookup_name)
+        if lang_key is not None:
+            return self._L.get(lang_key, name)
+        return name
+
+    def _fallback_candidate_host(self, candidate):
+        """フォールバック確認ダイアログに表示する候補の送信先ホスト/表示名を返す。
+
+        クラウド候補は catalog.host_for（V190-CAT-01）が解決する送信先ホスト、
+        ローカル候補（lmstudio/ollama）は接続先 URL、Tesseract はネットワーク
+        送信を伴わないためプロバイダ表示名を返す（D-11・送信先明示）。
+        """
+        settings = self.app.settings
+        if candidate == "lmstudio":
+            return settings.get("lm_studio_url", "http://localhost:1234")
+        if candidate == "ollama":
+            return settings.get("ollama_url", "http://localhost:11434")
+        if candidate == "tesseract":
+            return self._L["ocr_provider_name_tesseract"]
+        return _resolved_host_text(candidate, settings, self._L)
+
+    def _propose_fallback(self, kind, msg, summary=False):
+        """_finish_error / _on_summary_error から呼ぶフォールバック提案フック
+        （D-11/D-12）。summary=True のときはサマリ経路として扱い、
+        next_summary_candidate で text 非対応候補（tesseract 等）を除外する
+        （レビュー MEDIUM）。
+
+        フォールバック連鎖の各段で必ず messagebox.askyesno による送信先確認を
+        再提示する（D-10・「今後表示しない」オプションは設けない）。
+        self.app.settings は一切書き換えない（Pitfall 4）。
+        """
+        if not self.app.settings.get("ocr_fallback_enabled", False):
+            return  # D-16: 既定 OFF（フォールバック未設定時は発火しない）
+        chain = self.app.settings.get("ocr_fallback_chain", [])
+        if not self._fallback_tried:
+            self._fallback_tried = {self._active_provider_name()}
+        if summary:
+            candidate = next_summary_candidate(
+                chain, self._fallback_tried, _TEXT_CAPABLE_PROVIDERS
+            )
+        else:
+            candidate = next_fallback_candidate(chain, self._fallback_tried)
+        if candidate is None:
+            # チェーン終端（D-10）: 現状のエラー表示に終了案内を追記するのみで、
+            # 自動送信はしない。
+            text_widget = getattr(self, "text", None)
+            if text_widget is not None:
+                text_widget.insert("end", "\n" + self._L["fallback_exhausted"] + "\n")
+                text_widget.see("end")
+            return
+        reason_key = {
+            "connection": "fallback_reason_connection",
+            "timeout": "fallback_reason_timeout",
+            "circuit_breaker": "fallback_reason_circuit_breaker",
+            "api_key_missing": "fallback_reason_api_key_missing",
+            "provider_unavailable": "fallback_reason_provider_unavailable",
+        }.get(kind, "fallback_reason_generic")
+        if not messagebox.askyesno(
+            self._L["fallback_confirm_title"],
+            self._L["fallback_confirm_msg"].format(
+                reason=self._L[reason_key],
+                # 02-REVIEW WR-04 修正: 内部プロバイダキーの生値ではなく
+                # ローカライズされた表示名を見せる（他の表示箇所と統一）。
+                candidate=self._provider_key_to_display_name(candidate),
+                host=self._fallback_candidate_host(candidate),
+            ),
+            parent=self,
+        ):
+            # 拒否された候補も試行済み扱い（D-10 連鎖継続）。ユーザー承認なしに
+            # 自動送信はしない（現状のエラー表示のみに留める）。
+            self._fallback_tried.add(candidate)
+            return
+        self._fallback_tried.add(candidate)
+        self._switch_to_fallback_provider(candidate, summary=summary)
+
+    def _validate_provider_readiness(self, candidate, settings):
+        """候補プロバイダが build 前に実行可能か検証する（レビュー LOW・D-11/D-14）。
+
+        クラウド候補は APIキー解決可否を、tesseract はインストール検出を
+        確認する。それ以外のローカル/プラグインプロバイダは True を返す
+        （到達不能は既存の connection fatal 経路が拾い、そこから再度
+        _propose_fallback される）。
+        """
+        if self._is_cloud_provider(settings=settings):
+            return self._check_cloud_api_key(settings=settings)
+        if candidate == "tesseract":
+            from pagefolio.ocr_providers import _detect_tesseract
+
+            available, _langs = _detect_tesseract()
+            return available
+        return True
+
+    def _switch_to_fallback_provider(self, candidate, summary=False):
+        """フォールバック候補への実切替（V180-FALL-03・Pitfall 3/4）。
+
+        self.app.settings は書き換えず、ダイアログローカルスナップショット fb
+        （self._active_ocr_settings）上でのみプロバイダを差し替える。
+        """
+        fb = dict(self.app.settings)
+        fb["ocr_provider"] = candidate
+        self._active_ocr_settings = fb
+
+        if not self._validate_provider_readiness(candidate, fb):
+            # レビュー LOW: 実行不可プロバイダを静かに握りつぶさず次候補へ進む
+            # （D-11/D-14・build 前に検出したため未使用の候補は試行済みへ計上）
+            self._fallback_tried.add(candidate)
+            reason = (
+                "api_key_missing"
+                if self._is_cloud_provider(settings=fb)
+                else "provider_unavailable"
+            )
+            self._propose_fallback(reason, "", summary=summary)
+            return
+
+        from pagefolio.ocr import _resolve_api_key, build_provider
+        from pagefolio.ocr_providers import OCRAPIKeyError
+
+        session_keys = getattr(self.app, "_session_api_keys", {})
+        try:
+            api_key = _resolve_api_key(candidate, session_keys)
+        except OCRAPIKeyError:
+            api_key = ""
+        self.provider = build_provider(
+            fb,
+            api_key=api_key,
+            plugin_manager=getattr(self.app, "plugin_manager", None),
+        )
+        # V180-FALL-03/Pitfall 3: 候補プロバイダ別の max_concurrency で再クランプ
+        self.concurrency = max(1, min(self.provider.max_concurrency, self.concurrency))
+
+        # 02-REVIEW WR-01 修正: プロバイダ切替後、ヘッダーのプロバイダ/モデル
+        # 表示と LM Studio 欄の可視性を再評価する。これを呼ばないとダイアログ
+        # の常設ヘッダーが旧プロバイダを表示したままになり、実際の送信先と
+        # 食い違う（_apply_llm_settings が同メソッドを呼ぶのと同じ理由）。
+        self._refresh_provider_dependent_ui()
+
+        # フォールバック確認 askyesno が送信先確認を兼ねるため、再開直後の
+        # コスト確認ダイアログは二重表示しない（_on_run/_on_summary 側のガード
+        # が参照するフラグ。ゲート通過直後に必ず finally で戻す）。
+        self._fallback_resume = True
+        try:
+            if summary:
+                self._summary_running = False
+                self._on_summary(settings=fb)
+            else:
+                self._done = False
+                self._started = False
+                self._on_run(resume=True, settings=fb)
+        finally:
+            self._fallback_resume = False
+
+    def _on_summary_cancelled(self):
+        """サマリ生成キャンセル（メインスレッド）。"""
+        self.progress_var.set(self._L["ocr_summary_cancelled"])
+        self._summary_ui_reset()
+
+    def _summary_ui_reset(self):
+        """サマリ実行終了後（成功/失敗/キャンセル共通）の UI 復帰。
+
+        _after_run_ui_reset が run/resume/llm_config/サマリボタンを再評価する。
+        サマリ実行中に引き上げた provider.timeout もここで復元する。
+        """
+        prev = getattr(self, "_summary_prev_timeout", None)
+        if prev is not None:
+            self.provider.timeout = prev
+            self._summary_prev_timeout = None
+        self._summary_running = False
+        self._summary_progress_stop()
+        self.cancel_btn.state(["disabled"])
+        self.clear_btn.state(["!disabled"])
+        if self.results:
+            self.copy_btn.state(["!disabled"])
+            self.save_btn.state(["!disabled"])
+        self._after_run_ui_reset()
+
+    def _copy_to_clipboard(self):
+        text = self._format_full_text()
+        self.clipboard_clear()
+        self.clipboard_append(text)
+        try:
+            self.app._set_status(self._L["ocr_copied"])
+        except Exception as e:
+            logger.debug("ステータス更新失敗: %s", e)
+
+    def _save_to_file(self):
+        path = filedialog.asksaveasfilename(
+            parent=self,
+            defaultextension=".txt",
+            filetypes=[
+                ("Text file", "*.txt"),
+                ("Markdown", "*.md"),
+                ("All", "*.*"),
+            ],
+            title=self._L["ocr_save_dialog_title"],
+        )
+        if not path:
+            return
+        try:
+            with open(path, "w", encoding="utf-8") as f:
+                f.write(self._format_full_text())
+            try:
+                self.app._set_status(self._L["ocr_saved"].format(path=path))
+            except Exception as e:
+                logger.debug("ステータス更新失敗: %s", e)
+        except OSError as e:
+            messagebox.showerror(self._L["err_title"], str(e), parent=self)

@@ -1,0 +1,303 @@
+# PageFolio - PDF Page Organizer
+# Copyright (c) 2026 mistyura
+# Released under the MIT License
+"""Settings ダイアログ"""
+
+import logging
+import tkinter as tk
+from tkinter import ttk
+
+from pagefolio.constants import LANG, C
+
+logger = logging.getLogger(__name__)
+
+
+# ══════════════════════════════════════════
+#  設定ダイアログ
+# ══════════════════════════════════════════
+class SettingsDialog(tk.Toplevel):
+    def __init__(
+        self,
+        parent,
+        current_settings,
+        callback,
+        font_func=None,
+        plugin_manager=None,
+        session_api_keys=None,
+        app=None,
+        on_llm_apply=None,
+    ):
+        super().__init__(parent)
+        lang = current_settings.get("lang", "ja")
+        self._L = LANG[lang]
+        self.title(self._L["settings_title"])
+        self.configure(bg=C["BG_DARK"])
+        self.resizable(False, False)
+        self.grab_set()
+
+        self.callback = callback
+        self.current_settings = dict(current_settings)
+        self._font = font_func
+        # M-8: plugin_manager を保持して LLMConfigDialog へ渡す
+        self._plugin_manager = plugin_manager
+        # V171-KEY-01: session_api_keys は複製せず参照をそのまま保持する
+        # （複製すると app._session_api_keys の実体へ変更が反映されない・Pitfall 5）。
+        self._session_api_keys = (
+            session_api_keys if session_api_keys is not None else {}
+        )
+        # V171-UIUX-01・D-01: ShortcutsDialog は app._cmd_map/_default_shortcuts/
+        # _bind_shortcuts を参照するため app 参照を保持する（後方互換の任意引数）。
+        self._app = app
+        # V171-UIUX-03・D-14: LLMConfigDialog のネスト適用を外側 Apply/Cancel と
+        # 独立して app.settings（メモリ）へ即時反映するためのコールバック
+        # （後方互換の任意引数。OCRDialog 側のネストしない起動経路には影響
+        # しない・Pitfall 5）。
+        self._on_llm_apply = on_llm_apply
+
+        self._build()
+        self.update_idletasks()
+        px = parent.winfo_rootx() + parent.winfo_width() // 2
+        py = parent.winfo_rooty() + parent.winfo_height() // 2
+        fs = current_settings.get("font_size", 12)
+        w = max(460, int(fs * 38))
+        h = max(420, self.winfo_reqheight() + 20)
+        self.geometry(f"{w}x{h}+{px - w // 2}+{py - h // 2}")
+
+    def _build(self):
+        tk.Label(
+            self,
+            text=self._L["settings_heading"],
+            bg=C["BG_DARK"],
+            fg=C["ACCENT"],
+            font=self._font(2, "bold"),
+        ).pack(pady=(14, 10))
+
+        # ── 外観セクション（テーマ・フォント）──
+        tk.Label(
+            self,
+            text=self._L["settings_section_appearance"],
+            bg=C["BG_DARK"],
+            fg=C["WARNING"],
+            font=self._font(0, "bold"),
+        ).pack(anchor="w", padx=24, pady=(4, 2))
+
+        tf = tk.Frame(self, bg=C["BG_DARK"])
+        tf.pack(fill="x", padx=24, pady=6)
+        tk.Label(
+            tf,
+            text=self._L["settings_theme"],
+            bg=C["BG_DARK"],
+            fg=C["TEXT_MAIN"],
+            font=self._font(0),
+        ).pack(side="left")
+        self.theme_var = tk.StringVar(value=self.current_settings.get("theme", "dark"))
+        theme_options = [
+            (self._L["settings_theme_dark"], "dark"),
+            (self._L["settings_theme_light"], "light"),
+            (self._L["settings_theme_system"], "system"),
+        ]
+        for text, value in theme_options:
+            tk.Radiobutton(
+                tf,
+                text=text,
+                variable=self.theme_var,
+                value=value,
+                bg=C["BG_DARK"],
+                fg=C["TEXT_MAIN"],
+                selectcolor=C["BG_CARD"],
+                activebackground=C["BG_DARK"],
+                activeforeground=C["TEXT_MAIN"],
+                font=self._font(-1),
+            ).pack(side="left", padx=6)
+
+        ff = tk.Frame(self, bg=C["BG_DARK"])
+        ff.pack(fill="x", padx=24, pady=6)
+        tk.Label(
+            ff,
+            text=self._L["settings_font"],
+            bg=C["BG_DARK"],
+            fg=C["TEXT_MAIN"],
+            font=self._font(0),
+        ).pack(side="left")
+        self.font_var = tk.IntVar(value=self.current_settings.get("font_size", 10))
+        tk.Spinbox(
+            ff,
+            from_=8,
+            to=16,
+            textvariable=self.font_var,
+            width=4,
+            font=self._font(0),
+            bg=C["BG_CARD"],
+            fg=C["TEXT_MAIN"],
+            buttonbackground=C["BG_PANEL"],
+            insertbackground=C["TEXT_MAIN"],
+        ).pack(side="left", padx=8)
+        tk.Label(
+            ff,
+            text=self._L["settings_font_hint"],
+            bg=C["BG_DARK"],
+            fg=C["TEXT_SUB"],
+            font=self._font(-1),
+        ).pack(side="left")
+
+        self.preview_label = tk.Label(
+            self,
+            text=self._L["settings_preview_text"],
+            bg=C["BG_CARD"],
+            fg=C["TEXT_MAIN"],
+            font=("Segoe UI", self.font_var.get()),
+            padx=12,
+            pady=8,
+        )
+        self.preview_label.pack(padx=24, pady=8, fill="x")
+        self.font_var.trace_add("write", self._update_preview)
+
+        # ── 操作セクション（ショートカット）──
+        sep_op = tk.Frame(self, bg=C["BG_CARD"], height=1)
+        sep_op.pack(fill="x", padx=24, pady=(8, 4))
+        tk.Label(
+            self,
+            text=self._L["settings_section_operation"],
+            bg=C["BG_DARK"],
+            fg=C["WARNING"],
+            font=self._font(0, "bold"),
+        ).pack(anchor="w", padx=24, pady=(4, 2))
+
+        ttk.Button(
+            self,
+            text=self._L["settings_open_shortcuts"],
+            command=self._open_shortcuts_dialog,
+        ).pack(anchor="w", padx=24, pady=(2, 8))
+
+        # ── AI・OCR セクション（旧 LM Studio (OCR)）──
+        sep = tk.Frame(self, bg=C["BG_CARD"], height=1)
+        sep.pack(fill="x", padx=24, pady=(8, 4))
+        tk.Label(
+            self,
+            text=self._L["settings_lm_studio_section"],
+            bg=C["BG_DARK"],
+            fg=C["WARNING"],
+            font=self._font(0, "bold"),
+        ).pack(anchor="w", padx=24, pady=(4, 2))
+
+        ttk.Button(
+            self,
+            text=self._L["settings_open_llm_config"],
+            command=self._open_llm_config,
+        ).pack(anchor="w", padx=24, pady=(2, 8))
+
+        btn_row = tk.Frame(self, bg=C["BG_DARK"])
+        btn_row.pack(pady=(8, 14))
+        ttk.Button(
+            btn_row,
+            text=self._L["settings_apply"],
+            style="Accent.TButton",
+            command=self._apply,
+        ).pack(side="left", padx=8)
+        ttk.Button(btn_row, text=self._L["settings_cancel"], command=self.destroy).pack(
+            side="left", padx=8
+        )
+
+    def _update_preview(self, *_):
+        try:
+            size = self.font_var.get()
+            size = max(8, min(16, size))
+            self.preview_label.configure(font=("Segoe UI", size))
+        except Exception as e:
+            logger.debug("フォントプレビュー更新失敗: %s", e)
+
+    def _open_llm_config(self):
+        """LLM 設定ダイアログを開く（二重起動ガード付き）。
+
+        適用時に current_settings を更新する。
+        """
+        existing = getattr(self, "_llm_config_dialog", None)
+        if existing is not None and existing.winfo_exists():
+            existing.lift()
+            existing.focus_force()
+            return
+
+        from pagefolio.dialogs.llm_config import LLMConfigDialog
+
+        lang = self.current_settings.get("lang", "ja")
+
+        def on_apply(llm_settings):
+            # 外側の一般設定は未適用のまま保ち、LLM部分だけApp ownerへ渡す。
+            self.current_settings.update(llm_settings)
+            on_llm_apply = getattr(self, "_on_llm_apply", None)
+            if callable(on_llm_apply):
+                return on_llm_apply(dict(llm_settings))
+            app = getattr(self, "_app", None)
+            apply_live = getattr(app, "_apply_llm_settings_live", None)
+            if callable(apply_live):
+                return apply_live(dict(llm_settings))
+            # 未束縛のテスト用stubはメモリだけ更新し、保存成功にはしない。
+            return False
+
+        self._llm_config_dialog = LLMConfigDialog(
+            self,
+            self.current_settings,
+            on_apply=on_apply,
+            font_func=self._font,
+            lang=lang,
+            plugin_manager=getattr(self, "_plugin_manager", None),
+            session_api_keys=getattr(self, "_session_api_keys", None),
+        )
+        dialog = self._llm_config_dialog
+        bind = getattr(dialog, "bind", None)
+        if callable(bind):
+
+            def restore_outer_grab(event):
+                if event.widget is dialog:
+                    try:
+                        if self.winfo_exists():
+                            self.grab_set()
+                    except tk.TclError as e:
+                        logger.debug("外側設定grab復元終了: %s", type(e).__name__)
+
+            bind("<Destroy>", restore_outer_grab, add="+")
+
+    def _open_shortcuts_dialog(self):
+        """ショートカット設定ダイアログを開く（二重起動ガード付き・D-01）。
+
+        app 参照（`_cmd_map`/`_default_shortcuts`/`_bind_shortcuts`）が
+        取得できない場合は何もしない（後方互換のための防御的パターン）。
+        """
+        existing = getattr(self, "_shortcuts_dialog", None)
+        if existing is not None and existing.winfo_exists():
+            existing.lift()
+            existing.focus_force()
+            return
+
+        app = getattr(self, "_app", None)
+        if app is None:
+            logger.warning("ShortcutsDialog を開けません: app 参照が未設定です")
+            return
+
+        from pagefolio.dialogs.shortcuts import ShortcutsDialog
+
+        lang = self.current_settings.get("lang", "ja")
+        self._shortcuts_dialog = ShortcutsDialog(
+            self,
+            app,
+            font_func=self._font,
+            lang=lang,
+        )
+        dialog = self._shortcuts_dialog
+
+        def restore_outer_grab(event):
+            if event.widget is dialog:
+                try:
+                    if self.winfo_exists():
+                        self.grab_set()
+                except tk.TclError as e:
+                    logger.debug("外側設定grab復元終了: %s", type(e).__name__)
+
+        dialog.bind("<Destroy>", restore_outer_grab, add="+")
+
+    def _apply(self):
+        new_settings = dict(self.current_settings)
+        new_settings["theme"] = self.theme_var.get()
+        new_settings["font_size"] = max(8, min(16, self.font_var.get()))
+        self.destroy()
+        self.callback(new_settings)

@@ -1076,6 +1076,10 @@ def _live_records(manifest):
 def _record_for(child, manifest, role, exe, extra=None):
     ident = process_identity(child.pid)
     if ident is None:
+        # このPopenが所有する子だけを回収し、未記録の生存processを残さない。
+        if child.poll() is None:
+            child.kill()
+            child.wait(timeout=5)
         raise OwnershipError("起動したprocessの同一性を取得できません")
     record = {
         "role": role,

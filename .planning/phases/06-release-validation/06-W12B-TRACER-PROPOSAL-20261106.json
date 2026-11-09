@@ -1,0 +1,100 @@
+{
+  "schema_version": 1,
+  "status": "proposal_only",
+  "date": "2026-11-06",
+  "subject": {
+    "role": "final-release-candidate",
+    "version": "v1.10.2",
+    "exe_sha256": "66be5df663e333057c5c3cde02180857f930d2433e377f69c2838432d49a19d4",
+    "action": "preserve_without_rebuild"
+  },
+  "missing_peer": {
+    "role": "technical-tracer-real-exe",
+    "version": "v1.9.1",
+    "run_id": "2db21a6b3e8b4aed80d92adc3a521668",
+    "recorded_exe_sha256": "c082f6f4c35af75f07e574f2ef30f41c25e41965f7f9f17a8b65ac71e9183ba7",
+    "recorded_root": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf06_tracer_acce06df0c694f10be4a1ed80f690793",
+    "checked_absent": [
+      "PageFolio-v1.9.1/release-report.json",
+      ".release-work/2db21a6b3e8b4aed80d92adc3a521668/report.json",
+      ".release-history/2db21a6b3e8b4aed80d92adc3a521668"
+    ],
+    "full_source_manifest_recovered": false,
+    "old_hash_recreation_claimed": false
+  },
+  "historical_source": {
+    "task1_commit": "509e05c37a9dbdee0364a36a398ef1c9d6058ac5",
+    "task1_parent": "07244dce67b774a59f7831cbbc27c7485fbf8cdd",
+    "task2_commit": "db7ba213130cf6e63dc13c69929b001ce58b002f",
+    "candidate_commit": "db7ba213130cf6e63dc13c69929b001ce58b002f",
+    "app_version": "v1.9.1",
+    "product_inputs_unchanged_between_task_commits": true,
+    "source_export_paths": [
+      "pagefolio.py",
+      "pagefolio/",
+      "pagefolio.ico",
+      "requirements.txt",
+      "tools/build_release.py",
+      "distribution/",
+      "docs/CONFIGURATION.md",
+      ".gitattributes"
+    ],
+    "metadata_to_preserve": [
+      "commit_and_parent",
+      "git_ls_tree_path_blob_ids",
+      "zip_sha256",
+      "export_file_sha256",
+      "isolated_clone_HEAD_and_clean_status",
+      "clone_export_hash_comparison"
+    ]
+  },
+  "builder_contract": {
+    "cli_option": "--output-root",
+    "cli_repo_option": false,
+    "internal_checkout": false,
+    "repo_is_running_script_parent_parent": true,
+    "git_metadata_required_for_report_source_commit": true,
+    "new_install_planned": false,
+    "output_must_be_new_durable_path_outside_source": true,
+    "current_pyinstaller_version_read_only": "6.22.3",
+    "historical_requirements_pyinstaller_version": "6.21.0",
+    "new_binary_requires_new_run_hash_and_acceptance": true
+  },
+  "w12b": {
+    "total_rows": 9,
+    "tracer_rows_not_run": [
+      "W12b/exe-tracer@production-exe",
+      "W12b/tracer-exe@tracer"
+    ],
+    "other_rows_count": 7,
+    "other_rows_independent_of_tracer": true,
+    "new_tracer_automatically_substitutes_in_contract": false
+  },
+  "decision_options": [
+    {
+      "id": "A",
+      "label": "新 tracer を準備",
+      "recommended": true,
+      "approval_scope": "隔離したdb7ba21 sourceから現venvで技術tracerを1回buildし、新run/hash/reportを採取する。正式相手変更と実機UATは成果物確認後に判断。"
+    },
+    {
+      "id": "B",
+      "label": "別版2行を保留",
+      "approval_scope": "tracer buildを行わず、別版2行をnot-runに保ち、残り7行を各ゲートに従って進める。"
+    },
+    {
+      "id": "C",
+      "label": "指定旧保存先を確認",
+      "approval_scope": "利用者が示す具体的な絶対pathだけread-only照合する。"
+    }
+  ],
+  "not_performed": [
+    "source_export",
+    "clone_or_worktree",
+    "build",
+    "gui",
+    "pytest",
+    "formal_ledger_edit"
+  ],
+  "release_allowed": false
+}

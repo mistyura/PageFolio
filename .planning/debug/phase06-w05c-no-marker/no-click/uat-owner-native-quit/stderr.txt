@@ -1,0 +1,6 @@
+起動terminal: f0099de208494a58b9477e57169c4ed0 / foreground_denied / deadline=151442984 / tick=151438046
+DEBUG:pagefolio.startup_win32:起動terminal: f0099de208494a58b9477e57169c4ed0 / foreground_denied / deadline=151442984 / tick=151438046
+起動terminal: 53368262f89847e0962664e8a8a448b4 / completed / deadline=151484390 / tick=151479437
+DEBUG:pagefolio.startup_win32:起動terminal: 53368262f89847e0962664e8a8a448b4 / completed / deadline=151484390 / tick=151479437
+起動rootの後始末: cannot invoke "winfo" command: application has been destroyed
+DEBUG:pagefolio.startup_win32:起動rootの後始末: cannot invoke "winfo" command: application has been destroyed

@@ -1,0 +1,19 @@
+{
+  "started": "2026-11-05T00:30:28.574Z",
+  "ended": "2026-11-05T00:40:01.299Z",
+  "argv": [
+    ".venv\\Scripts\\python.exe",
+    "-m",
+    "pytest",
+    "-q",
+    "--basetemp",
+    "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp",
+    "--junitxml",
+    "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\phases\\04-startup-control\\04-reverify-20261105-full\\junit.xml"
+  ],
+  "exit_code": 0,
+  "signal": null,
+  "error": null,
+  "input_count": 118,
+  "changed_inputs": []
+}

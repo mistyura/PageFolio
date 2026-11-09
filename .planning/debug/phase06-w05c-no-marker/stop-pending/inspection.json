@@ -1,0 +1,85 @@
+{
+  "manifest": {
+    "run": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-w05c-probe-4f6cdc66239b459fae857a9b291c2111",
+    "namespace": "926b32194a2a4476815c46d085c3b36d",
+    "case": "native-quit",
+    "role": "uat-owner-native-quit",
+    "fixture": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-w05c-probe-4f6cdc66239b459fae857a9b291c2111\\uat-owner-native-quit",
+    "launcher_pid": 21556,
+    "originals_before": {
+      "pagefolio_settings.json": null,
+      "ocr_custom_prompt.md": null,
+      "ocr_summary_prompt.md": null
+    },
+    "expected_owner": {
+      "sid": "S-1-5-5-0-347023",
+      "authentication_luid": 352479,
+      "session_id": 1,
+      "pid": 30320,
+      "process_created": 134383261886647417,
+      "started_tick": 151532796,
+      "owner_result": "acquired",
+      "snapshot": {
+        "protocol": 1,
+        "generation": "6a42fee3f7a14c399499d44ac2fd18f6",
+        "pid": 30320,
+        "process_created": 134383261886647417,
+        "session_id": 1,
+        "state": "ready",
+        "ready": true,
+        "release_generation": null
+      },
+      "ready_tick": 151536375,
+      "manual": true
+    },
+    "diagnostic_only": true
+  },
+  "originals_unchanged": true,
+  "ready": {
+    "sid": "S-1-5-5-0-347023",
+    "authentication_luid": 352479,
+    "session_id": 1,
+    "pid": 30320,
+    "process_created": 134383261886647417,
+    "started_tick": 151532796,
+    "owner_result": "acquired",
+    "snapshot": {
+      "protocol": 1,
+      "generation": "6a42fee3f7a14c399499d44ac2fd18f6",
+      "pid": 30320,
+      "process_created": 134383261886647417,
+      "session_id": 1,
+      "state": "ready",
+      "ready": true,
+      "release_generation": null
+    },
+    "ready_tick": 151536375
+  },
+  "resource-audit.json": {
+    "sid": "S-1-5-5-0-347023",
+    "authentication_luid": 352479,
+    "session_id": 1,
+    "pid": 30320,
+    "process_created": 134383261886647417,
+    "started_tick": 151532796,
+    "owner_result": "acquired",
+    "snapshot": {
+      "protocol": 1,
+      "generation": "6a42fee3f7a14c399499d44ac2fd18f6",
+      "pid": 30320,
+      "process_created": 134383261886647417,
+      "session_id": 1,
+      "state": "ready",
+      "ready": true,
+      "release_generation": null
+    },
+    "ready_tick": 151536375
+  },
+  "result.json": {
+    "constructed": 1,
+    "restored": 0,
+    "status_preserved": true,
+    "result": "primary",
+    "elapsed": 18391
+  }
+}

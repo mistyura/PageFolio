@@ -1,0 +1,18 @@
+{
+  "purpose": "一回限りの追加診断。品質合格・停止解除には用いない",
+  "started": "2026-10-28T03:15:25.890302+00:00",
+  "command": [
+    "C:\\Users\\shdwf\\work\\project\\PageFolio\\.venv\\Scripts\\python.exe",
+    "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\debug\\simultaneous-owner-missing-evidence\\probe_notice_once.py",
+    "--pytest",
+    "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_notice-probe-20261028-4186632ffba54d25b37703d6e2db059a"
+  ],
+  "basetemp": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_notice-probe-20261028-4186632ffba54d25b37703d6e2db059a",
+  "runs": 1,
+  "finished": "2026-10-28T03:15:30.211485+00:00",
+  "exit_code": 0,
+  "changed_inputs": [],
+  "log_sha256": "5d9f9f123cbd6d2f6341dd8cee9dcdeadea1d7e20fe1d9485a8822012b762d37",
+  "copied_unchanged": true,
+  "artifacts": 56
+}

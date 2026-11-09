@@ -1,0 +1,28 @@
+{
+  "started": "2026-10-28T00:50:24.226Z",
+  "finished": "2026-10-28T00:50:25.477Z",
+  "collector_sha256": "6973a63291087023fa41a8a0db6b3bfd12ff418c16e44dc30b090065a12367bc",
+  "executable": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.venv\\Scripts\\python.exe",
+  "executable_sha256": "f14d10e954b922d758234ff49335ad0e07e567103e06b38ff675c6bc85282865",
+  "command": [
+    "-m",
+    "pytest",
+    "-q",
+    "-x",
+    "tests/test_gsd_dod.py",
+    "--basetemp=C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf-debug-wake-7a753b23-3520-40d3-a868-9debbcb89501"
+  ],
+  "basetemp": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf-debug-wake-7a753b23-3520-40d3-a868-9debbcb89501",
+  "code": 0,
+  "signal": null,
+  "timedOut": false,
+  "environment_exit": 0,
+  "inputs_unchanged": true,
+  "changed_inputs": [],
+  "file_count": 118,
+  "inputs_before_sha256": "2b6844acd19961efb6e052b2318b2406b248c84d4389945fa595cd38f83e22bb",
+  "inputs_after_sha256": "2b6844acd19961efb6e052b2318b2406b248c84d4389945fa595cd38f83e22bb",
+  "environment_sha256": "574d41cd3f6e3c4d440e790319db9db2d8a6dd2531ffccd4cea63be8b97a6bcf",
+  "log_sha256": "704a72e3845a445394aeb6c40d9705b9c07e74d6524250a235c56cd7593dcfe3",
+  "children": []
+}

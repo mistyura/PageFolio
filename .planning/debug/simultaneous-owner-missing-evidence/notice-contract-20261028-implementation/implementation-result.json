@@ -1,0 +1,40 @@
+{
+  "utc": "2026-10-28T03:46:50.952Z",
+  "baseline_input_count": 132,
+  "changed_baseline_inputs": [
+    "tests/test_startup_windows.py",
+    "開発履歴.md",
+    ".planning/debug/simultaneous-owner-missing.md",
+    ".planning/debug/simultaneous-owner-missing-evidence/notice-test-review-20261028.md"
+  ],
+  "index_unchanged": true,
+  "unit_tests": {
+    "passed": 24,
+    "warnings": 1,
+    "seconds": 0.65,
+    "log": "unit-v3-pytest.txt"
+  },
+  "native_connection": {
+    "status": "not-run"
+  },
+  "native_nine_processes": {
+    "status": "not-run"
+  },
+  "stop": "ruff format . --check internal panic",
+  "full_pytest": "not-run",
+  "release_allowed": false,
+  "unexpected_changes": [],
+  "static_all": {
+    "lint_exit": 0,
+    "format_check_exit": 101
+  },
+  "target_lint": "passed",
+  "target_format": "passed",
+  "ast": "passed (pagefolio.py plus three edited Python files)",
+  "source_hashes": {
+    "tests/startup_foreground_audit.py": "1db51b8de1abc1ea8e06daa9e197787d586b0a3272622fe11cd82760082c4f8b",
+    "tests/test_startup_foreground_audit.py": "e194312c5453b4c5b3734493631cd020b2874a32b502db165f329e28dc144a03",
+    "tests/test_startup_windows.py": "846ee305e323fed436a2a60741df52135afdb39da35c672ed976d86c123a9b47"
+  },
+  "whitespace_issues": []
+}

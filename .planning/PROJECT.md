@@ -1,6 +1,12 @@
 # PageFolio — コード最適化プロジェクト
 
-## 2026-10-22 承認済み受入再計画（現行）
+## 2026-10-28 承認済み保証範囲の限定（現行）
+
+利用者は「案B：単一ログインセッション利用に限定して再計画を承認する」と明示承認した。今回のリリース保証はWindowsの単一ログインセッション利用に限定する。31ケース/110行は履歴ごと保持し、W11の `other-session@script` / `other-session@production-exe` の2行だけを未確認 `not-run` の対象外項目として追跡する。残る108行と品質・安全・独立ゲートは必須。実行時の複数セッション禁止機能を追加する判断ではない。
+
+正本: [06-W11-SCOPE-APPROVAL.md](phases/06-release-validation/06-W11-SCOPE-APPROVAL.md)。契約/回帰/台帳を先に整合し、配布文書更新後に新世代入力freeze・実2build・保護・接続、108必須行の本受入へ進む。保証範囲の承認だけで出荷可能にはならない。
+
+## 2026-10-22 承認済み受入再計画（履歴・W11以外は継続）
 
 ユーザー承認: 「受入条件を再計画し、別セッション確認など準備できない項目をPhase 6へ移す」。
 従来のW全必須passまでPhase 4を停止する条件と移管不可の判断を置き換える。
@@ -22,7 +28,11 @@ PageFolio の既存コードベースに対する最適化プロジェクト。
 
 ## Current Milestone: v1.10.0 多重起動防止・起動操作の改善
 
+**2026-10-28 現行:** アプリv1.10.2でCR-03修正、2083件成功・Phase04/05 fresh passed。世代4の実build2回、保護/接続準備監査合格は当該入力の証拠として保持。本受入pass0/110、W11は別セッション準備不能。案Bの明示承認により必須108行/対象外2行へ限定再計画済み（実機passへの変換なし）。06-07/06-08の契約・配布入力更新と新世代準備が先行する。Phase06/出荷は未完了。承認正本はphases/06-release-validation/06-W11-SCOPE-APPROVAL.md、承認前の世代4記録は06-04g4-CHECKPOINT.md。以下の同日記録は履歴。
+
 **2026-10-28 Phase 05再検証:** 設定I/O失敗通知・原本保護の4要件/23 must-haveは現行入力でpassed、staleを解消。既存全件2071 passedの入力・環境一致を照合して再利用した。別契約の重大指摘CR-03（OCRをoffにした後の旧providerによるサマリ送信）はopenで、製品修正・回帰・再レビューまで出荷停止。Phase 06のW05b自動復帰未実証と限定debug再開点も維持する。詳細は `phases/05-config-notification/05-REVIEW.md` と `05-VERIFICATION.md`。
+
+**2026-10-28 品質停止解除:** 診断原本保存・AST不変の整形と全体Ruff137件、保留中の実OS接続/9プロセス各1回、単一全件2071件成功を確認。現在の品質停止を解除し、Phase 6のresume_contractによる現行入力・依存検証の鮮度・台帳照合へ戻す。実機受入・Phase完了・出荷は未承認。過去の失敗原本と未確定原因は保持する。正本は `.planning/debug/quality-gate-unblock.md`。
 
 **Goal:** 多重起動による作業の分散を防ぎ、起動済み画面への復帰・設定失敗の把握・配布内容の再現性を改善する。
 
@@ -33,7 +43,7 @@ PageFolio の既存コードベースに対する最適化プロジェクト。
 - **配布ビルド改善:** サンプルプロンプトの原本を保持し、再ビルドしても配布物への同梱が再現されるようにする。
 
 **Scope:** 起動時 PDF 引数の受け渡し、最近使ったファイル・閲覧位置の復元、異常終了後の編集復旧、OCR 共通化、技術的負債の一括解消、実 API UAT は今回に含めない。既存候補は保留として保持する。
-**Planning:** [15要件と保証範囲](REQUIREMENTS.md)および[Phase 4〜6 のロードマップ](ROADMAP.md)を2026-10-21にユーザー承認済み。Phase 5は4/4計画・検証23/23・操作受入14件と意味評価2件の合格で2026-10-24に完了し、次はPhase 6の議論・計画。Phase 4の完了履歴は保持するが、現行コードに対する検証報告はstaleのため再検証が必要。アプリ版番号の更新と README・開発履歴の同期はPhase 6リリースゲートで行う。
+**Planning:** [15要件と保証範囲](REQUIREMENTS.md)および[Phase 4〜6 のロードマップ](ROADMAP.md)を2026-10-21にユーザー承認済み。Phase 5は4/4計画・検証23/23・操作受入14件と意味評価2件の合格で2026-10-24に完了。Phase 4は2026-10-28に現行入力のゲートと独立検証21/21 passedを再確認し、staleを解消した。次は計画済みPhase 6のresume_contract確認、新世代build、実機受入を再開する。Phase 4の人手W・禁止事項3件は承認どおりPhase 6へ移管し、未実施not-runと出荷停止を維持する。アプリ版番号は現行v1.10.2で、新世代EXEとの同期を確認済み。最終出荷判定は本受入後に行う。
 **Source:** [申し送り](notes/GSD_HANDOFF_2026-10-21.md)、[調査統合](research/SUMMARY.md)、今回の採用・要件承認回答。名前付きミューテックス等は実装候補であり、採用方式の詳細はフェーズ計画で確定する。
 
 ## Last Milestone: v1.9.0 安全性・整合性の是正 + OpenAI プロバイダ追加 — ✅ Shipped 2026-08-11
@@ -531,4 +541,4 @@ Phase 4（2026-10-22）: 起動判定backendの構築失敗は通知専用backen
 ---
 *Previous update: 2026-08-12 quick 260812-and — `## フェーズ完了 DoD` 節を `## ブランチ運用` の直後に新設し、機械ゲート `tests/test_gsd_dod.py`（6 テスト）を追加。適用範囲は v1.9.0 以降で、v1.9.0 未満の除外集合はテストが実ディレクトリと突き合わせて固定する。loto 実装は前提（ROADMAP の Phase 列 / フェーズ番号の連番性 / PyYAML）が PageFolio で成立しないため走査の入口をディレクトリ列挙へ差し替えた。3 プロジェクト比較の差分 #1〜#5 がこれで全て完了。前回更新: 2026-08-12 quick 260812-a8u — `## Constraints` 節を `## Context` の直後に新設（9 項目・正本は CLAUDE.md でその要約）。260812-9tv で暫定的に `## Context` 表へ置いていたブランチ運用ポインタを Constraints 末尾へ移設し、loto/numbers と同型（末尾がブランチ運用ポインタ）にした。CLAUDE.md・`pagefolio/` ソースは無変更。前回更新: 2026-08-12 quick 260812-9tv — ブランチ運用を姉妹プロジェクト（numbers `feature/v0.18.0` が原典・loto `main` が踏襲）と統一。`.planning/config.json` の `git` セクション 3 キー（`branching_strategy` = `milestone` / `milestone_branch_template` = `feature/{milestone}` / `quick_branch_template` = `quick/{num}-{slug}`）を 3 プロジェクト同値へ更新し、`## ブランチ運用` 節（5 部構成）を `## Key Decisions` の直前に新設、`## Context` 表へ入口 1 行を追加。発効は v1.10.0 以降。`git` 以外の config セクション・`pagefolio/` ソースは無変更。前回更新: 2026-08-11 after v1.9.0 milestone — マイルストーンクローズに伴う全項目の進化レビュー実施。v1.9.0 を Current State へ昇格し v1.8.0 以前を `<details>` へ格納、Context のテスト件数を実測 1404 件へ同期しリリースゲート行を追加、Active を空にして次マイルストーン候補（技術的負債 10 件・未実施 UAT 2 項目ほか）を Next Milestone Goals へ整理。Core Value・Out of Scope は再確認のうえ変更なし。前回更新: 2026-08-11 Phase 3 UAT 完了。*
 
-*Last updated: 2026-10-24 — Phase 5正式完了（4/4計画・検証23/23・人手16件pass）、Phase 6計画前。Phase 4のstale再検証と最終実機受入・出荷停止を維持。*
+*Last updated: 2026-10-28 — Phase 4再検証完了（6/6計画・独立21/21 passed・Nyquist compliant）。Phase 5完了を維持し、Phase 6は新世代build・最終実機受入待ち、出荷停止。*

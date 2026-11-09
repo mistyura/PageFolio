@@ -1,0 +1,57 @@
+[
+  {
+    "source": "manifest.json",
+    "sha256": "5146e2525b9623519b537cc0fab783471089ac60d62b85a3d4978d8f337db585",
+    "target": "06-05-evidence/W12c_explorer-python_at_script-20261109T122904Z-raw/manifest.json"
+  },
+  {
+    "source": "w12c-machine.json",
+    "sha256": "eb0cb11231dbea42a4aeb226f76333f3fb5632feccb205ca351a78070ad2e3d8",
+    "target": "06-05-evidence/W12c_explorer-python_at_script-20261109T122904Z-raw/w12c-machine.json"
+  },
+  {
+    "source": "peer-0283fb97a8e34cb5ae6807d3d619fbdb/resource-audit.json",
+    "sha256": "b41e9f0c56079a15022344400aee8765ac87b0c23b5804057de6dfa5d4d961b0",
+    "target": "06-05-evidence/W12c_explorer-python_at_script-20261109T122904Z-raw/peer-0283fb97a8e34cb5ae6807d3d619fbdb-resource-audit.json"
+  },
+  {
+    "source": "peer-0283fb97a8e34cb5ae6807d3d619fbdb/result.json",
+    "sha256": "82118a8d65e5be696f5200d571a7b7c936e537fcf0a906074e6f351904e8dca0",
+    "target": "06-05-evidence/W12c_explorer-python_at_script-20261109T122904Z-raw/peer-0283fb97a8e34cb5ae6807d3d619fbdb-result.json"
+  },
+  {
+    "source": "peer-0283fb97a8e34cb5ae6807d3d619fbdb/expected-owner.json",
+    "sha256": "cf41a0e04975e27897b94bc97b939cdebb5e3a40b4d96f2bdf5bc873d73778c8",
+    "target": "06-05-evidence/W12c_explorer-python_at_script-20261109T122904Z-raw/peer-0283fb97a8e34cb5ae6807d3d619fbdb-expected-owner.json"
+  },
+  {
+    "source": "entry-owner-script/ready",
+    "sha256": "baece94860d70de76ea02e8f6dda6fea1a27531c60adcdc8ddc96e5fc6cbcc6f",
+    "target": "06-05-evidence/W12c_explorer-python_at_script-20261109T122904Z-raw/entry-owner-script-ready"
+  },
+  {
+    "source": "entry-owner-script/result.json",
+    "sha256": "27ad1cb31b5618d07234419b68ea3b767a7357d8e986786de594bc5aea3d7453",
+    "target": "06-05-evidence/W12c_explorer-python_at_script-20261109T122904Z-raw/entry-owner-script-result.json"
+  },
+  {
+    "source": "entry-owner-script/resource-audit.json",
+    "sha256": "baece94860d70de76ea02e8f6dda6fea1a27531c60adcdc8ddc96e5fc6cbcc6f",
+    "target": "06-05-evidence/W12c_explorer-python_at_script-20261109T122904Z-raw/entry-owner-script-resource-audit.json"
+  },
+  {
+    "source": "inspection.json",
+    "sha256": "7ce4347ce5a217457fc4b683bc001277d3c16f932ed1c648cac148ef01f6e672",
+    "target": "06-05-evidence/W12c_explorer-python_at_script-20261109T122904Z-raw/inspection.json"
+  },
+  {
+    "source": "provenance-before-stop.json",
+    "sha256": "61b77107d96655e75a6802d93413a4ad30970fbf8b0e6efd452f0902c4653ff2",
+    "target": "06-05-evidence/W12c_explorer-python_at_script-20261109T122904Z-raw/provenance-before-stop.json"
+  },
+  {
+    "source": "W12c-Python.lnk",
+    "sha256": "4f0a1c034443ab38a6b785c469d7bbbacbc95049f9ec3fcad90f14869054360f",
+    "target": "06-05-evidence/W12c_explorer-python_at_script-20261109T122904Z-raw/W12c-Python.lnk"
+  }
+]

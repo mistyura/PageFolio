@@ -1,0 +1,30 @@
+{
+  "schema": "w12a-answer-v1",
+  "primary": "module",
+  "secondary": "module",
+  "row": "W12a/module-module@module",
+  "run": "C:/Users/shdwf/work/project/PageFolio/.planning/tmp/pagefolio-uat-01ed562bc3f443b8bd220ae2abaad14a",
+  "manifest_sha256": "9d752d278f292d747ed727f6a3a84853ea0a426ece963ecf558f707bdfaadc38",
+  "owner_process_created": "134386901294404764",
+  "direct_answer": {
+    "source": "user-direct",
+    "row": "W12a/module-module@module",
+    "text": "W12a/module-module@module: 1はい 2はい 3はい",
+    "source_ref": "Claude Codeセッション a9876433-e422-432a-90ca-01d9b6925498 / 回収完了後の利用者チャット発言(行ID付き) / captured_atは担当の受領記録時刻",
+    "captured_at": "2026-11-09T09:30:29.661361+00:00",
+    "observations": {
+      "one_primary_screen": "はい",
+      "secondary_returns_to_primary": "はい",
+      "state_kept": "はい"
+    }
+  },
+  "adoption": {
+    "decision": "採用",
+    "approved_by": "利用者",
+    "source": "user-direct",
+    "source_ref": "Claude Codeセッション a9876433-e422-432a-90ca-01d9b6925498 / 機械照合結果提示後の別の利用者チャット発言『採用してよい』 / approved_atは担当の受領記録時刻",
+    "text": "採用してよい",
+    "approved_at": "2026-11-09T09:30:30.761515+00:00",
+    "answer_sha256": "a54990d418cc55cde8b75522086dec293efd516b09565827e414f5624df73c8e"
+  }
+}

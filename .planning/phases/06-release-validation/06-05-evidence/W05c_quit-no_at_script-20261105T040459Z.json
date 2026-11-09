@@ -1,0 +1,22 @@
+{
+  "case": "W05c",
+  "condition": "quit-no",
+  "entry": "script",
+  "row": "W05c/quit-no@script",
+  "run": ".planning/tmp/pagefolio-uat-tone_ht2",
+  "harness": "tests/test_startup_windows.py --uat start --case native-quit / peer --entry script ×2 / inspect / stop",
+  "answer_original": "いいえを押し、全3ページ・1と2ページが横向き・3ページが縦向き・PageFolioは1画面",
+  "answer_source": "本セッションの観察質問に対する利用者の直接回答。原文をそのまま保持。",
+  "observation_record": ".planning/tmp/pagefolio-uat-tone_ht2/observation-20261105.md",
+  "observation_record_sha256": "79e7deca39eec6d8f7200f33dbc3198ac39b0e53b08d43b5644dbea61753ec41",
+  "adoption": {
+    "approved_by": "利用者（Phase06実行指示と本受入の直接回答）",
+    "approved_at": "2026-11-05T04:04:59.798Z",
+    "decision": "実施を依頼されたW05c/scriptの直接回答を正式記録helperで機械観測と照合する。個別の事後免除・条件変更は行わない。",
+    "recorded_post_hoc": false
+  },
+  "peers": {
+    "during_confirm": "peer-902240e2202b4255a56fcba3b3ed71cc",
+    "after_answer": "peer-174051b292d345978180df415d0991cf"
+  }
+}

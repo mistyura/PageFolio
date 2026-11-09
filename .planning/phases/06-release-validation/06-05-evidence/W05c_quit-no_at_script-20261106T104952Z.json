@@ -1,0 +1,55 @@
+{
+  "schema": "w05c-v3",
+  "case": "W05c",
+  "condition": "quit-no",
+  "row": "W05c/quit-no@script",
+  "entry": "script",
+  "run": ".planning/tmp/pagefolio-uat-90219b127fbe491a88e7ed17db1df509",
+  "peers": {
+    "during_confirm": "peer-de30b8dd73c6432ab23ee0504d01c659",
+    "after_no": "peer-6dca3fb111084dc4a8aa9c86526aaa56"
+  },
+  "answer_original": "6点すべて確認でき、採用してよい",
+  "answer_source": "利用者のChatGPT直接回答 / request_user_input_async call_fcedbad01053495ba0dd0bc63d3dd612",
+  "answer_run_id": "pagefolio-uat-90219b127fbe491a88e7ed17db1df509",
+  "answer_captured_at": "2026-11-06T10:52:55.842Z",
+  "question_original": "今回の W05c/script（run末尾 db1df509）について、自動終了する前に次の6点をすべて確認できましたか？ ①自分で「いいえ」を押した ②終了確認が閉じた ③全3ページが残った ④1・2ページは横向き、3ページは縦向きだった ⑤PageFolioの作業画面は1つだった ⑥これらを自動終了前に観察した。すべて確認できた場合、この結果を正式な受入 pass として採用してよいかも回答してください。",
+  "observation_record": ".planning/tmp/pagefolio-uat-90219b127fbe491a88e7ed17db1df509/observation-acceptance-20261106.md",
+  "observation_record_sha256": "16fd492e7ad96a383cffd356178b9b4a66d70e85e3bc71d812176359c7de20f2",
+  "collection_sha256": "baa55e9ba541c72826726a81cfe7eec4127d749813d3393dcb30028613bfd5b8",
+  "answer_semantics": {
+    "approved_by": "利用者（質問の6点をすべて明示確認）",
+    "approved_at": "2026-11-06T10:52:55.842Z",
+    "question_original": "今回の W05c/script（run末尾 db1df509）について、自動終了する前に次の6点をすべて確認できましたか？ ①自分で「いいえ」を押した ②終了確認が閉じた ③全3ページが残った ④1・2ページは横向き、3ページは縦向きだった ⑤PageFolioの作業画面は1つだった ⑥これらを自動終了前に観察した。すべて確認できた場合、この結果を正式な受入 pass として採用してよいかも回答してください。",
+    "answered_no": {
+      "confirmed": true,
+      "quote": "6点すべて確認でき"
+    },
+    "confirm_closed": {
+      "confirmed": true,
+      "quote": "6点すべて確認でき"
+    },
+    "three_pages": {
+      "confirmed": true,
+      "quote": "6点すべて確認でき"
+    },
+    "rotations_kept": {
+      "confirmed": true,
+      "quote": "6点すべて確認でき"
+    },
+    "single_window": {
+      "confirmed": true,
+      "quote": "6点すべて確認でき"
+    },
+    "observed_before_collection": {
+      "confirmed": true,
+      "quote": "6点すべて確認でき"
+    }
+  },
+  "adoption": {
+    "approved_by": "利用者",
+    "approved_at": "2026-11-06T10:52:55.842Z",
+    "decision": "採用",
+    "quote": "採用してよい"
+  }
+}

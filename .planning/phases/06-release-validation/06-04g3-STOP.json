@@ -1,0 +1,58 @@
+{
+  "at": "2026-10-28T01:35:32.733584+00:00",
+  "status": "invalidated-attempt-preserved",
+  "generation": 3,
+  "reason": "unreadable条件の実EXEがsettle観測前に終了。未分類edgeとして後続/再試行/commitを一時停止した",
+  "failed_case": "launch-unreadable",
+  "pid": 23380,
+  "created": 134376247594366164,
+  "run_id": "c5fae4908d5d4e77b6b535d9252a9ea2",
+  "final_exe_sha256": "9b3ebbce390c3b9f1752a97820a5ef81a0c39b7e148b93717b86bb47f9f5f73b",
+  "owner_probe_after": [],
+  "source_unchanged": true,
+  "diagnostic_limits": [
+    "noconsole EXE、起動adapterがstdout/stderrをDEVNULLへ送る",
+    "終了code/終了入口は未採取、原因を製品・手動・既存owner_missingへ断定しない"
+  ],
+  "human_question": "10:32ごろの手動終了操作の有無を利用者へ照会した",
+  "not_run": [
+    "faults X01-X05",
+    "ocr-single connection",
+    "w05b-modal connection",
+    "全110受入subrow",
+    "親4ゲートと最終監査"
+  ],
+  "files": {
+    "06-04g3-stop-evidence\\corrupt\\inspect-001.json": "86fce76bcfed1e5696d966a956f34079dcfd43f57bd07808e960758d26c8f305",
+    "06-04g3-stop-evidence\\corrupt\\inspect-002.json": "af3d2338fbbe4605d6c40a53e7fee5c607e2ab622024ab692ad685143010c2aa",
+    "06-04g3-stop-evidence\\corrupt\\manifest.json": "c848e0caa22e272415bf551765ca885cdf7ddf9a0956ce6d8046c732e6943e8c",
+    "06-04g3-stop-evidence\\normal\\inspect-001.json": "8c96884e42f8a0afa4bc44edeadf43f1717b3abe84d41d1b7383915f2d49a059",
+    "06-04g3-stop-evidence\\normal\\inspect-002.json": "23cfe877696a9a7894adadfafde03ace479efaa5f943d0f3f85806a16d0fff6b",
+    "06-04g3-stop-evidence\\normal\\manifest.json": "b41fc578f79af644ea51c26673696d9f7acbb771ba7e1b1816f0ab6533895bf1",
+    "06-04g3-stop-evidence\\unreadable\\inspect-001.json": "6278cd40767056f9d77fc510788c0d1c02b535035dcd084dcab8ef53d0dcb50a",
+    "06-04g3-stop-evidence\\unreadable\\inspect-002.json": "60c511aeacb27ddc3ed36da33923acbece5ac668a84dee86d9f482bfc309ecaf",
+    "06-04g3-stop-evidence\\unreadable\\manifest.json": "5ad5f11e53cee0cfd51e17b6c0cb2fb89868fa6376e2e53022be3f208334b6d3"
+  },
+  "release_allowed": false,
+  "phase_complete": false,
+  "commit_performed": false,
+  "user_response": {
+    "answer": "手動で閉じた／終了した",
+    "question": "10:32ごろの自動起動確認中に、PageFolioの画面を手動で閉じたり、終了を選んだりしましたか？",
+    "source": "request_user_input_async の利用者回答",
+    "recorded_at": "2026-10-28T01:37:49.128505+00:00"
+  },
+  "disposition": "手動操作が介在した無効試行として保持。元の終了原因は断定しない。利用者へ操作を止めるよう案内し、unreadable条件だけを新しい隔離runで1回確認した",
+  "trial_validity": "invalidated-by-manual-intervention",
+  "retry_result": {
+    "run_id": "release-uat-58ff032e11a841c6a59a7a1c0616a60d",
+    "alive_at_stable": true,
+    "hash_kept": true,
+    "owned_pid": 30076,
+    "stop": "closed",
+    "owner_after": [],
+    "source_unchanged": true,
+    "original_observation_unchanged": true
+  },
+  "encoding_repair": "PowerShell 5の既定ASCIIパイプで追記説明が文字化けしたため、UTF-8で利用者原文と説明を再記録。生観測JSONは変更なし"
+}

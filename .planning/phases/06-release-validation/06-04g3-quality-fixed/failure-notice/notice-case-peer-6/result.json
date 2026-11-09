@@ -1,0 +1,1 @@
+{"foreground_before": 789312, "acquired": false, "snapshot": {"protocol": 1, "reason": "contact_failed", "pid": 16616, "process_created": 134376259017672042, "session_id": 1, "generation": "54826ea590294757b2f6320ed85a1f9f", "state": "shown", "hwnd": 3738882, "shown_tick": 9957265, "deadline_tick": 9959065}, "elapsed": 16, "foreground_after": 789312}

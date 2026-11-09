@@ -1,0 +1,1 @@
+{"constructed": 0, "notice_calls": 1, "snapshot": {"protocol": 1, "reason": "check_failed", "pid": 34344, "process_created": 134372366023355755, "session_id": 1, "generation": "9be64f7cba5f4901860d3105d05c0c54", "state": "shown", "hwnd": 3738284, "shown_tick": 8937750, "deadline_tick": 8939550}, "foreground_before": 199190, "reason": "check_failed", "foreground_shown": 199190}

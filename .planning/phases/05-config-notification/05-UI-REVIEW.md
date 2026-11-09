@@ -1,5 +1,27 @@
 # Phase 5 — UI Review
 
+## 2026-11-06 W05c v3 / CR-02後の静的所見継承（現行）
+
+Nyquist/Security後、設定通知とOCR offの製品文言・寿命・表示配線が前回v3入力から不変であることを照合した。新全件2361件とprovider_refresh18件は自動回帰証拠であり、既存の静的22/24だけを継承する。新しい撮影・実クリック・DPI/UAC/EXE視覚判定は行わず、V-01/S-01とPhase06の人手受入を保持。`05-REVALIDATION-20261106.md` 参照。
+
+## 2026-11-05 W05c計測後の静的UI再照合（履歴）
+
+設定通知の文言・寿命・表示配線、OCR off表示は前回covered入力から不変。現行全件2293件/167一意入力一致とprovider_refresh18件のpassを自動回帰証拠とし、既存の静的22/24を継承する。今回の画面撮影、実Tk視覚採点、実EXE/DPI/UAC操作はない。V-01/S-01とPhase 06人手受入は未解除。`05-REVALIDATION-W05C-20261105.md`参照。
+
+## 2026-11-05 現行入力の静的再照合
+
+設定通知の文言・寿命・表示配線、OCR off表示の製品コードと回帰試験は旧入力SHA-256と一致し、現行native全件2254件中のprovider_refresh18件もpass。利用者指定に沿い既存の静的22/24を維持する。撮影、実Tkの視覚採点、実EXE/DPI/UAC操作は追加しておらず、V-01/S-01とPhase 06人手受入は未解除。[05-REVALIDATION-20261105.md](05-REVALIDATION-20261105.md)参照。
+
+## 2026-10-28 案B・配布文書契約変更後の確認（現行）
+
+製品UI・通知文言・CR-03のoff表示は前回入力から不変。利用者指定に従い静的22/24を継承し、GUI/撮影/visual採点を追加していない。変更はREADME・同梱はじめに・履歴の保証範囲で、単一ログインセッションに限定し、複数セッションの挙動未確認を明記する。文書契約named testを含む最新2232件成功と151入力一致を05-REVERIFY-SCOPE-20261028.jsonで独立確認した。W11の2行はnot-run/deferred、他108行と実EXE/DPI/UAC本受入は引き続き必須。静的評価を実画面合格や出荷承認へ転用しない。
+
+## 2026-10-28 CR-03 修正後の差分照合（現行）
+
+既存評価の再利用という利用者指定を継続し、**静的22/24**を維持する。新しいGUI操作・撮影・独立visual採点はしていない。設定通知の文言・レイアウト・テーマ・フォント・寿命の実装は変更なし。今回のOCR差分だけ、_apply_llm_settings → _refresh_provider_dependent_ui → 表示名/モデル名、および _update_summary_btn_state の配線を独立に読んだ。
+
+最新実走JUnitの `test_off_disables_summary_and_clears_provider_display` と `test_summary_reenabled_after_off_keeps_results`（各lmstudio/claude/gemini）で、off表示・空モデル・無効/再有効状態と結果保持を確認した。既存試験の実メソッド/headless widgetによる証明であり、実Tkの表示寸法・可読性・DPIを検証したとは扱わない。正本2083 passedと現行147入力一致は `05-REVERIFY-20261028.json`。V-01/S-01の推奨、Phase 06の実EXE受入と出荷未承認を保持する。
+
 **Audited:** 2026-10-24
 **Baseline:** UI-SPECなし。抽象6-pillar基準と05-CONTEXT D-01〜D-22、05-01〜04 PLANの設定通知契約
 **Screenshots:** not captured（Tkinter対象のCLI撮影手段なし。localhost:3000/5173/8080は応答なし）
@@ -80,3 +102,12 @@
 - pagefolio/lang.py、pagefolio/themes.py、pagefolio/settings.py（関連トークン範囲）
 
 **Recommendation Count:** 優先事項3（うちコード品質WARNING2、独立確認1）。追加の軽微推奨0。実装・テスト・共有文書は変更せず、commitは親担当。
+
+## 2026-11-06 constructor同期修正後の再照合
+
+製品表示変更なし。既存静的22/24の評価とV-01/S-01未実施を保持し、追加captureなし。constructor試験や新しいW05c EXE観察を未実施UI項目のpassへ転用しない。
+
+
+## 2026-11-07 G4採取基盤変更後の差分照合
+
+`05-REVALIDATION-G4-20261107.md` と `../04-startup-control/04-QUALITY-G4-20261107.json` を参照。単一全件2481 passed/2 warnings、174入力と追加12入力不変、Ruff/format/AST成功。変更は採取試験基盤と証拠/文書のみで、製品の実装・表示・版番号・固定EXEは不変。G4レビュー7指摘を解消。既存の静的評価と未解除リスクを維持し、正式人手受入・UI capture・出荷承認へ転用しない。独立verificationは後続で現行fingerprintを照合する。

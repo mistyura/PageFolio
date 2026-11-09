@@ -7,6 +7,70 @@ wave_0_complete: true
 created: "2026-10-21"
 ---
 
+## 2026-11-06 CR-02修正後のNyquist再結合（現行）
+
+採用判断を厳密化した後の単一全件 `04-reverify-20261106-cr02/` は2361 passed、failure/error/skip各0、170入力前後/現行一致。既存13タスク/5要件のPhase04対象299件に加え、W05c証拠39件/runner68件がpass。新28件はv2/v3・否認7種・dry-run/書込の実拒否と全ファイル無変更を検査する。REDの否認受理再現とGREEN107件を保持。MISSING/PARTIAL 0、追加テスト不要。Ruff check/format/AST成功、全件の標準エラー空。詳細は `04-REVALIDATION-20261106.md` / `04-QUALITY-CR02-20261106.json`。
+
+## 2026-11-06 native確認窓の試験時序修正後のNyquist再監査（履歴）
+
+GSD validate-phase State Aとして6 PLAN/13タスク/5要件の既存Per-Task Mapを現行JUnitへ再照合した。`04-reverify-20261106-native-fix/` の単一全件2333 passed、failure/error/skip各0、170入力前後不変。Phase04名付き299件（DoD19/control52/focus32/foreground_audit24/notice61/wake23/windows88）が全て成功し、MISSING/PARTIAL 0。試験側のnative popup出現待機と出現起点30秒閉鎖は製品5秒期限を変えない。W05c計測39件/runner40件は人手受入とは別。詳細は `04-REVALIDATION-20261106.md`。過負荷時の別モードとPhase06移管項目は未解除。
+
+## 2026-11-05 W05c計測後のNyquist再監査
+
+Phase 04の6計画・13タスク・5要件は、現行製品配線、試験assert、native全件JUnitの対象299件へ再結合した。自動範囲のMISSING/PARTIALは0。新設のW05c証拠39件は観測機構の正負対照であり、正式script人手Noのpassには数えない。全件2293 passed、failure/error/skip各0、167一意入力の前後・現行SHA-256一致。Nyquist `validated`/`nyquist_compliant`を維持する。品質の現在cleanとrunner事前warningの区別は`04-QUALITY-RECHECK-W05C-20261105.json`、証拠と限界は`04-REVALIDATION-W05C-20261105.md`。人手Wは未実施のまま。
+
+## 2026-11-05 現行入力のNyquist再監査
+
+Phase 06再開の依存検証として、6 PLAN / 6 SUMMARY・13タスク・5要件を現行コードと試験へ再照合した。Phase04の自動範囲はMISSING 0 / PARTIAL 0、`status: validated` / `nyquist_compliant: true`を維持する。新規単一全件は `04-reverify-20261105-full/{run.json,junit.xml,stdout.txt,inputs-before.json,inputs-after.json}` の **2254 passed / 2 warnings / 571.44秒 / exit0**、JUnit failures/errors/skipped 0。実行前後118入力は不変、Phase04対象の名前付き299件にskipはない。詳細と旧証拠との差異は `04-REVALIDATION-20261105.md`。合成fixtureの自動成功を実機W05cの人手passには使わない。
+
+## 2026-10-28 品質停止解除後の Nyquist 再監査（最新）
+
+Phase 06 再開の依存検証として State A、6 PLAN / 6 SUMMARY、13タスク、5要件を再照合した。下記 Per-Task Verification Map の自動範囲は COVERED、MISSING 0 / PARTIAL 0 を維持する。最新の単一全件は `.planning/debug/quality-gate-unblock-20261028/full.json`・`full.xml`・`full-0.stdout.txt` の **2071 passed / 2 warnings / 480.86秒、exit 0、failed/ERROR/skip 0**。2047件の旧成功とは別の実走であり、今回再実行していない。
+
+実行時前後の146入力は不変。現行と142/146一致、Python137/137一致で、相違は `.gitignore`、`docs/DEVELOPMENT.md`、`CONTRIBUTING.md`、`開発履歴.md` の4件だけ。実装・tests・AGENTS・pyproject・依存定義・Ruff設定は一致する。Python実体SHA256と環境のPython/Windows/主要5パッケージ版も照合済み。通知監査の新24件を含む全件を現在の製品/試験に再利用する。全体Ruff/format/ASTは同所 `native-final.json` の成功を再利用する（Python137/137一致）。
+
+`tests/test_startup_windows.py` の追加監査は `tests/startup_foreground_audit.py` の保守的判定と接続し、owner＋8 peerのidentity・期限不変・通知集約に加え、禁止API要求、一時的前景化、要求元未確定の切替、証拠不足を不合格にする。`tests/test_startup_foreground_audit.py` の故障注入、実接続1件、9プロセス1件も同一入力の成功証拠に含まれる。旧118入力に含まれる製品/既存試験の相違は当該Windows試験だけで、従来の製品側緩和策を変更していない。
+
+今回変更するのは検証報告の本文と追補だけで、DoDが読む frontmatter の validated/compliant および既存タスク対応は維持する。全件後の DoD/リリース契約47件成功は当時の文書の確認として区別し、変更後の全文書が同一と主張しない。自動範囲の Nyquist は pass。人手W、実EXE、DEP-05/owner_missing、WR-01の未解消、初回前景変化の原因未確定は維持する。証拠・各hash・再利用判定は `04-GATES-CURRENT-20261028.md` と同名JSONに記録した。
+
+## 2026-10-28 前回入力での Nyquist 再監査（履歴）
+
+State A として6 PLAN/6 SUMMARY、13タスク、5要件（V110-START-01/02/03、V110-FOCUS-01/02）を下表の試験へ再照合した。自動検証の MISSING/PARTIAL は0、追加テストは不要。人手W項目と実EXE受入は `06-UAT-CARRYOVER.md` の not-run を維持する。
+
+前回停止後の試験契約修正は `tests/test_startup_wake.py` と `tests/startup_wake_child.py` のみで、製品側のwake実装は変わっていない。前景値を診断として残し、`PostThreadMessageW` の送信先・`WM_NULL`・呼出スレッドと禁止APIを正負対照で検証する。旧判定を一時的に戻すと偽陽性を再現し、新判定の対象試験は23件合格した。初回原本の前景値変化の発生原因は証拠不足で未確定のまま。
+
+ゲート報告編集前に現行118入力を `.planning/debug/startup-wake-foreground-evidence/full-native-after-state/inputs-before.json` と `inputs-after.json` に照合し、前後一致・当時の現行一致118/118を確認した。同じ入力の単一native全件試験は `run.json`（exit 0、入力不変）と `pytest.txt`（**2047 passed / 1 warning / 427.01秒**）を再利用し、理由のない再走をしていない。警告は既存PyMuPDFの `ByteString` 廃止予告のみ。本書更新後は本書だけが元manifestと異なるため、現在のDoD19件を専用basetempで実行し19 passed / 2 warnings / 0.42秒、exit 0（生ログ `04-gate-dod-20261028.txt`）。2つ目の警告は並行作業中のpytest共有cache書込であり、必須試験の失敗ではない。この判定は自動範囲の Nyquist 合格であり、Phase 04 の正式完了判定ではない。
+
+## Validation Audit 2026-10-28
+
+| Metric | Count |
+|---|---:|
+| Gaps found | 0 |
+| Resolved | 0 |
+| Escalated | 0 |
+
+## 2026-10-28 再検証ゲート停止（解消前の原本）
+
+Phase 06 の依存契約に従い、全6 PLAN/6 SUMMARY済みの Phase 04 を `aggregate_results` → `verify_phase_goal` の順で再開した。`verify:post` の最初の Nyquist ゲートで、現行ソースの必須試験が失敗したため停止した。過去の validated/compliant の記載は当時の履歴であり、現行の合格根拠ではない。
+
+| 対象 | 現行結果 |
+|---|---|
+| 状態 | State A（既存 VALIDATION の再監査）、自動ギャップ1件、解消0件 |
+| 要件の対応 | 全13タスク/5要件の既存対応を確認。F1 の新試験は UI 待機回復・前景不変・root破棄前停止を追加検証する |
+| 現行全件 | **1810 passed / 1 failed / 1 warning / 144.87秒**。単一プロセス、`-x` で初回失敗時停止、終了値1 |
+| 失敗 | `tests/test_startup_wake.py::test_native_tcl_getmessage_stall_recovers_with_product_wake[True]`、216行 `assert data["foreground_unchanged"]` が False |
+| 影響する検証 | FOCUS-01/02 に関係する「他アプリの入力先を変えない」追加回帰を現行入力で証明できない。製品原因か外部前景変化かは未確定 |
+| 証拠 | `04-reverify-20261028/native/run.json`、`pytest-full.txt`、`inputs-before.json`、`inputs-after.json`、`environment.txt` |
+| 入力同一性 | 製品・試験・設定113ファイルの前後ハッシュ一致。入力マニフェストSHA256 `2c75948a9b85fae8f1d355bc14a5f97b96e31aeffbf5b288ac3055b98f3a6850` |
+| 元ログ保全 | sandbox初回は `Cannot find a usable init.tcl`。root直下の `04-reverify-20261028/run.json` とログを保全。資源アクセス失敗として昇格1回のみ実施 |
+| 再実行 | native失敗後の再走なし。許容値変更・skip・除外・製品修正なし |
+
+F1 の過去 `2036 passed` と12件成功の申告は `.planning/debug/resolved/w02-preview-peer-expired.md` と既存生ログにあるが、採取時の全入力manifestがなく現行バイトへの結合を証明できなかったため、今回の合格根拠には採用していない。今回の失敗で過去ログを上書きしない。
+
+Ruff全体checkはサンドボックス外で成功。F1関連7 Pythonの `format --check`、`pagefolio.py` AST、対象 `git diff --check` は成功。ただし全件合格を代替しない。全体 `ruff format .` は既存dirty保護と担当範囲制約により実施せず、再整形しない読み取り検査のみ行った。
+
+後続の security/UI/code-review/regression/独立 verifier は、この停止を越えて完了扱いにしていない。`04-VERIFICATION.md` は更新せず stale を保持する。`phase.complete`、STATE/ROADMAP更新、コミットも未実施。W人手受入の Phase 06 移管、DEP-05、owner_missing、Tcl既知症状、WR-01、未分類edge/禁止事項の未解決状態は維持する。
+
 ## 2026-10-22 承認済み受入再計画（現行）
 
 ユーザー承認: 「受入条件を再計画し、別セッション確認など準備できない項目をPhase 6へ移す」。
@@ -231,3 +295,12 @@ validate-phase後の単一全件pytestは1629 passed / 1 warning / 228.84秒（�
 ## 2026-10-24 Phase 6前提の再監査（Phase 5変更後）
 
 Phase 4検証報告のstale解消（`dd10ce7`、21/21 passed、digest `v3:sha256:5011dcc6...`）に続き、06-04最終build前の依存として実走した。現行HEAD（`dd10ce7`）で `tests/test_startup_control.py tests/test_startup_focus.py tests/test_startup_notice.py tests/test_gsd_dod.py tests/test_startup_windows.py` を実行し **238 passed, 1 warning in 276.15s**、失敗/ERROR/skipなし（basetemp `C:\Users\shdwf\AppData\Local\Temp\pf04_validate_1792826444`）。5要件のMISSING/PARTIALは0でNyquist compliantを維持する。追加テストは不要のため監査子エージェントは起動していない。人手Wと実EXEは06-UAT-CARRYOVERでnot-runのままであり、本監査の合格に含めない。
+
+## 2026-11-06 constructor同期修正後の再照合
+
+constructor通知の試験前提をready/release同期へ修正。通知寿命1800msと製品期限は不変。制御RED1件→遅延0/2.1秒×通常/legacyの4件成功、他constructor5件成功。単一全件2401 passed/2 warnings/629.77秒、失敗・error・skip0、Phase04対象301件。171入力前後/回収時不変、全体Ruff/149format/AST成功。根拠: 04-REVALIDATION-CONSTRUCTOR-20261106.md、04-QUALITY-CONSTRUCTOR-20261106.json。既存Nyquist被覆を再利用し、未解除事項は維持する。
+
+
+## 2026-11-07 G4採取基盤変更後の差分照合
+
+`04-REVALIDATION-G4-20261107.md` と `../04-startup-control/04-QUALITY-G4-20261107.json` を参照。単一全件2481 passed/2 warnings、174入力と追加12入力不変、Ruff/format/AST成功。変更は採取試験基盤と証拠/文書のみで、製品の実装・表示・版番号・固定EXEは不変。G4レビュー7指摘を解消。既存の静的評価と未解除リスクを維持し、正式人手受入・UI capture・出荷承認へ転用しない。独立verificationは後続で現行fingerprintを照合する。

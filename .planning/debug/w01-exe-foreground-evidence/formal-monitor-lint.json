@@ -1,0 +1,14 @@
+[
+  {
+    "command": "format",
+    "exit": 0,
+    "stdout": "141 files left unchanged\n",
+    "stderr": ""
+  },
+  {
+    "command": "check",
+    "exit": 0,
+    "stdout": "All checks passed!\n",
+    "stderr": ""
+  }
+]

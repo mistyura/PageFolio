@@ -1,0 +1,35 @@
+{
+  "started": "2026-10-28T00:44:52.460Z",
+  "finished": "2026-10-28T00:44:54.329Z",
+  "collector_sha256": "478edae55fca85ce7a94bdda7b38ebc6fb9f0803b3f55052a914cf5b073ca056",
+  "executable": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.venv\\Scripts\\python.exe",
+  "executable_sha256": "f14d10e954b922d758234ff49335ad0e07e567103e06b38ff675c6bc85282865",
+  "command": [
+    "-m",
+    "pytest",
+    "-q",
+    "-x",
+    "tests/test_startup_wake.py",
+    "-k",
+    "True-True",
+    "--basetemp=C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf-debug-wake-2a578c03-de13-40a3-b4a2-1b81d197b693"
+  ],
+  "basetemp": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf-debug-wake-2a578c03-de13-40a3-b4a2-1b81d197b693",
+  "code": 1,
+  "signal": null,
+  "timedOut": false,
+  "environment_exit": 0,
+  "inputs_unchanged": true,
+  "changed_inputs": [],
+  "file_count": 113,
+  "inputs_before_sha256": "9efb6f4fdb3a14e0b67e0ead801bb7028fb8992d0056cdbc1673cc7b611a79f0",
+  "inputs_after_sha256": "9efb6f4fdb3a14e0b67e0ead801bb7028fb8992d0056cdbc1673cc7b611a79f0",
+  "environment_sha256": "574d41cd3f6e3c4d440e790319db9db2d8a6dd2531ffccd4cea63be8b97a6bcf",
+  "log_sha256": "9ef5e75b7b7b990a9abbb13d7a5d8063d4a333bc56a44c3768fdf6e60a6e146f",
+  "children": [
+    {
+      "path": "test_native_tcl_getmessage_sta0\\startup-wake-child.json",
+      "sha256": "acdc56ae0a939bc707c784ff90def0c11e39a43f8250337c79b10949b417db71"
+    }
+  ]
+}

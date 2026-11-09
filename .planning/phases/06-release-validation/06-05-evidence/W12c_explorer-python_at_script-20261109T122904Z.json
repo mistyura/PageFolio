@@ -1,0 +1,28 @@
+{
+  "schema": "w12c-answer-v1",
+  "condition": "explorer-python@script",
+  "row": "W12c/explorer-python@script",
+  "run": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-44b37ad5f04c4048bdcfcf605cc6976e",
+  "machine_sha256": "eb0cb11231dbea42a4aeb226f76333f3fb5632feccb205ca351a78070ad2e3d8",
+  "direct_answer": {
+    "source": "user-direct",
+    "row": "W12c/explorer-python@script",
+    "text": "W12c/explorer-python@script: Explorerから起動した/同じ入力先に実入力した/画面は1つ",
+    "source_ref": "チャットの回収後の本人観察回答（原文）、担当受領記録時刻",
+    "captured_at": "2026-11-09T12:28:43.513840+00:00",
+    "observations": {
+      "launch_route": "explorer",
+      "real_input_target_kept": "はい",
+      "one_primary_screen": "はい"
+    }
+  },
+  "adoption": {
+    "decision": "採用",
+    "approved_by": "利用者",
+    "source": "user-direct",
+    "source_ref": "チャットの観察回答後の別回答「採用」、担当受領記録時刻",
+    "text": "採用",
+    "approved_at": "2026-11-09T12:29:04.694326+00:00",
+    "answer_sha256": "911e0835fceca7e48b0f90de7536576d1a2d0790278e3a23fb6d3a32ac0546f9"
+  }
+}

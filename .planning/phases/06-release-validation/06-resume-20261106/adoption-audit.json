@@ -1,0 +1,27 @@
+{
+  "checked_at": "2026-11-06T10:53:49.400Z",
+  "counts": {
+    "required:pass": 29,
+    "required:not-run": 79,
+    "deferred:not-run": 2
+  },
+  "W05c": [
+    {
+      "card": "W05c/quit-no@script",
+      "status": "pass"
+    },
+    {
+      "card": "W05c/quit-no@module",
+      "status": "pass"
+    },
+    {
+      "card": "W05c/quit-no@production-exe",
+      "status": "not-run"
+    }
+  ],
+  "unrelated_rows_unchanged": true,
+  "raw_copies_verified": 79,
+  "observation_seconds": 15.37817350000023,
+  "watchdog_events": 0,
+  "release_allowed": false
+}

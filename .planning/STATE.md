@@ -5,20 +5,50 @@ milestone_name: 多重起動防止・起動操作の改善
 current_phase: 06
 current_phase_name: サンプル配布とリリース検証
 current_plan: 5
-status: paused
-stopped_at: 06-05-02を利用者指定で中断。Phase04/05をfresh passedへ再検証、単一native全件2254 passed・失敗/ERROR/skip各0・118入力不変。W05c/scriptは観察回答がなく中断、not-run維持。同runはstop済み・owner終了・原本不変、21生ファイルを保存。必須28pass/80not-run+対象外2。GUI/試験/回答待ちなし。次は新runのW05c/script。
-last_updated: "2026-11-05T00:58:46.1725042Z"
-last_activity: 06-05-02を利用者指定で中断。Phase04/05をfresh passedへ再検証、単一native全件2254 passed・失敗/ERROR/skip各0・118入力不変。W05c/scriptは観察回答がなく中断、not-run維持。同runはstop済み・owner終了・原本不変、21生ファイルを保存。必須28pass/80not-run+対象外2。GUI/試験/回答待ちなし。次は新runのW05c/script。
-state_head: 4f90cdee39adf8575cd9e71fb53258bcfaa991e9
+status: G4採取基盤の品質・親再検証完了。実機操作待ち — 10pass/98not-run、release_allowed=false
+stopped_at: G4品質・親鮮度確認済み。W12a利用者操作可能時間待ち。10pass/98not-run、出荷不可。
+last_updated: "2026-11-06T20:39:33.380Z"
+last_activity: 2026-11-07
+state_head: 53bbfd009ad0f05c95370efed0c975411deaf98c
 progress:
   total_phases: 3
   completed_phases: 2
   total_plans: 18
   completed_plans: 16
   percent: 67
+last_activity_desc: 2481件成功、04/05 fresh passed。G4基盤レビュー解消、新tracer1回生成。実機受入は未開始。
 ---
 
+## 2026-11-07 最新の実行状態（以下の履歴に優先）
+
+G4 W12a/b/c採取基盤の独立レビュー7指摘は全解消。単一全件2481passed/2warnings、174入力と追加12入力不変、全Ruff/format/AST成功。開発履歴追記のみを別記し、04は21/21・05は23/23で公式fresh passed。新tracer1回build成功/64入力照合、最終EXE不変。現行10pass/98必須not-run/対象外2、release_allowed=false。次はW12a/script-scriptを1行だけ利用者同席で採取。EXE内部API未取得のW12b7/W12c2は正式helper拒否、G5/G6・06-06未完了。
+
+計画16/18、Phase06 6/8。新tracer生成だけ利用者の明示承認で実施済み。製品v1.10.2/固定最終EXEは不変、stage/commit/pushなし。現在UAT GUI/pytestの稼働なし。
+
+## 2026-11-06 constructor同期後の実行状態（履歴）
+
+Phase04 21/21・05 23/23は再検証fresh passed。通知試験同期修正後全件2401passed/2warnings、171入力前後不変、事後変更はMANUAL/UAT出力2件だけでmetadata49passed。Python20旧passをhash付き退避し現行not-run、EXE10pass維持。現行10pass/98not-run/対象外2。次はG4採取基盤と共通provenanceを整えてからPython20再採取、G4/G5/G6→06-06。
+
+計画は16/18、Phase06は6/8。全件品質・親検証・人手受入・出荷判定は別々に管理する。旧30pass/G3 9/9は変更前入力の履歴であり現在の合格数ではない。記録の根拠はHANDOFF.jsonとphases/06-release-validation/.continue-here.md。製品/凍結EXE不変、commit/build/pushなし。
+
+
 # Project State
+
+## 2026-11-05 現行停止点（候補1回未完了）
+
+計測39件/全件2293件成功・167入力不変、Phase04/05 fresh passed。新候補1回でNo/False/元マーカー成立。回答後処理前にwatchdog終了してnot-run、原本30ファイル＋回答copyを保全。追加試行0、元主因未解決。
+
+$gsd-debug continue phase06-w05c-no-marker。保存済み新runの時系列から、120秒以内に回答後peer/回収前採取を完了させる実行手順を見直す。期限延長/追加GUI/追加試行/製品推測修正/commitなし。 正式台帳28pass/80not-run・対象外2、06-06未開始、出荷不可。正本は `phases/06-release-validation/06-W05C-CANDIDATE-STOP-20261105.md`。以下の開始待ちは過去の履歴。
+
+## 2026-11-05 再試行前の再開点（履歴）
+
+W05c v2計測/回収前検査/helperと39件の正負/実Windows対照を実装。native全件2293成功、167一意入力前後/現行一致。Phase04/05を必須ゲートで再検証し公式passed/fresh。正式script候補0回、製品/版/配布物/台帳不変・再build/commit/pushなし。元No不成立と過去事故は未解除。
+
+利用者の操作可能時間の回答待ち。開始直前に入力/親鮮度/owner/lockを再照合し、新規W05c/scriptを1回だけ確認する。before_peer→回答後peer→before_stop→inspect→stop→正式helper dry-run→書込→行監査。 ready_for_retry=false、正式台帳28pass/80not-run・対象外2、出荷不可。詳細は `phases/06-release-validation/06-W05C-INSTRUMENTATION.md`。下記は方針設計時の履歴。
+
+## 2026-11-05 方針設計時の再開方針
+
+利用者指示によりW05cの証拠採取・再試行方針を見直し、`phases/06-release-validation/06-W05C-RETRY-POLICY.md` を設計正本とした。方針設計は完了、計測・回収前確認・helperの実装/正負対照は未実施、ready_for_retry=false。次はGSD内でその実装/検証を行う。実装/品質/鮮度/親再開ゲート成立前のGUI起動・同じ正常診断の反復を行わない。成立後の新規script候補は1回だけ、再発時は保存・回収してdebugへ戻す。元原因は未特定、正式受入28pass/80not-run・対象外2、06-05停止/06-06未開始・出荷不可を維持する。製品・試験・正式台帳を変更せず、今回の方針改訂で版更新や再buildは行わない。以下の再開履歴は本段落より古い。
 
 ## Project Reference
 
@@ -47,14 +77,16 @@ See: .planning/PROJECT.md (updated 2026-10-28)
 
 **2026-10-28 現行再開点:** 案B承認（W11-B-20261028）に基づく06-07/08を完了。CR-03=e13a00b、世代5の配布・実2build・保護/接続準備=8e83658、SUMMARY=4f90cde。Phase04 21/21・Phase05 23/23再検証済み。06-05はG1のW01全6行・W02全9行pass、指定ID監査成功。必須108行中15pass/93not-run、W11対象外2not-run。G1確定入力の全件2237 passed/2 warnings/159入力不変・Ruff/format/AST成功（g1-closeout-diagnostic-20261028）。一度のnative Tcl対照群timeoutは原因未確定・再現なしとして原本と追加診断を保持。G2/W03は自動Undo/Redoをmanual時に行わない準備へ修正し、対象実機26passed・監視機構確認成功。21:30:35 JSTにW03/pdf-3page@scriptの可視PowerShell PID31424を開始し、人手確認中。製品・凍結65入力は不変。Phase06は6/8計画完了・出荷未承認、pushなし。現在の詳細は06-05-CHECKPOINT.md、旧世代は06-08-SUMMARY.md。以下の旧停止記録は当時の判断。
 
+**2026-11-05 ????:** W05c/script???????????quit-cancelled???????dry-run??????TclError???34????????owner?????/118?????????28pass/80not-run+???2???????/??/commit?????gsd-debug phase06-w05c-no-marker? ???`phases/06-release-validation/06-W05C-STOP-20261105.md`????paused????????????????????
+
 ## Current Position
 
 Phase: 06 (サンプル配布とリリース検証) — EXECUTING
 Current Plan: 5
 Total Plans in Phase: 8
-Plan: 5 of 8（実行順07→08→05→06。07/08完了、05の本受入へ）
-Status: paused
-Last activity: 06-05-02を利用者指定で中断。Phase04/05をfresh passedへ再検証、単一native全件2254 passed・失敗/ERROR/skip各0・118入力不変。W05c/scriptは観察回答がなく中断、not-run維持。同runはstop済み・owner終了・原本不変、21生ファイルを保存。必須28pass/80not-run+対象外2。GUI/試験/回答待ちなし。次は新runのW05c/script。
+Plan: 5 of 8
+Status: G4採取基盤の品質・親再検証完了。実機操作待ち — 10pass/98not-run、release_allowed=false
+Last Activity: 2026-11-07
 
 **過去の再開点（世代3 W05b接続実証停止）:** 次は `$gsd-debug phase06-w05b-manual-switch` で、peer後の前景観測とチャット回答/手動切替の影響を限定調査する。再試行・driver/製品修正・追加GUI/build・06-05/06・commitを行わず、最初の現場を保持する。sandbox `d04061c65a42406c90736c4a3e183368` は画面不可視で未成立。native ocr-single `0d73a0cdf5b8465f9970b3702c2653e7` は同1POST完了と合成結果回答を記録したがprimary terminated/診断を保持し正常終了と書換えない。native W05b `cf52cf1df4db42a3b384db6f13a6c103` は同modal HWND6753582/同request完了、peer後前景はChatGPT側PID18044でprimary9920と不一致。利用者補足「自分で PageFolio に切り替えて確認した」により自動復帰成功の解釈を取り下げ、peer_returned_to_modal=false・原因/製品関与未確定とする。準備監査はこのW05b観測不足だけでexit1。原本copy/hash/補足/監査は `phases/06-release-validation/06-CONNECTION-STOP-20261028-evidence/`、停止報告は同 `06-CONNECTION-STOP-20261028.md`。全110行not-run、06-04-02未完了、06-05停止/06-06not-ready、Phase未完了・出荷停止。Phase04fresh/品質停止resolved/2071件成功の既存判定を戻さず、DEP-05/owner_missing等の原因解決とも混同しない。製品/tests/版/既存dirty/index/全失敗原本を保全、commitなし。
 
@@ -466,8 +498,8 @@ v1.9.0 クローズ時点で次マイルストーンへ引き継ぐ未解決項�
 
 **Resume file:** .planning/phases/06-release-validation/.continue-here.md
 
-Last session: 2026-11-05
-Stopped at: 06-05-02を利用者指定で中断。Phase04/05をfresh passedへ再検証、単一native全件2254 passed・失敗/ERROR/skip各0・118入力不変。W05c/scriptは観察回答がなく中断、not-run維持。同runはstop済み・owner終了・原本不変、21生ファイルを保存。必須28pass/80not-run+対象外2。GUI/試験/回答待ちなし。次は新runのW05c/script。
+Last session: 2026-11-09
+Stopped at: W12c/terminal-python@script を3回目(方式B)でpass正式記録。台帳23 pass/85 not-run、release_allowed=false。次は残G4/G5/G6の採取対象選定（利用者操作待ち）。
 
 ## Operator Next Steps
 

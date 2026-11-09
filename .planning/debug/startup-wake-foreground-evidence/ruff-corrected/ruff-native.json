@@ -1,0 +1,312 @@
+{
+  "lint_exit": 0,
+  "format_exit": 0,
+  "restored": [
+    {
+      "path": ".planning\\codebase\\CONVENTIONS.md",
+      "sha256": "6fd7cd84e82b6ac13995eca6265fe3637fc074e96779ffad6569187d6f5701ee",
+      "matches": true
+    },
+    {
+      "path": ".planning\\debug\\preview-focus-not-restored-evidence\\diag_btn_press.py",
+      "sha256": "516c747089f75138a8f9e106fbd3daba9637f5964594d8e3111c2e268605ea42",
+      "matches": true
+    },
+    {
+      "path": ".planning\\milestones\\v1.4.0-phases\\04-provider-abstraction\\04-PATTERNS.md",
+      "sha256": "dc53540a7ec46ea1a74163f309347486f7dc141cf51816bb9d34bf34f273647e",
+      "matches": true
+    },
+    {
+      "path": ".planning\\milestones\\v1.4.0-phases\\04-provider-abstraction\\04-REVIEW.md",
+      "sha256": "458bbaa34489ea0e7276a994b9d047e94396af9a33e973354ee18689b04a9d25",
+      "matches": true
+    },
+    {
+      "path": ".planning\\milestones\\v1.4.0-phases\\05-claude-provider-ui\\05-PATTERNS.md",
+      "sha256": "186f37050ee2581f77fcf621b60a9364feecf925f8046447510842752cd35ebc",
+      "matches": true
+    },
+    {
+      "path": ".planning\\milestones\\v1.4.0-phases\\06-gemini-provider\\06-PATTERNS.md",
+      "sha256": "7239de79e33fc1a30cd077d3d48fa4c7819a9a40fba5cd540a070b90336bb167",
+      "matches": true
+    },
+    {
+      "path": ".planning\\milestones\\v1.4.0-phases\\06-gemini-provider\\06-RESEARCH.md",
+      "sha256": "738f4f2dde51d852eee5cc57dc63f784abd22a173e04440d025312be4aefcf91",
+      "matches": true
+    },
+    {
+      "path": ".planning\\milestones\\v1.4.0-phases\\06-gemini-provider\\06-REVIEW.md",
+      "sha256": "fe403002e4308fec149afa734717bfb033f5f77c78ea34fb515b66c31c771cba",
+      "matches": true
+    },
+    {
+      "path": ".planning\\milestones\\v1.4.0-phases\\06-gemini-provider\\06-VERIFICATION.md",
+      "sha256": "d05476245215d21c39119173ecd735364397a154366dd1748727cc43e6f8c9d6",
+      "matches": true
+    },
+    {
+      "path": ".planning\\milestones\\v1.4.0-phases\\07-tesseract-pluginmanager-qa\\07-RESEARCH.md",
+      "sha256": "f06a4949c177f5d36ae891b0a446ef6189e2c1fec66f39f1dbec06fec4e391ae",
+      "matches": true
+    },
+    {
+      "path": ".planning\\milestones\\v1.4.0-phases\\07-tesseract-pluginmanager-qa\\PATTERNS.md",
+      "sha256": "6fa4a12e66bc75b88db2e12044906569d0f7330b042c13eb1bbafeda776efe77",
+      "matches": true
+    },
+    {
+      "path": ".planning\\milestones\\v1.6.0-phases\\01-ui-ocr\\01-PATTERNS.md",
+      "sha256": "26a1522e24064181f489050371a6c3aadda3cca33dd7aeb49ac7e26cb18c172b",
+      "matches": true
+    },
+    {
+      "path": ".planning\\milestones\\v1.6.0-phases\\01-ui-ocr\\01-REVIEW.md",
+      "sha256": "ce5566ab8fd1df37a9df5943507f1ec506193636df12429cc9cb5874dcaf7209",
+      "matches": true
+    },
+    {
+      "path": ".planning\\milestones\\v1.6.0-phases\\02-pagination\\02-PATTERNS.md",
+      "sha256": "1c06b6286ed48a833064ce965fa894f2332f792f4099962a7f4c42180946d984",
+      "matches": true
+    },
+    {
+      "path": ".planning\\milestones\\v1.6.0-phases\\02-pagination\\02-RESEARCH.md",
+      "sha256": "883ed7f653323d78fdcc05b83da277b000a42d50c7afa503bc54778295363c96",
+      "matches": true
+    },
+    {
+      "path": ".planning\\milestones\\v1.6.0-phases\\03-ocr-a\\03-PATTERNS.md",
+      "sha256": "52ee8d3d26dcca3cfb4ead248f6ca0e31e4f7a84cd8b959224903e1b3e5a3af8",
+      "matches": true
+    },
+    {
+      "path": ".planning\\milestones\\v1.6.0-phases\\03-ocr-a\\03-RESEARCH.md",
+      "sha256": "aad065039101bc5c6b22a3a499564fdc6c25fa1c5933810612963d2a1f5ffc8d",
+      "matches": true
+    },
+    {
+      "path": ".planning\\milestones\\v1.6.0-phases\\04-ai-c\\04-PATTERNS.md",
+      "sha256": "aea24c8da8a852ba9d47bf9addd9f29c3c3976240ddf682304e9ea9d1957fd69",
+      "matches": true
+    },
+    {
+      "path": ".planning\\milestones\\v1.6.0-phases\\04-ai-c\\04-RESEARCH.md",
+      "sha256": "c457b0e98396a2e0c0ad6e74fa44a8ac94d41119335d85be1261f6028f6b2a96",
+      "matches": true
+    },
+    {
+      "path": ".planning\\milestones\\v1.6.0-phases\\04-ai-c\\04-REVIEW.md",
+      "sha256": "b4377996559842a6d750ebb325e798b40aec2853e482c99279a3ca456428d76d",
+      "matches": true
+    },
+    {
+      "path": ".planning\\milestones\\v1.7.1-phases\\01-api-llm\\01-PATTERNS.md",
+      "sha256": "832bce64f80ad16e64ca55119593d775aa154d927913c570213e1f3e2ec96d25",
+      "matches": true
+    },
+    {
+      "path": ".planning\\milestones\\v1.7.1-phases\\01-api-llm\\01-RESEARCH.md",
+      "sha256": "ed0c374a586256080bfcac0a7a977cb0a3f3e3caa0fdee360966037b1406f840",
+      "matches": true
+    },
+    {
+      "path": ".planning\\milestones\\v1.7.1-phases\\01-api-llm\\01-REVIEW.md",
+      "sha256": "ba12a025800ce3602009aa962a4bf93d20c053413459e3b4204c69fcac9a5eb6",
+      "matches": true
+    },
+    {
+      "path": ".planning\\milestones\\v1.7.1-phases\\02-ocr\\02-PATTERNS.md",
+      "sha256": "476e6ad2ffb4ca57987af852e66dccccaecc1a9bc97a4d2d275a4cc2566d1757",
+      "matches": true
+    },
+    {
+      "path": ".planning\\milestones\\v1.7.1-phases\\02-ocr\\02-RESEARCH.md",
+      "sha256": "abf1da5590806a69f8e8d4ba79de8ca2a2288f68affd29a09ffb4830a7582aa5",
+      "matches": true
+    },
+    {
+      "path": ".planning\\milestones\\v1.7.1-phases\\02-ocr\\02-REVIEW.md",
+      "sha256": "8eb15f2d583d7c1a5a61dae7c7e60f136d90208f81f39028eed7ee06433bdc97",
+      "matches": true
+    },
+    {
+      "path": ".planning\\milestones\\v1.7.1-phases\\03-v1-5-0\\03-PATTERNS.md",
+      "sha256": "0cbae759ddd958b1b2f4cbdde30b4605b230b5db06abe14335de59408202d64e",
+      "matches": true
+    },
+    {
+      "path": ".planning\\milestones\\v1.7.1-phases\\03-v1-5-0\\03-RESEARCH.md",
+      "sha256": "668f98035973484d8582eb29b29e11ec6fd0462be398540a2acc809878e8a2e1",
+      "matches": true
+    },
+    {
+      "path": ".planning\\milestones\\v1.7.1-phases\\04-ui-ux\\04-PATTERNS.md",
+      "sha256": "9ab627b889cf28e7407fe1da2a382bfdc7b51d2c8018093769fbd14b78f12fbd",
+      "matches": true
+    },
+    {
+      "path": ".planning\\milestones\\v1.7.1-phases\\04-ui-ux\\04-RESEARCH.md",
+      "sha256": "98aeab7d8c20f14d27f5f47bfa6a521f8c5629f118e2239d26566081d963f6a5",
+      "matches": true
+    },
+    {
+      "path": ".planning\\milestones\\v1.8.0-phases\\01-foundation-split\\01-PATTERNS.md",
+      "sha256": "83f5b1eab7adf9a9a95050ad3ea3d078816125e61c952464133ab6f0e4d5229d",
+      "matches": true
+    },
+    {
+      "path": ".planning\\milestones\\v1.8.0-phases\\01-foundation-split\\01-RESEARCH.md",
+      "sha256": "6be55fb7a210e21e4bc8ed0f479c27df31cae0a83fe72db290e83b8c919078f2",
+      "matches": true
+    },
+    {
+      "path": ".planning\\milestones\\v1.8.0-phases\\02-ai\\02-PATTERNS.md",
+      "sha256": "33ef2c918893b5cb295e56cfa95b50ab01bd49a58747f5c5bcc41dd6b6e3a8d5",
+      "matches": true
+    },
+    {
+      "path": ".planning\\milestones\\v1.8.0-phases\\02-ai\\02-RESEARCH.md",
+      "sha256": "a07cd97413900dc54c3c9aafaf96b497fb9186988a1fa40eb88a392e074e3789",
+      "matches": true
+    },
+    {
+      "path": ".planning\\milestones\\v1.8.0-phases\\02-ai\\02-REVIEW.md",
+      "sha256": "5c0c7d11c837b52340b7fd112fdc78b67f17bd75e172373607740dd5c5184baf",
+      "matches": true
+    },
+    {
+      "path": ".planning\\milestones\\v1.8.0-phases\\03-ocr-e2e\\03-PATTERNS.md",
+      "sha256": "3efc52a6794a93b9b34d801c76148d859854e23eeb6a44875b204c05bc6de1c9",
+      "matches": true
+    },
+    {
+      "path": ".planning\\milestones\\v1.8.0-phases\\03-ocr-e2e\\03-RESEARCH.md",
+      "sha256": "62eb49c90586a4d0dec466d2ab898c2aa9d40e137938cf122243d7fa95586d15",
+      "matches": true
+    },
+    {
+      "path": ".planning\\milestones\\v1.8.0-phases\\03-ocr-e2e\\03-REVIEW.md",
+      "sha256": "88f4009a68ca1440e960695224797fa80c12496d587bfe5b123b0340e912f75a",
+      "matches": true
+    },
+    {
+      "path": ".planning\\milestones\\v1.8.0-phases\\03-ocr-e2e\\03-REVIEWS.md",
+      "sha256": "e66caa6c85e1ace516f9261e886ae4dfbddf96da69467eaa861517de8fead1ad",
+      "matches": true
+    },
+    {
+      "path": ".planning\\milestones\\v1.8.0-phases\\04-ocr\\04-PATTERNS.md",
+      "sha256": "786ca96606dca97149815fb8cbca897cfc2d8e5b42822d2d05c5785ac7a5ca5d",
+      "matches": true
+    },
+    {
+      "path": ".planning\\milestones\\v1.8.0-phases\\04-ocr\\04-RESEARCH.md",
+      "sha256": "3c59974599965b46d2c2c5e547a19bd9e7f43c05ba11816a3b687fe9b64f9b5a",
+      "matches": true
+    },
+    {
+      "path": ".planning\\milestones\\v1.8.0-phases\\05-blob-shortcutsdialog\\05-PATTERNS.md",
+      "sha256": "b8e4926bfc1305a5404ee477190359232fe2d1ca0c772906641d7018b4b0da6b",
+      "matches": true
+    },
+    {
+      "path": ".planning\\milestones\\v1.8.0-phases\\05-blob-shortcutsdialog\\05-RESEARCH.md",
+      "sha256": "d1c45308ac7c53d768cdb9ad1bc6de2e6969c363c7e2e57f0a440dd71aaecfcf",
+      "matches": true
+    },
+    {
+      "path": ".planning\\milestones\\v1.8.0-phases\\05-blob-shortcutsdialog\\deferred-items.md",
+      "sha256": "b493568ea462184b9e2a739cd9e01aec8b4f1e6e4276b581863c5f3f795bf025",
+      "matches": true
+    },
+    {
+      "path": ".planning\\milestones\\v1.8.0-phases\\06-ux-ui\\06-PATTERNS.md",
+      "sha256": "dc092be9c43d7ca847e4485d5d42299e535bd1ebcaf65f03754f1a66140afffd",
+      "matches": true
+    },
+    {
+      "path": ".planning\\milestones\\v1.8.0-phases\\06-ux-ui\\06-RESEARCH.md",
+      "sha256": "792d946e03cd923091ef5cd2eca921b5277560c74bbff9aac2f920c4de2b9af2",
+      "matches": true
+    },
+    {
+      "path": ".planning\\milestones\\v1.8.0-phases\\06-ux-ui\\06-REVIEW.md",
+      "sha256": "86b37547a6da2f67e1eec97b4c9deaaba086358361d6b08d0542cd851fc59f31",
+      "matches": true
+    },
+    {
+      "path": ".planning\\milestones\\v1.9.0-phases\\01-safety-rollback\\01-PATTERNS.md",
+      "sha256": "8823a4385988fe243334d7b9710d5b8fd3a7b056473d2c11a32944183d88ca3e",
+      "matches": true
+    },
+    {
+      "path": ".planning\\milestones\\v1.9.0-phases\\01-safety-rollback\\01-RESEARCH.md",
+      "sha256": "2c284ebdd286187feede1493f879620b432d1f4e4cfb0db1dc590ac4e9425d3f",
+      "matches": true
+    },
+    {
+      "path": ".planning\\milestones\\v1.9.0-phases\\02-ocr-openai-chatgpt\\02-PATTERNS.md",
+      "sha256": "6f537c4ab26c57379de67543753fbfbe1d0e1410e5eb1ce8640727919b756b05",
+      "matches": true
+    },
+    {
+      "path": ".planning\\milestones\\v1.9.0-phases\\02-ocr-openai-chatgpt\\02-RESEARCH.md",
+      "sha256": "5c76f3e55206eb02a0e2467fd09ecfe22dc2fdc0ddf9c59f24140cb70c6576df",
+      "matches": true
+    },
+    {
+      "path": ".planning\\milestones\\v1.9.0-phases\\02-ocr-openai-chatgpt\\02-REVIEW.md",
+      "sha256": "25c79965dfe1c6b518f890872e6c9bedf394f820350d4fc64b811e28cfd69719",
+      "matches": true
+    },
+    {
+      "path": ".planning\\milestones\\v1.9.0-phases\\03-qa-release-gate\\03-PATTERNS.md",
+      "sha256": "847aad6b9588273da81e0fc12ad73933402f80c193c57ab68af0aa8c78d679e3",
+      "matches": true
+    },
+    {
+      "path": ".planning\\milestones\\v1.9.0-phases\\03-qa-release-gate\\03-RESEARCH.md",
+      "sha256": "26688bf34a05f472a088db03185fcb5b2b4be5bce932d96f225518b2406eaf6d",
+      "matches": true
+    },
+    {
+      "path": ".planning\\milestones\\v1.9.0-phases\\03-qa-release-gate\\03-REVIEW.md",
+      "sha256": "41d2a08f64d42fa8a03ebe4499d7ccad124f61c683dd85c58ac8db9add5aa390",
+      "matches": true
+    },
+    {
+      "path": ".planning\\milestones\\v1.9.0-research\\ARCHITECTURE.md",
+      "sha256": "965bef41bc274f3509ec51614ed56215beca112bd7b73d7091fd13da2ebf8c30",
+      "matches": true
+    },
+    {
+      "path": ".planning\\phases\\06-release-validation\\06-PATTERNS.md",
+      "sha256": "68b0d8b458f6c15f6ae2ef8580c9640cb4ede4b71362404840a751e98a3c5347",
+      "matches": true
+    },
+    {
+      "path": ".planning\\phases\\06-release-validation\\06-RESEARCH.md",
+      "sha256": "3f081b5db4f9d86f31ab96097978c5d2ebf10959809c55295a49d05cc219a0f7",
+      "matches": true
+    },
+    {
+      "path": "docs\\OCR-PROVIDERS.md",
+      "sha256": "5590161f156f779f073db44424325a952a60e23a68c348d6a672328ceb85e569",
+      "matches": true
+    },
+    {
+      "path": "docs\\PLUGINS.md",
+      "sha256": "cffc7e6bcc23e721cb221c5761e9388faff855a3607807dcee40eeca7f5a7214",
+      "matches": true
+    },
+    {
+      "path": "docs\\TESTING.md",
+      "sha256": "2ed689d06ef5766ed82329b664199df7ff6ff7a8e23345d9c01ff2c1f8420d6d",
+      "matches": true
+    }
+  ],
+  "scope_note": "全体formatの完走後、今回対象外の既存ファイルはコマンド直前bytesへ戻した。"
+}

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="1" time="0.525" timestamp="2026-11-06T21:14:01.303052+09:00" hostname="nullaze-z240"><testcase classname="tests.test_w05c_exe_evidence" name="test_adopted_row_satisfies_shared_uat_audit_without_changing_answer" time="0.227"><failure message="AssertionError: ['W05c/quit-no@production-exe: ケースID付きの利用者回答がありません']&#10;assert False&#10; +  where False = &lt;tests.release_uat_support.Audit object at 0x0000023D15903B60&gt;.ok">bundle = {'root': WindowsPath('C:/Users/shdwf/work/project/PageFolio/.planning/tmp/w05c-exe-caseid-red-20261106/test_adopted_ro...st_adopted_row_satisfies_sha0\\project\\.planning\\tmp\\release-uat-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\\dist', ...}, ...}
+
+    def test_adopted_row_satisfies_shared_uat_audit_without_changing_answer(bundle):
+        result = invoke(bundle)
+        assert result.returncode == 0, result.stderr
+        ledger = json.loads(
+            (bundle["phase"] / "06-MANUAL-EVIDENCE.json").read_text(encoding="utf-8")
+        )
+        row = ledger["cases"][0]["subrows"][0]
+        audit = support.Audit("require-pass")
+        support._check_subrow(
+            "W05c", row, {"exe_sha256": bundle["answer"]["binary_sha256"]}, audit, strict=True
+        )
+&gt;       assert audit.ok, audit.reasons
+E       AssertionError: ['W05c/quit-no@production-exe: ケースID付きの利用者回答がありません']
+E       assert False
+E        +  where False = &lt;tests.release_uat_support.Audit object at 0x0000023D15903B60&gt;.ok
+
+tests\test_w05c_exe_evidence.py:398: AssertionError</failure></testcase></testsuite></testsuites>

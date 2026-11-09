@@ -1,0 +1,52 @@
+[
+  {
+    "source": "manifest.json",
+    "sha256": "9a35e9a020b5fefe6cbfea5d0e8dd77895d9d48e1dc2faf6ad059cc32cf3549f",
+    "target": "06-05-evidence/W12c_terminal-python_at_script-20261109T130912Z-raw/manifest.json"
+  },
+  {
+    "source": "w12c-machine.json",
+    "sha256": "c02014c0d154bc5fcbf7bf1b73fa6eff9a4156b6cacae1980f76c92e39a0a259",
+    "target": "06-05-evidence/W12c_terminal-python_at_script-20261109T130912Z-raw/w12c-machine.json"
+  },
+  {
+    "source": "peer-ee379a25ede84b67a5087ce116111f35/resource-audit.json",
+    "sha256": "2712486b823171b86eddb615e322c9079cf63ba0e9fdc728771e3a945eb864e4",
+    "target": "06-05-evidence/W12c_terminal-python_at_script-20261109T130912Z-raw/peer-ee379a25ede84b67a5087ce116111f35-resource-audit.json"
+  },
+  {
+    "source": "peer-ee379a25ede84b67a5087ce116111f35/result.json",
+    "sha256": "490b7fced337be3acdf5c595e9494c374e5e34519f7edc6b1e5009d3b4493561",
+    "target": "06-05-evidence/W12c_terminal-python_at_script-20261109T130912Z-raw/peer-ee379a25ede84b67a5087ce116111f35-result.json"
+  },
+  {
+    "source": "peer-ee379a25ede84b67a5087ce116111f35/expected-owner.json",
+    "sha256": "da18b659996ba27c2ee434e1c32031f0e3266a467b6c270e83897998f3547e8a",
+    "target": "06-05-evidence/W12c_terminal-python_at_script-20261109T130912Z-raw/peer-ee379a25ede84b67a5087ce116111f35-expected-owner.json"
+  },
+  {
+    "source": "entry-owner-script/ready",
+    "sha256": "21a61303e6cd70ca9c6b816bab54bc6b4b54c629486ff939aa24837d3a157e25",
+    "target": "06-05-evidence/W12c_terminal-python_at_script-20261109T130912Z-raw/entry-owner-script-ready"
+  },
+  {
+    "source": "entry-owner-script/result.json",
+    "sha256": "f6a9b1b41d2b66f07e110e4f64233a3d2d71c8c6a5ea20ea6801045e7561a875",
+    "target": "06-05-evidence/W12c_terminal-python_at_script-20261109T130912Z-raw/entry-owner-script-result.json"
+  },
+  {
+    "source": "entry-owner-script/resource-audit.json",
+    "sha256": "21a61303e6cd70ca9c6b816bab54bc6b4b54c629486ff939aa24837d3a157e25",
+    "target": "06-05-evidence/W12c_terminal-python_at_script-20261109T130912Z-raw/entry-owner-script-resource-audit.json"
+  },
+  {
+    "source": "inspection.json",
+    "sha256": "bf1930b9a6af2d1b3e3767bb76919f804e4258ff5c1f9f6d6d820e119b80b98d",
+    "target": "06-05-evidence/W12c_terminal-python_at_script-20261109T130912Z-raw/inspection.json"
+  },
+  {
+    "source": "provenance-before-stop.json",
+    "sha256": "61b77107d96655e75a6802d93413a4ad30970fbf8b0e6efd452f0902c4653ff2",
+    "target": "06-05-evidence/W12c_terminal-python_at_script-20261109T130912Z-raw/provenance-before-stop.json"
+  }
+]

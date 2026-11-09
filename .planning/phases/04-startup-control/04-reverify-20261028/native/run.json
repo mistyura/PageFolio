@@ -1,0 +1,24 @@
+{
+  "started": "2026-10-28T00:25:02.117Z",
+  "finished": "2026-10-28T00:27:28.371Z",
+  "executable": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.venv\\Scripts\\python.exe",
+  "executable_sha256": "f14d10e954b922d758234ff49335ad0e07e567103e06b38ff675c6bc85282865",
+  "command": [
+    "-m",
+    "pytest",
+    "-q",
+    "-x",
+    "--basetemp=C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf04-reverify-3a9071d0-3f30-4a48-8f80-e95fef4cb428"
+  ],
+  "basetemp": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf04-reverify-3a9071d0-3f30-4a48-8f80-e95fef4cb428",
+  "code": 1,
+  "signal": null,
+  "environment_exit": 0,
+  "inputs_unchanged": true,
+  "changed_inputs": [],
+  "inputs_before_sha256": "2c75948a9b85fae8f1d355bc14a5f97b96e31aeffbf5b288ac3055b98f3a6850",
+  "inputs_after_sha256": "2c75948a9b85fae8f1d355bc14a5f97b96e31aeffbf5b288ac3055b98f3a6850",
+  "environment_sha256": "574d41cd3f6e3c4d440e790319db9db2d8a6dd2531ffccd4cea63be8b97a6bcf",
+  "log_sha256": "8fd685d2e2d9c31e28dfe3e38c99cfc730af8273067115737adff530f73aec07",
+  "file_count": 113
+}

@@ -1,0 +1,16 @@
+{
+  "post_removed": {
+    "removed": 1,
+    "posted": 0,
+    "first_beat_after_ghost_ms": 800.856500000009,
+    "foreground_unchanged": true,
+    "worker_stopped": true
+  },
+  "product": {
+    "removed": 1,
+    "posted": 7,
+    "first_beat_after_ghost_ms": 122.72649999977148,
+    "foreground_unchanged": true,
+    "worker_stopped": true
+  }
+}

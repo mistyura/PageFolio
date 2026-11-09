@@ -1,0 +1,35 @@
+[
+  {
+    "argv": [
+      "C:\\Users\\shdwf\\work\\project\\PageFolio\\.venv\\Scripts\\ruff.exe",
+      "check",
+      ".",
+      "--no-cache"
+    ],
+    "exit": 0,
+    "stdout": "All checks passed!\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "C:\\Users\\shdwf\\work\\project\\PageFolio\\.venv\\Scripts\\ruff.exe",
+      "format",
+      "--check",
+      "--no-cache",
+      "<146 files>"
+    ],
+    "exit": 0,
+    "stdout": "146 files already formatted\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "C:\\Users\\shdwf\\work\\project\\PageFolio\\.venv\\Scripts\\python.exe",
+      "-c",
+      "import ast; ast.parse(open('pagefolio.py', encoding='utf-8').read())"
+    ],
+    "exit": 0,
+    "stdout": "",
+    "stderr": ""
+  }
+]

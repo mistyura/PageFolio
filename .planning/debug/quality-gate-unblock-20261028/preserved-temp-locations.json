@@ -1,0 +1,27 @@
+[
+  {
+    "Original": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\debug\\quality-gate-unblock-20261028\\connection-tmp",
+    "Preserved": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\PageFolio-quality-gate-unblock-20261028-preserved-22ab83f30a70406bbdba46f3e603fff8\\connection-tmp",
+    "ContentAction": "same-volume directory move; no file rewriting"
+  },
+  {
+    "Original": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\debug\\quality-gate-unblock-20261028\\nine-tmp",
+    "Preserved": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\PageFolio-quality-gate-unblock-20261028-preserved-22ab83f30a70406bbdba46f3e603fff8\\nine-tmp",
+    "ContentAction": "same-volume directory move; no file rewriting"
+  },
+  {
+    "Original": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\debug\\quality-gate-unblock-20261028\\full-tmp",
+    "Preserved": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\PageFolio-quality-gate-unblock-20261028-preserved-22ab83f30a70406bbdba46f3e603fff8\\full-tmp",
+    "ContentAction": "same-volume directory move; no file rewriting"
+  },
+  {
+    "Original": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\debug\\quality-gate-unblock-20261028\\documents-tmp",
+    "Preserved": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\PageFolio-quality-gate-unblock-20261028-preserved-22ab83f30a70406bbdba46f3e603fff8\\documents-tmp",
+    "ContentAction": "same-volume directory move; no file rewriting"
+  },
+  {
+    "Original": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\debug\\quality-gate-unblock-20261028\\pytest-cache",
+    "Preserved": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\PageFolio-quality-gate-unblock-20261028-preserved-22ab83f30a70406bbdba46f3e603fff8\\pytest-cache",
+    "ContentAction": "same-volume directory move; no file rewriting"
+  }
+]

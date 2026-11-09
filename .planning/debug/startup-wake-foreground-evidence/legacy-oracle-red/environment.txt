@@ -1,0 +1,5 @@
+3.15.2 (tags/v3.15.2:5e58eaa, Oct 25 2026, 17:27:03) [MSC v.1951 64 bit (AMD64)]
+Windows-11-10.0.26300-SP0
+pytest=9.1.1
+Tcl=9.0 Tk=9.0
+executable=C:\Users\shdwf\work\project\PageFolio\.venv\Scripts\python.exe

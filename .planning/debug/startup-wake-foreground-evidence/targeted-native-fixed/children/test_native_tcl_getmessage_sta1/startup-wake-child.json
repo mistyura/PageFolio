@@ -1,0 +1,10 @@
+{
+  "command": [
+    "C:\\Users\\shdwf\\work\\project\\PageFolio\\.venv\\Scripts\\python.exe",
+    "C:\\Users\\shdwf\\work\\project\\PageFolio\\tests\\startup_wake_child.py",
+    "wake"
+  ],
+  "returncode": 0,
+  "stdout": "{\"removed\": 1, \"posted\": 7, \"posts\": [{\"args\": [27500, 0, 0, 0], \"caller_tid\": 25212}, {\"args\": [27500, 0, 0, 0], \"caller_tid\": 25212}, {\"args\": [27500, 0, 0, 0], \"caller_tid\": 25212}, {\"args\": [27500, 0, 0, 0], \"caller_tid\": 25212}, {\"args\": [27500, 0, 0, 0], \"caller_tid\": 25212}, {\"args\": [27500, 0, 0, 0], \"caller_tid\": 25212}, {\"args\": [27500, 0, 0, 0], \"caller_tid\": 25212}], \"creator_tid\": 27500, \"wake_api_requests\": [\"PostThreadMessageW\", \"PostThreadMessageW\", \"PostThreadMessageW\", \"PostThreadMessageW\", \"PostThreadMessageW\", \"PostThreadMessageW\", \"PostThreadMessageW\"], \"wake_ctypes_requests\": [], \"boundary_violations\": [], \"first_beat_after_ghost_ms\": 117.81810000047699, \"foreground_unchanged\": true, \"foreground_observation_source\": \"native\", \"foreground_observed_handles\": [396656, 396656], \"foreground_before\": {\"hwnd\": 396656, \"pid\": 18044, \"thread_id\": 7096, \"title\": \"\\u2838 \\u30d5\\u30a7\\u30fc\\u30ba6\\u3092\\u5b9f\\u884c | PageFolio\"}, \"foreground_after\": {\"hwnd\": 396656, \"pid\": 18044, \"thread_id\": 7096, \"title\": \"\\u283c \\u30d5\\u30a7\\u30fc\\u30ba6\\u3092\\u5b9f\\u884c | PageFolio\"}, \"worker_stopped\": true}\n",
+  "stderr": ""
+}

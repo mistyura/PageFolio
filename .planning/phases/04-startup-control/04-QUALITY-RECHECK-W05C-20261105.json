@@ -1,0 +1,35 @@
+{
+  "checked_utc": "2026-11-05T06:34:16.0890053Z",
+  "working_directory": "C:/Users/shdwf/work/project/PageFolio",
+  "checks": [
+    {
+      "argv": [".venv/Scripts/ruff.exe", "check", ".", "--no-cache"],
+      "exit": 0,
+      "stdout": "All checks passed!\n",
+      "stderr": "",
+      "captured_utc": "2026-11-05T06:33:58.1915575Z"
+    },
+    {
+      "argv": [".venv/Scripts/ruff.exe", "format", "--check", ".", "--no-cache"],
+      "exit": 0,
+      "stdout": "144 files already formatted\n",
+      "stderr": "",
+      "captured_utc": "2026-11-05T06:33:58.4240807Z"
+    }
+  ],
+  "input_manifest": {
+    "source": ".planning/phases/06-release-validation/06-05-evidence/w05c-instrumentation-native-20261105/result.json:after",
+    "source_sha256": "c31a930cfe8aeb39bcbfa54d276751fe2924af08949286560258d866b73ad0dd",
+    "unique_paths": 167,
+    "current_sha256_mismatches": 0,
+    "checked_utc": "2026-11-05T06:34:16.0890053Z"
+  },
+  "historical_runner_warning": {
+    "source": ".planning/phases/06-release-validation/06-05-evidence/w05c-instrumentation-native-20261105/checks.json",
+    "stage": "before pytest; both Ruff check calls",
+    "exit": 0,
+    "stderr": "warning: Encountered error: アクセスが拒否されました。 (os error 5)\n",
+    "path_identified": false,
+    "current_reproduced": false
+  }
+}

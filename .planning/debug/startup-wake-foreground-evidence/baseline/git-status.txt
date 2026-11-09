@@ -1,0 +1,73 @@
+ M .planning/STATE.md
+ M .planning/phases/04-startup-control/04-VALIDATION.md
+ M .planning/phases/06-release-validation/06-05-drivers/uat_row.py
+ M .planning/state.json
+ M README.md
+ M distribution/はじめに.md
+ M pagefolio/__main__.py
+ M pagefolio/constants.py
+ M pagefolio/startup_win32.py
+ M tests/test_release_contract.py
+ M 開発履歴.md
+?? .planning/debug/knowledge-base.md
+?? .planning/debug/resolved/w02-preview-peer-expired.md
+?? .planning/debug/simultaneous-owner-missing-evidence/entry-audit-20261023.md
+?? .planning/debug/simultaneous-owner-missing-evidence/entry-audit-artifacts/
+?? .planning/debug/simultaneous-owner-missing-evidence/entry-audit-full.txt
+?? .planning/debug/simultaneous-owner-missing-evidence/entry-audit-targeted-native.txt
+?? .planning/debug/simultaneous-owner-missing-evidence/entry-audit-targeted.txt
+?? .planning/debug/simultaneous-owner-missing-evidence/forensics-20261023.md
+?? .planning/debug/simultaneous-owner-missing-evidence/native-audit-20261023.md
+?? .planning/debug/simultaneous-owner-missing-evidence/native-audit-artifacts/
+?? .planning/debug/simultaneous-owner-missing-evidence/native-full-20261023.txt
+?? .planning/debug/simultaneous-owner-missing-evidence/native-targeted-20261023.txt
+?? .planning/debug/simultaneous-owner-missing-evidence/native-targeted-fixed-20261023.txt
+?? .planning/debug/simultaneous-owner-missing-evidence/native-targeted-pid-20261023.txt
+?? .planning/debug/simultaneous-owner-missing-evidence/notice-focus-20261023.md
+?? .planning/debug/simultaneous-owner-missing-evidence/notice-focus-artifacts-20261023/
+?? .planning/debug/simultaneous-owner-missing-evidence/notice-focus-targeted-20261023.txt
+?? .planning/debug/simultaneous-owner-missing-evidence/resume-check-20261023.md
+?? .planning/debug/simultaneous-owner-missing-evidence/resume-check-20261023/
+?? .planning/debug/simultaneous-owner-missing-evidence/resume-clock-fixed-20261023/
+?? .planning/debug/simultaneous-owner-missing-evidence/resume-final-20261023/
+?? .planning/debug/simultaneous-owner-missing-evidence/resume-hidden-20261023/
+?? .planning/debug/simultaneous-owner-missing-evidence/run_resume_check.py
+?? .planning/debug/startup-wake-foreground-evidence/
+?? .planning/debug/startup-wake-foreground.md
+?? .planning/debug/w02-preview-module-peer-expired-evidence/
+?? .planning/milestone.lock
+?? .planning/phases/04-startup-control/.review-diagnostics/
+?? .planning/phases/04-startup-control/04-DISCUSSION-LOG.md
+?? .planning/phases/04-startup-control/04-PATTERNS.md
+?? .planning/phases/04-startup-control/04-RESEARCH.md
+?? .planning/phases/04-startup-control/04-REVERIFY-20261028.cjs
+?? .planning/phases/04-startup-control/04-REVERIFY-GATES-20261028.md
+?? .planning/phases/04-startup-control/04-REVIEWS.md
+?? .planning/phases/04-startup-control/04-reverify-20261028/
+?? .planning/phases/05-config-notification/.review-diagnostics/
+?? .planning/phases/05-config-notification/05-01-task1-full.txt
+?? .planning/phases/05-config-notification/05-01-task2-full.txt
+?? .planning/phases/05-config-notification/05-02-task1-failure/
+?? .planning/phases/05-config-notification/05-PATTERNS.md
+?? .planning/phases/05-config-notification/05-PLANNING-CHECKS.md
+?? .planning/phases/05-config-notification/05-RESEARCH.md
+?? .planning/phases/05-config-notification/05-REVIEWS.md
+?? .planning/phases/06-release-validation/.review-diagnostics/
+?? .planning/phases/06-release-validation/06-05-drivers/ui_thread_probe.py
+?? .planning/phases/06-release-validation/06-05-evidence/W02_preview_at_module-20261025T062551Z.json
+?? .planning/phases/06-release-validation/06-05-evidence/W02_settings_at_module-20261025T061910Z.json
+?? .planning/phases/06-release-validation/06-05-evidence/W02_thumb_at_module-20261025T062139Z.json
+?? .planning/phases/06-release-validation/06-05-evidence/debug-w02-preview-peer-expired/
+?? .planning/phases/06-release-validation/06-PREFLIGHT-EVIDENCE.json
+?? .planning/phases/06-release-validation/06-preflight-pytest-native.txt
+?? .planning/phases/06-release-validation/06-preflight-pytest.txt
+?? pagefolio/startup_wake.py
+?? pf_owner_missing_entry_audit_20261023/
+?? tests/startup_wake_child.py
+?? tests/test_startup_wake.py
+warning: unable to access 'C:\Users\shdwf/.config/git/ignore': Permission denied
+warning: unable to access 'C:\Users\shdwf/.config/git/ignore': Permission denied
+warning: could not open directory '.pytest_cache/': Permission denied
+warning: could not open directory 'pf_0502_atomic_red/': Permission denied
+warning: could not open directory 'pf_0502_flow_green/': Permission denied
+warning: could not open directory 'pf_0502_flow_red/': Permission denied

@@ -1,0 +1,204 @@
+{
+  "at": "2026-10-28T05:25:09.500Z",
+  "files": [
+    {
+      "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\phases\\06-release-validation\\06-PROTECTION-EVIDENCE.json",
+      "copy": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\phases\\06-release-validation\\06-CONNECTION-STOP-20261028-evidence\\before\\06-PROTECTION-EVIDENCE.json",
+      "sha256": "5fb0c3909a67728607450590b7ca42959289b5d067ab44f31511c2f41b48685b",
+      "size": 240694
+    },
+    {
+      "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\phases\\06-release-validation\\06-BUILD-EVIDENCE.json",
+      "copy": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\phases\\06-release-validation\\06-CONNECTION-STOP-20261028-evidence\\before\\06-BUILD-EVIDENCE.json",
+      "sha256": "92aaf618beaddaf7566fd01db8c21912c9f42c14f4aca0c5636327def534c123",
+      "size": 80850
+    },
+    {
+      "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\phases\\06-release-validation\\06-MANUAL-EVIDENCE.json",
+      "copy": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\phases\\06-release-validation\\06-CONNECTION-STOP-20261028-evidence\\before\\06-MANUAL-EVIDENCE.json",
+      "sha256": "5730dddb536d2ec2aed95bc1f6bdca6689a4d6c2af3959f9cc20ec062bc706f3",
+      "size": 129878
+    },
+    {
+      "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\phases\\06-release-validation\\06-UAT-PREPARATION.md",
+      "copy": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\phases\\06-release-validation\\06-CONNECTION-STOP-20261028-evidence\\before\\06-UAT-PREPARATION.md",
+      "sha256": "e7c5997004fae6f2f87bf05960017d44738f21b4863731b0383766149d18b772",
+      "size": 29856
+    },
+    {
+      "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\phases\\06-release-validation\\06-UAT.md",
+      "copy": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\phases\\06-release-validation\\06-CONNECTION-STOP-20261028-evidence\\before\\06-UAT.md",
+      "sha256": "75a3a9c3ba0ccb065cdfa236dfcc12a5db249c21caf22bc31f22eb03855b78b3",
+      "size": 224413
+    },
+    {
+      "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\phases\\06-release-validation\\06-RESUME-20261028.md",
+      "copy": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\phases\\06-release-validation\\06-CONNECTION-STOP-20261028-evidence\\before\\06-RESUME-20261028.md",
+      "sha256": "9f1eb2e8ab04ec3714ebc31058b88fb95f2b090205736259f96c4cb9f0ba8645",
+      "size": 9585
+    },
+    {
+      "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\phases\\06-release-validation\\06-RESUME-CHECKPOINT-20261028.md",
+      "copy": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\phases\\06-release-validation\\06-CONNECTION-STOP-20261028-evidence\\before\\06-RESUME-CHECKPOINT-20261028.md",
+      "sha256": "e7770cc2bc9faf6930a6328572fb3b40cadd7ef2762f03c348ec392042eda037",
+      "size": 6047
+    },
+    {
+      "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\phases\\06-release-validation\\.continue-here.md",
+      "copy": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\phases\\06-release-validation\\06-CONNECTION-STOP-20261028-evidence\\before\\.continue-here.md",
+      "sha256": "a02cb8c77ed8d60c1633e12dcb3eb780a4aa2e3151ddd5572dfc1ef8ed06f94a",
+      "size": 4471
+    },
+    {
+      "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\phases\\06-release-validation\\06-CONNECTION-SANDBOX-NOT-VISIBLE-20261028.json",
+      "copy": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\phases\\06-release-validation\\06-CONNECTION-STOP-20261028-evidence\\before\\06-CONNECTION-SANDBOX-NOT-VISIBLE-20261028.json",
+      "sha256": "4fb961a0a2ef7fc940cc37432a1ff9b5cdbb5b1f7e644ad41df64c79461e6b6c",
+      "size": 1045
+    },
+    {
+      "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\STATE.md",
+      "copy": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\phases\\06-release-validation\\06-CONNECTION-STOP-20261028-evidence\\before\\STATE.md",
+      "sha256": "08b756f1f425e3b771f9f956a79b91d15628d161ee9d683dd53c868cc03ba0a7",
+      "size": 76133
+    },
+    {
+      "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\state.json",
+      "copy": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\phases\\06-release-validation\\06-CONNECTION-STOP-20261028-evidence\\before\\state.json",
+      "sha256": "84e79f868973f4da13b98cd8b75fbd2923cf49b7b1f673232d0cec374a6d2af1",
+      "size": 903
+    },
+    {
+      "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf06_t2_g3_unreadable_8433fc4ee5324234931fb80ac0f310d1\\runs\\release-uat-d04061c65a42406c90736c4a3e183368\\evidence\\fake-ocr-events.jsonl",
+      "copy": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\phases\\06-release-validation\\06-CONNECTION-STOP-20261028-evidence\\runs\\release-uat-d04061c65a42406c90736c4a3e183368\\evidence\\fake-ocr-events.jsonl",
+      "sha256": "7ceaaad08eb16142e21ebdd174988db8a975b416c5da97d3eab932bec4cf9e5d",
+      "size": 186
+    },
+    {
+      "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf06_t2_g3_unreadable_8433fc4ee5324234931fb80ac0f310d1\\runs\\release-uat-d04061c65a42406c90736c4a3e183368\\evidence\\inspect-001.json",
+      "copy": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\phases\\06-release-validation\\06-CONNECTION-STOP-20261028-evidence\\runs\\release-uat-d04061c65a42406c90736c4a3e183368\\evidence\\inspect-001.json",
+      "sha256": "c10ae49dcb703ed826f2df63b8590b7d3860fac0a999f2b4cfc64bc0dc17a8ae",
+      "size": 2192
+    },
+    {
+      "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf06_t2_g3_unreadable_8433fc4ee5324234931fb80ac0f310d1\\runs\\release-uat-d04061c65a42406c90736c4a3e183368\\fixtures\\ocr-one-page.pdf",
+      "copy": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\phases\\06-release-validation\\06-CONNECTION-STOP-20261028-evidence\\runs\\release-uat-d04061c65a42406c90736c4a3e183368\\fixtures\\ocr-one-page.pdf",
+      "sha256": "a67e16c3fa23da3a6215d0137427a8482b7fc2a37d3441d0ba0f764ce90abb05",
+      "size": 3243567
+    },
+    {
+      "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf06_t2_g3_unreadable_8433fc4ee5324234931fb80ac0f310d1\\runs\\release-uat-d04061c65a42406c90736c4a3e183368\\manifest.json",
+      "copy": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\phases\\06-release-validation\\06-CONNECTION-STOP-20261028-evidence\\runs\\release-uat-d04061c65a42406c90736c4a3e183368\\manifest.json",
+      "sha256": "6d662f5a80a0680792ec4148ad96c33f7ae2874d1a9fdb9db54a862deabf81a9",
+      "size": 14425
+    },
+    {
+      "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf06_t2_g3_unreadable_8433fc4ee5324234931fb80ac0f310d1\\runs\\release-uat-d04061c65a42406c90736c4a3e183368\\overlay-source\\pagefolio_settings.json",
+      "copy": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\phases\\06-release-validation\\06-CONNECTION-STOP-20261028-evidence\\runs\\release-uat-d04061c65a42406c90736c4a3e183368\\overlay-source\\pagefolio_settings.json",
+      "sha256": "2afd00a05d0a22c42bc37bead2fb97b2612e9404c6b9c3ef232930844c14b72e",
+      "size": 238
+    },
+    {
+      "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf06_t2_g3_unreadable_8433fc4ee5324234931fb80ac0f310d1\\runs\\release-uat-0d73a0cdf5b8465f9970b3702c2653e7\\evidence\\fake-ocr-events.jsonl",
+      "copy": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\phases\\06-release-validation\\06-CONNECTION-STOP-20261028-evidence\\runs\\release-uat-0d73a0cdf5b8465f9970b3702c2653e7\\evidence\\fake-ocr-events.jsonl",
+      "sha256": "1573fb29243c21c7d56d6fe6b3dc4432f2fb54a40df1e6860e504c151840cef2",
+      "size": 1248
+    },
+    {
+      "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf06_t2_g3_unreadable_8433fc4ee5324234931fb80ac0f310d1\\runs\\release-uat-0d73a0cdf5b8465f9970b3702c2653e7\\evidence\\inspect-001.json",
+      "copy": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\phases\\06-release-validation\\06-CONNECTION-STOP-20261028-evidence\\runs\\release-uat-0d73a0cdf5b8465f9970b3702c2653e7\\evidence\\inspect-001.json",
+      "sha256": "3884b383264ef5559858eb40e7555dfe0628a165e8c9c14c78dc9e94031125b3",
+      "size": 3678
+    },
+    {
+      "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf06_t2_g3_unreadable_8433fc4ee5324234931fb80ac0f310d1\\runs\\release-uat-0d73a0cdf5b8465f9970b3702c2653e7\\evidence\\inspect-002.json",
+      "copy": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\phases\\06-release-validation\\06-CONNECTION-STOP-20261028-evidence\\runs\\release-uat-0d73a0cdf5b8465f9970b3702c2653e7\\evidence\\inspect-002.json",
+      "sha256": "415aea1ff01606685f99c97c31ad09c79885aa8c671a21b480878daa3d6c2c1a",
+      "size": 4807
+    },
+    {
+      "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf06_t2_g3_unreadable_8433fc4ee5324234931fb80ac0f310d1\\runs\\release-uat-0d73a0cdf5b8465f9970b3702c2653e7\\evidence\\session-ocr-single.json",
+      "copy": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\phases\\06-release-validation\\06-CONNECTION-STOP-20261028-evidence\\runs\\release-uat-0d73a0cdf5b8465f9970b3702c2653e7\\evidence\\session-ocr-single.json",
+      "sha256": "4adb1f3c42e294227f293fb8b9d3c749e81424ac0c58205a9f5f1b0983c67e0e",
+      "size": 21706
+    },
+    {
+      "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf06_t2_g3_unreadable_8433fc4ee5324234931fb80ac0f310d1\\runs\\release-uat-0d73a0cdf5b8465f9970b3702c2653e7\\evidence\\stop-diagnostics-28824.json",
+      "copy": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\phases\\06-release-validation\\06-CONNECTION-STOP-20261028-evidence\\runs\\release-uat-0d73a0cdf5b8465f9970b3702c2653e7\\evidence\\stop-diagnostics-28824.json",
+      "sha256": "e3f26905fa02facbe83b8affde8e1368e07a317f4ffdb0681d386d58034bd02a",
+      "size": 1804
+    },
+    {
+      "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf06_t2_g3_unreadable_8433fc4ee5324234931fb80ac0f310d1\\runs\\release-uat-0d73a0cdf5b8465f9970b3702c2653e7\\fixtures\\ocr-one-page.pdf",
+      "copy": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\phases\\06-release-validation\\06-CONNECTION-STOP-20261028-evidence\\runs\\release-uat-0d73a0cdf5b8465f9970b3702c2653e7\\fixtures\\ocr-one-page.pdf",
+      "sha256": "f574bbd4692110091556c5208344798f2a473694932852259a1003a53ce0ce3d",
+      "size": 3243567
+    },
+    {
+      "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf06_t2_g3_unreadable_8433fc4ee5324234931fb80ac0f310d1\\runs\\release-uat-0d73a0cdf5b8465f9970b3702c2653e7\\manifest.json",
+      "copy": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\phases\\06-release-validation\\06-CONNECTION-STOP-20261028-evidence\\runs\\release-uat-0d73a0cdf5b8465f9970b3702c2653e7\\manifest.json",
+      "sha256": "57eeb5a9770a3258f0b6cd6e99a7d2ad9daebf94b3fc2b659bfc84753f4d00e3",
+      "size": 23385
+    },
+    {
+      "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf06_t2_g3_unreadable_8433fc4ee5324234931fb80ac0f310d1\\runs\\release-uat-0d73a0cdf5b8465f9970b3702c2653e7\\overlay-source\\pagefolio_settings.json",
+      "copy": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\phases\\06-release-validation\\06-CONNECTION-STOP-20261028-evidence\\runs\\release-uat-0d73a0cdf5b8465f9970b3702c2653e7\\overlay-source\\pagefolio_settings.json",
+      "sha256": "b3b56a06d47997c358ab6f54203c733431437b6951d7c9b01a6678d136d0f893",
+      "size": 237
+    },
+    {
+      "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf06_t2_g3_unreadable_8433fc4ee5324234931fb80ac0f310d1\\runs\\release-uat-0d73a0cdf5b8465f9970b3702c2653e7\\release.flag",
+      "copy": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\phases\\06-release-validation\\06-CONNECTION-STOP-20261028-evidence\\runs\\release-uat-0d73a0cdf5b8465f9970b3702c2653e7\\release.flag",
+      "sha256": "4e849abdc801751949bcd426f3a46ebe35fce480733d743d97b57118b044195d",
+      "size": 9
+    },
+    {
+      "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf06_t2_g3_unreadable_8433fc4ee5324234931fb80ac0f310d1\\runs\\release-uat-cf52cf1df4db42a3b384db6f13a6c103\\evidence\\fake-ocr-events.jsonl",
+      "copy": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\phases\\06-release-validation\\06-CONNECTION-STOP-20261028-evidence\\runs\\release-uat-cf52cf1df4db42a3b384db6f13a6c103\\evidence\\fake-ocr-events.jsonl",
+      "sha256": "f1c88f41b63188adff38194d2dc6cc45536c6ce7b1fd19e98d1df73e1ec23a40",
+      "size": 1248
+    },
+    {
+      "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf06_t2_g3_unreadable_8433fc4ee5324234931fb80ac0f310d1\\runs\\release-uat-cf52cf1df4db42a3b384db6f13a6c103\\evidence\\inspect-001.json",
+      "copy": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\phases\\06-release-validation\\06-CONNECTION-STOP-20261028-evidence\\runs\\release-uat-cf52cf1df4db42a3b384db6f13a6c103\\evidence\\inspect-001.json",
+      "sha256": "4a4be664c17e38b65968519ea1b266a32dc14342bb721ebf8b28cc1c19e99258",
+      "size": 3705
+    },
+    {
+      "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf06_t2_g3_unreadable_8433fc4ee5324234931fb80ac0f310d1\\runs\\release-uat-cf52cf1df4db42a3b384db6f13a6c103\\evidence\\inspect-002.json",
+      "copy": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\phases\\06-release-validation\\06-CONNECTION-STOP-20261028-evidence\\runs\\release-uat-cf52cf1df4db42a3b384db6f13a6c103\\evidence\\inspect-002.json",
+      "sha256": "678053f007ba0e551fb5b762b12326ed290246222a9ad0e75723722fe5830f34",
+      "size": 5071
+    },
+    {
+      "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf06_t2_g3_unreadable_8433fc4ee5324234931fb80ac0f310d1\\runs\\release-uat-cf52cf1df4db42a3b384db6f13a6c103\\evidence\\session-w05b-modal.json",
+      "copy": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\phases\\06-release-validation\\06-CONNECTION-STOP-20261028-evidence\\runs\\release-uat-cf52cf1df4db42a3b384db6f13a6c103\\evidence\\session-w05b-modal.json",
+      "sha256": "40c6ea55d99ddcb5b20838dbf306227d623d29b502e46c6422b18bed64e7af8c",
+      "size": 35352
+    },
+    {
+      "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf06_t2_g3_unreadable_8433fc4ee5324234931fb80ac0f310d1\\runs\\release-uat-cf52cf1df4db42a3b384db6f13a6c103\\fixtures\\ocr-one-page.pdf",
+      "copy": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\phases\\06-release-validation\\06-CONNECTION-STOP-20261028-evidence\\runs\\release-uat-cf52cf1df4db42a3b384db6f13a6c103\\fixtures\\ocr-one-page.pdf",
+      "sha256": "39eb0caa44e4e06455e84fe4f3eb6f285ca4682bd0397c20b5a8819c1ab6cd62",
+      "size": 3243567
+    },
+    {
+      "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf06_t2_g3_unreadable_8433fc4ee5324234931fb80ac0f310d1\\runs\\release-uat-cf52cf1df4db42a3b384db6f13a6c103\\manifest.json",
+      "copy": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\phases\\06-release-validation\\06-CONNECTION-STOP-20261028-evidence\\runs\\release-uat-cf52cf1df4db42a3b384db6f13a6c103\\manifest.json",
+      "sha256": "697f822b4d62f7f701cf2a8751bf09861e4f956da1395dbfb1d6a8084d1438bb",
+      "size": 23763
+    },
+    {
+      "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf06_t2_g3_unreadable_8433fc4ee5324234931fb80ac0f310d1\\runs\\release-uat-cf52cf1df4db42a3b384db6f13a6c103\\overlay-source\\pagefolio_settings.json",
+      "copy": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\phases\\06-release-validation\\06-CONNECTION-STOP-20261028-evidence\\runs\\release-uat-cf52cf1df4db42a3b384db6f13a6c103\\overlay-source\\pagefolio_settings.json",
+      "sha256": "4f8bd2d52cbbf2d5324c941fc91b5d40f220090d2ade16e4f9829dbaafcc47d6",
+      "size": 237
+    },
+    {
+      "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf06_t2_g3_unreadable_8433fc4ee5324234931fb80ac0f310d1\\runs\\release-uat-cf52cf1df4db42a3b384db6f13a6c103\\release.flag",
+      "copy": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\phases\\06-release-validation\\06-CONNECTION-STOP-20261028-evidence\\runs\\release-uat-cf52cf1df4db42a3b384db6f13a6c103\\release.flag",
+      "sha256": "4e849abdc801751949bcd426f3a46ebe35fce480733d743d97b57118b044195d",
+      "size": 9
+    }
+  ],
+  "note": "distは再copyせず固定配布hashと照合。run metadata/evidence/fixture/overlay-sourceは原本copy。"
+}

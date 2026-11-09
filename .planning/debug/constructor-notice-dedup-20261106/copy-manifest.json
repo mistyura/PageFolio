@@ -1,0 +1,284 @@
+{
+  "captured_at": "2026-11-06T13:29:05.832944+00:00",
+  "run": ".planning/phases/04-startup-control/04-reverify-20261106-exe-closeout",
+  "fixture_copies": [
+    {
+      "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf04-04-reverify-20261106-exe-closeout\\test_constructor_failure_notic0",
+      "copy": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\debug\\constructor-notice-dedup-20261106\\test_constructor_failure_notic0",
+      "files": {
+        "constructor-failure-join-0/ocr_custom_prompt.md": {
+          "sha256": "bcc220750b5717d96f5878d73a02c62628a2d7422c466dce790db84e6566c001",
+          "size": 20
+        },
+        "constructor-failure-join-0/ocr_summary_prompt.md": {
+          "sha256": "bcc220750b5717d96f5878d73a02c62628a2d7422c466dce790db84e6566c001",
+          "size": 20
+        },
+        "constructor-failure-join-0/pagefolio_settings.json": {
+          "sha256": "13b8411ba9565436be62514258c85a210b3d1c7c1cf88af2895fa24f52bfd830",
+          "size": 34
+        },
+        "constructor-failure-join-0/traceback.log": {
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "size": 0
+        },
+        "constructor-failure-join-2/ocr_custom_prompt.md": {
+          "sha256": "bcc220750b5717d96f5878d73a02c62628a2d7422c466dce790db84e6566c001",
+          "size": 20
+        },
+        "constructor-failure-join-2/ocr_summary_prompt.md": {
+          "sha256": "bcc220750b5717d96f5878d73a02c62628a2d7422c466dce790db84e6566c001",
+          "size": 20
+        },
+        "constructor-failure-join-2/pagefolio_settings.json": {
+          "sha256": "13b8411ba9565436be62514258c85a210b3d1c7c1cf88af2895fa24f52bfd830",
+          "size": 34
+        },
+        "constructor-failure-join-2/traceback.log": {
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "size": 0
+        },
+        "constructor-failure-join-4/ocr_custom_prompt.md": {
+          "sha256": "bcc220750b5717d96f5878d73a02c62628a2d7422c466dce790db84e6566c001",
+          "size": 20
+        },
+        "constructor-failure-join-4/ocr_summary_prompt.md": {
+          "sha256": "bcc220750b5717d96f5878d73a02c62628a2d7422c466dce790db84e6566c001",
+          "size": 20
+        },
+        "constructor-failure-join-4/pagefolio_settings.json": {
+          "sha256": "13b8411ba9565436be62514258c85a210b3d1c7c1cf88af2895fa24f52bfd830",
+          "size": 34
+        },
+        "constructor-failure-join-4/traceback.log": {
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "size": 0
+        },
+        "constructor-failure-join-6/ocr_custom_prompt.md": {
+          "sha256": "bcc220750b5717d96f5878d73a02c62628a2d7422c466dce790db84e6566c001",
+          "size": 20
+        },
+        "constructor-failure-join-6/ocr_summary_prompt.md": {
+          "sha256": "bcc220750b5717d96f5878d73a02c62628a2d7422c466dce790db84e6566c001",
+          "size": 20
+        },
+        "constructor-failure-join-6/pagefolio_settings.json": {
+          "sha256": "13b8411ba9565436be62514258c85a210b3d1c7c1cf88af2895fa24f52bfd830",
+          "size": 34
+        },
+        "constructor-failure-join-6/traceback.log": {
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "size": 0
+        },
+        "constructor-failure-legacy-join-1/ocr_custom_prompt.md": {
+          "sha256": "bcc220750b5717d96f5878d73a02c62628a2d7422c466dce790db84e6566c001",
+          "size": 20
+        },
+        "constructor-failure-legacy-join-1/ocr_summary_prompt.md": {
+          "sha256": "bcc220750b5717d96f5878d73a02c62628a2d7422c466dce790db84e6566c001",
+          "size": 20
+        },
+        "constructor-failure-legacy-join-1/pagefolio_settings.json": {
+          "sha256": "13b8411ba9565436be62514258c85a210b3d1c7c1cf88af2895fa24f52bfd830",
+          "size": 34
+        },
+        "constructor-failure-legacy-join-1/traceback.log": {
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "size": 0
+        },
+        "constructor-failure-legacy-join-3/ocr_custom_prompt.md": {
+          "sha256": "bcc220750b5717d96f5878d73a02c62628a2d7422c466dce790db84e6566c001",
+          "size": 20
+        },
+        "constructor-failure-legacy-join-3/ocr_summary_prompt.md": {
+          "sha256": "bcc220750b5717d96f5878d73a02c62628a2d7422c466dce790db84e6566c001",
+          "size": 20
+        },
+        "constructor-failure-legacy-join-3/pagefolio_settings.json": {
+          "sha256": "13b8411ba9565436be62514258c85a210b3d1c7c1cf88af2895fa24f52bfd830",
+          "size": 34
+        },
+        "constructor-failure-legacy-join-3/traceback.log": {
+          "sha256": "ea096373442667a398a253b03b071dc9f6477e9571572cf66775560f7f256e9f",
+          "size": 688
+        },
+        "constructor-failure-legacy-join-5/ocr_custom_prompt.md": {
+          "sha256": "bcc220750b5717d96f5878d73a02c62628a2d7422c466dce790db84e6566c001",
+          "size": 20
+        },
+        "constructor-failure-legacy-join-5/ocr_summary_prompt.md": {
+          "sha256": "bcc220750b5717d96f5878d73a02c62628a2d7422c466dce790db84e6566c001",
+          "size": 20
+        },
+        "constructor-failure-legacy-join-5/pagefolio_settings.json": {
+          "sha256": "13b8411ba9565436be62514258c85a210b3d1c7c1cf88af2895fa24f52bfd830",
+          "size": 34
+        },
+        "constructor-failure-legacy-join-5/traceback.log": {
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "size": 0
+        },
+        "constructor-failure-owner/ocr_custom_prompt.md": {
+          "sha256": "bcc220750b5717d96f5878d73a02c62628a2d7422c466dce790db84e6566c001",
+          "size": 20
+        },
+        "constructor-failure-owner/ocr_summary_prompt.md": {
+          "sha256": "bcc220750b5717d96f5878d73a02c62628a2d7422c466dce790db84e6566c001",
+          "size": 20
+        },
+        "constructor-failure-owner/pagefolio_settings.json": {
+          "sha256": "13b8411ba9565436be62514258c85a210b3d1c7c1cf88af2895fa24f52bfd830",
+          "size": 34
+        },
+        "constructor-failure-owner/ready": {
+          "sha256": "64b7ad572f976f524eab60acb599bab930c5a0ff1656e97f609fce6a8b0c3c4a",
+          "size": 381
+        },
+        "constructor-failure-owner/traceback.log": {
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "size": 0
+        }
+      }
+    },
+    {
+      "source": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf04-04-reverify-20261106-exe-closeout\\test_constructor_failure_notic1",
+      "copy": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\debug\\constructor-notice-dedup-20261106\\test_constructor_failure_notic1",
+      "files": {
+        "constructor-failure-join-0/ocr_custom_prompt.md": {
+          "sha256": "bcc220750b5717d96f5878d73a02c62628a2d7422c466dce790db84e6566c001",
+          "size": 20
+        },
+        "constructor-failure-join-0/ocr_summary_prompt.md": {
+          "sha256": "bcc220750b5717d96f5878d73a02c62628a2d7422c466dce790db84e6566c001",
+          "size": 20
+        },
+        "constructor-failure-join-0/pagefolio_settings.json": {
+          "sha256": "13b8411ba9565436be62514258c85a210b3d1c7c1cf88af2895fa24f52bfd830",
+          "size": 34
+        },
+        "constructor-failure-join-0/traceback.log": {
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "size": 0
+        },
+        "constructor-failure-join-2/ocr_custom_prompt.md": {
+          "sha256": "bcc220750b5717d96f5878d73a02c62628a2d7422c466dce790db84e6566c001",
+          "size": 20
+        },
+        "constructor-failure-join-2/ocr_summary_prompt.md": {
+          "sha256": "bcc220750b5717d96f5878d73a02c62628a2d7422c466dce790db84e6566c001",
+          "size": 20
+        },
+        "constructor-failure-join-2/pagefolio_settings.json": {
+          "sha256": "13b8411ba9565436be62514258c85a210b3d1c7c1cf88af2895fa24f52bfd830",
+          "size": 34
+        },
+        "constructor-failure-join-2/traceback.log": {
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "size": 0
+        },
+        "constructor-failure-join-4/ocr_custom_prompt.md": {
+          "sha256": "bcc220750b5717d96f5878d73a02c62628a2d7422c466dce790db84e6566c001",
+          "size": 20
+        },
+        "constructor-failure-join-4/ocr_summary_prompt.md": {
+          "sha256": "bcc220750b5717d96f5878d73a02c62628a2d7422c466dce790db84e6566c001",
+          "size": 20
+        },
+        "constructor-failure-join-4/pagefolio_settings.json": {
+          "sha256": "13b8411ba9565436be62514258c85a210b3d1c7c1cf88af2895fa24f52bfd830",
+          "size": 34
+        },
+        "constructor-failure-join-4/traceback.log": {
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "size": 0
+        },
+        "constructor-failure-join-6/ocr_custom_prompt.md": {
+          "sha256": "bcc220750b5717d96f5878d73a02c62628a2d7422c466dce790db84e6566c001",
+          "size": 20
+        },
+        "constructor-failure-join-6/ocr_summary_prompt.md": {
+          "sha256": "bcc220750b5717d96f5878d73a02c62628a2d7422c466dce790db84e6566c001",
+          "size": 20
+        },
+        "constructor-failure-join-6/pagefolio_settings.json": {
+          "sha256": "13b8411ba9565436be62514258c85a210b3d1c7c1cf88af2895fa24f52bfd830",
+          "size": 34
+        },
+        "constructor-failure-join-6/traceback.log": {
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "size": 0
+        },
+        "constructor-failure-legacy-join-1/ocr_custom_prompt.md": {
+          "sha256": "bcc220750b5717d96f5878d73a02c62628a2d7422c466dce790db84e6566c001",
+          "size": 20
+        },
+        "constructor-failure-legacy-join-1/ocr_summary_prompt.md": {
+          "sha256": "bcc220750b5717d96f5878d73a02c62628a2d7422c466dce790db84e6566c001",
+          "size": 20
+        },
+        "constructor-failure-legacy-join-1/pagefolio_settings.json": {
+          "sha256": "13b8411ba9565436be62514258c85a210b3d1c7c1cf88af2895fa24f52bfd830",
+          "size": 34
+        },
+        "constructor-failure-legacy-join-1/traceback.log": {
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "size": 0
+        },
+        "constructor-failure-legacy-join-3/ocr_custom_prompt.md": {
+          "sha256": "bcc220750b5717d96f5878d73a02c62628a2d7422c466dce790db84e6566c001",
+          "size": 20
+        },
+        "constructor-failure-legacy-join-3/ocr_summary_prompt.md": {
+          "sha256": "bcc220750b5717d96f5878d73a02c62628a2d7422c466dce790db84e6566c001",
+          "size": 20
+        },
+        "constructor-failure-legacy-join-3/pagefolio_settings.json": {
+          "sha256": "13b8411ba9565436be62514258c85a210b3d1c7c1cf88af2895fa24f52bfd830",
+          "size": 34
+        },
+        "constructor-failure-legacy-join-3/traceback.log": {
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "size": 0
+        },
+        "constructor-failure-legacy-join-5/ocr_custom_prompt.md": {
+          "sha256": "bcc220750b5717d96f5878d73a02c62628a2d7422c466dce790db84e6566c001",
+          "size": 20
+        },
+        "constructor-failure-legacy-join-5/ocr_summary_prompt.md": {
+          "sha256": "bcc220750b5717d96f5878d73a02c62628a2d7422c466dce790db84e6566c001",
+          "size": 20
+        },
+        "constructor-failure-legacy-join-5/pagefolio_settings.json": {
+          "sha256": "13b8411ba9565436be62514258c85a210b3d1c7c1cf88af2895fa24f52bfd830",
+          "size": 34
+        },
+        "constructor-failure-legacy-join-5/traceback.log": {
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "size": 0
+        },
+        "constructor-failure-legacy-owner/ocr_custom_prompt.md": {
+          "sha256": "bcc220750b5717d96f5878d73a02c62628a2d7422c466dce790db84e6566c001",
+          "size": 20
+        },
+        "constructor-failure-legacy-owner/ocr_summary_prompt.md": {
+          "sha256": "bcc220750b5717d96f5878d73a02c62628a2d7422c466dce790db84e6566c001",
+          "size": 20
+        },
+        "constructor-failure-legacy-owner/pagefolio_settings.json": {
+          "sha256": "13b8411ba9565436be62514258c85a210b3d1c7c1cf88af2895fa24f52bfd830",
+          "size": 34
+        },
+        "constructor-failure-legacy-owner/ready": {
+          "sha256": "add643c28460165d33e4cb9c6272a604aed0d95527f974892e3fcba61e1a3d98",
+          "size": 297
+        },
+        "constructor-failure-legacy-owner/traceback.log": {
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "size": 0
+        }
+      }
+    }
+  ],
+  "diagnostic_only": true,
+  "release_allowed": false
+}

@@ -36,6 +36,29 @@ CANON = {
 }
 
 
+def test_record_for_reclaims_owned_child_when_identity_unavailable(monkeypatch):
+    class Child:
+        pid = 1234
+        killed = False
+        waited = False
+
+        def poll(self):
+            return None
+
+        def kill(self):
+            self.killed = True
+
+        def wait(self, *, timeout):
+            assert timeout == 5
+            self.waited = True
+
+    child = Child()
+    monkeypatch.setattr(sup, "process_identity", lambda _pid: None)
+    with pytest.raises(sup.OwnershipError, match="同一性"):
+        sup._record_for(child, {}, "peer", Path("PageFolio.exe"))
+    assert child.killed and child.waited
+
+
 # ---------------------------------------------------------------------------
 # 共通fixture
 # ---------------------------------------------------------------------------
@@ -241,6 +264,27 @@ class TestIsolation:
         Path(manifest["copy"], "pagefolio_settings.json").write_bytes(b'{"a":1}')
         check = sup.verify_copy(manifest)  # 明示保存相当はoverlay差分として別に見える
         assert check["ok"] and check["overlay_changed"] == ["pagefolio_settings.json"]
+
+    def test_absent_settings_creation_is_an_overlay_change(self, tmp_path, repo):
+        manifest = prep(tmp_path, repo, overlays={sup.SETTINGS_NAME: None})
+        copy_dir = Path(manifest["copy"])
+        before = sup.verify_copy(manifest)
+        assert before["ok"] and before["overlay_changed"] == []
+        assert not (copy_dir / sup.SETTINGS_NAME).exists()
+
+        # 通常終了時のウィンドウ設定保存。初期状態との相違は隠さない。
+        (copy_dir / sup.SETTINGS_NAME).write_bytes(b'{"geometry":"1216x839+78+78"}')
+        after = sup.verify_copy(manifest)
+        assert after["ok"]
+        assert after["overlay_changed"] == [sup.SETTINGS_NAME]
+        assert after["distribution_changed"] == []
+        assert after["undeclared"] == []
+        assert sup._source_unchanged(manifest)
+
+        (copy_dir / "unexpected.dll").write_bytes(b"unapproved")
+        rejected = sup.verify_copy(manifest)
+        assert not rejected["ok"]
+        assert rejected["undeclared"] == ["unexpected.dll"]
 
     def test_undeclared_overlay_and_distribution_diffs_are_rejected(
         self, tmp_path, repo

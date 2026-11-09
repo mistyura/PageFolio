@@ -1,0 +1,6 @@
+# Pythonのルールは既存の正本から継承する。pyproject.tomlは編集しない。
+extend = "pyproject.toml"
+
+[format]
+# Ruff 0.17以降のMarkdown内コード整形による、文書・検証証拠の変更を防ぐ。
+exclude = ["*.md"]

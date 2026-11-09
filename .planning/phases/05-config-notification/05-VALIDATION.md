@@ -7,7 +7,35 @@ wave_0_complete: true
 created: "2026-10-22"
 ---
 
+## 2026-11-06 W05c v3 / CR-02後のNyquist再監査（現行）
+
+Phase04公式passedを先に確認し、4要件/9タスクを現行assertと新単一全件JUnitへ再結合した。config_notification143、settings_keyguard26、toast38、provider_refresh18、release_contract30、release_uat_support243の498件が全て成功。新2361件はfailure/error/skip0、標準エラー空、170入力前後/現行一致、Ruff/format/AST成功。W05cの39+68件は計測回帰で、人手Hの再実施へ転用しない。MISSING/PARTIAL 0。正本は `05-REVALIDATION-20261106.md` と `../04-startup-control/04-QUALITY-CR02-20261106.json`。
+
+## 2026-11-05 W05c計測後のNyquist再監査（履歴）
+
+Phase 04の公式fresh passedを先に確認し、Phase 05の4要件/9実装タスクを現行設定・通知コード、試験assert、新native全件JUnitへ再結合した。config_notification143、settings_keyguard26、toast38、provider_refresh18、release_contract30、release_uat_support243は全てpass。MISSING/PARTIAL 0、`validated`/`nyquist_compliant`を維持。全件2293件/JUnit failure/error/skip0、167一意入力前後・現行SHA-256一致。新W05c39件は計測対照であり人手受入には算入しない。現在cleanとrunner事前Ruff warningの分離は`../04-startup-control/04-QUALITY-RECHECK-W05C-20261105.json`、詳細は`05-REVALIDATION-W05C-20261105.md`。既存H受入を再実施扱いにしない。
+
 # Phase 5 — Validation Strategy
+
+## 2026-11-05 現行入力・Nyquist再照合
+
+最新の単一native全件2254 passed / 2 warnings / exit0を現行118入力のSHA-256一致と結合し、Phase 05の4/4要件COVERED、9/9実装タスク自動検証、gap0を維持した。config_notification143、settings_keyguard26、toast38、provider_refresh18、release_contract30をJUnitで確認。旧2232件の151入力は9件変化しており現行結果へ転用しない。詳細は [05-REVALIDATION-20261105.md](05-REVALIDATION-20261105.md)。人手H01〜H14と意味評価2件は既存passの継承であり、再実施とは記録しない。未解決依存とPhase 06本受入は維持。
+
+## 2026-10-28 案B・配布文書契約変更後の限定再検証（現行）
+
+verify:post の Nyquist を再評価。Phase 05 の4要件・9タスク、実装/主要試験/CR-03回帰は不変で、4/4 COVERED・新規gap0を維持する。変更された tests/test_release_contract.py はW11の正確な2キーだけをnot-run/deferred、他108行を必須とする承認済み境界と、配布3文書の単一ログインセッション保証/未確認記述を追加検証する。既存の偽pass拒否を削除していない。
+
+変更後の正本は `../06-release-validation/06-08-evidence/native-docs-20261028/`。**2232 passed / 2 warnings / 607.00秒 / exit0**、JUnit failure/error/skip0。独立 `05-REVERIFY-SCOPE-20261028.cjs` 実行でbefore/after各151入力の現行一致、実行中変更0を確認した。主要config_notification143/settings_keyguard26/toast38、CR-03を含むprovider_refresh18、release_contract30がすべてpass。旧2231件を変更後文書へ無条件転用していない。
+
+checks.jsonのRuff/ASTは全exit0、formatは同一140ファイル unchanged。ただしcheck .のstderrには探索時 `アクセスが拒否されました。 (os error 5)` 警告があり、警告なしと記載しない。製品・依存変更なし、pytest/GUI/build新規実行なし。108必須/2対象外の全110行はnot-run、本受入/出荷は未承認。以下の旧実測・全行必須という時点記述は当時の履歴として保持する。
+
+## 2026-10-28 CR-03 修正後の独立再検証（現行）
+
+verify:post の Nyquist ゲートを再評価し、4/4 要件 COVERED・9/9 タスクに自動検証あり・新規 gap 0 を維持した。全 PLAN の must_haves と既存試験の assert、実保存 owner、原本保護、通知 FIFO、再構築・終了の配線を再照合した。変更された OCR サマリ経路では、off のボタン/入口拒否、表示 off・モデル空、既存結果保持、再有効化を 3 provider × 4 ケースで検証している。テストの表示 widget は headless stub であり、実画面の見た目は証明しない。
+
+正本 `.planning/debug/ocr-off-summary-evidence/native-20261028/` の result.json、JUnit、stdout/stderr、環境を独立読取確認した。単一全件は **2083 passed / 2 warnings / 463.98 秒 / exit 0**、failure/error/skip 0。`05-REVERIFY-20261028.cjs` を実行し、before/after 各147入力の現行 SHA-256 不一致0、実行中変更0を確認した（`05-REVERIFY-20261028.json`）。最新製品/試験/依存が同一のため、成功済み全件を再走せず再利用した。旧2071件等は履歴である。
+
+主要内訳: config_notification 143、settings_keyguard 26、toast 38、provider_ui 236、ocr 165、pagination 84、ocr_dialog_provider_refresh 18（追加12を含む）。既存 H01〜H14 と意味評価2件の利用者 pass を再実施扱いにしない。未分類 edge 4件、旧投影の descriptor 不明、DEP-05/owner_missing 等の原因未解決、実 EXE/DPI/UAC を含む Phase 06 人手受入と出荷未承認を維持する。後段の独立 VERIFICATION が Phase 判定を所有する。
 
 設定読込・保存失敗の通知と原本保護の検証契約。05-01〜04の自動実測と2026-10-24 JSTの利用者によるH01〜H12の12 passを下記へ同期した。独立Nyquist監査で4/4要件COVERED・9/9タスク自動検証・具体的な試験ギャップ0、現行入力103件のSHA256一致を確認した。実測正本は[05-EVIDENCE.json](05-EVIDENCE.json)、人手は[05-UAT.md](05-UAT.md)。外部依存と内容不明のプローブの未解除は維持し、Phase正式完了は後続の独立検証で判定する。
 
@@ -159,3 +187,12 @@ SPECなしの edge-probe は V110-CFG-01/02/03/04 全4行が `unclassified` / `u
 | Gaps found | 0 |
 | Resolved | 0 |
 | Escalated | 0 |
+
+## 2026-11-06 constructor同期修正後の再照合
+
+単一全件2401 passed/2 warnings（constructor-sync、629.77秒）を共有証拠として再利用し、Phase05関連498件成功。171入力実行前後不変、Ruff/149format/AST成功。製品/設定/通知コードは前回独立検証から不変。開発履歴の試験基盤記載だけ更新されたため正式VERIFICATIONは所有CLIで再生成する。
+
+
+## 2026-11-07 G4採取基盤変更後の差分照合
+
+`05-REVALIDATION-G4-20261107.md` と `../04-startup-control/04-QUALITY-G4-20261107.json` を参照。単一全件2481 passed/2 warnings、174入力と追加12入力不変、Ruff/format/AST成功。変更は採取試験基盤と証拠/文書のみで、製品の実装・表示・版番号・固定EXEは不変。G4レビュー7指摘を解消。既存の静的評価と未解除リスクを維持し、正式人手受入・UI capture・出荷承認へ転用しない。独立verificationは後続で現行fingerprintを照合する。

@@ -1,0 +1,72 @@
+........................................................................ [  3%]
+........................................................................ [  7%]
+........................................................................ [ 10%]
+........................................................................ [ 14%]
+........................................................................ [ 17%]
+........................................................................ [ 21%]
+........................................................................ [ 24%]
+........................................................................ [ 28%]
+........................................................................ [ 31%]
+........................................................................ [ 35%]
+........................................................................ [ 38%]
+........................................................................ [ 42%]
+........................................................................ [ 45%]
+........................................................................ [ 49%]
+........................................................................ [ 52%]
+........................................................................ [ 56%]
+........................................................................ [ 59%]
+........................................................................ [ 63%]
+........................................................................ [ 66%]
+........................................................................ [ 70%]
+.......................................................F
+================================== FAILURES ===================================
+_________ TestCaseCoverage.test_w12b_roles_hashes_and_both_directions _________
+
+self = <tests.test_release_contract.TestCaseCoverage object at 0x000002C94F549B50>
+
+    def test_w12b_roles_hashes_and_both_directions(self):
+        build = json.loads((PHASE_DIR / "06-BUILD-EVIDENCE.json").read_text("utf-8"))
+        final = build["final_release"]["exe_sha256"]
+        w12b = next(c for c in ledger()["cases"] if c["id"] == "W12b")
+        by = {s["condition"]: s for s in w12b["subrows"]}
+        for pair in (
+            ("exe-script", "script-exe"),
+            ("exe-module", "module-exe"),
+            ("exe-tracer", "tracer-exe"),
+            ("exe-relocated-copy", "relocated-copy-exe"),
+        ):
+            assert all(name in by for name in pair), pair  # 両方向
+        for sub in w12b["subrows"]:
+            assert sub["subject"]["role"] == "final-release-candidate"
+            assert sub["subject"]["binary_sha256"] == final
+            assert sub["evidence_kind"] == "production-exe"
+            assert sub["binary_sha256"] in ("", final)
+        for name in ("exe-tracer", "tracer-exe"):
+            peer = by[name]["peer"]
+            assert peer["role"] == "technical-tracer-real-exe"
+            assert peer["binary_sha256"] != final
+            assert peer["version"] != build["version"]
+            assert peer["provenance"]["run_id"]
+            assert peer["provenance"]["source_manifest_sha256"]
+            # tracerを公式旧版/最終EXE受入済みとして扱わない
+            assert peer.get("official_release") is False
+        for name in ("exe-exe-samecopy", "exe-relocated-copy", "relocated-copy-exe"):
+            peer = by[name]["peer"]
+            assert peer["role"] == "same-version-copy"
+>           assert peer["binary_sha256"] == final
+E           AssertionError: assert 'b3d4a07e94cc...a9878603a8c17' == '9b3ebbce390c...6bb47f9f5f73b'
+E             
+E             - 9b3ebbce390c3b9f1752a97820a5ef81a0c39b7e148b93717b86bb47f9f5f73b
+E             + b3d4a07e94ccb9a8a82671f5191902ac86b02f8abbeaf8f16e9a9878603a8c17
+
+tests\test_release_contract.py:575: AssertionError
+============================== warnings summary ===============================
+.venv\Lib\site-packages\pymupdf\__init__.py:470
+  C:\Users\shdwf\work\project\PageFolio\.venv\Lib\site-packages\pymupdf\__init__.py:470: DeprecationWarning: 'typing.ByteString' and 'collections.abc.ByteString' are deprecated and slated for removal in Python 3.17
+    ByteString = typing.ByteString
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED tests/test_release_contract.py::TestCaseCoverage::test_w12b_roles_hashes_and_both_directions
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!
+1 failed, 1495 passed, 1 warning in 91.06s (0:01:31)

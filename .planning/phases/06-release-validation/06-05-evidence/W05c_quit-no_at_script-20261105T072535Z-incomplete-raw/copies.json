@@ -1,0 +1,122 @@
+[
+  {
+    "path": "run\\inspection.json",
+    "sha256": "e9bd5ddae31e351c2af91001b5239a358fcb3bd402e495eaf551fe054461b6b1"
+  },
+  {
+    "path": "run\\manifest.json",
+    "sha256": "44d71008f904659d051b653af7bdad5367eb236a97291f0990568225e31151c1"
+  },
+  {
+    "path": "run\\observation-w05c.md",
+    "sha256": "33fad54dfdedf7d40e10589a2a76d7c763c0a8a91d07442ea18b01d38a7e1b2b"
+  },
+  {
+    "path": "run\\w05c-check-before_peer.json",
+    "sha256": "5cbc0e8698c4b52dc1f6a31c4cb4385013428540bc4ea042ae25e9825ffad921"
+  },
+  {
+    "path": "run\\peer-34dacfb572184cd9910cb2d215011c67\\expected-owner.json",
+    "sha256": "f7a2a9ff0b198e6596ae665d76d03f08febbf038515d06c78bb72879715e9583"
+  },
+  {
+    "path": "run\\peer-34dacfb572184cd9910cb2d215011c67\\ocr_custom_prompt.md",
+    "sha256": "bcc220750b5717d96f5878d73a02c62628a2d7422c466dce790db84e6566c001"
+  },
+  {
+    "path": "run\\peer-34dacfb572184cd9910cb2d215011c67\\ocr_summary_prompt.md",
+    "sha256": "bcc220750b5717d96f5878d73a02c62628a2d7422c466dce790db84e6566c001"
+  },
+  {
+    "path": "run\\peer-34dacfb572184cd9910cb2d215011c67\\pagefolio_settings.json",
+    "sha256": "13b8411ba9565436be62514258c85a210b3d1c7c1cf88af2895fa24f52bfd830"
+  },
+  {
+    "path": "run\\peer-34dacfb572184cd9910cb2d215011c67\\resource-audit.json",
+    "sha256": "ab5563083ef7fbf721d368c6f3451dc218899bd36334a78b5bf24f34be9d2b88"
+  },
+  {
+    "path": "run\\peer-34dacfb572184cd9910cb2d215011c67\\result.json",
+    "sha256": "6a562bbf47fde6f823e596422764116f88c28c49b8d6d0b2bab693d09315a527"
+  },
+  {
+    "path": "run\\peer-34dacfb572184cd9910cb2d215011c67\\stderr.log",
+    "sha256": "7f7df82ba8bc8c7cc010d6f143d38d4e1ca52a21c09bad89e006cc6bccd30f6a"
+  },
+  {
+    "path": "run\\peer-34dacfb572184cd9910cb2d215011c67\\stdout.log",
+    "sha256": "6a1976d5acbc1184d90fdd47fd633ecefbd9a7325f7a30e8a377e8e82d27df88"
+  },
+  {
+    "path": "run\\peer-34dacfb572184cd9910cb2d215011c67\\traceback.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "run\\uat-owner-native-quit\\focus-ready",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "run\\uat-owner-native-quit\\focus-result.json",
+    "sha256": "f513fc6441c766ab065453914ba245198f6b773b702ccb82a07d9f1ff2cb25dc"
+  },
+  {
+    "path": "run\\uat-owner-native-quit\\initializing.json",
+    "sha256": "925bc0aeb7580df8850ea3d34d1d5d67f39b9a43dac4b90b3af6149d8fe61916"
+  },
+  {
+    "path": "run\\uat-owner-native-quit\\manual-deadline",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "run\\uat-owner-native-quit\\ocr_custom_prompt.md",
+    "sha256": "bcc220750b5717d96f5878d73a02c62628a2d7422c466dce790db84e6566c001"
+  },
+  {
+    "path": "run\\uat-owner-native-quit\\ocr_summary_prompt.md",
+    "sha256": "bcc220750b5717d96f5878d73a02c62628a2d7422c466dce790db84e6566c001"
+  },
+  {
+    "path": "run\\uat-owner-native-quit\\pagefolio_settings.json",
+    "sha256": "b3a2efbf8f8452393e899b5e8dba11c3d200f193f513388f7dc5c33ea037f3b9"
+  },
+  {
+    "path": "run\\uat-owner-native-quit\\quit-cancelled",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "run\\uat-owner-native-quit\\ready",
+    "sha256": "485643815b43f11e577ab21e3b03a827c2bfebcecafb65b3fdbaa9b519a913b4"
+  },
+  {
+    "path": "run\\uat-owner-native-quit\\resource-audit.json",
+    "sha256": "485643815b43f11e577ab21e3b03a827c2bfebcecafb65b3fdbaa9b519a913b4"
+  },
+  {
+    "path": "run\\uat-owner-native-quit\\result.json",
+    "sha256": "fa1235f04943613c36aa1b477ed9a03c7008276d332a9b341e04b8e93144d818"
+  },
+  {
+    "path": "run\\uat-owner-native-quit\\stderr.log",
+    "sha256": "7ca8c909fda6a784f306b0d845942db748d9ef538430e0ca9bf092eee90d76e9"
+  },
+  {
+    "path": "run\\uat-owner-native-quit\\stdout.log",
+    "sha256": "92051c4e275e8b9d73aa32d7087b504269550b3c33602c4ba72121730c9d5f39"
+  },
+  {
+    "path": "run\\uat-owner-native-quit\\traceback.log",
+    "sha256": "14be01ac3ed2161f3749804bc281617f44741cdf5bf05dedf4e7a9a6e1919884"
+  },
+  {
+    "path": "run\\uat-owner-native-quit\\w05c-events.jsonl",
+    "sha256": "85fc32b213f7ba61a2137d0d77793670874594bd486ad5eefe292091328c3dc0"
+  },
+  {
+    "path": "run\\uat-owner-native-quit\\w05c-observer-final.json",
+    "sha256": "f7e323be781a5272a3af474c35ea8f3551a3d7e8820ab15d3b6ebdb206b05863"
+  },
+  {
+    "path": "run\\uat-owner-native-quit\\w05c-peer-during_confirm.json",
+    "sha256": "05ffa605933ee01a8847964f1bd6bceb4273ff65ffc03506c4beef00184adc9b"
+  }
+]

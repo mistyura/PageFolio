@@ -13,7 +13,7 @@ created: 2026-10-24
 
 ## 現行の観測と未達
 
-世代5の実初回/再build、保護・接続準備が完了し、準備監査exit0。ocr-single/W05bは利用者の結果目視・通常終了と機械観測を照合した。観測中の手動切替が入ったW05b初回は原記録を保持し、無操作手順を明確化した別runのみ成立。本受入は必須108行中28行pass・80行not-run・W11対象外2行not-run。以下の世代4記録は履歴。
+世代5の実初回/再build、保護・接続準備が完了し、準備監査exit0。ocr-single/W05bは利用者の結果目視・通常終了と機械観測を照合した。観測中の手動切替が入ったW05b初回は原記録を保持し、無操作手順を明確化した別runのみ成立。本受入は必須108行中23行pass・85行not-run・W11対象外2行not-run。以下の世代4記録は履歴。
 
 世代4の接続準備監査は合格。W01/normal@scriptの回答・生観測1件は記録したが、本受入判定は保留しnot-runを維持する。全110行の人手passは0。2026-10-28の案B承認（`W11-B-20261028`）により、W11の別セッション2行だけを未確認のまま `not-run/deferred` とする。今回の保証はWindowsの単一ログインセッション利用に限定する。必須108行は全てnot-runであり、品質・安全条件も継続する。正本は `06-W11-SCOPE-APPROVAL.md` と `06-RELEASE-SCOPE.json`。文書変更後の新世代build/保護/接続を06-08で実施してから本受入へ進む。世代4までの観測履歴は06-04g4-CHECKPOINT.mdに保持する。
 
@@ -77,8 +77,9 @@ created: 2026-10-24
 
 **W01 / 通常の大きさ / Python直接起動(python pagefolio.py)**(証拠種別: `python-real`)
 
-- **状態**: pass / 利用者直接入力・機械観測一致。根拠: 06-05-evidence/W01_normal_at_script-20261028T100202Z.json
-- **回答原文**: W01 normal script：state_after=通常・geometry=はい・single=１つ・status=見える（メモ: なし）
+- **状態**: not-run / 現行Python入力の再採取待ち
+- **旧入力の受入**: passを別保存。旧回答・旧観測は履歴であり現行判定へ転用しない。根拠: 06-05-evidence/PYTHON-INPUT-SUPERSESSION-20261106.json / W01/normal@script
+- **旧入力の回答原文（履歴）**: W01 normal script：state_after=通常・geometry=はい・single=１つ・status=見える（メモ: なし）
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
   ```powershell
   $uat = .venv/Scripts/python.exe tests/test_startup_windows.py --uat start --case normal | ConvertFrom-Json
@@ -105,8 +106,9 @@ created: 2026-10-24
 
 **W01 / 通常の大きさ / Python -m pagefolio**(証拠種別: `python-real`)
 
-- **状態**: pass / 利用者直接入力・機械観測一致。根拠: 06-05-evidence/W01_normal_at_module-20261028T100652Z.json
-- **回答原文**: W01 normal module：state_after=通常・geometry=はい・single=１つ・status=見える（メモ: なし）
+- **状態**: not-run / 現行Python入力の再採取待ち
+- **旧入力の受入**: passを別保存。旧回答・旧観測は履歴であり現行判定へ転用しない。根拠: 06-05-evidence/PYTHON-INPUT-SUPERSESSION-20261106.json / W01/normal@module
+- **旧入力の回答原文（履歴）**: W01 normal module：state_after=通常・geometry=はい・single=１つ・status=見える（メモ: なし）
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
   ```powershell
   $uat = .venv/Scripts/python.exe tests/test_startup_windows.py --uat start --case normal | ConvertFrom-Json
@@ -165,8 +167,9 @@ created: 2026-10-24
 
 **W01 / 最大化 / Python直接起動(python pagefolio.py)**(証拠種別: `python-real`)
 
-- **状態**: pass / 利用者直接入力・機械観測一致。根拠: 06-05-evidence/W01_zoomed_at_script-20261028T104539Z.json
-- **回答原文**: W01 zoomed script：state_after=最大化・geometry=はい・single=１つ・status=見える（メモ: なし）
+- **状態**: not-run / 現行Python入力の再採取待ち
+- **旧入力の受入**: passを別保存。旧回答・旧観測は履歴であり現行判定へ転用しない。根拠: 06-05-evidence/PYTHON-INPUT-SUPERSESSION-20261106.json / W01/zoomed@script
+- **旧入力の回答原文（履歴）**: W01 zoomed script：state_after=最大化・geometry=はい・single=１つ・status=見える（メモ: なし）
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
   ```powershell
   $uat = .venv/Scripts/python.exe tests/test_startup_windows.py --uat start --case zoomed | ConvertFrom-Json
@@ -193,8 +196,9 @@ created: 2026-10-24
 
 **W01 / 最大化 / Python -m pagefolio**(証拠種別: `python-real`)
 
-- **状態**: pass / 利用者直接入力・機械観測一致。根拠: 06-05-evidence/W01_zoomed_at_module-20261028T104658Z.json
-- **回答原文**: W01 zoomed module：state_after=最大化・geometry=はい・single=１つ・status=見える（メモ: なし）
+- **状態**: not-run / 現行Python入力の再採取待ち
+- **旧入力の受入**: passを別保存。旧回答・旧観測は履歴であり現行判定へ転用しない。根拠: 06-05-evidence/PYTHON-INPUT-SUPERSESSION-20261106.json / W01/zoomed@module
+- **旧入力の回答原文（履歴）**: W01 zoomed module：state_after=最大化・geometry=はい・single=１つ・status=見える（メモ: なし）
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
   ```powershell
   $uat = .venv/Scripts/python.exe tests/test_startup_windows.py --uat start --case zoomed | ConvertFrom-Json
@@ -258,8 +262,9 @@ created: 2026-10-24
 
 **W02 / 設定ダイアログの入力欄 / Python直接起動(python pagefolio.py)**(証拠種別: `python-real`)
 
-- **状態**: pass / 利用者直接入力・機械観測一致。根拠: 06-05-evidence/W02_settings_at_script-20261028T111048Z.json
-- **回答原文**: W02 settings script：foreground=出た・input=入った・kept=保たれた・single=１つ（メモ: なし）
+- **状態**: not-run / 現行Python入力の再採取待ち
+- **旧入力の受入**: passを別保存。旧回答・旧観測は履歴であり現行判定へ転用しない。根拠: 06-05-evidence/PYTHON-INPUT-SUPERSESSION-20261106.json / W02/settings@script
+- **旧入力の回答原文（履歴）**: W02 settings script：foreground=出た・input=入った・kept=保たれた・single=１つ（メモ: なし）
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
   ```powershell
   $uat = .venv/Scripts/python.exe tests/test_startup_windows.py --uat start --case settings | ConvertFrom-Json
@@ -286,8 +291,9 @@ created: 2026-10-24
 
 **W02 / 設定ダイアログの入力欄 / Python -m pagefolio**(証拠種別: `python-real`)
 
-- **状態**: pass / 利用者直接入力・機械観測一致。根拠: 06-05-evidence/W02_settings_at_module-20261028T111310Z.json
-- **回答原文**: W02 settings module：foreground=出た・input=入った・kept=保たれた・single=１つ（メモ: なし）
+- **状態**: not-run / 現行Python入力の再採取待ち
+- **旧入力の受入**: passを別保存。旧回答・旧観測は履歴であり現行判定へ転用しない。根拠: 06-05-evidence/PYTHON-INPUT-SUPERSESSION-20261106.json / W02/settings@module
+- **旧入力の回答原文（履歴）**: W02 settings module：foreground=出た・input=入った・kept=保たれた・single=１つ（メモ: なし）
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
   ```powershell
   $uat = .venv/Scripts/python.exe tests/test_startup_windows.py --uat start --case settings | ConvertFrom-Json
@@ -344,8 +350,9 @@ created: 2026-10-24
 
 **W02 / 左ペインのサムネイル欄 / Python直接起動(python pagefolio.py)**(証拠種別: `python-real`)
 
-- **状態**: pass / 利用者直接入力・機械観測一致。根拠: 06-05-evidence/W02_thumb_at_script-20261028T113122Z.json
-- **回答原文**: W02 thumb script：foreground=出た・key_reached=変わった・restored=戻った・kept=保たれた・single=１つ（メモ: なし）
+- **状態**: not-run / 現行Python入力の再採取待ち
+- **旧入力の受入**: passを別保存。旧回答・旧観測は履歴であり現行判定へ転用しない。根拠: 06-05-evidence/PYTHON-INPUT-SUPERSESSION-20261106.json / W02/thumb@script
+- **旧入力の回答原文（履歴）**: W02 thumb script：foreground=出た・key_reached=変わった・restored=戻った・kept=保たれた・single=１つ（メモ: なし）
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
   ```powershell
   $uat = .venv/Scripts/python.exe tests/test_startup_windows.py --uat start --case thumb | ConvertFrom-Json
@@ -374,8 +381,9 @@ created: 2026-10-24
 
 **W02 / 左ペインのサムネイル欄 / Python -m pagefolio**(証拠種別: `python-real`)
 
-- **状態**: pass / 利用者直接入力・機械観測一致。根拠: 06-05-evidence/W02_thumb_at_module-20261028T113300Z.json
-- **回答原文**: W02 thumb module：foreground=出た・key_reached=変わった・restored=戻った・kept=保たれた・single=１つ（メモ: なし）
+- **状態**: not-run / 現行Python入力の再採取待ち
+- **旧入力の受入**: passを別保存。旧回答・旧観測は履歴であり現行判定へ転用しない。根拠: 06-05-evidence/PYTHON-INPUT-SUPERSESSION-20261106.json / W02/thumb@module
+- **旧入力の回答原文（履歴）**: W02 thumb module：foreground=出た・key_reached=変わった・restored=戻った・kept=保たれた・single=１つ（メモ: なし）
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
   ```powershell
   $uat = .venv/Scripts/python.exe tests/test_startup_windows.py --uat start --case thumb | ConvertFrom-Json
@@ -434,8 +442,9 @@ created: 2026-10-24
 
 **W02 / 中央のプレビュー / Python直接起動(python pagefolio.py)**(証拠種別: `python-real`)
 
-- **状態**: pass / 利用者直接入力・機械観測一致。根拠: 06-05-evidence/W02_preview_at_script-20261028T115040Z.json
-- **回答原文**: W02 preview script：foreground=出た・key_reached=変わった・restored=戻った・kept=保たれた・single=１つ（メモ: なし）
+- **状態**: not-run / 現行Python入力の再採取待ち
+- **旧入力の受入**: passを別保存。旧回答・旧観測は履歴であり現行判定へ転用しない。根拠: 06-05-evidence/PYTHON-INPUT-SUPERSESSION-20261106.json / W02/preview@script
+- **旧入力の回答原文（履歴）**: W02 preview script：foreground=出た・key_reached=変わった・restored=戻った・kept=保たれた・single=１つ（メモ: なし）
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
   ```powershell
   $uat = .venv/Scripts/python.exe tests/test_startup_windows.py --uat start --case preview | ConvertFrom-Json
@@ -463,8 +472,9 @@ created: 2026-10-24
 
 **W02 / 中央のプレビュー / Python -m pagefolio**(証拠種別: `python-real`)
 
-- **状態**: pass / 利用者直接入力・機械観測一致。根拠: 06-05-evidence/W02_preview_at_module-20261028T115223Z.json
-- **回答原文**: W02 preview module：foreground=出た・key_reached=変わった・restored=戻った・kept=保たれた・single=１つ（メモ: なし）
+- **状態**: not-run / 現行Python入力の再採取待ち
+- **旧入力の受入**: passを別保存。旧回答・旧観測は履歴であり現行判定へ転用しない。根拠: 06-05-evidence/PYTHON-INPUT-SUPERSESSION-20261106.json / W02/preview@module
+- **旧入力の回答原文（履歴）**: W02 preview module：foreground=出た・key_reached=変わった・restored=戻った・kept=保たれた・single=１つ（メモ: なし）
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
   ```powershell
   $uat = .venv/Scripts/python.exe tests/test_startup_windows.py --uat start --case preview | ConvertFrom-Json
@@ -527,8 +537,9 @@ created: 2026-10-24
 
 **W03 / 未保存3頁PDF / Python直接起動(python pagefolio.py)**(証拠種別: `python-real`)
 
-- **状態**: pass / 利用者直接入力・機械観測一致。根拠: 06-05-evidence/W03_pdf-3page_at_script-20261028T124500Z.json
-- **回答原文**: W03 pdf-3page script：page_counts=4 3 4 3・orientations=全て横・edit_visible_after_restore=分からない・original_pdf_untouched=合成のみ（メモ: なし） / 追加回答: 3ページで1ページ目が横向きだった
+- **状態**: not-run / 現行Python入力の再採取待ち
+- **旧入力の受入**: passを別保存。旧回答・旧観測は履歴であり現行判定へ転用しない。根拠: 06-05-evidence/PYTHON-INPUT-SUPERSESSION-20261106.json / W03/pdf-3page@script
+- **旧入力の回答原文（履歴）**: W03 pdf-3page script：page_counts=4 3 4 3・orientations=全て横・edit_visible_after_restore=分からない・original_pdf_untouched=合成のみ（メモ: なし） / 追加回答: 3ページで1ページ目が横向きだった
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
   ```powershell
   $uat = .venv/Scripts/python.exe tests/test_startup_windows.py --uat start --case pdf | ConvertFrom-Json
@@ -555,8 +566,9 @@ created: 2026-10-24
 
 **W03 / 未保存3頁PDF / Python -m pagefolio**(証拠種別: `python-real`)
 
-- **状態**: pass / 利用者直接入力・機械観測一致。根拠: 06-05-evidence/W03_pdf-3page_at_module-20261028T125331Z.json
-- **回答原文**: W03 pdf-3page module：page_counts=4 3 4 3・orientations=全て横・edit_visible_after_restore=はい・original_pdf_untouched=合成のみ（メモ: なし）
+- **状態**: not-run / 現行Python入力の再採取待ち
+- **旧入力の受入**: passを別保存。旧回答・旧観測は履歴であり現行判定へ転用しない。根拠: 06-05-evidence/PYTHON-INPUT-SUPERSESSION-20261106.json / W03/pdf-3page@module
+- **旧入力の回答原文（履歴）**: W03 pdf-3page module：page_counts=4 3 4 3・orientations=全て横・edit_visible_after_restore=はい・original_pdf_untouched=合成のみ（メモ: なし）
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
   ```powershell
   $uat = .venv/Scripts/python.exe tests/test_startup_windows.py --uat start --case pdf | ConvertFrom-Json
@@ -619,8 +631,9 @@ created: 2026-10-24
 
 **W04 / 1page画像PDF・並列1 / Python直接起動(python pagefolio.py)**(証拠種別: `python-real`)
 
-- **状態**: pass / 利用者直接回答・同一OCR要求の継続・復帰が一致。根拠: 06-05-evidence/W04_ocr-1page_at_script-20261028T142948Z.json
-- **回答原文**: W04 ocr-1page script：progress_shown=はい・completed_shown=見えた・summary_not_run=していない（メモ: なし）
+- **状態**: not-run / 現行Python入力の再採取待ち
+- **旧入力の受入**: passを別保存。旧回答・旧観測は履歴であり現行判定へ転用しない。根拠: 06-05-evidence/PYTHON-INPUT-SUPERSESSION-20261106.json / W04/ocr-1page@script
+- **旧入力の回答原文（履歴）**: W04 ocr-1page script：progress_shown=はい・completed_shown=見えた・summary_not_run=していない（メモ: なし）
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
   ```powershell
   $uat = .venv/Scripts/python.exe tests/test_startup_windows.py --uat start --case ocr | ConvertFrom-Json
@@ -647,8 +660,9 @@ created: 2026-10-24
 
 **W04 / 1page画像PDF・並列1 / Python -m pagefolio**(証拠種別: `python-real`)
 
-- **状態**: pass / 利用者直接回答・同一OCR要求の継続・復帰が一致。根拠: 06-05-evidence/W04_ocr-1page_at_module-20261028T143122Z.json
-- **回答原文**: W04 ocr-1page module：progress_shown=はい・completed_shown=見えた・summary_not_run=していない（メモ: なし）
+- **状態**: not-run / 現行Python入力の再採取待ち
+- **旧入力の受入**: passを別保存。旧回答・旧観測は履歴であり現行判定へ転用しない。根拠: 06-05-evidence/PYTHON-INPUT-SUPERSESSION-20261106.json / W04/ocr-1page@module
+- **旧入力の回答原文（履歴）**: W04 ocr-1page module：progress_shown=はい・completed_shown=見えた・summary_not_run=していない（メモ: なし）
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
   ```powershell
   $uat = .venv/Scripts/python.exe tests/test_startup_windows.py --uat start --case ocr | ConvertFrom-Json
@@ -712,8 +726,9 @@ created: 2026-10-24
 
 **W05a / 設定→LLM設定を閉じる / Python直接起動(python pagefolio.py)**(証拠種別: `python-real`)
 
-- **状態**: pass / 利用者直接入力・機械観測一致。根拠: 06-05-evidence/W05a_nested-settings_at_script-20261028T150111Z.json
-- **回答原文**: W05a nested-settings script：foreground=出た・input=入った・kept=保たれた・single=１つ（メモ: なし）
+- **状態**: not-run / 現行Python入力の再採取待ち
+- **旧入力の受入**: passを別保存。旧回答・旧観測は履歴であり現行判定へ転用しない。根拠: 06-05-evidence/PYTHON-INPUT-SUPERSESSION-20261106.json / W05a/nested-settings@script
+- **旧入力の回答原文（履歴）**: W05a nested-settings script：foreground=出た・input=入った・kept=保たれた・single=１つ（メモ: なし）
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
   ```powershell
   $uat = .venv/Scripts/python.exe tests/test_startup_windows.py --uat start --case nested | ConvertFrom-Json
@@ -737,8 +752,9 @@ created: 2026-10-24
 
 **W05a / 設定→LLM設定を閉じる / Python -m pagefolio**(証拠種別: `python-real`)
 
-- **状態**: pass / 利用者直接入力・機械観測一致。根拠: 06-05-evidence/W05a_nested-settings_at_module-20261028T151926Z.json
-- **回答原文**: W05a nested-settings module：foreground=出た・input=入った・kept=保たれた・single=１つ（メモ: なし）
+- **状態**: not-run / 現行Python入力の再採取待ち
+- **旧入力の受入**: passを別保存。旧回答・旧観測は履歴であり現行判定へ転用しない。根拠: 06-05-evidence/PYTHON-INPUT-SUPERSESSION-20261106.json / W05a/nested-settings@module
+- **旧入力の回答原文（履歴）**: W05a nested-settings module：foreground=出た・input=入った・kept=保たれた・single=１つ（メモ: なし）
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
   ```powershell
   $uat = .venv/Scripts/python.exe tests/test_startup_windows.py --uat start --case nested | ConvertFrom-Json
@@ -795,8 +811,9 @@ created: 2026-10-24
 
 **W05b / OCRDialog閉じる確認 / Python直接起動(python pagefolio.py)**(証拠種別: `python-real`)
 
-- **状態**: pass / 利用者直接回答・無操作の自動復帰・同じ要求の完了が一致。根拠: 06-05-evidence/W05b_ocr-close-confirm_at_script-20261031T003108Z.json
-- **回答原文**: W05b ocr-close-confirm script：result_shown=見えた・auto_return=自動で出た・manual_switch=していない・answered_no=いいえを押した・process_kept=続いていた・summary_not_run=していない（メモ: なし）
+- **状態**: not-run / 現行Python入力の再採取待ち
+- **旧入力の受入**: passを別保存。旧回答・旧観測は履歴であり現行判定へ転用しない。根拠: 06-05-evidence/PYTHON-INPUT-SUPERSESSION-20261106.json / W05b/ocr-close-confirm@script
+- **旧入力の回答原文（履歴）**: W05b ocr-close-confirm script：result_shown=見えた・auto_return=自動で出た・manual_switch=していない・answered_no=いいえを押した・process_kept=続いていた・summary_not_run=していない（メモ: なし）
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
   ```powershell
   $uat = .venv/Scripts/python.exe tests/test_startup_windows.py --uat start --case native-ocr | ConvertFrom-Json
@@ -823,8 +840,9 @@ created: 2026-10-24
 
 **W05b / OCRDialog閉じる確認 / Python -m pagefolio**(証拠種別: `python-real`)
 
-- **状態**: pass / 利用者直接回答・無操作の自動復帰・同じ要求の完了が一致。根拠: 06-05-evidence/W05b_ocr-close-confirm_at_module-20261031T003956Z.json
-- **回答原文**: W05b ocr-close-confirm module：result_shown=見えた・auto_return=自動で出た・manual_switch=していない・answered_no=いいえを押した・process_kept=続いていた・summary_not_run=していない（メモ: なし）
+- **状態**: not-run / 現行Python入力の再採取待ち
+- **旧入力の受入**: passを別保存。旧回答・旧観測は履歴であり現行判定へ転用しない。根拠: 06-05-evidence/PYTHON-INPUT-SUPERSESSION-20261106.json / W05b/ocr-close-confirm@module
+- **旧入力の回答原文（履歴）**: W05b ocr-close-confirm module：result_shown=見えた・auto_return=自動で出た・manual_switch=していない・answered_no=いいえを押した・process_kept=続いていた・summary_not_run=していない（メモ: なし）
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
   ```powershell
   $uat = .venv/Scripts/python.exe tests/test_startup_windows.py --uat start --case native-ocr | ConvertFrom-Json
@@ -890,11 +908,19 @@ created: 2026-10-24
 
 **W05c / 終了確認でNo / Python直接起動(python pagefolio.py)**(証拠種別: `python-real`)
 
-- **状態**: not-run / 準備: 未準備(別フィールド)
+- **状態**: not-run / 現行Python入力の再採取待ち
+- **旧入力の受入**: passを別保存。旧回答・旧観測は履歴であり現行判定へ転用しない。根拠: 06-05-evidence/PYTHON-INPUT-SUPERSESSION-20261106.json / W05c/quit-no@script
+- **旧入力の回答原文（履歴）**: W05c quit-no script：6点すべて確認でき、採用してよい
+- **再開ゲート（2026-11-05実装）**: [方針](06-W05C-RETRY-POLICY.md)と[計測手順・検証結果](06-W05C-INSTRUMENTATION.md)に従う。v2計測・回収前確認・helperと39件の正負/機構対照を実装した。全件品質とPhase04/05の鮮度・親再開ゲートは別判定であり、`ready_for_retry=false`。下記は開始条件が揃った後の参照手順。新規script候補は1回だけとし、既存正常診断を正式採用しない。
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
   ```powershell
-  $uat = .venv/Scripts/python.exe tests/test_startup_windows.py --uat start --case native-quit | ConvertFrom-Json
+  $uat = .venv/Scripts/python.exe tests/test_startup_windows.py --uat start --case native-quit --entry script | ConvertFrom-Json
   .venv/Scripts/python.exe tests/test_startup_windows.py --uat peer --run $uat.run --entry script
+  # 利用者No操作・直接回答を同runの回答JSONへ原文のまま保存し、意味対応を人が確認する。
+  .venv/Scripts/python.exe tests/test_startup_windows.py --uat w05c-check --run $uat.run --answer-file "<同runの回答JSON>" --stage before_peer
+  # 上の確認が成功した場合だけ回答後peerへ進み、返ったdirを回答JSONのpeers.after_answerへ追加する。
+  .venv/Scripts/python.exe tests/test_startup_windows.py --uat peer --run $uat.run --entry script
+  .venv/Scripts/python.exe tests/test_startup_windows.py --uat w05c-check --run $uat.run --answer-file "<同runの回答JSON>" --stage before_stop
   .venv/Scripts/python.exe tests/test_startup_windows.py --uat inspect --run $uat.run
   .venv/Scripts/python.exe tests/test_startup_windows.py --uat stop --run $uat.run
   ```
@@ -915,8 +941,9 @@ created: 2026-10-24
 
 **W05c / 終了確認でNo / Python -m pagefolio**(証拠種別: `python-real`)
 
-- **状態**: pass / 利用者回答(チャット・事後採用)と機械観測が一致。根拠: 06-05-evidence/W05c_quit-no_at_module-20261031T085031Z.json
-- **回答原文**: W05c quit-no module：いいえを押し、1・2ページが横向きで3ページが縦向き
+- **状態**: not-run / 現行Python入力の再採取待ち
+- **旧入力の受入**: passを別保存。旧回答・旧観測は履歴であり現行判定へ転用しない。根拠: 06-05-evidence/PYTHON-INPUT-SUPERSESSION-20261106.json / W05c/quit-no@module
+- **旧入力の回答原文（履歴）**: W05c quit-no module：いいえを押し、1・2ページが横向きで3ページが縦向き
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
   ```powershell
   $uat = .venv/Scripts/python.exe tests/test_startup_windows.py --uat start --case native-quit | ConvertFrom-Json
@@ -941,10 +968,13 @@ created: 2026-10-24
 
 **W05c / 終了確認でNo / 実配布EXE(隔離copy。最終v1.10.2)**(証拠種別: `production-exe`)
 
-- **状態**: not-run / 準備: 未準備(別フィールド)
+- **状態**: pass / 利用者直接回答と外部観測を照合。根拠: 06-05-evidence/W05c_quit-no_at_production-exe-20261106T120952Z.json
+- **回答原文**: 自分で「いいえ」を押し、7点すべて確認しました
+- **再開ゲート（2026-11-05改訂）**: [証拠採取・再試行方針](06-W05C-RETRY-POLICY.md)のEXE境界を適用する。script正式採用とEXE専用の外部観測手順/helperの整備・検証まで、下記コマンドは参照のみとする。内部マーカーやask_returnの存在を仮定せず、確認消失・直接回答・編集維持・同ownerを回収前に採取する。固定hashの未改変EXEを使い、Python診断を合格に転用しない。
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
   ```powershell
-  $run = (.venv/Scripts/python.exe tests/release_uat_support.py prepare --distribution "C:\Users\shdwf\AppData\Local\PageFolio-release\pf06_final_3f96a37a7cef4ee1ab3a1c1b2f2c435f\PageFolio-v1.10.2" --case W05c).run  # 完全copy・hash固定
+  $prepared = (.venv/Scripts/python.exe tests/release_uat_support.py prepare --distribution "C:\Users\shdwf\AppData\Local\PageFolio-release\pf06_final_3f96a37a7cef4ee1ab3a1c1b2f2c435f\PageFolio-v1.10.2" --case W05c) | ConvertFrom-Json
+  $run = [string]$prepared.run  # 完全copy・hash固定。実行時は06-W05C-EXE-COLLECTION.mdの配置検査・監視手順に従う
   .venv/Scripts/python.exe tests/release_uat_support.py start --run $run
   .venv/Scripts/python.exe tests/release_uat_support.py peer --run $run     # 二次起動(必要なカードのみ)
   .venv/Scripts/python.exe tests/release_uat_support.py inspect --run $run
@@ -976,7 +1006,8 @@ created: 2026-10-24
 
 **W12a / 一次script→二次script / Python直接起動(python pagefolio.py)**(証拠種別: `python-real`)
 
-- **状態**: not-run / 準備: 未準備(別フィールド)
+- **状態**: pass / 利用者直接回答・同一一次ownerと実foregroundを照合。根拠: 06-05-evidence/W12a_script-script_at_script-20261109T091826Z.json
+- **回答原文**: W12a/script-script@script: 1はい 2はい 3はい
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
   ```powershell
   一次=script: 既存harnessの一次起動(entry-owner-script相当)を実行担当がdriverで起動(G4で用意。現在は未準備)
@@ -1002,7 +1033,8 @@ created: 2026-10-24
 
 **W12a / 一次script→二次module / Python直接起動(python pagefolio.py)**(証拠種別: `python-real`)
 
-- **状態**: not-run / 準備: 未準備(別フィールド)
+- **状態**: pass / 利用者直接回答・同一一次ownerと実foregroundを照合。根拠: 06-05-evidence/W12a_script-module_at_script-20261109T092153Z.json
+- **回答原文**: W12a/script-module@script: 1はい 2はい 3はい
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
   ```powershell
   一次=script: 既存harnessの一次起動(entry-owner-script相当)を実行担当がdriverで起動(G4で用意。現在は未準備)
@@ -1028,7 +1060,8 @@ created: 2026-10-24
 
 **W12a / 一次script→二次relocated / Python直接起動(python pagefolio.py)**(証拠種別: `python-real`)
 
-- **状態**: not-run / 準備: 未準備(別フィールド)
+- **状態**: pass / 利用者直接回答・同一一次ownerと実foregroundを照合。根拠: 06-05-evidence/W12a_script-relocated_at_script-20261109T092613Z.json
+- **回答原文**: W12a/script-relocated@script: 1はい 2はい 3はい
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
   ```powershell
   一次=script: 既存harnessの一次起動(entry-owner-script相当)を実行担当がdriverで起動(G4で用意。現在は未準備)
@@ -1054,7 +1087,8 @@ created: 2026-10-24
 
 **W12a / 一次module→二次script / Python -m pagefolio**(証拠種別: `python-real`)
 
-- **状態**: not-run / 準備: 未準備(別フィールド)
+- **状態**: pass / 利用者直接回答・同一一次ownerと実foregroundを照合。根拠: 06-05-evidence/W12a_module-script_at_module-20261109T092823Z.json
+- **回答原文**: W12a/module-script@module: 1はい 2はい 3はい
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
   ```powershell
   一次=module: 既存harnessの一次起動(entry-owner-module相当)を実行担当がdriverで起動(G4で用意。現在は未準備)
@@ -1080,7 +1114,8 @@ created: 2026-10-24
 
 **W12a / 一次module→二次module / Python -m pagefolio**(証拠種別: `python-real`)
 
-- **状態**: not-run / 準備: 未準備(別フィールド)
+- **状態**: pass / 利用者直接回答・同一一次ownerと実foregroundを照合。根拠: 06-05-evidence/W12a_module-module_at_module-20261109T093030Z.json
+- **回答原文**: W12a/module-module@module: 1はい 2はい 3はい
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
   ```powershell
   一次=module: 既存harnessの一次起動(entry-owner-module相当)を実行担当がdriverで起動(G4で用意。現在は未準備)
@@ -1106,7 +1141,8 @@ created: 2026-10-24
 
 **W12a / 一次module→二次relocated / Python -m pagefolio**(証拠種別: `python-real`)
 
-- **状態**: not-run / 準備: 未準備(別フィールド)
+- **状態**: pass / 利用者直接回答・同一一次ownerと実foregroundを照合。根拠: 06-05-evidence/W12a_module-relocated_at_module-20261109T093220Z.json
+- **回答原文**: W12a/module-relocated@module: 1はい 2はい 3はい
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
   ```powershell
   一次=module: 既存harnessの一次起動(entry-owner-module相当)を実行担当がdriverで起動(G4で用意。現在は未準備)
@@ -1132,7 +1168,8 @@ created: 2026-10-24
 
 **W12a / 一次relocated→二次script / 別配置のPython(複製pagefolio)**(証拠種別: `python-real`)
 
-- **状態**: not-run / 準備: 未準備(別フィールド)
+- **状態**: pass / 利用者直接回答・同一一次ownerと実foregroundを照合。根拠: 06-05-evidence/W12a_relocated-script_at_relocated-20261109T093420Z.json
+- **回答原文**: W12a/relocated-script@relocated: 1はい 2はい 3はい
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
   ```powershell
   一次=relocated: 既存harnessの一次起動(entry-owner-relocated相当)を実行担当がdriverで起動(G4で用意。現在は未準備)
@@ -1158,7 +1195,8 @@ created: 2026-10-24
 
 **W12a / 一次relocated→二次module / 別配置のPython(複製pagefolio)**(証拠種別: `python-real`)
 
-- **状態**: not-run / 準備: 未準備(別フィールド)
+- **状態**: pass / 利用者直接回答・同一一次ownerと実foregroundを照合。根拠: 06-05-evidence/W12a_relocated-module_at_relocated-20261109T093615Z.json
+- **回答原文**: W12a/relocated-module@relocated: 1はい 2はい 3はい
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
   ```powershell
   一次=relocated: 既存harnessの一次起動(entry-owner-relocated相当)を実行担当がdriverで起動(G4で用意。現在は未準備)
@@ -1184,7 +1222,8 @@ created: 2026-10-24
 
 **W12a / 一次relocated→二次relocated / 別配置のPython(複製pagefolio)**(証拠種別: `python-real`)
 
-- **状態**: not-run / 準備: 未準備(別フィールド)
+- **状態**: pass / 利用者直接回答・同一一次ownerと実foregroundを照合。根拠: 06-05-evidence/W12a_relocated-relocated_at_relocated-20261109T093808Z.json
+- **回答原文**: W12a/relocated-relocated@relocated: 1はい 2はい 3はい
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
   ```powershell
   一次=relocated: 既存harnessの一次起動(entry-owner-relocated相当)を実行担当がdriverで起動(G4で用意。現在は未準備)
@@ -1244,7 +1283,7 @@ created: 2026-10-24
 
 **W12b / 一次EXE→二次Python script / 実配布EXE(隔離copy。最終v1.10.2)**(証拠種別: `production-exe`)
 
-- **状態**: not-run / 準備: 未準備(別フィールド)
+- **状態**: pass / 利用者直接回答と実owner/foreground照合。根拠: 06-05-evidence/W12b_exe-script_at_production-exe-20261109T121614Z.json / 準備: 未準備(別フィールド)
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
   ```powershell
   .venv/Scripts/python.exe tests/release_uat_support.py prepare --distribution "C:\Users\shdwf\AppData\Local\PageFolio-release\pf06_final_3f96a37a7cef4ee1ab3a1c1b2f2c435f\PageFolio-v1.10.2" --case W12b --role final-release-candidate  # 主対象(最終EXE)
@@ -1302,7 +1341,7 @@ created: 2026-10-24
 
 **W12b / 一次EXE→二次Python -m / 実配布EXE(隔離copy。最終v1.10.2)**(証拠種別: `production-exe`)
 
-- **状態**: not-run / 準備: 未準備(別フィールド)
+- **状態**: pass / 利用者直接回答と実owner/foreground照合。根拠: 06-05-evidence/W12b_exe-module_at_production-exe-20261109T122110Z.json / 準備: 未準備(別フィールド)
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
   ```powershell
   .venv/Scripts/python.exe tests/release_uat_support.py prepare --distribution "C:\Users\shdwf\AppData\Local\PageFolio-release\pf06_final_3f96a37a7cef4ee1ab3a1c1b2f2c435f\PageFolio-v1.10.2" --case W12b --role final-release-candidate  # 主対象(最終EXE)
@@ -1371,7 +1410,7 @@ created: 2026-10-24
   .venv/Scripts/python.exe tests/release_uat_support.py stop --run <各run>
   ```
 - **利用者操作**:
-  1. 実行担当: 一次=最終EXE→二次=06-01技術tracer(v1.9.1実EXE)。tracerを使う行は、保持先・run ID・source manifest・実版・EXE hashを06-01の report から読み、起動排他/固定namespace/protocolを持つ実装であることをsource manifestと同世代の自動証拠に照合してから使う(照合できなければこの行は not-run のまま)。
+  1. 実行担当: 一次=最終EXE→二次=新規技術tracer。承認済み新run `0ebda2a8b4f3435ca43568e7884489fc` の v1.9.1（EXE SHA-256 `61811aafe0812940596e2c4dadd1e0e8d5c5bd414cd97d7efdc2fec568dc34de`）を使う。`06-W12B-NEW-TRACER-20261107.json` と保存両reportの保持先/64入力/commit/実版/hashを照合し、同世代自動証拠と親ゲートを確認する。旧06-01生成物の再現とは扱わず、未照合・未観測はnot-runを維持する。
   2. 実行担当: 一次を `start` し、安定後に二次を起動して、PID・生成時刻・session・foregroundを外部観測する。
   3. 利用者: 一次の画面が1つだけか、二次起動後も同じ画面が前面で元の状態が保たれているかを答える。
 - **期待**: 対応する実装を持つ組み合わせで、一次1画面・同sessionの復帰・元状態維持が観測できる。同版copyは別配置の根拠だけであり、別版の互換軸はtracer行だけが担う。tracerを公式旧版や最終EXE受入済みとは扱わない。
@@ -1400,7 +1439,7 @@ created: 2026-10-24
   .venv/Scripts/python.exe tests/release_uat_support.py stop --run <各run>
   ```
 - **利用者操作**:
-  1. 実行担当: 一次=06-01技術tracer→二次=最終EXE。tracerを使う行は、保持先・run ID・source manifest・実版・EXE hashを06-01の report から読み、起動排他/固定namespace/protocolを持つ実装であることをsource manifestと同世代の自動証拠に照合してから使う(照合できなければこの行は not-run のまま)。
+  1. 実行担当: 一次=新規技術tracer→二次=最終EXE。承認済み新run `0ebda2a8b4f3435ca43568e7884489fc` の v1.9.1（EXE SHA-256 `61811aafe0812940596e2c4dadd1e0e8d5c5bd414cd97d7efdc2fec568dc34de`）を使う。`06-W12B-NEW-TRACER-20261107.json` と保存両reportの保持先/64入力/commit/実版/hashを照合し、同世代自動証拠と親ゲートを確認する。旧06-01生成物の再現とは扱わず、未照合・未観測はnot-runを維持する。
   2. 実行担当: 一次を `start` し、安定後に二次を起動して、PID・生成時刻・session・foregroundを外部観測する。
   3. 利用者: 一次の画面が1つだけか、二次起動後も同じ画面が前面で元の状態が保たれているかを答える。
 - **期待**: 対応する実装を持つ組み合わせで、一次1画面・同sessionの復帰・元状態維持が観測できる。同版copyは別配置の根拠だけであり、別版の互換軸はtracer行だけが担う。tracerを公式旧版や最終EXE受入済みとは扱わない。
@@ -1481,7 +1520,8 @@ created: 2026-10-24
 
 **W12c / Explorerのショートカット→Python / Python直接起動(python pagefolio.py)**(証拠種別: `python-real`)
 
-- **状態**: not-run / 準備: 未準備(別フィールド)
+- **状態**: pass / 本人実経路・入力回答と外部証拠を照合。根拠: 06-05-evidence/W12c_explorer-python_at_script-20261109T122904Z.json
+- **回答原文**: W12c/explorer-python@script: Explorerから起動した/同じ入力先に実入力した/画面は1つ
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
   ```powershell
   .venv/Scripts/python.exe tests/test_startup_windows.py --uat start --production --case preview  # Pythonの固定名行のみ。既存ownerがあれば送信せず停止
@@ -1505,7 +1545,8 @@ created: 2026-10-24
 
 **W12c / 端末→Python / Python直接起動(python pagefolio.py)**(証拠種別: `python-real`)
 
-- **状態**: not-run / 準備: 未準備(別フィールド)
+- **状態**: pass / 本人実経路・入力回答と外部証拠を照合。根拠: 06-05-evidence/W12c_terminal-python_at_script-20261109T130912Z.json
+- **回答原文**: W12c/terminal-python@script: 端末から起動した/同じ入力先に実入力した/画面は1つ
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
   ```powershell
   .venv/Scripts/python.exe tests/test_startup_windows.py --uat start --production --case preview  # Pythonの固定名行のみ。既存ownerがあれば送信せず停止

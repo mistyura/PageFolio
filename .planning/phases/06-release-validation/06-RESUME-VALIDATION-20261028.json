@@ -1,0 +1,47 @@
+{
+  "phase": "06",
+  "task": "06-04-02 resume",
+  "date": "2026-10-28",
+  "gui_launched": false,
+  "build_executed": false,
+  "committed": false,
+  "identity_evidence": "06-RESUME-CHECK-20261028.json",
+  "build_only": {
+    "exit": 0,
+    "reasons": [],
+    "tree_hash_mtime_unchanged": true
+  },
+  "preparation_only": {
+    "command": ".venv/Scripts/python.exe tests/release_uat_support.py audit --phase-dir .planning/phases/06-release-validation --preparation-only",
+    "tool_chunk": "c2725b",
+    "exit": 1,
+    "ok": false,
+    "reasons": ["実接続(ocr-single)とnative modal(w05b-modal)の両方が必要です"],
+    "interpretation": "未実施の接続2条件を正しく拒否。旧16 run参照不足は解消。準備未完了を維持。"
+  },
+  "document_tests": {
+    "command": ".venv/Scripts/python.exe -m pytest -q tests/test_gsd_dod.py tests/test_release_contract.py --basetemp=C:/Users/shdwf/AppData/Local/Temp/pf06_resume_docs_20261028_0510",
+    "tool_session": 95801,
+    "tool_chunk": "3c9a8c",
+    "exit": 0,
+    "passed": 47,
+    "warnings": 2,
+    "seconds": 9.53,
+    "warnings_text": [
+      "DeprecationWarning: 'typing.ByteString' and 'collections.abc.ByteString' are deprecated and slated for removal in Python 3.17",
+      "PytestCacheWarning: could not create cache path C:\\Users\\shdwf\\work\\project\\PageFolio\\.pytest_cache\\v\\cache\\nodeids: [WinError 183] 既に存在するファイルを作成することはできません。"
+    ],
+    "note": "全件を再走していない。既存キャッシュへの書込警告を隠さず保持し、成功するまでの再試行/除外/閾値延長は行っていない。"
+  },
+  "syntax": {"command": "node --check .planning/phases/06-release-validation/06-RESUME-CHECK-20261028.cjs", "exit": 0},
+  "diff_check": {"exit": 0, "crlf_aware": true},
+  "index": {"staged_files": [], "unchanged": true},
+  "owned_pid_check": {
+    "method": "Get-Process -Id（読取専用）",
+    "tool_chunk": "2494b7",
+    "all_absent": true,
+    "pids": [30908, 26688, 23596, 1788, 30076, 29156, 29992, 12788, 22752]
+  },
+  "release_allowed": false,
+  "phase_complete": false
+}

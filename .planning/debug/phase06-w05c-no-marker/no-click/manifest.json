@@ -1,0 +1,35 @@
+{
+  "run": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-w05c-probe-331580d77a8d42b883916f102fa72e39",
+  "namespace": "3db8a8d0aa3948a9b1e6fa3280ebded5",
+  "case": "native-quit",
+  "role": "uat-owner-native-quit",
+  "fixture": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-w05c-probe-331580d77a8d42b883916f102fa72e39\\uat-owner-native-quit",
+  "launcher_pid": 32984,
+  "originals_before": {
+    "pagefolio_settings.json": null,
+    "ocr_custom_prompt.md": null,
+    "ocr_summary_prompt.md": null
+  },
+  "expected_owner": {
+    "sid": "S-1-5-5-0-347023",
+    "authentication_luid": 352479,
+    "session_id": 1,
+    "pid": 25940,
+    "process_created": 134383260579529950,
+    "started_tick": 151402234,
+    "owner_result": "acquired",
+    "snapshot": {
+      "protocol": 1,
+      "generation": "9f7250f6c89a4059a54334c2fd72c04c",
+      "pid": 25940,
+      "process_created": 134383260579529950,
+      "session_id": 1,
+      "state": "ready",
+      "ready": true,
+      "release_generation": null
+    },
+    "ready_tick": 151406859,
+    "manual": true
+  },
+  "diagnostic_only": true
+}

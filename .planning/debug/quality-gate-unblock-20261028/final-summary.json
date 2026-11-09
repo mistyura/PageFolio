@@ -1,0 +1,47 @@
+{
+  "changed_inputs": [
+    ".planning/debug/preview-focus-not-restored-evidence/diag_btn_press.py",
+    ".gitignore",
+    "docs/DEVELOPMENT.md",
+    "CONTRIBUTING.md",
+    "開発履歴.md"
+  ],
+  "changed_python": [
+    ".planning/debug/preview-focus-not-restored-evidence/diag_btn_press.py"
+  ],
+  "protected_inputs_unchanged": true,
+  "index_unchanged": true,
+  "static": [
+    {
+      "argv": [
+        ".venv/Scripts/ruff.exe",
+        "check",
+        "."
+      ],
+      "code": 0,
+      "stdout": "All checks passed!\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        ".venv/Scripts/ruff.exe",
+        "format",
+        "."
+      ],
+      "code": 0,
+      "stdout": "137 files left unchanged\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        ".venv/Scripts/ruff.exe",
+        "format",
+        ".",
+        "--check"
+      ],
+      "code": 0,
+      "stdout": "137 files already formatted\n",
+      "stderr": ""
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "code": 0,
+  "stdout": "1 file reformatted\n",
+  "stderr": "",
+  "before_sha256": "516c747089f75138a8f9e106fbd3daba9637f5964594d8e3111c2e268605ea42",
+  "after_sha256": "d37cbd2e2986f9bf0a5bc68dc9f77b5d4b6faf2201fdbd0cf682bd6170502ba2",
+  "ast_equal": true,
+  "before_crlf": 590,
+  "after_crlf": 597
+}

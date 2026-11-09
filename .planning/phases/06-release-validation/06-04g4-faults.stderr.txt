@@ -1,0 +1,19 @@
+Traceback (most recent call last):
+  File "<string>", line 22, in <module>
+    scope['stage_'+stage]()
+    ~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\shdwf\work\project\PageFolio\.planning\phases\06-release-validation\06-04-drivers\t2_driver.py", line 367, in stage_faults
+    "X04-write": hold_session(
+                 ~~~~~~~~~~~~^
+        "fault-x04-save-write",
+        ^^^^^^^^^^^^^^^^^^^^^^^
+        overlays={S.SETTINGS_NAME: valid},
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        faults=("save-write",),
+        ^^^^^^^^^^^^^^^^^^^^^^^
+    ),
+    ^
+  File "<string>", line 19, in guarded
+    if errors: raise RuntimeError('FIRST FAILURE '+record['run_id']+': '+','.join(errors))
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: FIRST FAILURE 8729b769b9ab45648a63714b79b1fce7: abnormal stop,stop diagnostics present

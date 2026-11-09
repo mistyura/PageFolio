@@ -1,0 +1,16 @@
+{
+  "at": "2026-10-28T05:25:10.764Z",
+  "original_run_files": 0,
+  "original_run_changed": [],
+  "copies_changed": [],
+  "old_generations_unchanged": true,
+  "manual_unchanged": true,
+  "build_unchanged": true,
+  "audit_exit": 1,
+  "run_ids": [
+    "0d73a0cdf5b8465f9970b3702c2653e7",
+    "cf52cf1df4db42a3b384db6f13a6c103"
+  ],
+  "release_allowed": false,
+  "phase_complete": false
+}

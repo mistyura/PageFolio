@@ -1,0 +1,981 @@
+{
+  "verified_at": "2026-10-28T08:55:51.498Z",
+  "method": "独立読み取り照合。変更後単一全件を再利用し、pytest・GUI・buildを再実行しない。",
+  "source": ".planning/phases/06-release-validation/06-08-evidence/native-docs-20261028/",
+  "argv": [
+    "C:\\Users\\shdwf\\work\\project\\PageFolio\\.venv\\Scripts\\python.exe",
+    "-m",
+    "pytest",
+    "-q",
+    "-x",
+    "-rA",
+    "-p",
+    "no:cacheprovider",
+    "--basetemp=C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf06-scope-native-docs-20261028",
+    "--junitxml=C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\phases\\06-release-validation\\06-08-evidence\\native-docs-20261028\\junit.xml"
+  ],
+  "started": "2026-10-28T08:43:44.390Z",
+  "finished": "2026-10-28T08:53:52.537Z",
+  "exit_code": 0,
+  "run_changed": [],
+  "checks": {
+    "before": {
+      "count": 151,
+      "mismatches": []
+    },
+    "after": {
+      "count": 151,
+      "mismatches": []
+    }
+  },
+  "baseline": ".planning/debug/ocr-off-summary-evidence/native-20261028/result.json",
+  "baseline_changes": [
+    "tests/release_uat_support.py",
+    "tests/test_release_contract.py",
+    "tests/test_release_uat_support.py",
+    "README.md",
+    "開発履歴.md",
+    "distribution/はじめに.md"
+  ],
+  "product_or_dependency_changes": [],
+  "junit": {
+    "name": "pytest",
+    "errors": "0",
+    "failures": "0",
+    "skipped": "0",
+    "tests": "2232",
+    "time": "606.452",
+    "timestamp": "2026-10-28T17:43:45.182519+09:00",
+    "hostname": "nullaze-z240"
+  },
+  "stdout_summary": "2232 passed, 2 warnings in 607.00s (0:10:06)",
+  "files": {
+    "test_batch_ocr_dialog.py": 25,
+    "test_batch_ocr_state.py": 6,
+    "test_config_notification.py": 143,
+    "test_export_images.py": 20,
+    "test_font_hardcode_guard.py": 2,
+    "test_gc_barrier_guard.py": 2,
+    "test_gsd_dod.py": 19,
+    "test_imports.py": 55,
+    "test_lang_parity.py": 3,
+    "test_md_render.py": 9,
+    "test_ocr.py": 165,
+    "test_ocr_dialog_center.py": 2,
+    "test_ocr_dialog_provider_refresh.py": 18,
+    "test_ocr_engine.py": 10,
+    "test_ocr_fallback.py": 30,
+    "test_ocr_local_endpoint.py": 33,
+    "test_ocr_pipeline.py": 17,
+    "test_ocr_provider_catalog.py": 21,
+    "test_ocr_providers.py": 253,
+    "test_page_polish.py": 35,
+    "test_pagination.py": 84,
+    "test_password.py": 23,
+    "test_pdf_ops.py": 107,
+    "test_plugin_dialog_wheel.py": 2,
+    "test_plugins.py": 54,
+    "test_print.py": 6,
+    "test_prompt_templates.py": 32,
+    "test_provider_ui.py": 236,
+    "test_release_build.py": 70,
+    "test_release_contract.py": 30,
+    "test_release_uat_support.py": 234,
+    "test_save_overwrite.py": 9,
+    "test_selection_invariant.py": 21,
+    "test_settings_keyguard.py": 26,
+    "test_shortcuts_dialog.py": 12,
+    "test_source_keyguard.py": 1,
+    "test_startup_control.py": 52,
+    "test_startup_focus.py": 32,
+    "test_startup_foreground_audit.py": 24,
+    "test_startup_notice.py": 61,
+    "test_startup_wake.py": 23,
+    "test_startup_windows.py": 75,
+    "test_thumb_cache.py": 9,
+    "test_toast.py": 38,
+    "test_undo_stress.py": 11,
+    "test_utils.py": 51,
+    "test_v150_regression.py": 30,
+    "test_viewer.py": 11
+  },
+  "cases": [
+    {
+      "name": "tests.test_config_notification.TestNotificationLifecycle::test_hidden_root_preserves_fifo_and_visible_time[False]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestNotificationLifecycle::test_hidden_root_preserves_fifo_and_visible_time[True]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestNotificationLifecycle::test_hidden_at_deadline_is_not_consumed",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestNotificationLifecycle::test_real_root_visibility_suspends_same_event[withdraw]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestNotificationLifecycle::test_real_root_visibility_suspends_same_event[iconify]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestNotificationLifecycle::test_interruption_preserves_remaining_time[save_file]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestNotificationLifecycle::test_interruption_preserves_remaining_time[print]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestNotificationLifecycle::test_fifo_boundary_and_stale_close_never_consume_next",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestNotificationLifecycle::test_rebuild_preserves_time_language_and_rejects_old_callbacks",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestNotificationLifecycle::test_existing_operation_and_initial_nested_grab_hold_unshown_time",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestNotificationLifecycle::test_modal_suspends_display_and_nested_exit_does_not_resume",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestNotificationLifecycle::test_grab_at_expiry_keeps_event_until_release",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestNotificationLifecycle::test_shutdown_cancels_all_owned_callbacks",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestNotificationLifecycle::test_real_rebuild_restores_same_notice_in_current_language",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestAppSaveOrigins::test_success_obeys_protection[language-ok]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestAppSaveOrigins::test_success_obeys_protection[language-corrupt]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestAppSaveOrigins::test_success_obeys_protection[language-unreadable]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestAppSaveOrigins::test_success_obeys_protection[llm-ok]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestAppSaveOrigins::test_success_obeys_protection[llm-corrupt]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestAppSaveOrigins::test_success_obeys_protection[llm-unreadable]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestAppSaveOrigins::test_success_obeys_protection[plugin-ok]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestAppSaveOrigins::test_success_obeys_protection[plugin-corrupt]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestAppSaveOrigins::test_success_obeys_protection[plugin-unreadable]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestAppSaveOrigins::test_failure_keeps_applied_memory_and_one_event[language-ok]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestAppSaveOrigins::test_failure_keeps_applied_memory_and_one_event[language-corrupt]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestAppSaveOrigins::test_failure_keeps_applied_memory_and_one_event[language-unreadable]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestAppSaveOrigins::test_failure_keeps_applied_memory_and_one_event[llm-ok]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestAppSaveOrigins::test_failure_keeps_applied_memory_and_one_event[llm-corrupt]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestAppSaveOrigins::test_failure_keeps_applied_memory_and_one_event[llm-unreadable]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestAppSaveOrigins::test_failure_keeps_applied_memory_and_one_event[plugin-ok]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestAppSaveOrigins::test_failure_keeps_applied_memory_and_one_event[plugin-corrupt]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestAppSaveOrigins::test_failure_keeps_applied_memory_and_one_event[plugin-unreadable]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestAppSaveOrigins::test_plugin_noop_rescan_close_preserves_original[corrupt]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestAppSaveOrigins::test_plugin_noop_rescan_close_preserves_original[unreadable]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestAppSaveOrigins::test_changed_rescan_persists_once",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestAppSaveOrigins::test_same_value_explicit_apply_retries[general]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestAppSaveOrigins::test_same_value_explicit_apply_retries[llm]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestAppSaveOrigins::test_plugin_failure_waits_for_real_modal_close",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestLlmSaveOrigins::test_nested_apply_saves_once_without_general_settings",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestLlmSaveOrigins::test_nested_cancel_retains_llm_and_protects_original[callback-True-ok]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestLlmSaveOrigins::test_nested_cancel_retains_llm_and_protects_original[callback-True-corrupt]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestLlmSaveOrigins::test_nested_cancel_retains_llm_and_protects_original[callback-True-unreadable]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestLlmSaveOrigins::test_nested_cancel_retains_llm_and_protects_original[callback-False-ok]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestLlmSaveOrigins::test_nested_cancel_retains_llm_and_protects_original[callback-False-corrupt]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestLlmSaveOrigins::test_nested_cancel_retains_llm_and_protects_original[callback-False-unreadable]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestLlmSaveOrigins::test_nested_cancel_retains_llm_and_protects_original[app-True-ok]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestLlmSaveOrigins::test_nested_cancel_retains_llm_and_protects_original[app-True-corrupt]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestLlmSaveOrigins::test_nested_cancel_retains_llm_and_protects_original[app-True-unreadable]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestLlmSaveOrigins::test_nested_cancel_retains_llm_and_protects_original[app-False-ok]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestLlmSaveOrigins::test_nested_cancel_retains_llm_and_protects_original[app-False-corrupt]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestLlmSaveOrigins::test_nested_cancel_retains_llm_and_protects_original[app-False-unreadable]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestLlmSaveOrigins::test_ownerless_stub_updates_memory_only",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestLlmSaveOrigins::test_ocr_apply_keeps_provider_prompt_keys_and_buttons[True-ok]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestLlmSaveOrigins::test_ocr_apply_keeps_provider_prompt_keys_and_buttons[True-corrupt]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestLlmSaveOrigins::test_ocr_apply_keeps_provider_prompt_keys_and_buttons[True-unreadable]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestLlmSaveOrigins::test_ocr_apply_keeps_provider_prompt_keys_and_buttons[False-ok]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestLlmSaveOrigins::test_ocr_apply_keeps_provider_prompt_keys_and_buttons[False-corrupt]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestLlmSaveOrigins::test_ocr_apply_keeps_provider_prompt_keys_and_buttons[False-unreadable]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestLlmSaveOrigins::test_product_open_settings_injects_owner",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestLlmSaveOrigins::test_real_nested_close_restores_outer_grab[settings-True]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestLlmSaveOrigins::test_real_nested_close_restores_outer_grab[settings-False]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestLlmSaveOrigins::test_real_nested_close_restores_outer_grab[ocr-True]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestLlmSaveOrigins::test_real_nested_close_restores_outer_grab[ocr-False]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestLlmSaveOrigins::test_nested_modal_keeps_event_after_inner_exit[settings]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestLlmSaveOrigins::test_nested_modal_keeps_event_after_inner_exit[ocr]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestToolSaveOrigins::test_real_shortcuts_close_restores_outer_grab[save]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestToolSaveOrigins::test_real_shortcuts_close_restores_outer_grab[cancel]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestToolSaveOrigins::test_real_shortcuts_close_restores_outer_grab[wm]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestToolSaveOrigins::test_handler_preserves_memory_and_protection[shortcuts-True-ok]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestToolSaveOrigins::test_handler_preserves_memory_and_protection[shortcuts-True-corrupt]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestToolSaveOrigins::test_handler_preserves_memory_and_protection[shortcuts-True-unreadable]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestToolSaveOrigins::test_handler_preserves_memory_and_protection[shortcuts-False-ok]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestToolSaveOrigins::test_handler_preserves_memory_and_protection[shortcuts-False-corrupt]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestToolSaveOrigins::test_handler_preserves_memory_and_protection[shortcuts-False-unreadable]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestToolSaveOrigins::test_handler_preserves_memory_and_protection[mosaic-True-ok]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestToolSaveOrigins::test_handler_preserves_memory_and_protection[mosaic-True-corrupt]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestToolSaveOrigins::test_handler_preserves_memory_and_protection[mosaic-True-unreadable]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestToolSaveOrigins::test_handler_preserves_memory_and_protection[mosaic-False-ok]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestToolSaveOrigins::test_handler_preserves_memory_and_protection[mosaic-False-corrupt]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestToolSaveOrigins::test_handler_preserves_memory_and_protection[mosaic-False-unreadable]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestToolSaveOrigins::test_handler_preserves_memory_and_protection[zoom-True-ok]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestToolSaveOrigins::test_handler_preserves_memory_and_protection[zoom-True-corrupt]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestToolSaveOrigins::test_handler_preserves_memory_and_protection[zoom-True-unreadable]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestToolSaveOrigins::test_handler_preserves_memory_and_protection[zoom-False-ok]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestToolSaveOrigins::test_handler_preserves_memory_and_protection[zoom-False-corrupt]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestToolSaveOrigins::test_handler_preserves_memory_and_protection[zoom-False-unreadable]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestToolSaveOrigins::test_handler_preserves_memory_and_protection[page_size-True-ok]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestToolSaveOrigins::test_handler_preserves_memory_and_protection[page_size-True-corrupt]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestToolSaveOrigins::test_handler_preserves_memory_and_protection[page_size-True-unreadable]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestToolSaveOrigins::test_handler_preserves_memory_and_protection[page_size-False-ok]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestToolSaveOrigins::test_handler_preserves_memory_and_protection[page_size-False-corrupt]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestToolSaveOrigins::test_handler_preserves_memory_and_protection[page_size-False-unreadable]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestToolSaveOrigins::test_shortcuts_close_leaves_failed_event_for_display",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestSaveOriginCoverage::test_inventory_resolves_alias_attribute_and_reexport[from pagefolio.settings import _save_settings as save-save]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestSaveOriginCoverage::test_inventory_resolves_alias_attribute_and_reexport[import pagefolio.settings as config-config._save_settings]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestSaveOriginCoverage::test_inventory_resolves_alias_attribute_and_reexport[import pagefolio.settings-pagefolio.settings._save_settings]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestSaveOriginCoverage::test_inventory_resolves_alias_attribute_and_reexport[from pagefolio import _save_settings as save-save]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestSaveOriginCoverage::test_inventory_resolves_alias_attribute_and_reexport[import pagefolio as pf-pf._save_settings]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestSaveOriginCoverage::test_inventory_resolves_alias_attribute_and_reexport[from .settings import _save_settings-_save_settings]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestSaveOriginCoverage::test_inventory_resolves_alias_attribute_and_reexport[from pagefolio import *-_save_settings]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestSaveOriginCoverage::test_only_app_owner_calls_low_level_save",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestSaveFlow::test_protected_explicit_save_rules[corrupt]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestSaveFlow::test_protected_explicit_save_rules[unreadable]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestSaveFlow::test_apply_failure_keeps_memory_and_original_without_success",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestSaveFlow::test_explicit_success_clears_protection_and_exit_flag_only",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestExitSaveFailure::test_no_confirmation_never_saves_or_clears_failure",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestExitSaveFailure::test_first_failure_preserves_work_and_second_exit_skips_save[False]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestExitSaveFailure::test_first_failure_preserves_work_and_second_exit_skips_save[True]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestExitSaveFailure::test_unreadable_exit_skips_collection_and_does_not_set_failure",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestScenarioIsolation::test_scenario_classifies_real_load_and_preserves_originals[read-corrupt-corrupt]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestScenarioIsolation::test_scenario_classifies_real_load_and_preserves_originals[read-unreadable-unreadable]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestScenarioIsolation::test_save_fault_only_changes_memory_then_recovers[save-write]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestScenarioIsolation::test_save_fault_only_changes_memory_then_recovers[save-replace]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestScenarioIsolation::test_prompt_and_plugin_resolvers_never_load_real_plugins",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestScenarioIsolation::test_partial_initialization_exception_cleans_root_and_temporary",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestConfigAcceptance::test_corrupt_two_failures_rebuild_edit_recovery_and_exit",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestConfigAcceptance::test_exit_no_first_failure_next_exit_and_explicit_flag_reset[False]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestConfigAcceptance::test_exit_no_first_failure_next_exit_and_explicit_flag_reset[True]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestConfigAcceptance::test_unreadable_permission_recovery_stays_blocked_until_restart",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestConfigAcceptance::test_hundred_failures_all_consume_fifo_with_nested_modal_and_operation",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestLoadTracer::test_corrupt_settings_show_one_real_toast_and_keep_pdf_editable",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestLoadTracer::test_config_message_keys_match_languages_without_secret_interpolation",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestLoadBoundaries::test_file_classification[{bad-corrupt]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestLoadBoundaries::test_file_classification[\\xff-corrupt]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestLoadBoundaries::test_file_classification[[]-corrupt]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestLoadBoundaries::test_file_classification[{&quot;font_size&quot;: true}-corrupt]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestLoadBoundaries::test_file_classification[{&quot;font_size&quot;: 0}-corrupt]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestLoadBoundaries::test_file_classification[{&quot;lang&quot;: &quot;fr&quot;}-corrupt]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestLoadBoundaries::test_file_classification[{&quot;theme&quot;: false}-corrupt]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestLoadBoundaries::test_file_classification[{&quot;prompt_templates&quot;: []}-corrupt]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestLoadBoundaries::test_file_classification[{&quot;prompt_templates&quot;: {&quot;active&quot;: 3}}-corrupt]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestLoadBoundaries::test_file_classification[{&quot;prompt_templates&quot;: {&quot;items&quot;: []}}-corrupt]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestLoadBoundaries::test_file_classification[\\xef\\xbb\\xbf{&quot;lang&quot;:&quot;en&quot;}-ok]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestLoadBoundaries::test_missing_and_open_race_are_silent",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestLoadBoundaries::test_read_failures_are_unreadable_without_leaking_values[error0]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestLoadBoundaries::test_read_failures_are_unreadable_without_leaking_values[error1]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestLoadBoundaries::test_read_failures_are_unreadable_without_leaking_values[error2]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestLoadBoundaries::test_partial_dict_keeps_unknown_keys_and_compatibility",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestLoadProtection::test_missing_file_starts_without_notice_and_can_save",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestLoadProtection::test_exit_preserves_corrupt_original_and_cancel_keeps_work[None]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestLoadProtection::test_exit_preserves_corrupt_original_and_cancel_keeps_work[False]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestLoadProtection::test_exit_preserves_corrupt_original_and_cancel_keeps_work[True]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_config_notification.TestLoadProtection::test_load_notice_is_registered_once",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_ocr_dialog_provider_refresh.TestApplyLlmSettingsRefreshesDisplay::test_ollama_to_gemini_after_a_run_shows_gemini",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_ocr_dialog_provider_refresh.TestApplyLlmSettingsRefreshesDisplay::test_active_snapshot_is_cleared_on_apply",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_ocr_dialog_provider_refresh.TestApplyLlmSettingsRefreshesDisplay::test_gemini_to_openai_before_any_run_shows_openai",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_ocr_dialog_provider_refresh.TestApplyLlmSettingsRefreshesDisplay::test_lmstudio_to_ollama_shows_ollama_model",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_ocr_dialog_provider_refresh.TestApplyLlmSettingsRefreshesDisplay::test_refresh_runs_after_provider_regeneration",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_ocr_dialog_provider_refresh.TestApplyLlmSettingsRefreshesDisplay::test_refresh_still_runs_when_provider_regeneration_fails",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_ocr_dialog_provider_refresh::test_off_disables_summary_and_clears_provider_display[lmstudio]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_ocr_dialog_provider_refresh::test_off_disables_summary_and_clears_provider_display[claude]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_ocr_dialog_provider_refresh::test_off_disables_summary_and_clears_provider_display[gemini]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_ocr_dialog_provider_refresh::test_off_summary_entry_rejects_before_reading_text[lmstudio-False]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_ocr_dialog_provider_refresh::test_off_summary_entry_rejects_before_reading_text[lmstudio-True]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_ocr_dialog_provider_refresh::test_off_summary_entry_rejects_before_reading_text[claude-False]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_ocr_dialog_provider_refresh::test_off_summary_entry_rejects_before_reading_text[claude-True]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_ocr_dialog_provider_refresh::test_off_summary_entry_rejects_before_reading_text[gemini-False]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_ocr_dialog_provider_refresh::test_off_summary_entry_rejects_before_reading_text[gemini-True]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_ocr_dialog_provider_refresh::test_summary_reenabled_after_off_keeps_results[lmstudio]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_ocr_dialog_provider_refresh::test_summary_reenabled_after_off_keeps_results[claude]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_ocr_dialog_provider_refresh::test_summary_reenabled_after_off_keeps_results[gemini]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_release_contract.TestVersionAndDocs::test_app_version_is_v1_10_2",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_release_contract.TestVersionAndDocs::test_readme_badge_matches_app_version",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_release_contract.TestVersionAndDocs::test_history_latest_section_is_current_version",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_release_contract.TestVersionAndDocs::test_history_keeps_phase5_record_with_reference",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_release_contract.TestVersionAndDocs::test_readme_distribution_section_states_use_and_limits",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_release_contract.TestVersionAndDocs::test_readme_relative_links_resolve",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_release_contract.TestVersionAndDocs::test_no_second_version_constant_in_release_cli",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_release_contract.TestReleaseScopeDocs::test_distribution_docs_state_single_session_and_unverified_behavior",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_release_contract.TestSampleSources::test_sources_match_original_sha256",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_release_contract.TestSampleSources::test_sources_are_byte_identical_to_legacy_dist",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_release_contract.TestSampleSources::test_gitattributes_keeps_sample_bytes",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_release_contract.TestSampleSources::test_sources_are_tracked_by_git",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_release_contract.TestGuideAndWorkflow::test_guide_is_short_markdown_for_both_prompts",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_release_contract.TestGuideAndWorkflow::test_guide_links_resolve_inside_the_bundle",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_release_contract.TestGuideAndWorkflow::test_development_describes_one_cli_for_first_and_rebuild",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_release_contract.TestGuideAndWorkflow::test_development_gives_safe_recovery_and_retention_rules",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_release_contract.TestGuideAndWorkflow::test_development_has_no_destructive_or_duplicated_instructions",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_release_contract.TestGuideAndWorkflow::test_legacy_tracked_dist_and_ignore_rules_are_kept",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_release_contract.TestGuideAndWorkflow::test_configuration_documents_sample_copy_without_changing_contract",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_release_contract.TestCaseCoverage::test_approved_scope_keeps_110_cards_and_only_two_deferred",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_release_contract.TestCaseCoverage::test_all_carryover_cases_and_fault_cases_are_declared_once",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_release_contract.TestCaseCoverage::test_groups_and_tasks_follow_the_validation_table",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_release_contract.TestCaseCoverage::test_subrows_expand_by_entry_and_condition",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_release_contract.TestCaseCoverage::test_python_injection_and_exe_common_behavior_are_separate_rows",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_release_contract.TestCaseCoverage::test_every_subrow_is_fully_declared_and_not_prematurely_passed",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_release_contract.TestCaseCoverage::test_cards_cover_every_subrow_with_all_required_labels",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_release_contract.TestCaseCoverage::test_phase5_results_are_referenced_not_repeated",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_release_contract.TestCaseCoverage::test_w12b_roles_hashes_and_both_directions",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_release_contract.TestCaseCoverage::test_structure_audit_accepts_ledger_and_rejects_false_pass",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_release_contract.TestCaseCoverage::test_uat_document_keeps_states_separate_and_never_claims_pass",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_settings_keyguard.TestAtomicSettingsWrite::test_failure_preserves_original_and_cleans_owned_tmp[open]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_settings_keyguard.TestAtomicSettingsWrite::test_failure_preserves_original_and_cleans_owned_tmp[write]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_settings_keyguard.TestAtomicSettingsWrite::test_failure_preserves_original_and_cleans_owned_tmp[close]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_settings_keyguard.TestAtomicSettingsWrite::test_failure_preserves_original_and_cleans_owned_tmp[json]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_settings_keyguard.TestAtomicSettingsWrite::test_failure_preserves_original_and_cleans_owned_tmp[replace]",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_settings_keyguard.TestAtomicSettingsWrite::test_existing_tmp_is_not_overwritten_or_deleted",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_settings_keyguard.TestAtomicSettingsWrite::test_success_returns_true_without_mutating_secrets",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_settings_keyguard.TestSensitiveKeysConstant::test_sensitive_keys_exists",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_settings_keyguard.TestSensitiveKeysConstant::test_sensitive_keys_contains_claude",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_settings_keyguard.TestSensitiveKeysConstant::test_sensitive_keys_contains_anthropic",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_settings_keyguard.TestSensitiveKeysConstant::test_sensitive_keys_contains_gemini",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_settings_keyguard.TestSensitiveKeysConstant::test_sensitive_keys_contains_api_key",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_settings_keyguard.TestRegistrySensitiveKeysCoverage::test_sensitive_keys_returns_set",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_settings_keyguard.TestRegistrySensitiveKeysCoverage::test_sensitive_keys_covers_current_ten_entries",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_settings_keyguard.TestSaveSettingsKeyGuard::test_claude_api_key_not_written_to_file",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_settings_keyguard.TestSaveSettingsKeyGuard::test_anthropic_api_key_not_written_to_file",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_settings_keyguard.TestSaveSettingsKeyGuard::test_gemini_api_key_not_written_to_file",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_settings_keyguard.TestSaveSettingsKeyGuard::test_api_key_not_written_to_file",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_settings_keyguard.TestSaveSettingsKeyGuard::test_non_sensitive_keys_are_saved_normally",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_settings_keyguard.TestSaveSettingsKeyGuard::test_api_key_value_not_logged",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_settings_keyguard.TestSaveSettingsKeyGuard::test_input_dict_not_mutated",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_settings_keyguard.TestLoadSettingsDefaults::test_claude_model_default",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_settings_keyguard.TestLoadSettingsDefaults::test_ocr_effort_default",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_settings_keyguard.TestLoadSettingsDefaults::test_ocr_scale_default_is_1_5",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_settings_keyguard.TestLoadSettingsDefaults::test_gemini_model_default",
+      "status": "pass"
+    },
+    {
+      "name": "tests.test_settings_keyguard.TestLoadSettingsDefaults::test_load_with_existing_file_preserves_defaults",
+      "status": "pass"
+    }
+  ],
+  "source_hashes": {
+    ".planning/phases/06-release-validation/06-08-evidence/native-docs-20261028/result.json": "fc1901c47be34c1a6e28026e232f9c85ac7666f84125f47aa61902a45804af40",
+    ".planning/phases/06-release-validation/06-08-evidence/native-docs-20261028/junit.xml": "008c8653d14251ab7742c37da73f86ff4be7d1255b392e0bda1f4b7b0e96718a",
+    ".planning/phases/06-release-validation/06-08-evidence/native-docs-20261028/stdout.txt": "a7d104962ff1d3b304a0f955330113a44263f61e6bce780264ae1509fa8dca8c",
+    ".planning/phases/06-release-validation/06-08-evidence/native-docs-20261028/stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    ".planning/phases/06-release-validation/06-08-evidence/native-docs-20261028/environment.txt": "c2edc377a53c20dd3aedbb73517b88048ff15a27ef3034b5da216c7e989b7384",
+    ".planning/phases/06-release-validation/06-08-evidence/native-docs-20261028/checks.json": "078aa4d6beec4df1b00b3dadb609d132e82c63995b2efe4f6a318db77f7df2d0",
+    ".planning/phases/06-release-validation/06-08-evidence/native-docs-20261028/before.json": "f53370a20c6f62e91ffd56c379c9a1299ca126aece375bc314862f3203e0cf22"
+  }
+}

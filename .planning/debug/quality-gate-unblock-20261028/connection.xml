@@ -1,0 +1,1 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="0" skipped="0" tests="1" time="0.360" timestamp="2026-10-28T13:07:50.596321+09:00" hostname="nullaze-z240"><testcase classname="tests.test_startup_windows" name="test_foreground_audit_receives_native_window_event" time="0.242" /></testsuite></testsuites>

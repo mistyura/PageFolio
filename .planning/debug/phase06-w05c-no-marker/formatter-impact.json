@@ -1,0 +1,923 @@
+{
+  "incident": "ruff format . が既存basetempの生成fixtureを整形。整形前のbytes未保存のため推測復元しない。",
+  "items": [
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_builder_failure_keeps_log0\\repo\\pagefolio\\constants.py",
+      "mtime": "2026-11-05T04:24:57.979Z",
+      "size": 159,
+      "sha256": "2819b2a8606e2c7023f878173861c0110173fce0dde330feb358c4e6f2d2ebf2"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_builder_failure_keeps_log0\\repo\\pagefolio.py",
+      "mtime": "2026-11-05T04:24:57.982Z",
+      "size": 17,
+      "sha256": "d4466db650a5ccc2b05b6d9713e569b917bce0d7e54ce9d0137e9b9eaa03b327"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_changed_managed_tree_reje0\\repo\\pagefolio\\constants.py",
+      "mtime": "2026-11-05T04:24:57.980Z",
+      "size": 159,
+      "sha256": "2819b2a8606e2c7023f878173861c0110173fce0dde330feb358c4e6f2d2ebf2"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_changed_managed_tree_reje0\\repo\\pagefolio.py",
+      "mtime": "2026-11-05T04:24:57.983Z",
+      "size": 17,
+      "sha256": "d4466db650a5ccc2b05b6d9713e569b917bce0d7e54ce9d0137e9b9eaa03b327"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_changed_managed_tree_reje1\\repo\\pagefolio\\constants.py",
+      "mtime": "2026-11-05T04:24:57.984Z",
+      "size": 159,
+      "sha256": "2819b2a8606e2c7023f878173861c0110173fce0dde330feb358c4e6f2d2ebf2"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_changed_managed_tree_reje1\\repo\\pagefolio.py",
+      "mtime": "2026-11-05T04:24:57.986Z",
+      "size": 17,
+      "sha256": "d4466db650a5ccc2b05b6d9713e569b917bce0d7e54ce9d0137e9b9eaa03b327"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_changed_managed_tree_reje2\\repo\\pagefolio\\constants.py",
+      "mtime": "2026-11-05T04:24:57.990Z",
+      "size": 159,
+      "sha256": "2819b2a8606e2c7023f878173861c0110173fce0dde330feb358c4e6f2d2ebf2"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_changed_managed_tree_reje2\\repo\\pagefolio.py",
+      "mtime": "2026-11-05T04:24:57.993Z",
+      "size": 17,
+      "sha256": "d4466db650a5ccc2b05b6d9713e569b917bce0d7e54ce9d0137e9b9eaa03b327"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_changed_managed_tree_reje3\\repo\\pagefolio\\constants.py",
+      "mtime": "2026-11-05T04:24:57.996Z",
+      "size": 159,
+      "sha256": "2819b2a8606e2c7023f878173861c0110173fce0dde330feb358c4e6f2d2ebf2"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_changed_managed_tree_reje3\\repo\\pagefolio.py",
+      "mtime": "2026-11-05T04:24:58.009Z",
+      "size": 17,
+      "sha256": "d4466db650a5ccc2b05b6d9713e569b917bce0d7e54ce9d0137e9b9eaa03b327"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_changed_managed_tree_reje4\\repo\\pagefolio\\constants.py",
+      "mtime": "2026-11-05T04:24:58.019Z",
+      "size": 159,
+      "sha256": "2819b2a8606e2c7023f878173861c0110173fce0dde330feb358c4e6f2d2ebf2"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_changed_managed_tree_reje4\\repo\\pagefolio.py",
+      "mtime": "2026-11-05T04:24:58.021Z",
+      "size": 17,
+      "sha256": "d4466db650a5ccc2b05b6d9713e569b917bce0d7e54ce9d0137e9b9eaa03b327"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_changed_managed_tree_reje5\\repo\\pagefolio\\constants.py",
+      "mtime": "2026-11-05T04:24:58.022Z",
+      "size": 159,
+      "sha256": "2819b2a8606e2c7023f878173861c0110173fce0dde330feb358c4e6f2d2ebf2"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_changed_managed_tree_reje5\\repo\\pagefolio.py",
+      "mtime": "2026-11-05T04:24:58.024Z",
+      "size": 17,
+      "sha256": "d4466db650a5ccc2b05b6d9713e569b917bce0d7e54ce9d0137e9b9eaa03b327"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_concurrent_run_cannot_sha0\\repo\\pagefolio\\constants.py",
+      "mtime": "2026-11-05T04:24:57.969Z",
+      "size": 159,
+      "sha256": "2819b2a8606e2c7023f878173861c0110173fce0dde330feb358c4e6f2d2ebf2"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_concurrent_run_cannot_sha0\\repo\\pagefolio.py",
+      "mtime": "2026-11-05T04:24:57.971Z",
+      "size": 17,
+      "sha256": "d4466db650a5ccc2b05b6d9713e569b917bce0d7e54ce9d0137e9b9eaa03b327"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_copy_hash_mismatch_fails_0\\repo\\pagefolio\\constants.py",
+      "mtime": "2026-11-05T04:24:57.974Z",
+      "size": 159,
+      "sha256": "2819b2a8606e2c7023f878173861c0110173fce0dde330feb358c4e6f2d2ebf2"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_copy_hash_mismatch_fails_0\\repo\\pagefolio.py",
+      "mtime": "2026-11-05T04:24:57.976Z",
+      "size": 17,
+      "sha256": "d4466db650a5ccc2b05b6d9713e569b917bce0d7e54ce9d0137e9b9eaa03b327"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_default_dist_preserves_le0\\repo\\pagefolio\\constants.py",
+      "mtime": "2026-11-05T04:24:58.038Z",
+      "size": 159,
+      "sha256": "2819b2a8606e2c7023f878173861c0110173fce0dde330feb358c4e6f2d2ebf2"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_default_dist_preserves_le0\\repo\\pagefolio.py",
+      "mtime": "2026-11-05T04:24:58.042Z",
+      "size": 17,
+      "sha256": "d4466db650a5ccc2b05b6d9713e569b917bce0d7e54ce9d0137e9b9eaa03b327"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_disabled_ids0\\my_plug.py",
+      "mtime": "2026-11-05T04:24:58.044Z",
+      "size": 112,
+      "sha256": "a82bf99b2311d1659280814a1dcc242c1ed4d054cdee933edecc50b06f787be4"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_disable_exception_caught0\\err_lc.py",
+      "mtime": "2026-11-05T04:24:58.046Z",
+      "size": 292,
+      "sha256": "2977fd4a51d27281b0b14ece1665991014184ff2747a34caa28d032e7ab498dd"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_disable_plugin0\\my_plug.py",
+      "mtime": "2026-11-05T04:24:58.047Z",
+      "size": 112,
+      "sha256": "a82bf99b2311d1659280814a1dcc242c1ed4d054cdee933edecc50b06f787be4"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_disable_plugin_with_app0\\lc_plug.py",
+      "mtime": "2026-11-05T04:24:58.042Z",
+      "size": 335,
+      "sha256": "0e4944dedbebc5f2b99715b9a4699571f13656b7a02e3a08ccea4c918fee424d"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_discover_from_directory0\\plugins\\another.py",
+      "mtime": "2026-11-05T04:24:58.046Z",
+      "size": 8,
+      "sha256": "ddb1c8705176da86c285112f625f6a732bf7353b0a17835e8bcbc27c0e4243d9"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_discover_from_directory0\\plugins\\my_plugin.py",
+      "mtime": "2026-11-05T04:24:58.046Z",
+      "size": 8,
+      "sha256": "ddb1c8705176da86c285112f625f6a732bf7353b0a17835e8bcbc27c0e4243d9"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_discover_from_directory0\\plugins\\_hidden.py",
+      "mtime": "2026-11-05T04:24:58.044Z",
+      "size": 8,
+      "sha256": "ddb1c8705176da86c285112f625f6a732bf7353b0a17835e8bcbc27c0e4243d9"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_empty_output_builds_verif0\\repo\\pagefolio\\constants.py",
+      "mtime": "2026-11-05T04:24:58.042Z",
+      "size": 159,
+      "sha256": "2819b2a8606e2c7023f878173861c0110173fce0dde330feb358c4e6f2d2ebf2"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_empty_output_builds_verif0\\repo\\pagefolio.py",
+      "mtime": "2026-11-05T04:24:58.044Z",
+      "size": 17,
+      "sha256": "d4466db650a5ccc2b05b6d9713e569b917bce0d7e54ce9d0137e9b9eaa03b327"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_enable_exception_caught0\\err_lc.py",
+      "mtime": "2026-11-05T04:24:58.044Z",
+      "size": 292,
+      "sha256": "2977fd4a51d27281b0b14ece1665991014184ff2747a34caa28d032e7ab498dd"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_enable_plugin0\\my_plug.py",
+      "mtime": "2026-11-05T04:24:58.045Z",
+      "size": 112,
+      "sha256": "a82bf99b2311d1659280814a1dcc242c1ed4d054cdee933edecc50b06f787be4"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_enable_plugin_with_app0\\lc_plug.py",
+      "mtime": "2026-11-05T04:24:58.047Z",
+      "size": 335,
+      "sha256": "0e4944dedbebc5f2b99715b9a4699571f13656b7a02e3a08ccea4c918fee424d"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_failure_exit_is_nonzero_a0\\repo\\pagefolio\\constants.py",
+      "mtime": "2026-11-05T04:24:57.973Z",
+      "size": 159,
+      "sha256": "2819b2a8606e2c7023f878173861c0110173fce0dde330feb358c4e6f2d2ebf2"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_failure_exit_is_nonzero_a0\\repo\\pagefolio.py",
+      "mtime": "2026-11-05T04:24:57.978Z",
+      "size": 17,
+      "sha256": "d4466db650a5ccc2b05b6d9713e569b917bce0d7e54ce9d0137e9b9eaa03b327"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_fire_event_calls_method0\\event_plug.py",
+      "mtime": "2026-11-05T04:24:57.986Z",
+      "size": 313,
+      "sha256": "5f164f543ca439b167a8d49746b7390492ba25d41e0ac3fe843b9c782b97df48"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_fire_event_exception_caug0\\error_plug.py",
+      "mtime": "2026-11-05T04:24:57.991Z",
+      "size": 219,
+      "sha256": "9db587ee1015e821590385e7adeef06e594c08391d367f75d35e7d64000d6e22"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_fire_event_exception_othe0\\error_plug.py",
+      "mtime": "2026-11-05T04:24:57.994Z",
+      "size": 219,
+      "sha256": "9db587ee1015e821590385e7adeef06e594c08391d367f75d35e7d64000d6e22"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_fire_event_exception_othe0\\tracking_plug.py",
+      "mtime": "2026-11-05T04:24:57.995Z",
+      "size": 250,
+      "sha256": "87fc1b7b6d7c66605f8621fa95bad730a4afa670a9a7e3beefd589accf547e93"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_fire_event_nonexistent_me0\\safe_plug.py",
+      "mtime": "2026-11-05T04:24:57.996Z",
+      "size": 116,
+      "sha256": "f4561af5acc9e6f12fa217bc35be2cb17ebc745b4ab56dfa2a239f6c14c7fa40"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_fire_event_skips_disabled0\\skip_plug.py",
+      "mtime": "2026-11-05T04:24:57.997Z",
+      "size": 242,
+      "sha256": "2f4ba02ba640c2c3c99711563a1c1709401a3a30d4e766baa8bec01bb3427b63"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_history_move_failure_leav0\\repo\\pagefolio\\constants.py",
+      "mtime": "2026-11-05T04:24:57.965Z",
+      "size": 159,
+      "sha256": "2819b2a8606e2c7023f878173861c0110173fce0dde330feb358c4e6f2d2ebf2"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_history_move_failure_leav0\\repo\\pagefolio.py",
+      "mtime": "2026-11-05T04:24:57.965Z",
+      "size": 17,
+      "sha256": "d4466db650a5ccc2b05b6d9713e569b917bce0d7e54ce9d0137e9b9eaa03b327"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_input_change_during_build0\\repo\\pagefolio\\constants.py",
+      "mtime": "2026-11-05T04:24:57.967Z",
+      "size": 159,
+      "sha256": "2819b2a8606e2c7023f878173861c0110173fce0dde330feb358c4e6f2d2ebf2"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_input_change_during_build0\\repo\\pagefolio.py",
+      "mtime": "2026-11-05T04:24:57.970Z",
+      "size": 17,
+      "sha256": "aea27a33387526509306847dc3fe4a861486bfa6f50af38da7076b7c2403240e"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_interrupt_is_reported_not0\\repo\\pagefolio\\constants.py",
+      "mtime": "2026-11-05T04:24:57.971Z",
+      "size": 159,
+      "sha256": "2819b2a8606e2c7023f878173861c0110173fce0dde330feb358c4e6f2d2ebf2"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_interrupt_is_reported_not0\\repo\\pagefolio.py",
+      "mtime": "2026-11-05T04:24:57.972Z",
+      "size": 17,
+      "sha256": "d4466db650a5ccc2b05b6d9713e569b917bce0d7e54ce9d0137e9b9eaa03b327"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_kept_lock_survives_unrecl0\\repo\\pagefolio\\constants.py",
+      "mtime": "2026-11-05T04:24:57.975Z",
+      "size": 159,
+      "sha256": "2819b2a8606e2c7023f878173861c0110173fce0dde330feb358c4e6f2d2ebf2"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_kept_lock_survives_unrecl0\\repo\\pagefolio.py",
+      "mtime": "2026-11-05T04:24:57.979Z",
+      "size": 17,
+      "sha256": "d4466db650a5ccc2b05b6d9713e569b917bce0d7e54ce9d0137e9b9eaa03b327"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_load_all_with_disabled0\\plugins\\alpha.py",
+      "mtime": "2026-11-05T04:24:57.983Z",
+      "size": 112,
+      "sha256": "24563ffc0926235e6657a40332d550577ef8eb50a03268241d7f60aa74de99c9"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_load_all_with_disabled0\\plugins\\beta.py",
+      "mtime": "2026-11-05T04:24:57.985Z",
+      "size": 110,
+      "sha256": "9ec9e37560e6eb72fc7881241bbeb27422904785faaf59c74721067cf688ee5e"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_load_plugin0\\test_plug.py",
+      "mtime": "2026-11-05T04:24:57.990Z",
+      "size": 464,
+      "sha256": "3ff1d1a4a784a2292a0d17bda17c409e90ab64c3be1bb5896c685c5b4c760645"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_load_plugin_returns_same_0\\test_plug.py",
+      "mtime": "2026-11-05T04:24:57.995Z",
+      "size": 464,
+      "sha256": "3ff1d1a4a784a2292a0d17bda17c409e90ab64c3be1bb5896c685c5b4c760645"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_load_plugin_with_app0\\lc_plug.py",
+      "mtime": "2026-11-05T04:24:58.010Z",
+      "size": 335,
+      "sha256": "0e4944dedbebc5f2b99715b9a4699571f13656b7a02e3a08ccea4c918fee424d"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_load_plugin_with_app_disa0\\lc_plug.py",
+      "mtime": "2026-11-05T04:24:58.017Z",
+      "size": 335,
+      "sha256": "0e4944dedbebc5f2b99715b9a4699571f13656b7a02e3a08ccea4c918fee424d"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_lock_replaced_during_buil0\\repo\\pagefolio\\constants.py",
+      "mtime": "2026-11-05T04:24:57.947Z",
+      "size": 159,
+      "sha256": "2819b2a8606e2c7023f878173861c0110173fce0dde330feb358c4e6f2d2ebf2"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_lock_replaced_during_buil0\\repo\\pagefolio.py",
+      "mtime": "2026-11-05T04:24:57.952Z",
+      "size": 17,
+      "sha256": "d4466db650a5ccc2b05b6d9713e569b917bce0d7e54ce9d0137e9b9eaa03b327"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_managed_rebuild_keeps_pre0\\repo\\pagefolio\\constants.py",
+      "mtime": "2026-11-05T04:24:57.953Z",
+      "size": 159,
+      "sha256": "2819b2a8606e2c7023f878173861c0110173fce0dde330feb358c4e6f2d2ebf2"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_managed_rebuild_keeps_pre0\\repo\\pagefolio.py",
+      "mtime": "2026-11-05T04:24:57.954Z",
+      "size": 17,
+      "sha256": "d4466db650a5ccc2b05b6d9713e569b917bce0d7e54ce9d0137e9b9eaa03b327"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_missing_executable_fails0\\repo\\pagefolio\\constants.py",
+      "mtime": "2026-11-05T04:24:57.959Z",
+      "size": 159,
+      "sha256": "2819b2a8606e2c7023f878173861c0110173fce0dde330feb358c4e6f2d2ebf2"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_missing_executable_fails0\\repo\\pagefolio.py",
+      "mtime": "2026-11-05T04:24:57.960Z",
+      "size": 17,
+      "sha256": "d4466db650a5ccc2b05b6d9713e569b917bce0d7e54ce9d0137e9b9eaa03b327"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_missing_external_report_r0\\repo\\pagefolio\\constants.py",
+      "mtime": "2026-11-05T04:24:57.962Z",
+      "size": 159,
+      "sha256": "2819b2a8606e2c7023f878173861c0110173fce0dde330feb358c4e6f2d2ebf2"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_missing_external_report_r0\\repo\\pagefolio.py",
+      "mtime": "2026-11-05T04:24:57.963Z",
+      "size": 17,
+      "sha256": "d4466db650a5ccc2b05b6d9713e569b917bce0d7e54ce9d0137e9b9eaa03b327"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_output_change_during_buil0\\repo\\pagefolio\\constants.py",
+      "mtime": "2026-11-05T04:24:57.970Z",
+      "size": 159,
+      "sha256": "2819b2a8606e2c7023f878173861c0110173fce0dde330feb358c4e6f2d2ebf2"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_output_change_during_buil0\\repo\\pagefolio.py",
+      "mtime": "2026-11-05T04:24:57.971Z",
+      "size": 17,
+      "sha256": "d4466db650a5ccc2b05b6d9713e569b917bce0d7e54ce9d0137e9b9eaa03b327"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_post_publish_mismatch_res0\\repo\\pagefolio\\constants.py",
+      "mtime": "2026-11-05T04:24:57.980Z",
+      "size": 159,
+      "sha256": "2819b2a8606e2c7023f878173861c0110173fce0dde330feb358c4e6f2d2ebf2"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_post_publish_mismatch_res0\\repo\\pagefolio.py",
+      "mtime": "2026-11-05T04:24:57.981Z",
+      "size": 17,
+      "sha256": "d4466db650a5ccc2b05b6d9713e569b917bce0d7e54ce9d0137e9b9eaa03b327"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_promote_failure_restores_0\\repo\\pagefolio\\constants.py",
+      "mtime": "2026-11-05T04:24:58.020Z",
+      "size": 159,
+      "sha256": "2819b2a8606e2c7023f878173861c0110173fce0dde330feb358c4e6f2d2ebf2"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_promote_failure_restores_0\\repo\\pagefolio.py",
+      "mtime": "2026-11-05T04:24:58.022Z",
+      "size": 17,
+      "sha256": "d4466db650a5ccc2b05b6d9713e569b917bce0d7e54ce9d0137e9b9eaa03b327"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_protected_name_is_case_in0\\repo\\pagefolio\\constants.py",
+      "mtime": "2026-11-05T04:24:58.026Z",
+      "size": 159,
+      "sha256": "2819b2a8606e2c7023f878173861c0110173fce0dde330feb358c4e6f2d2ebf2"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_protected_name_is_case_in0\\repo\\pagefolio.py",
+      "mtime": "2026-11-05T04:24:58.029Z",
+      "size": 17,
+      "sha256": "d4466db650a5ccc2b05b6d9713e569b917bce0d7e54ce9d0137e9b9eaa03b327"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_protected_name_kinds_stop0\\repo\\pagefolio\\constants.py",
+      "mtime": "2026-11-05T04:24:58.032Z",
+      "size": 159,
+      "sha256": "2819b2a8606e2c7023f878173861c0110173fce0dde330feb358c4e6f2d2ebf2"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_protected_name_kinds_stop0\\repo\\pagefolio.py",
+      "mtime": "2026-11-05T04:24:58.027Z",
+      "size": 17,
+      "sha256": "d4466db650a5ccc2b05b6d9713e569b917bce0d7e54ce9d0137e9b9eaa03b327"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_protected_name_kinds_stop1\\repo\\pagefolio\\constants.py",
+      "mtime": "2026-11-05T04:24:58.029Z",
+      "size": 159,
+      "sha256": "2819b2a8606e2c7023f878173861c0110173fce0dde330feb358c4e6f2d2ebf2"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_protected_name_kinds_stop1\\repo\\pagefolio.py",
+      "mtime": "2026-11-05T04:24:58.031Z",
+      "size": 17,
+      "sha256": "d4466db650a5ccc2b05b6d9713e569b917bce0d7e54ce9d0137e9b9eaa03b327"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_protected_name_kinds_stop2\\repo\\pagefolio\\constants.py",
+      "mtime": "2026-11-05T04:24:58.032Z",
+      "size": 159,
+      "sha256": "2819b2a8606e2c7023f878173861c0110173fce0dde330feb358c4e6f2d2ebf2"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_protected_name_kinds_stop2\\repo\\pagefolio.py",
+      "mtime": "2026-11-05T04:24:58.033Z",
+      "size": 17,
+      "sha256": "d4466db650a5ccc2b05b6d9713e569b917bce0d7e54ce9d0137e9b9eaa03b327"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_protected_name_kinds_stop3\\repo\\pagefolio\\constants.py",
+      "mtime": "2026-11-05T04:24:58.037Z",
+      "size": 159,
+      "sha256": "2819b2a8606e2c7023f878173861c0110173fce0dde330feb358c4e6f2d2ebf2"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_protected_name_kinds_stop3\\repo\\pagefolio.py",
+      "mtime": "2026-11-05T04:24:58.038Z",
+      "size": 17,
+      "sha256": "d4466db650a5ccc2b05b6d9713e569b917bce0d7e54ce9d0137e9b9eaa03b327"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_protected_name_kinds_stop4\\repo\\pagefolio\\constants.py",
+      "mtime": "2026-11-05T04:24:58.025Z",
+      "size": 159,
+      "sha256": "2819b2a8606e2c7023f878173861c0110173fce0dde330feb358c4e6f2d2ebf2"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_protected_name_kinds_stop4\\repo\\pagefolio.py",
+      "mtime": "2026-11-05T04:24:58.027Z",
+      "size": 17,
+      "sha256": "d4466db650a5ccc2b05b6d9713e569b917bce0d7e54ce9d0137e9b9eaa03b327"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_protected_name_kinds_stop5\\repo\\pagefolio\\constants.py",
+      "mtime": "2026-11-05T04:24:58.030Z",
+      "size": 159,
+      "sha256": "2819b2a8606e2c7023f878173861c0110173fce0dde330feb358c4e6f2d2ebf2"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_protected_name_kinds_stop5\\repo\\pagefolio.py",
+      "mtime": "2026-11-05T04:24:58.031Z",
+      "size": 17,
+      "sha256": "d4466db650a5ccc2b05b6d9713e569b917bce0d7e54ce9d0137e9b9eaa03b327"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_protected_name_kinds_stop6\\repo\\pagefolio\\constants.py",
+      "mtime": "2026-11-05T04:24:58.034Z",
+      "size": 159,
+      "sha256": "2819b2a8606e2c7023f878173861c0110173fce0dde330feb358c4e6f2d2ebf2"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_protected_name_kinds_stop6\\repo\\pagefolio.py",
+      "mtime": "2026-11-05T04:24:58.037Z",
+      "size": 17,
+      "sha256": "d4466db650a5ccc2b05b6d9713e569b917bce0d7e54ce9d0137e9b9eaa03b327"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_protected_name_kinds_stop7\\repo\\pagefolio\\constants.py",
+      "mtime": "2026-11-05T04:24:58.027Z",
+      "size": 159,
+      "sha256": "2819b2a8606e2c7023f878173861c0110173fce0dde330feb358c4e6f2d2ebf2"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_protected_name_kinds_stop7\\repo\\pagefolio.py",
+      "mtime": "2026-11-05T04:24:58.030Z",
+      "size": 17,
+      "sha256": "d4466db650a5ccc2b05b6d9713e569b917bce0d7e54ce9d0137e9b9eaa03b327"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_protected_name_kinds_stop8\\repo\\pagefolio\\constants.py",
+      "mtime": "2026-11-05T04:24:58.033Z",
+      "size": 159,
+      "sha256": "2819b2a8606e2c7023f878173861c0110173fce0dde330feb358c4e6f2d2ebf2"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_protected_name_kinds_stop8\\repo\\pagefolio.py",
+      "mtime": "2026-11-05T04:24:58.035Z",
+      "size": 17,
+      "sha256": "d4466db650a5ccc2b05b6d9713e569b917bce0d7e54ce9d0137e9b9eaa03b327"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_real_junction_ancestor_re0\\repo\\pagefolio\\constants.py",
+      "mtime": "2026-11-05T04:24:57.982Z",
+      "size": 159,
+      "sha256": "2819b2a8606e2c7023f878173861c0110173fce0dde330feb358c4e6f2d2ebf2"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_real_junction_ancestor_re0\\repo\\pagefolio.py",
+      "mtime": "2026-11-05T04:24:57.989Z",
+      "size": 17,
+      "sha256": "d4466db650a5ccc2b05b6d9713e569b917bce0d7e54ce9d0137e9b9eaa03b327"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_real_junction_destination0\\repo\\pagefolio\\constants.py",
+      "mtime": "2026-11-05T04:24:57.991Z",
+      "size": 159,
+      "sha256": "2819b2a8606e2c7023f878173861c0110173fce0dde330feb358c4e6f2d2ebf2"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_real_junction_destination0\\repo\\pagefolio.py",
+      "mtime": "2026-11-05T04:24:57.993Z",
+      "size": 17,
+      "sha256": "d4466db650a5ccc2b05b6d9713e569b917bce0d7e54ce9d0137e9b9eaa03b327"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_reparse_ancestor_rejected0\\repo\\pagefolio\\constants.py",
+      "mtime": "2026-11-05T04:24:57.995Z",
+      "size": 159,
+      "sha256": "2819b2a8606e2c7023f878173861c0110173fce0dde330feb358c4e6f2d2ebf2"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_reparse_ancestor_rejected0\\repo\\pagefolio.py",
+      "mtime": "2026-11-05T04:24:58.016Z",
+      "size": 17,
+      "sha256": "d4466db650a5ccc2b05b6d9713e569b917bce0d7e54ce9d0137e9b9eaa03b327"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_report_write_failure_is_n0\\repo\\pagefolio\\constants.py",
+      "mtime": "2026-11-05T04:24:58.020Z",
+      "size": 159,
+      "sha256": "2819b2a8606e2c7023f878173861c0110173fce0dde330feb358c4e6f2d2ebf2"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_report_write_failure_is_n0\\repo\\pagefolio.py",
+      "mtime": "2026-11-05T04:24:58.022Z",
+      "size": 17,
+      "sha256": "d4466db650a5ccc2b05b6d9713e569b917bce0d7e54ce9d0137e9b9eaa03b327"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_rollback_failure_is_repor0\\repo\\pagefolio\\constants.py",
+      "mtime": "2026-11-05T04:24:58.025Z",
+      "size": 159,
+      "sha256": "2819b2a8606e2c7023f878173861c0110173fce0dde330feb358c4e6f2d2ebf2"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_rollback_failure_is_repor0\\repo\\pagefolio.py",
+      "mtime": "2026-11-05T04:24:58.026Z",
+      "size": 17,
+      "sha256": "d4466db650a5ccc2b05b6d9713e569b917bce0d7e54ce9d0137e9b9eaa03b327"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_secrets_are_not_collected0\\repo\\pagefolio\\constants.py",
+      "mtime": "2026-11-05T04:24:58.017Z",
+      "size": 159,
+      "sha256": "2819b2a8606e2c7023f878173861c0110173fce0dde330feb358c4e6f2d2ebf2"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_secrets_are_not_collected0\\repo\\pagefolio.py",
+      "mtime": "2026-11-05T04:24:58.019Z",
+      "size": 17,
+      "sha256": "d4466db650a5ccc2b05b6d9713e569b917bce0d7e54ce9d0137e9b9eaa03b327"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_shell_characters_are_lite0\\repo\\pagefolio\\constants.py",
+      "mtime": "2026-11-05T04:24:58.023Z",
+      "size": 159,
+      "sha256": "2819b2a8606e2c7023f878173861c0110173fce0dde330feb358c4e6f2d2ebf2"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_shell_characters_are_lite0\\repo\\pagefolio.py",
+      "mtime": "2026-11-05T04:24:58.024Z",
+      "size": 17,
+      "sha256": "d4466db650a5ccc2b05b6d9713e569b917bce0d7e54ce9d0137e9b9eaa03b327"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_shell_characters_are_lite1\\repo\\pagefolio\\constants.py",
+      "mtime": "2026-11-05T04:24:57.997Z",
+      "size": 159,
+      "sha256": "2819b2a8606e2c7023f878173861c0110173fce0dde330feb358c4e6f2d2ebf2"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_shell_characters_are_lite1\\repo\\pagefolio.py",
+      "mtime": "2026-11-05T04:24:58.015Z",
+      "size": 17,
+      "sha256": "d4466db650a5ccc2b05b6d9713e569b917bce0d7e54ce9d0137e9b9eaa03b327"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_shell_characters_are_lite2\\repo\\pagefolio\\constants.py",
+      "mtime": "2026-11-05T04:24:58.020Z",
+      "size": 159,
+      "sha256": "2819b2a8606e2c7023f878173861c0110173fce0dde330feb358c4e6f2d2ebf2"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_shell_characters_are_lite2\\repo\\pagefolio.py",
+      "mtime": "2026-11-05T04:24:58.022Z",
+      "size": 17,
+      "sha256": "d4466db650a5ccc2b05b6d9713e569b917bce0d7e54ce9d0137e9b9eaa03b327"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_shell_characters_are_lite3\\repo\\pagefolio\\constants.py",
+      "mtime": "2026-11-05T04:24:58.025Z",
+      "size": 159,
+      "sha256": "2819b2a8606e2c7023f878173861c0110173fce0dde330feb358c4e6f2d2ebf2"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_shell_characters_are_lite3\\repo\\pagefolio.py",
+      "mtime": "2026-11-05T04:24:58.028Z",
+      "size": 17,
+      "sha256": "d4466db650a5ccc2b05b6d9713e569b917bce0d7e54ce9d0137e9b9eaa03b327"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_shell_characters_are_lite4\\repo\\pagefolio\\constants.py",
+      "mtime": "2026-11-05T04:24:58.031Z",
+      "size": 159,
+      "sha256": "2819b2a8606e2c7023f878173861c0110173fce0dde330feb358c4e6f2d2ebf2"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_shell_characters_are_lite4\\repo\\pagefolio.py",
+      "mtime": "2026-11-05T04:24:58.034Z",
+      "size": 17,
+      "sha256": "d4466db650a5ccc2b05b6d9713e569b917bce0d7e54ce9d0137e9b9eaa03b327"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_shell_characters_are_lite5\\repo\\pagefolio\\constants.py",
+      "mtime": "2026-11-05T04:24:58.031Z",
+      "size": 159,
+      "sha256": "2819b2a8606e2c7023f878173861c0110173fce0dde330feb358c4e6f2d2ebf2"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_shell_characters_are_lite5\\repo\\pagefolio.py",
+      "mtime": "2026-11-05T04:24:58.035Z",
+      "size": 17,
+      "sha256": "d4466db650a5ccc2b05b6d9713e569b917bce0d7e54ce9d0137e9b9eaa03b327"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_source_overlap_rejected_b0\\repo\\pagefolio\\constants.py",
+      "mtime": "2026-11-05T04:24:57.949Z",
+      "size": 159,
+      "sha256": "2819b2a8606e2c7023f878173861c0110173fce0dde330feb358c4e6f2d2ebf2"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_source_overlap_rejected_b0\\repo\\pagefolio.py",
+      "mtime": "2026-11-05T04:24:57.951Z",
+      "size": 17,
+      "sha256": "d4466db650a5ccc2b05b6d9713e569b917bce0d7e54ce9d0137e9b9eaa03b327"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_source_overlap_rejected_b1\\repo\\pagefolio\\constants.py",
+      "mtime": "2026-11-05T04:24:57.955Z",
+      "size": 159,
+      "sha256": "2819b2a8606e2c7023f878173861c0110173fce0dde330feb358c4e6f2d2ebf2"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_source_overlap_rejected_b1\\repo\\pagefolio.py",
+      "mtime": "2026-11-05T04:24:57.961Z",
+      "size": 17,
+      "sha256": "d4466db650a5ccc2b05b6d9713e569b917bce0d7e54ce9d0137e9b9eaa03b327"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_source_overlap_rejected_b2\\repo\\pagefolio\\constants.py",
+      "mtime": "2026-11-05T04:24:57.963Z",
+      "size": 159,
+      "sha256": "2819b2a8606e2c7023f878173861c0110173fce0dde330feb358c4e6f2d2ebf2"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_source_overlap_rejected_b2\\repo\\pagefolio.py",
+      "mtime": "2026-11-05T04:24:57.964Z",
+      "size": 17,
+      "sha256": "d4466db650a5ccc2b05b6d9713e569b917bce0d7e54ce9d0137e9b9eaa03b327"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_source_overlap_rejected_b3\\repo\\pagefolio\\constants.py",
+      "mtime": "2026-11-05T04:24:57.965Z",
+      "size": 159,
+      "sha256": "2819b2a8606e2c7023f878173861c0110173fce0dde330feb358c4e6f2d2ebf2"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_source_overlap_rejected_b3\\repo\\pagefolio.py",
+      "mtime": "2026-11-05T04:24:57.966Z",
+      "size": 17,
+      "sha256": "d4466db650a5ccc2b05b6d9713e569b917bce0d7e54ce9d0137e9b9eaa03b327"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_source_overlap_rejected_b4\\repo\\pagefolio\\constants.py",
+      "mtime": "2026-11-05T04:24:57.967Z",
+      "size": 159,
+      "sha256": "2819b2a8606e2c7023f878173861c0110173fce0dde330feb358c4e6f2d2ebf2"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_source_overlap_rejected_b4\\repo\\pagefolio.py",
+      "mtime": "2026-11-05T04:24:57.969Z",
+      "size": 17,
+      "sha256": "d4466db650a5ccc2b05b6d9713e569b917bce0d7e54ce9d0137e9b9eaa03b327"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_source_overlap_rejected_b5\\repo\\pagefolio\\constants.py",
+      "mtime": "2026-11-05T04:24:57.970Z",
+      "size": 159,
+      "sha256": "2819b2a8606e2c7023f878173861c0110173fce0dde330feb358c4e6f2d2ebf2"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_source_overlap_rejected_b5\\repo\\pagefolio.py",
+      "mtime": "2026-11-05T04:24:57.972Z",
+      "size": 17,
+      "sha256": "d4466db650a5ccc2b05b6d9713e569b917bce0d7e54ce9d0137e9b9eaa03b327"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_source_overlap_rejected_b6\\repo\\pagefolio\\constants.py",
+      "mtime": "2026-11-05T04:24:57.976Z",
+      "size": 159,
+      "sha256": "2819b2a8606e2c7023f878173861c0110173fce0dde330feb358c4e6f2d2ebf2"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_source_overlap_rejected_b6\\repo\\pagefolio.py",
+      "mtime": "2026-11-05T04:24:57.979Z",
+      "size": 17,
+      "sha256": "d4466db650a5ccc2b05b6d9713e569b917bce0d7e54ce9d0137e9b9eaa03b327"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_source_overlap_rejected_b7\\repo\\pagefolio\\constants.py",
+      "mtime": "2026-11-05T04:24:57.983Z",
+      "size": 159,
+      "sha256": "2819b2a8606e2c7023f878173861c0110173fce0dde330feb358c4e6f2d2ebf2"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_source_overlap_rejected_b7\\repo\\pagefolio.py",
+      "mtime": "2026-11-05T04:24:57.989Z",
+      "size": 17,
+      "sha256": "d4466db650a5ccc2b05b6d9713e569b917bce0d7e54ce9d0137e9b9eaa03b327"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_stale_or_foreign_lock_is_0\\repo\\pagefolio\\constants.py",
+      "mtime": "2026-11-05T04:24:57.971Z",
+      "size": 159,
+      "sha256": "2819b2a8606e2c7023f878173861c0110173fce0dde330feb358c4e6f2d2ebf2"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_stale_or_foreign_lock_is_0\\repo\\pagefolio.py",
+      "mtime": "2026-11-05T04:24:57.972Z",
+      "size": 17,
+      "sha256": "d4466db650a5ccc2b05b6d9713e569b917bce0d7e54ce9d0137e9b9eaa03b327"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_success_exit_and_guidance0\\repo\\pagefolio\\constants.py",
+      "mtime": "2026-11-05T04:24:57.973Z",
+      "size": 159,
+      "sha256": "2819b2a8606e2c7023f878173861c0110173fce0dde330feb358c4e6f2d2ebf2"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_success_exit_and_guidance0\\repo\\pagefolio.py",
+      "mtime": "2026-11-05T04:24:57.975Z",
+      "size": 17,
+      "sha256": "d4466db650a5ccc2b05b6d9713e569b917bce0d7e54ce9d0137e9b9eaa03b327"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_tracked_source_file_colli0\\repo\\pagefolio\\constants.py",
+      "mtime": "2026-11-05T04:24:57.958Z",
+      "size": 159,
+      "sha256": "2819b2a8606e2c7023f878173861c0110173fce0dde330feb358c4e6f2d2ebf2"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_tracked_source_file_colli0\\repo\\pagefolio.py",
+      "mtime": "2026-11-05T04:24:57.961Z",
+      "size": 17,
+      "sha256": "d4466db650a5ccc2b05b6d9713e569b917bce0d7e54ce9d0137e9b9eaa03b327"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_unknown_existing_file_rej0\\repo\\pagefolio\\constants.py",
+      "mtime": "2026-11-05T04:24:57.963Z",
+      "size": 159,
+      "sha256": "2819b2a8606e2c7023f878173861c0110173fce0dde330feb358c4e6f2d2ebf2"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_unknown_existing_file_rej0\\repo\\pagefolio.py",
+      "mtime": "2026-11-05T04:24:57.965Z",
+      "size": 17,
+      "sha256": "d4466db650a5ccc2b05b6d9713e569b917bce0d7e54ce9d0137e9b9eaa03b327"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_unload_exception_caught0\\err_lc.py",
+      "mtime": "2026-11-05T04:24:57.970Z",
+      "size": 292,
+      "sha256": "2977fd4a51d27281b0b14ece1665991014184ff2747a34caa28d032e7ab498dd"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_unload_plugin0\\test_plug.py",
+      "mtime": "2026-11-05T04:24:57.972Z",
+      "size": 464,
+      "sha256": "3ff1d1a4a784a2292a0d17bda17c409e90ab64c3be1bb5896c685c5b4c760645"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_unload_plugin_with_app0\\lc_plug.py",
+      "mtime": "2026-11-05T04:24:57.976Z",
+      "size": 335,
+      "sha256": "0e4944dedbebc5f2b99715b9a4699571f13656b7a02e3a08ccea4c918fee424d"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_unreadable_destination_re0\\repo\\pagefolio\\constants.py",
+      "mtime": "2026-11-05T04:24:57.981Z",
+      "size": 159,
+      "sha256": "2819b2a8606e2c7023f878173861c0110173fce0dde330feb358c4e6f2d2ebf2"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_unreadable_destination_re0\\repo\\pagefolio.py",
+      "mtime": "2026-11-05T04:24:57.985Z",
+      "size": 17,
+      "sha256": "d4466db650a5ccc2b05b6d9713e569b917bce0d7e54ce9d0137e9b9eaa03b327"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_user_file_rejected_before0\\repo\\pagefolio\\constants.py",
+      "mtime": "2026-11-05T04:24:57.986Z",
+      "size": 159,
+      "sha256": "2819b2a8606e2c7023f878173861c0110173fce0dde330feb358c4e6f2d2ebf2"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_user_file_rejected_before0\\repo\\pagefolio.py",
+      "mtime": "2026-11-05T04:24:57.995Z",
+      "size": 17,
+      "sha256": "d4466db650a5ccc2b05b6d9713e569b917bce0d7e54ce9d0137e9b9eaa03b327"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_user_file_rejected_before1\\repo\\pagefolio\\constants.py",
+      "mtime": "2026-11-05T04:24:57.997Z",
+      "size": 159,
+      "sha256": "2819b2a8606e2c7023f878173861c0110173fce0dde330feb358c4e6f2d2ebf2"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_user_file_rejected_before1\\repo\\pagefolio.py",
+      "mtime": "2026-11-05T04:24:58.010Z",
+      "size": 17,
+      "sha256": "d4466db650a5ccc2b05b6d9713e569b917bce0d7e54ce9d0137e9b9eaa03b327"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_user_file_rejected_before2\\repo\\pagefolio\\constants.py",
+      "mtime": "2026-11-05T04:24:58.016Z",
+      "size": 159,
+      "sha256": "2819b2a8606e2c7023f878173861c0110173fce0dde330feb358c4e6f2d2ebf2"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_user_file_rejected_before2\\repo\\pagefolio.py",
+      "mtime": "2026-11-05T04:24:58.017Z",
+      "size": 17,
+      "sha256": "d4466db650a5ccc2b05b6d9713e569b917bce0d7e54ce9d0137e9b9eaa03b327"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_user_prompt_copy_in_manag0\\repo\\pagefolio\\constants.py",
+      "mtime": "2026-11-05T04:24:58.020Z",
+      "size": 159,
+      "sha256": "2819b2a8606e2c7023f878173861c0110173fce0dde330feb358c4e6f2d2ebf2"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_user_prompt_copy_in_manag0\\repo\\pagefolio.py",
+      "mtime": "2026-11-05T04:24:58.023Z",
+      "size": 17,
+      "sha256": "d4466db650a5ccc2b05b6d9713e569b917bce0d7e54ce9d0137e9b9eaa03b327"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_work_or_history_name_take0\\repo\\pagefolio\\constants.py",
+      "mtime": "2026-11-05T04:24:58.029Z",
+      "size": 159,
+      "sha256": "2819b2a8606e2c7023f878173861c0110173fce0dde330feb358c4e6f2d2ebf2"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_work_or_history_name_take0\\repo\\pagefolio.py",
+      "mtime": "2026-11-05T04:24:58.031Z",
+      "size": 17,
+      "sha256": "d4466db650a5ccc2b05b6d9713e569b917bce0d7e54ce9d0137e9b9eaa03b327"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_work_or_history_name_take1\\repo\\pagefolio\\constants.py",
+      "mtime": "2026-11-05T04:24:58.034Z",
+      "size": 159,
+      "sha256": "2819b2a8606e2c7023f878173861c0110173fce0dde330feb358c4e6f2d2ebf2"
+    },
+    {
+      "path": ".planning\\phases\\04-startup-control\\04-reverify-20261105-full\\basetemp\\test_work_or_history_name_take1\\repo\\pagefolio.py",
+      "mtime": "2026-11-05T04:24:58.035Z",
+      "size": 17,
+      "sha256": "d4466db650a5ccc2b05b6d9713e569b917bce0d7e54ce9d0137e9b9eaa03b327"
+    }
+  ]
+}

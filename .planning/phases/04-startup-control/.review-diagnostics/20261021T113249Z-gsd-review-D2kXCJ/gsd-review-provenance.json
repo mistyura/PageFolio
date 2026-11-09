@@ -1,0 +1,48 @@
+{
+  "reviewed_at": "2026-10-21T11:32:49.091Z",
+  "plans_sha256": {
+    "04-01-PLAN.md": "1a7b62f54910b67fcd0f4bb282b5adf9b9184ee57ae6e31fac28ba5dd12a593b",
+    "04-02-PLAN.md": "fd0b8276b877320bdf21b3447cc88a93fd966f419c24ab5ca67394ea66859d4e",
+    "04-03-PLAN.md": "40824d86e2a4039da4d52dda099aaecd1ffd4e272043ecb05b61381b3143b01b",
+    "04-04-PLAN.md": "06e52066772338e18d5c4910893fd0d6d1213dde8f2665ab1ff430e91d22da3a",
+    "04-05-PLAN.md": "fedd95386cd9d7a36b3523d999218810ee9d0404ae7ee43c99a99fa61dfe54b4"
+  },
+  "coverage": {
+    "claude": {
+      "total": 5,
+      "covered": [
+        "04-01",
+        "04-02",
+        "04-03",
+        "04-04",
+        "04-05"
+      ],
+      "missing": [],
+      "source_citations": true
+    },
+    "grok": {
+      "total": 5,
+      "covered": [
+        "04-01",
+        "04-02",
+        "04-03",
+        "04-04",
+        "04-05"
+      ],
+      "missing": [],
+      "source_citations": true
+    },
+    "antigravity": {
+      "total": 5,
+      "covered": [
+        "04-01",
+        "04-02",
+        "04-03",
+        "04-04",
+        "04-05"
+      ],
+      "missing": [],
+      "source_citations": true
+    }
+  }
+}

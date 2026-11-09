@@ -1,0 +1,138 @@
+"""自己プロセスだけに幽霊メッセージを作る、UI 見張りの子プロセス試験。"""
+
+import ctypes as ct
+import json
+import logging
+import sys
+import threading
+import time
+from ctypes import wintypes as wt
+from pathlib import Path
+from types import SimpleNamespace
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
+from pagefolio.startup_wake import UiThreadWake  # noqa: E402
+from pagefolio.startup_win32 import _bind  # noqa: E402
+
+
+def run(enabled):
+    import tkinter as tk
+
+    user = ct.WinDLL("user32", use_last_error=True)
+    hook_proc = ct.WINFUNCTYPE(ct.c_ssize_t, ct.c_int, wt.WPARAM, wt.LPARAM)
+    set_hook = _bind(
+        user,
+        "SetWindowsHookExW",
+        wt.HANDLE,
+        ct.c_int,
+        hook_proc,
+        wt.HINSTANCE,
+        wt.DWORD,
+    )
+    unhook = _bind(user, "UnhookWindowsHookEx", wt.BOOL, wt.HANDLE)
+    call_next = _bind(
+        user, "CallNextHookEx", ct.c_ssize_t, wt.HANDLE, ct.c_int, wt.WPARAM, wt.LPARAM
+    )
+    peek = _bind(
+        user,
+        "PeekMessageW",
+        wt.BOOL,
+        ct.POINTER(wt.MSG),
+        wt.HWND,
+        wt.UINT,
+        wt.UINT,
+        wt.UINT,
+    )
+    post = _bind(
+        user, "PostThreadMessageW", wt.BOOL, wt.DWORD, wt.UINT, wt.WPARAM, wt.LPARAM
+    )
+    foreground = _bind(user, "GetForegroundWindow", wt.HWND)
+    removed = []
+    beats = []
+    posts = []
+    errors = []
+    ghost = 0x8007
+    tid = threading.get_native_id()
+    ready = threading.Event()
+    done = threading.Event()
+
+    @hook_proc
+    def callback(code, wparam, lparam):
+        if code >= 0 and wparam == 0:
+            msg = ct.cast(lparam, ct.POINTER(wt.MSG)).contents
+            if msg.message == ghost and not removed:
+                removed.append(time.monotonic())
+                taken = wt.MSG()
+                if not peek(ct.byref(taken), None, ghost, ghost, 1):
+                    errors.append("ghost-not-removed")
+        return call_next(None, code, wparam, lparam)
+
+    def heartbeat():
+        beats.append(time.monotonic())
+        ready.set()
+        if done.is_set():
+            root.setvar("wake_done", 1)
+        else:
+            root.after(25, heartbeat)
+
+    def trigger():
+        if not ready.wait(3):
+            errors.append("no-heartbeat")
+        time.sleep(0.1)
+        if not post(tid, ghost, 0, 0):
+            errors.append("ghost-post-failed")
+        # 対照群の無期限待ちを必ず解き、親のタイムアウトに頼らず終了する。
+        time.sleep(0.8)
+        done.set()
+        if not post(tid, 0, 0, 0):
+            errors.append("rescue-post-failed")
+
+    def counted_post(*args):
+        posts.append(args)
+        return post(*args)
+
+    # Tk 窓への別のメッセージが対照群を偶然起こすことを避け、同じ Tcl
+    # Windows 通知器を使う vwait を直接実行する。Peek でスレッドのキューも作る。
+    root = tk.Tcl()
+    peek(ct.byref(wt.MSG()), None, 0, 0, 0)
+    initial_foreground = foreground()
+    hook = set_hook(3, callback, None, tid)  # WH_GETMESSAGE、自スレッドのみ。
+    if not hook:
+        raise ct.WinError(ct.get_last_error())
+    wake = UiThreadWake(
+        SimpleNamespace(PostThreadMessageW=counted_post), logging.getLogger(__name__)
+    )
+    driver = threading.Thread(target=trigger, daemon=True)
+    try:
+        if enabled:
+            wake.start()
+        driver.start()
+        root.after(25, heartbeat)
+        root.eval("vwait wake_done")
+    finally:
+        done.set()
+        wake.close()
+        driver.join(3)
+        unhook(hook)
+        final_foreground = foreground()
+    if errors:
+        raise RuntimeError(errors)
+    after = [t for t in beats if removed and t > removed[0]]
+    print(
+        json.dumps(
+            {
+                "removed": len(removed),
+                "posted": len(posts),
+                "first_beat_after_ghost_ms": (after[0] - removed[0]) * 1000
+                if after
+                else None,
+                "foreground_unchanged": initial_foreground == final_foreground,
+                "worker_stopped": wake._worker is None or not wake._worker.is_alive(),
+            }
+        )
+    )
+
+
+if __name__ == "__main__":
+    run(sys.argv[1] == "wake")

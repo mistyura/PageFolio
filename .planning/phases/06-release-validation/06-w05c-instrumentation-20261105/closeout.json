@@ -1,0 +1,26 @@
+{
+  "at": "2026-11-05T06:48:00.197Z",
+  "status": "awaiting_operator_availability",
+  "ready_for_retry": false,
+  "machine_gates_passed": true,
+  "formal_script_attempts": 0,
+  "phase_complete": false,
+  "release_allowed": false,
+  "required_pass": 28,
+  "required_not_run": 80,
+  "deferred_not_run": 2,
+  "full_result": ".planning/phases/06-release-validation/06-05-evidence/w05c-instrumentation-native-20261105/result.json",
+  "full_result_sha256": "c31a930cfe8aeb39bcbfa54d276751fe2924af08949286560258d866b73ad0dd",
+  "unique_quality_inputs": 167,
+  "current_input_drift": [],
+  "files": {
+    "tests/w05c_evidence.py": "58770e26ee75ce6692ce81110fc6885b6ef5c8f34dae720507dc9d28ab9ed5df",
+    "tests/test_w05c_evidence.py": "da8eff5e7d091c460a6757add7455552b0c22555d83285e10cf3297cc2b5716d",
+    "tests/test_startup_windows.py": "d937888b945a40b97f5aaed3a4d999a5739eb56daa3d3249c8459180128a2ad2",
+    ".gitignore": "d57e52747691c09d1e591298c402ebcaf9bf6db46cd859e8b59f7f3e9cc685ba",
+    ".planning/phases/06-release-validation/06-05-record-w05c-python.cjs": "762e1a31282ebb4bf4ca5cb68e9889b983af5684472c5eb51dc08d84bc0f0701",
+    ".planning/phases/06-release-validation/06-05-w05c-evidence.cjs": "c8e1b9f7d15e9e0d2ae20ac9e4913d0e178eb65229c6140746a1cd4d052786d5",
+    ".planning/phases/06-release-validation/06-07-quality.cjs": "fb32435662ecab42c60e0242a4f4aa5bd7f26cde0de10a64b26593d0f1b4ab38"
+  },
+  "note": "過去のNo不成立/153fixture原bytes不明/開始前Ruff一過性警告/配布元・tracer消失等の未解除事項は保持。開始直前にowner/lock・入力・親鮮度と利用者の準備を再確認する。"
+}

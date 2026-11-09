@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="1" failures="0" skipped="0" tests="1" time="0.674" timestamp="2026-11-05T15:08:14.076019+09:00" hostname="nullaze-z240"><testcase classname="tests.test_batch_ocr_dialog.TestBatchOCRDialogE2E" name="test_file_failure_continues" time="0.026"><error message="failed on setup with &quot;_tkinter.TclError: Cannot find a usable init.tcl in the following directories: &#10;    C:/Users/shdwf/AppData/Local/Programs/Python/Python315/lib/tcl9.0 C:/Users/shdwf/AppData/Local/Programs/Python/lib/tcl9.0 C:/Users/shdwf/AppData/Local/Programs/lib/tcl9.0 C:/Users/shdwf/AppData/Local/Programs/Python/library C:/Users/shdwf/AppData/Local/Programs/library C:/Users/shdwf/AppData/Local/Programs/tcl9.0/library C:/Users/shdwf/AppData/Local/Programs/tcl9.0.4/library C:/Users/shdwf/AppData/Local/tcl9.0.4/library&#10;&#10;&#10;&#10;This probably means that Tcl wasn't installed properly.&quot;">@pytest.fixture(scope="module")
+    def tk_root():
+        """モジュール全体で1つの `tk.Tk()` を共有する（複数 Tk() の逐次生成は
+        ttk テーマ再読込で `TclError` を誘発するため・環境依存の既知制約）。
+        個々のダイアログ（Toplevel）は各テストが生成・破棄する。
+        """
+&gt;       root = tk.Tk()
+               ^^^^^^^
+
+tests\test_batch_ocr_dialog.py:175: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = &lt;tkinter.Tk object .&gt;, screenName = None, baseName = '__main__'
+className = 'Tk', useTk = True, sync = False, use = None
+
+    def __init__(self, screenName=None, baseName=None, className='Tk',
+                 useTk=True, sync=False, use=None):
+        """Return a new top level widget on screen SCREENNAME. A new Tcl interpreter will
+        be created. BASENAME will be used for the identification of the profile file (see
+        readprofile).
+        It is constructed from sys.argv[0] without extensions if None is given. CLASSNAME
+        is the name of the widget class."""
+        self.master = None
+        self.children = {}
+        self._tkloaded = False
+        # to avoid recursions in the getattr code in case of failure, we
+        # ensure that self.tk is always _something_.
+        self.tk = None
+        if baseName is None:
+            import os
+            baseName = os.path.basename(sys.argv[0])
+            baseName, ext = os.path.splitext(baseName)
+            if ext not in ('.py', '.pyc'):
+                baseName = baseName + ext
+        interactive = False
+&gt;       self.tk = _tkinter.create(screenName, baseName, className, interactive, wantobjects, useTk, sync, use)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       _tkinter.TclError: Cannot find a usable init.tcl in the following directories: 
+E           C:/Users/shdwf/AppData/Local/Programs/Python/Python315/lib/tcl9.0 C:/Users/shdwf/AppData/Local/Programs/Python/lib/tcl9.0 C:/Users/shdwf/AppData/Local/Programs/lib/tcl9.0 C:/Users/shdwf/AppData/Local/Programs/Python/library C:/Users/shdwf/AppData/Local/Programs/library C:/Users/shdwf/AppData/Local/Programs/tcl9.0/library C:/Users/shdwf/AppData/Local/Programs/tcl9.0.4/library C:/Users/shdwf/AppData/Local/tcl9.0.4/library
+E       
+E       
+E       
+E       This probably means that Tcl wasn't installed properly.
+
+..\..\..\AppData\Local\Programs\Python\Python315\Lib\tkinter\__init__.py:2576: TclError</error></testcase></testsuite></testsuites>

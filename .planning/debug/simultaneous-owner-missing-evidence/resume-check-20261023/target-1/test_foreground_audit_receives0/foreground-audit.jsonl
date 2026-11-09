@@ -1,0 +1,3 @@
+{"event": "observer_started", "tick": 7516578, "monotonic": 7516.6090614, "hwnd": 199190, "pid": 30308, "window_thread_id": 30320, "class_name": "CASCADIA_HOSTING_WINDOW_CLASS", "identity_available": true, "event_id": 32770}
+{"event": "winevent", "tick": 7516593, "monotonic": 7516.6284673, "hwnd": 264746, "pid": 23484, "window_thread_id": 23488, "class_name": "PageFolioNotice6808d4ef0e9a49aab6b7ad4ab9d57d21", "identity_available": true, "event_id": 32770, "event_tick": 7516593, "event_thread_id": 23488, "object_id": 0, "child_id": 0}
+{"event": "observer_stopped", "tick": 7516750, "monotonic": 7516.7785763, "hwnd": 199190, "pid": 30308, "window_thread_id": 30320, "class_name": "CASCADIA_HOSTING_WINDOW_CLASS", "identity_available": true, "removed": true, "errors": []}

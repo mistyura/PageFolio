@@ -1,0 +1,41 @@
+{
+  "started": "2026-10-28T00:43:51.561Z",
+  "finished": "2026-10-28T00:43:56.409Z",
+  "collector_sha256": "478edae55fca85ce7a94bdda7b38ebc6fb9f0803b3f55052a914cf5b073ca056",
+  "executable": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.venv\\Scripts\\python.exe",
+  "executable_sha256": "f14d10e954b922d758234ff49335ad0e07e567103e06b38ff675c6bc85282865",
+  "command": [
+    "-m",
+    "pytest",
+    "-q",
+    "-x",
+    "tests/test_startup_wake.py",
+    "--basetemp=C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf-debug-wake-cfe02da9-9c27-4e6b-9fdb-6e01ff81b485"
+  ],
+  "basetemp": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf-debug-wake-cfe02da9-9c27-4e6b-9fdb-6e01ff81b485",
+  "code": 0,
+  "signal": null,
+  "timedOut": false,
+  "environment_exit": 0,
+  "inputs_unchanged": true,
+  "changed_inputs": [],
+  "file_count": 113,
+  "inputs_before_sha256": "16b2df6d5533962595898b882e65d8c5ccd112dad4df3979a395f5229b21b686",
+  "inputs_after_sha256": "16b2df6d5533962595898b882e65d8c5ccd112dad4df3979a395f5229b21b686",
+  "environment_sha256": "574d41cd3f6e3c4d440e790319db9db2d8a6dd2531ffccd4cea63be8b97a6bcf",
+  "log_sha256": "df3b5d89a47881f99dc483c12682e9034ec32697d6bae84051f60dc9764ddcab",
+  "children": [
+    {
+      "path": "test_native_tcl_getmessage_sta0\\startup-wake-child.json",
+      "sha256": "c2756d086a96fa3e3e3537e4f973165a6e8a06fd1bcc7cdf744b1220131f4793"
+    },
+    {
+      "path": "test_native_tcl_getmessage_sta1\\startup-wake-child.json",
+      "sha256": "8275c744e8cd4bc2c48bcf488f61588686df4c4dac6e49ba16415e9d88699abb"
+    },
+    {
+      "path": "test_native_tcl_getmessage_sta2\\startup-wake-child.json",
+      "sha256": "5c5a4e831670b3cebed1bf9c7af84a96e0635cf2c349cd127bd8dc5bd2bef6d6"
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "started": "2026-10-28T01:44:56.408Z",
+  "pid": 16392,
+  "command": [
+    "-m",
+    "pytest",
+    "-q",
+    "-x",
+    "--basetemp=C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf06-g3-quality-3934d07c-0fec-4f8f-a640-21cb15b13101",
+    "-o",
+    "cache_dir=C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf06-g3-quality-3934d07c-0fec-4f8f-a640-21cb15b13101-cache"
+  ],
+  "basetemp": "C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf06-g3-quality-3934d07c-0fec-4f8f-a640-21cb15b13101"
+}

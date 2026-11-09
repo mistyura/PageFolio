@@ -1,0 +1,54 @@
+{
+  "schema": "w12a-not-run-record-v1",
+  "row": "W12a/script-relocated@script",
+  "status": "not-run",
+  "reason": "二次terminal_result=foreground_denied。二次終了直後の実foregroundはexplorer.exe(PID 8980, HWND 200272)で一次owner(PID 4516)ではない。利用者目視も前面復帰いいえ。",
+  "run": "C:/Users/shdwf/work/project/PageFolio/.planning/tmp/pagefolio-uat-91b26a59389442b89a61cb39057e8d05",
+  "manifest_sha256": "ecd14e286434fe7c4fe7b42500f920c990207630c91bd537d390d1495655d40a",
+  "machine": {
+    "peer_resource_audit": {
+      "sid": "S-1-5-5-0-390037",
+      "authentication_luid": 399699,
+      "session_id": 1,
+      "pid": 26840,
+      "process_created": 134386897656181649,
+      "started_tick": 2626421,
+      "owner_result": "existing",
+      "verified_owner": {
+        "protocol": 1,
+        "generation": "277ab5ec276841ebba0e9f46aad901e9",
+        "pid": 4516,
+        "process_created": 134386897407589191,
+        "session_id": 1,
+        "state": "ready",
+        "ready": true,
+        "release_generation": null
+      },
+      "allow_foreground": {
+        "pid": 4516,
+        "allowed": true,
+        "os_error": 0
+      },
+      "terminal_result": "foreground_denied",
+      "elapsed": 63
+    },
+    "after_peer_foreground": {
+      "at_utc": "2026-11-09T18:22:46.367869+09:00",
+      "hwnd": 200272,
+      "pid": 8980,
+      "owner_verified": true,
+      "entry": "relocated",
+      "peer_fixture": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-91b26a59389442b89a61cb39057e8d05\\peer-fa3b057230ad4d0cab3cf2e05105b113"
+    },
+    "originals_unchanged_inspect_and_stop": true
+  },
+  "direct_answer": {
+    "source": "user-direct",
+    "text": "W12a/script-relocated@script: 1はい 2いいえ 3はい",
+    "captured_at": "2026-11-09T09:24:19.484533+00:00",
+    "source_ref": "Claude Codeセッション a9876433-e422-432a-90ca-01d9b6925498 / 回収後の利用者チャット発言 / captured_atは担当の受領記録時刻"
+  },
+  "user_interaction_outside_app": "未回答(他所の操作有無を尋ねたが回答なし)",
+  "adoption": null,
+  "next": "利用者の選択Bにより新規run1回で同行を再採取。本runは失敗証拠として保持し上書きしない。"
+}

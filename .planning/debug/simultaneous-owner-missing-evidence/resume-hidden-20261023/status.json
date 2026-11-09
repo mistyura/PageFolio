@@ -1,0 +1,45 @@
+{
+  "state": "failed target-2",
+  "runs": [
+    {
+      "label": "target-1",
+      "exit_code": 0,
+      "seconds": 73.8513880999999,
+      "artifacts": 96,
+      "command": [
+        "C:\\Users\\shdwf\\work\\project\\PageFolio\\.venv\\Scripts\\python.exe",
+        "-m",
+        "pytest",
+        "tests/test_startup_windows.py::test_foreground_audit_receives_native_window_event",
+        "tests/test_startup_windows.py::test_notice_dedup_eight_processes_keep_original_deadline",
+        "tests/test_startup_windows.py::test_simultaneous_real_processes_construct_one_editor",
+        "tests/test_startup_windows.py::test_simultaneous_exit_audit_distinguishes_entry",
+        "tests/test_startup_windows.py::test_simultaneous_exit_audit_native_wm_close",
+        "-x",
+        "-q",
+        "--tb=short",
+        "--basetemp=C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_resume_hidden_20261023_target-1"
+      ]
+    },
+    {
+      "label": "target-2",
+      "exit_code": 1,
+      "seconds": 49.954680499999995,
+      "artifacts": 90,
+      "command": [
+        "C:\\Users\\shdwf\\work\\project\\PageFolio\\.venv\\Scripts\\python.exe",
+        "-m",
+        "pytest",
+        "tests/test_startup_windows.py::test_foreground_audit_receives_native_window_event",
+        "tests/test_startup_windows.py::test_notice_dedup_eight_processes_keep_original_deadline",
+        "tests/test_startup_windows.py::test_simultaneous_real_processes_construct_one_editor",
+        "tests/test_startup_windows.py::test_simultaneous_exit_audit_distinguishes_entry",
+        "tests/test_startup_windows.py::test_simultaneous_exit_audit_native_wm_close",
+        "-x",
+        "-q",
+        "--tb=short",
+        "--basetemp=C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf_resume_hidden_20261023_target-2"
+      ]
+    }
+  ]
+}

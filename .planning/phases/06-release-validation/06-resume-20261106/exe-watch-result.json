@@ -1,0 +1,13 @@
+{
+  "stage": "after_no",
+  "index": 4,
+  "at": "2026-11-06T12:08:53.968051+00:00",
+  "foreground": {
+    "hwnd": 17240204,
+    "pid": 13184,
+    "title": "PageFolio",
+    "owned_by": "primary"
+  },
+  "owner_alive": true,
+  "copy_ok": true
+}

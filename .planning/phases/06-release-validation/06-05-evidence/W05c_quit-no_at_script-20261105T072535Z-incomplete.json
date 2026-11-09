@@ -1,0 +1,69 @@
+{
+  "case": "W05c",
+  "condition": "quit-no",
+  "entry": "script",
+  "row": "W05c/quit-no@script",
+  "status": "not-run",
+  "run": ".planning/tmp/pagefolio-uat-73sihnga",
+  "owner": {
+    "sid": "S-1-5-5-0-347023",
+    "authentication_luid": 352479,
+    "session_id": 1,
+    "pid": 2844,
+    "process_created": 134383350518202480,
+    "started_tick": 160395968,
+    "owner_result": "acquired",
+    "snapshot": {
+      "protocol": 1,
+      "generation": "494577de3c4f4e358103396526718a94",
+      "pid": 2844,
+      "process_created": 134383350518202480,
+      "session_id": 1,
+      "state": "ready",
+      "ready": true,
+      "release_generation": null
+    },
+    "ready_tick": 160401000,
+    "manual": true
+  },
+  "formal_candidate_attempt": 1,
+  "additional_attempts": 0,
+  "ready_for_retry": false,
+  "reason": "No→False→元マーカーは成立したが、回答後peer/回収前snapshotより前に120秒watchdogが開始した。受入全体は未完了。",
+  "timeline": {
+    "shown": "2026-11-05T06:50:58.106253+00:00",
+    "peer_during": "2026-11-05T06:50:59.111693+00:00",
+    "native_no": "2026-11-05T06:51:19.593407+00:00",
+    "ask_return": "2026-11-05T06:51:19.667502+00:00",
+    "marker": "2026-11-05T06:51:19.668088+00:00",
+    "watchdog": "2026-11-05T06:52:57.340241+00:00",
+    "closed": "2026-11-05T06:52:57.482174+00:00"
+  },
+  "answer_original": "1.確認は閉じた\n2.全3ページ\n3.1-2 横 3 縦\n4 1画面",
+  "answer_captured_at": "2026-11-05T07:25:35.5599089Z",
+  "answer_source": "同じNo操作の結果についての利用者直接回答。原文・記録時刻を保持し、遡及して時刻を付け替えない。",
+  "stage": "before_peer_owner_validation_rejected",
+  "peer_after_answer": false,
+  "pre_collection_snapshot": false,
+  "observer": {
+    "events": 18,
+    "written": 18,
+    "pending": 0,
+    "errors": [],
+    "sha256": "85fc32b213f7ba61a2137d0d77793670874594bd486ad5eefe292091328c3dc0"
+  },
+  "recovery": {
+    "owner_running": false,
+    "basis": "native CIMでexpected PID2844なし。result/observer_closedあり。後続OpenProcess WinError87。",
+    "errors": [
+      "before_peer: OpenProcess [WinError 87] パラメーターが間違っています。",
+      "collect: OpenProcess [WinError 87] パラメーターが間違っています。"
+    ],
+    "inspection_originals_unchanged": true
+  },
+  "archive": "06-05-evidence/W05c_quit-no_at_script-20261105T072535Z-incomplete-raw",
+  "original_archive_files": 30,
+  "old_run_cause": "unresolved; 今回は元マーカー欠落が再現していない。今回の未完了と元runの主因を混同しない。",
+  "phase_complete": false,
+  "release_allowed": false
+}
