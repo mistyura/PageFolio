@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "timestamp": "2026-11-06T22:32:40.906Z",
+  "timestamp": "2026-11-09T09:41:08.000Z",
   "phase": "06",
   "phase_name": "サンプル配布とリリース検証",
   "phase_dir": ".planning/phases/06-release-validation",
@@ -14,11 +14,11 @@
     "implementation_status": "native_integration_and_human_acceptance_completed",
     "implementation_status_scope": "v3_automated_validation",
     "ready_for_retry": false,
-    "next_action": "G4 W12a/b/c採取基盤の独立レビュー7指摘は全解消。単一全件2481passed/2warnings、174入力と追加12入力不変、全Ruff/format/AST成功。開発履歴追記のみを別記し、04は21/21・05は23/23で公式fresh passed。新tracer1回build成功/64入力照合、最終EXE不変。現行10pass/98必須not-run/対象外2、release_allowed=false。次はW12a/script-scriptを1行だけ利用者同席で採取。EXE内部API未取得のW12b7/W12c2は正式helper拒否、G5/G6・06-06未完了。",
+    "next_action": "2026-11-09 W12a 9行を利用者同席で採取し全9行を正式pass記録(直接回答3問はい+回収後の別回答で採用、各行dry-run後に正式記録)。台帳は必須108行中19pass/89not-run・W11対象外2not-run、release_allowed=false。script-relocatedの初回runはforeground_denied(実foreground=explorer.exe PID8980)で失敗記録を保存し、利用者選択Bにより新run1回で再採取しpass。次はW12bのPython二次2行(exe-script/exe-module@production-exe)とW12cのPython2行(terminal-python/explorer-python@script)。いずれもdriverが実行中に端末入力/指示表示を要するため、利用者が別PowerShell窓で自ら実行しrunパスを貼る方式を提示済み(未着手)。EXE二次のW12b7行/W12c2行は正式helper拒否のまま。",
     "collection_review": ".planning/phases/06-release-validation/06-W05C-COLLECTION-REVIEW.md",
     "collection_implementation_status": "implemented_native_integration_pending",
     "root_cause": "unresolved",
-    "formal_acceptance": "10 pass / 98 not-run / 2 deferred",
+    "formal_acceptance": "19 pass / 89 not-run / 2 deferred",
     "gui_attempts_this_revision": 1,
     "machine_gates_passed": true,
     "awaiting": "human_availability_for_g4",
@@ -42,7 +42,7 @@
       "id": 2,
       "name": "06-05-02 状態維持・混在入口・通知",
       "status": "in_progress",
-      "progress": "G4 W12a/b/c採取基盤の独立レビュー7指摘は全解消。単一全件2481passed/2warnings、174入力と追加12入力不変、全Ruff/format/AST成功。開発履歴追記のみを別記し、04は21/21・05は23/23で公式fresh passed。新tracer1回build成功/64入力照合、最終EXE不変。現行10pass/98必須not-run/対象外2、release_allowed=false。次はW12a/script-scriptを1行だけ利用者同席で採取。EXE内部API未取得のW12b7/W12c2は正式helper拒否、G5/G6・06-06未完了。",
+      "progress": "2026-11-09 W12a 9行を利用者同席で採取し全9行を正式pass記録(直接回答3問はい+回収後の別回答で採用、各行dry-run後に正式記録)。台帳は必須108行中19pass/89not-run・W11対象外2not-run、release_allowed=false。script-relocatedの初回runはforeground_denied(実foreground=explorer.exe PID8980)で失敗記録を保存し、利用者選択Bにより新run1回で再採取しpass。次はW12bのPython二次2行(exe-script/exe-module@production-exe)とW12cのPython2行(terminal-python/explorer-python@script)。いずれもdriverが実行中に端末入力/指示表示を要するため、利用者が別PowerShell窓で自ら実行しrunパスを貼る方式を提示済み(未着手)。EXE二次のW12b7行/W12c2行は正式helper拒否のまま。",
       "commit": "7a65491"
     }
   ],
@@ -73,13 +73,23 @@
       "description": "元W05c No不成立の原因・極端な過負荷の別モード/既知のWR-01等は未解除。旧tracer原本の消失は新生成物で復元したとは扱わない。",
       "type": "historical_risk",
       "workaround": "保存したdebug/原本/履歴を維持。新規成功を原因解明へ転用しない。"
+    },
+    {
+      "description": "W12b/W12cのdriverは実行中の端末入力・指示表示を前提とし、Claude CodeのBashツール経由では利用者が応答できない",
+      "type": "human_action",
+      "workaround": "利用者が別PowerShell窓でdriverを実行し、runパスを貼る。照合・採用確認・正式記録は担当が行う。"
     }
   ],
   "async_jobs": [],
   "human_actions_pending": [
     {
-      "action": "W12a/script-script@scriptの単発実機操作可能時間",
-      "context": "開始後20秒以内に設定のフォントサイズ欄へ13を入れ数字を選択（適用しない）。続く15秒は一次1画面・前景・値/選択保持を観察。採取・所有回収完了までチャットへ切り替えない。起動はまだしない。",
+      "action": "W12b/exe-script@production-exe と exe-module@production-exe を利用者自身の別PowerShell窓でdriver実行(stdinで12秒以内に観察原文入力)",
+      "context": "Claude CodeのBashはstdinを渡せず実行中表示もリアルタイムに見えないため。コマンドは06-W12B-COLLECTION.md記載。",
+      "blocking": true
+    },
+    {
+      "action": "W12c/terminal-python@script と explorer-python@script を利用者自身の別PowerShell窓でdriver実行し、表示された指示で本人起動",
+      "context": "driverが.lnkパス/端末コマンドを実行中に表示し38秒以内の本人起動を要するため。",
       "blocking": true
     }
   ],
@@ -103,11 +113,20 @@
       "decision": "Phase04 native-quit 失敗は試験側修正で対処(製品不変)、close_native 期限30秒",
       "rationale": "診断で試験の合図位置が原因と確定。5秒期限は負荷時 peer 遅延より短く別失敗を生むため",
       "phase": "04"
+    },
+    {
+      "decision": "W12a/script-relocated@script初回foreground_deniedは失敗証拠として保存し、新規runで1回再採取(同run内の再peerはしない)",
+      "rationale": "利用者選択B(2026-11-09)。初回の他所操作有無は未回答のため原因は推定(待機中の操作)に留める",
+      "phase": "06"
+    },
+    {
+      "decision": "W12a回答JSONのcaptured_at/approved_atは担当の受領記録時刻とし、その旨をsource_refに明記",
+      "rationale": "チャット発言の正確な時刻を取得できないため",
+      "phase": "06"
     }
   ],
   "uncommitted_files": [
     " M .gitignore",
-    " M .planning/HANDOFF.json",
     " M .planning/PROJECT.md",
     " M .planning/REQUIREMENTS.md",
     " M .planning/ROADMAP.md",
@@ -126,7 +145,6 @@
     " M .planning/phases/05-config-notification/05-UI-REVIEW.md",
     " M .planning/phases/05-config-notification/05-VALIDATION.md",
     " M .planning/phases/05-config-notification/05-VERIFICATION.md",
-    " M .planning/phases/06-release-validation/.continue-here.md",
     " M .planning/phases/06-release-validation/06-05-CHECKPOINT.md",
     " M .planning/phases/06-release-validation/06-05-PLAN.md",
     " M .planning/phases/06-release-validation/06-05-record-w05c-python.cjs",
@@ -155,11 +173,13 @@
     "?? .planning/debug/ocr-off-summary-evidence/",
     "?? .planning/debug/ocr-off-summary-ocr.txt",
     "?? .planning/debug/ocr-off-summary-red.txt",
-    "?? .planning/debug/ocr-off-summary-ruff-verbose.txt"
+    "?? .planning/debug/ocr-off-summary-ruff-verbose.txt",
+    "?? .planning/debug/ocr-off-summary-targeted.txt",
+    "?? .planning/debug/ocr-off-summary.md"
   ],
-  "uncommitted_file_count": 311,
-  "uncommitted_files_elided": 261,
-  "next_action": "最新HANDOFFとcontinue-here、06-W12A-COLLECTION.mdを読む。利用者の操作可能回答を得て、開始直前に親鮮度・入力・owner/lock不在を照合し、W12a/script-script@scriptを新run1回だけ採取する。",
+  "uncommitted_file_count": 329,
+  "uncommitted_files_elided": 279,
+  "next_action": "最新HANDOFF.jsonとcontinue-hereの2026-11-09節、06-W12B-COLLECTION.md・06-W12C-COLLECTION.mdを読む。利用者が別PowerShell窓でW12b/exe-script@production-exeのdriverを1回実行し、12秒以内に端末へ行ID付き観察原文を入力、終了後にrunパスをチャットへ貼る。担当はrun内w12b-machine.json等を照合し、回収後の別回答で採用を得てから06-05-record-w12b.cjsをdry-run→正式記録。続いてexe-module、W12c terminal-python、explorer-pythonの順。失敗時は再peerせずnot-run。",
   "context_notes": "2026-11-07のgsd-progressは読取確認のみ。その後、利用者のgsd-pause-work指定で中断。186入力hash一致、既存2481passed/2warningsを参照。人手受入未実施、正式台帳不変。current_stopを優先。",
   "validation": {
     "required_pass": 10,
@@ -170,7 +190,7 @@
     "phase05": "23/23 fresh passed",
     "release_allowed": false
   },
-  "background_processes": [],
+  "background_processes": "2026-11-09中断時: python/pagefolioプロセスなし(tasklist確認)。GUI/pytest/background jobなし。",
   "blocking_constraints": [
     {
       "severity": "blocking",
@@ -319,7 +339,7 @@
     "build_attempts": 1,
     "final_exe_unchanged": true
   },
-  "uncommitted_files_measured_at": "2026-11-06T22:32:40.906Z",
+  "uncommitted_files_measured_at": "2026-11-09T09:41:08.000Z",
   "uncommitted_files_scope": "handoffコミット前のgit status --porcelain=v1実測",
   "uncommitted_files_warnings": "warning: unable to access 'C:\\Users\\shdwf/.config/git/ignore': Permission denied\nwarning: unable to access 'C:\\Users\\shdwf/.config/git/ignore': Permission denied\nwarning: could not open directory '.planning/phases/04-startup-control/04-cr02-red-20261106/': Permission denied",
   "progress_review": {
@@ -346,5 +366,25 @@
       "full_suite_rerun": false
     },
     "infrastructure": "このセッションでGUI/pytest/background jobは起動していない。async-jobs manifestなし。既存引継ぎのowner/pytest不在は全端末を再実測しておらず、再開前に確認する。"
+  },
+  "w12a_session_20261109": {
+    "rows_passed": [
+      "script-script@script",
+      "script-module@script",
+      "script-relocated@script",
+      "module-script@module",
+      "module-module@module",
+      "module-relocated@module",
+      "relocated-script@relocated",
+      "relocated-module@relocated",
+      "relocated-relocated@relocated"
+    ],
+    "failed_run_record": ".planning/phases/06-release-validation/06-05-evidence/W12a_script-relocated_at_script-20261109T092419Z-foreground-denied.json",
+    "answer_builder": "scratchpad一時スクリプト(非永続)で回答JSONを生成。生成物は06-05-evidence/W12a_*-20261109T*.json",
+    "observations": [
+      "python -m 二次で runpy RuntimeWarning (pagefolio.__main__ found in sys.modules) が毎回1行。結果completedに影響なし、未調査",
+      "記録helperは台帳全体をJSON.stringify(indent2)で再書出しするためHEADとの差分行数が変動。記録前のbackupなしで書式差のみかは未比較"
+    ],
+    "ledger": "必須108行中19pass・89not-run・W11対象外2not-run"
   }
 }
