@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "timestamp": "2026-11-09T10:22:43.254347+00:00",
+  "timestamp": "2026-11-09T12:35:15.273Z",
   "phase": "06",
   "phase_name": "サンプル配布とリリース検証",
   "phase_dir": ".planning/phases/06-release-validation",
@@ -14,7 +14,7 @@
     "implementation_status": "native_integration_and_human_acceptance_completed",
     "implementation_status_scope": "v3_automated_validation",
     "ready_for_retry": false,
-    "next_action": "GSD debug?W12b Python??PID?????????run?????????wrapper PID?API??PID??????????helper???????????run???????????GUI/?peer??????",
+    "next_action": "（1c5bac3で文字化け。W12b PID不一致は解決済み。現行の次アクションはトップレベル next_action を参照）",
     "collection_review": ".planning/phases/06-release-validation/06-W05C-COLLECTION-REVIEW.md",
     "collection_implementation_status": "implemented_native_integration_pending",
     "root_cause": "unresolved",
@@ -42,7 +42,7 @@
       "id": 2,
       "name": "06-05-02 状態維持・混在入口・通知",
       "status": "in_progress",
-      "progress": "W12a 9?pass?W12b exe-script ?run???????????helper dry-run PID?????????????",
+      "progress": "W12a 9行・W12b Python2行・W12c explorer-python pass。W12c terminal-python 2回not-run",
       "commit": "7a65491"
     }
   ],
@@ -60,37 +60,37 @@
   ],
   "blockers": [
     {
-      "description": "W12b exe-script: machine peer_identity.pid=2972?resource-audit.pid=24248?helper????????dry-run????????????",
-      "type": "technical",
-      "workaround": "GSD debug??run????????PID????????????????????"
+      "description": "W12c terminal-python@script は同日2回 not-run（38秒以内に手動コマンド実行が成立せず二次未起動）",
+      "type": "human_action",
+      "workaround": "利用者承認後、手順を改善して新run1回"
     },
     {
-      "description": "W12bのEXE二次7行・W12cのEXE2行は未改変EXE内部の許可API戻り/OS errorを通常ログから取得できない。正式helperは取得済みと扱わず拒否する。",
+      "description": "W12bのEXE二次7行・W12cのEXE2行は未改変EXE内部の許可API戻り/OS errorを取得できず正式helper拒否",
       "type": "evidence_capability",
-      "workaround": "新たな観測方法の根拠・検証、または別途承認された計画変更が必要。現在はnot-run。製品/凍結EXEを勝手に変更しない。"
+      "workaround": "新たな観測方法の根拠・検証、または承認された計画変更が必要。現在not-run"
     },
     {
-      "description": "Python20の再受入と残G4/G5/G6には利用者の直接操作・観察が必要。",
+      "description": "残G4/G5/G6と06-06には利用者の直接操作・観察が必要",
       "type": "human_action",
-      "workaround": "利用者の操作可能回答を待ち、小分けで採取。回答なし/未取得をpassにしない。"
+      "workaround": "小分けで採取。回答なし/未取得をpassにしない"
     },
     {
-      "description": "元W05c No不成立の原因・極端な過負荷の別モード/既知のWR-01等は未解除。旧tracer原本の消失は新生成物で復元したとは扱わない。",
+      "description": "元W05c No不成立の原因・極端な過負荷の別モード/既知のWR-01等は未解除",
       "type": "historical_risk",
-      "workaround": "保存したdebug/原本/履歴を維持。新規成功を原因解明へ転用しない。"
-    },
-    {
-      "description": "W12b/W12cのdriverは実行中の端末入力・指示表示を前提とし、Claude CodeのBashツール経由では利用者が応答できない",
-      "type": "human_action",
-      "workaround": "利用者が別PowerShell窓でdriverを実行し、runパスを貼る。照合・採用確認・正式記録は担当が行う。"
+      "workaround": "保存したdebug/原本/履歴を維持"
     }
   ],
   "async_jobs": [],
   "human_actions_pending": [
     {
-      "action": "PID???????????????",
-      "context": "??????run?????????",
+      "action": "W12c/terminal-python@script 3回目の可否判断と実施",
+      "context": "2回not-run、各回利用者承認が必要",
       "blocking": true
+    },
+    {
+      "action": "未追跡のW12b driver/helper/証拠試験と今回の修正を含む未コミット差分のコミット方針判断",
+      "context": "今回の修正だけ切り出せない",
+      "blocking": false
     }
   ],
   "decisions": [
@@ -145,6 +145,7 @@
     " M .planning/phases/05-config-notification/05-UI-REVIEW.md",
     " M .planning/phases/05-config-notification/05-VALIDATION.md",
     " M .planning/phases/05-config-notification/05-VERIFICATION.md",
+    " M .planning/phases/06-release-validation/.continue-here.md",
     " M .planning/phases/06-release-validation/06-05-CHECKPOINT.md",
     " M .planning/phases/06-release-validation/06-05-PLAN.md",
     " M .planning/phases/06-release-validation/06-05-record-w05c-python.cjs",
@@ -174,13 +175,12 @@
     "?? .planning/debug/ocr-off-summary-ocr.txt",
     "?? .planning/debug/ocr-off-summary-red.txt",
     "?? .planning/debug/ocr-off-summary-ruff-verbose.txt",
-    "?? .planning/debug/ocr-off-summary-targeted.txt",
-    "?? .planning/debug/ocr-off-summary.md"
+    "?? .planning/debug/ocr-off-summary-targeted.txt"
   ],
-  "uncommitted_file_count": 329,
-  "uncommitted_files_elided": 279,
-  "next_action": "GSD debug?W12b Python??PID?????????run?????????wrapper PID?API??PID??????????helper???????????run???????????GUI/?peer??????",
-  "context_notes": "???????W12b 2 run????????run??????????dry-run????19/89?????STATE??HANDOFF?????current_stop?w12b_session????",
+  "uncommitted_file_count": 341,
+  "uncommitted_files_elided": 291,
+  "next_action": "利用者に W12c/terminal-python@script の3回目（新run1回）の可否を確認。承認なら2つ目のPowerShell窓を事前に開き、&〜'entry-script' をShift+クリック選択→Ctrl+C→2つ目の窓にCtrl+V→Enter の手順と『20秒準備中は他窓をクリックしない』『チャットに貼らない』を案内し、利用者がdriverを実行。",
+  "context_notes": "W12b PID不一致は venv launcher が原因で解決済み（parent_pid照合）。修正後に記録付き全件2488 passed・Phase04/05 fresh passed。以後 pagefolio/・tests/・06-05-* と Phase04/05 covered files を変更しない。台帳22 pass / 86 not-run / 対象外2、release_allowed=false。",
   "validation": {
     "required_pass": 19,
     "required_not_run": 89,
@@ -190,27 +190,19 @@
     "phase05": "23/23 fresh passed",
     "release_allowed": false
   },
-  "background_processes": "??? Get-Process python,pythonw,PageFolio ????????????????????????",
+  "background_processes": "なし（python/pythonw 不在を確認）",
   "blocking_constraints": [
     {
-      "severity": "blocking",
-      "constraint": "API??PID?driver?PID?????????????????",
-      "mitigation": "?????????PID/FILETIME????????????????helper????????"
+      "constraint": "作業tree凍結: pagefolio/・tests/ 全.py、全06-05-*.py/.cjs、Phase04/05 covered files を採取完了まで変更しない",
+      "severity": "blocking"
     },
     {
-      "severity": "blocking",
-      "constraint": "正式記録・証拠監査を経ずに暫定観測を受入passとしない",
-      "mitigation": "06-05-record-*.cjsで照合してから台帳を更新"
+      "constraint": "20秒準備確認時に一次入力欄が前景であること（他窓クリック禁止）",
+      "severity": "blocking"
     },
     {
-      "severity": "blocking",
-      "constraint": "手動切替/機械成功を人手自動復帰passにしない",
-      "mitigation": "同一HWND/PID直接遷移・切替UI非経由・無操作・直接回答を照合"
-    },
-    {
-      "severity": "blocking",
-      "constraint": "成果物を%TEMP%に置かない",
-      "mitigation": "%LOCALAPPDATA%\\PageFolio-release等、自動削除されない場所を使う"
+      "constraint": "失敗runは上書き・再peerせず、新runは利用者承認ごとに1回",
+      "severity": "blocking"
     }
   ],
   "current_session_validation": {
@@ -248,11 +240,12 @@
   },
   "current_stop": {
     "status": "paused",
-    "point": "W12b/exe-script@production-exe ?????dry-run?Python??API/??????????",
-    "next_action": "GSD debug?W12b Python??PID?????????run?????????wrapper PID?API??PID??????????helper???????????run???????????GUI/?peer??????",
-    "run": ".planning/tmp/release-uat-cd223f3bcaf34f8f84bbe79f17b28129",
-    "answer": ".planning/phases/06-release-validation/06-05-evidence/W12b_exe-script_at_production-exe-20261109T101932Z.json",
-    "release_allowed": false
+    "point": "W12c/terminal-python@script 2回not-run後",
+    "release_allowed": false,
+    "last_runs": [
+      ".planning/tmp/pagefolio-uat-bb04fe33092f43b190abcc3ff1ee5bc0",
+      ".planning/tmp/pagefolio-uat-6ec00984ff3d4eb09dea28b55aaef8ea"
+    ]
   },
   "phase04_native_quit_debug": {
     "debug_file": ".planning/debug/phase04-native-quit-false-entry.md",
@@ -343,7 +336,7 @@
     "build_attempts": 1,
     "final_exe_unchanged": true
   },
-  "uncommitted_files_measured_at": "2026-11-09T09:41:08.000Z",
+  "uncommitted_files_measured_at": "2026-11-09T12:35Z",
   "uncommitted_files_scope": "handoffコミット前のgit status --porcelain=v1実測",
   "uncommitted_files_warnings": "warning: unable to access 'C:\\Users\\shdwf/.config/git/ignore': Permission denied\nwarning: unable to access 'C:\\Users\\shdwf/.config/git/ignore': Permission denied\nwarning: could not open directory '.planning/phases/04-startup-control/04-cr02-red-20261106/': Permission denied",
   "progress_review": {
@@ -391,20 +384,67 @@
     ],
     "ledger": "必須108行中19pass・89not-run・W11対象外2not-run"
   },
-  "w12b_session_20261109": {
-    "first_run": ".planning/tmp/release-uat-49c939698e194790a46b8a927872e6a1",
-    "first_result": "direct_answer_text null??????",
-    "retry_authorized": "??????run1??????",
-    "run": ".planning/tmp/release-uat-cd223f3bcaf34f8f84bbe79f17b28129",
-    "observation": "????????ID?? ??/??/?? ??????????????",
-    "answer": ".planning/phases/06-release-validation/06-05-evidence/W12b_exe-script_at_production-exe-20261109T101932Z.json",
-    "dry_run": "Python??API/???????",
-    "wrapper_pid": 2972,
-    "audit_pid": 24248,
-    "owner_pid": 6432,
-    "cause": "???",
-    "ledger": "19 pass / 89 not-run / W11???2 not-run",
+  "uncommitted_status_warning": "git status reported access denied for .planning/phases/04-startup-control/04-cr02-red-20261106; listing may be incomplete.",
+  "w12_session_20261109b": {
+    "debug": ".planning/debug/w12b-pid-mismatch.md (resolved)",
+    "fix_files": [
+      "tests/test_startup_windows.py",
+      "tests/test_w12b_evidence.py",
+      ".planning/phases/06-release-validation/06-05-record-w12b.cjs"
+    ],
+    "review": ".planning/phases/06-release-validation/06-W12B-REVIEW.md CR-02",
+    "reverify": ".planning/phases/04-startup-control/04-reverify-20261109-w12b-pid (2488 passed, 186入力不変)",
+    "phase04_digest": "v4:sha256:8490d00c7159b8334c1f1cb88cca5a29d906a10e056ed8a7256705b1b5cf1662",
+    "phase05_digest": "v4:sha256:0c8cddf86d9bcf2c821ae531c9aa2cdc525d09c253feff346521597db3b84271",
+    "passed_rows": {
+      "W12b/exe-script@production-exe": [
+        "release-uat-31b816497292427e97ff6b7cc654c23a",
+        "W12b_exe-script_at_production-exe-20261109T121614Z.json"
+      ],
+      "W12b/exe-module@production-exe": [
+        "release-uat-3b5b645cb20e4c14af5b89222580f20c",
+        "W12b_exe-module_at_production-exe-20261109T122110Z.json"
+      ],
+      "W12c/explorer-python@script": [
+        "pagefolio-uat-44b37ad5f04c4048bdcfcf605cc6976e",
+        "W12c_explorer-python_at_script-20261109T122904Z.json"
+      ]
+    },
+    "not_run_runs": {
+      "release-uat-cd223f3bcaf34f8f84bbe79f17b28129": "W12b exe-script 旧run、入力hash変更で記録不可",
+      "release-uat-e0302b5d98e641b7afa429c644487404": "W12b exe-module direct_answer null",
+      "pagefolio-uat-39146d5ae7cd4c61bdac4f1307d24c25": "W12c explorer 二次起動が締切+4秒",
+      "pagefolio-uat-1d841d4b1642404880d145d00a65347f": "W12c explorer 準備確認時の前景がPowerShell",
+      "pagefolio-uat-bb04fe33092f43b190abcc3ff1ee5bc0": "W12c terminal 二次未起動（間に合わず）",
+      "pagefolio-uat-6ec00984ff3d4eb09dea28b55aaef8ea": "W12c terminal 二次未起動（コマンドをチャットに貼付）"
+    },
+    "ledger": "必須108行中22 pass / 86 not-run / W11対象外2 not-run",
     "release_allowed": false
   },
-  "uncommitted_status_warning": "git status reported access denied for .planning/phases/04-startup-control/04-cr02-red-20261106; listing may be incomplete."
+  "garbled_fields_note": "1c5bac3 で current_stop/w12b_session_20261109 等が?に化けた。数値は w12b_session_20261109_restored に保持、日本語は .continue-here.md の復元要約を参照",
+  "w12b_session_20261109_restored": {
+    "current_stop": {
+      "status": "paused",
+      "point": "W12b/exe-script@production-exe ?????dry-run?Python??API/??????????",
+      "next_action": "GSD debug?W12b Python??PID?????????run?????????wrapper PID?API??PID??????????helper???????????run???????????GUI/?peer??????",
+      "run": ".planning/tmp/release-uat-cd223f3bcaf34f8f84bbe79f17b28129",
+      "answer": ".planning/phases/06-release-validation/06-05-evidence/W12b_exe-script_at_production-exe-20261109T101932Z.json",
+      "release_allowed": false
+    },
+    "w12b_session_20261109": {
+      "first_run": ".planning/tmp/release-uat-49c939698e194790a46b8a927872e6a1",
+      "first_result": "direct_answer_text null??????",
+      "retry_authorized": "??????run1??????",
+      "run": ".planning/tmp/release-uat-cd223f3bcaf34f8f84bbe79f17b28129",
+      "observation": "????????ID?? ??/??/?? ??????????????",
+      "answer": ".planning/phases/06-release-validation/06-05-evidence/W12b_exe-script_at_production-exe-20261109T101932Z.json",
+      "dry_run": "Python??API/???????",
+      "wrapper_pid": 2972,
+      "audit_pid": 24248,
+      "owner_pid": 6432,
+      "cause": "???",
+      "ledger": "19 pass / 89 not-run / W11???2 not-run",
+      "release_allowed": false
+    }
+  }
 }
