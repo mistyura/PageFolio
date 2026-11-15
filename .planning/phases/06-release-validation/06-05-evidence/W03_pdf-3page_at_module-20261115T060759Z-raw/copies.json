@@ -1,0 +1,67 @@
+[
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-b6miyk18\\manifest.json",
+    "target": "06-05-evidence/W03_pdf-3page_at_module-20261115T060759Z-raw/run-manifest.json",
+    "sha256": "d4bba2516f816f513cc71298ec3177a632be283e2c4618a36aa00bfd109ba905"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-b6miyk18\\provenance-before-stop.json",
+    "target": "06-05-evidence/W03_pdf-3page_at_module-20261115T060759Z-raw/run-provenance-before-stop.json",
+    "sha256": "61b77107d96655e75a6802d93413a4ad30970fbf8b0e6efd452f0902c4653ff2"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-b6miyk18\\inspection.json",
+    "target": "06-05-evidence/W03_pdf-3page_at_module-20261115T060759Z-raw/run-inspection.json",
+    "sha256": "22477207198ef4679708b8e05c6f100d8132b2a273c1564b1b0585ba8a419b65"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-b6miyk18\\uat-owner-pdf\\result.json",
+    "target": "06-05-evidence/W03_pdf-3page_at_module-20261115T060759Z-raw/primary-result.json",
+    "sha256": "6e6c1ee037194441deb3c9982a3e001ebc07aea7f2c4f6ea87de4601bf7536fb"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-b6miyk18\\uat-owner-pdf\\focus-result.json",
+    "target": "06-05-evidence/W03_pdf-3page_at_module-20261115T060759Z-raw/primary-focus-result.json",
+    "sha256": "26119fd03f8b24a5440728e39b3cfbf5f29717a5475addace8d37c0d2e28ce5e"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-b6miyk18\\uat-owner-pdf\\manual-pdf-ready.json",
+    "target": "06-05-evidence/W03_pdf-3page_at_module-20261115T060759Z-raw/primary-manual-pdf-ready.json",
+    "sha256": "a92a1b957aed4a93a12ddeeb5565fba7bd709ba6d0cae51d72f5fd0c821d822a"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-b6miyk18\\uat-owner-pdf\\manual-pdf-trace.json",
+    "target": "06-05-evidence/W03_pdf-3page_at_module-20261115T060759Z-raw/primary-manual-pdf-trace.json",
+    "sha256": "6e4abeb66662ca5a461d2e664c55cd6fd72dddb1da95ec81364e4b4db85b6d6b"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-b6miyk18\\uat-owner-pdf\\resource-audit.json",
+    "target": "06-05-evidence/W03_pdf-3page_at_module-20261115T060759Z-raw/primary-resource-audit.json",
+    "sha256": "4fcffafc37c202327ebb96e295738bec4b45186d959227422118b67c416b0010"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-b6miyk18\\uat-owner-pdf\\ready",
+    "target": "06-05-evidence/W03_pdf-3page_at_module-20261115T060759Z-raw/primary-ready",
+    "sha256": "4fcffafc37c202327ebb96e295738bec4b45186d959227422118b67c416b0010"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-b6miyk18\\uat-owner-pdf\\stderr.log",
+    "target": "06-05-evidence/W03_pdf-3page_at_module-20261115T060759Z-raw/primary-stderr.log",
+    "sha256": "ad3be296fc4fdb4569b3c66d6819b720ca755d6511193bbca52ccfdf3fd6839d"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-b6miyk18\\uat-owner-pdf\\stdout.log",
+    "target": "06-05-evidence/W03_pdf-3page_at_module-20261115T060759Z-raw/primary-stdout.log",
+    "sha256": "83d57ba55efdf4d92c5324aff1656c728a7478b7364717aeadce253a02788a84"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-b6miyk18\\uat-owner-pdf\\traceback.log",
+    "target": "06-05-evidence/W03_pdf-3page_at_module-20261115T060759Z-raw/primary-traceback.log",
+    "sha256": "13530ab21ff0dd0c5990fce427dd6684c8d91a496e1ff06f30bb9d89e92c0073"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-b6miyk18\\uat-owner-pdf\\manual-pdf-keys.json",
+    "target": "06-05-evidence/W03_pdf-3page_at_module-20261115T060759Z-raw/primary-manual-pdf-keys.json",
+    "sha256": "bed0261d5404326a60086f5eed0f87bc2352d3259032c4064ba10d0dd44ca434"
+  }
+]
