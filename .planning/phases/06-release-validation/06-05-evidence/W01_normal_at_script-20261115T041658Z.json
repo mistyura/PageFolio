@@ -1,0 +1,63 @@
+{
+  "row": "W01/normal@script",
+  "case": "W01",
+  "condition": "normal",
+  "entry": "script",
+  "selftest": false,
+  "started_at": "2026-11-15T04:16:57.999645+00:00",
+  "target_exe_sha256": "66be5df663e333057c5c3cde02180857f930d2433e377f69c2838432d49a19d4",
+  "steps": [
+    {
+      "at": "2026-11-15T04:16:58.000526+00:00",
+      "step": "start-harness"
+    }
+  ],
+  "harness_start": {
+    "returncode": 1,
+    "stderr_tail": "Traceback (most recent call last):\n  File \"C:\\Users\\shdwf\\work\\project\\PageFolio\\tests\\test_startup_windows.py\", line 3783, in <module>\n    _uat_harness(sys.argv[2:])\n    ~~~~~~~~~~~~^^^^^^^^^^^^^^\n  File \"C:\\Users\\shdwf\\work\\project\\PageFolio\\tests\\test_startup_windows.py\", line 3439, in _uat_harness\n    tempfile.mkdtemp(\n    ~~~~~~~~~~~~~~~~^\n        prefix=\"pagefolio-uat-\", dir=_ROOT / \".planning\" / \"tmp\"\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n    )\n    ^\n  File \"C:\\Users\\shdwf\\AppData\\Local\\Programs\\Python\\Python315\\Lib\\tempfile.py\", line 435, in mkdtemp\n    _os.mkdir(file, 0o700)\n    ~~~~~~~~~^^^^^^^^^^^^^\nFileNotFoundError: [WinError 3] 指定されたパスが見つかりません。: 'C:\\\\Users\\\\shdwf\\\\work\\\\project\\\\PageFolio\\\\.planning\\\\tmp\\\\pagefolio-uat-1bmuq90j'\n"
+  },
+  "outcome": "start-failed",
+  "input_monitor": {
+    "enabled": true,
+    "method": "read-only polling: GetAsyncKeyState/GetCursorPos/WindowFromPoint/GetAncestor/GetForegroundWindow (no SendInput/SetCursorPos/SetForegroundWindow); Alt/Tab/Win edges are watched regardless of the foreground window (switch_key_events)",
+    "interval_s": 0.008,
+    "samples": 41,
+    "switch_key_capture": true,
+    "switch_key_samples": 41,
+    "max_gap_s": 0.009,
+    "errors": [],
+    "truncated": false,
+    "started_at": "2026-11-15T04:16:57.999669+00:00",
+    "stopped_at": "2026-11-15T04:16:58.334191+00:00",
+    "owned_pids": [],
+    "contaminating_phases": [
+      "start-harness",
+      "awaiting-enter",
+      "peer"
+    ],
+    "phase_log": [
+      {
+        "t": "2026-11-15T04:16:57.999666+00:00",
+        "phase": "start-harness"
+      }
+    ],
+    "mouse_events": [],
+    "foreground_transitions": [],
+    "key_events": [],
+    "switch_key_events": []
+  },
+  "procedure_assessment": {
+    "procedure_verdict": "clean",
+    "rerun_required": false,
+    "reason": "peer完了までの間にPageFolio上のボタン押下・キー押下は検出されなかった",
+    "pagefolio_presses_before_peer_done": [],
+    "pagefolio_keys_before_peer_done": [],
+    "focus_correct_as_recorded": null,
+    "focus_attribution": "no-focus-result"
+  },
+  "procedure_verdict": "clean",
+  "focus_attribution": "no-focus-result",
+  "finished_at": "2026-11-15T04:16:58.334334+00:00",
+  "raw_inputs": [],
+  "composed_answer": ""
+}
