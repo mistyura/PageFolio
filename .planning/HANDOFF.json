@@ -151,7 +151,7 @@
     }
   ],
   "uncommitted_files": [],
-  "uncommitted_file_count": 344,
+  "uncommitted_file_count": 0,
   "uncommitted_files_elided": 294,
   "next_action": "区分A完了（41 pass / 67 not-run）。次は利用者判断: W05c recorder 改修 quick（tests fixture 限定変更＋recorder改修＋Phase04/05再検証）の開始可否。その後 W05c/quit-no script/module の採取。",
   "context_notes": "2026-11-15 後半: W03/W04/W05a/W05b 各script/module 8行を pass 記録（b550bb1, c035827, f97f61e, 13fcca6, d2696da, 4746c1e, 166f78b, 915087d）。失敗試行: W03@script 060151Z（PageFolio上で追加のZ/Y/Z押下後に回答、page_counts不一致で recorder 拒否）、W05b@script 062105Z（二次起動前に確認画面をクリック→contaminated停止）。いずれも証拠として保存・コミット済み。教訓: W05b は確認画面が出ても触らず Alt+Tab→40秒以内に Enter、音の後に『いいえ』。案内文に recorder の期待値を書かない。 / 2026-11-15: quick 261115-gna（commits 0832241/0f98e58/6c10a0e/682b0b4）で recorder 改修・全件2488 passed・Phase04/05 passed。W01×4・W02×6 を pass記録（835072f〜ac364a0）。採取の運用知見: Enter前に最小化PageFolioが前面になることがある→Alt+TabでPowerShellへ切替後にEnter。F5/x等はdriverのPowerShell指示表示後に押す（peer完了前の押下はkeys-suspect）。失敗回sessionは証拠として保存・コミット済み。",
@@ -212,15 +212,7 @@
       "parent05": "fresh passed 23/23"
     }
   },
-  "current_stop": {
-    "status": "paused",
-    "point": "W12c/terminal-python@script 3回目(方式B: 表示行を右クリックコピー/貼付)でpass正式記録後",
-    "release_allowed": false,
-    "last_runs": [
-      ".planning/tmp/pagefolio-uat-74bdbdeb60cf415d9edc8c16e4c6f2ce"
-    ],
-    "evidence": ".planning/phases/06-release-validation/06-05-evidence/W12c_terminal-python_at_script-20261109T130912Z.json"
-  },
+  "current_stop": "2026-11-15 区分A残8行 pass記録完了後、W05c recorder 改修 quick の開始判断待ち",
   "phase04_native_quit_debug": {
     "debug_file": ".planning/debug/phase04-native-quit-false-entry.md",
     "status": "resolved_uncommitted",
@@ -310,8 +302,8 @@
     "build_attempts": 1,
     "final_exe_unchanged": true
   },
-  "uncommitted_files_measured_at": "2026-11-09T13:15:43.874Z",
-  "uncommitted_files_scope": "handoffコミット前のgit status --porcelain=v1実測",
+  "uncommitted_files_measured_at": "2026-11-15T06:32:44.000Z",
+  "uncommitted_files_scope": "git status --porcelain（実測・clean）",
   "uncommitted_files_warnings": "warning: unable to access 'C:\\Users\\shdwf/.config/git/ignore': Permission denied\nwarning: unable to access 'C:\\Users\\shdwf/.config/git/ignore': Permission denied\nwarning: could not open directory '.planning/phases/04-startup-control/04-cr02-red-20261106/': Permission denied",
   "progress_review": {
     "checked_at": "2026-11-06T22:32:40.906Z",
