@@ -1,0 +1,62 @@
+[
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-h97vgwd5\\manifest.json",
+    "target": "06-05-evidence/W05a_nested-settings_at_script-20261115T061459Z-raw/run-manifest.json",
+    "sha256": "7add12baec06bc885d9de0cf0264724b250f0ba2626195ec7814ad3b71cddf9a"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-h97vgwd5\\provenance-before-stop.json",
+    "target": "06-05-evidence/W05a_nested-settings_at_script-20261115T061459Z-raw/run-provenance-before-stop.json",
+    "sha256": "61b77107d96655e75a6802d93413a4ad30970fbf8b0e6efd452f0902c4653ff2"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-h97vgwd5\\inspection.json",
+    "target": "06-05-evidence/W05a_nested-settings_at_script-20261115T061459Z-raw/run-inspection.json",
+    "sha256": "36b41485c3808433bec2b41b6bb9fc356af131b7a519e896e968968c1f670c40"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-h97vgwd5\\uat-owner-nested\\result.json",
+    "target": "06-05-evidence/W05a_nested-settings_at_script-20261115T061459Z-raw/primary-result.json",
+    "sha256": "fdc0d321d5cc67fea7d8d0f9aa140d097649fa073baceffe69e3772aa89b18b8"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-h97vgwd5\\uat-owner-nested\\focus-result.json",
+    "target": "06-05-evidence/W05a_nested-settings_at_script-20261115T061459Z-raw/primary-focus-result.json",
+    "sha256": "ca2ac7aeb5225d71b8c46e819e2dfd09d914adde1298e49a52bcd43551c3f9d5"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-h97vgwd5\\uat-owner-nested\\resource-audit.json",
+    "target": "06-05-evidence/W05a_nested-settings_at_script-20261115T061459Z-raw/primary-resource-audit.json",
+    "sha256": "638ab68b27197454c30be6a5132f03d16de2282808d8f57733e4d3d5f389e081"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-h97vgwd5\\uat-owner-nested\\ready",
+    "target": "06-05-evidence/W05a_nested-settings_at_script-20261115T061459Z-raw/primary-ready",
+    "sha256": "638ab68b27197454c30be6a5132f03d16de2282808d8f57733e4d3d5f389e081"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-h97vgwd5\\uat-owner-nested\\stderr.log",
+    "target": "06-05-evidence/W05a_nested-settings_at_script-20261115T061459Z-raw/primary-stderr.log",
+    "sha256": "e05633c15b3f0976b7b38f99ee3db4acf4e0b89ef72fd507f3f0da0bb5775494"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-h97vgwd5\\uat-owner-nested\\stdout.log",
+    "target": "06-05-evidence/W05a_nested-settings_at_script-20261115T061459Z-raw/primary-stdout.log",
+    "sha256": "fa46ab870495780d84635e19d1dd3b30bf0be9b0be18f5f6b4ea7d9799e94b1c"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-h97vgwd5\\uat-owner-nested\\traceback.log",
+    "target": "06-05-evidence/W05a_nested-settings_at_script-20261115T061459Z-raw/primary-traceback.log",
+    "sha256": "734142fe7d45e1c0f278db1d236ebfdd55ddb540042733db926fdee75d14fe6e"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-h97vgwd5\\uat-owner-nested\\manual-nested-closed.json",
+    "target": "06-05-evidence/W05a_nested-settings_at_script-20261115T061459Z-raw/primary-manual-nested-closed.json",
+    "sha256": "f38d985dbafd6b20861d1908eb8b3b3218661fe4b540ebca61dd1e5dce2c1fd5"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-h97vgwd5\\uat-owner-nested\\manual-nested-input.json",
+    "target": "06-05-evidence/W05a_nested-settings_at_script-20261115T061459Z-raw/primary-manual-nested-input.json",
+    "sha256": "9ca833dfb218ed2228c2839879655d10205abb0a5d0107ef23307b84283438d1"
+  }
+]
