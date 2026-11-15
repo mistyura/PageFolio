@@ -1,0 +1,100 @@
+{
+  "checked_at": "2026-11-15T04:01:56.519Z",
+  "result": {
+    "started": "2026-11-15T03:48:27.247Z",
+    "finished": "2026-11-15T04:00:43.788Z",
+    "argv": [
+      "C:\\Users\\shdwf\\work\\project\\PageFolio\\.venv\\Scripts\\python.exe",
+      "-m",
+      "pytest",
+      "-q",
+      "-rA",
+      "-p",
+      "no:cacheprovider",
+      "--basetemp=C:\\Users\\shdwf\\AppData\\Local\\Temp\\pf04-04-reverify-20261115-pyrec",
+      "--junitxml=C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\phases\\04-startup-control\\04-reverify-20261115-pyrec\\junit.xml"
+    ],
+    "code": 0,
+    "signal": null,
+    "error": null,
+    "inputCount": 187,
+    "missing": [],
+    "changed": []
+  },
+  "totals": {
+    "tests": 2488,
+    "errors": 0,
+    "failures": 0,
+    "skipped": 0,
+    "time": 734.985
+  },
+  "warnings": 2,
+  "input_count": 187,
+  "current_drift": [
+    "開発履歴.md"
+  ],
+  "current_drift_note": "集約時の再hash(post-history-inputs.json)とinputs-afterの差分は、全件完了後に追記した開発履歴.mdの1件だけ。ソース・試験は不変。",
+  "changes_since_w12b_pid_baseline": {
+    "reason": "区分A Python recorderのformal_provenance照合・restored_final_dir対応・新有効行選択・CRLF対応・dry-run追加、W12c recorderのenvironment.elevated出力（quick 261115-gna）。.pyは変更なし。",
+    "files": [
+      ".planning/phases/06-release-validation/06-05-python-provenance.cjs",
+      ".planning/phases/06-release-validation/06-05-record-w01-python.cjs",
+      ".planning/phases/06-release-validation/06-05-record-w02-settings.cjs",
+      ".planning/phases/06-release-validation/06-05-record-w03-python.cjs",
+      ".planning/phases/06-release-validation/06-05-record-w04.cjs",
+      ".planning/phases/06-release-validation/06-05-record-w05b.cjs",
+      ".planning/phases/06-release-validation/06-05-record-w12c.cjs",
+      ".planning/quick/261115-gna-phase06-a-python-recorder-provenance/261115-gna-verify-recorders.cjs",
+      "開発履歴.md"
+    ],
+    "product_changed": false,
+    "frozen_exe_changed": false,
+    "version_changed": false
+  },
+  "environment_note": "2026-11-15にvenvを再作成（git cloneをやり直したため消失）。Python 3.15.2 / PyMuPDF 1.28.2 / Pillow 13.0.0 / Tk 9.0は前回と同版。.planning/tmpもclone再作成で消失しているが、全件2488 passedに影響しなかった。",
+  "checks": [
+    {
+      "argv": [
+        "check",
+        ".",
+        "--no-cache"
+      ],
+      "exit": 0,
+      "stdout": "All checks passed!"
+    },
+    {
+      "argv": [
+        "format",
+        "--check",
+        "--no-cache",
+        "."
+      ],
+      "exit": 0,
+      "stdout": "503 files already formatted"
+    },
+    {
+      "argv": [
+        "-c",
+        "import ast; ast.parse(open('pagefolio.py', encoding='utf-8').read())"
+      ],
+      "exit": 0,
+      "stdout": ""
+    }
+  ],
+  "raw_hashes": {
+    ".planning/phases/04-startup-control/04-reverify-20261115-pyrec/checks.json": "b639565056449eeba5211c3ca21b690a6374b5611c556f77cf0b0c7b3f8c9d90",
+    ".planning/phases/04-startup-control/04-reverify-20261115-pyrec/environment.txt": "366bfb1a4419836354e99965c6ca06555bd2c64487f57cd80b984fe0a8fe8ffc",
+    ".planning/phases/04-startup-control/04-reverify-20261115-pyrec/inputs-after.json": "570df4c789181cc8086ee4d7075ed095837d649eb8e9d5e025bbcda121a41f84",
+    ".planning/phases/04-startup-control/04-reverify-20261115-pyrec/inputs-before.json": "570df4c789181cc8086ee4d7075ed095837d649eb8e9d5e025bbcda121a41f84",
+    ".planning/phases/04-startup-control/04-reverify-20261115-pyrec/junit.xml": "2abda2d3cbb2b714bcc6ef1f771321cfce4551fadbc510b7f34d92dba31031ea",
+    ".planning/phases/04-startup-control/04-reverify-20261115-pyrec/post-history-inputs.json": "146e3b2fec03b4d60911f1c3659ef422642a776b825488c26e4757aab23dee33",
+    ".planning/phases/04-startup-control/04-reverify-20261115-pyrec/result.json": "108ee44b5b72a8e12a30294bf47b1da22f98158bc77ca5d56ef658b6f9befa16",
+    ".planning/phases/04-startup-control/04-reverify-20261115-pyrec/stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    ".planning/phases/04-startup-control/04-reverify-20261115-pyrec/stdout.txt": "33089a18da09e065a106171db66706574e3997b8b274b12f9b0c9b4c107c0514"
+  },
+  "reviews": {
+    "independent": "未実施。本再検証はquick 261115-gnaのexecutorが機械的に実行したもので、独立コードレビューは行っていない。recorderの検証は隔離temp repoでのe2e（正例3・改変13）、実repoでのlegacy-reject 18件、static、real-reportによる。"
+  },
+  "manual_uat": "未変更。台帳23 pass / 85 not-run / W11対象外2 not-run",
+  "release_allowed": false
+}
