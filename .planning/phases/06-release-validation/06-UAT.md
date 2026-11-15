@@ -13,7 +13,7 @@ created: 2026-10-24
 
 ## 現行の観測と未達
 
-世代5の実初回/再build、保護・接続準備が完了し、準備監査exit0。ocr-single/W05bは利用者の結果目視・通常終了と機械観測を照合した。観測中の手動切替が入ったW05b初回は原記録を保持し、無操作手順を明確化した別runのみ成立。本受入は必須108行中36行pass・72行not-run・W11対象外2行not-run。以下の世代4記録は履歴。
+世代5の実初回/再build、保護・接続準備が完了し、準備監査exit0。ocr-single/W05bは利用者の結果目視・通常終了と機械観測を照合した。観測中の手動切替が入ったW05b初回は原記録を保持し、無操作手順を明確化した別runのみ成立。本受入は必須108行中37行pass・71行not-run・W11対象外2行not-run。以下の世代4記録は履歴。
 
 世代4の接続準備監査は合格。W01/normal@scriptの回答・生観測1件は記録したが、本受入判定は保留しnot-runを維持する。全110行の人手passは0。2026-10-28の案B承認（`W11-B-20261028`）により、W11の別セッション2行だけを未確認のまま `not-run/deferred` とする。今回の保証はWindowsの単一ログインセッション利用に限定する。必須108行は全てnot-runであり、品質・安全条件も継続する。正本は `06-W11-SCOPE-APPROVAL.md` と `06-RELEASE-SCOPE.json`。文書変更後の新世代build/保護/接続を06-08で実施してから本受入へ進む。世代4までの観測履歴は06-04g4-CHECKPOINT.mdに保持する。
 
@@ -673,7 +673,8 @@ created: 2026-10-24
 
 **W04 / 1page画像PDF・並列1 / Python -m pagefolio**(証拠種別: `python-real`)
 
-- **状態**: not-run / 現行Python入力の再採取待ち
+- **状態**: pass / 利用者直接回答・同一OCR要求の継続・復帰が一致。根拠: 06-05-evidence/W04_ocr-1page_at_module-20261115T061228Z.json
+- **回答原文**: W04 ocr-1page module：progress_shown=はい・completed_shown=見えた・summary_not_run=していない（メモ: なし）
 - **旧入力の受入**: passを別保存。旧回答・旧観測は履歴であり現行判定へ転用しない。根拠: 06-05-evidence/PYTHON-INPUT-SUPERSESSION-20261106.json / W04/ocr-1page@module
 - **旧入力の回答原文（履歴）**: W04 ocr-1page module：progress_shown=はい・completed_shown=見えた・summary_not_run=していない（メモ: なし）
 - **準備コマンド**(実行担当が実行。利用者はコマンドを調べない):
