@@ -1,0 +1,52 @@
+[
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-4hjtz5p3\\manifest.json",
+    "target": "06-05-evidence/W02_settings_at_module-20261115T043320Z-raw/run-manifest.json",
+    "sha256": "f05e6df8f537f261e57081acacef15695e244d24f0b001c44cd5e835232da4e0"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-4hjtz5p3\\provenance-before-stop.json",
+    "target": "06-05-evidence/W02_settings_at_module-20261115T043320Z-raw/run-provenance-before-stop.json",
+    "sha256": "61b77107d96655e75a6802d93413a4ad30970fbf8b0e6efd452f0902c4653ff2"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-4hjtz5p3\\inspection.json",
+    "target": "06-05-evidence/W02_settings_at_module-20261115T043320Z-raw/run-inspection.json",
+    "sha256": "b634abab2c9980ce0effe6fe467e3cd5f55a4d80f11cf5a362ee451ae95ec21e"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-4hjtz5p3\\uat-owner-settings\\result.json",
+    "target": "06-05-evidence/W02_settings_at_module-20261115T043320Z-raw/primary-result.json",
+    "sha256": "fb4627e218a84326dbfc0f11716245d4c057714a4565d676d42bab6c4422f9f8"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-4hjtz5p3\\uat-owner-settings\\focus-result.json",
+    "target": "06-05-evidence/W02_settings_at_module-20261115T043320Z-raw/primary-focus-result.json",
+    "sha256": "9f05e40b4f29cf9fe29b6c5c430ca919cbd3300415b8669ab716c80cf3b929a7"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-4hjtz5p3\\uat-owner-settings\\resource-audit.json",
+    "target": "06-05-evidence/W02_settings_at_module-20261115T043320Z-raw/primary-resource-audit.json",
+    "sha256": "4527f20741d9ada3bc7e13a2745a17f595e47f6f273103e0548fe06db6eba6a4"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-4hjtz5p3\\uat-owner-settings\\ready",
+    "target": "06-05-evidence/W02_settings_at_module-20261115T043320Z-raw/primary-ready",
+    "sha256": "4527f20741d9ada3bc7e13a2745a17f595e47f6f273103e0548fe06db6eba6a4"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-4hjtz5p3\\uat-owner-settings\\stderr.log",
+    "target": "06-05-evidence/W02_settings_at_module-20261115T043320Z-raw/primary-stderr.log",
+    "sha256": "2c7848ff691b99d6d030275d65e96d0aecb6fa05862552ef67286e001305c7dd"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-4hjtz5p3\\uat-owner-settings\\stdout.log",
+    "target": "06-05-evidence/W02_settings_at_module-20261115T043320Z-raw/primary-stdout.log",
+    "sha256": "9bac8c04db8053438a0c8c503280e168ac07af4ca74aac6191fcdd6e3ac0a4f3"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-4hjtz5p3\\uat-owner-settings\\traceback.log",
+    "target": "06-05-evidence/W02_settings_at_module-20261115T043320Z-raw/primary-traceback.log",
+    "sha256": "5981e7d132437732b4284d141b47a529f91e5adc8dd468ea9e18409afbb31f5a"
+  }
+]
