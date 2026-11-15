@@ -1,11 +1,19 @@
 // W04: 人の進捗/完了回答と、1ページ1要求の継続・復帰・保護を照合する。
+// 使い方: node 06-05-record-w04.cjs <06-05-evidence配下のsessionファイル名> [--dry-run]
+//   --dry-run は全ての照合だけを行い、台帳・UAT・raw copyを一切書き換えない。
+// Python経路(script|module)はformal_provenance照合を必須とする。production-exe経路にはこのゲートを適用しない。
 const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto');
-const phase=__dirname,root=path.resolve(phase,'../../..'),name=process.argv[2];
+const prov=require('./06-05-python-provenance.cjs');
+const phase=__dirname,root=path.resolve(phase,'../../..'),dry=process.argv.includes('--dry-run'),name=process.argv[2];
 const assert=(ok,why)=>{if(!ok)throw Error(why);};
 const hash=b=>crypto.createHash('sha256').update(b).digest('hex');
 const equal=(a,b)=>JSON.stringify(a)===JSON.stringify(b);
+assert(process.argv.length===(dry?4:3),'usage: session.json [--dry-run]');
 assert(/^W04_ocr-1page_at_(script|module|production-exe)-\d{8}T\d{6}Z\.json$/.test(name||''),'unexpected filename');
+const entry=name.match(/_at_(script|module|production-exe)-/)[1];
 const relative='06-05-evidence/'+name,raw=fs.readFileSync(path.join(phase,relative)),s=JSON.parse(raw);
+// 旧harness採取・入力変化・Phase04非fresh は、他の照合やrun dirの読込より前に拒否する(Python経路のみ)。
+const provenance=entry==='production-exe'?null:prov.checkFormalProvenance({root,run:s.run,manifest:s.harness_inspect?.json?.manifest});
 assert(s.case==='W04'&&s.condition==='ocr-1page'&&s.row===`W04/ocr-1page@${s.entry}`,'row mismatch');
 assert(!s.selftest&&!s.diagnostics&&s.acceptance!==false&&!s.error&&s.outcome==='answered','not a human acceptance run');
 assert(s.procedure_verdict==='clean'&&!s.procedure_assessment.rerun_required,'procedure not clean');
@@ -80,7 +88,7 @@ if(exe){
  assert(equal(final,done),'extra OCR request after completion');
  for(const [file,value] of [['manual-ocr-running.json',s.ocr_before],['manual-ocr-after-peer.json',s.ocr_after_peer],['manual-ocr-completed.json',s.ocr_completed]])assert(equal(JSON.parse(fs.readFileSync(path.join(fixture,file))),value),'raw OCR state mismatch');
  assert(equal(fs.readFileSync(path.join(fixture,'manual-ocr-server.jsonl'),'utf8').trim().split(/\r?\n/).map(JSON.parse),done.events),'raw server log mismatch');
- collect('run',run,['manifest.json']);
+ collect('run',run,['manifest.json','provenance-before-stop.json',...(fs.existsSync(path.join(run,'inspection.json'))?['inspection.json']:[])]);
  collect('primary',fixture,['result.json','focus-result.json','ready','stdout.log','stderr.log','traceback.log','manual-ocr-running.json','manual-ocr-after-peer.json','manual-ocr-completed.json','manual-ocr-final.json','manual-ocr-server.jsonl','ocr-one-page.pdf']);
  const primary=JSON.parse(fs.readFileSync(path.join(fixture,'result.json')));
  assert(primary.result==='primary'&&primary.constructed===1&&primary.restored===1&&primary.status_preserved,'primary abnormal exit');
@@ -88,24 +96,26 @@ if(exe){
  environment={...manifest.environment,elevated:manifest.environment.is_admin};sourceCommit=manifest.source_commit;
 }
 assert(pdf.pages===1&&!pdf.has_embedded_text&&pdf.images_on_first_page===1&&hash(fs.readFileSync(pdf.path))===pdf.sha256,'image PDF missing/changed');
-const build=JSON.parse(fs.readFileSync(path.join(phase,'06-BUILD-EVIDENCE.json'))),report=JSON.parse(fs.readFileSync(path.join(build.final_release.final_dir,'release-report.json')));
+const build=JSON.parse(fs.readFileSync(path.join(phase,'06-BUILD-EVIDENCE.json'))),{report,source:finalSource}=prov.resolveFinalReport({phase,build});
 assert(build.generation===5&&s.target_exe_sha256===build.final_release.exe_sha256,'wrong generation');
 if(exe)assert(s.binary_sha256===build.final_release.exe_sha256&&s.verify_after.exe_sha256===s.binary_sha256&&s.tree_sha256===build.final_release.tree_sha256,'binary/tree mismatch');
 for(const [file,expected] of Object.entries(report.input_manifest))assert(hash(fs.readFileSync(path.join(root,file)))===expected,'frozen input drift: '+file);
-const ledgerPath=path.join(phase,'06-MANUAL-EVIDENCE.json'),ledger=JSON.parse(fs.readFileSync(ledgerPath)),row=ledger.cases.find(c=>c.id==='W04').subrows.find(r=>r.card===s.row);
-assert(row&&row.status==='not-run'&&row.generation===5&&row.release_requirement==='required','row already judged/wrong generation');
-const uatPath=path.join(phase,'06-UAT.md'),uat=fs.readFileSync(uatPath,'utf8'),marker='### '+s.row+'\n',first=uat.indexOf(marker);assert(first>=0,'card missing');
-const next=uat.indexOf('\n### ',first+marker.length),last=next<0?uat.length:next,card=uat.slice(first,last);assert(card.includes('- **状態**: not-run'),'card already judged');
+const ledgerPath=path.join(phase,'06-MANUAL-EVIDENCE.json'),ledger=JSON.parse(fs.readFileSync(ledgerPath));
+// Python経路は台帳の新有効行だけを一意に選ぶ。EXE経路は従来の選択のまま。
+let row;
+if(exe){row=ledger.cases.find(c=>c.id==='W04').subrows.find(r=>r.card===s.row);assert(row&&row.status==='not-run'&&row.generation===5&&row.release_requirement==='required','row already judged/wrong generation');}
+else row=prov.selectEffectiveRow({phase,ledger,caseId:'W04',card:s.row,entry});
+const uatPath=path.join(phase,'06-UAT.md'),uat=fs.readFileSync(uatPath,'utf8');
+prov.locateUatCard(uat,s.row);
 const dest=path.join(phase,relative.replace('.json','-raw'));assert(!fs.existsSync(dest),'raw already preserved');
+if(dry){console.log(JSON.stringify({row:s.row,status:'validated',dry_run:true,final_report_source:finalSource,observed_python_input:provenance?provenance.observed:null}));process.exit(0);}
 fs.mkdirSync(dest);const copies=pending.map(p=>{const target=path.join(dest,p.name);fs.writeFileSync(target,p.bytes,{flag:'wx'});return {source:p.source,target:path.relative(phase,target).replaceAll('\\','/'),sha256:hash(p.bytes)};});
 fs.writeFileSync(path.join(dest,'copies.json'),JSON.stringify(copies,null,2)+'\n');
 row.status='pass';row.preparation={status:'prepared',run_id:runId,note:'1ページ画像PDF・並列1・loopback合成OCR。要求待機中の二次起動後に同じ要求を解放。'};
 row.observations={progress_shown:true,same_page_attempt:true,completed_shown:true,post_count_1:true,summary_not_run:true,...(exe?{foreground_after:post.foreground}:{})};
-row.observation_basis={session_file:relative,session_sha256:hash(raw),window:{before,after,foreground:post.foreground},request,server_completed:done,focus_result:focusResult,fixture_pdf:pdf,raw_copy_manifest:path.relative(phase,path.join(dest,'copies.json')).replaceAll('\\','/'),frozen_input_files:Object.keys(report.input_manifest).length,note:exe?'実EXEの内部には注入せず、実前景と人の表示確認、serverの同一要求完了で照合。':'人の表示確認と、同一dialog/engine/worker/run generation・page/attempt保持を照合。'};
+row.observation_basis={session_file:relative,session_sha256:hash(raw),window:{before,after,foreground:post.foreground},request,server_completed:done,focus_result:focusResult,fixture_pdf:pdf,raw_copy_manifest:path.relative(phase,path.join(dest,'copies.json')).replaceAll('\\','/'),frozen_input_files:Object.keys(report.input_manifest).length,...(provenance?prov.provenanceBasis({prov:provenance,finalSource,recorderFile:__filename}):{}),note:exe?'実EXEの内部には注入せず、実前景と人の表示確認、serverの同一要求完了で照合。':'人の表示確認と、同一dialog/engine/worker/run generation・page/attempt保持を照合。'};
 row.answer=s.composed_answer;row.raw_inputs=s.raw_inputs;row.answer_provenance='利用者が可視PowerShellへ直接入力。担当の代理入力なし。';row.run_id=runId;row.observed_at=s.finished_at;row.environment=environment;row.source_commit=sourceCommit;row.input_manifest_sha256=build.final_release.input_manifest_sha256;if(exe)row.binary_sha256=s.binary_sha256;
 const passed=ledger.cases.flatMap(c=>c.subrows).filter(r=>r.release_requirement==='required'&&r.status==='pass').length;
-const updated=card.replace(/- \*\*状態\*\*: not-run[^\n]*/,`- **状態**: pass / 利用者直接回答・同一OCR要求の継続・復帰が一致。根拠: ${relative}\n- **回答原文**: ${row.answer}`);
-let result=uat.slice(0,first)+updated+uat.slice(last);
-result=result.replace(/本受入は必須108行(?:not-run|中\d+行pass・\d+行not-run)・W11対象外2行not-run。/,`本受入は必須108行中${passed}行pass・${108-passed}行not-run・W11対象外2行not-run。`);
+const result=prov.applyUatPass({uat,card:s.row,passed,status:`pass / 利用者直接回答・同一OCR要求の継続・復帰が一致。根拠: ${relative}`,answer:row.answer});
 fs.writeFileSync(ledgerPath,JSON.stringify(ledger,null,2)+'\n');fs.writeFileSync(uatPath,result);
 console.log(JSON.stringify({row:s.row,status:'pass',required_pass:passed,required_not_run:108-passed,deferred:2,copied:copies.length}));

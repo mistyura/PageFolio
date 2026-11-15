@@ -1,10 +1,17 @@
 // W02 の Python 入口を直接回答・実前景・保持・正常回収から判定する（settings開始時のファイル名を維持）。
+// 使い方: node 06-05-record-w02-settings.cjs <06-05-evidence配下のsessionファイル名> [--dry-run]
+//   --dry-run は全ての照合だけを行い、台帳・UAT・raw copyを一切書き換えない。
 const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto');
-const phase=__dirname,root=path.resolve(phase,'../../..'),name=process.argv[2];
+const prov=require('./06-05-python-provenance.cjs');
+const phase=__dirname,root=path.resolve(phase,'../../..'),dry=process.argv.includes('--dry-run'),name=process.argv[2];
 const assert=(ok,why)=>{if(!ok)throw Error(why);};
 const hash=b=>crypto.createHash('sha256').update(b).digest('hex');
+assert(process.argv.length===(dry?4:3),'usage: session.json [--dry-run]');
 assert(/^(W02_(settings|thumb|preview)|W05a_nested-settings)_at_(script|module)-\d{8}T\d{6}Z\.json$/.test(name||''),'unexpected session filename');
+const entry=name.match(/_at_(script|module)-/)[1];
 const relative='06-05-evidence/'+name,raw=fs.readFileSync(path.join(phase,relative)),s=JSON.parse(raw);
+// 旧harness採取・入力変化・Phase04非fresh は、他の照合やrun dirの読込より前に拒否する。
+const provenance=prov.checkFormalProvenance({root,run:s.run,manifest:s.harness_inspect?.json?.manifest});
 const nested=s.case==='W05a'&&s.condition==='nested-settings';
 assert((nested||(s.case==='W02'&&['settings','thumb','preview'].includes(s.condition)))&&s.row===`${s.case}/${s.condition}@${s.entry}`,'row mismatch');
 const settings=nested||s.condition==='settings';
@@ -33,15 +40,13 @@ for(const [file,expected] of Object.entries(i.manifest.originals_before)){
  assert(actual===expected,'original changed after cleanup: '+file);
 }
 const build=JSON.parse(fs.readFileSync(path.join(phase,'06-BUILD-EVIDENCE.json')));
-const report=JSON.parse(fs.readFileSync(path.join(build.final_release.final_dir,'release-report.json')));
+const {report,source:finalSource}=prov.resolveFinalReport({phase,build});
 assert(build.generation===5&&s.target_exe_sha256===build.final_release.exe_sha256,'generation mismatch');
 for(const [file,expected] of Object.entries(report.input_manifest))assert(hash(fs.readFileSync(path.join(root,file)))===expected,'frozen input drift: '+file);
 const ledgerPath=path.join(phase,'06-MANUAL-EVIDENCE.json'),ledger=JSON.parse(fs.readFileSync(ledgerPath));
-const row=ledger.cases.find(c=>c.id===s.case).subrows.find(r=>r.card===s.row);
-assert(row&&row.status==='not-run'&&row.generation===5&&row.release_requirement==='required','row already judged or wrong generation');
-const uatPath=path.join(phase,'06-UAT.md'),uat=fs.readFileSync(uatPath,'utf8'),marker='### '+s.row+'\n',start=uat.indexOf(marker);assert(start>=0,'card missing');
-const end=uat.indexOf('\n### ',start+marker.length),stop=end<0?uat.length:end,card=uat.slice(start,stop);
-assert(card.includes('- **状態**: not-run'),'UAT row already judged');
+const row=prov.selectEffectiveRow({phase,ledger,caseId:s.case,card:s.row,entry});
+const uatPath=path.join(phase,'06-UAT.md'),uat=fs.readFileSync(uatPath,'utf8');
+prov.locateUatCard(uat,s.row);
 const run=path.resolve(s.run);assert(run.startsWith(path.join(root,'.planning','tmp')+path.sep),'unexpected run root');
 const dest=path.join(phase,'06-05-evidence',name.replace('.json','-raw'));assert(!fs.existsSync(dest),'raw already preserved');
 const pending=[];
@@ -53,23 +58,22 @@ if(nested){
  assert(closed.outer===f.expected_focus.slice(0,f.expected_focus.lastIndexOf('.')),'wrong outer dialog');
  assert(input.text==='ux input'&&input.cursor===2,'actual x input did not reach outer entry');
 }
-for(const [label,dir,names] of [['run',run,['manifest.json']],['primary',fixture,['result.json','focus-result.json','resource-audit.json','ready','stderr.log','stdout.log','traceback.log',...(nested?['manual-nested-closed.json','manual-nested-input.json']:[])]]]){
+for(const [label,dir,names] of [['run',run,['manifest.json','provenance-before-stop.json','inspection.json']],['primary',fixture,['result.json','focus-result.json','resource-audit.json','ready','stderr.log','stdout.log','traceback.log',...(nested?['manual-nested-closed.json','manual-nested-input.json']:[])]]]){
  for(const file of names){const source=path.join(dir,file);if(!fs.existsSync(source))continue;pending.push({source,target:path.join(dest,label+'-'+file),bytes:fs.readFileSync(source)});}
 }
 const primary=JSON.parse(pending.find(p=>p.target.endsWith('primary-result.json')).bytes);
 assert(primary.result==='primary'&&primary.constructed===1&&primary.restored===1&&primary.status_preserved,'primary did not exit normally');
+if(dry){console.log(JSON.stringify({row:s.row,status:'validated',dry_run:true,final_report_source:finalSource,observed_python_input:provenance.observed}));process.exit(0);}
 fs.mkdirSync(dest);const copies=[];
 for(const p of pending){fs.writeFileSync(p.target,p.bytes,{flag:'wx'});copies.push({source:p.source,target:path.relative(phase,p.target).replaceAll('\\','/'),sha256:hash(p.bytes)});}
 fs.writeFileSync(path.join(dest,'copies.json'),JSON.stringify(copies,null,2)+'\n');
 row.status='pass';row.preparation={status:'prepared',run_id:path.basename(run),note:settings?'実設定ダイアログ内の未保存文字・選択・カーソルを設定済みの入力欄から、操作なしでpeer復帰。':'PDFと選択を用意し、指定Canvasに入力先を置いて操作なしでpeer復帰。'};
 row.observations=settings?{typed_text_kept:true,selection_kept:true,cursor_kept:true,input_target_kept:true,foreground_result:'settings-restored'}:{foreground_result:'main-restored',key_reached_window:true,mode_restored:true,selection_kept:true,input_target_canvas:true};
-row.observation_basis={session_file:relative,session_sha256:hash(raw),state:settings?'test_startup_windows.py snapshot のentry文字・insert・sel.first・sel.last一致。利用者の保持回答と実x入力を併用。':'test_startup_windows.py snapshot のPDF・選択・表示ページ一致と対象Canvasのsettled_focus一致。利用者の選択保持・F5切替/復帰の直接回答を併用。',window:{before:b,after:w,foreground:after.foreground},focus_result:f,raw_copy_manifest:path.relative(phase,path.join(dest,'copies.json')).replaceAll('\\','/'),frozen_input_files:Object.keys(report.input_manifest).length};
+row.observation_basis={session_file:relative,session_sha256:hash(raw),state:settings?'test_startup_windows.py snapshot のentry文字・insert・sel.first・sel.last一致。利用者の保持回答と実x入力を併用。':'test_startup_windows.py snapshot のPDF・選択・表示ページ一致と対象Canvasのsettled_focus一致。利用者の選択保持・F5切替/復帰の直接回答を併用。',window:{before:b,after:w,foreground:after.foreground},focus_result:f,raw_copy_manifest:path.relative(phase,path.join(dest,'copies.json')).replaceAll('\\','/'),frozen_input_files:Object.keys(report.input_manifest).length,...prov.provenanceBasis({prov:provenance,finalSource,recorderFile:__filename})};
 if(nested){row.preparation.note='設定→内側LLM設定を開いて閉じ、outer入力/選択を準備。復帰後は利用者がxを入力。';row.observations={outer_input_kept:true,selection_kept:true,grab_released_after_inner_close:true};row.observation_basis.nested_closed=i['manual-nested-closed.json'];row.observation_basis.actual_input=i['manual-nested-input.json'];}
 row.answer=s.composed_answer;row.raw_inputs=s.raw_inputs;row.answer_provenance='利用者が可視PowerShellへ直接入力。担当による代理入力なし。';row.run_id=path.basename(run);row.observed_at=s.finished_at;
 row.environment={...i.manifest.environment,elevated:i.manifest.environment.is_admin};row.input_manifest_sha256=build.final_release.input_manifest_sha256;row.source_commit=i.manifest.source_commit;
 const passed=ledger.cases.flatMap(c=>c.subrows).filter(r=>r.release_requirement==='required'&&r.status==='pass').length;
-const updated=card.replace(/- \*\*状態\*\*: not-run[^\n]*/,`- **状態**: pass / 利用者直接入力・機械観測一致。根拠: ${relative}\n- **回答原文**: ${s.composed_answer}`);
-let finalUat=uat.slice(0,start)+updated+uat.slice(stop);
-finalUat=finalUat.replace(/本受入は必須108行(?:not-run|中\d+行pass・\d+行not-run)・W11対象外2行not-run。/,`本受入は必須108行中${passed}行pass・${108-passed}行not-run・W11対象外2行not-run。`);
+const finalUat=prov.applyUatPass({uat,card:s.row,passed,status:`pass / 利用者直接入力・機械観測一致。根拠: ${relative}`,answer:s.composed_answer});
 fs.writeFileSync(ledgerPath,JSON.stringify(ledger,null,2)+'\n');fs.writeFileSync(uatPath,finalUat);
 console.log(JSON.stringify({row:s.row,status:'pass',required_pass:passed,required_not_run:108-passed,deferred:2,copied:copies.length}));

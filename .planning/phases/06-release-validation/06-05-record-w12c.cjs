@@ -229,7 +229,7 @@ row.answer=human.text;row.raw_inputs=[{key:'direct_answer',text:human.text,at:hu
   {key:'adoption',text:adoption.text,at:adoption.approved_at}];
 row.answer_provenance=`${human.source_ref}; 回収後別回答 ${adoption.source_ref}`;
 row.run_id=path.basename(run);row.observed_at=human.captured_at;
-row.environment=manifest.environment;row.binary_sha256=build.final_release.exe_sha256;
+row.environment={...manifest.environment,elevated:manifest.environment.is_admin};row.binary_sha256=build.final_release.exe_sha256;
 row.input_manifest_sha256=build.final_release.input_manifest_sha256;
 row.observation_basis={answer_file:`06-05-evidence/${name}`,answer_sha256:sha(answerRaw),
   raw_copy_manifest:path.relative(phase,path.join(target,'copies.json')).replaceAll('\\','/'),
