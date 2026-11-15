@@ -1,0 +1,67 @@
+[
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-2pqgrd_g\\manifest.json",
+    "target": "06-05-evidence/W03_pdf-3page_at_script-20261115T060539Z-raw/run-manifest.json",
+    "sha256": "459253ef7fa59a6dc3a59b79e91b051194f8eec751613f348531f2fbcfc628d4"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-2pqgrd_g\\provenance-before-stop.json",
+    "target": "06-05-evidence/W03_pdf-3page_at_script-20261115T060539Z-raw/run-provenance-before-stop.json",
+    "sha256": "61b77107d96655e75a6802d93413a4ad30970fbf8b0e6efd452f0902c4653ff2"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-2pqgrd_g\\inspection.json",
+    "target": "06-05-evidence/W03_pdf-3page_at_script-20261115T060539Z-raw/run-inspection.json",
+    "sha256": "9e930f3edb92228d7729539939cc529358185de018b26c97a4ddb1955665c463"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-2pqgrd_g\\uat-owner-pdf\\result.json",
+    "target": "06-05-evidence/W03_pdf-3page_at_script-20261115T060539Z-raw/primary-result.json",
+    "sha256": "57a2140ada4ced1983efcbdf7d2bd9909c3417841c04225a66cafc9f5ccf6bd9"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-2pqgrd_g\\uat-owner-pdf\\focus-result.json",
+    "target": "06-05-evidence/W03_pdf-3page_at_script-20261115T060539Z-raw/primary-focus-result.json",
+    "sha256": "d9fcfd9277d295d95fceaec0214a89c6b92bfaafe0e9d537d5b34ee7858a5257"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-2pqgrd_g\\uat-owner-pdf\\manual-pdf-ready.json",
+    "target": "06-05-evidence/W03_pdf-3page_at_script-20261115T060539Z-raw/primary-manual-pdf-ready.json",
+    "sha256": "a92a1b957aed4a93a12ddeeb5565fba7bd709ba6d0cae51d72f5fd0c821d822a"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-2pqgrd_g\\uat-owner-pdf\\manual-pdf-trace.json",
+    "target": "06-05-evidence/W03_pdf-3page_at_script-20261115T060539Z-raw/primary-manual-pdf-trace.json",
+    "sha256": "8a9954dfc29ac35275db182a1a9ff39b726af3b1fb8b5c00458c12b5ff00c260"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-2pqgrd_g\\uat-owner-pdf\\resource-audit.json",
+    "target": "06-05-evidence/W03_pdf-3page_at_script-20261115T060539Z-raw/primary-resource-audit.json",
+    "sha256": "94a3312e8fe619e2caa87874445c54db4c90417720ea8340a19d761f9a383c2e"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-2pqgrd_g\\uat-owner-pdf\\ready",
+    "target": "06-05-evidence/W03_pdf-3page_at_script-20261115T060539Z-raw/primary-ready",
+    "sha256": "94a3312e8fe619e2caa87874445c54db4c90417720ea8340a19d761f9a383c2e"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-2pqgrd_g\\uat-owner-pdf\\stderr.log",
+    "target": "06-05-evidence/W03_pdf-3page_at_script-20261115T060539Z-raw/primary-stderr.log",
+    "sha256": "60173188ceda3ffb1898664e20a80d4b1be9144ef686b0c91bb821ee2dbedec7"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-2pqgrd_g\\uat-owner-pdf\\stdout.log",
+    "target": "06-05-evidence/W03_pdf-3page_at_script-20261115T060539Z-raw/primary-stdout.log",
+    "sha256": "7e99aa0328e1c01ade4e55995317c5a48c765890c84b213c787f5253a26e0312"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-2pqgrd_g\\uat-owner-pdf\\traceback.log",
+    "target": "06-05-evidence/W03_pdf-3page_at_script-20261115T060539Z-raw/primary-traceback.log",
+    "sha256": "40f484e478145b6665b6fa81b3ae1c7a8b40ffbcaa99095a614947570bd7f8bf"
+  },
+  {
+    "source": "C:\\Users\\shdwf\\work\\project\\PageFolio\\.planning\\tmp\\pagefolio-uat-2pqgrd_g\\uat-owner-pdf\\manual-pdf-keys.json",
+    "target": "06-05-evidence/W03_pdf-3page_at_script-20261115T060539Z-raw/primary-manual-pdf-keys.json",
+    "sha256": "5031f5e68e45d0bc46c4faf1704bb58cd007bfec76d4c8b2f65c440300d05bb7"
+  }
+]
