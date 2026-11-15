@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "timestamp": "2026-11-15T04:43:50.498Z",
+  "timestamp": "2026-11-15T06:29:30.000Z",
   "phase": "06",
   "phase_name": "サンプル配布とリリース検証",
   "phase_dir": ".planning/phases/06-release-validation",
@@ -78,18 +78,13 @@
   "async_jobs": [],
   "human_actions_pending": [
     {
-      "action": "W03/pdf-3page@script から区分A残8行の実機操作",
-      "context": "案内済み・未開始。W03〜W05b recorder は改修後未だ実データ未使用→必ず --dry-run 先行",
+      "action": "W05c recorder 改修 quick の開始判断",
+      "context": "区分A残8行は 2026-11-15 に完了（b550bb1〜915087d）",
       "blocking": true
     },
     {
-      "action": "W05c recorder 改修 quick の開始判断",
-      "context": "区分A残8行の後",
-      "blocking": false
-    },
-    {
       "action": "区分C recorder新設・区分B観測手段・区分D計画見直し",
-      "context": "提案順 A→凍結判断(済)→B保留→D",
+      "context": "提案順 A(済)→W05c→B保留→C→D",
       "blocking": false
     }
   ],
@@ -158,8 +153,8 @@
   "uncommitted_files": [],
   "uncommitted_file_count": 344,
   "uncommitted_files_elided": 294,
-  "next_action": "W03/pdf-3page@script の採取を案内（案内文は送付済み・未開始）。完了報告後、最新 session を確認→node 06-05-record-w03-python.cjs <file> --dry-run→台帳hash不変確認→本記録→個別コミット。",
-  "context_notes": "2026-11-15: quick 261115-gna（commits 0832241/0f98e58/6c10a0e/682b0b4）で recorder 改修・全件2488 passed・Phase04/05 passed。W01×4・W02×6 を pass記録（835072f〜ac364a0）。採取の運用知見: Enter前に最小化PageFolioが前面になることがある→Alt+TabでPowerShellへ切替後にEnter。F5/x等はdriverのPowerShell指示表示後に押す（peer完了前の押下はkeys-suspect）。失敗回sessionは証拠として保存・コミット済み。",
+  "next_action": "区分A完了（41 pass / 67 not-run）。次は利用者判断: W05c recorder 改修 quick（tests fixture 限定変更＋recorder改修＋Phase04/05再検証）の開始可否。その後 W05c/quit-no script/module の採取。",
+  "context_notes": "2026-11-15 後半: W03/W04/W05a/W05b 各script/module 8行を pass 記録（b550bb1, c035827, f97f61e, 13fcca6, d2696da, 4746c1e, 166f78b, 915087d）。失敗試行: W03@script 060151Z（PageFolio上で追加のZ/Y/Z押下後に回答、page_counts不一致で recorder 拒否）、W05b@script 062105Z（二次起動前に確認画面をクリック→contaminated停止）。いずれも証拠として保存・コミット済み。教訓: W05b は確認画面が出ても触らず Alt+Tab→40秒以内に Enter、音の後に『いいえ』。案内文に recorder の期待値を書かない。 / 2026-11-15: quick 261115-gna（commits 0832241/0f98e58/6c10a0e/682b0b4）で recorder 改修・全件2488 passed・Phase04/05 passed。W01×4・W02×6 を pass記録（835072f〜ac364a0）。採取の運用知見: Enter前に最小化PageFolioが前面になることがある→Alt+TabでPowerShellへ切替後にEnter。F5/x等はdriverのPowerShell指示表示後に押す（peer完了前の押下はkeys-suspect）。失敗回sessionは証拠として保存・コミット済み。",
   "validation": {
     "required_pass": 19,
     "required_not_run": 89,
@@ -427,14 +422,14 @@
     }
   },
   "remaining_breakdown": {
-    "required_not_run": 75,
-    "A_python_recollect_remaining": 10,
-    "A_detail": "W03/W04/W05a/W05b 各script/module 8行（recorder改修済）+ W05c 2行（recorder未改修）",
+    "required_not_run": 67,
+    "A_python_recollect_remaining": 2,
+    "A_detail": "W05c/quit-no script/module 2行（recorder未改修）",
     "B_exe_observation_gap_G4": 9,
     "C_settings_notice_sample_G5_G6": 20,
     "D_0606_os_conditions_G7_G13": 36,
     "out_of_scope_W11_deferred": 2,
-    "ledger": "33 pass / 75 not-run / 対象外2",
+    "ledger": "41 pass / 67 not-run / 対象外2",
     "release_allowed": false
   },
   "test_gate_20261109": {

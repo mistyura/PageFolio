@@ -19,7 +19,11 @@ progress:
 last_activity_desc: 2481件成功、04/05 fresh passed。G4基盤レビュー解消、新tracer1回生成。実機受入は未開始。
 ---
 
-## 2026-11-15 中断時点（以下の履歴に優先）
+## 2026-11-15 区分A 残8行完了（以下の履歴に優先）
+
+W03/W04/W05a/W05b 各 script/module 8行を pass 記録（b550bb1〜915087d）。台帳 41 pass / 67 not-run / 対象外2、release_allowed=false。区分A Python 再採取は W05c 2行（recorder 未改修・別quick）を残すのみ。次は W05c recorder 改修 quick の開始判断（利用者）。正本は HANDOFF.json と phases/06-release-validation/.continue-here.md。
+
+## 2026-11-15 中断時点（履歴）
 
 quick 261115-gna の recorder 改修後、W01×4・W02×6 を現行Python入力で再採取し pass 記録（ac364a0 まで）。台帳 33 pass / 75 not-run / 対象外2、release_allowed=false。次は W03/pdf-3page@script（案内済み・未開始）→W04/W05a/W05b 各 script/module、記録は必ず --dry-run 先行。W05c 2行は recorder 別quick。正本は HANDOFF.json と phases/06-release-validation/.continue-here.md。
 
@@ -507,8 +511,8 @@ v1.9.0 クローズ時点で次マイルストーンへ引き継ぐ未解決項�
 
 **Resume file:** .planning/phases/06-release-validation/.continue-here.md
 
-Last session: 2026-11-09
-Stopped at: W12c/terminal-python@script を3回目(方式B)でpass正式記録。台帳23 pass/85 not-run、release_allowed=false。次は残G4/G5/G6の採取対象選定（利用者操作待ち）。
+Last session: 2026-11-15
+Stopped at: 区分A 残8行（W03/W04/W05a/W05b）を pass 記録。台帳41 pass/67 not-run、release_allowed=false。次は W05c recorder 改修 quick の開始判断（利用者）。
 
 ## Operator Next Steps
 
