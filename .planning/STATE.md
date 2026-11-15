@@ -5,10 +5,10 @@ milestone_name: 多重起動防止・起動操作の改善
 current_phase: 06
 current_phase_name: サンプル配布とリリース検証
 current_plan: 5
-status: G4採取基盤の品質・親再検証完了。実機操作待ち — 10pass/98not-run、release_allowed=false
-stopped_at: G4品質・親鮮度確認済み。W12a利用者操作可能時間待ち。10pass/98not-run、出荷不可。
-last_updated: "2026-11-06T20:39:33.380Z"
-last_activity: 2026-11-07
+status: 区分A W01×4・W02×6 pass記録後に中断。33pass/75not-run、release_allowed=false
+stopped_at: W03/pdf-3page@script 案内直後（未開始）。区分A残8行+W05c2行。
+last_updated: "2026-11-15T04:43:50.498Z"
+last_activity: 2026-11-15
 state_head: 53bbfd009ad0f05c95370efed0c975411deaf98c
 progress:
   total_phases: 3
@@ -18,6 +18,10 @@ progress:
   percent: 67
 last_activity_desc: 2481件成功、04/05 fresh passed。G4基盤レビュー解消、新tracer1回生成。実機受入は未開始。
 ---
+
+## 2026-11-15 中断時点（以下の履歴に優先）
+
+quick 261115-gna の recorder 改修後、W01×4・W02×6 を現行Python入力で再採取し pass 記録（ac364a0 まで）。台帳 33 pass / 75 not-run / 対象外2、release_allowed=false。次は W03/pdf-3page@script（案内済み・未開始）→W04/W05a/W05b 各 script/module、記録は必ず --dry-run 先行。W05c 2行は recorder 別quick。正本は HANDOFF.json と phases/06-release-validation/.continue-here.md。
 
 ## 2026-11-15 最新の実行状態（以下の履歴に優先）
 

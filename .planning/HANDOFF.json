@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "timestamp": "2026-11-09T13:15:43.874Z",
+  "timestamp": "2026-11-15T04:43:50.498Z",
   "phase": "06",
   "phase_name": "サンプル配布とリリース検証",
   "phase_dir": ".planning/phases/06-release-validation",
@@ -42,14 +42,14 @@
       "id": 2,
       "name": "06-05-02 状態維持・混在入口・通知",
       "status": "in_progress",
-      "progress": "W12a 9行・W12b Python2行・W12c Python2行(explorer/terminal) pass。台帳23 pass / 85 not-run",
-      "commit": "7a65491"
+      "progress": "区分A: W01×4・W02×6 を現行Python入力で再採取しpass記録（2026-11-15）。台帳33 pass / 75 not-run",
+      "commit": "ac364a0"
     }
   ],
   "remaining_tasks": [
     {
       "id": "06-05-02",
-      "name": "G4採取基盤整備・Python20再採取・残G4/G5/G6",
+      "name": "区分A残8行(W03/W04/W05a/W05b 各script/module)→W05c recorder別quick→区分B/C/D",
       "status": "in_progress"
     },
     {
@@ -60,41 +60,36 @@
   ],
   "blockers": [
     {
-      "description": "W12bのEXE二次7行・W12cのEXE2行は未改変EXE内部の許可API戻り/OS errorを取得できず正式helper拒否",
+      "description": "W05c script/module の recorder は formal_provenance・CRLF 未対応（tests/test_w05c_*.py fixture が旧挙動を固定）",
+      "type": "technical",
+      "workaround": "別quickで fixture 限定変更＋recorder改修＋Phase04/05 再検証（利用者決定 2026-11-15）"
+    },
+    {
+      "description": "W12b EXE二次7行・W12c EXE2行は未改変EXE内部の許可API戻り/OS errorを取得できず正式helper拒否",
       "type": "evidence_capability",
-      "workaround": "新たな観測方法の根拠・検証、または承認された計画変更が必要。現在not-run"
+      "workaround": "新観測手段か承認された計画変更が必要"
     },
     {
       "description": "残G4/G5/G6と06-06には利用者の直接操作・観察が必要",
       "type": "human_action",
-      "workaround": "小分けで採取。回答なし/未取得をpassにしない"
-    },
-    {
-      "description": "元W05c No不成立の原因・極端な過負荷の別モード/既知のWR-01等は未解除",
-      "type": "historical_risk",
-      "workaround": "保存したdebug/原本/履歴を維持"
+      "workaround": "小分けで採取"
     }
   ],
   "async_jobs": [],
   "human_actions_pending": [
     {
-      "action": "区分A Python再採取20行の開始可否と実機操作",
-      "context": "凍結に触れず採取できる唯一の区分",
+      "action": "W03/pdf-3page@script から区分A残8行の実機操作",
+      "context": "案内済み・未開始。W03〜W05b recorder は改修後未だ実データ未使用→必ず --dry-run 先行",
       "blocking": true
     },
     {
-      "action": "凍結解除（区分C recorder新設・Phase04/05再検証）の判断",
-      "context": "W12c Python2行完了で凍結の当初目的はほぼ達成",
+      "action": "W05c recorder 改修 quick の開始判断",
+      "context": "区分A残8行の後",
       "blocking": false
     },
     {
-      "action": "未コミット差分のコミット方針判断",
-      "context": "今回のhandoff以外は未コミット",
-      "blocking": false
-    },
-    {
-      "action": "凍結解除時に06-05-record-w12c.cjsへelevated出力を追加",
-      "context": "未修正だと同recorderの新規記録が構造監査で再拒否される",
+      "action": "区分C recorder新設・区分B観測手段・区分D計画見直し",
+      "context": "提案順 A→凍結判断(済)→B保留→D",
       "blocking": false
     }
   ],
@@ -138,64 +133,33 @@
       "decision": "W12c pass2行の台帳environmentにelevated:falseを補正追記（recorder 06-05-record-w12c.cjsは凍結中のため未修正）",
       "rationale": "利用者承認 案1 2026-11-09。値は各run manifest.environment.is_admin",
       "phase": "06"
+    },
+    {
+      "decision": "凍結を部分解除し区分A Python recorder を formal_provenance 照合付きに改修（quick 261115-gna）",
+      "rationale": "旧recorderは消失した final_dir を読み ENOENT、かつ provenance 未記録で証拠不足を再生産するため。利用者承認 2026-11-15",
+      "phase": "06"
+    },
+    {
+      "decision": "W05c 2行は今回除外し別quick",
+      "rationale": "tests fixture 変更が必要。利用者選択 2026-11-15",
+      "phase": "06"
+    },
+    {
+      "decision": "Phase04/05 covered_digest は executor が機械的に再計算",
+      "rationale": "利用者選択 2026-11-15。条件3つ成立時のみ",
+      "phase": "06"
+    },
+    {
+      "decision": "git clone やり直しで消えた .venv を requirements.txt 固定版で再作成、空の .planning/tmp を作成",
+      "rationale": "利用者承認 2026-11-15。版は前回と同一",
+      "phase": "06"
     }
   ],
-  "uncommitted_files": [
-    " M .gitignore",
-    " M .planning/HANDOFF.json",
-    " M .planning/PROJECT.md",
-    " M .planning/REQUIREMENTS.md",
-    " M .planning/ROADMAP.md",
-    " M .planning/STATE.md",
-    " M .planning/debug/preview-focus-not-restored-evidence/diag_btn_press.py",
-    " M .planning/debug/simultaneous-owner-missing.md",
-    " M .planning/phases/04-startup-control/04-REVIEW-DISPOSITION.md",
-    " M .planning/phases/04-startup-control/04-REVIEW.md",
-    " M .planning/phases/04-startup-control/04-SECURITY.md",
-    " M .planning/phases/04-startup-control/04-UI-REVIEW.md",
-    " M .planning/phases/04-startup-control/04-VALIDATION.md",
-    " M .planning/phases/04-startup-control/04-VERIFICATION.md",
-    " M .planning/phases/05-config-notification/05-REVIEW-DISPOSITION.md",
-    " M .planning/phases/05-config-notification/05-REVIEW.md",
-    " M .planning/phases/05-config-notification/05-SECURITY.md",
-    " M .planning/phases/05-config-notification/05-UI-REVIEW.md",
-    " M .planning/phases/05-config-notification/05-VALIDATION.md",
-    " M .planning/phases/05-config-notification/05-VERIFICATION.md",
-    " M .planning/phases/06-release-validation/.continue-here.md",
-    " M .planning/phases/06-release-validation/06-05-CHECKPOINT.md",
-    " M .planning/phases/06-release-validation/06-05-PLAN.md",
-    " M .planning/phases/06-release-validation/06-05-record-w05c-python.cjs",
-    " M .planning/phases/06-release-validation/06-06-PLAN.md",
-    " M .planning/phases/06-release-validation/06-07-quality.cjs",
-    " M .planning/phases/06-release-validation/06-CONTEXT.md",
-    " M .planning/phases/06-release-validation/06-MANUAL-EVIDENCE.json",
-    " M .planning/phases/06-release-validation/06-UAT-CARRYOVER.md",
-    " M .planning/phases/06-release-validation/06-UAT.md",
-    " M .planning/phases/06-release-validation/06-VALIDATION.md",
-    " M .planning/state.json",
-    " M CONTRIBUTING.md",
-    " M docs/DEVELOPMENT.md",
-    " M pagefolio/__main__.py",
-    " M pagefolio/startup_win32.py",
-    " M tests/release_uat_support.py",
-    " M tests/test_release_contract.py",
-    " M tests/test_release_uat_support.py",
-    " M tests/test_startup_windows.py",
-    " M 開発履歴.md",
-    "?? .planning/debug/constructor-notice-dedup-20261106.md",
-    "?? .planning/debug/constructor-notice-dedup-20261106/",
-    "?? .planning/debug/g1-uat-audit-scope.md",
-    "?? .planning/debug/knowledge-base.md",
-    "?? .planning/debug/ocr-off-summary-check.cjs",
-    "?? .planning/debug/ocr-off-summary-evidence/",
-    "?? .planning/debug/ocr-off-summary-ocr.txt",
-    "?? .planning/debug/ocr-off-summary-red.txt",
-    "?? .planning/debug/ocr-off-summary-ruff-verbose.txt"
-  ],
+  "uncommitted_files": [],
   "uncommitted_file_count": 344,
   "uncommitted_files_elided": 294,
-  "next_action": "利用者に区分A（Python再採取20行: W01×4・W02×6・W03/W04/W05a/W05b/W05c 各script/module）から始めてよいか確認し、承認なら W01/normal@script の採取手順を確認して案内する。",
-  "context_notes": "W12b PID不一致は venv launcher が原因で解決済み（parent_pid照合）。修正後に記録付き全件2488 passed・Phase04/05 fresh passed。以後 pagefolio/・tests/・06-05-* と Phase04/05 covered files を変更しない。台帳23 pass / 85 not-run / 対象外2、release_allowed=false。",
+  "next_action": "W03/pdf-3page@script の採取を案内（案内文は送付済み・未開始）。完了報告後、最新 session を確認→node 06-05-record-w03-python.cjs <file> --dry-run→台帳hash不変確認→本記録→個別コミット。",
+  "context_notes": "2026-11-15: quick 261115-gna（commits 0832241/0f98e58/6c10a0e/682b0b4）で recorder 改修・全件2488 passed・Phase04/05 passed。W01×4・W02×6 を pass記録（835072f〜ac364a0）。採取の運用知見: Enter前に最小化PageFolioが前面になることがある→Alt+TabでPowerShellへ切替後にEnter。F5/x等はdriverのPowerShell指示表示後に押す（peer完了前の押下はkeys-suspect）。失敗回sessionは証拠として保存・コミット済み。",
   "validation": {
     "required_pass": 19,
     "required_not_run": 89,
@@ -463,13 +427,14 @@
     }
   },
   "remaining_breakdown": {
-    "required_not_run": 85,
-    "A_python_recollect_G1_G3": 20,
+    "required_not_run": 75,
+    "A_python_recollect_remaining": 10,
+    "A_detail": "W03/W04/W05a/W05b 各script/module 8行（recorder改修済）+ W05c 2行（recorder未改修）",
     "B_exe_observation_gap_G4": 9,
     "C_settings_notice_sample_G5_G6": 20,
     "D_0606_os_conditions_G7_G13": 36,
     "out_of_scope_W11_deferred": 2,
-    "ledger": "23 pass / 85 not-run / 対象外2",
+    "ledger": "33 pass / 75 not-run / 対象外2",
     "release_allowed": false
   },
   "test_gate_20261109": {
