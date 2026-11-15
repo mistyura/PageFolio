@@ -19,6 +19,10 @@ progress:
 last_activity_desc: 2481件成功、04/05 fresh passed。G4基盤レビュー解消、新tracer1回生成。実機受入は未開始。
 ---
 
+## 2026-11-15 最新の実行状態（以下の履歴に優先）
+
+凍結を利用者承認で部分解除し、quick 261115-gna で区分A Python recorder 6経路（W05c除外）を formal_provenance 照合付きに改修。git clone やり直しで消えた .venv を requirements.txt 固定版で再作成（Python 3.15.2/PyMuPDF 1.28.2/Tk 9.0）、.planning/tmp も消失（生データは evidence/*-raw に保存済み）。単一全件 2488 passed/失敗0/ERROR0、187入力不変、Phase04/05 再検証 passed（digest 更新は executor の機械計算）。台帳は 23 pass/85 not-run のまま、release_allowed=false。次は W01/normal@script の実機採取（最初は --dry-run で記録確認）。W05c recorder は別 quick（tests fixture 変更・Phase04/05 再検証要）。
+
 ## 2026-11-07 最新の実行状態（以下の履歴に優先）
 
 G4 W12a/b/c採取基盤の独立レビュー7指摘は全解消。単一全件2481passed/2warnings、174入力と追加12入力不変、全Ruff/format/AST成功。開発履歴追記のみを別記し、04は21/21・05は23/23で公式fresh passed。新tracer1回build成功/64入力照合、最終EXE不変。現行10pass/98必須not-run/対象外2、release_allowed=false。次はW12a/script-scriptを1行だけ利用者同席で採取。EXE内部API未取得のW12b7/W12c2は正式helper拒否、G5/G6・06-06未完了。
@@ -412,6 +416,7 @@ v1.9.0 クローズ時点で次マイルストーンへ引き継ぐ未解決項�
 
 | # | Description | Date | Commit | Directory |
 |---|-------------|------|--------|-----------|
+| 261115-gna | Phase06区分A Python recorder（W01/W02/W03/W04/W05a/W05b）にformal_provenance照合・restored_final_dir・新有効行選択・CRLF対応・--dry-runを追加、W12cにelevated出力。.venv再作成後に単一全件2488 passed、Phase04/05再検証passed。W05cは除外（別quick） | 2026-11-15 | 0832241, 0f98e58, 6c10a0e | [261115-gna-phase06-a-python-recorder-provenance](./quick/261115-gna-phase06-a-python-recorder-provenance/) |
 | 261022-1ns | Phase 4の未実施人手受入をPhase 6へ移管し、04-05-02の証拠照合から再開可能にする | 2026-10-22 | 本行を含むコミット | [261022-1ns-phase-4-phase-6](./quick/261022-1ns-phase-4-phase-6/) |
 | 260607-ccz | OCR 抽出画面に「⚙ LLM 設定…」ボタンを追加し既存 LLMConfigDialog でプロバイダ・モデルを変更可能化（ライブ更新・05-05 UAT 発見の不具合修正） | 2026-06-07 | f210f76 | [260607-ccz-ocr-llm-llmconfigdialog](./quick/260607-ccz-ocr-llm-llmconfigdialog/) |
 | 260609-aaa | v1.4.0 ビルド（PyInstaller）・git push・GitHub Release 作成（PageFolio-v1.4.0-win64.zip） | 2026-06-09 | 9888c4f | [260609-aaa-v140-build-release](./quick/260609-aaa-v140-build-release/) |
